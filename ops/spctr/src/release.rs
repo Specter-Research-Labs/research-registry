@@ -804,9 +804,7 @@ pub fn bundle_source_surface(
     }
     include_paths.extend(surface.support_paths.iter().cloned());
 
-    for rel in &include_paths {
-        copy_rel_path(repo_root, rel, &stage_dir)?;
-    }
+    let copied_paths = copy_tracked_include_paths(repo_root, &include_paths, &stage_dir)?;
     rewrite_bundle_markdown_links(&stage_dir, &include_paths)?;
 
     let release_manifest = serde_json::to_string_pretty(&serde_json::json!({
@@ -844,14 +842,17 @@ pub fn bundle_source_surface(
     let mut command = Command::new("tar");
     command.args(&args).current_dir(repo_root);
     run_command(&mut command, "failed to create source bundle archive")?;
-    let evidence_inputs = include_paths.iter().map(String::as_str).collect::<Vec<_>>();
-    write_release_artifact_evidence(
+    let evidence_inputs = include_paths
+        .iter()
+        .map(|rel| fingerprint_tracked_include_path(repo_root, rel, &copied_paths))
+        .collect::<Result<Vec<_>>>()?;
+    write_release_artifact_evidence_with_inputs(
         repo_root,
         manifest,
         surface,
         "source_bundle",
         Some(&release_id),
-        &evidence_inputs,
+        evidence_inputs,
         &[archive_path.clone()],
         &bundle_evidence_path(&archive_path),
     )?;
@@ -952,14 +953,36 @@ fn write_release_artifact_evidence(
     output_paths: &[Utf8PathBuf],
     card_path: &Utf8Path,
 ) -> Result<()> {
-    if let Some(parent) = card_path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create release evidence dir {parent}"))?;
-    }
     let inputs = input_paths
         .iter()
         .map(|rel| fingerprint_repo_rel_path(repo_root, rel))
         .collect::<Result<Vec<_>>>()?;
+    write_release_artifact_evidence_with_inputs(
+        repo_root,
+        manifest,
+        surface,
+        action,
+        release_id,
+        inputs,
+        output_paths,
+        card_path,
+    )
+}
+
+fn write_release_artifact_evidence_with_inputs(
+    repo_root: &Utf8Path,
+    manifest: &ProjectManifest,
+    surface: &ReleaseSurfaceConfig,
+    action: &str,
+    release_id: Option<&str>,
+    inputs: Vec<ReleaseEvidencePathRecord>,
+    output_paths: &[Utf8PathBuf],
+    card_path: &Utf8Path,
+) -> Result<()> {
+    if let Some(parent) = card_path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create release evidence dir {parent}"))?;
+    }
     let outputs = output_paths
         .iter()
         .map(|path| fingerprint_path(repo_root, path))
@@ -994,6 +1017,60 @@ fn fingerprint_repo_rel_path(
     rel_path: &str,
 ) -> Result<ReleaseEvidencePathRecord> {
     fingerprint_path(repo_root, &repo_root.join(rel_path))
+}
+
+fn fingerprint_tracked_include_path(
+    repo_root: &Utf8Path,
+    include_path: &str,
+    copied_paths: &[String],
+) -> Result<ReleaseEvidencePathRecord> {
+    let root = repo_root.join(include_path);
+    if root.is_file() {
+        return fingerprint_file(repo_root, &root);
+    }
+    if !root.is_dir() {
+        bail!("missing path while fingerprinting source bundle input: {include_path}");
+    }
+
+    let mut files = copied_paths
+        .iter()
+        .filter_map(|path| path_relative_to_include(path, include_path).map(|rel| (path, rel)))
+        .collect::<Vec<_>>();
+    files.sort_by(|(_, left), (_, right)| left.cmp(right));
+    if files.is_empty() {
+        bail!("source bundle include path has no tracked files: {include_path}");
+    }
+
+    let mut hasher = Sha256::new();
+    let mut size_bytes = 0_u64;
+    for (repo_rel, include_rel) in &files {
+        let absolute = repo_root.join(repo_rel);
+        let bytes = fs::read(&absolute)
+            .with_context(|| format!("failed to read source bundle input file {absolute}"))?;
+        let file_size = u64::try_from(bytes.len())
+            .map_err(|_| anyhow::anyhow!("artifact file too large: {absolute}"))?;
+        size_bytes = size_bytes
+            .checked_add(file_size)
+            .ok_or_else(|| anyhow::anyhow!("source bundle input too large: {include_path}"))?;
+        let mut file_hasher = Sha256::new();
+        file_hasher.update(&bytes);
+        hasher.update(include_rel.as_bytes());
+        hasher.update([0]);
+        hasher.update(format!("{:x}", file_hasher.finalize()).as_bytes());
+        hasher.update([0]);
+    }
+
+    Ok(ReleaseEvidencePathRecord {
+        path: include_path.to_owned(),
+        kind: "directory".to_owned(),
+        sha256: format!("{:x}", hasher.finalize()),
+        size_bytes,
+        file_count: u64::try_from(files.len()).map_err(|_| {
+            anyhow::anyhow!(
+                "too many files while fingerprinting source bundle input {include_path}"
+            )
+        })?,
+    })
 }
 
 fn fingerprint_path(repo_root: &Utf8Path, path: &Utf8Path) -> Result<ReleaseEvidencePathRecord> {
@@ -1180,6 +1257,38 @@ fn copy_rel_path(repo_root: &Utf8Path, rel_path: &str, dest_root: &Utf8Path) -> 
     } else {
         bail!("missing path while bundling: {rel_path}");
     }
+}
+
+fn copy_tracked_include_paths(
+    repo_root: &Utf8Path,
+    include_paths: &BTreeSet<String>,
+    dest_root: &Utf8Path,
+) -> Result<Vec<String>> {
+    let copied_paths = tracked_files(repo_root)?
+        .into_iter()
+        .filter(|path| is_included_path(path, include_paths))
+        .collect::<BTreeSet<_>>();
+
+    let missing_includes = include_paths
+        .iter()
+        .filter(|include| {
+            !copied_paths
+                .iter()
+                .any(|path| path_is_within_include(path, include))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if !missing_includes.is_empty() {
+        bail!(
+            "source bundle include paths contain no tracked files:\n{}",
+            missing_includes.join("\n")
+        );
+    }
+
+    for rel in &copied_paths {
+        copy_file(&repo_root.join(rel), &dest_root.join(rel))?;
+    }
+    Ok(copied_paths.into_iter().collect())
 }
 
 fn copy_dir_contents(source: &Utf8Path, dest: &Utf8Path) -> Result<()> {
@@ -1477,12 +1586,25 @@ fn resolve_repo_relative_target(source_dir: &str, target: &str) -> Option<String
 }
 
 fn is_included_path(path: &str, include_paths: &BTreeSet<String>) -> bool {
-    include_paths.iter().any(|include| {
-        path == include
-            || path
-                .strip_prefix(include)
-                .is_some_and(|suffix| suffix.starts_with('/'))
-    })
+    include_paths
+        .iter()
+        .any(|include| path_is_within_include(path, include))
+}
+
+fn path_is_within_include(path: &str, include: &str) -> bool {
+    path == include
+        || path
+            .strip_prefix(include)
+            .is_some_and(|suffix| suffix.starts_with('/'))
+}
+
+fn path_relative_to_include(path: &str, include: &str) -> Option<String> {
+    if path == include {
+        return Some(String::new());
+    }
+    path.strip_prefix(include)
+        .and_then(|suffix| suffix.strip_prefix('/'))
+        .map(ToOwned::to_owned)
 }
 
 #[cfg(test)]
@@ -1495,6 +1617,7 @@ mod tests {
     use camino::Utf8Path;
     use serde_json::Value;
     use std::fs;
+    use std::process::Command;
     use tempfile::TempDir;
 
     fn write(path: &Utf8Path, content: &str) {
@@ -1509,6 +1632,44 @@ mod tests {
             &project_root.join(format!("artifacts/evidence/{action}.json")),
             &format!("{{\n  \"action\": \"{action}\",\n  \"status\": \"{status}\"\n}}\n"),
         );
+    }
+
+    fn run_git(repo_root: &Utf8Path, args: &[&str]) {
+        let output = Command::new("git")
+            .args(args)
+            .current_dir(repo_root)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    fn track_all(repo_root: &Utf8Path) {
+        run_git(repo_root, &["init"]);
+        run_git(repo_root, &["add", "."]);
+    }
+
+    fn archive_entries(archive: &Utf8Path) -> Vec<String> {
+        let output = Command::new("tar")
+            .args(["-tzf", archive.as_str()])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "tar list failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let mut entries = String::from_utf8(output.stdout)
+            .unwrap()
+            .lines()
+            .map(ToOwned::to_owned)
+            .collect::<Vec<_>>();
+        entries.sort();
+        entries
     }
 
     fn minimal_design_tokens(root: &Utf8Path) {
@@ -1590,6 +1751,7 @@ path = "src"
 include_docs = false
 "#,
         );
+        track_all(repo_root);
 
         let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
         let output_dir = repo_root.join("tmp/releases-check");
@@ -1612,6 +1774,76 @@ include_docs = false
             .unwrap()
             .iter()
             .any(|entry| entry["path"] == "dossiers/alpha/src" && entry["kind"] == "directory"));
+    }
+
+    #[test]
+    fn bundle_source_surface_omits_untracked_runtime_files() {
+        let temp = TempDir::new().unwrap();
+        let repo_root = Utf8Path::from_path(temp.path()).unwrap();
+        let project_root = repo_root.join("dossiers/alpha");
+        let manifest_path = project_root.join("spctr.toml");
+        write(&project_root.join("src/lib.rs"), "pub fn alpha() {}\n");
+        write(
+            &manifest_path,
+            r#"version = 1
+license = "MIT"
+title = "Alpha"
+series = "D-001"
+summary = "Alpha summary."
+status = "active"
+
+[site]
+visible = false
+featured = false
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+path = "."
+include_docs = false
+"#,
+        );
+        track_all(repo_root);
+        write(
+            &project_root.join(".venv/cache.py"),
+            "print('runtime cache')\n",
+        );
+        write(
+            &project_root.join("artifacts/evidence/generated.json"),
+            "{\"status\":\"ok\"}\n",
+        );
+
+        let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
+        let output_dir = repo_root.join("tmp/releases-check");
+        let archive =
+            bundle_source_surface(repo_root, &manifest, "source", "r1", Some(&output_dir)).unwrap();
+        let entries = archive_entries(&archive);
+
+        assert!(entries
+            .iter()
+            .any(|entry| entry.ends_with("/dossiers/alpha/src/lib.rs")));
+        assert!(entries
+            .iter()
+            .any(|entry| entry.ends_with("/dossiers/alpha/spctr.toml")));
+        assert!(!entries.iter().any(|entry| entry.contains("/.venv/")));
+        assert!(!entries
+            .iter()
+            .any(|entry| entry.contains("/artifacts/evidence/generated.json")));
+
+        let evidence_path = output_dir.join("alpha-source-r1.tar.gz.evidence.json");
+        let card: Value =
+            serde_json::from_str(&fs::read_to_string(evidence_path).unwrap()).unwrap();
+        let source_input = card["inputs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["path"] == "dossiers/alpha")
+            .unwrap();
+        assert_eq!(source_input["file_count"], 2);
     }
 
     #[test]

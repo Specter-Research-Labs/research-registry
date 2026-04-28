@@ -5,14 +5,10 @@ name: lean-mcts-learning-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/lean-mcts-learning-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/lean-mcts-learning/**'
   push:
     branches: [main]
     paths:
-      - '.github/workflows/lean-mcts-learning-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/lean-mcts-learning/**'
   workflow_dispatch:
 

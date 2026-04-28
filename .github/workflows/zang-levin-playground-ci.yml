@@ -5,8 +5,6 @@ name: zang-levin-playground-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/zang-levin-playground-ci.yml'
-      - 'ops/spctr/**'
       - 'dossiers/zang-levin-playground/**'
   workflow_dispatch:
 

@@ -122,14 +122,7 @@ nightly = ["smoke"]
     assert!(plan.includes_push_main);
     assert!(plan.includes_nightly);
     assert!(plan.requires_nightly_schedule);
-    assert_eq!(
-        plan.path_filters,
-        vec![
-            ".github/workflows/alpha-ci.yml",
-            "ops/spctr/**",
-            "dossiers/alpha/**"
-        ]
-    );
+    assert_eq!(plan.path_filters, vec!["dossiers/alpha/**"]);
 
     let rendered = render_github_workflow(&plan);
     assert!(rendered.contains("name: alpha-ci"));

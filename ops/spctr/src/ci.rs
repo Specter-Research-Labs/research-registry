@@ -103,11 +103,7 @@ pub fn github_plan(repo_root: &Utf8Path, project: Option<&str>) -> Result<Github
     let python_version = detect_python_version(&manifest.root)?;
     let has_pyproject = manifest.root.join("pyproject.toml").is_file();
     let workflow_path = format!(".github/workflows/{}-ci.yml", plan.slug);
-    let path_filters = vec![
-        workflow_path.clone(),
-        "ops/spctr/**".to_owned(),
-        format!("{project_root}/**"),
-    ];
+    let path_filters = vec![format!("{project_root}/**")];
     let jobs = plan
         .lanes
         .iter()

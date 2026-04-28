@@ -5,8 +5,6 @@ name: lean-tactic-representation-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/lean-tactic-representation-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/lean-tactic-representation/**'
   workflow_dispatch:
 

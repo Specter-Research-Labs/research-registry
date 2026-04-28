@@ -5,8 +5,6 @@ name: jolt-material-memory-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/jolt-material-memory-ci.yml'
-      - 'ops/spctr/**'
       - 'dossiers/jolt-material-memory/**'
   workflow_dispatch:
 

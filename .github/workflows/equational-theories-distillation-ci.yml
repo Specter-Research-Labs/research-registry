@@ -5,14 +5,10 @@ name: equational-theories-distillation-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/equational-theories-distillation-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/equational-theories-distillation/**'
   push:
     branches: [main]
     paths:
-      - '.github/workflows/equational-theories-distillation-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/equational-theories-distillation/**'
   workflow_dispatch:
 

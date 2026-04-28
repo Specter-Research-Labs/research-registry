@@ -5,8 +5,6 @@ name: typst-field-manual-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/typst-field-manual-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/typst-field-manual/**'
   workflow_dispatch:
 

@@ -5,14 +5,10 @@ name: lenia-swarm-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/lenia-swarm-ci.yml'
-      - 'ops/spctr/**'
       - 'dossiers/lenia-swarm/**'
   push:
     branches: [main]
     paths:
-      - '.github/workflows/lenia-swarm-ci.yml'
-      - 'ops/spctr/**'
       - 'dossiers/lenia-swarm/**'
   workflow_dispatch:
   schedule:
