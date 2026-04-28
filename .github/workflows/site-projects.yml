@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/site-projects.yml"
+      - ".github/workflows/*-ci.yml"
       - ".github/workflows/repo-mirror.yml"
       - ".gitignore"
       - "README.md"
@@ -60,6 +61,12 @@ jobs:
 
       - name: Build spctr
         run: cargo build --release --manifest-path ops/spctr/Cargo.toml
+
+      - name: Test spctr
+        run: cargo test --locked --manifest-path ops/spctr/Cargo.toml
+
+      - name: Validate generated CI workflows
+        run: ./ops/spctr/target/release/spctr ci sync
 
       - name: Validate registry sync state
         run: ./ops/spctr/target/release/spctr registry check

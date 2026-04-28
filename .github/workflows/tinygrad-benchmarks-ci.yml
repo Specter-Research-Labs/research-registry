@@ -5,8 +5,6 @@ name: tinygrad-benchmarks-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/tinygrad-benchmarks-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/tinygrad-benchmarks/**'
   workflow_dispatch:
 

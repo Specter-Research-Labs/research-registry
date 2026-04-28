@@ -5,14 +5,10 @@ name: lean-sorry-repos-benchmark-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/lean-sorry-repos-benchmark-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/lean-sorry-repos-benchmark/**'
   push:
     branches: [main]
     paths:
-      - '.github/workflows/lean-sorry-repos-benchmark-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/lean-sorry-repos-benchmark/**'
   workflow_dispatch:
 

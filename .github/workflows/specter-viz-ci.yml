@@ -5,14 +5,10 @@ name: specter-viz-ci
 on:
   pull_request:
     paths:
-      - '.github/workflows/specter-viz-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/specter-viz/**'
   push:
     branches: [main]
     paths:
-      - '.github/workflows/specter-viz-ci.yml'
-      - 'ops/spctr/**'
       - 'addenda/specter-viz/**'
   workflow_dispatch:
 
