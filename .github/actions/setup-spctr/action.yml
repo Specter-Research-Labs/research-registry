@@ -1,0 +1,84 @@
+name: Setup spctr project
+description: Shared setup for generated SPECTER project CI jobs.
+
+inputs:
+  project-root:
+    description: Project directory relative to the repository root.
+    required: true
+  rust-targets:
+    description: Comma-separated Rust targets to install.
+    required: false
+    default: ""
+  use-python:
+    description: Whether to install Python.
+    required: false
+    default: "false"
+  python-version:
+    description: Python version to install when Python is required.
+    required: false
+    default: ""
+  use-uv:
+    description: Whether to install uv.
+    required: false
+    default: "false"
+  sync-python:
+    description: Whether to run uv sync in the project directory.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      if: ${{ inputs.rust-targets == '' }}
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install Rust toolchain
+      if: ${{ inputs.rust-targets != '' }}
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ inputs.rust-targets }}
+
+    - name: Cache cargo build
+      uses: actions/cache@v5.0.5
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ops/spctr/target
+        key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
+        restore-keys: spctr-${{ runner.os }}-
+
+    - name: Build spctr
+      shell: bash
+      run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml
+
+    - name: Require Python version
+      if: ${{ inputs.use-python == 'true' && inputs.python-version == '' }}
+      shell: bash
+      run: |
+        echo "python-version is required when use-python is true" >&2
+        exit 1
+
+    - name: Setup Python
+      if: ${{ inputs.use-python == 'true' && inputs.python-version != '' }}
+      uses: actions/setup-python@v6.2.0
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Setup uv
+      if: ${{ inputs.use-uv == 'true' }}
+      uses: astral-sh/setup-uv@v8.1.0
+      with:
+        version: "0.9.26"
+        enable-cache: true
+        working-directory: ${{ inputs.project-root }}
+        cache-dependency-glob: |
+          pyproject.toml
+          uv.lock
+
+    - name: Sync Python dependencies
+      if: ${{ inputs.sync-python == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.project-root }}
+      run: uv sync --frozen --dev

@@ -1,6 +1,8 @@
 name: Sync repo mirror
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -17,14 +19,28 @@ jobs:
     env:
       DEPLOY_HOST: ${{ secrets.SPECTER_DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.SPECTER_DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.SPECTER_DEPLOY_SSH_KEY }}
       REPO_ROOT: /srv/specterlab/research-registry
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
+
+      - name: Validate deploy secrets
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?missing SPECTER_DEPLOY_HOST secret}"
+          : "${DEPLOY_USER:?missing SPECTER_DEPLOY_USER secret}"
+          : "${DEPLOY_SSH_KEY:?missing SPECTER_DEPLOY_SSH_KEY secret}"
+
+      - name: Install system tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y rsync openssh-client
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
-          ssh-private-key: ${{ secrets.SPECTER_DEPLOY_SSH_KEY }}
+          ssh-private-key: ${{ env.DEPLOY_SSH_KEY }}
 
       - name: Trust deploy host
         run: |

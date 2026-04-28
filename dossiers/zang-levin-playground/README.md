@@ -216,6 +216,6 @@ Paper-facing outputs live in `paper/results/` and `paper/figures/`. For the cent
 
 - Figure and table inputs: `paper/results/*.json`
 - Rendered figures: `paper/figures/*.pdf` and `paper/figures/*.png`
-- Rendered manuscript: `paper/main.pdf`
+- Rendered manuscript: build locally from `paper/main.tex`
 
 Some exploratory scripts still print summaries to stdout, but if a result matters for the paper it should have a committed JSON artifact under `paper/results/`.

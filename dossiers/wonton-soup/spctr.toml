@@ -65,7 +65,7 @@ cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
 [spctr.ci]
 runner = "ubuntu-latest"
 pull_request = ["check"]
-push_main = ["check", "publish"]
+push_main = []
 nightly = []
 
 [spctr.evidence]

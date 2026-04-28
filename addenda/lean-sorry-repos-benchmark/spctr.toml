@@ -86,8 +86,8 @@ cache_paths = [".venv", ".ruff_cache", ".pytest_cache", "artifacts"]
 
 [spctr.ci]
 runner = "ubuntu-latest"
-pull_request = ["check", "smoke"]
-push_main = ["check", "smoke", "build", "publish"]
+pull_request = ["check"]
+push_main = []
 nightly = []
 
 [spctr.evidence]

@@ -152,9 +152,9 @@ If a project does not declare a lane, treat that as intentional. Add the narrowe
   - keeps the latest dossier/addenda/site/ops code available on the VM
   - does not activate any public surface by itself
 - `.github/workflows/dispatch.yml`
-  - validates and deploys the dispatch app to the Hetzner repo mirror
+  - manually validates and deploys the dispatch app from the Hetzner repo mirror
 - `.github/workflows/pages.yml`
-  - builds the static site
+  - builds and deploys the static site on site-relevant pushes to `main`
   - publishes `/srv/www/site/releases/<git-sha>`
   - switches `/srv/www/site/current`
   - archives the exact built snapshot under the releases host
