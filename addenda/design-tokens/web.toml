@@ -1,0 +1,22 @@
+[layout]
+shell-max-width = "900px"
+shell-max-width-doc = "1100px"
+shell-pad-inline = "24px"
+shell-pad-top = "32px"
+shell-pad-bottom = "64px"
+shell-pad-inline-mobile = "14px"
+shell-pad-top-mobile = "18px"
+shell-pad-bottom-mobile = "38px"
+layout-gap = "24px"
+layout-gap-mobile = "16px"
+
+card-gap = "14px"
+card-gap-mobile = "10px"
+card-pad = "10px 12px 12px"
+
+[type-scale]
+section-title = "13px"
+page-title = "16px"
+card-title = "13px"
+page-title-mobile = "14px"
+section-title-mobile = "12px"

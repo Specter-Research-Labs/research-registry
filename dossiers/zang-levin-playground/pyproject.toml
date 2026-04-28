@@ -1,0 +1,83 @@
+[project]
+name = "clustering-investigation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10.8",
+    "numpy>=2.3.5",
+    "pandas>=2.0.0",
+    "ripser>=0.6.0",
+    "persim>=0.3.0",
+    "scipy>=1.11.0",
+    "seaborn>=0.13.0",
+    "statsmodels>=0.14.0",
+    "tabulate>=0.9.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ty>=0.0.1a7",
+    "ruff>=0.8",
+]
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.src]
+include = [
+    "analysis",
+    "modules",
+    "multi_dimensions",
+    "visualization",
+    "campaign_runner.py",
+    "compare_race_impact.py",
+    "debug_bubble2d.py",
+    "exp10_ablation_goal_adjustment.py",
+    "exp11_robustness_curve.py",
+    "exp14_cellview_vs_traditional.py",
+    "exp15_delay_gratification.py",
+    "exp16_movable_frozen.py",
+    "exp17_duplicate_values.py",
+    "exp18_nudge_unfreezing.py",
+    "exp19_2d_sorting.py",
+    "exp1_frozen_cells.py",
+    "exp_random_baseline.py",
+    "exp22_2d_deeper.py",
+    "exp23_2d_alt_ordering.py",
+    "exp24_pattern_guided_2d.py",
+    "exp25_selection_factorization.py",
+    "exp26_substrate_matched_baselines.py",
+    "exp27_timing_interventions.py",
+    "exp28_2d_canonical.py",
+    "generate_20point_data.py",
+    "generate_baseline_data.py",
+    "generate_baseline_data_synchronized.py",
+    "generate_chimeric_data.py",
+    "generate_chimeric_data_synchronized.py",
+    "generate_frozen_data.py",
+    "generate_frozen_data_synchronized.py",
+    "generate_group_id_data.py",
+    "generate_group_id_data_synchronized.py",
+    "generate_traditional_data.py",
+    "paper/make_figures.py",
+    "paper/compute_fig1_temporal_clustering.py",
+    "paper/compute_fig5_h1.py",
+    "paper/compute_directed_flow.py",
+    "paper/compute_k.py",
+    "paper/compute_dip_stats.py",
+    "paper/run_clustering_ablation.py",
+    "paper/exp2d_core.py",
+    "paper/aggregate_exp25_selection_factorization.py",
+    "paper/aggregate_exp26_substrate_matched_baselines.py",
+    "paper/aggregate_exp27_timing_interventions.py",
+    "paper/aggregate_fig3_2d.py",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

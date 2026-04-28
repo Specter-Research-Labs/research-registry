@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "name": "same_method_dashboard_v2",
+  "selection": {
+    "same_method_as": {
+      "run_id": "CHANGE_ME"
+    }
+  },
+  "reference": null,
+  "datasets": [
+    {
+      "name": "wonton_dashboard_v2",
+      "generator": "wonton_dashboard_v2",
+      "format": "dir"
+    }
+  ]
+}
+

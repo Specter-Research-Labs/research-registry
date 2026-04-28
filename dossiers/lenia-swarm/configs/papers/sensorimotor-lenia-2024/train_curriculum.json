@@ -1,0 +1,99 @@
+{
+  "paper": "hamon-2024-sensorimotor-agency",
+  "outer_steps": 160,
+  "history_initialization_trials": 40,
+  "rollout_steps": 50,
+  "goal_sampling": {
+    "warmup_steps": 8,
+    "warmup_start": [
+      0.0,
+      0.19
+    ],
+    "warmup_delta": [
+      0.0,
+      -0.06
+    ],
+    "collapse_goal_mean": 0.065,
+    "collapse_goal_jitter_std": 0.002,
+    "best_goal_probability": 0.2,
+    "random_far_probability": 0.7,
+    "best_goal_y_offset": [
+      -0.06,
+      -0.02
+    ],
+    "best_goal_x_offset": [
+      -0.055,
+      0.0575
+    ],
+    "far_x_range": [
+      -0.23,
+      0.22
+    ],
+    "far_y_range": [
+      -0.35,
+      -0.15
+    ],
+    "broad_x_range": [
+      -0.23,
+      0.22
+    ],
+    "broad_y_range": [
+      -0.35,
+      0.0
+    ],
+    "close_distance": 0.1,
+    "very_close_distance": 0.06,
+    "min_close_neighbors": 1,
+    "max_very_close_neighbors": 2
+  },
+  "source_selection": {
+    "collapse_max": 0.11,
+    "collapse_goal": 0.065
+  },
+  "optimization": {
+    "optimizer": "Adam",
+    "steps_unmutated": 125,
+    "steps_mutated": 15,
+    "initialization_lr": 0.008,
+    "rule_lr": 0.0008,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-8
+  },
+  "mutation": {
+    "mutate_every_n_steps": 5,
+    "active_sigma_threshold": 0.04,
+    "active_kernel_mutation_probability": 0.25,
+    "T_std": 0.1,
+    "R_std": 0.01,
+    "r_std": 0.2,
+    "a_std": 0.2,
+    "b_std": 0.2,
+    "w_std": 0.2,
+    "mu_std": 0.2,
+    "sigma_std": 0.01,
+    "h_std": 0.2,
+    "collapse_max": 0.11,
+    "collapse_mass_min": 10.0
+  },
+  "restart": {
+    "max_attempts": 8,
+    "min_alive_random_initializations": 2,
+    "deterministic_validation_steps": 50,
+    "max_loss": 19.5
+  },
+  "evaluation_after_step": {
+    "rollouts": 20
+  },
+  "goal_mask": {
+    "normalizer": 35.0,
+    "inner_radius": 0.5,
+    "outer_radius": 1.0,
+    "inner_weight": 0.85,
+    "outer_weight": 0.15,
+    "amplitude": 0.9,
+    "collapse_proxy_normalizer": 230.0
+  }
+}

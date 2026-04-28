@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "name": "site_dashboard_lean_matrix_deepseek_pair_v1",
+  "selection": {
+    "rel_run_dir": [
+      "deepseek/centralized-no-basin",
+      "deepseek/distributed-no-basin"
+    ],
+    "require_completed": true,
+    "exclude_partial_results": true,
+    "require_capabilities": [
+      "has_proof_term",
+      "has_proof_term_pretty",
+      "has_assembly_trace",
+      "has_proof_term_metrics"
+    ],
+    "order_by": "created_at_desc"
+  },
+  "reference": null,
+  "datasets": [
+    {
+      "name": "wonton_dashboard_v2",
+      "generator": "wonton_dashboard_v2",
+      "format": "dir"
+    }
+  ]
+}

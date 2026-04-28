@@ -1,0 +1,44 @@
+{
+  "schema_version": 2,
+  "name": "followup_k_ref_reprover_v1",
+  "selection": {
+    "backend": "lean",
+    "mode": "research",
+    "goal_sig_scheme": "ast",
+    "require_completed": true,
+    "exclude_partial_results": true
+  },
+  "reference": {
+    "build_outcomes": {
+      "alpha": 1.0,
+      "meta": {
+        "purpose": "followup locked K reference (reprover anchor)",
+        "protocol_version": "2026-03-followup-v1"
+      }
+    },
+    "selection": {
+      "backend": "lean",
+      "mode": "research",
+      "provider": "reprover",
+      "goal_sig_scheme": "ast"
+    },
+    "score_k": true
+  },
+  "datasets": [
+    {
+      "name": "k_rows",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, k.theorem, k.variant, k.ref_id, k.valid, k.primary_null_model, k.tau_agent, k.tau_blind, k.K FROM k_reference_score k JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) JOIN job_context jc ON jc.ref_id = k.ref_id ORDER BY r.provider NULLS LAST, r.run_id NULLS LAST, k.theorem, k.variant"
+    },
+    {
+      "name": "k_summary_by_provider_mode",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT r.provider, r.mode, k.valid, k.K FROM k_reference_score k JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) JOIN job_context jc ON jc.ref_id = k.ref_id ) SELECT provider, mode, count(*) AS k_rows, sum(CASE WHEN valid THEN 1 ELSE 0 END) AS valid_rows, avg(CASE WHEN valid THEN K ELSE NULL END) AS k_mean_valid, stddev_samp(CASE WHEN valid THEN K ELSE NULL END) AS k_std_valid FROM base GROUP BY provider, mode ORDER BY provider NULLS LAST, mode NULLS LAST"
+    },
+    {
+      "name": "reference_meta",
+      "format": "jsonl",
+      "query": "SELECT ref_id, kind, created_at, meta, artifact_path FROM lake_references WHERE ref_id IN (SELECT ref_id FROM job_context) ORDER BY ref_id"
+    }
+  ]
+}

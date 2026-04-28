@@ -1,0 +1,38 @@
+[project]
+name = "jolt-material-memory"
+version = "0.1.0"
+description = "Material-memory experiments in Jolt with CPU/Metal update backends"
+requires-python = ">=3.12"
+dependencies = [
+  "matplotlib>=3.9",
+  "numpy>=2.1",
+  "pandas>=2.2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.8",
+  "ty>=0.0.1a7",
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+  "analysis",
+  "scripts",
+  "paths.py",
+  "tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,24 @@
+{
+  "name": "exploration-v1",
+  "phases": [
+    {
+      "name": "aurora-open",
+      "type": "qd",
+      "algorithm": "aurora",
+      "config_dir": "configs/papers/leniabreeder-2024",
+      "seeds": [0],
+      "target": { "min_coverage": 0.3 }
+    },
+    {
+      "name": "curiosity-ecosystem",
+      "type": "curiosity",
+      "config_dir": "configs/papers/ai-scientist-2025",
+      "target": { "iterations": 512 }
+    }
+  ],
+  "compendium": {
+    "merge_phases": true,
+    "central_db": "outputs/compendium.sqlite"
+  },
+  "phase_isolation": true
+}

@@ -1,0 +1,6 @@
+- Select target versions and tasks from git history and issue threads.
+- Make the above reproducible, within time ranges
+- Figure out great candidates to teest
+- Build hermetic environments and record hardware/runtime metadata.
+- Goal is to have a benchmark for LLMs to showcase their capacity to contribute to Tinygrad
+- This could be done on other repos (Ghostty? A Rust repo? find a couple small self-contained highly beautiful and technical repo per nice language, basically, and reproduce. This entail us bulding smth reproducible here)

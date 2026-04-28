@@ -1,0 +1,40 @@
+% fig15-log-block-exact.tex
+% Log-derived vignette from iff_intro: block exact, solved reroute.
+\documentclass[tikz,border=8pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small}
+]
+
+% Left: Wild-type
+\begin{scope}[shift={(-5.8, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Wild-type\\(iff\_intro\_w18)};
+
+    \node[goal, minimum width=4.0cm] (w0) at (0, 0.2) {$P \leftrightarrow Q$};
+    \node[goal, below=1.35cm of w0, minimum width=4.0cm] (w1) {$P \to Q$};
+    \node[terminal, below=1.35cm of w1, minimum width=3.0cm] (w2) {\Large$\bullet$};
+
+    \draw[tactic] (w0) -- node[midway, left, tacticlabel] {\texttt{constructor}} (w1);
+    \draw[divergetactic] (w1) -- node[midway, left, tacticlabel] {\texttt{exact hpq}} (w2);
+\end{scope}
+
+% Right: Intervention
+\begin{scope}[shift={(5.8, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Intervention\\(\texttt{block exact})};
+
+    \node[goal, minimum width=4.0cm] (i0) at (0, 0.2) {$P \leftrightarrow Q$};
+    \node[divergenode, below=1.35cm of i0, minimum width=4.0cm] (i1) {$P \to Q$};
+    \node[terminal, below=1.35cm of i1, minimum width=3.0cm] (i2) {\Large$\bullet$};
+    \node[dead, right=2.2cm of i1, minimum width=2.6cm] (i_dead) {blocked};
+
+    \draw[tactic] (i0) -- node[midway, left, tacticlabel] {\texttt{constructor}} (i1);
+    \draw[divergeblock] (i1.east) -- node[pos=0.44, above=3pt, tacticlabel, text=blocked, fill=white, inner sep=1pt] {block \texttt{exact}} (i_dead.west);
+    \draw[divergetactic] (i1) -- node[midway, left, tacticlabel] {\texttt{assumption}} (i2);
+\end{scope}
+
+% Crosslink
+\draw[crosslink] (w0.east) -- (i0.west) node[midway, above, annotbg] {same theorem + budget};
+
+\end{tikzpicture}
+\end{document}

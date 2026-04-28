@@ -1,0 +1,46 @@
+% fig5b-equivalence-sheaf.tex
+\documentclass[tikz,border=10pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+\begin{scope}[shift={(0, 0)}]
+    \node[paneltitle, anchor=south west] at (-3.4, 3.55) {(B) Equivalence Sheaf (Consistency)};
+    
+    % Base space (Signature)
+    \draw[draw=muted, fill=flowbox] (0, 0) ellipse (3.5cm and 0.6cm);
+    \node[annot, anchor=north] at (0, -0.75) {Base: Signatures};
+    
+    % Point S_A
+    \fill[ink] (-1.5, 0) circle (2pt) node[below=0.18cm] {$S_A$};
+    
+    % Stalk at S_A (Fiber)
+    \draw[draw=muted!50] (-1.5, 0) -- (-1.5, 3.5);
+    \node[annot, rotate=90] at (-2.25, 1.75) {Stalk: Tactic Success};
+    
+    % Data points on stalk (Occurrences)
+    % Consistent example
+    \node[circle, fill=accentgreen, inner sep=2.5pt, label={right:\scriptsize occ 1: 80\%}] at (-1.5, 3.0) {};
+    \node[circle, fill=accentgreen, inner sep=2.5pt, label={[xshift=2pt]right:\scriptsize occ 2: 75\%}] at (-1.5, 2.3) {};
+    \node[circle, fill=accentgreen, inner sep=2.5pt, label={right:\scriptsize occ 3: 82\%}] at (-1.5, 1.6) {};
+    
+    \node[annotbg, text=accentgreen, font=\bfseries\scriptsize] at (-1.5, 3.35) {High consistency};
+
+    % Point S_B (Inconsistent)
+    \fill[ink] (1.5, 0) circle (2pt) node[below=0.18cm] {$S_B$};
+    \draw[draw=muted!50] (1.5, 0) -- (1.5, 3.5);
+    
+    % Data points
+    \node[circle, fill=accentgreen, inner sep=2.5pt, label={right:\scriptsize occ 1: 90\%}] at (1.5, 3.0) {};
+    \node[circle, fill=blocked, inner sep=2.5pt, label={right:\scriptsize occ 2: 10\%}] at (1.5, 1.6) {};
+    
+    \node[annotbg, text=blocked, font=\bfseries\scriptsize] at (1.5, 3.35) {Low consistency};
+    
+    % Brace
+    \draw[decorate, decoration={brace, amplitude=6pt}, draw=muted] (3.2, 3.2) -- (3.2, 1.4)
+        node[midway, right=0.3cm, annot, align=left] {Variance measures\\feature quality};
+\end{scope}\end{tikzpicture}
+\end{document}

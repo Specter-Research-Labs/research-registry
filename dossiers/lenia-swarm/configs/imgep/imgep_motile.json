@@ -1,0 +1,15 @@
+{
+  "iterations": 256,
+  "warmupIterations": 32,
+  "batchSize": 4,
+  "seedsPerCandidate": 3,
+  "goal": {
+    "features": ["center_velocity", "gyration", "mass_mean", "displacement", "complexity_mean"],
+    "boundsMode": "auto",
+    "bounds": null
+  },
+  "mutation": {
+    "std": 0.15,
+    "clip": true
+  }
+}

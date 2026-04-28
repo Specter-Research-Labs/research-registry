@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="52" x2="1180" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4EEE2"/>
+      <stop offset="1" stop-color="#E8DDCA"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F7F0E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#241D15" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="900" fill="url(#bg)"/>
+  <circle cx="1068" cy="146" r="170" fill="#D5C2A2" opacity="0.34"/>
+  <circle cx="162" cy="746" r="198" fill="#C46A52" opacity="0.08"/>
+  <path d="M92 124H1188" stroke="#3A3129" stroke-opacity="0.13" stroke-width="2"/>
+  <path d="M92 154H1188" stroke="#3A3129" stroke-opacity="0.12" stroke-width="1.5"/>
+
+  <text x="96" y="90" fill="#221B13" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="42" letter-spacing="1">TacticActionIR</text>
+  <text x="97" y="118" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="14" letter-spacing="1.1">Typed proof-process bridge from Lean preview traces to cross-assistant alignment</text>
+
+  <g filter="url(#shadow)">
+    <rect x="92" y="194" width="1096" height="176" rx="28" fill="url(#card)"/>
+    <rect x="92" y="194" width="12" height="176" rx="6" fill="#2F6F6D"/>
+    <text x="132" y="236" fill="#2B251F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="17" letter-spacing="0.8">1. Lean preview material</text>
+    <text x="132" y="270" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="28">TacticPreview already knows more than</text>
+    <text x="132" y="302" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="28">a tactic string.</text>
+    <text x="132" y="334" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="22">It already carries branch partitions, proof-term deltas,</text>
+    <text x="132" y="362" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="22">goal transitions, dependencies, and mvar context after the step.</text>
+
+    <rect x="724" y="326" width="170" height="34" rx="17" fill="#E6F0ED"/>
+    <rect x="910" y="326" width="170" height="34" rx="17" fill="#EFE4D1"/>
+    <rect x="724" y="278" width="170" height="34" rx="17" fill="#F0D7CE"/>
+    <rect x="910" y="278" width="170" height="34" rx="17" fill="#E8DFC8"/>
+    <rect x="724" y="230" width="356" height="34" rx="17" fill="#DDE4CD"/>
+    <text x="840" y="252" fill="#536333" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">mvar graph after tactic</text>
+    <text x="754" y="300" fill="#693A2B" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">goal transitions</text>
+    <text x="942" y="300" fill="#6E5724" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">step dependencies</text>
+    <text x="754" y="348" fill="#24514F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">branch partitions</text>
+    <text x="944" y="348" fill="#7B5A2E" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">term deltas</text>
+  </g>
+
+  <path d="M640 370L640 418" stroke="#826D55" stroke-width="3" stroke-linecap="round"/>
+  <path d="M628 404L640 418L652 404" stroke="#826D55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="122" y="436" width="1036" height="176" rx="30" fill="url(#card)"/>
+    <rect x="122" y="436" width="12" height="176" rx="6" fill="#B55C45"/>
+    <text x="162" y="478" fill="#2B251F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="17" letter-spacing="0.8">2. Action metadata on each expansion</text>
+    <text x="162" y="512" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="28">One tactic application becomes one</text>
+    <text x="162" y="544" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="28">annotated action record.</text>
+    <text x="162" y="576" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="22">The graph and the assembly trace now carry</text>
+    <text x="162" y="604" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="22">the same typed step summary.</text>
+
+    <rect x="162" y="588" width="216" height="34" rx="17" fill="#F0D7CE"/>
+    <rect x="394" y="588" width="244" height="34" rx="17" fill="#DDE7E3"/>
+    <rect x="654" y="588" width="228" height="34" rx="17" fill="#E8DFC8"/>
+    <rect x="898" y="588" width="220" height="34" rx="17" fill="#DDE4CD"/>
+    <text x="198" y="610" fill="#693A2B" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">branch_arity / branch_count</text>
+    <text x="430" y="610" fill="#24514F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">goal_coupling / shared_mvar_count</text>
+    <text x="684" y="610" fill="#6E5724" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">continuation / term hashes</text>
+    <text x="948" y="610" fill="#536333" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">effect flags / dependencies</text>
+  </g>
+
+  <path d="M640 612L640 660" stroke="#826D55" stroke-width="3" stroke-linecap="round"/>
+  <path d="M628 646L640 660L652 646" stroke="#826D55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="168" y="678" width="944" height="172" rx="30" fill="url(#card)"/>
+    <rect x="168" y="678" width="12" height="172" rx="6" fill="#647A44"/>
+    <text x="208" y="720" fill="#2B251F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="17" letter-spacing="0.8">3. TacticActionIR and ProofGraphIR</text>
+    <text x="208" y="754" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="28">Aggregate proof-process structure instead of</text>
+    <text x="208" y="786" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="28">guessing from tactic strings.</text>
+    <text x="208" y="818" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="22">Alignment now sees typed action, effect, and continuation.</text>
+    <text x="208" y="846" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="22">Coupling and dependency signals sit beside topology and role structure.</text>
+
+    <rect x="722" y="726" width="220" height="34" rx="17" fill="#E8DFC8"/>
+    <rect x="722" y="774" width="268" height="34" rx="17" fill="#DDE7E3"/>
+    <rect x="722" y="822" width="154" height="34" rx="17" fill="#F0D7CE"/>
+    <rect x="892" y="822" width="178" height="34" rx="17" fill="#DDE4CD"/>
+    <text x="752" y="748" fill="#6E5724" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">action / operator / motif</text>
+    <text x="764" y="796" fill="#24514F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">effect / continuation / coupling</text>
+    <text x="746" y="844" fill="#693A2B" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">same-kind distance</text>
+    <text x="922" y="844" fill="#536333" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">cross-kind distance</text>
+  </g>
+
+  <text x="96" y="874" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12" letter-spacing="0.8">wonton-soup / lean-tactic-representation  |  phase 2 representation stack</text>
+</svg>

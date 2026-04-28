@@ -1,0 +1,110 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "equational-theories-distillation"
+series = "A-010"
+summary = "Compact decision procedure for equational implication over magmas, distilled from the 4694-law implication graph into a sub-10KB offline cheatsheet for SAIR's Stage 1 benchmark."
+status = "active"
+
+[site]
+visible = true
+featured = true
+featured_order = 5
+publish_docs = false
+
+[labels]
+type = "competition"
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "equational-theories-distillation"
+
+[spctr.exec.check]
+description = "Canonical candidate verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest", "-q"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "Cheap CLI smoke that proves the entrypoint resolves"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/smoke
+uv run python -m equational_theories_distillation --help > artifacts/smoke/help.txt
+''']
+expected_outputs = ["cli-help"]
+timeout_sec = 600
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Build the Python sdist and wheel"
+command = ["bash", "-lc", '''set -euo pipefail
+scratch="$(mktemp -d)"
+cleanup() {
+  if [[ -d "$scratch/artifacts" ]]; then
+    mv "$scratch/artifacts" artifacts
+  fi
+  rm -rf "$scratch"
+}
+trap cleanup EXIT
+if [[ -d artifacts ]]; then
+  mv artifacts "$scratch/artifacts"
+fi
+uv build
+''']
+expected_outputs = ["python-wheel", "python-sdist"]
+timeout_sec = 1200
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = ["check", "smoke", "build"]
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "cli-help"
+path = "artifacts/smoke/help.txt"
+kind = "text"
+required = true
+
+[[spctr.expected_outputs]]
+name = "python-wheel"
+path = "dist/equational_theories_distillation-0.1.0-py3-none-any.whl"
+kind = "python_wheel"
+required = true
+
+[[spctr.expected_outputs]]
+name = "python-sdist"
+path = "dist/equational_theories_distillation-0.1.0.tar.gz"
+kind = "python_sdist"
+required = true

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="60" x2="1110" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F2E8"/>
+      <stop offset="1" stop-color="#EFE5D5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#1F1812" flood-opacity="0.11"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="760" fill="url(#bg)"/>
+  <circle cx="1064" cy="124" r="150" fill="#2F6F6D" opacity="0.08"/>
+  <circle cx="166" cy="132" r="118" fill="#B55C45" opacity="0.08"/>
+
+  <text x="92" y="86" fill="#221B13" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="38" letter-spacing="1.2">Coupling and Continuation Cases</text>
+  <text x="92" y="112" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="15" letter-spacing="1.4">How one tactic application becomes an explicit action shape instead of a guessed motif</text>
+
+  <g filter="url(#shadow)">
+    <rect x="82" y="170" width="320" height="492" rx="28" fill="#FFF9F0"/>
+    <rect x="440" y="170" width="320" height="492" rx="28" fill="#FFF9F0"/>
+    <rect x="798" y="170" width="320" height="492" rx="28" fill="#FFF9F0"/>
+  </g>
+
+  <rect x="106" y="194" width="109" height="26" rx="13" fill="#DDE4CD"/>
+  <text x="126" y="211" fill="#536333" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">independent</text>
+  <text x="106" y="250" fill="#2B251F" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="24">One split, two branches</text>
+  <text x="106" y="278" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="13">goal_coupling = independent</text>
+  <rect x="164" y="314" width="156" height="34" rx="17" fill="#2F6F6D"/>
+  <text x="190" y="336" fill="#F7F2E8" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="13">constructor</text>
+  <path d="M242 348V406" stroke="#2F6F6D" stroke-width="4" stroke-linecap="round"/>
+  <path d="M242 392L182 454" stroke="#2F6F6D" stroke-width="4" stroke-linecap="round"/>
+  <path d="M242 392L302 454" stroke="#2F6F6D" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="182" cy="474" r="34" fill="#E2F0EE" stroke="#2F6F6D" stroke-width="3"/>
+  <circle cx="302" cy="474" r="34" fill="#E2F0EE" stroke="#2F6F6D" stroke-width="3"/>
+  <text x="171" y="479" fill="#18413F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="15">P</text>
+  <text x="291" y="479" fill="#18413F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="15">Q</text>
+  <rect x="118" y="565" width="248" height="56" rx="18" fill="#F1E8D8"/>
+  <text x="139" y="590" fill="#6E5724" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">branch_count = 2  |  shared_mvar_count = 0</text>
+  <text x="139" y="609" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="17">continuation_kind = branch</text>
+
+  <rect x="464" y="194" width="91" height="26" rx="13" fill="#F0D7CE"/>
+  <text x="483" y="211" fill="#693A2B" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">coupled</text>
+  <text x="464" y="250" fill="#2B251F" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="24">Subgoals still share a metavariable</text>
+  <text x="464" y="278" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="13">goal_coupling = coupled</text>
+  <rect x="522" y="314" width="156" height="34" rx="17" fill="#B55C45"/>
+  <text x="565" y="336" fill="#F7F2E8" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="13">cases h</text>
+  <path d="M600 348V404" stroke="#B55C45" stroke-width="4" stroke-linecap="round"/>
+  <path d="M600 404L560 448" stroke="#B55C45" stroke-width="4" stroke-linecap="round"/>
+  <path d="M600 404L640 448" stroke="#B55C45" stroke-width="4" stroke-linecap="round"/>
+  <path d="M560 448L640 448" stroke="#B55C45" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/>
+  <circle cx="560" cy="474" r="34" fill="#F7E7E1" stroke="#B55C45" stroke-width="3"/>
+  <circle cx="640" cy="474" r="34" fill="#F7E7E1" stroke="#B55C45" stroke-width="3"/>
+  <text x="541" y="479" fill="#693A2B" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="15">?m₁</text>
+  <text x="621" y="479" fill="#693A2B" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="15">?m₂</text>
+  <rect x="476" y="565" width="248" height="56" rx="18" fill="#F1E8D8"/>
+  <text x="497" y="590" fill="#6E5724" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">shared_mvar_count &gt; 0  |  effect = couples_goals</text>
+  <text x="497" y="609" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="17">continuation_kind = branch</text>
+
+  <rect x="822" y="194" width="75" height="26" rx="13" fill="#DDE7E3"/>
+  <text x="842" y="211" fill="#24514F" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">solve</text>
+  <text x="822" y="250" fill="#2B251F" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="24">Close the goal and seal the term</text>
+  <text x="822" y="278" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="13">continuation_kind = solve</text>
+  <rect x="880" y="314" width="156" height="34" rx="17" fill="#647A44"/>
+  <text x="921" y="336" fill="#F7F2E8" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="13">exact hp</text>
+  <path d="M958 348V430" stroke="#647A44" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="958" cy="470" r="38" fill="#E8EEDB" stroke="#647A44" stroke-width="3"/>
+  <path d="M942 470L954 482L975 456" stroke="#647A44" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="842" y="533" width="230" height="22" rx="11" fill="#DDE4CD"/>
+  <text x="862" y="548" fill="#536333" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">partial term rail</text>
+  <path d="M866 544H1048" stroke="#647A44" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="902" cy="544" r="8" fill="#647A44"/>
+  <circle cx="958" cy="544" r="8" fill="#647A44"/>
+  <circle cx="1014" cy="544" r="8" fill="#647A44"/>
+  <rect x="834" y="565" width="248" height="56" rx="18" fill="#F1E8D8"/>
+  <text x="855" y="590" fill="#6E5724" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12">completed_proof_term_hash present</text>
+  <text x="855" y="609" fill="#5D5348" font-family="'Iowan Old Style', 'Palatino Linotype', serif" font-size="17">effect = completes_term</text>
+
+  <text x="92" y="719" fill="#5D5348" font-family="'Berkeley Mono', 'SFMono-Regular', monospace" font-size="12" letter-spacing="0.8">lean-tactic-representation  |  coupling and continuation atlas</text>
+</svg>

@@ -1,0 +1,23 @@
+{
+  "algorithm": "me",
+  "phenotype_size": 64,
+  "center_phenotype": true,
+  "record_phenotype": true,
+  "n_generations": 40,
+  "log_interval": 5,
+  "batch_size": 256,
+  "repertoire_size": 2048,
+  "n_init_cvt_samples": 100000,
+  "iso_sigma": 0.005,
+  "line_sigma": 0.05,
+  "fitness": "pos_organism_score_avg",
+  "descriptor": [
+    "pos_linear_velocity_avg",
+    "pos_largest_component_anisotropy_avg",
+    "pos_component_count_avg",
+    "pos_moment_density_avg"
+  ],
+  "descriptor_min": [0.0, 0.0, 1.0, 0.0],
+  "descriptor_max": [0.5, 1.0, 32.0, 0.25],
+  "n_keep": 256
+}

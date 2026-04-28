@@ -1,0 +1,40 @@
+% fig13-log-block-contrapose.tex
+% Log-derived vignette from contrapositive: block contrapose!, solved reroute.
+\documentclass[tikz,border=8pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small}
+]
+
+% Left: Wild-type
+\begin{scope}[shift={(-5.8, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Wild-type\\(contrapositive\_w43)};
+
+    \node[goal, minimum width=3.6cm] (w0) at (0, 0.2) {$\neg P$};
+    \node[goal, below=1.35cm of w0, minimum width=3.6cm] (w1) {$Q$};
+    \node[terminal, below=1.35cm of w1, minimum width=3.0cm] (w2) {\Large$\bullet$};
+
+    \draw[divergetactic] (w0) -- node[midway, left, tacticlabel] {\texttt{contrapose! hnq}} (w1);
+    \draw[tactic] (w1) -- node[midway, left, tacticlabel] {\texttt{exact h hnq}} (w2);
+\end{scope}
+
+% Right: Intervention
+\begin{scope}[shift={(5.8, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Intervention\\(\texttt{block contrapose!})};
+
+    \node[divergenode, minimum width=3.6cm] (i0) at (0, 0.2) {$\neg P$};
+    \node[goal, below=1.35cm of i0, minimum width=3.6cm] (i1) {$\mathsf{False}$};
+    \node[terminal, below=1.35cm of i1, minimum width=3.0cm] (i2) {\Large$\bullet$};
+    \node[dead, right=2.0cm of i0, minimum width=2.4cm] (i_dead) {blocked};
+
+    \draw[divergeblock] (i0.east) -- node[pos=0.44, above=3pt, tacticlabel, text=blocked, fill=white, inner sep=1pt] {block \texttt{contrapose!}} (i_dead.west);
+    \draw[divergetactic] (i0) -- node[midway, left, tacticlabel] {\texttt{intro hP}} (i1);
+    \draw[tactic] (i1) -- node[midway, left, tacticlabel] {\texttt{exact hnq (h hP)}} (i2);
+\end{scope}
+
+% Crosslink
+\draw[crosslink] (w0.east) -- (i0.west) node[midway, above, annotbg] {same theorem + budget};
+
+\end{tikzpicture}
+\end{document}

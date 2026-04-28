@@ -1,0 +1,116 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Wonton Soup"
+series = "D-002"
+summary = "Intervention framework for proof-search structure: centralized MCTS maps proof families, basin stability, and search efficiency, while distributed MCTS tests how collective control changes access to that landscape."
+status = "active"
+
+[site]
+visible = true
+featured = true
+featured_order = 2
+hub_path = "site/dossiers/wonton-soup/index.html"
+
+[labels]
+scope = "expansion"
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+support_paths = ["flake.nix", "flake.lock"]
+
+[spctr]
+project = "wonton-soup"
+default_surface = "wonton-lake"
+
+[spctr.exec.check]
+description = "Canonical dossier verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "Representative local Lean smoke run"
+command = ["uv", "run", "python", "wonton.py", "lean", "run", "-m", "dev", "--sample", "5", "--seed", "123"]
+timeout_sec = 1800
+network = "bootstrap"
+requires = ["python", "uv", "lean"]
+
+[spctr.exec.publish]
+description = "Canonical source bundle publish proof path"
+command = ["bash", "-lc", '''set -euo pipefail
+"$SPCTR_BIN" release bundle wonton-soup source --release-id contract-publish --output artifacts/publish/source
+''']
+expected_outputs = ["source-bundle", "source-bundle-evidence"]
+timeout_sec = 1800
+network = "off"
+requires = ["tar"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python", "uv"]
+network = "bootstrap"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = ["check", "publish"]
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/wonton-soup-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/wonton-soup-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[spctr.docs]
+root = "docs"
+landing = "docs/README.md"
+require_frontmatter = false
+
+[spctr.surfaces.wonton-lake]
+kind = "raw_plus_db"
+local_db_path = "lake/lake.duckdb"
+db_raw_root = 1
+refresh_commands = [
+    ["uv", "run", "python", "wonton.py", "postprocess"],
+    ["uv", "run", "python", "wonton.py", "lake", "reconcile"],
+]
+remote_raw_namespace = "wonton-soup"
+remote_snapshot_namespace = "wonton-lake"
+
+[[spctr.surfaces.wonton-lake.raw_roots]]
+path = "logs"
+remote_base = "logs"
+resolve = "runtime"
+runtime_slug = "wonton-soup"
+project_fallback = "logs"
+
+[[spctr.surfaces.wonton-lake.raw_roots]]
+path = "artifacts"
+remote_base = "artifacts"
+resolve = "runtime"
+runtime_slug = "wonton-soup"
+project_fallback = "outputs"
+excludes = ["lake", "lake/**"]

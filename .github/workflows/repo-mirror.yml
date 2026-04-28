@@ -1,0 +1,60 @@
+name: Sync repo mirror
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DEPLOY_HOST: ${{ secrets.SPECTER_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.SPECTER_DEPLOY_USER }}
+      REPO_ROOT: /srv/specterlab/research-registry
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SPECTER_DEPLOY_SSH_KEY }}
+
+      - name: Trust deploy host
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync repo mirror to server
+        run: |
+          set -euo pipefail
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$REPO_ROOT'"
+          rsync -rlz --delete --omit-dir-times --no-perms --no-owner --no-group \
+            --exclude '.git/' \
+            --exclude '.jj/' \
+            --exclude '.env*' \
+            --exclude '.zuliprc*' \
+            --exclude 'generated/' \
+            --exclude 'synthetic-bureau/' \
+            --exclude 'records-bureau/' \
+            --exclude 'vault/' \
+            --exclude '__pycache__/' \
+            --exclude '*.pyc' \
+            --exclude 'node_modules/' \
+            --exclude 'dist/' \
+            ./ \
+            "$DEPLOY_USER@$DEPLOY_HOST:$REPO_ROOT/"
+
+      - name: Build spctr on server
+        run: |
+          set -euo pipefail
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -lc "'cd $REPO_ROOT/ops/spctr && cargo build --release && sudo ln -sfn $REPO_ROOT/ops/spctr/target/release/spctr /usr/local/bin/spctr'"

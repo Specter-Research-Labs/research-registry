@@ -1,0 +1,47 @@
+% fig12-log-block-norm-num1.tex
+% Log-derived example: blocking `norm_num1` causes late collapse after shared prefix.
+\documentclass[tikz,border=8pt]{standalone}
+
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small}
+]
+
+% Left: Wild-type
+\begin{scope}[shift={(-6.0, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Wild-type\\(ds\_0124\_thm\_2218)};
+
+    \node[goal, minimum width=5.0cm] (w0) at (0, 0.2) {Goal: $N_7 - N_7^{distinct} = 3600$};
+    \node[goal, below=1.55cm of w0, minimum width=5.0cm] (w1) {Subgoal: $N_7 - N_7^{distinct} = 3600$};
+    \node[goal, below=1.55cm of w1, minimum width=3.2cm] (w2) {$\mathsf{False}$};
+    \node[terminal, below=1.55cm of w2, minimum width=3.2cm] (w3) {\Large$\bullet$};
+
+    \draw[tactic] (w0) -- node[midway, left, tacticlabel] {\texttt{intros}} (w1);
+    \draw[divergetactic] (w1) -- node[midway, left, tacticlabel] {\texttt{norm\_num1}} (w2);
+    \draw[tactic] (w2) -- node[midway, left, tacticlabel] {\texttt{norm\_num at *}} (w3);
+\end{scope}
+
+% Right: Intervention
+\begin{scope}[shift={(6.0, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Intervention\\(\texttt{block norm\_num1})};
+
+    \node[goal, minimum width=5.0cm] (i0) at (0, 0.2) {Goal: $N_7 - N_7^{distinct} = 3600$};
+    \node[divergenode, below=1.55cm of i0, minimum width=5.0cm] (i1) {Subgoal: $N_7 - N_7^{distinct} = 3600$};
+    \node[dead, right=2.4cm of i1, minimum width=2.7cm] (i_dead) {dead end};
+
+    \draw[tactic] (i0) -- node[midway, left, tacticlabel] {\texttt{intros}} (i1);
+    \draw[divergeblock] (i1.east) -- node[midway, left, tacticlabel, text=blocked] {block \texttt{norm\_num1}} (i_dead.west);
+    \draw[backprop] (i_dead.south) .. controls +(0,-0.9) and +(0,-0.5) .. node[pos=0.45, right=1.25cm, annot] {backtrack, no recovery} (i0.south);
+\end{scope}
+
+% Crosslink: same goal
+\draw[crosslink] (w0.east) -- (i0.west) node[midway, above, annotbg] {same goal};
+
+% Provenance
+\node[annot, font=\scriptsize, text=muted, anchor=north] at (0, -5.25)
+    {From logs: 2026-02-08 (research-deepseek-50-123, ds\_0124\_thm\_2218).};
+
+\end{tikzpicture}
+\end{document}

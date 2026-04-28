@@ -1,0 +1,101 @@
+{
+  "paper": "hamon-2024-sensorimotor-agency",
+  "grid": {
+    "sx": 256,
+    "sy": 256
+  },
+  "channels": {
+    "learnable": 0,
+    "obstacle": 1,
+    "total": 2
+  },
+  "learnable_rules": {
+    "count": 10,
+    "bumps_per_kernel": 3,
+    "shared_T": {
+      "low": 1.0,
+      "high": 10.0
+    },
+    "shared_R": {
+      "low": 0.0,
+      "high": 24.0
+    },
+    "r": {
+      "low": 0.2,
+      "high": 1.0
+    },
+    "a": {
+      "low": 0.0,
+      "high": 1.0
+    },
+    "b": {
+      "low": 0.0,
+      "high": 1.0
+    },
+    "w": {
+      "low": 0.01,
+      "high": 0.5
+    },
+    "mu": {
+      "low": 0.05,
+      "high": 0.5
+    },
+    "sigma": {
+      "low": 0.001,
+      "high": 0.18
+    },
+    "h": {
+      "low": 0.0,
+      "high": 1.0
+    },
+    "source_channel": 0,
+    "target_channel": 0,
+    "gate_gain": 10.0
+  },
+  "fixed_obstacle_rule": {
+    "source_channel": 1,
+    "target_channel": 0,
+    "R": 4.0,
+    "r": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "a": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "b": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "w": [
+      0.5,
+      0.1,
+      0.1
+    ],
+    "growth_clip_epsilon": 1e-8,
+    "growth_scale": 10.0
+  },
+  "initialization": {
+    "size": 40,
+    "origin": [
+      105,
+      180
+    ],
+    "value_range": [
+      0.0,
+      1.0
+    ],
+    "history_init_h_scale": 0.33333334
+  },
+  "search_environment": {
+    "obstacle_count": 8,
+    "obstacle_radius": 10,
+    "left_half_clear": false,
+    "clear_initialization": true,
+    "clear_initialization_radius": 10
+  }
+}

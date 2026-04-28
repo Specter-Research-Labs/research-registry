@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 310" width="700" height="310">
+<style>text { font-family: "Berkeley Mono", ui-monospace, monospace; }</style>
+<rect width="700" height="310" fill="#ffffff" rx="0"/>
+
+<text x="45" y="26" fill="#3f8458" font-size="12" font-weight="600">H0</text>
+
+<!-- axis -->
+<line x1="100" y1="280" x2="600" y2="280" stroke="rgba(11,14,20,0.18)" stroke-width="1"/>
+<text x="350" y="300" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">filtration radius &#x3B5;</text>
+<text x="100" y="296" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">0</text>
+<text x="350" y="296" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">0.5</text>
+<text x="600" y="296" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">1.0</text>
+
+<!-- H0 bars -->
+<rect x="100" y="38" width="510" height="10" rx="2" fill="#3f8458" opacity="0.8"/>
+<text x="615" y="47" fill="#3f8458" font-size="9">&#x221E;</text>
+<text x="90" y="47" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">essential</text>
+
+<rect x="100" y="54" width="360" height="10" rx="2" fill="#3f8458" opacity="0.6"/>
+<text x="90" y="63" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">gap</text>
+
+<rect x="100" y="70" width="210" height="7" rx="2" fill="#3f8458" opacity="0.25"/>
+<rect x="100" y="81" width="200" height="7" rx="2" fill="#3f8458" opacity="0.25"/>
+<rect x="100" y="92" width="190" height="7" rx="2" fill="#3f8458" opacity="0.2"/>
+<rect x="100" y="103" width="175" height="7" rx="2" fill="#3f8458" opacity="0.2"/>
+<text x="90" y="92" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">cluster</text>
+
+<rect x="100" y="116" width="100" height="5" rx="2" fill="#3f8458" opacity="0.1"/>
+<rect x="100" y="125" width="90" height="5" rx="2" fill="#3f8458" opacity="0.1"/>
+<rect x="100" y="134" width="80" height="5" rx="2" fill="#3f8458" opacity="0.08"/>
+<rect x="100" y="143" width="75" height="5" rx="2" fill="#3f8458" opacity="0.08"/>
+<rect x="100" y="152" width="70" height="5" rx="2" fill="#3f8458" opacity="0.06"/>
+<rect x="100" y="161" width="60" height="5" rx="2" fill="#3f8458" opacity="0.06"/>
+<text x="90" y="143" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">noise</text>
+
+<!-- separator -->
+<line x1="100" y1="178" x2="600" y2="178" stroke="rgba(11,14,20,0.08)" stroke-width="1" stroke-dasharray="3,3"/>
+
+<!-- H1 -->
+<text x="45" y="198" fill="#9f6f00" font-size="12" font-weight="600">H1</text>
+
+<rect x="300" y="192" width="175" height="10" rx="2" fill="#9f6f00" opacity="0.7"/>
+<text x="90" y="201" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">cycle</text>
+<rect x="310" y="208" width="130" height="7" rx="2" fill="#9f6f00" opacity="0.5"/>
+<rect x="275" y="221" width="100" height="7" rx="2" fill="#9f6f00" opacity="0.3"/>
+<rect x="250" y="234" width="40" height="5" rx="2" fill="#9f6f00" opacity="0.15"/>
+<rect x="225" y="243" width="35" height="5" rx="2" fill="#9f6f00" opacity="0.1"/>
+<text x="90" y="240" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">noise</text>
+
+<!-- persistence gap -->
+<line x1="380" y1="30" x2="380" y2="170" stroke="#b4573d" stroke-width="1" stroke-dasharray="4,4" opacity="0.25"/>
+<text x="392" y="88" fill="#b4573d" font-size="9" opacity="0.7">persistence</text>
+<text x="392" y="101" fill="#b4573d" font-size="9" opacity="0.7">gap</text>
+<text x="392" y="120" fill="rgba(11,14,20,0.4)" font-size="8" font-style="italic">features left of</text>
+<text x="392" y="131" fill="rgba(11,14,20,0.4)" font-size="8" font-style="italic">this line are</text>
+<text x="392" y="142" fill="rgba(11,14,20,0.4)" font-size="8" font-style="italic">noise</text>
+</svg>

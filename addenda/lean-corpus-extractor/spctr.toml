@@ -1,0 +1,84 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "lean-corpus-extractor"
+series = "A-007"
+summary = "Lean-native extractor for deterministic theorem-item JSONL used in Wonton Soup corpus workflows."
+status = "operational"
+
+[site]
+visible = true
+featured = false
+
+[labels]
+type = "tooling"
+
+[relations]
+dossier = "wonton-soup"
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[[release.surfaces]]
+name = "lean"
+kind = "package"
+publish = false
+language = "lean"
+distribution_channel = "lake"
+publish_mode = "mirror_repo"
+mirror_repo = "https://github.com/Specter-Research-Labs/lean-corpus-extractor"
+
+[spctr]
+project = "lean-corpus-extractor"
+
+[spctr.exec.check]
+description = "Build the Lean extractor executable"
+command = ["bash", "-lc", '''set -euo pipefail
+if ! command -v lake >/dev/null; then
+  export PATH="$HOME/.elan/bin:$PATH"
+fi
+lake build
+''']
+timeout_sec = 1800
+network = "bootstrap"
+requires = ["lean"]
+
+[spctr.exec.smoke]
+description = "Extract a single theorem from Lean core into JSONL"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/smoke
+if ! command -v lake >/dev/null; then
+  export PATH="$HOME/.elan/bin:$PATH"
+fi
+lake build >/dev/null
+.lake/build/bin/lean_corpus_extract --import Init --name Nat.add_assoc --out artifacts/smoke/init_items.jsonl
+''']
+expected_outputs = ["init-items-jsonl"]
+timeout_sec = 1800
+network = "bootstrap"
+requires = ["lean"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["lean"]
+network = "bootstrap"
+cache_paths = [".lake"]
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "init-items-jsonl"
+path = "artifacts/smoke/init_items.jsonl"
+kind = "jsonl"
+required = true
+
+[spctr.docs]
+root = "."
+landing = "README.md"
+require_frontmatter = false

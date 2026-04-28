@@ -1,0 +1,28 @@
+{
+  "variants": [
+    {
+      "id": "colab-random-1c-10k",
+      "config": "configs/presets/colab_random_1c_10k_128.json",
+      "search": "configs/search/search_colab_scout.json",
+      "count": 16
+    },
+    {
+      "id": "colab-embed-2c-40k-256",
+      "config": "configs/presets/colab_embed_2c_40k_256.json",
+      "search": "configs/search/search_colab_scout.json",
+      "count": 8
+    },
+    {
+      "id": "colab-cyclic-3c-12k-128",
+      "config": "configs/presets/colab_cyclic_3c_12k_128.json",
+      "search": "configs/search/search_colab_scout.json",
+      "count": 16
+    },
+    {
+      "id": "colab-cyclic-embed-3c-12k-128",
+      "config": "configs/presets/colab_cyclic_embed_3c_12k_128.json",
+      "search": "configs/search/search_colab_scout.json",
+      "count": 12
+    }
+  ]
+}

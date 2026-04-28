@@ -1,0 +1,57 @@
+% fig9-distributed-frontier.tex
+\documentclass[tikz,border=10pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+    % Tree structure
+    \node[goal] (root) at (0, 0) {$G_0$};
+    
+    \node[goal] (n1) at (-3.5, -1.5) {$G_1$};
+    \node[goal] (n2) at (0, -1.5) {$G_2$};
+    \node[goal] (n3) at (3.5, -1.5) {$G_3$};
+    
+    \draw[tactic] (root) -- (n1);
+    \draw[tactic] (root) -- (n2);
+    \draw[tactic] (root) -- (n3);
+    
+    % Frontier nodes
+    \node[goal, dashed, fill=basin1!20] (f1) at (-5, -3.5) {$f_1$};
+    \node[goal, dashed, fill=basin1!20] (f2) at (-2, -3.5) {$f_2$};
+    \node[goal, dashed, fill=basin1!20] (f3) at (0, -3.5) {$f_3$};
+    \node[goal, dashed, fill=basin1!20] (f4) at (2, -3.5) {$f_4$};
+    \node[goal, dashed, fill=basin1!20] (f5) at (5, -3.5) {$f_5$};
+    
+    \draw[tactic] (n1) -- (f1);
+    \draw[tactic] (n1) -- (f2);
+    \draw[tactic] (n2) -- (f3);
+    \draw[tactic] (n3) -- (f4);
+    \draw[tactic] (n3) -- (f5);
+
+    % Agents
+    \node[flowbox, fill=highlight!20, minimum width=2cm] (a1) at (-6.5, -1) {Agent A};
+    \node[flowbox, fill=highlight!20, minimum width=2cm] (a2) at (6.5, -1) {Agent B};
+    
+    % Selection arrows
+    \draw[selected, bend right=20] (a1.south) to node[pos=0.55, left, annotbg] {Selecting $f_1$} (f1.west);
+    \draw[selected, bend left=20] (a2.south) to node[pos=0.55, right, annotbg] {Selecting $f_4$} (f4.east);
+    
+    % In-flight marker
+    \node[draw=red, circle, inner sep=4pt, line width=1pt] at (f1.center) {};
+    \node[draw=red, circle, inner sep=4pt, line width=1pt] at (f4.center) {};
+    \node[red, font=\bfseries\tiny, above=0.2cm of f1] {IN-FLIGHT};
+    \node[red, font=\bfseries\tiny, above=0.2cm of f4] {IN-FLIGHT};
+
+    \node[
+        annot,
+        below=1.1cm of f3,
+        text width=11.5cm,
+        align=center
+    ] {Shared Frontier: Agents reserve nodes to avoid redundant expansion\\while using local value estimates and shared priors.};
+
+\end{tikzpicture}
+\end{document}

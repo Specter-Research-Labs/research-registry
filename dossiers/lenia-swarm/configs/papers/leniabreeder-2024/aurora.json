@@ -1,0 +1,23 @@
+{
+  "algorithm": "aurora",
+  "phenotype_size": 32,
+  "center_phenotype": true,
+  "record_phenotype": true,
+  "n_generations": 20,
+  "log_interval": 10,
+  "batch_size": 256,
+  "repertoire_size": 1024,
+  "iso_sigma": 0.005,
+  "line_sigma": 0.05,
+  "fitness": "pos_linear_velocity_avg",
+  "secondary_fitness": null,
+  "secondary_fitness_weight": 1.0,
+  "n_keep": 16,
+  "features": 8,
+  "hidden_size": 128,
+  "train_ratio": 8,
+  "lr_init_value": 0.0005,
+  "ae_batch_size": 256,
+  "n_keep_ae": 128,
+  "use_data_augmentation": true
+}

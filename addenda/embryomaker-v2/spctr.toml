@@ -1,0 +1,88 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "EmbryoMaker v2"
+series = "A-012"
+summary = "Typed EmbryoMaker remake scaffold for kernel parity, baseline capture, and comparison tooling."
+status = "concept"
+
+[site]
+visible = false
+featured = false
+publish_docs = false
+
+[labels]
+type = "research"
+
+[release]
+stage = "wip"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = false
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "embryomaker-v2"
+
+[spctr.exec.check]
+description = "Kernel and Python control-plane verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Build the typed C++23 kernel surfaces"
+command = ["bash", "-lc", '''set -euo pipefail
+cmake -S kernel -B kernel/build
+cmake --build kernel/build
+''']
+expected_outputs = ["legacy-cell-sorting-summary"]
+timeout_sec = 2400
+network = "off"
+requires = ["cmake"]
+
+[spctr.exec.smoke]
+description = "Run the compiled kernel smoke tests"
+command = ["bash", "-lc", '''set -euo pipefail
+if [[ ! -f kernel/build/em2_legacy_cell_sorting_summary ]]; then
+  cmake -S kernel -B kernel/build
+  cmake --build kernel/build
+fi
+ctest --test-dir kernel/build --output-on-failure
+''']
+timeout_sec = 2400
+network = "off"
+requires = ["cmake"]
+
+[spctr.runtime]
+platforms = ["linux"]
+requires = ["python", "uv", "cmake"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache", "kernel/build"]
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "legacy-cell-sorting-summary"
+path = "kernel/build/em2_legacy_cell_sorting_summary"
+kind = "native_binary"
+required = true
+
+[spctr.docs]
+root = "docs"
+landing = "docs/architecture.md"
+require_frontmatter = false

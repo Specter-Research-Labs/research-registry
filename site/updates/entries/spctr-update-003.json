@@ -1,0 +1,32 @@
+{
+  "id": "spctr-update-003",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-003",
+  "date": "2026-02-11",
+  "published_at": "2026-02-11T22:08:59Z",
+  "topic": "weekly / spctr-update-003",
+  "window": {
+    "start": "2026-01-28",
+    "end": "2026-02-11"
+  },
+  "series_number": 3,
+  "sections": {
+    "dossiers": [
+      "lenia-swarm: changed the project into dossier form; added compendium indexing, morphometrics, ecology export, thresholding, paper-aligned configs, and smoke/docs surfaces.",
+      "wonton-soup: added leantree integration, corpus/list/build tooling, postprocess metrics, external statement similarity, and dashboard/lake datasets.",
+      "wonton-soup: added ATP surfaces for Coq, TPTP, and Z3, plus docs/tests for the expanded backend stack.",
+      "zang-levin-playground: added the paper draft and reproducible figure pipeline."
+    ],
+    "addenda": [
+      "paper-k: added the reference implementation, demos, tests, and README/pyproject surface.",
+      "typst-field-manual: added the template, build tools, fonts, and README surface.",
+      "lean-corpus-extractor: added the Lean mathlib corpus builder and supporting README/toolchain files.",
+      "specter-viz: added the crate structure, chart primitives, themes, fonts, and usage docs."
+    ],
+    "ops": [
+      "changed the repo into dossiers/addenda layout and refreshed README, AGENTS, issue-log, and Pages workflow surfaces.",
+      "changed site/blog surfaces: added the blog build pipeline, typography/theme refresh, responsive dashboard/layout cleanup, and wonton-soup blog figure polish."
+    ],
+    "lab": []
+  }
+}

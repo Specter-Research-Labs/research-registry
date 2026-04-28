@@ -1,0 +1,20 @@
+{
+  "campaign_name": "paper_track_v1",
+  "artifact_subdir": "data",
+  "build_first": true,
+  "build_dir": "build",
+  "binary_path": "build/jolt_memory_lab",
+  "scenarios": [
+    "imprint",
+    "hysteresis",
+    "damage"
+  ],
+  "backends": [
+    "cpu",
+    "metal"
+  ],
+  "seed_start": 41000,
+  "seed_count": 40,
+  "steps": 1200,
+  "dt": 0.0166667
+}

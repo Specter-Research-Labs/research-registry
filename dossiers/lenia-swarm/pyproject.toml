@@ -1,0 +1,50 @@
+[project]
+name = "lenia-swarm-analysis"
+version = "0.1.0"
+description = "Canonical warehouse and analysis pipeline for lenia-swarm specimen artifacts"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.2.1",
+    "numpy>=2.1.0",
+    "ripser>=0.6.10",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.11.0",
+    "ty>=0.0.1a14",
+]
+
+[project.scripts]
+lenia-swarm-topology = "lenia_swarm_analysis.topology._cli:main"
+lenia-swarm-generators = "lenia_swarm_analysis.generators._cli:main"
+lenia-swarm-fiber = "lenia_swarm_analysis.fiber._cli:main"
+lenia-swarm-transport = "lenia_swarm_analysis.transport._cli:main"
+lenia-swarm-hotspot = "lenia_swarm_analysis.hotspot._cli:main"
+lenia-swarm-agda = "lenia_swarm_analysis.agda._cli:main"
+lenia-swarm-imgep = "lenia_swarm_analysis.imgep._cli:main"
+lenia-swarm-transform = "lenia_swarm_analysis.transform._cli:main"
+lenia-swarm-morphospace = "lenia_swarm_analysis.morphospace_cli:main"
+lenia-swarm-attractor-packet = "lenia_swarm_analysis.attractor_packet:main"
+lenia-swarm-arrangement-packet = "lenia_swarm_analysis.arrangement_packet:main"
+lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibration_packet:main"
+lenia-swarm-local-results-library = "lenia_swarm_analysis.local_results_library:main"
+lenia-swarm-loop-variant-report = "lenia_swarm_analysis.loop_variant_report:main"
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lenia_swarm_analysis"]
+
+[tool.pytest.ini_options]
+testpaths = ["Tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]

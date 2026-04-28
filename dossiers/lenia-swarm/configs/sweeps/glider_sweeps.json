@@ -1,0 +1,22 @@
+{
+  "variants": [
+    {
+      "id": "orbium-like-classic",
+      "config": "configs/presets/orbium_like_classic_1c_128.json",
+      "search": "configs/search/search_orbium_glider.json",
+      "count": 128
+    },
+    {
+      "id": "orbium-like-relaxed",
+      "config": "configs/presets/orbium_like_relaxed_1c_128.json",
+      "search": "configs/search/search_orbium_glider.json",
+      "count": 128
+    },
+    {
+      "id": "glider-family-luminous-spiral-4134",
+      "config": "configs/presets/glider_family_luminous_spiral_4134_1c_128.json",
+      "search": "configs/search/search_orbium_glider.json",
+      "count": 128
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+% fig7-k-metric.tex
+\documentclass[tikz,border=18pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+% Background panels
+\path[fill=deadnode!70, rounded corners=9pt] (-9.5, -2.95) rectangle (-1.2, 4.2);
+\path[fill=basin1!28, rounded corners=9pt] (1.2, -2.95) rectangle (9.5, 4.2);
+
+% Left panel: blind expansion
+\node[paneltitle] at (-5.4, 3.6) {Blind null model ($\tau_{blind}$)};
+\node[annot] at (-5.4, 3.15) {uniform tactic pick over candidates};
+
+\node[goal, circle, minimum width=0.55cm] (b0) at (-5.4, 2.0) {};
+\node[goal, circle, minimum width=0.45cm] (b1) at (-6.8, 0.9) {};
+\node[goal, circle, minimum width=0.45cm] (b2) at (-5.4, 0.9) {};
+\node[goal, circle, minimum width=0.45cm] (b3) at (-4.0, 0.9) {};
+\node[goal, circle, minimum width=0.42cm] (b4) at (-7.4, -0.3) {};
+\node[goal, circle, minimum width=0.42cm] (b5) at (-6.2, -0.3) {};
+\node[goal, circle, minimum width=0.42cm] (b6) at (-4.7, -0.3) {};
+\node[goal, circle, minimum width=0.42cm] (b7) at (-3.5, -0.3) {};
+\node[terminal, circle, minimum width=0.45cm] (bterm) at (-4.7, -1.5) {};
+
+\draw[tactic] (b0) -- (b1);
+\draw[tactic] (b0) -- (b2);
+\draw[tactic] (b0) -- (b3);
+\draw[tactic] (b1) -- (b4);
+\draw[tactic] (b1) -- (b5);
+\draw[tactic] (b2) -- (b6);
+\draw[tactic] (b3) -- (b7);
+\draw[selected] (b6) -- (bterm);
+
+\node[annot, align=center] at (-5.4, -2.08) {$\tau_{blind}$ = expected attempted edges};
+\node[annot, align=center] at (-5.4, -2.40) {to first terminal proof};
+\node[annotbg, text=blocked] at (-5.4, -2.74) {$\tau_{blind}\approx120$ attempts};
+
+% Right panel: guided expansion
+\node[paneltitle] at (5.4, 3.6) {Wonton agent ($\tau_{agent}$)};
+\node[annot] at (5.4, 3.15) {policy + value priors focus search};
+
+\node[goal, circle, minimum width=0.55cm] (a0) at (5.4, 2.0) {};
+\node[goal, circle, minimum width=0.45cm] (a1) at (4.3, 0.9) {};
+\node[goal, circle, minimum width=0.45cm] (a2) at (5.4, 0.9) {};
+\node[terminal, circle, minimum width=0.45cm] (aterm) at (5.4, -0.3) {};
+\node[goal, circle, minimum width=0.42cm, opacity=0.35] (a3) at (6.5, 0.9) {};
+\node[goal, circle, minimum width=0.42cm, opacity=0.35] (a4) at (6.9, -0.2) {};
+
+\draw[tactic, opacity=0.35] (a0) -- (a1);
+\draw[selected] (a0) -- (a2);
+\draw[selected] (a2) -- (aterm);
+\draw[tactic, opacity=0.35] (a0) -- (a3);
+\draw[tactic, opacity=0.35] (a3) -- (a4);
+
+\node[annot, align=center] at (5.4, -2.08) {$\tau_{agent}$ = realized attempted edges};
+\node[annot, align=center] at (5.4, -2.40) {on run trace before solve};
+\node[annotbg, text=accentgreen!70!black] at (5.4, -2.74) {$\tau_{agent}=9$ attempts};
+
+\end{tikzpicture}
+\end{document}

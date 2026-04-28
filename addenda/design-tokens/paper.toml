@@ -1,0 +1,59 @@
+[colors]
+ink = "luma(10%)"
+muted = "luma(38%)"
+rule = "luma(78%)"
+panel = "luma(97.5%)"
+accent = "rgb(\"#1f4555\")"
+
+[rules]
+thin = "0.6pt"
+accent = "1.2pt"
+
+[type-scale]
+body = "10.5pt"
+mono = "9pt"
+title = "22pt"
+subtitle = "11.5pt"
+kicker = "8.5pt"
+author-name = "10.5pt"
+author-meta = "8.8pt"
+heading-1 = "14pt"
+heading-2 = "11.5pt"
+heading-3 = "10.5pt"
+caption = "9pt"
+running = "8.5pt"
+keyword = "8.8pt"
+
+[leading]
+body = "1.34em"
+
+[layout.page-margin]
+top = "20mm"
+bottom = "20mm"
+left = "23mm"
+right = "23mm"
+
+[layout]
+title-top-gap = "6mm"
+kicker-gap = "3.5mm"
+subtitle-gap = "3mm"
+authors-gap = "7mm"
+abstract-gap = "7mm"
+author-columns-gap = "12pt"
+author-rows-gap = "10pt"
+author-meta-gap = "2pt"
+abstract-inset = "10pt"
+abstract-radius = "1.5pt"
+abstract-label-gap = "4pt"
+keywords-gap = "5pt"
+heading-1-above = "1.7em"
+heading-1-below = "0.45em"
+heading-2-above = "1.15em"
+heading-2-below = "0.3em"
+heading-3-above = "0.9em"
+heading-3-below = "0.2em"
+footer-gap = "8pt"
+
+[layout.raw-block]
+inset = "8pt"
+radius = "1.5pt"

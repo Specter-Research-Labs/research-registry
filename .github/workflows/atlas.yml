@@ -1,0 +1,85 @@
+name: atlas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/atlas.yml"
+      - "site/atlas/**"
+      - "ops/spctr/**"
+      - "spctr-registry.json"
+      - "dossiers/*/spctr.toml"
+      - "addenda/*/spctr.toml"
+      - "dossiers/*/docs/**"
+      - "addenda/*/docs/**"
+  pull_request:
+    paths:
+      - ".github/workflows/atlas.yml"
+      - "site/atlas/**"
+      - "ops/spctr/**"
+      - "spctr-registry.json"
+      - "dossiers/*/spctr.toml"
+      - "addenda/*/spctr.toml"
+      - "dossiers/*/docs/**"
+      - "addenda/*/docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    defaults:
+      run:
+        working-directory: site/atlas
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ops/spctr/target
+          key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
+          restore-keys: spctr-${{ runner.os }}-
+
+      - name: Build spctr
+        working-directory: .
+        run: cargo build --release --manifest-path ops/spctr/Cargo.toml
+
+      - name: Export canonical project feeds for atlas
+        working-directory: .
+        run: |
+          set -euo pipefail
+          ./ops/spctr/target/release/spctr site project-feeds --write
+          mkdir -p site/atlas/public/projects
+          cp site/projects/catalog.json site/projects/health.json site/atlas/public/projects/
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/atlas/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build

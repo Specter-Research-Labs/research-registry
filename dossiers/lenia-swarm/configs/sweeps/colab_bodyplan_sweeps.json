@@ -1,0 +1,16 @@
+{
+  "variants": [
+    {
+      "id": "colab-cyclic-3c-12k-128",
+      "config": "configs/presets/colab_cyclic_3c_12k_128.json",
+      "search": "configs/search/search_colab_bodyplan.json",
+      "count": 32
+    },
+    {
+      "id": "colab-cyclic-embed-3c-12k-128",
+      "config": "configs/presets/colab_cyclic_embed_3c_12k_128.json",
+      "search": "configs/search/search_colab_bodyplan.json",
+      "count": 24
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+[project]
+name = "wonton-soup"
+version = "0.1.0"
+description = "MCTS x Lean4 theorem proving experiments"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "leantree",
+    "networkx>=3.0",
+    "tqdm>=4.67",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "duckdb>=1.1.0",
+    "cmd2<3.0",
+    "PrettyPrintTree>=2.0",
+    "datasets>=4.4.2",
+    "lean-dojo>=4.20.0",
+    "mlx-lm>=0.22",
+    "python-dotenv>=1.2.1",
+    "PyYAML>=6.0",
+    "rich>=13.0",
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "typer>=0.12.0",
+    "tabulate>=0.10.0",
+]
+
+[tool.uv.sources]
+leantree = { git = "https://github.com/Specter-Research-Labs/leantree.git", rev = "aab7c3840552629d4cc16fb8e4af474a9c80067b" }
+
+[dependency-groups]
+dev = [
+    "ty>=0.0.1a7",
+    "ruff>=0.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+analysis = ["marimo>=0.10", "plotly>=6.0"]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+    "analysis",
+    "corpus",
+    "experiments",
+    "prover",
+    "tools",
+    "orchestrator",
+    "wonton.py",
+    "setup_lean.py",
+]
+
+[tool.ty.rules]
+unresolved-import = "warn"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["analysis/tests", "atp/tests", "corpus/tests", "prover/tests"]

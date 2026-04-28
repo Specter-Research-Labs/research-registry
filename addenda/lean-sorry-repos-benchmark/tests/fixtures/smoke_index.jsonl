@@ -1,0 +1,1 @@
+{"goal_sha256":"goal-1","goal_text":"x : Nat\n⊢ x = x","item_id":"smoke-1","location_end_column":6,"location_end_line":1,"location_path":"Main.lean","location_start_column":1,"location_start_line":1,"repo_commit":"deadbeef","repo_lean_version":"4.28.0","repo_remote":"https://example.invalid/repo","source_url":"https://example.invalid/repo/blob/deadbeef/Main.lean#L1"}

@@ -1,0 +1,16 @@
+{
+  "variants": [
+    {
+      "id": "crossmap-motion",
+      "config": "configs/presets/crossmap_1c_128.json",
+      "search": "configs/search/search_crossmap_motion.json",
+      "count": 32
+    },
+    {
+      "id": "open-glider",
+      "config": "configs/base/paper_base_pe_1c_128.json",
+      "search": "configs/search/search_open_glider.json",
+      "count": 32
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Design Tokens"
+series = "A-011"
+summary = "Canonical SPECTER design language specification and multi-target token generation."
+status = "active"
+
+[site]
+visible = true
+featured = false
+publish_docs = false
+
+[labels]
+type = "tooling"
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[spctr]
+project = "design-tokens"
+
+[spctr.exec.check]
+description = "Validate the canonical token spec and generated projections"
+command = ["bash", "-lc", '''set -euo pipefail
+"$SPCTR_BIN" tokens check
+''']
+timeout_sec = 600
+network = "off"
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+network = "off"
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"

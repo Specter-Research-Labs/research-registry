@@ -1,0 +1,71 @@
+% fig6-canonical-loop.tex
+\documentclass[tikz,border=12pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    node distance=1.6cm and 2.2cm,
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+% Phase backgrounds
+\path[fill=basin1!25, rounded corners=9pt] (-9.5, 2.5) rectangle (-2.8, -4.8);
+\path[fill=basin2!20, rounded corners=9pt] (-2.4, 2.5) rectangle (3.6, -4.8);
+\path[fill=basin3!25, rounded corners=9pt] (4.0, 2.5) rectangle (10.0, -4.8);
+
+% Headers
+\node[paneltitle, anchor=west] at (-9.2, 2.0) {Phase 1: Wild-type solve};
+\node[paneltitle, anchor=west] at (-2.1, 2.0) {Phase 2: Intervention sweep};
+\node[paneltitle, anchor=west] at (4.3, 2.0) {Phase 3: Outcome map};
+
+% Left phase
+\node[flowbox, fill=basin1!45, minimum width=2.7cm] (thm) at (-6.9, 0.8) {Theorem $T$};
+\node[flowbox, minimum width=3.1cm] (wild) at (-6.9, -0.7) {\textbf{Wild-type Run}\\MCTS};
+\node[decision] (solved) at (-6.9, -2.3) {Solved?};
+\node[flowbox, fill=basin1!45, minimum width=3.8cm] (path) at (-6.9, -3.9) {Extract path $\pi=\{\tau_1,\dots,\tau_n\}$};
+\node[flowbox, minimum width=2.8cm] (next1) at (-8.9, -3.0) {Next theorem};
+
+\draw[flowarrow] (thm) -- (wild);
+\draw[flowarrow] (wild) -- (solved);
+\draw[flowarrow] (solved) -- node[midway, right, annot] {yes} (path);
+\draw[flowarrow] (solved.west) -- ++(-0.9,0) |- node[pos=0.25, above, annot] {no} (next1.north);
+
+% Middle phase
+\node[flowbox, fill=basin2!35, minimum width=4.0cm] (pick) at (0.5, 0.8) {Choose intervention \\ $\tau_i \in \pi$ or control};
+\node[flowbox, minimum width=3.0cm] (apply) at (0.5, -0.7) {Apply block policy};
+\node[flowbox, minimum width=3.5cm] (rerun) at (0.5, -2.3) {\textbf{Intervention Run}\\same budget + seed};
+\node[decision] (doneall) at (0.5, -3.9) {All $\tau_i$ tested?};
+
+\draw[flowarrow] (path.east) -- ++(0.6,0) |- (pick.west);
+\draw[flowarrow] (pick) -- (apply);
+\draw[flowarrow] (apply) -- (rerun);
+\draw[flowarrow] (rerun) -- (doneall);
+\draw[flowarrow, dashed] (doneall.west) -- ++(-1.0,0) |- node[pos=0.3, left, annot] {no: next $\tau_i$} (pick.west);
+
+% Right phase outcomes
+\node[flowbox, fill=basin3!45, minimum width=3.5cm] (same) at (7.0, 0.8) {Solved, same structure\\(high overlap, low GED)};
+\node[flowbox, fill=basin2!35, minimum width=3.5cm] (alt) at (7.0, -0.7) {Solved, rerouted\\(new attractor)};
+\node[flowbox, fill=deadnode!85, minimum width=3.5cm] (fail) at (7.0, -2.3) {Unsolved (dead end)};
+\node[flowbox, minimum width=4.4cm] (metrics) at (7.0, -3.9) {Aggregate metrics\\$K$, GED, divergence depth, basin mass};
+
+\draw[flowarrow] (rerun.east) -- ++(0.8,0) |- (same.west);
+\draw[flowarrow] (rerun.east) -- ++(0.8,0) |- (alt.west);
+\draw[flowarrow] (rerun.east) -- ++(0.8,0) |- (fail.west);
+\draw[flowarrow] (same) -- (metrics);
+\draw[flowarrow] (alt) -- (metrics);
+\draw[flowarrow] (fail) -- (metrics);
+\draw[flowarrow] (doneall) -- node[midway, above, annot] {yes} (metrics);
+\draw[flowarrow, dashed] (next1.west) -- ++(-1.4,0) |- (thm.west);
+\draw[flowarrow, dashed] (metrics.east) -- ++(2.2,0) |- node[pos=0.22, right, annot] {next theorem} ([yshift=0.85cm]thm.north) -- (thm.north);
+\node[
+    annotbg,
+    draw=muted!45,
+    rounded corners=2pt,
+    anchor=west,
+    inner xsep=4pt,
+    inner ysep=2.5pt
+] at (-9.2, -5.25) {Loop invariant: fixed theorem, fixed budget, one blocked channel at a time.};
+
+\end{tikzpicture}
+\end{document}

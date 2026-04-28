@@ -1,0 +1,8 @@
+{
+  "auxiliary_variable_count": 40,
+  "mu": 0.1,
+  "diffusion_start": 1,
+  "diffusion_end": 40,
+  "epsilon": 0.005,
+  "euler_dt": 0.00001
+}

@@ -1,0 +1,40 @@
+% fig14-log-block-positivity.tex
+% Log-derived vignette from nat_succ_pred: block positivity, solved reroute.
+\documentclass[tikz,border=8pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small}
+]
+
+% Left: Wild-type
+\begin{scope}[shift={(-5.8, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Wild-type\\(nat\_succ\_pred\_w110)};
+
+    \node[goal, minimum width=4.4cm] (w0) at (0, 0.2) {$n.pred.succ = n$};
+    \node[goal, below=1.35cm of w0, minimum width=4.0cm] (w1) {$n \ne 0$};
+    \node[terminal, below=1.35cm of w1, minimum width=3.0cm] (w2) {\Large$\bullet$};
+
+    \draw[tactic] (w0) -- node[midway, left, tacticlabel] {\texttt{rw [succ\_pred]}} (w1);
+    \draw[divergetactic] (w1) -- node[midway, left, tacticlabel] {\texttt{positivity}} (w2);
+\end{scope}
+
+% Right: Intervention
+\begin{scope}[shift={(5.8, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Intervention\\(\texttt{block positivity})};
+
+    \node[goal, minimum width=4.4cm] (i0) at (0, 0.2) {$n.pred.succ = n$};
+    \node[divergenode, below=1.35cm of i0, minimum width=4.0cm] (i1) {$n \ne 0$};
+    \node[terminal, below=1.35cm of i1, minimum width=3.0cm] (i2) {\Large$\bullet$};
+    \node[dead, right=2.2cm of i1, minimum width=2.6cm] (i_dead) {blocked};
+
+    \draw[tactic] (i0) -- node[midway, left, tacticlabel] {\texttt{rw [succ\_pred]}} (i1);
+    \draw[divergeblock] (i1.east) -- node[pos=0.44, above=3pt, tacticlabel, text=blocked, fill=white, inner sep=1pt] {block \texttt{positivity}} (i_dead.west);
+    \draw[divergetactic] (i1) -- node[midway, left, tacticlabel] {\texttt{exact Nat.ne\_of\_gt h}} (i2);
+\end{scope}
+
+% Crosslink
+\draw[crosslink] (w0.east) -- (i0.west) node[midway, above, annotbg] {same theorem + budget};
+
+\end{tikzpicture}
+\end{document}

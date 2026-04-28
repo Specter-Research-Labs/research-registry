@@ -1,0 +1,215 @@
+{
+  "metadata": {
+    "total_theorems": 43,
+    "multi_node_theorems": 9,
+    "reprover_solvable": 2,
+    "deepseek_solvable": 9,
+    "min_nodes": 2
+  },
+  "short": [
+    {
+      "name": "mul_add_distrib",
+      "corpus": "easy",
+      "nodes": 61,
+      "edges": 60,
+      "max_depth": 60,
+      "reprover": true,
+      "deepseek": true
+    },
+    {
+      "name": "logic_chain",
+      "corpus": "easy",
+      "nodes": 3,
+      "edges": 2,
+      "max_depth": 2,
+      "reprover": true,
+      "deepseek": true
+    }
+  ],
+  "mid": [
+    {
+      "name": "mul_add_distrib",
+      "corpus": "easy",
+      "nodes": 61,
+      "edges": 60,
+      "max_depth": 60,
+      "reprover": true,
+      "deepseek": true
+    },
+    {
+      "name": "logic_chain",
+      "corpus": "easy",
+      "nodes": 3,
+      "edges": 2,
+      "max_depth": 2,
+      "reprover": true,
+      "deepseek": true
+    }
+  ],
+  "long": [
+    {
+      "name": "mul_add_distrib",
+      "corpus": "easy",
+      "nodes": 61,
+      "edges": 60,
+      "max_depth": 60,
+      "reprover": true,
+      "deepseek": true
+    },
+    {
+      "name": "three_way_or",
+      "corpus": "easy",
+      "nodes": 5,
+      "edges": 4,
+      "max_depth": 2,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "list_length_append",
+      "corpus": "easy",
+      "nodes": 4,
+      "edges": 3,
+      "max_depth": 2,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "list_append_nil",
+      "corpus": "easy",
+      "nodes": 4,
+      "edges": 3,
+      "max_depth": 2,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "logic_chain",
+      "corpus": "easy",
+      "nodes": 3,
+      "edges": 2,
+      "max_depth": 2,
+      "reprover": true,
+      "deepseek": true
+    },
+    {
+      "name": "exists_imp",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "set_empty_union",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "exists_and_distrib",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "and_or_distrib",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    }
+  ],
+  "all_multi_node": [
+    {
+      "name": "mul_add_distrib",
+      "corpus": "easy",
+      "nodes": 61,
+      "edges": 60,
+      "max_depth": 60,
+      "reprover": true,
+      "deepseek": true
+    },
+    {
+      "name": "three_way_or",
+      "corpus": "easy",
+      "nodes": 5,
+      "edges": 4,
+      "max_depth": 2,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "list_length_append",
+      "corpus": "easy",
+      "nodes": 4,
+      "edges": 3,
+      "max_depth": 2,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "list_append_nil",
+      "corpus": "easy",
+      "nodes": 4,
+      "edges": 3,
+      "max_depth": 2,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "logic_chain",
+      "corpus": "easy",
+      "nodes": 3,
+      "edges": 2,
+      "max_depth": 2,
+      "reprover": true,
+      "deepseek": true
+    },
+    {
+      "name": "exists_imp",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "set_empty_union",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "exists_and_distrib",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    },
+    {
+      "name": "and_or_distrib",
+      "corpus": "easy",
+      "nodes": 2,
+      "edges": 1,
+      "max_depth": 1,
+      "reprover": false,
+      "deepseek": true
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "name": "runs_overview",
+  "selection": {},
+  "reference": null,
+  "datasets": [
+    {
+      "name": "runs",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, r.created_at, r.goal_sig_scheme, r.trace_mcts, r.rel_run_dir, r.problem_space, (SELECT count(*) FROM run_files f WHERE f.run_key = r.run_key) AS file_count FROM runs r JOIN selected_runs s USING(run_key) ORDER BY r.created_at NULLS LAST, r.run_key"
+    },
+    {
+      "name": "run_files",
+      "format": "jsonl",
+      "query": "SELECT f.* FROM run_files f JOIN selected_runs s USING(run_key) ORDER BY f.run_key, f.file_name"
+    },
+    {
+      "name": "theorem_wild",
+      "format": "jsonl",
+      "query": "SELECT w.* FROM theorem_wild w JOIN selected_runs s USING(run_key) ORDER BY w.run_key, w.theorem"
+    },
+    {
+      "name": "theorem_intervention",
+      "format": "jsonl",
+      "query": "SELECT i.* FROM theorem_intervention i JOIN selected_runs s USING(run_key) ORDER BY i.run_key, i.theorem, i.intervention"
+    },
+    {
+      "name": "extract_errors",
+      "format": "jsonl",
+      "query": "SELECT e.* FROM extract_errors e JOIN selected_runs s USING(run_key) ORDER BY e.recorded_at"
+    }
+  ]
+}

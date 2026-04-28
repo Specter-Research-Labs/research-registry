@@ -1,0 +1,173 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Lenia Swarm"
+series = "D-003"
+summary = "Distributed Flow Lenia search, compendium indexing, and replay tools for studying persistent forms and behavior."
+status = "active"
+
+[site]
+visible = true
+featured = true
+featured_order = 3
+hub_path = "site/dossiers/lenia-swarm/index.html"
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+support_paths = ["flake.nix", "flake.lock"]
+
+[[release.surfaces]]
+name = "swift"
+kind = "package"
+publish = false
+language = "swift"
+distribution_channel = "swift-package-index"
+publish_mode = "mirror_repo"
+mirror_repo = "https://github.com/Specter-Research-Labs/lenia-swarm"
+
+[[release.surfaces]]
+name = "tt-lenia"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+path = "tt_backend"
+
+[spctr]
+project = "lenia-swarm"
+default_surface = "lenia-compendium"
+
+[spctr.exec.check]
+description = "Canonical promoted verification lane"
+commands = [
+    ["swift", "package", "resolve"],
+    ["bash", "ops/build-mlx-metallib.sh"],
+    ["swift", "test"],
+    ["uv", "run", "ruff", "check", "lenia_swarm_analysis", "Tests"],
+    ["uv", "run", "ty", "check"],
+    ["uv", "run", "pytest"],
+]
+timeout_sec = 3600
+network = "bootstrap"
+requires = ["python", "uv", "swift", "cmake"]
+
+[spctr.exec.smoke]
+description = "Determinism smoke with explicit MLX metallib bootstrap"
+command = ["bash", "-lc", '''set -euo pipefail
+swift package resolve
+bash ops/build-mlx-metallib.sh
+metallib="$(find "$PWD/.build/mlx-metallib" -name 'mlx.metallib' -print -quit)"
+if [[ -z "$metallib" ]]; then
+  echo "mlx.metallib not found after build" >&2
+  exit 1
+fi
+export MLX_METAL_PATH="$metallib"
+./ops/deterministic-smoke.sh
+''']
+expected_outputs = ["deterministic-smoke-summary", "deterministic-smoke-results"]
+timeout_sec = 2400
+network = "bootstrap"
+requires = ["swift", "xcodebuild", "cmake"]
+
+[spctr.exec.build]
+description = "Release LeniaCLI build via Xcode"
+command = ["bash", "-lc", '''set -euo pipefail
+swift package resolve
+/usr/bin/xcrun xcodebuild build \
+  -scheme LeniaCLI \
+  -destination 'platform=OS X' \
+  -configuration Release \
+  -derivedDataPath artifacts/build/DerivedData \
+  -quiet
+''']
+expected_outputs = ["lenia-cli-release"]
+timeout_sec = 2400
+network = "bootstrap"
+requires = ["swift", "xcodebuild"]
+
+[spctr.exec.publish]
+description = "Canonical source bundle publish proof path"
+command = ["bash", "-lc", '''set -euo pipefail
+"$SPCTR_BIN" release bundle lenia-swarm source --release-id contract-publish --output artifacts/publish/source
+''']
+expected_outputs = ["source-bundle", "source-bundle-evidence"]
+timeout_sec = 1800
+network = "off"
+requires = ["tar"]
+
+[spctr.runtime]
+platforms = ["macos"]
+requires = ["swift"]
+network = "bootstrap"
+cache_paths = [".build", ".swiftpm", ".venv", ".ruff_cache", ".pytest_cache", "artifacts/build/DerivedData"]
+
+[spctr.ci]
+runner = "macos-latest"
+pull_request = ["check"]
+push_main = ["check", "smoke", "build", "publish"]
+nightly = ["smoke"]
+nightly_cron = "0 8 * * 1"
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "deterministic-smoke-summary"
+path = "artifacts/smoke/*/smoke-a/summary.json"
+kind = "status_json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "deterministic-smoke-results"
+path = "artifacts/smoke/*/smoke-a/results.jsonl"
+kind = "jsonl"
+required = true
+
+[[spctr.expected_outputs]]
+name = "lenia-cli-release"
+path = "artifacts/build/DerivedData/Build/Products/Release/LeniaCLI"
+kind = "macos_binary"
+required = true
+surface = "swift"
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/lenia-swarm-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/lenia-swarm-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[spctr.docs]
+root = "docs"
+landing = "docs/README.md"
+require_frontmatter = false
+
+[spctr.surfaces.lenia-compendium]
+kind = "raw_plus_db"
+local_db_path = "compendium.sqlite"
+db_raw_root = 0
+refresh_commands = [
+    ["ops/rebuild-local-compendium.sh"],
+]
+remote_raw_namespace = "lenia-swarm"
+remote_snapshot_namespace = "lenia-compendium"
+raw_roots = [
+    { path = "artifacts", remote_base = "artifacts", excludes = ["compendium.sqlite", "**/compendium.sqlite"] },
+]
+
+[[spctr.site_data]]
+name = "compendium"
+site_path = "dossiers/lenia-swarm/compendium/data"
+local_source = "artifacts/compendium"

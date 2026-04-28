@@ -1,0 +1,82 @@
+% fig1-mcts-tree.tex
+% MCTS Proof Search Tree (Cleaned)
+\documentclass[tikz,border=9pt]{standalone}
+
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    level distance=4.5cm,
+    sibling distance=9.0cm,
+    every node/.style={font=\normalfont},
+    edge from parent/.style={tactic},
+    label distance=6pt,
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+\tikzset{visit/.style={annot, font=\normalfont\scriptsize, inner sep=2pt, fill=white, fill opacity=0.8, rounded corners=2pt}}
+
+% Main MCTS Tree
+\node[goal, label={[visit]above:{\textbf{Root}: $N=12, Q=0.68$}}] (root) {$a*(b+c)=\ldots$}
+    child {
+        node[goal, label={[visit]above left:{$N=7, Q=0.55$}}] (n1) {$(b+c)*a=\ldots$}
+        child {
+            node[dead] (n1a) {$\ldots$}
+            edge from parent node[left, tacticlabel, xshift=-0.2cm] {rw}
+        }
+        child {
+            node[terminal, label={[visit]below:{$N=4$}}] (n1b) {\Large$\bullet$}
+            edge from parent node[right, tacticlabel, xshift=0.2cm] {ring}
+        }
+        edge from parent node[left, tacticlabel, xshift=-0.2cm] {rw [mul\_comm]}
+    }
+    child {
+        node[goal, label={[visit]above right:{$N=5, \mathbf{Q=0.85}$}}] (n2) {$a*b+a*c=\ldots$}
+        child {
+            node[terminal, label={[visit]below:{$N=5$}}] (n2a) {\Large$\bullet$}
+            edge from parent node[left, tacticlabel, xshift=-0.2cm] {ring}
+        }
+        edge from parent node[right, tacticlabel, xshift=0.2cm] {rw [mul\_add]}
+    };
+
+% Selection path highlight (Orange Arrow)
+\draw[selected] (root.south) -- (n2.north);
+\draw[selected] (n2.south) -- (n2a.north);
+
+% Explicit label for the selection path
+\node[
+    annotbg,
+    text=highlight,
+    anchor=west,
+    text width=3.2cm,
+    align=left
+] (sel_label) at ([xshift=1.05cm, yshift=0.15cm]n2.east) {\textbf{Selection Path}\\[-1pt]\scriptsize (follows max $Q + U$)};
+\draw[->, highlight, dashed] (sel_label.west) -- ([xshift=0.15cm]n2.east);
+
+% Backpropagation arrows (Curved for elegance)
+\draw[backprop] ([xshift=0.35cm]n2a.east) to[out=0, in=0, looseness=1.6] ([xshift=0.35cm]n2.east);
+\draw[backprop] ([xshift=0.70cm]n2.east) to[out=0, in=0, looseness=1.3] ([xshift=0.70cm]root.east);
+\node[annotbg, anchor=west, text=muted] at ([xshift=1.05cm, yshift=0.95cm]n2.east) {Backpropagation};
+
+% Legend / Key
+\begin{scope}[shift={(-5.0, -6.5)}]
+    \node[paneltitle, anchor=west] at (0, 1.2) {Key};
+    
+    % N and Q explanation
+    \node[right, font=\footnotesize] at (0, 0.6) {$N$: Visit Count};
+    \node[right, font=\footnotesize] at (0, 0.2) {$Q$: Value Estimate (0-1)};
+    
+    % Node types
+    \node[goal, minimum width=0.6cm, minimum height=0.3cm] (lg) at (0.3, -0.5) {};
+    \node[right, font=\footnotesize] at (0.8, -0.5) {Open Goal};
+
+    \node[terminal, minimum width=0.6cm, minimum height=0.3cm] (lt) at (0.3, -1.1) {};
+    \node[right, font=\footnotesize] at (0.8, -1.1) {Proved};
+    
+    \node[dead, minimum width=0.6cm, minimum height=0.3cm] (ld) at (0.3, -1.7) {};
+    \node[right, font=\footnotesize] at (0.8, -1.7) {Dead End};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

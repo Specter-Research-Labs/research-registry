@@ -1,0 +1,25 @@
+{
+  "id": "spctr-update-001",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-001",
+  "date": "2026-01-13",
+  "published_at": "2026-01-12T15:52:05Z",
+  "topic": "weekly / spctr-update-001",
+  "window": {
+    "start": "2026-01-01",
+    "end": "2026-01-13"
+  },
+  "series_number": 1,
+  "sections": {
+    "dossiers": [
+      "wonton-soup: changed theorem/intervention handling, goal deduplication, log routing, and the core CLI/analysis surfaces.",
+      "lenia-playground: added preliminary Flow Lenia implementation, search/config templates, rendering, and evolutionary tooling."
+    ],
+    "addenda": [],
+    "ops": [
+      "changed repo tooling to JJ, uv, ty, and ruff; removed unreachable code and silent failures.",
+      "added the first public site skeleton and cleaned repo-level docs/readme surfaces."
+    ],
+    "lab": []
+  }
+}

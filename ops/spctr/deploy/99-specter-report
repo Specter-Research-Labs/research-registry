@@ -1,0 +1,5 @@
+#!/bin/sh
+cache="/var/cache/spctr/report.json"
+if [ -f "$cache" ]; then
+    /usr/local/bin/spctr report --from-cache "$cache"
+fi

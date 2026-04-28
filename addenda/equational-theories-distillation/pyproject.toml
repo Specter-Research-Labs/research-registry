@@ -1,0 +1,51 @@
+[project]
+name = "equational-theories-distillation"
+version = "0.1.0"
+description = "Teacher-student distillation tools for equational implication over magmas"
+requires-python = ">=3.12"
+dependencies = [
+  "z3-solver>=4.15.3.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.8",
+  "ty>=0.0.1a7",
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+  "analysis",
+  "cheatsheet.py",
+  "cli.py",
+  "equational_theories_distillation.py",
+  "graph.py",
+  "laws.py",
+  "matching.py",
+  "paths.py",
+  "proof_catalog.py",
+  "public_benchmark.py",
+  "rewriting.py",
+  "sat_countermodels.py",
+  "small_models.py",
+  "source_patterns.py",
+  "source_row_semantics.py",
+  "sources.py",
+  "syntax.py",
+  "tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

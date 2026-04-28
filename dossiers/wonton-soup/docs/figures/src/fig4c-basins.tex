@@ -1,0 +1,77 @@
+% fig4c-basins.tex
+\documentclass[tikz,border=5pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+\begin{scope}[shift={(0, 0)}]
+    \node[paneltitle, anchor=south] at (4.0, 3.5) {(C) Basins of attraction};
+
+    % Basin 1 (Topological Contours)
+    \foreach \r/\o in {1.6/0.15, 1.3/0.3, 1.0/0.45, 0.7/0.6} {
+        \pgfmathsetmacro{\ry}{\r*0.875}
+        \fill[basin1, opacity=\o] (1.5, 1.2) ellipse (\r cm and \ry cm);
+        \draw[basin1!80!black, line width=0.2pt, opacity=0.5] (1.5, 1.2) ellipse (\r cm and \ry cm);
+    }
+    \node[font=\bfseries, text=ink] at (1.5, -0.6) {Basin 1};
+    \node[annot] at (1.5, -1.0) {(dominant)};
+    \fill[ink] (1.5, 1.0) circle (3pt) node[right, xshift=2pt, font=\scriptsize] {Attractor A};
+
+    % Basin 2 (Topological Contours)
+    \foreach \r/\o in {1.4/0.15, 1.1/0.3, 0.8/0.45, 0.5/0.6} {
+        \pgfmathsetmacro{\ry}{\r*0.85}
+        \fill[basin2, opacity=\o] (4.8, 0.8) ellipse (\r cm and \ry cm);
+        \draw[basin2!80!black, line width=0.2pt, opacity=0.5] (4.8, 0.8) ellipse (\r cm and \ry cm);
+    }
+    \node[font=\bfseries, text=ink] at (4.8, -0.6) {Basin 2};
+    \fill[ink] (4.8, 0.6) circle (3pt) node[right, xshift=2pt, font=\scriptsize] {Attractor B};
+
+    % Basin 3 (Topological Contours)
+    \foreach \r/\o in {1.1/0.15, 0.85/0.3, 0.6/0.45, 0.35/0.6} {
+        \pgfmathsetmacro{\ry}{\r*0.9}
+        \fill[basin3, opacity=\o] (7.5, 1.5) ellipse (\r cm and \ry cm);
+        \draw[basin3!80!black, line width=0.2pt, opacity=0.5] (7.5, 1.5) ellipse (\r cm and \ry cm);
+    }
+    \node[font=\bfseries, text=ink] at (7.5, -0.6) {Basin 3};
+    \fill[ink] (7.5, 1.5) circle (3pt) node[right, xshift=2pt, font=\scriptsize] {Attractor C};
+
+    % Trajectories
+    % Basin 1 trajectories
+    \foreach \ang in {45, 135, 225, 315} {
+        \draw[trajectory, ->] ($(1.5, 1.0) + (\ang:1.2)$) to[out=\ang+180, in=\ang] (1.5, 1.0);
+        \fill[black!40] ($(1.5, 1.0) + (\ang:1.2)$) circle (1.5pt);
+    }
+    % Basin 2 trajectories
+    \foreach \ang in {60, 180, 300} {
+         \draw[trajectory, ->] ($(4.8, 0.6) + (\ang:1.0)$) to[out=\ang+160, in=\ang] (4.8, 0.6);
+         \fill[black!40] ($(4.8, 0.6) + (\ang:1.0)$) circle (1.5pt);
+    }
+    % Basin 3 trajectories
+    \foreach \ang in {90, 270} {
+         \draw[trajectory, ->] ($(7.5, 1.5) + (\ang:0.8)$) to[out=\ang+180, in=\ang] (7.5, 1.5);
+         \fill[black!40] ($(7.5, 1.5) + (\ang:0.8)$) circle (1.5pt);
+    }
+
+    % Stats
+    \node[annotbg, text=ink] at (1.5, 2.3) {45\% seeds};
+    \node[annotbg, text=ink] at (4.8, 1.8) {36\% seeds};
+    \node[annotbg, text=ink] at (7.5, 2.3) {18\% seeds};
+
+    % Legend
+    \begin{scope}[shift={(9.2, 1.0)}]
+        \fill[black!40] (0, 0) circle (1.5pt);
+        \node[anchor=west, font=\scriptsize] at (0.2, 0) {Seed state};
+
+        \fill[ink] (0, -0.4) circle (3pt);
+        \node[anchor=west, font=\scriptsize] at (0.2, -0.4) {Attractor};
+
+        \draw[trajectory, ->] (0, -0.8) -- (0.5, -0.8);
+        \node[anchor=west, font=\scriptsize] at (0.6, -0.8) {Trajectory};
+    \end{scope}
+\end{scope}
+\end{tikzpicture}
+\end{document}

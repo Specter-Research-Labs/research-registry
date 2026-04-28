@@ -1,0 +1,25 @@
+name = "PolyMorphogenesis"
+uuid = "34b3a48e-6cc8-4fac-bd78-d7be09f694cb"
+version = "0.1.0"
+
+[deps]
+AlgebraicDynamics = "5fd6ff03-a254-427e-8840-ba658f502e32"
+Catlab = "134e5e36-593f-5add-ad60-77f754baafbe"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+
+[compat]
+AlgebraicDynamics = "0.2.2"
+Catlab = "0.16.20"
+JSON3 = "1.14.3"
+OrdinaryDiffEq = "6.66.0"
+SciMLBase = "2.10.0"
+julia = "1.11"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

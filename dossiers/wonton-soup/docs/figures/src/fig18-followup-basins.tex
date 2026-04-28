@@ -1,0 +1,61 @@
+% fig18-followup-basins.tex
+% Matched deep-basin subset in the paper-freeze cohort
+\documentclass[tikz,border=18pt]{standalone}
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+\def\xmin{-0.2}
+\def\xmax{3.0}
+\def\ymin{-0.05}
+\def\ymax{0.60}
+\def\xscale{3.2}
+\def\yscale{8.2}
+
+\path[fill=basin1!18, rounded corners=8pt] (-0.5, -0.5) rectangle ({(\xmax-\xmin)*\xscale + 0.6}, {(\ymax-\ymin)*\yscale + 0.6});
+
+\node[paneltitle, anchor=west] at (0, {(\ymax-\ymin)*\yscale + 1.05}) {Matched deep-basin subset: blind-relative gain vs lesion recovery};
+\node[annot, anchor=west] at (0, {(\ymax-\ymin)*\yscale + 0.5}) {All five matched rows have basin solve rate = 1.0 and only one observed structure; the current freeze does not support a multibasin claim.};
+
+\draw[ink, line width=0.6pt] (0, 0) -- ({(\xmax-\xmin)*\xscale}, 0);
+\draw[ink, line width=0.6pt] ({(0-\xmin)*\xscale}, -0.15) -- ({(0-\xmin)*\xscale}, {(\ymax-\ymin)*\yscale});
+\draw[ink, line width=0.6pt] (0, 0) -- (0, {(\ymax-\ymin)*\yscale});
+
+\foreach \x/\label in {0.0/0, 0.5/0.5, 1.0/1.0, 1.5/1.5, 2.0/2.0, 2.5/2.5, 3.0/3.0} {
+    \draw[ink, line width=0.4pt] ({(\x-\xmin)*\xscale}, -0.08) -- ({(\x-\xmin)*\xscale}, 0.08);
+    \node[annot, anchor=north] at ({(\x-\xmin)*\xscale}, -0.14) {\label};
+}
+\foreach \y/\label in {0.0/0, 0.25/0.25, 0.50/0.50} {
+    \draw[ink, line width=0.4pt] (-0.08, {(\y-\ymin)*\yscale}) -- (0.08, {(\y-\ymin)*\yscale});
+    \node[annot, anchor=east] at (-0.14, {(\y-\ymin)*\yscale}) {\label};
+}
+
+\node[annot] at ({(\xmax-\xmin)*\xscale/2}, -0.75) {blind-relative gain (paper K)};
+\node[annot, rotate=90] at (-0.95, {(\ymax-\ymin)*\yscale/2}) {lesion recovery rate};
+
+% heuristic points
+\fill[accentgreen!80] ({(2.35679-\xmin)*\xscale}, {(0.5-\ymin)*\yscale}) circle[radius=3.6pt];
+\node[annot, anchor=west] at ({(2.35679-\xmin)*\xscale + 0.18}, {(0.5-\ymin)*\yscale + 0.18}) {H-subnegzero};
+
+\fill[accentgreen!80] ({(2.764221-\xmin)*\xscale}, {(0.0-\ymin)*\yscale}) circle[radius=3.6pt];
+\node[annot, anchor=west] at ({(2.764221-\xmin)*\xscale + 0.18}, {(0.0-\ymin)*\yscale + 0.12}) {H-iterate};
+
+\fill[accentgreen!80] ({(1.966517-\xmin)*\xscale}, {(0.5-\ymin)*\yscale}) circle[radius=3.6pt];
+\node[annot, anchor=east] at ({(1.966517-\xmin)*\xscale - 0.18}, {(0.5-\ymin)*\yscale + 0.18}) {H-cancel-right};
+
+% reprover points
+\fill[blocked!75] ({(0.0-\xmin)*\xscale}, {(0.5-\ymin)*\yscale}) rectangle ++(0.12,0.12);
+\node[annot, anchor=west] at ({(0.0-\xmin)*\xscale + 0.20}, {(0.5-\ymin)*\yscale - 0.20}) {R-subnegzero};
+
+\fill[blocked!75] ({(2.080518-\xmin)*\xscale}, {(0.0-\ymin)*\yscale}) rectangle ++(0.12,0.12);
+\node[annot, anchor=west] at ({(2.080518-\xmin)*\xscale + 0.20}, {(0.0-\ymin)*\yscale - 0.10}) {R-mul'};
+
+\node[formula, anchor=west] at ({(0.18-\xmin)*\xscale}, {(0.56-\ymin)*\yscale}) {the current matched subset varies in blind-relative gain, not in observed basin multiplicity};
+
+\end{tikzpicture}
+\end{document}

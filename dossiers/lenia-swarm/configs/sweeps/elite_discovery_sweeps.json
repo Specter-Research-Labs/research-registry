@@ -1,0 +1,28 @@
+{
+  "variants": [
+    {
+      "id": "discovery-fast-pe-1c",
+      "config": "configs/base/paper_base_pe_1c_128.json",
+      "search": "configs/search/search_discovery_fast.json",
+      "count": 48
+    },
+    {
+      "id": "activity-stable-pe-1c",
+      "config": "configs/base/paper_base_pe_1c_128.json",
+      "search": "configs/search/search_activity.json",
+      "count": 32
+    },
+    {
+      "id": "complexity-stable-1c",
+      "config": "configs/base/paper_base_1c_128.json",
+      "search": "configs/search/search_complexity.json",
+      "count": 64
+    },
+    {
+      "id": "motion-fast-1c",
+      "config": "configs/base/paper_base_1c_128.json",
+      "search": "configs/search/search_motion.json",
+      "count": 64
+    }
+  ]
+}

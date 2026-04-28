@@ -1,0 +1,89 @@
+name: site-projects
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/site-projects.yml"
+      - ".github/workflows/repo-mirror.yml"
+      - ".gitignore"
+      - "README.md"
+      - "AGENTS.md"
+      - "LICENSE"
+      - "LICENSING.md"
+      - "ops/spctr/**"
+      - "addenda/design-tokens/**"
+      - "dossiers/*/spctr.toml"
+      - "addenda/*/spctr.toml"
+      - "site/templates/**"
+      - "site/tokens.css"
+      - "site/style.css"
+      - "site/blog/**"
+      - "site/cabinet/**"
+      - "site/dashboards/**"
+      - "spctr-registry.json"
+      - "dossiers/*/docs/**"
+      - "addenda/*/docs/**"
+      - "dossiers/wonton-soup/docs/figures/out/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ops/spctr/target
+          key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
+          restore-keys: spctr-${{ runner.os }}-
+
+      - name: Install pandoc and poppler
+        run: sudo apt-get update && sudo apt-get install -y pandoc poppler-utils
+
+      - name: Build spctr
+        run: cargo build --release --manifest-path ops/spctr/Cargo.toml
+
+      - name: Validate registry sync state
+        run: ./ops/spctr/target/release/spctr registry check
+
+      - name: Generate design tokens
+        run: ./ops/spctr/target/release/spctr tokens generate
+
+      - name: Validate design token spec
+        run: ./ops/spctr/target/release/spctr tokens check
+
+      - name: Audit source-available release
+        run: ./ops/spctr/target/release/spctr release audit
+
+      - name: Validate site build
+        run: ./ops/spctr/target/release/spctr site build --write
+
+      - name: Validate blog rendering
+        run: ./ops/spctr/target/release/spctr site blog --write
+
+      - name: Validate cabinet
+        run: ./ops/spctr/target/release/spctr site cabinet
+
+      - name: Check site project provenance
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: ./ops/spctr/target/release/spctr site provenance --base-ref "$BASE_SHA"

@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "name": "wonton_dashboard_v2",
+  "selection": {},
+  "reference": null,
+  "datasets": [
+    {
+      "name": "wonton_dashboard_v2",
+      "generator": "wonton_dashboard_v2",
+      "format": "dir"
+    }
+  ]
+}
+

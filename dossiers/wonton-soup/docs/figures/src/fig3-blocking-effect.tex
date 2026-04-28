@@ -1,0 +1,70 @@
+% fig3-blocking-effect.tex
+% Effect of Tactic Blocking on Search Trajectories
+\documentclass[tikz,border=5pt]{standalone}
+
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    level distance=1.7cm,
+    sibling distance=4.5cm,
+    every node/.style={font=\small},
+    edge from parent/.style={tactic},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+    % Background Zones (using path with fill)
+    % Wild-type zone
+    \path[fill=basin1!30, rounded corners=8pt] (-9.5, -4.5) rectangle (-2.5, 1.5);
+    % Intervention zone
+    \path[fill=deadnode!80, rounded corners=8pt] (2.5, -4.5) rectangle (9.5, 1.5);
+
+% Left tree: Wild-type (direct ring solve)
+\begin{scope}[shift={(-6.0, 0)}]
+    \node[goal] (wroot) {$a + b = b + a$}
+        child {
+            node[terminal] (w1) {{\Large$\bullet$}}
+            edge from parent node[left, tacticlabel] {\texttt{ring}}
+        };
+
+    % Label
+    \node[above=0.5cm of wroot, paneltitle, align=center] {Wild-type\\(Standard)};
+
+    % Annotation
+    \node[annot, left=0.8cm of w1] (d1) {depth 1};
+\end{scope}
+
+% Right tree: Intervention (block ring)
+\begin{scope}[shift={(6.0, 0)}]
+    \node[goal] (iroot) {$a + b = b + a$}
+        child {
+            node[goal] (i1) {$b + a = b + a$}
+            child {
+                node[terminal] (i1a) {{\Large$\bullet$}}
+                edge from parent node[left, tacticlabel] {\texttt{rfl}}
+            }
+            edge from parent node[left, tacticlabel] {\texttt{rw [add-comm]}}
+        }
+        child {
+            node[dead] (i2) {dead end}
+            edge from parent[blockedtactic] node[right, tacticlabel, text=blocked] {block ring}
+        };
+
+    % Label
+    \node[above=0.5cm of iroot, paneltitle, align=center] {Intervention\\(\texttt{block-ring})};
+
+    % Annotation
+    \node[annot, right=0.8cm of i1a] (d2) {depth 2};
+\end{scope}
+
+% Cross-tree connection: equivalent root goals
+\draw[crosslink] (wroot.east) -- (iroot.west)
+    node[midway, above, annotbg] {same goal};
+
+% Cross-tree connection: equivalent terminal states
+\draw[crosslink] (w1.east) -- ++(1.2, 0) |- ([yshift=-0.5cm]i1a.west)
+    node[pos=0.08, below=0.35cm, annotbg, anchor=east] {equivalent solved state};
+
+\end{tikzpicture}
+\end{document}

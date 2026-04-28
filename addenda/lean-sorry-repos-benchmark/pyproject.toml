@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lean-sorry-repos-benchmark"
+version = "0.1.0"
+description = "Benchmark harness for Lean sorry goal-to-tactic proposal tasks"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Specter Research Labs" }]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/Specter-Research-Labs/research-registry"
+Source = "https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/lean-sorry-repos-benchmark"
+
+[project.scripts]
+lean-sorry-repos-benchmark = "lean_sorry_repos_benchmark.cli:main"
+lean-sorry-split-artifacts = "lean_sorry_repos_benchmark.split_artifacts_cli:main"
+lean-sorry-suite-runner = "lean_sorry_repos_benchmark.suite_runner:main"
+
+[dependency-groups]
+dev = [
+  "ty>=0.0.1a7",
+  "ruff>=0.8",
+  "pytest>=8.0",
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+  "lean_sorry_repos_benchmark",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["lean_sorry_repos_benchmark"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,6 @@
+{
+  "generator_seed": 42,
+  "polygon_library_size": 256,
+  "small_voronoi_point_range": [4, 50],
+  "large_voronoi_point_range": [3, 8]
+}

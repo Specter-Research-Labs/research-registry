@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 300" width="740" height="300">
+<style>
+text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
+.label { font-size: 13px; fill: rgba(11,14,20,0.68); }
+.label-bold { font-size: 13px; fill: #0b0e14; font-weight: 700; }
+.label-accent { font-size: 13px; fill: #ff6600; }
+.label-accent2 { font-size: 13px; fill: #b4573d; }
+.label-accent3 { font-size: 13px; fill: #3f8458; }
+.label-accent4 { font-size: 13px; fill: #9f6f00; }
+.label-accent5 { font-size: 13px; fill: #4f66bc; }
+.annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
+</style>
+<rect width="740" height="300" fill="#ffffff"/>
+<g transform="translate(10,0)"><text x="180" y="20" class="label-accent3" text-anchor="middle" font-weight="600">Flat region</text>
+  <text x="180" y="36" class="annotation" text-anchor="middle">fibers are parallel, transport is trivial</text>
+
+  <!-- Parallel fibers -->
+  <g stroke="#ff6600" stroke-opacity="0.25" stroke-width="1">
+    <line x1="60"  y1="60" x2="60"  y2="240"/>
+    <line x1="120" y1="60" x2="120" y2="240"/>
+    <line x1="180" y1="60" x2="180" y2="240"/>
+    <line x1="240" y1="60" x2="240" y2="240"/>
+    <line x1="300" y1="60" x2="300" y2="240"/>
+  </g>
+
+  <!-- Horizontal transport (straight = flat) -->
+  <path d="M 60 150 L 300 150" stroke="#3f8458" stroke-width="2.5"/>
+  <circle cx="60"  cy="150" r="5" fill="#3f8458"/>
+  <circle cx="300" cy="150" r="5" fill="#3f8458"/>
+
+  <!-- Small loop -->
+  <ellipse cx="180" cy="150" rx="50" ry="15" fill="none" stroke="#9f6f00" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="180" y="180" class="annotation" text-anchor="middle">small loop: no drift</text>
+
+  <!-- Base -->
+  <line x1="40" y1="270" x2="320" y2="270" stroke="#b4573d" stroke-width="2"/>
+  <text x="180" y="290" class="label" text-anchor="middle">far from barriers</text></g>
+<g transform="translate(380,0)"><text x="180" y="20" class="label-accent2" text-anchor="middle" font-weight="600">Curved region</text>
+  <text x="180" y="36" class="annotation" text-anchor="middle">fibers twist, transport shifts genotype</text>
+
+  <!-- Twisted fibers -->
+  <g stroke="#ff6600" stroke-opacity="0.25" stroke-width="1">
+    <path d="M 60  60 C 55  150, 65  150, 60  240" fill="none"/>
+    <path d="M 120 60 C 110 150, 130 150, 120 240" fill="none"/>
+    <path d="M 180 60 C 160 120, 200 180, 180 240" fill="none"/>
+    <path d="M 240 60 C 250 150, 230 150, 240 240" fill="none"/>
+    <path d="M 300 60 C 305 150, 295 150, 300 240" fill="none"/>
+  </g>
+
+  <!-- Curved transport -->
+  <path d="M 60 150 C 120 140, 160 120, 180 110 C 200 100, 250 130, 300 160"
+        stroke="#9f6f00" stroke-width="2.5" fill="none"/>
+  <circle cx="60"  cy="150" r="5" fill="#3f8458"/>
+  <circle cx="300" cy="160" r="5" fill="#4f66bc"/>
+
+  <!-- Small loop with drift -->
+  <path d="M 160 125 C 180 110, 200 110, 200 125 C 200 140, 180 142, 165 135"
+        stroke="#9f6f00" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <text x="180" y="165" class="annotation" text-anchor="middle">small loop: drift!</text>
+
+  <!-- Barrier indicator -->
+  <rect x="165" y="55" width="30" height="190" rx="3" fill="#b4573d" fill-opacity="0.08"/>
+  <text x="180" y="52" class="label-accent2" text-anchor="middle" font-size="10">barrier</text>
+
+  <!-- Base -->
+  <line x1="40" y1="270" x2="320" y2="270" stroke="#b4573d" stroke-width="2"/>
+  <text x="180" y="290" class="label" text-anchor="middle">near failure band</text></g>
+</svg>

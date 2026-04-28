@@ -1,0 +1,20 @@
+[Unit]
+Description=Specter dispatch control plane
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=specter
+Group=specter
+WorkingDirectory=/srv/specterlab/research-registry
+EnvironmentFile=/etc/specter/dispatch.env
+ExecStartPre=/usr/local/bin/spctr dispatch migrate
+ExecStart=/usr/local/bin/spctr dispatch serve
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

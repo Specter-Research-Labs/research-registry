@@ -1,0 +1,56 @@
+.sitemap-label-key {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.sitemap-label-key .taxonomy-group {
+    background: var(--sl-color-paper);
+    border-color: var(--site-rule);
+    padding: 12px;
+}
+
+.sitemap-label-key .taxonomy-title {
+    border-bottom: 1px solid var(--site-rule);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+}
+
+.taxonomy-chip-list {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.taxonomy-chip-list .project-status,
+.taxonomy-chip-list .addenda-chip,
+.taxonomy-chip-list .research-note-tag {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.research-note-tag {
+    border: 1px solid var(--site-rule);
+    color: var(--site-muted);
+    background: var(--sl-color-paper);
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 1px 5px;
+    font-family: var(--sl-font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+
+.provenance-tag-list {
+    gap: 5px;
+}
+
+@media (max-width: 900px) {
+    .sitemap-label-key {
+        grid-template-columns: 1fr;
+    }
+}

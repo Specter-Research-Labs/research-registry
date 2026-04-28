@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "name": "goal_tactic_invariants",
+  "selection": {},
+  "reference": null,
+  "datasets": [
+    {
+      "name": "goal_type_tactic_raw",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, g.goal_type, g.tactic_norm, g.tactic_family, g.success, g.failure, g.blocked, g.total FROM goal_type_tactic g JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) WHERE g.total >= 3 ORDER BY r.provider NULLS LAST, r.run_id NULLS LAST, g.goal_type, g.tactic_norm"
+    },
+    {
+      "name": "goal_type_tactic_by_provider",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT r.provider, r.backend, r.mode, r.corpus, g.goal_type, coalesce(g.tactic_family, g.tactic_norm) AS fam, sum(g.success) AS success, sum(g.failure) AS failure, sum(g.blocked) AS blocked, sum(g.total) AS total FROM goal_type_tactic g JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) GROUP BY r.provider, r.backend, r.mode, r.corpus, g.goal_type, fam ), norm AS ( SELECT *, (total::DOUBLE) / nullif(sum(total) OVER (PARTITION BY provider, backend, mode, corpus, goal_type), 0) AS p_attempt FROM base ) SELECT provider, backend, mode, corpus, goal_type, fam AS tactic_family, total, success, failure, blocked, p_attempt, (success::DOUBLE) / nullif((success+failure)::DOUBLE, 0) AS p_success_given_tried FROM norm ORDER BY provider NULLS LAST, backend NULLS LAST, mode NULLS LAST, corpus NULLS LAST, goal_type, tactic_family"
+    }
+  ]
+}

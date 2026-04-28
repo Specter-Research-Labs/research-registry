@@ -1,0 +1,130 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Material Memory in Physical Collectives"
+series = "D-004"
+summary = "Jolt simulations that compare local material-memory updates against memory-free and damping-only controls."
+status = "concept"
+
+[site]
+visible = true
+featured = true
+featured_order = 4
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "jolt-material-memory"
+
+[spctr.exec.check]
+description = "Canonical promoted verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Build the Jolt material-memory binary"
+command = ["bash", "-lc", '''set -euo pipefail
+./scripts/build.sh artifacts/build
+''']
+expected_outputs = ["jolt-binary"]
+timeout_sec = 2400
+network = "off"
+requires = ["cmake"]
+
+[spctr.exec.smoke]
+description = "Run a small single-run imprint smoke"
+command = ["bash", "-lc", '''set -euo pipefail
+if [[ ! -x artifacts/build/jolt_memory_lab ]]; then
+  ./scripts/build.sh artifacts/build
+fi
+mkdir -p artifacts/smoke
+./artifacts/build/jolt_memory_lab \
+  --scenario imprint \
+  --policy directed \
+  --backend cpu \
+  --memory on \
+  --seed 41000 \
+  --steps 64 \
+  --dt 0.0166667 \
+  --out artifacts/smoke/smoke.ndjson
+''']
+expected_outputs = ["jolt-smoke-ndjson"]
+timeout_sec = 2400
+network = "off"
+requires = ["cmake"]
+
+[spctr.exec.publish]
+description = "Canonical source bundle publish proof path"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/publish/source
+"$SPCTR_BIN" release bundle jolt-material-memory source --release-id contract-publish --output "$PWD/artifacts/publish/source"
+''']
+expected_outputs = ["source-bundle", "source-bundle-evidence"]
+timeout_sec = 1800
+network = "off"
+requires = ["tar"]
+
+[spctr.runtime]
+platforms = ["macos"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache", "artifacts/build"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = []
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "jolt-binary"
+path = "artifacts/build/jolt_memory_lab"
+kind = "native_binary"
+required = true
+
+[[spctr.expected_outputs]]
+name = "jolt-smoke-ndjson"
+path = "artifacts/smoke/smoke.ndjson"
+kind = "ndjson"
+required = true
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/jolt-material-memory-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/jolt-material-memory-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[spctr.docs]
+root = "docs"
+landing = "docs/experiment-matrix.md"
+require_frontmatter = false

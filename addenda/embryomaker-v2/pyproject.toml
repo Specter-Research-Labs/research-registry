@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "embryomaker-v2"
+version = "0.1.0"
+description = "Scaffold and parity harness for a modern EmbryoMaker remake"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "typer>=0.12",
+]
+
+[project.scripts]
+embryomaker-v2 = "embryomaker_v2.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.8",
+  "ty>=0.0.1a7",
+]
+
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.src]
+include = [
+  "embryomaker_v2",
+  "tests",
+]
+
+[tool.ty.rules]
+unresolved-import = "warn"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["embryomaker_v2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["embryomaker_v2*"]

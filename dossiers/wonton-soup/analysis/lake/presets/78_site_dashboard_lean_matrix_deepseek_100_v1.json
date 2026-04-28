@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "name": "site_dashboard_lean_matrix_deepseek_100_v1",
+  "selection": {
+    "provider": "deepseek",
+    "corpus": "artifact:mathlib4@973f0905e770bc0f6b5b49bef6c69d00cbc0e00d7cdcdd87071d61774f117ff2:derived/valid@41b6bbd1541bbda7218a2004759804ffc399cb41cbe88cc577c749ce3c9709b9",
+    "require_completed": true,
+    "exclude_partial_results": true,
+    "require_capabilities": [
+      "has_proof_term",
+      "has_proof_term_pretty",
+      "has_assembly_trace",
+      "has_proof_term_metrics"
+    ],
+    "order_by": "created_at_desc",
+    "dedupe_run_id": true,
+    "max_runs": 2
+  },
+  "reference": null,
+  "datasets": [
+    {
+      "name": "wonton_dashboard_v2",
+      "generator": "wonton_dashboard_v2",
+      "format": "dir"
+    }
+  ]
+}

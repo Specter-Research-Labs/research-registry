@@ -1,0 +1,27 @@
+{
+  "mode": "search",
+  "base_config": "configs/base/paper_base_pe_1c_128.json",
+  "search_config": "configs/search/search_motile.json",
+  "warmup_steps": 200,
+  "observation_steps": 300,
+  "record_every_steps": 25,
+  "repeats": 3,
+  "environments": [
+    { "id": "flat" },
+    { "id": "high-theta", "overrides": { "flow.theta_A": 4.0 } }
+  ],
+  "perturbations": [
+    {
+      "id": "param-jitter",
+      "family": "param_noise",
+      "overrides": { "params.seed": 999 },
+      "payload": { "description": "re-seed params to perturb growth dynamics" }
+    },
+    {
+      "id": "low-dt",
+      "family": "flow_regime",
+      "overrides": { "flow.dt": 0.05 },
+      "payload": { "description": "halve timestep to slow advection" }
+    }
+  ]
+}

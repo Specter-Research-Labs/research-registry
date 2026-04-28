@@ -1,0 +1,22 @@
+{
+  "variants": [
+    {
+      "id": "bodyplan-random-1c-10k",
+      "config": "configs/base/paper_random_1c_10k_128.json",
+      "search": "configs/search/search_flow_bodyplan.json",
+      "count": 48
+    },
+    {
+      "id": "bodyplan-random-2c-20k",
+      "config": "configs/base/paper_random_2c_20k_128.json",
+      "search": "configs/search/search_flow_bodyplan.json",
+      "count": 32
+    },
+    {
+      "id": "motile-random-1c-10k",
+      "config": "configs/base/paper_random_1c_10k_128.json",
+      "search": "configs/search/search_motion.json",
+      "count": 48
+    }
+  ]
+}

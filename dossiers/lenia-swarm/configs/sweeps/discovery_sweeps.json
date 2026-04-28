@@ -1,0 +1,28 @@
+{
+  "variants": [
+    {
+      "id": "nnea-fast",
+      "config": "configs/base/paper_base_pe_1c_128.json",
+      "search": "configs/search/search_discovery_fast.json",
+      "count": 32
+    },
+    {
+      "id": "activity-stable",
+      "config": "configs/base/paper_base_pe_1c_128.json",
+      "search": "configs/search/search_activity.json",
+      "count": 32
+    },
+    {
+      "id": "complexity-stable",
+      "config": "configs/base/paper_base_1c_128.json",
+      "search": "configs/search/search_complexity.json",
+      "count": 64
+    },
+    {
+      "id": "crossmap-fast",
+      "config": "configs/presets/crossmap_1c_128.json",
+      "search": "configs/search/search_discovery_fast.json",
+      "count": 32
+    }
+  ]
+}

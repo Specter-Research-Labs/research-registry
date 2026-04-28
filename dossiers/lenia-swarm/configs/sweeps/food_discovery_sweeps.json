@@ -1,0 +1,22 @@
+{
+  "variants": [
+    {
+      "id": "embed-food-bodyplan",
+      "config": "configs/base/paper_embed_food_2c_20k_128.json",
+      "search": "configs/search/search_flow_bodyplan_embed.json",
+      "count": 24
+    },
+    {
+      "id": "embed-food-fast",
+      "config": "configs/base/paper_embed_food_2c_20k_128.json",
+      "search": "configs/search/search_discovery_fast.json",
+      "count": 24
+    },
+    {
+      "id": "external-food-activity",
+      "config": "configs/presets/experimental_food_2c_128.json",
+      "search": "configs/search/search_activity.json",
+      "count": 32
+    }
+  ]
+}

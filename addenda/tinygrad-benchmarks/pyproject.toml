@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tinygrad-benchmarks"
+version = "0.1.0"
+description = "History-mined benchmark harness for pinned tinygrad contribution tasks"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Specter Research Labs" }]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/Specter-Research-Labs/research-registry"
+Source = "https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/tinygrad-benchmarks"
+
+[project.scripts]
+tinygrad-benchmarks = "tinygrad_benchmarks.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.8",
+  "ty>=0.0.1a7",
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+  "tests",
+  "tinygrad_benchmarks",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["tinygrad_benchmarks"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

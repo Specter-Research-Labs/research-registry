@@ -1,0 +1,55 @@
+{
+  "count": 32,
+  "seed_start": 0,
+  "seed_stride": 1,
+  "init_seed_offset": 0,
+  "steps": 500,
+  "record_interval": 25,
+  "warmup_steps": 50,
+  "occupancy_threshold": 0.05,
+  "mass_channel": -1,
+  "score_weights": {
+    "center_velocity": 4.0,
+    "displacement": 2.0,
+    "path_length": 1.0,
+    "complexity_mean": 0.25
+  },
+  "filters": {
+    "mass_min": 0.01,
+    "occupancy_min": 0.03,
+    "occupancy_max": 0.35,
+    "gyration_max": 5000.0,
+    "velocity_min": 0.003
+  },
+  "stability": {
+    "enabled": true,
+    "mass_min_fraction": 0.01,
+    "mass_max_fraction": 0.5,
+    "require_survival": false,
+    "window_samples": 0,
+    "filters": {}
+  },
+  "collection": {
+    "enabled": true,
+    "require_stable": false,
+    "require_filters_passed": true,
+    "min_score": null,
+    "export_enabled": true
+  },
+  "overrides": {},
+  "top_k": 20,
+  "batch_size": 1,
+  "seeds_per_job": 1,
+  "complexity": {
+    "enabled": true,
+    "scales": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "target": null,
+    "polar": true,
+    "backend": "png"
+  }
+}

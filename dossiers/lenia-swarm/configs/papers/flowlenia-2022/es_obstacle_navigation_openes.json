@@ -1,0 +1,34 @@
+{
+  "output_dir": "artifacts/papers/flowlenia-2022/obstacle-navigation",
+  "generations": 100,
+  "population": 16,
+  "sigma": 0.1,
+  "learning_rate": 0.01,
+  "seed": 42,
+  "steps": 500,
+  "fitness": {
+    "objective": "obstacle_navigation",
+    "target_step": 400,
+    "angle_threshold": 0.01
+  },
+  "fitness_shaping": "centered_rank",
+  "init_patch": {
+    "enabled": true,
+    "size": 40,
+    "center": [64, 64],
+    "value_low": 0.0,
+    "value_high": 1.0
+  },
+  "param_ranges": null,
+  "obstacle_field": {
+    "enabled": true,
+    "channel_index": 2,
+    "mode": "random_on_circle",
+    "count": 12,
+    "circle_radius": 42.0,
+    "sigma": 3.5,
+    "amplitude": 1.0,
+    "center": [64.0, 64.0],
+    "seed": 7
+  }
+}

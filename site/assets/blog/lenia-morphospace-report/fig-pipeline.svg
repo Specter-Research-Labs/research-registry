@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" width="700" height="400">
+<style>text { font-family: "Berkeley Mono", ui-monospace, monospace; }</style>
+<rect width="700" height="400" fill="#ffffff" rx="0"/>
+
+<!-- source -->
+<rect x="250" y="12" width="200" height="40" rx="4" fill="rgba(63,132,88,0.06)" stroke="#3f8458" stroke-opacity="0.4"/>
+<text x="350" y="30" fill="#3f8458" font-size="11" font-weight="600" text-anchor="middle">96 stable 3-kernel creatures</text>
+<text x="350" y="44" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">discovery-20260306-movers</text>
+<line x1="350" y1="52" x2="350" y2="68" stroke="rgba(11,14,20,0.18)" stroke-width="1"/>
+
+<!-- compendium -->
+<rect x="250" y="68" width="200" height="32" rx="4" fill="rgba(255,102,0,0.04)" stroke="#ff6600" stroke-opacity="0.3"/>
+<text x="350" y="88" fill="#ff6600" font-size="10" font-weight="600" text-anchor="middle">Compendium index + classify</text>
+<line x1="250" y1="100" x2="175" y2="122" stroke="rgba(11,14,20,0.18)" stroke-width="1"/>
+<line x1="450" y1="100" x2="525" y2="122" stroke="rgba(11,14,20,0.18)" stroke-width="1"/>
+
+<!-- geometry path -->
+<rect x="60" y="122" width="230" height="28" rx="4" fill="rgba(255,102,0,0.04)" stroke="#ff6600" stroke-opacity="0.3"/>
+<text x="175" y="140" fill="#ff6600" font-size="10" font-weight="600" text-anchor="middle">Geometry Path</text>
+
+<rect x="75" y="160" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="175" y="175" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">ripser: H0, H1 persistence</text>
+<rect x="75" y="188" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="175" y="203" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">cycle-lift: H1 &#x2192; specimen edges</text>
+<rect x="75" y="216" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="175" y="231" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">bridge study: barrier detection</text>
+<rect x="75" y="244" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="175" y="259" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">loop transport: holonomy</text>
+
+<!-- algebra path -->
+<rect x="410" y="122" width="230" height="28" rx="4" fill="rgba(159,111,0,0.04)" stroke="#9f6f00" stroke-opacity="0.3"/>
+<text x="525" y="140" fill="#9f6f00" font-size="10" font-weight="600" text-anchor="middle">Algebra Path</text>
+
+<rect x="425" y="160" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="525" y="175" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">decompose: interface vs arrangement</text>
+<rect x="425" y="188" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="525" y="203" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">classify: wiring topology types</text>
+<rect x="425" y="216" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="525" y="231" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">fiber decomposition: which bundle?</text>
+<rect x="425" y="244" width="200" height="22" rx="3" fill="rgba(11,14,20,0.02)" stroke="rgba(11,14,20,0.08)"/>
+<text x="525" y="259" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">substrate independence test</text>
+
+<!-- merge -->
+<line x1="175" y1="266" x2="280" y2="298" stroke="#ff6600" stroke-width="1" opacity="0.3"/>
+<line x1="525" y1="266" x2="420" y2="298" stroke="#9f6f00" stroke-width="1" opacity="0.3"/>
+
+<!-- fibration packet -->
+<rect x="215" y="295" width="270" height="40" rx="5" fill="rgba(79,102,188,0.06)" stroke="#4f66bc" stroke-width="1.5"/>
+<text x="350" y="313" fill="#4f66bc" font-size="11" font-weight="600" text-anchor="middle">Empirical Fibration Packet</text>
+<text x="350" y="328" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">topology + arrangement + transport</text>
+<line x1="350" y1="335" x2="350" y2="353" stroke="rgba(11,14,20,0.18)" stroke-width="1"/>
+
+<!-- agda -->
+<rect x="270" y="353" width="160" height="28" rx="4" fill="rgba(180,87,61,0.04)" stroke="#b4573d" stroke-opacity="0.4"/>
+<text x="350" y="371" fill="#b4573d" font-size="10" font-weight="600" text-anchor="middle">Agda codegen &#x2192; formal proofs</text>
+</svg>

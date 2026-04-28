@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "name": "track2_stability_structural_vs_term",
+  "selection": {},
+  "reference": {
+    "build_outcomes": {
+      "alpha": 1.0,
+      "meta": {
+        "purpose": "track2 structural (GED) vs proof-term hash stability (not full semantic equivalence)"
+      }
+    },
+    "score_k": true,
+    "selection": {
+      "backend": "lean"
+    }
+  },
+  "datasets": [
+    {
+      "name": "stability_interventions",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, i.theorem, i.intervention, w.solved AS wild_solved, i.solved AS inv_solved, w.proof_term_hash AS wild_proof_term_hash, c.intervention_hash AS inv_proof_term_hash, CASE WHEN w.proof_term_hash IS NOT NULL AND c.intervention_hash IS NOT NULL THEN (w.proof_term_hash = c.intervention_hash) ELSE NULL END AS proof_term_hash_equal, i.ged_search_value, i.ged_search_norm, i.ged_search_soft_value, i.ged_search_soft_norm, p.goal_novelty_novel_goal_count, p.goal_novelty_dropped_goal_count, p.solution_path_soft_distance_value, p.solution_path_soft_distance_valid, p.solution_path_soft_distance_wild_len, p.solution_path_soft_distance_intervention_len, p.solution_path_soft_distance_dp_cells, i.is_control, i.baseline_solved, i.blocked, w.k_K AS wild_k_local, i.k_K AS inv_k_local, kw.valid AS wild_k_ref_valid, kw.K AS wild_k_ref, ki.valid AS inv_k_ref_valid, ki.K AS inv_k_ref, CASE WHEN kw.valid AND ki.valid THEN (ki.K - kw.K) ELSE NULL END AS delta_k_ref FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN theorem_wild w ON w.run_key = i.run_key AND w.theorem = i.theorem LEFT JOIN theorem_intervention_comparison c ON c.run_key = i.run_key AND c.theorem = i.theorem AND c.intervention = i.intervention LEFT JOIN theorem_intervention_postprocess p ON p.run_key = i.run_key AND p.theorem = i.theorem AND p.intervention = i.intervention LEFT JOIN k_reference_score kw ON kw.run_key = i.run_key AND kw.theorem = i.theorem AND kw.variant = 'wild_type' AND kw.ref_id = (SELECT ref_id FROM job_context LIMIT 1) LEFT JOIN k_reference_score ki ON ki.run_key = i.run_key AND ki.theorem = i.theorem AND ki.variant = i.intervention AND ki.ref_id = (SELECT ref_id FROM job_context LIMIT 1) ORDER BY r.provider NULLS LAST, r.run_id NULLS LAST, i.theorem, i.intervention"
+    },
+    {
+      "name": "stability_wild_proof_hashes",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, w.theorem, w.solved, w.proof_term_hash, w.iterations, w.k_K AS k_local, k.valid AS k_ref_valid, k.K AS k_ref FROM theorem_wild w JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN k_reference_score k ON k.run_key = w.run_key AND k.theorem = w.theorem AND k.variant = 'wild_type' AND k.ref_id = (SELECT ref_id FROM job_context LIMIT 1) ORDER BY r.provider NULLS LAST, r.run_id NULLS LAST, w.theorem"
+    }
+  ]
+}

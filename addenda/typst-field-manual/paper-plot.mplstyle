@@ -1,0 +1,50 @@
+font.family: IBM Plex Sans Condensed
+font.sans-serif: IBM Plex Sans Condensed, DejaVu Sans
+font.serif: IBM Plex Serif, DejaVu Serif
+font.monospace: IBM Plex Mono, DejaVu Sans Mono
+
+figure.facecolor: white
+savefig.facecolor: white
+axes.facecolor: white
+axes.edgecolor: 1a1a1a
+axes.labelcolor: 1a1a1a
+axes.titlecolor: 1a1a1a
+axes.titlesize: 12
+axes.titleweight: bold
+axes.labelsize: 10
+axes.linewidth: 0.8
+axes.grid: True
+axes.axisbelow: True
+axes.spines.top: False
+axes.spines.right: False
+
+grid.color: c7c7c7
+grid.alpha: 0.55
+grid.linestyle: -
+grid.linewidth: 0.6
+
+xtick.color: 1a1a1a
+ytick.color: 1a1a1a
+xtick.labelsize: 9
+ytick.labelsize: 9
+xtick.major.width: 0.8
+ytick.major.width: 0.8
+
+legend.frameon: False
+legend.fontsize: 9
+legend.title_fontsize: 9
+
+lines.linewidth: 1.8
+patch.linewidth: 1.0
+errorbar.capsize: 4
+
+text.color: 1a1a1a
+mathtext.fontset: custom
+mathtext.rm: IBM Plex Serif
+mathtext.it: IBM Plex Serif:italic
+mathtext.bf: IBM Plex Sans Condensed:bold
+mathtext.cal: IBM Plex Sans Condensed
+mathtext.tt: IBM Plex Mono
+
+pdf.fonttype: 42
+ps.fonttype: 42

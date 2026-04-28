@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 280" width="700" height="280">
+<style>text { font-family: "Berkeley Mono", ui-monospace, monospace; }</style>
+<rect width="700" height="280" fill="#ffffff" rx="0"/>
+
+<!-- Column 1: Cross-coupled -->
+<text x="117" y="20" fill="#b4573d" font-size="11" font-weight="600" text-anchor="middle">Cross-coupled</text>
+<text x="117" y="34" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">ancient-dancer-2685</text>
+<text x="117" y="46" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel=0.011  diag=10.7%</text>
+
+<text x="87" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K0</text>
+<text x="117" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K1</text>
+<text x="147" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K2</text>
+<text x="57" y="84" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">Ch0</text>
+<text x="57" y="104" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">Ch1</text>
+<text x="57" y="124" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="end">Ch2</text>
+
+<rect x="72" y="72" width="30" height="18" rx="2" fill="rgba(180,87,61,0.04)"/>
+<text x="87" y="86" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.07</text>
+<rect x="102" y="72" width="30" height="18" rx="2" fill="rgba(180,87,61,0.20)"/>
+<text x="117" y="86" fill="#b4573d" font-size="10" text-anchor="middle" font-weight="600">0.43</text>
+<rect x="132" y="72" width="30" height="18" rx="2" fill="rgba(180,87,61,0.10)"/>
+<text x="147" y="86" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.20</text>
+<rect x="72" y="92" width="30" height="18" rx="2" fill="rgba(180,87,61,0.22)"/>
+<text x="87" y="106" fill="#b4573d" font-size="10" text-anchor="middle" font-weight="600">0.47</text>
+<rect x="102" y="92" width="30" height="18" rx="2" fill="rgba(180,87,61,0.02)"/>
+<text x="117" y="106" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.04</text>
+<rect x="132" y="92" width="30" height="18" rx="2" fill="rgba(180,87,61,0.02)"/>
+<text x="147" y="106" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.04</text>
+<rect x="72" y="112" width="30" height="18" rx="2" fill="rgba(180,87,61,0.22)"/>
+<text x="87" y="126" fill="#b4573d" font-size="10" text-anchor="middle" font-weight="600">0.47</text>
+<rect x="102" y="112" width="30" height="18" rx="2" fill="rgba(180,87,61,0.04)"/>
+<text x="117" y="126" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.07</text>
+<rect x="132" y="112" width="30" height="18" rx="2" fill="rgba(180,87,61,0.05)"/>
+<text x="147" y="126" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.10</text>
+
+<!-- wiring -->
+<circle cx="77" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<circle cx="117" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<circle cx="157" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<text x="77" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K0</text>
+<text x="117" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K1</text>
+<text x="157" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K2</text>
+<path d="M 91 180 Q 100 165 106 180" stroke="#b4573d" stroke-width="2.5" fill="none" opacity="0.7"/>
+<path d="M 91 190 Q 117 215 143 190" stroke="#b4573d" stroke-width="2.5" fill="none" opacity="0.5"/>
+<text x="117" y="232" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K0 drives Ch1+Ch2</text>
+<text x="117" y="245" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K1 drives Ch0</text>
+
+<!-- divider -->
+<line x1="233" y1="12" x2="233" y2="260" stroke="rgba(11,14,20,0.08)" stroke-width="1"/>
+
+<!-- Column 2: Balanced -->
+<text x="350" y="20" fill="#9f6f00" font-size="11" font-weight="600" text-anchor="middle">Balanced</text>
+<text x="350" y="34" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vibrant-orbiter-4810</text>
+<text x="350" y="46" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel=0.011  diag=32.8%</text>
+
+<text x="320" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K0</text>
+<text x="350" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K1</text>
+<text x="380" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K2</text>
+
+<rect x="305" y="72" width="30" height="18" rx="2" fill="rgba(159,111,0,0.18)"/>
+<text x="320" y="86" fill="#9f6f00" font-size="10" text-anchor="middle" font-weight="600">0.41</text>
+<rect x="335" y="72" width="30" height="18" rx="2" fill="rgba(159,111,0,0.08)"/>
+<text x="350" y="86" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.22</text>
+<rect x="365" y="72" width="30" height="18" rx="2" fill="rgba(159,111,0,0.02)"/>
+<text x="380" y="86" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.06</text>
+<rect x="305" y="92" width="30" height="18" rx="2" fill="rgba(159,111,0,0.08)"/>
+<text x="320" y="106" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.20</text>
+<rect x="335" y="92" width="30" height="18" rx="2" fill="rgba(159,111,0,0.06)"/>
+<text x="350" y="106" fill="#9f6f00" font-size="10" text-anchor="middle">0.15</text>
+<rect x="365" y="92" width="30" height="18" rx="2" fill="rgba(159,111,0,0.02)"/>
+<text x="380" y="106" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.07</text>
+<rect x="305" y="112" width="30" height="18" rx="2" fill="rgba(159,111,0,0.04)"/>
+<text x="320" y="126" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.12</text>
+<rect x="335" y="112" width="30" height="18" rx="2" fill="rgba(159,111,0,0.14)"/>
+<text x="350" y="126" fill="#9f6f00" font-size="10" text-anchor="middle" font-weight="600">0.37</text>
+<rect x="365" y="112" width="30" height="18" rx="2" fill="rgba(159,111,0,0.18)"/>
+<text x="380" y="126" fill="#9f6f00" font-size="10" text-anchor="middle" font-weight="600">0.41</text>
+
+<circle cx="310" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<circle cx="350" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<circle cx="390" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<text x="310" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K0</text>
+<text x="350" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K1</text>
+<text x="390" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K2</text>
+<circle cx="310" cy="167" r="6" fill="none" stroke="#9f6f00" stroke-width="2" opacity="0.6"/>
+<circle cx="390" cy="167" r="6" fill="none" stroke="#9f6f00" stroke-width="2" opacity="0.6"/>
+<line x1="364" y1="183" x2="376" y2="183" stroke="#9f6f00" stroke-width="2" opacity="0.6"/>
+<text x="350" y="232" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K0 self-reinforces</text>
+<text x="350" y="245" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K1&#x2013;K2 feedback loop</text>
+
+<!-- divider -->
+<line x1="466" y1="12" x2="466" y2="260" stroke="rgba(11,14,20,0.08)" stroke-width="1"/>
+
+<!-- Column 3: Self-coupled -->
+<text x="583" y="20" fill="#3f8458" font-size="11" font-weight="600" text-anchor="middle">Self-coupled</text>
+<text x="583" y="34" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">luminous-form-2760</text>
+<text x="583" y="46" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel=0.011  diag=51.7%</text>
+
+<text x="553" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K0</text>
+<text x="583" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K1</text>
+<text x="613" y="66" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">K2</text>
+
+<rect x="538" y="72" width="30" height="18" rx="2" fill="rgba(63,132,88,0.18)"/>
+<text x="553" y="86" fill="#3f8458" font-size="10" text-anchor="middle" font-weight="600">0.41</text>
+<rect x="568" y="72" width="30" height="18" rx="2" fill="rgba(63,132,88,0.06)"/>
+<text x="583" y="86" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.17</text>
+<rect x="598" y="72" width="30" height="18" rx="2" fill="rgba(63,132,88,0.08)"/>
+<text x="613" y="86" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.23</text>
+<rect x="538" y="92" width="30" height="18" rx="2" fill="rgba(63,132,88,0.08)"/>
+<text x="553" y="106" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.24</text>
+<rect x="568" y="92" width="30" height="18" rx="2" fill="rgba(63,132,88,0.22)"/>
+<text x="583" y="106" fill="#3f8458" font-size="10" text-anchor="middle" font-weight="600">0.46</text>
+<rect x="598" y="92" width="30" height="18" rx="2" fill="rgba(63,132,88,0.08)"/>
+<text x="613" y="106" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.21</text>
+<rect x="538" y="112" width="30" height="18" rx="2" fill="rgba(63,132,88,0.02)"/>
+<text x="553" y="126" fill="rgba(11,14,20,0.5)" font-size="10" text-anchor="middle">0.07</text>
+<rect x="568" y="112" width="30" height="18" rx="2" fill="rgba(63,132,88,0.14)"/>
+<text x="583" y="126" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">0.34</text>
+<rect x="598" y="112" width="30" height="18" rx="2" fill="rgba(63,132,88,0.22)"/>
+<text x="613" y="126" fill="#3f8458" font-size="10" text-anchor="middle" font-weight="600">0.48</text>
+
+<circle cx="543" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<circle cx="583" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<circle cx="623" cy="185" r="14" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.6"/>
+<text x="543" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K0</text>
+<text x="583" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K1</text>
+<text x="623" y="189" fill="#ff6600" font-size="9" text-anchor="middle">K2</text>
+<circle cx="543" cy="167" r="6" fill="none" stroke="#3f8458" stroke-width="2" opacity="0.7"/>
+<circle cx="583" cy="167" r="6" fill="none" stroke="#3f8458" stroke-width="2" opacity="0.7"/>
+<circle cx="623" cy="167" r="6" fill="none" stroke="#3f8458" stroke-width="2" opacity="0.7"/>
+<text x="583" y="232" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">each kernel primarily</text>
+<text x="583" y="245" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">drives its own channel</text>
+</svg>

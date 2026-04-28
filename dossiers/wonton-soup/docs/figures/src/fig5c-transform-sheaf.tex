@@ -1,0 +1,53 @@
+% fig5c-transform-sheaf.tex
+\documentclass[tikz,border=12pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+\begin{scope}[shift={(0, 0)}]
+    \node[paneltitle, anchor=south west] at (-0.5, 3.0) {(C) Tactic Transform Sheaf};
+    
+    % Parent Feature Space
+    \begin{scope}[shift={(0,0)}]
+        \draw[->, muted] (0,0) -- (2,0) node[right] {$x_1$};
+        \draw[->, muted] (0,0) -- (0,2) node[above] {$x_2$};
+        \draw[thick, ink, ->] (0,0) -- (1.2, 1.5) node[midway, above left] {$v_{parent}$};
+        \node[annot] at (1.0, -0.4) {Feature Space $\mathbb{R}^d$};
+    \end{scope}
+    
+    % Transformation Arrow
+    \draw[->, line width=1.5pt, draw=highlight] (2.5, 1.0) -- (4.5, 1.0) node[midway, above] {$M_{tactic}$};
+    
+    % Child Feature Space
+    \begin{scope}[shift={(5.5,0)}]
+        \draw[->, muted] (0,0) -- (2,0) node[right] {$x_1$};
+        \draw[->, muted] (0,0) -- (0,2) node[above] {$x_2$};
+        
+        % Predicted
+        \draw[thick, highlight, ->, dashed] (0,0) -- (1.5, 0.8)
+            node[pos=0.72, below right, xshift=2pt] {$\hat{v} = M \cdot v_p$};
+        
+        % Actual
+        \draw[thick, ink, ->] (0,0) -- (1.2, 1.6) node[above] {$v_{child}$};
+        
+        % Residual
+        \draw[red, thick, ->] (1.5, 0.8) -- (1.2, 1.6)
+            node[midway, right, xshift=2pt] {$\epsilon$};
+    \end{scope}
+    
+    % Matrix Equation
+    \node[align=left, text width=6.8cm, anchor=west] at (9.0, 1.05) {
+        $\begin{aligned}
+            \text{Linear Fit: } & v_{child} \approx M_t \cdot v_{parent} \\
+            \text{Energy: } & E = \sum \lVert v_c - M_t v_p\rVert^2
+        \end{aligned}$
+    };
+    
+    % Interpretation
+    \node[annot, align=left, text width=6.8cm, anchor=west] at (9.0, -0.7) {Low residual $\implies$ Tactic logic is\\captured by goal features};
+\end{scope}
+\end{tikzpicture}
+\end{document}

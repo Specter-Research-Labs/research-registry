@@ -1,0 +1,70 @@
+[fonts]
+body = ["IBM Plex Serif"]
+heading = ["IBM Plex Sans"]
+display = ["IBM Plex Sans"]
+mono = ["IBM Plex Mono"]
+
+[colors]
+ink = "luma(8%)"
+muted = "luma(35%)"
+rule = "luma(74%)"
+rule-strong = "luma(56%)"
+paper = "luma(97%)"
+panel = "luma(96%)"
+redaction = "black"
+
+[rules]
+thin = "0.6pt"
+thick = "1.4pt"
+top-bar = "2.4pt"
+
+[type-scale]
+body = "10pt"
+mono = "9pt"
+heading-1 = "16pt"
+heading-2 = "12pt"
+heading-3 = "11pt"
+title = "26pt"
+subtitle = "14pt"
+label = "11pt"
+callout = "8.5pt"
+meta = "10pt"
+running = "9pt"
+
+[tracking]
+label = "0.18em"
+
+[leading]
+body = "1.32em"
+callout = "1.25em"
+
+[layout.page-margin]
+top = "16mm"
+bottom = "18mm"
+left = "18mm"
+right = "34mm"
+
+[layout.callout]
+offset-dx = "18mm"
+width = "60mm"
+inset = "7pt"
+radius = "1.5pt"
+title-gap = "4pt"
+
+[layout.redaction-inline]
+inset-x = "1.5pt"
+inset-y = "1pt"
+radius = "1pt"
+
+[layout]
+redaction-block-radius = "1pt"
+header-grid-gutter = "10pt"
+footer-grid-gutter = "10pt"
+
+[layout.meta-grid]
+label-col = "22mm"
+gutter = "10pt"
+
+[layout.raw-block]
+inset = "8pt"
+radius = "1.5pt"

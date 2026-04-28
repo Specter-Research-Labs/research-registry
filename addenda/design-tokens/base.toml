@@ -1,0 +1,118 @@
+[colors]
+ink = "#0b0e14"
+paper = "#ffffff"
+bg = "#edeef0"
+accent = "#ff6600"
+accent-2 = "#00a645"
+
+[colors.alpha]
+muted = { base = "ink", alpha = 0.68 }
+rule = { base = "ink", alpha = 0.18 }
+rule-strong = { base = "ink", alpha = 0.42 }
+
+[overlays]
+base = "ink"
+stops = [0.02, 0.025, 0.03, 0.06, 0.12, 0.32, 0.82]
+
+[shadows]
+raised = "0 18px 46px {overlay.12}, 0 2px 0 {overlay.06}"
+lightbox = "0 18px 46px {overlay.32}, 0 2px 0 {overlay.12}"
+
+[colors.status]
+exploratory = "#5f6c7b"
+paused = "#9f6f00"
+archived = "#7d8694"
+
+[colors.idea]
+active = { base = "ink", alpha = 0.78 }
+exploring = "#5f6c7b"
+paused = "#786b52"
+
+[colors.workflow]
+blocked = { stroke = "#b4573d", fill = "#fdf0eb" }
+failure = { stroke = "#9d7b2a", fill = "#fbf5e8" }
+success = { stroke = "#3f8458", fill = "#edf4ef" }
+continuation = { stroke = "#4f66bc", fill = "#eef2fa" }
+wild = { stroke = "#8694ad", fill = "#f1f4f9" }
+intervention = { stroke = "#4a8a61", fill = "#edf4ef" }
+
+[colors.addenda-type]
+tooling = "#556372"
+research = "#8b7142"
+dataset = "#2f6f64"
+benchmark = "#425f7b"
+competition = "#7b5243"
+
+[colors.cabinet]
+tab = "#e6e3db"
+tab-hover = "#d9d5cb"
+folder = "#f5f3ed"
+
+[colors.series]
+id = { base = "ink", alpha = 0.52 }
+
+[fonts]
+mono = ["Berkeley Mono", "ui-monospace", "SFMono-Regular", "SF Mono", "Menlo", "Consolas", "monospace"]
+body = ["Berkeley Mono"]
+heading = ["Berkeley Mono"]
+display = ["Berkeley Mono"]
+prose = ["IBM Plex Serif", "Georgia", "serif"]
+
+[symbols]
+active = { glyph = "\u25CF", label = "active" }
+paused = { glyph = "\u25CB", label = "paused" }
+archived = { glyph = "\u2013", label = "archived" }
+exploratory = { glyph = "\u25E6", label = "exploratory" }
+separator = "\u00B7"
+arrow = "\u2192"
+dash = "\u2013"
+bullet = "\u2022"
+
+[badges.project-status]
+dossier = ["concept", "active", "active-writing", "hold"]
+addenda = ["concept", "active", "operational", "hold", "archived"]
+
+[badges.project-status.concept]
+color = "status.exploratory"
+symbol = "exploratory"
+
+[badges.project-status.active]
+color = "accent"
+symbol = "active"
+
+[badges.project-status.active-writing]
+color = "accent"
+symbol = "active"
+
+[badges.project-status.operational]
+color = "accent-2"
+symbol = "active"
+
+[badges.project-status.hold]
+color = "status.paused"
+symbol = "paused"
+
+[badges.project-status.archived]
+color = "status.archived"
+symbol = "archived"
+
+[badges.addenda-type]
+values = ["tooling", "research", "dataset", "benchmark", "competition"]
+
+[badges.addenda-type.tooling]
+color = "addenda-type.tooling"
+
+[badges.addenda-type.research]
+color = "addenda-type.research"
+
+[badges.addenda-type.dataset]
+color = "addenda-type.dataset"
+
+[badges.addenda-type.benchmark]
+color = "addenda-type.benchmark"
+
+[badges.addenda-type.competition]
+color = "addenda-type.competition"
+
+[badges.idea-status]
+values = ["active", "exploring", "paused"]

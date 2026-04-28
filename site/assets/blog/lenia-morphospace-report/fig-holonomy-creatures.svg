@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+<style>
+text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
+.label { font-size: 13px; fill: rgba(11,14,20,0.68); }
+.label-bold { font-size: 13px; fill: #0b0e14; font-weight: 700; }
+.label-accent { font-size: 13px; fill: #ff6600; }
+.label-accent2 { font-size: 13px; fill: #b4573d; }
+.label-accent3 { font-size: 13px; fill: #3f8458; }
+.label-accent4 { font-size: 13px; fill: #9f6f00; }
+.label-accent5 { font-size: 13px; fill: #4f66bc; }
+.annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
+</style>
+<rect width="800" height="500" fill="#ffffff"/>
+  <!-- The three creatures as waypoints -->
+  <!-- Triangle layout -->
+
+  <!-- serene-dancer (top) -->
+  <image href="creatures/serene-dancer.png" x="345" y="20" width="70" height="70" style="image-rendering:pixelated"/>
+  <text x="380" y="105" class="label-accent3" text-anchor="middle" font-weight="600">serene-dancer</text>
+  <text x="380" y="117" class="label" text-anchor="middle">R=10.57, m=0.380</text>
+
+  <!-- harmonic-cell (bottom-left) -->
+  <image href="creatures/harmonic-cell.png" x="95" y="250" width="70" height="70" style="image-rendering:pixelated"/>
+  <text x="130" y="340" class="label-accent3" text-anchor="middle" font-weight="600">harmonic-cell</text>
+  <text x="130" y="352" class="label" text-anchor="middle">R=18.60, m=0.459</text>
+
+  <!-- serene-entity (bottom-right) -->
+  <image href="creatures/serene-entity.png" x="575" y="250" width="70" height="70" style="image-rendering:pixelated"/>
+  <text x="610" y="340" class="label-accent3" text-anchor="middle" font-weight="600">serene-entity</text>
+  <text x="610" y="352" class="label" text-anchor="middle">R=9.50, m=0.286</text>
+
+  <!-- Path arrows (the loop) -->
+  <defs>
+    <marker id="arrowGold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9f6f00"/>
+    </marker>
+  </defs>
+
+  <!-- Leg 1: dancer -> cell -->
+  <path d="M 355 90 C 300 130, 200 200, 155 250"
+        stroke="#9f6f00" stroke-width="2.5" fill="none" marker-end="url(#arrowGold)"/>
+  <text x="220" y="160" class="label-accent4" text-anchor="middle">leg 1</text>
+  <text x="220" y="174" class="annotation" text-anchor="middle">R: 10.57 → 18.60</text>
+
+  <!-- Leg 2: cell -> entity -->
+  <path d="M 170 290 C 250 310, 450 310, 575 290"
+        stroke="#9f6f00" stroke-width="2.5" fill="none" marker-end="url(#arrowGold)"/>
+  <text x="380" y="330" class="label-accent4" text-anchor="middle">leg 2</text>
+  <text x="380" y="344" class="annotation" text-anchor="middle">R: 18.60 → 9.50</text>
+
+  <!-- Leg 3: entity -> back to dancer phenotype -->
+  <path d="M 625 250 C 580 190, 470 120, 415 90"
+        stroke="#9f6f00" stroke-width="2.5" fill="none" marker-end="url(#arrowGold)"/>
+  <text x="555" y="165" class="label-accent4" text-anchor="middle">leg 3</text>
+  <text x="555" y="179" class="annotation" text-anchor="middle">R: 9.50 → ???</text>
+
+  <!-- The holonomy gap -->
+  <rect x="310" y="370" width="160" height="115" rx="8" fill="rgba(180, 87, 61, 0.06)" stroke="#b4573d" stroke-opacity="0.4"/>
+
+  <text x="390" y="393" class="label-accent2" text-anchor="middle" font-weight="600">Holonomy Gap</text>
+
+  <text x="330" y="415" class="label" text-anchor="start">started at:</text>
+  <text x="330" y="430" class="label-accent3">R=10.57, m=0.380, s=0.058</text>
+
+  <text x="330" y="452" class="label" text-anchor="start">returned to:</text>
+  <text x="330" y="467" class="label-accent5">R=10.61, m=0.375, s=0.062</text>
+
+  <text x="390" y="483" class="label-accent2" text-anchor="middle" font-size="10">same phenotype, different genotype</text>
+</svg>

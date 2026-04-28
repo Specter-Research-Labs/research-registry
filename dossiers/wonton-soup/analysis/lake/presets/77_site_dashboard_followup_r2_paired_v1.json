@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "name": "site_dashboard_followup_r2_paired_v1",
+  "selection": {
+    "root_id": "c9b5fbf028610744",
+    "require_completed": true,
+    "exclude_partial_results": true,
+    "require_capabilities": [
+      "has_proof_term",
+      "has_proof_term_pretty",
+      "has_assembly_trace",
+      "has_proof_term_metrics"
+    ],
+    "order_by": "created_at_desc",
+    "dedupe_run_id": true,
+    "max_runs": 24
+  },
+  "reference": null,
+  "datasets": [
+    {
+      "name": "wonton_dashboard_v2",
+      "generator": "wonton_dashboard_v2",
+      "format": "dir"
+    }
+  ]
+}

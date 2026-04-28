@@ -1,0 +1,44 @@
+% fig1b-preview-commit.tex
+% Detail of the Preview/Commit Mechanism
+\documentclass[tikz,border=5pt]{standalone}
+
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+    \node[paneltitle] at (0, 1.0) {Preview \& Commit Protocol};
+
+    % Flowchart nodes
+    \node[flowbox, minimum width=2.0cm] (select) at (0, 0) {Select Leaf Node};
+    \node[flowbox, minimum width=2.0cm, below=0.6cm of select] (preview) {Preview Tactic\\
+(Run in Sandbox)};
+    \node[flowbox, minimum width=2.0cm, below=0.6cm of preview] (sig) {Compute\\
+Goal Signature};
+    \node[decision, below=0.6cm of sig] (seen) {Signature\\
+Seen?};
+    
+    \node[flowbox, minimum width=1.5cm, below left=0.8cm and 0.5cm of seen] (skip) {Skip / Prune};
+    \node[flowbox, minimum width=1.5cm, below right=0.8cm and 0.5cm of seen] (commit) {Commit Node\\
+to Tree};
+
+    % Edges
+    \draw[flowarrow] (select) -- (preview);
+    \draw[flowarrow] (preview) -- (sig);
+    \draw[flowarrow] (sig) -- (seen);
+    
+    \draw[flowarrow] (seen) -- node[midway, left=0.2cm, annot] {Yes} (skip);
+    \draw[flowarrow] (seen) -- node[midway, right=0.2cm, annot] {No} (commit);
+
+    % Feedback loop
+    \draw[flowarrow] (skip.west) -- ++(-0.5, 0) |- node[pos=0.25, left, annot] {Try next tactic} (preview.west);
+
+    % Annotations
+    \node[annot, right=0.5cm of sig, text width=3cm] {Identifies duplicate states early};
+
+\end{tikzpicture}
+\end{document}

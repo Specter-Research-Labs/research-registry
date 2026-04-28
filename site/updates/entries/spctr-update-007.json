@@ -1,0 +1,42 @@
+{
+  "id": "spctr-update-007",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-007",
+  "date": "2026-03-21",
+  "published_at": "2026-03-21T00:00:00Z",
+  "topic": "weekly / spctr-update-007",
+  "window": {
+    "start": "2026-03-14",
+    "end": "2026-03-21"
+  },
+  "series_number": 7,
+  "sections": {
+    "dossiers": [
+      "lenia-swarm: added declarative multi-phase campaign system with preset-driven runner and discovery sweep manifests.",
+      "lenia-swarm: added ranked local seed selection for ecology and warm starts.",
+      "lenia-swarm: stabilized search mass variance accumulation; enabled Metal backends for non-PE configs with compatibility check.",
+      "lenia-swarm: added interactive Lenia explainer blog article with 7 live widgets.",
+      "lenia-swarm: added compendium backfill command with completeness checks; normalized graph_kind via graph_family in lake extractor.",
+      "lenia-swarm: fixed intervention-battery config, cross-phase seed forwarding, QD compendium merge, re-index enrichment, and provenance backfill.",
+      "wonton-soup: rewrote dashboard as Vite/TypeScript SPA with DuckDB-WASM; aligned parquet pipeline; dropped old dashboard.",
+      "wonton-soup: fixed MCTS visualization and clarified MCTS mode framing."
+    ],
+    "addenda": [
+      "equational-theories-distillation: added the addendum."
+    ],
+    "ops": [
+      "ported site builder from Python/Bash to spctr Rust CLI; moved publish orchestration, scripts, and Lenia CLI into spctr; deleted unused parity scripts.",
+      "added design token system: TOML spec, parser, CSS/Typst/email generators, CLI wiring, manifest vocabularies, and integration tests.",
+      "added spctr sync, lake refresh, cabinet doc publishing controls, and --version flag.",
+      "added approval-backed weekly update publishing; renamed updates to SPCTR-UPDATE codes; backfilled and retro-numbered the archive.",
+      "added site data mount system, externalized compendium data from git.",
+      "replaced sidebar nav with horizontal topnav; added mobile adaptation (touch targets, type tokens, min-height).",
+      "redesigned dossier and addenda index cards with tab-panel pattern; added page background contrast; added IBM Plex Serif for body prose.",
+      "restyled sitemap registry (single column, autolink bare URIs, ascending sort, scope chip styling).",
+      "added rust-native CSS/HTML minification (lightningcss + minhtml); cleaned dead fonts; fixed minifier crate names and template rewriting.",
+      "added site build drift check and blog validation; tightened site-project provenance checks; untracked generated site outputs.",
+      "fixed cargo PATH in mirror CI; fixed gitignore inconsistencies; fixed topnav height inheritance; fixed double-title pattern; restored card borders."
+    ],
+    "lab": []
+  }
+}

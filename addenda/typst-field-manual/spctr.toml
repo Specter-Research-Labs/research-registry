@@ -1,0 +1,66 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "typst-field-manual"
+series = "A-008"
+summary = "Typst template suite for Specter field manuals and public papers, with shared tokens and reproducible build routing."
+status = "operational"
+
+[site]
+visible = true
+featured = false
+
+[labels]
+type = "tooling"
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[spctr]
+project = "typst-field-manual"
+
+[spctr.exec.check]
+description = "Token-discipline check for both Typst style surfaces"
+command = ["python3", "tools/check_style_tokens.py"]
+timeout_sec = 600
+network = "off"
+requires = ["python3"]
+
+[spctr.exec.smoke]
+description = "Compile the paper example with vendored fonts"
+command = ["python3", "tools/build.py", "paper-example.typ"]
+expected_outputs = ["paper-example-pdf"]
+timeout_sec = 1200
+network = "off"
+requires = ["python3", "typst"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python3"]
+network = "off"
+cache_paths = ["artifacts"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = []
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "paper-example-pdf"
+path = "artifacts/pdfs/paper-example.pdf"
+kind = "pdf"
+required = true
+
+[spctr.docs]
+root = "."
+landing = "README.md"
+require_frontmatter = false

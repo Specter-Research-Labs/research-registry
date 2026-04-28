@@ -1,0 +1,63 @@
+% fig4b-clustering.tex
+\documentclass[tikz,border=5pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+\tikzset{
+    dendro/.style={draw=muted, line width=0.8pt, rounded corners=1pt},
+    faint/.style={draw=muted!50}
+}
+
+\begin{scope}[shift={(0, 0)}]
+    \node[paneltitle, anchor=south] at (1.6, 0.5) {(B) Clustering};
+
+    % Tree structure
+    % Coordinates (Tighter vertical)
+    \coordinate (wild) at (0, -2.0);
+    \coordinate (ctrl) at (0.8, -2.0);
+    \coordinate (blks) at (1.6, -2.0);
+    \coordinate (blkr) at (2.4, -2.0);
+    \coordinate (blki) at (3.2, -2.0);
+
+    % Labels
+    \node[anchor=north, font=\scriptsize] at (wild) {wild};
+    \node[anchor=north, font=\scriptsize] at (ctrl) {ctrl};
+    \node[anchor=north, font=\scriptsize] at (blks) {blk-s};
+    \node[anchor=north, font=\scriptsize] at (blkr) {blk-r};
+    \node[anchor=north, font=\scriptsize] at (blki) {blk-i};
+
+    % Edges - squared
+    % wild-ctrl merge
+    \draw[dendro] (wild) -- (wild |- 0, -1.2) -- (ctrl |- 0, -1.2) -- (ctrl);
+    \coordinate (m1) at (0.4, -1.2);
+    \fill[ink] (m1) circle (1.5pt);
+
+    % blks-blkr merge
+    \draw[dendro] (blks) -- (blks |- 0, -1.5) -- (blkr |- 0, -1.5) -- (blkr);
+    \coordinate (m2) at (2.0, -1.5);
+    \fill[ink] (m2) circle (1.5pt);
+
+    % m2 - blki merge
+    \draw[dendro] (m2) -- (m2 |- 0, -0.8) -- (blki |- 0, -0.8) -- (blki);
+    \coordinate (m3) at (2.6, -0.8);
+    \fill[ink] (m3) circle (1.5pt);
+
+    % m1 - m3 merge (Root)
+    \draw[dendro] (m1) -- (m1 |- 0, -0.2) -- (m3 |- 0, -0.2) -- (m3);
+    \coordinate (root) at (1.5, -0.2);
+    \fill[ink] (root) circle (1.5pt);
+
+    % Distance axis
+    \draw[faint, ->] (-0.6, -2.0) -- (-0.6, 0.0);
+    \node[anchor=south, font=\scriptsize, rotate=90, text=muted] at (-0.8, -1.0) {Distance};
+    
+    % Cut line
+    \draw[dashed, blocked, line width=0.6pt] (-0.4, -0.6) -- (3.6, -0.6);
+    \node[annot, text=blocked, anchor=west] at (3.65, -0.6) {cut};
+\end{scope}
+\end{tikzpicture}
+\end{document}

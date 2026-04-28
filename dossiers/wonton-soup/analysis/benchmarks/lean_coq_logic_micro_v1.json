@@ -1,0 +1,695 @@
+{
+  "schema_version": 1,
+  "benchmark_id": "lean-coq-logic-micro-v1",
+  "description": "Manually curated Lean\u2194Coq logic benchmark pairs for cross-assistant retrieval.",
+  "gate": {
+    "min_recall_at_1": 0.02,
+    "min_recall_at_10": 0.3,
+    "min_mrr": 0.12,
+    "by_kind": {
+      "cross_kind": {
+        "min_pairs": 20,
+        "min_recall_at_1": 0.02,
+        "min_recall_at_10": 0.3,
+        "min_mrr": 0.12
+      },
+      "same_kind": {
+        "min_pairs": 0
+      }
+    }
+  },
+  "pairs": [
+    {
+      "pair_id": "pair_absurd",
+      "coq_theorem": "absurd",
+      "lean_display_name": "absurd",
+      "lean_item_id": "coq_pair_absurd",
+      "lean_statement": "theorem {name} (P Q : Prop) (hP : P) (hNotP : \u00ac P) : Q := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_and_assoc",
+      "coq_theorem": "and_assoc",
+      "lean_display_name": "and_assoc",
+      "lean_item_id": "coq_pair_and_assoc",
+      "lean_statement": "theorem {name} (P Q R : Prop) : ((P \u2227 Q) \u2227 R) \u2194 (P \u2227 (Q \u2227 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_and_cancel_l",
+      "coq_theorem": "and_cancel_l",
+      "lean_display_name": "and_cancel_l",
+      "lean_item_id": "coq_pair_and_cancel_l",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2227 Q \u2194 P \u2227 R) \u2194 (P \u2192 (Q \u2194 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_and_cancel_r",
+      "coq_theorem": "and_cancel_r",
+      "lean_display_name": "and_cancel_r",
+      "lean_item_id": "coq_pair_and_cancel_r",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2227 R \u2194 Q \u2227 R) \u2194 (R \u2192 (P \u2194 Q)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_and_comm",
+      "coq_theorem": "and_comm",
+      "lean_display_name": "and_comm",
+      "lean_item_id": "coq_pair_and_comm",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2227 Q) \u2194 (Q \u2227 P) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_and_iff_compat_l",
+      "coq_theorem": "and_iff_compat_l",
+      "lean_display_name": "and_iff_compat_l",
+      "lean_item_id": "coq_pair_and_iff_compat_l",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2194 Q) \u2192 ((R \u2227 P) \u2194 (R \u2227 Q)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_and_iff_compat_r",
+      "coq_theorem": "and_iff_compat_r",
+      "lean_display_name": "and_iff_compat_r",
+      "lean_item_id": "coq_pair_and_iff_compat_r",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2194 Q) \u2192 ((P \u2227 R) \u2194 (Q \u2227 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_andb_prop",
+      "coq_theorem": "andb_prop",
+      "lean_display_name": "andb_prop",
+      "lean_item_id": "coq_pair_andb_prop",
+      "lean_statement": "theorem {name} (a b : Bool) : a && b = true \u2192 (a = true \u2227 b = true) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_andb_true_intro",
+      "coq_theorem": "andb_true_intro",
+      "lean_display_name": "andb_true_intro",
+      "lean_item_id": "coq_pair_andb_true_intro",
+      "lean_statement": "theorem {name} (a b : Bool) : (a = true \u2227 b = true) \u2192 a && b = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_bool_dec",
+      "coq_theorem": "bool_dec",
+      "lean_display_name": "bool_dec",
+      "lean_item_id": "coq_pair_bool_dec",
+      "lean_statement": "theorem {name} (a : Bool) : a = true \u2228 a = false := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_diff_false_true",
+      "coq_theorem": "diff_false_true",
+      "lean_display_name": "diff_false_true",
+      "lean_item_id": "coq_pair_diff_false_true",
+      "lean_statement": "theorem {name} : (False \u2194 True) \u2192 False := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_diff_true_false",
+      "coq_theorem": "diff_true_false",
+      "lean_display_name": "diff_true_false",
+      "lean_item_id": "coq_pair_diff_true_false",
+      "lean_statement": "theorem {name} : (True \u2194 False) \u2192 False := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_sym",
+      "coq_theorem": "eq_sym",
+      "lean_display_name": "eq_sym",
+      "lean_item_id": "coq_pair_eq_sym",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} : x = y \u2192 y = x := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_sym_involutive",
+      "coq_theorem": "eq_sym_involutive",
+      "lean_display_name": "eq_sym_involutive",
+      "lean_item_id": "coq_pair_eq_sym_involutive",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} (hxy : x = y) : Eq.symm (Eq.symm hxy) = hxy := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans",
+      "coq_theorem": "eq_trans",
+      "lean_display_name": "eq_trans",
+      "lean_item_id": "coq_pair_eq_trans",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y z : \u03b1} : x = y \u2192 y = z \u2192 x = z := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_assoc",
+      "coq_theorem": "eq_trans_assoc",
+      "lean_display_name": "eq_trans_assoc",
+      "lean_item_id": "coq_pair_eq_trans_assoc",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {w x y z : \u03b1} (h1 : w = x) (h2 : x = y) (h3 : y = z) : Eq.trans (Eq.trans h1 h2) h3 = Eq.trans h1 (Eq.trans h2 h3) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_map",
+      "coq_theorem": "eq_trans_map",
+      "lean_display_name": "eq_trans_map",
+      "lean_item_id": "coq_pair_eq_trans_map",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (f : \u03b1 \u2192 \u03b2) {x y z : \u03b1} (hxy : x = y) (hyz : y = z) : Eq.trans (congrArg f hxy) (congrArg f hyz) = congrArg f (Eq.trans hxy hyz) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_r",
+      "coq_theorem": "eq_trans_r",
+      "lean_display_name": "eq_trans_r",
+      "lean_item_id": "coq_pair_eq_trans_r",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} (hxy : x = y) : Eq.trans hxy rfl = hxy := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_refl_l",
+      "coq_theorem": "eq_trans_refl_l",
+      "lean_display_name": "eq_trans_refl_l",
+      "lean_item_id": "coq_pair_eq_trans_refl_l",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} (hxy : x = y) : Eq.trans rfl hxy = hxy := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_refl_r",
+      "coq_theorem": "eq_trans_refl_r",
+      "lean_display_name": "eq_trans_refl_r",
+      "lean_item_id": "coq_pair_eq_trans_refl_r",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} (hxy : x = y) : Eq.trans hxy rfl = hxy := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_sym_inv_l",
+      "coq_theorem": "eq_trans_sym_inv_l",
+      "lean_display_name": "eq_trans_sym_inv_l",
+      "lean_item_id": "coq_pair_eq_trans_sym_inv_l",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} (hxy : x = y) : Eq.trans (Eq.symm hxy) hxy = rfl := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_trans_sym_inv_r",
+      "coq_theorem": "eq_trans_sym_inv_r",
+      "lean_display_name": "eq_trans_sym_inv_r",
+      "lean_item_id": "coq_pair_eq_trans_sym_inv_r",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} (hxy : x = y) : Eq.trans hxy (Eq.symm hxy) = rfl := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_true_false_abs",
+      "coq_theorem": "eq_true_false_abs",
+      "lean_display_name": "eq_true_false_abs",
+      "lean_item_id": "coq_pair_eq_true_false_abs",
+      "lean_statement": "theorem {name} : (True = False) \u2192 False := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_true_ind_r",
+      "coq_theorem": "eq_true_ind_r",
+      "lean_display_name": "eq_true_ind_r",
+      "lean_item_id": "coq_pair_eq_true_ind_r",
+      "lean_statement": "theorem {name} (a : Bool) : a = true \u2192 decide (a = true) = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_true_rec_r",
+      "coq_theorem": "eq_true_rec_r",
+      "lean_display_name": "eq_true_rec_r",
+      "lean_item_id": "coq_pair_eq_true_rec_r",
+      "lean_statement": "theorem {name} (a : Bool) : a = true \u2192 decide (a = true) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eq_true_rect_r",
+      "coq_theorem": "eq_true_rect_r",
+      "lean_display_name": "eq_true_rect_r",
+      "lean_item_id": "coq_pair_eq_true_rect_r",
+      "lean_statement": "theorem {name} (a : Bool) : a = true \u2192 decide (a = true) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_false_iff",
+      "coq_theorem": "eqb_false_iff",
+      "lean_display_name": "eqb_false_iff",
+      "lean_item_id": "coq_pair_eqb_false_iff",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a b : \u03b1) : decide (a = b) = false \u2194 a \u2260 b := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_negb1",
+      "coq_theorem": "eqb_negb1",
+      "lean_display_name": "eqb_negb1",
+      "lean_item_id": "coq_pair_eqb_negb1",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a b : \u03b1) : !(decide (a = b)) = decide (a \u2260 b) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_negb2",
+      "coq_theorem": "eqb_negb2",
+      "lean_display_name": "eqb_negb2",
+      "lean_item_id": "coq_pair_eqb_negb2",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a b : \u03b1) : decide (a \u2260 b) = !(decide (a = b)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_prop",
+      "coq_theorem": "eqb_prop",
+      "lean_display_name": "eqb_prop",
+      "lean_item_id": "coq_pair_eqb_prop",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a b : \u03b1) : decide (a = b) = true \u2192 a = b := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_reflx",
+      "coq_theorem": "eqb_reflx",
+      "lean_display_name": "eqb_reflx",
+      "lean_item_id": "coq_pair_eqb_reflx",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a : \u03b1) : decide (a = a) = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_subst",
+      "coq_theorem": "eqb_subst",
+      "lean_display_name": "eqb_subst",
+      "lean_item_id": "coq_pair_eqb_subst",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a b c : \u03b1) : a = b \u2192 decide (a = c) = decide (b = c) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_eqb_true_iff",
+      "coq_theorem": "eqb_true_iff",
+      "lean_display_name": "eqb_true_iff",
+      "lean_item_id": "coq_pair_eqb_true_iff",
+      "lean_statement": "theorem {name} {\u03b1 : Type} [DecidableEq \u03b1] (a b : \u03b1) : decide (a = b) = true \u2194 a = b := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_f_equal",
+      "coq_theorem": "f_equal",
+      "lean_display_name": "f_equal",
+      "lean_item_id": "coq_pair_f_equal",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (f : \u03b1 \u2192 \u03b2) {x y : \u03b1} : x = y \u2192 f x = f y := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_f_equal2",
+      "coq_theorem": "f_equal2",
+      "lean_display_name": "f_equal2",
+      "lean_item_id": "coq_pair_f_equal2",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 \u03b3 : Type} (f : \u03b1 \u2192 \u03b2 \u2192 \u03b3) {a1 a2 : \u03b1} {b1 b2 : \u03b2} : a1 = a2 \u2192 b1 = b2 \u2192 f a1 b1 = f a2 b2 := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_f_equal3",
+      "coq_theorem": "f_equal3",
+      "lean_display_name": "f_equal3",
+      "lean_item_id": "coq_pair_f_equal3",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 \u03b3 \u03b4 : Type} (f : \u03b1 \u2192 \u03b2 \u2192 \u03b3 \u2192 \u03b4) {a1 a2 : \u03b1} {b1 b2 : \u03b2} {c1 c2 : \u03b3} : a1 = a2 \u2192 b1 = b2 \u2192 c1 = c2 \u2192 f a1 b1 c1 = f a2 b2 c2 := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_f_equal_compose",
+      "coq_theorem": "f_equal_compose",
+      "lean_display_name": "f_equal_compose",
+      "lean_item_id": "coq_pair_f_equal_compose",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 \u03b3 : Type} (f : \u03b2 \u2192 \u03b3) (g : \u03b1 \u2192 \u03b2) {x y : \u03b1} : x = y \u2192 f (g x) = f (g y) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_if_negb",
+      "coq_theorem": "if_negb",
+      "lean_display_name": "if_negb",
+      "lean_item_id": "coq_pair_if_negb",
+      "lean_statement": "theorem {name} {\u03b1 : Type} (a : Bool) (x y : \u03b1) : (if !a then x else y) = (if a then y else x) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_iff_and",
+      "coq_theorem": "iff_and",
+      "lean_display_name": "iff_and",
+      "lean_item_id": "coq_pair_iff_and",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2194 Q) \u2194 ((P \u2192 Q) \u2227 (Q \u2192 P)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_iff_refl",
+      "coq_theorem": "iff_refl",
+      "lean_display_name": "iff_refl",
+      "lean_item_id": "coq_pair_iff_refl",
+      "lean_statement": "theorem {name} (P : Prop) : P \u2194 P := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_iff_sym",
+      "coq_theorem": "iff_sym",
+      "lean_display_name": "iff_sym",
+      "lean_item_id": "coq_pair_iff_sym",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2194 Q) \u2192 (Q \u2194 P) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_iff_to_and",
+      "coq_theorem": "iff_to_and",
+      "lean_display_name": "iff_to_and",
+      "lean_item_id": "coq_pair_iff_to_and",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2194 Q) \u2192 ((P \u2192 Q) \u2227 (Q \u2192 P)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_iff_trans",
+      "coq_theorem": "iff_trans",
+      "lean_display_name": "iff_trans",
+      "lean_item_id": "coq_pair_iff_trans",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2194 Q) \u2192 (Q \u2194 R) \u2192 (P \u2194 R) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_imp_iff_compat_l",
+      "coq_theorem": "imp_iff_compat_l",
+      "lean_display_name": "imp_iff_compat_l",
+      "lean_item_id": "coq_pair_imp_iff_compat_l",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2194 Q) \u2192 ((P \u2192 R) \u2194 (Q \u2192 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_imp_iff_compat_r",
+      "coq_theorem": "imp_iff_compat_r",
+      "lean_display_name": "imp_iff_compat_r",
+      "lean_item_id": "coq_pair_imp_iff_compat_r",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (Q \u2194 R) \u2192 ((P \u2192 Q) \u2194 (P \u2192 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_injective_projections",
+      "coq_theorem": "injective_projections",
+      "lean_display_name": "injective_projections",
+      "lean_item_id": "coq_pair_injective_projections",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} {a c : \u03b1} {b d : \u03b2} : (a, b) = (c, d) \u2192 (a = c \u2227 b = d) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_map_subst",
+      "coq_theorem": "map_subst",
+      "lean_display_name": "map_subst",
+      "lean_item_id": "coq_pair_map_subst",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (f : \u03b1 \u2192 \u03b2) {x y : \u03b1} : x = y \u2192 f x = f y := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_map_subst_map",
+      "coq_theorem": "map_subst_map",
+      "lean_display_name": "map_subst_map",
+      "lean_item_id": "coq_pair_map_subst_map",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 \u03b3 : Type} (f : \u03b1 \u2192 \u03b2) (g : \u03b2 \u2192 \u03b3) {x y : \u03b1} : x = y \u2192 g (f x) = g (f y) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_neg_false",
+      "coq_theorem": "neg_false",
+      "lean_display_name": "neg_false",
+      "lean_item_id": "coq_pair_neg_false",
+      "lean_statement": "theorem {name} : \u00ac False := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_andb",
+      "coq_theorem": "negb_andb",
+      "lean_display_name": "negb_andb",
+      "lean_item_id": "coq_pair_negb_andb",
+      "lean_statement": "theorem {name} (a b : Bool) : !(a && b) = (!a || !b) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_false_iff",
+      "coq_theorem": "negb_false_iff",
+      "lean_display_name": "negb_false_iff",
+      "lean_item_id": "coq_pair_negb_false_iff",
+      "lean_statement": "theorem {name} (a : Bool) : !a = false \u2194 a = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_involutive",
+      "coq_theorem": "negb_involutive",
+      "lean_display_name": "negb_involutive",
+      "lean_item_id": "coq_pair_negb_involutive",
+      "lean_statement": "theorem {name} (a : Bool) : !!a = a := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_involutive_reverse",
+      "coq_theorem": "negb_involutive_reverse",
+      "lean_display_name": "negb_involutive_reverse",
+      "lean_item_id": "coq_pair_negb_involutive_reverse",
+      "lean_statement": "theorem {name} (a : Bool) : a = !!a := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_orb",
+      "coq_theorem": "negb_orb",
+      "lean_display_name": "negb_orb",
+      "lean_item_id": "coq_pair_negb_orb",
+      "lean_statement": "theorem {name} (a b : Bool) : !(a || b) = (!a && !b) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_sym",
+      "coq_theorem": "negb_sym",
+      "lean_display_name": "negb_sym",
+      "lean_item_id": "coq_pair_negb_sym",
+      "lean_statement": "theorem {name} (a b : Bool) : (!a = b) \u2194 (a = !b) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_negb_true_iff",
+      "coq_theorem": "negb_true_iff",
+      "lean_display_name": "negb_true_iff",
+      "lean_item_id": "coq_pair_negb_true_iff",
+      "lean_statement": "theorem {name} (a : Bool) : !a = true \u2194 a = false := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_no_fixpoint_negb",
+      "coq_theorem": "no_fixpoint_negb",
+      "lean_display_name": "no_fixpoint_negb",
+      "lean_item_id": "coq_pair_no_fixpoint_negb",
+      "lean_statement": "theorem {name} (a : Bool) : a \u2260 !a := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_not_eq_sym",
+      "coq_theorem": "not_eq_sym",
+      "lean_display_name": "not_eq_sym",
+      "lean_item_id": "coq_pair_not_eq_sym",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} : x \u2260 y \u2194 y \u2260 x := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_not_false_iff_true",
+      "coq_theorem": "not_false_iff_true",
+      "lean_display_name": "not_false_iff_true",
+      "lean_item_id": "coq_pair_not_false_iff_true",
+      "lean_statement": "theorem {name} (a : Bool) : a \u2260 false \u2194 a = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_not_false_is_true",
+      "coq_theorem": "not_false_is_true",
+      "lean_display_name": "not_false_is_true",
+      "lean_item_id": "coq_pair_not_false_is_true",
+      "lean_statement": "theorem {name} (a : Bool) : a \u2260 false \u2192 a = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_not_iff_compat",
+      "coq_theorem": "not_iff_compat",
+      "lean_display_name": "not_iff_compat",
+      "lean_item_id": "coq_pair_not_iff_compat",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2194 Q) \u2192 (\u00ac P \u2194 \u00ac Q) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_not_true_iff_false",
+      "coq_theorem": "not_true_iff_false",
+      "lean_display_name": "not_true_iff_false",
+      "lean_item_id": "coq_pair_not_true_iff_false",
+      "lean_statement": "theorem {name} (a : Bool) : a \u2260 true \u2194 a = false := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_not_true_is_false",
+      "coq_theorem": "not_true_is_false",
+      "lean_display_name": "not_true_is_false",
+      "lean_item_id": "coq_pair_not_true_is_false",
+      "lean_statement": "theorem {name} (a : Bool) : a \u2260 true \u2192 a = false := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_or_assoc",
+      "coq_theorem": "or_assoc",
+      "lean_display_name": "or_assoc",
+      "lean_item_id": "coq_pair_or_assoc",
+      "lean_statement": "theorem {name} (P Q R : Prop) : ((P \u2228 Q) \u2228 R) \u2194 (P \u2228 (Q \u2228 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_or_cancel_l",
+      "coq_theorem": "or_cancel_l",
+      "lean_display_name": "or_cancel_l",
+      "lean_item_id": "coq_pair_or_cancel_l",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2228 Q \u2194 P \u2228 R) \u2194 (\u00ac P \u2192 (Q \u2194 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_or_cancel_r",
+      "coq_theorem": "or_cancel_r",
+      "lean_display_name": "or_cancel_r",
+      "lean_item_id": "coq_pair_or_cancel_r",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2228 R \u2194 Q \u2228 R) \u2194 (\u00ac R \u2192 (P \u2194 Q)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_or_comm",
+      "coq_theorem": "or_comm",
+      "lean_display_name": "or_comm",
+      "lean_item_id": "coq_pair_or_comm",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2228 Q) \u2194 (Q \u2228 P) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_or_iff_compat_l",
+      "coq_theorem": "or_iff_compat_l",
+      "lean_display_name": "or_iff_compat_l",
+      "lean_item_id": "coq_pair_or_iff_compat_l",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2194 Q) \u2192 ((R \u2228 P) \u2194 (R \u2228 Q)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_or_iff_compat_r",
+      "coq_theorem": "or_iff_compat_r",
+      "lean_display_name": "or_iff_compat_r",
+      "lean_item_id": "coq_pair_or_iff_compat_r",
+      "lean_statement": "theorem {name} (P Q R : Prop) : (P \u2194 Q) \u2192 ((P \u2228 R) \u2194 (Q \u2228 R)) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_diag",
+      "coq_theorem": "orb_diag",
+      "lean_display_name": "orb_diag",
+      "lean_item_id": "coq_pair_orb_diag",
+      "lean_statement": "theorem {name} (a : Bool) : a || a = a := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_false_iff",
+      "coq_theorem": "orb_false_iff",
+      "lean_display_name": "orb_false_iff",
+      "lean_item_id": "coq_pair_orb_false_iff",
+      "lean_statement": "theorem {name} (a b : Bool) : a || b = false \u2194 (a = false \u2227 b = false) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_false_intro",
+      "coq_theorem": "orb_false_intro",
+      "lean_display_name": "orb_false_intro",
+      "lean_item_id": "coq_pair_orb_false_intro",
+      "lean_statement": "theorem {name} (a b : Bool) : a = false \u2192 b = false \u2192 a || b = false := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_prop",
+      "coq_theorem": "orb_prop",
+      "lean_display_name": "orb_prop",
+      "lean_item_id": "coq_pair_orb_prop",
+      "lean_statement": "theorem {name} (a b : Bool) : a || b = true \u2192 (a = true \u2228 b = true) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_true_iff",
+      "coq_theorem": "orb_true_iff",
+      "lean_display_name": "orb_true_iff",
+      "lean_item_id": "coq_pair_orb_true_iff",
+      "lean_statement": "theorem {name} (a b : Bool) : a || b = true \u2194 (a = true \u2228 b = true) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_true_intro",
+      "coq_theorem": "orb_true_intro",
+      "lean_display_name": "orb_true_intro",
+      "lean_item_id": "coq_pair_orb_true_intro",
+      "lean_statement": "theorem {name} (a b : Bool) : (a = true \u2228 b = true) \u2192 a || b = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_orb_true_r",
+      "coq_theorem": "orb_true_r",
+      "lean_display_name": "orb_true_r",
+      "lean_item_id": "coq_pair_orb_true_r",
+      "lean_statement": "theorem {name} (a : Bool) : a || true = true := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_pair_equal_spec",
+      "coq_theorem": "pair_equal_spec",
+      "lean_display_name": "pair_equal_spec",
+      "lean_item_id": "coq_pair_pair_equal_spec",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (a c : \u03b1) (b d : \u03b2) : ((a, b) = (c, d)) \u2194 (a = c \u2227 b = d) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_proj1",
+      "coq_theorem": "proj1",
+      "lean_display_name": "proj1",
+      "lean_item_id": "coq_pair_proj1",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2227 Q) \u2192 P := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_proj2",
+      "coq_theorem": "proj2",
+      "lean_display_name": "proj2",
+      "lean_item_id": "coq_pair_proj2",
+      "lean_statement": "theorem {name} (P Q : Prop) : (P \u2227 Q) \u2192 Q := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_rew_map",
+      "coq_theorem": "rew_map",
+      "lean_display_name": "rew_map",
+      "lean_item_id": "coq_pair_rew_map",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (f : \u03b1 \u2192 \u03b2) {x y : \u03b1} : x = y \u2192 f x = f y := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_rew_opp_l",
+      "coq_theorem": "rew_opp_l",
+      "lean_display_name": "rew_opp_l",
+      "lean_item_id": "coq_pair_rew_opp_l",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} : x = y \u2192 y = x := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_rew_opp_r",
+      "coq_theorem": "rew_opp_r",
+      "lean_display_name": "rew_opp_r",
+      "lean_item_id": "coq_pair_rew_opp_r",
+      "lean_statement": "theorem {name} {\u03b1 : Type} {x y : \u03b1} : y = x \u2192 x = y := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_rew_pair",
+      "coq_theorem": "rew_pair",
+      "lean_display_name": "rew_pair",
+      "lean_item_id": "coq_pair_rew_pair",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (a : \u03b1) (b : \u03b2) : ((a, b).1 = a) \u2227 ((a, b).2 = b) := by\n  sorry",
+      "notes": "manual-semantic-map"
+    },
+    {
+      "pair_id": "pair_surjective_pairing",
+      "coq_theorem": "surjective_pairing",
+      "lean_display_name": "surjective_pairing",
+      "lean_item_id": "coq_pair_surjective_pairing",
+      "lean_statement": "theorem {name} {\u03b1 \u03b2 : Type} (p : \u03b1 \u00d7 \u03b2) : (p.1, p.2) = p := by\n  sorry",
+      "notes": "manual-semantic-map"
+    }
+  ]
+}

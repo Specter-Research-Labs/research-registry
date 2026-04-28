@@ -1,0 +1,77 @@
+% fig18-tactic-roles.tex
+% Absorbed vs load-bearing tactic roles under intervention
+\documentclass[tikz,border=18pt]{standalone}
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+% Background panels
+\path[fill=basin1!28, rounded corners=9pt] (-9.5, -4.5) rectangle (-0.6, 4.5);
+\path[fill=deadnode!70, rounded corners=9pt] (0.6, -4.5) rectangle (9.5, 4.5);
+
+% === LEFT PANEL: Absorbed ===
+\node[paneltitle] at (-5.05, 3.9) {Absorbed};
+\node[annot] at (-5.05, 3.4) {blocked tactic, run still solves};
+
+% Schematic: blocked path + green success path
+\node[goal] (al0) at (-5.05, 2.0) {$G$};
+\node[dead, minimum width=1.4cm] (ald) at (-7.2, 0.5) {\scriptsize blocked};
+\node[goal] (al1) at (-3.0, 0.5) {$G'$};
+\node[terminal] (alt) at (-3.0, -0.8) {{\Large$\bullet$}};
+
+\draw[blockedtactic] (al0) -- (ald)
+    node[midway, above left, tacticlabel, text=blocked] {block};
+\draw[tactic, draw=accentgreen, line width=1.2pt] (al0) -- (al1)
+    node[midway, above right, tacticlabel, text=accentgreen!80!black] {alternate};
+\draw[tactic, draw=accentgreen, line width=1.2pt] (al1) -- (alt);
+
+\node[annot, text=accentgreen!70!black, font=\normalfont\footnotesize\bfseries]
+    at (-3.0, -1.5) {still solves};
+
+% Tactic list with solve rates
+\node[annot, anchor=north west, align=left, font=\normalfont\footnotesize]
+    at (-8.8, -2.0) {%
+        \begin{tabular}{@{}l@{\quad}r@{\quad}r@{}}
+        \textbf{tactic} & \textbf{entries} & \textbf{solve} \\[2pt]
+        \texttt{push\_neg} & 60 & 100\% \\
+        \texttt{contrapose!} & 28 & 100\% \\
+        \texttt{positivity} & 24 & 100\% \\
+        \end{tabular}%
+    };
+
+% === RIGHT PANEL: Load-bearing ===
+\node[paneltitle] at (5.05, 3.9) {Load-bearing};
+\node[annot] at (5.05, 3.4) {blocked tactic, run collapses};
+
+% Schematic: blocked path leads to dead ends
+\node[goal] (bl0) at (5.05, 2.0) {$G$};
+\node[dead, minimum width=1.4cm] (bld1) at (3.0, 0.5) {\scriptsize dead end};
+\node[dead, minimum width=1.4cm] (bld2) at (7.1, 0.5) {\scriptsize dead end};
+
+\draw[blockedtactic] (bl0) -- (bld1)
+    node[midway, above left, tacticlabel, text=blocked] {block};
+\draw[blockedtactic] (bl0) -- (bld2)
+    node[midway, above right, tacticlabel, text=muted] {fallback};
+
+\node[annot, text=blocked, font=\normalfont\footnotesize\bfseries]
+    at (5.05, -0.7) {no alternate path};
+
+% Tactic list with solve rates
+\node[annot, anchor=north west, align=left, font=\normalfont\footnotesize]
+    at (1.3, -2.0) {%
+        \begin{tabular}{@{}l@{\quad}r@{\quad}r@{}}
+        \textbf{tactic} & \textbf{entries} & \textbf{solve} \\[2pt]
+        \texttt{simp} & 573 & 0\% \\
+        \texttt{rfl} & 111 & 0\% \\
+        \texttt{decide} & 53 & 0\% \\
+        \texttt{omega} & 25 & 0\% \\
+        \end{tabular}%
+    };
+
+\end{tikzpicture}
+\end{document}

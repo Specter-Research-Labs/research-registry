@@ -1,0 +1,38 @@
+{
+  "name": "full-discovery-v2",
+  "phases": [
+    {
+      "name": "map-elites-diversity",
+      "type": "qd",
+      "algorithm": "me",
+      "config_dir": "configs/papers/leniabreeder-2024",
+      "seeds": [0, 1, 2, 3],
+      "target": { "min_coverage": 0.5 }
+    },
+    {
+      "name": "imgep-motile",
+      "type": "imgep",
+      "config": "configs/imgep/imgep_motile.json",
+      "base_config": "configs/base/paper_base_1c_128.json",
+      "search_config": "configs/search/search_motile.json",
+      "target": { "iterations": 256 }
+    },
+    {
+      "name": "gliders",
+      "type": "sweep",
+      "manifest": "configs/sweeps/glider_sweeps.json",
+      "target": { "creatures": 200, "max_cycles": 4 }
+    },
+    {
+      "name": "bodyplans",
+      "type": "sweep",
+      "manifest": "configs/sweeps/bodyplan_discovery_sweeps.json",
+      "target": { "creatures": 300, "max_cycles": 8 }
+    }
+  ],
+  "compendium": {
+    "merge_phases": true,
+    "central_db": "outputs/compendium.sqlite"
+  },
+  "phase_isolation": true
+}

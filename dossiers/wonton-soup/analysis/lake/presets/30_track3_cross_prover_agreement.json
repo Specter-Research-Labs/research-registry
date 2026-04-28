@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "name": "track3_cross_prover_agreement",
+  "selection": {},
+  "reference": {
+    "build_outcomes": {
+      "alpha": 1.0,
+      "meta": {
+        "purpose": "track3 cross-prover agreement via solved + reference-scored K"
+      }
+    },
+    "score_k": true,
+    "selection": {
+      "backend": "lean"
+    }
+  },
+  "datasets": [
+    {
+      "name": "wild_by_provider_theorem",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT r.provider, r.backend, r.mode, r.corpus, w.theorem, w.solved, k.valid AS k_ref_valid, k.K AS k_ref_K FROM theorem_wild w JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN k_reference_score k ON k.run_key = w.run_key AND k.theorem = w.theorem AND k.variant = 'wild_type' AND k.ref_id = (SELECT ref_id FROM job_context LIMIT 1) ) SELECT provider, backend, mode, corpus, theorem, count(*) AS n_runs, avg(CASE WHEN solved IS NULL THEN NULL ELSE CAST(solved AS DOUBLE) END) AS solve_rate, avg(CASE WHEN k_ref_valid THEN k_ref_K ELSE NULL END) AS k_ref_mean, stddev_samp(CASE WHEN k_ref_valid THEN k_ref_K ELSE NULL END) AS k_ref_std FROM base GROUP BY provider, backend, mode, corpus, theorem ORDER BY provider NULLS LAST, backend NULLS LAST, mode NULLS LAST, corpus NULLS LAST, solve_rate DESC NULLS LAST, theorem"
+    },
+    {
+      "name": "paired_agreement_by_run_id",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT r.run_id, split_part(r.run_id, '/', 1) AS campaign, r.provider, r.backend, r.mode, r.corpus, w.theorem, w.solved, k.K AS k_ref_K FROM theorem_wild w JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN k_reference_score k ON k.run_key = w.run_key AND k.theorem = w.theorem AND k.variant = 'wild_type' AND k.ref_id = (SELECT ref_id FROM job_context LIMIT 1) WHERE r.run_id IS NOT NULL AND r.provider IS NOT NULL ) SELECT a.campaign, a.backend, a.mode, a.corpus, a.theorem, a.provider AS provider_a, b.provider AS provider_b, a.solved AS solved_a, b.solved AS solved_b, CASE WHEN a.solved IS NULL OR b.solved IS NULL THEN NULL ELSE (a.solved = b.solved) END AS agree_solved, a.k_ref_K AS k_a, b.k_ref_K AS k_b, CASE WHEN a.k_ref_K IS NULL OR b.k_ref_K IS NULL THEN NULL ELSE abs(a.k_ref_K - b.k_ref_K) END AS abs_delta_k FROM base a JOIN base b ON a.campaign = b.campaign AND a.backend = b.backend AND a.mode = b.mode AND a.corpus = b.corpus AND a.theorem = b.theorem WHERE a.provider < b.provider ORDER BY a.campaign, a.corpus, a.theorem, provider_a, provider_b"
+    }
+  ]
+}

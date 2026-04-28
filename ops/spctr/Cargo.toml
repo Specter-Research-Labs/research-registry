@@ -1,0 +1,42 @@
+[package]
+name = "spctr"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.87"
+description = "Portable Specter Labs CLI"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+axum = { version = "0.8", features = ["json", "tokio", "http1"] }
+base64 = "0.22"
+camino = "1"
+dirs = "6"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+clap = { version = "4.5", features = ["derive"] }
+clap_complete = "4"
+csscolorparser = "0.8"
+hmac = "0.12"
+maud = "0.26"
+regex-lite = "0.1"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tempfile = "3"
+rayon = "1.10"
+tokio = { version = "1", features = ["fs", "macros", "net", "rt-multi-thread", "signal", "time"] }
+tokio-postgres = "0.7"
+toml = "0.8"
+gray_matter = { version = "0.2", default-features = false, features = ["yaml"] }
+globset = "0.4"
+tower = { version = "0.5", features = ["util"] }
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

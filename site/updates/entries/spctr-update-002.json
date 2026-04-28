@@ -1,0 +1,26 @@
+{
+  "id": "spctr-update-002",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-002",
+  "date": "2026-01-27",
+  "published_at": "2026-01-24T23:20:21Z",
+  "topic": "weekly / spctr-update-002",
+  "window": {
+    "start": "2026-01-14",
+    "end": "2026-01-27"
+  },
+  "series_number": 2,
+  "sections": {
+    "dossiers": [
+      "lenia-swarm: added the LeniaStudio macOS app with live simulation viewing, ranked creatures, and cluster-aware exploration surfaces.",
+      "lenia-swarm: added cluster gossip, unique worker IDs, sweep campaigns, real-time arenas, fluid visualization, and creature-detection metrics.",
+      "lenia-swarm: added IMGEP activity/complexity tracking, new search configs, and regression tests around core logic.",
+      "wonton-soup: added the first visualization surfaces for run analysis."
+    ],
+    "addenda": [],
+    "ops": [
+      "changed site styling, typography, header/contact copy, and mobile viewport behavior."
+    ],
+    "lab": []
+  }
+}

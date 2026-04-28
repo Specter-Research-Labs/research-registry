@@ -1,0 +1,22 @@
+{
+  "id": "spctr-update-004",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-004",
+  "date": "2026-02-13",
+  "published_at": "2026-02-12T15:15:55Z",
+  "topic": "weekly / spctr-update-004",
+  "window": {
+    "start": "2026-02-12",
+    "end": "2026-02-13"
+  },
+  "series_number": 4,
+  "sections": {
+    "dossiers": [
+      "wonton-soup: added local-first runtime path routing across the main CLI, Lean orchestration, prover, corpus, graphs, and viz server.",
+      "wonton-soup: added runtime-path tests for prover logs and artifact environment handling."
+    ],
+    "addenda": [],
+    "ops": [],
+    "lab": []
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "paper": "hamon-2024-sensorimotor-agency",
+  "prefilter": {
+    "rollout_steps": 500,
+    "final_mass_min": 0.0,
+    "final_mass_max": 6400.0
+  },
+  "agency": {
+    "rollout_steps": 2000,
+    "final_mass_min": 0.0,
+    "final_mass_max": 6400.0,
+    "mass_window_a": [
+      0,
+      500
+    ],
+    "mass_window_b": [
+      1500,
+      2000
+    ],
+    "max_mass_ratio": 2.0,
+    "connectivity_threshold": 0.05
+  },
+  "moving": {
+    "distance_threshold": 100.0,
+    "window_end": 1000,
+    "speed_window": 1000,
+    "speed_start": 0
+  },
+  "basic_obstacle_test": {
+    "rollouts": 50,
+    "rollout_steps": 2000,
+    "obstacle_radius": 10,
+    "obstacle_count": 24,
+    "random_obstacles": 23,
+    "forced_obstacle_on_nominal_trajectory": true,
+    "forced_obstacle_reference_step": 1000,
+    "clear_initialization_radius": 10
+  },
+  "generalization": {
+    "trials_per_setting": 10,
+    "obstacle_radius": [
+      4,
+      7,
+      10,
+      13,
+      16
+    ],
+    "obstacle_count": [
+      24,
+      30,
+      36,
+      42,
+      48
+    ],
+    "obstacle_speed": [
+      0.3333333333,
+      0.5,
+      1.0,
+      2.0,
+      3.0
+    ],
+    "update_mask_rate": [
+      0.2,
+      0.6,
+      1.0,
+      1.4,
+      1.8
+    ],
+    "update_noise_std": [
+      0.2,
+      0.6,
+      1.0,
+      1.4,
+      1.8
+    ],
+    "update_noise_rate": [
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0
+    ],
+    "init_noise_rate": [
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0
+    ],
+    "init_noise_std": [
+      0.5,
+      1.5,
+      2.5,
+      3.5,
+      4.5
+    ],
+    "scale": [
+      0.15,
+      0.65,
+      1.15,
+      1.65,
+      2.15
+    ]
+  }
+}

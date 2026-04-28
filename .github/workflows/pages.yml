@@ -1,0 +1,105 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pages.yml"
+      - "site/**"
+      - "!site/atlas/**"
+      - "ops/site/deploy/**"
+      - "ops/spctr/**"
+      - "addenda/design-tokens/**"
+      - "dossiers/*/spctr.toml"
+      - "addenda/*/spctr.toml"
+      - "spctr-registry.json"
+      - "dossiers/*/docs/**"
+      - "addenda/*/docs/**"
+      - "dossiers/wonton-soup/docs/figures/out/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DEPLOY_HOST: ${{ secrets.SPECTER_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.SPECTER_DEPLOY_USER }}
+      SPECTER_DEPLOY_HOST: ${{ secrets.SPECTER_DEPLOY_HOST }}
+      SPECTER_DEPLOY_USER: ${{ secrets.SPECTER_DEPLOY_USER }}
+      RELEASE_ID: ${{ github.sha }}
+      SPECTER_SITE_PUBLIC_URL: https://specterlab.org
+      SPECTER_RELEASES_PUBLIC_URL: https://releases.specterlab.org
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install system tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y pandoc poppler-utils rsync openssh-client
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            ops/spctr/target
+          key: spctr-v2-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
+          restore-keys: spctr-v2-${{ runner.os }}-
+
+      - name: Install minification tools
+        run: |
+          command -v lightningcss || cargo install lightningcss --features cli --version 1.0.0-alpha.71
+          command -v minhtml || cargo install minhtml --version 0.18.1
+
+      - name: Install typst
+        uses: typst-community/setup-typst@v4
+
+      - name: Build spctr
+        run: cargo build --release --manifest-path ops/spctr/Cargo.toml
+
+      - name: Validate registry sync state
+        run: ./ops/spctr/target/release/spctr registry check
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SPECTER_DEPLOY_SSH_KEY }}
+
+      - name: Trust deploy host
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Publish site
+        run: |
+          set -euo pipefail
+          ./ops/spctr/target/release/spctr site publish --release-id "$RELEASE_ID"
+
+      - name: Purge Cloudflare cache
+        if: ${{ env.CLOUDFLARE_ZONE_ID != '' && env.CLOUDFLARE_API_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"prefixes":["https://specterlab.org/","https://www.specterlab.org/"]}'

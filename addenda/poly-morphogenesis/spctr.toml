@@ -1,0 +1,42 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Poly Morphogenesis"
+series = "A-013"
+summary = "Julia workbench for expressing a closed-loop morphogenesis model as composed Poly-style systems."
+status = "concept"
+
+[site]
+visible = false
+featured = false
+
+[labels]
+type = "research"
+
+[release]
+stage = "wip"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = false
+
+[spctr]
+project = "poly-morphogenesis"
+
+[spctr.exec.check]
+description = "Run the Julia parity and CLI test suite in the pinned root flake shell"
+command = ["bash", "-lc", '''set -euo pipefail
+nix develop ../../../#poly-morphogenesis -c julia --project=. -e 'using Pkg; Pkg.test()'
+''']
+timeout_sec = 3600
+network = "bootstrap"
+requires = ["nix"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["nix"]
+network = "bootstrap"
+cache_paths = ["Manifest.toml"]
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"

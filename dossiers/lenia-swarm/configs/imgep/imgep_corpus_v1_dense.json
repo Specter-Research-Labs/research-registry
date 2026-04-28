@@ -1,0 +1,22 @@
+{
+  "iterations": 512,
+  "warmupIterations": 64,
+  "batchSize": 4,
+  "seedsPerCandidate": 3,
+  "goal": {
+    "features": [
+      "mass_mean",
+      "gyration",
+      "moment_density",
+      "symmetry_dominant_amplitude",
+      "symmetry_entropy",
+      "trajectory_path_tortuosity"
+    ],
+    "boundsMode": "auto",
+    "bounds": null
+  },
+  "mutation": {
+    "std": 0.12,
+    "clip": true
+  }
+}

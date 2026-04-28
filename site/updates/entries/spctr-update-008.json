@@ -1,0 +1,39 @@
+{
+  "id": "spctr-update-008",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-008",
+  "date": "2026-03-28",
+  "published_at": "2026-03-28T00:00:00Z",
+  "topic": "weekly / spctr-update-008",
+  "window": {
+    "start": "2026-03-21",
+    "end": "2026-03-28"
+  },
+  "series_number": 8,
+  "sections": {
+    "dossiers": [
+      "lenia-swarm: added H1 generator packet extraction, continuation sweep tooling, cycle-lift and stateful continuation packets, and bidirectional charted continuation analysis.",
+      "lenia-swarm: added transport atlas surfaces, attractor packets, loop transport control, hotspot-seeded IMGEP scaffolding, and multi-loop control groups.",
+      "lenia-swarm: added winner transport packets with dense reports, validation batches, stability tracking, and Agda-facing transport group exports.",
+      "lenia-swarm: added Agda-facing empirical fibration packets, split packet normalization from codegen, sanitized constructors, and assembled semantic packages.",
+      "lenia-swarm: added specimen manifest contract, warehouse backfill, morphospace warehouse CLI, and analysis bridge; centralized specimen promotion; deduplicated CLI promotion options.",
+      "lenia-swarm: canonicalized archive and simplified lifecycle surfaces; shared archive seam across CLI and Studio; repaired lifecycle tests.",
+      "lenia-swarm: reified universe/world/ecosystem hierarchy and aligned naming with Flow Lenia terminology.",
+      "lenia-swarm: rewrote Lenia explainer blog into narrative atlas-oriented draft with morphospace anchor, TAME framing, and comparative sandbox controls.",
+      "lenia-swarm: restored fiber, replay, and topology stacks; hardened local fiber batch studies; sanitized persisted morphospace scores.",
+      "wonton-soup: added abstract program and DeepSeek throughput work; fixed deterministic inference failure propagation and batch seeding.",
+      "wonton-soup: simplified lake export and proof plumbing; refined dashboard and removed checked-in data; fixed postprocess dry-run and stale tree pruning.",
+      "wonton-soup: resumed saved theorem selections in Lean corpus runs; hardened graph and controller data.",
+      "zang-levin-playground: revised paper and experiments."
+    ],
+    "addenda": [
+      "embryomaker-v2: added parity scaffold with C++ kernel port, Python comparison CLI, and legacy baseline snapshot tooling.",
+      "typst-field-manual: added markdown-to-PDF pipeline and fixed field-manual template."
+    ],
+    "ops": [
+      "published SPCTR-UPDATE-007; refreshed site public shell.",
+      "migrated lenia-swarm scripts to grouped CLI surface and validated warehouse promotion."
+    ],
+    "lab": []
+  }
+}

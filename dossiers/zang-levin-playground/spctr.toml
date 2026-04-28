@@ -1,0 +1,95 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Morphogenetic Signatures in Sorting Algorithms"
+series = "D-001"
+summary = "Sorting-algorithm dynamics analyzed through mechanistic signatures, perturbations, and robustness assays."
+status = "active-writing"
+
+[site]
+visible = true
+featured = true
+featured_order = 1
+
+[release]
+stage = "candidate"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "zang-levin-playground"
+
+[spctr.exec.check]
+description = "Canonical candidate verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "Small seeded Figure 1 regeneration smoke"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/smoke
+uv run python paper/compute_fig1_temporal_clustering.py \
+  --n-trials 2 \
+  --timeout 2 \
+  --out artifacts/smoke/fig1_temporal_vs_clustering.json
+''']
+expected_outputs = ["fig1-smoke-results"]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Regenerate committed paper figure surfaces"
+command = ["uv", "run", "python", "paper/make_figures.py"]
+expected_outputs = ["fig1-paper-figure"]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = []
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "fig1-smoke-results"
+path = "artifacts/smoke/fig1_temporal_vs_clustering.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "fig1-paper-figure"
+path = "paper/figures/fig1_temporal_vs_clustering.pdf"
+kind = "pdf"
+required = true
+
+[spctr.docs]
+root = "."
+landing = "README.md"
+require_frontmatter = false

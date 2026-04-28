@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "name": "track1_basin_k",
+  "selection": {},
+  "reference": {
+    "build_outcomes": {
+      "alpha": 1.0,
+      "meta": {
+        "purpose": "track1 basin robustness via reference-scored K"
+      }
+    },
+    "score_k": true,
+    "selection": {
+      "backend": "lean"
+    }
+  },
+  "datasets": [
+    {
+      "name": "k_reference_score",
+      "format": "jsonl",
+      "query": "SELECT k.run_key, k.theorem, k.variant, k.ref_id, k.valid, k.primary_null_model, k.tau_agent, k.tau_blind, k.K, r.run_id, r.provider, r.backend, r.mode, r.corpus, r.goal_sig_scheme, r.created_at FROM k_reference_score k JOIN job_context jc ON k.ref_id = jc.ref_id JOIN runs r ON r.run_key = k.run_key JOIN selected_runs s ON s.run_key = k.run_key ORDER BY r.provider NULLS LAST, r.run_id NULLS LAST, k.theorem, k.variant"
+    },
+    {
+      "name": "basin_theorem_wild_summary",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT w.run_key, w.theorem, w.solved, w.k_K AS k_local_K, k.valid AS k_ref_valid, k.K AS k_ref_K FROM theorem_wild w JOIN selected_runs s USING(run_key) LEFT JOIN k_reference_score k ON k.run_key = w.run_key AND k.theorem = w.theorem AND k.variant = 'wild_type' AND k.ref_id = (SELECT ref_id FROM job_context LIMIT 1) ) SELECT theorem, count(*) AS n_runs, sum(CASE WHEN solved THEN 1 ELSE 0 END) AS n_solved, avg(CASE WHEN solved IS NULL THEN NULL ELSE CAST(solved AS DOUBLE) END) AS solve_rate, avg(CASE WHEN k_ref_valid THEN k_ref_K ELSE NULL END) AS k_ref_mean, stddev_samp(CASE WHEN k_ref_valid THEN k_ref_K ELSE NULL END) AS k_ref_std, avg(k_local_K) AS k_local_mean, stddev_samp(k_local_K) AS k_local_std FROM base GROUP BY theorem ORDER BY solve_rate DESC NULLS LAST, n_runs DESC, theorem"
+    },
+    {
+      "name": "basin_run_wild_summary",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, w.theorem, w.solved, k.valid AS k_ref_valid, k.K AS k_ref_K FROM runs r JOIN selected_runs s USING(run_key) JOIN theorem_wild w USING(run_key) LEFT JOIN k_reference_score k ON k.run_key = w.run_key AND k.theorem = w.theorem AND k.variant = 'wild_type' AND k.ref_id = (SELECT ref_id FROM job_context LIMIT 1) ) SELECT run_key, run_id, provider, backend, mode, corpus, count(*) AS n_theorems, sum(CASE WHEN solved THEN 1 ELSE 0 END) AS n_solved, avg(CASE WHEN solved IS NULL THEN NULL ELSE CAST(solved AS DOUBLE) END) AS solve_rate, avg(CASE WHEN k_ref_valid THEN k_ref_K ELSE NULL END) AS k_ref_mean, stddev_samp(CASE WHEN k_ref_valid THEN k_ref_K ELSE NULL END) AS k_ref_std FROM base GROUP BY run_key, run_id, provider, backend, mode, corpus ORDER BY solve_rate DESC NULLS LAST, run_key"
+    },
+    {
+      "name": "intervention_effects_summary",
+      "format": "jsonl",
+      "query": "WITH base AS ( SELECT i.run_key, i.theorem, i.intervention, i.solved AS inv_solved, w.solved AS wild_solved, i.ged_search_norm, kw.valid AS wild_k_valid, kw.K AS wild_k, ki.valid AS inv_k_valid, ki.K AS inv_k FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN theorem_wild w ON w.run_key = i.run_key AND w.theorem = i.theorem LEFT JOIN k_reference_score kw ON kw.run_key = i.run_key AND kw.theorem = i.theorem AND kw.variant = 'wild_type' AND kw.ref_id = (SELECT ref_id FROM job_context LIMIT 1) LEFT JOIN k_reference_score ki ON ki.run_key = i.run_key AND ki.theorem = i.theorem AND ki.variant = i.intervention AND ki.ref_id = (SELECT ref_id FROM job_context LIMIT 1) WHERE w.solved = true ) SELECT intervention, count(*) AS n, avg(CASE WHEN inv_solved IS NULL THEN NULL ELSE CAST(inv_solved AS DOUBLE) END) AS recovery_rate, avg(ged_search_norm) AS ged_norm_mean, avg(CASE WHEN wild_k_valid THEN wild_k ELSE NULL END) AS wild_k_ref_mean, avg(CASE WHEN inv_k_valid THEN inv_k ELSE NULL END) AS inv_k_ref_mean, avg(CASE WHEN wild_k_valid AND inv_k_valid THEN (inv_k - wild_k) ELSE NULL END) AS delta_k_ref_mean FROM base GROUP BY intervention ORDER BY delta_k_ref_mean DESC NULLS LAST, n DESC, intervention"
+    }
+  ]
+}

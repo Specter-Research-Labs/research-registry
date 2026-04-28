@@ -1,0 +1,86 @@
+% fig2-protocol.tex
+% Experimental Protocol: Wild-type -> Interventions -> Comparison
+\documentclass[tikz,border=9pt]{standalone}
+
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.5cm,
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+\tikzset{
+    stage/.style={protocolbox, minimum width=2.8cm, fill=white, draw=muted, line width=0.8pt},
+    phaselabel/.style={font=\bfseries\footnotesize, text=muted, align=center, anchor=north west}
+}
+
+% --- Background Zones ---
+% Drawn first to sit behind everything
+\begin{scope}
+    % Phase 1: Exploration (Top)
+    \fill[basin1!20, rounded corners=10pt] (-3.0, 1.2) rectangle (13.0, -1.8);
+    \node[phaselabel] at (-2.8, 1.0) {Phase 1: Exploration};
+
+    % Phase 2: Intervention (Middle)
+    \fill[deadnode!100, rounded corners=10pt] (-3.0, -2.5) rectangle (13.0, -6.0);
+    \node[phaselabel] at (-2.8, -2.7) {Phase 2: Intervention (Parallel)};
+
+    % Phase 3: Analysis (Bottom)
+    \fill[basin3!30, rounded corners=10pt] (-3.0, -6.5) rectangle (13.0, -9.5);
+    \node[phaselabel] at (-2.8, -6.7) {Phase 3: Analysis};
+\end{scope}
+
+
+% --- Phase 1: Exploration ---
+\node[stage] (theorem) at (0.5, 0) {Theorem\\$T$};
+\node[stage, right=of theorem] (wildtype) {Wild-type\\MCTS};
+\node[stage, right=of wildtype] (extract) {Extract\\Solution Path};
+
+\draw[flowarrow] (theorem) -- (wildtype);
+\draw[flowarrow] (wildtype) -- (extract);
+
+% Tactic extraction annotation
+\draw[dashed, draw=highlight, ->, >=Stealth] (extract.north) -- ++(0, 0.45)
+    node[above, annotbg, text=highlight] {Identify tactics $\tau_1, \tau_2, \dots$};
+
+
+% --- Phase 2: Intervention ---
+% Fan-out point
+\coordinate[below=1.5cm of extract] (fanout_center);
+
+% Nodes
+\node[stage, below=2.5cm of extract] (int2) {Intervention 2\\Block $\tau_2$};
+\node[stage, left=0.5cm of int2] (int1) {Intervention 1\\Block $\tau_1$};
+\node[stage, right=0.5cm of int2] (control) {Control\\Block $\tau_{rnd}$};
+
+% Arrows from Phase 1
+\draw[flowarrow, rounded corners=5pt] (extract.south) -- ++(0,-0.8) -| (int1.north);
+\draw[flowarrow] (extract.south) -- (int2.north);
+\draw[flowarrow, rounded corners=5pt] (extract.south) -- ++(0,-0.8) -| (control.north);
+
+% Annotations
+\node[annotbg, above=0.1cm of int1, text=highlight, font=\scriptsize] {Critical?};
+\node[annotbg, above=0.1cm of control, text=muted, font=\scriptsize] {Control};
+
+
+% --- Phase 3: Analysis ---
+\node[stage, below=2.5cm of int2, minimum width=4cm] (compare) {Compute GED Matrix\\\& Cluster Trajectories};
+\node[stage, below=of compare] (output) {Attractor Landscape};
+
+% Convergence arrows
+\draw[flowarrow, rounded corners=5pt] (int1.south) -- ++(0,-0.6) -| ([xshift=-1.0cm]compare.north);
+\draw[flowarrow] (int2.south) -- (compare.north);
+\draw[flowarrow, rounded corners=5pt] (control.south) -- ++(0,-0.6) -| ([xshift=1.0cm]compare.north);
+
+\draw[flowarrow] (compare) -- (output);
+
+% --- Legend / Key ---
+\begin{scope}[shift={(7.5, -8.5)}]
+    \node[annot, align=left] {GED: Graph Edit Distance\\MCTS: Monte Carlo Tree Search};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

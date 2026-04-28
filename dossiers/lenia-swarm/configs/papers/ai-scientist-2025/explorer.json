@@ -1,0 +1,11 @@
+{
+  "paper": "exploring-flow-lenia-universes-with-a-curiosity-driven-ai-scientist-2025",
+  "grid_size": 256,
+  "total_steps": 10000,
+  "coverage_bins_per_dimension": 5,
+  "coverage_bounds_mode": "observed_archive",
+  "frame_stride": 100,
+  "mp4_framerate": 10,
+  "evolutionary_activity_metric": "non_neutral",
+  "experiments": ["ecosystem", "movement"]
+}

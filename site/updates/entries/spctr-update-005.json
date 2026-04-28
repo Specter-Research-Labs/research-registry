@@ -1,0 +1,31 @@
+{
+  "id": "spctr-update-005",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-005",
+  "date": "2026-02-27",
+  "published_at": "2026-02-25T15:33:40Z",
+  "topic": "weekly / spctr-update-005",
+  "window": {
+    "start": "2026-02-14",
+    "end": "2026-02-27"
+  },
+  "series_number": 5,
+  "sections": {
+    "dossiers": [
+      "zang-levin-playground: added plan-file campaign runner support for deterministic runs.",
+      "wonton-soup: added the 1000-plus corpus build pipeline and coverage for the ingest path.",
+      "zang-levin-playground: added random-baseline, dip-statistic, and K-analysis scripts; refreshed paper figures, references, and benchmark tooling.",
+      "lenia-swarm: changed Lenia Studio into shared comparison, metric, render-mode, thumbnail, and compendium/live-view surfaces.",
+      "zang-levin-playground: changed the follow-up paper wording and rigor."
+    ],
+    "addenda": [
+      "specter-viz: changed line-chart and chart-type support.",
+      "paper-k: changed the core semantics implementation and added tests.",
+      "lean-corpus-extractor: changed the main CLI and README surface."
+    ],
+    "ops": [
+      "added the document cabinet generator, templates, styling, homepage link, and Pages workflow wiring."
+    ],
+    "lab": []
+  }
+}

@@ -1,0 +1,73 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "tinygrad-benchmarks"
+series = "A-003"
+summary = "History-mined benchmark harness for reproducible tinygrad contribution tasks."
+status = "concept"
+
+[site]
+visible = true
+featured = false
+
+[labels]
+type = "benchmark"
+
+[release]
+stage = "wip"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[spctr]
+project = "tinygrad-benchmarks"
+
+[spctr.exec.check]
+description = "Canonical WIP verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "CLI availability smoke"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/smoke
+uv run python -m tinygrad_benchmarks --help > artifacts/smoke/help.txt
+''']
+expected_outputs = ["cli-help"]
+timeout_sec = 300
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = []
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "cli-help"
+path = "artifacts/smoke/help.txt"
+kind = "text"
+required = true
+
+[spctr.docs]
+root = "docs"
+landing = "README.md"
+require_frontmatter = false

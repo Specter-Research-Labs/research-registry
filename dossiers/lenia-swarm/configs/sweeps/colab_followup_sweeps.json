@@ -1,0 +1,16 @@
+{
+  "variants": [
+    {
+      "id": "colab-coherent-1c-10k",
+      "config": "configs/presets/colab_random_1c_10k_128.json",
+      "search": "configs/search/search_colab_coherent_1c.json",
+      "count": 64
+    },
+    {
+      "id": "colab-embed-single-2c-40k-256",
+      "config": "configs/presets/colab_embed_single_2c_40k_256.json",
+      "search": "configs/search/search_colab_scout.json",
+      "count": 12
+    }
+  ]
+}

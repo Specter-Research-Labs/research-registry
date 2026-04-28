@@ -1,0 +1,23 @@
+SPECTER Labs Research Registry License Notice
+
+This repository is mixed-licensed.
+
+Required Notice: Copyright (c) 2026 Specter Research Labs
+
+- Specter-authored source code, scripts, build files, manifests, and
+  machine-readable configuration are licensed under PolyForm
+  Noncommercial 1.0.0.
+- Specter-authored documentation, papers, figures, Markdown, and
+  other narrative or media content are licensed under Creative
+  Commons Attribution-NonCommercial 4.0 International.
+- Any file or subtree that carries its own license header or local
+  `LICENSE` or `NOTICE` file keeps those local terms.
+
+See `LICENSING.md` for the repository policy and carve-outs.
+Canonical license texts live in:
+
+- `LICENSES/PolyForm-Noncommercial-1.0.0.txt`
+- `LICENSES/CC-BY-NC-4.0.txt`
+
+Commercial use of Specter-authored material requires separate written
+permission from Specter Research Labs.

@@ -1,0 +1,9 @@
+{
+  "paper": "toward-artificial-open-ended-evolution-within-lenia-using-quality-diversity-2024",
+  "pattern_id": "5N7KKM",
+  "world_size": 128,
+  "world_scale": 1,
+  "n_step": 200,
+  "n_params_size": 3,
+  "n_cells_size": 32
+}

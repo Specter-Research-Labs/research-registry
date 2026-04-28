@@ -1,0 +1,121 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "specter-viz"
+series = "A-005"
+summary = "WASM-first `egui` component library for dashboard-grade research visualization."
+status = "operational"
+
+[site]
+visible = true
+featured = false
+
+[labels]
+type = "tooling"
+
+[relations]
+dossier = "wonton-soup"
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+path = "src"
+include_docs = false
+support_paths = [
+    "addenda/specter-viz/Cargo.toml",
+    "addenda/specter-viz/Cargo.lock",
+    "addenda/specter-viz/LICENSE",
+    "addenda/specter-viz/README.md",
+    "addenda/specter-viz/flake.nix",
+    "addenda/specter-viz/spctr.toml",
+]
+
+[[release.surfaces]]
+name = "crate"
+kind = "package"
+publish = false
+language = "rust"
+registry = "crates.io"
+publish_mode = "subdir"
+
+[spctr]
+project = "specter-viz"
+
+[spctr.exec.check]
+description = "Compile the native and wasm library surfaces"
+commands = [
+    ["cargo", "check", "--locked", "--all-targets"],
+    ["cargo", "check", "--locked", "--lib", "--target", "wasm32-unknown-unknown"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["rust", "wasm32-unknown-unknown"]
+
+[spctr.exec.smoke]
+description = "Run the crate test suite"
+command = ["cargo", "test", "--locked"]
+timeout_sec = 1800
+network = "off"
+requires = ["rust"]
+
+[spctr.exec.build]
+description = "Build the release wasm artifact"
+command = ["cargo", "build", "--locked", "--release", "--lib", "--target", "wasm32-unknown-unknown"]
+expected_outputs = ["specter-viz-wasm"]
+timeout_sec = 1800
+network = "off"
+requires = ["rust", "wasm32-unknown-unknown"]
+
+[spctr.exec.publish]
+description = "Canonical source bundle publish proof path"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/publish/source
+"$SPCTR_BIN" release bundle specter-viz source --release-id contract-publish --output "$PWD/artifacts/publish/source"
+''']
+expected_outputs = ["source-bundle", "source-bundle-evidence"]
+timeout_sec = 1800
+network = "off"
+requires = ["tar"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["rust"]
+network = "off"
+cache_paths = ["target"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check", "smoke"]
+push_main = ["check", "smoke", "build", "publish"]
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "specter-viz-wasm"
+path = "target/wasm32-unknown-unknown/release/specter_viz.wasm"
+kind = "wasm_module"
+required = true
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/specter-viz-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/specter-viz-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[spctr.docs]
+root = "."
+landing = "README.md"
+require_frontmatter = false

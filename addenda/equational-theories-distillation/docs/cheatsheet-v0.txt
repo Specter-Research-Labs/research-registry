@@ -1,0 +1,36 @@
+You answer whether Equation 1 implies Equation 2 over all magmas.
+Run this checklist in order. Stop at the first decisive result.
+1. Normalize variables by first appearance. For exact source matches, substitution checks, and context checks, also allow swapping equation sides.
+2. Immediate TRUE families:
+- if E1 is `x = t` and `x` never appears in `t`, answer TRUE.
+- if E1 is `x = t`, every occurrence of `x` in `t` is on a mixed path (its root-to-leaf path uses both `L` and `R`), some other variable occurs exactly once in `t`, and the x-path set does not contain both exact `LR` and `RL`, answer TRUE.
+- if the leftmost leaf of `t` is still `x`, do not assume collapse from shape alone.
+3. Tiny-model separator on carrier `{0,1}`:
+- read a 4-bit table `abcd` as `f(0,0)=a`, `f(0,1)=b`, `f(1,0)=c`, `f(1,1)=d`.
+- test these 10 representatives: `0001` and_or, `0000` constant, `0010` left_and_not_right_right_implies_left, `0011` left_projection, `1000` nand_nor, `1100` not_left, `0100` not_left_and_right_left_implies_right, `1010` not_right, `0101` right_projection, `0110` xor_xnor.
+- if any representative satisfies E1 but breaks E2, answer FALSE immediately.
+- do not turn `no separator found` into TRUE.
+4. Direct TRUE checks after no separator:
+- if E2 is a direct substitution instance of E1, answer TRUE. Use one consistent replacement for each variable in E1; equality may swap sides.
+- if E2 is a one-hole context instance of E1, answer TRUE.
+5. Exact source-triggered kernel catalog after no separator:
+- only use the following cataloged source matches after normalization and optional side-swap of E1; do not invent new kernels.
+- if E1 is `x = y ◇ (z ◇ ((w ◇ u) ◇ x))` or `x = (y ◇ y) ◇ (y ◇ (z ◇ x))`, derive `x ◇ y = z ◇ y`.
+- if E1 is `x = ((y ◇ x) ◇ y) ◇ (z ◇ z)`, derive `x = x ◇ (((y ◇ z) ◇ y) ◇ z)`.
+- if E1 is `x = (y ◇ (z ◇ (x ◇ w))) ◇ x`, derive `x ◇ y = x ◇ (x ◇ y)`.
+- if E1 is `x = (y ◇ (z ◇ (z ◇ x))) ◇ x`, derive `x = (y ◇ ((z ◇ x) ◇ x)) ◇ x`.
+- if E1 is `x = (y ◇ (z ◇ (z ◇ x))) ◇ y`, derive `x = (x ◇ y) ◇ y`.
+- if E1 is `x = (((x ◇ x) ◇ y) ◇ z) ◇ y`, derive `x ◇ y = x ◇ z`.
+- if E1 is `x ◇ x = (y ◇ (z ◇ z)) ◇ z`, derive `x ◇ x = (x ◇ (y ◇ y)) ◇ z`.
+- if E1 is `x ◇ x = ((y ◇ x) ◇ x) ◇ z`, derive `x ◇ x = ((y ◇ z) ◇ z) ◇ w`.
+- if E1 is `x ◇ (y ◇ z) = y ◇ (w ◇ u)`, derive `x ◇ (y ◇ z) = w ◇ (u ◇ v)`.
+- after deriving the listed kernel, accept TRUE only if E2 is an exact substitution instance or one-hole context instance of that kernel.
+6. Exact commutativity repairs after no separator:
+- if E1 is `x = y ◇ (y ◇ ((x ◇ z) ◇ z))`, derive `x ◇ y = y ◇ ((x ◇ z) ◇ z)` and helper `x ◇ y = y ◇ x`; allow one local flip inside `((x ◇ z) ◇ z)` to get `x ◇ y = y ◇ ((z ◇ x) ◇ z)`.
+- if E1 is `x = ((y ◇ z) ◇ x) ◇ (z ◇ y)`, derive `x ◇ (x ◇ y) = (y ◇ z) ◇ z` and helper `x ◇ y = y ◇ x`; allow one local flip on the left nest to get `(x ◇ y) ◇ x = (y ◇ z) ◇ z`.
+- accept TRUE only if E2 is obtained exactly after at most 2 local rewrites.
+7. Last FALSE tie-break if nothing else fires:
+- if you cannot mentally run all 10 tables, the fastest fallback six are `0000`, `0101`, `0011`, `0110`, `1100`, `1010`.
+- only at this last step, if E1 uses just 2 variables and either repeats more than E2 or has the same op count as E2, answer FALSE.
+8. Never infer TRUE just because no small counterexample appeared.
+9. Prefer FALSE from a witnessed tiny model or TRUE from an exact cataloged derivation.

@@ -1,0 +1,143 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "lean-sorry-repos-benchmark"
+series = "A-002"
+summary = "Benchmark harness for Lean `sorry` tactic proposals, with split policy, scoring, and verification protocols."
+status = "operational"
+
+[site]
+visible = true
+featured = true
+featured_order = 1
+publish_docs = false
+
+[labels]
+type = "benchmark"
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "lean-sorry-repos-benchmark"
+
+[spctr.exec.check]
+description = "Canonical promoted verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest", "-q"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "Mock benchmark smoke on a checked-in tiny index"
+command = ["./scripts/mock_smoke_run.sh", "artifacts/smoke/mock-run"]
+expected_outputs = ["mock-smoke-summary"]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Build the pinned replay runtime manifest"
+command = ["./scripts/build_replay_runtime.sh", "lean-sorry-repos-benchmark-replay:contract", "artifacts/replay-runtime"]
+expected_outputs = ["replay-runtime-manifest"]
+timeout_sec = 2400
+network = "bootstrap"
+requires = ["docker"]
+
+[spctr.exec.publish]
+description = "Materialize the release candidate fixture plus source bundle"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/publish/source
+"$SPCTR_BIN" release bundle lean-sorry-repos-benchmark source --release-id contract-publish --output "$PWD/artifacts/publish/source"
+./scripts/release_candidate_fixture.sh artifacts/publish/release-candidate-fixture
+''']
+expected_outputs = [
+    "source-bundle",
+    "source-bundle-evidence",
+    "release-split-manifest",
+    "release-suite-results",
+    "release-bundle-sha256s",
+]
+timeout_sec = 2400
+network = "off"
+requires = ["tar", "python", "uv"]
+
+[spctr.runtime]
+platforms = ["linux"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache", "artifacts"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check", "smoke"]
+push_main = ["check", "smoke", "build", "publish"]
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "mock-smoke-summary"
+path = "artifacts/smoke/mock-run/summary.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "replay-runtime-manifest"
+path = "artifacts/replay-runtime/runtime_manifest.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/lean-sorry-repos-benchmark-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/lean-sorry-repos-benchmark-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "release-split-manifest"
+path = "artifacts/publish/release-candidate-fixture/split/split_manifest.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "release-suite-results"
+path = "artifacts/publish/release-candidate-fixture/suite/suite_results.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "release-bundle-sha256s"
+path = "artifacts/publish/release-candidate-fixture/baseline-bundle/SHA256SUMS"
+kind = "text"
+required = true
+
+[spctr.docs]
+root = "docs"
+landing = "docs/benchmark-card.md"
+require_frontmatter = false

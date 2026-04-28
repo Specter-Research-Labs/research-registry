@@ -1,0 +1,7 @@
+{
+  "compare_original_lenia": true,
+  "compare_asymptotic_lenia": true,
+  "lower_clip_only_at_small_dt": true,
+  "occasional_upper_clip_delta": 0.1,
+  "expected_small_dt_threshold": 0.002
+}

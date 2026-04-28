@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "id": "mathlib4",
+      "match": {
+        "repo_remote_prefix": "https://github.com/leanprover-community/mathlib4"
+      },
+      "overrides": {
+        "lean_cmd": "lake env lean",
+        "prepare_cmd": "lake build",
+        "prepare_timeout_seconds": 1800,
+        "timeout_seconds": 120,
+        "cold_start_timeout_seconds": 240
+      }
+    }
+  ]
+}

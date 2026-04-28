@@ -1,0 +1,126 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "k-semantics-reference"
+series = "A-009"
+summary = "Implementation for reworking CATWD 2.0 semantics and calibrating K across domains to better understand its properties."
+status = "active"
+
+[site]
+visible = true
+featured = true
+featured_order = 4
+
+[labels]
+type = "research"
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "k-semantics-reference"
+
+[spctr.exec.check]
+description = "Canonical promoted verification lane"
+command = ["uv", "run", "python", "-m", "pytest"]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "Small deterministic sorting demo smoke"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/smoke
+uv run python -m paper_k demo sorting --n 6 --trials 10 --H 200 --seed 0 > artifacts/smoke/demo-sorting.json
+''']
+expected_outputs = ["sorting-demo"]
+timeout_sec = 1200
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Materialize the fixed benchmark markdown report"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/build
+uv run python -m paper_k benchmark \
+  --case sorting-small \
+  --case bitstring-small \
+  --repeats 1 \
+  --warmup 0 \
+  --format markdown \
+  --output artifacts/build/benchmark.md
+''']
+expected_outputs = ["benchmark-report"]
+timeout_sec = 1200
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.publish]
+description = "Canonical source bundle publish proof path"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/publish/source
+"$SPCTR_BIN" release bundle k-semantics-reference source --release-id contract-publish --output "$PWD/artifacts/publish/source"
+''']
+expected_outputs = ["source-bundle", "source-bundle-evidence"]
+timeout_sec = 1800
+network = "off"
+requires = ["tar"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = ["check", "smoke", "build", "publish"]
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "sorting-demo"
+path = "artifacts/smoke/demo-sorting.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "benchmark-report"
+path = "artifacts/build/benchmark.md"
+kind = "markdown"
+required = true
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/k-semantics-reference-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/k-semantics-reference-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[spctr.docs]
+root = "docs"
+landing = "docs/k-equations.md"
+require_frontmatter = false

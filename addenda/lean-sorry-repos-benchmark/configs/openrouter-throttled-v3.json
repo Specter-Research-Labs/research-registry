@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "common_args": [
+    "--index",
+    "../../tmp/lean-sorry-release-v1-beta-open-only-ci-refresh-20260301/split-full/heldout_test.jsonl",
+    "--split-policy",
+    "all",
+    "--goal-slice",
+    "core_easy",
+    "--max-items",
+    "16",
+    "--seed",
+    "11",
+    "--samples-per-item",
+    "2",
+    "--pass-at-k",
+    "1",
+    "2",
+    "--generation-retry-count",
+    "2",
+    "--generation-retry-domains",
+    "all",
+    "--generation-retry-kinds",
+    "http_error,timeout",
+    "--verification-mode",
+    "synthetic",
+    "--lean-cmd",
+    "lean",
+    "--lean-timeout-seconds",
+    "10",
+    "--openai-endpoint",
+    "https://openrouter.ai/api/v1/chat/completions",
+    "--openai-api-key-env",
+    "OPENROUTER_API_KEY",
+    "--openai-timeout-seconds",
+    "90",
+    "--openai-max-tokens",
+    "64",
+    "--openai-temperature",
+    "0.0"
+  ],
+  "runs": [
+    {"name": "kimi-k2", "adapter": "openai", "model": "moonshotai/kimi-k2"},
+    {"name": "qwen3-coder", "adapter": "openai", "model": "qwen/qwen3-coder"},
+    {"name": "gemma-3-27b-it-free", "adapter": "openai", "model": "google/gemma-3-27b-it:free"},
+    {"name": "gemma-3-12b-it-free", "adapter": "openai", "model": "google/gemma-3-12b-it:free"},
+    {
+      "name": "arcee-trinity-large-free",
+      "adapter": "openai",
+      "model": "arcee-ai/trinity-large-preview:free"
+    }
+  ]
+}

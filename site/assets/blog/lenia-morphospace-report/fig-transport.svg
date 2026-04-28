@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="800" height="420">
+<style>
+text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
+.label { font-size: 13px; fill: rgba(11,14,20,0.68); }
+.label-bold { font-size: 13px; fill: #0b0e14; font-weight: 700; }
+.label-accent { font-size: 13px; fill: #ff6600; }
+.label-accent2 { font-size: 13px; fill: #b4573d; }
+.label-accent3 { font-size: 13px; fill: #3f8458; }
+.label-accent4 { font-size: 13px; fill: #9f6f00; }
+.label-accent5 { font-size: 13px; fill: #4f66bc; }
+.annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
+</style>
+<rect width="800" height="420" fill="#ffffff"/>
+  <defs>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3f8458"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b4573d"/>
+    </marker>
+  </defs>
+
+  <!-- Fibers (more of them for continuous feel) -->
+  <g stroke="#ff6600" stroke-opacity="0.1" stroke-width="1">
+    <line x1="100" y1="40" x2="100" y2="280"/>
+    <line x1="150" y1="40" x2="150" y2="280"/>
+    <line x1="200" y1="40" x2="200" y2="280"/>
+    <line x1="250" y1="40" x2="250" y2="280"/>
+    <line x1="300" y1="40" x2="300" y2="280"/>
+    <line x1="350" y1="40" x2="350" y2="280"/>
+    <line x1="400" y1="40" x2="400" y2="280"/>
+    <line x1="450" y1="40" x2="450" y2="280"/>
+    <line x1="500" y1="40" x2="500" y2="280"/>
+    <line x1="550" y1="40" x2="550" y2="280"/>
+    <line x1="600" y1="40" x2="600" y2="280"/>
+    <line x1="650" y1="40" x2="650" y2="280"/>
+  </g>
+
+  <!-- The lifted path in total space (genotype interpolation) -->
+  <!-- Success segments in green -->
+  <path d="M 100 180 C 130 175, 160 160, 200 140 C 240 120, 270 110, 300 105"
+        stroke="#3f8458" stroke-width="3" fill="none"/>
+  <!-- Failure band in red -->
+  <path d="M 300 105 C 330 100, 360 95, 400 130"
+        stroke="#b4573d" stroke-width="3" fill="none" stroke-dasharray="5,4"/>
+  <!-- Success again -->
+  <path d="M 400 130 C 440 165, 470 180, 500 190 C 530 200, 570 195, 600 185 C 630 175, 640 165, 650 160"
+        stroke="#3f8458" stroke-width="3" fill="none"/>
+
+  <!-- Failure band shading -->
+  <rect x="290" y="40" width="120" height="280" rx="4" fill="#b4573d" fill-opacity="0.06"/>
+
+  <!-- Start and end points -->
+  <circle cx="100" cy="180" r="7" fill="#3f8458" stroke="#ffffff" stroke-width="2"/>
+  <circle cx="650" cy="160" r="7" fill="#3f8458" stroke="#ffffff" stroke-width="2"/>
+
+  <!-- X marks in failure band -->
+  <g stroke="#b4573d" stroke-width="2" opacity="0.7">
+    <line x1="330" y1="95" x2="340" y2="105"/>
+    <line x1="340" y1="95" x2="330" y2="105"/>
+    <line x1="360" y1="90" x2="370" y2="100"/>
+    <line x1="370" y1="90" x2="360" y2="100"/>
+  </g>
+
+  <!-- Labels for start/end -->
+  <text x="70" y="185" class="label-accent3" text-anchor="end">genotype A</text>
+  <text x="70" y="199" class="label" text-anchor="end">(seed 196)</text>
+  <text x="680" y="165" class="label-accent3">genotype B</text>
+  <text x="680" y="179" class="label">(seed 241)</text>
+
+  <!-- Failure band label -->
+  <text x="350" y="55" class="label-accent2" text-anchor="middle">failure band</text>
+  <text x="350" y="69" class="annotation" text-anchor="middle">creature disintegrates</text>
+  <text x="350" y="81" class="annotation" text-anchor="middle">no viable phenotype here</text>
+
+  <!-- Alpha labels along top -->
+  <text x="100" y="35" class="label" text-anchor="middle">alpha=0</text>
+  <text x="375" y="35" class="label" text-anchor="middle">alpha=0.5</text>
+  <text x="650" y="35" class="label" text-anchor="middle">alpha=1</text>
+
+  <!-- Base path -->
+  <line x1="80" y1="350" x2="670" y2="350" stroke="#b4573d" stroke-width="2.5"/>
+  <path d="M 100 350 C 200 345, 280 340, 300 350" stroke="#b4573d" stroke-width="2" fill="none" opacity="0.5"/>
+  <text x="200" y="340" class="annotation" text-anchor="middle">phenotype path exists</text>
+
+  <!-- Gap in base (projected failure) -->
+  <line x1="300" y1="350" x2="410" y2="350" stroke="#b4573d" stroke-width="2.5" stroke-dasharray="4,4" opacity="0.4"/>
+  <text x="355" y="375" class="label-accent2" text-anchor="middle">no phenotype</text>
+
+  <path d="M 410 350 C 500 355, 580 348, 650 350" stroke="#b4573d" stroke-width="2" fill="none" opacity="0.5"/>
+
+  <circle cx="100" cy="350" r="4" fill="#b4573d"/>
+  <circle cx="650" cy="350" r="4" fill="#b4573d"/>
+
+  <text x="375" y="405" class="label-accent2" text-anchor="middle">B = Phenotype Space</text>
+
+  <!-- Annotation -->
+  <text x="700" y="260" class="label" text-anchor="start">bridge study =</text>
+  <text x="700" y="276" class="label" text-anchor="start">attempted section</text>
+  <text x="700" y="292" class="label" text-anchor="start">along a path</text>
+</svg>

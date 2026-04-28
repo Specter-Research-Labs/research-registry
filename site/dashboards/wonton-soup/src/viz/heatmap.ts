@@ -1,0 +1,99 @@
+import { scaleOrdinal } from "d3-scale";
+import { select } from "d3-selection";
+
+export interface HeatmapCell {
+  row: string;
+  col: string;
+  value: number | null;
+  category: string;
+}
+
+export interface HeatmapOpts {
+  container: HTMLElement;
+  cells: HeatmapCell[];
+  rows: string[];
+  cols: string[];
+  colorMap: Record<string, string>;
+  onCellClick?: (row: string, col: string) => void;
+  cellSize?: number;
+}
+
+export function renderHeatmap(opts: HeatmapOpts): void {
+  const { container, cells, rows, cols, colorMap, onCellClick, cellSize = 22 } = opts;
+
+  const labelWidth = 120;
+  const labelHeight = 80;
+  const width = labelWidth + cols.length * cellSize;
+  const height = labelHeight + rows.length * cellSize;
+
+  container.replaceChildren();
+
+  const svg = select(container)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("viewBox", `0 0 ${width} ${height}`);
+
+  const cellLookup = new Map<string, HeatmapCell>();
+  for (const c of cells) {
+    cellLookup.set(`${c.row}::${c.col}`, c);
+  }
+
+  const categories = Object.keys(colorMap);
+  const colorScale = scaleOrdinal<string>().domain(categories).range(categories.map((c) => colorMap[c]));
+
+  svg
+    .selectAll(".hm-col-label")
+    .data(cols)
+    .enter()
+    .append("text")
+    .attr("class", "rescue-axis-label")
+    .attr("x", (_d, i) => labelWidth + i * cellSize + cellSize / 2)
+    .attr("y", labelHeight - 6)
+    .attr("text-anchor", "end")
+    .attr("transform", (_d, i) => {
+      const x = labelWidth + i * cellSize + cellSize / 2;
+      return `rotate(-55, ${x}, ${labelHeight - 6})`;
+    })
+    .text((d) => truncate(d, 16));
+
+  svg
+    .selectAll(".hm-row-label")
+    .data(rows)
+    .enter()
+    .append("text")
+    .attr("class", "rescue-axis-label")
+    .attr("x", labelWidth - 6)
+    .attr("y", (_d, i) => labelHeight + i * cellSize + cellSize / 2 + 3)
+    .attr("text-anchor", "end")
+    .text((d) => truncate(d, 18));
+
+  const cellGroup = svg.append("g").attr("transform", `translate(${labelWidth}, ${labelHeight})`);
+
+  for (let ri = 0; ri < rows.length; ri++) {
+    for (let ci = 0; ci < cols.length; ci++) {
+      const cell = cellLookup.get(`${rows[ri]}::${cols[ci]}`);
+      const cat = cell?.category ?? "no-data";
+
+      const rect = cellGroup
+        .append("rect")
+        .attr("class", `rescue-cell ${cat}`)
+        .attr("x", ci * cellSize + 1)
+        .attr("y", ri * cellSize + 1)
+        .attr("width", cellSize - 2)
+        .attr("height", cellSize - 2)
+        .attr("rx", 3)
+        .attr("fill", colorScale(cat) ?? "#e8eaed");
+
+      if (onCellClick) {
+        rect.style("cursor", "pointer").on("click", () => {
+          onCellClick(rows[ri], cols[ci]);
+        });
+      }
+    }
+  }
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? s.slice(0, max - 1) + "\u2026" : s;
+}

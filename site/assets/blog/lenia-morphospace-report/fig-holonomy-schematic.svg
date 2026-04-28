@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440" width="800" height="440">
+<style>
+text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
+.label { font-size: 13px; fill: rgba(11,14,20,0.68); }
+.label-bold { font-size: 13px; fill: #0b0e14; font-weight: 700; }
+.label-accent { font-size: 13px; fill: #ff6600; }
+.label-accent2 { font-size: 13px; fill: #b4573d; }
+.label-accent3 { font-size: 13px; fill: #3f8458; }
+.label-accent4 { font-size: 13px; fill: #9f6f00; }
+.label-accent5 { font-size: 13px; fill: #4f66bc; }
+.annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
+</style>
+<rect width="800" height="440" fill="#ffffff"/>
+  <defs>
+    <marker id="arrowYellow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9f6f00"/>
+    </marker>
+  </defs>
+
+  <!-- The fiber at start/end (emphasized) -->
+  <rect x="130" y="30" width="50" height="310" rx="6" fill="#ff6600" fill-opacity="0.08" stroke="#ff6600" stroke-opacity="0.2"/>
+  <line x1="155" y1="40" x2="155" y2="330" stroke="#ff6600" stroke-opacity="0.3" stroke-width="1" stroke-dasharray="3,4"/>
+
+  <!-- Other fibers (dim) -->
+  <g stroke="#ff6600" stroke-opacity="0.08" stroke-width="1">
+    <line x1="270" y1="60" x2="270" y2="310"/>
+    <line x1="390" y1="60" x2="390" y2="310"/>
+    <line x1="510" y1="60" x2="510" y2="310"/>
+  </g>
+
+  <!-- The loop path in total space -->
+  <!-- Forward path (solid) -->
+  <path d="M 155 120 C 200 100, 240 85, 270 80 C 320 70, 360 90, 390 110 C 430 135, 480 160, 510 150"
+        stroke="#9f6f00" stroke-width="2.5" fill="none" marker-end="url(#arrowYellow)"/>
+  <!-- Return path (solid, continues) -->
+  <path d="M 510 150 C 480 180, 430 220, 390 230 C 350 240, 300 250, 270 240 C 230 228, 190 215, 155 200"
+        stroke="#9f6f00" stroke-width="2.5" fill="none" marker-end="url(#arrowYellow)"/>
+
+  <!-- Start point -->
+  <circle cx="155" cy="120" r="8" fill="#3f8458" stroke="#ffffff" stroke-width="2"/>
+  <!-- End point (DIFFERENT position in fiber!) -->
+  <circle cx="155" cy="200" r="8" fill="#4f66bc" stroke="#ffffff" stroke-width="2"/>
+
+  <!-- The gap annotation -->
+  <line x1="170" y1="120" x2="185" y2="120" stroke="#3f8458" stroke-width="1"/>
+  <line x1="170" y1="200" x2="185" y2="200" stroke="#4f66bc" stroke-width="1"/>
+  <line x1="185" y1="125" x2="185" y2="195" stroke="#b4573d" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <text x="195" y="165" class="label-accent2">holonomy</text>
+  <text x="195" y="179" class="label-accent2">gap</text>
+
+  <!-- Labels -->
+  <text x="155" y="108" class="label-accent3" text-anchor="middle">start</text>
+  <text x="155" y="223" class="label-accent5" text-anchor="middle">end</text>
+
+  <!-- Loop direction labels -->
+  <text x="340" y="65" class="label-accent4" text-anchor="middle">deform creature</text>
+  <text x="340" y="265" class="label-accent4" text-anchor="middle">restore creature</text>
+
+  <!-- The loop in base space -->
+  <ellipse cx="330" cy="380" rx="180" ry="30" fill="none" stroke="#b4573d" stroke-width="2.5"/>
+  <!-- Arrow on the ellipse -->
+  <path d="M 510 380 C 510 350, 330 348, 150 380" stroke="#9f6f00" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M 150 380 C 150 410, 330 412, 510 380" stroke="#9f6f00" stroke-width="2" fill="none" opacity="0.5"/>
+  <circle cx="150" cy="380" r="5" fill="#b4573d"/>
+  <text x="150" y="400" class="label" text-anchor="middle">same phenotype</text>
+
+  <text x="330" y="435" class="label-accent2" text-anchor="middle">closed loop in B (phenotype comes back)</text>
+
+  <!-- Fiber label -->
+  <text x="155" y="25" class="label-accent" text-anchor="middle">same fiber</text>
+
+  <!-- Right side explanation -->
+  <text x="600" y="80" class="label-bold">Phenotype:</text>
+  <text x="600" y="96" class="label">came back (dist ~ 5e-5)</text>
+  <text x="600" y="130" class="label-bold">Genotype state:</text>
+  <text x="600" y="146" class="label-accent2">did NOT come back</text>
+  <text x="600" y="162" class="label">(dist ~ 1.4e-3)</text>
+  <text x="600" y="196" class="label-bold">Ratio:</text>
+  <text x="600" y="212" class="label-accent2">28x gap</text>
+  <text x="600" y="244" class="label-bold">Meaning:</text>
+  <text x="600" y="260" class="label">the bundle is curved</text>
+  <text x="600" y="276" class="label">the form forgets but</text>
+  <text x="600" y="292" class="label">the state remembers</text>
+</svg>

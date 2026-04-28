@@ -1,0 +1,203 @@
+import CoreGraphics
+import Foundation
+import ImageIO
+import UniformTypeIdentifiers
+
+func writeFlowLeniaEcologyFrames(_ frames: [FlowLeniaEcology2025FrameMetrics], to url: URL) throws {
+    FileManager.default.createFile(atPath: url.path, contents: nil)
+    let handle = try FileHandle(forWritingTo: url)
+    defer { try? handle.close() }
+    let lineEncoder = JSONEncoder()
+    for frame in frames {
+        handle.write(try lineEncoder.encode(frame))
+        handle.write(Data([0x0A]))
+    }
+}
+
+private func writeFlowLeniaEcologyTrajectoryFrames(_ frames: [LeniaTrajectoryFrame], to url: URL) throws {
+    guard !frames.isEmpty else {
+        return
+    }
+    let massURL = url.appendingPathComponent("frames", isDirectory: true)
+    let colorURL = url.appendingPathComponent("frames_color", isDirectory: true)
+    try FileManager.default.createDirectory(at: massURL, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: colorURL, withIntermediateDirectories: true)
+    for frame in frames {
+        let name = String(format: "frame_%06d.png", frame.step)
+        try writeFlowLeniaEcologyGrayPNG(
+            data: frame.bytes,
+            width: frame.width,
+            height: frame.height,
+            url: massURL.appendingPathComponent(name)
+        )
+        if let foodBytes = frame.foodBytes {
+            try writeFlowLeniaEcologyColorPNG(
+                rgba: flowLeniaEcologyFoodRGBA(mass: frame.bytes, food: foodBytes),
+                width: frame.width,
+                height: frame.height,
+                url: colorURL.appendingPathComponent(name)
+            )
+        } else {
+            try writeFlowLeniaEcologyGrayPNG(
+                data: frame.bytes,
+                width: frame.width,
+                height: frame.height,
+                url: colorURL.appendingPathComponent(name)
+            )
+        }
+    }
+}
+
+private func writeFlowLeniaEcologyGrayPNG(data: Data, width: Int, height: Int, url: URL) throws {
+    let expected = width * height
+    guard data.count == expected else {
+        throw ConfigError.invalidConfig("trajectory frame stores \(data.count) bytes but expected \(expected).")
+    }
+    guard let provider = CGDataProvider(data: data as CFData) else {
+        throw ConfigError.invalidConfig("failed to create trajectory frame data provider.")
+    }
+    let colorSpace = CGColorSpaceCreateDeviceGray()
+    let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
+    guard let image = CGImage(
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bitsPerPixel: 8,
+        bytesPerRow: width,
+        space: colorSpace,
+        bitmapInfo: bitmapInfo,
+        provider: provider,
+        decode: nil,
+        shouldInterpolate: false,
+        intent: .defaultIntent
+    ) else {
+        throw ConfigError.invalidConfig("failed to create trajectory frame image.")
+    }
+    try writeFlowLeniaEcologyPNGImage(image, to: url)
+}
+
+private func writeFlowLeniaEcologyColorPNG(rgba: Data, width: Int, height: Int, url: URL) throws {
+    let expected = width * height * 4
+    guard rgba.count == expected else {
+        throw ConfigError.invalidConfig("trajectory color frame stores \(rgba.count) bytes but expected \(expected).")
+    }
+    guard let provider = CGDataProvider(data: rgba as CFData) else {
+        throw ConfigError.invalidConfig("failed to create trajectory color frame data provider.")
+    }
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+    guard let image = CGImage(
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bitsPerPixel: 32,
+        bytesPerRow: width * 4,
+        space: colorSpace,
+        bitmapInfo: bitmapInfo,
+        provider: provider,
+        decode: nil,
+        shouldInterpolate: false,
+        intent: .defaultIntent
+    ) else {
+        throw ConfigError.invalidConfig("failed to create trajectory color frame image.")
+    }
+    try writeFlowLeniaEcologyPNGImage(image, to: url)
+}
+
+private func writeFlowLeniaEcologyPNGImage(_ image: CGImage, to url: URL) throws {
+    guard let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
+        throw ConfigError.invalidConfig("failed to create trajectory PNG destination.")
+    }
+    CGImageDestinationAddImage(destination, image, nil)
+    guard CGImageDestinationFinalize(destination) else {
+        throw ConfigError.invalidConfig("failed to write trajectory PNG.")
+    }
+}
+
+private func flowLeniaEcologyFoodRGBA(mass: Data, food: Data) throws -> Data {
+    guard mass.count == food.count else {
+        throw ConfigError.invalidConfig("food frame stores \(food.count) bytes but mass frame stores \(mass.count).")
+    }
+    var rgba = [UInt8](repeating: 0, count: mass.count * 4)
+    for index in 0..<mass.count {
+        let m = Float(mass[index]) / 255
+        let f = Float(food[index]) / 255
+        rgba[index * 4] = UInt8(min(255, m * 255 + f * 32))
+        rgba[index * 4 + 1] = UInt8(min(255, m * 180 + f * 230))
+        rgba[index * 4 + 2] = UInt8(min(255, m * 90 + f * 40))
+        rgba[index * 4 + 3] = 255
+    }
+    return Data(rgba)
+}
+
+public func writeFlowLeniaEcology2025RunArtifacts(
+    runDirectory: URL,
+    runID: String,
+    campaignID: String?,
+    replayBaseConfig: LeniaBaseConfig,
+    replayPayload: FlowLeniaEcology2025ReplayPayload,
+    runSummary: FlowLeniaEcology2025RunSummary,
+    trajectoryFrames: [LeniaTrajectoryFrame],
+    activitySummary: ActivitySummary?,
+    exportedAt: Date,
+    encoder: JSONEncoder
+) throws -> FlowLeniaEcology2025RunRecord {
+    let baseURL = runDirectory.appendingPathComponent("base.json")
+    let payloadURL = runDirectory.appendingPathComponent("payload.json")
+    let metadataURL = runDirectory.appendingPathComponent("meta.json")
+    try encoder.encode(replayBaseConfig).write(to: baseURL)
+    try encoder.encode(replayPayload).write(to: payloadURL)
+    try encoder.encode(FlowLeniaEcology2025RunMetadata(
+        runID: runID,
+        campaignID: campaignID,
+        bundleKind: .flowLeniaEcology2025ArenaReplayBundleV1,
+        runSummary: runSummary,
+        exportedAt: exportedAt
+    )).write(to: metadataURL)
+    let trajectoryFramesURL = trajectoryFrames.isEmpty
+        ? nil
+        : runDirectory.appendingPathComponent("trajectory-frames", isDirectory: true)
+    if let trajectoryFramesURL {
+        try writeFlowLeniaEcologyTrajectoryFrames(trajectoryFrames, to: trajectoryFramesURL)
+    }
+    let activitySummaryURL = activitySummary.map { _ in
+        runDirectory.appendingPathComponent("activity-summary.json")
+    }
+    return FlowLeniaEcology2025RunRecord(
+        trialID: flowLeniaEcology2025TrialID(runSummary),
+        runID: runID,
+        campaignID: campaignID,
+        bundleKind: .flowLeniaEcology2025ArenaReplayBundleV1,
+        variant: runSummary.variant,
+        mutationProbability: runSummary.mutationProbability,
+        repeatIndex: runSummary.repeatIndex,
+        bundleDir: runDirectory.path,
+        baseConfigPath: baseURL.path,
+        payloadPath: payloadURL.path,
+        metadataPath: metadataURL.path,
+        summaryPath: runDirectory.appendingPathComponent("summary.json").path,
+        framesPath: runDirectory.appendingPathComponent("frames.jsonl").path,
+        trajectoryFramesPath: trajectoryFramesURL?.path,
+        activitySummaryPath: activitySummaryURL?.path,
+        exportedAt: exportedAt
+    )
+}
+
+public func writeFlowLeniaEcology2025RunIndex(records: [FlowLeniaEcology2025RunRecord], to url: URL) throws {
+    guard !records.isEmpty else { return }
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    FileManager.default.createFile(atPath: url.path, contents: nil)
+    let handle = try FileHandle(forWritingTo: url)
+    defer { try? handle.close() }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys]
+    encoder.dateEncodingStrategy = .deferredToDate
+    for record in records {
+        handle.write(try encoder.encode(record))
+        handle.write(Data([0x0A]))
+    }
+}
+
+func flowLeniaEcology2025TrialID(_ summary: FlowLeniaEcology2025RunSummary) -> String {
+    "\(summary.variant)-pmut=\(flowLeniaFloatLabel(summary.mutationProbability))-repeat=\(summary.repeatIndex)"
+}

@@ -1,0 +1,46 @@
+% fig10-log-block-norm-num.tex
+% Log-derived example: blocking `norm_num at *` forces a local tactic swap.
+\documentclass[tikz,border=8pt]{standalone}
+
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small}
+]
+
+% Left: Wild-type
+\begin{scope}[shift={(-6.0, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Wild-type\\(ds\_0124\_thm\_2218)};
+
+    \node[goal, minimum width=5.0cm] (w0) at (0, 0.2) {Goal: $N_7 - N_7^{distinct} = 3600$};
+    \node[goal, below=1.55cm of w0, minimum width=5.0cm] (w1) {Subgoal: $N_7 - N_7^{distinct} = 3600$};
+    \node[goal, below=1.55cm of w1, minimum width=3.2cm] (w2) {$\mathsf{False}$};
+    \node[terminal, below=1.55cm of w2, minimum width=3.2cm] (w3) {\Large$\bullet$};
+
+    \draw[tactic] (w0) -- node[midway, left, tacticlabel] {\texttt{intros}} (w1);
+    \draw[tactic] (w1) -- node[midway, left, tacticlabel] {\texttt{norm\_num1}} (w2);
+    \draw[divergetactic] (w2) -- node[midway, left, tacticlabel] {\texttt{norm\_num at *}} (w3);
+\end{scope}
+
+% Right: Intervention
+\begin{scope}[shift={(6.0, 0)}]
+    \node[paneltitle, align=center] at (0, 1.1) {Intervention\\(\texttt{block norm\_num at *})};
+
+    \node[goal, minimum width=5.0cm] (i0) at (0, 0.2) {Goal: $N_7 - N_7^{distinct} = 3600$};
+    \node[goal, below=1.55cm of i0, minimum width=5.0cm] (i1) {Subgoal: $N_7 - N_7^{distinct} = 3600$};
+    \node[divergenode, below=1.55cm of i1, minimum width=3.2cm] (i2) {$\mathsf{False}$};
+    \node[terminal, below=1.55cm of i2, minimum width=3.2cm] (i3) {\Large$\bullet$};
+    \node[dead, right=2.3cm of i2, minimum width=2.7cm] (i_dead) {blocked};
+
+    \draw[tactic] (i0) -- node[midway, left, tacticlabel] {\texttt{intros}} (i1);
+    \draw[tactic] (i1) -- node[midway, left, tacticlabel] {\texttt{norm\_num1}} (i2);
+    \draw[divergeblock] (i2.east) -- node[pos=0.42, above=2.5pt, tacticlabel, text=blocked, fill=white, inner sep=1pt] {block \texttt{norm\_num at *}} (i_dead.west);
+    \draw[divergetactic] (i2) -- node[midway, left, tacticlabel] {\texttt{norm\_num1 at *}} (i3);
+\end{scope}
+
+% Crosslink: same goal
+\draw[crosslink] (w0.east) -- (i0.west) node[midway, above, annotbg] {same goal};
+
+\end{tikzpicture}
+\end{document}

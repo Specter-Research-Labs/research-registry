@@ -1,0 +1,45 @@
+{
+  "id": "spctr-update-006",
+  "kind": "main",
+  "label": "SPCTR-UPDATE-006",
+  "date": "2026-03-14",
+  "published_at": "2026-03-14T22:14:20Z",
+  "topic": "weekly / spctr-update-006",
+  "window": {
+    "start": "2026-02-28",
+    "end": "2026-03-14"
+  },
+  "series_number": 6,
+  "sections": {
+    "dossiers": [
+      "lenia-swarm: added Lenia Lab, discovery gallery, atlas/compendium publishing, replay thumbnails, and curated qd-2024 releases.",
+      "lenia-swarm: changed search, evolution, and headless runtimes to persistent full-Metal GPU paths with staged kernels, shared pipelines, SIMD/reduction tuning, and benchmark profiling.",
+      "lenia-swarm: added food, chemotaxis, obstacle, wall, beam-mutation, and scheduled-intervention support on the Metal path.",
+      "lenia-swarm: added paper-grounded lanes, MAP-Elites, AURORA diagnostics, elite curation, and research-mode creature export.",
+      "wonton-soup: added the cross-assistant benchmark pipeline, proof-graph IR, Coq tooling updates, DeepSeek dashboard cohort, and lake-driven dashboard release flow.",
+      "wonton-soup: changed Lean startup/cache handling, replay isolation, runtime-path routing, docs taxonomy, and dashboard layout.",
+      "jolt-material-memory: added the dossier scaffold, then changed campaign configs, metrics, plots, engine scenarios, and article/media tooling.",
+      "fly-competency-atlas: added the dossier package, backend probing, local execution, and site manifest wiring.",
+      "zang-levin-playground: changed paper analysis, figures, and layout; added MIPS/TASEP discussion."
+    ],
+    "addenda": [
+      "equational-theories-distillation: added a runnable addendum with CLI, analysis, countermodels, and tests.",
+      "lean-tactic-representation: added a runnable addendum.",
+      "k-semantics-reference: renamed from paper-k; added demos and expanded the formalism.",
+      "lean-sorry-repos-benchmark: added proposal/release harness work, adapter support, bootstrap confidence intervals, and stricter release flow.",
+      "lean-sorry-dataset: added the deterministic index builder.",
+      "typst-field-manual: added shared tokens/style checking and a paper-oriented PDF surface.",
+      "lean-mcts-learning: added replay and batch-eval commands.",
+      "addenda-wide: changed manifests to spctr.toml, tightened READMEs, removed duplicate goals, and fixed CI regressions."
+    ],
+    "ops": [
+      "added the Rust spctr CLI and changed project manifests from project.toml to spctr.toml.",
+      "changed dispatch/site ops to the VM-hosted control plane; removed old compatibility layers; split Zulip traffic; routed GitHub webhooks into dispatch.",
+      "added the formal ledger-post path for Zulip, with durable ledger entry IDs and timestamps.",
+      "added the release registry/archive toolchain, public release publishing, sitemap, and project-status sync.",
+      "changed site surfaces: dossier hubs, status/activity chips, cabinet doc IDs/backlinks, mobile layout, and public copy.",
+      "changed runtime/CI plumbing: SPECTER_RUNTIME_ROOT, dossier log routing, active dossier/site workflows, Rust lockfile tracking, and Node 24 Actions/deploy key rotation."
+    ],
+    "lab": []
+  }
+}

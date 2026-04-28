@@ -1,0 +1,67 @@
+{
+  "count": 32,
+  "seed_start": 0,
+  "seed_stride": 1,
+  "init_seed_offset": 0,
+  "steps": 1500,
+  "record_interval": 50,
+  "warmup_steps": 200,
+  "occupancy_threshold": 0.05,
+  "mass_channel": 0,
+  "score_weights": {
+    "center_velocity": 1.0,
+    "complexity_mean": 0.6,
+    "largest_component_fraction": 0.8,
+    "component_count": -0.3,
+    "moment_density": 0.4
+  },
+  "filters": {
+    "mass_min": 0.01,
+    "occupancy_min": 0.02,
+    "occupancy_max": 0.22,
+    "gyration_min": 0.1,
+    "gyration_max": 900.0,
+    "velocity_min": 0.00015,
+    "component_count_max": 4.0,
+    "largest_component_fraction_min": 0.58,
+    "moment_density_min": 0.04
+  },
+  "stability": {
+    "enabled": true,
+    "mass_min_fraction": 0.01,
+    "mass_max_fraction": 0.45,
+    "require_survival": true,
+    "window_samples": 8,
+    "window_gyration_std_max": 180.0,
+    "filters": {
+      "gyration_min": 0.1,
+      "gyration_max": 900.0,
+      "component_count_max": 4.0,
+      "largest_component_fraction_min": 0.58,
+      "moment_density_min": 0.04
+    }
+  },
+  "collection": {
+    "enabled": true,
+    "require_stable": true,
+    "require_filters_passed": true,
+    "min_score": null,
+    "export_enabled": true
+  },
+  "overrides": {},
+  "top_k": 16,
+  "batch_size": 1,
+  "seeds_per_job": 1,
+  "complexity": {
+    "enabled": true,
+    "scales": [0, 1, 2, 3],
+    "target": 0.45,
+    "polar": true,
+    "backend": "png"
+  },
+  "activity": null,
+  "moments": {
+    "enabled": true,
+    "threshold": 0.03
+  }
+}

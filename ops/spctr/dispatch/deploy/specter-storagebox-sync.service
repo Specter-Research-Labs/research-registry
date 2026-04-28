@@ -1,0 +1,9 @@
+[Unit]
+Description=Sync Specter backups to Hetzner Storage Box
+
+[Service]
+Type=oneshot
+User=specter
+Group=specter
+Environment=SPECTER_BACKUP_ENV=/etc/specter/backup.env
+ExecStart=/usr/bin/bash /srv/specterlab/research-registry/ops/spctr/dispatch/deploy/sync_storage_box.sh

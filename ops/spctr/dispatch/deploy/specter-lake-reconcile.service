@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh Specter master lake and dashboard parquet
+
+[Service]
+Type=oneshot
+User=specter
+Group=specter
+WorkingDirectory=/srv/specterlab/research-registry
+EnvironmentFile=/etc/specter/lake.env
+ExecStart=/usr/local/bin/spctr surface refresh wonton-lake --site-data-root /srv/www/site/data/wonton-soup

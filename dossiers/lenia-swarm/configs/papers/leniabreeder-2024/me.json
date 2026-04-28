@@ -1,0 +1,18 @@
+{
+  "algorithm": "me",
+  "phenotype_size": 64,
+  "center_phenotype": true,
+  "record_phenotype": true,
+  "n_generations": 20,
+  "log_interval": 10,
+  "batch_size": 256,
+  "repertoire_size": 1024,
+  "n_init_cvt_samples": 50000,
+  "iso_sigma": 0.005,
+  "line_sigma": 0.05,
+  "fitness": "neg_angle_var",
+  "descriptor": ["pos_mass_avg", "pos_linear_velocity_avg"],
+  "descriptor_min": [0.0, 0.0],
+  "descriptor_max": [10.0, 0.5],
+  "n_keep": 128
+}

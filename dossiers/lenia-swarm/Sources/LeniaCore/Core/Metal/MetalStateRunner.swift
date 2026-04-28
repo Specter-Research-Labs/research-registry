@@ -1,0 +1,1864 @@
+import Foundation
+import Metal
+import MLX
+
+final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
+    let config: BatchedConfig
+    let parameterCount: Int
+    let batchCount: Int
+    let channelCount: Int
+
+    private let device: MTLDevice
+    private let commandQueue: MTLCommandQueue
+    private let pipeline: FlowLeniaMetalFullPipeline
+    private let summaryReducer: FlowLeniaMetalSummaryReducer?
+    private let scalarSummaryReducer: FlowLeniaMetalScalarSummaryReducer
+    private let wallMaskPipeline: MTLComputePipelineState
+    private let parameterPatchPipeline: MTLComputePipelineState
+    private let channelFieldPipeline: MTLComputePipelineState
+    private let scalarPatchPipeline: MTLComputePipelineState
+    private let scalarFieldMaskPipeline: MTLComputePipelineState
+    private let foodDynamicsPipeline: MTLComputePipelineState
+    private let zeroStatePatchPipeline: MTLComputePipelineState
+    private let insertStatePatchPipeline: MTLComputePipelineState
+    private let massMapPipeline: MTLComputePipelineState
+
+    private var currentMassBuffer: MTLBuffer
+    private var currentParamsBuffer: MTLBuffer
+    private var nextMassBuffer: MTLBuffer
+    private var nextParamsBuffer: MTLBuffer
+    private let wallMaskBuffer: MTLBuffer
+    private let massMapBuffer: MTLBuffer
+    private let massTransferBuffer: MTLBuffer
+    private let paramsTransferBuffer: MTLBuffer
+    private let wallMaskTransferBuffer: MTLBuffer
+    private let massMapTransferBuffer: MTLBuffer
+    private let massMapWeightsBuffer: MTLBuffer
+    private var currentMatterWeights: [Float]
+    private var wallMaskEnabled = false
+    private let reintegrateParams: Bool
+    private var currentMixStep = 0
+    private var staticChannelFields: [FlowLeniaMetalChannelFieldBuffer] = []
+    private var foodState: FlowLeniaMetalFoodStateBuffer?
+    private var hasState = false
+
+    var supportsMassSummary: Bool {
+        summaryReducer != nil
+    }
+
+    init(
+        config: BatchedConfig,
+        kernels: CompiledKernels,
+        batchCount: Int,
+        wallPotential: MLXArray? = nil,
+        matterWeights: [Float]? = nil,
+        reintegrateParams: Bool = true,
+        parameterFieldMode: FlowLeniaParameterFieldMode = .kernelGain,
+        parameterMix: String = "avg",
+        mixSeed: Int? = nil
+    ) {
+        self.config = config
+        let kernelCount = FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
+        self.parameterCount = parameterFieldMode.parameterCount(kernelCount: kernelCount)
+        self.batchCount = batchCount
+        self.channelCount = config.channels
+        self.reintegrateParams = reintegrateParams
+        let kernelBatchCount = FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
+        guard kernelBatchCount == 1 || kernelBatchCount == batchCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner requires either shared kernels or one kernel set per batch element.")
+        }
+        let metal = FlowLeniaMetalFullPipeline.makeDeviceAndQueue()
+        self.device = metal.0
+        self.commandQueue = metal.1
+        self.pipeline = FlowLeniaMetalFullPipeline(
+            config: config,
+            kernels: kernels,
+            batchCount: batchCount,
+            device: device,
+            commandQueue: commandQueue,
+            wallPotential: wallPotential,
+            parameterFieldMode: parameterFieldMode,
+            parameterMix: parameterMix,
+            mixSeed: mixSeed
+        )
+        self.currentMatterWeights = Self.resolvedMatterWeights(
+            weights: matterWeights,
+            channelCount: config.channels
+        )
+        self.pipeline.updateMatterWeights(currentMatterWeights)
+        self.summaryReducer = FlowLeniaMetalSummaryReducer(
+            config: config,
+            parameterCount: self.parameterCount,
+            batchCount: batchCount,
+            device: device,
+            commandQueue: commandQueue
+        )
+        let wallLibrary = FlowLeniaMetalFullPipeline.makeLibrary(
+            device: device,
+            source: Self.wallMaskKernelSource(
+                parameterCount: self.parameterCount,
+                channelCount: self.channelCount,
+                batchCount: batchCount,
+                sx: config.sx,
+                sy: config.sy
+            )
+        )
+        self.scalarSummaryReducer = FlowLeniaMetalScalarSummaryReducer(
+            batchCount: batchCount,
+            partialGroupCount: FlowLeniaMetalFullPipeline.summaryPartialGroupCount(sx: config.sx, sy: config.sy),
+            device: device,
+            commandQueue: commandQueue,
+            library: wallLibrary
+        )
+        self.wallMaskPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalApplyWallMask"
+        )
+        self.parameterPatchPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalApplyParameterPatch"
+        )
+        self.channelFieldPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalOverwriteChannelField"
+        )
+        self.scalarPatchPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalApplyScalarPatch"
+        )
+        self.scalarFieldMaskPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalApplyScalarFieldMask"
+        )
+        self.foodDynamicsPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalApplyFoodDynamics"
+        )
+        self.zeroStatePatchPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalZeroStatePatch"
+        )
+        self.insertStatePatchPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalInsertStatePatch"
+        )
+        self.massMapPipeline = FlowLeniaMetalFullPipeline.makePipeline(
+            device: device,
+            library: wallLibrary,
+            name: "flowMetalBuildMassMap"
+        )
+
+        let cellCount = batchCount * config.sx * config.sy
+        let massBytes = cellCount * channelCount * MemoryLayout<Float>.stride
+        let paramBytes = cellCount * parameterCount * MemoryLayout<Float>.stride
+        let scalarBytes = cellCount * MemoryLayout<Float>.stride
+        self.currentMassBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: massBytes,
+            label: "flow-metal.state.mass"
+        )
+        self.currentParamsBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: paramBytes,
+            label: "flow-metal.state.params"
+        )
+        self.nextMassBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: massBytes,
+            label: "flow-metal.state.nextMass"
+        )
+        self.nextParamsBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: paramBytes,
+            label: "flow-metal.state.nextParams"
+        )
+        self.wallMaskBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: massBytes,
+            label: "flow-metal.state.wallMask"
+        )
+        self.massMapBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: scalarBytes,
+            label: "flow-metal.state.mass-map"
+        )
+        self.massTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: massBytes,
+            label: "flow-metal.state.mass-transfer"
+        )
+        self.paramsTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: paramBytes,
+            label: "flow-metal.state.params-transfer"
+        )
+        self.wallMaskTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: massBytes,
+            label: "flow-metal.state.wallMask-transfer"
+        )
+        self.massMapTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: scalarBytes,
+            label: "flow-metal.state.mass-map-transfer"
+        )
+        self.massMapWeightsBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: channelCount * MemoryLayout<Float>.stride,
+            label: "flow-metal.state.mass-map-weights"
+        )
+    }
+
+    func setState(mass: MLXArray, params: MLXArray) {
+        guard mass.shape.count == 4, mass.shape[0] == batchCount, mass.shape[1] == config.sx, mass.shape[2] == config.sy, mass.shape[3] == channelCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner expects mass with shape [batch, sx, sy, channels].")
+        }
+        guard params.shape.count == 4, params.shape[0] == batchCount, params.shape[1] == config.sx, params.shape[2] == config.sy, params.shape[3] == parameterCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner expects params with shape [batch, sx, sy, parameterCount].")
+        }
+
+        let massValues = mass.contiguous().asArray(Float.self)
+        let paramValues = params.contiguous().asArray(Float.self)
+        FlowLeniaMetalFullPipeline.writeFloats(massValues, to: massTransferBuffer)
+        FlowLeniaMetalFullPipeline.writeFloats(paramValues, to: paramsTransferBuffer)
+        FlowLeniaMetalFullPipeline.copyBuffer(
+            massTransferBuffer,
+            to: currentMassBuffer,
+            length: massValues.count * MemoryLayout<Float>.stride,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.mass.upload"
+        )
+        FlowLeniaMetalFullPipeline.copyBuffer(
+            paramsTransferBuffer,
+            to: currentParamsBuffer,
+            length: paramValues.count * MemoryLayout<Float>.stride,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.params.upload"
+        )
+        hasState = true
+        currentMixStep = 0
+        if !staticChannelFields.isEmpty {
+            applyStaticChannelFields(
+                massBuffer: currentMassBuffer,
+                label: "flow-metal.state.channelFields-initial"
+            )
+        }
+        if foodState != nil {
+            applyFoodField(
+                massBuffer: currentMassBuffer,
+                label: "flow-metal.state.food-initial"
+            )
+        }
+        if wallMaskEnabled {
+            applyWallMask(
+                massBuffer: currentMassBuffer,
+                paramsBuffer: currentParamsBuffer,
+                label: "flow-metal.state.mask-initial"
+            )
+            if foodState != nil {
+                applyFoodMask(label: "flow-metal.state.food-mask-initial")
+            }
+        }
+    }
+
+    func updateKernels(_ kernels: CompiledKernels) {
+        pipeline.updateKernels(kernels)
+    }
+
+    func setWallPotential(_ wallPotential: MLXArray?) {
+        pipeline.updateWallPotential(wallPotential)
+    }
+
+    func setMatterWeights(_ weights: [Float]?) {
+        currentMatterWeights = Self.resolvedMatterWeights(
+            weights: weights,
+            channelCount: channelCount
+        )
+        pipeline.updateMatterWeights(currentMatterWeights)
+    }
+
+    func setWallMask(_ wallMask: MLXArray?) {
+        guard let wallMask else {
+            wallMaskEnabled = false
+            return
+        }
+        let values = Self.expandScalarField(
+            wallMask,
+            batchCount: batchCount,
+            sx: config.sx,
+            sy: config.sy,
+            label: "wallMask"
+        )
+        FlowLeniaMetalFullPipeline.uploadFloats(
+            values,
+            toPrivate: wallMaskBuffer,
+            stagingBuffer: wallMaskTransferBuffer,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.wallMask"
+        )
+        wallMaskEnabled = true
+        if hasState {
+            applyWallMask(
+                massBuffer: currentMassBuffer,
+                paramsBuffer: currentParamsBuffer,
+                label: "flow-metal.state.mask-update"
+            )
+            if foodState != nil {
+                applyFoodMask(label: "flow-metal.state.food-mask-update")
+            }
+        }
+    }
+
+    func setStaticChannelFields(_ fields: [FlowLeniaMetalChannelField]) {
+        staticChannelFields = fields.map { field in
+            guard field.channelIndex >= 0, field.channelIndex < channelCount else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner static channel fields must target an in-range channel.")
+            }
+            let values = Self.expandScalarField(
+                field.field,
+                batchCount: batchCount,
+                sx: config.sx,
+                sy: config.sy,
+                label: "channelField"
+            )
+            let byteCount = values.count * MemoryLayout<Float>.stride
+            let transferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.channelField-transfer.\(field.channelIndex)"
+            )
+            let privateBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.channelField.\(field.channelIndex)"
+            )
+            FlowLeniaMetalFullPipeline.uploadFloats(
+                values,
+                toPrivate: privateBuffer,
+                stagingBuffer: transferBuffer,
+                commandQueue: commandQueue,
+                label: "flow-metal.state.channelField.\(field.channelIndex)"
+            )
+            return FlowLeniaMetalChannelFieldBuffer(
+                channelIndex: field.channelIndex,
+                buffer: privateBuffer
+            )
+        }
+    }
+
+    func setFoodState(_ food: FlowLeniaMetalFoodState?) {
+        guard let food else {
+            foodState = nil
+            return
+        }
+        guard food.channelIndex >= 0, food.channelIndex < channelCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner food state must target an in-range channel.")
+        }
+        let values = Self.expandPlanarField(
+            food.field,
+            batchCount: batchCount,
+            sx: config.sx,
+            sy: config.sy,
+            label: "food"
+        )
+        let byteCount = values.count * MemoryLayout<Float>.stride
+        let transferBuffer: MTLBuffer
+        let privateBuffer: MTLBuffer
+        if let existing = foodState,
+           existing.buffer.length == byteCount,
+           existing.transferBuffer.length == byteCount {
+            transferBuffer = existing.transferBuffer
+            privateBuffer = existing.buffer
+        } else {
+            transferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.food-transfer"
+            )
+            privateBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.food"
+            )
+        }
+        FlowLeniaMetalFullPipeline.uploadFloats(
+            values,
+            toPrivate: privateBuffer,
+            stagingBuffer: transferBuffer,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.food"
+        )
+        foodState = FlowLeniaMetalFoodStateBuffer(
+            channelIndex: food.channelIndex,
+            decayRate: food.decayRate,
+            digestRate: food.digestRate,
+            buffer: privateBuffer,
+            transferBuffer: transferBuffer
+        )
+        if wallMaskEnabled {
+            applyFoodMask(label: "flow-metal.state.food-mask")
+        }
+        if hasState {
+            applyFoodField(
+                massBuffer: currentMassBuffer,
+                label: "flow-metal.state.food-update"
+            )
+        }
+    }
+
+    func applyParameterPatch(
+        x0: Int,
+        y0: Int,
+        size: Int,
+        deltas: [Float],
+        clip: [Float]?
+    ) {
+        applyParameterPatch(
+            FlowLeniaMetalParameterPatchBatch(
+                origins: Array(repeating: SIMD2<Int32>(Int32(x0), Int32(y0)), count: batchCount),
+                size: size,
+                deltas: deltas,
+                clip: clip
+            )
+        )
+    }
+
+    func applyParameterPatch(
+        origins: [SIMD2<Int32>],
+        size: Int,
+        deltas: [Float],
+        clip: [Float]?
+    ) {
+        applyParameterPatch(
+            FlowLeniaMetalParameterPatchBatch(
+                origins: origins,
+                size: size,
+                deltas: deltas,
+                clip: clip
+            )
+        )
+    }
+
+    func applyParameterPatch(_ patch: FlowLeniaMetalParameterPatchBatch) {
+        guard patch.size > 0 else {
+            return
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal parameter patch command buffer.")
+        }
+        commandBuffer.label = "flow-metal.state.paramPatch"
+        var retainedBuffers: [MTLBuffer] = []
+        encodeParameterPatch(
+            on: commandBuffer,
+            paramsBuffer: currentParamsBuffer,
+            patch: patch,
+            retainedBuffers: &retainedBuffers
+        )
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+
+    func applyZeroStatePatch(origins: [SIMD2<Int32>], size: Int) {
+        guard size > 0 else {
+            return
+        }
+        let insertionOrigins = Array(repeating: SIMD2<Int32>(Int32(-size), Int32(-size)), count: batchCount)
+        applyDissipationPatch(
+            FlowLeniaMetalDissipationBatch(
+                removalOrigins: origins,
+                insertionOrigins: insertionOrigins,
+                size: size,
+                insertedMass: [Float](repeating: 0, count: batchCount * size * size * channelCount),
+                insertedParams: [Float](repeating: 0, count: batchCount * parameterCount)
+            )
+        )
+    }
+
+    private func applyDissipationPatch(_ patch: FlowLeniaMetalDissipationBatch) {
+        guard patch.size > 0 else {
+            return
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal dissipation command buffer.")
+        }
+        commandBuffer.label = "flow-metal.state.dissipationPatch"
+        var retainedBuffers: [MTLBuffer] = []
+        encodeDissipationPatch(
+            on: commandBuffer,
+            massBuffer: currentMassBuffer,
+            paramsBuffer: currentParamsBuffer,
+            patch: patch,
+            retainedBuffers: &retainedBuffers
+        )
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+
+    func step(count: Int = 1) {
+        step(
+            count: count,
+            preStepParameterPatches: [:],
+            postStepParameterPatches: [:],
+            postStepScalarPatches: [:],
+            postStepDissipationPatches: [:]
+        )
+    }
+
+    func step(
+        count: Int,
+        preStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
+        postStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
+        postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]] = [:],
+        postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]] = [:]
+    ) {
+        let stepCount = max(count, 0)
+        guard stepCount > 0 else {
+            return
+        }
+        stepChunk(
+            count: stepCount,
+            preStepParameterPatches: preStepParameterPatches,
+            postStepParameterPatches: postStepParameterPatches,
+            postStepScalarPatches: postStepScalarPatches,
+            postStepDissipationPatches: postStepDissipationPatches
+        )
+    }
+
+    func materializeState() -> (mass: MLXArray, params: MLXArray) {
+        let cellCount = batchCount * config.sx * config.sy
+        let massValues = FlowLeniaMetalFullPipeline.copyFloatsFromGPUBuffer(
+            currentMassBuffer,
+            count: cellCount * channelCount,
+            device: device,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.mass"
+        )
+        let paramValues = FlowLeniaMetalFullPipeline.copyFloatsFromGPUBuffer(
+            currentParamsBuffer,
+            count: cellCount * parameterCount,
+            device: device,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.params"
+        )
+        return (
+            MLXArray(massValues).reshaped([batchCount, config.sx, config.sy, channelCount]),
+            MLXArray(paramValues).reshaped([batchCount, config.sx, config.sy, parameterCount])
+        )
+    }
+
+    func materializeMass() -> MLXArray {
+        let cellCount = batchCount * config.sx * config.sy
+        let massValues = FlowLeniaMetalFullPipeline.copyFloatsFromGPUBuffer(
+            currentMassBuffer,
+            count: cellCount * channelCount,
+            device: device,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.mass"
+        )
+        return MLXArray(massValues).reshaped([batchCount, config.sx, config.sy, channelCount])
+    }
+
+    func materializeMassMap(channelWeights: [Float]? = nil) -> MLXArray {
+        let weights = channelWeights ?? Array(repeating: 1.0, count: channelCount)
+        guard weights.count == channelCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner mass-map weights must match the configured channel count.")
+        }
+        FlowLeniaMetalFullPipeline.writeFloats(weights, to: massMapWeightsBuffer)
+
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal mass-map command buffer.")
+        }
+        commandBuffer.label = "flow-metal.state.mass-map"
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal mass-map encoder.")
+        }
+        encoder.setComputePipelineState(massMapPipeline)
+        encoder.setBuffer(currentMassBuffer, offset: 0, index: 0)
+        encoder.setBuffer(massMapBuffer, offset: 0, index: 1)
+        encoder.setBuffer(massMapWeightsBuffer, offset: 0, index: 2)
+        encoder.dispatchThreads(
+            MTLSize(width: config.sx, height: config.sy, depth: batchCount),
+            threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1)
+        )
+        encoder.endEncoding()
+
+        guard let blit = commandBuffer.makeBlitCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal mass-map readback encoder.")
+        }
+        let byteCount = batchCount * config.sx * config.sy * MemoryLayout<Float>.stride
+        blit.copy(from: massMapBuffer, sourceOffset: 0, to: massMapTransferBuffer, destinationOffset: 0, size: byteCount)
+        blit.endEncoding()
+
+        FlowLeniaMetalFullPipeline.commitAndWait(commandBuffer, label: "flow-metal.state.mass-map")
+        let values = FlowLeniaMetalFullPipeline.readFloats(from: massMapTransferBuffer, count: batchCount * config.sx * config.sy)
+        return MLXArray(values).reshaped([batchCount, config.sx, config.sy])
+    }
+
+    func materializeParams() -> MLXArray {
+        let cellCount = batchCount * config.sx * config.sy
+        let paramValues = FlowLeniaMetalFullPipeline.copyFloatsFromGPUBuffer(
+            currentParamsBuffer,
+            count: cellCount * parameterCount,
+            device: device,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.params"
+        )
+        return MLXArray(paramValues).reshaped([batchCount, config.sx, config.sy, parameterCount])
+    }
+
+    func materializeFood() -> MLXArray? {
+        guard let foodState else {
+            return nil
+        }
+        let cellCount = batchCount * config.sx * config.sy
+        let foodValues = FlowLeniaMetalFullPipeline.copyFloatsFromGPUBuffer(
+            foodState.buffer,
+            count: cellCount,
+            device: device,
+            commandQueue: commandQueue,
+            label: "flow-metal.state.food"
+        )
+        return MLXArray(foodValues).reshaped([batchCount, config.sx, config.sy])
+    }
+
+    func summarizeFoodMass() -> [Float]? {
+        guard let foodState else {
+            return nil
+        }
+        return scalarSummaryReducer.summarize(buffer: foodState.buffer)
+    }
+
+    func summarizeMass(
+        occupancyThreshold: Float,
+        includeGyration: Bool,
+        channelWeights: [Float]? = nil
+    ) -> FlowLeniaMetalMassSummary {
+        guard let summaryReducer else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner mass summary reducer is unavailable.")
+        }
+        return summaryReducer.summarize(
+            massBuffer: currentMassBuffer,
+            occupancyThreshold: occupancyThreshold,
+            includeGyration: includeGyration,
+            channelWeights: channelWeights
+        )
+    }
+
+    func profileCurrentStep() -> FlowSandboxMetalStageTimings {
+        var wallMaskMs = 0.0
+        let stageProfile = pipeline.profileStep(
+            preparedMassBuffer: currentMassBuffer,
+            paramsBuffer: currentParamsBuffer,
+            nextMassBuffer: nextMassBuffer,
+            nextParamsBuffer: nextParamsBuffer
+        )
+        if wallMaskEnabled {
+            let wallMaskStart = ContinuousClock.now
+            applyWallMask(
+                massBuffer: nextMassBuffer,
+                paramsBuffer: nextParamsBuffer,
+                label: "flow-metal.state.mask-profile"
+            )
+            wallMaskMs = flowSandboxDurationMs(wallMaskStart.duration(to: ContinuousClock.now))
+        }
+        return FlowSandboxMetalStageTimings(
+            prepareMs: 0.0,
+            fftMs: stageProfile.fftMs,
+            growthReduceMs: stageProfile.growthReduceMs,
+            flowMs: stageProfile.flowMs,
+            reintegrateMs: stageProfile.reintegrateMs + wallMaskMs,
+            totalMs: stageProfile.totalMs + wallMaskMs
+        )
+    }
+
+    private func stepChunk(
+        count: Int,
+        preStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
+        postStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
+        postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]],
+        postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]]
+    ) {
+        if pipeline.requiresSegmentedStepEncoding {
+            stepChunkSegmented(
+                count: count,
+                preStepParameterPatches: preStepParameterPatches,
+                postStepParameterPatches: postStepParameterPatches,
+                postStepScalarPatches: postStepScalarPatches,
+                postStepDissipationPatches: postStepDissipationPatches
+            )
+            return
+        }
+
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal state runner command buffer.")
+        }
+        commandBuffer.label = "flow-metal.state.step.\(count)"
+        var readMassBuffer = currentMassBuffer
+        var readParamsBuffer = currentParamsBuffer
+        var writeMassBuffer = nextMassBuffer
+        var writeParamsBuffer = nextParamsBuffer
+        var retainedBuffers: [MTLBuffer] = []
+        for stepIndex in 1...count {
+            for field in staticChannelFields {
+                encodeChannelFieldOverwrite(
+                    on: commandBuffer,
+                    massBuffer: readMassBuffer,
+                    field: field
+                )
+            }
+            if foodState != nil {
+                encodeFoodFieldOverwrite(
+                    on: commandBuffer,
+                    massBuffer: readMassBuffer
+                )
+            }
+            if let patches = preStepParameterPatches[stepIndex] {
+                for patch in patches {
+                    encodeParameterPatch(
+                        on: commandBuffer,
+                        paramsBuffer: readParamsBuffer,
+                        patch: patch,
+                        retainedBuffers: &retainedBuffers
+                    )
+                }
+            }
+            pipeline.encodeStep(
+                on: commandBuffer,
+                preparedMassBuffer: readMassBuffer,
+                paramsBuffer: readParamsBuffer,
+                nextMassBuffer: writeMassBuffer,
+                nextParamsBuffer: writeParamsBuffer,
+                mixStep: currentMixStep + stepIndex - 1
+            )
+            if let patches = postStepParameterPatches[stepIndex] {
+                for patch in patches {
+                    encodeParameterPatch(
+                        on: commandBuffer,
+                        paramsBuffer: writeParamsBuffer,
+                        patch: patch,
+                        retainedBuffers: &retainedBuffers
+                    )
+                }
+            }
+            if let dissipationPatches = postStepDissipationPatches[stepIndex] {
+                for dissipation in dissipationPatches {
+                    encodeDissipationPatch(
+                        on: commandBuffer,
+                        massBuffer: writeMassBuffer,
+                        paramsBuffer: writeParamsBuffer,
+                        patch: dissipation,
+                        retainedBuffers: &retainedBuffers
+                    )
+                }
+            }
+            if foodState != nil {
+                encodeFoodDynamics(
+                    on: commandBuffer,
+                    massBuffer: writeMassBuffer
+                )
+            }
+            if let scalarPatches = postStepScalarPatches[stepIndex],
+               let foodState {
+                for patch in scalarPatches {
+                    encodeScalarPatch(
+                        on: commandBuffer,
+                        fieldBuffer: foodState.buffer,
+                        patch: patch,
+                        retainedBuffers: &retainedBuffers
+                    )
+                }
+                if !scalarPatches.isEmpty {
+                    encodeFoodFieldOverwrite(
+                        on: commandBuffer,
+                        massBuffer: writeMassBuffer
+                    )
+                }
+            }
+            if wallMaskEnabled {
+                encodeWallMask(
+                    on: commandBuffer,
+                    massBuffer: writeMassBuffer,
+                    paramsBuffer: writeParamsBuffer
+                )
+                if foodState != nil {
+                    encodeFoodMask(on: commandBuffer)
+                }
+            }
+            swap(&readMassBuffer, &writeMassBuffer)
+            if reintegrateParams {
+                swap(&readParamsBuffer, &writeParamsBuffer)
+            }
+        }
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        currentMassBuffer = readMassBuffer
+        currentParamsBuffer = readParamsBuffer
+        nextMassBuffer = writeMassBuffer
+        nextParamsBuffer = writeParamsBuffer
+        currentMixStep += count
+    }
+
+    private func stepChunkSegmented(
+        count: Int,
+        preStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
+        postStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
+        postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]],
+        postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]]
+    ) {
+        var readMassBuffer = currentMassBuffer
+        var readParamsBuffer = currentParamsBuffer
+        var writeMassBuffer = nextMassBuffer
+        var writeParamsBuffer = nextParamsBuffer
+
+        for stepIndex in 1...count {
+            let prePatches = preStepParameterPatches[stepIndex] ?? []
+            let hasPreWork = !staticChannelFields.isEmpty || foodState != nil || !prePatches.isEmpty
+            if hasPreWork {
+                guard let preCommandBuffer = commandQueue.makeCommandBuffer() else {
+                    preconditionFailure("Failed to create Flow Metal segmented pre-step command buffer.")
+                }
+                preCommandBuffer.label = "flow-metal.state.segmented.pre.\(stepIndex)"
+                var preRetainedBuffers: [MTLBuffer] = []
+                for field in staticChannelFields {
+                    encodeChannelFieldOverwrite(
+                        on: preCommandBuffer,
+                        massBuffer: readMassBuffer,
+                        field: field
+                    )
+                }
+                if foodState != nil {
+                    encodeFoodFieldOverwrite(
+                        on: preCommandBuffer,
+                        massBuffer: readMassBuffer
+                    )
+                }
+                for patch in prePatches {
+                    encodeParameterPatch(
+                        on: preCommandBuffer,
+                        paramsBuffer: readParamsBuffer,
+                        patch: patch,
+                        retainedBuffers: &preRetainedBuffers
+                    )
+                }
+                FlowLeniaMetalFullPipeline.commitAndWait(
+                    preCommandBuffer,
+                    label: "flow-metal.state.segmented.pre.\(stepIndex)"
+                )
+            }
+
+            pipeline.runSegmentedStep(
+                preparedMassBuffer: readMassBuffer,
+                paramsBuffer: readParamsBuffer,
+                nextMassBuffer: writeMassBuffer,
+                nextParamsBuffer: writeParamsBuffer,
+                mixStep: currentMixStep + stepIndex - 1
+            )
+
+            let postPatches = postStepParameterPatches[stepIndex] ?? []
+            let dissipationPatches = postStepDissipationPatches[stepIndex] ?? []
+            let scalarPatches = postStepScalarPatches[stepIndex] ?? []
+            let hasPostWork = !postPatches.isEmpty || !dissipationPatches.isEmpty || foodState != nil || wallMaskEnabled
+            if hasPostWork {
+                guard let postCommandBuffer = commandQueue.makeCommandBuffer() else {
+                    preconditionFailure("Failed to create Flow Metal segmented post-step command buffer.")
+                }
+                postCommandBuffer.label = "flow-metal.state.segmented.post.\(stepIndex)"
+                var postRetainedBuffers: [MTLBuffer] = []
+                for patch in postPatches {
+                    encodeParameterPatch(
+                        on: postCommandBuffer,
+                        paramsBuffer: writeParamsBuffer,
+                        patch: patch,
+                        retainedBuffers: &postRetainedBuffers
+                    )
+                }
+                for dissipation in dissipationPatches {
+                    encodeDissipationPatch(
+                        on: postCommandBuffer,
+                        massBuffer: writeMassBuffer,
+                        paramsBuffer: writeParamsBuffer,
+                        patch: dissipation,
+                        retainedBuffers: &postRetainedBuffers
+                    )
+                }
+                if foodState != nil {
+                    encodeFoodDynamics(
+                        on: postCommandBuffer,
+                        massBuffer: writeMassBuffer
+                    )
+                }
+                if let foodState {
+                    for patch in scalarPatches {
+                        encodeScalarPatch(
+                            on: postCommandBuffer,
+                            fieldBuffer: foodState.buffer,
+                            patch: patch,
+                            retainedBuffers: &postRetainedBuffers
+                        )
+                    }
+                    if !scalarPatches.isEmpty {
+                        encodeFoodFieldOverwrite(
+                            on: postCommandBuffer,
+                            massBuffer: writeMassBuffer
+                        )
+                    }
+                }
+                if wallMaskEnabled {
+                    encodeWallMask(
+                        on: postCommandBuffer,
+                        massBuffer: writeMassBuffer,
+                        paramsBuffer: writeParamsBuffer
+                    )
+                    if foodState != nil {
+                        encodeFoodMask(on: postCommandBuffer)
+                    }
+                }
+                FlowLeniaMetalFullPipeline.commitAndWait(
+                    postCommandBuffer,
+                    label: "flow-metal.state.segmented.post.\(stepIndex)"
+                )
+            }
+
+            swap(&readMassBuffer, &writeMassBuffer)
+            if reintegrateParams {
+                swap(&readParamsBuffer, &writeParamsBuffer)
+            }
+        }
+
+        currentMassBuffer = readMassBuffer
+        currentParamsBuffer = readParamsBuffer
+        nextMassBuffer = writeMassBuffer
+        nextParamsBuffer = writeParamsBuffer
+        currentMixStep += count
+    }
+
+    private func encodeChannelFieldOverwrite(
+        on commandBuffer: MTLCommandBuffer,
+        massBuffer: MTLBuffer,
+        field: FlowLeniaMetalChannelFieldBuffer
+    ) {
+        encodeChannelFieldOverwrite(
+            on: commandBuffer,
+            massBuffer: massBuffer,
+            fieldBuffer: field.buffer,
+            channelIndex: field.channelIndex
+        )
+    }
+
+    private func encodeChannelFieldOverwrite(
+        on commandBuffer: MTLCommandBuffer,
+        massBuffer: MTLBuffer,
+        fieldBuffer: MTLBuffer,
+        channelIndex: Int
+    ) {
+        var uniforms = ChannelFieldUniforms(channelIndex: Int32(channelIndex))
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal channel field encoder.")
+        }
+        encoder.setComputePipelineState(channelFieldPipeline)
+        encoder.setBuffer(fieldBuffer, offset: 0, index: 0)
+        encoder.setBuffer(massBuffer, offset: 0, index: 1)
+        withUnsafeBytes(of: &uniforms) { rawUniforms in
+            encoder.setBytes(rawUniforms.baseAddress!, length: rawUniforms.count, index: 2)
+        }
+        let threadWidth = min(16, max(1, channelFieldPipeline.threadExecutionWidth))
+        let maxHeight = max(1, channelFieldPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
+        let threadHeight = min(16, maxHeight)
+        let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
+        let threads = MTLSize(width: config.sx, height: config.sy, depth: batchCount)
+        encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
+        encoder.endEncoding()
+    }
+
+    private func encodeScalarPatch(
+        on commandBuffer: MTLCommandBuffer,
+        fieldBuffer: MTLBuffer,
+        patch: FlowLeniaMetalScalarPatchBatch,
+        retainedBuffers: inout [MTLBuffer]
+    ) {
+        guard patch.origins.count == batchCount else {
+            preconditionFailure(
+                "FlowLeniaMetalFullStateRunner scalar patch expects \(batchCount) batch origins, got \(patch.origins.count)."
+            )
+        }
+        let patchOrigins = patch.origins.map { ParameterPatchOrigin(x0: $0.x, y0: $0.y) }
+        guard let originBuffer = device.makeBuffer(
+            length: patchOrigins.count * MemoryLayout<ParameterPatchOrigin>.stride,
+            options: .storageModeShared
+        ) else {
+            preconditionFailure("Failed to allocate Flow Metal scalar patch origin buffer.")
+        }
+        originBuffer.label = "flow-metal.state.scalarPatch.origins"
+        _ = patchOrigins.withUnsafeBytes { rawOrigins in
+            memcpy(originBuffer.contents(), rawOrigins.baseAddress, rawOrigins.count)
+        }
+        retainedBuffers.append(originBuffer)
+
+        var uniforms = ScalarPatchUniforms(size: Int32(patch.size), value: patch.value)
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal scalar patch encoder.")
+        }
+        encoder.setComputePipelineState(scalarPatchPipeline)
+        encoder.setBuffer(originBuffer, offset: 0, index: 0)
+        encoder.setBuffer(fieldBuffer, offset: 0, index: 1)
+        withUnsafeBytes(of: &uniforms) { rawUniforms in
+            encoder.setBytes(rawUniforms.baseAddress!, length: rawUniforms.count, index: 2)
+        }
+        let threadWidth = min(8, max(1, scalarPatchPipeline.threadExecutionWidth))
+        let maxHeight = max(1, scalarPatchPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
+        let threadHeight = min(8, maxHeight)
+        let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
+        let threads = MTLSize(width: patch.size, height: patch.size, depth: batchCount)
+        encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
+        encoder.endEncoding()
+    }
+
+    private func encodeDissipationPatch(
+        on commandBuffer: MTLCommandBuffer,
+        massBuffer: MTLBuffer,
+        paramsBuffer: MTLBuffer,
+        patch: FlowLeniaMetalDissipationBatch,
+        retainedBuffers: inout [MTLBuffer]
+    ) {
+        guard patch.removalOrigins.count == batchCount, patch.insertionOrigins.count == batchCount else {
+            preconditionFailure(
+                "FlowLeniaMetalFullStateRunner dissipation patch expects \(batchCount) batch origins."
+            )
+        }
+        let expectedMassCount = batchCount * patch.size * patch.size * channelCount
+        guard patch.insertedMass.count == expectedMassCount else {
+            preconditionFailure(
+                "FlowLeniaMetalFullStateRunner dissipation patch expects \(expectedMassCount) inserted mass values, got \(patch.insertedMass.count)."
+            )
+        }
+        let expectedParamCount = batchCount * parameterCount
+        guard patch.insertedParams.count == expectedParamCount else {
+            preconditionFailure(
+                "FlowLeniaMetalFullStateRunner dissipation patch expects \(expectedParamCount) inserted parameter values, got \(patch.insertedParams.count)."
+            )
+        }
+
+        let removalOrigins = patch.removalOrigins.map { ParameterPatchOrigin(x0: $0.x, y0: $0.y) }
+        let insertionOrigins = patch.insertionOrigins.map { ParameterPatchOrigin(x0: $0.x, y0: $0.y) }
+        guard let removalOriginBuffer = device.makeBuffer(
+            length: removalOrigins.count * MemoryLayout<ParameterPatchOrigin>.stride,
+            options: .storageModeShared
+        ), let insertionOriginBuffer = device.makeBuffer(
+            length: insertionOrigins.count * MemoryLayout<ParameterPatchOrigin>.stride,
+            options: .storageModeShared
+        ), let insertedMassBuffer = device.makeBuffer(
+            length: patch.insertedMass.count * MemoryLayout<Float>.stride,
+            options: .storageModeShared
+        ), let insertedParamsBuffer = device.makeBuffer(
+            length: patch.insertedParams.count * MemoryLayout<Float>.stride,
+            options: .storageModeShared
+        ) else {
+            preconditionFailure("Failed to allocate Flow Metal dissipation buffers.")
+        }
+        removalOriginBuffer.label = "flow-metal.state.dissipation.remove-origins"
+        insertionOriginBuffer.label = "flow-metal.state.dissipation.insert-origins"
+        insertedMassBuffer.label = "flow-metal.state.dissipation.insert-mass"
+        insertedParamsBuffer.label = "flow-metal.state.dissipation.insert-params"
+        _ = removalOrigins.withUnsafeBytes { rawOrigins in
+            memcpy(removalOriginBuffer.contents(), rawOrigins.baseAddress, rawOrigins.count)
+        }
+        _ = insertionOrigins.withUnsafeBytes { rawOrigins in
+            memcpy(insertionOriginBuffer.contents(), rawOrigins.baseAddress, rawOrigins.count)
+        }
+        FlowLeniaMetalFullPipeline.writeFloats(patch.insertedMass, to: insertedMassBuffer)
+        FlowLeniaMetalFullPipeline.writeFloats(patch.insertedParams, to: insertedParamsBuffer)
+        retainedBuffers.append(removalOriginBuffer)
+        retainedBuffers.append(insertionOriginBuffer)
+        retainedBuffers.append(insertedMassBuffer)
+        retainedBuffers.append(insertedParamsBuffer)
+
+        var uniforms = StatePatchUniforms(size: Int32(patch.size))
+
+        guard let zeroEncoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal dissipation zero encoder.")
+        }
+        zeroEncoder.setComputePipelineState(zeroStatePatchPipeline)
+        zeroEncoder.setBuffer(removalOriginBuffer, offset: 0, index: 0)
+        zeroEncoder.setBuffer(massBuffer, offset: 0, index: 1)
+        zeroEncoder.setBuffer(paramsBuffer, offset: 0, index: 2)
+        withUnsafeBytes(of: &uniforms) { rawUniforms in
+            zeroEncoder.setBytes(rawUniforms.baseAddress!, length: rawUniforms.count, index: 3)
+        }
+        let zeroThreadWidth = min(8, max(1, zeroStatePatchPipeline.threadExecutionWidth))
+        let zeroMaxHeight = max(1, zeroStatePatchPipeline.maxTotalThreadsPerThreadgroup / zeroThreadWidth)
+        let zeroThreadHeight = min(8, zeroMaxHeight)
+        let zeroThreadsPerGroup = MTLSize(width: zeroThreadWidth, height: zeroThreadHeight, depth: 1)
+        let threads = MTLSize(width: patch.size, height: patch.size, depth: batchCount)
+        zeroEncoder.dispatchThreads(threads, threadsPerThreadgroup: zeroThreadsPerGroup)
+        zeroEncoder.endEncoding()
+
+        guard let insertEncoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal dissipation insert encoder.")
+        }
+        insertEncoder.setComputePipelineState(insertStatePatchPipeline)
+        insertEncoder.setBuffer(insertedMassBuffer, offset: 0, index: 0)
+        insertEncoder.setBuffer(insertedParamsBuffer, offset: 0, index: 1)
+        insertEncoder.setBuffer(insertionOriginBuffer, offset: 0, index: 2)
+        insertEncoder.setBuffer(massBuffer, offset: 0, index: 3)
+        insertEncoder.setBuffer(paramsBuffer, offset: 0, index: 4)
+        withUnsafeBytes(of: &uniforms) { rawUniforms in
+            insertEncoder.setBytes(rawUniforms.baseAddress!, length: rawUniforms.count, index: 5)
+        }
+        let insertThreadWidth = min(8, max(1, insertStatePatchPipeline.threadExecutionWidth))
+        let insertMaxHeight = max(1, insertStatePatchPipeline.maxTotalThreadsPerThreadgroup / insertThreadWidth)
+        let insertThreadHeight = min(8, insertMaxHeight)
+        let insertThreadsPerGroup = MTLSize(width: insertThreadWidth, height: insertThreadHeight, depth: 1)
+        insertEncoder.dispatchThreads(threads, threadsPerThreadgroup: insertThreadsPerGroup)
+        insertEncoder.endEncoding()
+    }
+
+    private func encodeFoodFieldOverwrite(
+        on commandBuffer: MTLCommandBuffer,
+        massBuffer: MTLBuffer
+    ) {
+        guard let foodState else {
+            return
+        }
+        encodeChannelFieldOverwrite(
+            on: commandBuffer,
+            massBuffer: massBuffer,
+            fieldBuffer: foodState.buffer,
+            channelIndex: foodState.channelIndex
+        )
+    }
+
+    private func encodeParameterPatch(
+        on commandBuffer: MTLCommandBuffer,
+        paramsBuffer: MTLBuffer,
+        patch: FlowLeniaMetalParameterPatchBatch,
+        retainedBuffers: inout [MTLBuffer]
+    ) {
+        guard patch.origins.count == batchCount else {
+            preconditionFailure(
+                "FlowLeniaMetalFullStateRunner parameter patch expects \(batchCount) batch origins, got \(patch.origins.count)."
+            )
+        }
+        let expectedCount = batchCount * patch.size * patch.size * parameterCount
+        guard patch.deltas.count == expectedCount else {
+            preconditionFailure(
+                "FlowLeniaMetalFullStateRunner parameter patch expects \(expectedCount) delta values, got \(patch.deltas.count)."
+            )
+        }
+        guard let deltaBuffer = device.makeBuffer(
+            length: patch.deltas.count * MemoryLayout<Float>.stride,
+            options: .storageModeShared
+        ) else {
+            preconditionFailure("Failed to allocate Flow Metal parameter patch delta buffer.")
+        }
+        deltaBuffer.label = "flow-metal.state.paramPatch.delta"
+        FlowLeniaMetalFullPipeline.writeFloats(patch.deltas, to: deltaBuffer)
+        let patchOrigins = patch.origins.map { ParameterPatchOrigin(x0: $0.x, y0: $0.y) }
+        guard let originBuffer = device.makeBuffer(
+            length: patchOrigins.count * MemoryLayout<ParameterPatchOrigin>.stride,
+            options: .storageModeShared
+        ) else {
+            preconditionFailure("Failed to allocate Flow Metal parameter patch origin buffer.")
+        }
+        originBuffer.label = "flow-metal.state.paramPatch.origins"
+        _ = patchOrigins.withUnsafeBytes { rawOrigins in
+            memcpy(originBuffer.contents(), rawOrigins.baseAddress, rawOrigins.count)
+        }
+        retainedBuffers.append(deltaBuffer)
+        retainedBuffers.append(originBuffer)
+
+        var uniforms = ParameterPatchUniforms(
+            size: Int32(patch.size),
+            applyClip: patch.clip == nil ? 0 : 1,
+            clipLow: patch.clip?[0] ?? 0,
+            clipHigh: patch.clip?[1] ?? 0
+        )
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal parameter patch encoder.")
+        }
+        encoder.setComputePipelineState(parameterPatchPipeline)
+        encoder.setBuffer(deltaBuffer, offset: 0, index: 0)
+        encoder.setBuffer(originBuffer, offset: 0, index: 1)
+        encoder.setBuffer(paramsBuffer, offset: 0, index: 2)
+        withUnsafeBytes(of: &uniforms) { rawUniforms in
+            encoder.setBytes(rawUniforms.baseAddress!, length: rawUniforms.count, index: 3)
+        }
+        let threadWidth = min(8, max(1, parameterPatchPipeline.threadExecutionWidth))
+        let maxHeight = max(1, parameterPatchPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
+        let threadHeight = min(8, maxHeight)
+        let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
+        let threads = MTLSize(width: patch.size, height: patch.size, depth: batchCount)
+        encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
+        encoder.endEncoding()
+    }
+
+    private func applyWallMask(
+        massBuffer: MTLBuffer,
+        paramsBuffer: MTLBuffer,
+        label: String
+    ) {
+        guard wallMaskEnabled else {
+            return
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal wall mask command buffer.")
+        }
+        commandBuffer.label = label
+        encodeWallMask(on: commandBuffer, massBuffer: massBuffer, paramsBuffer: paramsBuffer)
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+
+    private func applyFoodField(
+        massBuffer: MTLBuffer,
+        label: String
+    ) {
+        guard foodState != nil else {
+            return
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal food field command buffer.")
+        }
+        commandBuffer.label = label
+        encodeFoodFieldOverwrite(on: commandBuffer, massBuffer: massBuffer)
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+
+    private func applyFoodMask(label: String) {
+        guard foodState != nil else {
+            return
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal food mask command buffer.")
+        }
+        commandBuffer.label = label
+        encodeFoodMask(on: commandBuffer)
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+
+    private func applyStaticChannelFields(
+        massBuffer: MTLBuffer,
+        label: String
+    ) {
+        guard !staticChannelFields.isEmpty else {
+            return
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal channel field command buffer.")
+        }
+        commandBuffer.label = label
+        for field in staticChannelFields {
+            encodeChannelFieldOverwrite(
+                on: commandBuffer,
+                massBuffer: massBuffer,
+                field: field
+            )
+        }
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+
+    private func encodeWallMask(
+        on commandBuffer: MTLCommandBuffer,
+        massBuffer: MTLBuffer,
+        paramsBuffer: MTLBuffer
+    ) {
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal wall mask encoder.")
+        }
+        encoder.setComputePipelineState(wallMaskPipeline)
+        encoder.setBuffer(wallMaskBuffer, offset: 0, index: 0)
+        encoder.setBuffer(massBuffer, offset: 0, index: 1)
+        encoder.setBuffer(paramsBuffer, offset: 0, index: 2)
+        let threadWidth = min(16, max(1, wallMaskPipeline.threadExecutionWidth))
+        let maxHeight = max(1, wallMaskPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
+        let threadHeight = min(16, maxHeight)
+        let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
+        let threads = MTLSize(width: config.sx, height: config.sy, depth: batchCount)
+        encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
+        encoder.endEncoding()
+    }
+
+    private func encodeFoodMask(on commandBuffer: MTLCommandBuffer) {
+        guard let foodState else {
+            return
+        }
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal food mask encoder.")
+        }
+        encoder.setComputePipelineState(scalarFieldMaskPipeline)
+        encoder.setBuffer(wallMaskBuffer, offset: 0, index: 0)
+        encoder.setBuffer(foodState.buffer, offset: 0, index: 1)
+        let threadWidth = min(16, max(1, scalarFieldMaskPipeline.threadExecutionWidth))
+        let maxHeight = max(1, scalarFieldMaskPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
+        let threadHeight = min(16, maxHeight)
+        let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
+        let threads = MTLSize(width: config.sx, height: config.sy, depth: batchCount)
+        encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
+        encoder.endEncoding()
+    }
+
+    private func encodeFoodDynamics(
+        on commandBuffer: MTLCommandBuffer,
+        massBuffer: MTLBuffer
+    ) {
+        guard let foodState else {
+            return
+        }
+        var uniforms = FoodDynamicsUniforms(
+            channelIndex: Int32(foodState.channelIndex),
+            decayRate: foodState.decayRate,
+            digestRate: foodState.digestRate,
+            epsilon: 1e-6
+        )
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal food dynamics encoder.")
+        }
+        encoder.setComputePipelineState(foodDynamicsPipeline)
+        currentMatterWeights.withUnsafeBufferPointer { weights in
+            guard let base = weights.baseAddress else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner matter weights are unexpectedly empty.")
+            }
+            encoder.setBytes(base, length: weights.count * MemoryLayout<Float>.stride, index: 0)
+        }
+        encoder.setBuffer(massBuffer, offset: 0, index: 1)
+        encoder.setBuffer(foodState.buffer, offset: 0, index: 2)
+        withUnsafeBytes(of: &uniforms) { rawUniforms in
+            encoder.setBytes(rawUniforms.baseAddress!, length: rawUniforms.count, index: 3)
+        }
+        let threadWidth = min(16, max(1, foodDynamicsPipeline.threadExecutionWidth))
+        let maxHeight = max(1, foodDynamicsPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
+        let threadHeight = min(16, maxHeight)
+        let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
+        let threads = MTLSize(width: config.sx, height: config.sy, depth: batchCount)
+        encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
+        encoder.endEncoding()
+    }
+
+    private static func expandScalarField(
+        _ values: MLXArray,
+        batchCount: Int,
+        sx: Int,
+        sy: Int,
+        label: String
+    ) -> [Float] {
+        guard values.shape.count == 4 else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must have shape [batch, sx, sy, 1].")
+        }
+        guard values.shape[1] == sx, values.shape[2] == sy, values.shape[3] == 1 else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must have shape [batch, \(sx), \(sy), 1].")
+        }
+        guard values.shape[0] == 1 || values.shape[0] == batchCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must be shared across the batch or provided per batch element.")
+        }
+        let contiguous = values.contiguous()
+        let raw = contiguous.asArray(Float.self)
+        if values.shape[0] == batchCount {
+            return raw
+        }
+        return Array(repeating: raw, count: batchCount).flatMap { $0 }
+    }
+
+    private static func expandPlanarField(
+        _ values: MLXArray,
+        batchCount: Int,
+        sx: Int,
+        sy: Int,
+        label: String
+    ) -> [Float] {
+        switch values.shape.count {
+        case 2:
+            guard values.shape[0] == sx, values.shape[1] == sy else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must have shape [\(sx), \(sy)].")
+            }
+            let raw = values.contiguous().asArray(Float.self)
+            return Array(repeating: raw, count: batchCount).flatMap { $0 }
+        case 3:
+            guard values.shape[1] == sx, values.shape[2] == sy else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must have shape [batch, \(sx), \(sy)].")
+            }
+            guard values.shape[0] == 1 || values.shape[0] == batchCount else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must be shared across the batch or provided per batch element.")
+            }
+            let raw = values.contiguous().asArray(Float.self)
+            if values.shape[0] == batchCount {
+                return raw
+            }
+            return Array(repeating: raw, count: batchCount).flatMap { $0 }
+        case 4:
+            return expandScalarField(
+                values,
+                batchCount: batchCount,
+                sx: sx,
+                sy: sy,
+                label: label
+            )
+        default:
+            preconditionFailure("FlowLeniaMetalFullStateRunner \(label) must have shape [sx, sy], [batch, sx, sy], or [batch, sx, sy, 1].")
+        }
+    }
+
+    private static func resolvedMatterWeights(
+        weights: [Float]?,
+        channelCount: Int
+    ) -> [Float] {
+        if let weights {
+            guard weights.count == channelCount else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner matter weights must match the configured channel count.")
+            }
+            return weights
+        }
+        return Array(repeating: 1.0, count: channelCount)
+    }
+
+    private static func wallMaskKernelSource(
+        parameterCount: Int,
+        channelCount: Int,
+        batchCount: Int,
+        sx: Int,
+        sy: Int
+    ) -> String {
+        """
+        #include <metal_stdlib>
+        using namespace metal;
+
+        constant int kParamCount = \(parameterCount);
+        constant int kChannelCount = \(channelCount);
+        constant int kBatchCount = \(batchCount);
+        constant int kSX = \(sx);
+        constant int kSY = \(sy);
+        constant uint kSummaryThreads = \(FlowLeniaMetalFullPipeline.summaryThreadCount)u;
+        constant uint kSummaryChunkSpan = \(FlowLeniaMetalFullPipeline.summaryChunkSpan)u;
+        constant uint kSummaryPartialGroups = \(FlowLeniaMetalFullPipeline.summaryPartialGroupCount(sx: sx, sy: sy))u;
+
+        struct ParameterPatchUniforms {
+            int size;
+            uint applyClip;
+            float clipLow;
+            float clipHigh;
+        };
+
+        struct ParameterPatchOrigin {
+            int x0;
+            int y0;
+        };
+
+        struct ChannelFieldUniforms {
+            int channelIndex;
+        };
+
+        struct ScalarPatchUniforms {
+            int size;
+            float value;
+        };
+
+        struct StatePatchUniforms {
+            int size;
+        };
+
+        struct FoodDynamicsUniforms {
+            int channelIndex;
+            float decayRate;
+            float digestRate;
+            float epsilon;
+        };
+
+        kernel void flowMetalApplyWallMask(
+            device const float *wallMask [[buffer(0)]],
+            device float *mass [[buffer(1)]],
+            device float *params [[buffer(2)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            int x = int(gid.x);
+            int y = int(gid.y);
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            float maskValue = wallMask[cellIndex];
+            int massBase = cellIndex * kChannelCount;
+            for (int channel = 0; channel < kChannelCount; ++channel) {
+                mass[massBase + channel] *= maskValue;
+            }
+            int paramBase = cellIndex * kParamCount;
+            for (int k = 0; k < kParamCount; ++k) {
+                params[paramBase + k] *= maskValue;
+            }
+        }
+
+        kernel void flowMetalOverwriteChannelField(
+            device const float *field [[buffer(0)]],
+            device float *mass [[buffer(1)]],
+            constant ChannelFieldUniforms &uniforms [[buffer(2)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            int x = int(gid.x);
+            int y = int(gid.y);
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            int massBase = cellIndex * kChannelCount;
+            mass[massBase + uniforms.channelIndex] = field[cellIndex];
+        }
+
+        kernel void flowMetalApplyScalarFieldMask(
+            device const float *wallMask [[buffer(0)]],
+            device float *field [[buffer(1)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            int x = int(gid.x);
+            int y = int(gid.y);
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            field[cellIndex] *= wallMask[cellIndex];
+        }
+
+        kernel void flowMetalApplyScalarPatch(
+            device const ParameterPatchOrigin *origins [[buffer(0)]],
+            device float *field [[buffer(1)]],
+            constant ScalarPatchUniforms &patch [[buffer(2)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= patch.size || int(gid.y) >= patch.size || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            ParameterPatchOrigin origin = origins[batch];
+            if (origin.x0 < 0 || origin.y0 < 0) {
+                return;
+            }
+            int x = origin.x0 + int(gid.x);
+            int y = origin.y0 + int(gid.y);
+            if (x < 0 || x >= kSX || y < 0 || y >= kSY) {
+                return;
+            }
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            field[cellIndex] = patch.value;
+        }
+
+        kernel void flowMetalApplyFoodDynamics(
+            constant float *matterWeights [[buffer(0)]],
+            device float *mass [[buffer(1)]],
+            device float *food [[buffer(2)]],
+            constant FoodDynamicsUniforms &uniforms [[buffer(3)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            int x = int(gid.x);
+            int y = int(gid.y);
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            int massBase = cellIndex * kChannelCount;
+            float matter = 0.0f;
+            for (int channel = 0; channel < kChannelCount; ++channel) {
+                matter += mass[massBase + channel] * matterWeights[channel];
+            }
+            float oldFood = food[cellIndex];
+            float decay = matter * uniforms.decayRate;
+            float digestRaw = matter * uniforms.digestRate;
+            float digestClipped = clamp(digestRaw, 0.0f, matter);
+            float delta = digestClipped * oldFood;
+            float newMatter = max(matter + delta - decay, 0.0f);
+            float scale = newMatter / max(matter, uniforms.epsilon);
+            for (int channel = 0; channel < kChannelCount; ++channel) {
+                if (matterWeights[channel] != 0.0f) {
+                    mass[massBase + channel] *= scale;
+                }
+            }
+            float newFood = max(oldFood - delta, 0.0f);
+            food[cellIndex] = newFood;
+            mass[massBase + uniforms.channelIndex] = newFood;
+        }
+
+        kernel void flowMetalZeroStatePatch(
+            device const ParameterPatchOrigin *origins [[buffer(0)]],
+            device float *mass [[buffer(1)]],
+            device float *params [[buffer(2)]],
+            constant StatePatchUniforms &patch [[buffer(3)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= patch.size || int(gid.y) >= patch.size || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            ParameterPatchOrigin origin = origins[batch];
+            if (origin.x0 < 0 || origin.y0 < 0) {
+                return;
+            }
+            int x = origin.x0 + int(gid.x);
+            int y = origin.y0 + int(gid.y);
+            if (x < 0 || x >= kSX || y < 0 || y >= kSY) {
+                return;
+            }
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            int massBase = cellIndex * kChannelCount;
+            for (int channel = 0; channel < kChannelCount; ++channel) {
+                mass[massBase + channel] = 0.0f;
+            }
+            int paramBase = cellIndex * kParamCount;
+            for (int k = 0; k < kParamCount; ++k) {
+                params[paramBase + k] = 0.0f;
+            }
+        }
+
+        kernel void flowMetalInsertStatePatch(
+            device const float *massValues [[buffer(0)]],
+            device const float *paramValues [[buffer(1)]],
+            device const ParameterPatchOrigin *origins [[buffer(2)]],
+            device float *mass [[buffer(3)]],
+            device float *params [[buffer(4)]],
+            constant StatePatchUniforms &patch [[buffer(5)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= patch.size || int(gid.y) >= patch.size || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            ParameterPatchOrigin origin = origins[batch];
+            if (origin.x0 < 0 || origin.y0 < 0) {
+                return;
+            }
+            int localX = int(gid.x);
+            int localY = int(gid.y);
+            int x = origin.x0 + localX;
+            int y = origin.y0 + localY;
+            if (x < 0 || x >= kSX || y < 0 || y >= kSY) {
+                return;
+            }
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            int insertedMassBase = ((batch * patch.size + localX) * patch.size + localY) * kChannelCount;
+            int massBase = cellIndex * kChannelCount;
+            for (int channel = 0; channel < kChannelCount; ++channel) {
+                mass[massBase + channel] = massValues[insertedMassBase + channel];
+            }
+            int paramBase = cellIndex * kParamCount;
+            int insertedParamBase = batch * kParamCount;
+            for (int k = 0; k < kParamCount; ++k) {
+                params[paramBase + k] = paramValues[insertedParamBase + k];
+            }
+        }
+
+        kernel void flowMetalApplyParameterPatch(
+            device const float *delta [[buffer(0)]],
+            device const ParameterPatchOrigin *origins [[buffer(1)]],
+            device float *params [[buffer(2)]],
+            constant ParameterPatchUniforms &patch [[buffer(3)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= patch.size || int(gid.y) >= patch.size || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            int localX = int(gid.x);
+            int localY = int(gid.y);
+            ParameterPatchOrigin origin = origins[batch];
+            int x = origin.x0 + localX;
+            int y = origin.y0 + localY;
+            if (x < 0 || x >= kSX || y < 0 || y >= kSY) {
+                return;
+            }
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            int deltaBase = ((batch * patch.size + localX) * patch.size + localY) * kParamCount;
+            int paramBase = cellIndex * kParamCount;
+            for (int k = 0; k < kParamCount; ++k) {
+                float value = params[paramBase + k] + delta[deltaBase + k];
+                if (patch.applyClip != 0u) {
+                    value = clamp(value, patch.clipLow, patch.clipHigh);
+                }
+                params[paramBase + k] = value;
+            }
+        }
+
+        kernel void flowMetalBuildMassMap(
+            device const float *mass [[buffer(0)]],
+            device float *massMap [[buffer(1)]],
+            device const float *channelWeights [[buffer(2)]],
+            uint3 gid [[thread_position_in_grid]]
+        ) {
+            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+                return;
+            }
+            int batch = int(gid.z);
+            int x = int(gid.x);
+            int y = int(gid.y);
+            int cellIndex = (batch * kSX + x) * kSY + y;
+            int massBase = cellIndex * kChannelCount;
+            float value = 0.0f;
+            for (int channel = 0; channel < kChannelCount; ++channel) {
+                value += mass[massBase + channel] * channelWeights[channel];
+            }
+            massMap[cellIndex] = value;
+        }
+
+        kernel void flowMetalScalarSummaryPartial(
+            device const float *field [[buffer(0)]],
+            device float *partialSums [[buffer(1)]],
+            uint tid [[thread_index_in_threadgroup]],
+            uint lane [[thread_index_in_simdgroup]],
+            uint simdGroup [[simdgroup_index_in_threadgroup]],
+            uint threadsPerSimdgroup [[threads_per_simdgroup]],
+            uint3 groupPos [[threadgroup_position_in_grid]]
+        ) {
+            int batch = int(groupPos.z);
+            uint partialGroup = groupPos.x;
+            if (batch >= kBatchCount || partialGroup >= kSummaryPartialGroups) {
+                return;
+            }
+
+            threadgroup float sumScratch[kSummaryThreads];
+            float localSum = 0.0f;
+            int spatialCount = kSX * kSY;
+            uint chunkStart = partialGroup * kSummaryChunkSpan;
+            uint chunkEnd = min(chunkStart + kSummaryChunkSpan, uint(spatialCount));
+            int batchOffset = batch * spatialCount;
+            for (uint linear = chunkStart + tid; linear < chunkEnd; linear += kSummaryThreads) {
+                localSum += field[batchOffset + int(linear)];
+            }
+
+            localSum = simd_sum(localSum);
+            if (lane == 0u) {
+                sumScratch[simdGroup] = localSum;
+            }
+            threadgroup_barrier(mem_flags::mem_threadgroup);
+
+            uint simdGroupCount = (kSummaryThreads + threadsPerSimdgroup - 1u) / threadsPerSimdgroup;
+            float reducedSum = tid < simdGroupCount ? sumScratch[tid] : 0.0f;
+            reducedSum = simd_sum(reducedSum);
+            if (tid == 0u) {
+                int partialIndex = batch * int(kSummaryPartialGroups) + int(partialGroup);
+                partialSums[partialIndex] = reducedSum;
+            }
+        }
+
+        kernel void flowMetalScalarSummaryFinalize(
+            device const float *partialSums [[buffer(0)]],
+            device float *sums [[buffer(1)]],
+            uint tid [[thread_index_in_threadgroup]],
+            uint lane [[thread_index_in_simdgroup]],
+            uint simdGroup [[simdgroup_index_in_threadgroup]],
+            uint threadsPerSimdgroup [[threads_per_simdgroup]],
+            uint3 groupPos [[threadgroup_position_in_grid]]
+        ) {
+            int batch = int(groupPos.z);
+            if (batch >= kBatchCount) {
+                return;
+            }
+
+            threadgroup float sumScratch[kSummaryThreads];
+            float localSum = 0.0f;
+            for (uint partialIndex = tid; partialIndex < kSummaryPartialGroups; partialIndex += kSummaryThreads) {
+                int index = batch * int(kSummaryPartialGroups) + int(partialIndex);
+                localSum += partialSums[index];
+            }
+
+            localSum = simd_sum(localSum);
+            if (lane == 0u) {
+                sumScratch[simdGroup] = localSum;
+            }
+            threadgroup_barrier(mem_flags::mem_threadgroup);
+
+            uint simdGroupCount = (kSummaryThreads + threadsPerSimdgroup - 1u) / threadsPerSimdgroup;
+            float reducedSum = tid < simdGroupCount ? sumScratch[tid] : 0.0f;
+            reducedSum = simd_sum(reducedSum);
+            if (tid == 0u) {
+                sums[batch] = reducedSum;
+            }
+        }
+        """
+    }
+}
+
+struct FlowLeniaMetalParameterPatchBatch {
+    let origins: [SIMD2<Int32>]
+    let size: Int
+    let deltas: [Float]
+    let clip: [Float]?
+}
+
+struct FlowLeniaMetalChannelField {
+    let channelIndex: Int
+    let field: MLXArray
+}
+
+struct FlowLeniaMetalFoodState {
+    let channelIndex: Int
+    let field: MLXArray
+    let decayRate: Float
+    let digestRate: Float
+}
+
+struct FlowLeniaMetalScalarPatchBatch {
+    let origins: [SIMD2<Int32>]
+    let size: Int
+    let value: Float
+}
+
+struct FlowLeniaMetalDissipationBatch {
+    let removalOrigins: [SIMD2<Int32>]
+    let insertionOrigins: [SIMD2<Int32>]
+    let size: Int
+    let insertedMass: [Float]
+    let insertedParams: [Float]
+}
+
+private struct FlowLeniaMetalChannelFieldBuffer {
+    let channelIndex: Int
+    let buffer: MTLBuffer
+}
+
+private struct FlowLeniaMetalFoodStateBuffer {
+    let channelIndex: Int
+    let decayRate: Float
+    let digestRate: Float
+    let buffer: MTLBuffer
+    let transferBuffer: MTLBuffer
+}
+
+private struct ParameterPatchUniforms {
+    var size: Int32
+    var applyClip: UInt32
+    var clipLow: Float
+    var clipHigh: Float
+}
+
+private struct ChannelFieldUniforms {
+    var channelIndex: Int32
+}
+
+private struct ScalarPatchUniforms {
+    var size: Int32
+    var value: Float
+}
+
+private struct StatePatchUniforms {
+    var size: Int32
+}
+
+private struct FoodDynamicsUniforms {
+    var channelIndex: Int32
+    var decayRate: Float
+    var digestRate: Float
+    var epsilon: Float
+}
+
+private struct ParameterPatchOrigin {
+    var x0: Int32
+    var y0: Int32
+}

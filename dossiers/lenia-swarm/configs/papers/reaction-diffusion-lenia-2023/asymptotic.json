@@ -1,0 +1,9 @@
+{
+  "paper": "implementation-of-lenia-as-a-reaction-diffusion-system-2023",
+  "kernel_function": "gauss",
+  "reaction_transform": "T=(G+1)/2",
+  "dt_values": [0.5, 0.1, 0.05, 0.01, 0.002],
+  "gaussian_mean": 0.15,
+  "gaussian_std": 0.017,
+  "orbium_config": "../../presets/orbium_like_classic_1c_128.json"
+}

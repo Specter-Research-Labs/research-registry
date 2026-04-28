@@ -1,0 +1,11 @@
+{
+  "name": "food",
+  "base_config": "food-base.json",
+  "init_patch_count": 64,
+  "init_patch_size": 20,
+  "init_param_mean": 0.0,
+  "init_param_std": 1.0,
+  "food_patch_count": 32,
+  "food_patch_size": 5,
+  "food_patch_value": 1.0
+}

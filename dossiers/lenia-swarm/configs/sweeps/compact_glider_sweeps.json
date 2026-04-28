@@ -1,0 +1,34 @@
+{
+  "variants": [
+    {
+      "id": "orbium-like-classic",
+      "config": "configs/presets/orbium_like_classic_1c_128.json",
+      "search": "configs/search/search_compact_glider.json",
+      "count": 64
+    },
+    {
+      "id": "orbium-like-classic-rminus",
+      "config": "configs/presets/orbium_like_classic_rminus_1c_128.json",
+      "search": "configs/search/search_compact_glider.json",
+      "count": 64
+    },
+    {
+      "id": "orbium-like-classic-rplus",
+      "config": "configs/presets/orbium_like_classic_rplus_1c_128.json",
+      "search": "configs/search/search_compact_glider.json",
+      "count": 64
+    },
+    {
+      "id": "orbium-like-mid",
+      "config": "configs/presets/orbium_like_mid_1c_128.json",
+      "search": "configs/search/search_compact_glider.json",
+      "count": 64
+    },
+    {
+      "id": "orbium-like-relaxed",
+      "config": "configs/presets/orbium_like_relaxed_1c_128.json",
+      "search": "configs/search/search_compact_glider.json",
+      "count": 64
+    }
+  ]
+}

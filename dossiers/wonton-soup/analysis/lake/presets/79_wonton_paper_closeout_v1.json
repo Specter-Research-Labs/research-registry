@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "name": "wonton_paper_closeout_v1",
+  "selection": {
+    "provider": ["reprover", "heuristic", "deepseek"],
+    "backend": "lean",
+    "mode": "research",
+    "rel_run_dir": [
+      "p2-paired/provider=reprover/control=centralized",
+      "p2-paired/provider=reprover/distributed-a8-i64",
+      "p2-paired/provider=heuristic/control=centralized",
+      "p2-paired/provider=heuristic/distributed-a8-i64",
+      "p2-paired/provider=deepseek/control=centralized",
+      "p2-paired/provider=deepseek/distributed-a8-i64",
+      "p4-basin-deep/provider=reprover/seeds=50",
+      "p4-basin-deep/provider=heuristic/seeds=50",
+      "p4-basin-deep/provider=deepseek/seeds=50"
+    ],
+    "require_completed": true,
+    "exclude_partial_results": true,
+    "order_by": "run_key_asc"
+  },
+  "reference": {},
+  "datasets": [
+    {
+      "name": "paper_runs",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, r.goal_sig_scheme, r.created_at, r.rel_run_dir, CASE WHEN r.rel_run_dir LIKE 'p2-paired/%' THEN 'main_text_lesions' WHEN r.rel_run_dir LIKE 'p4-basin-deep/%' THEN 'appendix_basin_deep' ELSE 'out_of_scope' END AS paper_cohort, CASE WHEN r.rel_run_dir LIKE '%control=centralized' THEN 'centralized' WHEN r.rel_run_dir LIKE '%distributed-a8-i64' THEN 'distributed' WHEN r.rel_run_dir LIKE 'p4-basin-deep/%' THEN 'basin_deep' ELSE 'other' END AS run_family FROM runs r JOIN selected_runs s USING(run_key) ORDER BY paper_cohort, r.provider NULLS LAST, r.rel_run_dir, r.run_key"
+    },
+    {
+      "name": "paper_p2_interventions",
+      "format": "jsonl",
+      "query": "WITH control_null AS ( SELECT run_key, theorem, solved AS control_null_solved, status AS control_null_status FROM theorem_intervention WHERE intervention = 'control_null' ) SELECT r.run_key, r.run_id, r.provider, r.rel_run_dir, i.theorem, i.intervention, i.solved AS intervention_solved, i.status AS intervention_status, i.baseline_solved, cn.control_null_solved, cn.control_null_status, w.solved AS wild_solved, c.hash_mismatch, c.ged_search_norm, c.ged_search_soft_norm, p.goal_novelty_novel_goal_count, p.goal_novelty_dropped_goal_count, p.solution_path_soft_distance_value, i.k_valid AS intervention_k_valid, i.k_K AS intervention_k_local, w.k_valid AS wild_k_valid, w.k_K AS wild_k_local, i.blocked, CASE WHEN i.baseline_solved IS TRUE AND cn.control_null_solved IS TRUE THEN TRUE ELSE FALSE END AS main_text_include, CASE WHEN i.baseline_solved IS TRUE THEN TRUE ELSE FALSE END AS appendix_baseline_include, CASE WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN TRUE ELSE FALSE END AS rescue_include, CASE WHEN i.baseline_solved IS TRUE AND cn.control_null_solved IS TRUE THEN 'main_text' WHEN i.baseline_solved IS TRUE THEN 'appendix_null_unstable' WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN 'appendix_rescue' ELSE 'excluded' END AS paper_bucket, CASE WHEN i.baseline_solved IS TRUE AND i.solved IS NOT TRUE THEN 'collapse' WHEN i.baseline_solved IS TRUE AND i.solved IS TRUE AND c.hash_mismatch IS TRUE THEN 'reroute' WHEN i.baseline_solved IS TRUE AND i.solved IS TRUE THEN 'replicate_or_hash_match' WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN 'rescue' ELSE 'out_of_denominator' END AS paper_outcome_bucket FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN theorem_wild w ON w.run_key = i.run_key AND w.theorem = i.theorem LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem LEFT JOIN theorem_intervention_comparison c ON c.run_key = i.run_key AND c.theorem = i.theorem AND c.intervention = i.intervention LEFT JOIN theorem_intervention_postprocess p ON p.run_key = i.run_key AND p.theorem = i.theorem AND p.intervention = i.intervention WHERE r.rel_run_dir LIKE 'p2-paired/%' AND COALESCE(i.is_control, FALSE) = FALSE AND i.intervention <> 'control_null' ORDER BY r.provider NULLS LAST, r.rel_run_dir, i.theorem, i.intervention"
+    },
+    {
+      "name": "paper_p2_outcome_summary",
+      "format": "jsonl",
+      "query": "WITH control_null AS ( SELECT run_key, theorem, solved AS control_null_solved FROM theorem_intervention WHERE intervention = 'control_null' ), base AS ( SELECT r.provider, r.rel_run_dir, i.theorem, i.intervention, i.solved AS intervention_solved, i.baseline_solved, cn.control_null_solved, c.hash_mismatch, CASE WHEN i.baseline_solved IS TRUE AND cn.control_null_solved IS TRUE THEN 'main_text' WHEN i.baseline_solved IS TRUE THEN 'appendix_null_unstable' WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN 'appendix_rescue' ELSE 'excluded' END AS paper_bucket, CASE WHEN i.baseline_solved IS TRUE AND i.solved IS NOT TRUE THEN 'collapse' WHEN i.baseline_solved IS TRUE AND i.solved IS TRUE AND c.hash_mismatch IS TRUE THEN 'reroute' WHEN i.baseline_solved IS TRUE AND i.solved IS TRUE THEN 'replicate_or_hash_match' WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN 'rescue' ELSE 'out_of_denominator' END AS paper_outcome_bucket FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem LEFT JOIN theorem_intervention_comparison c ON c.run_key = i.run_key AND c.theorem = i.theorem AND c.intervention = i.intervention WHERE r.rel_run_dir LIKE 'p2-paired/%' AND COALESCE(i.is_control, FALSE) = FALSE AND i.intervention <> 'control_null' ) SELECT provider, rel_run_dir, paper_bucket, paper_outcome_bucket, COUNT(*) AS rows_total, SUM(CASE WHEN intervention_solved THEN 1 ELSE 0 END) AS solved_rows, AVG(CASE WHEN intervention_solved IS NULL THEN NULL ELSE CAST(intervention_solved AS DOUBLE) END) AS solve_rate FROM base GROUP BY provider, rel_run_dir, paper_bucket, paper_outcome_bucket ORDER BY provider NULLS LAST, rel_run_dir, paper_bucket, paper_outcome_bucket"
+    },
+    {
+      "name": "paper_p2_control_null_summary",
+      "format": "jsonl",
+      "query": "SELECT r.provider, r.rel_run_dir, COUNT(*) AS control_null_rows, SUM(CASE WHEN i.solved THEN 1 ELSE 0 END) AS control_null_solved_rows, AVG(CASE WHEN i.solved IS NULL THEN NULL ELSE CAST(i.solved AS DOUBLE) END) AS control_null_solve_rate FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) WHERE r.rel_run_dir LIKE 'p2-paired/%' AND i.intervention = 'control_null' AND i.baseline_solved IS TRUE GROUP BY r.provider, r.rel_run_dir ORDER BY r.provider NULLS LAST, r.rel_run_dir"
+    },
+    {
+      "name": "paper_basin_runs",
+      "format": "jsonl",
+      "query": "SELECT r.run_key, r.run_id, r.provider, r.rel_run_dir, 'appendix_basin_deep' AS paper_bucket, b.theorem, b.seeds_requested, b.solve_rate, b.unique_structures, b.dominant_structure_frequency, b.blind_solve_rate, b.paper_k FROM basin_runs b JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) WHERE r.rel_run_dir LIKE 'p4-basin-deep/%' ORDER BY paper_bucket, r.provider NULLS LAST, b.theorem"
+    },
+    {
+      "name": "paper_basin_resilience_join",
+      "format": "jsonl",
+      "query": "WITH control_null AS ( SELECT run_key, theorem, solved AS control_null_solved FROM theorem_intervention WHERE intervention = 'control_null' ), p2 AS ( SELECT r.provider, i.theorem, AVG(CASE WHEN i.solved IS NULL THEN NULL ELSE CAST(i.solved AS DOUBLE) END) AS lesion_recovery_rate, AVG(CASE WHEN c.hash_mismatch IS TRUE THEN 1.0 WHEN i.solved IS TRUE THEN 0.0 ELSE NULL END) AS reroute_rate, COUNT(*) AS lesion_rows FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem LEFT JOIN theorem_intervention_comparison c ON c.run_key = i.run_key AND c.theorem = i.theorem AND c.intervention = i.intervention WHERE r.rel_run_dir LIKE 'p2-paired/%' AND COALESCE(i.is_control, FALSE) = FALSE AND i.intervention <> 'control_null' AND i.baseline_solved IS TRUE AND cn.control_null_solved IS TRUE GROUP BY r.provider, i.theorem ), p4 AS ( SELECT r.provider, b.theorem, b.solve_rate AS basin_solve_rate, b.unique_structures, b.dominant_structure_frequency, b.paper_k FROM basin_runs b JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) WHERE r.rel_run_dir LIKE 'p4-basin-deep/%' ) SELECT p2.provider, p2.theorem, p2.lesion_rows, p2.lesion_recovery_rate, p2.reroute_rate, p4.basin_solve_rate, p4.unique_structures, p4.dominant_structure_frequency, p4.paper_k FROM p2 JOIN p4 ON p4.provider = p2.provider AND p4.theorem = p2.theorem ORDER BY p2.provider NULLS LAST, p2.theorem"
+    }
+  ]
+}

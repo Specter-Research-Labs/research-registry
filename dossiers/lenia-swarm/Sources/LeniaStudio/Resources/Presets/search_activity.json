@@ -1,0 +1,55 @@
+{
+  "count": 64,
+  "seed_start": 0,
+  "seed_stride": 1,
+  "init_seed_offset": 0,
+  "steps": 1000,
+  "record_interval": 50,
+  "warmup_steps": 100,
+  "occupancy_threshold": 0.05,
+  "mass_channel": -1,
+  "score_weights": {
+    "complexity_target_score": -1.0
+  },
+  "filters": {
+    "mass_min": 0.01
+  },
+  "stability": {
+    "enabled": true,
+    "mass_min_fraction": 0.01,
+    "mass_max_fraction": 0.4,
+    "require_survival": false,
+    "window_samples": 0,
+    "filters": {
+      "gyration_min": 0.1,
+      "gyration_max": 180.0
+    }
+  },
+  "collection": {
+    "enabled": true,
+    "require_stable": true,
+    "require_filters_passed": false,
+    "min_score": null,
+    "export_enabled": true
+  },
+  "overrides": {},
+  "top_k": 10,
+  "batch_size": 1,
+  "seeds_per_job": 1,
+  "complexity": {
+    "enabled": true,
+    "scales": [0, 1, 2, 3],
+    "target": 0.45,
+    "polar": true,
+    "backend": "png"
+  },
+  "activity": {
+    "enabled": true,
+    "interval": 100,
+    "threshold": 0.05,
+    "maxComponents": 64,
+    "matchThreshold": 1.5,
+    "paramWeight": 1.0,
+    "positionWeight": 0.05
+  }
+}

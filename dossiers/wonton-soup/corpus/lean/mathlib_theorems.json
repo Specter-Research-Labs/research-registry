@@ -1,0 +1,1138 @@
+[
+  {
+    "name": "UniqueFactorizationMonoid.primeFactors_mul_eq_union",
+    "file_path": "Mathlib/RingTheory/Radical.lean",
+    "namespace": "UniqueFactorizationMonoid",
+    "imports": [],
+    "statement": "theorem {name} [DecidableEq M] (ha : a \u2260 0) (hb : b \u2260 0) :\n    primeFactors (a * b) = primeFactors a \u222a primeFactors b := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "isClosed_property",
+    "file_path": "Mathlib/Topology/DenseEmbedding.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [TopologicalSpace \u03b2] {e : \u03b1 \u2192 \u03b2} {p : \u03b2 \u2192 Prop} (he : DenseRange e)\n    (hp : IsClosed { x | p x }) (h : \u2200 a, p (e a)) : \u2200 b, p b := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "Function.Semiconj",
+    "file_path": "Mathlib/Order/SemiconjSup.lean",
+    "namespace": "Function",
+    "imports": [],
+    "statement": "theorem {name}.symm_adjoint [PartialOrder \u03b1] [Preorder \u03b2] {fa : \u03b1 \u2243o \u03b1} {fb : \u03b2 \u21aao \u03b2} {g : \u03b1 \u2192 \u03b2}\n    (h : Function.Semiconj g fa fb) {g' : \u03b2 \u2192 \u03b1} (hg' : IsOrderRightAdjoint g g') :\n    Function.Semiconj g' fb fa := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Set.wellFoundedOn_range",
+    "file_path": "Mathlib/Order/WellFoundedSet.lean",
+    "namespace": "Set",
+    "imports": [],
+    "statement": "theorem {name} : (range f).WellFoundedOn r \u2194 WellFounded (r on f) := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "Nat",
+    "file_path": "Mathlib/NumberTheory/Multiplicity.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.emultiplicity_pow_sub_pow {x y : \u2115} (hxy : p \u2223 x - y) (hx : \u00acp \u2223 x) (n : \u2115) :\n    emultiplicity p (x ^ n - y ^ n) = emultiplicity p (x - y) + emultiplicity p n := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "Nat.snd_mem_divisors_of_mem_antidiagonal",
+    "file_path": "Mathlib/NumberTheory/Divisors.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {x : \u2115 \u00d7 \u2115} (h : x \u2208 divisorsAntidiagonal n) :\n    x.snd \u2208 divisors n := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Algebra.FiniteType.isNoetherianRing",
+    "file_path": "Mathlib/RingTheory/FiniteType.lean",
+    "namespace": "Algebra.FiniteType",
+    "imports": [],
+    "statement": "theorem {name} (R S : Type*) [CommRing R] [CommRing S] [Algebra R S]\n    [h : Algebra.FiniteType R S] [IsNoetherianRing R] : IsNoetherianRing S := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "Real.geom_mean_eq_arith_mean_weighted_iff",
+    "file_path": "Mathlib/Analysis/MeanInequalities.lean",
+    "namespace": "Real",
+    "imports": [],
+    "statement": "theorem {name}' (w z : \u03b9 \u2192 \u211d) (hw : \u2200 i \u2208 s, 0 < w i)\n    (hw' : \u2211 i \u2208 s, w i = 1) (hz : \u2200 i \u2208 s, 0 \u2264 z i) :\n    \u220f i \u2208 s, z i ^ w i = \u2211 i \u2208 s, w i * z i \u2194 \u2200 j \u2208 s, z j = \u2211 i \u2208 s, w i * z i := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "exists_pow_lt\u2080",
+    "file_path": "Mathlib/GroupTheory/ArchimedeanDensely.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {G : Type*} [LinearOrderedCommGroupWithZero G] [MulArchimedean G]\n    {a : G} (ha : a < 1) (b : G\u02e3) : \u2203 n : \u2115, a ^ n < b := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "pmul_comm",
+    "file_path": "Mathlib/NumberTheory/ArithmeticFunction.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [CommMonoidWithZero R] (f g : ArithmeticFunction R) : f.pmul g = g.pmul f := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "exists_increasing_or_nonincreasing_subseq",
+    "file_path": "Mathlib/Order/OrderIsoNat.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}' (r : \u03b1 \u2192 \u03b1 \u2192 Prop) (f : \u2115 \u2192 \u03b1) :\n    \u2203 g : \u2115 \u21aao \u2115,\n      (\u2200 n : \u2115, r (f (g n)) (f (g (n + 1)))) \u2228 \u2200 m n : \u2115, m < n \u2192 \u00acr (f (g m)) (f (g n)) := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "Nat.fermatNumber_eq_fermatNumber_sq_sub_two_mul_fermatNumber_sub_one_sq",
+    "file_path": "Mathlib/NumberTheory/Fermat.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (n : \u2115) :\n    fermatNumber (n + 2) = (fermatNumber (n + 1)) ^ 2 - 2 * (fermatNumber n - 1) ^ 2 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Nat.pow_mul_mem_factoredNumbers",
+    "file_path": "Mathlib/NumberTheory/SmoothNumbers.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {s : Finset \u2115} {p n : \u2115} (hp : p.Prime) (e : \u2115)\n    (hn : n \u2208 factoredNumbers s) :\n    p ^ e * n \u2208 factoredNumbers (insert p s) := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "Set.bounded_lt_inter_lt",
+    "file_path": "Mathlib/Order/Bounded.lean",
+    "namespace": "Set",
+    "imports": [],
+    "statement": "theorem {name} [LinearOrder \u03b1] [NoMaxOrder \u03b1] (a : \u03b1) :\n    Bounded (\u00b7 < \u00b7) (s \u2229 { b | a < b }) \u2194 Bounded (\u00b7 < \u00b7) s := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat.sorted_divisorsAntidiagonalList_fst",
+    "file_path": "Mathlib/NumberTheory/Divisors.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {n : \u2115} :\n    n.divisorsAntidiagonalList.Sorted (\u00b7.fst < \u00b7.fst) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Set.exists_monotone_Icc_subset_open_cover_Icc",
+    "file_path": "Mathlib/Topology/UnitInterval.lean",
+    "namespace": "Set",
+    "imports": [],
+    "statement": "theorem {name} {\u03b9} {a b : \u211d} (h : a \u2264 b) {c : \u03b9 \u2192 Set (Icc a b)}\n    (hc\u2081 : \u2200 i, IsOpen (c i)) (hc\u2082 : univ \u2286 \u22c3 i, c i) : \u2203 t : \u2115 \u2192 Icc a b, t 0 = a \u2227\n      Monotone t \u2227 (\u2203 m, \u2200 n \u2265 m, t n = b) \u2227 \u2200 n, \u2203 i, Icc (t n) (t (n + 1)) \u2286 c i := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "NFA.to\u03b5NFA_\u03b5Closure",
+    "file_path": "Mathlib/Computability/EpsilonNFA.lean",
+    "namespace": "NFA",
+    "imports": [],
+    "statement": "theorem {name} (M : NFA \u03b1 \u03c3) (S : Set \u03c3) : M.to\u03b5NFA.\u03b5Closure S = S := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "Nat.not_pseudoperfect_iff_forall",
+    "file_path": "Mathlib/NumberTheory/FactorisationProperties.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} :\n    \u00ac Pseudoperfect n \u2194 n = 0 \u2228 \u2200 s \u2286 properDivisors n, \u2211 i \u2208 s, i \u2260 n := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "WithBot.unbot_eq_iff",
+    "file_path": "Mathlib/Order/WithBot.lean",
+    "namespace": "WithBot",
+    "imports": [],
+    "statement": "theorem {name} {a : WithBot \u03b1} {b : \u03b1} (h : a \u2260 \u22a5) :\n    a.unbot h = b \u2194 a = b := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Nat.dvd_setGcd_iff",
+    "file_path": "Mathlib/NumberTheory/FrobeniusNumber.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} : n \u2223 setGcd s \u2194 \u2200 m \u2208 s, n \u2223 m := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Set.PartiallyWellOrderedOn.fiberProdLex",
+    "file_path": "Mathlib/Order/WellFoundedSet.lean",
+    "namespace": "Set.PartiallyWellOrderedOn",
+    "imports": [],
+    "statement": "theorem {name} [Preorder \u03b1] [Preorder \u03b2] {s : Set (\u03b1 \u00d7\u2097 \u03b2)}\n    (h\u03b1\u03b2 : s.IsPWO) (a : \u03b1) : {y | toLex (a, y) \u2208 s}.IsPWO := by\n  sorry",
+    "proof_lines": 12
+  },
+  {
+    "name": "Function.semiconj_of_isLUB",
+    "file_path": "Mathlib/Order/SemiconjSup.lean",
+    "namespace": "Function",
+    "imports": [],
+    "statement": "theorem {name} [PartialOrder \u03b1] [Group G] (f\u2081 f\u2082 : G \u2192* \u03b1 \u2243o \u03b1) {h : \u03b1 \u2192 \u03b1}\n    (H : \u2200 x, IsLUB (range fun g' => (f\u2081 g')\u207b\u00b9 (f\u2082 g' x)) (h x)) (g : G) :\n    Function.Semiconj h (f\u2082 g) (f\u2081 g) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "summable_condensed_iff_of_nonneg",
+    "file_path": "Mathlib/Analysis/PSeries.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {f : \u2115 \u2192 \u211d} (h_nonneg : \u2200 n, 0 \u2264 f n)\n    (h_mono : \u2200 \u2983m n\u2984, 0 < m \u2192 m \u2264 n \u2192 f n \u2264 f m) :\n    (Summable fun k : \u2115 => (2 : \u211d) ^ k * f (2 ^ k)) \u2194 Summable f := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "krullTopology_mem_nhds_one_iff_of_normal",
+    "file_path": "Mathlib/FieldTheory/KrullTopology.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (K L : Type*) [Field K] [Field L] [Algebra K L]\n    [Normal K L] (s : Set Gal(L/K)) : s \u2208 \ud835\udcdd 1 \u2194 \u2203 E : IntermediateField K L,\n    FiniteDimensional K E \u2227 Normal K E \u2227 (E.fixingSubgroup : Set Gal(L/K)) \u2286 s := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "Nat.deficient_iff_not_abundant_and_not_perfect",
+    "file_path": "Mathlib/NumberTheory/FactorisationProperties.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (hn : n \u2260 0) :\n    Deficient n \u2194 \u00ac Abundant n \u2227 \u00ac Perfect n := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat.coprime_of_probablePrime",
+    "file_path": "Mathlib/NumberTheory/FermatPsp.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {n b : \u2115} (h : ProbablePrime n b) (h\u2081 : 1 \u2264 n) (h\u2082 : 1 \u2264 b) :\n    Nat.Coprime n b := by\n  sorry",
+    "proof_lines": 12
+  },
+  {
+    "name": "FirstOrder.Language.LHom.funext",
+    "file_path": "Mathlib/ModelTheory/LanguageMap.lean",
+    "namespace": "FirstOrder.Language.LHom",
+    "imports": [],
+    "statement": "theorem {name} {F G : L \u2192\u1d38 L'} (h_fun : F.onFunction = G.onFunction)\n    (h_rel : F.onRelation = G.onRelation) : F = G := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "StableUnderComposition",
+    "file_path": "Mathlib/RingTheory/RingHomProperties.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.respectsIso (hP : RingHom.StableUnderComposition @P)\n    (hP' : \u2200 {R S : Type u} [CommRing R] [CommRing S] (e : R \u2243+* S), P e.toRingHom) :\n    RingHom.RespectsIso @P := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "Part.elim_toOption",
+    "file_path": "Mathlib/Data/Part.lean",
+    "namespace": "Part",
+    "imports": [],
+    "statement": "theorem {name} {\u03b1 \u03b2 : Type*} (a : Part \u03b1) [Decidable a.Dom] (b : \u03b2) (f : \u03b1 \u2192 \u03b2) :\n    a.toOption.elim b f = if h : a.Dom then f (a.get h) else b := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "smul_eq_of_le_smul",
+    "file_path": "Mathlib/GroupTheory/OrderOfElement.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}\n    {G : Type*} [Group G] [Finite G] {\u03b1 : Type*} [PartialOrder \u03b1] {g : G} {a : \u03b1}\n    [MulAction G \u03b1] [CovariantClass G \u03b1 HSMul.hSMul LE.le] (h : a \u2264 g \u2022 a) : g \u2022 a = a := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "wellFoundedGT_iff_monotone_chain_condition",
+    "file_path": "Mathlib/Order/OrderIsoNat.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}' [Preorder \u03b1] :\n    WellFoundedGT \u03b1 \u2194 \u2200 a : \u2115 \u2192o \u03b1, \u2203 n, \u2200 m, n \u2264 m \u2192 \u00aca n < a m := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "summable_indicator_mod_iff_summable_indicator_mod",
+    "file_path": "Mathlib/Analysis/SumOverResidueClass.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {m : \u2115} [NeZero m] {f : \u2115 \u2192 \u211d}\n    (hf : Antitone f) {k : ZMod m} (l : ZMod m)\n    (hs : Summable ({n : \u2115 | (n : ZMod m) = k}.indicator f)) :\n    Summable ({n : \u2115 | (n : ZMod m) = l}.indicator f) := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "Units",
+    "file_path": "Mathlib/GroupTheory/ArchimedeanDensely.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.mulArchimedean_iff {G\u2080} [LinearOrderedCommGroupWithZero G\u2080] :\n    MulArchimedean G\u2080\u02e3 \u2194 MulArchimedean G\u2080 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "cmpLE_eq_cmp",
+    "file_path": "Mathlib/Order/Compare.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {\u03b1} [Preorder \u03b1] [IsTotal \u03b1 (\u00b7 \u2264 \u00b7)] [DecidableLE \u03b1] [DecidableLT \u03b1]\n    (x y : \u03b1) : cmpLE x y = cmp x y := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Real",
+    "file_path": "Mathlib/Analysis/PSeries.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.not_summable_indicator_one_div_natCast {m : \u2115} (hm : m \u2260 0) (k : ZMod m) :\n    \u00ac Summable ({n : \u2115 | (n : ZMod m) = k}.indicator fun n : \u2115 \u21a6 (1 / n : \u211d)) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "integral_bernoulliFun_eq_zero",
+    "file_path": "Mathlib/NumberTheory/ZetaValues.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {k : \u2115} (hk : k \u2260 0) :\n    \u222b x : \u211d in 0..1, bernoulliFun k x = 0 := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "IsAntichain",
+    "file_path": "Mathlib/Order/WellQuasiOrder.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.finite_of_wellQuasiOrdered {s : Set \u03b1} (hs : IsAntichain r s)\n    (hr : WellQuasiOrdered r) : s.Finite := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "continuous_uliftMap",
+    "file_path": "Mathlib/Topology/Constructions.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [TopologicalSpace X] [TopologicalSpace Y]\n    (f : X \u2192 Y) (hf : Continuous f) :\n    Continuous (ULift.map f : ULift.{u'} X \u2192 ULift.{v'} Y) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat.eq_prod_primes_mul_sq_of_mem_smoothNumbers",
+    "file_path": "Mathlib/NumberTheory/SmoothNumbers.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {n k : \u2115} (h : n \u2208 smoothNumbers k) :\n    \u2203 s \u2208 k.primesBelow.powerset, \u2203 m, n = m ^ 2 * (s.prod id) := by\n  sorry",
+    "proof_lines": 12
+  },
+  {
+    "name": "Nat.pow_add_mul_totient_mod_eq",
+    "file_path": "Mathlib/NumberTheory/PowModTotient.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {x k l n : \u2115} (hn : 1 < n) (h : x.Coprime n) :\n    (x ^ (k + l * \u03c6 n)) % n = (x ^ k) % n := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "discreteTopology_iff_nhds",
+    "file_path": "Mathlib/Topology/Order.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [TopologicalSpace \u03b1] :\n    DiscreteTopology \u03b1 \u2194 \u2200 x : \u03b1, \ud835\udcdd x = pure x := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "PFun.preimage_comp",
+    "file_path": "Mathlib/Data/PFun.lean",
+    "namespace": "PFun",
+    "imports": [],
+    "statement": "theorem {name} (f : \u03b2 \u2192. \u03b3) (g : \u03b1 \u2192. \u03b2) (s : Set \u03b3) :\n    (f.comp g).preimage s = g.preimage (f.preimage s) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "Nat.insert_self_properDivisors",
+    "file_path": "Mathlib/NumberTheory/Divisors.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (h : n \u2260 0) : insert n (properDivisors n) = divisors n := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Nat.probablePrime_iff_modEq",
+    "file_path": "Mathlib/NumberTheory/FermatPsp.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (n : \u2115) {b : \u2115} (h : 1 \u2264 b) :\n    ProbablePrime n b \u2194 b ^ (n - 1) \u2261 1 [MOD n] := by\n  sorry",
+    "proof_lines": 9
+  },
+  {
+    "name": "bernoulli",
+    "file_path": "Mathlib/NumberTheory/Bernoulli.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}'_def' (n : \u2115) :\n    bernoulli' n = 1 - \u2211 k : Fin n, n.choose k / (n - k + 1) * bernoulli' k := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "IsOrderRightAdjoint.comp_orderIso",
+    "file_path": "Mathlib/Order/SemiconjSup.lean",
+    "namespace": "IsOrderRightAdjoint",
+    "imports": [],
+    "statement": "theorem {name} [Preorder \u03b1] [Preorder \u03b2] [Preorder \u03b3] {f : \u03b1 \u2192 \u03b2} {g : \u03b2 \u2192 \u03b1}\n    (h : IsOrderRightAdjoint f g) (e : \u03b3 \u2243o \u03b1) : IsOrderRightAdjoint (f \u2218 e) (e.symm \u2218 g) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "Monoid.exponent_eq_prime_iff",
+    "file_path": "Mathlib/GroupTheory/Exponent.lean",
+    "namespace": "Monoid",
+    "imports": [],
+    "statement": "theorem {name} {G : Type*} [Monoid G] [Nontrivial G] {p : \u2115} (hp : p.Prime) :\n    Monoid.exponent G = p \u2194 \u2200 g : G, g \u2260 1 \u2192 orderOf g = p := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "IsBezout.dvd_gcd",
+    "file_path": "Mathlib/RingTheory/PrincipalIdealDomain.lean",
+    "namespace": "IsBezout",
+    "imports": [],
+    "statement": "theorem {name} (hx : z \u2223 x) (hy : z \u2223 y) : z \u2223 gcd x y := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Topology.image_snd_preimageImageRestrict",
+    "file_path": "Mathlib/Topology/IsClosedRestrict.lean",
+    "namespace": "Topology",
+    "imports": [],
+    "statement": "theorem {name} [\u2200 i, TopologicalSpace (\u03b1 i)] :\n    Prod.snd '' (Homeomorph.preimageImageRestrict \u03b1 S s ''\n        ((fun (x : S\u1d9c.restrict \u207b\u00b9' (S\u1d9c.restrict '' s)) \u21a6 (x : \u03a0 j, \u03b1 j)) \u207b\u00b9' s))\n      = S.restrict '' s := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "Nat.primeFactors_subset_of_mem_factoredNumbers",
+    "file_path": "Mathlib/NumberTheory/SmoothNumbers.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {s : Finset \u2115} {m : \u2115}\n    (hm : m \u2208 factoredNumbers s) :\n    m.primeFactors \u2286 s := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat.Prime",
+    "file_path": "Mathlib/NumberTheory/Divisors.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name}.divisors {p : \u2115} (pp : p.Prime) : divisors p = {1, p} := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "summable_bernoulli_fourier",
+    "file_path": "Mathlib/NumberTheory/ZetaValues.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {k : \u2115} (hk : 2 \u2264 k) :\n    Summable (fun n => -k ! / (2 * \u03c0 * I * n) ^ k : \u2124 \u2192 \u2102) := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "sSupIndep_iff",
+    "file_path": "Mathlib/Order/SupIndep.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {\u03b1 : Type*} [CompleteLattice \u03b1] (s : Set \u03b1) :\n    sSupIndep s \u2194 iSupIndep ((\u2191) : s \u2192 \u03b1) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Mathlib.Meta.mersenne_mod_four",
+    "file_path": "Mathlib/NumberTheory/LucasLehmer.lean",
+    "namespace": "Mathlib.Meta",
+    "imports": [],
+    "statement": "theorem {name} {n : \u2115} (h : 2 \u2264 n) : mersenne n % 4 = 3 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Int",
+    "file_path": "Mathlib/NumberTheory/PythagoreanTriples.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.sq_ne_two_mod_four (z : \u2124) : z * z % 4 \u2260 2 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "reverse_lucas_primality",
+    "file_path": "Mathlib/NumberTheory/LucasPrimality.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (p : \u2115) (hP : p.Prime) :\n    \u2203 a : ZMod p, a ^ (p - 1) = 1 \u2227 \u2200 q : \u2115, q.Prime \u2192 q \u2223 p - 1 \u2192 a ^ ((p - 1) / q) \u2260 1 := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "bernoulli",
+    "file_path": "Mathlib/NumberTheory/Bernoulli.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}'_def' (n : \u2115) :\n    bernoulli' n = 1 - \u2211 k : Fin n, n.choose k / (n - k + 1) * bernoulli' k := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "PresentedGroup.generated_by",
+    "file_path": "Mathlib/GroupTheory/PresentedGroup.lean",
+    "namespace": "PresentedGroup",
+    "imports": [],
+    "statement": "theorem {name} (rels : Set (FreeGroup \u03b1)) (H : Subgroup (PresentedGroup rels))\n    (h : \u2200 j : \u03b1, PresentedGroup.of j \u2208 H) (x : PresentedGroup rels) : x \u2208 H := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "geomSum_ofColex_strictMono",
+    "file_path": "Mathlib/Combinatorics/Colex.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (hn : 2 \u2264 n) : StrictMono fun s \u21a6 \u2211 k \u2208 ofColex s, n ^ k := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "ZMod",
+    "file_path": "Mathlib/NumberTheory/SumTwoSquares.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.isSquare_neg_one_of_dvd {m n : \u2115} (hd : m \u2223 n) (hs : IsSquare (-1 : ZMod n)) :\n    IsSquare (-1 : ZMod m) := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "eq_iff_eq_on_prime_powers",
+    "file_path": "Mathlib/NumberTheory/ArithmeticFunction.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [CommMonoidWithZero R] (f : ArithmeticFunction R)\n    (hf : f.IsMultiplicative) (g : ArithmeticFunction R) (hg : g.IsMultiplicative) :\n    f = g \u2194 \u2200 p i : \u2115, Nat.Prime p \u2192 f (p ^ i) = g (p ^ i) := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "Nat.frequently_atTop_modEq_one",
+    "file_path": "Mathlib/NumberTheory/PrimesCongruentOne.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {k : \u2115} (hk0 : k \u2260 0) :\n    \u2203\u1da0 p in atTop, Nat.Prime p \u2227 p \u2261 1 [MOD k] := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Mathlib.Meta.mersenne_mod_eight",
+    "file_path": "Mathlib/NumberTheory/LucasLehmer.lean",
+    "namespace": "Mathlib.Meta",
+    "imports": [],
+    "statement": "theorem {name} {n : \u2115} (h : 3 \u2264 n) : mersenne n % 8 = 7 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "WithZero",
+    "file_path": "Mathlib/GroupTheory/ArchimedeanDensely.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.mulArchimedean_iff {\u03b1} [CommGroup \u03b1] [PartialOrder \u03b1] :\n    MulArchimedean (WithZero \u03b1) \u2194 MulArchimedean \u03b1 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "niven_angle_eq",
+    "file_path": "Mathlib/NumberTheory/Niven.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (h\u03b8 : \u2203 r : \u211a, \u03b8 = r * \u03c0) (hcos : \u2203 q : \u211a, cos \u03b8 = q)\n    (h_bnd : \u03b8 \u2208 Set.Icc 0 \u03c0) : \u03b8 \u2208 ({0, \u03c0 / 3, \u03c0 / 2, \u03c0 * (2 / 3), \u03c0} : Set \u211d) := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "ZMod",
+    "file_path": "Mathlib/NumberTheory/SumTwoSquares.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.isSquare_neg_one_of_dvd {m n : \u2115} (hd : m \u2223 n) (hs : IsSquare (-1 : ZMod n)) :\n    IsSquare (-1 : ZMod m) := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "preimage_metric_ball",
+    "file_path": "Mathlib/Analysis/Seminorm.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {r : \u211d} : p \u207b\u00b9' Metric.ball 0 r = { x | p x < r } := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Int",
+    "file_path": "Mathlib/NumberTheory/Multiplicity.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.emultiplicity_pow_sub_pow {x y : \u2124} (hxy : \u2191p \u2223 x - y) (hx : \u00ac\u2191p \u2223 x) (n : \u2115) :\n    emultiplicity (\u2191p) (x ^ n - y ^ n) = emultiplicity (\u2191p) (x - y) + emultiplicity p n := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "bernoulli",
+    "file_path": "Mathlib/NumberTheory/Bernoulli.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}'_def' (n : \u2115) :\n    bernoulli' n = 1 - \u2211 k : Fin n, n.choose k / (n - k + 1) * bernoulli' k := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "pNilradical_le_nilradical",
+    "file_path": "Mathlib/FieldTheory/IsPerfectClosure.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {R : Type*} [CommSemiring R] {p : \u2115} :\n    pNilradical R p \u2264 nilradical R := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "orderOf_eq_iff",
+    "file_path": "Mathlib/GroupTheory/OrderOfElement.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {n} (h : 0 < n) :\n    orderOf x = n \u2194 x ^ n = 1 \u2227 \u2200 m, m < n \u2192 0 < m \u2192 x ^ m \u2260 1 := by\n  sorry",
+    "proof_lines": 9
+  },
+  {
+    "name": "IsPiSystem",
+    "file_path": "Mathlib/MeasureTheory/PiSystem.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.singleton (S : Set \u03b1) : IsPiSystem ({S} : Set (Set \u03b1)) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Mathlib.Meta.succ_mersenne",
+    "file_path": "Mathlib/NumberTheory/LucasLehmer.lean",
+    "namespace": "Mathlib.Meta",
+    "imports": [],
+    "statement": "theorem {name} (k : \u2115) : mersenne k + 1 = 2 ^ k := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "dvd_sub_pow_of_dvd_sub",
+    "file_path": "Mathlib/NumberTheory/Basic.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {R : Type*} [CommRing R] {p : \u2115} {a b : R} (h : (p : R) \u2223 a - b)\n    (k : \u2115) : (p ^ (k + 1) : R) \u2223 a ^ p ^ k - b ^ p ^ k := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "Nat.Primrec'.unpair\u2081",
+    "file_path": "Mathlib/Computability/Primrec.lean",
+    "namespace": "Nat.Primrec'",
+    "imports": [],
+    "statement": "theorem {name} {n f} (hf : @Primrec' n f) : @Primrec' n fun v => (f v).unpair.1 := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "PFun.mem_prodLift",
+    "file_path": "Mathlib/Data/PFun.lean",
+    "namespace": "PFun",
+    "imports": [],
+    "statement": "theorem {name} {f : \u03b1 \u2192. \u03b2} {g : \u03b1 \u2192. \u03b3} {x : \u03b1} {y : \u03b2 \u00d7 \u03b3} :\n    y \u2208 f.prodLift g x \u2194 y.1 \u2208 f x \u2227 y.2 \u2208 g x := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Nat.reverse_divisorsAntidiagonalList",
+    "file_path": "Mathlib/NumberTheory/Divisors.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (n : \u2115) :\n    n.divisorsAntidiagonalList.reverse = n.divisorsAntidiagonalList.map .swap := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "ZMod",
+    "file_path": "Mathlib/NumberTheory/SumTwoSquares.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.isSquare_neg_one_of_dvd {m n : \u2115} (hd : m \u2223 n) (hs : IsSquare (-1 : ZMod n)) :\n    IsSquare (-1 : ZMod m) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Finite",
+    "file_path": "Mathlib/Order/WellQuasiOrder.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.wellQuasiOrdered (r : \u03b1 \u2192 \u03b1 \u2192 Prop) [Finite \u03b1] [IsRefl \u03b1 r] :\n    WellQuasiOrdered r := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "Filter.mem_closure",
+    "file_path": "Mathlib/Topology/Filter.lean",
+    "namespace": "Filter",
+    "imports": [],
+    "statement": "theorem {name} {s : Set (Filter \u03b1)} {l : Filter \u03b1} :\n    l \u2208 closure s \u2194 \u2200 t \u2208 l, \u2203 l' \u2208 s, t \u2208 l' := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "secondCountableTopology_induced",
+    "file_path": "Mathlib/Topology/Bases.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (\u03b1 \u03b2) [t : TopologicalSpace \u03b2] [SecondCountableTopology \u03b2]\n    (f : \u03b1 \u2192 \u03b2) : @SecondCountableTopology \u03b1 (t.induced f) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "acc_iff_isEmpty_descending_chain",
+    "file_path": "Mathlib/Order/WellFounded.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {\u03b1} {r : \u03b1 \u2192 \u03b1 \u2192 Prop} {x : \u03b1} :\n    Acc r x \u2194 IsEmpty { f : \u2115 \u2192 \u03b1 // f 0 = x \u2227 \u2200 n, r (f (n + 1)) (f n) } := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Filter.sInter_nhds",
+    "file_path": "Mathlib/Topology/Filter.lean",
+    "namespace": "Filter",
+    "imports": [],
+    "statement": "theorem {name} (l : Filter \u03b1) : \u22c2\u2080 { s | s \u2208 \ud835\udcdd l } = Iic l := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat.span_singleton_setGcd",
+    "file_path": "Mathlib/NumberTheory/FrobeniusNumber.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} : Ideal.span {(setGcd s : \u2124)} = Ideal.span (((\u2191) : \u2115 \u2192 \u2124) '' s) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "IsPiSystem",
+    "file_path": "Mathlib/MeasureTheory/PiSystem.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.singleton (S : Set \u03b1) : IsPiSystem ({S} : Set (Set \u03b1)) := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "Nat.exists_prime_lt_and_le_two_mul_eventually",
+    "file_path": "Mathlib/NumberTheory/Bertrand.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (n : \u2115) (n_large : 512 \u2264 n) :\n    \u2203 p : \u2115, p.Prime \u2227 n < p \u2227 p \u2264 2 * n := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "discreteTopology_iff_singleton_mem_nhds",
+    "file_path": "Mathlib/Topology/Order.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [TopologicalSpace \u03b1] :\n    DiscreteTopology \u03b1 \u2194 \u2200 x : \u03b1, {x} \u2208 \ud835\udcdd x := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "ZMod",
+    "file_path": "Mathlib/RingTheory/ZMod.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.ker_intCastRingHom (n : \u2115) :\n    RingHom.ker (Int.castRingHom (ZMod n)) = Ideal.span ({(n : \u2124)} : Set \u2124) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Part.Dom",
+    "file_path": "Mathlib/Data/Part.lean",
+    "namespace": "Part",
+    "imports": [],
+    "statement": "theorem {name}.toOption {o : Part \u03b1} [Decidable o.Dom] (h : o.Dom) : o.toOption = o.get h :=\n  dif_pos h\n\ntheorem toOption_eq_none_iff {a : Part \u03b1} [Decidable a.Dom] : a.toOption = Option.none \u2194 \u00aca.Dom :=\n  Ne.dite_eq_right_iff fun _ => Option.some_ne_none _\n\n@[simp]\ntheorem elim_toOption {\u03b1 \u03b2 : Type*} (a : Part \u03b1) [Decidable a.Dom] (b : \u03b2) (f : \u03b1 \u2192 \u03b2) :\n    a.toOption.elim b f = if h : a.Dom then f (a.get h) else b := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "Nat.deficient_or_perfect_or_abundant",
+    "file_path": "Mathlib/NumberTheory/FactorisationProperties.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (hn : 0 \u2260 n) :\n    Deficient n \u2228 Abundant n \u2228 Perfect n := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "IsCoatomic",
+    "file_path": "Mathlib/Order/ZornAtoms.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.of_isChain_bounded {\u03b1 : Type*} [PartialOrder \u03b1] [OrderTop \u03b1]\n    (h : \u2200 c : Set \u03b1, IsChain (\u00b7 \u2264 \u00b7) c \u2192 c.Nonempty \u2192 \u22a4 \u2209 c \u2192 \u2203 x \u2260 \u22a4, x \u2208 upperBounds c) :\n    IsCoatomic \u03b1 := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "nonempty_unique",
+    "file_path": "Mathlib/Logic/Unique.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (\u03b1 : Sort u) [Subsingleton \u03b1] [Nonempty \u03b1] : Nonempty (Unique \u03b1) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Set.unbounded_lt_inter_le",
+    "file_path": "Mathlib/Order/Bounded.lean",
+    "namespace": "Set",
+    "imports": [],
+    "statement": "theorem {name} [LinearOrder \u03b1] (a : \u03b1) :\n    Unbounded (\u00b7 < \u00b7) (s \u2229 { b | a \u2264 b }) \u2194 Unbounded (\u00b7 < \u00b7) s := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat",
+    "file_path": "Mathlib/NumberTheory/SumPrimeReciprocals.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.roughNumbersUpTo_card_le' (N k : \u2115) :\n    (roughNumbersUpTo N k).card \u2264\n      N * (N.succ.primesBelow \\ k.primesBelow).sum (fun p \u21a6 (1 : \u211d) / p) := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "Lattice",
+    "file_path": "Mathlib/Order/Lattice.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.ext {\u03b1} {A B : Lattice \u03b1} (H : \u2200 x y : \u03b1, (haveI := A; x \u2264 y) \u2194 x \u2264 y) :\n    A = B := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "LTSeries.apply_add_index_le_apply_add_index_nat",
+    "file_path": "Mathlib/Order/RelSeries.lean",
+    "namespace": "LTSeries",
+    "imports": [],
+    "statement": "theorem {name} (p : LTSeries \u2115) (i j : Fin (p.length + 1))\n    (hij : i \u2264 j) : p i + j \u2264 p j + i := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "schnirelmannDensity_finset",
+    "file_path": "Mathlib/Combinatorics/Schnirelmann.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (A : Finset \u2115) : schnirelmannDensity A = 0 := by\n  sorry",
+    "proof_lines": 12
+  },
+  {
+    "name": "eq_iff_atom_le_iff",
+    "file_path": "Mathlib/Order/Atoms.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {\u03b1} [BooleanAlgebra \u03b1] [IsAtomic \u03b1] {x y : \u03b1} :\n    x = y \u2194 \u2200 a, IsAtom a \u2192 (a \u2264 x \u2194 a \u2264 y) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "PFun.dom_comp",
+    "file_path": "Mathlib/Data/PFun.lean",
+    "namespace": "PFun",
+    "imports": [],
+    "statement": "theorem {name} (f : \u03b2 \u2192. \u03b3) (g : \u03b1 \u2192. \u03b2) : (f.comp g).Dom = g.preimage f.Dom := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "denselyOrdered_iff",
+    "file_path": "Mathlib/Order/WithBot.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [LT \u03b1] [NoMinOrder \u03b1] :\n    DenselyOrdered (WithBot \u03b1) \u2194 DenselyOrdered \u03b1 := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "orderOf_zero",
+    "file_path": "Mathlib/GroupTheory/OrderOfElement.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (M\u2080 : Type*) [MonoidWithZero M\u2080] [Nontrivial M\u2080] : orderOf (0 : M\u2080) = 0 := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "WellQuasiOrdered",
+    "file_path": "Mathlib/Order/WellQuasiOrder.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.exists_monotone_subseq [IsPreorder \u03b1 r] (h : WellQuasiOrdered r)\n    (f : \u2115 \u2192 \u03b1) : \u2203 g : \u2115 \u21aao \u2115, \u2200 m n, m \u2264 n \u2192 r (f (g m)) (f (g n)) := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "Nat",
+    "file_path": "Mathlib/NumberTheory/SumTwoSquares.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.Prime.sq_add_sq {p : \u2115} [Fact p.Prime] (hp : p % 4 \u2260 3) :\n    \u2203 a b : \u2115, a ^ 2 + b ^ 2 = p := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Ordering.compares_swap",
+    "file_path": "Mathlib/Order/Compare.lean",
+    "namespace": "Ordering",
+    "imports": [],
+    "statement": "theorem {name} [LT \u03b1] {a b : \u03b1} {o : Ordering} : o.swap.Compares a b \u2194 o.Compares b a := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "WellFounded",
+    "file_path": "Mathlib/Order/WellFoundedSet.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.prod_lex_of_wellFoundedOn_fiber (h\u03b1 : WellFounded (r\u03b1 on f))\n    (h\u03b2 : \u2200 a, (f \u207b\u00b9' {a}).WellFoundedOn (r\u03b2 on g)) :\n    WellFounded (Prod.Lex r\u03b1 r\u03b2 on fun c => (f c, g c)) := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "Real.summable_nat_rpow",
+    "file_path": "Mathlib/Analysis/PSeries.lean",
+    "namespace": "Real",
+    "imports": [],
+    "statement": "theorem {name} {p : \u211d} : Summable (fun n => (n : \u211d) ^ p : \u2115 \u2192 \u211d) \u2194 p < -1 := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "ack_one",
+    "file_path": "Mathlib/Computability/Ackermann.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (n : \u2115) : ack 1 n = n + 2 := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Set.PartiallyWellOrderedOn.exists_notMem_of_gt",
+    "file_path": "Mathlib/Order/WellFoundedSet.lean",
+    "namespace": "Set.PartiallyWellOrderedOn",
+    "imports": [],
+    "statement": "theorem {name} {s : Set \u03b1} (hs : s.PartiallyWellOrderedOn r) {f : \u2115 \u2192 \u03b1}\n    (hf : \u2200 m n : \u2115, m < n \u2192 \u00ac r (f m) (f n)) :\n    \u2203 k : \u2115, \u2200 m, k < m \u2192 f m \u2209 s := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Int",
+    "file_path": "Mathlib/NumberTheory/Multiplicity.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.emultiplicity_pow_sub_pow {x y : \u2124} (hxy : \u2191p \u2223 x - y) (hx : \u00ac\u2191p \u2223 x) (n : \u2115) :\n    emultiplicity (\u2191p) (x ^ n - y ^ n) = emultiplicity (\u2191p) (x - y) + emultiplicity p n := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Acc",
+    "file_path": "Mathlib/Order/GameAdd.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.prod_gameAdd (ha : Acc r\u03b1 a) (hb : Acc r\u03b2 b) :\n    Acc (Prod.GameAdd r\u03b1 r\u03b2) (a, b) := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "niven_sin",
+    "file_path": "Mathlib/NumberTheory/Niven.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (h\u03b8 : \u2203 r : \u211a, \u03b8 = r * \u03c0) (hcos : \u2203 q : \u211a, sin \u03b8 = q) :\n    sin \u03b8 \u2208 ({-1, -1 / 2, 0, 1 / 2, 1} : Set \u211d) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "isSolvable_of_comm",
+    "file_path": "Mathlib/GroupTheory/Solvable.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {G : Type*} [hG : Group G] (h : \u2200 a b : G, a * b = b * a) :\n    IsSolvable G := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "eq_or_eq_or_eq_of_forall_not_lt_lt",
+    "file_path": "Mathlib/Order/Basic.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [LinearOrder \u03b1]\n    (h : \u2200 \u2983x y z : \u03b1\u2984, x < y \u2192 y < z \u2192 False) (x y z : \u03b1) : x = y \u2228 y = z \u2228 x = z := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "Nat.factoredNumbers_insert",
+    "file_path": "Mathlib/NumberTheory/SmoothNumbers.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} (s : Finset \u2115) {N : \u2115} (hN : \u00ac N.Prime) :\n    factoredNumbers (insert N s) = factoredNumbers s := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "Set.WellFounded",
+    "file_path": "Mathlib/Order/WellFoundedSet.lean",
+    "namespace": "Set",
+    "imports": [],
+    "statement": "theorem {name}.prod_lex_of_wellFoundedOn_fiber (h\u03b1 : WellFounded (r\u03b1 on f))\n    (h\u03b2 : \u2200 a, (f \u207b\u00b9' {a}).WellFoundedOn (r\u03b2 on g)) :\n    WellFounded (Prod.Lex r\u03b1 r\u03b2 on fun c => (f c, g c)) := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "Algebra",
+    "file_path": "Mathlib/RingTheory/Complex.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.leftMulMatrix_complex (z : \u2102) :\n    Algebra.leftMulMatrix Complex.basisOneI z = !![z.re, -z.im; z.im, z.re] := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "IntermediateField",
+    "file_path": "Mathlib/FieldTheory/KrullTopology.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.fixingSubgroup_isOpen {K L : Type*} [Field K] [Field L] [Algebra K L]\n    (E : IntermediateField K L) [FiniteDimensional K E] :\n    IsOpen (E.fixingSubgroup : Set Gal(L/K)) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "Nat",
+    "file_path": "Mathlib/NumberTheory/LucasLehmer.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.Prime.of_mersenne {p : \u2115} (h : (mersenne p).Prime) : Nat.Prime p := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "Lists.lt_sizeof_cons",
+    "file_path": "Mathlib/SetTheory/Lists.lean",
+    "namespace": "Lists",
+    "imports": [],
+    "statement": "theorem {name}' {b} (a : Lists' \u03b1 b) (l) :\n    SizeOf.sizeOf (\u27e8b, a\u27e9 : Lists \u03b1) < SizeOf.sizeOf (Lists'.cons' a l) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "IteratedWreathProduct",
+    "file_path": "Mathlib/GroupTheory/RegularWreathProduct.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.card [Finite G] : Nat.card (IteratedWreathProduct G n) =\n    Nat.card G ^ (\u2211 i \u2208 Finset.range n, Nat.card G ^ i) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "bernoulli",
+    "file_path": "Mathlib/NumberTheory/Bernoulli.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}'_def' (n : \u2115) :\n    bernoulli' n = 1 - \u2211 k : Fin n, n.choose k / (n - k + 1) * bernoulli' k := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "PerfectRing",
+    "file_path": "Mathlib/FieldTheory/Perfect.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.toPerfectField (K : Type*) (p : \u2115)\n    [Field K] [ExpChar K p] [PerfectRing K p] : PerfectField K := by\n  sorry",
+    "proof_lines": 7
+  },
+  {
+    "name": "Nat.fermatPsp_base_one",
+    "file_path": "Mathlib/NumberTheory/FermatPsp.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {n : \u2115} (h\u2081 : 1 < n) (h\u2082 : \u00acn.Prime) : FermatPsp n 1 := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "xor_iff_or_and_not_and",
+    "file_path": "Mathlib/Logic/Basic.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (a b : Prop) : Xor' a b \u2194 (a \u2228 b) \u2227 (\u00ac(a \u2227 b)) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Nat.factoredNumbers_compl",
+    "file_path": "Mathlib/NumberTheory/SmoothNumbers.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {N : \u2115} {s : Finset \u2115} (h : primesBelow N \u2264 s) :\n    (factoredNumbers s)\u1d9c \\ {0} \u2286 {n | N \u2264 n} := by\n  sorry",
+    "proof_lines": 10
+  },
+  {
+    "name": "Nat.disjoint_divisors_filter_isPrimePow",
+    "file_path": "Mathlib/NumberTheory/Divisors.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {a b : \u2115} (hab : a.Coprime b) :\n    Disjoint (a.divisors.filter IsPrimePow) (b.divisors.filter IsPrimePow) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "DihedralGroup.commProb_odd",
+    "file_path": "Mathlib/GroupTheory/CommutingProbability.lean",
+    "namespace": "DihedralGroup",
+    "imports": [],
+    "statement": "theorem {name} {n : \u2115} (hn : Odd n) :\n    commProb (DihedralGroup n) = (n + 3) / (4 * n) := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "Nat",
+    "file_path": "Mathlib/NumberTheory/SumTwoSquares.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.Prime.sq_add_sq {p : \u2115} [Fact p.Prime] (hp : p % 4 \u2260 3) :\n    \u2203 a b : \u2115, a ^ 2 + b ^ 2 = p := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "ZMod",
+    "file_path": "Mathlib/NumberTheory/SumTwoSquares.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.isSquare_neg_one_of_dvd {m n : \u2115} (hd : m \u2223 n) (hs : IsSquare (-1 : ZMod n)) :\n    IsSquare (-1 : ZMod m) := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "Rep.to_Module_monoidAlgebra_map_aux",
+    "file_path": "Mathlib/RepresentationTheory/Rep.lean",
+    "namespace": "Rep",
+    "imports": [],
+    "statement": "theorem {name} {k G : Type*} [CommRing k] [Monoid G] (V W : Type*)\n    [AddCommGroup V] [AddCommGroup W] [Module k V] [Module k W] (\u03c1 : G \u2192* V \u2192\u2097[k] V)\n    (\u03c3 : G \u2192* W \u2192\u2097[k] W) (f : V \u2192\u2097[k] W) (w : \u2200 g : G, f.comp (\u03c1 g) = (\u03c3 g).comp f)\n    (r : MonoidAlgebra k G) (x : V) :\n    f ((((MonoidAlgebra.lift k G (V \u2192\u2097[k] V)) \u03c1) r) x) =\n      (((MonoidAlgebra.lift k G (W \u2192\u2097[k] W)) \u03c3) r) (f x) := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "exists_eq_pow_of_mul_eq_pow_of_coprime",
+    "file_path": "Mathlib/RingTheory/IntegralDomain.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} {R : Type*} [CommSemiring R] [IsDomain R]\n    [GCDMonoid R] [Subsingleton R\u02e3] {a b c : R} {n : \u2115} (cp : IsCoprime a b) (h : a * b = c ^ n) :\n    \u2203 d : R, a = d ^ n := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "le_monotonicSequenceLimit",
+    "file_path": "Mathlib/Order/OrderIsoNat.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [PartialOrder \u03b1] [WellFoundedGT \u03b1] (a : \u2115 \u2192o \u03b1) (m : \u2115) :\n    a m \u2264 monotonicSequenceLimit a := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "Nat.infinite_odd_deficient",
+    "file_path": "Mathlib/NumberTheory/FactorisationProperties.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} : {n : \u2115 | Odd n \u2227 n.Deficient}.Infinite := by\n  sorry",
+    "proof_lines": 6
+  },
+  {
+    "name": "Set.bounded_le_inter_le",
+    "file_path": "Mathlib/Order/Bounded.lean",
+    "namespace": "Set",
+    "imports": [],
+    "statement": "theorem {name} [LinearOrder \u03b1] (a : \u03b1) :\n    Bounded (\u00b7 \u2264 \u00b7) (s \u2229 { b | a \u2264 b }) \u2194 Bounded (\u00b7 \u2264 \u00b7) s := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "IsPiSystem",
+    "file_path": "Mathlib/MeasureTheory/PiSystem.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.singleton (S : Set \u03b1) : IsPiSystem ({S} : Set (Set \u03b1)) := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "sup_eq_maxDefault",
+    "file_path": "Mathlib/Order/Lattice.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [SemilatticeSup \u03b1] [DecidableLE \u03b1] [IsTotal \u03b1 (\u00b7 \u2264 \u00b7)] :\n    (\u00b7 \u2294 \u00b7) = (maxDefault : \u03b1 \u2192 \u03b1 \u2192 \u03b1) := by\n  sorry",
+    "proof_lines": 5
+  },
+  {
+    "name": "Algebra",
+    "file_path": "Mathlib/RingTheory/Complex.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name}.leftMulMatrix_complex (z : \u2102) :\n    Algebra.leftMulMatrix Complex.basisOneI z = !![z.re, -z.im; z.im, z.re] := by\n  sorry",
+    "proof_lines": 4
+  },
+  {
+    "name": "TopologicalSpace.nhds_mkOfNhds_single",
+    "file_path": "Mathlib/Topology/Order.lean",
+    "namespace": "TopologicalSpace",
+    "imports": [],
+    "statement": "theorem {name} [DecidableEq \u03b1] {a\u2080 : \u03b1} {l : Filter \u03b1} (h : pure a\u2080 \u2264 l) (b : \u03b1) :\n    @nhds \u03b1 (TopologicalSpace.mkOfNhds (update pure a\u2080 l)) b =\n      (update pure a\u2080 l : \u03b1 \u2192 Filter \u03b1) b := by\n  sorry",
+    "proof_lines": 8
+  },
+  {
+    "name": "preimage_find_eq_disjointed",
+    "file_path": "Mathlib/Order/Disjointed.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} (s : \u2115 \u2192 Set \u03b1) (H : \u2200 x, \u2203 n, x \u2208 s n)\n    [\u2200 x n, Decidable (x \u2208 s n)] (n : \u2115) : (fun x => Nat.find (H x)) \u207b\u00b9' {n} = disjointed s n := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "LTSeries.apply_add_index_le_apply_add_index_int",
+    "file_path": "Mathlib/Order/RelSeries.lean",
+    "namespace": "LTSeries",
+    "imports": [],
+    "statement": "theorem {name} (p : LTSeries \u2124) (i j : Fin (p.length + 1))\n    (hij : i \u2264 j) : p i + j \u2264 p j + i := by\n  sorry",
+    "proof_lines": 11
+  },
+  {
+    "name": "Nat.mul_mem_smoothNumbers",
+    "file_path": "Mathlib/NumberTheory/SmoothNumbers.lean",
+    "namespace": "Nat",
+    "imports": [],
+    "statement": "theorem {name} {m\u2081 m\u2082 n : \u2115}\n    (hm1 : m\u2081 \u2208 n.smoothNumbers) (hm2 : m\u2082 \u2208 n.smoothNumbers) : m\u2081 * m\u2082 \u2208 n.smoothNumbers := by\n  sorry",
+    "proof_lines": 3
+  },
+  {
+    "name": "isOfFinOrder_iff_isUnit",
+    "file_path": "Mathlib/GroupTheory/OrderOfElement.lean",
+    "namespace": "",
+    "imports": [],
+    "statement": "theorem {name} [Monoid G] [Finite G\u02e3] {x : G} : IsOfFinOrder x \u2194 IsUnit x := by\n  sorry",
+    "proof_lines": 5
+  }
+]

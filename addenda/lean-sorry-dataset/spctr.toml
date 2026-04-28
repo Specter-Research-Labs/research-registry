@@ -1,0 +1,130 @@
+version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "lean-sorry-dataset"
+series = "A-001"
+summary = "Deterministic ingestion pipeline for SorryDB-compatible snapshots and benchmark indexes."
+status = "operational"
+
+[site]
+visible = true
+featured = true
+featured_order = 2
+
+[labels]
+type = "dataset"
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+include_docs = false
+
+[[release.surfaces]]
+name = "python"
+kind = "package"
+publish = false
+language = "python"
+registry = "pypi"
+publish_mode = "subdir"
+
+[spctr]
+project = "lean-sorry-dataset"
+
+[spctr.exec.check]
+description = "Canonical promoted verification lane"
+commands = [
+    ["uv", "run", "ruff", "check", "."],
+    ["uv", "run", "ty", "check", "."],
+    ["uv", "run", "python", "-m", "pytest"],
+]
+timeout_sec = 1800
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.smoke]
+description = "License-backfill smoke on a tiny checked-in index"
+command = ["uv", "run", "python", "-m", "lean_sorry_dataset", "license-backfill", "--index", "tests/fixtures/index.min.jsonl", "--out", "artifacts/smoke/index.licensed.jsonl"]
+expected_outputs = ["licensed-index", "licensed-index-manifest"]
+timeout_sec = 1200
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.build]
+description = "Build a deterministic index from a tiny checked-in snapshot"
+command = ["uv", "run", "python", "-m", "lean_sorry_dataset", "build-index", "--snapshot", "tests/fixtures/snapshot.min.json", "--out", "artifacts/build/index.jsonl"]
+expected_outputs = ["benchmark-index", "benchmark-index-manifest"]
+timeout_sec = 1200
+network = "off"
+requires = ["python", "uv"]
+
+[spctr.exec.publish]
+description = "Canonical source bundle publish proof path"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/publish/source
+"$SPCTR_BIN" release bundle lean-sorry-dataset source --release-id contract-publish --output "$PWD/artifacts/publish/source"
+''']
+expected_outputs = ["source-bundle", "source-bundle-evidence"]
+timeout_sec = 1800
+network = "off"
+requires = ["tar"]
+
+[spctr.runtime]
+platforms = ["linux", "macos"]
+requires = ["python", "uv"]
+network = "off"
+cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
+
+[spctr.ci]
+runner = "ubuntu-latest"
+pull_request = ["check"]
+push_main = ["check", "smoke", "build", "publish"]
+nightly = []
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "licensed-index"
+path = "artifacts/smoke/index.licensed.jsonl"
+kind = "jsonl"
+required = true
+
+[[spctr.expected_outputs]]
+name = "licensed-index-manifest"
+path = "artifacts/smoke/index.licensed.jsonl.manifest.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "benchmark-index"
+path = "artifacts/build/index.jsonl"
+kind = "jsonl"
+required = true
+
+[[spctr.expected_outputs]]
+name = "benchmark-index-manifest"
+path = "artifacts/build/index.jsonl.manifest.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "source-bundle"
+path = "artifacts/publish/source/lean-sorry-dataset-source-contract-publish.tar.gz"
+kind = "source_bundle_archive"
+required = true
+surface = "source"
+
+[[spctr.expected_outputs]]
+name = "source-bundle-evidence"
+path = "artifacts/publish/source/lean-sorry-dataset-source-contract-publish.tar.gz.evidence.json"
+kind = "release_evidence_json"
+required = true
+surface = "source"
+
+[spctr.docs]
+root = "."
+landing = "README.md"
+require_frontmatter = false

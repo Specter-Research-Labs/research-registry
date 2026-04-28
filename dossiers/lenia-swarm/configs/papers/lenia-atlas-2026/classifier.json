@@ -1,0 +1,6 @@
+{
+  "window_size": 200,
+  "std": 3.0,
+  "short_tmax_multiplier": 100,
+  "long_tmax_multiplier": 1000
+}

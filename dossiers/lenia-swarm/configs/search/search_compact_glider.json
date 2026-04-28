@@ -1,0 +1,73 @@
+{
+  "count": 64,
+  "seed_start": 0,
+  "seed_stride": 1,
+  "init_seed_offset": 0,
+  "steps": 1200,
+  "record_interval": 25,
+  "warmup_steps": 150,
+  "occupancy_threshold": 0.05,
+  "mass_channel": 0,
+  "score_weights": {
+    "center_velocity": 4.5,
+    "displacement": 3.0,
+    "translation_ratio": 6.0,
+    "path_length": 1.5,
+    "largest_component_fraction": 1.2,
+    "component_count": -0.4,
+    "moment_density": 0.5,
+    "complexity_mean": 0.1
+  },
+  "filters": {
+    "mass_min": 0.005,
+    "occupancy_min": 0.02,
+    "occupancy_max": 0.14,
+    "gyration_min": 0.1,
+    "gyration_max": 650.0,
+    "velocity_min": 0.0005,
+    "displacement_min": 0.18,
+    "path_length_min": 0.24,
+    "translation_ratio_min": 0.82,
+    "component_count_max": 3.0,
+    "largest_component_fraction_min": 0.82,
+    "moment_density_min": 0.05
+  },
+  "stability": {
+    "enabled": true,
+    "mass_min_fraction": 0.005,
+    "mass_max_fraction": 0.25,
+    "require_survival": true,
+    "window_samples": 8,
+    "window_gyration_std_max": 80.0,
+    "filters": {
+      "gyration_min": 0.1,
+      "gyration_max": 650.0,
+      "translation_ratio_min": 0.82,
+      "component_count_max": 3.0,
+      "largest_component_fraction_min": 0.82,
+      "moment_density_min": 0.05
+    }
+  },
+  "collection": {
+    "enabled": true,
+    "require_stable": true,
+    "require_filters_passed": true,
+    "min_score": null,
+    "export_enabled": true
+  },
+  "overrides": {},
+  "top_k": 24,
+  "batch_size": 1,
+  "seeds_per_job": 1,
+  "complexity": {
+    "enabled": true,
+    "scales": [0, 1, 2, 3],
+    "target": null,
+    "polar": true,
+    "backend": "png"
+  },
+  "moments": {
+    "enabled": true,
+    "threshold": 0.03
+  }
+}

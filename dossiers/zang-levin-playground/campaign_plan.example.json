@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "experiment": "exp11_robustness_curve.py",
+      "repeats": 2,
+      "base_seed": 42000
+    },
+    {
+      "experiment": "exp15_delay_gratification.py",
+      "repeats": 2,
+      "base_seed": 43000,
+      "extra_args": []
+    }
+  ]
+}

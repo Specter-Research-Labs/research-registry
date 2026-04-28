@@ -1,0 +1,20 @@
+{
+  "paper": "flow-lenia-emergent-evolutionary-dynamics-2025",
+  "grid_size": 512,
+  "total_steps": 500000,
+  "record_every_steps": 100,
+  "channels": 3,
+  "kernels_per_channel_pair": 5,
+  "repeats": 5,
+  "mutation_probabilities": [0.001, 0.01, 0.1, 0.5, 1.0],
+  "variants": ["vanilla", "dissipative", "food"],
+  "activity": {
+    "enabled": true,
+    "interval": 100,
+    "threshold": 0.05,
+    "maxComponents": 256,
+    "matchThreshold": 1.5,
+    "paramWeight": 1.0,
+    "positionWeight": 0.05
+  }
+}

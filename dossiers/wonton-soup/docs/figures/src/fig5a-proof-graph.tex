@@ -1,0 +1,50 @@
+% fig5a-proof-graph.tex
+\documentclass[tikz,border=5pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+% Panel A: Proof Graph & Goal Identification
+\begin{scope}[shift={(0, 0)}]
+    \node[paneltitle, anchor=south west] at (-0.5, 4.0) {(A) Proof Graph \& Goal Equivalence};
+    
+    % Nodes in a DAG structure (Increased spacing)
+    % Root
+    \node[goal, minimum width=0.8cm] (n0) at (2.5, 3.5) {$G_{root}$};
+    
+    % Level 1
+    \node[goal, minimum width=0.8cm] (n1) at (0.0, 2.0) {$G_1$};
+    \node[goal, minimum width=0.8cm, fill=basin1] (n2) at (2.5, 2.0) {$S_A$}; % Signature A occurrence 1
+    \node[goal, minimum width=0.8cm] (n3) at (5.0, 2.0) {$G_2$};
+    
+    % Level 2
+    \node[goal, minimum width=0.8cm] (n4) at (-1.0, 0.0) {$G_3$};
+    \node[goal, minimum width=0.8cm, fill=basin1] (n5) at (1.5, 0.0) {$S_A$}; % Signature A occurrence 2
+    \node[terminal, minimum width=0.6cm] (n6) at (4.0, 0.0) {$\bullet$};
+    \node[dead, minimum width=0.6cm] (n7) at (6.0, 0.0) {$\times$};
+
+    % Edges (More curved/bended to avoid overlap)
+    \draw[tactic] (n0) to[bend right=10] (n1);
+    \draw[tactic] (n0) -- (n2);
+    \draw[tactic] (n0) to[bend left=10] (n3);
+    
+    \draw[tactic] (n1) -- (n4);
+    \draw[tactic] (n1) to[bend left=15] (n5); 
+    \draw[tactic] (n2) to[bend right=15] (n5); 
+    \draw[tactic] (n2) to[bend left=15] (n6);
+    \draw[tactic] (n3) -- (n7);
+
+    % Annotate Signature Match
+    \draw[dashed, draw=highlight, line width=0.8pt] (n2.north west) rectangle (n2.south east);
+    \draw[dashed, draw=highlight, line width=0.8pt] (n5.north west) rectangle (n5.south east);
+    
+    \draw[<->, draw=highlight, dashed, bend left=45] (n2.east) to node[right, annotbg, text=highlight] {same signature $S_A$} (n5.east);
+    
+    % Label
+    \node[annot, align=left, anchor=west] at (6.5, 2.0) {Nodes with identical\\signatures are analyzed\\for behavioral consistency};
+\end{scope}
+\end{tikzpicture}
+\end{document}

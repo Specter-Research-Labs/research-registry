@@ -1,0 +1,52 @@
+% fig16-followup-taxonomy.tex
+% Paired follow-up intervention taxonomy on solved-baseline rows
+\documentclass[tikz,border=18pt]{standalone}
+\input{common-styles.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+
+\def\maxw{10.5}
+\def\repw{3.69}   % 13 / 37
+\def\rerw{2.27}   % 8 / 37
+\def\colw{4.54}   % 16 / 37
+
+\node[paneltitle, anchor=west] at (0, 4.55) {Solved-baseline comparisons};
+\node[annot, anchor=west] at (5.3, 4.55) {\textit{n} = 37};
+
+\path[fill=basin1!24, rounded corners=7pt] (-0.35, 2.9) rectangle (\maxw + 1.6, 3.7);
+\fill[accentblue!78] (0, 3.05) rectangle (\repw, 3.55);
+\fill[highlight!55] (\repw, 3.05) rectangle (\repw + \rerw, 3.55);
+\fill[blocked!75] (\repw + \rerw, 3.05) rectangle (\maxw, 3.55);
+\draw[ink, line width=0.6pt] (0, 3.05) rectangle (\maxw, 3.55);
+
+\node[paneltitle, text=ink, anchor=south] at (\repw/2, 3.68) {replicate};
+\node[paneltitle, text=ink, anchor=south] at (\repw + \rerw/2, 3.68) {reroute};
+\node[paneltitle, text=ink, anchor=south] at (\repw + \rerw + \colw/2, 3.68) {collapse};
+
+\node[annot, text=ink] at (\repw/2, 3.3) {13};
+\node[annot, text=ink] at (\repw + \rerw/2, 3.3) {8};
+\node[annot, text=white] at (\repw + \rerw + \colw/2, 3.3) {16};
+
+\node[annot, anchor=north] at (\repw/2, 2.78) {35.1\%};
+\node[annot, anchor=north] at (\repw + \rerw/2, 2.78) {21.6\%};
+\node[annot, anchor=north] at (\repw + \rerw + \colw/2, 2.78) {43.2\%};
+
+\draw[ink, line width=0.5pt] (0, 2.2) -- (\maxw, 2.2);
+\foreach \x/\label in {0/0, 2.84/10, 5.68/20, 8.51/30, 10.5/37} {
+    \draw[ink, line width=0.4pt] (\x, 2.15) -- (\x, 2.25);
+    \node[annot, anchor=north] at (\x, 2.1) {\label};
+}
+\node[annot] at (5.25, 1.55) {count of paired solved-baseline intervention rows};
+
+\node[paneltitle, anchor=west] at (0, 0.8) {Constraint-generated wins};
+\node[annot, anchor=north west, align=left] at (0, 0.45) {13 intervention-only solves out of 376 paired-panel intervention rows};
+\fill[accentgreen!75] (0, -0.28) rectangle (0.36, 0.02);
+\node[annot, anchor=west, text=ink] at (0.55, -0.13) {12 from deepseek, 1 from reprover, 0 from heuristic};
+
+\end{tikzpicture}
+\end{document}

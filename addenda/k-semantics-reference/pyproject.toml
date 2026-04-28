@@ -1,0 +1,36 @@
+[project]
+name = "k-semantics-reference"
+version = "0.1.0"
+description = "Playground implementation of CATWD 2.0 K semantics and calibration"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "ty>=0.0.1a7",
+  "ruff>=0.8",
+  "pytest>=8.0",
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+  "cli.py",
+  "cli_support.py",
+  "core.py",
+  "demos",
+  "paper_k.py",
+  "tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

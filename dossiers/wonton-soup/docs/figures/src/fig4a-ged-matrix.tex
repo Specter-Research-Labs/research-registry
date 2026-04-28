@@ -1,0 +1,62 @@
+% fig4a-ged-matrix.tex
+\documentclass[tikz,border=5pt]{standalone}
+\input{common-styles.tex}
+\begin{document}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    show background rectangle,
+    background rectangle/.style={fill=white}
+]
+\tikzset{cell/.style={draw=black!15, line width=0.4pt}}
+
+\begin{scope}[shift={(0, 0)}]
+    \node[paneltitle, anchor=south] at (1.5, 3.5) {(A) GED matrix};
+    \def\cellsize{0.8} % Larger cells
+
+    % Matrix cells
+    \foreach \i in {0,1,2,3,4} {
+        \foreach \j in {0,1,2,3,4} {
+            \ifnum\i=\j
+                \fill[white] (\j*\cellsize, -\i*\cellsize) rectangle +(\cellsize, \cellsize);
+                \node[font=\small, text=ink] at (\j*\cellsize + 0.5*\cellsize, -\i*\cellsize + 0.5*\cellsize) {0};
+            \else
+                % Fake data for illustration
+                \pgfmathtruncatemacro{\dist}{abs(\i-\j)}
+                \pgfmathtruncatemacro{\val}{\dist * 2 + 1}
+                \pgfmathsetmacro{\shade}{15 + \dist*18}
+                \fill[heatbase!\shade!white] (\j*\cellsize, -\i*\cellsize) rectangle +(\cellsize, \cellsize);
+                \node[font=\small, text=ink] at (\j*\cellsize + 0.5*\cellsize, -\i*\cellsize + 0.5*\cellsize) {\val};
+            \fi
+            \draw[cell] (\j*\cellsize, -\i*\cellsize) rectangle +(\cellsize, \cellsize);
+        }
+    }
+
+    % Row labels
+    \foreach \i/\lbl in {0/wild,1/blk-s,2/blk-r,3/blk-i,4/ctrl} {
+        \node[anchor=east, font=\small, align=right] at (-0.1, -\i*\cellsize + 0.5*\cellsize) {\lbl};
+    }
+
+    % Column labels (abbreviated)
+    \foreach \j/\lbl in {0/w,1/s,2/r,3/i,4/c} {
+        \node[anchor=south, font=\small] at (\j*\cellsize + 0.5*\cellsize, \cellsize + 0.05) {\lbl};
+    }
+
+    % Colorbar
+    \begin{scope}[shift={(5.0, -2.5)}]
+        \shade[left color=heatbase!15!white, right color=heatbase!95!white] (0,0) rectangle (2.0, 0.4);
+        \draw[black!20] (0, 0) rectangle (2.0, 0.4);
+        
+        \node[anchor=north, font=\footnotesize, text=muted] at (0, -0.1) {low};
+        \node[anchor=north, font=\footnotesize, text=muted] at (2.0, -0.1) {high};
+        \node[anchor=south, font=\footnotesize, text=muted] at (1.0, 0.5) {GED Score};
+
+        % Legend
+        \node[annot, anchor=north west, text width=4cm, font=\small, align=left] at (-0.5, -1.0)
+            {\textbf{Legend:}\\[2pt]
+            w: wild \quad s: blk-s\\
+            r: blk-r \quad i: blk-i\\
+            c: ctrl};
+    \end{scope}
+\end{scope}
+\end{tikzpicture}
+\end{document}

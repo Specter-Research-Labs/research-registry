@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lean-sorry-dataset"
+version = "0.1.0"
+description = "Benchmark-oriented ingestion layer for Lean sorry datasets"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Specter Research Labs" }]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/Specter-Research-Labs/research-registry"
+Source = "https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/lean-sorry-dataset"
+
+[project.scripts]
+lean-sorry-dataset = "cli:main"
+lean-sorry-license-backfill = "licenses.backfill:main"
+
+[dependency-groups]
+dev = [
+  "ty>=0.0.1a7",
+  "ruff>=0.8",
+  "pytest>=8.0",
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = [
+  "cli.py",
+  "constants.py",
+  "dataset",
+  "lean_sorry_dataset.py",
+  "licenses",
+  "tests",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = [
+  "cli.py",
+  "constants.py",
+  "dataset",
+  "lean_sorry_dataset.py",
+  "licenses",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

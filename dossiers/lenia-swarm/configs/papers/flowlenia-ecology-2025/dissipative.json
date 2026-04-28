@@ -1,0 +1,15 @@
+{
+  "name": "dissipative",
+  "base_config": "dissipative-base.json",
+  "init_patch_count": 64,
+  "init_patch_size": 20,
+  "init_param_mean": 0.0,
+  "init_param_std": 1.0,
+  "dissipation": {
+    "probability": 0.01,
+    "patch_size": 10,
+    "insertion_zone_origin": [0, 0],
+    "insertion_zone_size": 100,
+    "seed": 23
+  }
+}

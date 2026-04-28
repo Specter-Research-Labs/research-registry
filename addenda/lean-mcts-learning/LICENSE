@@ -1,0 +1,9 @@
+This project is mixed-licensed.
+
+Required Notice: Copyright (c) 2026 Specter Research Labs
+
+- Specter-authored source code, scripts, build files, manifests, and machine-readable configuration in this project are licensed under PolyForm Noncommercial 1.0.0: https://polyformproject.org/licenses/noncommercial/1.0.0/
+- Specter-authored documentation, papers, figures, Markdown, and other narrative or media content in this project are licensed under Creative Commons Attribution-NonCommercial 4.0 International: https://creativecommons.org/licenses/by-nc/4.0/
+- Any file or subtree that carries its own license header or local LICENSE or NOTICE file keeps those local terms.
+
+Commercial use of Specter-authored material requires separate written permission from Specter Research Labs.

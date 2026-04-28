@@ -1,0 +1,15 @@
+{
+  "name": "intervention-battery-v1",
+  "phases": [
+    {
+      "name": "battery",
+      "type": "intervention-battery",
+      "config": "configs/campaigns/intervention-battery-agency.json"
+    }
+  ],
+  "compendium": {
+    "merge_phases": true,
+    "central_db": "outputs/compendium.sqlite"
+  },
+  "phase_isolation": false
+}

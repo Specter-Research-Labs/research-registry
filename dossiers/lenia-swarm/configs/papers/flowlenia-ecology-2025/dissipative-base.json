@@ -1,0 +1,46 @@
+{
+  "backend": "metal-full",
+  "profile": "experimental",
+  "grid": {"sx": 512, "sy": 512},
+  "channels": 3,
+  "connectivity": [[5, 5, 5], [5, 5, 5], [5, 5, 5]],
+  "flow": {"dt": 0.2, "n": 2, "theta_A": 2.0},
+  "reintegration": {"dd": 5, "sigma": 0.65, "border": "wall"},
+  "implementation": {"mode": "flowlenia_2022_paper_equations"},
+  "parameter_embedding": {"enabled": true, "mix": "stoch", "mix_seed": 42},
+  "chemotaxis": null,
+  "food": null,
+  "walls": null,
+  "environment": null,
+  "beam_mutation": {"enabled": true, "probability": 0.01, "patch_size": 10, "std": 1.0, "seed": 17},
+  "params": {
+    "mode": "random",
+    "seed": 13,
+    "ranges": {
+      "r": [0.2, 1.0],
+      "b": [0.001, 1.0],
+      "w": [0.01, 0.5],
+      "a": [0.0, 1.0],
+      "m": [0.05, 0.5],
+      "s": [0.001, 0.18],
+      "h": [0.01, 1.0],
+      "R": [2.0, 25.0]
+    },
+    "r": null,
+    "b": null,
+    "w": null,
+    "a": null,
+    "m": null,
+    "s": null,
+    "h": null,
+    "R": null
+  },
+  "init": {
+    "seed": 0,
+    "patches": [{"center": [256, 256], "size": 20}],
+    "a_uniform": {"low": 0.0, "high": 1.0},
+    "p_uniform": {"low": 0.0, "high": 1.0}
+  },
+  "run": {"steps": 500000},
+  "interventions": []
+}

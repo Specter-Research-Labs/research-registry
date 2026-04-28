@@ -1,0 +1,22 @@
+{
+  "variants": [
+    {
+      "id": "paper-random-1c-10k",
+      "config": "configs/base/paper_random_1c_10k_128.json",
+      "search": "configs/search/search_flow_bodyplan.json",
+      "count": 48
+    },
+    {
+      "id": "paper-random-2c-20k",
+      "config": "configs/base/paper_random_2c_20k_128.json",
+      "search": "configs/search/search_flow_bodyplan.json",
+      "count": 32
+    },
+    {
+      "id": "paper-embed-food-2c-20k",
+      "config": "configs/base/paper_embed_food_2c_20k_128.json",
+      "search": "configs/search/search_flow_bodyplan_embed.json",
+      "count": 24
+    }
+  ]
+}

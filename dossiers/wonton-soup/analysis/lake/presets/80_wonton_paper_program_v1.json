@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "name": "wonton_paper_program_v1",
+  "selection": {
+    "provider": ["reprover", "heuristic", "deepseek"],
+    "backend": "lean",
+    "mode": "research",
+    "require_completed": true,
+    "exclude_partial_results": true,
+    "order_by": "created_at_desc",
+    "dedupe_run_id": true,
+    "max_runs": 600
+  },
+  "reference": {},
+  "datasets": [
+    {
+      "name": "program_runs",
+      "format": "jsonl",
+      "query": "SELECT r.root_id, r.run_key, r.run_id, r.provider, r.backend, r.mode, r.corpus, r.goal_sig_scheme, r.created_at, r.rel_run_dir FROM runs r JOIN selected_runs s USING(run_key) ORDER BY r.root_id, r.provider NULLS LAST, r.created_at NULLS LAST, r.run_key"
+    },
+    {
+      "name": "program_root_summary",
+      "format": "jsonl",
+      "query": "SELECT r.root_id, count(*) AS runs, count(DISTINCT r.provider) AS providers, min(r.created_at) AS created_min, max(r.created_at) AS created_max, min(r.run_id) AS min_run_id, max(r.run_id) AS max_run_id FROM runs r JOIN selected_runs s USING(run_key) GROUP BY r.root_id ORDER BY runs DESC, r.root_id"
+    },
+    {
+      "name": "program_intervention_summary",
+      "format": "jsonl",
+      "query": "WITH control_null AS ( SELECT run_key, theorem, solved AS control_null_solved FROM theorem_intervention WHERE intervention = 'control_null' ), base AS ( SELECT r.root_id, r.provider, i.theorem, i.intervention, i.solved AS intervention_solved, i.baseline_solved, cn.control_null_solved, CASE WHEN i.baseline_solved IS TRUE AND cn.control_null_solved IS TRUE THEN 'main_text' WHEN i.baseline_solved IS TRUE THEN 'appendix_null_unstable' WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN 'appendix_rescue' ELSE 'excluded' END AS paper_bucket, CASE WHEN i.baseline_solved IS TRUE AND i.solved IS NOT TRUE THEN 'collapse' WHEN i.baseline_solved IS TRUE AND i.solved IS TRUE THEN 'solved' WHEN i.baseline_solved IS FALSE AND i.solved IS TRUE THEN 'rescue' ELSE 'out_of_denominator' END AS paper_outcome_bucket FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem WHERE COALESCE(i.is_control, FALSE) = FALSE AND i.intervention <> 'control_null' ) SELECT root_id, provider, paper_bucket, paper_outcome_bucket, count(*) AS rows_total, sum(CASE WHEN intervention_solved THEN 1 ELSE 0 END) AS solved_rows, avg(CASE WHEN intervention_solved IS NULL THEN NULL ELSE CAST(intervention_solved AS DOUBLE) END) AS solve_rate FROM base GROUP BY root_id, provider, paper_bucket, paper_outcome_bucket ORDER BY root_id, provider NULLS LAST, paper_bucket, paper_outcome_bucket"
+    },
+    {
+      "name": "program_control_null_summary",
+      "format": "jsonl",
+      "query": "SELECT r.root_id, r.provider, count(*) AS control_null_rows, sum(CASE WHEN i.solved THEN 1 ELSE 0 END) AS control_null_solved_rows, avg(CASE WHEN i.solved IS NULL THEN NULL ELSE CAST(i.solved AS DOUBLE) END) AS control_null_solve_rate FROM theorem_intervention i JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) WHERE i.intervention = 'control_null' AND i.baseline_solved IS TRUE GROUP BY r.root_id, r.provider ORDER BY r.root_id, r.provider NULLS LAST"
+    },
+    {
+      "name": "program_basin_summary",
+      "format": "jsonl",
+      "query": "SELECT r.root_id, r.provider, count(*) AS theorem_rows, avg(b.solve_rate) AS basin_solve_rate_mean, avg(b.unique_structures) AS unique_structures_mean, avg(b.dominant_structure_frequency) AS dominant_structure_frequency_mean, avg(b.paper_k) AS paper_k_mean FROM basin_runs b JOIN selected_runs s USING(run_key) JOIN runs r USING(run_key) GROUP BY r.root_id, r.provider ORDER BY r.root_id, r.provider NULLS LAST"
+    }
+  ]
+}

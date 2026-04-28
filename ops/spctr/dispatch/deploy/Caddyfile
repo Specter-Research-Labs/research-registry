@@ -1,0 +1,25 @@
+{
+    acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+specterlab.org, www.specterlab.org {
+    handle /data/* {
+        root * /srv/www/site
+        encode zstd gzip
+        file_server
+    }
+    root * /srv/www/site/current
+    encode zstd gzip
+    file_server
+}
+
+dispatch.specterlab.org {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3001
+}
+
+releases.specterlab.org {
+    root * /srv/www/releases
+    encode zstd gzip
+    file_server browse
+}

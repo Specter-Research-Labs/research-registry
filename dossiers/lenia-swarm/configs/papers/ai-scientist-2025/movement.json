@@ -1,0 +1,32 @@
+{
+  "name": "movement",
+  "mode": "movement",
+  "base_config": "movement-base.json",
+  "iterations": 2000,
+  "bootstrap_iterations": 128,
+  "init_patch_count": 64,
+  "init_patch_size": 20,
+  "init_param_mean": 0.0,
+  "init_param_std": 1.0,
+  "init_zone_origin": [0, 0],
+  "init_zone_size": 64,
+  "goal_dimensions": ["center_x", "center_y"],
+  "mutation_probability_range": [0.001, 1.0],
+  "beam_patch_size_range": [5, 20],
+  "parameter_mutation": {"std": 0.1, "clip": true},
+  "activity": {
+    "enabled": true,
+    "interval": 100,
+    "threshold": 0.05,
+    "maxComponents": 256,
+    "matchThreshold": 1.5,
+    "paramWeight": 1.0,
+    "positionWeight": 0.05
+  },
+  "seed": 41,
+  "food_patch_count": null,
+  "food_patch_size": null,
+  "food_patch_value": null,
+  "food_spawn": null,
+  "dissipation": null
+}

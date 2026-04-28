@@ -1,0 +1,7 @@
+[Unit]
+Description=Cache spctr systems status report as JSON
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '/usr/local/bin/spctr report --json > /var/cache/spctr/report.json'
+User=specter

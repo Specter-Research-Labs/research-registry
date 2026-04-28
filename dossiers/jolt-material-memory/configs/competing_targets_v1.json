@@ -1,0 +1,25 @@
+{
+  "campaign_name": "competing_targets_v1",
+  "artifact_subdir": "data",
+  "build_first": true,
+  "build_dir": "build",
+  "binary_path": "build/jolt_memory_lab",
+  "scenarios": [
+    "competing_targets"
+  ],
+  "backends": [
+    "cpu"
+  ],
+  "layouts": [
+    "line"
+  ],
+  "memory_variants": [
+    {
+      "name": "baseline"
+    }
+  ],
+  "seed_start": 61000,
+  "seed_count": 20,
+  "steps": 240,
+  "dt": 0.0166666667
+}

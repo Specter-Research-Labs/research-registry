@@ -1,0 +1,9 @@
+.dossier-card p code,
+.resource-card p code,
+.addenda-list-item p code {
+    border: 1px solid var(--site-rule);
+    background: var(--sl-overlay-ink-2-5);
+    padding: 0 .25em;
+    font-family: var(--sl-font-mono);
+    font-size: .88em;
+}
