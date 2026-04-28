@@ -48,7 +48,8 @@ requires = ["python", "uv", "lean"]
 [spctr.exec.publish]
 description = "Canonical source bundle publish proof path"
 command = ["bash", "-lc", '''set -euo pipefail
-"$SPCTR_BIN" release bundle wonton-soup source --release-id contract-publish --output artifacts/publish/source
+mkdir -p artifacts/publish/source
+"$SPCTR_BIN" release bundle wonton-soup source --release-id contract-publish --output "$PWD/artifacts/publish/source"
 ''']
 expected_outputs = ["source-bundle", "source-bundle-evidence"]
 timeout_sec = 1800
