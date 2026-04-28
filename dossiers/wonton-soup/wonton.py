@@ -5066,7 +5066,6 @@ def analysis(
         / "artifacts"
         / "lake"
         / "lake.duckdb",
-        Path("/Volumes/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb"),
         Path("/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb"),
         lake_db,
     ]:

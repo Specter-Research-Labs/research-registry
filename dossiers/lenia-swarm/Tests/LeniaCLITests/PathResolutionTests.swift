@@ -31,18 +31,18 @@ final class PathResolutionTests: XCTestCase {
     }
 
     func testResolvePathRemapsTmpPathWhenRuntimeRootSet() throws {
-        setenv("SPECTER_RUNTIME_ROOT", "/Volumes/Addenda/dev/specter-labs/tmp", 1)
+        setenv("SPECTER_RUNTIME_ROOT", "/tmp/specter-runtime", 1)
         XCTAssertEqual(
             try resolvePath("/tmp/lenia-smoke", dossier: dossierName),
-            "/Volumes/Addenda/dev/specter-labs/tmp/lenia-swarm/lenia-smoke"
+            "/tmp/specter-runtime/lenia-swarm/lenia-smoke"
         )
     }
 
     func testResolvePathRemapsPrivateTmpPathWhenRuntimeRootSet() throws {
-        setenv("SPECTER_RUNTIME_ROOT", "/Volumes/Addenda/dev/specter-labs/tmp", 1)
+        setenv("SPECTER_RUNTIME_ROOT", "/tmp/specter-runtime", 1)
         XCTAssertEqual(
             try resolvePath("/private/tmp/lenia-smoke", dossier: dossierName),
-            "/Volumes/Addenda/dev/specter-labs/tmp/lenia-swarm/lenia-smoke"
+            "/tmp/specter-runtime/lenia-swarm/lenia-smoke"
         )
     }
 

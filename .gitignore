@@ -55,7 +55,9 @@ results/
 outputs/
 visual_gifs/
 
-# Wonton-Soup local-only corpus artifacts (rebuildable via pinned provenance).
+# Generated local-only runtime artifacts (rebuildable via pinned provenance).
+**/artifacts/evidence/
+**/artifacts/publish/
 dossiers/wonton-soup/artifacts/
 dossiers/lenia-swarm/artifacts/
 dossiers/wonton-soup/logs/
