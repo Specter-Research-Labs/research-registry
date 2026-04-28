@@ -202,7 +202,7 @@ Run `LeniaCLI orchestrate controller --help` for the full flag surface.
 ```bash
 LeniaCLI orchestrate worker \
   --port 7338 \
-  --controller 192.168.1.10
+  --controller 192.0.2.10
 ```
 
 Workers discover the controller and register automatically. The controller assigns seed ranges

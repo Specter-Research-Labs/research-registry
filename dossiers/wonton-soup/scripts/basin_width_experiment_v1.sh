@@ -180,9 +180,13 @@ analyze_correlation() {
   run_cmd uv run python -c "
 import duckdb
 import numpy as np
+import os
+from pathlib import Path
 from scipy import stats
+from runtime_paths import resolve_artifacts_root
 
-conn = duckdb.connect('/Volumes/Addenda/dev/specter-labs/wonton-soup/artifacts/lake/lake.duckdb', read_only=True)
+db_path = Path(os.environ.get('LAKE_DB_PATH', resolve_artifacts_root() / 'lake' / 'lake.duckdb'))
+conn = duckdb.connect(str(db_path), read_only=True)
 
 # Join basin and intervention data
 results = conn.execute('''

@@ -30,11 +30,8 @@ def _(mo):
     from plotly.subplots import make_subplots
     from scipy import stats
 
-    db_path = os.environ.get(
-        "LAKE_DB_PATH",
-        "/Volumes/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb",
-    )
-    if not os.path.exists(db_path):
+    db_path = os.environ.get("LAKE_DB_PATH")
+    if not db_path or not os.path.exists(db_path):
         db_path = "/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb"
 
     conn = duckdb.connect(db_path, read_only=True)

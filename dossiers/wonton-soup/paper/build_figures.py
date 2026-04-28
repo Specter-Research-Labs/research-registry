@@ -14,7 +14,6 @@ P2_PREFIX = "p2-paired/"
 P4_PREFIX = "p4-basin-deep/"
 DEFAULT_DB_CANDIDATES = (
     os.environ.get("LAKE_DB_PATH"),
-    "/Volumes/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb",
     "/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb",
 )
 

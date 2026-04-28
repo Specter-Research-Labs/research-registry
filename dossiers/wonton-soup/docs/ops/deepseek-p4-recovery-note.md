@@ -4,7 +4,7 @@ Current paper blocker: the March DeepSeek p4 basin run is incomplete.
 
 ## Original March run root
 
-`/Volumes/Addenda/dev/specter-labs/tmp/wonton-soup/logs/2026-03-02-followup-2026-03-extvol-r2/p4-basin-deep/provider=deepseek/seeds=50`
+`$SPECTER_RUNTIME_ROOT/wonton-soup/logs/2026-03-02-followup-2026-03-extvol-r2/p4-basin-deep/provider=deepseek/seeds=50`
 
 This run originally failed with partial results after 4 theorem basins.
 
@@ -26,16 +26,16 @@ This run originally failed with partial results after 4 theorem basins.
 
 ## Recovery strategy
 
-Use the Addenda DeepSeek model root:
+Use the DeepSeek model archive root:
 
-`DEEPSEEK_ARTIFACT_ROOT=/Volumes/Addenda/dev/specter-labs`
+`DEEPSEEK_ARTIFACT_ROOT=/path/to/specter-archive`
 
 Run one theorem at a time under a fresh run id, for example:
 
 ```bash
 cd dossiers/wonton-soup
 
-DEEPSEEK_ARTIFACT_ROOT=/Volumes/Addenda/dev/specter-labs \
+DEEPSEEK_ARTIFACT_ROOT=/path/to/specter-archive \
 uv run python wonton.py lean basin \
   --seeds 50 \
   --blind \
@@ -54,8 +54,8 @@ After a theorem completes, copy its theorem directory into the original March ru
 
 ```bash
 cp -R \
-  /Volumes/Addenda/dev/specter-labs/tmp/wonton-soup/logs/2026-04-18-deepseek-p4-single-retry/provider=deepseek/theorem=<THEOREM_NAME>/<THEOREM_NAME> \
-  /Volumes/Addenda/dev/specter-labs/tmp/wonton-soup/logs/2026-03-02-followup-2026-03-extvol-r2/p4-basin-deep/provider=deepseek/seeds=50/
+  "$SPECTER_RUNTIME_ROOT/wonton-soup/logs/2026-04-18-deepseek-p4-single-retry/provider=deepseek/theorem=<THEOREM_NAME>/<THEOREM_NAME>" \
+  "$SPECTER_RUNTIME_ROOT/wonton-soup/logs/2026-03-02-followup-2026-03-extvol-r2/p4-basin-deep/provider=deepseek/seeds=50/"
 ```
 
 `analysis/lake/extract_basin.py` extracts basin facts by scanning theorem subdirectories for `basin_analysis.json`, so copying the finished theorem directory into the March run root is sufficient for lake reconciliation.
