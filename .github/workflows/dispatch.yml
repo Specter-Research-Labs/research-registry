@@ -1,12 +1,6 @@
 name: Deploy dispatch
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/dispatch.yml"
-      - "ops/spctr/**"
-      - "ops/site/**"
   workflow_dispatch:
 
 concurrency:
