@@ -7,7 +7,7 @@ Canonical research monorepo for SPECTER Labs.
 ## Structure
 
 - `dossiers/` holds primary research programs.
-- `addenda/` holds focused side programs, tools, and references.
+- `addenda/` holds focused side programs, tools and various side quests.
 - `site/` holds source for public web surfaces.
 - `ops/` holds the `spctr` tooling for registry, release, and site work.
 
@@ -26,21 +26,12 @@ cd dossiers/<name> && nix develop
 cd addenda/<name> && nix develop
 ```
 
-With `direnv`, run `direnv allow` once in the root or project directory.
-Tracked `.envrc` files only enter the flake and optionally source
-`.envrc.local`; personal paths and machine-specific roots belong outside git.
+With `direnv`, run `direnv allow` once in the root or project directory. Tracked `.envrc` files only enter the flake and optionally source `.envrc.local`.
 
 ## Links
 
 - Site: <https://specterlab.org/>
 - Records: <https://releases.specterlab.org/records/>
-
-## Checks
-
-```bash
-cargo test --manifest-path ops/spctr/Cargo.toml
-cargo run --manifest-path ops/spctr/Cargo.toml -- release audit
-```
 
 ## License
 
