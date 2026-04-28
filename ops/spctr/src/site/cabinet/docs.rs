@@ -27,7 +27,7 @@ pub(crate) fn find_docs_for_manifests(manifests: &[ProjectManifest]) -> Result<V
     let mut entries = Vec::new();
     for project in project_docs_from_manifests(manifests) {
         let mut md_files = Vec::new();
-        collect_md_files(&project.docs_root, &mut md_files)?;
+        collect_md_files(&project.docs_root, &project.docs_root, &mut md_files)?;
         md_files.sort();
 
         for md_path in md_files {
@@ -190,17 +190,60 @@ struct DocScan {
     published: bool,
 }
 
-fn collect_md_files(dir: &Utf8Path, out: &mut Vec<Utf8PathBuf>) -> Result<()> {
+fn collect_md_files(
+    docs_root: &Utf8Path,
+    dir: &Utf8Path,
+    out: &mut Vec<Utf8PathBuf>,
+) -> Result<()> {
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
         let path: Utf8PathBuf = entry.path().try_into().expect("docs path is UTF-8");
         if path.is_dir() {
-            collect_md_files(&path, out)?;
+            if is_local_doc_skip_dir(docs_root, &path) {
+                continue;
+            }
+            collect_md_files(docs_root, &path, out)?;
         } else if path.extension().is_some_and(|ext| ext == "md") {
             out.push(path);
         }
     }
     Ok(())
+}
+
+fn is_local_doc_skip_dir(docs_root: &Utf8Path, path: &Utf8Path) -> bool {
+    if is_generated_root_doc_dir(docs_root, path) {
+        return true;
+    }
+
+    matches!(
+        path.file_name(),
+        Some(
+            ".git"
+                | ".jj"
+                | ".venv"
+                | ".tox"
+                | ".nox"
+                | ".mypy_cache"
+                | ".ruff_cache"
+                | ".pytest_cache"
+                | "__pycache__"
+                | "node_modules"
+                | "target"
+                | "dist"
+                | "build"
+        )
+    )
+}
+
+fn is_generated_root_doc_dir(docs_root: &Utf8Path, path: &Utf8Path) -> bool {
+    if docs_root.file_name() == Some("docs") || path.parent() != Some(docs_root) {
+        return false;
+    }
+
+    matches!(
+        path.file_name(),
+        Some("artifacts" | "logs" | "tmp" | "temp")
+    )
 }
 
 fn scan_doc(md_path: &Utf8Path) -> DocScan {

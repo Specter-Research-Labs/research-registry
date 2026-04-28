@@ -21,20 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - uses: actions/checkout@v6.0.2
+      - name: Setup spctr project
+        uses: ./.github/actions/setup-spctr
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ops/spctr/target
-          key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
-          restore-keys: spctr-${{ runner.os }}-
-      - name: Build spctr
-        run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml
+          project-root: 'addenda/typst-field-manual'
+          use-python: 'false'
+          use-uv: 'false'
+          sync-python: 'false'
       - name: Verify declared runtime requirements
         run: |
           set -euo pipefail

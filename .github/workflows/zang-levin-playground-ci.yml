@@ -19,37 +19,16 @@ jobs:
   pull_request:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - uses: actions/checkout@v6.0.2
+      - name: Setup spctr project
+        uses: ./.github/actions/setup-spctr
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ops/spctr/target
-          key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
-          restore-keys: spctr-${{ runner.os }}-
-      - name: Build spctr
-        run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
+          project-root: 'dossiers/zang-levin-playground'
+          use-python: 'true'
           python-version: '3.13'
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v8.0.0
-        with:
-          version: '0.9.26'
-          enable-cache: true
-          working-directory: dossiers/zang-levin-playground
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
-      - name: Sync Python dependencies
-        working-directory: dossiers/zang-levin-playground
-        run: uv sync --frozen --dev
+          use-uv: 'false'
+          sync-python: 'false'
       - name: Run exec check
         run: ./ops/spctr/target/release/spctr exec run --project zang-levin-playground check

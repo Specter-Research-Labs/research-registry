@@ -128,11 +128,11 @@ nightly = ["smoke"]
     assert!(rendered.contains("name: alpha-ci"));
     assert!(rendered.contains("runs-on: macos-latest"));
     assert!(rendered.contains("timeout-minutes: 8"));
-    assert!(rendered.contains("uses: actions/setup-python@v5"));
+    assert!(rendered.contains("uses: ./.github/actions/setup-spctr"));
+    assert!(rendered.contains("use-python: 'true'"));
     assert!(rendered.contains("python-version: '3.12'"));
-    assert!(rendered.contains("uses: astral-sh/setup-uv@v8.0.0"));
-    assert!(rendered.contains("working-directory: dossiers/alpha"));
-    assert!(rendered.contains("run: uv sync --frozen --dev"));
+    assert!(rendered.contains("use-uv: 'true'"));
+    assert!(rendered.contains("sync-python: 'true'"));
     assert!(rendered.contains("Verify declared runtime requirements"));
     assert!(rendered.contains("./ops/spctr/target/release/spctr exec run --project alpha check"));
     assert!(rendered.contains("./ops/spctr/target/release/spctr exec run --project alpha smoke"));
@@ -244,8 +244,8 @@ pull_request = ["check"]
 
     let plan = github_plan(root, Some("alpha")).unwrap();
     let rendered = render_github_workflow(&plan);
-    assert!(rendered.contains("uses: dtolnay/rust-toolchain@stable"));
-    assert!(rendered.contains("targets: 'wasm32-unknown-unknown'"));
+    assert!(rendered.contains("uses: ./.github/actions/setup-spctr"));
+    assert!(rendered.contains("rust-targets: 'wasm32-unknown-unknown'"));
     assert!(!rendered.contains("missing required runtime: wasm32-unknown-unknown"));
 }
 

@@ -140,6 +140,79 @@ fn sync_assigns_missing_cabinet_doc_ids() {
 }
 
 #[test]
+fn sync_ignores_local_dirs_when_docs_root_is_project_root() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+    minimal_design_tokens(root);
+    minimal_registry(root);
+    write(
+        root,
+        "addenda/k-semantics-reference/spctr.toml",
+        r#"version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "k-semantics-reference"
+series = "A-009"
+summary = "reference"
+status = "active"
+
+[site]
+visible = true
+featured = false
+publish_docs = true
+
+[labels]
+type = "research"
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+
+[spctr.docs]
+root = "."
+landing = "README.md"
+require_frontmatter = false
+"#,
+    );
+    write(
+        root,
+        "addenda/k-semantics-reference/README.md",
+        "# K Semantics Reference\n",
+    );
+    write(
+        root,
+        "addenda/k-semantics-reference/.venv/lib/python/site-packages/pkg/README.md",
+        "# Vendored Package README\n",
+    );
+    write(
+        root,
+        "addenda/k-semantics-reference/logs/run.md",
+        "# Runtime Log\n",
+    );
+    write(
+        root,
+        "addenda/k-semantics-reference/artifacts/report.md",
+        "# Generated Report\n",
+    );
+    write(
+        root,
+        "addenda/k-semantics-reference/docs/contracts/logs/schema.md",
+        "# Log Schema\n",
+    );
+
+    let report = spctr::registry_sync::plan(root).unwrap();
+    let slugs = report
+        .doc_assignments
+        .iter()
+        .map(|assignment| assignment.doc_slug.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(slugs, vec!["README", "docs/contracts/logs/schema"]);
+}
+
+#[test]
 fn sync_assigns_research_note_series_without_patching_frontmatter() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");

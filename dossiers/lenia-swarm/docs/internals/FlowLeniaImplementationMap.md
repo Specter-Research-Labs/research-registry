@@ -3,7 +3,7 @@
 Struct and function mapping from `Sources/LeniaCore/Core/FlowLenia.swift` to the Flow Lenia paper.
 
 ## Concept
-Maps the public structs in `Sources/LeniaCore/Core/FlowLenia.swift` to the exact equations and line references in the Flow Lenia paper (dossiers/lenia-swarm/lenia-flow-paper.pdf). It is a parameter-to-theory bridge for verifying the Swift implementation against the paper.
+Maps the public structs in `Sources/LeniaCore/Core/FlowLenia.swift` to the exact equations and line references in the Flow-Lenia paper ([arXiv:2212.07906](https://arxiv.org/abs/2212.07906)). It is a parameter-to-theory bridge for verifying the Swift implementation against the paper.
 
 ## Why it matters
 The Flow Lenia update rule couples convolutional affinity (Lenia) with mass-conserving transport (reintegration tracking). The parameters below are the only user-level knobs that must align with the paper to ensure scientific fidelity, especially when running distributed parameter sweeps.

@@ -8,10 +8,13 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::env;
-use std::fs;
-use std::process::{Command, Stdio};
+use std::fs::{self, File};
+use std::io::{Read, Seek, SeekFrom};
+use std::process::{Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
+
+const MAX_EXEC_ERROR_BYTES: usize = 16 * 1024;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ExecOutputPlan {
@@ -417,13 +420,23 @@ fn run_command(
         argv.first()
             .ok_or_else(|| anyhow::anyhow!("exec command must contain a program name"))?,
     );
+    let mut stdout_file = tempfile::tempfile().context("failed to create exec stdout capture")?;
+    let mut stderr_file = tempfile::tempfile().context("failed to create exec stderr capture")?;
     command
         .args(&argv[1..])
         .current_dir(workdir)
         .envs(envs)
         .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+        .stdout(Stdio::from(
+            stdout_file
+                .try_clone()
+                .context("failed to prepare exec stdout capture")?,
+        ))
+        .stderr(Stdio::from(
+            stderr_file
+                .try_clone()
+                .context("failed to prepare exec stderr capture")?,
+        ));
     let child = match command.spawn() {
         Ok(child) => child,
         Err(error) => {
@@ -434,25 +447,27 @@ fn run_command(
             });
         }
     };
-    let (output, timed_out) = wait_for_output(child, timeout_sec)?;
-    let exit_code = output.status.code();
+    let (status, timed_out) = wait_for_status(child, timeout_sec)?;
+    let stdout = read_capture(&mut stdout_file).context("failed to read exec stdout capture")?;
+    let stderr = read_capture(&mut stderr_file).context("failed to read exec stderr capture")?;
+    let exit_code = status.code();
     let error = if timed_out {
         Some(format!(
             "command timed out after {}s: {}",
             timeout_sec.unwrap_or_default(),
             argv.join(" ")
         ))
-    } else if output.status.success() {
+    } else if status.success() {
         None
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
-        Some(if stderr.is_empty() {
+        let diagnostics = command_diagnostics(&stdout, &stderr);
+        Some(if diagnostics.is_empty() {
             match exit_code {
                 Some(code) => format!("command exited with status {code}: {}", argv.join(" ")),
                 None => format!("command terminated without exit code: {}", argv.join(" ")),
             }
         } else {
-            stderr
+            diagnostics
         })
     };
     Ok(ExecCommandOutcome {
@@ -462,15 +477,13 @@ fn run_command(
     })
 }
 
-fn wait_for_output(
+fn wait_for_status(
     mut child: std::process::Child,
     timeout_sec: Option<u64>,
-) -> Result<(std::process::Output, bool)> {
+) -> Result<(ExitStatus, bool)> {
     let Some(timeout_sec) = timeout_sec else {
-        let output = child
-            .wait_with_output()
-            .context("failed to wait for exec command")?;
-        return Ok((output, false));
+        let status = child.wait().context("failed to wait for exec command")?;
+        return Ok((status, false));
     };
     let timeout = Duration::from_secs(timeout_sec);
     let start = Instant::now();
@@ -480,22 +493,61 @@ fn wait_for_output(
             .context("failed to poll exec command status")?
             .is_some()
         {
-            let output = child
-                .wait_with_output()
-                .context("failed to collect exec command output")?;
-            return Ok((output, false));
+            let status = child
+                .wait()
+                .context("failed to collect exec command status")?;
+            return Ok((status, false));
         }
         if start.elapsed() >= timeout {
             child
                 .kill()
                 .context("failed to kill timed out exec command")?;
-            let output = child
-                .wait_with_output()
-                .context("failed to collect timed out exec command output")?;
-            return Ok((output, true));
+            let status = child
+                .wait()
+                .context("failed to collect timed out exec command status")?;
+            return Ok((status, true));
         }
         thread::sleep(Duration::from_millis(50));
     }
+}
+
+fn read_capture(file: &mut File) -> Result<Vec<u8>> {
+    file.seek(SeekFrom::Start(0))?;
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes)?;
+    Ok(bytes)
+}
+
+fn command_diagnostics(stdout: &[u8], stderr: &[u8]) -> String {
+    let stdout = String::from_utf8_lossy(stdout).trim().to_owned();
+    let stderr = String::from_utf8_lossy(stderr).trim().to_owned();
+    match (stderr.is_empty(), stdout.is_empty()) {
+        (true, true) => String::new(),
+        (true, false) => truncate_diagnostics(&stdout),
+        (false, true) => truncate_diagnostics(&stderr),
+        (false, false) => {
+            format!(
+                "{}\n{}",
+                truncate_diagnostics(&stderr),
+                truncate_diagnostics(&stdout)
+            )
+        }
+    }
+}
+
+fn truncate_diagnostics(text: &str) -> String {
+    if text.len() <= MAX_EXEC_ERROR_BYTES {
+        return text.to_owned();
+    }
+    let mut start = text.len() - MAX_EXEC_ERROR_BYTES;
+    while !text.is_char_boundary(start) {
+        start += 1;
+    }
+    format!(
+        "[truncated {} bytes of exec diagnostics]\n{}",
+        start,
+        &text[start..]
+    )
 }
 
 fn write_evidence_card(
@@ -1189,5 +1241,50 @@ card_path = "artifacts/evidence/latest.json"
             serde_json::from_str(&fs::read_to_string(action_card_path).unwrap()).unwrap();
         assert_eq!(action_card["action"], "check");
         assert_eq!(action_card["status"], "timed_out");
+    }
+
+    #[test]
+    fn run_handles_noisy_failed_commands_without_timing_out() {
+        let temp = TempDir::new().unwrap();
+        let repo_root = Utf8Path::from_path(temp.path()).unwrap();
+        let project_root = repo_root.join("dossiers/alpha");
+        let manifest_path = project_root.join("spctr.toml");
+        write(
+            &manifest_path,
+            r#"version = 1
+license = "Apache-2.0"
+title = "Alpha"
+summary = "Alpha summary."
+status = "active"
+
+[site]
+visible = false
+featured = false
+
+[release]
+stage = "candidate"
+
+[spctr]
+project = "alpha"
+
+[spctr.exec.check]
+command = ["python3", "-c", "import sys; print('x' * 200000); print('boom', file=sys.stderr); sys.exit(7)"]
+timeout_sec = 5
+
+[spctr.evidence]
+card_path = "artifacts/evidence/latest.json"
+"#,
+        );
+
+        let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
+        let report = run_action(repo_root, &manifest, "check").unwrap();
+
+        assert!(!report.ok);
+        assert_eq!(report.exit_code, Some(7));
+        assert!(!report.timed_out);
+        assert!(report
+            .error
+            .as_deref()
+            .is_some_and(|error| error.contains("boom")));
     }
 }

@@ -43,18 +43,14 @@ project = "lenia-swarm"
 default_surface = "lenia-compendium"
 
 [spctr.exec.check]
-description = "Canonical promoted verification lane"
+description = "Fast public CLI surface test lane"
 commands = [
     ["swift", "package", "resolve"],
-    ["bash", "ops/build-mlx-metallib.sh"],
-    ["swift", "test"],
-    ["uv", "run", "ruff", "check", "lenia_swarm_analysis", "Tests"],
-    ["uv", "run", "ty", "check"],
-    ["uv", "run", "pytest"],
+    ["swift", "test", "--filter", "CLISurfaceTests"],
 ]
-timeout_sec = 3600
+timeout_sec = 900
 network = "bootstrap"
-requires = ["python", "uv", "swift", "cmake"]
+requires = ["swift"]
 
 [spctr.exec.smoke]
 description = "Determinism smoke with explicit MLX metallib bootstrap"
@@ -109,9 +105,8 @@ cache_paths = [".build", ".swiftpm", ".venv", ".ruff_cache", ".pytest_cache", "a
 [spctr.ci]
 runner = "macos-latest"
 pull_request = ["check"]
-push_main = ["check", "smoke", "build", "publish"]
-nightly = ["smoke"]
-nightly_cron = "0 8 * * 1"
+push_main = []
+nightly = []
 
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/site-projects.yml"
+      - ".github/actions/**"
       - ".github/workflows/*-ci.yml"
       - ".github/workflows/repo-mirror.yml"
       - ".gitignore"
@@ -39,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
@@ -47,7 +48,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.5
         with:
           path: |
             ~/.cargo/registry

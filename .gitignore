@@ -55,7 +55,13 @@ results/
 outputs/
 visual_gifs/
 
-# Generated local-only runtime artifacts (rebuildable via pinned provenance).
+# Generated/local paper PDFs and vendored reference PDFs.
+**/paper/main.pdf
+**/docs/paper/main.pdf
+**/paper/artifacts/*.pdf
+**/docs/paper/references/*.pdf
+
+# Generated local-only artifacts.
 **/artifacts/evidence/
 **/artifacts/publish/
 dossiers/wonton-soup/artifacts/

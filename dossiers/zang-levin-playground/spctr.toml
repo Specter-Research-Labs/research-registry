@@ -31,14 +31,11 @@ publish_mode = "subdir"
 project = "zang-levin-playground"
 
 [spctr.exec.check]
-description = "Canonical candidate verification lane"
-commands = [
-    ["uv", "run", "ruff", "check", "."],
-    ["uv", "run", "ty", "check", "."],
-]
-timeout_sec = 1800
+description = "Fast public test lane"
+command = ["python", "-m", "unittest", "discover", "-s", "tests"]
+timeout_sec = 300
 network = "off"
-requires = ["python", "uv"]
+requires = ["python"]
 
 [spctr.exec.smoke]
 description = "Small seeded Figure 1 regeneration smoke"
@@ -64,7 +61,7 @@ requires = ["python", "uv"]
 
 [spctr.runtime]
 platforms = ["linux", "macos"]
-requires = ["python", "uv"]
+requires = ["python"]
 network = "off"
 cache_paths = [".venv", ".ruff_cache"]
 

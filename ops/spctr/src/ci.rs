@@ -194,43 +194,9 @@ pub fn render_github_workflow(plan: &GithubWorkflowPlan) -> String {
             writeln!(&mut yaml, "    timeout-minutes: {timeout_minutes}").unwrap();
         }
         writeln!(&mut yaml, "    steps:").unwrap();
-        writeln!(&mut yaml, "      - uses: actions/checkout@v4").unwrap();
-        writeln!(&mut yaml, "      - name: Install Rust toolchain").unwrap();
-        writeln!(&mut yaml, "        uses: dtolnay/rust-toolchain@stable").unwrap();
-        let rust_targets = rust_toolchain_targets(job);
-        if !rust_targets.is_empty() {
-            writeln!(&mut yaml, "        with:").unwrap();
-            writeln!(
-                &mut yaml,
-                "          targets: {}",
-                yaml_quote(&rust_targets.join(","))
-            )
-            .unwrap();
-        }
-        writeln!(&mut yaml, "      - name: Cache cargo build").unwrap();
-        writeln!(&mut yaml, "        uses: actions/cache@v4").unwrap();
-        writeln!(&mut yaml, "        with:").unwrap();
-        writeln!(&mut yaml, "          path: |").unwrap();
-        writeln!(&mut yaml, "            ~/.cargo/registry").unwrap();
-        writeln!(&mut yaml, "            ~/.cargo/git").unwrap();
-        writeln!(&mut yaml, "            ops/spctr/target").unwrap();
-        writeln!(
-            &mut yaml,
-            "          key: spctr-${{{{ runner.os }}}}-${{{{ hashFiles('ops/spctr/Cargo.lock') }}}}"
-        )
-        .unwrap();
-        writeln!(
-            &mut yaml,
-            "          restore-keys: spctr-${{{{ runner.os }}}}-"
-        )
-        .unwrap();
-        writeln!(&mut yaml, "      - name: Build spctr").unwrap();
-        writeln!(
-            &mut yaml,
-            "        run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml"
-        )
-        .unwrap();
-        render_runtime_requirements(&mut yaml, plan, job);
+        writeln!(&mut yaml, "      - uses: actions/checkout@v6.0.2").unwrap();
+        render_setup_action(&mut yaml, plan, job);
+        render_runtime_requirements(&mut yaml, job);
         for action in &job.actions {
             writeln!(&mut yaml, "      - name: Run exec {}", action.action).unwrap();
             writeln!(
@@ -599,46 +565,61 @@ fn detect_python_version(project_root: &Utf8Path) -> Result<Option<String>> {
     Ok(None)
 }
 
-fn render_runtime_requirements(
-    yaml: &mut String,
-    plan: &GithubWorkflowPlan,
-    job: &GithubWorkflowJobPlan,
-) {
-    if job_requires_python(job) {
-        match &plan.python_version {
-            Some(version) => {
-                writeln!(yaml, "      - name: Setup Python").unwrap();
-                writeln!(yaml, "        uses: actions/setup-python@v5").unwrap();
-                writeln!(yaml, "        with:").unwrap();
-                writeln!(yaml, "          python-version: {}", yaml_quote(version)).unwrap();
-            }
-            None => {
-                writeln!(
-                    yaml,
-                    "      # Add a Python setup step before use: no version could be derived from pyproject.toml."
-                )
-                .unwrap();
-            }
-        }
+fn render_setup_action(yaml: &mut String, plan: &GithubWorkflowPlan, job: &GithubWorkflowJobPlan) {
+    writeln!(yaml, "      - name: Setup spctr project").unwrap();
+    writeln!(yaml, "        uses: ./.github/actions/setup-spctr").unwrap();
+    writeln!(yaml, "        with:").unwrap();
+    writeln!(
+        yaml,
+        "          project-root: {}",
+        yaml_quote(&plan.project_root)
+    )
+    .unwrap();
+    writeln!(
+        yaml,
+        "          use-python: {}",
+        yaml_quote(if job_requires_python(job) {
+            "true"
+        } else {
+            "false"
+        })
+    )
+    .unwrap();
+    if let Some(version) = &plan.python_version {
+        writeln!(yaml, "          python-version: {}", yaml_quote(version)).unwrap();
     }
-
-    if job_requires_uv(job) {
-        writeln!(yaml, "      - name: Setup uv").unwrap();
-        writeln!(yaml, "        uses: astral-sh/setup-uv@v8.0.0").unwrap();
-        writeln!(yaml, "        with:").unwrap();
-        writeln!(yaml, "          version: {}", yaml_quote("0.9.26")).unwrap();
-        writeln!(yaml, "          enable-cache: true").unwrap();
-        writeln!(yaml, "          working-directory: {}", plan.project_root).unwrap();
-        writeln!(yaml, "          cache-dependency-glob: |").unwrap();
-        writeln!(yaml, "            pyproject.toml").unwrap();
-        writeln!(yaml, "            uv.lock").unwrap();
-        if plan.has_pyproject {
-            writeln!(yaml, "      - name: Sync Python dependencies").unwrap();
-            writeln!(yaml, "        working-directory: {}", plan.project_root).unwrap();
-            writeln!(yaml, "        run: uv sync --frozen --dev").unwrap();
-        }
+    writeln!(
+        yaml,
+        "          use-uv: {}",
+        yaml_quote(if job_requires_uv(job) {
+            "true"
+        } else {
+            "false"
+        })
+    )
+    .unwrap();
+    writeln!(
+        yaml,
+        "          sync-python: {}",
+        yaml_quote(if job_requires_uv(job) && plan.has_pyproject {
+            "true"
+        } else {
+            "false"
+        })
+    )
+    .unwrap();
+    let rust_targets = rust_toolchain_targets(job);
+    if !rust_targets.is_empty() {
+        writeln!(
+            yaml,
+            "          rust-targets: {}",
+            yaml_quote(&rust_targets.join(","))
+        )
+        .unwrap();
     }
+}
 
+fn render_runtime_requirements(yaml: &mut String, job: &GithubWorkflowJobPlan) {
     let unsupported = unsupported_requires(job);
     if unsupported.is_empty() {
         return;

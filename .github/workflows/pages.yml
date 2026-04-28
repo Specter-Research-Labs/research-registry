@@ -1,6 +1,17 @@
 name: Deploy site
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pages.yml"
+      - "ops/spctr/**"
+      - "site/**"
+      - "spctr-registry.json"
+      - "dossiers/*/spctr.toml"
+      - "addenda/*/spctr.toml"
+      - "dossiers/*/docs/**"
+      - "addenda/*/docs/**"
   workflow_dispatch:
 
 concurrency:
@@ -19,15 +30,23 @@ jobs:
       DEPLOY_USER: ${{ secrets.SPECTER_DEPLOY_USER }}
       SPECTER_DEPLOY_HOST: ${{ secrets.SPECTER_DEPLOY_HOST }}
       SPECTER_DEPLOY_USER: ${{ secrets.SPECTER_DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.SPECTER_DEPLOY_SSH_KEY }}
       RELEASE_ID: ${{ github.sha }}
       SPECTER_SITE_PUBLIC_URL: https://specterlab.org
       SPECTER_RELEASES_PUBLIC_URL: https://releases.specterlab.org
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+
+      - name: Validate deploy secrets
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?missing SPECTER_DEPLOY_HOST secret}"
+          : "${DEPLOY_USER:?missing SPECTER_DEPLOY_USER secret}"
+          : "${DEPLOY_SSH_KEY:?missing SPECTER_DEPLOY_SSH_KEY secret}"
 
       - name: Install system tools
         run: |
@@ -39,7 +58,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.5
         with:
           path: |
             ~/.cargo/registry
@@ -55,7 +74,7 @@ jobs:
           command -v minhtml || cargo install minhtml --version 0.18.1
 
       - name: Install typst
-        uses: typst-community/setup-typst@v4
+        uses: typst-community/setup-typst@v5.1.0
 
       - name: Build spctr
         run: cargo build --release --manifest-path ops/spctr/Cargo.toml
@@ -64,9 +83,9 @@ jobs:
         run: ./ops/spctr/target/release/spctr registry check
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
-          ssh-private-key: ${{ secrets.SPECTER_DEPLOY_SSH_KEY }}
+          ssh-private-key: ${{ env.DEPLOY_SSH_KEY }}
 
       - name: Trust deploy host
         run: |

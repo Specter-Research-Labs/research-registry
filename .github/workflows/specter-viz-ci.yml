@@ -6,10 +6,6 @@ on:
   pull_request:
     paths:
       - 'addenda/specter-viz/**'
-  push:
-    branches: [main]
-    paths:
-      - 'addenda/specter-viz/**'
   workflow_dispatch:
 
 concurrency:
@@ -23,63 +19,16 @@ jobs:
   pull_request:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v6.0.2
+      - name: Setup spctr project
+        uses: ./.github/actions/setup-spctr
         with:
-          targets: 'wasm32-unknown-unknown'
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ops/spctr/target
-          key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
-          restore-keys: spctr-${{ runner.os }}-
-      - name: Build spctr
-        run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml
+          project-root: 'addenda/specter-viz'
+          use-python: 'false'
+          use-uv: 'false'
+          sync-python: 'false'
+          rust-targets: 'wasm32-unknown-unknown'
       - name: Run exec check
         run: ./ops/spctr/target/release/spctr exec run --project specter-viz check
-      - name: Run exec smoke
-        run: ./ops/spctr/target/release/spctr exec run --project specter-viz smoke
-  push_main:
-    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: 'wasm32-unknown-unknown'
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ops/spctr/target
-          key: spctr-${{ runner.os }}-${{ hashFiles('ops/spctr/Cargo.lock') }}
-          restore-keys: spctr-${{ runner.os }}-
-      - name: Build spctr
-        run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml
-      - name: Verify declared runtime requirements
-        run: |
-          set -euo pipefail
-          if ! command -v tar >/dev/null; then
-            echo "missing required runtime: tar" >&2
-            exit 1
-          fi
-      - name: Run exec check
-        run: ./ops/spctr/target/release/spctr exec run --project specter-viz check
-      - name: Run exec smoke
-        run: ./ops/spctr/target/release/spctr exec run --project specter-viz smoke
-      - name: Run exec build
-        run: ./ops/spctr/target/release/spctr exec run --project specter-viz build
-      - name: Run exec publish
-        run: ./ops/spctr/target/release/spctr exec run --project specter-viz publish
-      - name: Evaluate release gate
-        run: ./ops/spctr/target/release/spctr release gate specter-viz
