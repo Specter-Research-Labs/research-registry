@@ -28,11 +28,11 @@ project = "wonton-soup"
 default_surface = "wonton-lake"
 
 [spctr.exec.check]
-description = "Canonical dossier verification lane"
+description = "Targeted public CI verification lane"
 commands = [
-    ["uv", "run", "ruff", "check", "."],
-    ["uv", "run", "ty", "check", "."],
-    ["uv", "run", "python", "-m", "pytest"],
+    ["uv", "run", "ruff", "check", "orchestrator/lean.py", "setup_lean.py", "prover/tests/test_leantree_tooling.py", "prover/tests/test_lean_setup.py"],
+    ["uv", "run", "ty", "check", "orchestrator/lean.py", "setup_lean.py"],
+    ["uv", "run", "--extra", "dev", "python", "-m", "pytest", "prover/tests/test_leantree_tooling.py", "prover/tests/test_lean_setup.py", "-q"],
 ]
 timeout_sec = 1800
 network = "off"

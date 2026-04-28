@@ -1,21 +1,6 @@
 name: Deploy site
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/pages.yml"
-      - "site/**"
-      - "!site/atlas/**"
-      - "ops/site/deploy/**"
-      - "ops/spctr/**"
-      - "addenda/design-tokens/**"
-      - "dossiers/*/spctr.toml"
-      - "addenda/*/spctr.toml"
-      - "spctr-registry.json"
-      - "dossiers/*/docs/**"
-      - "addenda/*/docs/**"
-      - "dossiers/wonton-soup/docs/figures/out/**"
   workflow_dispatch:
 
 concurrency:

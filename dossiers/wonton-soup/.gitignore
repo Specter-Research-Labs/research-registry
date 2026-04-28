@@ -13,8 +13,6 @@ lake-packages/
 *.ilean
 *.trace
 
-uv.lock
-
 .idea/
 .vscode/
 *.swp
