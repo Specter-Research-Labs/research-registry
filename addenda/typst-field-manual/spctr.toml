@@ -25,7 +25,7 @@ include_docs = false
 project = "typst-field-manual"
 
 [spctr.exec.check]
-description = "Token-discipline check for both Typst style surfaces"
+description = "Token-discipline check for both Typst style files"
 command = ["python3", "tools/check_style_tokens.py"]
 timeout_sec = 600
 network = "off"

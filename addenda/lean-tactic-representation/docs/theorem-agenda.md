@@ -24,7 +24,7 @@ Do not assume:
 
 ## Core Judgments
 
-These should be treated as the canonical judgment forms.
+These are the canonical judgment forms.
 
 ### Provenance well-formedness
 
@@ -102,7 +102,7 @@ Pi |- pack ==>action a
 Pi |- pack ==>assembly m
 ```
 
-`pack` forgets to current action-level and assembly-level repo surfaces.
+`pack` forgets to current action-level and assembly-level repo artifacts.
 
 ### Serialization round-trip
 

@@ -1,46 +1,31 @@
 # Lean Tactic Representation
 
-Tracks the research agenda for richer tactic representation in Lean.
+Research agenda and toy interpreter for structured Lean tactic representations.
 
-Asks whether proof tactics admit a representation that is structurally richer than strings, possibly algebraic or compositional, with an explicit execution story and evaluation plan.
+The question is whether proof tactics can be represented as compositional
+objects instead of strings, with an execution story and evaluation plan.
 
-## What Lives Here
+Start with `research.md` for the argument, then
+`docs/general-algebraic-tactic-calculus-spec.md` for the technical target.
 
-- [research.md](research.md):
-  survey, objections, and a plausible path to a proof-of-concept
-- [goals.md](goals.md):
-  research scope and concrete success criteria
-- [docs/general-algebraic-tactic-calculus-spec.md](docs/general-algebraic-tactic-calculus-spec.md):
-  research-level semantic spec for a fully general algebraic tactic calculus
-- [docs/theorem-agenda.md](docs/theorem-agenda.md):
-  companion theorem program with fixed judgments, side conditions, and the first lemmas to attempt
-- `core/`, `examples/`, `render.py`, and `cli.py`:
-  toy interpreter and CLI visualizer for calculus fragments, examples, and invariant checks
+The runnable code is a toy interpreter and visualizer for calculus fragments.
 
-## What Does Not Live Here
+## Check
 
-- `TacticActionIR` lives in `wonton-soup`.
-- `ProofGraphIR` lives in `wonton-soup`.
+```bash
+cd addenda/lean-tactic-representation
+nix develop
+uv run ruff check .
+uv run ty check .
+uv run python -m pytest
+```
 
-Those are dossier concerns because they are artifact contracts and analysis surfaces, not the
-research program itself.
+## Related
 
-## Related Dossier Surfaces
-
-The nearest concrete implementation work is documented in:
+This addendum asks the representation question. The concrete IR docs live in
+`wonton-soup`:
 
 - [TacticActionIR](../../dossiers/wonton-soup/docs/concepts/tactic-action-ir.md):
   a pragmatic typed summary of what one observed proof step did
 - [ProofGraphIR](../../dossiers/wonton-soup/docs/concepts/proof-graph-ir.md):
   the downstream graph-level abstraction used for cross-assistant comparison
-
-Those surfaces inform this addendum, but they are not the addendum itself.
-
-## Boundary
-
-The clean split is:
-
-- this addendum owns the research question about richer tactic representation
-- `wonton-soup` owns the step-level and graph-level IR surfaces
-
-That split keeps the research agenda separate from the dossier’s working artifact contracts.

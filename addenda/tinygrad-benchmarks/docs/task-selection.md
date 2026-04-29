@@ -50,7 +50,7 @@ Exclude tasks that:
 
 ## Preferred Task Shapes
 
-The first corpus should favor small, technical, self-contained work:
+The first corpus favors small, technical, self-contained work:
 
 - bug fixes with a targeted regression test
 - narrow API or runtime adjustments
@@ -70,7 +70,7 @@ When mining from git history, prefer commits that satisfy most of the following:
 - deterministic local acceptance command
 - no vendored, generated, or formatting-dominated noise
 
-The mined candidate set should also carry an explicit quality score and review priority so manual
+The mined candidate set also carries an explicit quality score and review priority so manual
 curation can start from the strongest fixes first.
 
 For the initial tinygrad corpus, prefer miner configurations that include `tinygrad/` sources and
@@ -98,7 +98,7 @@ Reject or down-rank commits that are mostly:
 
 ## Provenance Record
 
-Each selected task should retain enough evidence to explain why it was chosen:
+Each selected task retains enough evidence to explain why it was chosen:
 
 - source thread or commit reference
 - why the task is reproducible
@@ -107,6 +107,6 @@ Each selected task should retain enough evidence to explain why it was chosen:
 - what gold resolution was used for comparison
 - any known caveats or environment assumptions
 
-The public benchmark should stay clean. Leakage-sensitive material belongs in the maintainer-only
-ledger, keyed by `item_id`. Model-visible prompt packets should be cleaner still: no repo remote,
-no commit id, no source refs, and no miner provenance metadata.
+The public benchmark stays clean. Leakage-sensitive material belongs in the maintainer-only
+ledger, keyed by `item_id`. Model-visible prompt packets are cleaner still: no repo remote, no
+commit id, no source refs, and no miner provenance metadata.
