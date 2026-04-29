@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any, NamedTuple
 
 import pytest
 from typer.testing import CliRunner
@@ -11,7 +12,16 @@ from embryomaker_v2.legacy_snapshot import LegacySnapshotSeries, LegacySnapshotS
 runner = CliRunner()
 
 
-def _read_json(path: Path) -> dict[str, object]:
+class StageCase(NamedTuple):
+    command: str
+    run_script: str
+    manifest: str
+    preset: str
+    script_fragments: tuple[str, ...]
+    lane: str | None = None
+
+
+def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -27,35 +37,35 @@ def _make_legacy_root(root: Path) -> Path:
 
 
 def test_stage_commands_write_manifest_and_script() -> None:
-    cases = [
-        {
-            "command": "stage-cell-sorting",
-            "run_script": "run_legacy_cell_sorting.sh",
-            "manifest": "cell_sorting_manifest.json",
-            "preset": "2",
-            "script_fragments": ['rm -rf "$ARTIFACTS_ROOT"', 'EMAKER_PATH="./bin"'],
-        },
-        {
-            "command": "stage-invagination",
-            "run_script": "run_legacy_invagination.sh",
-            "manifest": "invagination_manifest.json",
-            "preset": "3",
-            "script_fragments": ['lines[4] = "3"'],
-            "lane": "invagination",
-        },
-    ]
+    cases = (
+        StageCase(
+            command="stage-cell-sorting",
+            run_script="run_legacy_cell_sorting.sh",
+            manifest="cell_sorting_manifest.json",
+            preset="2",
+            script_fragments=('rm -rf "$ARTIFACTS_ROOT"', 'EMAKER_PATH="./bin"'),
+        ),
+        StageCase(
+            command="stage-invagination",
+            run_script="run_legacy_invagination.sh",
+            manifest="invagination_manifest.json",
+            preset="3",
+            script_fragments=('lines[4] = "3"',),
+            lane="invagination",
+        ),
+    )
 
     with runner.isolated_filesystem():
         root = Path.cwd()
         legacy_root = _make_legacy_root(root)
 
         for case in cases:
-            run_root = root / f"staged-{case['command']}"
+            run_root = root / f"staged-{case.command}"
             result = runner.invoke(
                 app,
                 [
                     "baseline",
-                    str(case["command"]),
+                    case.command,
                     str(legacy_root),
                     "--run-root",
                     str(run_root),
@@ -68,23 +78,23 @@ def test_stage_commands_write_manifest_and_script() -> None:
 
             assert result.exit_code == 0
             assert "run_command: ./bin 0 01 12 34" in result.stdout
-            stage_script = run_root / str(case["run_script"])
-            manifest_path = run_root / str(case["manifest"])
+            stage_script = run_root / case.run_script
+            manifest_path = run_root / case.manifest
             assert stage_script.is_file()
             assert manifest_path.is_file()
 
             stage_script_text = stage_script.read_text(encoding="utf-8")
             assert '"$EMAKER_PATH" 0 01 12 34' in stage_script_text
-            for fragment in case["script_fragments"]:
+            for fragment in case.script_fragments:
                 assert fragment in stage_script_text
 
             manifest = _read_json(manifest_path)
             assert manifest["expected_exit_code"] == 231
             assert manifest["run_command"] == "./bin 0 01 12 34"
             assert manifest["preset_selection"]["line_number"] == 5
-            assert manifest["preset_selection"]["value"] == case["preset"]
-            if "lane" in case:
-                assert manifest["lane"] == case["lane"]
+            assert manifest["preset_selection"]["value"] == case.preset
+            if case.lane is not None:
+                assert manifest["lane"] == case.lane
             else:
                 assert manifest["binary_resolution"]["primary_path"] == "bin"
                 assert manifest["binary_resolution"]["fallback_path"] == "bin/EMaker"

@@ -1,80 +1,51 @@
 # EmbryoMaker v2
 
-Staging surface for a modern EmbryoMaker remake.
+EmbryoMaker parity work for two lanes: cell sorting and invagination.
 
-Focuses on:
-- fixing the kernel boundary
-- scaffolding the `C++23` and Python split
-- defining the parity plan against the original mathematics
-- preparing a clean baseline lane for legacy code
+## What Lives Here
 
-Serves as the workbench to pin down the compiled kernel, Python control plane, and mathematical parity before full simulator implementation.
+- `kernel/`: C++23 summary binaries for cell sorting and invagination.
+- `embryomaker_v2/legacy_snapshot.py`: parser for the legacy `.dat` snapshot
+  subset used by the active lanes.
+- `embryomaker_v2/comparison.py`: comparison logic for legacy snapshots and v2
+  summaries.
+- `embryomaker_v2/baseline_cli.py`: legacy staging and comparison commands.
 
-## Documentation
+## Status
 
-- `docs/architecture.md`: compiled boundary, module tree, memory layout, and public API
-- `docs/legacy-baseline-linux-x86_64.md`: preferred original baseline host and run recipe
-- `docs/parity-plan.md`: how to match the original mathematics and scheduler 1:1
-- `docs/parity-ledger-v0.md`: concrete original source surfaces to transcribe first
+- cell sorting: staged legacy snapshots compare against v2 trajectory summaries.
+- invagination: bootstrap/state comparison is wired; geometry parity is still
+  open.
+- baseline runs: use Linux x86_64, or the provided `linux/amd64` Docker wrapper
+  on Apple Silicon.
 
-## Project Surfaces
+## Docs
 
-- `kernel/`: typed `C++23` parity surfaces, including the first legacy cell-sorting lane
-- `embryomaker_v2/`: Python control-plane CLI for toolchain checks and parity surfaces
-- `tests/`: Python CLI tests
+- `docs/architecture.md`: current C++/Python split.
+- `docs/baseline.md`: legacy baseline host and commands.
+- `docs/parity-targets.md`: active lanes and legacy files that matter.
 
-## Start Here
+## Check
 
 ```bash
 cd addenda/embryomaker-v2
 nix develop
-uv run embryomaker-v2 doctor
-uv run embryomaker-v2 layout
-uv run embryomaker-v2 preset cell-sorting
-uv run embryomaker-v2 baseline doctor
-uv run embryomaker-v2 baseline recipe
-uv run embryomaker-v2 baseline lanes
-uv run embryomaker-v2 baseline build-docker-image
-uv run embryomaker-v2 baseline stage-cell-sorting /path/to/EmbryoMaker
-uv run embryomaker-v2 baseline stage-cell-sorting-docker /path/to/EmbryoMaker
-uv run embryomaker-v2 baseline snapshot-summary /path/to/10.dat
-uv run embryomaker-v2 baseline compare-cell-sorting /path/to/10.dat --json-out /tmp/cell-sorting-compare.json
-uv run embryomaker-v2 baseline compare-cell-sorting-trajectory /path/to/output-or-artifacts --json-out /tmp/cell-sorting-trajectory.json
-```
-
-If you use direnv, `direnv allow` from `addenda/embryomaker-v2/` is equivalent. The shell
-auto-runs `uv sync`.
-
-To build the current kernel scaffold:
-
-```bash
-cd addenda/embryomaker-v2
+uv run ruff check .
+uv run ty check .
+uv run python -m pytest
 cmake -S kernel -B kernel/build
 cmake --build kernel/build
 ctest --test-dir kernel/build --output-on-failure
-./kernel/build/em2_legacy_cell_sorting_summary 10 1234 77
 ```
 
-## Dev Tooling
+`direnv allow` from this directory enters the same flake and runs `uv sync`.
+
+## Useful Commands
 
 ```bash
-cd addenda/embryomaker-v2
-uv run ruff check .
-uv run ty check
-uv run pytest
+uv run embryomaker-v2 baseline lanes
+uv run embryomaker-v2 baseline stage-cell-sorting /path/to/EmbryoMaker
+uv run embryomaker-v2 baseline compare-cell-sorting-trajectory tmp/legacy-cell-sorting-baseline/artifacts
+uv run embryomaker-v2 baseline stage-invagination /path/to/EmbryoMaker
+uv run embryomaker-v2 baseline compare-invagination-bootstrap /path/to/0.dat
 ```
-
-## Scope
-
-- `C++23` kernel
-- Python control plane
-- one typed experiment surface
-- one checkpoint surface
-- explicit parity lanes against the original EmbryoMaker code
-
-## Non-Goals
-
-- no GUI-first runtime yet
-- no positional config files
-- no legacy snapshot compatibility layer
-- no promise of full math parity with every historical mode before we pin the benchmark lanes

@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "EmbryoMaker v2"
 series = "A-012"
-summary = "Typed EmbryoMaker remake scaffold for kernel parity, baseline capture, and comparison tooling."
+summary = "Parity harness for selected EmbryoMaker developmental mechanics, with C++ summary executables and legacy snapshot comparison tools."
 status = "concept"
 
 [site]
@@ -44,7 +44,7 @@ network = "off"
 requires = ["python", "uv"]
 
 [spctr.exec.build]
-description = "Build the typed C++23 kernel surfaces"
+description = "Build the C++23 kernel summary binaries"
 command = ["bash", "-lc", '''set -euo pipefail
 cmake -S kernel -B kernel/build
 cmake --build kernel/build

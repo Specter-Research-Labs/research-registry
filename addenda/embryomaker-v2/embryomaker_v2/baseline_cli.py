@@ -29,7 +29,7 @@ from embryomaker_v2.legacy_snapshot import (
     summarize_legacy_snapshot,
 )
 
-baseline_app = typer.Typer(no_args_is_help=True, help="Original baseline and parity surfaces")
+baseline_app = typer.Typer(no_args_is_help=True, help="Original baseline and parity tools")
 
 
 def _emit(lines: tuple[str, ...]) -> None:
