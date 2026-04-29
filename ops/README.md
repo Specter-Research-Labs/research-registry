@@ -158,7 +158,7 @@ If a project does not declare a lane, treat that as intentional. Add the narrowe
   - publishes `/srv/www/site/releases/<git-sha>`
   - switches `/srv/www/site/current`
   - archives the exact built snapshot under the releases host
-  - purges Cloudflare cache
+  - purges Cloudflare cache when credentials are present
 
 Manual and chat-driven publishes use the same repo-owned CLI entrypoints as CI so there is one deploy path per surface.
 The full repo mirror is broader than any one surface, but it is intentionally passive: syncing code to the VM does not imply build, publish, or execution.
