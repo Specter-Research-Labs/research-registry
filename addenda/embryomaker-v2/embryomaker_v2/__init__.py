@@ -1,2 +1,1 @@
-"""EmbryoMaker v2 scaffold."""
-
+"""EmbryoMaker v2 parity tools."""

@@ -24,7 +24,7 @@ def _tool_line(name: str) -> str:
     return f"{name}: {path}" if path is not None else f"{name}: missing"
 
 
-app = typer.Typer(no_args_is_help=True, help="EmbryoMaker v2 scaffold CLI")
+app = typer.Typer(no_args_is_help=True, help="EmbryoMaker v2 parity CLI")
 preset_app = typer.Typer(no_args_is_help=True, help="Legacy parity presets")
 app.add_typer(baseline_app, name="baseline")
 app.add_typer(preset_app, name="preset")

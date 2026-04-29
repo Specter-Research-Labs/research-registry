@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any, NamedTuple
 
 from typer.testing import CliRunner
 
@@ -16,41 +17,53 @@ def _make_legacy_root(tmp_path: Path) -> Path:
     return legacy_root
 
 
-def _read_json(path: Path) -> dict[str, object]:
+class DockerStageCase(NamedTuple):
+    command: str
+    run_root: Path
+    native_script: str
+    docker_script: str
+    docker_manifest: str
+    native_fragments: tuple[str, ...]
+    lane_manifest: str | None = None
+    lane: str | None = None
+    preset: str | None = None
+
+
+def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def test_docker_stage_commands_write_native_and_container_runners(tmp_path: Path) -> None:
     legacy_root = _make_legacy_root(tmp_path)
-    cases = [
-        {
-            "command": "stage-cell-sorting-docker",
-            "run_root": tmp_path / "baseline-cell",
-            "native_script": "run_legacy_cell_sorting.sh",
-            "docker_script": "run_legacy_cell_sorting_docker.sh",
-            "docker_manifest": "cell_sorting_docker_manifest.json",
-            "native_fragments": ['rm -rf "$ARTIFACTS_ROOT"', 'EMAKER_PATH="./bin"'],
-        },
-        {
-            "command": "stage-invagination-docker",
-            "run_root": tmp_path / "baseline-invagination",
-            "native_script": "run_legacy_invagination.sh",
-            "docker_script": "run_legacy_invagination_docker.sh",
-            "docker_manifest": "invagination_docker_manifest.json",
-            "native_fragments": ['lines[4] = "3"'],
-            "lane_manifest": "invagination_manifest.json",
-            "lane": "invagination",
-            "preset": "3",
-        },
-    ]
+    cases = (
+        DockerStageCase(
+            command="stage-cell-sorting-docker",
+            run_root=tmp_path / "baseline-cell",
+            native_script="run_legacy_cell_sorting.sh",
+            docker_script="run_legacy_cell_sorting_docker.sh",
+            docker_manifest="cell_sorting_docker_manifest.json",
+            native_fragments=('rm -rf "$ARTIFACTS_ROOT"', 'EMAKER_PATH="./bin"'),
+        ),
+        DockerStageCase(
+            command="stage-invagination-docker",
+            run_root=tmp_path / "baseline-invagination",
+            native_script="run_legacy_invagination.sh",
+            docker_script="run_legacy_invagination_docker.sh",
+            docker_manifest="invagination_docker_manifest.json",
+            native_fragments=('lines[4] = "3"',),
+            lane_manifest="invagination_manifest.json",
+            lane="invagination",
+            preset="3",
+        ),
+    )
 
     for case in cases:
-        run_root = case["run_root"]
+        run_root = case.run_root
         result = runner.invoke(
             app,
             [
                 "baseline",
-                str(case["command"]),
+                case.command,
                 str(legacy_root),
                 "--run-root",
                 str(run_root),
@@ -60,16 +73,16 @@ def test_docker_stage_commands_write_native_and_container_runners(tmp_path: Path
         )
 
         assert result.exit_code == 0
-        native_script = run_root / str(case["native_script"])
-        docker_script = run_root / str(case["docker_script"])
-        docker_manifest = run_root / str(case["docker_manifest"])
+        native_script = run_root / case.native_script
+        docker_script = run_root / case.docker_script
+        docker_manifest = run_root / case.docker_manifest
         assert native_script.is_file()
         assert docker_script.is_file()
         assert docker_manifest.is_file()
 
         native_script_text = native_script.read_text(encoding="utf-8")
         assert '"$EMAKER_PATH" 0 01 10 2' in native_script_text
-        for fragment in case["native_fragments"]:
+        for fragment in case.native_fragments:
             assert fragment in native_script_text
 
         docker_script_text = docker_script.read_text(encoding="utf-8")
@@ -81,11 +94,13 @@ def test_docker_stage_commands_write_native_and_container_runners(tmp_path: Path
 
         docker_manifest_payload = _read_json(docker_manifest)
         assert docker_manifest_payload["install_packages"] is True
-        if "lane" in case:
-            manifest = _read_json(run_root / str(case["lane_manifest"]))
-            assert manifest["lane"] == case["lane"]
-            assert manifest["preset_selection"]["value"] == case["preset"]
-            assert docker_manifest_payload["lane"] == case["lane"]
+        if case.lane is not None:
+            assert case.lane_manifest is not None
+            assert case.preset is not None
+            manifest = _read_json(run_root / case.lane_manifest)
+            assert manifest["lane"] == case.lane
+            assert manifest["preset_selection"]["value"] == case.preset
+            assert docker_manifest_payload["lane"] == case.lane
         else:
             assert (
                 "apt-get install -y gfortran freeglut3-dev libglu1-mesa-dev "
