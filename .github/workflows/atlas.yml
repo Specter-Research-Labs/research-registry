@@ -6,22 +6,26 @@ on:
     paths:
       - ".github/workflows/atlas.yml"
       - "site/atlas/**"
-      - "ops/spctr/**"
-      - "spctr-registry.json"
-      - "dossiers/*/spctr.toml"
-      - "addenda/*/spctr.toml"
-      - "dossiers/*/docs/**"
-      - "addenda/*/docs/**"
+      - "ops/spctr/Cargo.lock"
+      - "ops/spctr/Cargo.toml"
+      - "ops/spctr/src/graph.rs"
+      - "ops/spctr/src/manifest.rs"
+      - "ops/spctr/src/site/catalog.rs"
+      - "ops/spctr/src/site/health.rs"
+      - "ops/spctr/src/site/mod.rs"
+      - "ops/spctr/src/site/records.rs"
   pull_request:
     paths:
       - ".github/workflows/atlas.yml"
       - "site/atlas/**"
-      - "ops/spctr/**"
-      - "spctr-registry.json"
-      - "dossiers/*/spctr.toml"
-      - "addenda/*/spctr.toml"
-      - "dossiers/*/docs/**"
-      - "addenda/*/docs/**"
+      - "ops/spctr/Cargo.lock"
+      - "ops/spctr/Cargo.toml"
+      - "ops/spctr/src/graph.rs"
+      - "ops/spctr/src/manifest.rs"
+      - "ops/spctr/src/site/catalog.rs"
+      - "ops/spctr/src/site/health.rs"
+      - "ops/spctr/src/site/mod.rs"
+      - "ops/spctr/src/site/records.rs"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
