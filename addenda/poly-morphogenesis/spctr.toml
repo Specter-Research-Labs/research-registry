@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Poly Morphogenesis"
 series = "A-013"
-summary = "Julia workbench for expressing a closed-loop morphogenesis model as composed Poly-style systems."
+summary = "Julia implementation of the BITSEY reaction-diffusion controller as composed Poly-style systems."
 status = "concept"
 
 [site]

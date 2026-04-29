@@ -33,8 +33,7 @@ This is the strongest compact false-side signal.
 
 If we shift from the old greedy witness battery to the full fixed `10`-theory `2`-element
 pair-evaluator basis, false coverage improves to `467/626`. So the full representative basis adds
-`13` public false decisions beyond the old six-table battery and is the better offline evaluator
-surface.
+`13` public false decisions beyond the old six-table battery and is the better offline evaluator.
 
 Brute-force search over all `19683` binary operations on the `3`-element carrier adds another
 `84` false problems from the `172` missed by the `2`-element battery, leaving `88` still
@@ -177,7 +176,7 @@ The lesson is straightforward:
 
 The proof layer is now explicitly cataloged instead of graph-mined at review time.
 
-After the exact public surface `1164/1200`, the shipped constructive extension is:
+After the exact public count `1164/1200`, the shipped constructive extension is:
 
 1. an exact source-triggered kernel catalog with `10` explicit source patterns
 2. two exact source-triggered commutativity repairs
@@ -187,7 +186,7 @@ The kernel catalog explains:
 - `13/15` current residual public true problems
 - `10/12` current residual unique true pairs
 
-That raises the constructive candidate surface from `1164/1200` to `1177/1200`, leaving only:
+That raises the constructive candidate count from `1164/1200` to `1177/1200`, leaving only:
 
 - `2` unresolved public true cases
 - `21` unresolved public false cases
@@ -205,7 +204,7 @@ The two remaining true cases are closed by two explicit commutativity repairs:
   - helper: `x * y = y * x`
   - one local flip yields `(x * y) * x = (y * z) * z`
 - the commutativity repairs cover `2/2` residual true cases after the direct-kernel catalog
-- the constructive candidate surface therefore moves from `1177/1200` to `1179/1200`
+- the constructive candidate count therefore moves from `1177/1200` to `1179/1200`
 
 So the public true-side residual is closed by a finite constructive catalog. The remaining public
 tail is purely false-side.
@@ -244,13 +243,13 @@ If we stack:
 - exact `2`-element source-row semantics
 - explicit false witnesses from the finite-model search stack
 
-then the current public decision surface is:
+then the current public decision count is:
 
 - `1164/1200` exact decisions
 - `15` unresolved public true cases
 - `21` unresolved public false cases
 
-If we then add the current explicit source-triggered kernel catalog, the constructive surface moves
+If we then add the current explicit source-triggered kernel catalog, the constructive count moves
 to:
 
 - `1177/1200` candidate decisions
@@ -258,7 +257,7 @@ to:
 - `21` unresolved public false cases
 
 If we add the two explicit commutativity repairs on top of that catalog, the constructive
-candidate surface moves again to:
+candidate count moves again to:
 
 - `1179/1200` candidate decisions
 - `0` unresolved public true cases
@@ -267,7 +266,7 @@ candidate surface moves again to:
 ## Public-Only Candidate Rules Still Stay Hypotheses
 
 These are public-set patterns only. They are useful for triage, but they are not theorem-backed
-and should stay hypotheses:
+and remain hypotheses:
 
 - non-collapse TRUE candidate: `source_more_vars + target_more_ops + target_two_vars` is `17/17`
 - non-collapse FALSE candidate: `source_more_repetition + source_two_vars` is `0/116`
