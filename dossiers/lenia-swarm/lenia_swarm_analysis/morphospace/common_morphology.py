@@ -559,6 +559,32 @@ def _collect_fish_rows(
     return rows
 
 
+def _collect_all_fish_rows(
+    connection: DuckDBPyConnection,
+    *,
+    study_id: str | None,
+    dataset_root: Path | None,
+) -> list[_CommonMorphologyRow]:
+    if study_id is None or dataset_root is None:
+        return _collect_fish_rows(
+            connection,
+            study_id=None,
+            dataset_root=dataset_root,
+        )
+
+    selected_rows = _collect_fish_rows(
+        connection,
+        study_id=study_id,
+        dataset_root=dataset_root,
+    )
+    metadata_rows = _collect_fish_rows(
+        connection,
+        study_id=None,
+        dataset_root=None,
+    )
+    return [row for row in metadata_rows if row.study_id != study_id] + selected_rows
+
+
 def _axis_stats(rows: list[_CommonMorphologyRow]) -> dict[str, dict[str, float]]:
     stats: dict[str, dict[str, float]] = {}
     for axis_id in AXIS_IDS:
@@ -614,9 +640,9 @@ def derive_common_morphology(
 ) -> dict[str, Any]:
     all_rows = [
         *_collect_lenia_rows(connection, study_id=None),
-        *_collect_fish_rows(
+        *_collect_all_fish_rows(
             connection,
-            study_id=None,
+            study_id=study_id,
             dataset_root=dryad_fish_root,
         ),
     ]
