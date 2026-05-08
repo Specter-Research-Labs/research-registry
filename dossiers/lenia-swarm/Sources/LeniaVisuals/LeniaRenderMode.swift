@@ -2,6 +2,7 @@ import Foundation
 
 public enum LeniaRenderMode: String, CaseIterable, Identifiable, Sendable {
     case truth = "Truth"
+    case body = "Body"
     case smoothMagma = "Magma"
     case viridis = "Viridis"
     case inferno = "Inferno"

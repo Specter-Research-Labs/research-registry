@@ -268,9 +268,13 @@ def run_feature_tda_profile(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
+    study_kind: str | None = None,
     run_id: str | None = None,
+    run_id_contains: str | None = None,
+    source_mode: str | None = None,
     observation_kind: str | None = None,
     source_algorithm: str | None = None,
+    canonical_family: str | None = None,
     max_homology_dim: int = 1,
     stratify_by: str = "rule_family_key",
     seed: int = 0,
@@ -284,9 +288,13 @@ def run_feature_tda_profile(
         value_column=value_column,
         source_id=source_id,
         study_id=study_id,
+        study_kind=study_kind,
         run_id=run_id,
+        run_id_contains=run_id_contains,
+        source_mode=source_mode,
         observation_kind=observation_kind,
         source_algorithm=source_algorithm,
+        canonical_family=canonical_family,
     )
     matrix = np.asarray(matrix_packet["matrix"], dtype=np.float64)
     observations = matrix_packet["observations"]

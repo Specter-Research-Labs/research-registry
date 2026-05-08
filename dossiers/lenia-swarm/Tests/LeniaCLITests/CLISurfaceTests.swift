@@ -50,6 +50,7 @@ final class CLISurfaceTests: XCTestCase {
                 "qd-2024",
                 "ecology-2025",
                 "curiosity-2025",
+                "map-elites",
             ])
         )
     }

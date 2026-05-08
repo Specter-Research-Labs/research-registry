@@ -202,8 +202,9 @@ function renderTileGrid(activeDetailPath) {
         button.type = "button";
 
         const media = entry.media ?? null;
-        const posterUrl = media?.posterPath ? resolveManifestHref(media.posterPath) : null;
         const replayUrl = media?.replayPath ? resolveManifestHref(media.replayPath) : null;
+        const posterUrl =
+            media?.posterPath && !replayUrl ? resolveManifestHref(media.posterPath) : null;
         const metricBadge = tileMetricBadge(entry);
 
         button.className = `compendium-tile${entry.detail === activeDetailPath ? " is-active" : ""}`;
@@ -362,8 +363,9 @@ function renderDetail(detail, entry) {
     const metrics = creature.metrics ?? {};
     const media = detail.media ?? entry.media ?? null;
     const telemetry = resolveTelemetry(detail.telemetry ?? entry.telemetry, metrics);
-    const posterUrl = media?.posterPath ? resolveManifestHref(media.posterPath) : null;
     const replayUrl = media?.replayPath ? resolveManifestHref(media.replayPath) : null;
+    const posterUrl =
+        media?.posterPath && !replayUrl ? resolveManifestHref(media.posterPath) : null;
     const anatomy = media?.anatomy ?? null;
     const detailLinks = [];
 
@@ -373,7 +375,7 @@ function renderDetail(detail, entry) {
     if (entry.searchConfig) {
         detailLinks.push(`<a href="${escapeAttr(resolveManifestHref(entry.searchConfig))}">Search Config</a>`);
     }
-    if (media?.posterPath) {
+    if (posterUrl) {
         detailLinks.push(`<a href="${escapeAttr(posterUrl)}">Poster PNG</a>`);
     }
     if (media?.replayPath) {
@@ -616,9 +618,7 @@ function renderAnatomyStrip(anatomy, { live = false } = {}) {
                     <figcaption>Kernel K(r)</figcaption>
                 </figure>
                 <figure class="compendium-anatomy-card">
-                    ${anatomy?.neighborPath
-                        ? `<img src="${escapeAttr(resolveManifestHref(anatomy.neighborPath))}" alt="Neighbor" loading="lazy" />`
-                        : `<canvas data-anatomy="neighbor-placeholder" width="128" height="128"></canvas>`}
+                    <canvas data-anatomy="neighbor-placeholder" width="128" height="128"></canvas>
                     <figcaption>Neighbor k*f</figcaption>
                 </figure>
             </div>

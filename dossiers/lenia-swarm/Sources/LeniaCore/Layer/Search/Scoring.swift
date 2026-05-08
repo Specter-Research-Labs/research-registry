@@ -18,6 +18,23 @@ public func scoreMetrics(_ metrics: SimulationMetrics, weights: [String: Float])
         case "gyration": value = metrics.gyration
         case "center_velocity": value = metrics.centerVelocity
         case "translation_ratio": value = translationRatio(for: metrics)
+        case "transport_displacement":
+            guard let metric = metrics.transportDisplacement else {
+                fatalError("transport_displacement requested but coherent transport metrics not computed.")
+            }
+            value = metric
+        case "translated_shape_overlap":
+            guard let metric = metrics.translatedShapeOverlap else {
+                fatalError("translated_shape_overlap requested but coherent transport metrics not computed.")
+            }
+            value = metric
+        case "coherent_transport":
+            guard let metric = metrics.coherentTransport else {
+                fatalError("coherent_transport requested but coherent transport metrics not computed.")
+            }
+            value = metric
+        case "body_locomotion":
+            value = bodyLocomotion(for: metrics)
         case "survived":
             guard metrics.survivalTracked else {
                 fatalError("survived requested but k_survival tracking was not enabled.")
@@ -74,6 +91,26 @@ public func scoreMetrics(_ metrics: SimulationMetrics, weights: [String: Float])
                 fatalError("largest_component_anisotropy requested but component metrics not computed.")
             }
             value = metric
+        case "largest_component_solidity", "solidity":
+            guard let metric = metrics.largestComponentSolidity else {
+                fatalError("largest_component_solidity requested but component metrics not computed.")
+            }
+            value = metric
+        case "largest_component_mean_thickness", "thickness":
+            guard let metric = metrics.largestComponentMeanThickness else {
+                fatalError("largest_component_mean_thickness requested but component metrics not computed.")
+            }
+            value = metric
+        case "largest_component_max_thickness":
+            guard let metric = metrics.largestComponentMaxThickness else {
+                fatalError("largest_component_max_thickness requested but component metrics not computed.")
+            }
+            value = metric
+        case "largest_component_filamentarity", "filamentarity":
+            guard let metric = metrics.largestComponentFilamentarity else {
+                fatalError("largest_component_filamentarity requested but component metrics not computed.")
+            }
+            value = metric
         case "activity_eac_mean": value = metrics.activityEacMean ?? 0
         case "activity_ean_mean": value = metrics.activityEanMean ?? 0
         case "activity_diversity_mean": value = metrics.activityDiversityMean ?? 0
@@ -125,6 +162,40 @@ public func passesFilters(_ metrics: SimulationMetrics, filters: [String: Float]
             if translationRatio(for: metrics) < threshold { return false }
         case "translation_ratio_max":
             if translationRatio(for: metrics) > threshold { return false }
+        case "transport_displacement_min":
+            guard let metric = metrics.transportDisplacement else {
+                fatalError("transport_displacement_min requested but coherent transport metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "transport_displacement_max":
+            guard let metric = metrics.transportDisplacement else {
+                fatalError("transport_displacement_max requested but coherent transport metrics not computed.")
+            }
+            if metric > threshold { return false }
+        case "translated_shape_overlap_min":
+            guard let metric = metrics.translatedShapeOverlap else {
+                fatalError("translated_shape_overlap_min requested but coherent transport metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "translated_shape_overlap_max":
+            guard let metric = metrics.translatedShapeOverlap else {
+                fatalError("translated_shape_overlap_max requested but coherent transport metrics not computed.")
+            }
+            if metric > threshold { return false }
+        case "coherent_transport_min":
+            guard let metric = metrics.coherentTransport else {
+                fatalError("coherent_transport_min requested but coherent transport metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "coherent_transport_max":
+            guard let metric = metrics.coherentTransport else {
+                fatalError("coherent_transport_max requested but coherent transport metrics not computed.")
+            }
+            if metric > threshold { return false }
+        case "body_locomotion_min":
+            if bodyLocomotion(for: metrics) < threshold { return false }
+        case "body_locomotion_max":
+            if bodyLocomotion(for: metrics) > threshold { return false }
         case "survived":
             guard metrics.survivalTracked else {
                 fatalError("survived filter requested but k_survival tracking was not enabled.")
@@ -272,6 +343,46 @@ public func passesFilters(_ metrics: SimulationMetrics, filters: [String: Float]
                 fatalError("largest_component_anisotropy_max: component metrics not computed.")
             }
             if metric > threshold { return false }
+        case "largest_component_solidity_min", "solidity_min":
+            guard let metric = metrics.largestComponentSolidity else {
+                fatalError("largest_component_solidity_min: component metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "largest_component_solidity_max", "solidity_max":
+            guard let metric = metrics.largestComponentSolidity else {
+                fatalError("largest_component_solidity_max: component metrics not computed.")
+            }
+            if metric > threshold { return false }
+        case "largest_component_mean_thickness_min", "thickness_min":
+            guard let metric = metrics.largestComponentMeanThickness else {
+                fatalError("largest_component_mean_thickness_min: component metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "largest_component_mean_thickness_max", "thickness_max":
+            guard let metric = metrics.largestComponentMeanThickness else {
+                fatalError("largest_component_mean_thickness_max: component metrics not computed.")
+            }
+            if metric > threshold { return false }
+        case "largest_component_max_thickness_min":
+            guard let metric = metrics.largestComponentMaxThickness else {
+                fatalError("largest_component_max_thickness_min: component metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "largest_component_max_thickness_max":
+            guard let metric = metrics.largestComponentMaxThickness else {
+                fatalError("largest_component_max_thickness_max: component metrics not computed.")
+            }
+            if metric > threshold { return false }
+        case "largest_component_filamentarity_min", "filamentarity_min":
+            guard let metric = metrics.largestComponentFilamentarity else {
+                fatalError("largest_component_filamentarity_min: component metrics not computed.")
+            }
+            if metric < threshold { return false }
+        case "largest_component_filamentarity_max", "filamentarity_max":
+            guard let metric = metrics.largestComponentFilamentarity else {
+                fatalError("largest_component_filamentarity_max: component metrics not computed.")
+            }
+            if metric > threshold { return false }
         default:
             fatalError("passesFilters: unknown filter key '\(key)'")
         }
@@ -291,6 +402,30 @@ private func compactness(for metrics: SimulationMetrics) -> Float {
 
 private func localizedMotion(for metrics: SimulationMetrics) -> Float {
     metrics.centerVelocity * compactness(for: metrics)
+}
+
+public func bodyLocomotion(for metrics: SimulationMetrics) -> Float {
+    if let bodyLocomotion = metrics.bodyLocomotion, bodyLocomotion.isFinite {
+        return max(bodyLocomotion, 0)
+    }
+    guard let displacement = metrics.transportDisplacement, displacement.isFinite,
+          let overlap = metrics.translatedShapeOverlap, overlap.isFinite else {
+        return 0
+    }
+    let growth = metrics.occupiedGrowth ?? 1
+    let growthTerm = bodyLocomotionGrowthTerm(growth)
+    let connectedTerm = 0.25 + 0.75 * max(0, min(1, metrics.largestComponentFraction ?? 0))
+    let solidityTerm = 0.35 + 0.65 * max(0, min(1, metrics.largestComponentSolidity ?? 0))
+    let anisotropyTerm = 0.35 + 0.65 * (1 - max(0, min(1, metrics.largestComponentAnisotropy ?? 1)))
+    let filamentTerm = 0.35 + 0.65 * (1 - max(0, min(1, metrics.largestComponentFilamentarity ?? 1)))
+    let morphologyTerm = (connectedTerm + solidityTerm + anisotropyTerm + filamentTerm) / 4
+    return max(displacement, 0) * (0.2 + 0.8 * max(0, min(1, overlap))) * growthTerm * morphologyTerm
+}
+
+private func bodyLocomotionGrowthTerm(_ value: Float) -> Float {
+    guard value.isFinite, value > 0 else { return 0 }
+    let logDeviation = abs(log(value))
+    return 1 / (1 + 2 * logDeviation)
 }
 
 private func foodConsumedFraction(for metrics: SimulationMetrics) -> Float {

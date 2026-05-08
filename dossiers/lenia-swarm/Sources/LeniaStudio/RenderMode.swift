@@ -11,6 +11,8 @@ extension View {
         switch mode {
         case .truth:
             self
+        case .body:
+            self.colorEffect(leniaShaderLibrary.bodyLenia())
         case .smoothMagma:
             self.colorEffect(leniaShaderLibrary.smoothLenia())
         case .viridis:

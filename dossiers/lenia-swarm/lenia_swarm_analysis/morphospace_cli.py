@@ -37,6 +37,10 @@ from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.ingest_dryad_fish import (
     ingest_dryad_fish_body_shape,
 )
+from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
+    ingest_embryomaker_snapshots,
+)
+from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
 from lenia_swarm_analysis.morphospace.track1_raw_summary import (
@@ -76,23 +80,41 @@ def _add_json(parser: argparse.ArgumentParser) -> None:
 def _add_feature_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--source-id")
     parser.add_argument("--study-id")
+    parser.add_argument("--study-kind")
     parser.add_argument("--run-id")
+    parser.add_argument("--run-id-contains")
+    parser.add_argument("--source-mode")
     parser.add_argument("--observation-kind")
     parser.add_argument("--source-algorithm")
+    parser.add_argument("--canonical-family")
 
 
 def _feature_filter_kwargs(args: argparse.Namespace) -> dict[str, str | None]:
     return {
         "source_id": args.source_id,
         "study_id": args.study_id,
+        "study_kind": args.study_kind,
         "run_id": args.run_id,
+        "run_id_contains": args.run_id_contains,
+        "source_mode": args.source_mode,
         "observation_kind": args.observation_kind,
         "source_algorithm": args.source_algorithm,
+        "canonical_family": args.canonical_family,
     }
 
 
 def _add_cohort_filter_args(parser: argparse.ArgumentParser, prefix: str) -> None:
-    for name in ("source-id", "study-id", "run-id", "observation-kind", "source-algorithm"):
+    for name in (
+        "source-id",
+        "study-id",
+        "study-kind",
+        "run-id",
+        "run-id-contains",
+        "source-mode",
+        "observation-kind",
+        "source-algorithm",
+        "canonical-family",
+    ):
         parser.add_argument(f"--{prefix}-{name}")
 
 
@@ -100,9 +122,13 @@ def _cohort_filter_kwargs(args: argparse.Namespace, prefix: str) -> dict[str, st
     return {
         f"{prefix}_source_id": getattr(args, f"{prefix}_source_id"),
         f"{prefix}_study_id": getattr(args, f"{prefix}_study_id"),
+        f"{prefix}_study_kind": getattr(args, f"{prefix}_study_kind"),
         f"{prefix}_run_id": getattr(args, f"{prefix}_run_id"),
+        f"{prefix}_run_id_contains": getattr(args, f"{prefix}_run_id_contains"),
+        f"{prefix}_source_mode": getattr(args, f"{prefix}_source_mode"),
         f"{prefix}_observation_kind": getattr(args, f"{prefix}_observation_kind"),
         f"{prefix}_source_algorithm": getattr(args, f"{prefix}_source_algorithm"),
+        f"{prefix}_canonical_family": getattr(args, f"{prefix}_canonical_family"),
     }
 
 
@@ -274,6 +300,49 @@ def import_dryad_fish_dataset(
     return _using_warehouse(warehouse_path, run)
 
 
+def import_embryomaker_snapshots_dataset(
+    *,
+    warehouse_path: Path,
+    snapshot_roots: list[Path],
+    label: str | None = None,
+    limit: int | None = None,
+    skip_invalid: bool = False,
+) -> dict[str, Any]:
+    def run(connection: Any) -> dict[str, Any]:
+        payload = ingest_embryomaker_snapshots(
+            connection,
+            snapshot_roots=snapshot_roots,
+            label=label,
+            limit=limit,
+            skip_invalid=skip_invalid,
+        )
+        return {
+            "warehousePath": str(warehouse_path),
+            **payload,
+        }
+
+    return _using_warehouse(warehouse_path, run)
+
+
+def import_reference_bundle_dataset(
+    *,
+    warehouse_path: Path,
+    bundle_root: Path,
+    label: str | None = None,
+) -> dict[str, Any]:
+    def run(connection: Any) -> dict[str, Any]:
+        return {
+            "warehousePath": str(warehouse_path),
+            **import_reference_bundle(
+                connection,
+                bundle_root=bundle_root,
+                label=label,
+            ),
+        }
+
+    return _using_warehouse(warehouse_path, run)
+
+
 def derive_lenia_features_packet(
     *,
     warehouse_path: Path,
@@ -314,9 +383,13 @@ def export_feature_matrix_packet(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
+    study_kind: str | None = None,
     run_id: str | None = None,
+    run_id_contains: str | None = None,
+    source_mode: str | None = None,
     observation_kind: str | None = None,
     source_algorithm: str | None = None,
+    canonical_family: str | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         return export_feature_matrix(
@@ -325,9 +398,13 @@ def export_feature_matrix_packet(
             value_column=value_column,
             source_id=source_id,
             study_id=study_id,
+            study_kind=study_kind,
             run_id=run_id,
+            run_id_contains=run_id_contains,
+            source_mode=source_mode,
             observation_kind=observation_kind,
             source_algorithm=source_algorithm,
+            canonical_family=canonical_family,
         )
 
     return _using_warehouse(warehouse_path, run, read_only=True)
@@ -340,23 +417,33 @@ def run_feature_tda_packet(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
+    study_kind: str | None = None,
     run_id: str | None = None,
+    run_id_contains: str | None = None,
+    source_mode: str | None = None,
     observation_kind: str | None = None,
     source_algorithm: str | None = None,
+    canonical_family: str | None = None,
     max_homology_dim: int = 1,
+    summary_only: bool = False,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
-        return run_feature_tda(
+        payload = run_feature_tda(
             connection,
             feature_space_id=feature_space_id,
             value_column=value_column,
             source_id=source_id,
             study_id=study_id,
+            study_kind=study_kind,
             run_id=run_id,
+            run_id_contains=run_id_contains,
+            source_mode=source_mode,
             observation_kind=observation_kind,
             source_algorithm=source_algorithm,
+            canonical_family=canonical_family,
             max_homology_dim=max_homology_dim,
         )
+        return _feature_tda_summary_payload(payload) if summary_only else payload
 
     return _using_warehouse(warehouse_path, run, read_only=True)
 
@@ -369,9 +456,13 @@ def run_feature_tda_profile_packet(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
+    study_kind: str | None = None,
     run_id: str | None = None,
+    run_id_contains: str | None = None,
+    source_mode: str | None = None,
     observation_kind: str | None = None,
     source_algorithm: str | None = None,
+    canonical_family: str | None = None,
     max_homology_dim: int = 1,
     stratify_by: str = "rule_family_key",
     seed: int = 0,
@@ -384,9 +475,13 @@ def run_feature_tda_profile_packet(
             value_column=value_column,
             source_id=source_id,
             study_id=study_id,
+            study_kind=study_kind,
             run_id=run_id,
+            run_id_contains=run_id_contains,
+            source_mode=source_mode,
             observation_kind=observation_kind,
             source_algorithm=source_algorithm,
+            canonical_family=canonical_family,
             max_homology_dim=max_homology_dim,
             stratify_by=stratify_by,
             seed=seed,
@@ -404,14 +499,22 @@ def compare_feature_cohorts_packet(
     right_label: str = "right",
     left_source_id: str | None = None,
     left_study_id: str | None = None,
+    left_study_kind: str | None = None,
     left_run_id: str | None = None,
+    left_run_id_contains: str | None = None,
+    left_source_mode: str | None = None,
     left_observation_kind: str | None = None,
     left_source_algorithm: str | None = None,
+    left_canonical_family: str | None = None,
     right_source_id: str | None = None,
     right_study_id: str | None = None,
+    right_study_kind: str | None = None,
     right_run_id: str | None = None,
+    right_run_id_contains: str | None = None,
+    right_source_mode: str | None = None,
     right_observation_kind: str | None = None,
     right_source_algorithm: str | None = None,
+    right_canonical_family: str | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         return compare_feature_cohorts(
@@ -422,14 +525,22 @@ def compare_feature_cohorts_packet(
             right_label=right_label,
             left_source_id=left_source_id,
             left_study_id=left_study_id,
+            left_study_kind=left_study_kind,
             left_run_id=left_run_id,
+            left_run_id_contains=left_run_id_contains,
+            left_source_mode=left_source_mode,
             left_observation_kind=left_observation_kind,
             left_source_algorithm=left_source_algorithm,
+            left_canonical_family=left_canonical_family,
             right_source_id=right_source_id,
             right_study_id=right_study_id,
+            right_study_kind=right_study_kind,
             right_run_id=right_run_id,
+            right_run_id_contains=right_run_id_contains,
+            right_source_mode=right_source_mode,
             right_observation_kind=right_observation_kind,
             right_source_algorithm=right_source_algorithm,
+            right_canonical_family=right_canonical_family,
         )
 
     return _using_warehouse(warehouse_path, run, read_only=True)
@@ -653,6 +764,48 @@ def _build_parser() -> argparse.ArgumentParser:
         )
     )
 
+    embryomaker = subparsers.add_parser(
+        "import-embryomaker-snapshots",
+        help="Import external EmbryoMaker legacy snapshots into the comparison layer",
+    )
+    embryomaker.add_argument("--warehouse", required=True, type=Path)
+    embryomaker.add_argument(
+        "--snapshot-root",
+        required=True,
+        action="append",
+        type=Path,
+        help="Snapshot file or directory; may be passed more than once",
+    )
+    embryomaker.add_argument("--label")
+    embryomaker.add_argument("--limit", type=int)
+    embryomaker.add_argument("--skip-invalid", action="store_true")
+    _add_json(embryomaker)
+    embryomaker.set_defaults(
+        handler=lambda args: import_embryomaker_snapshots_dataset(
+            warehouse_path=args.warehouse.resolve(),
+            snapshot_roots=[path.resolve() for path in args.snapshot_root],
+            label=args.label,
+            limit=args.limit,
+            skip_invalid=bool(args.skip_invalid),
+        )
+    )
+
+    reference_bundle = subparsers.add_parser(
+        "import-reference-bundle",
+        help="Register an external morphospace reference bundle in the warehouse",
+    )
+    reference_bundle.add_argument("--warehouse", required=True, type=Path)
+    reference_bundle.add_argument("--bundle-root", required=True, type=Path)
+    reference_bundle.add_argument("--label")
+    _add_json(reference_bundle)
+    reference_bundle.set_defaults(
+        handler=lambda args: import_reference_bundle_dataset(
+            warehouse_path=args.warehouse.resolve(),
+            bundle_root=args.bundle_root.resolve(),
+            label=args.label,
+        )
+    )
+
     lenia_features = subparsers.add_parser(
         "derive-lenia-features",
         help="Populate the comparison layer from existing Lenia terminal axes",
@@ -710,6 +863,7 @@ def _build_parser() -> argparse.ArgumentParser:
     feature_tda.add_argument("--value-column", default="normalized_value")
     _add_feature_filter_args(feature_tda)
     feature_tda.add_argument("--max-homology-dim", type=int, default=1)
+    feature_tda.add_argument("--summary-only", action="store_true")
     _add_json(feature_tda)
     feature_tda.set_defaults(
         handler=lambda args: run_feature_tda_packet(
@@ -718,6 +872,7 @@ def _build_parser() -> argparse.ArgumentParser:
             value_column=str(args.value_column),
             **_feature_filter_kwargs(args),
             max_homology_dim=int(args.max_homology_dim),
+            summary_only=bool(args.summary_only),
         )
     )
 
@@ -836,6 +991,19 @@ def _print_payload(payload: dict[str, Any], *, as_json: bool) -> None:
         print(json.dumps(payload, sort_keys=True))
         return
     print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def _feature_tda_summary_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    topology = payload["topology"]
+    return {
+        "packetKind": payload["packetKind"],
+        "summary": payload["summary"],
+        "featureSpace": payload["featureSpace"],
+        "topology": {
+            "scaleMax": topology["scaleMax"],
+            "summaries": topology["summaries"],
+        },
+    }
 
 
 def main(argv: list[str] | None = None) -> int:

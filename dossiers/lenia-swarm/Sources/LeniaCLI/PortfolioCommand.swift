@@ -1536,6 +1536,7 @@ private func portfolioESConfig(
         steps: base.steps,
         fitness: base.fitness,
         fitnessShaping: base.fitnessShaping,
+        includeParent: base.includeParent,
         initPatch: base.initPatch,
         initialInitPatchValues: initialInitPatchValues,
         initialKernelParams: initialKernelParams,

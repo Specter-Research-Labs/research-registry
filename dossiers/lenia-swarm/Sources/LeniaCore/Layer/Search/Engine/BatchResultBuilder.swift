@@ -74,6 +74,21 @@ struct SearchBatchResultBuilder {
             threshold: componentThreshold,
             useTorus: runtimeConfig.border == "torus"
         )
+        let coherentTransportResult: CoherentTransportBatchResult?
+        if rolloutSummary.needsCoherentTransport {
+            guard let sourceMassMap = rolloutSummary.coherentTransportSourceMassMap else {
+                fatalError("Coherent transport metrics requested but the reference mass map was not captured.")
+            }
+            coherentTransportResult = computeCoherentTransportBatch(
+                source: materializeMassBatch(sourceMassMap),
+                target: postProcessingMass,
+                threshold: componentThreshold,
+                useTorus: runtimeConfig.border == "torus"
+            )
+        } else {
+            coherentTransportResult = nil
+        }
+        let genotypeDescriptor = morphospaceGenotypeDescriptor(runtimeConfig.params)
         var results: [BatchSimulationResult] = []
         for (i, seed) in seeds.enumerated() {
             let resolvedParams = paramsBySample?[i] ?? runtimeConfig.params
@@ -137,7 +152,14 @@ struct SearchBatchResultBuilder {
                 largestComponentFraction: componentMetricsResult.largestFraction[i],
                 largestComponentAnisotropy: componentMetricsResult.largestAnisotropy[i],
                 largestComponentInternalStripe: largestComponentInternalStripe[i],
-                largestComponentOrientedRidge: largestComponentOrientedRidge[i]
+                largestComponentOrientedRidge: largestComponentOrientedRidge[i],
+                largestComponentSolidity: componentMetricsResult.largestSolidity[i],
+                largestComponentMeanThickness: componentMetricsResult.largestMeanThickness[i],
+                largestComponentMaxThickness: componentMetricsResult.largestMaxThickness[i],
+                largestComponentFilamentarity: componentMetricsResult.largestFilamentarity[i],
+                transportDisplacement: coherentTransportResult?.displacement[i],
+                translatedShapeOverlap: coherentTransportResult?.translatedShapeOverlap[i],
+                coherentTransport: coherentTransportResult?.coherentTransport[i]
             )
 
             let stable = isStableCreature(
@@ -215,6 +237,10 @@ struct SearchBatchResultBuilder {
                 largestComponentAnisotropy: metrics.largestComponentAnisotropy,
                 largestComponentInternalStripe: metrics.largestComponentInternalStripe,
                 largestComponentOrientedRidge: metrics.largestComponentOrientedRidge,
+                largestComponentSolidity: metrics.largestComponentSolidity,
+                largestComponentMeanThickness: metrics.largestComponentMeanThickness,
+                largestComponentMaxThickness: metrics.largestComponentMaxThickness,
+                largestComponentFilamentarity: metrics.largestComponentFilamentarity,
                 hu1: metrics.hu1,
                 hu2: metrics.hu2,
                 hu3: metrics.hu3,

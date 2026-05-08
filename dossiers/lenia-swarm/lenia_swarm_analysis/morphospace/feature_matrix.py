@@ -323,9 +323,13 @@ def _filter_sql(
     *,
     source_id: str | None,
     study_id: str | None,
+    study_kind: str | None,
     run_id: str | None,
-    observation_kind: str | None,
+    run_id_contains: str | None,
+    source_mode: str | None,
     source_algorithm: str | None,
+    canonical_family: str | None,
+    observation_kind: str | None,
 ) -> tuple[str, list[str]]:
     clauses: list[str] = []
     params: list[str] = []
@@ -335,15 +339,27 @@ def _filter_sql(
     if study_id is not None:
         clauses.append("comparison_observations_vw.study_id = ?")
         params.append(study_id)
+    if study_kind is not None:
+        clauses.append("comparison_observations_vw.study_kind = ?")
+        params.append(study_kind)
     if run_id is not None:
         clauses.append("comparison_observations_vw.run_id = ?")
         params.append(run_id)
-    if observation_kind is not None:
-        clauses.append("comparison_observations_vw.observation_kind = ?")
-        params.append(observation_kind)
+    if run_id_contains is not None:
+        clauses.append("comparison_observations_vw.run_id LIKE ?")
+        params.append(f"%{run_id_contains}%")
+    if source_mode is not None:
+        clauses.append("comparison_observations_vw.source_mode = ?")
+        params.append(source_mode)
     if source_algorithm is not None:
         clauses.append("comparison_observations_vw.source_algorithm = ?")
         params.append(source_algorithm)
+    if canonical_family is not None:
+        clauses.append("comparison_observations_vw.canonical_family = ?")
+        params.append(canonical_family)
+    if observation_kind is not None:
+        clauses.append("comparison_observations_vw.observation_kind = ?")
+        params.append(observation_kind)
     if not clauses:
         return "", []
     return " AND " + " AND ".join(clauses), params
@@ -355,16 +371,24 @@ def _observation_payloads(
     feature_space_id: str,
     source_id: str | None,
     study_id: str | None,
+    study_kind: str | None,
     run_id: str | None,
-    observation_kind: str | None,
+    run_id_contains: str | None,
+    source_mode: str | None,
     source_algorithm: str | None,
+    canonical_family: str | None,
+    observation_kind: str | None,
 ) -> list[dict[str, Any]]:
     filter_sql, filter_params = _filter_sql(
         source_id=source_id,
         study_id=study_id,
+        study_kind=study_kind,
         run_id=run_id,
-        observation_kind=observation_kind,
+        run_id_contains=run_id_contains,
+        source_mode=source_mode,
         source_algorithm=source_algorithm,
+        canonical_family=canonical_family,
+        observation_kind=observation_kind,
     )
     rows = connection.execute(
         f"""
@@ -436,9 +460,13 @@ def export_feature_matrix(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
+    study_kind: str | None = None,
     run_id: str | None = None,
-    observation_kind: str | None = None,
+    run_id_contains: str | None = None,
+    source_mode: str | None = None,
     source_algorithm: str | None = None,
+    canonical_family: str | None = None,
+    observation_kind: str | None = None,
 ) -> dict[str, Any]:
     resolved_value_column = _validate_value_column(value_column)
     feature_space = _feature_space_payload(connection, feature_space_id=feature_space_id)
@@ -450,13 +478,28 @@ def export_feature_matrix(
         feature_space_id=feature_space_id,
         source_id=source_id,
         study_id=study_id,
+        study_kind=study_kind,
         run_id=run_id,
-        observation_kind=observation_kind,
+        run_id_contains=run_id_contains,
+        source_mode=source_mode,
         source_algorithm=source_algorithm,
+        canonical_family=canonical_family,
+        observation_kind=observation_kind,
     )
     observation_index = {
         str(observation["observationId"]): index for index, observation in enumerate(observations)
     }
+    filter_sql, filter_params = _filter_sql(
+        source_id=source_id,
+        study_id=study_id,
+        study_kind=study_kind,
+        run_id=run_id,
+        run_id_contains=run_id_contains,
+        source_mode=source_mode,
+        source_algorithm=source_algorithm,
+        canonical_family=canonical_family,
+        observation_kind=observation_kind,
+    )
     rows = connection.execute(
         f"""
         SELECT feature_values.observation_id, feature_values.axis_id,
@@ -465,9 +508,10 @@ def export_feature_matrix(
         JOIN comparison_observations_vw USING (observation_id)
         WHERE feature_values.feature_space_id = ?
           AND feature_values.{resolved_value_column} IS NOT NULL
+        {filter_sql}
         ORDER BY feature_values.observation_id, feature_values.axis_id
         """,
-        [feature_space_id],
+        [feature_space_id, *filter_params],
     ).fetchall()
     matrix = np.full((len(observations), len(axis_ids)), np.nan, dtype=np.float64)
     for observation_id, axis_id, value in rows:
@@ -510,9 +554,13 @@ def run_feature_tda(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
+    study_kind: str | None = None,
     run_id: str | None = None,
-    observation_kind: str | None = None,
+    run_id_contains: str | None = None,
+    source_mode: str | None = None,
     source_algorithm: str | None = None,
+    canonical_family: str | None = None,
+    observation_kind: str | None = None,
     max_homology_dim: int = 1,
 ) -> dict[str, Any]:
     matrix_packet = export_feature_matrix(
@@ -521,9 +569,13 @@ def run_feature_tda(
         value_column=value_column,
         source_id=source_id,
         study_id=study_id,
+        study_kind=study_kind,
         run_id=run_id,
-        observation_kind=observation_kind,
+        run_id_contains=run_id_contains,
+        source_mode=source_mode,
         source_algorithm=source_algorithm,
+        canonical_family=canonical_family,
+        observation_kind=observation_kind,
     )
     matrix = np.asarray(matrix_packet["matrix"], dtype=np.float64)
     if matrix.shape[0] < 2:
@@ -561,28 +613,44 @@ def compare_feature_cohorts(
     right_label: str = "right",
     left_source_id: str | None = None,
     left_study_id: str | None = None,
+    left_study_kind: str | None = None,
     left_run_id: str | None = None,
-    left_observation_kind: str | None = None,
+    left_run_id_contains: str | None = None,
+    left_source_mode: str | None = None,
     left_source_algorithm: str | None = None,
+    left_canonical_family: str | None = None,
+    left_observation_kind: str | None = None,
     right_source_id: str | None = None,
     right_study_id: str | None = None,
+    right_study_kind: str | None = None,
     right_run_id: str | None = None,
-    right_observation_kind: str | None = None,
+    right_run_id_contains: str | None = None,
+    right_source_mode: str | None = None,
     right_source_algorithm: str | None = None,
+    right_canonical_family: str | None = None,
+    right_observation_kind: str | None = None,
 ) -> dict[str, Any]:
     left_filters: MatrixFilters = {
         "sourceId": left_source_id,
         "studyId": left_study_id,
+        "studyKind": left_study_kind,
         "runId": left_run_id,
-        "observationKind": left_observation_kind,
+        "runIdContains": left_run_id_contains,
+        "sourceMode": left_source_mode,
         "sourceAlgorithm": left_source_algorithm,
+        "canonicalFamily": left_canonical_family,
+        "observationKind": left_observation_kind,
     }
     right_filters: MatrixFilters = {
         "sourceId": right_source_id,
         "studyId": right_study_id,
+        "studyKind": right_study_kind,
         "runId": right_run_id,
-        "observationKind": right_observation_kind,
+        "runIdContains": right_run_id_contains,
+        "sourceMode": right_source_mode,
         "sourceAlgorithm": right_source_algorithm,
+        "canonicalFamily": right_canonical_family,
+        "observationKind": right_observation_kind,
     }
     left_packet = export_feature_matrix(
         connection,
@@ -590,9 +658,13 @@ def compare_feature_cohorts(
         value_column=value_column,
         source_id=left_source_id,
         study_id=left_study_id,
+        study_kind=left_study_kind,
         run_id=left_run_id,
-        observation_kind=left_observation_kind,
+        run_id_contains=left_run_id_contains,
+        source_mode=left_source_mode,
         source_algorithm=left_source_algorithm,
+        canonical_family=left_canonical_family,
+        observation_kind=left_observation_kind,
     )
     right_packet = export_feature_matrix(
         connection,
@@ -600,9 +672,13 @@ def compare_feature_cohorts(
         value_column=value_column,
         source_id=right_source_id,
         study_id=right_study_id,
+        study_kind=right_study_kind,
         run_id=right_run_id,
-        observation_kind=right_observation_kind,
+        run_id_contains=right_run_id_contains,
+        source_mode=right_source_mode,
         source_algorithm=right_source_algorithm,
+        canonical_family=right_canonical_family,
+        observation_kind=right_observation_kind,
     )
     left_matrix = np.asarray(left_packet["matrix"], dtype=np.float64)
     right_matrix = np.asarray(right_packet["matrix"], dtype=np.float64)

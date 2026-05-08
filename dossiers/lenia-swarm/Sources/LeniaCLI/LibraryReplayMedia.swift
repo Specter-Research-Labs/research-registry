@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import LeniaCore
+import LeniaVisuals
 
 struct LibraryReplayBundle {
     let campaignDir: URL
@@ -200,6 +201,7 @@ func renderLibraryReplayMediaBundle(
     frameBudget: Int,
     steps: Int?,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
     let creature = bundle.entry.creature

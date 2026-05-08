@@ -337,6 +337,7 @@ public final class SearchEngine: @unchecked Sendable {
         )
         var pendingMetalSteps = 0
         var pendingMetalStartStep = 1
+        var capturedCoherentTransportReference = false
         let rolloutStart = ContinuousClock.now
         for step in 1...searchConfig.steps {
             if let runner = persistentMetalRunner {
@@ -388,7 +389,13 @@ public final class SearchEngine: @unchecked Sendable {
                 step % (activityConfig?.interval ?? 1) == 0
             let shouldRecordSample = step > searchConfig.warmupSteps &&
                 (step - searchConfig.warmupSteps) % searchConfig.recordInterval == 0
-            let needsRunnerState = shouldCaptureFrame || shouldCaptureActivity || shouldRecordSample
+            let shouldCaptureCoherentTransportReference = shouldRecordSample &&
+                !capturedCoherentTransportReference &&
+                rolloutContext.shouldCaptureCoherentTransportReference(step: step)
+            let needsRunnerState = shouldCaptureFrame
+                || shouldCaptureActivity
+                || shouldRecordSample
+                || shouldCaptureCoherentTransportReference
             if needsRunnerState, let runner = persistentMetalRunner, pendingMetalSteps > 0 {
                 flushPendingMetalSteps(
                     runner: runner,
@@ -412,7 +419,7 @@ public final class SearchEngine: @unchecked Sendable {
             let massMap: MLXArray? = (shouldCaptureFrame || shouldCaptureActivity || shouldRecordSample)
                 ? {
                     if summarySample != nil {
-                        if !(shouldCaptureFrame || shouldCaptureActivity) {
+                        if !(shouldCaptureFrame || shouldCaptureActivity || shouldCaptureCoherentTransportReference) {
                             return nil
                         }
                     }
@@ -479,6 +486,9 @@ public final class SearchEngine: @unchecked Sendable {
                     massMap: massMap,
                     energyPerSample: summarySample == nil && massMap != nil ? runtimeOperators.energyFromBatch(ABatch) : nil
                 )
+                if shouldCaptureCoherentTransportReference {
+                    capturedCoherentTransportReference = true
+                }
             }
         }
 

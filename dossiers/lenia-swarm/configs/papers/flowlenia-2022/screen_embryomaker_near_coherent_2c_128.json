@@ -1,0 +1,47 @@
+{
+  "output_dir": "artifacts/flow-map-elites/screen-embryomaker-near-coherent-2c-128",
+  "generations": 4,
+  "population": 128,
+  "sigma": 0.08,
+  "line_sigma": 0.10,
+  "seed": 202605064,
+  "steps": 900,
+  "fitness": {
+    "objective": "coherent_transport",
+    "target_step": 760,
+    "angle_threshold": 0.025,
+    "minimum_displacement": 0.03,
+    "translated_shape_overlap_min": 0.40,
+    "component_count_penalty": 0.08,
+    "component_count_max": 2.0,
+    "largest_component_fraction_reward": 0.10,
+    "largest_component_fraction_min": 0.95,
+    "largest_component_anisotropy_penalty": 0.10,
+    "moment_density_reward": 0.025,
+    "moment_anisotropy_penalty": 0.06,
+    "occupied_fraction_min": 0.08,
+    "occupied_fraction_max": 0.28,
+    "occupied_growth_max": 1.20,
+    "organismness_penalty": 0.35,
+    "morphology_threshold": 0.03
+  },
+  "include_parent": true,
+  "descriptors": [
+    {"name": "coherent_transport", "min": 0.0, "max": 6.0, "bins": 10},
+    {"name": "translated_shape_overlap", "min": 0.40, "max": 0.95, "bins": 8},
+    {"name": "largest_component_anisotropy", "min": 0.0, "max": 0.65, "bins": 8},
+    {"name": "occupied_fraction", "min": 0.08, "max": 0.28, "bins": 8}
+  ],
+  "export_top": 32,
+  "init_patch": {
+    "enabled": true,
+    "size": 28,
+    "center": [64, 64],
+    "value_low": 0.0,
+    "value_high": 1.0
+  },
+  "initial_init_patch_values": null,
+  "initial_kernel_params": null,
+  "param_ranges": null,
+  "obstacle_field": null
+}

@@ -30,9 +30,11 @@ final class ColorFrameWriter {
     let outputDir: URL
     private(set) var error: Error?
     private let renderer: LeniaMetalFieldRenderer
+    private let renderMode: LeniaRenderMode
 
-    init(outputDir: URL) {
+    init(outputDir: URL, renderMode: LeniaRenderMode = .body) {
         self.outputDir = outputDir
+        self.renderMode = renderMode
         guard let device = MTLCreateSystemDefaultDevice() else {
             preconditionFailure("Lenia color frame export requires a Metal device")
         }
@@ -49,7 +51,8 @@ final class ColorFrameWriter {
                 width: width,
                 height: height,
                 url: url,
-                renderer: renderer
+                renderer: renderer,
+                renderMode: renderMode
             )
         } catch {
             self.error = error
@@ -321,6 +324,30 @@ func robustPositiveScale(_ values: [Float]) -> Float {
     return positives[index]
 }
 
+func parseLeniaRenderMode(_ rawValue: String) throws -> LeniaRenderMode {
+    let normalized = rawValue
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .lowercased()
+        .replacingOccurrences(of: "_", with: "-")
+        .replacingOccurrences(of: " ", with: "-")
+    switch normalized {
+    case "body", "mass", "density", "soft-body":
+        return .body
+    case "truth", "raw", "gray", "grayscale":
+        return .truth
+    case "magma", "smooth-magma":
+        return .smoothMagma
+    case "viridis":
+        return .viridis
+    case "inferno":
+        return .inferno
+    case "plasma":
+        return .plasma
+    default:
+        throw ValidationError("Invalid render mode '\(rawValue)'. Expected body, truth, magma, viridis, inferno, or plasma.")
+    }
+}
+
 func writePNGFrame(data: Data, width: Int, height: Int, url: URL) throws {
     let expected = width * height
     if data.count != expected {
@@ -411,7 +438,7 @@ func renderLeniaSpectrumImage(
     width: Int,
     height: Int,
     renderer: LeniaMetalFieldRenderer,
-    renderMode: LeniaRenderMode = .smoothMagma,
+    renderMode: LeniaRenderMode = .body,
     outputSize: CGSize? = nil
 ) throws -> CGImage {
     let expected = width * height
@@ -438,7 +465,7 @@ func writeLeniaSpectrumPNG(
     height: Int,
     url: URL,
     renderer: LeniaMetalFieldRenderer,
-    renderMode: LeniaRenderMode = .smoothMagma,
+    renderMode: LeniaRenderMode = .body,
     outputSize: CGSize? = nil
 ) throws {
     let image = try renderLeniaSpectrumImage(

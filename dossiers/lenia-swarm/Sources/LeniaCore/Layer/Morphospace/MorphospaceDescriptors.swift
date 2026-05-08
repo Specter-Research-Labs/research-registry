@@ -70,6 +70,10 @@ public struct MorphospaceTerminalDescriptor: Codable, Sendable {
     public let largestComponentAnisotropy: Float?
     public let largestComponentInternalStripe: Float?
     public let largestComponentOrientedRidge: Float?
+    public let largestComponentSolidity: Float?
+    public let largestComponentMeanThickness: Float?
+    public let largestComponentMaxThickness: Float?
+    public let largestComponentFilamentarity: Float?
     public let hu1: Float?
     public let hu2: Float?
     public let hu3: Float?
@@ -108,6 +112,10 @@ public struct MorphospaceTerminalDescriptor: Codable, Sendable {
         largestComponentAnisotropy: Float?,
         largestComponentInternalStripe: Float? = nil,
         largestComponentOrientedRidge: Float? = nil,
+        largestComponentSolidity: Float? = nil,
+        largestComponentMeanThickness: Float? = nil,
+        largestComponentMaxThickness: Float? = nil,
+        largestComponentFilamentarity: Float? = nil,
         hu1: Float?,
         hu2: Float?,
         hu3: Float?,
@@ -145,6 +153,10 @@ public struct MorphospaceTerminalDescriptor: Codable, Sendable {
         self.largestComponentAnisotropy = largestComponentAnisotropy
         self.largestComponentInternalStripe = largestComponentInternalStripe
         self.largestComponentOrientedRidge = largestComponentOrientedRidge
+        self.largestComponentSolidity = largestComponentSolidity
+        self.largestComponentMeanThickness = largestComponentMeanThickness
+        self.largestComponentMaxThickness = largestComponentMaxThickness
+        self.largestComponentFilamentarity = largestComponentFilamentarity
         self.hu1 = hu1
         self.hu2 = hu2
         self.hu3 = hu3

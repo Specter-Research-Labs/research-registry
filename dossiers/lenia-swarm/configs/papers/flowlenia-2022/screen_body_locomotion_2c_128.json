@@ -1,0 +1,47 @@
+{
+  "output_dir": "artifacts/flow-map-elites/screen-body-locomotion-2c-128",
+  "generations": 30,
+  "population": 192,
+  "sigma": 0.05,
+  "line_sigma": 0.10,
+  "seed": 202605085,
+  "steps": 900,
+  "fitness": {
+    "objective": "body_locomotion",
+    "target_step": 760,
+    "angle_threshold": 0.025,
+    "minimum_displacement": 0.03,
+    "gyration_penalty": 0.015,
+    "component_count_penalty": 0.04,
+    "morphology_threshold": 0.03
+  },
+  "include_parent": true,
+  "descriptors": [
+    {"name": "body_locomotion", "min": 0.0, "max": 8.0, "bins": 12},
+    {"name": "translated_shape_overlap", "min": 0.0, "max": 1.0, "bins": 10},
+    {"name": "occupied_growth", "min": 0.40, "max": 2.00, "bins": 8},
+    {"name": "largest_component_anisotropy", "min": 0.0, "max": 1.0, "bins": 8}
+  ],
+  "export_top": 48,
+  "export_replay_pool_limit": 128,
+  "init_patch": {
+    "enabled": true,
+    "size": 32,
+    "center": [64, 64],
+    "value_low": 0.0,
+    "value_high": 1.0
+  },
+  "initial_init_patch_values": null,
+  "initial_kernel_params": null,
+  "param_ranges": {
+    "r": [0.2, 1.0],
+    "b": [0.001, 1.0],
+    "w": [0.01, 0.5],
+    "a": [0.0, 1.0],
+    "m": [0.05, 0.5],
+    "s": [0.001, 0.18],
+    "h": [0.01, 1.0],
+    "R": [2.0, 12.0]
+  },
+  "obstacle_field": null
+}

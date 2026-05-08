@@ -55,6 +55,8 @@ struct SearchRolloutSampleContext {
     let yPeriod: Float
     let deathThreshold: Float?
     let borderMode: String
+    let needsCoherentTransport: Bool
+    let coherentTransportReferenceStep: Int
 
     init(
         batchSize: Int,
@@ -87,6 +89,19 @@ struct SearchRolloutSampleContext {
         yPeriodArr = usesTorusBorder ? MLXArray(yPeriod) : nil
         deathThreshold = searchConfig.kSurvival?.deathThreshold
         borderMode = runtimeConfig.border
+        let stabilityFilters = searchConfig.stability?.filters ?? [:]
+        needsCoherentTransport = searchMetricKeysRequireCoherentTransport(searchConfig.scoreWeights)
+            || searchMetricKeysRequireCoherentTransport(searchConfig.filters)
+            || searchMetricKeysRequireCoherentTransport(stabilityFilters)
+        let postWarmupSteps = max(searchConfig.steps - searchConfig.warmupSteps, searchConfig.recordInterval)
+        coherentTransportReferenceStep = min(
+            searchConfig.steps,
+            searchConfig.warmupSteps + max(searchConfig.recordInterval, postWarmupSteps / 2)
+        )
+    }
+
+    func shouldCaptureCoherentTransportReference(step: Int) -> Bool {
+        needsCoherentTransport && step >= coherentTransportReferenceStep
     }
 }
 
@@ -122,6 +137,8 @@ struct SearchRolloutFinalizedStats {
     let activitySpeciesMean: [Float?]
     let survivalDeathStep: [Int?]
     let lastMassMap: MLXArray?
+    let coherentTransportSourceMassMap: MLXArray?
+    let needsCoherentTransport: Bool
 
     var massMeanCPU: [Float] { massMean }
     var massStdCPU: [Float] { massStd }
@@ -176,6 +193,7 @@ struct SearchRolloutAccumulator {
     private var lastGyration: [Float]?
     private var finalMass: [Float]?
     private var lastMassMap: MLXArray?
+    private var coherentTransportSourceMassMap: MLXArray?
     private var activityLogs: [[ActivitySnapshot]]?
     private var activitySummaries: [ActivitySummarizer]?
     private var survivalDeathStep: [Int?]
@@ -357,6 +375,15 @@ struct SearchRolloutAccumulator {
             comXCPU = comX.asArray(Float.self)
             comYCPU = comY.asArray(Float.self)
             gyrationCPU = gyrationPerSample.asArray(Float.self)
+        }
+
+        if context.shouldCaptureCoherentTransportReference(step: step),
+           coherentTransportSourceMassMap == nil {
+            guard let massMap else {
+                fatalError("Coherent transport metrics require a materialized reference mass map.")
+            }
+            eval(massMap)
+            coherentTransportSourceMassMap = massMap
         }
 
         let sampleOrdinal = Double(sampleCount + 1)
@@ -598,7 +625,9 @@ struct SearchRolloutAccumulator {
             activityDiversityMean: activityDiversityMean,
             activitySpeciesMean: activitySpeciesMean,
             survivalDeathStep: survivalDeathStep,
-            lastMassMap: lastMassMap
+            lastMassMap: lastMassMap,
+            coherentTransportSourceMassMap: coherentTransportSourceMassMap,
+            needsCoherentTransport: context.needsCoherentTransport
         )
     }
 }
