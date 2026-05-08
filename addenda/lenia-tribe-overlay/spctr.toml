@@ -1,9 +1,9 @@
 version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Lenia TRIBE Overlay"
-series = "A-013"
+series = "A-014"
 summary = "Score Lenia trajectories with TRIBE-predicted cortical engagement and check whether it adds a 17th descriptor on top of lenia-swarm's 16 lenia_terminal_v1 axes."
-status = "incubating"
+status = "concept"
 
 [site]
 visible = false

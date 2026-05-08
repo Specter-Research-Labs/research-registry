@@ -1,7 +1,7 @@
 {
   "version": 1,
   "counters": {
-    "A": 14,
+    "A": 15,
     "B": 13,
     "D": 6
   },
@@ -57,6 +57,10 @@
     "A-013": {
       "slug": "poly-morphogenesis",
       "title": "Poly Morphogenesis"
+    },
+    "A-014": {
+      "slug": "lenia-tribe-overlay",
+      "title": "Lenia TRIBE Overlay"
     },
     "B-001": {
       "slug": "wonton-soup",
@@ -200,6 +204,14 @@
         "external-review-notes": "A-010.001",
         "public-benchmark-notes": "A-010.002",
         "review-package": "A-010.003"
+      }
+    },
+    "A-014": {
+      "next_counter": 4,
+      "entries": {
+        "README": "A-014.001",
+        "contracts/BiomotionExperiment": "A-014.002",
+        "findings": "A-014.003"
       }
     },
     "D-001": {
