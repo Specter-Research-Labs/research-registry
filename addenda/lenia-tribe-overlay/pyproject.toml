@@ -1,0 +1,45 @@
+[project]
+name = "lenia-tribe-overlay"
+version = "0.1.0"
+description = "Score Lenia creatures by TRIBE-predicted cortical engagement; a candidate 17th descriptor on top of lenia-swarm's morphospace."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.1.0,<2.3",
+    "torch>=2.5.1,<2.7",
+    "transformers>=4.45.0",
+    "huggingface-hub>=0.25.0",
+    "imageio[ffmpeg]>=2.35.0",
+    "pillow>=10.4.0",
+    "pyarrow>=17.0.0",
+    "nilearn>=0.10.4",
+    "duckdb>=1.0.0",
+    "tribev2 @ git+https://github.com/facebookresearch/tribev2.git",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.11.0",
+    "ty>=0.0.1a14",
+]
+
+[project.scripts]
+lenia-tribe-sanity = "lenia_tribe_overlay.sanity:main"
+lenia-tribe-roi-probe = "lenia_tribe_overlay.roi_probe:main"
+lenia-tribe-score = "lenia_tribe_overlay.score:main"
+lenia-tribe-overlay = "lenia_tribe_overlay.overlay:main"
+lenia-tribe-correlate = "lenia_tribe_overlay.correlate:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lenia_tribe_overlay"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
