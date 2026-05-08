@@ -32,7 +32,7 @@
   ],
   "compendium": {
     "merge_phases": true,
-    "central_db": "outputs/compendium.sqlite"
+    "central_db": "artifacts/compendium.sqlite"
   },
   "phase_isolation": true
 }

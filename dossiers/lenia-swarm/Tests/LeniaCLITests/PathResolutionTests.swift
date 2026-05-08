@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+@testable import LeniaCore
 @testable import LeniaCLIKit
 
 final class PathResolutionTests: XCTestCase {
@@ -10,7 +11,17 @@ final class PathResolutionTests: XCTestCase {
             .deletingLastPathComponent()
     }
 
+    private var persistentDossierRoot: URL {
+        let repoRoot = dossierRoot
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        return defaultPersistentDossierParent(repoRoot: repoRoot)
+            .appendingPathComponent(dossierName, isDirectory: true)
+    }
+
     override func tearDown() {
+        unsetenv("SPCTR_LOCAL_LOG_ROOT")
+        unsetenv("SPCTR_LOCAL_ARTIFACT_ROOT")
         unsetenv("SPECTER_LOG_ROOT")
         unsetenv("SPECTER_ARTIFACT_ROOT")
         unsetenv("SPECTER_RUNTIME_ROOT")
@@ -27,6 +38,23 @@ final class PathResolutionTests: XCTestCase {
         XCTAssertEqual(
             try resolveArtifactPath("outputs/sweep-a", dossier: dossierName),
             "/tmp/remote-artifacts/lenia-swarm/outputs/sweep-a"
+        )
+    }
+
+    func testResolveArtifactPathUsesSharedRootForCanonicalArtifacts() throws {
+        setenv("SPCTR_LOCAL_ARTIFACT_ROOT", "/tmp/shared-artifacts", 1)
+        XCTAssertEqual(
+            try resolveArtifactPath("artifacts/compendium.sqlite", dossier: dossierName),
+            "/tmp/shared-artifacts/lenia-swarm/artifacts/compendium.sqlite"
+        )
+    }
+
+    func testLocalArtifactRootWinsOverLegacyArtifactRoot() throws {
+        setenv("SPCTR_LOCAL_ARTIFACT_ROOT", "/tmp/local-artifacts", 1)
+        setenv("SPECTER_ARTIFACT_ROOT", "/tmp/server-artifacts", 1)
+        XCTAssertEqual(
+            try resolveArtifactPath("outputs/sweep-a", dossier: dossierName),
+            "/tmp/local-artifacts/lenia-swarm/outputs/sweep-a"
         )
     }
 
@@ -62,7 +90,7 @@ final class PathResolutionTests: XCTestCase {
     }
 
     func testResolveLogBaseUsesCanonicalOutputSubdirectory() throws {
-        let expected = dossierRoot
+        let expected = persistentDossierRoot
             .appendingPathComponent("outputs", isDirectory: true)
             .appendingPathComponent("ecology", isDirectory: true)
             .appendingPathComponent("logs", isDirectory: true)
@@ -74,7 +102,7 @@ final class PathResolutionTests: XCTestCase {
     }
 
     func testResolveArtifactPathDefaultsOutputsToDossierRoot() throws {
-        let expected = dossierRoot
+        let expected = persistentDossierRoot
             .appendingPathComponent("outputs", isDirectory: true)
             .appendingPathComponent("sweep-a", isDirectory: true)
             .path
@@ -84,8 +112,35 @@ final class PathResolutionTests: XCTestCase {
         )
     }
 
+    func testResolveArtifactPathDefaultsArtifactsToDossierRoot() throws {
+        let expected = persistentDossierRoot
+            .appendingPathComponent("artifacts", isDirectory: true)
+            .appendingPathComponent("compendium.sqlite")
+            .path
+        XCTAssertEqual(
+            try resolveArtifactPath("artifacts/compendium.sqlite", dossier: dossierName),
+            expected
+        )
+    }
+
+    func testWorkspaceRepoUsesSiblingMainDossiersAsDefaultPersistentRoot() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let mainDossiers = root
+            .appendingPathComponent("research-registry", isDirectory: true)
+            .appendingPathComponent("dossiers", isDirectory: true)
+        let workspaceRepo = root
+            .appendingPathComponent("research-registry-workspaces", isDirectory: true)
+            .appendingPathComponent("lenia-atlas-live", isDirectory: true)
+        try FileManager.default.createDirectory(at: mainDossiers, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: workspaceRepo, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        XCTAssertEqual(defaultPersistentDossierParent(repoRoot: workspaceRepo), mainDossiers)
+    }
+
     func testResolveLogBaseDefaultsToDossierOutputLogs() throws {
-        let expected = dossierRoot
+        let expected = persistentDossierRoot
             .appendingPathComponent("outputs", isDirectory: true)
             .appendingPathComponent("logs", isDirectory: true)
             .path

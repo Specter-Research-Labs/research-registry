@@ -1360,7 +1360,7 @@ def postprocess(
     logs_dir: list[str] | None = typer.Option(
         None,
         "--logs-dir",
-        help="Logs directory root to scan (repeatable). Default: ./logs or $SPECTER_LOG_ROOT",
+        help="Logs directory root to scan (repeatable). Default: canonical local Wonton logs root",
     ),
     dry_run: bool = typer.Option(
         False,
@@ -3250,7 +3250,7 @@ def sync_durable_push(
         _die(
             "Durability check failed: local runs are not yet represented in lake DB. "
             f"Count={len(snap['local_missing_in_lake'])}; sample={preview}. "
-            "Run `wonton.py lake reconcile --logs-dir logs` and push again."
+            "Run `wonton.py lake reconcile` and push again."
         )
     if snap["lake_in_sync"] is False:
         _die(
@@ -3539,7 +3539,7 @@ def export_learning(
     out_dir: str | None = typer.Option(
         None,
         "--out-dir",
-        help="Output root (default: $SPECTER_ARTIFACT_ROOT/... or dossier-local outputs/)",
+        help="Output root (default: canonical local Wonton artifacts root)",
     ),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing outputs"),
 ) -> None:
@@ -3560,7 +3560,7 @@ def train_family_prior(
     out_dir: str | None = typer.Option(
         None,
         "--out-dir",
-        help="Output root (default: $SPECTER_ARTIFACT_ROOT/... or dossier-local outputs/)",
+        help="Output root (default: canonical local Wonton artifacts root)",
     ),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing outputs"),
     epochs: int = typer.Option(25, "--epochs"),
@@ -3593,7 +3593,7 @@ def transition_analysis(
     out_dir: str | None = typer.Option(
         None,
         "--out-dir",
-        help="Output root (default: $SPECTER_ARTIFACT_ROOT/... or dossier-local outputs/)",
+        help="Output root (default: canonical local Wonton artifacts root)",
     ),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing outputs"),
 ) -> None:
@@ -3610,12 +3610,12 @@ def reconcile(
     logs_dir: list[str] | None = typer.Option(
         None,
         "--logs-dir",
-        help="Logs directory to reconcile (repeatable). Default: ./logs or $SPECTER_LOG_ROOT",
+        help="Logs directory to reconcile (repeatable). Default: canonical local Wonton logs root",
     ),
     db: str | None = typer.Option(
         None,
         "--db",
-        help="DuckDB path (default: $SPECTER_ARTIFACT_ROOT/.../artifacts/lake/lake.duckdb)",
+        help="DuckDB path (default: canonical local Wonton lake)",
     ),
     prune: bool = typer.Option(
         False,
@@ -3684,7 +3684,7 @@ def lake_export_parquet(
     db: str | None = typer.Option(
         None,
         "--db",
-        help="DuckDB path (default: $SPECTER_ARTIFACT_ROOT/.../artifacts/lake/lake.duckdb)",
+        help="DuckDB path (default: canonical local Wonton lake)",
     ),
 ) -> None:
     """Export lake tables as parquet files."""
@@ -3718,7 +3718,7 @@ def lake_build_outcomes_reference(
     db: str | None = typer.Option(
         None,
         "--db",
-        help="DuckDB path (default: $SPECTER_ARTIFACT_ROOT/.../artifacts/lake/lake.duckdb)",
+        help="DuckDB path (default: canonical local Wonton lake)",
     ),
 ) -> None:
     """Build a cross-run goal-outcome reference model from extracted goal_cache aggregates."""
@@ -3784,7 +3784,7 @@ def lake_score_k(
     db: str | None = typer.Option(
         None,
         "--db",
-        help="DuckDB path (default: $SPECTER_ARTIFACT_ROOT/.../artifacts/lake/lake.duckdb)",
+        help="DuckDB path (default: canonical local Wonton lake)",
     ),
 ) -> None:
     """Score K-style search efficiency using a cross-run reference model."""
@@ -3864,12 +3864,12 @@ def lake_job_run(
     out_dir: str | None = typer.Option(
         None,
         "--out-dir",
-        help="Output directory (default: $SPECTER_ARTIFACT_ROOT/.../artifacts/lake/jobs/...)",
+        help="Output directory (default: canonical local Wonton lake jobs root)",
     ),
     db: str | None = typer.Option(
         None,
         "--db",
-        help="DuckDB path (default: $SPECTER_ARTIFACT_ROOT/.../artifacts/lake/lake.duckdb)",
+        help="DuckDB path (default: canonical local Wonton lake)",
     ),
 ) -> None:
     """Run a lake job: select runs, optionally build references, materialize datasets."""

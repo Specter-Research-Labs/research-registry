@@ -22,9 +22,10 @@ class CorpusArtifactError(RuntimeError):
 def resolve_corpora_root() -> Path:
     """Resolve the root directory for corpus artifacts.
 
+    - If SPCTR_LOCAL_ARTIFACT_ROOT is set: <root>/wonton-soup/artifacts/corpora/
     - If SPECTER_ARTIFACT_ROOT is set: local staging under SPECTER_RUNTIME_ROOT/.../corpora/
       when SPECTER_RUNTIME_ROOT is configured, else repo-local tmp/runtime-artifacts/.../corpora/
-    - Else: dossiers/wonton-soup/artifacts/corpora/ (local-only; gitignored)
+    - Else: canonical local dossiers/wonton-soup/artifacts/corpora/ (local-only; gitignored)
     """
     return _resolve_runtime_corpora_root()
 

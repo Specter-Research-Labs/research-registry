@@ -104,14 +104,8 @@ remote_snapshot_namespace = "wonton-lake"
 [[spctr.surfaces.wonton-lake.raw_roots]]
 path = "logs"
 remote_base = "logs"
-resolve = "runtime"
-runtime_slug = "wonton-soup"
-project_fallback = "logs"
 
 [[spctr.surfaces.wonton-lake.raw_roots]]
 path = "artifacts"
 remote_base = "artifacts"
-resolve = "runtime"
-runtime_slug = "wonton-soup"
-project_fallback = "outputs"
 excludes = ["lake", "lake/**"]

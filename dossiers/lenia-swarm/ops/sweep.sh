@@ -3,14 +3,19 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 dossier_root="$repo_root/dossiers/lenia-swarm"
+artifact_parent="${SPCTR_LOCAL_ARTIFACT_ROOT-${SPECTER_ARTIFACT_ROOT-$repo_root/dossiers}}"
+if [[ -z "$artifact_parent" ]]; then
+  echo "local artifact root is set but empty" >&2
+  exit 2
+fi
+artifact_root="${artifact_parent%/}/lenia-swarm/artifacts"
 manifest_path="$dossier_root/configs/sweeps/discovery_sweeps.json"
-workspace="$dossier_root/artifacts/discovery-sweep"
+workspace="$artifact_root/discovery-sweep"
 db_path=""
 target_creatures=100
 max_cycles=0
 log_level="info"
 skip_postprocess=0
-sync_remote=0
 prebuilt_cli="${LENIA_CLI_BIN-}"
 swift_scratch_path="${LENIA_SWIFT_SCRATCH_PATH-}"
 swift_tmpdir="${LENIA_SWIFT_TMPDIR-}"
@@ -21,14 +26,13 @@ usage: sweep.sh [options]
 
 options:
   --output <dir>             local staging root for runs, db, logs, and ecology output
-  --db <path>                explicit local compendium sqlite path (defaults to <output>/compendium.sqlite)
+  --db <path>                explicit local compendium sqlite path (defaults to shared artifacts/compendium.sqlite)
   --manifest <path>          discovery sweep manifest json (default: $manifest_path)
   --target-creatures <n>     stop once indexed creature count reaches n (default: $target_creatures)
   --batches <n>              maximum full manifest cycles to run (0 = until target)
   --max-cycles <n>           alias for --batches
   --log-level <level>        LeniaCLI local log level (default: $log_level)
   --skip-postprocess         do not run sanity, taxonomy, and ecology after the sweep
-  --sync-remote              rsync the staged workspace to \$SPECTER_ARTIFACT_ROOT and sync compendium.sqlite
   -h, --help                 show this help
 
 environment:
@@ -68,10 +72,6 @@ while [[ $# -gt 0 ]]; do
       skip_postprocess=1
       shift
       ;;
-    --sync-remote)
-      sync_remote=1
-      shift
-      ;;
     -h|--help)
       usage
       exit 0
@@ -104,7 +104,7 @@ resolve_path() {
 workspace="$(resolve_path "$workspace")"
 manifest_path="$(resolve_path "$manifest_path")"
 if [[ -z "$db_path" ]]; then
-  db_path="$workspace/compendium.sqlite"
+  db_path="$artifact_root/compendium.sqlite"
 else
   db_path="$(resolve_path "$db_path")"
 fi
@@ -417,20 +417,6 @@ if [[ "$skip_postprocess" -eq 0 && -f "$db_path" ]]; then
 fi
 
 write_summary "$creature_count" "$taxonomy_count" "$export_count"
-
-if [[ "$sync_remote" -eq 1 ]]; then
-  if [[ -z "${SPECTER_ARTIFACT_ROOT-}" ]]; then
-    echo "SPECTER_ARTIFACT_ROOT is unset; cannot sync remote workspace" >&2
-    exit 2
-  fi
-  remote_workspace="$SPECTER_ARTIFACT_ROOT/lenia-swarm/outputs/discovery/$(basename "$workspace")"
-  mkdir -p "$remote_workspace"
-  if [[ "$remote_workspace" != "$workspace" ]]; then
-    rsync -a "$workspace/" "$remote_workspace/"
-  fi
-  "$dossier_root/ops/sync-local-compendium.sh" --db "$db_path"
-  echo "synced remote workspace: $remote_workspace"
-fi
 
 echo "discovery sweep complete"
 echo "  creatures: $creature_count / $target_creatures"

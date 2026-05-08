@@ -45,6 +45,72 @@ remote_snapshot_namespace = \"demo\"\n",
     project_root
 }
 
+fn create_category_root_project(root: &Path) -> PathBuf {
+    let project_root = root.join("dossiers/alpha");
+    write(
+        &project_root.join("spctr.toml"),
+        "version = 1\n\
+license = \"Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)\"\n\
+title = \"Alpha\"\n\
+summary = \"Alpha summary.\"\n\
+status = \"active\"\n\n\
+[site]\n\
+visible = true\n\
+featured = false\n\n\
+[release]\n\
+stage = \"candidate\"\n\n\
+[spctr]\n\
+project = \"alpha\"\n\
+default_surface = \"demo\"\n\n\
+[spctr.surfaces.demo]\n\
+kind = \"raw_plus_db\"\n\
+raw_roots = [\"logs\", \"artifacts\"]\n\
+local_db_path = \"compendium.sqlite\"\n\
+db_raw_root = 1\n\
+remote_raw_namespace = \"alpha\"\n\
+remote_snapshot_namespace = \"demo\"\n",
+    );
+    write(&project_root.join("logs/run.log"), "log\n");
+    write(&project_root.join("artifacts/result.json"), "{}\n");
+    write(&project_root.join("artifacts/compendium.sqlite"), "db\n");
+    project_root
+}
+
+fn create_workspace_category_root_project(root: &Path) -> PathBuf {
+    let workspace_project_root = root.join("research-registry-workspaces/ws/dossiers/alpha");
+    write(
+        &workspace_project_root.join("spctr.toml"),
+        "version = 1\n\
+license = \"Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)\"\n\
+title = \"Alpha\"\n\
+summary = \"Alpha summary.\"\n\
+status = \"active\"\n\n\
+[site]\n\
+visible = true\n\
+featured = false\n\n\
+[release]\n\
+stage = \"candidate\"\n\n\
+[spctr]\n\
+project = \"alpha\"\n\
+default_surface = \"demo\"\n\n\
+[spctr.surfaces.demo]\n\
+kind = \"raw_plus_db\"\n\
+raw_roots = [\"logs\", \"artifacts\"]\n\
+local_db_path = \"compendium.sqlite\"\n\
+db_raw_root = 1\n\
+remote_raw_namespace = \"alpha\"\n\
+remote_snapshot_namespace = \"demo\"\n",
+    );
+    let shared_project_root = root.join("research-registry/dossiers/alpha");
+    write(&shared_project_root.join("logs/run.log"), "shared-log\n");
+    write(&shared_project_root.join("artifacts/result.json"), "{}\n");
+    write(
+        &shared_project_root.join("artifacts/compendium.sqlite"),
+        "shared-db\n",
+    );
+    workspace_project_root
+}
+
 fn create_config(root: &Path) -> PathBuf {
     let config_path = root.join("config/spctr.toml");
     write(
@@ -62,6 +128,20 @@ durable_artifact_root = \"{}\"\n",
     config_path
 }
 
+fn create_config_with_local_artifact_root(root: &Path, local_artifact_root: &Path) -> PathBuf {
+    let config_path = create_config(root);
+    fs::write(
+        &config_path,
+        fs::read_to_string(&config_path).unwrap()
+            + &format!(
+                "local_artifact_root = \"{}\"\n",
+                local_artifact_root.display()
+            ),
+    )
+    .unwrap();
+    config_path
+}
+
 fn spctr(args: &[&str], project_root: &Path, config_path: &Path) -> Output {
     Command::new(env!("CARGO_BIN_EXE_spctr"))
         .args(args)
@@ -69,6 +149,8 @@ fn spctr(args: &[&str], project_root: &Path, config_path: &Path) -> Output {
         .env("SPCTR_CONFIG", config_path)
         .env_remove("SPECTER_REMOTE_SSH")
         .env_remove("SPCTR_MACHINE_ID")
+        .env_remove("SPCTR_LOCAL_LOG_ROOT")
+        .env_remove("SPCTR_LOCAL_ARTIFACT_ROOT")
         .env_remove("SPECTER_LOG_ROOT")
         .env_remove("SPECTER_ARTIFACT_ROOT")
         .output()
@@ -83,6 +165,8 @@ fn spctr_with_path(args: &[&str], project_root: &Path, config_path: &Path, path:
         .env("PATH", path)
         .env_remove("SPECTER_REMOTE_SSH")
         .env_remove("SPCTR_MACHINE_ID")
+        .env_remove("SPCTR_LOCAL_LOG_ROOT")
+        .env_remove("SPCTR_LOCAL_ARTIFACT_ROOT")
         .env_remove("SPECTER_LOG_ROOT")
         .env_remove("SPECTER_ARTIFACT_ROOT")
         .output()
@@ -193,6 +277,115 @@ fn checkpoint_noop_does_not_create_new_checkpoint() {
     );
     assert!(second.status.success(), "{}", output_text(&second));
     assert!(output_text(&second).contains("checkpoint=no-op"));
+}
+
+#[test]
+fn category_root_raw_paths_do_not_repeat_remote_category() {
+    let temp = TempDir::new().unwrap();
+    let project_root = create_category_root_project(temp.path());
+    let config_path = create_config(temp.path());
+
+    let output = spctr(
+        &["surface", "checkpoint", "demo"],
+        &project_root,
+        &config_path,
+    );
+    assert!(output.status.success(), "{}", output_text(&output));
+    assert!(temp
+        .path()
+        .join("remote/durable-logs/alpha/logs/run.log")
+        .exists());
+    assert!(!temp
+        .path()
+        .join("remote/durable-logs/alpha/logs/logs/run.log")
+        .exists());
+    assert!(temp
+        .path()
+        .join("remote/durable-artifacts/alpha/artifacts/result.json")
+        .exists());
+    assert!(!temp
+        .path()
+        .join("remote/durable-artifacts/alpha/artifacts/artifacts/result.json")
+        .exists());
+}
+
+#[test]
+fn workspace_without_local_roots_uses_shared_main_checkout() {
+    let temp = TempDir::new().unwrap();
+    let project_root = create_workspace_category_root_project(temp.path());
+    let config_path = create_config(temp.path());
+
+    let output = spctr(&["surface", "sync", "demo"], &project_root, &config_path);
+    assert!(output.status.success(), "{}", output_text(&output));
+    assert_eq!(
+        fs::read_to_string(temp.path().join("remote/durable-logs/alpha/logs/run.log")).unwrap(),
+        "shared-log\n"
+    );
+    assert_eq!(
+        fs::read_to_string(
+            temp.path()
+                .join("remote/durable-artifacts/alpha/artifacts/result.json")
+        )
+        .unwrap(),
+        "{}\n"
+    );
+    let history_root = temp.path().join("remote/hot/alpha/surfaces/demo/history");
+    let snapshot_dir = fs::read_dir(history_root)
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
+    assert_eq!(
+        fs::read_to_string(snapshot_dir.join("compendium.sqlite")).unwrap(),
+        "shared-db\n"
+    );
+}
+
+#[test]
+fn sync_promotes_db_from_machine_local_artifact_root() {
+    let temp = TempDir::new().unwrap();
+    let project_root = create_project(temp.path());
+    let local_artifact_root = temp.path().join("local-artifacts");
+    let local_project_root = local_artifact_root.join("alpha");
+    write(
+        &local_project_root.join("outputs/raw/result.json"),
+        "{\"source\":\"local\"}\n",
+    );
+    write(
+        &local_project_root.join("outputs/demo.sqlite"),
+        "local-db\n",
+    );
+    let config_path = create_config_with_local_artifact_root(temp.path(), &local_artifact_root);
+
+    let output = spctr(&["surface", "sync", "demo"], &project_root, &config_path);
+    assert!(output.status.success(), "{}", output_text(&output));
+    let text = output_text(&output);
+    assert!(text.contains("checkpoint="));
+    assert!(text.contains("promoted="));
+    assert_eq!(
+        fs::read_to_string(
+            temp.path()
+                .join("remote/durable-artifacts/alpha/artifacts/outputs/raw/result.json")
+        )
+        .unwrap(),
+        "{\"source\":\"local\"}\n"
+    );
+    assert!(temp
+        .path()
+        .join("remote/hot/alpha/surfaces/demo/current.json")
+        .exists());
+    let history_root = temp.path().join("remote/hot/alpha/surfaces/demo/history");
+    let snapshot_dir = fs::read_dir(history_root)
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
+    assert_eq!(
+        fs::read_to_string(snapshot_dir.join("demo.sqlite")).unwrap(),
+        "local-db\n"
+    );
 }
 
 #[test]

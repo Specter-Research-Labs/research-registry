@@ -115,6 +115,10 @@ enum SurfaceCommand {
     Promote {
         surface: String,
     },
+    Sync {
+        #[arg(default_value = "all")]
+        surface: String,
+    },
     Pull {
         surface: String,
     },
@@ -630,6 +634,7 @@ fn dispatch_surface(command: SurfaceCommand, json: bool) -> anyhow::Result<()> {
             }
         }
         SurfaceCommand::Promote { surface } => surface::promote(&surface, json),
+        SurfaceCommand::Sync { surface } => surface::sync(&surface, json),
         SurfaceCommand::Pull { surface } => surface::pull(&surface, json),
     }
 }

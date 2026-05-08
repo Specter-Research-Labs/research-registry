@@ -1,7 +1,7 @@
 use crate::config::load_machine_config;
 use crate::drivers::resolve_surface;
 use crate::manifest::{self, discover_surfaced_manifests, ProjectManifest};
-use crate::surface::{checkpoint_surface, CheckpointResult};
+use crate::surface::{sync_resolved_surface, SurfaceSyncResult};
 use anyhow::Result;
 use rayon::prelude::*;
 
@@ -37,19 +37,25 @@ pub fn sync(json: bool) -> Result<()> {
         return Ok(());
     }
 
-    let results: Vec<CheckpointResult> = targets
+    let results: Vec<SurfaceSyncResult> = targets
         .par_iter()
-        .map(|target| checkpoint_surface(&machine, &target.manifest, &target.resolved))
+        .map(|target| sync_resolved_surface(&machine, &target.manifest, &target.resolved))
         .collect::<Result<Vec<_>>>()?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&results)?);
     } else {
         for result in &results {
-            match &result.checkpoint_id {
-                Some(id) => eprintln!("{}: checkpoint={id}", result.surface),
-                None => eprintln!("{}: no changes", result.surface),
-            }
+            let checkpoint = result.checkpoint_id.as_deref().unwrap_or("no-op");
+            let promoted = match (&result.promoted_snapshot_id, result.promoted) {
+                (Some(id), true) => id.as_str(),
+                (Some(_), false) => "no-op",
+                (None, _) => "-",
+            };
+            eprintln!(
+                "{}: checkpoint={} promoted={}",
+                result.surface, checkpoint, promoted
+            );
         }
     }
     Ok(())

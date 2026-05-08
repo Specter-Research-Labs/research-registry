@@ -69,6 +69,11 @@ func promoteRunArtifacts(
     warehousePath: String? = nil,
     warehouseTopology: Bool = false
 ) throws -> String {
+    let compendiumURL = URL(fileURLWithPath: compendiumPath)
+    try FileManager.default.createDirectory(
+        at: compendiumURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
     let indexer = try executeCompendiumIngest(
         plan: CompendiumIngestPlan(
             runInputs: [try makeRunInput(runDir: runDir)],

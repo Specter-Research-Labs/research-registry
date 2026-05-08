@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyConnection
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 8
 
 
 def _table_columns(connection: DuckDBPyConnection, table_name: str) -> set[str]:
@@ -458,6 +458,76 @@ def create_schema(connection: DuckDBPyConnection) -> None:
         )
         """
     )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS morphospace_sources (
+            source_id TEXT PRIMARY KEY,
+            source_kind TEXT NOT NULL,
+            label TEXT NOT NULL,
+            version_label TEXT,
+            doi TEXT,
+            url TEXT,
+            license TEXT,
+            metadata_json JSON NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS observations (
+            observation_id TEXT PRIMARY KEY,
+            specimen_id TEXT,
+            study_id TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            context_id TEXT,
+            observation_kind TEXT NOT NULL,
+            observed_at TIMESTAMP,
+            step INTEGER,
+            source_ref TEXT,
+            payload_json JSON NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feature_spaces (
+            feature_space_id TEXT PRIMARY KEY,
+            feature_space_kind TEXT NOT NULL,
+            label TEXT NOT NULL,
+            version_label TEXT NOT NULL,
+            coordinate_policy TEXT NOT NULL,
+            metric_json JSON NOT NULL,
+            metadata_json JSON NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feature_axes (
+            feature_space_id TEXT NOT NULL,
+            axis_id TEXT NOT NULL,
+            axis_index INTEGER NOT NULL,
+            axis_family TEXT NOT NULL,
+            label TEXT,
+            units TEXT,
+            metadata_json JSON NOT NULL,
+            PRIMARY KEY (feature_space_id, axis_id)
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feature_values (
+            observation_id TEXT NOT NULL,
+            feature_space_id TEXT NOT NULL,
+            axis_id TEXT NOT NULL,
+            raw_value DOUBLE,
+            normalized_value DOUBLE,
+            metadata_json JSON NOT NULL,
+            PRIMARY KEY (observation_id, feature_space_id, axis_id)
+        )
+        """
+    )
     create_views(connection)
 
 
@@ -794,6 +864,84 @@ def create_views(connection: DuckDBPyConnection) -> None:
         LEFT JOIN specimens USING (specimen_id)
         LEFT JOIN context_outcomes USING (context_trial_id)
         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+        """
+    )
+    connection.execute(
+        """
+        CREATE OR REPLACE VIEW comparison_observations_vw AS
+        SELECT
+            observations.observation_id,
+            observations.specimen_id,
+            observations.study_id,
+            studies.study_kind,
+            studies.label AS study_label,
+            observations.source_id,
+            morphospace_sources.source_kind,
+            morphospace_sources.label AS source_label,
+            observations.context_id,
+            contexts.context_kind,
+            contexts.label AS context_label,
+            observations.observation_kind,
+            observations.observed_at,
+            observations.step,
+            observations.source_ref,
+            specimens.run_id,
+            specimens.campaign_id,
+            specimens.source_mode,
+            specimens.source_algorithm,
+            specimens.config_hash,
+            specimens.family_kind,
+            specimens.regime_family,
+            specimens.geometry_family,
+            specimens.canonical_family,
+            specimens.runtime_family,
+            observations.payload_json
+        FROM observations
+        LEFT JOIN studies USING (study_id)
+        LEFT JOIN morphospace_sources USING (source_id)
+        LEFT JOIN contexts USING (context_id)
+        LEFT JOIN specimens USING (specimen_id)
+        """
+    )
+    connection.execute(
+        """
+        CREATE OR REPLACE VIEW comparison_feature_values_vw AS
+        SELECT
+            comparison_observations_vw.observation_id,
+            comparison_observations_vw.specimen_id,
+            comparison_observations_vw.study_id,
+            comparison_observations_vw.study_kind,
+            comparison_observations_vw.study_label,
+            comparison_observations_vw.source_id,
+            comparison_observations_vw.source_kind,
+            comparison_observations_vw.source_label,
+            comparison_observations_vw.context_id,
+            comparison_observations_vw.context_kind,
+            comparison_observations_vw.context_label,
+            comparison_observations_vw.observation_kind,
+            comparison_observations_vw.run_id,
+            comparison_observations_vw.campaign_id,
+            comparison_observations_vw.source_mode,
+            comparison_observations_vw.source_algorithm,
+            comparison_observations_vw.config_hash,
+            feature_values.feature_space_id,
+            feature_spaces.feature_space_kind,
+            feature_spaces.label AS feature_space_label,
+            feature_spaces.version_label AS feature_space_version_label,
+            feature_axes.axis_id,
+            feature_axes.axis_index,
+            feature_axes.axis_family,
+            feature_axes.label AS axis_label,
+            feature_axes.units,
+            feature_values.raw_value,
+            feature_values.normalized_value,
+            feature_values.metadata_json
+        FROM feature_values
+        JOIN comparison_observations_vw USING (observation_id)
+        JOIN feature_spaces USING (feature_space_id)
+        JOIN feature_axes
+          ON feature_axes.feature_space_id = feature_values.feature_space_id
+         AND feature_axes.axis_id = feature_values.axis_id
         """
     )
     connection.execute(

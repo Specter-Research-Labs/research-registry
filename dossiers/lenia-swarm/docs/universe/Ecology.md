@@ -13,7 +13,7 @@ Ecology describes how discovered patterns distribute across parameter and behavi
 
 ## Current Quality-Gated Corpus (2026-02-28)
 
-From the canonical `outputs/compendium.sqlite` (optionally synced to a remote artifact root):
+From the canonical `artifacts/compendium.sqlite` at the shared local artifact root:
 
 - schema version: `4`
 - indexed runs: `7`
