@@ -6,33 +6,22 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from lenia_tribe_overlay.overlay import LENIA_FEATURE_SPACE, join
+from lenia_tribe_overlay.overlay import join
 
 
 def _build_warehouse(path: Path, rows: list[tuple[str, str, float]]) -> None:
     """Create a minimal morphospace.duckdb with just the tables overlay needs."""
     con = duckdb.connect(str(path))
     try:
-        con.execute("CREATE TABLE specimens (specimen_id VARCHAR PRIMARY KEY)")
-        con.execute("CREATE TABLE observations (observation_id VARCHAR PRIMARY KEY, specimen_id VARCHAR)")
         con.execute(
-            "CREATE TABLE feature_values "
-            "(observation_id VARCHAR, axis_id VARCHAR, "
-            "feature_space_id VARCHAR, normalized_value DOUBLE)"
+            "CREATE TABLE specimen_axes "
+            "(specimen_id VARCHAR, axis_id VARCHAR, axis_family VARCHAR, "
+            "raw_value DOUBLE, transformed_value DOUBLE)"
         )
-        seen_specs: set[str] = set()
-        seen_obs: set[str] = set()
         for sid, axis_id, value in rows:
-            if sid not in seen_specs:
-                con.execute("INSERT INTO specimens VALUES (?)", [sid])
-                seen_specs.add(sid)
-            obs_id = f"obs-{sid}"
-            if obs_id not in seen_obs:
-                con.execute("INSERT INTO observations VALUES (?, ?)", [obs_id, sid])
-                seen_obs.add(obs_id)
             con.execute(
-                "INSERT INTO feature_values VALUES (?, ?, ?, ?)",
-                [obs_id, axis_id, LENIA_FEATURE_SPACE, value],
+                "INSERT INTO specimen_axes VALUES (?, ?, 'terminal', ?, ?)",
+                [sid, axis_id, value, value],
             )
     finally:
         con.close()
