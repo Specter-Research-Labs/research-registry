@@ -249,11 +249,12 @@
       }
     },
     "D-003": {
-      "next_counter": 23,
+      "next_counter": 24,
       "entries": {
         "README": "D-003.001",
         "configs/README": "D-003.022",
         "contracts/ArtifactLayout": "D-003.002",
+        "contracts/ComparativeMorphospace": "D-003.023",
         "contracts/CompendiumSchema": "D-003.003",
         "contracts/EcologyCLI": "D-003.004",
         "contracts/LocalCLI": "D-003.005",
