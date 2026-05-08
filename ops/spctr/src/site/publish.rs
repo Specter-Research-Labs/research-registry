@@ -555,18 +555,12 @@ fn render_status_page(site_root: &Utf8Path) -> Result<()> {
     fs::create_dir_all(&status_dir).with_context(|| format!("failed to create {status_dir}"))?;
     let path = status_dir.join("index.html");
 
-    match crate::config::load_report_config().and_then(|config| report::collect(&config)) {
-        Ok(data) => {
-            fs::write(&path, report::format_html(&data))
-                .with_context(|| format!("failed to write {path}"))?;
-        }
-        Err(error) => {
-            eprintln!(
-                "warning: spctr report --html failed (missing config?), skipping status page: {error:#}"
-            );
-            let _ = fs::remove_file(&path);
-        }
-    }
+    let config = crate::config::load_report_config()
+        .context("failed to load status report config for site/status/index.html")?;
+    let data = report::collect(&config)
+        .context("failed to collect status report for site/status/index.html")?;
+    fs::write(&path, report::format_html(&data))
+        .with_context(|| format!("failed to write {path}"))?;
 
     Ok(())
 }
