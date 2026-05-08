@@ -151,15 +151,11 @@ require_frontmatter = false
 
 [spctr.surfaces.lenia-compendium]
 kind = "raw_plus_db"
-local_db_path = "compendium.sqlite"
-db_raw_root = 0
-refresh_commands = [
-    ["ops/rebuild-local-compendium.sh"],
-]
+local_db_path = "artifacts/compendium.sqlite"
 remote_raw_namespace = "lenia-swarm"
 remote_snapshot_namespace = "lenia-compendium"
 raw_roots = [
-    { path = "artifacts", remote_base = "artifacts", excludes = ["compendium.sqlite", "**/compendium.sqlite"] },
+    { path = "artifacts/compendium", remote_base = "artifacts" },
 ]
 
 [[spctr.site_data]]

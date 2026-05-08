@@ -12,6 +12,7 @@ def test_resolve_corpora_root_env_policy(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    monkeypatch.delenv("SPCTR_LOCAL_ARTIFACT_ROOT", raising=False)
     monkeypatch.delenv("SPECTER_ARTIFACT_ROOT", raising=False)
     monkeypatch.delenv("SPECTER_RUNTIME_ROOT", raising=False)
     root = resolve_corpora_root()
@@ -38,3 +39,9 @@ def test_resolve_corpora_root_env_policy(
     monkeypatch.setenv("SPECTER_RUNTIME_ROOT", str(runtime_root))
 
     assert resolve_corpora_root() == (runtime_root / "wonton-soup" / "corpora")
+
+    monkeypatch.setenv("SPCTR_LOCAL_ARTIFACT_ROOT", str(tmp_path / "local"))
+    assert (
+        resolve_corpora_root()
+        == (tmp_path / "local" / "wonton-soup" / "artifacts" / "corpora").resolve()
+    )

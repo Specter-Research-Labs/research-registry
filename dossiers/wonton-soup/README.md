@@ -15,13 +15,13 @@ Centralized MCTS establishes the structural landscape: proof families, basin sta
 4. Corpus pipeline and reproducible artifact refs: `docs/ops/corpus-pipeline.md`
 5. Run the canonical verification lane:
 
-```bash
+```
 ./scripts/verify.sh
 ```
 
 If you want the ad hoc smoke test instead:
 
-```bash
+```
 uv run python wonton.py lean run -m dev --sample 5 --seed 123
 ```
 
@@ -31,7 +31,7 @@ uv run python wonton.py lean run -m dev --sample 5 --seed 123
 If you do nothing, `uv run python setup_lean.py` still creates `./lean_project`. If you want a
 single durable runtime root, export these first:
 
-```bash
+```
 export WONTON_SOUP_RUNTIME_ROOT="${WONTON_SOUP_RUNTIME_ROOT:-$HOME/.local/state/wonton-soup}"
 export LEAN_PROJECT_PATH="${LEAN_PROJECT_PATH:-$WONTON_SOUP_RUNTIME_ROOT/lean_project}"
 export LEAN_REPL_EXE="${LEAN_REPL_EXE:-$WONTON_SOUP_RUNTIME_ROOT/bin/repl}"
@@ -39,13 +39,13 @@ export LEAN_REPL_EXE="${LEAN_REPL_EXE:-$WONTON_SOUP_RUNTIME_ROOT/bin/repl}"
 
 Then run:
 
-```bash
+```
 uv run python setup_lean.py
 ```
 
 On shared lab storage, the better split is:
 
-```bash
+```
 export LEAN_PROJECT_PATH=/shared/specter-runtime/common/wonton-soup/lean_project
 export LEAN_REPL_EXE=/shared/specter-runtime/machines/<machine>/wonton-soup/bin/repl
 ```
@@ -66,18 +66,23 @@ Use [Wonton Soup Docs](docs/README.md) as the canonical map for runbooks, intern
 - `paper/`: Typst manuscript scaffold for the perturbation / proto-cognition paper
 - `docs/`: canonical project documentation
 
-`wonton.py` computes proof-search logs and local lake caches. `spctr surface`
-preserves the declared `wonton-lake` raw roots; the server refresh rebuilds the
-master lake from those preserved logs and artifacts:
+`wonton.py` computes proof-search logs and the local Wonton lake under the
+canonical local Wonton roots: `wonton-soup/logs` and
+`wonton-soup/artifacts/lake/lake.duckdb`. A checkout under
+`research-registry-workspaces/` resolves those roots to the sibling main
+`research-registry/dossiers` tree, so workspace runs append to the same local
+lake and logs instead of duplicating them. `local_artifact_root` and
+`local_log_root` in the machine `spctr` config are only for machines whose
+checkout layout differs.
 
-```bash
+```
 spctr surface status wonton-lake
-spctr surface checkpoint wonton-lake
+spctr surface sync wonton-lake
 ```
 
 ## Dev Tooling
 
-```bash
+```
 cd /path/to/specter-labs/research-registry
 cd dossiers/wonton-soup && nix develop --command true
 cd dossiers/wonton-soup && ./scripts/verify.sh

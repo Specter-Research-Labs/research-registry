@@ -1,6 +1,8 @@
 import Foundation
 
 private let runtimeRootEnv = "SPECTER_RUNTIME_ROOT"
+private let localLogRootEnv = "SPCTR_LOCAL_LOG_ROOT"
+private let localArtifactRootEnv = "SPCTR_LOCAL_ARTIFACT_ROOT"
 private let logRootEnv = "SPECTER_LOG_ROOT"
 private let artifactRootEnv = "SPECTER_ARTIFACT_ROOT"
 private let repoRootURL = URL(fileURLWithPath: #filePath)
@@ -27,23 +29,54 @@ private func normalizedPathValue(_ value: String?) -> String? {
     return trimmed.isEmpty ? nil : trimmed
 }
 
-private func configuredPersistentRoot(envName: String, dossier: String) throws -> URL? {
-    guard let raw = ProcessInfo.processInfo.environment[envName] else {
-        return nil
+func defaultPersistentDossierParent(repoRoot: URL) -> URL {
+    let workspaceParent = repoRoot.deletingLastPathComponent()
+    if workspaceParent.lastPathComponent == "research-registry-workspaces" {
+        let sharedDossiers = workspaceParent
+            .deletingLastPathComponent()
+            .appendingPathComponent("research-registry", isDirectory: true)
+            .appendingPathComponent("dossiers", isDirectory: true)
+        if FileManager.default.fileExists(atPath: sharedDossiers.path) {
+            return sharedDossiers
+        }
     }
-    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-    if trimmed.isEmpty {
-        throw RuntimePathResolutionError.emptyEnvVar(envName)
+    return repoRoot.appendingPathComponent("dossiers", isDirectory: true)
+}
+
+private func defaultPersistentRoot(dossier: String) -> URL {
+    defaultPersistentDossierParent(repoRoot: repoRootURL)
+        .appendingPathComponent(dossier, isDirectory: true)
+}
+
+private func configuredPersistentRoot(envNames: [String], dossier: String) throws -> URL? {
+    for envName in envNames {
+        guard let raw = ProcessInfo.processInfo.environment[envName] else {
+            continue
+        }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            throw RuntimePathResolutionError.emptyEnvVar(envName)
+        }
+        return URL(fileURLWithPath: (trimmed as NSString).expandingTildeInPath, isDirectory: true)
+            .appendingPathComponent(dossier, isDirectory: true)
     }
-    return URL(fileURLWithPath: (trimmed as NSString).expandingTildeInPath, isDirectory: true)
+    return nil
+}
+
+private func dossierRoot(dossier: String) -> URL {
+    repoRootURL
+        .appendingPathComponent("dossiers", isDirectory: true)
         .appendingPathComponent(dossier, isDirectory: true)
 }
 
 private func dossierOutputRoot(dossier: String) -> URL {
-    repoRootURL
-        .appendingPathComponent("dossiers", isDirectory: true)
-        .appendingPathComponent(dossier, isDirectory: true)
+    defaultPersistentRoot(dossier: dossier)
         .appendingPathComponent("outputs", isDirectory: true)
+}
+
+private func dossierArtifactRoot(dossier: String) -> URL {
+    defaultPersistentRoot(dossier: dossier)
+        .appendingPathComponent("artifacts", isDirectory: true)
 }
 
 private func canonicalRelativeSuffix(_ path: String, prefix: String) -> String? {
@@ -59,14 +92,21 @@ private func canonicalRelativeSuffix(_ path: String, prefix: String) -> String? 
 
 private func resolveCanonicalRelativePath(_ path: String, dossier: String) throws -> String? {
     if let suffix = canonicalRelativeSuffix(path, prefix: "outputs") {
-        let base = try configuredPersistentRoot(envName: artifactRootEnv, dossier: dossier)?
+        let base = try configuredPersistentRoot(envNames: [localArtifactRootEnv, artifactRootEnv], dossier: dossier)?
             .appendingPathComponent("outputs", isDirectory: true)
             ?? dossierOutputRoot(dossier: dossier)
         guard !suffix.isEmpty else { return base.path }
         return base.appendingPathComponent(suffix, isDirectory: false).path
     }
+    if let suffix = canonicalRelativeSuffix(path, prefix: "artifacts") {
+        let base = try configuredPersistentRoot(envNames: [localArtifactRootEnv, artifactRootEnv], dossier: dossier)?
+            .appendingPathComponent("artifacts", isDirectory: true)
+            ?? dossierArtifactRoot(dossier: dossier)
+        guard !suffix.isEmpty else { return base.path }
+        return base.appendingPathComponent(suffix, isDirectory: false).path
+    }
     if let suffix = canonicalRelativeSuffix(path, prefix: "logs") {
-        let base = try configuredPersistentRoot(envName: logRootEnv, dossier: dossier)?
+        let base = try configuredPersistentRoot(envNames: [localLogRootEnv, logRootEnv], dossier: dossier)?
             .appendingPathComponent("logs", isDirectory: true)
             ?? dossierOutputRoot(dossier: dossier).appendingPathComponent("logs", isDirectory: true)
         guard !suffix.isEmpty else { return base.path }
@@ -147,7 +187,7 @@ public func resolveRuntimeAwareLogBase(
             .appendingPathComponent("logs", isDirectory: true)
             .path
     }
-    if let remoteLogRoot = try configuredPersistentRoot(envName: logRootEnv, dossier: dossier) {
+    if let remoteLogRoot = try configuredPersistentRoot(envNames: [localLogRootEnv, logRootEnv], dossier: dossier) {
         return remoteLogRoot.appendingPathComponent("logs", isDirectory: true).path
     }
     return dossierOutputRoot(dossier: dossier)

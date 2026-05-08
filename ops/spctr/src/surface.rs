@@ -129,14 +129,42 @@ struct SshFs {
     ssh: SshConfig,
 }
 
+fn shell_quote(value: &str) -> String {
+    if value.is_empty() {
+        return "''".to_owned();
+    }
+    let mut quoted = String::from("'");
+    for ch in value.chars() {
+        if ch == '\'' {
+            quoted.push_str("'\"'\"'");
+        } else {
+            quoted.push(ch);
+        }
+    }
+    quoted.push('\'');
+    quoted
+}
+
 impl SshFs {
-    fn python_args(&self, snippet: &str, target: &str) -> Vec<String> {
+    fn remote_command_args(&self, parts: &[String]) -> Vec<String> {
         let mut args = self.ssh.ssh_args();
-        args.push("python3".to_owned());
-        args.push("-c".to_owned());
-        args.push(snippet.to_owned());
-        args.push(target.to_owned());
+        args.push(
+            parts
+                .iter()
+                .map(|part| shell_quote(part))
+                .collect::<Vec<_>>()
+                .join(" "),
+        );
         args
+    }
+
+    fn python_args(&self, snippet: &str, target: &str) -> Vec<String> {
+        self.remote_command_args(&[
+            "python3".to_owned(),
+            "-c".to_owned(),
+            snippet.to_owned(),
+            target.to_owned(),
+        ])
     }
 }
 
@@ -158,11 +186,12 @@ impl RemoteFs for SshFs {
     }
 
     fn write_text(&self, path: &str, content: &str) -> Result<()> {
-        let mut args = self.ssh.ssh_args();
-        args.push("python3".to_owned());
-        args.push("-c".to_owned());
-        args.push("import pathlib,sys; p=pathlib.Path(sys.argv[1]); p.parent.mkdir(parents=True, exist_ok=True); tmp=p.with_suffix(p.suffix + '.tmp'); tmp.write_text(sys.stdin.read(), encoding='utf-8'); tmp.replace(p)".to_owned());
-        args.push(path.to_owned());
+        let args = self.remote_command_args(&[
+            "python3".to_owned(),
+            "-c".to_owned(),
+            "import pathlib,sys; p=pathlib.Path(sys.argv[1]); p.parent.mkdir(parents=True, exist_ok=True); tmp=p.with_suffix(p.suffix + '.tmp'); tmp.write_text(sys.stdin.read(), encoding='utf-8'); tmp.replace(p)".to_owned(),
+            path.to_owned(),
+        ]);
         check_command("ssh", &args, None, &BTreeMap::new(), Some(content))?;
         Ok(())
     }
@@ -219,12 +248,13 @@ impl RemoteFs for SshFs {
         content: &str,
         expected_snapshot_id: Option<&str>,
     ) -> Result<()> {
-        let mut args = self.ssh.ssh_args();
-        args.push("python3".to_owned());
-        args.push("-c".to_owned());
-        args.push("import json,pathlib,sys\npath=pathlib.Path(sys.argv[1])\nexpected=sys.argv[2]\nraw=sys.stdin.read()\ncurrent_snapshot=None\nif path.exists():\n    current=json.loads(path.read_text(encoding='utf-8'))\n    current_snapshot=current.get('snapshot_id')\nexpected_snapshot=None if expected == '__NONE__' else expected\nif current_snapshot != expected_snapshot:\n    raise SystemExit(17)\npath.parent.mkdir(parents=True, exist_ok=True)\ntmp=path.with_suffix(path.suffix + '.tmp')\ntmp.write_text(raw, encoding='utf-8')\ntmp.replace(path)".to_owned());
-        args.push(path.to_owned());
-        args.push(expected_snapshot_id.unwrap_or("__NONE__").to_owned());
+        let args = self.remote_command_args(&[
+            "python3".to_owned(),
+            "-c".to_owned(),
+            "import json,pathlib,sys\npath=pathlib.Path(sys.argv[1])\nexpected=sys.argv[2]\nraw=sys.stdin.read()\ncurrent_snapshot=None\nif path.exists():\n    current=json.loads(path.read_text(encoding='utf-8'))\n    current_snapshot=current.get('snapshot_id')\nexpected_snapshot=None if expected == '__NONE__' else expected\nif current_snapshot != expected_snapshot:\n    raise SystemExit(17)\npath.parent.mkdir(parents=True, exist_ok=True)\ntmp=path.with_suffix(path.suffix + '.tmp')\ntmp.write_text(raw, encoding='utf-8')\ntmp.replace(path)".to_owned(),
+            path.to_owned(),
+            expected_snapshot_id.unwrap_or("__NONE__").to_owned(),
+        ]);
         let output = run_command("ssh", &args, None, &BTreeMap::new(), Some(content))?;
         match output.status.code() {
             Some(0) => Ok(()),
@@ -237,6 +267,21 @@ impl RemoteFs for SshFs {
                 String::from_utf8_lossy(&output.stderr)
             ),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shell_quote;
+
+    #[test]
+    fn shell_quote_preserves_remote_argument_boundaries() {
+        assert_eq!(shell_quote(""), "''");
+        assert_eq!(shell_quote("plain"), "'plain'");
+        assert_eq!(
+            shell_quote("root.glob('*.json')"),
+            "'root.glob('\"'\"'*.json'\"'\"')'"
+        );
     }
 }
 
@@ -273,9 +318,19 @@ struct RefreshResult {
 }
 
 #[derive(Debug, Serialize)]
-struct PromoteResult {
-    surface: String,
-    snapshot_id: String,
+pub(crate) struct PromoteResult {
+    pub(crate) surface: String,
+    pub(crate) snapshot_id: String,
+    pub(crate) changed: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct SurfaceSyncResult {
+    pub(crate) surface: String,
+    pub(crate) checkpoint_id: Option<String>,
+    pub(crate) changed_roots: Vec<String>,
+    pub(crate) promoted_snapshot_id: Option<String>,
+    pub(crate) promoted: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -506,12 +561,29 @@ pub(crate) fn env_for_machine(machine: &MachineConfig) -> BTreeMap<String, Strin
     let mut envs = BTreeMap::new();
     envs.insert(
         "SPECTER_LOG_ROOT".to_owned(),
-        machine.durable_log_root.clone(),
+        machine
+            .local_log_root
+            .as_ref()
+            .unwrap_or(&machine.durable_log_root)
+            .clone(),
     );
+    if let Some(local_log_root) = &machine.local_log_root {
+        envs.insert("SPCTR_LOCAL_LOG_ROOT".to_owned(), local_log_root.clone());
+    }
     envs.insert(
         "SPECTER_ARTIFACT_ROOT".to_owned(),
-        machine.durable_artifact_root.clone(),
+        machine
+            .local_artifact_root
+            .as_ref()
+            .unwrap_or(&machine.durable_artifact_root)
+            .clone(),
     );
+    if let Some(local_artifact_root) = &machine.local_artifact_root {
+        envs.insert(
+            "SPCTR_LOCAL_ARTIFACT_ROOT".to_owned(),
+            local_artifact_root.clone(),
+        );
+    }
     if let Some(runtime_root) = &machine.runtime_root {
         envs.insert("SPECTER_RUNTIME_ROOT".to_owned(), runtime_root.clone());
     }
@@ -826,31 +898,44 @@ pub fn refresh(surface: &str, json: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn promote(surface: &str, json: bool) -> Result<()> {
-    let manifest = load_manifest()?;
-    let machine = resolve_machine()?;
-    let fs = fs_for(&machine);
-    let resolved = selected_surfaces(&manifest, &machine, surface)?
-        .into_iter()
-        .next()
-        .context("missing resolved surface")?;
-    let db_path = resolved
-        .db_path
-        .as_ref()
-        .context(format!("{surface} does not define a database surface"))?;
-    let db_filename = resolved
-        .db_filename
-        .as_ref()
-        .context(format!("{surface} does not define a database surface"))?;
+pub(crate) fn promote_resolved_surface(
+    machine: &MachineConfig,
+    manifest: &ProjectManifest,
+    resolved: &ResolvedSurface,
+) -> Result<PromoteResult> {
+    let fs = fs_for(machine);
+    let db_path = resolved.db_path.as_ref().context(format!(
+        "{} does not define a database surface",
+        resolved.surface_name
+    ))?;
+    let db_filename = resolved.db_filename.as_ref().context(format!(
+        "{} does not define a database surface",
+        resolved.surface_name
+    ))?;
     if !db_path.exists() {
         bail!("local DB not found: {db_path}");
     }
     let current: Option<CurrentSnapshot> =
-        read_json(&*fs, &remote_current_path(&machine, &resolved))?;
-    let expected_current = current.and_then(|c| c.snapshot_id);
+        read_json(&*fs, &remote_current_path(machine, resolved))?;
+    let expected_current = current.as_ref().and_then(|c| c.snapshot_id.clone());
     let local_sha = sha256_file(db_path)?;
+    let checkpoints_root = remote_checkpoints_root(machine, resolved);
+    let included = fs.list_json_stems(&checkpoints_root)?;
+    if current.as_ref().is_some_and(|snapshot| {
+        snapshot.db_sha256.as_deref() == Some(local_sha.as_str())
+            && snapshot
+                .included_raw_checkpoint_ids
+                .as_ref()
+                .is_some_and(|current_included| current_included == &included)
+    }) {
+        return Ok(PromoteResult {
+            surface: resolved.surface_name.clone(),
+            snapshot_id: expected_current.unwrap_or_default(),
+            changed: false,
+        });
+    }
     let snapshot_id = format!("{}-{}", utc_stamp(), &local_sha[..12]);
-    let remote_snapshot_root = remote_join(&remote_history_root(&machine, &resolved), &snapshot_id);
+    let remote_snapshot_root = remote_join(&remote_history_root(machine, resolved), &snapshot_id);
     let remote_db_path = remote_join(&remote_snapshot_root, db_filename);
     copy_local_to_remote(&*fs, db_path, &remote_db_path)?;
     let remote_sha = fs.checksum(&remote_db_path)?;
@@ -862,8 +947,6 @@ pub fn promote(surface: &str, json: bool) -> Result<()> {
             remote_sha
         );
     }
-    let checkpoints_root = remote_checkpoints_root(&machine, &resolved);
-    let included = fs.list_json_stems(&checkpoints_root)?;
     let payload = SnapshotPayload {
         schema_version: 1,
         surface: resolved.surface_name.clone(),
@@ -889,20 +972,76 @@ pub fn promote(surface: &str, json: bool) -> Result<()> {
     let encoded =
         serde_json::to_string_pretty(&payload).context("failed to encode current payload")? + "\n";
     fs.cas_write_text(
-        &remote_current_path(&machine, &resolved),
+        &remote_current_path(machine, resolved),
         &encoded,
         expected_current.as_deref(),
     )?;
+    Ok(PromoteResult {
+        surface: resolved.surface_name.clone(),
+        snapshot_id,
+        changed: true,
+    })
+}
+
+pub fn promote(surface: &str, json: bool) -> Result<()> {
+    let manifest = load_manifest()?;
+    let machine = resolve_machine()?;
+    let resolved = selected_surfaces(&manifest, &machine, surface)?
+        .into_iter()
+        .next()
+        .context("missing resolved surface")?;
+    let result = promote_resolved_surface(&machine, &manifest, &resolved)?;
     if json {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&PromoteResult {
-                surface: resolved.surface_name.clone(),
-                snapshot_id,
-            })?
-        );
+        println!("{}", serde_json::to_string_pretty(&result)?);
+    } else if result.changed {
+        println!("{}: promoted={}", result.surface, result.snapshot_id);
     } else {
-        println!("{}: promoted={}", resolved.surface_name, snapshot_id);
+        println!("{}: promote=no-op", result.surface);
+    }
+    Ok(())
+}
+
+pub(crate) fn sync_resolved_surface(
+    machine: &MachineConfig,
+    manifest: &ProjectManifest,
+    resolved: &ResolvedSurface,
+) -> Result<SurfaceSyncResult> {
+    let checkpoint = checkpoint_surface(machine, manifest, resolved)?;
+    let promotion = match &resolved.db_path {
+        Some(path) if path.exists() => Some(promote_resolved_surface(machine, manifest, resolved)?),
+        _ => None,
+    };
+    Ok(SurfaceSyncResult {
+        surface: resolved.surface_name.clone(),
+        checkpoint_id: checkpoint.checkpoint_id,
+        changed_roots: checkpoint.changed_roots,
+        promoted_snapshot_id: promotion.as_ref().map(|result| result.snapshot_id.clone()),
+        promoted: promotion.as_ref().is_some_and(|result| result.changed),
+    })
+}
+
+pub fn sync(surface: &str, json: bool) -> Result<()> {
+    let manifest = load_manifest()?;
+    let machine = resolve_machine()?;
+    let mut results = Vec::new();
+    for resolved in selected_surfaces(&manifest, &machine, surface)? {
+        let result = sync_resolved_surface(&machine, &manifest, &resolved)?;
+        if !json {
+            let checkpoint = result.checkpoint_id.as_deref().unwrap_or("no-op");
+            let promoted = match (&result.promoted_snapshot_id, result.promoted) {
+                (Some(id), true) => id.as_str(),
+                (Some(_), false) => "no-op",
+                (None, _) => "-",
+            };
+            println!(
+                "{}: checkpoint={} promoted={}",
+                result.surface, checkpoint, promoted
+            );
+        }
+        results.push(result);
+    }
+    if json {
+        println!("{}", serde_json::to_string_pretty(&results)?);
     }
     Ok(())
 }

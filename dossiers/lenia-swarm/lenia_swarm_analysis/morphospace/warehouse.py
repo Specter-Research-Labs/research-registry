@@ -375,6 +375,170 @@ def register_specimen_study(
     )
 
 
+def upsert_morphospace_source(
+    connection: DuckDBPyConnection,
+    *,
+    source_id: str,
+    source_kind: str,
+    label: str,
+    version_label: str | None = None,
+    doi: str | None = None,
+    url: str | None = None,
+    license: str | None = None,
+    metadata_json: dict[str, Any] | None = None,
+) -> None:
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO morphospace_sources (
+            source_id, source_kind, label, version_label, doi, url, license, metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
+            source_id,
+            source_kind,
+            label,
+            version_label,
+            doi,
+            url,
+            license,
+            json_text(metadata_json or {}),
+        ],
+    )
+
+
+def upsert_feature_space(
+    connection: DuckDBPyConnection,
+    *,
+    feature_space_id: str,
+    feature_space_kind: str,
+    label: str,
+    version_label: str,
+    coordinate_policy: str,
+    metric_json: dict[str, Any] | None = None,
+    metadata_json: dict[str, Any] | None = None,
+) -> None:
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO feature_spaces (
+            feature_space_id, feature_space_kind, label, version_label,
+            coordinate_policy, metric_json, metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON))
+        """,
+        [
+            feature_space_id,
+            feature_space_kind,
+            label,
+            version_label,
+            coordinate_policy,
+            json_text(metric_json or {}),
+            json_text(metadata_json or {}),
+        ],
+    )
+
+
+def replace_feature_axes(
+    connection: DuckDBPyConnection,
+    *,
+    feature_space_id: str,
+    axis_rows: list[dict[str, Any]],
+) -> None:
+    connection.execute(
+        "DELETE FROM feature_axes WHERE feature_space_id = ?",
+        [feature_space_id],
+    )
+    for row in axis_rows:
+        connection.execute(
+            """
+            INSERT INTO feature_axes (
+                feature_space_id, axis_id, axis_index, axis_family, label, units, metadata_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+            """,
+            [
+                feature_space_id,
+                row["axis_id"],
+                int(row["axis_index"]),
+                row["axis_family"],
+                row.get("label"),
+                row.get("units"),
+                json_text(row.get("metadata_json") or {}),
+            ],
+        )
+
+
+def upsert_observation(
+    connection: DuckDBPyConnection,
+    *,
+    observation_id: str,
+    specimen_id: str | None,
+    study_id: str,
+    source_id: str,
+    observation_kind: str,
+    context_id: str | None = None,
+    observed_at: Any = None,
+    step: int | None = None,
+    source_ref: str | None = None,
+    payload_json: dict[str, Any] | None = None,
+) -> None:
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO observations (
+            observation_id, specimen_id, study_id, source_id, context_id,
+            observation_kind, observed_at, step, source_ref, payload_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
+            observation_id,
+            specimen_id,
+            study_id,
+            source_id,
+            context_id,
+            observation_kind,
+            normalize_optional_timestamp(observed_at),
+            step,
+            source_ref,
+            json_text(payload_json or {}),
+        ],
+    )
+
+
+def replace_feature_values(
+    connection: DuckDBPyConnection,
+    *,
+    observation_id: str,
+    feature_space_id: str,
+    value_rows: list[dict[str, Any]],
+) -> None:
+    connection.execute(
+        """
+        DELETE FROM feature_values
+        WHERE observation_id = ? AND feature_space_id = ?
+        """,
+        [observation_id, feature_space_id],
+    )
+    for row in value_rows:
+        connection.execute(
+            """
+            INSERT INTO feature_values (
+                observation_id, feature_space_id, axis_id, raw_value,
+                normalized_value, metadata_json
+            )
+            VALUES (?, ?, ?, ?, ?, CAST(? AS JSON))
+            """,
+            [
+                observation_id,
+                feature_space_id,
+                row["axis_id"],
+                row.get("raw_value"),
+                row.get("normalized_value"),
+                json_text(row.get("metadata_json") or {}),
+            ],
+        )
+
+
 def replace_specimen_axes(
     connection: DuckDBPyConnection,
     *,

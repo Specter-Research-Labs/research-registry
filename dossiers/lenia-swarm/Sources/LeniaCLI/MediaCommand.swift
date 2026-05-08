@@ -194,6 +194,21 @@ private func renderMedia(
         }
     }
 
+    let libraryReplayBundles = try discoverLibraryReplayBundles(from: inputURL)
+    if !libraryReplayBundles.isEmpty {
+        let selectedBundles = limit.map { Array(libraryReplayBundles.prefix($0)) } ?? libraryReplayBundles
+        return try selectedBundles.map {
+            try renderLibraryReplayMediaBundle(
+                $0,
+                outputRoot: outputURL,
+                frameBudget: frameBudget,
+                steps: steps,
+                fps: fps,
+                ffmpeg: ffmpeg
+            )
+        }
+    }
+
     throw ValidationError("No media renderer matched \(inputURL.path). Expected a replay-capable run directory.")
 }
 

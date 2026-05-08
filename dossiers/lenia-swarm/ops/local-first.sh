@@ -3,7 +3,13 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 dossier_root="$repo_root/dossiers/lenia-swarm"
-artifact_root="$dossier_root/artifacts"
+
+artifact_parent="${SPCTR_LOCAL_ARTIFACT_ROOT-${SPECTER_ARTIFACT_ROOT-$repo_root/dossiers}}"
+if [[ -z "$artifact_parent" ]]; then
+  echo "local artifact root is set but empty" >&2
+  exit 2
+fi
+artifact_root="${artifact_parent%/}/lenia-swarm/artifacts"
 runs_root="$artifact_root/runs"
 logs_root="$artifact_root/logs"
 bundles_root="$artifact_root/bundles"
@@ -40,10 +46,9 @@ Usage:
   local-first.sh evolve --config <base.json> --es <es.json> [--tag NAME]
   local-first.sh sweep [args passed through to ops/sweep.sh]
   local-first.sh index --run-dir <path>
-  local-first.sh sync [--with-bundles]
 
 Notes:
-  - All outputs are local under dossiers/lenia-swarm/artifacts/
+  - All outputs are local under the shared lenia-swarm artifacts root.
   - search runs media export for the top-N results, indexes into local compendium.sqlite, and optionally creates tarballs.
 EOF
 }
@@ -199,10 +204,6 @@ case "$cmd" in
     fi
     "$cli_bin" index --run-dir "$run_dir" --db "$db_path" --include-results --stats
     echo "db: $db_path"
-    ;;
-
-  sync)
-    "$dossier_root/ops/sync-local-compendium.sh" "$@"
     ;;
 
   *)

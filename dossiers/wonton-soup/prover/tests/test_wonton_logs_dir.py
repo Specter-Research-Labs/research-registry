@@ -7,14 +7,15 @@ from pathlib import Path
 import pytest
 
 import wonton
-from runtime_paths import local_runtime_logs_root
+from runtime_paths import default_persistent_root, local_runtime_logs_root
 
 
 def test_resolve_logs_dir_env_policy(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.delenv("SPECTER_LOG_ROOT", raising=False)
+    monkeypatch.delenv("SPCTR_LOCAL_LOG_ROOT", raising=False)
     out = wonton.resolve_logs_dir()
     assert out.name == "logs"
-    assert out.parent == wonton.DOSSIER_ROOT
+    assert out == default_persistent_root() / "logs"
 
     monkeypatch.setenv("SPECTER_LOG_ROOT", "   ")
     with pytest.raises(ValueError, match="SPECTER_LOG_ROOT is set but empty"):
@@ -23,6 +24,10 @@ def test_resolve_logs_dir_env_policy(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("SPECTER_LOG_ROOT", str(tmp_path))
     out = wonton.resolve_logs_dir()
     assert out == local_runtime_logs_root()
+
+    monkeypatch.setenv("SPCTR_LOCAL_LOG_ROOT", str(tmp_path / "local"))
+    out = wonton.resolve_logs_dir()
+    assert out == (tmp_path / "local" / "wonton-soup" / "logs").resolve()
 
 
 def test_list_runs_discovers_non_corpus_run_ids(

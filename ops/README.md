@@ -141,9 +141,17 @@ Use:
 - `spctr exec run --project <slug> <check|smoke|build|publish>`
 - `spctr release gate <slug>`
 - `spctr ci sync --project <slug> --write`
+- `spctr surface sync <surface>` for durable surfaces that have both raw artifacts and a local database snapshot
 
 If a project does not declare a lane, treat that as intentional. Add the narrowest honest lane to
 `spctr.toml` first.
+
+Machine-local artifact roots belong in `~/.config/spctr/config.toml` as
+`local_artifact_root` and `local_log_root`; server roots remain
+`durable_artifact_root`, `durable_log_root`, and `hot_snapshot_root`.
+Repo workspaces may also resolve project-local artifact paths to the sibling
+main checkout when the project contract defines a canonical local surface. Use
+`SPCTR_LOCAL_ARTIFACT_ROOT` only as a temporary override.
 
 ## CI and Deploys
 

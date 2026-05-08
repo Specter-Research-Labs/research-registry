@@ -235,6 +235,7 @@ struct PublishCommands: AsyncParsableCommand {
         subcommands: [
             ReplayCommand.self,
             MediaCommand.self,
+            LibraryFromResultsCommand.self,
             CompendiumPublishCommand.self,
             AtlasPublishCommand.self,
         ]

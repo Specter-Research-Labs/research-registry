@@ -43,7 +43,7 @@ public func defaultCompendiumPathCandidates(
 
     if let repositoryRoot {
         candidates.append(
-            repositoryRoot.appendingPathComponent("outputs")
+            repositoryRoot.appendingPathComponent("artifacts")
                 .appendingPathComponent("compendium.sqlite")
                 .path
         )
@@ -51,7 +51,7 @@ public func defaultCompendiumPathCandidates(
 
     if let supportRoot {
         candidates.append(
-            supportRoot.appendingPathComponent("outputs")
+            supportRoot.appendingPathComponent("artifacts")
                 .appendingPathComponent("compendium.sqlite")
                 .path
         )

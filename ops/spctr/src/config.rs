@@ -52,6 +52,8 @@ pub struct MachineConfig {
     pub hot_snapshot_root: String,
     pub durable_log_root: String,
     pub durable_artifact_root: String,
+    pub local_log_root: Option<String>,
+    pub local_artifact_root: Option<String>,
     pub runtime_root: Option<String>,
     pub ssh: Option<SshConfig>,
     pub config_path: Utf8PathBuf,
@@ -210,6 +212,14 @@ pub fn load_machine_config() -> Result<MachineConfig> {
         true,
     )?
     .unwrap();
+    let local_log_root =
+        string_value(&data, "local_log_root", Some("SPCTR_LOCAL_LOG_ROOT"), false)?;
+    let local_artifact_root = string_value(
+        &data,
+        "local_artifact_root",
+        Some("SPCTR_LOCAL_ARTIFACT_ROOT"),
+        false,
+    )?;
     let runtime_root = string_value(&data, "runtime_root", Some("SPECTER_RUNTIME_ROOT"), false)?;
     let ssh = string_value(&data, "ssh_target", Some("SPECTER_REMOTE_SSH"), false)?
         .map(|raw| SshConfig::parse(&raw))
@@ -219,6 +229,8 @@ pub fn load_machine_config() -> Result<MachineConfig> {
         hot_snapshot_root,
         durable_log_root,
         durable_artifact_root,
+        local_log_root,
+        local_artifact_root,
         runtime_root,
         ssh,
         config_path,

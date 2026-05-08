@@ -327,7 +327,7 @@ struct LocalCommand: AsyncParsableCommand {
 
         let resolvedPromotion = try promoteIfConfigured(
             options: promotion,
-            defaultCompendiumPath: resolveCompendiumPath(configPath: config),
+            defaultCompendiumPath: try resolveCompendiumPath(),
             dossier: dossierName,
             defaultEnabled: true,
             runDir: runDirURL.path,
@@ -339,18 +339,8 @@ struct LocalCommand: AsyncParsableCommand {
         }
     }
 
-    private func resolveCompendiumPath(configPath: String) -> String? {
-        let configURL = URL(fileURLWithPath: configPath).standardizedFileURL
-        var current = configURL.deletingLastPathComponent()
-        while current.path != "/" {
-            let artifacts = current.appendingPathComponent("artifacts", isDirectory: true)
-            var isDir: ObjCBool = false
-            if FileManager.default.fileExists(atPath: artifacts.path, isDirectory: &isDir), isDir.boolValue {
-                return artifacts.appendingPathComponent("compendium.sqlite").path
-            }
-            current = current.deletingLastPathComponent()
-        }
-        return nil
+    private func resolveCompendiumPath() throws -> String {
+        try resolveArtifactPath("artifacts/compendium.sqlite", dossier: dossierName)
     }
 }
 

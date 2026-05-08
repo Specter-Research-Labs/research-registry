@@ -8,8 +8,18 @@ from pathlib import Path
 from typing import Any, Sequence, cast
 
 import duckdb
+import numpy as np
 import pytest
 
+from lenia_swarm_analysis.morphospace.common_morphology import (
+    AXIS_IDS as COMMON_MORPHOLOGY_AXIS_IDS,
+)
+from lenia_swarm_analysis.morphospace.common_morphology import (
+    FEATURE_SPACE_ID as COMMON_MORPHOLOGY_FEATURE_SPACE_ID,
+)
+from lenia_swarm_analysis.morphospace.common_morphology import (
+    point_cloud_shape_features,
+)
 from lenia_swarm_analysis.morphospace.derive_anatomy import derive_anatomy
 from lenia_swarm_analysis.morphospace.derive_context_outcomes import (
     derive_context_outcomes,
@@ -45,12 +55,23 @@ from lenia_swarm_analysis.morphospace.run_universality import run_universality
 from lenia_swarm_analysis.morphospace.warehouse import (
     connect_database,
     normalize_optional_timestamp,
+    register_context,
+    register_specimen_study,
+    register_study,
+    replace_feature_axes,
+    replace_feature_values,
+    upsert_feature_space,
+    upsert_morphospace_source,
+    upsert_observation,
+    upsert_specimen,
+)
+from lenia_swarm_analysis.morphospace_cli import (
+    derive_common_morphology_packet,
+    import_dryad_fish_dataset,
+    refresh_compendium_warehouse,
 )
 from lenia_swarm_analysis.morphospace_cli import (
     main as morphospace_main,
-)
-from lenia_swarm_analysis.morphospace_cli import (
-    refresh_compendium_warehouse,
 )
 from lenia_swarm_analysis.transform.atlas import (
     build_transformation_atlas_packet,
@@ -1823,12 +1844,21 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
     )
     assert direct_payload["studyId"]
     assert direct_payload["statusUpdated"] == 1
+    assert direct_payload["comparisonFeatureSpaceId"] == "lenia_terminal_v1"
+    assert direct_payload["comparisonObservationsUpdated"] == 1
+    assert direct_payload["comparisonFeatureValuesUpdated"] == len(TERMINAL_AXIS_IDS)
     assert direct_payload["topologyStudyId"] is None
 
     connection = connect_database(warehouse_path)
     try:
         assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 1
         assert _scalar_int(connection, "SELECT COUNT(*) FROM study_specimens") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM morphospace_sources") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == len(
+            TERMINAL_AXIS_IDS
+        )
     finally:
         connection.close()
 
@@ -1849,6 +1879,8 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
     payload = json.loads(capsys.readouterr().out)
     assert payload["studyId"]
     assert payload["statusUpdated"] == 1
+    assert payload["comparisonFeatureSpaceId"] == "lenia_terminal_v1"
+    assert payload["comparisonFeatureValuesUpdated"] == len(TERMINAL_AXIS_IDS)
     assert payload["topologyStudyId"] is None
 
 
@@ -1891,6 +1923,42 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
     assert topology_packet["summary"]["sourcePacketKind"] == "transformation_focal_packet_v1"
     assert topology_packet["summary"]["spaces"] == ["terminal_descriptor_space"]
 
+    assert morphospace_main(
+        [
+            "derive-lenia-features",
+            "--warehouse",
+            str(warehouse_path),
+            "--study-id",
+            study_id,
+            "--json",
+        ]
+    ) == 0
+    lenia_payload = json.loads(capsys.readouterr().out)
+    assert lenia_payload["featureSpaceId"] == "lenia_terminal_v1"
+    assert lenia_payload["featureValueCount"] == len(TERMINAL_AXIS_IDS)
+
+    assert morphospace_main(
+        [
+            "export-feature-matrix",
+            "--warehouse",
+            str(warehouse_path),
+            "--feature-space-id",
+            "lenia_terminal_v1",
+            "--study-id",
+            study_id,
+            "--run-id",
+            "run-1",
+            "--json",
+        ]
+    ) == 0
+    matrix_payload = json.loads(capsys.readouterr().out)
+    assert matrix_payload["packetKind"] == "comparative_feature_matrix_v1"
+    assert matrix_payload["summary"]["observationCount"] == 1
+    assert matrix_payload["summary"]["axisCount"] == len(TERMINAL_AXIS_IDS)
+    assert matrix_payload["summary"]["runCounts"] == {"run-1": 1}
+    assert matrix_payload["observations"][0]["runId"] == "run-1"
+    assert len(matrix_payload["matrix"][0]) == len(TERMINAL_AXIS_IDS)
+
     with pytest.raises(SystemExit, match="missing numeric axis"):
         morphospace_main(
             [
@@ -1932,3 +2000,440 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
     discovery_payload = json.loads(capsys.readouterr().out)
     assert discovery_payload["packetKind"] == "creature_discovery_v1"
     assert discovery_payload["summary"]["candidateCount"] == 1
+
+
+def test_morphospace_cli_compares_feature_cohorts(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    warehouse_path = tmp_path / "cohorts.duckdb"
+    connection = connect_database(warehouse_path)
+    try:
+        study_id = register_study(
+            connection,
+            study_kind="fixture",
+            label="cohort-fixture",
+        )
+        upsert_morphospace_source(
+            connection,
+            source_id="synthetic_fixture",
+            source_kind="fixture",
+            label="Synthetic fixture",
+        )
+        upsert_feature_space(
+            connection,
+            feature_space_id="fixture_space",
+            feature_space_kind="fixture",
+            label="Fixture feature space",
+            version_label="v1",
+            coordinate_policy="unit test coordinates",
+            metric_json={"metric": "euclidean", "preferredValueColumn": "normalized_value"},
+        )
+        replace_feature_axes(
+            connection,
+            feature_space_id="fixture_space",
+            axis_rows=[
+                {
+                    "axis_id": "x",
+                    "axis_index": 0,
+                    "axis_family": "fixture",
+                    "label": "x",
+                },
+                {
+                    "axis_id": "y",
+                    "axis_index": 1,
+                    "axis_family": "fixture",
+                    "label": "y",
+                },
+            ],
+        )
+        context_id = register_context(
+            connection,
+            study_id=study_id,
+            context_kind="baseline",
+            label="baseline",
+        )
+        for specimen_id, run_id, values in [
+            ("fixture-left", "run-left", {"x": 0.0, "y": 0.0}),
+            ("fixture-right", "run-right", {"x": 3.0, "y": 4.0}),
+        ]:
+            upsert_specimen(
+                connection,
+                {
+                    "specimen_id": specimen_id,
+                    "study_id": study_id,
+                    "run_id": run_id,
+                    "source_kind": "fixture",
+                    "source_mode": "cohort-test",
+                    "source_algorithm": "manual",
+                    "provenance_json": {},
+                },
+            )
+            register_specimen_study(connection, study_id=study_id, specimen_id=specimen_id)
+            observation_id = f"{specimen_id}-obs"
+            upsert_observation(
+                connection,
+                observation_id=observation_id,
+                specimen_id=specimen_id,
+                study_id=study_id,
+                source_id="synthetic_fixture",
+                context_id=context_id,
+                observation_kind="fixture_embedding",
+            )
+            replace_feature_values(
+                connection,
+                observation_id=observation_id,
+                feature_space_id="fixture_space",
+                value_rows=[
+                    {"axis_id": axis_id, "raw_value": value, "normalized_value": value}
+                    for axis_id, value in values.items()
+                ],
+            )
+    finally:
+        connection.close()
+
+    assert morphospace_main(
+        [
+            "compare-feature-cohorts",
+            "--warehouse",
+            str(warehouse_path),
+            "--feature-space-id",
+            "fixture_space",
+            "--left-label",
+            "left",
+            "--left-run-id",
+            "run-left",
+            "--right-label",
+            "right",
+            "--right-run-id",
+            "run-right",
+            "--json",
+        ]
+    ) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["packetKind"] == "comparative_feature_cohort_comparison_v1"
+    assert payload["summary"]["left"]["observationCount"] == 1
+    assert payload["summary"]["right"]["observationCount"] == 1
+    assert payload["summary"]["crossDistance"]["count"] == 1
+    assert payload["summary"]["crossDistance"]["mean"] == 5.0
+    assert payload["summary"]["leftToRightNearestDistance"]["max"] == 5.0
+    assert payload["topAxisDeltas"][0]["axisId"] == "y"
+    assert payload["topAxisDeltas"][0]["deltaRightMinusLeft"] == 4.0
+
+
+def test_common_morphology_point_cloud_features_distinguish_shapes() -> None:
+    elongated = np.asarray(
+        [
+            [0.0, 0.0],
+            [4.0, 0.0],
+            [2.0, 0.2],
+            [2.0, -0.2],
+        ],
+        dtype=np.float64,
+    )
+    roundish = np.asarray(
+        [
+            [-1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 0.0],
+            [0.0, -1.0],
+        ],
+        dtype=np.float64,
+    )
+
+    elongated_features = point_cloud_shape_features(elongated)
+    roundish_features = point_cloud_shape_features(roundish)
+
+    assert elongated_features["elongation"] > roundish_features["elongation"]
+    assert elongated_features["anisotropy"] > roundish_features["anisotropy"]
+    assert roundish_features["radial_symmetry"] > elongated_features["radial_symmetry"]
+    assert set(elongated_features) == set(COMMON_MORPHOLOGY_AXIS_IDS)
+
+
+def _write_dryad_fish_fixture(root: Path) -> None:
+    gpa_root = root / "extracted" / "gpa" / "Slicer_GPA_output"
+    provenance_root = root / "provenance"
+    gpa_root.mkdir(parents=True)
+    provenance_root.mkdir(parents=True)
+    _write_json(
+        provenance_root / "source.json",
+        {
+            "dataset_id": "dryad-fish-body-shape-20240112",
+            "title": (
+                "Data for: Phylogenetic structure of body shape in a diverse "
+                "inland ichthyofauna"
+            ),
+            "doi": "10.5061/dryad.n2z34tn2t",
+            "url": "https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t",
+            "publication_date": "2024-01-12",
+            "license": "CC0-1.0",
+            "authors": ["Kevin Torgersen"],
+        },
+    )
+    (gpa_root / "pcScores.csv").write_text(
+        "\n".join(
+            [
+                "Sample_name,PC 1,PC 2",
+                "Alosa alabamae fixture,1.0,0.0",
+                "Ameiurus melas fixture,3.0,0.0",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (gpa_root / "eigenvalues.csv").write_text(
+        "\n".join(
+            [
+                "PC 1,2.0",
+                "PC 2,1.0",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (gpa_root / "OutputData.csv").write_text(
+        "Sample_name,proc_dist,centeroid,"
+        "LM 1_X,LM 1_Y,LM 1_Z,"
+        "LM 2_X,LM 2_Y,LM 2_Z,"
+        "LM 3_X,LM 3_Y,LM 3_Z,"
+        "LM 4_X,LM 4_Y,LM 4_Z\n"
+        "Alosa alabamae fixture,0.1,10.0,"
+        "0.0,0.0,0.0,"
+        "4.0,0.0,0.0,"
+        "2.0,0.2,0.0,"
+        "2.0,-0.2,0.0\n"
+        "Ameiurus melas fixture,0.2,12.0,"
+        "-1.0,0.0,0.0,"
+        "0.0,1.0,0.0,"
+        "1.0,0.0,0.0,"
+        "0.0,-1.0,0.0\n",
+        encoding="utf-8",
+    )
+
+
+def test_morphospace_import_dryad_fish_populates_comparison_layer(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_root = tmp_path / "dryad-fish"
+    _write_dryad_fish_fixture(dataset_root)
+    warehouse_path = tmp_path / "warehouse.duckdb"
+
+    direct_payload = import_dryad_fish_dataset(
+        warehouse_path=warehouse_path,
+        dataset_root=dataset_root,
+        label="fish-fixture",
+    )
+    assert direct_payload["specimenCount"] == 2
+    assert direct_payload["observationCount"] == 2
+    assert direct_payload["axisCount"] == 2
+    assert direct_payload["featureValueCount"] == 4
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM morphospace_sources") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_axes") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == 4
+        axis_metadata = json.loads(
+            connection.execute(
+                """
+                SELECT metadata_json
+                FROM feature_axes
+                WHERE feature_space_id = 'fish_gpa_pc_v1' AND axis_id = 'pc_01'
+                """
+            ).fetchone()[0]
+        )
+        assert axis_metadata["explainedVariance"] == 2.0 / 3.0
+        normalized_rows = connection.execute(
+            """
+            SELECT axis_id, raw_value, normalized_value
+            FROM comparison_feature_values_vw
+            WHERE axis_id IN ('pc_01', 'pc_02')
+            ORDER BY axis_id, raw_value
+            """
+        ).fetchall()
+        assert normalized_rows == [
+            ("pc_01", 1.0, -1.0),
+            ("pc_01", 3.0, 1.0),
+            ("pc_02", 0.0, 0.0),
+            ("pc_02", 0.0, 0.0),
+        ]
+        canonical_families = {
+            row[0]
+            for row in connection.execute(
+                "SELECT canonical_family FROM specimens ORDER BY canonical_family"
+            ).fetchall()
+        }
+        assert canonical_families == {"Alosa alabamae", "Ameiurus melas"}
+    finally:
+        connection.close()
+
+    replayed_warehouse = tmp_path / "warehouse-cli.duckdb"
+    assert morphospace_main(
+        [
+            "import-dryad-fish",
+            "--warehouse",
+            str(replayed_warehouse),
+            "--dataset-root",
+            str(dataset_root),
+            "--label",
+            "fish-fixture-cli",
+            "--json",
+        ]
+    ) == 0
+    cli_payload = json.loads(capsys.readouterr().out)
+    assert cli_payload["specimenCount"] == 2
+    assert cli_payload["featureSpaceId"] == "fish_gpa_pc_v1"
+
+    assert morphospace_main(
+        [
+            "export-feature-matrix",
+            "--warehouse",
+            str(replayed_warehouse),
+            "--feature-space-id",
+            "fish_gpa_pc_v1",
+            "--json",
+        ]
+    ) == 0
+    matrix_payload = json.loads(capsys.readouterr().out)
+    assert matrix_payload["packetKind"] == "comparative_feature_matrix_v1"
+    assert matrix_payload["summary"]["observationCount"] == 2
+    assert matrix_payload["summary"]["axisCount"] == 2
+    assert matrix_payload["matrix"] == [[-1.0, 0.0], [1.0, 0.0]]
+
+    assert morphospace_main(
+        [
+            "run-feature-tda",
+            "--warehouse",
+            str(replayed_warehouse),
+            "--feature-space-id",
+            "fish_gpa_pc_v1",
+            "--max-homology-dim",
+            "1",
+            "--json",
+        ]
+    ) == 0
+    tda_payload = json.loads(capsys.readouterr().out)
+    assert tda_payload["packetKind"] == "comparative_feature_tda_v1"
+    assert tda_payload["summary"]["backend"] == "ripser-euclidean"
+    assert tda_payload["summary"]["pairwiseDistance"]["count"] == 1
+    assert tda_payload["topology"]["summaries"][0]["featureCount"] == 2
+
+
+def test_morphospace_cli_derives_common_morphology_space(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_root = tmp_path / "dryad-fish"
+    _write_dryad_fish_fixture(dataset_root)
+    compendium_path = _make_compendium_fixture(tmp_path)
+    warehouse_path = tmp_path / "warehouse.duckdb"
+
+    refresh_compendium_warehouse(
+        warehouse_path=warehouse_path,
+        compendium_path=compendium_path,
+        label="fixture-study",
+    )
+    import_dryad_fish_dataset(
+        warehouse_path=warehouse_path,
+        dataset_root=dataset_root,
+        label="fish-fixture",
+    )
+    direct_payload = derive_common_morphology_packet(
+        warehouse_path=warehouse_path,
+        dryad_fish_root=dataset_root,
+    )
+    assert direct_payload["featureSpaceId"] == COMMON_MORPHOLOGY_FEATURE_SPACE_ID
+    assert direct_payload["observationCount"] == 3
+    assert direct_payload["axisCount"] == len(COMMON_MORPHOLOGY_AXIS_IDS)
+    assert direct_payload["featureValueCount"] == 3 * len(COMMON_MORPHOLOGY_AXIS_IDS)
+    assert direct_payload["sourceCounts"] == {
+        "dryad_fish_body_shape_20240112": 2,
+        "lenia_swarm": 1,
+    }
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert (
+            _scalar_int(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM feature_values
+                WHERE feature_space_id = 'common_morphology_v1'
+                """,
+            )
+            == 3 * len(COMMON_MORPHOLOGY_AXIS_IDS)
+        )
+        axis_ids = [
+            row[0]
+            for row in connection.execute(
+                """
+                SELECT axis_id
+                FROM feature_axes
+                WHERE feature_space_id = 'common_morphology_v1'
+                ORDER BY axis_index
+                """
+            ).fetchall()
+        ]
+        assert tuple(axis_ids) == COMMON_MORPHOLOGY_AXIS_IDS
+    finally:
+        connection.close()
+
+    assert morphospace_main(
+        [
+            "derive-common-morphology",
+            "--warehouse",
+            str(warehouse_path),
+            "--dryad-fish-root",
+            str(dataset_root),
+            "--json",
+        ]
+    ) == 0
+    cli_payload = json.loads(capsys.readouterr().out)
+    assert cli_payload["observationCount"] == 3
+    assert cli_payload["sourceCounts"]["dryad_fish_body_shape_20240112"] == 2
+
+    assert morphospace_main(
+        [
+            "export-feature-matrix",
+            "--warehouse",
+            str(warehouse_path),
+            "--feature-space-id",
+            COMMON_MORPHOLOGY_FEATURE_SPACE_ID,
+            "--json",
+        ]
+    ) == 0
+    matrix_payload = json.loads(capsys.readouterr().out)
+    assert matrix_payload["summary"]["observationCount"] == 3
+    assert matrix_payload["summary"]["axisCount"] == len(COMMON_MORPHOLOGY_AXIS_IDS)
+    assert matrix_payload["summary"]["sourceCounts"] == {
+        "dryad_fish_body_shape_20240112": 2,
+        "lenia_swarm": 1,
+    }
+
+    assert morphospace_main(
+        [
+            "compare-feature-cohorts",
+            "--warehouse",
+            str(warehouse_path),
+            "--feature-space-id",
+            COMMON_MORPHOLOGY_FEATURE_SPACE_ID,
+            "--left-label",
+            "lenia",
+            "--left-source-id",
+            "lenia_swarm",
+            "--right-label",
+            "fish",
+            "--right-source-id",
+            "dryad_fish_body_shape_20240112",
+            "--json",
+        ]
+    ) == 0
+    comparison_payload = json.loads(capsys.readouterr().out)
+    assert comparison_payload["packetKind"] == "comparative_feature_cohort_comparison_v1"
+    assert comparison_payload["summary"]["left"]["observationCount"] == 1
+    assert comparison_payload["summary"]["right"]["observationCount"] == 2
+    assert comparison_payload["summary"]["crossDistance"]["count"] == 2

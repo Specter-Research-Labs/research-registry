@@ -6,6 +6,55 @@ import XCTest
 @testable import LeniaCore
 
 final class CampaignCommandTests: XCTestCase {
+    func testCampaignCentralCompendiumResolvesPlainRelativePathFromConfigDirectoryWhenPresent() throws {
+        let root = try makeTempDirectory(prefix: "lenia-campaign-central-db")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let configDirectory = root.appendingPathComponent("configs/campaigns", isDirectory: true)
+        let dossierRoot = root.appendingPathComponent("dossier", isDirectory: true)
+        let outputURL = root.appendingPathComponent("output", isDirectory: true)
+        try FileManager.default.createDirectory(at: configDirectory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: dossierRoot, withIntermediateDirectories: true)
+        _ = FileManager.default.createFile(
+            atPath: configDirectory.appendingPathComponent("central.sqlite").path,
+            contents: Data()
+        )
+
+        let resolved = try resolveCampaignCentralCompendiumPath(
+            promotedPath: nil,
+            configuredPath: "central.sqlite",
+            outputURL: outputURL,
+            campaignConfigDirectory: configDirectory,
+            dossierRoot: dossierRoot
+        )
+
+        XCTAssertEqual(resolved, configDirectory.appendingPathComponent("central.sqlite").path)
+    }
+
+    func testCampaignCentralCompendiumUsesArtifactRootForCanonicalOutputPath() throws {
+        let root = try makeTempDirectory(prefix: "lenia-campaign-central-canonical")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let artifactRoot = root.appendingPathComponent("artifacts-root", isDirectory: true)
+        setenv("SPCTR_LOCAL_ARTIFACT_ROOT", artifactRoot.path, 1)
+        defer { unsetenv("SPCTR_LOCAL_ARTIFACT_ROOT") }
+
+        let resolved = try resolveCampaignCentralCompendiumPath(
+            promotedPath: nil,
+            configuredPath: "outputs/compendium.sqlite",
+            outputURL: root.appendingPathComponent("output", isDirectory: true),
+            campaignConfigDirectory: root,
+            dossierRoot: root.appendingPathComponent("dossier", isDirectory: true)
+        )
+
+        XCTAssertEqual(
+            resolved,
+            artifactRoot
+                .appendingPathComponent(dossierName, isDirectory: true)
+                .appendingPathComponent("outputs/compendium.sqlite")
+                .path
+        )
+    }
+
     func testDiscoveryCampaignWritesBundleAndExportsBest() async throws {
         let root = try makeTempDirectory(prefix: "lenia-campaign-discovery")
         defer { try? FileManager.default.removeItem(at: root) }

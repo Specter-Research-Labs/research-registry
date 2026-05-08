@@ -8,6 +8,8 @@ from pathlib import Path
 DOSSIER_NAME = "wonton-soup"
 DOSSIER_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = DOSSIER_ROOT.parents[1]
+LOCAL_LOG_ROOT_ENV = "SPCTR_LOCAL_LOG_ROOT"
+LOCAL_ARTIFACT_ROOT_ENV = "SPCTR_LOCAL_ARTIFACT_ROOT"
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,35 @@ def _dossier_root(env_name: str, child: str) -> Path | None:
     return root / DOSSIER_NAME / child
 
 
+def default_persistent_dossier_parent(repo_root: Path | None = None) -> Path:
+    repo = (repo_root or REPO_ROOT).resolve()
+    workspace_parent = repo.parent
+    if workspace_parent.name == "research-registry-workspaces":
+        shared_dossiers = workspace_parent.parent / "research-registry" / "dossiers"
+        if shared_dossiers.exists():
+            return shared_dossiers.resolve()
+    return (repo / "dossiers").resolve()
+
+
+def default_persistent_root(repo_root: Path | None = None) -> Path:
+    return default_persistent_dossier_parent(repo_root) / DOSSIER_NAME
+
+
+def configured_local_logs_root() -> Path | None:
+    return _dossier_root(LOCAL_LOG_ROOT_ENV, "logs")
+
+
+def configured_local_artifacts_root() -> Path | None:
+    return _dossier_root(LOCAL_ARTIFACT_ROOT_ENV, "artifacts")
+
+
+def configured_local_corpora_root() -> Path | None:
+    root = _read_root(LOCAL_ARTIFACT_ROOT_ENV)
+    if root is None:
+        return None
+    return root / DOSSIER_NAME / "artifacts" / "corpora"
+
+
 def configured_remote_logs_root() -> Path | None:
     return _dossier_root("SPECTER_LOG_ROOT", "logs")
 
@@ -115,21 +146,30 @@ def local_runtime_corpora_root() -> Path:
 
 
 def resolve_logs_root() -> Path:
+    local_root = configured_local_logs_root()
+    if local_root is not None:
+        return local_root
     if configured_remote_logs_root() is not None:
         return local_runtime_logs_root()
-    return DOSSIER_ROOT / "logs"
+    return default_persistent_root() / "logs"
 
 
 def resolve_artifacts_root() -> Path:
+    local_root = configured_local_artifacts_root()
+    if local_root is not None:
+        return local_root
     if configured_remote_artifacts_root() is not None:
         return local_runtime_artifacts_root()
-    return DOSSIER_ROOT / "outputs"
+    return default_persistent_root() / "artifacts"
 
 
 def resolve_corpora_root() -> Path:
+    local_root = configured_local_corpora_root()
+    if local_root is not None:
+        return local_root
     if configured_remote_corpora_root() is not None:
         return local_runtime_corpora_root()
-    return DOSSIER_ROOT / "artifacts" / "corpora"
+    return default_persistent_root() / "artifacts" / "corpora"
 
 
 def resolve_synthetic_bureau_root() -> Path:

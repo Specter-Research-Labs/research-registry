@@ -33,6 +33,7 @@ declared surfaces such as `lenia-compendium`.
 - [LocalCLI](./contracts/LocalCLI.md)
 - [ResearchModes](./contracts/ResearchModes.md)
 - [CompendiumSchema](./contracts/CompendiumSchema.md)
+- [ComparativeMorphospace](./contracts/ComparativeMorphospace.md)
 - [MorphometricsAndTraits](./contracts/MorphometricsAndTraits.md)
 - [EcologyCLI](./contracts/EcologyCLI.md)
 - [ArtifactLayout](./contracts/ArtifactLayout.md)

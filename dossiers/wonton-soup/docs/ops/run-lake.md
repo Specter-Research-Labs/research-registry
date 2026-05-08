@@ -16,8 +16,12 @@ Single-run logs answer local debugging questions. The lake answers cross-run que
 Lake root resolves via `analysis.lake.db.resolve_lake_paths()` and
 `runtime_paths.resolve_artifacts_root()`.
 
-- If `SPECTER_ARTIFACT_ROOT` is unset:
-  - active path: `dossiers/wonton-soup/outputs/lake/`
+- If no machine-local override is configured:
+  - active path: `dossiers/wonton-soup/artifacts/lake/`
+  - checkouts under `research-registry-workspaces/` resolve this to the sibling main
+    `research-registry/dossiers/wonton-soup/artifacts/lake/`
+- If `SPCTR_LOCAL_ARTIFACT_ROOT` is set:
+  - active path: `$SPCTR_LOCAL_ARTIFACT_ROOT/wonton-soup/artifacts/lake/`
 - If `SPECTER_ARTIFACT_ROOT` is set:
   - active local staging path: `$SPECTER_RUNTIME_ROOT/wonton-soup/artifacts/lake/` when `SPECTER_RUNTIME_ROOT` is set, otherwise `tmp/runtime-artifacts/wonton-soup/artifacts/lake/`
   - remote target root: `$SPECTER_ARTIFACT_ROOT/wonton-soup/artifacts/lake/`
@@ -43,25 +47,25 @@ double-indexing it in `runs` and downstream fact tables.
 
 ### Daily Incremental Update
 
-```bash
-uv run python wonton.py postprocess --logs-dir logs
-uv run python wonton.py lake reconcile --logs-dir logs
+```
+uv run python wonton.py postprocess
+uv run python wonton.py lake reconcile
 ```
 
 Use when adding fresh runs locally.
 
 ### Backfill / Repair Missing Metrics
 
-```bash
-uv run python wonton.py postprocess --logs-dir logs
-uv run python wonton.py lake reconcile --logs-dir logs
+```
+uv run python wonton.py postprocess
+uv run python wonton.py lake reconcile
 ```
 
 Use when old runs are missing postprocess-heavy fields.
 
 ### Paper Analysis Workflow
 
-```bash
+```
 LAKE_DB_PATH=/path/to/shared/lake.duckdb \
 uv run python dossiers/wonton-soup/paper/build_figures.py \
   --out-dir dossiers/wonton-soup/paper/artifacts
@@ -79,10 +83,9 @@ lake jobs for optional snapshots, and `lake export-parquet` only for the site da
 
 ### Site Dashboard Release (Hybrid Publish Path)
 
-```bash
+```
 uv run python wonton.py lake export-parquet \
-  --config dossiers/wonton-soup/analysis/lake/presets/72_site_dashboard_superset_v1.json \
-  --logs-dir logs
+  --config dossiers/wonton-soup/analysis/lake/presets/72_site_dashboard_superset_v1.json
 ```
 
 Use when publishing a reproducible compiled dashboard cohort to `site/dashboards/wonton-soup/data`.
@@ -91,27 +94,26 @@ publishes static site assets.
 
 ### Surface Preservation Path
 
-Local runs preserve raw material; the server owns the master DB.
+Local runs write into the canonical local lake. `spctr surface sync` checkpoints
+the raw logs/artifacts and promotes the current lake snapshot to the server.
 
-```bash
+```
 spctr surface status wonton-lake
-spctr surface checkpoint wonton-lake
+spctr surface sync wonton-lake
 ```
 
-Use after local experiments to cold-store logs and non-lake artifacts. The
-local `lake.duckdb` is a cache for fast analysis, not a merge source for the
-server.
+Use after local experiments to cold-store logs, non-lake artifacts, and the
+current `lake.duckdb` snapshot.
 
 On the server, the systemd timer runs:
 
-```bash
+```
 spctr surface refresh wonton-lake --site-data-root /srv/www/site/data/wonton-soup
 ```
 
 That refresh runs the native Wonton postprocess/reconcile path against the
-server-visible durable roots and rebuilds the master `lake.duckdb` plus the
-dashboard parquet export. Do not upsert local DB files into the server DB; if a
-row matters, it must be recoverable from cold-stored logs and artifacts.
+server-visible durable roots and can rebuild `lake.duckdb` plus the dashboard
+parquet export from the preserved raw roots.
 
 ## What Reconcile Extracts
 
@@ -174,7 +176,7 @@ Checks:
 
 - run `spctr surface status wonton-lake`
 - inspect log/artifact roots from `runtime_paths`
-- rerun `spctr surface checkpoint wonton-lake` after resolving root mismatch
+- rerun `spctr surface sync wonton-lake` after resolving root mismatch
 
 ## Job-Based Materialization
 

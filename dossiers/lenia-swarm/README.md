@@ -153,14 +153,19 @@ See `docs/contracts/LocalCLI.md` for the `LeniaCLI discover local` interface, ar
 
 ### Surface Operations
 
-`LeniaCLI` and `LeniaStudio` compute run artifacts, compendia, and warehouse
-data. `spctr surface` preserves the declared `lenia-compendium` raw roots; any
-master compendium should be rebuilt from those preserved artifacts rather than
-merged from local SQLite files:
+`LeniaCLI` and `LeniaStudio` append into one local compendium at the shared
+Lenia artifacts root: `lenia-swarm/artifacts/compendium.sqlite`, with the
+warehouse beside it as `morphospace.duckdb`. A checkout under
+`research-registry-workspaces/` resolves canonical artifact paths to the sibling
+main `research-registry/dossiers` tree, so workspace runs append to the same
+local store instead of creating workspace-local compendiums. `local_artifact_root`
+in the machine `spctr` config is only for machines whose checkout layout differs.
+`spctr surface sync` checkpoints the declared compendium artifacts and promotes
+the current compendium snapshot:
 
-```bash
+```
 spctr surface status lenia-compendium
-spctr surface checkpoint lenia-compendium
+spctr surface sync lenia-compendium
 ```
 
 ### Studio

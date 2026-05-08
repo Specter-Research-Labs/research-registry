@@ -14,13 +14,18 @@ Core guarantees:
 
 Corpus artifacts resolve via `runtime_paths.resolve_corpora_root()`.
 
-- If `SPECTER_ARTIFACT_ROOT` is unset:
+- If no machine-local override is configured:
   - active path: `dossiers/wonton-soup/artifacts/corpora/` (gitignored)
+- If `SPCTR_LOCAL_ARTIFACT_ROOT` is set:
+  - active path: `$SPCTR_LOCAL_ARTIFACT_ROOT/wonton-soup/artifacts/corpora/`
 - If `SPECTER_ARTIFACT_ROOT` is set:
   - active local staging path: `$SPECTER_RUNTIME_ROOT/wonton-soup/corpora/` when `SPECTER_RUNTIME_ROOT` is set, otherwise `tmp/runtime-artifacts/wonton-soup/corpora/`
   - remote target root: `$SPECTER_ARTIFACT_ROOT/wonton-soup/corpora/`
 
-Corpus commands keep outputs local by default; use `--sync` when you want staged outputs copied to the remote target.
+Checkouts under `research-registry-workspaces/` resolve the unset-env local path
+to the sibling main `research-registry/dossiers` tree. Corpus commands keep
+outputs local by default; use `--sync` when you want staged outputs copied to
+the remote target.
 
 ## Directory Layout
 
@@ -95,7 +100,7 @@ When `--sample` is used, `--seed` is required.
 
 Build from the pinned checkout under `lean_project/.lake/packages/mathlib`:
 
-```bash
+```
 uv run python wonton.py corpus build-lean-mathlib --corpus-id mathlib4 --limit 500
 ```
 
@@ -103,7 +108,7 @@ uv run python wonton.py corpus build-lean-mathlib --corpus-id mathlib4 --limit 5
 
 Validation emits `validation.jsonl` and a derived-valid slice:
 
-```bash
+```
 uv run python wonton.py corpus validate --ref lean:<corpus_id>@<build_id>
 ```
 
@@ -112,7 +117,7 @@ uv run python wonton.py corpus validate --ref lean:<corpus_id>@<build_id>
 Capability sweeps run basin analysis across provider x MCTS mode and emit `capability.jsonl` plus
 a derived-feasible slice:
 
-```bash
+```
 uv run python wonton.py corpus sweep-lean-capability \
   --ref lean:<corpus_id>@<build_id>#valid \
   --provider reprover --provider deepseek \
@@ -130,7 +135,7 @@ Runtime scales roughly linearly in `N`.
 
 ### Distributed MCTS (optional)
 
-```bash
+```
 uv run python wonton.py corpus sweep-lean-capability \
   --ref lean:<corpus_id>@<build_id>#valid \
   --provider reprover \
@@ -147,13 +152,13 @@ If a sweep root already exists and is incomplete, re-run with `--resume`.
 
 TPTP:
 
-```bash
+```
 uv run python wonton.py corpus sweep-tptp-capability --ref tptp:<corpus_id>@<build_id> --timeout 10
 ```
 
 SMT-LIB:
 
-```bash
+```
 uv run python wonton.py corpus sweep-smtlib-capability --ref smtlib:<corpus_id>@<build_id> --timeout 10
 uv run python wonton.py corpus sweep-smtlib-capability --ref smtlib:<corpus_id>@<build_id> --timeout 10 --require-proof
 ```

@@ -131,14 +131,13 @@ struct CampaignCommand: AsyncParsableCommand {
         if let compendiumConfig = campaignConfig.compendium,
            compendiumConfig.mergePhases,
            !phaseCompendiumPaths.isEmpty {
-            let centralPath = resolvedPromotion.compendiumPath ?? compendiumConfig.centralDB.map { path -> String in
-                let resolved = resolveCampaignRelativePath(
-                    path,
-                    configDirectory: campaignConfigDirectory,
-                    dossierRoot: dossierRoot
-                )
-                return resolved.path
-            } ?? outputURL.appendingPathComponent("compendium.sqlite").path
+            let centralPath = try resolveCampaignCentralCompendiumPath(
+                promotedPath: resolvedPromotion.compendiumPath,
+                configuredPath: compendiumConfig.centralDB,
+                outputURL: outputURL,
+                campaignConfigDirectory: campaignConfigDirectory,
+                dossierRoot: dossierRoot
+            )
             try mergeCompendiumDatabases(sources: phaseCompendiumPaths, into: centralPath, logger: logger)
             if let warehouseResult = try refreshWarehouseProjection(
                 compendiumPath: centralPath,
@@ -686,6 +685,32 @@ func phasePromotionConfig(outputURL: URL) -> ArchivePromotionConfig {
         warehousePath: nil,
         warehouseTopology: false
     )
+}
+
+func resolveCampaignCentralCompendiumPath(
+    promotedPath: String?,
+    configuredPath: String?,
+    outputURL: URL,
+    campaignConfigDirectory: URL,
+    dossierRoot: URL
+) throws -> String {
+    if let promotedPath {
+        return promotedPath
+    }
+    guard let configuredPath else {
+        return outputURL.appendingPathComponent("compendium.sqlite").path
+    }
+
+    let rawPath = normalized(configuredPath) ?? configuredPath
+    let artifactPath = try resolveArtifactPath(rawPath, dossier: dossierName)
+    if artifactPath != rawPath || rawPath.hasPrefix("/") || rawPath.hasPrefix("~") {
+        return artifactPath
+    }
+    return resolveCampaignRelativePath(
+        rawPath,
+        configDirectory: campaignConfigDirectory,
+        dossierRoot: dossierRoot
+    ).path
 }
 
 func mergeCompendiumDatabases(sources: [URL], into centralPath: String, logger: Logger) throws {

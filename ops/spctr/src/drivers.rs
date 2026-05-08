@@ -47,11 +47,50 @@ fn repo_root(project_root: &Utf8Path) -> Result<Utf8PathBuf> {
         })
 }
 
+fn default_local_project_root(project_root: &Utf8Path, project_name: &str) -> Utf8PathBuf {
+    let Some(repo) = project_root.parent().and_then(Utf8Path::parent) else {
+        return project_root.to_owned();
+    };
+    let Some(workspace_parent) = repo.parent() else {
+        return project_root.to_owned();
+    };
+    if workspace_parent.file_name() != Some("research-registry-workspaces") {
+        return project_root.to_owned();
+    }
+    let Some(specter_root) = workspace_parent.parent() else {
+        return project_root.to_owned();
+    };
+    let shared_project_root = specter_root
+        .join("research-registry/dossiers")
+        .join(project_name);
+    if shared_project_root.exists() {
+        return shared_project_root;
+    }
+    project_root.to_owned()
+}
+
 fn infer_remote_base(path: &str) -> RemoteBase {
     if path == "logs" || path.starts_with("logs/") {
         RemoteBase::Logs
     } else {
         RemoteBase::Artifacts
+    }
+}
+
+fn resolve_local_root(
+    project_root: &Utf8Path,
+    machine: &MachineConfig,
+    project_name: &str,
+    path: &str,
+    remote_base: &RemoteBase,
+) -> Utf8PathBuf {
+    let configured_root = match remote_base {
+        RemoteBase::Logs => machine.local_log_root.as_ref(),
+        RemoteBase::Artifacts => machine.local_artifact_root.as_ref(),
+    };
+    match configured_root {
+        Some(root) => Utf8PathBuf::from(root).join(project_name).join(path),
+        None => default_local_project_root(project_root, project_name).join(path),
     }
 }
 
@@ -86,14 +125,10 @@ fn resolve_runtime_path(
 
 fn resolve_raw_root(
     project_root: &Utf8Path,
+    project_name: &str,
     machine: &MachineConfig,
     config: &RawRootConfig,
 ) -> Result<RawRoot> {
-    let local_path = if config.resolve.as_deref() == Some("runtime") {
-        resolve_runtime_path(project_root, machine, config)?
-    } else {
-        project_root.join(&config.path)
-    };
     let remote_base = config
         .remote_base
         .as_deref()
@@ -102,10 +137,21 @@ fn resolve_raw_root(
             _ => RemoteBase::Artifacts,
         })
         .unwrap_or_else(|| infer_remote_base(&config.path));
+    let local_path = if config.resolve.as_deref() == Some("runtime") {
+        resolve_runtime_path(project_root, machine, config)?
+    } else {
+        resolve_local_root(
+            project_root,
+            machine,
+            project_name,
+            &config.path,
+            &remote_base,
+        )
+    };
     let remote_relpath = if config.resolve.is_some() {
         String::new()
     } else {
-        config.path.clone()
+        remote_relpath(&remote_base, &config.path)
     };
     Ok(RawRoot {
         local_path,
@@ -113,6 +159,36 @@ fn resolve_raw_root(
         remote_relpath,
         excludes: config.excludes.clone(),
     })
+}
+
+fn strip_category_prefix<'a>(path: &'a str, category: &str) -> &'a str {
+    if path == category {
+        ""
+    } else {
+        path.strip_prefix(&format!("{category}/")).unwrap_or(path)
+    }
+}
+
+fn remote_relpath(remote_base: &RemoteBase, path: &str) -> String {
+    match remote_base {
+        RemoteBase::Logs => strip_category_prefix(path, "logs").to_owned(),
+        RemoteBase::Artifacts => strip_category_prefix(path, "artifacts").to_owned(),
+    }
+}
+
+fn resolve_db_path(
+    project_root: &Utf8Path,
+    project_name: &str,
+    machine: &MachineConfig,
+    raw_roots: &[RawRoot],
+    db_raw_root: Option<usize>,
+    rel: &str,
+) -> Utf8PathBuf {
+    if let Some(idx) = db_raw_root {
+        return raw_roots[idx].local_path.join(rel);
+    }
+    let remote_base = infer_remote_base(rel);
+    resolve_local_root(project_root, machine, project_name, rel, &remote_base)
 }
 
 pub fn resolve_surface(
@@ -127,14 +203,17 @@ pub fn resolve_surface(
     let raw_roots = surface
         .raw_roots
         .iter()
-        .map(|config| resolve_raw_root(&manifest.root, machine, config))
+        .map(|config| resolve_raw_root(&manifest.root, &project_name, machine, config))
         .collect::<Result<Vec<_>>>()?;
     let db_path = surface.local_db_path.as_ref().map(|rel| {
-        if let Some(idx) = surface.db_raw_root {
-            raw_roots[idx].local_path.join(rel)
-        } else {
-            manifest.root.join(rel)
-        }
+        resolve_db_path(
+            &manifest.root,
+            &project_name,
+            machine,
+            &raw_roots,
+            surface.db_raw_root,
+            rel,
+        )
     });
     let db_filename = db_path
         .as_ref()

@@ -35,11 +35,15 @@ struct IndexCommand: ParsableCommand {
     var stats: Bool = false
 
     func run() throws {
-        let plan = try resolveCompendiumIngestPlan(
+        let resolvedPlan = try resolveCompendiumIngestPlan(
             outputRoots: outputRoots,
             runDir: runDir,
             dbPath: dbPath,
             repairOnly: repairOnly
+        )
+        let plan = CompendiumIngestPlan(
+            runInputs: resolvedPlan.runInputs,
+            resolvedDBPath: try resolveArtifactPath(resolvedPlan.resolvedDBPath, dossier: dossierName)
         )
         let indexer = try executeCompendiumIngest(
             plan: plan,

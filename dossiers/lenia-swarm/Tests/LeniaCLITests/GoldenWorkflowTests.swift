@@ -61,6 +61,44 @@ final class GoldenWorkflowTests: XCTestCase {
         XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'golden-local-promotion'"), 2)
     }
 
+    func testLibraryFromResultsUsesDeterministicCreatureIDsForScoutArtifacts() throws {
+        let root = try makeTempDirectory(prefix: "lenia-library-from-results")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let fixture = try makeLocalWorkflowFixture(at: root, runID: "stable-library-from-results")
+        try runDiscoverLocal(fixture: fixture, extraArguments: ["--no-promotion"])
+
+        let firstOutput = try runLeniaCLI(arguments: [
+            "publish",
+            "library-from-results",
+            "--scout-dir", fixture.runDir.path,
+        ])
+        let firstEntry = try decodeSingleJSONL(
+            ResearchLibraryEntry.self,
+            from: fixture.runDir.appendingPathComponent("library/index.jsonl")
+        )
+
+        let secondOutput = try runLeniaCLI(arguments: [
+            "publish",
+            "library-from-results",
+            "--scout-dir", fixture.runDir.path,
+        ])
+        let secondEntry = try decodeSingleJSONL(
+            ResearchLibraryEntry.self,
+            from: fixture.runDir.appendingPathComponent("library/index.jsonl")
+        )
+        let result = try decodeSingleJSONL(
+            SimulationResultData.self,
+            from: fixture.runDir.appendingPathComponent("results.jsonl")
+        )
+        let stableKey = libraryResultStableKey(runId: fixture.runID, result: result)
+
+        XCTAssertEqual(firstEntry.creature.id, secondEntry.creature.id)
+        XCTAssertEqual(firstEntry.creature.id, deterministicResearchUUID(stableKey))
+        XCTAssertTrue(firstOutput.contains(stableKey))
+        XCTAssertTrue(secondOutput.contains(stableKey))
+    }
+
     func testAnalyzeWarehouseRefreshesExplicitWarehouseFromIndexedLocalRun() throws {
         let root = try makeTempDirectory(prefix: "lenia-golden-warehouse")
         defer { try? FileManager.default.removeItem(at: root) }
