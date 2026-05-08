@@ -82,11 +82,10 @@ def _load_score_rows(report_path: Path) -> tuple[list[dict[str, object]], list[s
 def _fetch_descriptors(
     warehouse: Path, specimen_ids: list[str]
 ) -> dict[str, dict[str, float]]:
-    """Return {specimen_id: {axis_id: normalized_value}} for lenia_terminal_v1.
+    """Return {specimen_id: {axis_id: transformed_value}} for terminal axes.
 
-    invariant: feature_values.normalized_value is the descriptor in axis-local units
-    (per the warehouse metadata for lenia_terminal_v1). raw_value is the un-transformed
-    Lenia descriptor; we use normalized for cross-axis comparability.
+    invariant: specimen_axes is the canonical Lenia descriptor layer. raw_value is
+    the direct descriptor; transformed_value is the axis-local comparable value.
     """
     if not warehouse.is_file():
         raise FileNotFoundError(f"morphospace warehouse not found: {warehouse}")
@@ -94,14 +93,13 @@ def _fetch_descriptors(
     try:
         placeholders = ",".join("?" for _ in specimen_ids)
         sql = f"""
-            SELECT s.specimen_id, fv.axis_id, fv.normalized_value
-            FROM specimens s
-            JOIN observations o ON s.specimen_id = o.specimen_id
-            JOIN feature_values fv ON o.observation_id = fv.observation_id
-            WHERE fv.feature_space_id = ?
-              AND s.specimen_id IN ({placeholders})
+            SELECT specimen_id, axis_id, transformed_value
+            FROM specimen_axes
+            WHERE axis_family = 'terminal'
+              AND transformed_value IS NOT NULL
+              AND specimen_id IN ({placeholders})
         """
-        rows = con.execute(sql, [LENIA_FEATURE_SPACE, *specimen_ids]).fetchall()
+        rows = con.execute(sql, specimen_ids).fetchall()
     finally:
         con.close()
     out: dict[str, dict[str, float]] = {}

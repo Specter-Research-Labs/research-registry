@@ -130,6 +130,20 @@ def _scalar_int(connection: Any, query: str) -> int:
     return int(row[0])
 
 
+def _common_morphology_axis_metadata(connection: Any) -> dict[str, Any]:
+    return {
+        row[0]: json.loads(row[1])
+        for row in connection.execute(
+            """
+            SELECT axis_id, metadata_json
+            FROM feature_axes
+            WHERE feature_space_id = 'common_morphology_v1'
+            ORDER BY axis_id
+            """
+        ).fetchall()
+    }
+
+
 def _terminal(
     *,
     mass: float,
@@ -2211,6 +2225,40 @@ def _write_dryad_fish_fixture(root: Path) -> None:
     )
 
 
+def _write_distinct_dryad_fish_fixture(root: Path) -> None:
+    _write_dryad_fish_fixture(root)
+    gpa_root = root / "extracted" / "gpa" / "Slicer_GPA_output"
+    (gpa_root / "pcScores.csv").write_text(
+        "\n".join(
+            [
+                "Sample_name,PC 1,PC 2",
+                "Cyprinella lutrensis fixture,-4.0,2.0",
+                "Lepomis cyanellus fixture,6.0,-3.0",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (gpa_root / "OutputData.csv").write_text(
+        "Sample_name,proc_dist,centeroid,"
+        "LM 1_X,LM 1_Y,LM 1_Z,"
+        "LM 2_X,LM 2_Y,LM 2_Z,"
+        "LM 3_X,LM 3_Y,LM 3_Z,"
+        "LM 4_X,LM 4_Y,LM 4_Z\n"
+        "Cyprinella lutrensis fixture,0.3,14.0,"
+        "-8.0,-1.0,0.0,"
+        "0.0,6.0,0.0,"
+        "4.0,-3.0,0.0,"
+        "14.0,2.0,0.0\n"
+        "Lepomis cyanellus fixture,0.4,16.0,"
+        "0.0,0.0,0.0,"
+        "0.0,4.0,0.0,"
+        "0.0,8.0,0.0,"
+        "8.0,0.0,0.0\n",
+        encoding="utf-8",
+    )
+
+
 def test_morphospace_import_dryad_fish_populates_comparison_layer(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -2322,6 +2370,71 @@ def test_morphospace_import_dryad_fish_populates_comparison_layer(
     assert tda_payload["topology"]["summaries"][0]["featureCount"] == 2
 
 
+def test_scoped_common_morphology_uses_metadata_roots_for_other_fish_studies(
+    tmp_path: Path,
+) -> None:
+    dataset_root_a = tmp_path / "dryad-fish-a"
+    dataset_root_b = tmp_path / "dryad-fish-b"
+    _write_dryad_fish_fixture(dataset_root_a)
+    _write_distinct_dryad_fish_fixture(dataset_root_b)
+    compendium_path = _make_compendium_fixture(tmp_path)
+    warehouse_path = tmp_path / "warehouse.duckdb"
+
+    refresh_compendium_warehouse(
+        warehouse_path=warehouse_path,
+        compendium_path=compendium_path,
+        label="fixture-study",
+    )
+    fish_payload_a = import_dryad_fish_dataset(
+        warehouse_path=warehouse_path,
+        dataset_root=dataset_root_a,
+        label="fish-fixture-a",
+    )
+    import_dryad_fish_dataset(
+        warehouse_path=warehouse_path,
+        dataset_root=dataset_root_b,
+        label="fish-fixture-b",
+    )
+
+    direct_payload = derive_common_morphology_packet(warehouse_path=warehouse_path)
+    assert direct_payload["observationCount"] == 5
+    assert direct_payload["sourceCounts"] == {
+        "dryad_fish_body_shape_20240112": 4,
+        "lenia_swarm": 1,
+    }
+
+    connection = connect_database(warehouse_path)
+    try:
+        axis_metadata_before = _common_morphology_axis_metadata(connection)
+    finally:
+        connection.close()
+
+    scoped_payload = derive_common_morphology_packet(
+        warehouse_path=warehouse_path,
+        dryad_fish_root=dataset_root_a,
+        study_id=str(fish_payload_a["studyId"]),
+    )
+    assert scoped_payload["observationCount"] == 2
+    assert scoped_payload["sourceCounts"] == direct_payload["sourceCounts"]
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert _common_morphology_axis_metadata(connection) == axis_metadata_before
+        assert (
+            _scalar_int(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM observations
+                WHERE observation_kind = 'common_point_cloud_morphology'
+                """,
+            )
+            == 5
+        )
+    finally:
+        connection.close()
+
+
 def test_morphospace_cli_derives_common_morphology_space(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -2336,7 +2449,7 @@ def test_morphospace_cli_derives_common_morphology_space(
         compendium_path=compendium_path,
         label="fixture-study",
     )
-    import_dryad_fish_dataset(
+    fish_payload = import_dryad_fish_dataset(
         warehouse_path=warehouse_path,
         dataset_root=dataset_root,
         label="fish-fixture",
@@ -2356,6 +2469,17 @@ def test_morphospace_cli_derives_common_morphology_space(
 
     connection = connect_database(warehouse_path)
     try:
+        axis_metadata_before = {
+            row[0]: json.loads(row[1])
+            for row in connection.execute(
+                """
+                SELECT axis_id, metadata_json
+                FROM feature_axes
+                WHERE feature_space_id = 'common_morphology_v1'
+                ORDER BY axis_id
+                """
+            ).fetchall()
+        }
         assert (
             _scalar_int(
                 connection,
@@ -2379,6 +2503,42 @@ def test_morphospace_cli_derives_common_morphology_space(
             ).fetchall()
         ]
         assert tuple(axis_ids) == COMMON_MORPHOLOGY_AXIS_IDS
+    finally:
+        connection.close()
+
+    scoped_payload = derive_common_morphology_packet(
+        warehouse_path=warehouse_path,
+        dryad_fish_root=dataset_root,
+        study_id=str(fish_payload["studyId"]),
+    )
+    assert scoped_payload["observationCount"] == 2
+    assert scoped_payload["sourceCounts"] == direct_payload["sourceCounts"]
+
+    connection = connect_database(warehouse_path)
+    try:
+        axis_metadata_after = {
+            row[0]: json.loads(row[1])
+            for row in connection.execute(
+                """
+                SELECT axis_id, metadata_json
+                FROM feature_axes
+                WHERE feature_space_id = 'common_morphology_v1'
+                ORDER BY axis_id
+                """
+            ).fetchall()
+        }
+        assert axis_metadata_after == axis_metadata_before
+        assert (
+            _scalar_int(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM observations
+                WHERE observation_kind = 'common_point_cloud_morphology'
+                """
+            )
+            == 3
+        )
     finally:
         connection.close()
 

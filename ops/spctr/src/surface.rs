@@ -1006,9 +1006,14 @@ pub(crate) fn sync_resolved_surface(
     manifest: &ProjectManifest,
     resolved: &ResolvedSurface,
 ) -> Result<SurfaceSyncResult> {
+    if let Some(path) = &resolved.db_path {
+        if !path.exists() {
+            bail!("local DB not found: {path}");
+        }
+    }
     let checkpoint = checkpoint_surface(machine, manifest, resolved)?;
     let promotion = match &resolved.db_path {
-        Some(path) if path.exists() => Some(promote_resolved_surface(machine, manifest, resolved)?),
+        Some(_) => Some(promote_resolved_surface(machine, manifest, resolved)?),
         _ => None,
     };
     Ok(SurfaceSyncResult {
