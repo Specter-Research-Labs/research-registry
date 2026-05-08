@@ -9,7 +9,7 @@ status = "incubating"
 visible = false
 
 [release]
-stage = "incubating"
+stage = "wip"
 
 [[release.surfaces]]
 name = "source"
