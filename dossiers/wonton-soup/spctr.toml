@@ -104,8 +104,10 @@ remote_snapshot_namespace = "wonton-lake"
 [[spctr.surfaces.wonton-lake.raw_roots]]
 path = "logs"
 remote_base = "logs"
+sync_mode = "upsert"
 
 [[spctr.surfaces.wonton-lake.raw_roots]]
 path = "artifacts"
 remote_base = "artifacts"
 excludes = ["lake", "lake/**"]
+sync_mode = "upsert"

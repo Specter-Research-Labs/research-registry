@@ -155,7 +155,7 @@ local_db_path = "artifacts/compendium.sqlite"
 remote_raw_namespace = "lenia-swarm"
 remote_snapshot_namespace = "lenia-compendium"
 raw_roots = [
-    { path = "artifacts/compendium", remote_base = "artifacts" },
+    { path = "artifacts/compendium", remote_base = "artifacts", sync_mode = "upsert" },
 ]
 
 [[spctr.site_data]]

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::process::{Command, Output, Stdio};
 
 trait RemoteFs {
@@ -23,6 +23,7 @@ trait RemoteFs {
     fn rsync_target(&self, path: &str) -> String;
     fn rsync_transport_args(&self) -> Vec<String>;
     fn copy_to_local(&self, source: &str, local_target: &Utf8Path) -> Result<()>;
+    fn copy_remote_file(&self, source: &str, target: &str) -> Result<()>;
     fn cas_write_text(
         &self,
         path: &str,
@@ -103,6 +104,19 @@ impl RemoteFs for LocalFs {
     fn copy_to_local(&self, source: &str, local_target: &Utf8Path) -> Result<()> {
         fs::copy(source, local_target)
             .with_context(|| format!("failed to copy {source} to {local_target}"))?;
+        Ok(())
+    }
+
+    fn copy_remote_file(&self, source: &str, target: &str) -> Result<()> {
+        let source = Utf8Path::new(source);
+        let target = Utf8Path::new(target);
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent).with_context(|| format!("failed to create {parent}"))?;
+        }
+        if fs::hard_link(source, target).is_err() {
+            fs::copy(source, target)
+                .with_context(|| format!("failed to copy {source} to {target}"))?;
+        }
         Ok(())
     }
 
@@ -239,6 +253,18 @@ impl RemoteFs for SshFs {
         args.push(self.rsync_target(source));
         args.push(local_target.to_string());
         check_command("rsync", &args, None, &BTreeMap::new(), None)?;
+        Ok(())
+    }
+
+    fn copy_remote_file(&self, source: &str, target: &str) -> Result<()> {
+        let args = self.remote_command_args(&[
+            "python3".to_owned(),
+            "-c".to_owned(),
+            "import os,pathlib,shutil,sys\nsrc=pathlib.Path(sys.argv[1])\ndst=pathlib.Path(sys.argv[2])\ndst.parent.mkdir(parents=True, exist_ok=True)\ntry:\n    os.link(src, dst)\nexcept OSError:\n    shutil.copy2(src, dst)".to_owned(),
+            source.to_owned(),
+            target.to_owned(),
+        ]);
+        check_command("ssh", &args, None, &BTreeMap::new(), None)?;
         Ok(())
     }
 
@@ -466,8 +492,17 @@ pub(crate) fn check_command(
 
 fn sha256_file(path: &Utf8Path) -> Result<String> {
     let mut digest = Sha256::new();
-    let bytes = fs::read(path).with_context(|| format!("failed to read {path}"))?;
-    digest.update(bytes);
+    let mut file = fs::File::open(path).with_context(|| format!("failed to read {path}"))?;
+    let mut buffer = [0_u8; 1024 * 1024];
+    loop {
+        let n = file
+            .read(&mut buffer)
+            .with_context(|| format!("failed to read {path}"))?;
+        if n == 0 {
+            break;
+        }
+        digest.update(&buffer[..n]);
+    }
     Ok(format!("{:x}", digest.finalize()))
 }
 
@@ -659,14 +694,33 @@ fn is_rsync_change_line(line: &str) -> bool {
     !trimmed.starts_with(".d")
 }
 
-fn rsync_args(fs: &dyn RemoteFs, dry_run: bool, excludes: &[String]) -> Vec<String> {
-    let mut args = vec!["-a".to_owned(), "--delete".to_owned()];
+fn resumable_file_rsync_args(fs: &dyn RemoteFs) -> Vec<String> {
+    let mut args = vec![
+        "-a".to_owned(),
+        "--partial".to_owned(),
+        "--append".to_owned(),
+        "--inplace".to_owned(),
+    ];
+    args.extend(fs.rsync_transport_args());
+    args
+}
+
+fn rsync_args(fs: &dyn RemoteFs, raw_root: &RawRoot, dry_run: bool) -> Vec<String> {
+    let mut args = vec!["-a".to_owned()];
+    if raw_root.sync_mode == "upsert" {
+        args.push("--ignore-existing".to_owned());
+        args.push("--omit-dir-times".to_owned());
+        args.push("--no-perms".to_owned());
+        args.push("--chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rw,Fg=rw,Fo=r".to_owned());
+    } else {
+        args.push("--delete".to_owned());
+    }
     if dry_run {
         args.push("--dry-run".to_owned());
         args.push("--itemize-changes".to_owned());
     }
     args.extend(fs.rsync_transport_args());
-    for pattern in excludes {
+    for pattern in &raw_root.excludes {
         args.push("--exclude".to_owned());
         args.push(pattern.clone());
     }
@@ -675,7 +729,7 @@ fn rsync_args(fs: &dyn RemoteFs, dry_run: bool, excludes: &[String]) -> Vec<Stri
 
 fn sync_check(fs: &dyn RemoteFs, raw_root: &RawRoot, target: &str) -> Result<bool> {
     fs.ensure_dir(target)?;
-    let mut args = rsync_args(fs, true, &raw_root.excludes);
+    let mut args = rsync_args(fs, raw_root, true);
     args.push(format!("{}/", raw_root.local_path.as_str()));
     args.push(format!("{}/", fs.rsync_target(target)));
     let output = run_command("rsync", &args, None, &BTreeMap::new(), None)?;
@@ -693,7 +747,7 @@ fn sync_check(fs: &dyn RemoteFs, raw_root: &RawRoot, target: &str) -> Result<boo
 
 fn sync_root(fs: &dyn RemoteFs, raw_root: &RawRoot, target: &str) -> Result<()> {
     fs.ensure_dir(target)?;
-    let mut args = rsync_args(fs, false, &raw_root.excludes);
+    let mut args = rsync_args(fs, raw_root, false);
     args.push(format!("{}/", raw_root.local_path.as_str()));
     args.push(format!("{}/", fs.rsync_target(target)));
     check_command("rsync", &args, None, &BTreeMap::new(), None)?;
@@ -705,7 +759,7 @@ fn copy_local_to_remote(fs: &dyn RemoteFs, source: &Utf8Path, target: &str) -> R
         .rsplit_once('/')
         .map_or_else(|| ".".to_owned(), |(base, _)| base.to_owned());
     fs.ensure_dir(&parent)?;
-    let mut args = rsync_args(fs, false, &[]);
+    let mut args = resumable_file_rsync_args(fs);
     args.push(source.to_string());
     args.push(fs.rsync_target(target));
     check_command("rsync", &args, None, &BTreeMap::new(), None)?;
@@ -937,8 +991,12 @@ pub(crate) fn promote_resolved_surface(
     let snapshot_id = format!("{}-{}", utc_stamp(), &local_sha[..12]);
     let remote_snapshot_root = remote_join(&remote_history_root(machine, resolved), &snapshot_id);
     let remote_db_path = remote_join(&remote_snapshot_root, db_filename);
-    copy_local_to_remote(&*fs, db_path, &remote_db_path)?;
-    let remote_sha = fs.checksum(&remote_db_path)?;
+    let remote_upload_path = remote_join(
+        &remote_history_root(machine, resolved),
+        &format!("_uploads/{}/{}", &local_sha[..12], db_filename),
+    );
+    copy_local_to_remote(&*fs, db_path, &remote_upload_path)?;
+    let remote_sha = fs.checksum(&remote_upload_path)?;
     if remote_sha != local_sha {
         bail!(
             "remote checksum mismatch for {}: local={} remote={}",
@@ -947,6 +1005,7 @@ pub(crate) fn promote_resolved_surface(
             remote_sha
         );
     }
+    fs.copy_remote_file(&remote_upload_path, &remote_db_path)?;
     let payload = SnapshotPayload {
         schema_version: 1,
         surface: resolved.surface_name.clone(),

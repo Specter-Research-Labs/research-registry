@@ -1868,6 +1868,7 @@ fn raw_roots_value(surface: &manifest::SurfaceConfig) -> Value {
                     "path": root.path,
                     "remote_base": root.remote_base,
                     "excludes": root.excludes,
+                    "sync_mode": root.sync_mode,
                     "resolve": root.resolve,
                     "runtime_slug": root.runtime_slug,
                     "project_fallback": root.project_fallback,
