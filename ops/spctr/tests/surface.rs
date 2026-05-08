@@ -389,6 +389,27 @@ fn sync_promotes_db_from_machine_local_artifact_root() {
 }
 
 #[test]
+fn sync_fails_before_checkpoint_when_configured_db_is_missing() {
+    let temp = TempDir::new().unwrap();
+    let project_root = create_project(temp.path());
+    fs::remove_file(project_root.join("outputs/demo.sqlite")).unwrap();
+    let config_path = create_config(temp.path());
+
+    let output = spctr(&["surface", "sync", "demo"], &project_root, &config_path);
+    assert!(!output.status.success(), "{}", output_text(&output));
+    let text = output_text(&output);
+    assert!(text.contains("local DB not found"), "{text}");
+    assert!(!temp
+        .path()
+        .join("remote/durable-artifacts/alpha/artifacts/outputs/raw/result.json")
+        .exists());
+    assert!(!temp
+        .path()
+        .join("remote/hot/alpha/surfaces/demo/current.json")
+        .exists());
+}
+
+#[test]
 fn refresh_runs_configured_command() {
     let temp = TempDir::new().unwrap();
     let project_root = create_project(temp.path());

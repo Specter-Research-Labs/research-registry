@@ -612,20 +612,30 @@ def derive_common_morphology(
     dryad_fish_root: Path | None = None,
     study_id: str | None = None,
 ) -> dict[str, Any]:
-    rows = [
-        *_collect_lenia_rows(connection, study_id=study_id),
+    all_rows = [
+        *_collect_lenia_rows(connection, study_id=None),
         *_collect_fish_rows(
             connection,
-            study_id=study_id,
+            study_id=None,
             dataset_root=dryad_fish_root,
         ),
     ]
-    if not rows:
+    if not all_rows:
         raise ValueError("no Lenia fingerprints or Dryad fish landmarks available")
+    rows = (
+        all_rows
+        if study_id is None
+        else [row for row in all_rows if row.study_id == study_id]
+    )
+    if not rows:
+        raise ValueError(
+            "no Lenia fingerprints or Dryad fish landmarks available "
+            f"for study_id={study_id}"
+        )
 
-    stats = _axis_stats(rows)
+    stats = _axis_stats(all_rows)
     source_counts: dict[str, int] = {}
-    for row in rows:
+    for row in all_rows:
         source_counts[row.source_id] = source_counts.get(row.source_id, 0) + 1
 
     upsert_morphospace_source(

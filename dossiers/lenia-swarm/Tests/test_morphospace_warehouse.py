@@ -2336,7 +2336,7 @@ def test_morphospace_cli_derives_common_morphology_space(
         compendium_path=compendium_path,
         label="fixture-study",
     )
-    import_dryad_fish_dataset(
+    fish_payload = import_dryad_fish_dataset(
         warehouse_path=warehouse_path,
         dataset_root=dataset_root,
         label="fish-fixture",
@@ -2356,6 +2356,17 @@ def test_morphospace_cli_derives_common_morphology_space(
 
     connection = connect_database(warehouse_path)
     try:
+        axis_metadata_before = {
+            row[0]: json.loads(row[1])
+            for row in connection.execute(
+                """
+                SELECT axis_id, metadata_json
+                FROM feature_axes
+                WHERE feature_space_id = 'common_morphology_v1'
+                ORDER BY axis_id
+                """
+            ).fetchall()
+        }
         assert (
             _scalar_int(
                 connection,
@@ -2379,6 +2390,42 @@ def test_morphospace_cli_derives_common_morphology_space(
             ).fetchall()
         ]
         assert tuple(axis_ids) == COMMON_MORPHOLOGY_AXIS_IDS
+    finally:
+        connection.close()
+
+    scoped_payload = derive_common_morphology_packet(
+        warehouse_path=warehouse_path,
+        dryad_fish_root=dataset_root,
+        study_id=str(fish_payload["studyId"]),
+    )
+    assert scoped_payload["observationCount"] == 2
+    assert scoped_payload["sourceCounts"] == direct_payload["sourceCounts"]
+
+    connection = connect_database(warehouse_path)
+    try:
+        axis_metadata_after = {
+            row[0]: json.loads(row[1])
+            for row in connection.execute(
+                """
+                SELECT axis_id, metadata_json
+                FROM feature_axes
+                WHERE feature_space_id = 'common_morphology_v1'
+                ORDER BY axis_id
+                """
+            ).fetchall()
+        }
+        assert axis_metadata_after == axis_metadata_before
+        assert (
+            _scalar_int(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM observations
+                WHERE observation_kind = 'common_point_cloud_morphology'
+                """
+            )
+            == 3
+        )
     finally:
         connection.close()
 
