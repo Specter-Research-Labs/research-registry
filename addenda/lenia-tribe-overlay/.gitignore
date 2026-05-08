@@ -1,0 +1,6 @@
+.artifacts/
+.logs/
+tmp/
+.venv/
+__pycache__/
+*.egg-info/
