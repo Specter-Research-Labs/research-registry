@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">Red SPCTR registry source</title>
+    <desc id="desc">A red-on-black SPECTER source label using real registry fields and modular scan marks.</desc>
+    <defs>
+        <pattern id="redGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+            <path d="M24 0 H0 V24" stroke="#ff3030" stroke-width=".55" opacity=".09" fill="none"/>
+        </pattern>
+        <style>
+            .bg { fill: #030303; }
+            .paper { fill: url(#redGrid); }
+            .red { fill: #ff3030; }
+            .line { stroke: #ff3030; stroke-width: 1.45; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
+            .hair { stroke: #ff3030; stroke-width: .9; fill: none; stroke-linecap: square; stroke-linejoin: miter; opacity: .76; }
+            .ghost { stroke: #ff3030; stroke-width: 1; fill: none; opacity: .5; }
+            text { fill: #ff3030; font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .09em; }
+            .tiny { font-size: 8px; opacity: .72; }
+            .field { font-size: 12px; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <rect class="paper" width="640" height="360"/>
+    <g transform="translate(62 64)">
+        <path class="line" d="M0 0 H14 M0 0 V14 M0 226 H14 M0 226 V212 M222 0 H208 M222 0 V14 M222 226 H208 M222 226 V212"/>
+        <text x="28" y="34" font-size="20">SPCTR B-001</text>
+        <line class="line" x1="28" y1="54" x2="186" y2="54"/>
+
+        <g transform="translate(28 78)">
+            <rect class="hair" x="0" y="0" width="76" height="22"/>
+            <rect class="hair" x="0" y="32" width="76" height="22"/>
+            <rect class="hair" x="0" y="64" width="76" height="22"/>
+            <rect class="hair" x="0" y="96" width="76" height="22"/>
+            <text class="field" x="10" y="16">SERIES</text>
+            <text class="field" x="10" y="48">DOSSIER</text>
+            <text class="field" x="10" y="80">STATUS</text>
+            <text class="field" x="10" y="112">SURFACE</text>
+            <text class="field" x="96" y="16">B-001</text>
+            <text class="field" x="96" y="48">D-002</text>
+            <text class="field" x="96" y="80">ACTIVE</text>
+            <text class="field" x="96" y="112">BLOG</text>
+        </g>
+        <text class="tiny" x="28" y="206">WONTON SOUP / PUBLISHED / 2026</text>
+    </g>
+
+    <g transform="translate(342 78)">
+        <rect class="hair" x="0" y="0" width="190" height="166"/>
+        <line class="ghost" x1="20" y1="38" x2="170" y2="38"/>
+        <line class="ghost" x1="20" y1="82" x2="170" y2="82"/>
+        <line class="ghost" x1="20" y1="126" x2="170" y2="126"/>
+        <rect class="red" x="26" y="18" width="10" height="10"/>
+        <rect class="red" x="52" y="18" width="10" height="10"/>
+        <rect class="red" x="78" y="18" width="10" height="10"/>
+        <rect class="red" x="104" y="18" width="10" height="10"/>
+        <rect class="red" x="130" y="18" width="10" height="10"/>
+        <rect class="red" x="34" y="62" width="6" height="28"/>
+        <rect class="red" x="54" y="62" width="3" height="28"/>
+        <rect class="red" x="70" y="62" width="8" height="28"/>
+        <rect class="red" x="96" y="62" width="4" height="28"/>
+        <rect class="red" x="116" y="62" width="11" height="28"/>
+        <rect class="red" x="150" y="62" width="3" height="28"/>
+        <rect class="hair" x="42" y="108" width="24" height="24"/>
+        <rect class="hair" x="84" y="108" width="24" height="24"/>
+        <rect class="hair" x="126" y="108" width="24" height="24"/>
+        <path class="hair" d="M50 120 H58 M54 116 V124 M92 120 H100 M96 116 V124 M134 120 H142 M138 116 V124"/>
+        <text class="tiny" x="20" y="154">SOURCE GRAPHICS / EDITABLE SVG</text>
+    </g>
+</svg>

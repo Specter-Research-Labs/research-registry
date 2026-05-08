@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">D-002 Wonton Soup microstamp</title>
+    <desc id="desc">A small packaging-ready dossier stamp for Wonton Soup.</desc>
+    <defs>
+        <style>
+            .bg { fill: #070807; }
+            .ink { fill: #dde2da; }
+            .line { stroke: #dde2da; stroke-width: 1.5; fill: none; stroke-linecap: square; }
+            .thin { stroke: #dde2da; stroke-width: 1; fill: none; stroke-linecap: square; }
+            text { fill: #dde2da; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .14em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g opacity=".2">
+        <circle class="ink" cx="109" cy="126" r="1"/>
+        <circle class="ink" cx="503" cy="77" r="1"/>
+        <circle class="ink" cx="417" cy="271" r="1"/>
+    </g>
+    <g transform="translate(246 92)">
+        <text x="0" y="0" font-size="17">D-002</text>
+        <text x="0" y="29" font-size="17">WONTON SOUP</text>
+        <g transform="translate(32 62)">
+            <circle class="line" cx="48" cy="0" r="6"/>
+            <circle class="line" cx="20" cy="38" r="6"/>
+            <circle class="line" cx="76" cy="38" r="6"/>
+            <circle class="line" cx="0" cy="72" r="6"/>
+            <circle class="line" cx="40" cy="72" r="6"/>
+            <circle class="line" cx="96" cy="72" r="6"/>
+            <path class="thin" d="M44 5 L24 33 M52 5 L72 33 M17 44 L4 66 M25 44 L37 66 M79 44 L93 66"/>
+        </g>
+        <g transform="translate(146 50)">
+            <rect class="ink" x="0" y="0" width="9" height="9"/>
+            <rect class="ink" x="18" y="0" width="9" height="9"/>
+            <rect class="ink" x="9" y="9" width="9" height="9"/>
+            <rect class="ink" x="27" y="9" width="9" height="9"/>
+            <rect class="ink" x="0" y="18" width="9" height="9"/>
+            <rect class="ink" x="18" y="18" width="9" height="9"/>
+            <rect class="ink" x="9" y="27" width="9" height="9"/>
+            <rect class="ink" x="27" y="27" width="9" height="9"/>
+        </g>
+        <text x="0" y="164" font-size="13">ACTIVE DOSSIER</text>
+        <line class="line" x1="0" y1="176" x2="182" y2="176"/>
+        <g transform="translate(0 188)">
+            <rect class="ink" x="0" y="0" width="3" height="18"/>
+            <rect class="ink" x="10" y="0" width="2" height="18"/>
+            <rect class="ink" x="19" y="0" width="5" height="18"/>
+            <rect class="ink" x="33" y="0" width="2" height="18"/>
+            <rect class="ink" x="43" y="0" width="3" height="18"/>
+            <rect class="ink" x="55" y="0" width="2" height="18"/>
+            <rect class="ink" x="64" y="0" width="6" height="18"/>
+            <rect class="ink" x="80" y="0" width="2" height="18"/>
+            <rect class="ink" x="90" y="0" width="3" height="18"/>
+            <rect class="ink" x="102" y="0" width="5" height="18"/>
+            <rect class="ink" x="118" y="0" width="2" height="18"/>
+            <rect class="ink" x="128" y="0" width="4" height="18"/>
+            <rect class="ink" x="141" y="0" width="2" height="18"/>
+            <rect class="ink" x="150" y="0" width="6" height="18"/>
+            <rect class="ink" x="166" y="0" width="2" height="18"/>
+            <rect class="ink" x="176" y="0" width="3" height="18"/>
+        </g>
+    </g>
+</svg>

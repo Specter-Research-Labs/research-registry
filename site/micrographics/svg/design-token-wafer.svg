@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">A-011 Design Tokens wafer stamp</title>
+    <desc id="desc">A sparse off-white wafer-style stamp for the Design Tokens addendum.</desc>
+    <defs>
+        <pattern id="halftone" width="8" height="8" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1.2" fill="#0b0e14" opacity=".34"/>
+        </pattern>
+        <style>
+            .bg { fill: #070807; }
+            .paper { fill: #f3f2eb; }
+            .ink { fill: #0b0e14; }
+            .line { stroke: #0b0e14; stroke-width: 1.2; fill: none; }
+            text { fill: #0b0e14; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .08em; text-anchor: middle; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g transform="translate(232 76)">
+        <rect class="paper" width="176" height="208" rx="8"/>
+        <rect x="0" y="0" width="56" height="208" fill="url(#halftone)"/>
+        <g transform="translate(88 28)">
+            <line class="line" x1="-10" y1="0" x2="10" y2="0"/>
+            <line class="line" x1="0" y1="-10" x2="0" y2="10"/>
+            <circle class="line" cx="0" cy="0" r="4"/>
+        </g>
+        <text x="88" y="70" font-size="14">A-011</text>
+        <text x="88" y="92" font-size="12">DESIGN TOKENS</text>
+        <rect class="line" x="66" y="106" width="44" height="22"/>
+        <text x="88" y="122" font-size="11">2026</text>
+        <g transform="translate(62 154)">
+            <path class="line" d="M0 18 L9 2 L18 18 M5 13 L0 18 L6 20 M13 13 L18 18 L12 20"/>
+        </g>
+        <g transform="translate(104 151)">
+            <rect class="ink" x="0" y="0" width="8" height="8"/>
+            <rect class="ink" x="16" y="0" width="8" height="8"/>
+            <rect class="ink" x="8" y="8" width="8" height="8"/>
+            <rect class="ink" x="0" y="16" width="8" height="8"/>
+            <rect class="ink" x="16" y="16" width="8" height="8"/>
+        </g>
+        <g transform="translate(88 188)">
+            <line class="line" x1="-10" y1="0" x2="10" y2="0"/>
+            <line class="line" x1="0" y1="-10" x2="0" y2="10"/>
+            <circle class="line" cx="0" cy="0" r="4"/>
+        </g>
+    </g>
+</svg>

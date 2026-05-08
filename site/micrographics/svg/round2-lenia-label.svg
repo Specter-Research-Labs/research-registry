@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">Lenia Swarm round 2 label</title>
+    <desc id="desc">A compact Lenia Swarm synthetic morphospace label.</desc>
+    <defs>
+        <clipPath id="sphere"><circle cx="0" cy="0" r="54"/></clipPath>
+        <style>
+            .bg { fill: #050605; }
+            .ink { fill: #dde2da; }
+            .line { stroke: #dde2da; stroke-width: 1.2; fill: none; }
+            text { fill: #dde2da; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .1em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g transform="translate(174 98)">
+        <text x="0" y="16" font-size="13">D-003</text>
+        <text x="0" y="42" font-size="16">LENIA SWARM</text>
+        <text x="0" y="82" font-size="12">SYNTHETIC</text>
+        <text x="0" y="106" font-size="12">MORPHOSPACE</text>
+        <line class="line" x1="0" y1="136" x2="292" y2="136"/>
+        <text x="0" y="168" font-size="11">ACTIVE DOSSIER</text>
+        <g transform="translate(244 63)" clip-path="url(#sphere)">
+            <rect class="ink" x="-26" y="-52" width="52" height="7"/>
+            <rect class="ink" x="-46" y="-36" width="34" height="7"/>
+            <rect class="ink" x="-6" y="-36" width="52" height="7"/>
+            <rect class="ink" x="-58" y="-20" width="42" height="7"/>
+            <rect class="ink" x="-8" y="-20" width="66" height="7"/>
+            <rect class="ink" x="-62" y="-4" width="28" height="7"/>
+            <rect class="ink" x="-24" y="-4" width="30" height="7"/>
+            <rect class="ink" x="16" y="-4" width="46" height="7"/>
+            <rect class="ink" x="-56" y="12" width="48" height="7"/>
+            <rect class="ink" x="2" y="12" width="54" height="7"/>
+            <rect class="ink" x="-44" y="28" width="32" height="7"/>
+            <rect class="ink" x="-2" y="28" width="46" height="7"/>
+            <rect class="ink" x="-28" y="44" width="56" height="7"/>
+            <circle class="ink" cx="-12" cy="-32" r="2.3"/>
+            <circle class="ink" cx="10" cy="-16" r="2.3"/>
+            <circle class="ink" cx="-30" cy="0" r="2.3"/>
+            <circle class="ink" cx="12" cy="16" r="2.3"/>
+            <circle class="ink" cx="-8" cy="32" r="2.3"/>
+            <circle class="line" cx="0" cy="0" r="54"/>
+        </g>
+        <g transform="translate(250 164)">
+            <circle class="ink" cx="0" cy="0" r="2.4"/>
+            <circle class="ink" cx="13" cy="0" r="2.4"/>
+            <circle class="ink" cx="26" cy="0" r="2.4"/>
+        </g>
+    </g>
+</svg>

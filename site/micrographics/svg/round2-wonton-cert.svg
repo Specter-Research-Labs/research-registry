@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">Wonton Soup certification micrographic</title>
+    <desc id="desc">A D-002 Wonton Soup proof-structure micrographic for packaging labels.</desc>
+    <defs>
+        <style>
+            .bg { fill: #050605; }
+            .ink { fill: #dde2da; }
+            .line { stroke: #dde2da; stroke-width: 1.3; fill: none; }
+            text { fill: #dde2da; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .09em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g transform="translate(214 92)">
+        <text x="0" y="0" font-size="14">D-002</text>
+        <text x="0" y="24" font-size="15">WONTON SOUP</text>
+        <text x="0" y="46" font-size="11">PROOF STRUCTURES</text>
+        <text x="0" y="66" font-size="11">UNDER INTERVENTIONS</text>
+        <g transform="translate(156 0)">
+            <circle class="line" cx="48" cy="0" r="7"/>
+            <circle class="line" cx="20" cy="42" r="7"/>
+            <circle class="line" cx="76" cy="42" r="7"/>
+            <circle class="line" cx="0" cy="78" r="7"/>
+            <circle class="line" cx="40" cy="78" r="7"/>
+            <circle class="line" cx="96" cy="78" r="7"/>
+            <path class="line" d="M44 6 L24 36 M52 6 L72 36 M17 48 L4 72 M23 48 L36 72 M77 49 L92 72"/>
+        </g>
+        <line class="line" x1="0" y1="100" x2="300" y2="100"/>
+        <text x="0" y="132" font-size="10">STATUS: ACTIVE</text>
+        <text x="0" y="152" font-size="10">BASIN K / LESION</text>
+        <g transform="translate(170 121)">
+            <rect class="ink" x="0" y="0" width="8" height="8"/>
+            <rect class="ink" x="16" y="0" width="8" height="8"/>
+            <rect class="ink" x="8" y="8" width="8" height="8"/>
+            <rect class="ink" x="24" y="8" width="8" height="8"/>
+            <rect class="ink" x="0" y="16" width="8" height="8"/>
+            <rect class="ink" x="16" y="16" width="8" height="8"/>
+            <rect class="ink" x="8" y="24" width="8" height="8"/>
+            <rect class="ink" x="24" y="24" width="8" height="8"/>
+        </g>
+        <g transform="translate(228 121)">
+            <rect class="ink" x="0" y="0" width="3" height="34"/>
+            <rect class="ink" x="9" y="0" width="2" height="34"/>
+            <rect class="ink" x="17" y="0" width="5" height="34"/>
+            <rect class="ink" x="29" y="0" width="2" height="34"/>
+            <rect class="ink" x="38" y="0" width="4" height="34"/>
+            <rect class="ink" x="50" y="0" width="7" height="34"/>
+            <rect class="ink" x="66" y="0" width="2" height="34"/>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">Material Memory micrographic</title>
+    <desc id="desc">A D-004 Material Memory label with hysteresis and calibration ticks.</desc>
+    <defs>
+        <style>
+            .bg { fill: #050605; }
+            .ink { fill: #dde2da; }
+            .line { stroke: #dde2da; stroke-width: 1.3; fill: none; }
+            text { fill: #dde2da; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .09em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g transform="translate(206 108)">
+        <text x="0" y="0" font-size="14">D-004</text>
+        <text x="0" y="25" font-size="14">MATERIAL MEMORY</text>
+        <text x="0" y="49" font-size="12">PHYSICAL COLLECTIVES</text>
+        <line class="line" x1="0" y1="116" x2="310" y2="116"/>
+        <text x="0" y="146" font-size="10">CALIBRATED</text>
+        <text x="0" y="166" font-size="10">FOR CONTEXT</text>
+        <text x="145" y="156" font-size="10">REGISTRY / 2026</text>
+        <g transform="translate(206 -10)">
+            <path class="line" d="M0 104C46 104 38 18 92 18"/>
+            <path class="line" d="M0 18C46 18 38 104 92 104"/>
+            <line class="line" x1="46" y1="-2" x2="46" y2="124"/>
+            <line class="line" x1="-18" y1="62" x2="116" y2="62"/>
+            <g>
+                <line class="line" x1="-18" y1="56" x2="-18" y2="68"/>
+                <line class="line" x1="-10" y1="58" x2="-10" y2="66"/>
+                <line class="line" x1="108" y1="58" x2="108" y2="66"/>
+                <line class="line" x1="116" y1="56" x2="116" y2="68"/>
+            </g>
+        </g>
+        <g transform="translate(286 150)">
+            <circle class="line" cx="0" cy="0" r="12"/>
+            <line class="line" x1="-20" y1="0" x2="20" y2="0"/>
+            <line class="line" x1="0" y1="-20" x2="0" y2="20"/>
+        </g>
+    </g>
+</svg>

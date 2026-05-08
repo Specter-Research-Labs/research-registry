@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">D-003 Lenia Swarm microstamp</title>
+    <desc id="desc">A compact dossier stamp for Lenia Swarm with a striped organism glyph.</desc>
+    <defs>
+        <clipPath id="orb">
+            <circle cx="0" cy="0" r="54"/>
+        </clipPath>
+        <style>
+            .bg { fill: #070807; }
+            .ink { fill: #dde2da; }
+            .line { stroke: #dde2da; stroke-width: 1; fill: none; }
+            text { fill: #dde2da; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .1em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g transform="translate(196 122)">
+        <g transform="translate(48 44)" clip-path="url(#orb)">
+            <rect class="ink" x="-64" y="-50" width="128" height="7"/>
+            <rect class="ink" x="-58" y="-34" width="116" height="7"/>
+            <rect class="ink" x="-70" y="-18" width="140" height="7"/>
+            <rect class="ink" x="-52" y="-2" width="104" height="7"/>
+            <rect class="ink" x="-66" y="14" width="132" height="7"/>
+            <rect class="ink" x="-46" y="30" width="92" height="7"/>
+            <rect class="ink" x="-58" y="46" width="116" height="7"/>
+            <circle class="line" cx="0" cy="0" r="53"/>
+        </g>
+        <g transform="translate(122 8)">
+            <text x="0" y="0" font-size="15">D-003</text>
+            <text x="0" y="29" font-size="17">LENIA SWARM</text>
+            <text x="0" y="61" font-size="12">SYNTHETIC ORGANISM</text>
+            <text x="0" y="84" font-size="12">FIELD LOG: ACTIVE</text>
+            <text x="0" y="107" font-size="12">CLASS: DOSSIER</text>
+        </g>
+        <g opacity=".42">
+            <line class="line" x1="0" y1="120" x2="276" y2="120"/>
+            <line class="line" x1="0" y1="130" x2="96" y2="130"/>
+        </g>
+    </g>
+</svg>

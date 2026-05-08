@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">Wonton Soup round 3 proof graph</title>
+    <desc id="desc">An editable monochrome Wonton Soup hierarchical proof graph with checker, barcode, and rule marks.</desc>
+    <defs>
+        <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+            <path d="M28 0H0V28" class="grid-line"/>
+        </pattern>
+        <style>
+            .bg { fill: #050605; }
+            .grid-line { stroke: #dde2da; stroke-width: .45; opacity: .08; fill: none; }
+            .ink { fill: #dde2da; }
+            .node { fill: #050605; stroke: #dde2da; stroke-width: 1.35; }
+            .line { stroke: #dde2da; stroke-width: 1.25; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
+            .hair { stroke: #dde2da; stroke-width: .8; fill: none; stroke-linecap: square; }
+            text { fill: #dde2da; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .1em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <rect width="640" height="360" fill="url(#grid)"/>
+
+    <g transform="translate(54 56)">
+        <text x="0" y="0" font-size="13">D-002</text>
+        <text x="0" y="28" font-size="17">WONTON SOUP</text>
+        <text x="0" y="54" font-size="11">PROOF GRAPH</text>
+        <text x="0" y="75" font-size="10">CHECKED RULE SET</text>
+
+        <line class="line" x1="0" y1="103" x2="202" y2="103"/>
+        <text x="0" y="127" font-size="9">ROOT: H</text>
+        <text x="0" y="145" font-size="9">BASIN K / LESION</text>
+        <text x="0" y="163" font-size="9">TERMINALS VERIFIED</text>
+
+        <g transform="translate(0 190)">
+            <rect class="ink" x="0" y="0" width="8" height="8"/>
+            <rect class="ink" x="16" y="0" width="8" height="8"/>
+            <rect class="ink" x="32" y="0" width="8" height="8"/>
+            <rect class="ink" x="8" y="8" width="8" height="8"/>
+            <rect class="ink" x="24" y="8" width="8" height="8"/>
+            <rect class="ink" x="40" y="8" width="8" height="8"/>
+            <rect class="ink" x="0" y="16" width="8" height="8"/>
+            <rect class="ink" x="16" y="16" width="8" height="8"/>
+            <rect class="ink" x="32" y="16" width="8" height="8"/>
+            <rect class="ink" x="8" y="24" width="8" height="8"/>
+            <rect class="ink" x="24" y="24" width="8" height="8"/>
+            <rect class="ink" x="40" y="24" width="8" height="8"/>
+        </g>
+
+        <g transform="translate(78 190)">
+            <rect class="ink" x="0" y="0" width="3" height="32"/>
+            <rect class="ink" x="10" y="0" width="2" height="32"/>
+            <rect class="ink" x="19" y="0" width="5" height="32"/>
+            <rect class="ink" x="34" y="0" width="2" height="32"/>
+            <rect class="ink" x="44" y="0" width="7" height="32"/>
+            <rect class="ink" x="62" y="0" width="2" height="32"/>
+            <rect class="ink" x="72" y="0" width="4" height="32"/>
+            <rect class="ink" x="87" y="0" width="2" height="32"/>
+            <rect class="ink" x="97" y="0" width="6" height="32"/>
+            <rect class="ink" x="114" y="0" width="3" height="32"/>
+        </g>
+
+        <line class="hair" x1="0" y1="250" x2="202" y2="250"/>
+        <text x="0" y="271" font-size="8">RULE/003  PASS</text>
+    </g>
+
+    <g transform="translate(318 45)">
+        <path class="hair" d="M132 24L78 74M132 24L186 74"/>
+        <path class="hair" d="M78 94L38 146M78 94L104 146M186 94L154 146M186 94L232 146"/>
+        <path class="hair" d="M38 166L16 220M104 166L74 220M104 166L122 220M154 166L174 220M232 166L256 220"/>
+
+        <rect class="node" x="120" y="0" width="24" height="24"/>
+        <circle class="node" cx="78" cy="84" r="10"/>
+        <circle class="node" cx="186" cy="84" r="10"/>
+        <rect class="node" x="27" y="146" width="22" height="22"/>
+        <circle class="node" cx="104" cy="157" r="10"/>
+        <rect class="node" x="143" y="146" width="22" height="22"/>
+        <circle class="node" cx="232" cy="157" r="10"/>
+
+        <rect class="ink" x="9" y="218" width="14" height="14"/>
+        <circle class="ink" cx="74" cy="225" r="7"/>
+        <rect class="ink" x="115" y="218" width="14" height="14"/>
+        <circle class="ink" cx="174" cy="225" r="7"/>
+        <rect class="ink" x="249" y="218" width="14" height="14"/>
+
+        <g transform="translate(0 262)">
+            <line class="line" x1="0" y1="0" x2="264" y2="0"/>
+            <line class="hair" x1="0" y1="-8" x2="0" y2="8"/>
+            <line class="hair" x1="66" y1="-5" x2="66" y2="5"/>
+            <line class="hair" x1="132" y1="-8" x2="132" y2="8"/>
+            <line class="hair" x1="198" y1="-5" x2="198" y2="5"/>
+            <line class="hair" x1="264" y1="-8" x2="264" y2="8"/>
+        </g>
+    </g>
+</svg>

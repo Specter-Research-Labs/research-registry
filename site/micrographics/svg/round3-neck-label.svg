@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" role="img" aria-labelledby="title desc">
+    <title id="title">SPECTER neck label</title>
+    <desc id="desc">A compact editable off-white textile neck label for SPECTER Labs.</desc>
+    <defs>
+        <pattern id="weave" width="7" height="7" patternUnits="userSpaceOnUse">
+            <path d="M0 0H7M0 3.5H7M0 0V7M3.5 0V7" stroke="#0b0e14" stroke-width=".35" opacity=".18"/>
+        </pattern>
+        <style>
+            .bg { fill: #050605; }
+            .cloth { fill: #f2f0e8; }
+            .ink { fill: #0b0e14; }
+            .soft { fill: #0b0e14; opacity: .42; }
+            .line { stroke: #0b0e14; stroke-width: 1.4; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
+            .hair { stroke: #0b0e14; stroke-width: .8; fill: none; stroke-linecap: square; }
+            text { fill: #0b0e14; font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+            .brand { font-size: 26px; }
+            .mid { font-size: 17px; }
+            .pill-text { text-anchor: middle; }
+            .micro { font-size: 10px; }
+            .tiny { font-size: 8px; opacity: .72; }
+        </style>
+    </defs>
+    <rect class="bg" width="720" height="360"/>
+    <g transform="translate(110 82)">
+        <rect class="cloth" width="500" height="190" rx="2"/>
+        <rect width="500" height="190" fill="url(#weave)" rx="2"/>
+        <rect class="line" x="8" y="8" width="484" height="174" opacity=".36"/>
+        <text class="brand" x="42" y="48">SPECTER LABS</text>
+        <rect class="line" x="382" y="24" width="70" height="34" rx="17"/>
+        <text class="mid pill-text" x="417" y="47">SPCTR</text>
+        <text class="mid" x="42" y="88">D-002 / D-003</text>
+        <text class="micro" x="42" y="113">SMALL PRINT SYSTEMS</text>
+
+        <g transform="translate(42 132)">
+            <rect class="ink" x="0" y="0" width="8" height="8"/>
+            <rect class="ink" x="16" y="0" width="8" height="8"/>
+            <rect class="ink" x="0" y="16" width="8" height="8"/>
+            <rect class="ink" x="16" y="16" width="8" height="8"/>
+            <rect class="line" x="56" y="0" width="26" height="26"/>
+            <rect class="hair" x="62" y="6" width="14" height="14"/>
+            <circle class="hair" cx="124" cy="13" r="13" stroke-dasharray="2 4"/>
+            <circle class="ink" cx="177" cy="6" r="6"/>
+            <circle class="ink" cx="202" cy="6" r="6"/>
+            <circle class="ink" cx="227" cy="6" r="6"/>
+            <circle class="ink" cx="177" cy="25" r="6"/>
+            <circle class="ink" cx="202" cy="25" r="6"/>
+            <circle class="ink" cx="227" cy="25" r="6"/>
+            <rect class="ink" x="282" y="0" width="5" height="30"/>
+            <rect class="ink" x="294" y="0" width="3" height="30"/>
+            <rect class="ink" x="304" y="0" width="7" height="30"/>
+            <rect class="ink" x="320" y="0" width="3" height="30"/>
+            <rect class="ink" x="331" y="0" width="5" height="30"/>
+            <rect class="ink" x="348" y="0" width="3" height="30"/>
+        </g>
+
+        <line class="line" x1="42" y1="166" x2="452" y2="166"/>
+        <text class="tiny" x="42" y="180">REGISTRY / 2026</text>
+        <text class="tiny" x="272" y="180">D-002 D-003 A-011</text>
+    </g>
+</svg>

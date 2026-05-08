@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="dark light" />
+        <title>Micrographics | SPECTER Labs</title>
+        <script>
+            (() => {
+                if (localStorage.getItem("micrographics-theme") === "light") {
+                    document.documentElement.dataset.theme = "light";
+                }
+            })();
+        </script>
+        <link rel="icon" href="../assets/logo-black.svg" type="image/svg+xml" />
+        <link rel="preload" href="../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="../fonts/BerkeleyMono-Bold.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="micrographics.css" />
+    </head>
+    <body>
+        <main class="preview-shell">
+            <header class="preview-header">
+                <a class="preview-brand" href="../">
+                    <img src="../assets/logo-black.svg" alt="SPECTER Labs logo" />
+                    <span>SPECTER LABS</span>
+                </a>
+                <div class="preview-actions">
+                    <span class="preview-kicker">micrographics / 2026</span>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">White</button>
+                </div>
+            </header>
+
+            <section class="preview-intro" aria-labelledby="preview-title">
+                <p class="preview-eyebrow">Study</p>
+                <h1 id="preview-title">Micrographics.</h1>
+                <p>Footer / neck label / dossier.</p>
+            </section>
+
+            <section class="preview-grid" aria-label="Micrographic variants">
+                <article class="study wide">
+                    <div class="study-caption">
+                        <span>01</span>
+                        <strong>Website footer strip</strong>
+                    </div>
+                    <div class="micrographic starfield footer-strip" role="img" aria-label="SPECTER Labs footer micrographic with registry counters">
+                        <div class="footer-logo" aria-hidden="true">
+                            <div class="stripe-block"></div>
+                            <img src="../assets/logo-black.svg" alt="" />
+                        </div>
+                        <div class="footer-title">
+                            <span class="scan-label">SPECTER LABS</span>
+                            <span class="serif-label">research registry</span>
+                        </div>
+                        <div class="footer-divider"></div>
+                        <div class="footer-meta">
+                            <span>SPCTR IDS</span>
+                            <span>A-013</span>
+                            <span>B-012</span>
+                            <span>D-005</span>
+                            <span>NYC / WORLDWIDE</span>
+                        </div>
+                        <div class="footer-chip-row">
+                            <span class="solid-chip">OPEN RECORD</span>
+                            <span class="outline-chip">2026</span>
+                            <span class="solid-chip">ACTIVE DOSSIERS</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="study">
+                    <div class="study-caption">
+                        <span>02</span>
+                        <strong>Dossier plate</strong>
+                    </div>
+                    <div class="micrographic starfield dossier-plate" role="img" aria-label="D-003 Lenia Swarm dossier micrographic">
+                        <div class="plate-head">
+                            <span>DOSSIER SERIES</span>
+                            <span>SPCTR D-003</span>
+                        </div>
+                        <div class="plate-rule"></div>
+                        <div class="plate-title">
+                            <span class="plate-serif">Lenia Swarm</span>
+                            <span>D-003</span>
+                        </div>
+                        <div class="plate-subtitle">
+                            synthetic morphospace / transport coherence
+                        </div>
+                        <div class="plate-status">
+                            <span>STATUS: ACTIVE</span>
+                            <span>RUNS: 256x2C</span>
+                        </div>
+                        <div class="plate-bottom">
+                            <div class="mini-bars" aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <span>field organism unit</span>
+                            <div class="striped-orb" aria-hidden="true"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="study">
+                    <div class="study-caption">
+                        <span>03</span>
+                        <strong>Addendum wafer stamp</strong>
+                    </div>
+                    <div class="micrographic light-stamp addendum-stamp" role="img" aria-label="A-011 Design Tokens addendum stamp">
+                        <div class="stamp-dot-field" aria-hidden="true"></div>
+                        <div class="stamp-logo-row">
+                            <div class="tiny-witch">
+                                <img src="../assets/logo-black.svg" alt="" />
+                            </div>
+                            <div class="stamp-badge">A-011</div>
+                        </div>
+                        <div class="stamp-copy">
+                            <span>THE</span>
+                            <strong>DESIGN TOKEN</strong>
+                            <span>ADDENDUM IS GENERATED AND REVIEWED BY</span>
+                            <strong>SPECTER LABS</strong>
+                            <span>FOR PUBLIC SURFACE CONSISTENCY</span>
+                        </div>
+                        <div class="stamp-icons" aria-hidden="true">
+                            <span class="recycle-mark">SP</span>
+                            <span class="checker-mark"></span>
+                            <span class="three-dot-mark"></span>
+                        </div>
+                        <div class="stamp-foot">PROPERTY OF SPCTR / 2026</div>
+                    </div>
+                </article>
+
+                <article class="study">
+                    <div class="study-caption">
+                        <span>04</span>
+                        <strong>Penrose worlds seal</strong>
+                    </div>
+                    <div class="micrographic starfield worlds-seal" role="img" aria-label="Penrose three worlds micrographic for Specter Labs">
+                        <div class="seal-top">MODEL PLATE / THREE WORLDS</div>
+                        <div class="seal-diagram" aria-hidden="true">
+                            <img class="penrose-icon" src="svg/penrose-three-worlds-icon.svg" alt="" />
+                        </div>
+                        <div class="seal-copy">
+                            <span>platonic mathematical</span>
+                            <span>physical world</span>
+                            <span>mental world</span>
+                        </div>
+                        <div class="seal-id">SPCTR / FOUNDATIONAL GLYPH / B-008</div>
+                    </div>
+                </article>
+
+                <article class="study wide">
+                    <div class="study-caption">
+                        <span>05</span>
+                        <strong>Research note cargo label</strong>
+                    </div>
+                    <div class="micrographic red-label cargo-label" role="img" aria-label="B-012 research note micrographic">
+                        <div class="cargo-icons">
+                            <div class="cargo-proof-mark" aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <img src="../assets/logo-black.svg" alt="" />
+                        </div>
+                        <div class="cargo-main">
+                            <span>SPCTR B-001</span>
+                            <span>WONTON SOUP / PROOF STRUCTURES</span>
+                            <span>SERIES B-001 / DOSSIER D-002</span>
+                        </div>
+                        <div class="cargo-lot">
+                            <span>RELEASE</span>
+                            <strong>PUBLISHED</strong>
+                        </div>
+                        <div class="cargo-measure">status: active / surface: blog</div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="svg-section" aria-labelledby="svg-title">
+                <div class="svg-section-head">
+                    <p class="preview-eyebrow">SVG</p>
+                    <h2 id="svg-title">Minimal marks.</h2>
+                    <p>Editable vectors.</p>
+                </div>
+                <div class="svg-grid">
+                    <article class="svg-card">
+                        <img src="svg/wonton-soup-stamp.svg" alt="D-002 Wonton Soup microstamp SVG" />
+                        <a href="svg/wonton-soup-stamp.svg">wonton-soup-stamp.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/lenia-swarm-stamp.svg" alt="D-003 Lenia Swarm microstamp SVG" />
+                        <a href="svg/lenia-swarm-stamp.svg">lenia-swarm-stamp.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/design-token-wafer.svg" alt="A-011 Design Tokens wafer stamp SVG" />
+                        <a href="svg/design-token-wafer.svg">design-token-wafer.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/penrose-three-worlds-icon.svg" alt="Penrose three worlds micrographic SVG" />
+                        <a href="svg/penrose-three-worlds-icon.svg">penrose-three-worlds-icon.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/penrose-spctr-platonic.svg" alt="SPCTR Penrose platonic mental physical micrographic SVG" />
+                        <a href="svg/penrose-spctr-platonic.svg">penrose-spctr-platonic.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/red-lot-mark.svg" alt="Red phosphor SPCTR lot mark SVG" />
+                        <a href="svg/red-lot-mark.svg">red-lot-mark.svg</a>
+                    </article>
+                </div>
+            </section>
+
+            <section class="round-two-section" aria-labelledby="round-two-title">
+                <div class="svg-section-head">
+                    <p class="preview-eyebrow">Round 2</p>
+                    <h2 id="round-two-title">Footer / neck labels.</h2>
+                    <p>Small print systems.</p>
+                </div>
+                <div class="label-pair-grid" aria-label="One footer label and one neck label">
+                    <article class="svg-card">
+                        <img src="svg/round3-neck-label.svg" alt="Round three SPECTER neck label SVG" />
+                        <a href="svg/round3-neck-label.svg">neck-label.svg</a>
+                    </article>
+                </div>
+                <figure class="generated-sheet">
+                    <img src="generated/round2-inspiration.png" alt="Image-generated round two Specter Labs micrographic contact sheet" />
+                    <figcaption>Imagen reference.</figcaption>
+                </figure>
+            </section>
+
+            <section class="round-three-section" aria-labelledby="round-three-title">
+                <div class="svg-section-head">
+                    <p class="preview-eyebrow">Round 3</p>
+                    <h2 id="round-three-title">Usable sources.</h2>
+                    <p>Editable SVG.</p>
+                </div>
+                <div class="round-three-grid">
+                    <article class="svg-card wide">
+                        <img src="svg/round3-neck-label.svg" alt="Round three neck label SVG" />
+                        <a href="svg/round3-neck-label.svg">round3-neck-label.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/round3-wonton-proof.svg" alt="Round three Wonton Soup proof graph SVG" />
+                        <a href="svg/round3-wonton-proof.svg">round3-wonton-proof.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/round3-lenia-morphospace.svg" alt="Round three Lenia synthetic morphospace SVG" />
+                        <a href="svg/round3-lenia-morphospace.svg">round3-lenia-morphospace.svg</a>
+                    </article>
+                    <article class="svg-card">
+                        <img src="svg/round3-red-lot-loop.svg" alt="Round three red lot loop SVG" />
+                        <a href="svg/round3-red-lot-loop.svg">round3-red-lot-loop.svg</a>
+                    </article>
+                </div>
+            </section>
+        </main>
+        <script>
+            (() => {
+                const root = document.documentElement;
+                const button = document.querySelector("[data-theme-toggle]");
+                if (!button) return;
+
+                const sync = () => {
+                    const light = root.dataset.theme === "light";
+                    button.textContent = light ? "Black" : "White";
+                    button.setAttribute("aria-pressed", String(light));
+                };
+
+                sync();
+                button.addEventListener("click", () => {
+                    const light = root.dataset.theme !== "light";
+                    root.dataset.theme = light ? "light" : "";
+                    if (!light) {
+                        root.removeAttribute("data-theme");
+                    }
+                    localStorage.setItem("micrographics-theme", light ? "light" : "dark");
+                    sync();
+                });
+            })();
+        </script>
+    </body>
+</html>

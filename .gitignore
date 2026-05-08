@@ -72,6 +72,8 @@ dossiers/lenia-swarm/logs/
 
 # Specter Labs local-only outputs
 generated/
+!site/micrographics/generated/
+!site/micrographics/generated/**/*.png
 synthetic-bureau/
 records-bureau/
 vault/

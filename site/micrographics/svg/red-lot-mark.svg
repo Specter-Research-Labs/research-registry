@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+    <title id="title">Red SPCTR registry mark</title>
+    <desc id="desc">A red SPECTER registry mark using real series, dossier, release, and surface fields.</desc>
+    <defs>
+        <style>
+            .bg { fill: #030303; }
+            .red { fill: #ff3030; }
+            .line { stroke: #ff3030; stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
+            .hair { stroke: #ff3030; stroke-width: .85; fill: none; stroke-linecap: square; stroke-linejoin: miter; opacity: .78; }
+            .ghost { stroke: #ff3030; stroke-width: 1; fill: none; opacity: .55; }
+            text { fill: #ff3030; font-family: "Berkeley Mono", ui-monospace, monospace; letter-spacing: .08em; }
+        </style>
+    </defs>
+    <rect class="bg" width="640" height="360"/>
+    <g transform="translate(88 70)">
+        <path class="hair" d="M0 0 H16 M0 0 V16 M464 0 H448 M464 0 V16 M0 220 H16 M0 220 V204 M464 220 H448 M464 220 V204"/>
+
+        <text x="30" y="42" font-size="23">SPCTR B-001</text>
+        <text x="30" y="76" font-size="12">WONTON SOUP / PROOF STRUCTURES</text>
+        <line class="line" x1="30" y1="104" x2="274" y2="104"/>
+
+        <g transform="translate(30 126)">
+            <rect class="line" x="0" y="0" width="72" height="24"/>
+            <rect class="line" x="0" y="36" width="72" height="24"/>
+            <rect class="line" x="0" y="72" width="72" height="24"/>
+            <text x="10" y="17" font-size="11">SERIES</text>
+            <text x="10" y="53" font-size="11">DOSSIER</text>
+            <text x="10" y="89" font-size="11">RELEASE</text>
+            <text x="94" y="18" font-size="15">B-001</text>
+            <text x="94" y="54" font-size="15">D-002</text>
+            <text x="94" y="90" font-size="15">PUBLISHED</text>
+        </g>
+
+        <g transform="translate(308 38)">
+            <rect class="hair" x="0" y="0" width="122" height="122"/>
+            <rect class="red" x="18" y="18" width="15" height="15"/>
+            <rect class="red" x="48" y="18" width="15" height="15"/>
+            <rect class="red" x="78" y="18" width="15" height="15"/>
+            <rect class="red" x="33" y="33" width="15" height="15"/>
+            <rect class="red" x="63" y="33" width="15" height="15"/>
+            <rect class="red" x="93" y="33" width="15" height="15"/>
+            <rect class="red" x="18" y="48" width="15" height="15"/>
+            <rect class="red" x="48" y="48" width="15" height="15"/>
+            <rect class="red" x="78" y="48" width="15" height="15"/>
+            <line class="ghost" x1="18" y1="87" x2="104" y2="87"/>
+            <line class="ghost" x1="18" y1="102" x2="82" y2="102"/>
+        </g>
+
+        <g transform="translate(314 184)">
+            <rect class="red" x="0" y="0" width="4" height="46"/>
+            <rect class="red" x="14" y="0" width="2" height="46"/>
+            <rect class="red" x="28" y="0" width="7" height="46"/>
+            <rect class="red" x="48" y="0" width="2" height="46"/>
+            <rect class="red" x="60" y="0" width="9" height="46"/>
+            <rect class="red" x="84" y="0" width="3" height="46"/>
+            <rect class="red" x="98" y="0" width="5" height="46"/>
+            <rect class="red" x="116" y="0" width="2" height="46"/>
+            <rect class="red" x="130" y="0" width="6" height="46"/>
+            <text x="0" y="72" font-size="10">SURFACE: BLOG</text>
+            <text x="0" y="94" font-size="10">STATUS: ACTIVE</text>
+        </g>
+    </g>
+</svg>
