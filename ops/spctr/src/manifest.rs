@@ -57,6 +57,7 @@ pub struct RawRootConfig {
     pub path: String,
     pub remote_base: Option<String>,
     pub excludes: Vec<String>,
+    pub sync_mode: String,
     pub resolve: Option<String>,
     pub runtime_slug: Option<String>,
     pub project_fallback: Option<String>,
@@ -977,6 +978,7 @@ fn validate_raw_root_item(
             path: text.to_owned(),
             remote_base: None,
             excludes: Vec::new(),
+            sync_mode: "mirror".to_owned(),
             resolve: None,
             runtime_slug: None,
             project_fallback: None,
@@ -989,6 +991,7 @@ fn validate_raw_root_item(
         "path",
         "remote_base",
         "excludes",
+        "sync_mode",
         "resolve",
         "runtime_slug",
         "project_fallback",
@@ -1017,6 +1020,14 @@ fn validate_raw_root_item(
             .map(|(i, item)| require_string(Some(item), &format!("{field}.excludes[{i}]"), path))
             .collect::<Result<Vec<_>>>()?,
     };
+    let sync_mode = table
+        .get("sync_mode")
+        .map(|v| require_string(Some(v), &format!("{field}.sync_mode"), path))
+        .transpose()?
+        .unwrap_or_else(|| "mirror".to_owned());
+    if sync_mode != "mirror" && sync_mode != "upsert" {
+        bail!("{}: {field}.sync_mode must be 'mirror' or 'upsert'", path);
+    }
     let resolve = table
         .get("resolve")
         .map(|v| require_string(Some(v), &format!("{field}.resolve"), path))
@@ -1062,6 +1073,7 @@ fn validate_raw_root_item(
         path: root_path,
         remote_base,
         excludes,
+        sync_mode,
         resolve,
         runtime_slug,
         project_fallback,

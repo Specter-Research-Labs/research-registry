@@ -15,6 +15,7 @@ pub struct RawRoot {
     pub remote_base: RemoteBase,
     pub remote_relpath: String,
     pub excludes: Vec<String>,
+    pub sync_mode: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -158,6 +159,7 @@ fn resolve_raw_root(
         remote_base,
         remote_relpath,
         excludes: config.excludes.clone(),
+        sync_mode: config.sync_mode.clone(),
     })
 }
 

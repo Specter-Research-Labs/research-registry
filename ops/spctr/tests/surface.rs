@@ -183,6 +183,17 @@ fn output_text(output: &Output) -> String {
     String::from_utf8_lossy(&output.stdout).into_owned() + &String::from_utf8_lossy(&output.stderr)
 }
 
+fn only_snapshot_dir(history_root: &Path) -> PathBuf {
+    let snapshots = fs::read_dir(history_root)
+        .unwrap()
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.join("snapshot.json").exists())
+        .collect::<Vec<_>>();
+    assert_eq!(snapshots.len(), 1);
+    snapshots.into_iter().next().unwrap()
+}
+
 #[test]
 fn checkpoint_promote_pull_and_status_flow() {
     let temp = TempDir::new().unwrap();
@@ -310,6 +321,69 @@ fn category_root_raw_paths_do_not_repeat_remote_category() {
 }
 
 #[test]
+fn upsert_raw_root_preserves_remote_existing_files() {
+    let temp = TempDir::new().unwrap();
+    let project_root = temp.path().join("dossiers/alpha");
+    write(
+        &project_root.join("spctr.toml"),
+        "version = 1\n\
+license = \"Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)\"\n\
+title = \"Alpha\"\n\
+summary = \"Alpha summary.\"\n\
+status = \"active\"\n\n\
+[site]\n\
+visible = true\n\
+featured = false\n\n\
+[release]\n\
+stage = \"candidate\"\n\n\
+[spctr]\n\
+project = \"alpha\"\n\
+default_surface = \"demo\"\n\n\
+[spctr.surfaces.demo]\n\
+kind = \"raw\"\n\
+remote_raw_namespace = \"alpha\"\n\n\
+[[spctr.surfaces.demo.raw_roots]]\n\
+path = \"logs\"\n\
+remote_base = \"logs\"\n\
+sync_mode = \"upsert\"\n",
+    );
+    write(&project_root.join("logs/local-only.log"), "local\n");
+    write(&project_root.join("logs/same.log"), "local\n");
+    let remote_logs = temp.path().join("remote/durable-logs/alpha/logs");
+    write(&remote_logs.join("remote-only.log"), "remote-only\n");
+    write(&remote_logs.join("same.log"), "remote\n");
+    let config_path = create_config(temp.path());
+
+    let output = spctr(
+        &["surface", "checkpoint", "demo"],
+        &project_root,
+        &config_path,
+    );
+    assert!(output.status.success(), "{}", output_text(&output));
+    assert!(output_text(&output).contains("checkpoint="));
+    assert_eq!(
+        fs::read_to_string(remote_logs.join("local-only.log")).unwrap(),
+        "local\n"
+    );
+    assert_eq!(
+        fs::read_to_string(remote_logs.join("remote-only.log")).unwrap(),
+        "remote-only\n"
+    );
+    assert_eq!(
+        fs::read_to_string(remote_logs.join("same.log")).unwrap(),
+        "remote\n"
+    );
+
+    let noop = spctr(
+        &["surface", "checkpoint", "demo"],
+        &project_root,
+        &config_path,
+    );
+    assert!(noop.status.success(), "{}", output_text(&noop));
+    assert!(output_text(&noop).contains("checkpoint=no-op"));
+}
+
+#[test]
 fn workspace_without_local_roots_uses_shared_main_checkout() {
     let temp = TempDir::new().unwrap();
     let project_root = create_workspace_category_root_project(temp.path());
@@ -330,12 +404,7 @@ fn workspace_without_local_roots_uses_shared_main_checkout() {
         "{}\n"
     );
     let history_root = temp.path().join("remote/hot/alpha/surfaces/demo/history");
-    let snapshot_dir = fs::read_dir(history_root)
-        .unwrap()
-        .next()
-        .unwrap()
-        .unwrap()
-        .path();
+    let snapshot_dir = only_snapshot_dir(&history_root);
     assert_eq!(
         fs::read_to_string(snapshot_dir.join("compendium.sqlite")).unwrap(),
         "shared-db\n"
@@ -376,12 +445,7 @@ fn sync_promotes_db_from_machine_local_artifact_root() {
         .join("remote/hot/alpha/surfaces/demo/current.json")
         .exists());
     let history_root = temp.path().join("remote/hot/alpha/surfaces/demo/history");
-    let snapshot_dir = fs::read_dir(history_root)
-        .unwrap()
-        .next()
-        .unwrap()
-        .unwrap()
-        .path();
+    let snapshot_dir = only_snapshot_dir(&history_root);
     assert_eq!(
         fs::read_to_string(snapshot_dir.join("demo.sqlite")).unwrap(),
         "local-db\n"
