@@ -1,0 +1,312 @@
+{
+  "take": "ledger",
+  "theorem": "theorem hf_deepseek_prover_v1_train_00795 :\n    let A := 4444;\n    let B := (Nat.digits 10 A).sum;\n    let C := (Nat.digits 10 B).sum;\n    C = 7 → B % 9 = 0 → B % 9 = 0",
+  "baseline": {
+    "edges": [
+      {
+        "parent": "cp1:_uniq.114380",
+        "child": "cp2:_uniq.114397.2",
+        "tactic": "intro H"
+      },
+      {
+        "parent": "cp2:_uniq.114397.2",
+        "child": "cp3:_uniq.114397.5",
+        "tactic": "intro H'"
+      },
+      {
+        "parent": "cp3:_uniq.114397.5",
+        "child": "cp4:_uniq.114397.8",
+        "tactic": "intro H''"
+      },
+      {
+        "parent": "cp4:_uniq.114397.8",
+        "child": "cp5:_uniq.114397.11",
+        "tactic": "intro H'''"
+      },
+      {
+        "parent": "cp5:_uniq.114397.11",
+        "child": "cp6:_uniq.114397.14",
+        "tactic": "intro H''"
+      }
+    ],
+    "winner": {
+      "selected_path": [
+        "cp1:_uniq.114380",
+        "cp2:_uniq.114397.2",
+        "cp3:_uniq.114397.5",
+        "cp4:_uniq.114397.8",
+        "cp5:_uniq.114397.11",
+        "cp6:_uniq.114397.14"
+      ],
+      "terminal_node": "cp6:_uniq.114397.14",
+      "terminal_tactic": "exact H''",
+      "iteration": 5
+    },
+    "winner_edges": [
+      {
+        "parent": "cp5:_uniq.114397.11",
+        "child": "cp6:_uniq.114397.14"
+      },
+      {
+        "parent": "cp1:_uniq.114380",
+        "child": "cp2:_uniq.114397.2"
+      },
+      {
+        "parent": "cp4:_uniq.114397.8",
+        "child": "cp5:_uniq.114397.11"
+      },
+      {
+        "parent": "cp3:_uniq.114397.5",
+        "child": "cp4:_uniq.114397.8"
+      },
+      {
+        "parent": "cp2:_uniq.114397.2",
+        "child": "cp3:_uniq.114397.5"
+      }
+    ],
+    "terminal_closers": {
+      "cp6:_uniq.114397.14": [
+        "exact H''"
+      ]
+    },
+    "blocked_exact_attempts": {},
+    "displayed_muted_attempts": [
+      {
+        "node": "cp1:_uniq.114380",
+        "tactic": "intro C",
+        "label": "intro C",
+        "outcome": "proposed"
+      },
+      {
+        "node": "cp1:_uniq.114380",
+        "tactic": "intro h",
+        "label": "intro h",
+        "outcome": "proposed"
+      },
+      {
+        "node": "cp2:_uniq.114397.2",
+        "tactic": "intro H",
+        "label": "intro H",
+        "outcome": "proposed"
+      },
+      {
+        "node": "cp2:_uniq.114397.2",
+        "tactic": "intro _",
+        "label": "intro _",
+        "outcome": "proposed"
+      }
+    ],
+    "goal_snapshots": []
+  },
+  "intervention": {
+    "edges": [
+      {
+        "parent": "cp1:_uniq.114684",
+        "child": "cp2:_uniq.114701.19",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp1:_uniq.114684",
+        "child": "cp2:_uniq.114701.23",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp2:_uniq.114701.19",
+        "child": "cp3:_uniq.114701.47",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp2:_uniq.114701.19",
+        "child": "cp3:_uniq.114701.51",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp2:_uniq.114701.23",
+        "child": "cp4:_uniq.114701.47",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp2:_uniq.114701.23",
+        "child": "cp4:_uniq.114701.51",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp3:_uniq.114701.47",
+        "child": "cp5:_uniq.114701.73",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp3:_uniq.114701.47",
+        "child": "cp5:_uniq.114701.77",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp3:_uniq.114701.51",
+        "child": "cp7:_uniq.114701.73",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp3:_uniq.114701.51",
+        "child": "cp7:_uniq.114701.77",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp4:_uniq.114701.47",
+        "child": "cp6:_uniq.114701.73",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp4:_uniq.114701.47",
+        "child": "cp6:_uniq.114701.77",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp4:_uniq.114701.51",
+        "child": "cp8:_uniq.114701.73",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp4:_uniq.114701.51",
+        "child": "cp8:_uniq.114701.77",
+        "tactic": "rintro ⟨⟩"
+      },
+      {
+        "parent": "cp5:_uniq.114701.77",
+        "child": "cp13:_uniq.114701.83",
+        "tactic": "intro"
+      },
+      {
+        "parent": "cp6:_uniq.114701.77",
+        "child": "cp14:_uniq.114701.83",
+        "tactic": "intro"
+      },
+      {
+        "parent": "cp7:_uniq.114701.77",
+        "child": "cp15:_uniq.114701.83",
+        "tactic": "intro"
+      },
+      {
+        "parent": "cp8:_uniq.114701.77",
+        "child": "cp16:_uniq.114701.83",
+        "tactic": "intro"
+      },
+      {
+        "parent": "cp13:_uniq.114701.83",
+        "child": "cp17:_uniq.114701.86",
+        "tactic": "intros"
+      },
+      {
+        "parent": "cp14:_uniq.114701.83",
+        "child": "cp18:_uniq.114701.86",
+        "tactic": "intro"
+      },
+      {
+        "parent": "cp15:_uniq.114701.83",
+        "child": "cp19:_uniq.114701.86",
+        "tactic": "intros"
+      },
+      {
+        "parent": "cp16:_uniq.114701.83",
+        "child": "cp20:_uniq.114701.86",
+        "tactic": "intros"
+      }
+    ],
+    "winner": {
+      "selected_path": [
+        "cp1:_uniq.114684",
+        "cp2:_uniq.114701.19",
+        "cp3:_uniq.114701.47",
+        "cp5:_uniq.114701.73"
+      ],
+      "terminal_node": "cp5:_uniq.114701.73",
+      "terminal_tactic": "rintro ⟨⟩",
+      "iteration": 7
+    },
+    "winner_edges": [
+      {
+        "parent": "cp1:_uniq.114684",
+        "child": "cp2:_uniq.114701.19"
+      },
+      {
+        "parent": "cp3:_uniq.114701.47",
+        "child": "cp5:_uniq.114701.73"
+      },
+      {
+        "parent": "cp2:_uniq.114701.19",
+        "child": "cp3:_uniq.114701.47"
+      }
+    ],
+    "terminal_closers": {
+      "cp5:_uniq.114701.73": [
+        "rintro ⟨⟩"
+      ],
+      "cp6:_uniq.114701.73": [
+        "rintro ⟨⟩"
+      ],
+      "cp7:_uniq.114701.73": [
+        "rintro ⟨⟩"
+      ],
+      "cp8:_uniq.114701.73": [
+        "rintro ⟨⟩"
+      ],
+      "cp17:_uniq.114701.86": [
+        "assumption"
+      ],
+      "cp18:_uniq.114701.86": [
+        "try simp"
+      ],
+      "cp19:_uniq.114701.86": [
+        "assumption"
+      ],
+      "cp20:_uniq.114701.86": [
+        "assumption"
+      ]
+    },
+    "blocked_exact_attempts": {
+      "cp2:_uniq.114701.19": [
+        "exact fun _ h₁ h₂ => h₂",
+        "exact fun _ _ => rfl"
+      ],
+      "cp8:_uniq.114701.73": [
+        "exact fun _ => rfl"
+      ],
+      "cp5:_uniq.114701.77": [
+        "exact fun _ => rfl"
+      ],
+      "cp8:_uniq.114701.77": [
+        "exact Nat.mod_add_div _ _"
+      ],
+      "cp14:_uniq.114701.83": [
+        "exact fun _ => by rfl"
+      ],
+      "cp16:_uniq.114701.83": [
+        "exact (Nat.mod_eq_zero_of_dvd _ (Nat.dvd_of_mod_eq_zero _)).symm"
+      ],
+      "cp17:_uniq.114701.86": [
+        "exact Nat.mod_eq_of_lt (Nat.zero_lt_succ _)"
+      ]
+    },
+    "displayed_muted_attempts": [
+      {
+        "node": "cp1:_uniq.114684",
+        "tactic": "clear A B C",
+        "label": "clear A B C",
+        "outcome": "proposed"
+      },
+      {
+        "node": "cp2:_uniq.114701.19",
+        "tactic": "done",
+        "label": "done",
+        "outcome": "proposed"
+      }
+    ],
+    "goal_snapshots": []
+  },
+  "baseline_red_or_blocked_drawn": false,
+  "source_files": {
+    "wild_tree": "data/hf00795-block-exact/wild_type_mcts_tree.json",
+    "wild_trace": "data/hf00795-block-exact/wild_type_mcts_trace.jsonl",
+    "intervention_tree": "data/hf00795-block-exact/block_exact_mcts_tree.json",
+    "intervention_trace": "data/hf00795-block-exact/block_exact_mcts_trace.jsonl"
+  }
+}
