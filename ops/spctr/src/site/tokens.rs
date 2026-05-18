@@ -90,8 +90,31 @@ fn normalize_css(text: &str) -> String {
 }
 
 fn has_tokens_import(normalized_css: &str, import_path: &str) -> bool {
-    normalized_css.starts_with(&format!("@import\"{import_path}\";"))
-        || normalized_css.starts_with(&format!("@importurl(\"{import_path}\");"))
+    matches_import(
+        normalized_css,
+        &format!("@import\"{import_path}"),
+        "\";",
+    ) || matches_import(
+        normalized_css,
+        &format!("@importurl(\"{import_path}"),
+        "\");",
+    )
+}
+
+fn matches_import(normalized_css: &str, prefix: &str, suffix: &str) -> bool {
+    let Some(rest) = normalized_css.strip_prefix(prefix) else {
+        return false;
+    };
+    if rest.starts_with(suffix) {
+        return true;
+    }
+    let Some(query) = rest.strip_prefix('?') else {
+        return false;
+    };
+    let Some(closing) = query.find('"') else {
+        return false;
+    };
+    query[closing..].starts_with(suffix)
 }
 
 #[cfg(test)]
@@ -106,6 +129,30 @@ mod tests {
         ));
         assert!(has_tokens_import(
             &normalize_css("@import url(\"./tokens.css\");\n:root{}"),
+            "./tokens.css"
+        ));
+    }
+
+    #[test]
+    fn token_import_accepts_cache_bust_query_string() {
+        assert!(has_tokens_import(
+            &normalize_css("@import \"./tokens.css?v=20260518\";\n:root{}"),
+            "./tokens.css"
+        ));
+        assert!(has_tokens_import(
+            &normalize_css("@import url(\"./tokens.css?v=20260518\");\n:root{}"),
+            "./tokens.css"
+        ));
+    }
+
+    #[test]
+    fn token_import_rejects_wrong_path() {
+        assert!(!has_tokens_import(
+            &normalize_css("@import \"./other.css\";\n:root{}"),
+            "./tokens.css"
+        ));
+        assert!(!has_tokens_import(
+            &normalize_css("@import \"./tokens.css.bak\";\n:root{}"),
             "./tokens.css"
         ));
     }
