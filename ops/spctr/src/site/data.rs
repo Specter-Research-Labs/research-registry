@@ -17,7 +17,7 @@ pub struct ResolvedMount {
 
 fn site_data_root() -> String {
     publish::optional_env("SPECTER_SITE_DATA_ROOT")
-        .unwrap_or_else(|| "/srv/www/site/data".to_owned())
+        .unwrap_or_else(|| "/srv/www/site-data".to_owned())
 }
 
 pub fn resolve_mounts(repo_root: &Utf8Path) -> Result<Vec<ResolvedMount>> {

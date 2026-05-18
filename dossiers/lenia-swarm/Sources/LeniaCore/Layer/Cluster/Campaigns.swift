@@ -336,6 +336,7 @@ public struct LeniaCampaignMetricRecord: Codable, Sendable {
     public let seedName: String?
     public let seedRunID: String?
     public let seedCampaignID: String?
+    public let seed: Int?
     public let score: Float?
     public let finalMass: Float?
     public let finalCenterX: Float?
@@ -379,6 +380,7 @@ public struct LeniaCampaignMetricRecord: Codable, Sendable {
         seedName: String?,
         seedRunID: String?,
         seedCampaignID: String?,
+        seed: Int?,
         score: Float?,
         finalMass: Float?,
         finalCenterX: Float?,
@@ -412,6 +414,7 @@ public struct LeniaCampaignMetricRecord: Codable, Sendable {
         self.seedName = seedName
         self.seedRunID = seedRunID
         self.seedCampaignID = seedCampaignID
+        self.seed = seed
         self.score = score
         self.finalMass = finalMass
         self.finalCenterX = finalCenterX
@@ -694,7 +697,7 @@ private func executeLeniaSearchCampaignJob(
     let simulationJob = payload.simulationJob
     let searchConfig = simulationJob.searchConfig
     let batchSize = searchConfig.batchSize
-    let initSeedOffset = searchConfig.initSeedOffset ?? 0
+    var initSeedOffset = searchConfig.initSeedOffset ?? 0
     guard simulationJob.count > 0 else {
         throw WorkerError.invalidConfig("Campaign search job \(job.runID) count must be > 0.")
     }
@@ -713,7 +716,21 @@ private func executeLeniaSearchCampaignJob(
             overrides[key] = value
         }
     }
-    overrides["params.seed"] = seeds[0]
+    if overrides["params.seed"] == nil {
+        overrides["params.seed"] = seeds[0]
+    }
+    if let initSeedOverride = overrides["init.seed"] {
+        let asInt: Int? = {
+            if let int = initSeedOverride as? Int { return int }
+            if let double = initSeedOverride as? Double { return Int(double) }
+            return nil
+        }()
+        guard let extra = asInt else {
+            throw WorkerError.invalidConfig("Campaign search job \(job.runID) init.seed override must be an integer.")
+        }
+        initSeedOffset += extra
+        overrides.removeValue(forKey: "init.seed")
+    }
     overrides["run.steps"] = searchConfig.steps
 
     let baseConfigData = try JSONEncoder().encode(simulationJob.baseConfig)
@@ -883,6 +900,7 @@ private func campaignMetricRecord(
         seedName: job.seedReference?.name,
         seedRunID: job.seedReference?.runID,
         seedCampaignID: job.seedReference?.campaignID,
+        seed: values.seed,
         score: values.score,
         finalMass: values.finalMass,
         finalCenterX: values.finalCenterX,
@@ -906,6 +924,7 @@ private func campaignMetricRecord(
 }
 
 private struct CampaignMetricValues {
+    let seed: Int?
     let score: Float?
     let finalMass: Float?
     let finalCenterX: Float?
@@ -929,6 +948,7 @@ private struct CampaignMetricValues {
 
 private func campaignMetricValues(result: SimulationResultData) -> CampaignMetricValues {
     CampaignMetricValues(
+        seed: result.seed,
         score: result.score,
         finalMass: result.metrics.massMean,
         finalCenterX: nil,
@@ -953,6 +973,7 @@ private func campaignMetricValues(result: SimulationResultData) -> CampaignMetri
 
 private func campaignMetricValues(runSummary: FlowLeniaEcology2025RunSummary) -> CampaignMetricValues {
     CampaignMetricValues(
+        seed: nil,
         score: runSummary.finalNonNeutralActivity,
         finalMass: runSummary.finalMass,
         finalCenterX: nil,

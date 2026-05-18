@@ -67,7 +67,8 @@ func promoteRunArtifacts(
     includeResults: Bool = true,
     stats: Bool = false,
     warehousePath: String? = nil,
-    warehouseTopology: Bool = false
+    warehouseTopology: Bool = false,
+    postCompendiumIngest: ((String) throws -> Void)? = nil
 ) throws -> String {
     let compendiumURL = URL(fileURLWithPath: compendiumPath)
     try FileManager.default.createDirectory(
@@ -87,6 +88,7 @@ func promoteRunArtifacts(
     if stats {
         print("Compendium: \(try indexer.stats())")
     }
+    try postCompendiumIngest?(compendiumPath)
     if let warehouseResult = try refreshWarehouseProjection(
         compendiumPath: compendiumPath,
         warehousePath: warehousePath,
@@ -105,7 +107,8 @@ func applyPromotionIfEnabled(
     config: ArchivePromotionConfig,
     runDir: String,
     includeResults: Bool = true,
-    stats: Bool = false
+    stats: Bool = false,
+    postCompendiumIngest: ((String) throws -> Void)? = nil
 ) throws -> ArchivePromotionConfig {
     if let compendiumPath = config.compendiumPath {
         try promoteRunArtifacts(
@@ -114,7 +117,8 @@ func applyPromotionIfEnabled(
             includeResults: includeResults,
             stats: stats,
             warehousePath: config.warehousePath,
-            warehouseTopology: config.warehouseTopology
+            warehouseTopology: config.warehouseTopology,
+            postCompendiumIngest: postCompendiumIngest
         )
     }
     return config

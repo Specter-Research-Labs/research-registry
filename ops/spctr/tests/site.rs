@@ -480,6 +480,8 @@ fn spctr_table_is_ignored_for_site_metadata() {
         "<html><body>\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
+         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
          </body></html>\n",
     );
     let mut manifest = dossier_manifest(
@@ -533,6 +535,8 @@ fn hub_header_is_injected_into_output() {
         "<html><body>\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
+         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
@@ -556,12 +560,69 @@ fn hub_header_is_injected_into_output() {
         "hub should contain the project title"
     );
     assert!(
-        hub.contains("project-status active") && hub.contains(">active<"),
-        "hub should contain the status chip"
+        hub.contains("dossier-hub-title"),
+        "hub should contain the new title class"
     );
     assert!(
-        hub.contains("hub-meta-row"),
-        "hub should contain meta table rows"
+        hub.contains("dossier-hub-deck"),
+        "hub should render the summary as a deck"
+    );
+    assert!(
+        hub.contains("dossier-hub-metabar"),
+        "hub should contain the metabar strip"
+    );
+    assert!(
+        hub.contains("project-status active") && hub.contains(">active<"),
+        "hub should contain the status chip inline in the metabar"
+    );
+    assert!(
+        !hub.contains("hub-meta-row"),
+        "hub should no longer use the old hub-meta-row treatment"
+    );
+    assert!(
+        !hub.contains("section-lead"),
+        "hub should no longer render the section-lead summary block"
+    );
+}
+
+#[test]
+fn hub_footer_is_injected_into_output() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+    minimal_templates(root);
+    write(
+        root,
+        "site/templates/dossiers/alpha/index.html",
+        "<html><body>\n\
+         <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
+         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
+         </body></html>\n",
+    );
+    write(
+        root,
+        "dossiers/alpha/spctr.toml",
+        &dossier_manifest(
+            "Alpha Project",
+            "active",
+            true,
+            true,
+            Some(1),
+            Some("site/dossiers/alpha/index.html"),
+        ),
+    );
+
+    spctr::site::build(root, true).unwrap();
+
+    let hub = fs::read_to_string(root.join("site/dossiers/alpha/index.html")).unwrap();
+    assert!(
+        hub.contains("dossier-hub-footer-row"),
+        "hub should contain the new footer row class"
+    );
+    assert!(
+        hub.contains("Repository"),
+        "footer should always include the repository link"
     );
 }
 
@@ -603,12 +664,24 @@ fn visible_dossier_without_declared_hub_gets_generated_public_hub() {
         "hub should contain the title"
     );
     assert!(
-        hub.contains("Cabinet Docs"),
-        "hub should contain cabinet docs links"
+        hub.contains("dossier-hub-footer-row"),
+        "auto-gen hub should render the new footer row"
     );
     assert!(
-        hub.contains("Related Addenda") && hub.contains("ToolA"),
-        "hub should contain linked addenda"
+        hub.contains("Cabinet docs"),
+        "footer should link to cabinet docs when present"
+    );
+    assert!(
+        !hub.contains("Related Addenda"),
+        "auto-gen hub should no longer render the related addenda grid"
+    );
+    assert!(
+        !hub.contains("Public Surfaces"),
+        "auto-gen hub should no longer render the public surfaces grid"
+    );
+    assert!(
+        !hub.contains("Start Here") && !hub.contains("start-here"),
+        "auto-gen hub should no longer render the Start Here block"
     );
     assert!(
         home.contains("href=dossiers/alpha/") || home.contains("href=\"dossiers/alpha/\""),

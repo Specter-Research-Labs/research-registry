@@ -37,7 +37,7 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER START -->
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-                <section class="section-block section-card" id="research-questions">
+                <section class="section-block" id="research-questions">
                     <div class="site-section-title">Research Questions</div>
                     <p class="section-lead">
                         When we lesion a solver's search process, blocking a
@@ -57,7 +57,7 @@
                     </p>
                 </section>
 
-                <section class="section-block section-card" id="start-here">
+                <section class="section-block" id="start-here">
                     <div class="site-section-title">Start Here</div>
                     <ol class="quickstart-list">
                         <li>
@@ -116,123 +116,23 @@
                     </ul>
                 </section>
 
-                <section class="section-block section-card" id="key-outputs">
-                    <div class="site-section-title">Key Outputs</div>
-                    <div class="resource-grid">
-                        <article class="resource-card">
-                            <div class="resource-title">
-                                Wonton Soup Article
-                            </div>
-                            <p>
-                                Long-form overview of the project, methods,
-                                and results to date.
-                            </p>
-                            <div class="link-row">
-                                <a href="../../blog/wonton-soup/"
-                                    >Wonton Soup Article</a
-                                >
-                            </div>
-                        </article>
-                        <article class="resource-card">
-                            <div class="resource-title">Documentation</div>
-                            <p>
-                                Docs, ADRs, and runbooks for the dossier.
-                            </p>
-                            <div class="link-row">
-                                <a href="../../cabinet/">Cabinet Index</a>
-                                <a href="../../cabinet/wonton-soup/README/"
-                                    >Cabinet Docs</a
-                                >
-                            </div>
-                        </article>
-                        <article class="resource-card">
-                            <div class="resource-title">Dashboard</div>
-                            <p>
-                                Interactive dashboard for run comparison
-                                and metric inspection.
-                            </p>
-                            <div class="link-row">
-                                <a href="../../dashboards/wonton-soup/"
-                                    >Dashboard</a
-                                >
-                            </div>
-                        </article>
-                        <article class="resource-card">
-                            <div class="resource-title">Project Source</div>
-                            <p>
-                                Full codebase, CLI entry points, and test
-                                harnesses.
-                            </p>
-                            <div class="link-row">
-                                <a
-                                    href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >Repository Directory</a
-                                >
-                            </div>
-                        </article>
-                    </div>
-                </section>
-
-                <section class="section-block section-card" id="data-artifacts">
-                    <div class="site-section-title">Data &amp; Artifacts</div>
-                    <div class="collection-group">
-                        <div class="collection-title">Dashboard Manifests</div>
-                        <ul class="collection-list">
-                            <li>
-                                <a
-                                    href="../../dashboards/wonton-soup/data/manifest.json"
-                                    >Dashboard manifest</a
-                                >
-                                (run selection and metadata).
-                            </li>
-                            <li>
-                                Active payloads live under
-                                <a href="../../dashboards/wonton-soup/data/"
-                                    >the dashboard data directory</a
-                                >
-                                and are selected by the manifest rather
-                                than a hardcoded run id.
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="collection-group">
-                        <div class="collection-title">Cabinet Contracts</div>
-                        <ul class="collection-list">
-                            <li>
-                                <a
-                                    href="../../cabinet/wonton-soup/contracts/logs/log-file-schemas/"
-                                    >Log file schema index</a
-                                >
-                            </li>
-                            <li>
-                                <a
-                                    href="../../cabinet/wonton-soup/contracts/logs/log-schemas-run-level/"
-                                    >Run-level schema</a
-                                >
-                            </li>
-                            <li>
-                                <a
-                                    href="../../cabinet/wonton-soup/contracts/analysis/analysis-artifacts/"
-                                    >Analysis artifacts contract</a
-                                >
-                            </li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section class="section-block section-card" id="dashboard">
+                <section class="section-block" id="dashboard">
                     <div class="site-section-title">Dashboard</div>
                     <div class="feature-card">
                         <div class="feature-title">Wonton Dashboard</div>
                         <p>
                             Theorem-level traces, intervention splits,
-                            and run metrics.
+                            and run metrics. The active run is selected by
+                            a manifest rather than hardcoded, so payloads
+                            in the
+                            <a href="../../dashboards/wonton-soup/data/"
+                                >data directory</a
+                            >
+                            can rotate without touching the page.
                         </p>
                         <div class="link-row">
                             <a href="../../dashboards/wonton-soup/"
-                                >Dashboard</a
+                                >Open Dashboard</a
                             >
                             <a href="../../dashboards/wonton-soup/data/manifest.json"
                                 >Manifest</a
@@ -240,6 +140,8 @@
                         </div>
                     </div>
                 </section>
+                <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
+                <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
             </main>
         </div>
     </body>

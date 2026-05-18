@@ -422,10 +422,10 @@ fn dossier_index_sort_key(r: &SiteRecord) -> (bool, u32, String, String) {
     )
 }
 
-fn addenda_index_sort_key(r: &SiteRecord) -> (bool, String, String, String) {
+fn addenda_index_sort_key(r: &SiteRecord) -> (bool, std::cmp::Reverse<String>, String, String) {
     (
         r.series.is_none(),
-        r.series.clone().unwrap_or_default(),
+        std::cmp::Reverse(r.series.clone().unwrap_or_default()),
         r.title.to_lowercase(),
         r.slug.clone(),
     )
@@ -440,13 +440,12 @@ fn featured_release_rank(stage: &str) -> u8 {
 }
 
 fn featured_record_cmp(left: &&SiteRecord, right: &&SiteRecord) -> std::cmp::Ordering {
-    let left_order = left.featured_order.unwrap_or(u32::MAX);
-    let right_order = right.featured_order.unwrap_or(u32::MAX);
-    left_order
-        .cmp(&right_order)
+    featured_release_rank(&left.release_stage)
+        .cmp(&featured_release_rank(&right.release_stage))
         .then_with(|| {
-            featured_release_rank(&left.release_stage)
-                .cmp(&featured_release_rank(&right.release_stage))
+            let left_order = left.featured_order.unwrap_or(u32::MAX);
+            let right_order = right.featured_order.unwrap_or(u32::MAX);
+            left_order.cmp(&right_order)
         })
         .then_with(|| left.title.to_lowercase().cmp(&right.title.to_lowercase()))
         .then_with(|| left.slug.cmp(&right.slug))
@@ -482,111 +481,6 @@ mod tests {
             has_docs_readme: true,
             series: Some("D-001".to_owned()),
         }
-    }
-
-    fn ordering_record(
-        kind: &str,
-        slug: &str,
-        title: &str,
-        stage: &str,
-        featured_order: Option<u32>,
-        series: Option<&str>,
-    ) -> SiteRecord {
-        let mut record = make_record(stage, Vec::new());
-        record.kind = kind.to_owned();
-        record.slug = slug.to_owned();
-        record.title = title.to_owned();
-        record.featured = featured_order.is_some();
-        record.featured_order = featured_order;
-        record.series = series.map(str::to_owned);
-        record.repo_path = format!("{kind}s/{slug}");
-        record.repo_url = format!("https://example.test/{kind}s/{slug}");
-        if kind == "dossier" {
-            record.hub_path = Some(format!("site/dossiers/{slug}/index.html"));
-            record.hub_generated = true;
-        } else {
-            record.hub_path = None;
-            record.hub_generated = false;
-        }
-        record
-    }
-
-    #[test]
-    fn featured_records_follow_featured_order_before_release_stage() {
-        let records = vec![
-            ordering_record(
-                "addendum",
-                "third",
-                "Third",
-                "promoted",
-                Some(3),
-                Some("A-003"),
-            ),
-            ordering_record(
-                "addendum",
-                "second",
-                "Second",
-                "candidate",
-                Some(2),
-                Some("A-002"),
-            ),
-            ordering_record(
-                "addendum",
-                "first",
-                "First",
-                "promoted",
-                Some(1),
-                Some("A-001"),
-            ),
-        ];
-
-        let slices = super::slice_records(&records);
-        let slugs = slices
-            .featured_addenda
-            .iter()
-            .map(|record| record.slug.as_str())
-            .collect::<Vec<_>>();
-
-        assert_eq!(slugs, vec!["first", "second", "third"]);
-    }
-
-    #[test]
-    fn visible_addenda_follow_ascending_series_order() {
-        let records = vec![
-            ordering_record(
-                "addendum",
-                "third",
-                "Third",
-                "promoted",
-                None,
-                Some("A-003"),
-            ),
-            ordering_record(
-                "addendum",
-                "first",
-                "First",
-                "promoted",
-                None,
-                Some("A-001"),
-            ),
-            ordering_record(
-                "addendum",
-                "second",
-                "Second",
-                "promoted",
-                None,
-                Some("A-002"),
-            ),
-        ];
-
-        let slices = super::slice_records(&records);
-        let slugs = slices
-            .visible_addenda
-            .iter()
-            .map(|record| record.slug.as_str())
-            .collect::<Vec<_>>();
-
-        assert_eq!(slugs, vec!["first", "second", "third"]);
     }
 
     #[test]

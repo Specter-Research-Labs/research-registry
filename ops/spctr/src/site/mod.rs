@@ -162,10 +162,16 @@ fn build_from_projection(
             pages.push(PageRegion {
                 template_path: template,
                 output_path: hub_path.clone(),
-                regions: vec![(
-                    "DOSSIER_HUB_HEADER",
-                    regions::render_dossier_hub_header(record),
-                )],
+                regions: vec![
+                    (
+                        "DOSSIER_HUB_HEADER",
+                        regions::render_dossier_hub_header(record),
+                    ),
+                    (
+                        "DOSSIER_HUB_FOOTER",
+                        regions::render_dossier_hub_footer(record),
+                    ),
+                ],
             });
         }
     }
