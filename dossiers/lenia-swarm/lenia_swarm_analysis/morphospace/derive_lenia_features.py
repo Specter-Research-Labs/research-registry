@@ -215,9 +215,6 @@ def derive_lenia_terminal_features(
             feature_value_count += len(value_rows)
             study_counts[resolved_study_id] = study_counts.get(resolved_study_id, 0) + 1
 
-    if study_id is not None and observation_count == 0:
-        raise ValueError(f"{study_id}: no Lenia terminal axes found")
-
     return {
         "sourceId": SOURCE_ID,
         "featureSpaceId": FEATURE_SPACE_ID,

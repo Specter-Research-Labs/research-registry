@@ -76,6 +76,8 @@ synthetic-bureau/
 records-bureau/
 vault/
 .claude/
+.codex/
+.superpowers/
 
 .obsidian/
 .trash/
