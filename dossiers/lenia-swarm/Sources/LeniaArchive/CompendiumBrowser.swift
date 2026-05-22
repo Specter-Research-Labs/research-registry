@@ -2,29 +2,20 @@ import Foundation
 import LeniaCore
 import SQLite3
 
-public enum CompendiumCatalogFilter: String, CaseIterable, Sendable {
-    case active = "Active"
-    case quarantine = "Quarantine"
-    case all = "All"
-}
-
 public struct CompendiumBrowseQuery: Equatable, Sendable {
     public var search: String
     public var stableOnly: Bool
-    public var catalogFilter: CompendiumCatalogFilter
     public var minScore: Float?
     public var limit: Int
 
     public init(
         search: String = "",
         stableOnly: Bool = false,
-        catalogFilter: CompendiumCatalogFilter = .active,
         minScore: Float? = nil,
         limit: Int = 200
     ) {
         self.search = search
         self.stableOnly = stableOnly
-        self.catalogFilter = catalogFilter
         self.minScore = minScore
         self.limit = limit
     }
@@ -57,6 +48,12 @@ private struct CompendiumBrowseRow: Sendable {
     let sourceMode: String?
     let sourceAlgorithm: String?
     let traitLabelsJSON: String?
+    let taxonomyFamilyID: String?
+    let taxonomyGenusID: String?
+    let taxonomySpeciesID: String?
+    let taxonomyConfidence: Double?
+    let taxonomyMethod: String?
+    let taxonomyVersion: Int?
     let catalogStatus: String
     let qualityFlagsJSON: String?
     let specimenRecordID: String
@@ -101,6 +98,10 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         storage.traitLabels
     }
 
+    public var taxonomy: SpecimenTaxonomyRecord? {
+        storage.taxonomy
+    }
+
     public var previewSeed: Int {
         storage.previewSeed
     }
@@ -131,9 +132,10 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         specimenManifest: SpecimenManifest?,
         sourceMode: String?,
         sourceAlgorithm: String?,
+        traitLabels: [String],
+        taxonomy: SpecimenTaxonomyRecord? = nil,
         catalogStatus: String = "active",
         qualityFlags: [String] = [],
-        traitLabels: [String],
         specimenRecordID: String,
         specimenSourceKind: String
     ) {
@@ -175,7 +177,8 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
             ),
             runtimeCapabilities: runtimeCapabilities,
             specimenManifest: specimenManifest,
-            traitLabels: traitLabels
+            traitLabels: traitLabels,
+            taxonomy: taxonomy
         )
     }
 
@@ -236,13 +239,14 @@ private enum CreatureStorage: Sendable {
         previewParams: ResolvedParams,
         runtimeCapabilities: [String],
         specimenManifest: SpecimenManifest?,
-        traitLabels: [String]
+        traitLabels: [String],
+        taxonomy: SpecimenTaxonomyRecord?
     )
     case deferred(DeferredCreatureStorage)
 
     var creature: SavedCreature {
         switch self {
-        case .eager(let creature, _, _, _, _, _):
+        case .eager(let creature, _, _, _, _, _, _):
             return creature
         case .deferred(let storage):
             return storage.creature
@@ -251,7 +255,7 @@ private enum CreatureStorage: Sendable {
 
     var runtimeCapabilities: [String] {
         switch self {
-        case .eager(_, _, _, let runtimeCapabilities, _, _):
+        case .eager(_, _, _, let runtimeCapabilities, _, _, _):
             return runtimeCapabilities
         case .deferred(let storage):
             return storage.runtimeCapabilities
@@ -260,7 +264,7 @@ private enum CreatureStorage: Sendable {
 
     var specimenManifest: SpecimenManifest? {
         switch self {
-        case .eager(_, _, _, _, let specimenManifest, _):
+        case .eager(_, _, _, _, let specimenManifest, _, _):
             return specimenManifest
         case .deferred(let storage):
             return storage.specimenManifest
@@ -269,16 +273,25 @@ private enum CreatureStorage: Sendable {
 
     var traitLabels: [String] {
         switch self {
-        case .eager(_, _, _, _, _, let traitLabels):
+        case .eager(_, _, _, _, _, let traitLabels, _):
             return traitLabels
         case .deferred(let storage):
             return storage.traitLabels
         }
     }
 
+    var taxonomy: SpecimenTaxonomyRecord? {
+        switch self {
+        case .eager(_, _, _, _, _, _, let taxonomy):
+            return taxonomy
+        case .deferred(let storage):
+            return storage.taxonomy
+        }
+    }
+
     var previewSeed: Int {
         switch self {
-        case .eager(_, let previewSeed, _, _, _, _):
+        case .eager(_, let previewSeed, _, _, _, _, _):
             return previewSeed
         case .deferred(let storage):
             return storage.previewSeed
@@ -287,7 +300,7 @@ private enum CreatureStorage: Sendable {
 
     var previewParams: ResolvedParams {
         switch self {
-        case .eager(_, _, let previewParams, _, _, _):
+        case .eager(_, _, let previewParams, _, _, _, _):
             return previewParams
         case .deferred(let storage):
             return storage.previewParams
@@ -333,6 +346,10 @@ private final class DeferredCreatureStorage: @unchecked Sendable {
 
     var traitLabels: [String] {
         projection.traitLabels
+    }
+
+    var taxonomy: SpecimenTaxonomyRecord? {
+        row.taxonomyRecord ?? projection.manifest?.taxonomy
     }
 
     private var projection: ResolvedSpecimenProjection {
@@ -405,6 +422,30 @@ private final class DeferredCreatureStorage: @unchecked Sendable {
             return nil
         }
         return try? decoder.decode(type, from: Data(value.utf8))
+    }
+}
+
+private extension CompendiumBrowseRow {
+    var taxonomyRecord: SpecimenTaxonomyRecord? {
+        let hasAnyValue = [
+            taxonomyFamilyID,
+            taxonomyGenusID,
+            taxonomySpeciesID,
+            taxonomyMethod,
+        ].contains { value in
+            guard let value else { return false }
+            return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        } || taxonomyConfidence != nil || taxonomyVersion != nil
+
+        guard hasAnyValue else { return nil }
+        return SpecimenTaxonomyRecord(
+            familyID: taxonomyFamilyID,
+            genusID: taxonomyGenusID,
+            speciesID: taxonomySpeciesID,
+            confidence: taxonomyConfidence,
+            method: taxonomyMethod,
+            version: taxonomyVersion
+        )
     }
 }
 
@@ -528,6 +569,12 @@ public func browseCompendium(
             c.metrics_json,
             c.canonical_specimen_id,
             COALESCE(c.trait_labels_json, '') AS trait_labels_json,
+            c.taxonomy_family_id,
+            c.taxonomy_genus_id,
+            c.taxonomy_species_id,
+            c.taxonomy_confidence,
+            c.taxonomy_method,
+            c.taxonomy_version,
             \(creatureColumns.contains("catalog_status") ? "c.catalog_status" : "'active'") AS catalog_status,
             \(creatureColumns.contains("quality_flags_json") ? "COALESCE(c.quality_flags_json, '[]')" : "'[]'") AS quality_flags_json
         FROM creatures c\(indexHint)
@@ -562,6 +609,12 @@ public func browseCompendium(
         s.source_mode AS source_mode,
         s.source_algorithm AS source_algorithm,
         c.trait_labels_json,
+        c.taxonomy_family_id,
+        c.taxonomy_genus_id,
+        c.taxonomy_species_id,
+        c.taxonomy_confidence,
+        c.taxonomy_method,
+        c.taxonomy_version,
         c.catalog_status,
         c.quality_flags_json,
         s.id AS specimen_record_id,
@@ -605,8 +658,8 @@ public func browseCompendium(
             continue
         }
         guard
-            let specimenRecordID = columnText(statement, index: 28),
-            let specimenSourceKind = columnText(statement, index: 29)
+            let specimenRecordID = columnText(statement, index: 34),
+            let specimenSourceKind = columnText(statement, index: 35)
         else {
             skipped += 1
             continue
@@ -641,8 +694,14 @@ public func browseCompendium(
             sourceMode: columnText(statement, index: 23),
             sourceAlgorithm: columnText(statement, index: 24),
             traitLabelsJSON: columnText(statement, index: 25),
-            catalogStatus: columnText(statement, index: 26) ?? "active",
-            qualityFlagsJSON: columnText(statement, index: 27),
+            taxonomyFamilyID: columnText(statement, index: 26),
+            taxonomyGenusID: columnText(statement, index: 27),
+            taxonomySpeciesID: columnText(statement, index: 28),
+            taxonomyConfidence: columnDouble(statement, index: 29),
+            taxonomyMethod: columnText(statement, index: 30),
+            taxonomyVersion: columnInt(statement, index: 31),
+            catalogStatus: columnText(statement, index: 32) ?? "active",
+            qualityFlagsJSON: columnText(statement, index: 33),
             specimenRecordID: specimenRecordID,
             specimenSourceKind: specimenSourceKind
         )
@@ -668,6 +727,16 @@ private func columnText(_ statement: OpaquePointer, index: Int32) -> String? {
 private func columnFloat(_ statement: OpaquePointer, index: Int32) -> Float? {
     guard sqlite3_column_type(statement, index) != SQLITE_NULL else { return nil }
     return Float(sqlite3_column_double(statement, index))
+}
+
+private func columnDouble(_ statement: OpaquePointer, index: Int32) -> Double? {
+    guard sqlite3_column_type(statement, index) != SQLITE_NULL else { return nil }
+    return sqlite3_column_double(statement, index)
+}
+
+private func columnInt(_ statement: OpaquePointer, index: Int32) -> Int? {
+    guard sqlite3_column_type(statement, index) != SQLITE_NULL else { return nil }
+    return Int(sqlite3_column_int(statement, index))
 }
 
 private func decodeStringList(_ value: String?) -> [String] {

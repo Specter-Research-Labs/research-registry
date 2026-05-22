@@ -312,7 +312,7 @@ func buildLabMissionPresets() -> [LabMissionPreset] {
     let orbium = orbiumStarterEntry()
     let orbiumDraft: LabWorldDraft
     do {
-        orbiumDraft = try makeLabWorldDraft(for: orbium, gridSize: LabGridPreset.standard256.rawValue)
+        orbiumDraft = try makeLabWorldDraft(for: orbium, gridSize: LabGridPreset.compact128.rawValue)
     } catch {
         fatalError("Failed to synthesize Orbium lab draft: \(error.localizedDescription)")
     }
@@ -441,7 +441,9 @@ private func bundleLabMissionPreset(
     subtitle: String,
     detail: String
 ) -> LabMissionPreset {
-    guard let resourceURL = Bundle.module.url(forResource: resourceName, withExtension: "json", subdirectory: "Presets") else {
+    guard let resourceURL = Bundle.module.url(forResource: resourceName, withExtension: "json", subdirectory: "Presets")
+        ?? Bundle.module.url(forResource: resourceName, withExtension: "json")
+    else {
         fatalError("Missing lab preset resource: \(resourceName).json")
     }
     do {

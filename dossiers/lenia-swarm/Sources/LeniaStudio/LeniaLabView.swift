@@ -451,7 +451,7 @@ actor LeniaLabStampCache {
 struct LeniaLabView: View {
     @EnvironmentObject private var appState: AppState
     @StateObject private var model = LeniaLabModel()
-    @State private var gridPreset: LabGridPreset = .standard256
+    @State private var gridPreset: LabGridPreset = .compact128
     @State private var backend: FlowSandboxBackend = .metalFull
     @State private var renderMode: LeniaRenderMode = .smoothMagma
     @State private var primaryTool: SandboxTool = .creatureStamp
@@ -461,15 +461,16 @@ struct LeniaLabView: View {
     @State private var speedCap = 60
     @State private var diagnosticsEnabled = false
     @State private var autoFoodEnabled = false
-    @State private var worldSelection: LabWorldSelection = .preset("paper-2c")
+    @State private var worldSelection: LabWorldSelection = .preset("orbium-sandbox")
     @State private var selectedStampID: String?
     @State private var selectedStampPreview: CreatureStamp?
     @State private var worldDraft: LabWorldDraft?
     @State private var worldDraftError: String?
-    @State private var stageZoom: CGFloat = 1.0
+    @State private var stageZoom: CGFloat = 1.35
     @State private var stageOffset: CGSize = .zero
     @State private var hoveredGridPoint: SIMD2<Int>?
     @State private var showTTExportImporter = false
+    @State private var showContractEditor = false
 
     private let stampCache = LeniaLabStampCache()
     private static let backendOrder: [FlowSandboxBackend] = [.metalFull, .mlx]
@@ -552,38 +553,38 @@ struct LeniaLabView: View {
     var body: some View {
         GeometryReader { proxy in
             Group {
-                if proxy.size.width < 1_150 {
+                if proxy.size.width < 1_080 {
                     ScrollView {
-                        VStack(spacing: 16) {
+                        VStack(spacing: 10) {
                             stageSurface
                             controlSurface
                             paletteSurface
                             universeSurface
                             telemetrySurface
                         }
-                        .padding(18)
+                        .padding(12)
                     }
                 } else {
                     HSplitView {
                         ScrollView {
-                            VStack(spacing: 16) {
+                            VStack(spacing: 10) {
                                 stageSurface
                                 controlSurface
                             }
-                            .padding(18)
+                            .padding(12)
                         }
-                        .frame(minWidth: 520, idealWidth: max(560, proxy.size.width * 0.58))
+                        .frame(minWidth: 620, idealWidth: max(700, proxy.size.width * 0.64))
                         .layoutPriority(1)
 
                         ScrollView {
-                            VStack(spacing: 16) {
+                            VStack(spacing: 10) {
                                 paletteSurface
                                 universeSurface
                                 telemetrySurface
                             }
-                            .padding(18)
+                            .padding(12)
                         }
-                        .frame(minWidth: 320, idealWidth: 380, maxWidth: 480)
+                        .frame(minWidth: 360, idealWidth: 400, maxWidth: 480)
                     }
                 }
             }
@@ -605,7 +606,7 @@ struct LeniaLabView: View {
         .fileImporter(isPresented: $showTTExportImporter, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first {
                 model.loadFrameSequence(manifestURL: url)
-                stageZoom = 1.0
+                stageZoom = 1.35
                 stageOffset = .zero
             }
         }
@@ -639,7 +640,7 @@ struct LeniaLabView: View {
             rebuildActiveWorld(backend: newValue)
         }
         .onChange(of: worldSelection) { _, _ in
-            stageZoom = 1.0
+            stageZoom = 1.35
             stageOffset = .zero
             syncWorldDraft(rebuild: true)
         }
@@ -650,18 +651,129 @@ struct LeniaLabView: View {
 
     private var stageSurface: some View {
         StudioSurface(
-            title: "Mission Stage",
+            title: "Range Control",
             subtitle: stageSubtitle,
             style: .console
         ) {
-            VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Button {
+                        model.setRunning(!model.isRunning)
+                    } label: {
+                        Label(model.isRunning ? "Hold" : "Run", systemImage: model.isRunning ? "pause.fill" : "play.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+
+                    Button {
+                        model.reset()
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Reset runtime")
+
+                    Button {
+                        rebuildActiveWorld()
+                    } label: {
+                        Image(systemName: "checkmark.seal")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(worldDraft == nil)
+                    .help("Apply contract")
+
+                    Button {
+                        selectedStampID = selectedStampEntry.id
+                        worldSelection = .stamp(selectedStampEntry.id)
+                    } label: {
+                        Image(systemName: "scope")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Build world from selected stamp")
+
+                    Spacer(minLength: 8)
+
+                    if model.availableProjections.count > 1 {
+                        Picker("Field", selection: $model.activeProjection) {
+                            ForEach(model.availableProjections) { projection in
+                                Text(projection.label).tag(projection)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
+                        .frame(width: 238)
+                    }
+
+                    Button {
+                        adjustStageZoom(by: 0.85)
+                    } label: {
+                        Image(systemName: "minus.magnifyingglass")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Text("\(Int((stageZoom * 100).rounded()))%")
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .frame(width: 46)
+
+                    Button {
+                        adjustStageZoom(by: 1.15)
+                    } label: {
+                        Image(systemName: "plus.magnifyingglass")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Button("Focus") {
+                        updateStageTransform(LeniaLabStageTransform(zoom: 1.85, offset: .zero))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Button("Fit") {
+                        updateStageTransform(.init())
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        LabTacticalReadout(label: "State", value: model.isRunning ? "Running" : "Armed", accent: model.isRunning ? StudioPalette.moss : StudioPalette.ember)
+                        LabTacticalReadout(label: "Mode", value: model.runtimeModeLabel, accent: StudioPalette.ink)
+                        let resolvedGrid = model.worldContract?.gridSize ?? model.snapshot?.width ?? gridPreset.rawValue
+                        LabTacticalReadout(label: "Grid", value: "\(resolvedGrid)x\(resolvedGrid)", accent: StudioPalette.ocean)
+                        if let contract = model.worldContract {
+                            LabTacticalReadout(label: "Lanes", value: "\(contract.channels)m/\(contract.parameterFieldMode.displayName)", accent: StudioPalette.ocean)
+                            LabTacticalReadout(label: "Kernels", value: "\(contract.kernelCount)", accent: StudioPalette.ember)
+                            LabTacticalReadout(label: "Radius", value: formatCompact(contract.radius), accent: StudioPalette.moss)
+                        }
+                        LabTacticalReadout(label: "Step", value: "\(model.snapshot?.step ?? 0)", accent: StudioPalette.ember)
+                        LabTacticalReadout(label: "Activity", value: String(format: "%.4f", model.activityEstimate), accent: activityAccent(for: model.activityEstimate))
+                        if let metrics = model.snapshot?.metrics {
+                            LabTacticalReadout(label: "Mass", value: formatCompact(metrics.massMean), accent: StudioPalette.moss)
+                            LabTacticalReadout(label: "Food", value: formatCompact(metrics.foodMean), accent: StudioPalette.ocean)
+                        }
+                        LabTacticalReadout(label: "View", value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--", accent: StudioPalette.ink)
+                        LabTacticalReadout(label: "Ghost", value: primaryGhostCompactLabel, accent: hoverAccent(for: primaryTool))
+                        if let hoveredGridPoint {
+                            LabTacticalReadout(label: "Cursor", value: "\(hoveredGridPoint.x),\(hoveredGridPoint.y)", accent: StudioPalette.ink)
+                        }
+                    }
+                }
+
                 if let runtimeStatusMessage = model.runtimeStatusMessage, model.snapshot == nil {
                     ContentUnavailableView(
                         "World failed to load",
                         systemImage: "exclamationmark.triangle",
                         description: Text(runtimeStatusMessage)
                     )
-                    .frame(minHeight: 420)
+                    .frame(minHeight: 500)
                 } else {
                     ZStack(alignment: .topLeading) {
                         LeniaLabStageView(
@@ -674,6 +786,15 @@ struct LeniaLabView: View {
                             onSecondaryPoint: { handleStagePoint($0, tool: secondaryTool) },
                             onHoverPointChange: { hoveredGridPoint = $0 }
                         )
+
+                        LabTacticalStageOverlay(
+                            gridSize: model.snapshot?.width ?? gridPreset.rawValue,
+                            zoom: stageZoom,
+                            projectionLabel: model.activeProjection.label,
+                            healthLabel: model.healthState.label,
+                            healthAccent: model.healthState.accent
+                        )
+                        .allowsHitTesting(false)
 
                         GeometryReader { proxy in
                             LabStageHoverOverlay(
@@ -689,80 +810,12 @@ struct LeniaLabView: View {
                         }
                         .allowsHitTesting(false)
                     }
-                    .frame(minHeight: 420)
-                }
-
-                HStack(spacing: 10) {
-                    StudioMetricPill(label: "State", value: model.isRunning ? "Running" : "Armed", accent: model.isRunning ? StudioPalette.moss : StudioPalette.ember, style: .console)
-                    StudioMetricPill(label: "Mode", value: model.runtimeModeLabel, accent: StudioPalette.ink, style: .console)
-                    let resolvedGrid = model.worldContract?.gridSize ?? model.snapshot?.width ?? gridPreset.rawValue
-                    StudioMetricPill(label: "Grid", value: "\(resolvedGrid)x\(resolvedGrid)", accent: StudioPalette.ocean, style: .console)
-                    if let contract = model.worldContract {
-                        StudioMetricPill(label: "Lanes", value: "\(contract.channels)m/\(contract.parameterFieldMode.displayName)", accent: StudioPalette.ocean, style: .console)
-                        StudioMetricPill(label: "Kernels", value: "\(contract.kernelCount)", accent: StudioPalette.ember, style: .console)
-                    }
-                    StudioMetricPill(label: "Ghost", value: primaryGhostCompactLabel, accent: hoverAccent(for: primaryTool), style: .console)
-                    StudioMetricPill(label: "Step", value: "\(model.snapshot?.step ?? 0)", accent: StudioPalette.ember, style: .console)
-                    StudioMetricPill(
-                        label: "Activity",
-                        value: String(format: "%.4f", model.activityEstimate),
-                        accent: activityAccent(for: model.activityEstimate),
-                        style: .console
+                    .frame(minHeight: 500)
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .stroke(StudioPalette.hairline.opacity(0.85), lineWidth: 1)
                     )
-                    if let metrics = model.snapshot?.metrics {
-                        StudioMetricPill(label: "Mass", value: String(format: "%.3f", metrics.massMean), accent: StudioPalette.moss, style: .console)
-                        StudioMetricPill(label: "Food", value: String(format: "%.3f", metrics.foodMean), accent: StudioPalette.ocean, style: .console)
-                    }
-                    StudioMetricPill(
-                        label: "View",
-                        value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--",
-                        accent: StudioPalette.ink,
-                        style: .console
-                    )
-                    if let hoveredGridPoint {
-                        StudioMetricPill(
-                            label: "Hover",
-                            value: "\(hoveredGridPoint.x),\(hoveredGridPoint.y)",
-                            accent: StudioPalette.ink,
-                            style: .console
-                        )
-                    }
-                    Spacer()
-                    if model.availableProjections.count > 1 {
-                        Picker("Field", selection: $model.activeProjection) {
-                            ForEach(model.availableProjections) { projection in
-                                Text(projection.label).tag(projection)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 240)
-                    }
-                    Button {
-                        adjustStageZoom(by: 0.85)
-                    } label: {
-                        Image(systemName: "minus.magnifyingglass")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Text("\(Int((stageZoom * 100).rounded()))%")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .frame(minWidth: 46)
-
-                    Button {
-                        adjustStageZoom(by: 1.15)
-                    } label: {
-                        Image(systemName: "plus.magnifyingglass")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Button("Fit") {
-                        updateStageTransform(.init())
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
                 }
             }
         }
@@ -770,18 +823,27 @@ struct LeniaLabView: View {
 
     private var controlSurface: some View {
         StudioSurface(
-            title: "Mission Setup",
-            subtitle: "Author the runtime contract, arm the backend, then launch",
+            title: "World Loadout",
+            subtitle: "Runtime basis, topology edits, and field tools",
             style: .console
         ) {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("World Profiles")
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(StudioPalette.ink)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("WORLD PROFILES")
+                            .font(StudioType.labelStrong)
+                            .tracking(0.5)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                        Spacer()
+                        if let worldDraft {
+                            Text("\(worldDraft.channelCount)m · \(worldDraft.kernelCount)k · \(worldDraft.gridSize)x\(worldDraft.gridSize)")
+                                .font(StudioType.dataSmall)
+                                .foregroundStyle(StudioPalette.ink)
+                        }
+                    }
 
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
+                        HStack(spacing: 8) {
                             ForEach(Self.missionPresets) { preset in
                                 LabMissionPresetCard(
                                     preset: preset,
@@ -796,252 +858,34 @@ struct LeniaLabView: View {
                     }
 
                     if let selectedWorldPreset {
-                        HStack(spacing: 10) {
-                            StudioMetricPill(
-                                label: "Basis",
-                                value: selectedWorldPreset.name,
-                                accent: StudioPalette.ink,
-                                style: .console
-                            )
-                            StudioMetricPill(
-                                label: "Native lanes",
-                                value: "\(selectedWorldPreset.channels)m",
-                                accent: StudioPalette.ocean,
-                                style: .console
-                            )
-                            StudioMetricPill(
-                                label: "Kernel bank",
-                                value: "\(selectedWorldPreset.kernelCount)",
-                                accent: StudioPalette.ember,
-                                style: .console
-                            )
+                        HStack(spacing: 8) {
+                            LabTacticalReadout(label: "Basis", value: selectedWorldPreset.name, accent: StudioPalette.ink)
+                            LabTacticalReadout(label: "Native", value: "\(selectedWorldPreset.channels)m/\(selectedWorldPreset.parameterFields)p", accent: StudioPalette.ocean)
+                            LabTacticalReadout(label: "Kernels", value: "\(selectedWorldPreset.kernelCount)", accent: StudioPalette.ember)
                             if let fixedGrid = selectedWorldPreset.fixedGrid {
-                                StudioMetricPill(
-                                    label: "Source grid",
-                                    value: "\(fixedGrid)x\(fixedGrid)",
-                                    accent: StudioPalette.ocean,
-                                    style: .console
-                                )
+                                LabTacticalReadout(label: "Source", value: "\(fixedGrid)x\(fixedGrid)", accent: StudioPalette.ocean)
                             }
+                            Spacer(minLength: 0)
                         }
-
-                        Text(selectedWorldPreset.detail)
-                            .font(.callout)
-                            .foregroundStyle(StudioPalette.mutedInk)
                     } else {
-                        Text("World basis is coming from the selected stamp, and the contract editor turns that specimen into a real runtime config rather than the old sandbox shortcut.")
-                            .font(.callout)
-                            .foregroundStyle(StudioPalette.mutedInk)
+                        LabCompactKeyValueRow(label: "Stamp basis", value: selectedWorldEntry.name)
                     }
                 }
 
                 Divider()
 
-                HStack(spacing: 10) {
-                    Button(model.isRunning ? "Pause" : "Launch") {
-                        model.setRunning(!model.isRunning)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 10)], alignment: .leading, spacing: 10) {
+                    LabControlGroup(label: "Backend") {
+                        Picker("Backend", selection: $backend) {
+                            ForEach(Self.backendOrder) { backend in
+                                Text(labBackendLabel(backend)).tag(backend)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.borderedProminent)
 
-                    Button("Reset") {
-                        model.reset()
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button("World From Stamp") {
-                        selectedStampID = selectedStampEntry.id
-                        worldSelection = .stamp(selectedStampEntry.id)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button("Apply Contract") {
-                        rebuildActiveWorld()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(worldDraft == nil)
-                }
-
-                if let worldDraft {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Contract Editor")
-                            .font(.callout.weight(.semibold))
-                            .foregroundStyle(StudioPalette.ink)
-
-                        StudioKeyValueRow(label: "Basis", value: worldDraft.sourceSummary, style: .readable)
-                        StudioKeyValueRow(label: "Routing", value: worldDraft.connectivitySummary, style: .readable)
-
-                        HStack(alignment: .top, spacing: 14) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Grid")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                                Picker("Grid", selection: $gridPreset) {
-                                    ForEach(LabGridPreset.allCases) { preset in
-                                        Text("\(preset.rawValue)x\(preset.rawValue)").tag(preset)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .controlSize(.small)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Speed")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                                Picker("Speed", selection: $speedCap) {
-                                    Text("30").tag(30)
-                                    Text("60").tag(60)
-                                    Text("90").tag(90)
-                                    Text("120").tag(120)
-                                }
-                                .frame(width: 200)
-                                .controlSize(.small)
-                            }
-                        }
-
-                        HStack(alignment: .top, spacing: 14) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Matter lanes")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                                Picker("Matter lanes", selection: channelCountBinding) {
-                                    ForEach(1...4, id: \.self) { channelCount in
-                                        Text("\(channelCount)").tag(channelCount)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .controlSize(.small)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Border")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(StudioPalette.mutedInk)
-                                Picker("Border", selection: borderBinding) {
-                                    Text("Torus").tag("torus")
-                                    Text("Wall").tag("wall")
-                                }
-                                .pickerStyle(.segmented)
-                                .controlSize(.small)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        HStack(spacing: 12) {
-                            Toggle("Parameter transport", isOn: parameterEmbeddingBinding)
-                                .toggleStyle(.button)
-                                .controlSize(.small)
-                            Toggle("Food field", isOn: foodEnabledBinding)
-                                .toggleStyle(.button)
-                                .controlSize(.small)
-                        }
-
-                        if worldDraft.parameterEmbeddingEnabled {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Parameter mix")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                                Picker("Parameter mix", selection: parameterMixBinding) {
-                                    Text("Avg").tag("avg")
-                                    Text("Softmax").tag("softmax")
-                                }
-                                .pickerStyle(.segmented)
-                                .controlSize(.small)
-                            }
-                        }
-
-                        if worldDraft.foodEnabled {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Food lane")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                                Picker("Food lane", selection: foodChannelBinding) {
-                                    ForEach(0..<worldDraft.channelCount, id: \.self) { channel in
-                                        Text("c\(channel)").tag(channel)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .controlSize(.small)
-                            }
-                        }
-
-                        HStack(alignment: .top, spacing: 14) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Init seed")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                                Stepper(value: initSeedBinding, in: 0...999_999) {
-                                    Text("\(worldDraft.initSeed)")
-                                        .font(.system(.callout, design: .monospaced))
-                                        .foregroundStyle(StudioPalette.ink)
-                                }
-                                .controlSize(.small)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        LabSliderRow(label: "Patch Size", value: "\(worldDraft.patchSize)") {
-                            Slider(value: patchSizeBinding, in: 12...72, step: 2)
-                                .controlSize(.small)
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Connectivity matrix")
-                                    .font(.callout.weight(.semibold))
-                                    .foregroundStyle(StudioPalette.ink)
-                                Spacer()
-                                Text("\(worldDraft.kernelCount) kernels")
-                                    .font(.system(.callout, design: .monospaced))
-                                    .foregroundStyle(StudioPalette.mutedInk)
-                            }
-                            LabConnectivityMatrixEditor(
-                                channelCount: worldDraft.channelCount,
-                                connectivityMatrix: worldDraft.connectivityMatrix,
-                                onUpdate: { source, target, count in
-                                    applyDraftChange { draft in
-                                        draft.setEdgeCount(source: source, target: target, count: count)
-                                    }
-                                }
-                            )
-                        }
-
-                        if let worldDraftError {
-                            Text(worldDraftError)
-                                .font(.callout)
-                                .foregroundStyle(.red)
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Backend")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(StudioPalette.mutedInk)
-                    Picker("Backend", selection: $backend) {
-                        ForEach(Self.backendOrder) { backend in
-                            Text(labBackendLabel(backend)).tag(backend)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .controlSize(.small)
-                }
-
-                if backend != .metalFull {
-                    Text("Full Metal is the intended lab path. MLX remains available as the reference execution mode.")
-                        .font(.callout)
-                        .foregroundStyle(StudioPalette.mutedInk)
-                }
-
-                Divider()
-
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Primary Tool")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(StudioPalette.mutedInk)
+                    LabControlGroup(label: "Primary") {
                         Picker("Primary", selection: $primaryTool) {
                             ForEach(SandboxTool.allCases) { tool in
                                 Text(tool.rawValue).tag(tool)
@@ -1049,12 +893,8 @@ struct LeniaLabView: View {
                         }
                         .controlSize(.small)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Secondary Tool")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(StudioPalette.mutedInk)
+                    LabControlGroup(label: "Secondary") {
                         Picker("Secondary", selection: $secondaryTool) {
                             ForEach(SandboxTool.allCases) { tool in
                                 Text(tool.rawValue).tag(tool)
@@ -1062,138 +902,270 @@ struct LeniaLabView: View {
                         }
                         .controlSize(.small)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    LabSliderRow(
-                        label: "Brush Radius",
-                        value: "\(Int(brushRadius))"
-                    ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    LabSliderRow(label: "Brush Radius", value: "\(Int(brushRadius))") {
                         Slider(value: $brushRadius, in: 2...20, step: 1)
                             .controlSize(.small)
                     }
-
-                    LabSliderRow(
-                        label: "Brush Strength",
-                        value: String(format: "%.2f", brushStrength)
-                    ) {
+                    LabSliderRow(label: "Brush Strength", value: String(format: "%.2f", brushStrength)) {
                         Slider(value: $brushStrength, in: 0.05...1.0, step: 0.05)
                             .controlSize(.small)
                     }
                 }
 
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     Toggle("Diagnostics", isOn: $diagnosticsEnabled)
                         .toggleStyle(.button)
                         .controlSize(.small)
                     Toggle("Auto Food", isOn: $autoFoodEnabled)
                         .toggleStyle(.button)
                         .controlSize(.small)
+                    Spacer(minLength: 6)
+                    Text(primaryGhostSummary)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                 }
 
-                StudioKeyValueRow(label: "Primary ghost", value: primaryGhostSummary, style: .readable)
-
                 if diagnosticsEnabled, let metrics = model.snapshot?.metrics {
-                    HStack(spacing: 10) {
-                        StudioMetricPill(label: "Occ", value: String(format: "%.3f", metrics.occupancy), accent: StudioPalette.ember, style: .console)
-                        StudioMetricPill(label: "Wall", value: String(format: "%.3f", metrics.wallFraction), accent: StudioPalette.ink, style: .console)
-                        StudioMetricPill(label: "Peak", value: String(format: "%.3f", metrics.massPeak), accent: StudioPalette.moss, style: .console)
-                        StudioMetricPill(label: "Non-finite", value: String(format: "%.3f", metrics.nonFiniteFraction), accent: StudioPalette.ember, style: .console)
+                    HStack(spacing: 6) {
+                        LabTacticalReadout(label: "Occ", value: formatCompact(metrics.occupancy), accent: StudioPalette.ember)
+                        LabTacticalReadout(label: "Wall", value: formatCompact(metrics.wallFraction), accent: StudioPalette.ink)
+                        LabTacticalReadout(label: "Peak", value: formatCompact(metrics.massPeak), accent: StudioPalette.moss)
+                        LabTacticalReadout(label: "NaN", value: formatCompact(metrics.nonFiniteFraction), accent: StudioPalette.ember)
+                    }
+                }
+
+                DisclosureGroup(isExpanded: $showContractEditor) {
+                    contractEditorContent
+                } label: {
+                    HStack {
+                        Text("CONTRACT EDITOR")
+                            .font(StudioType.labelStrong)
+                            .tracking(0.5)
+                        Spacer()
+                        Text(worldDraft?.connectivitySummary ?? "--")
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
                     }
                 }
             }
         }
     }
 
+    @ViewBuilder
+    private var contractEditorContent: some View {
+        if let worldDraft {
+            VStack(alignment: .leading, spacing: 10) {
+                LabCompactKeyValueRow(label: "Basis", value: worldDraft.sourceSummary)
+                LabCompactKeyValueRow(label: "Routing", value: worldDraft.connectivitySummary)
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 10)], alignment: .leading, spacing: 10) {
+                    LabControlGroup(label: "Grid") {
+                        Picker("Grid", selection: $gridPreset) {
+                            ForEach(LabGridPreset.allCases) { preset in
+                                Text("\(preset.rawValue)x\(preset.rawValue)").tag(preset)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
+                    }
+
+                    LabControlGroup(label: "Speed") {
+                        Picker("Speed", selection: $speedCap) {
+                            Text("30").tag(30)
+                            Text("60").tag(60)
+                            Text("90").tag(90)
+                            Text("120").tag(120)
+                        }
+                        .frame(width: 200)
+                        .controlSize(.small)
+                    }
+                }
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 10)], alignment: .leading, spacing: 10) {
+                    LabControlGroup(label: "Matter lanes") {
+                        Picker("Matter lanes", selection: channelCountBinding) {
+                            ForEach(1...4, id: \.self) { channelCount in
+                                Text("\(channelCount)").tag(channelCount)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
+                    }
+
+                    LabControlGroup(label: "Border") {
+                        Picker("Border", selection: borderBinding) {
+                            Text("Torus").tag("torus")
+                            Text("Wall").tag("wall")
+                        }
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Toggle("Parameter transport", isOn: parameterEmbeddingBinding)
+                        .toggleStyle(.button)
+                        .controlSize(.small)
+                    Toggle("Food field", isOn: foodEnabledBinding)
+                        .toggleStyle(.button)
+                        .controlSize(.small)
+                }
+
+                if worldDraft.parameterEmbeddingEnabled {
+                    LabControlGroup(label: "Parameter mix") {
+                        Picker("Parameter mix", selection: parameterMixBinding) {
+                            Text("Avg").tag("avg")
+                            Text("Softmax").tag("softmax")
+                        }
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
+                    }
+                }
+
+                if worldDraft.foodEnabled {
+                    LabControlGroup(label: "Food lane") {
+                        Picker("Food lane", selection: foodChannelBinding) {
+                            ForEach(0..<worldDraft.channelCount, id: \.self) { channel in
+                                Text("c\(channel)").tag(channel)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .controlSize(.small)
+                    }
+                }
+
+                LabControlGroup(label: "Init seed") {
+                    Stepper(value: initSeedBinding, in: 0...999_999) {
+                        Text("\(worldDraft.initSeed)")
+                            .font(StudioType.data)
+                            .foregroundStyle(StudioPalette.ink)
+                    }
+                    .controlSize(.small)
+                }
+
+                LabSliderRow(label: "Patch Size", value: "\(worldDraft.patchSize)") {
+                    Slider(value: patchSizeBinding, in: 12...72, step: 2)
+                        .controlSize(.small)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Connectivity matrix")
+                            .font(StudioType.title)
+                            .foregroundStyle(StudioPalette.ink)
+                        Spacer()
+                        Text("\(worldDraft.kernelCount) kernels")
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    }
+                    LabConnectivityMatrixEditor(
+                        channelCount: worldDraft.channelCount,
+                        connectivityMatrix: worldDraft.connectivityMatrix,
+                        onUpdate: { source, target, count in
+                            applyDraftChange { draft in
+                                draft.setEdgeCount(source: source, target: target, count: count)
+                            }
+                        }
+                    )
+                }
+
+                if let worldDraftError {
+                    Text(worldDraftError)
+                        .font(StudioType.body)
+                        .foregroundStyle(.red)
+                }
+            }
+        } else if let worldDraftError {
+            Text(worldDraftError)
+                .font(StudioType.body)
+                .foregroundStyle(.red)
+        } else {
+            Text("No editable runtime contract is available for this world.")
+                .font(StudioType.body)
+                .foregroundStyle(StudioPalette.mutedInk)
+        }
+    }
+
     private var universeSurface: some View {
         StudioSurface(
-            title: "Universe Contract",
-            subtitle: "Current lab physics, runtime, and topology",
+            title: "Runtime Contract",
+            subtitle: "Physics, topology, and execution state",
             style: .console
         ) {
             if let contract = model.worldContract {
                 VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 10) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], alignment: .leading, spacing: 8) {
                         StudioMetricPill(label: "Matter", value: "\(contract.channels)", accent: StudioPalette.ocean, style: .console)
                         StudioMetricPill(label: "Params", value: contract.parameterFieldMode.displayName, accent: StudioPalette.ocean, style: .console)
                         StudioMetricPill(label: "Kernels", value: "\(contract.kernelCount)", accent: StudioPalette.ember, style: .console)
                         StudioMetricPill(label: "Radius", value: String(format: "%.1f", contract.radius), accent: StudioPalette.moss, style: .console)
-                        Spacer()
                     }
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Execution stack")
-                            .font(.callout.weight(.semibold))
-                            .foregroundStyle(StudioPalette.mutedInk)
+                    LabInfoSection(title: "Runtime") {
+                        LabCompactKeyValueRow(label: "Mode", value: model.runtimeModeLabel)
+                        LabCompactKeyValueRow(
+                            label: "Backend",
+                            value: model.externalReplayTitle == nil ? contract.backend.displayName : "Tenstorrent export"
+                        )
+                        LabCompactKeyValueRow(label: "Health", value: model.healthState.label)
+                        LabCompactKeyValueRow(label: "Projection", value: model.activeProjection.label)
+                    }
 
-                        Group {
-                            StudioKeyValueRow(label: "Mode", value: model.runtimeModeLabel, style: .readable)
-                            StudioKeyValueRow(
-                                label: "Backend",
-                                value: model.externalReplayTitle == nil ? contract.backend.displayName : "Tenstorrent export",
-                                style: .readable
-                            )
-                            StudioKeyValueRow(label: "Engine", value: contract.executionSummary, style: .readable)
-                            StudioKeyValueRow(label: "Field stack", value: contract.fieldSummary, style: .readable)
-                            StudioKeyValueRow(label: "Capabilities", value: contract.featureSummary, style: .readable)
-                            StudioKeyValueRow(label: "Health", value: model.healthState.label, style: .readable)
-                            StudioKeyValueRow(label: "Projection", value: model.activeProjection.label, style: .readable)
-                            StudioKeyValueRow(
-                                label: "View cadence",
-                                value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--",
-                                style: .readable
-                            )
-                            StudioKeyValueRow(
-                                label: "Solver cadence",
-                                value: model.realizedStepRateHz > 0 ? String(format: "%.0f Hz · %.2f ms", model.realizedStepRateHz, model.stepDurationMs) : "--",
-                                style: .readable
-                            )
-                            StudioKeyValueRow(label: "Speed cap", value: "\(speedCap) Hz", style: .readable)
+                    LabInfoSection(title: "Cadence") {
+                        LabCompactKeyValueRow(
+                            label: "View",
+                            value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--"
+                        )
+                        LabCompactKeyValueRow(
+                            label: "Solver",
+                            value: model.realizedStepRateHz > 0 ? String(format: "%.0f Hz · %.2f ms", model.realizedStepRateHz, model.stepDurationMs) : "--"
+                        )
+                        LabCompactKeyValueRow(label: "Speed cap", value: "\(speedCap) Hz")
+                    }
+
+                    LabInfoSection(title: "World source") {
+                        LabCompactKeyValueRow(label: "Basis", value: activeWorldEntry?.name ?? "--")
+                        if let worldDraft {
+                            LabCompactKeyValueRow(label: "Draft", value: worldDraft.sourceSummary)
+                        }
+                        LabCompactKeyValueRow(label: "Stamp", value: selectedStampEntry.name)
+                        if let worldDraft {
+                            LabCompactKeyValueRow(label: "Init seed", value: "\(worldDraft.initSeed)")
                         }
                     }
 
                     Divider()
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("World source")
-                            .font(.callout.weight(.semibold))
-                            .foregroundStyle(StudioPalette.mutedInk)
-
-                        Group {
-                            StudioKeyValueRow(label: "World basis", value: activeWorldEntry?.name ?? "--", style: .readable)
-                            if let worldDraft {
-                                StudioKeyValueRow(label: "Draft contract", value: worldDraft.sourceSummary, style: .readable)
-                            }
-                            StudioKeyValueRow(label: "Stamp ghost", value: selectedStampEntry.name, style: .readable)
-                            StudioKeyValueRow(label: "Stamp source", value: selectedStampSourceSummary, style: .readable)
+                    DisclosureGroup("Contract details") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            LabCompactKeyValueRow(label: "Engine", value: contract.executionSummary)
+                            LabCompactKeyValueRow(label: "Fields", value: contract.fieldSummary)
+                            LabCompactKeyValueRow(label: "Capabilities", value: contract.featureSummary)
+                            LabCompactKeyValueRow(label: "Grid", value: "\(contract.gridSize)x\(contract.gridSize)")
+                            LabCompactKeyValueRow(label: "Profile", value: contract.kernelProfile)
+                            LabCompactKeyValueRow(label: "Flow", value: "dt \(formatCompact(contract.dt)) · dd \(contract.dd) · sigma \(formatCompact(contract.sigma))")
+                            LabCompactKeyValueRow(label: "Border", value: "\(contract.border) · n \(contract.n) · thetaA \(formatCompact(contract.thetaA))")
+                            LabCompactKeyValueRow(label: "Kernel seed", value: "\(contract.seed)")
+                            LabCompactKeyValueRow(label: "Connectivity", value: contract.connectivitySummary)
+                            LabCompactKeyValueRow(label: "Stamp source", value: selectedStampSourceSummary)
                             if let replayReference = activeWorldEntry?.replayReference {
-                                StudioKeyValueRow(label: "Replay base", value: replayReference.baseConfigPath, style: .readable)
+                                LabCompactKeyValueRow(label: "Replay base", value: replayReference.baseConfigPath)
                             }
-                            if let worldDraft {
-                                StudioKeyValueRow(label: "Init seed", value: "\(worldDraft.initSeed)", style: .readable)
-                                if worldDraft.usesRandomKernelBank {
-                                    StudioKeyValueRow(label: "Param seed", value: "\(worldDraft.paramsSeed)", style: .readable)
-                                }
+                            if let worldDraft, worldDraft.usesRandomKernelBank {
+                                LabCompactKeyValueRow(label: "Param seed", value: "\(worldDraft.paramsSeed)")
                             }
                             if let saved = selectedStampEntry.savedCreature {
-                                StudioKeyValueRow(label: "Init family", value: saved.initialConditionFamily ?? "--", style: .readable)
+                                LabCompactKeyValueRow(label: "Init family", value: saved.initialConditionFamily ?? "--")
                             }
                         }
                     }
-
-                    Divider()
-
-                    Group {
-                        StudioKeyValueRow(label: "Grid", value: "\(contract.gridSize)x\(contract.gridSize)", style: .readable)
-                        StudioKeyValueRow(label: "Profile", value: contract.kernelProfile, style: .readable)
-                        StudioKeyValueRow(label: "Flow", value: "dt \(formatCompact(contract.dt)) · dd \(contract.dd) · sigma \(formatCompact(contract.sigma))", style: .readable)
-                        StudioKeyValueRow(label: "Border", value: "\(contract.border) · n \(contract.n) · thetaA \(formatCompact(contract.thetaA))", style: .readable)
-                        StudioKeyValueRow(label: "Kernel seed", value: "\(contract.seed)", style: .readable)
-                        StudioKeyValueRow(label: "Connectivity", value: contract.connectivitySummary, style: .readable)
-                    }
-
-                    Divider()
 
                     DisclosureGroup("Kernel bank (\(contract.kernels.count))") {
                         VStack(alignment: .leading, spacing: 8) {
@@ -1202,31 +1174,31 @@ struct LeniaLabView: View {
                             }
                         }
                     }
-                    .font(.callout)
+                    .font(StudioType.body)
                 }
             } else if let runtimeStatusMessage = model.runtimeStatusMessage {
                 Text(runtimeStatusMessage)
-                    .font(.callout)
+                    .font(StudioType.body)
                     .foregroundStyle(StudioPalette.mutedInk)
             } else {
                 Text("Runtime contract is materializing.")
-                    .font(.callout)
+                    .font(StudioType.body)
                     .foregroundStyle(StudioPalette.mutedInk)
             }
         }
     }
 
     private var paletteSurface: some View {
-        StudioSurface(title: "Creature Palette", subtitle: "Choose the current stamp or rebuild the world around a specimen", style: .console) {
+        StudioSurface(title: "Specimen Bay", subtitle: "Stamp source and world seed", style: .console) {
             VStack(alignment: .leading, spacing: 14) {
                 if let activeWorldEntry {
                     HStack {
                         Text("World physics")
-                            .font(.caption)
+                            .font(StudioType.bodySmall)
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text(activeWorldEntry.name)
-                            .font(.caption)
+                            .font(StudioType.dataSmall)
                             .foregroundStyle(StudioPalette.ink)
                     }
                 }
@@ -1234,29 +1206,15 @@ struct LeniaLabView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
                         ForEach(stampEntries) { entry in
-                            VStack(spacing: 8) {
-                                StudioCreatureCard(
-                                    entry: entry,
-                                    tone: selectedStampID == entry.id ? StudioPalette.ocean : StudioPalette.ember,
-                                    onSelect: { selectedStampID = entry.id }
-                                )
-                                .frame(width: 180)
-
-                                HStack(spacing: 8) {
-                                    Button(selectedStampID == entry.id ? "Selected" : "Use Stamp") {
-                                        selectedStampID = entry.id
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.small)
-
-                                    Button("Set World") {
-                                        selectedStampID = entry.id
-                                        worldSelection = .stamp(entry.id)
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
+                            LabPaletteStampCard(
+                                entry: entry,
+                                isSelected: selectedStampID == entry.id,
+                                onSelect: { selectedStampID = entry.id },
+                                onSetWorld: {
+                                    selectedStampID = entry.id
+                                    worldSelection = .stamp(entry.id)
                                 }
-                            }
+                            )
                         }
                     }
                 }
@@ -1265,7 +1223,7 @@ struct LeniaLabView: View {
     }
 
     private var telemetrySurface: some View {
-        StudioSurface(title: "Mission Telemetry", subtitle: "Health, cadence, and saturation on the live runtime", style: .console) {
+        StudioSurface(title: "Signal Telemetry", subtitle: "Health, cadence, and saturation", style: .console) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     StudioMetricPill(label: "Health", value: model.healthState.label, accent: model.healthState.accent, style: .console)
@@ -1283,14 +1241,14 @@ struct LeniaLabView: View {
                 }
 
                 Text(model.healthSummary)
-                    .font(.callout)
+                    .font(StudioType.body)
                     .foregroundStyle(StudioPalette.ink)
 
                 if !model.healthWarnings.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(Array(model.healthWarnings.enumerated()), id: \.offset) { _, warning in
                             Text(warning)
-                                .font(.callout)
+                                .font(StudioType.body)
                                 .foregroundStyle(StudioPalette.mutedInk)
                         }
                     }
@@ -1308,7 +1266,7 @@ struct LeniaLabView: View {
                     }
                 } else {
                     Text("Telemetry appears once the runtime has produced a field snapshot.")
-                        .font(.callout)
+                        .font(StudioType.body)
                         .foregroundStyle(StudioPalette.mutedInk)
                 }
             }
@@ -1646,6 +1604,125 @@ private func labHealthAssessment(
     )
 }
 
+private struct LabTacticalReadout: View {
+    let label: String
+    let value: String
+    let accent: Color
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(label.uppercased())
+                .font(StudioType.label)
+                .foregroundStyle(StudioPalette.mutedInk)
+            Text(value)
+                .font(StudioType.data)
+                .foregroundStyle(accent)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(
+            Rectangle()
+                .fill(StudioPalette.consoleControl.opacity(0.92))
+        )
+        .overlay(
+            Rectangle()
+                .stroke(accent.opacity(0.35), lineWidth: 1)
+        )
+    }
+}
+
+private struct LabTacticalStageOverlay: View {
+    let gridSize: Int
+    let zoom: CGFloat
+    let projectionLabel: String
+    let healthLabel: String
+    let healthAccent: Color
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            ZStack {
+                Path { path in
+                    let columns = 8
+                    for index in 1..<columns {
+                        let x = size.width * CGFloat(index) / CGFloat(columns)
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: size.height))
+                    }
+                    for index in 1..<columns {
+                        let y = size.height * CGFloat(index) / CGFloat(columns)
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: size.width, y: y))
+                    }
+                }
+                .stroke(StudioPalette.ocean.opacity(0.07), lineWidth: 1)
+
+                Path { path in
+                    let length: CGFloat = 34
+                    let inset: CGFloat = 12
+                    path.move(to: CGPoint(x: inset, y: inset + length))
+                    path.addLine(to: CGPoint(x: inset, y: inset))
+                    path.addLine(to: CGPoint(x: inset + length, y: inset))
+
+                    path.move(to: CGPoint(x: size.width - inset - length, y: inset))
+                    path.addLine(to: CGPoint(x: size.width - inset, y: inset))
+                    path.addLine(to: CGPoint(x: size.width - inset, y: inset + length))
+
+                    path.move(to: CGPoint(x: inset, y: size.height - inset - length))
+                    path.addLine(to: CGPoint(x: inset, y: size.height - inset))
+                    path.addLine(to: CGPoint(x: inset + length, y: size.height - inset))
+
+                    path.move(to: CGPoint(x: size.width - inset - length, y: size.height - inset))
+                    path.addLine(to: CGPoint(x: size.width - inset, y: size.height - inset))
+                    path.addLine(to: CGPoint(x: size.width - inset, y: size.height - inset - length))
+                }
+                .stroke(StudioPalette.ember.opacity(0.72), lineWidth: 1.25)
+
+                Path { path in
+                    let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                    path.move(to: CGPoint(x: center.x - 20, y: center.y))
+                    path.addLine(to: CGPoint(x: center.x - 6, y: center.y))
+                    path.move(to: CGPoint(x: center.x + 6, y: center.y))
+                    path.addLine(to: CGPoint(x: center.x + 20, y: center.y))
+                    path.move(to: CGPoint(x: center.x, y: center.y - 20))
+                    path.addLine(to: CGPoint(x: center.x, y: center.y - 6))
+                    path.move(to: CGPoint(x: center.x, y: center.y + 6))
+                    path.addLine(to: CGPoint(x: center.x, y: center.y + 20))
+                }
+                .stroke(StudioPalette.ocean.opacity(0.34), lineWidth: 1)
+
+                VStack {
+                    HStack(alignment: .top) {
+                        overlayTag("GRID \(gridSize)", accent: StudioPalette.ocean)
+                        overlayTag("Z \(Int((zoom * 100).rounded()))%", accent: StudioPalette.ink)
+                        overlayTag(projectionLabel.uppercased(), accent: StudioPalette.ember)
+                        Spacer()
+                        overlayTag(healthLabel.uppercased(), accent: healthAccent)
+                    }
+                    Spacer()
+                    HStack {
+                        overlayTag("FLOW LENIA RANGE", accent: StudioPalette.mutedInk)
+                        Spacer()
+                        overlayTag("LIVE", accent: healthAccent)
+                    }
+                }
+                .padding(12)
+            }
+        }
+    }
+
+    private func overlayTag(_ text: String, accent: Color) -> some View {
+        Text(text)
+            .font(StudioType.labelStrong)
+            .foregroundStyle(accent)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(Rectangle().fill(Color.black.opacity(0.54)))
+            .overlay(Rectangle().stroke(accent.opacity(0.35), lineWidth: 1))
+    }
+}
+
 private struct LabSliderRow<Control: View>: View {
     let label: String
     let value: String
@@ -1661,7 +1738,7 @@ private struct LabSliderRow<Control: View>: View {
         Grid(horizontalSpacing: 12, verticalSpacing: 0) {
             GridRow {
                 Text(label)
-                    .font(.callout)
+                    .font(StudioType.body)
                     .foregroundStyle(StudioPalette.ink)
                     .frame(width: 110, alignment: .leading)
 
@@ -1669,7 +1746,7 @@ private struct LabSliderRow<Control: View>: View {
                     .frame(maxWidth: 260)
 
                 Text(value)
-                    .font(.system(.callout, design: .monospaced))
+                    .font(StudioType.data)
                     .foregroundStyle(StudioPalette.mutedInk)
                     .frame(width: 48, alignment: .trailing)
             }
@@ -1684,51 +1761,159 @@ private struct LabMissionPresetCard: View {
 
     var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(preset.name)
-                    .font(.system(.headline, design: .serif, weight: .semibold))
-                    .foregroundStyle(StudioPalette.ink)
-                    .multilineTextAlignment(.leading)
-
-                Text(preset.subtitle)
-                    .font(.callout)
-                    .foregroundStyle(StudioPalette.mutedInk)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(2)
-
-                HStack(spacing: 8) {
-                    StudioMetricPill(
-                        label: "Lanes",
-                        value: "\(preset.channels)m/\(preset.parameterFields)p",
-                        accent: StudioPalette.ocean,
-                        style: .console
-                    )
-                    StudioMetricPill(
-                        label: "Kernels",
-                        value: "\(preset.kernelCount)",
-                        accent: StudioPalette.ember,
-                        style: .console
-                    )
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(preset.name)
+                        .font(StudioType.labelStrong)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text("\(preset.channels)m/\(preset.parameterFields)p")
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.ocean)
                 }
-
-                Text(preset.detail)
-                    .font(.caption)
+                Text(preset.subtitle)
+                    .font(StudioType.bodySmall)
                     .foregroundStyle(StudioPalette.mutedInk)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+                    .lineLimit(1)
+                HStack(spacing: 8) {
+                    Text("\(preset.kernelCount) kernels")
+                        .foregroundStyle(StudioPalette.ember)
+                    if let fixedGrid = preset.fixedGrid {
+                        Text("\(fixedGrid)x\(fixedGrid)")
+                            .foregroundStyle(StudioPalette.ocean)
+                    }
+                }
+                .font(StudioType.label)
             }
-            .frame(width: 248, alignment: .leading)
-            .padding(12)
+            .frame(width: 184, alignment: .leading)
+            .padding(9)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isSelected ? StudioPalette.surfaceRaised : StudioPalette.surfaceSoft)
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleSurface)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .stroke(isSelected ? StudioPalette.ocean.opacity(0.7) : StudioPalette.hairline, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
+        .help(preset.detail)
+    }
+}
+
+private struct LabPaletteStampCard: View {
+    let entry: StudioCompareEntry
+    let isSelected: Bool
+    let onSelect: () -> Void
+    let onSetWorld: () -> Void
+
+    private var score: Float {
+        entry.savedCreature?.score ?? entry.creature.score
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            CreatureThumbnailView(creature: entry.creature, size: 72)
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(entry.name)
+                        .font(StudioType.title)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(1)
+                    Text(entry.subtitle)
+                        .font(StudioType.bodySmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                }
+
+                HStack(spacing: 8) {
+                    StudioMetricPill(label: "Score", value: String(format: "%.3f", score), accent: StudioPalette.ocean, style: .console)
+                    StudioMetricPill(label: "Seed", value: "\(entry.creature.seed)", accent: StudioPalette.ink, style: .console)
+                }
+
+                HStack(spacing: 8) {
+                    Button(isSelected ? "Selected" : "Use Stamp", action: onSelect)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    Button("Set World", action: onSetWorld)
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                }
+            }
+        }
+        .frame(width: 320, alignment: .leading)
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleSurface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .stroke(isSelected ? StudioPalette.ocean.opacity(0.7) : StudioPalette.hairline, lineWidth: 1)
+        )
+    }
+}
+
+private struct LabInfoSection<Content: View>: View {
+    let title: String
+    let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(StudioType.labelStrong)
+                .textCase(.uppercase)
+                .foregroundStyle(StudioPalette.mutedInk)
+            content
+        }
+    }
+}
+
+private struct LabControlGroup<Content: View>: View {
+    let label: String
+    let content: Content
+
+    init(label: String, @ViewBuilder content: () -> Content) {
+        self.label = label
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(StudioType.labelStrong)
+                .foregroundStyle(StudioPalette.mutedInk)
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct LabCompactKeyValueRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(label)
+                .font(StudioType.bodySmall)
+                .foregroundStyle(StudioPalette.mutedInk)
+                .frame(width: 78, alignment: .leading)
+            Text(value)
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.ink)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 
@@ -1744,16 +1929,16 @@ private struct LabConnectivityMatrixEditor: View {
                     .frame(width: 52)
                 ForEach(0..<channelCount, id: \.self) { target in
                     Text("c\(target)")
-                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .font(StudioType.labelStrong)
                         .foregroundStyle(StudioPalette.mutedInk)
-                        .frame(maxWidth: .infinity)
+                        .frame(width: 112)
                 }
             }
 
             ForEach(0..<channelCount, id: \.self) { source in
                 GridRow {
                     Text("c\(source)")
-                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .font(StudioType.labelStrong)
                         .foregroundStyle(StudioPalette.ink)
                         .frame(width: 52, alignment: .leading)
 
@@ -1767,6 +1952,7 @@ private struct LabConnectivityMatrixEditor: View {
                                 onUpdate(source, target, connectivityMatrix[source][target] + 1)
                             }
                         )
+                        .frame(width: 112)
                     }
                 }
             }
@@ -1788,7 +1974,7 @@ private struct LabRouteCountCell: View {
             .controlSize(.mini)
 
             Text("\(count)")
-                .font(.system(.callout, design: .monospaced))
+                .font(StudioType.data)
                 .foregroundStyle(StudioPalette.ink)
                 .frame(minWidth: 22)
 
@@ -2058,22 +2244,22 @@ private struct LabKernelRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 Text("K\(kernel.id)")
-                    .font(.system(.callout, design: .monospaced, weight: .semibold))
+                    .font(StudioType.data)
                     .foregroundStyle(StudioPalette.ink)
                 Spacer()
                 Text("r \(formatCompact(kernel.radius)) · m \(formatCompact(kernel.center)) · s \(formatCompact(kernel.sigma)) · h \(formatCompact(kernel.gain))")
-                    .font(.system(.callout, design: .monospaced))
+                    .font(StudioType.dataSmall)
                     .foregroundStyle(StudioPalette.mutedInk)
             }
 
             Text("b \(formatKernelVector(kernel.beta))")
-                .font(.system(.callout, design: .monospaced))
+                .font(StudioType.dataSmall)
                 .foregroundStyle(StudioPalette.mutedInk)
             Text("w \(formatKernelVector(kernel.weights))")
-                .font(.system(.callout, design: .monospaced))
+                .font(StudioType.dataSmall)
                 .foregroundStyle(StudioPalette.mutedInk)
             Text("a \(formatKernelVector(kernel.anchors))")
-                .font(.system(.callout, design: .monospaced))
+                .font(StudioType.dataSmall)
                 .foregroundStyle(StudioPalette.mutedInk)
         }
         .padding(10)
@@ -2176,7 +2362,7 @@ private struct LabStageHoverOverlay: View {
                     .position(center)
 
                 Text(label)
-                    .font(.system(.caption2, design: .monospaced, weight: .semibold))
+                    .font(StudioType.labelStrong)
                     .foregroundStyle(StudioPalette.ink)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 5)

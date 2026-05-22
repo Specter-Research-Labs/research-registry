@@ -79,23 +79,10 @@ struct CreatureInspectorView: View {
                     }
                 }
 
+                StudioClassificationPanel(entry: entry)
+
                 if let metrics {
-                    StudioSurface(title: "Metrics", subtitle: "Behavior and persistence") {
-                        VStack(spacing: 8) {
-                            StudioKeyValueRow(label: "Stable", value: metrics.isStable ? "Yes" : "No")
-                            StudioKeyValueRow(label: "Gyration", value: String(format: "%.3f", metrics.gyration))
-                            StudioKeyValueRow(label: "Velocity", value: String(format: "%.3f", metrics.centerVelocity))
-                            StudioKeyValueRow(label: "Mass Mean", value: String(format: "%.3f", metrics.massMean))
-                            StudioKeyValueRow(label: "Mass Std", value: String(format: "%.3f", metrics.massStd))
-                            StudioKeyValueRow(label: "Occupancy", value: String(format: "%.3f", metrics.occupancyMean))
-                            if let complexity = metrics.complexityMean {
-                                StudioKeyValueRow(label: "Complexity", value: String(format: "%.3f", complexity))
-                            }
-                            if let survivalSteps = metrics.survivalSteps {
-                                StudioKeyValueRow(label: "Survival", value: "\(survivalSteps)")
-                            }
-                        }
-                    }
+                    StudioComputationPanel(metrics: metrics)
                 }
 
                 if let savedCreature = entry.savedCreature {

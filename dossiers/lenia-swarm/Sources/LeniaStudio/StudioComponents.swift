@@ -39,7 +39,19 @@ enum StudioPalette {
     )
     static let surfaceSoft = dynamicColor(
         light: (0.95, 0.93, 0.90, 1.0),
-        dark: (0.20, 0.22, 0.25, 1.0)
+        dark: (0.16, 0.17, 0.20, 1.0)
+    )
+    static let consoleSurface = dynamicColor(
+        light: (0.96, 0.95, 0.93, 1.0),
+        dark: (0.11, 0.12, 0.15, 1.0)
+    )
+    static let consoleSurfaceRaised = dynamicColor(
+        light: (0.99, 0.98, 0.96, 1.0),
+        dark: (0.14, 0.15, 0.18, 1.0)
+    )
+    static let consoleControl = dynamicColor(
+        light: (0.92, 0.90, 0.86, 1.0),
+        dark: (0.17, 0.18, 0.21, 1.0)
     )
     static let ink = dynamicColor(
         light: (0.15, 0.13, 0.11, 1.0),
@@ -78,6 +90,50 @@ enum StudioPalette {
             endPoint: .bottomTrailing
         )
     }
+
+    static var consoleSurfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [consoleSurfaceRaised.opacity(0.96), consoleSurface],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+enum StudioType {
+    static func interface(_ size: CGFloat, weight _: Font.Weight = .regular) -> Font {
+        .custom("DINAlternate-Bold", size: size)
+    }
+
+    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .custom(berkeleyName(for: weight), size: size)
+    }
+
+    static let panelTitle = mono(11, weight: .semibold)
+    static let panelSubtitle = interface(12)
+    static let label = mono(9.5, weight: .medium)
+    static let labelStrong = mono(10, weight: .semibold)
+    static let data = mono(12, weight: .medium)
+    static let dataSmall = mono(10.5, weight: .regular)
+    static let body = interface(13)
+    static let bodySmall = interface(12)
+    static let title = interface(15, weight: .semibold)
+
+    private static func berkeleyName(for weight: Font.Weight) -> String {
+        switch weight {
+        case .black, .heavy, .bold:
+            "BerkeleyMono-Bold"
+        case .semibold:
+            "BerkeleyMono-SemiBold"
+        case .medium:
+            "BerkeleyMono-Medium"
+        case .light, .thin, .ultraLight:
+            "BerkeleyMono-Light"
+        default:
+            "BerkeleyMono-Regular"
+        }
+    }
+
 }
 
 enum StudioPanelStyle: Equatable {
@@ -87,36 +143,36 @@ enum StudioPanelStyle: Equatable {
     var cornerRadius: CGFloat {
         switch self {
         case .standard:
-            24
+            6
         case .console:
-            12
+            4
         }
     }
 
     var shadowRadius: CGFloat {
         switch self {
         case .standard:
-            18
+            4
         case .console:
-            8
+            2
         }
     }
 
     var shadowYOffset: CGFloat {
         switch self {
         case .standard:
-            10
+            1
         case .console:
-            4
+            1
         }
     }
 
     var padding: CGFloat {
         switch self {
         case .standard:
-            18
+            12
         case .console:
-            16
+            8
         }
     }
 }
@@ -128,27 +184,27 @@ enum StudioMetricPillStyle: Equatable {
     var cornerRadius: CGFloat {
         switch self {
         case .standard:
-            999
+            4
         case .console:
-            10
+            3
         }
     }
 
     var labelFont: Font {
         switch self {
         case .standard:
-            .system(size: 9, weight: .semibold, design: .monospaced)
+            StudioType.label
         case .console:
-            .system(size: 10, weight: .semibold, design: .monospaced)
+            StudioType.labelStrong
         }
     }
 
     var valueFont: Font {
         switch self {
         case .standard:
-            .system(.callout, design: .monospaced, weight: .semibold)
+            StudioType.data
         case .console:
-            .system(.body, design: .monospaced, weight: .semibold)
+            StudioType.data
         }
     }
 }
@@ -160,18 +216,18 @@ enum StudioKeyValueRowStyle: Equatable {
     var labelFont: Font {
         switch self {
         case .compact:
-            .caption
+            StudioType.bodySmall
         case .readable:
-            .callout
+            StudioType.body
         }
     }
 
     var valueFont: Font {
         switch self {
         case .compact:
-            .system(.caption, design: .monospaced)
+            StudioType.dataSmall
         case .readable:
-            .system(.callout, design: .monospaced)
+            StudioType.data
         }
     }
 }
@@ -202,27 +258,31 @@ struct StudioSurface<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: style == .console ? 10 : 12) {
             if title != nil || subtitle != nil {
                 VStack(alignment: .leading, spacing: 4) {
                     if let title {
-                        Text(title)
-                            .font(.system(.title3, design: .serif, weight: .semibold))
+                        Text(style == .console ? title.uppercased() : title)
+                            .font(style == .console ? StudioType.panelTitle : StudioType.title)
+                            .tracking(style == .console ? 0.7 : 0)
                             .foregroundStyle(StudioPalette.ink)
                     }
                     if let subtitle {
                         Text(subtitle)
-                            .font(.caption)
+                            .font(StudioType.panelSubtitle)
                             .foregroundStyle(StudioPalette.mutedInk)
                     }
                 }
+                Rectangle()
+                    .fill(StudioPalette.hairline)
+                    .frame(height: 1)
             }
             content
         }
         .padding(style.padding)
         .background(
             RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
-                .fill(StudioPalette.surfaceGradient)
+                .fill(style == .console ? StudioPalette.consoleSurfaceGradient : StudioPalette.surfaceGradient)
         )
         .overlay(
             RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
@@ -248,10 +308,10 @@ struct StudioMetricPill: View {
                 .foregroundStyle(accent)
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.vertical, style == .console ? 5 : 8)
         .background(
             RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
-                .fill(StudioPalette.surfaceSoft)
+                .fill(style == .console ? StudioPalette.consoleControl : StudioPalette.surfaceSoft)
         )
         .overlay {
             if style == .console {
@@ -306,7 +366,7 @@ struct CreatureThumbnailView: View {
             }
         }
         .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .task(id: creature.id) {
             thumbnail = await ThumbnailRenderer.shared.render(creature: creature)
         }
@@ -342,7 +402,7 @@ struct StudioCreatureCard: View {
 
                 if let rank {
                     Text("#\(rank)")
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .font(StudioType.labelStrong)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
                         .background(.thinMaterial, in: Capsule(style: .continuous))
@@ -352,11 +412,11 @@ struct StudioCreatureCard: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(entry.name)
-                    .font(.headline)
+                    .font(StudioType.title)
                     .foregroundStyle(StudioPalette.ink)
                     .lineLimit(1)
                 Text(entry.subtitle)
-                    .font(.caption)
+                    .font(StudioType.bodySmall)
                     .foregroundStyle(StudioPalette.mutedInk)
                     .lineLimit(1)
             }
@@ -502,7 +562,7 @@ struct StudioCompareTrayView: View {
             VStack(alignment: .leading, spacing: 14) {
                 if entries.isEmpty {
                     Text("Add up to four creatures from the cockpit to build a comparison set.")
-                        .font(.caption)
+                        .font(StudioType.bodySmall)
                         .foregroundStyle(StudioPalette.mutedInk)
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -514,15 +574,15 @@ struct StudioCompareTrayView: View {
                                             CreatureThumbnailView(creature: entry.creature, size: 58)
                                             VStack(alignment: .leading, spacing: 3) {
                                                 Text(entry.name)
-                                                    .font(.subheadline.weight(.semibold))
+                                                    .font(StudioType.title)
                                                     .foregroundStyle(StudioPalette.ink)
                                                     .lineLimit(1)
                                                 Text(entry.subtitle)
-                                                    .font(.caption)
+                                                    .font(StudioType.bodySmall)
                                                     .foregroundStyle(StudioPalette.mutedInk)
                                                     .lineLimit(1)
                                                 Text(String(format: "%.3f", entry.savedCreature?.score ?? entry.creature.score))
-                                                    .font(.system(.caption, design: .monospaced))
+                                                    .font(StudioType.dataSmall)
                                                     .foregroundStyle(StudioPalette.ember)
                                             }
                                         }
@@ -556,7 +616,7 @@ struct StudioCompareTrayView: View {
                         .disabled(entries.isEmpty)
                     Spacer()
                     Text("\(entries.count)/4")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(StudioType.dataSmall)
                         .foregroundStyle(StudioPalette.mutedInk)
                 }
             }
