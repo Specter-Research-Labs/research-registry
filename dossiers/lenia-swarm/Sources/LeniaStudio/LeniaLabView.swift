@@ -474,6 +474,7 @@ struct LeniaLabView: View {
     @State private var showTTExportImporter = false
     @State private var showContractEditor = false
     @State private var selectedTrack1FamilyID: String?
+    @State private var inspectorPanel: LabInspectorPanel = .catalog
 
     private let stampCache = LeniaLabStampCache()
     private static let backendOrder: [FlowSandboxBackend] = [.metalFull, .mlx]
@@ -577,10 +578,7 @@ struct LeniaLabView: View {
                         VStack(spacing: 10) {
                             stageSurface
                             controlSurface
-                            paletteSurface
-                            taxonomySurface
-                            universeSurface
-                            telemetrySurface
+                            inspectorSurface
                         }
                         .padding(12)
                     }
@@ -596,10 +594,7 @@ struct LeniaLabView: View {
                             .layoutPriority(1)
 
                             VStack(spacing: 10) {
-                                paletteSurface
-                                taxonomySurface
-                                universeSurface
-                                telemetrySurface
+                                inspectorSurface
                             }
                             .frame(width: inspectorWidth)
                         }
@@ -614,9 +609,6 @@ struct LeniaLabView: View {
         )
         .navigationTitle("Lenia Lab")
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                RenderModePicker(renderMode: $renderMode)
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Open TT Export") {
                     showTTExportImporter = true
@@ -740,6 +732,25 @@ struct LeniaLabView: View {
                         .frame(width: 238)
                     }
 
+                    Menu {
+                        ForEach(LeniaRenderMode.allCases) { mode in
+                            Button {
+                                renderMode = mode
+                            } label: {
+                                if renderMode == mode {
+                                    Label(mode.rawValue, systemImage: "checkmark")
+                                } else {
+                                    Text(mode.rawValue)
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "paintpalette")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Color map")
+
                     Button {
                         adjustStageZoom(by: 0.85)
                     } label: {
@@ -843,7 +854,7 @@ struct LeniaLabView: View {
                         }
                         .allowsHitTesting(false)
                     }
-                    .frame(minHeight: 500)
+                    .frame(minHeight: 420)
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
@@ -991,6 +1002,32 @@ struct LeniaLabView: View {
         }
     }
 
+    private var inspectorSurface: some View {
+        VStack(spacing: 10) {
+            StudioSurface(style: .console) {
+                Picker("Inspector", selection: $inspectorPanel) {
+                    ForEach(LabInspectorPanel.allCases) { panel in
+                        Text(panel.title).tag(panel)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+            }
+
+            switch inspectorPanel {
+            case .bay:
+                paletteSurface
+            case .catalog:
+                taxonomySurface
+            case .runtime:
+                universeSurface
+            case .signals:
+                telemetrySurface
+            }
+        }
+    }
+
     @ViewBuilder
     private var contractEditorContent: some View {
         if let worldDraft {
@@ -1128,8 +1165,8 @@ struct LeniaLabView: View {
 
     private var taxonomySurface: some View {
         StudioSurface(
-            title: "Track 1 Taxonomy",
-            subtitle: "Family, genus, species, and runtime rulesets",
+            title: "Specimen Catalog",
+            subtitle: "Taxonomy, source, and loadable variants",
             style: .console
         ) {
             VStack(alignment: .leading, spacing: 10) {
@@ -1681,6 +1718,28 @@ let labBrushRadiusRange: ClosedRange<Double> = 1...16
 
 func labBrushRadiusStepping(from radius: Double, delta: Int) -> Double {
     min(labBrushRadiusRange.upperBound, max(labBrushRadiusRange.lowerBound, radius + Double(delta)))
+}
+
+private enum LabInspectorPanel: String, CaseIterable, Identifiable {
+    case bay
+    case catalog
+    case runtime
+    case signals
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .bay:
+            "Bay"
+        case .catalog:
+            "Catalog"
+        case .runtime:
+            "Runtime"
+        case .signals:
+            "Signals"
+        }
+    }
 }
 
 private func labErrorDescription(_ error: Error) -> String {
