@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: check check-swift check-python lint typecheck test-python smoke-deterministic smoke-cluster
+.PHONY: check check-swift check-python lint typecheck test-python smoke-deterministic smoke-cluster install-app
 
 check: check-swift check-python
 
@@ -23,3 +23,6 @@ smoke-deterministic:
 
 smoke-cluster:
 	./ops/smoke-cluster.sh
+
+install-app:
+	./ops/install-lenia-studio-app.sh
