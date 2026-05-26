@@ -155,6 +155,57 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(labBrushRadiusStepping(from: 16, delta: 5), 16)
     }
 
+    func testTrack1TaxonomyCatalogParsesRuntimeProvenance() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("track1-taxonomy-\(UUID().uuidString)")
+        let configs = root.appendingPathComponent("track1_section2_orbidae_species_panel")
+        try FileManager.default.createDirectory(at: configs, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let configURL = configs.appendingPathComponent("Orbidae-OG2-qd24-additive-native-parity-mlx.json")
+        let config = """
+        {
+          "backend": "mlx",
+          "channels": 1,
+          "connectivity": [[1]],
+          "grid": {"sx": 192, "sy": 192},
+          "implementation": {
+            "mode": "qd24_additive_v1",
+            "kernel_profile": "qd24_bump4_v1"
+          },
+          "params": {"r": [1.0]},
+          "provenance": {
+            "family": "Orbidae",
+            "pattern_id": "OG2",
+            "species": "Gyrorbium"
+          },
+          "run": {"steps": 1600}
+        }
+        """
+        try Data(config.utf8).write(to: configURL)
+
+        let catalog = try loadTrack1TaxonomyCatalog(rootPath: root.path)
+        let parsed = try XCTUnwrap(catalog.configs.first)
+
+        XCTAssertEqual(catalog.families.map(\.name), ["Orbidae"])
+        XCTAssertEqual(catalog.genusCount, 1)
+        XCTAssertEqual(catalog.speciesCount, 1)
+        XCTAssertEqual(catalog.labLoadableCount, 0)
+        XCTAssertEqual(parsed.family, "Orbidae")
+        XCTAssertEqual(parsed.genus, "Gyrorbium")
+        XCTAssertEqual(parsed.displayName, "Gyrorbium")
+        XCTAssertEqual(parsed.patternID, "OG2")
+        XCTAssertFalse(parsed.isLabLoadable)
+        XCTAssertEqual(parsed.backend, "mlx")
+        XCTAssertEqual(parsed.implementationMode, "qd24_additive_v1")
+        XCTAssertEqual(parsed.kernelProfile, "qd24_bump4_v1")
+        XCTAssertEqual(parsed.gridSize, 192)
+        XCTAssertEqual(parsed.kernelCount, 1)
+        XCTAssertEqual(parsed.runSteps, 1600)
+    }
+
     func testLeniaMetalFieldRendererProducesOffscreenImage() {
         guard let device = MTLCreateSystemDefaultDevice() else {
             XCTFail("Metal device unavailable")

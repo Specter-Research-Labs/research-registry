@@ -451,6 +451,8 @@ actor LeniaLabStampCache {
 struct LeniaLabView: View {
     @EnvironmentObject private var appState: AppState
     @StateObject private var model = LeniaLabModel()
+    @StateObject private var track1Catalog = Track1TaxonomyCatalogStore()
+    @AppStorage("track1ConfigRoot") private var track1ConfigRoot = ""
     @State private var gridPreset: LabGridPreset = .compact128
     @State private var backend: FlowSandboxBackend = .metalFull
     @State private var renderMode: LeniaRenderMode = .smoothMagma
@@ -471,6 +473,7 @@ struct LeniaLabView: View {
     @State private var hoveredGridPoint: SIMD2<Int>?
     @State private var showTTExportImporter = false
     @State private var showContractEditor = false
+    @State private var selectedTrack1FamilyID: String?
 
     private let stampCache = LeniaLabStampCache()
     private static let backendOrder: [FlowSandboxBackend] = [.metalFull, .mlx]
@@ -500,6 +503,8 @@ struct LeniaLabView: View {
             return Self.missionPresets.first(where: { $0.id == presetID })?.entry ?? Self.missionPresets[0].entry
         case .stamp(let entryID):
             return stampEntries.first(where: { $0.id == entryID }) ?? selectedStampEntry
+        case .track1Config(let path):
+            return track1Catalog.catalog.config(path: path)?.studioEntry() ?? fallbackTrack1Entry(path: path)
         }
     }
 
@@ -510,7 +515,21 @@ struct LeniaLabView: View {
 
     private var activeWorldEntry: StudioCompareEntry? {
         guard let activeWorldEntryID = model.activeWorldEntryID else { return nil }
-        return (Self.missionPresets.map(\.entry) + stampEntries).first(where: { $0.id == activeWorldEntryID })
+        return (Self.missionPresets.map(\.entry) + stampEntries + track1Catalog.catalog.configs.map { $0.studioEntry() })
+            .first(where: { $0.id == activeWorldEntryID })
+    }
+
+    private var selectedTrack1Family: Track1TaxonomyFamily? {
+        let familyID = selectedTrack1FamilyID
+            ?? selectedTrack1Config?.family
+            ?? track1Catalog.catalog.families.first?.id
+        guard let familyID else { return nil }
+        return track1Catalog.catalog.families.first(where: { $0.id == familyID })
+    }
+
+    private var selectedTrack1Config: Track1TaxonomyConfig? {
+        guard case .track1Config(let path) = worldSelection else { return nil }
+        return track1Catalog.catalog.config(path: path)
     }
 
     private var selectedStampSourceSummary: String {
@@ -559,6 +578,7 @@ struct LeniaLabView: View {
                             stageSurface
                             controlSurface
                             paletteSurface
+                            taxonomySurface
                             universeSurface
                             telemetrySurface
                         }
@@ -577,6 +597,7 @@ struct LeniaLabView: View {
 
                             VStack(spacing: 10) {
                                 paletteSurface
+                                taxonomySurface
                                 universeSurface
                                 telemetrySurface
                             }
@@ -621,6 +642,15 @@ struct LeniaLabView: View {
         .task(id: selectedStampEntry.id) {
             selectedStampPreview = await stampCache.stamp(for: selectedStampEntry)
         }
+        .task(id: track1ConfigRoot) {
+            if track1ConfigRoot.isEmpty {
+                if let defaultRoot = defaultTrack1ConfigRoot() {
+                    track1ConfigRoot = defaultRoot
+                }
+                return
+            }
+            track1Catalog.load(rootPath: track1ConfigRoot)
+        }
         .onChange(of: speedCap) { _, newValue in
             model.setSpeedCap(newValue)
         }
@@ -638,9 +668,12 @@ struct LeniaLabView: View {
         .onChange(of: backend) { _, newValue in
             rebuildActiveWorld(backend: newValue)
         }
-        .onChange(of: worldSelection) { _, _ in
+        .onChange(of: worldSelection) { _, newSelection in
             stageZoom = 1.35
             stageOffset = .zero
+            if case .track1Config = newSelection {
+                return
+            }
             syncWorldDraft(rebuild: true)
         }
         .onDisappear {
@@ -1093,6 +1126,112 @@ struct LeniaLabView: View {
         }
     }
 
+    private var taxonomySurface: some View {
+        StudioSurface(
+            title: "Track 1 Taxonomy",
+            subtitle: "Family, genus, species, and runtime rulesets",
+            style: .console
+        ) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    if track1Catalog.isLoading {
+                        ProgressView()
+                            .controlSize(.small)
+                            .scaleEffect(0.72)
+                    }
+                    Text(track1Catalog.status)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 8)
+                    Button {
+                        track1Catalog.load(rootPath: track1ConfigRoot)
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Rescan Track 1 configs")
+
+                    Button {
+                        chooseTrack1Root()
+                    } label: {
+                        Image(systemName: "folder")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Choose Track 1 config root")
+                }
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 6)], alignment: .leading, spacing: 6) {
+                    LabTacticalReadout(label: "Class", value: "Flow", accent: StudioPalette.ocean)
+                    LabTacticalReadout(label: "Order", value: "T1", accent: StudioPalette.ember)
+                    LabTacticalReadout(label: "Family", value: "\(track1Catalog.catalog.families.count)", accent: StudioPalette.moss)
+                    LabTacticalReadout(label: "Species", value: "\(track1Catalog.catalog.speciesCount)", accent: StudioPalette.ocean)
+                    LabTacticalReadout(label: "Loadable", value: "\(track1Catalog.catalog.labLoadableCount)", accent: StudioPalette.moss)
+                }
+
+                if !track1ConfigRoot.isEmpty {
+                    LabCompactKeyValueRow(label: "Root", value: track1RootDisplay(track1ConfigRoot))
+                }
+
+                if let error = track1Catalog.error {
+                    Text(error)
+                        .font(StudioType.bodySmall)
+                        .foregroundStyle(StudioPalette.ember)
+                        .lineLimit(3)
+                }
+
+                if case .track1Config = worldSelection, let worldDraftError {
+                    Text(worldDraftError)
+                        .font(StudioType.bodySmall)
+                        .foregroundStyle(StudioPalette.ember)
+                        .lineLimit(3)
+                }
+
+                if !track1Catalog.catalog.families.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(track1Catalog.catalog.families) { family in
+                                Track1FamilyChip(
+                                    family: family,
+                                    isSelected: selectedTrack1Family?.id == family.id,
+                                    onSelect: {
+                                        selectedTrack1FamilyID = family.id
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.vertical, 1)
+                    }
+
+                    if let selectedTrack1Family {
+                        Track1TaxonomyFamilyPanel(
+                            family: selectedTrack1Family,
+                            selectedPath: selectedTrack1Config?.path,
+                            onLoad: loadTrack1Config
+                        )
+                    }
+
+                    if let selectedTrack1Config {
+                        LabInfoSection(title: "Selected lineage") {
+                            LabCompactKeyValueRow(label: "Family", value: selectedTrack1Config.family)
+                            LabCompactKeyValueRow(label: "Genus", value: selectedTrack1Config.genus)
+                            LabCompactKeyValueRow(label: "Species", value: selectedTrack1Config.displayName)
+                            LabCompactKeyValueRow(label: "Pattern", value: selectedTrack1Config.patternID)
+                            LabCompactKeyValueRow(label: "Runtime", value: selectedTrack1Config.runtimeSummary)
+                        }
+                    }
+                } else if !track1Catalog.isLoading {
+                    Text("No Track 1 taxonomy loaded.")
+                        .font(StudioType.body)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                }
+            }
+        }
+    }
+
     private var universeSurface: some View {
         StudioSurface(
             title: "Runtime Contract",
@@ -1301,7 +1440,11 @@ struct LeniaLabView: View {
         worldDraftError = nil
         do {
             let nextDraft: LabWorldDraft
-            if let preset = selectedWorldPreset, let defaultDraft = preset.defaultDraft {
+            if case .track1Config(let path) = worldSelection {
+                let basisName = track1Catalog.catalog.config(path: path)?.displayName
+                    ?? URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+                nextDraft = try makeTrack1WorldDraft(path: path, basisName: basisName)
+            } else if let preset = selectedWorldPreset, let defaultDraft = preset.defaultDraft {
                 nextDraft = defaultDraft
             } else {
                 nextDraft = try makeLabWorldDraft(for: selectedWorldEntry, gridSize: gridPreset.rawValue)
@@ -1316,8 +1459,60 @@ struct LeniaLabView: View {
             }
         } catch {
             worldDraft = nil
-            worldDraftError = "Failed to prepare world contract: \(error.localizedDescription)"
+            worldDraftError = "Failed to prepare world contract: \(labErrorDescription(error))"
         }
+    }
+
+    private func loadTrack1Config(_ config: Track1TaxonomyConfig) {
+        guard config.isLabLoadable else {
+            worldDraftError = "Track 1 config is cataloged but not loadable by the current Lab runtime: \(config.implementationMode)."
+            return
+        }
+        selectedTrack1FamilyID = config.family
+        worldSelection = .track1Config(config.path)
+        stageZoom = 1.35
+        stageOffset = .zero
+        worldDraftError = nil
+        do {
+            let nextDraft = try makeTrack1WorldDraft(config: config)
+            worldDraft = nextDraft
+            if let matchingGrid = LabGridPreset.allCases.first(where: { $0.rawValue == nextDraft.gridSize }),
+               matchingGrid != gridPreset {
+                gridPreset = matchingGrid
+            }
+            model.rebuildWorld(
+                sourceEntryID: config.studioEntry().id,
+                runtimeConfig: nextDraft.runtimeConfig(overridingBackend: backend),
+                backend: backend,
+                speedCap: speedCap,
+                shouldRun: false,
+                initialStampEntry: nil,
+                stampCache: stampCache
+            )
+        } catch {
+            worldDraft = nil
+            worldDraftError = "Failed to load Track 1 config: \(labErrorDescription(error))"
+        }
+    }
+
+    private func chooseTrack1Root() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Use Root"
+        panel.message = "Select the directory containing Track 1 runtime configs."
+        if !track1ConfigRoot.isEmpty {
+            panel.directoryURL = URL(fileURLWithPath: track1ConfigRoot, isDirectory: true)
+        }
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        track1ConfigRoot = url.path
+    }
+
+    private func track1RootDisplay(_ path: String) -> String {
+        let components = URL(fileURLWithPath: path).pathComponents
+        guard components.count > 3 else { return path }
+        return ".../" + components.suffix(3).joined(separator: "/")
     }
 
     private func rebuildActiveWorld(backend overrideBackend: FlowSandboxBackend? = nil) {
@@ -1352,7 +1547,7 @@ struct LeniaLabView: View {
                 stampCache: stampCache
             )
         } catch {
-            worldDraftError = "Failed to load replay base: \(error.localizedDescription)"
+            worldDraftError = "Failed to load replay base: \(labErrorDescription(error))"
         }
     }
 
@@ -1486,6 +1681,14 @@ let labBrushRadiusRange: ClosedRange<Double> = 1...16
 
 func labBrushRadiusStepping(from radius: Double, delta: Int) -> Double {
     min(labBrushRadiusRange.upperBound, max(labBrushRadiusRange.lowerBound, radius + Double(delta)))
+}
+
+private func labErrorDescription(_ error: Error) -> String {
+    let description = String(describing: error)
+    if !description.isEmpty, description != error.localizedDescription {
+        return description
+    }
+    return error.localizedDescription
 }
 
 enum LabHealthState {
@@ -1865,6 +2068,196 @@ private struct LabPaletteStampCard: View {
                 .stroke(isSelected ? StudioPalette.ocean.opacity(0.7) : StudioPalette.hairline, lineWidth: 1)
         )
     }
+}
+
+private struct Track1FamilyChip: View {
+    let family: Track1TaxonomyFamily
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(family.name)
+                    .font(StudioType.labelStrong)
+                    .foregroundStyle(isSelected ? StudioPalette.ink : StudioPalette.mutedInk)
+                    .lineLimit(1)
+                HStack(spacing: 8) {
+                    Text("\(family.genera.count)g")
+                        .foregroundStyle(StudioPalette.ocean)
+                    Text("\(family.speciesCount)s")
+                        .foregroundStyle(StudioPalette.moss)
+                    Text("\(family.configCount)c")
+                        .foregroundStyle(StudioPalette.ember)
+                }
+                .font(StudioType.dataSmall)
+            }
+            .frame(width: 116, alignment: .leading)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 7)
+            .background(
+                Rectangle()
+                    .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleControl.opacity(0.82))
+            )
+            .overlay(
+                Rectangle()
+                    .stroke(isSelected ? StudioPalette.ocean.opacity(0.78) : StudioPalette.hairline, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct Track1TaxonomyFamilyPanel: View {
+    let family: Track1TaxonomyFamily
+    let selectedPath: String?
+    let onLoad: (Track1TaxonomyConfig) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(family.name.uppercased())
+                    .font(StudioType.labelStrong)
+                    .tracking(0.5)
+                    .foregroundStyle(StudioPalette.ink)
+                Spacer(minLength: 6)
+                Text("\(family.genera.count) genera · \(family.speciesCount) species · \(family.configCount) configs")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                    .lineLimit(1)
+            }
+
+            ForEach(family.genera) { genus in
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(genus.name)
+                            .font(StudioType.labelStrong)
+                            .foregroundStyle(StudioPalette.ocean)
+                        Text("\(genus.configs.count) configs")
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(track1SpeciesGroups(for: genus)) { group in
+                            Track1TaxonomySpeciesRow(
+                                group: group,
+                                selectedPath: selectedPath,
+                                onLoad: onLoad
+                            )
+                        }
+                    }
+                }
+                .padding(.top, 2)
+            }
+        }
+        .padding(8)
+        .background(Rectangle().fill(StudioPalette.consoleSurface.opacity(0.72)))
+        .overlay(Rectangle().stroke(StudioPalette.hairline.opacity(0.75), lineWidth: 1))
+    }
+}
+
+private struct Track1TaxonomySpeciesRow: View {
+    let group: Track1SpeciesGroup
+    let selectedPath: String?
+    let onLoad: (Track1TaxonomyConfig) -> Void
+
+    private var activeConfig: Track1TaxonomyConfig {
+        group.configs.first { $0.path == selectedPath }
+            ?? group.configs.first(where: \.isLabLoadable)
+            ?? group.configs[0]
+    }
+
+    private var isSelected: Bool {
+        group.configs.contains { $0.path == selectedPath }
+    }
+
+    private var hasLoadableConfig: Bool {
+        group.configs.contains(where: \.isLabLoadable)
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(group.name)
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(isSelected ? StudioPalette.ink : StudioPalette.mutedInk)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(activeConfig.runtimeSummary)
+                    .font(StudioType.label)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 6)
+            Text(group.configs.count == 1 ? activeConfig.patternID : "\(group.configs.count)x")
+                .font(StudioType.dataSmall)
+                .foregroundStyle(hasLoadableConfig ? (isSelected ? StudioPalette.moss : StudioPalette.ocean) : StudioPalette.ember)
+                .frame(width: 38, alignment: .trailing)
+
+            Button {
+                onLoad(activeConfig)
+            } label: {
+                Image(systemName: isSelected ? "checkmark" : (hasLoadableConfig ? "tray.and.arrow.down" : "exclamationmark.triangle"))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.mini)
+            .disabled(!hasLoadableConfig)
+            .help(hasLoadableConfig ? "Load \(group.name)" : "No Lab-loadable variant")
+
+            if group.configs.count > 1 {
+                Menu {
+                    ForEach(group.configs) { config in
+                        Button(config.variantLabel) {
+                            onLoad(config)
+                        }
+                        .disabled(!config.isLabLoadable)
+                    }
+                } label: {
+                    Image(systemName: "list.bullet")
+                }
+                .menuStyle(.borderlessButton)
+                .controlSize(.mini)
+                .frame(width: 24)
+                .help("Choose variant")
+            }
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 5)
+        .background(
+            Rectangle()
+                .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleControl.opacity(0.44))
+        )
+        .overlay(
+            Rectangle()
+                .stroke(isSelected ? StudioPalette.moss.opacity(0.72) : StudioPalette.hairline.opacity(0.48), lineWidth: 1)
+        )
+    }
+}
+
+private struct Track1SpeciesGroup: Identifiable {
+    let id: String
+    let name: String
+    let configs: [Track1TaxonomyConfig]
+}
+
+private func track1SpeciesGroups(for genus: Track1TaxonomyGenus) -> [Track1SpeciesGroup] {
+    Dictionary(grouping: genus.configs, by: \.displayName)
+        .map { species, configs in
+            Track1SpeciesGroup(
+                id: "\(genus.id)/\(species)",
+                name: species,
+                configs: configs.sorted { lhs, rhs in
+                    if lhs.isLabLoadable != rhs.isLabLoadable {
+                        return lhs.isLabLoadable && !rhs.isLabLoadable
+                    }
+                    return lhs.variantLabel.localizedStandardCompare(rhs.variantLabel) == .orderedAscending
+                }
+            )
+        }
+        .sorted { lhs, rhs in
+            lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+        }
 }
 
 private struct LabInfoSection<Content: View>: View {

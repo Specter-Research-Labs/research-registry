@@ -19,6 +19,7 @@ struct LabKernelRoute: Identifiable {
 enum LabWorldSelection: Equatable {
     case preset(String)
     case stamp(String)
+    case track1Config(String)
 
     var taskKey: String {
         switch self {
@@ -26,6 +27,8 @@ enum LabWorldSelection: Equatable {
             "preset:\(id)"
         case .stamp(let id):
             "stamp:\(id)"
+        case .track1Config(let path):
+            "track1:\(path)"
         }
     }
 }
