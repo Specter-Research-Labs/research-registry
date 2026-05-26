@@ -733,6 +733,25 @@ struct LeniaLabView: View {
                     }
 
                     Menu {
+                        ForEach(Self.backendOrder) { option in
+                            Button {
+                                backend = option
+                            } label: {
+                                if backend == option {
+                                    Label(labBackendLabel(option), systemImage: "checkmark")
+                                } else {
+                                    Text(labBackendLabel(option))
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "cpu")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Compute backend: \(labBackendLabel(backend))")
+
+                    Menu {
                         ForEach(LeniaRenderMode.allCases) { mode in
                             Button {
                                 renderMode = mode
@@ -789,6 +808,7 @@ struct LeniaLabView: View {
                     HStack(spacing: 6) {
                         LabTacticalReadout(label: "State", value: model.isRunning ? "Running" : "Armed", accent: model.isRunning ? StudioPalette.moss : StudioPalette.ember)
                         LabTacticalReadout(label: "Mode", value: model.runtimeModeLabel, accent: StudioPalette.ink)
+                        LabTacticalReadout(label: "Compute", value: labBackendLabel(model.activeBackend), accent: StudioPalette.ocean)
                         let resolvedGrid = model.worldContract?.gridSize ?? model.snapshot?.width ?? gridPreset.rawValue
                         LabTacticalReadout(label: "Grid", value: "\(resolvedGrid)x\(resolvedGrid)", accent: StudioPalette.ocean)
                         if let contract = model.worldContract {
@@ -919,16 +939,6 @@ struct LeniaLabView: View {
                 Divider()
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 10)], alignment: .leading, spacing: 10) {
-                    LabControlGroup(label: "Backend") {
-                        Picker("Backend", selection: $backend) {
-                            ForEach(Self.backendOrder) { backend in
-                                Text(labBackendLabel(backend)).tag(backend)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .controlSize(.small)
-                    }
-
                     LabControlGroup(label: "Primary") {
                         Picker("Primary", selection: $primaryTool) {
                             ForEach(SandboxTool.allCases) { tool in
@@ -1288,7 +1298,7 @@ struct LeniaLabView: View {
                         LabCompactKeyValueRow(label: "Mode", value: model.runtimeModeLabel)
                         LabCompactKeyValueRow(
                             label: "Backend",
-                            value: model.externalReplayTitle == nil ? contract.backend.displayName : "Tenstorrent export"
+                            value: model.externalReplayTitle == nil ? labBackendLabel(contract.backend) : "Tenstorrent export"
                         )
                         LabCompactKeyValueRow(label: "Health", value: model.healthState.label)
                         LabCompactKeyValueRow(label: "Projection", value: model.activeProjection.label)
@@ -1455,9 +1465,9 @@ struct LeniaLabView: View {
         }
         if let activeWorldEntry {
             if let contract = model.worldContract {
-                return "Active world: \(activeWorldEntry.name) · \(model.isRunning ? "running" : "armed") · \(model.runtimeModeLabel) · \(model.activeBackend.displayName) · \(contract.channels)m/\(contract.parameterFieldMode.displayName)"
+                return "Active world: \(activeWorldEntry.name) · \(model.isRunning ? "running" : "armed") · \(model.runtimeModeLabel) · \(labBackendLabel(model.activeBackend)) · \(contract.channels)m/\(contract.parameterFieldMode.displayName)"
             }
-            return "Active world: \(activeWorldEntry.name) · \(model.isRunning ? "running" : "armed") · \(model.runtimeModeLabel) · \(model.activeBackend.displayName)"
+            return "Active world: \(activeWorldEntry.name) · \(model.isRunning ? "running" : "armed") · \(model.runtimeModeLabel) · \(labBackendLabel(model.activeBackend))"
         }
         return "Building world"
     }
