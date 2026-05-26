@@ -108,7 +108,8 @@ struct ArenaFrameView: View {
             },
             onPrimaryPoint: { _ in },
             onSecondaryPoint: { _ in },
-            onHoverPointChange: { _ in }
+            onHoverPointChange: { _ in },
+            onBrushRadiusDelta: nil
         )
     }
 }

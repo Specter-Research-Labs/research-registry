@@ -149,6 +149,12 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(zoomed.zoom, 2.0, accuracy: 1e-6)
     }
 
+    func testLeniaLabBrushRadiusSteppingClampsToRange() {
+        XCTAssertEqual(labBrushRadiusStepping(from: 3, delta: 1), 4)
+        XCTAssertEqual(labBrushRadiusStepping(from: 1, delta: -5), 1)
+        XCTAssertEqual(labBrushRadiusStepping(from: 16, delta: 5), 16)
+    }
+
     func testLeniaMetalFieldRendererProducesOffscreenImage() {
         guard let device = MTLCreateSystemDefaultDevice() else {
             XCTFail("Metal device unavailable")

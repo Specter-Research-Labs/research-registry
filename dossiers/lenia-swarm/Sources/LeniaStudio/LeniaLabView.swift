@@ -454,9 +454,9 @@ struct LeniaLabView: View {
     @State private var gridPreset: LabGridPreset = .compact128
     @State private var backend: FlowSandboxBackend = .metalFull
     @State private var renderMode: LeniaRenderMode = .smoothMagma
-    @State private var primaryTool: SandboxTool = .creatureStamp
+    @State private var primaryTool: SandboxTool = .food
     @State private var secondaryTool: SandboxTool = .erase
-    @State private var brushRadius = 8.0
+    @State private var brushRadius = 3.0
     @State private var brushStrength = 0.35
     @State private var speedCap = 60
     @State private var diagnosticsEnabled = false
@@ -565,26 +565,25 @@ struct LeniaLabView: View {
                         .padding(12)
                     }
                 } else {
-                    HSplitView {
-                        ScrollView {
+                    let inspectorWidth = min(480, max(360, proxy.size.width * 0.28))
+                    ScrollView {
+                        HStack(alignment: .top, spacing: 12) {
                             VStack(spacing: 10) {
                                 stageSurface
                                 controlSurface
                             }
-                            .padding(12)
-                        }
-                        .frame(minWidth: 620, idealWidth: max(700, proxy.size.width * 0.64))
-                        .layoutPriority(1)
+                            .frame(minWidth: 620, maxWidth: .infinity)
+                            .layoutPriority(1)
 
-                        ScrollView {
                             VStack(spacing: 10) {
                                 paletteSurface
                                 universeSurface
                                 telemetrySurface
                             }
-                            .padding(12)
+                            .frame(width: inspectorWidth)
                         }
-                        .frame(minWidth: 360, idealWidth: 400, maxWidth: 480)
+                        .padding(12)
+                        .frame(minWidth: proxy.size.width, alignment: .topLeading)
                     }
                 }
             }
@@ -784,7 +783,8 @@ struct LeniaLabView: View {
                             onTransformChange: updateStageTransform,
                             onPrimaryPoint: { handleStagePoint($0, tool: primaryTool) },
                             onSecondaryPoint: { handleStagePoint($0, tool: secondaryTool) },
-                            onHoverPointChange: { hoveredGridPoint = $0 }
+                            onHoverPointChange: { hoveredGridPoint = $0 },
+                            onBrushRadiusDelta: adjustBrushRadius
                         )
 
                         LabTacticalStageOverlay(
@@ -906,7 +906,7 @@ struct LeniaLabView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     LabSliderRow(label: "Brush Radius", value: "\(Int(brushRadius))") {
-                        Slider(value: $brushRadius, in: 2...20, step: 1)
+                        Slider(value: $brushRadius, in: labBrushRadiusRange, step: 1)
                             .controlSize(.small)
                     }
                     LabSliderRow(label: "Brush Strength", value: String(format: "%.2f", brushStrength)) {
@@ -1476,6 +1476,16 @@ struct LeniaLabView: View {
             LeniaLabStageTransform(zoom: next, offset: stageOffset)
         )
     }
+
+    private func adjustBrushRadius(by delta: Int) {
+        brushRadius = labBrushRadiusStepping(from: brushRadius, delta: delta)
+    }
+}
+
+let labBrushRadiusRange: ClosedRange<Double> = 1...16
+
+func labBrushRadiusStepping(from radius: Double, delta: Int) -> Double {
+    min(labBrushRadiusRange.upperBound, max(labBrushRadiusRange.lowerBound, radius + Double(delta)))
 }
 
 enum LabHealthState {
@@ -2041,6 +2051,7 @@ struct LeniaLabStageView: NSViewRepresentable {
     let onPrimaryPoint: (SIMD2<Int>) -> Void
     let onSecondaryPoint: (SIMD2<Int>) -> Void
     let onHoverPointChange: (SIMD2<Int>?) -> Void
+    let onBrushRadiusDelta: ((Int) -> Void)?
 
     func makeNSView(context: Context) -> LeniaLabStageNSView {
         let view = LeniaLabStageNSView()
@@ -2048,6 +2059,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         view.onPrimaryPoint = onPrimaryPoint
         view.onSecondaryPoint = onSecondaryPoint
         view.onHoverPointChange = onHoverPointChange
+        view.onBrushRadiusDelta = onBrushRadiusDelta
         return view
     }
 
@@ -2056,6 +2068,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         nsView.onPrimaryPoint = onPrimaryPoint
         nsView.onSecondaryPoint = onSecondaryPoint
         nsView.onHoverPointChange = onHoverPointChange
+        nsView.onBrushRadiusDelta = onBrushRadiusDelta
         nsView.update(
             frame: frame,
             renderMode: renderMode,
@@ -2074,6 +2087,7 @@ final class LeniaLabStageNSView: MTKView {
     var onPrimaryPoint: ((SIMD2<Int>) -> Void)?
     var onSecondaryPoint: ((SIMD2<Int>) -> Void)?
     var onHoverPointChange: ((SIMD2<Int>?) -> Void)?
+    var onBrushRadiusDelta: ((Int) -> Void)?
 
     init() {
         guard let device = MTLCreateSystemDefaultDevice() else {
@@ -2194,6 +2208,14 @@ final class LeniaLabStageNSView: MTKView {
                 gridSize: gridSize
             )
             applyTransform(next)
+            return
+        }
+
+        let verticalIntent = abs(event.scrollingDeltaY) >= abs(event.scrollingDeltaX)
+        if verticalIntent && !event.modifierFlags.contains(.shift), let onBrushRadiusDelta {
+            if event.scrollingDeltaY != 0 {
+                onBrushRadiusDelta(event.scrollingDeltaY > 0 ? 1 : -1)
+            }
             return
         }
 

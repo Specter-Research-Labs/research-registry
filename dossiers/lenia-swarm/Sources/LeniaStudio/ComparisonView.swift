@@ -339,7 +339,8 @@ private struct ComparisonPanelView: View {
                             onTransformChange: { _ in },
                             onPrimaryPoint: { _ in },
                             onSecondaryPoint: { _ in },
-                            onHoverPointChange: { _ in }
+                            onHoverPointChange: { _ in },
+                            onBrushRadiusDelta: nil
                         )
                         .padding(10)
                     } else {
