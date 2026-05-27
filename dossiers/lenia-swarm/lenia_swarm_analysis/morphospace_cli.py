@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lenia_swarm_analysis.morphospace.catalog_qc import apply_shape_behavior_qc
 from lenia_swarm_analysis.morphospace.common_morphology import derive_common_morphology
 from lenia_swarm_analysis.morphospace.derive_anatomy import derive_anatomy
 from lenia_swarm_analysis.morphospace.derive_axes import derive_axes
@@ -280,6 +281,17 @@ def compare_feature_cohorts_packet(
         connection.close()
 
 
+def apply_catalog_qc_packet(
+    *,
+    compendium_path: Path,
+    audit_db: Path | None = None,
+) -> dict[str, Any]:
+    return apply_shape_behavior_qc(
+        compendium_path=compendium_path,
+        audit_db=audit_db,
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="lenia-swarm-morphospace",
@@ -299,6 +311,14 @@ def _build_parser() -> argparse.ArgumentParser:
     refresh.add_argument("--min-group-size", type=int, default=2)
     refresh.add_argument("--max-homology-dim", type=int, default=1)
     refresh.add_argument("--json", action="store_true")
+
+    catalog_qc = subparsers.add_parser(
+        "apply-catalog-qc",
+        help="Apply catalog QC status and quality flags to a compendium",
+    )
+    catalog_qc.add_argument("--compendium", required=True, type=Path)
+    catalog_qc.add_argument("--audit-db", type=Path)
+    catalog_qc.add_argument("--json", action="store_true")
 
     topology = subparsers.add_parser(
         "run-topology",
@@ -424,6 +444,14 @@ def main(argv: list[str] | None = None) -> int:
             source_packet_kind=str(args.source_packet_kind),
             min_group_size=int(args.min_group_size),
             max_homology_dim=int(args.max_homology_dim),
+        )
+        _print_payload(payload, as_json=bool(args.json))
+        return 0
+
+    if args.command == "apply-catalog-qc":
+        payload = apply_catalog_qc_packet(
+            compendium_path=args.compendium.resolve(),
+            audit_db=args.audit_db.resolve() if args.audit_db is not None else None,
         )
         _print_payload(payload, as_json=bool(args.json))
         return 0

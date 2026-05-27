@@ -164,6 +164,8 @@ final class CompendiumIndexingTests: XCTestCase {
         XCTAssertTrue(creatureCols.contains("source_mode"))
         XCTAssertTrue(creatureCols.contains("source_algorithm"))
         XCTAssertTrue(creatureCols.contains("research_metadata_json"))
+        XCTAssertTrue(creatureCols.contains("catalog_status"))
+        XCTAssertTrue(creatureCols.contains("quality_flags_json"))
 
         let motionStmt = try db.prepare("SELECT velocity_x, velocity_y, heading_rad FROM creatures LIMIT 1")
         defer { sqlite3_finalize(motionStmt) }

@@ -132,6 +132,7 @@ struct CompendiumLayoutView: View {
     @AppStorage("lastCompendiumPath") private var compendiumPath = ""
     @State private var searchText = ""
     @State private var stableOnly = false
+    @State private var catalogFilter: CompendiumCatalogFilter = .active
     @State private var minScoreText = ""
     @State private var limit = 200
     @State private var selectedCreatureIds: Set<UUID> = []
@@ -182,6 +183,13 @@ struct CompendiumLayoutView: View {
                         TextField("Min", text: $minScoreText)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 60)
+                        Picker("", selection: $catalogFilter) {
+                            ForEach(CompendiumCatalogFilter.allCases, id: \.self) { filter in
+                                Text(filter.rawValue).tag(filter)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .fixedSize()
                         Stepper("Limit \(limit)", value: $limit, in: 25...2000, step: 25)
                             .fixedSize()
 
@@ -299,6 +307,7 @@ struct CompendiumLayoutView: View {
         .onChange(of: compendiumPath) { _, _ in scheduleRefresh() }
         .onChange(of: searchText) { _, _ in scheduleRefresh() }
         .onChange(of: stableOnly) { _, _ in scheduleRefresh() }
+        .onChange(of: catalogFilter) { _, _ in scheduleRefresh() }
         .onChange(of: minScoreText) { _, _ in scheduleRefresh() }
         .onChange(of: limit) { _, _ in scheduleRefresh() }
         .onChange(of: store.creatures.map(\.id)) { _, _ in
@@ -341,6 +350,7 @@ struct CompendiumLayoutView: View {
         let query = CompendiumQuery(
             search: searchText,
             stableOnly: stableOnly,
+            catalogFilter: catalogFilter,
             minScore: minScore,
             limit: limit
         )
@@ -430,8 +440,21 @@ private struct CompendiumRow: View {
                 .font(.caption)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name)
-                    .font(.subheadline)
+                HStack(spacing: 6) {
+                    Text(entry.name)
+                        .font(.subheadline)
+                    if entry.catalogStatus != "active" {
+                        Text(entry.catalogStatus.capitalized)
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(qcStatusColor(entry.catalogStatus).opacity(0.14))
+                            )
+                            .foregroundStyle(qcStatusColor(entry.catalogStatus))
+                    }
+                }
                 Text(entry.displayRun)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -480,6 +503,19 @@ private struct CompendiumRowBadge: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .stroke(entry.isStable ? StudioPalette.ocean.opacity(0.6) : StudioPalette.hairline, lineWidth: 1)
         )
+    }
+}
+
+private func qcStatusColor(_ status: String) -> Color {
+    switch status {
+    case "protected":
+        return StudioPalette.moss
+    case "quarantine":
+        return StudioPalette.ember
+    case "rejected":
+        return StudioPalette.mutedInk
+    default:
+        return StudioPalette.ocean
     }
 }
 
@@ -575,6 +611,10 @@ private struct CompendiumDetailView: View {
                             MetadataRow(label: "Specimen ID", value: entry.specimenRecordID)
                             MetadataRow(label: "Source Kind", value: entry.specimenSourceKind)
                             MetadataRow(label: "Runtime Family", value: entry.runtimeFamily ?? "--")
+                            MetadataRow(label: "Catalog Status", value: entry.catalogStatus)
+                            if !entry.qualityFlags.isEmpty {
+                                MetadataRow(label: "Quality Flags", value: entry.qualityFlags.joined(separator: ", "))
+                            }
                             MetadataRow(
                                 label: "Capabilities",
                                 value: entry.runtimeCapabilities.isEmpty

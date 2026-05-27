@@ -1456,6 +1456,9 @@ final class SQLiteIndexer {
         if version < 14 {
             try migrate13to14()
         }
+        if version < 15 {
+            try migrate14to15()
+        }
 
         try createSchema()
         try repairCurrentSchema()
@@ -1799,6 +1802,13 @@ final class SQLiteIndexer {
         }
     }
 
+    private func migrate14to15() throws {
+        try db.withImmediateTransaction {
+            try ensureCreatureCatalogQCColumns()
+            try db.exec("UPDATE compendium_meta SET schema_version = 15")
+        }
+    }
+
     private func repairCurrentSchema() throws {
         guard try db.tableExists("compendium_meta") else {
             return
@@ -1809,6 +1819,7 @@ final class SQLiteIndexer {
             }
             try ensureCanonicalCreatureSnapshotColumns()
             try ensureSpecimenContractColumns()
+            try ensureCreatureCatalogQCColumns()
             try normalizeLegacyReplaySourceMode()
             try backfillSpecimenContracts()
             try db.exec("UPDATE compendium_meta SET schema_version = \(Self.schemaVersion)")
@@ -1819,7 +1830,43 @@ final class SQLiteIndexer {
         try legacyCreatureSnapshotNeedsRepair()
             || specimenContractColumnsNeedRepair()
             || canonicalCreatureLinkNeedsRepair()
+            || creatureCatalogQCColumnsNeedRepair()
             || legacyReplaySourceModeNeedsRepair()
+    }
+
+    private func creatureCatalogQCColumnsNeedRepair() throws -> Bool {
+        guard try db.tableExists("creatures") else {
+            return false
+        }
+        let columns = try db.tableColumns("creatures")
+        return !columns.contains("catalog_status") || !columns.contains("quality_flags_json")
+    }
+
+    private func ensureCreatureCatalogQCColumns() throws {
+        guard try db.tableExists("creatures") else {
+            return
+        }
+        let columns = try db.tableColumns("creatures")
+        if !columns.contains("catalog_status") {
+            try db.exec("ALTER TABLE creatures ADD COLUMN catalog_status TEXT NOT NULL DEFAULT 'active'")
+        }
+        if !columns.contains("quality_flags_json") {
+            try db.exec("ALTER TABLE creatures ADD COLUMN quality_flags_json TEXT NOT NULL DEFAULT '[]'")
+        }
+        try db.exec("""
+            CREATE TABLE IF NOT EXISTS creature_qc_events (
+                id TEXT PRIMARY KEY,
+                creature_id TEXT NOT NULL,
+                old_status TEXT,
+                new_status TEXT NOT NULL,
+                policy_id TEXT NOT NULL,
+                reasons_json TEXT NOT NULL,
+                metrics_snapshot_json TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
     }
 
     private func legacyCreatureSnapshotNeedsRepair() throws -> Bool {
@@ -2125,6 +2172,8 @@ final class SQLiteIndexer {
                 specimen_manifest_json TEXT,
                 canonical_specimen_id TEXT,
                 trait_labels_json TEXT,
+                catalog_status TEXT NOT NULL DEFAULT 'active',
+                quality_flags_json TEXT NOT NULL DEFAULT '[]',
                 score_weights_json TEXT,
                 genotype_json TEXT,
                 initial_condition_json TEXT,
@@ -2193,6 +2242,20 @@ final class SQLiteIndexer {
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_stable ON creatures(is_stable)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_config_hash ON creatures(config_hash)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_canonical_specimen ON creatures(canonical_specimen_id)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
+        try db.exec("""
+            CREATE TABLE IF NOT EXISTS creature_qc_events (
+                id TEXT PRIMARY KEY,
+                creature_id TEXT NOT NULL,
+                old_status TEXT,
+                new_status TEXT NOT NULL,
+                policy_id TEXT NOT NULL,
+                reasons_json TEXT NOT NULL,
+                metrics_snapshot_json TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+        try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
         try db.exec("CREATE INDEX IF NOT EXISTS exports_creature ON exports(creature_id)")
         try db.exec("CREATE INDEX IF NOT EXISTS exports_run_dir ON exports(run_id, export_dir)")
         try db.exec("CREATE INDEX IF NOT EXISTS results_score ON results(score DESC)")

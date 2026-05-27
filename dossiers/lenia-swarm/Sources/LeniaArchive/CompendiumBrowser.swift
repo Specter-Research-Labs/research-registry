@@ -2,20 +2,29 @@ import Foundation
 import LeniaCore
 import SQLite3
 
+public enum CompendiumCatalogFilter: String, CaseIterable, Sendable {
+    case active = "Active"
+    case quarantine = "Quarantine"
+    case all = "All"
+}
+
 public struct CompendiumBrowseQuery: Equatable, Sendable {
     public var search: String
     public var stableOnly: Bool
+    public var catalogFilter: CompendiumCatalogFilter
     public var minScore: Float?
     public var limit: Int
 
     public init(
         search: String = "",
         stableOnly: Bool = false,
+        catalogFilter: CompendiumCatalogFilter = .active,
         minScore: Float? = nil,
         limit: Int = 200
     ) {
         self.search = search
         self.stableOnly = stableOnly
+        self.catalogFilter = catalogFilter
         self.minScore = minScore
         self.limit = limit
     }
@@ -48,6 +57,8 @@ private struct CompendiumBrowseRow: Sendable {
     let sourceMode: String?
     let sourceAlgorithm: String?
     let traitLabelsJSON: String?
+    let catalogStatus: String
+    let qualityFlagsJSON: String?
     let specimenRecordID: String
     let specimenSourceKind: String
 }
@@ -71,6 +82,8 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
     public let runtimeFamily: String?
     public let sourceMode: String?
     public let sourceAlgorithm: String?
+    public let catalogStatus: String
+    public let qualityFlags: [String]
     public let specimenRecordID: String
     public let specimenSourceKind: String
 
@@ -118,6 +131,8 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         specimenManifest: SpecimenManifest?,
         sourceMode: String?,
         sourceAlgorithm: String?,
+        catalogStatus: String = "active",
+        qualityFlags: [String] = [],
         traitLabels: [String],
         specimenRecordID: String,
         specimenSourceKind: String
@@ -140,6 +155,8 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         self.runtimeFamily = runtimeFamily
         self.sourceMode = sourceMode
         self.sourceAlgorithm = sourceAlgorithm
+        self.catalogStatus = catalogStatus
+        self.qualityFlags = qualityFlags
         self.specimenRecordID = specimenRecordID
         self.specimenSourceKind = specimenSourceKind
         self.storage = .eager(
@@ -181,6 +198,8 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         self.runtimeFamily = row.runtimeFamily
         self.sourceMode = row.sourceMode
         self.sourceAlgorithm = row.sourceAlgorithm
+        self.catalogStatus = row.catalogStatus
+        self.qualityFlags = decodeStringList(row.qualityFlagsJSON)
         self.specimenRecordID = row.specimenRecordID
         self.specimenSourceKind = row.specimenSourceKind
         self.storage = .deferred(DeferredCreatureStorage(row: row))
@@ -457,6 +476,16 @@ public func browseCompendium(
         if query.minScore != nil {
             clauses.append("COALESCE(c.score, 0) >= ?")
         }
+        if creatureColumns.contains("catalog_status") {
+            switch query.catalogFilter {
+            case .active:
+                clauses.append("c.catalog_status IN ('active', 'protected')")
+            case .quarantine:
+                clauses.append("c.catalog_status = 'quarantine'")
+            case .all:
+                break
+            }
+        }
         clauses.append("c.genotype_json IS NOT NULL AND json_valid(c.genotype_json) = 1")
         clauses.append("c.initial_condition_json IS NOT NULL AND json_valid(c.initial_condition_json) = 1")
         clauses.append("c.metrics_json IS NOT NULL AND json_valid(c.metrics_json) = 1")
@@ -498,7 +527,9 @@ public func browseCompendium(
             c.sweep_json,
             c.metrics_json,
             c.canonical_specimen_id,
-            COALESCE(c.trait_labels_json, '') AS trait_labels_json
+            COALESCE(c.trait_labels_json, '') AS trait_labels_json,
+            \(creatureColumns.contains("catalog_status") ? "c.catalog_status" : "'active'") AS catalog_status,
+            \(creatureColumns.contains("quality_flags_json") ? "COALESCE(c.quality_flags_json, '[]')" : "'[]'") AS quality_flags_json
         FROM creatures c\(indexHint)
         \(whereSQL)
         ORDER BY c.score DESC, c.recorded_at DESC
@@ -531,6 +562,8 @@ public func browseCompendium(
         s.source_mode AS source_mode,
         s.source_algorithm AS source_algorithm,
         c.trait_labels_json,
+        c.catalog_status,
+        c.quality_flags_json,
         s.id AS specimen_record_id,
         s.source_kind AS specimen_source_kind
     FROM filtered c
@@ -572,8 +605,8 @@ public func browseCompendium(
             continue
         }
         guard
-            let specimenRecordID = columnText(statement, index: 26),
-            let specimenSourceKind = columnText(statement, index: 27)
+            let specimenRecordID = columnText(statement, index: 28),
+            let specimenSourceKind = columnText(statement, index: 29)
         else {
             skipped += 1
             continue
@@ -608,6 +641,8 @@ public func browseCompendium(
             sourceMode: columnText(statement, index: 23),
             sourceAlgorithm: columnText(statement, index: 24),
             traitLabelsJSON: columnText(statement, index: 25),
+            catalogStatus: columnText(statement, index: 26) ?? "active",
+            qualityFlagsJSON: columnText(statement, index: 27),
             specimenRecordID: specimenRecordID,
             specimenSourceKind: specimenSourceKind
         )
@@ -633,6 +668,13 @@ private func columnText(_ statement: OpaquePointer, index: Int32) -> String? {
 private func columnFloat(_ statement: OpaquePointer, index: Int32) -> Float? {
     guard sqlite3_column_type(statement, index) != SQLITE_NULL else { return nil }
     return Float(sqlite3_column_double(statement, index))
+}
+
+private func decodeStringList(_ value: String?) -> [String] {
+    guard let value, let data = value.data(using: .utf8) else {
+        return []
+    }
+    return (try? JSONDecoder().decode([String].self, from: data)) ?? []
 }
 
 private enum SQLiteBindValue {
