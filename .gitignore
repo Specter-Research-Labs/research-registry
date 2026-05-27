@@ -101,6 +101,7 @@ test-results/
 .build/
 .swiftpm/
 Package.resolved
+!dossiers/lenia-swarm/Package.resolved
 *.xcodeproj/
 DerivedData/
 *.profraw
