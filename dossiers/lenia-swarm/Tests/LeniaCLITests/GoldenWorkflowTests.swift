@@ -61,6 +61,71 @@ final class GoldenWorkflowTests: XCTestCase {
         XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'golden-local-promotion'"), 2)
     }
 
+    func testDiscoverLocalRetriesPromotionFromCompletedRunWithoutAppending() throws {
+        let root = try makeTempDirectory(prefix: "lenia-local-retry-promotion")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let fixture = try makeLocalWorkflowFixture(at: root, runID: "local-retry-promotion")
+        try rewriteJSONFile(at: fixture.searchConfigURL) { json in
+            json["count"] = 2
+            json["batch_size"] = 1
+            json["seeds_per_job"] = 1
+            json["top_k"] = 2
+        }
+
+        try runDiscoverLocal(fixture: fixture, extraArguments: ["--no-promotion"])
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.runDir.appendingPathComponent("checkpoint.json").path))
+        XCTAssertEqual(try countJSONLLines(at: fixture.runDir.appendingPathComponent("results.jsonl")), 2)
+        XCTAssertEqual(try countJSONLLines(at: fixture.runDir.appendingPathComponent("library/index.jsonl")), 2)
+        XCTAssertEqual(try countJSONLLines(at: fixture.runDir.appendingPathComponent("exports/index.jsonl")), 2)
+
+        try runDiscoverLocal(fixture: fixture, extraArguments: [
+            "--db", fixture.compendiumURL.path,
+            "--warehouse", fixture.warehouseURL.path,
+        ])
+
+        XCTAssertEqual(try countJSONLLines(at: fixture.runDir.appendingPathComponent("results.jsonl")), 2)
+        XCTAssertEqual(try countJSONLLines(at: fixture.runDir.appendingPathComponent("library/index.jsonl")), 2)
+        XCTAssertEqual(try countJSONLLines(at: fixture.runDir.appendingPathComponent("exports/index.jsonl")), 2)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: fixture.runDir.appendingPathComponent("promotion-error.json").path))
+
+        let db = try SQLiteDB(path: fixture.compendiumURL.path)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM runs WHERE run_id = 'local-retry-promotion'"), 1)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM results WHERE run_id = 'local-retry-promotion'"), 2)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM exports WHERE run_id = 'local-retry-promotion'"), 2)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE run_id = 'local-retry-promotion'"), 2)
+    }
+
+    func testDiscoverLocalUsesExplicitSearchSeeds() throws {
+        let root = try makeTempDirectory(prefix: "lenia-local-selected-seeds")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let fixture = try makeLocalWorkflowFixture(at: root, runID: "local-selected-seeds")
+        try rewriteJSONFile(at: fixture.searchConfigURL) { json in
+            json["count"] = 3
+            json["seeds"] = [11, 42, 123]
+            json["batch_size"] = 2
+            json["seeds_per_job"] = 2
+            json["top_k"] = 3
+        }
+
+        try runDiscoverLocal(fixture: fixture, extraArguments: ["--no-promotion"])
+
+        let results = try decodeJSONL(
+            SimulationResultData.self,
+            from: fixture.runDir.appendingPathComponent("results.jsonl")
+        )
+        XCTAssertEqual(results.map(\.seed), [11, 42, 123])
+
+        let summary = try JSONDecoder().decode(
+            LocalWorkflowSummaryFixture.self,
+            from: Data(contentsOf: fixture.runDir.appendingPathComponent("summary.json"))
+        )
+        XCTAssertEqual(summary.resultsCount, 3)
+        XCTAssertEqual(summary.seeds, [11, 42, 123])
+    }
+
     func testLibraryFromResultsUsesDeterministicCreatureIDsForScoutArtifacts() throws {
         let root = try makeTempDirectory(prefix: "lenia-library-from-results")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -153,6 +218,7 @@ private struct LocalWorkflowSummaryFixture: Decodable {
     let resultsCount: Int
     let collectedCount: Int
     let exportedCount: Int
+    let seeds: [Int]?
 }
 
 private struct WarehouseRefreshFixture: Decodable {
@@ -221,4 +287,12 @@ private func runDiscoverLocal(
         "--run-id", fixture.runID,
         "--no-log-console",
     ] + extraArguments)
+}
+
+private func decodeJSONL<T: Decodable>(_ type: T.Type, from url: URL) throws -> [T] {
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .deferredToDate
+    return try String(contentsOf: url, encoding: .utf8)
+        .split(whereSeparator: \.isNewline)
+        .map { try decoder.decode(T.self, from: Data($0.utf8)) }
 }

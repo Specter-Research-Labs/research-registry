@@ -6,11 +6,11 @@
         <meta name="color-scheme" content="light" />
         <title>$pagetitle$</title>
         <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
-        <link rel="icon" href="../../assets/favicon.png" type="image/png" />
         <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="stylesheet" href="../../style.css" />
         <link rel="stylesheet" href="../blog.css?v=field-note-sidebar-20260426" />
+        <link rel="stylesheet" href="../morphospace.css" />
     </head>
     <body class="blog-page">
         <div class="blog-shell">
@@ -45,10 +45,10 @@
                             $if(slug)$
                             <div class="doc-stamp-sub">$slug$</div>
                             $endif$
-                            $if(slug)$
+                            $if(pdf)$
                             <div class="doc-stamp-field">
                                 <strong>PDF</strong>
-                                <a href="$slug$.pdf">$slug$.pdf</a>
+                                <a href="$pdf$">$pdf$</a>
                             </div>
                             $endif$
                             $if(status)$

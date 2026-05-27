@@ -171,8 +171,8 @@ func normalizedSpatialKernelStack(params: ResolvedParams, config: BatchedConfig)
     for k in 0..<config.nbK {
         let rK = params.r[k]
         let kernel: MLXArray
-        if config.implementation.kernelProfile == "qd24_bucketed_v1" {
-            kernel = qd24BucketedKernel(DBase: DBase, beta: params.b[k], r: rK, R: params.R)
+        if config.implementation.kernelProfile.hasPrefix("qd24_") {
+            kernel = qd24Kernel(DBase: DBase, beta: params.b[k], r: rK, R: params.R, profile: config.implementation.kernelProfile)
         } else {
             let aK = MLXArray(params.a[k])
             let wK = MLXArray(params.w[k])
@@ -211,6 +211,55 @@ private func qd24BucketedKernel(DBase: MLXArray, beta: [Float], r: Float, R: Flo
     let bellInput = (fractional - MLXArray(Float(0.5))) / MLXArray(Float(0.15))
     let bell = MLX.exp(-(bellInput * bellInput) / MLXArray(Float(2.0)))
     return gate * bucketArray * bell
+}
+
+private func qd24Kernel(DBase: MLXArray, beta: [Float], r: Float, R: Float, profile: String) -> MLXArray {
+    if profile == "qd24_bucketed_v1" {
+        return qd24BucketedKernel(DBase: DBase, beta: beta, r: r, R: R)
+    }
+
+    let betaCount = beta.count
+    let normalizedDistance = DBase / MLXArray(R)
+    let scaled = normalizedDistance * MLXArray(Float(betaCount) / r)
+    let values = scaled.asArray(Float.self).map { value -> Float in
+        guard value >= 0, value < Float(betaCount) else {
+            return 0
+        }
+        let index = min(max(Int(floor(value)), 0), betaCount - 1)
+        let fractional = value - floor(value)
+        return beta[index] * qd24NativeCore(fractional, profile: profile)
+    }
+    return MLXArray(values).reshaped(scaled.shape)
+}
+
+private func qd24NativeCore(_ value: Float, profile: String) -> Float {
+    if profile == "qd24_life_v1" {
+        guard value >= 0, value <= 1 else {
+            return 0
+        }
+        if value < 0.25 {
+            return 0.5
+        }
+        if value <= 0.75 {
+            return 1
+        }
+        return 0
+    }
+
+    guard value > 0, value < 1 else {
+        return 0
+    }
+    let alpha: Float = 4
+    switch profile {
+    case "qd24_bump4_v1":
+        return exp(alpha - alpha / (4 * value * (1 - value)))
+    case "qd24_quad4_v1":
+        return pow(max(0, 4 * value * (1 - value)), alpha)
+    case "qd24_step_v1":
+        return value >= 0.25 && value <= 0.75 ? 1 : 0
+    default:
+        fatalError("Unsupported qd24 kernel profile: \(profile)")
+    }
 }
 
 public func compileKernels(
@@ -306,11 +355,25 @@ public func compilePopulationKernels(
     )
 }
 
-func growth(_ U: MLXArray, m: MLXArray, s: MLXArray, h: MLXArray) -> MLXArray {
+func growth(_ U: MLXArray, m: MLXArray, s: MLXArray, h: MLXArray, profile: String = "gaussian") -> MLXArray {
     let mB = reshapeKernelParams(m)
     let sB = reshapeKernelParams(s)
     let hB = reshapeKernelParams(h)
     let diff = (U - mB) / sB
+    if profile == "stpz" {
+        let inside = (MLX.abs(diff) .<= MLXArray(Float(1.0))).asType(.float32)
+        let stepped = inside * MLXArray(Float(2.0)) - MLXArray(Float(1.0))
+        return stepped * hB
+    }
+    if profile == "quad4" {
+        let radius = MLXArray(Float(3.0)) * sB
+        let scaled = (U - mB) / radius
+        let body = MLX.pow(MLX.maximum(MLXArray(0.0), MLXArray(Float(1.0)) - scaled * scaled), Float(4.0))
+        return (body * MLXArray(Float(2.0)) - MLXArray(Float(1.0))) * hB
+    }
+    guard profile == "gaussian" else {
+        fatalError("Unsupported growth profile: \(profile)")
+    }
     let exponent = -(diff * diff) / MLXArray(2.0)
     let bell = MLX.exp(exponent)
     let bellScaled = bell * MLXArray(2.0)
@@ -445,6 +508,7 @@ func computeFlow(
     gradientBoundary: String,
     alphaMode: String,
     flowClip: String,
+    growthProfile: String = "gaussian",
     chemChannel: Int?,
     chemIncludeInMass: Bool,
     dd: Int,
@@ -456,7 +520,7 @@ func computeFlow(
     let fAKfK = fAK * fK
     let UK = MLXFFT.ifft2(fAKfK, axes: [1, 2]).realPart()
 
-    let G = growth(UK, m: m, s: s, h: h)
+    let G = growth(UK, m: m, s: s, h: h, profile: growthProfile)
     var U = MLX.matmul(G, c1Mask.T)
     if let wp = wallPotential {
         U = U + wp
@@ -579,6 +643,7 @@ public func leniaStepBatched(
     gradientBoundary: String,
     alphaMode: String,
     flowClip: String,
+    growthProfile: String = "gaussian",
     useTorus: Bool,
     chemChannel: Int?,
     chemIncludeInMass: Bool,
@@ -599,6 +664,7 @@ public func leniaStepBatched(
         gradientBoundary: gradientBoundary,
         alphaMode: alphaMode,
         flowClip: flowClip,
+        growthProfile: growthProfile,
         chemChannel: chemChannel,
         chemIncludeInMass: chemIncludeInMass,
         dd: dd,
@@ -607,6 +673,29 @@ public func leniaStepBatched(
     )
     return reintegrationBatched(A, F: F, posGrid: posGrid,
                                 dt: dt, dd: dd, sigma: sigma, useTorus: useTorus, sx: sx, sy: sy)
+}
+
+public func additiveLeniaStepBatched(
+    _ A: MLXArray,
+    fK: MLXArray,
+    m: MLXArray,
+    s: MLXArray,
+    h: MLXArray,
+    c0Idxs: MLXArray,
+    c1Mask: MLXArray,
+    dt: Float,
+    growthProfile: String = "gaussian",
+    wallPotential: MLXArray? = nil
+) -> MLXArray {
+    let fA = MLXFFT.fft2(A, axes: [1, 2])
+    let fAK = fA.take(c0Idxs, axis: 3)
+    let UK = MLXFFT.ifft2(fAK * fK, axes: [1, 2]).realPart()
+    let GK = growth(UK, m: m, s: s, h: h, profile: growthProfile)
+    var G = MLX.matmul(GK, c1Mask.T)
+    if let wallPotential {
+        G = G + wallPotential
+    }
+    return MLX.clip(A + MLXArray(dt) * G, min: MLXArray(0.0), max: MLXArray(1.0))
 }
 
 public final class FlowLeniaBatched: @unchecked Sendable {
@@ -619,6 +708,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
     // Compiled functions (split compilation like Python version)
     private let flowFn: ([MLXArray]) -> [MLXArray]
     private let reintFn: (MLXArray, MLXArray, MLXArray) -> MLXArray
+    private var additiveLastShift: [(row: Int, col: Int)] = []
 
     public init(config: BatchedConfig, kernels: CompiledKernels, wallPotential: MLXArray? = nil) {
         validateFlowLeniaConfig(config)
@@ -651,8 +741,37 @@ public final class FlowLeniaBatched: @unchecked Sendable {
         let gradientBoundary = config.implementation.gradientBoundary
         let alphaMode = config.implementation.alphaMode
         let flowClip = config.implementation.flowClip
+        let growthProfile = config.implementation.growthProfile
         let chemChannel = config.chemChannel
         let chemIncludeInMass = config.chemIncludeInMass
+
+        if config.implementation.mode == "qd24_additive_v1" {
+            self.flowFn = compile { (inputs: [MLXArray]) -> [MLXArray] in
+                let A = inputs[0]
+                let fK = inputs[1]
+                let m = inputs[2]
+                let s = inputs[3]
+                let h = inputs[4]
+                let c0Idxs = inputs[5]
+                let c1Mask = inputs[6]
+                return [
+                    additiveLeniaStepBatched(
+                        A,
+                        fK: fK,
+                        m: m,
+                        s: s,
+                        h: h,
+                        c0Idxs: c0Idxs,
+                        c1Mask: c1Mask,
+                        dt: dt,
+                        growthProfile: growthProfile,
+                        wallPotential: wallPotential
+                    )
+                ]
+            }
+            self.reintFn = { nextA, _, _ in nextA }
+            return
+        }
 
         // 1. Compile flow computation (FFT, growth, sobel)
         // Uses array-based compile for 7 inputs: [A, fK, m, s, h, c0Idxs, c1Mask]
@@ -678,6 +797,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
                     gradientBoundary: gradientBoundary,
                     alphaMode: alphaMode,
                     flowClip: flowClip,
+                    growthProfile: growthProfile,
                     chemChannel: chemChannel,
                     chemIncludeInMass: chemIncludeInMass,
                     dd: dd,
@@ -708,6 +828,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
                     gradientBoundary: gradientBoundary,
                     alphaMode: alphaMode,
                     flowClip: flowClip,
+                    growthProfile: growthProfile,
                     chemChannel: chemChannel,
                     chemIncludeInMass: chemIncludeInMass,
                     dd: dd,
@@ -726,6 +847,15 @@ public final class FlowLeniaBatched: @unchecked Sendable {
     }
 
     public func step(_ ABatch: MLXArray) -> MLXArray {
+        if config.implementation.mode == "qd24_additive_v1" {
+            let centered = applyAdditiveLastShift(ABatch)
+            let flowInputs = [centered, kernels.fK, kernels.m, kernels.s,
+                              kernels.h, kernels.c0Idxs, kernels.c1Mask]
+            let next = flowFn(flowInputs)[0]
+            updateAdditiveLastShift(from: next)
+            return next
+        }
+
         // Run compiled flow computation
         let flowInputs = [ABatch, kernels.fK, kernels.m, kernels.s,
                           kernels.h, kernels.c0Idxs, kernels.c1Mask]
@@ -736,6 +866,23 @@ public final class FlowLeniaBatched: @unchecked Sendable {
     }
 
     public func stepUncompiled(_ ABatch: MLXArray) -> MLXArray {
+        if config.implementation.mode == "qd24_additive_v1" {
+            let centered = applyAdditiveLastShift(ABatch)
+            let next = additiveLeniaStepBatched(
+                centered,
+                fK: kernels.fK,
+                m: kernels.m,
+                s: kernels.s,
+                h: kernels.h,
+                c0Idxs: kernels.c0Idxs,
+                c1Mask: kernels.c1Mask,
+                dt: config.dt,
+                growthProfile: config.implementation.growthProfile,
+                wallPotential: wallPotential
+            )
+            updateAdditiveLastShift(from: next)
+            return next
+        }
         return leniaStepBatched(
             ABatch,
             fK: kernels.fK,
@@ -753,6 +900,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
             gradientBoundary: config.implementation.gradientBoundary,
             alphaMode: config.implementation.alphaMode,
             flowClip: config.implementation.flowClip,
+            growthProfile: config.implementation.growthProfile,
             useTorus: useTorus,
             chemChannel: config.chemChannel,
             chemIncludeInMass: config.chemIncludeInMass,
@@ -760,6 +908,60 @@ public final class FlowLeniaBatched: @unchecked Sendable {
             sy: config.sy,
             wallPotential: wallPotential
         )
+    }
+
+    private func applyAdditiveLastShift(_ ABatch: MLXArray) -> MLXArray {
+        let batchSize = ABatch.shape[0]
+        if additiveLastShift.count != batchSize {
+            additiveLastShift = Array(repeating: (row: 0, col: 0), count: batchSize)
+        }
+        guard additiveLastShift.contains(where: { $0.row != 0 || $0.col != 0 }) else {
+            return ABatch
+        }
+        let rolled = (0..<batchSize).map { index in
+            let shift = additiveLastShift[index]
+            return rollMultiAxis(
+                ABatch[index, 0..., 0..., 0...],
+                shifts: [-shift.row, -shift.col],
+                axes: [0, 1]
+            )
+        }
+        return MLX.stacked(rolled, axis: 0)
+    }
+
+    private func updateAdditiveLastShift(from state: MLXArray) {
+        let batchSize = state.shape[0]
+        let massMap = state.sum(axis: -1)
+        eval(massMap)
+        let flat = massMap.asArray(Float.self)
+        let sampleSize = config.sx * config.sy
+        let midRow = Float(config.sx) / 2.0
+        let midCol = Float(config.sy) / 2.0
+        var shifts: [(row: Int, col: Int)] = []
+        shifts.reserveCapacity(batchSize)
+        for sampleIndex in 0..<batchSize {
+            let base = sampleIndex * sampleSize
+            var total: Float = 0
+            var rowWeighted: Float = 0
+            var colWeighted: Float = 0
+            for row in 0..<config.sx {
+                for col in 0..<config.sy {
+                    let mass = flat[base + row * config.sy + col]
+                    total += mass
+                    rowWeighted += mass * Float(row)
+                    colWeighted += mass * Float(col)
+                }
+            }
+            guard total > 1e-8 else {
+                shifts.append((row: 0, col: 0))
+                continue
+            }
+            shifts.append((
+                row: Int(rowWeighted / total - midRow),
+                col: Int(colWeighted / total - midCol)
+            ))
+        }
+        additiveLastShift = shifts
     }
 }
 
@@ -782,15 +984,32 @@ public func leniaStepSingle(
     gradientBoundary: String,
     alphaMode: String,
     flowClip: String,
+    growthProfile: String = "gaussian",
     useTorus: Bool,
     chemChannel: Int?,
     chemIncludeInMass: Bool,
     sx: Int,
     sy: Int,
+    implementationMode: String = "flowlenia_2022_paper_equations",
     wallPotential: MLXArray? = nil
 ) -> MLXArray {
     // Add batch dimension, run step, remove batch dimension
     let ABatched = A.expandedDimensions(axis: 0)
+    if implementationMode == "qd24_additive_v1" {
+        let result = additiveLeniaStepBatched(
+            ABatched,
+            fK: fK,
+            m: m,
+            s: s,
+            h: h,
+            c0Idxs: c0Idxs,
+            c1Mask: c1Mask,
+            dt: dt,
+            growthProfile: growthProfile,
+            wallPotential: wallPotential
+        )
+        return result.squeezed(axis: 0)
+    }
     let result = leniaStepBatched(
         ABatched,
         fK: fK,
@@ -808,6 +1027,7 @@ public func leniaStepSingle(
         gradientBoundary: gradientBoundary,
         alphaMode: alphaMode,
         flowClip: flowClip,
+        growthProfile: growthProfile,
         useTorus: useTorus,
         chemChannel: chemChannel,
         chemIncludeInMass: chemIncludeInMass,
@@ -842,6 +1062,21 @@ public final class FlowLeniaSimple {
 
     public func step(_ A: MLXArray, kernels: CompiledKernels, wallPotential: MLXArray? = nil) -> MLXArray {
         let ABatched = A.expandedDimensions(axis: 0)
+        if config.implementation.mode == "qd24_additive_v1" {
+            let result = additiveLeniaStepBatched(
+                ABatched,
+                fK: kernels.fK,
+                m: kernels.m,
+                s: kernels.s,
+                h: kernels.h,
+                c0Idxs: kernels.c0Idxs,
+                c1Mask: kernels.c1Mask,
+                dt: config.dt,
+                growthProfile: config.implementation.growthProfile,
+                wallPotential: wallPotential
+            )
+            return result.squeezed(axis: 0)
+        }
         let result = leniaStepBatched(
             ABatched,
             fK: kernels.fK,
@@ -859,6 +1094,7 @@ public final class FlowLeniaSimple {
             gradientBoundary: config.implementation.gradientBoundary,
             alphaMode: config.implementation.alphaMode,
             flowClip: config.implementation.flowClip,
+            growthProfile: config.implementation.growthProfile,
             useTorus: config.border == "torus",
             chemChannel: config.chemChannel,
             chemIncludeInMass: config.chemIncludeInMass,

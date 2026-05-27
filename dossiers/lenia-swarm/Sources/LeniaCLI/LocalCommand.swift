@@ -98,14 +98,24 @@ struct LocalCommand: AsyncParsableCommand {
         let baseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: baseConfigData)
         let topologyHash = configTopologyHash(baseConfig)
 
-        let runCount = count ?? parsedSearchConfig.count
+        let selectedSeeds = parsedSearchConfig.seeds
+        if selectedSeeds != nil && (seed != nil || count != nil) {
+            throw ValidationError("search.seeds cannot be combined with --seed or --count overrides.")
+        }
+        if let selectedSeeds, selectedSeeds.isEmpty {
+            throw ValidationError("search.seeds must not be empty.")
+        }
+        if let selectedSeeds, selectedSeeds.count != parsedSearchConfig.count {
+            throw ValidationError("search.count must equal search.seeds.count when search.seeds is set.")
+        }
+        let runCount = selectedSeeds?.count ?? count ?? parsedSearchConfig.count
         if runCount <= 0 {
             throw ValidationError("count must be > 0")
         }
         if parsedSearchConfig.batchSize <= 0 {
             throw ValidationError("batch_size must be > 0")
         }
-        let seedStart = seed ?? parsedSearchConfig.seedStart
+        let seedStart = selectedSeeds?.first ?? seed ?? parsedSearchConfig.seedStart
         let initSeedOffset = parsedSearchConfig.initSeedOffset ?? 0
 
         let framesColorEnabled = framesColor || framesColorDir != nil
@@ -122,11 +132,17 @@ struct LocalCommand: AsyncParsableCommand {
             }
         }
 
-        var seeds: [Int] = []
-        seeds.reserveCapacity(runCount)
-        for i in 0..<runCount {
-            let seedValue = seedStart + i * parsedSearchConfig.seedStride
-            seeds.append(seedValue)
+        let seeds: [Int]
+        if let selectedSeeds {
+            seeds = selectedSeeds
+        } else {
+            var rangeSeeds: [Int] = []
+            rangeSeeds.reserveCapacity(runCount)
+            for i in 0..<runCount {
+                let seedValue = seedStart + i * parsedSearchConfig.seedStride
+                rangeSeeds.append(seedValue)
+            }
+            seeds = rangeSeeds
         }
 
         let simSearchConfig = parsedSearchConfig.toSearchConfig()
@@ -137,8 +153,63 @@ struct LocalCommand: AsyncParsableCommand {
         }
 
         try FileManager.default.createDirectory(at: runDirURL, withIntermediateDirectories: true)
-        try baseConfigData.write(to: runDirURL.appendingPathComponent("config.json"))
-        try searchConfigData.write(to: runDirURL.appendingPathComponent("search.json"))
+
+        let inputHash = researchConfigHash([
+            ("config", baseConfigData),
+            ("search", searchConfigData),
+        ])
+        let checkpointURL = runDirURL.appendingPathComponent("checkpoint.json")
+        let summaryURL = runDirURL.appendingPathComponent("summary.json")
+        let resultsURL = runDirURL.appendingPathComponent("results.jsonl")
+        let topURL = runDirURL.appendingPathComponent("top.json")
+        let libraryURL = runDirURL.appendingPathComponent("library/index.jsonl")
+        let exportRootURL = runDirURL.appendingPathComponent("exports", isDirectory: true)
+        let exportIndexURL = exportRootURL.appendingPathComponent("index.jsonl")
+
+        if let existingSummary = try loadCompletedLocalRunSummary(
+            at: summaryURL,
+            runId: resolvedRunId,
+            expectedCount: runCount
+        ) {
+            try validateExistingLocalRunInputs(
+                runDir: runDirURL,
+                baseConfigData: baseConfigData,
+                searchConfigData: searchConfigData
+            )
+            logger.info("Existing completed run found; skipping simulation and retrying promotion from \(runDirURL.path)")
+            try promoteLocalRunIfConfigured(
+                promotion: promotion,
+                runID: resolvedRunId,
+                runDirURL: runDirURL,
+                logger: logger
+            )
+            logger.info(
+                "Local run already complete (results=\(existingSummary.resultsCount), collected=\(existingSummary.collectedCount), exported=\(existingSummary.exportedCount))"
+            )
+            return
+        }
+
+        let loadedCheckpoint = try loadLocalRunCheckpoint(
+            at: checkpointURL,
+            runId: resolvedRunId,
+            inputHash: inputHash,
+            seedStart: seedStart,
+            seedStride: parsedSearchConfig.seedStride,
+            count: runCount,
+            batchSize: parsedSearchConfig.batchSize,
+            steps: parsedSearchConfig.steps
+        )
+        let isResuming = loadedCheckpoint != nil
+        if !isResuming {
+            try validateFreshLocalRunDirectory(runDirURL)
+        }
+
+        try prepareLocalRunInputFiles(
+            runDir: runDirURL,
+            baseConfigData: baseConfigData,
+            searchConfigData: searchConfigData,
+            isResuming: isResuming
+        )
 
         var frameWriter: FrameWriter?
         var colorFrameWriter: ColorFrameWriter?
@@ -188,13 +259,50 @@ struct LocalCommand: AsyncParsableCommand {
         refOverrides["run.steps"] = parsedSearchConfig.steps
         let refConfig = try loadRuntimeConfig(from: baseConfigData, overrides: refOverrides)
 
-        var allResults: [SimulationResultData] = []
+        var checkpoint = loadedCheckpoint ?? LocalRunCheckpoint(
+            runId: resolvedRunId,
+            inputHash: inputHash,
+            seedStart: seedStart,
+            seedStride: parsedSearchConfig.seedStride,
+            count: runCount,
+            batchSize: parsedSearchConfig.batchSize,
+            steps: parsedSearchConfig.steps
+        )
+        var completedBatchKeys = Set(checkpoint.completedBatches.map(\.key))
+        var topResults = try loadLocalTopResults(at: topURL)
+        var resultCount = checkpoint.resultsCount
+        var collectedCount = checkpoint.collectedCount
+        var exportedCount = checkpoint.exportedCount
         var currentIdx = 0
+        let collectionConfig = parsedSearchConfig.collection ?? CollectionConfig.defaultConfig
+
+        if !isResuming {
+            try resetLocalRunStreams(
+                resultsURL: resultsURL,
+                libraryURL: collectionConfig.enabled ? libraryURL : nil,
+                exportIndexURL: collectionConfig.enabled && collectionConfig.exportEnabled ? exportIndexURL : nil
+            )
+        }
+
+        let resultsHandle = try openLocalAppendHandle(resultsURL)
+        defer { try? resultsHandle.close() }
+        let libraryHandle = collectionConfig.enabled ? try openLocalAppendHandle(libraryURL) : nil
+        defer { try? libraryHandle?.close() }
+        let exportIndexHandle = collectionConfig.enabled && collectionConfig.exportEnabled
+            ? try openLocalAppendHandle(exportIndexURL)
+            : nil
+        defer { try? exportIndexHandle?.close() }
 
         let startTime = Date()
+        let checkpointDurationAtStart = checkpoint.durationSeconds
         while currentIdx < seeds.count {
             let chunkEnd = min(currentIdx + parsedSearchConfig.batchSize, seeds.count)
             let chunkSeeds = Array(seeds[currentIdx..<chunkEnd])
+            let batchKey = LocalRunCheckpointBatch.key(startIndex: currentIdx, endIndex: chunkEnd)
+            if completedBatchKeys.contains(batchKey) {
+                currentIdx = chunkEnd
+                continue
+            }
 
             var overrides = baseOverrides
             overrides["params.seed"] = chunkSeeds[0]
@@ -209,15 +317,58 @@ struct LocalCommand: AsyncParsableCommand {
                 frameCapture: frameCapture
             )
 
-            for result in batchResults {
-                let resultData = materializeSearchResultData(
+            let batchResultData = batchResults.map { result in
+                materializeSearchResultData(
                     result,
                     backend: runtimeConfig.backend.rawValue,
                     implementation: runtimeConfig.implementation,
                     searchConfig: simSearchConfig
                 )
-                allResults.append(resultData)
             }
+            try appendResearchJSONLines(batchResultData, to: resultsHandle)
+            try resultsHandle.synchronize()
+            mergeTopSimulationResults(batchResultData, into: &topResults, limit: parsedSearchConfig.topK)
+            try writeTopSimulationResultsSnapshot(topResults, to: topURL)
+
+            let batchArchive = try appendLocalArchiveArtifacts(
+                results: batchResultData,
+                collectionConfig: collectionConfig,
+                refConfig: refConfig,
+                baseConfig: baseConfig,
+                searchConfig: parsedSearchConfig,
+                topologyHash: topologyHash,
+                ownerId: nodeId,
+                runId: resolvedRunId,
+                exportRoot: exportRootURL,
+                libraryHandle: libraryHandle,
+                exportIndexHandle: exportIndexHandle
+            )
+            try libraryHandle?.synchronize()
+            try exportIndexHandle?.synchronize()
+
+            resultCount += batchResultData.count
+            collectedCount += batchArchive.collectedCount
+            exportedCount += batchArchive.exportedCount
+            checkpoint.resultsCount = resultCount
+            checkpoint.collectedCount = collectedCount
+            checkpoint.exportedCount = exportedCount
+            checkpoint.topCount = topResults.count
+            checkpoint.durationSeconds = checkpointDurationAtStart + Date().timeIntervalSince(startTime)
+            checkpoint.updatedAt = Date()
+            checkpoint.completedBatches.append(LocalRunCheckpointBatch(
+                startIndex: currentIdx,
+                endIndex: chunkEnd,
+                seedStart: chunkSeeds[0],
+                seedEnd: chunkSeeds[chunkSeeds.count - 1],
+                resultsCount: batchResultData.count,
+                collectedCount: batchArchive.collectedCount,
+                exportedCount: batchArchive.exportedCount
+            ))
+            try writeResearchJSON(checkpoint, to: checkpointURL, prettyPrinted: true)
+            completedBatchKeys.insert(batchKey)
+            logger.info(
+                "Completed batch \(currentIdx)..<\(chunkEnd) (results=\(resultCount)/\(runCount), collected=\(collectedCount), exported=\(exportedCount))"
+            )
 
             currentIdx = chunkEnd
         }
@@ -229,90 +380,14 @@ struct LocalCommand: AsyncParsableCommand {
             throw error
         }
 
-        let duration = Date().timeIntervalSince(startTime)
-        let resultsURL = runDirURL.appendingPathComponent("results.jsonl")
-        try writeResearchJSONLines(allResults, to: resultsURL)
-        let topResults = try writeTopSimulationResults(
-            from: allResults,
-            limit: parsedSearchConfig.topK,
-            to: runDirURL.appendingPathComponent("top.json")
-        )
-
-        let collectionConfig = parsedSearchConfig.collection ?? CollectionConfig.defaultConfig
-        var collectedCount = 0
-        var exportedCount = 0
-
-        if collectionConfig.enabled {
-            let collected = allResults.filter { shouldCollect($0, config: collectionConfig) }
-            if !collected.isEmpty {
-                var libraryEntries: [ResearchLibraryEntry] = []
-                libraryEntries.reserveCapacity(collected.count)
-                var exportArtifacts: [(SavedCreature, SimulationResultData)] = []
-                exportArtifacts.reserveCapacity(collected.count)
-
-                for result in collected {
-                    let initialCondition = InitConfig(
-                        seed: result.initSeed,
-                        patches: refConfig.patches,
-                        a_uniform: refConfig.aUniform,
-                        p_uniform: refConfig.pUniform,
-                        state_patch: refConfig.statePatch,
-                        p_state_patch: refConfig.paramPatch
-                    )
-                    let creature = savedCreatureFromResult(
-                        name: generateCreatureName(),
-                        ownerId: nodeId,
-                        result: result,
-                        initialCondition: initialCondition,
-                        configHash: topologyHash
-                    )
-                    let entry = archiveResearchLibraryEntry(
-                        creature: creature,
-                        runId: resolvedRunId,
-                        configHash: topologyHash
-                    )
-                    libraryEntries.append(entry)
-                    exportArtifacts.append((creature, result))
-                }
-                let archiveArtifacts = try persistResearchArchiveArtifacts(
-                    runDirectory: runDirURL,
-                    libraryEntries: libraryEntries,
-                    exportRoot: collectionConfig.exportEnabled
-                        ? runDirURL.appendingPathComponent("exports", isDirectory: true)
-                        : nil,
-                    exportItems: collectionConfig.exportEnabled ? exportArtifacts : [],
-                    buildExportPayload: { item in
-                        let creature = item.0
-                        let result = item.1
-                        return (
-                            baseConfig: baseConfig,
-                            searchConfig: parsedSearchConfig,
-                            creature: creature,
-                            runId: resolvedRunId,
-                            campaignId: Optional<UUID>.none,
-                            score: result.score,
-                            filtersPassed: result.filtersPassed,
-                            reason: "auto"
-                        )
-                    }
-                )
-                collectedCount = libraryEntries.count
-                logger.info("Collected \(collectedCount) creatures to library/index.jsonl")
-
-                if collectionConfig.exportEnabled {
-                    exportedCount = archiveArtifacts.exportCount
-                    logger.info("Exported \(exportedCount) creatures to exports/index.jsonl")
-                }
-            }
-        }
-
         let summary = LocalRunSummary(
             runId: resolvedRunId,
             seedStart: seedStart,
             count: runCount,
+            seeds: selectedSeeds,
             steps: parsedSearchConfig.steps,
-            durationSeconds: duration,
-            resultsCount: allResults.count,
+            durationSeconds: checkpoint.durationSeconds,
+            resultsCount: resultCount,
             topCount: topResults.count,
             collectedCount: collectedCount,
             exportedCount: exportedCount,
@@ -321,33 +396,25 @@ struct LocalCommand: AsyncParsableCommand {
             frameStride: framesEnabled ? frameStride : nil,
             includeWarmupFrames: framesEnabled ? includeWarmupFrames : nil
         )
-        try writeResearchJSON(summary, to: runDirURL.appendingPathComponent("summary.json"), prettyPrinted: true)
+        try writeResearchJSON(summary, to: summaryURL, prettyPrinted: true)
 
-        logger.info("Local run complete (duration=\(String(format: "%.2f", duration))s, results=\(allResults.count))")
+        logger.info("Local run complete (duration=\(String(format: "%.2f", checkpoint.durationSeconds))s, results=\(resultCount))")
 
-        let resolvedPromotion = try promoteIfConfigured(
-            options: promotion,
-            defaultCompendiumPath: try resolveCompendiumPath(),
-            dossier: dossierName,
-            defaultEnabled: true,
-            runDir: runDirURL.path,
-            includeResults: true,
-            stats: true
+        try promoteLocalRunIfConfigured(
+            promotion: promotion,
+            runID: resolvedRunId,
+            runDirURL: runDirURL,
+            logger: logger
         )
-        if let compendiumPath = resolvedPromotion.compendiumPath {
-            logger.info("Promoted local run into compendium: \(compendiumPath)")
-        }
     }
 
-    private func resolveCompendiumPath() throws -> String {
-        try resolveArtifactPath("artifacts/compendium.sqlite", dossier: dossierName)
-    }
 }
 
 private struct LocalRunSummary: Codable {
     let runId: String
     let seedStart: Int
     let count: Int
+    let seeds: [Int]?
     let steps: Int
     let durationSeconds: Double
     let resultsCount: Int
@@ -360,6 +427,403 @@ private struct LocalRunSummary: Codable {
     let includeWarmupFrames: Bool?
 }
 
+private struct LocalRunCheckpoint: Codable {
+    let version: Int
+    let runId: String
+    let inputHash: String
+    let seedStart: Int
+    let seedStride: Int
+    let count: Int
+    let batchSize: Int
+    let steps: Int
+    var completedBatches: [LocalRunCheckpointBatch]
+    var resultsCount: Int
+    var collectedCount: Int
+    var exportedCount: Int
+    var topCount: Int
+    var durationSeconds: Double
+    var updatedAt: Date
+
+    init(
+        runId: String,
+        inputHash: String,
+        seedStart: Int,
+        seedStride: Int,
+        count: Int,
+        batchSize: Int,
+        steps: Int
+    ) {
+        self.version = 1
+        self.runId = runId
+        self.inputHash = inputHash
+        self.seedStart = seedStart
+        self.seedStride = seedStride
+        self.count = count
+        self.batchSize = batchSize
+        self.steps = steps
+        self.completedBatches = []
+        self.resultsCount = 0
+        self.collectedCount = 0
+        self.exportedCount = 0
+        self.topCount = 0
+        self.durationSeconds = 0
+        self.updatedAt = Date()
+    }
+}
+
+private struct LocalRunCheckpointBatch: Codable {
+    let startIndex: Int
+    let endIndex: Int
+    let seedStart: Int
+    let seedEnd: Int
+    let resultsCount: Int
+    let collectedCount: Int
+    let exportedCount: Int
+
+    var key: String { Self.key(startIndex: startIndex, endIndex: endIndex) }
+
+    static func key(startIndex: Int, endIndex: Int) -> String {
+        "\(startIndex)..<\(endIndex)"
+    }
+}
+
+private struct LocalArchiveAppendResult {
+    let collectedCount: Int
+    let exportedCount: Int
+}
+
+private struct LocalPromotionFailure: Codable {
+    let runId: String
+    let runDir: String
+    let failedAt: Date
+    let message: String
+    let retryCommand: String
+}
+
+private func loadCompletedLocalRunSummary(
+    at url: URL,
+    runId: String,
+    expectedCount: Int
+) throws -> LocalRunSummary? {
+    guard FileManager.default.fileExists(atPath: url.path) else {
+        return nil
+    }
+    let summary = try JSONDecoder().decode(LocalRunSummary.self, from: Data(contentsOf: url))
+    guard summary.runId == runId, summary.resultsCount >= expectedCount else {
+        return nil
+    }
+    return summary
+}
+
+private func loadLocalRunCheckpoint(
+    at url: URL,
+    runId: String,
+    inputHash: String,
+    seedStart: Int,
+    seedStride: Int,
+    count: Int,
+    batchSize: Int,
+    steps: Int
+) throws -> LocalRunCheckpoint? {
+    guard FileManager.default.fileExists(atPath: url.path) else {
+        return nil
+    }
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .deferredToDate
+    let checkpoint = try decoder.decode(LocalRunCheckpoint.self, from: Data(contentsOf: url))
+    guard checkpoint.version == 1,
+          checkpoint.runId == runId,
+          checkpoint.inputHash == inputHash,
+          checkpoint.seedStart == seedStart,
+          checkpoint.seedStride == seedStride,
+          checkpoint.count == count,
+          checkpoint.batchSize == batchSize,
+          checkpoint.steps == steps else {
+        throw ValidationError("Existing checkpoint.json does not match this local run request.")
+    }
+    return checkpoint
+}
+
+private func loadLocalTopResults(at url: URL) throws -> [SimulationResultData] {
+    guard FileManager.default.fileExists(atPath: url.path) else {
+        return []
+    }
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .deferredToDate
+    return try decoder.decode([SimulationResultData].self, from: Data(contentsOf: url))
+}
+
+private func validateExistingLocalRunInputs(
+    runDir: URL,
+    baseConfigData: Data,
+    searchConfigData: Data
+) throws {
+    let existingConfigURL = runDir.appendingPathComponent("config.json")
+    let existingSearchURL = runDir.appendingPathComponent("search.json")
+    guard FileManager.default.fileExists(atPath: existingConfigURL.path),
+          FileManager.default.fileExists(atPath: existingSearchURL.path) else {
+        throw ValidationError("Existing completed run is missing config.json or search.json.")
+    }
+    guard try Data(contentsOf: existingConfigURL) == baseConfigData,
+          try Data(contentsOf: existingSearchURL) == searchConfigData else {
+        throw ValidationError("Existing completed run inputs do not match this local run request.")
+    }
+}
+
+private func validateFreshLocalRunDirectory(_ runDir: URL) throws {
+    let guardedPaths = [
+        "results.jsonl",
+        "library/index.jsonl",
+        "exports/index.jsonl",
+        "checkpoint.json",
+    ]
+    for relativePath in guardedPaths {
+        if FileManager.default.fileExists(atPath: runDir.appendingPathComponent(relativePath).path) {
+            throw ValidationError(
+                "Run directory already contains \(relativePath) without a compatible checkpoint. Use a new --run-id or retry the exact completed run."
+            )
+        }
+    }
+}
+
+private func prepareLocalRunInputFiles(
+    runDir: URL,
+    baseConfigData: Data,
+    searchConfigData: Data,
+    isResuming: Bool
+) throws {
+    if isResuming {
+        try validateExistingLocalRunInputs(
+            runDir: runDir,
+            baseConfigData: baseConfigData,
+            searchConfigData: searchConfigData
+        )
+        return
+    }
+    try baseConfigData.write(to: runDir.appendingPathComponent("config.json"))
+    try searchConfigData.write(to: runDir.appendingPathComponent("search.json"))
+}
+
+private func resetLocalRunStreams(
+    resultsURL: URL,
+    libraryURL: URL?,
+    exportIndexURL: URL?
+) throws {
+    try resetLocalRunStream(resultsURL)
+    if let libraryURL {
+        try resetLocalRunStream(libraryURL)
+    }
+    if let exportIndexURL {
+        try resetLocalRunStream(exportIndexURL)
+    }
+}
+
+private func resetLocalRunStream(_ url: URL) throws {
+    try FileManager.default.createDirectory(
+        at: url.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try Data().write(to: url, options: .atomic)
+}
+
+private func openLocalAppendHandle(_ url: URL) throws -> FileHandle {
+    try FileManager.default.createDirectory(
+        at: url.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    if !FileManager.default.fileExists(atPath: url.path) {
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+    }
+    let handle = try FileHandle(forWritingTo: url)
+    try handle.seekToEnd()
+    return handle
+}
+
+private func appendLocalArchiveArtifacts(
+    results: [SimulationResultData],
+    collectionConfig: CollectionConfig,
+    refConfig: LeniaRuntimeConfig,
+    baseConfig: LeniaBaseConfig,
+    searchConfig: ParsedSearchConfig,
+    topologyHash: String,
+    ownerId: String,
+    runId: String,
+    exportRoot: URL,
+    libraryHandle: FileHandle?,
+    exportIndexHandle: FileHandle?
+) throws -> LocalArchiveAppendResult {
+    guard collectionConfig.enabled else {
+        return LocalArchiveAppendResult(collectedCount: 0, exportedCount: 0)
+    }
+
+    let collected = results.filter { shouldCollect($0, config: collectionConfig) }
+    guard !collected.isEmpty else {
+        return LocalArchiveAppendResult(collectedCount: 0, exportedCount: 0)
+    }
+
+    var libraryEntries: [ResearchLibraryEntry] = []
+    libraryEntries.reserveCapacity(collected.count)
+    var exportItems: [(SavedCreature, SimulationResultData)] = []
+    exportItems.reserveCapacity(collected.count)
+
+    for result in collected {
+        let initialCondition = InitConfig(
+            seed: result.initSeed,
+            patches: refConfig.patches,
+            a_uniform: refConfig.aUniform,
+            p_uniform: refConfig.pUniform,
+            state_patch: refConfig.statePatch,
+            p_state_patch: refConfig.paramPatch
+        )
+        let creature = savedCreatureFromResult(
+            id: deterministicResearchUUID(localCreatureStableKey(runId: runId, result: result)),
+            name: generateCreatureName(runId: runId, result: result),
+            ownerId: ownerId,
+            result: result,
+            initialCondition: initialCondition,
+            configHash: topologyHash
+        )
+        libraryEntries.append(archiveResearchLibraryEntry(
+            creature: creature,
+            runId: runId,
+            configHash: topologyHash
+        ))
+        exportItems.append((creature, result))
+    }
+
+    if let libraryHandle {
+        try appendResearchJSONLines(libraryEntries, to: libraryHandle)
+    }
+
+    var exportCount = 0
+    if collectionConfig.exportEnabled, let exportIndexHandle {
+        let exportRecords = try writeLocalReplayExportRecords(
+            exportRoot: exportRoot,
+            items: exportItems,
+            baseConfig: baseConfig,
+            searchConfig: searchConfig,
+            runId: runId
+        )
+        try appendResearchJSONLines(exportRecords, to: exportIndexHandle)
+        exportCount = exportRecords.count
+    }
+
+    return LocalArchiveAppendResult(
+        collectedCount: libraryEntries.count,
+        exportedCount: exportCount
+    )
+}
+
+private func writeLocalReplayExportRecords(
+    exportRoot: URL,
+    items: [(SavedCreature, SimulationResultData)],
+    baseConfig: LeniaBaseConfig,
+    searchConfig: ParsedSearchConfig,
+    runId: String
+) throws -> [CreatureExportRecord] {
+    guard !items.isEmpty else { return [] }
+    try FileManager.default.createDirectory(at: exportRoot, withIntermediateDirectories: true)
+
+    var records: [CreatureExportRecord] = []
+    records.reserveCapacity(items.count)
+    for (creature, result) in items {
+        if let artifacts = try writeReplayExportArtifacts(
+            exportRoot: exportRoot,
+            baseConfig: baseConfig,
+            searchConfig: searchConfig,
+            creature: creature,
+            runId: runId,
+            campaignId: nil,
+            score: result.score,
+            filtersPassed: result.filtersPassed,
+            reason: "auto"
+        ) {
+            records.append(artifacts.record)
+        } else if let record = try existingLocalReplayExportRecord(
+            exportRoot: exportRoot,
+            creature: creature
+        ) {
+            records.append(record)
+        }
+    }
+    return records
+}
+
+private func existingLocalReplayExportRecord(
+    exportRoot: URL,
+    creature: SavedCreature
+) throws -> CreatureExportRecord? {
+    let exportDir = replayExportDirectory(root: exportRoot, creature: creature)
+    let metadataURL = exportDir.appendingPathComponent("meta.json")
+    guard FileManager.default.fileExists(atPath: metadataURL.path) else {
+        return nil
+    }
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .deferredToDate
+    let metadata = try decodeCreatureExportMetadata(Data(contentsOf: metadataURL), decoder: decoder)
+    let baseURL = exportDir.appendingPathComponent("base.json")
+    let searchURL = exportDir.appendingPathComponent("search.json")
+    return CreatureExportRecord(
+        creatureId: metadata.creature.id,
+        name: metadata.creature.name,
+        ownerId: metadata.creature.ownerId,
+        runId: metadata.runId,
+        campaignId: metadata.campaignId,
+        bundleKind: metadata.bundleKind,
+        exportDir: exportDir.path,
+        baseConfigPath: FileManager.default.fileExists(atPath: baseURL.path) ? baseURL.path : nil,
+        searchConfigPath: FileManager.default.fileExists(atPath: searchURL.path) ? searchURL.path : nil,
+        exportedAt: metadata.exportedAt,
+        reason: metadata.reason,
+        score: metadata.score,
+        filtersPassed: metadata.filtersPassed,
+        runtimeFamily: metadata.runtimeFamily,
+        runtimeCapabilities: metadata.runtimeCapabilities,
+        specimenManifest: metadata.specimenManifest
+    )
+}
+
+private func promoteLocalRunIfConfigured(
+    promotion: ArchivePromotionOptions,
+    runID: String,
+    runDirURL: URL,
+    logger: Logger
+) throws {
+    do {
+        let resolvedPromotion = try promoteIfConfigured(
+            options: promotion,
+            defaultCompendiumPath: try resolveArtifactPath("artifacts/compendium.sqlite", dossier: dossierName),
+            dossier: dossierName,
+            defaultEnabled: true,
+            runDir: runDirURL.path,
+            includeResults: true,
+            stats: true
+        )
+        if let compendiumPath = resolvedPromotion.compendiumPath {
+            logger.info("Promoted local run into compendium: \(compendiumPath)")
+        }
+        let failureURL = runDirURL.appendingPathComponent("promotion-error.json")
+        if FileManager.default.fileExists(atPath: failureURL.path) {
+            try FileManager.default.removeItem(at: failureURL)
+        }
+    } catch {
+        let retryCommand = "LeniaCLI index --run-dir \(runDirURL.path) --include-results"
+        try writeResearchJSON(
+            LocalPromotionFailure(
+                runId: runID,
+                runDir: runDirURL.path,
+                failedAt: Date(),
+                message: String(describing: error),
+                retryCommand: retryCommand
+            ),
+            to: runDirURL.appendingPathComponent("promotion-error.json"),
+            prettyPrinted: true
+        )
+        logger.error("Promotion failed; retry with: \(retryCommand)")
+        throw error
+    }
+}
+
 private func shouldCollect(_ result: SimulationResultData, config: CollectionConfig) -> Bool {
     if config.requireStable && !result.metrics.isStable { return false }
     if config.requireFiltersPassed && !result.filtersPassed { return false }
@@ -369,13 +833,27 @@ private func shouldCollect(_ result: SimulationResultData, config: CollectionCon
     return true
 }
 
-private func generateCreatureName() -> String {
+private func localCreatureStableKey(runId: String, result: SimulationResultData) -> String {
+    "\(runId)|local|\(result.seed)|\(result.initSeed)"
+}
+
+private func generateCreatureName(runId: String, result: SimulationResultData) -> String {
     let adjectives = ["ancient", "crystal", "ethereal", "flowing", "glowing", "harmonic",
                       "luminous", "mystic", "pulsing", "radiant", "serene", "vibrant"]
     let nouns = ["amoeba", "blob", "cell", "dancer", "entity", "form",
                  "glider", "orbiter", "pattern", "pulse", "spiral", "walker"]
-    let adj = adjectives.randomElement() ?? "unknown"
-    let noun = nouns.randomElement() ?? "creature"
-    let id = String(format: "%04d", Int.random(in: 0...9999))
+    let digest = stableLocalNameHash(localCreatureStableKey(runId: runId, result: result))
+    let adj = adjectives[digest % adjectives.count]
+    let noun = nouns[(digest / adjectives.count) % nouns.count]
+    let id = String(format: "%04d", result.seed % 10000)
     return "\(adj)-\(noun)-\(id)"
+}
+
+private func stableLocalNameHash(_ value: String) -> Int {
+    var hash = UInt64(14_695_981_039_346_656_037)
+    for byte in value.utf8 {
+        hash ^= UInt64(byte)
+        hash &*= 1_099_511_628_211
+    }
+    return Int(hash % UInt64(Int.max))
 }

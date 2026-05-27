@@ -69,6 +69,12 @@ def connect_database(path: Path) -> DuckDBPyConnection:
     return connection
 
 
+def connect_read_only_database(path: Path) -> DuckDBPyConnection:
+    if not path.exists():
+        raise FileNotFoundError(path)
+    return duckdb.connect(str(path), read_only=True)
+
+
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -126,9 +132,15 @@ def register_artifact(
     artifact_kind: str,
     path: Path,
     metadata_json: dict[str, Any] | None = None,
+    hash_content: bool = True,
 ) -> str:
-    artifact_id = stable_id("artifact", artifact_kind, path.resolve(), file_sha256(path))
     stat = path.stat()
+    content_fingerprint = (
+        file_sha256(path)
+        if hash_content
+        else f"stat:{stat.st_size}:{stat.st_mtime_ns}"
+    )
+    artifact_id = stable_id("artifact", artifact_kind, path.resolve(), content_fingerprint)
     connection.execute(
         """
         INSERT OR REPLACE INTO artifacts (
@@ -142,10 +154,15 @@ def register_artifact(
             study_id,
             artifact_kind,
             str(path),
-            file_sha256(path),
+            content_fingerprint,
             stat.st_size,
             utc_now(),
-            json_text(metadata_json or {}),
+            json_text(
+                {
+                    **(metadata_json or {}),
+                    "contentHashPolicy": "sha256" if hash_content else "stat-fingerprint",
+                }
+            ),
         ],
     )
     return artifact_id

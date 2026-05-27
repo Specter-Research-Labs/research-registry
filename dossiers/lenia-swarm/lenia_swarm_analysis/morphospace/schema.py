@@ -946,6 +946,80 @@ def create_views(connection: DuckDBPyConnection) -> None:
     )
     connection.execute(
         """
+        CREATE OR REPLACE VIEW lenia_rule_family_summary_vw AS
+        WITH lenia_specimens AS (
+            SELECT
+                specimens.*,
+                coalesce(
+                    specimens.runtime_family,
+                    json_extract_string(specimens.specimen_manifest_json, '$.runtimeFamily'),
+                    '<unknown>'
+                ) AS resolved_runtime_family,
+                try_cast(
+                    json_extract(
+                        specimens.specimen_manifest_json,
+                        '$.snapshots.descriptorBundle.genotype.kernelCount'
+                    ) AS INTEGER
+                ) AS resolved_kernel_count,
+                try_cast(
+                    json_extract(
+                        specimens.specimen_manifest_json,
+                        '$.snapshots.descriptorBundle.terminal.massChannel'
+                    ) AS INTEGER
+                ) AS resolved_mass_channel
+            FROM specimens
+            WHERE coalesce(
+                    specimens.runtime_family,
+                    json_extract_string(specimens.specimen_manifest_json, '$.runtimeFamily')
+                ) IS NOT NULL
+        ), common_morphology_specimens AS (
+            SELECT DISTINCT comparison_observations_vw.specimen_id
+            FROM comparison_observations_vw
+            JOIN feature_values USING (observation_id)
+            WHERE feature_values.feature_space_id = 'common_morphology_v1'
+              AND comparison_observations_vw.source_id = 'lenia_swarm'
+        )
+        SELECT
+            concat(
+                lenia_specimens.resolved_runtime_family,
+                ':',
+                coalesce(lenia_specimens.config_hash, '<no-config>'),
+                ':',
+                coalesce(lenia_specimens.source_mode, '<none>'),
+                ':',
+                coalesce(lenia_specimens.source_algorithm, '<none>')
+            ) AS rule_family_key,
+            lenia_specimens.resolved_runtime_family AS runtime_family,
+            lenia_specimens.config_hash,
+            coalesce(lenia_specimens.source_mode, '<none>') AS source_mode,
+            coalesce(lenia_specimens.source_algorithm, '<none>') AS source_algorithm,
+            lenia_specimens.resolved_kernel_count AS kernel_count,
+            lenia_specimens.resolved_mass_channel AS mass_channel,
+            count(*) AS specimen_count,
+            count(DISTINCT lenia_specimens.run_id) AS run_count,
+            count(DISTINCT lenia_specimens.initial_condition_family)
+                AS initial_condition_family_count,
+            sum(
+                CASE
+                    WHEN common_morphology_specimens.specimen_id IS NULL THEN 0
+                    ELSE 1
+                END
+            ) AS common_morphology_specimen_count,
+            min(lenia_specimens.recorded_at) AS first_recorded_at,
+            max(lenia_specimens.recorded_at) AS last_recorded_at
+        FROM lenia_specimens
+        LEFT JOIN common_morphology_specimens USING (specimen_id)
+        GROUP BY
+            lenia_specimens.resolved_runtime_family,
+            lenia_specimens.config_hash,
+            coalesce(lenia_specimens.source_mode, '<none>'),
+            coalesce(lenia_specimens.source_algorithm, '<none>'),
+            lenia_specimens.resolved_kernel_count,
+            lenia_specimens.resolved_mass_channel
+        """
+    )
+    connection.execute(
+        """
         CREATE OR REPLACE VIEW creature_context_summary_vw AS
         SELECT
             context_trial_summary_vw.*,

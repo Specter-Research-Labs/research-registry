@@ -42,7 +42,7 @@ struct ArchivePromotionOptions: ParsableArguments {
             throw ValidationError("--warehouse and --warehouse-topology require a compendium path (--db or a default).")
         }
         let resolvedWarehouse = try warehouseRefresh.warehouse.map { try resolveArtifactPath($0, dossier: dossier) }
-            ?? resolvedCompendium.map(defaultWarehousePath)
+            ?? (warehouseRefresh.warehouseTopology ? resolvedCompendium.map(defaultWarehousePath) : nil)
 
         return ArchivePromotionConfig(
             compendiumPath: resolvedCompendium,
@@ -93,7 +93,7 @@ func promoteRunArtifacts(
         compendiumPath: compendiumPath,
         warehousePath: warehousePath,
         warehouseTopology: warehouseTopology,
-        defaultEnabled: true
+        defaultEnabled: false
     ), stats {
         print(
             "Warehouse: study=\(warehouseResult.studyId) axes=\(warehouseResult.axesUpdated) status=\(warehouseResult.statusUpdated) anatomy=\(warehouseResult.anatomyUpdated)"

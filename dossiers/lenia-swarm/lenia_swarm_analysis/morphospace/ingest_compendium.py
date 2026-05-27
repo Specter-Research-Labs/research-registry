@@ -41,6 +41,20 @@ def _load_sqlite_rows(
         connection.close()
 
 
+def _sqlite_tables(path: Path) -> set[str]:
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
+    try:
+        return {
+            str(row["name"])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+    finally:
+        connection.close()
+
+
 def _sqlite_columns(path: Path, table_name: str) -> set[str]:
     connection = sqlite3.connect(path)
     connection.row_factory = sqlite3.Row
@@ -174,8 +188,16 @@ def _runtime_capabilities(
         return sorted(set(cast(list[str], explicit)))
 
     capabilities = {"archive", "warehouse_ingest"}
-    metadata_replayable = bool(research_metadata.get("canonical_export_available")) if isinstance(research_metadata, dict) else False
-    metadata_topology = bool(research_metadata.get("morphospace_ready")) if isinstance(research_metadata, dict) else False
+    metadata_replayable = (
+        bool(research_metadata.get("canonical_export_available"))
+        if isinstance(research_metadata, dict)
+        else False
+    )
+    metadata_topology = (
+        bool(research_metadata.get("morphospace_ready"))
+        if isinstance(research_metadata, dict)
+        else False
+    )
     if replayable or metadata_replayable:
         capabilities.update({"replay", "intervention", "media"})
     if descriptor_ready or metadata_topology:
@@ -215,7 +237,8 @@ def _strict_specimen_manifest(
     runtime_family = _runtime_family(
         {
             "runtime_family": row.get("runtime_family"),
-            "source_mode": row.get("source_mode") or (creature_row.get("source_mode") if creature_row else None),
+            "source_mode": row.get("source_mode")
+            or (creature_row.get("source_mode") if creature_row else None),
             "bundle_kind": export_row.get("bundle_kind") if export_row else None,
         },
         research_metadata=research_metadata,
@@ -248,7 +271,11 @@ def _strict_specimen_manifest(
             "method": creature_row.get("taxonomy_method") if creature_row else None,
             "version": creature_row.get("taxonomy_version") if creature_row else None,
         },
-        "traitLabels": _loads_optional_json(creature_row.get("trait_labels_json")) if creature_row else None,
+        "traitLabels": (
+            _loads_optional_json(creature_row.get("trait_labels_json"))
+            if creature_row
+            else None
+        ),
         "replay": {
             "bundleKind": export_row.get("bundle_kind") if export_row else None,
             "exportDir": export_row.get("export_dir") if export_row else None,
@@ -305,31 +332,54 @@ def ingest_compendium(
     compendium_path: Path,
     study_id: str | None = None,
     label: str | None = None,
+    run_id: str | None = None,
+    ingest_raw_rows: bool = True,
 ) -> str:
+    resolved_label = label or compendium_path.stem
+    if run_id is not None:
+        resolved_label = f"{resolved_label}:{run_id}"
     resolved_study_id = register_study(
         connection,
         study_kind="discovery",
-        label=label or compendium_path.stem,
+        label=resolved_label,
+        run_id=run_id,
         study_id=study_id,
-        metadata_json={"sourceArtifact": str(compendium_path)},
+        metadata_json={
+            "sourceArtifact": str(compendium_path),
+            "runId": run_id,
+            "rawRowsMirrored": ingest_raw_rows,
+        },
     )
     artifact_id = register_artifact(
         connection,
         study_id=resolved_study_id,
         artifact_kind="compendium_sqlite",
         path=compendium_path,
+        metadata_json={"runScopedRefresh": run_id is not None},
+        hash_content=run_id is None,
     )
-    tables = ingest_sqlite_rows(connection, artifact_id=artifact_id, sqlite_path=compendium_path)
+    tables = (
+        ingest_sqlite_rows(connection, artifact_id=artifact_id, sqlite_path=compendium_path)
+        if ingest_raw_rows
+        else sorted(_sqlite_tables(compendium_path))
+    )
     if "specimens" not in tables:
-        raise ValueError("Compendium is missing specimens; canonical warehouse ingest requires strict specimen rows.")
+        raise ValueError(
+            "Compendium is missing specimens; "
+            "canonical warehouse ingest requires strict specimen rows."
+        )
     if "creatures" not in tables:
-        raise ValueError("Compendium is missing creatures; canonical warehouse ingest requires creature projections.")
+        raise ValueError(
+            "Compendium is missing creatures; "
+            "canonical warehouse ingest requires creature projections."
+        )
     if "canonical_specimen_id" not in _sqlite_columns(compendium_path, "creatures"):
         raise ValueError(
-            "Compendium is missing creatures.canonical_specimen_id; rebuild the canonical compendium before warehouse ingest."
+            "Compendium is missing creatures.canonical_specimen_id; "
+            "rebuild the canonical compendium before warehouse ingest."
         )
 
-    creature_where_sql, creature_params = _active_creature_filter(compendium_path, None)
+    creature_where_sql, creature_params = _active_creature_filter(compendium_path, run_id)
     creature_rows = _load_sqlite_rows(
         compendium_path,
         "creatures",
@@ -343,22 +393,39 @@ def ingest_compendium(
     }
     latest_export_by_creature_id: dict[str, dict[str, Any]] = {}
     if "exports" in tables:
-        for row in _load_sqlite_rows(compendium_path, "exports"):
+        for row in _load_sqlite_rows(
+            compendium_path,
+            "exports",
+            where_sql="run_id = ?" if run_id is not None else None,
+            params=(run_id,) if run_id is not None else (),
+        ):
             creature_id = row.get("creature_id")
             if creature_id is None:
                 continue
             key = str(creature_id)
             existing = latest_export_by_creature_id.get(key)
-            if existing is None or str(row.get("exported_at") or "") >= str(existing.get("exported_at") or ""):
+            if existing is None or str(row.get("exported_at") or "") >= str(
+                existing.get("exported_at") or ""
+            ):
                 latest_export_by_creature_id[key] = row
 
-    for row in _load_sqlite_rows(compendium_path, "specimens"):
+    for row in _load_sqlite_rows(
+        compendium_path,
+        "specimens",
+        where_sql="run_id = ?" if run_id is not None else None,
+        params=(run_id,) if run_id is not None else (),
+    ):
             specimen_id = str(row["id"])
-            creature_row = creature_by_specimen_id.get(specimen_id)
-            if creature_row is None:
+            raw_creature_row = creature_by_specimen_id.get(specimen_id)
+            if raw_creature_row is None:
                 continue
-            creature_id = str(creature_row["id"])
-            export_row = latest_export_by_creature_id.get(creature_id)
+            creature_row = raw_creature_row or {}
+            source_creature_id = str(raw_creature_row["id"]) if raw_creature_row else None
+            export_row = (
+                latest_export_by_creature_id.get(source_creature_id)
+                if source_creature_id is not None
+                else None
+            )
             research_metadata = cast(
                 dict[str, Any] | None,
                 _loads_optional_json(creature_row.get("research_metadata_json")),
@@ -387,7 +454,7 @@ def ingest_compendium(
             )
             specimen_manifest = _strict_specimen_manifest(
                 row,
-                creature_row=creature_row,
+                creature_row=raw_creature_row,
                 export_row=export_row,
                 research_metadata=research_metadata,
             )
@@ -411,18 +478,30 @@ def ingest_compendium(
                 connection,
                 {
                     "specimen_id": specimen_id,
-                    "source_creature_id": creature_id,
+                    "source_creature_id": source_creature_id,
                     "study_id": resolved_study_id,
                     "run_id": row.get("run_id"),
                     "campaign_id": row.get("campaign_id"),
-                    "source_kind": manifest_source_kind or row.get("source_kind") or "compendium_specimen",
-                    "source_mode": manifest_source_mode or row.get("source_mode") or creature_row.get("source_mode"),
+                    "source_kind": (
+                        manifest_source_kind
+                        or row.get("source_kind")
+                        or "compendium_specimen"
+                    ),
+                    "source_mode": (
+                        manifest_source_mode
+                        or row.get("source_mode")
+                        or creature_row.get("source_mode")
+                    ),
                     "source_algorithm": (
                         manifest_source_algorithm
                         or row.get("source_algorithm")
                         or creature_row.get("source_algorithm")
                     ),
-                    "config_hash": manifest_config_hash or row.get("config_hash") or creature_row.get("config_hash"),
+                    "config_hash": (
+                        manifest_config_hash
+                        or row.get("config_hash")
+                        or creature_row.get("config_hash")
+                    ),
                     "initial_condition_family": (
                         manifest_initial_condition_family
                         or row.get("initial_condition_family")
@@ -433,19 +512,30 @@ def ingest_compendium(
                     "canonical_family": None,
                     "family_kind": manifest_family_kind or _taxonomy_family(creature_row),
                     "score": creature_row.get("score"),
-                    "filters_passed": _bool_or_none(export_row.get("filters_passed")) if export_row else None,
+                    "filters_passed": (
+                        _bool_or_none(export_row.get("filters_passed"))
+                        if export_row
+                        else None
+                    ),
                     "search_is_stable_candidate": _bool_or_none(creature_row.get("is_stable")),
-                    "recorded_at": manifest_recorded_at or row.get("recorded_at") or creature_row.get("recorded_at"),
+                    "recorded_at": (
+                        manifest_recorded_at
+                        or row.get("recorded_at")
+                        or creature_row.get("recorded_at")
+                    ),
                     "results_path": None,
-                    "export_dir": manifest_export_dir or (export_row.get("export_dir") if export_row else None),
+                    "export_dir": manifest_export_dir
+                    or (export_row.get("export_dir") if export_row else None),
                     "activity_path": row.get("activity_path"),
                     "fingerprint_path": row.get("fingerprint_path"),
                     "runtime_family": manifest_runtime_family or runtime_family,
-                    "runtime_capabilities_json": manifest_runtime_capabilities or runtime_capabilities,
+                    "runtime_capabilities_json": (
+                        manifest_runtime_capabilities or runtime_capabilities
+                    ),
                     "specimen_manifest_json": specimen_manifest,
                     "provenance_json": {
                         "specimen": row,
-                        "creature": creature_row,
+                        "creature": raw_creature_row,
                         "export": export_row,
                         "terminal": terminal_descriptor,
                         "trajectory": trajectory_descriptor,

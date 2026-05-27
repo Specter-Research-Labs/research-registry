@@ -8,6 +8,7 @@ from duckdb import DuckDBPyConnection
 from lenia_swarm_analysis.transformation_metrics import transform_axes
 
 from .warehouse import (
+    json_text,
     register_context,
     replace_anatomical_state_axes,
     stable_id,
@@ -232,7 +233,28 @@ def _replace_baseline_states(
         label="baseline",
         metadata_json={"environment": "baseline", "perturbation": "baseline"},
     )
-    updated = 0
+    state_rows = _state_rows_for_study(connection, study_id=study_id)
+    if not state_rows:
+        return 0
+
+    axes_by_specimen: dict[str, dict[str, float]] = {}
+    for specimen_id, axis_id, raw_value in connection.execute(
+        """
+        SELECT specimen_axes.specimen_id, specimen_axes.axis_id, specimen_axes.raw_value
+        FROM study_specimens
+        JOIN specimen_axes USING (specimen_id)
+        WHERE study_specimens.study_id = ?
+          AND specimen_axes.raw_value IS NOT NULL
+          AND specimen_axes.axis_id IN (SELECT unnest(?))
+        ORDER BY specimen_axes.specimen_id, specimen_axes.axis_id
+        """,
+        [study_id, list(ANATOMICAL_AXIS_IDS)],
+    ).fetchall():
+        axes_by_specimen.setdefault(str(specimen_id), {})[str(axis_id)] = float(raw_value)
+
+    state_insert_rows: list[tuple[Any, ...]] = []
+    state_axis_rows: list[tuple[Any, ...]] = []
+    state_ids: list[tuple[str]] = []
     for (
         specimen_id,
         specimen_study_id,
@@ -241,8 +263,8 @@ def _replace_baseline_states(
         regime_family,
         geometry_family,
         canonical_family,
-    ) in _state_rows_for_study(connection, study_id=study_id):
-        raw_axes = _raw_specimen_axes(connection, specimen_id=str(specimen_id))
+    ) in state_rows:
+        raw_axes = axes_by_specimen.get(str(specimen_id), {})
         axis_rows: list[tuple[str, float | None, float | None]] = [
             (
                 axis_id,
@@ -255,32 +277,70 @@ def _replace_baseline_states(
         if not axis_rows:
             continue
         state_id = stable_id("anatomical-state", specimen_study_id, specimen_id, "baseline")
-        upsert_anatomical_state(
-            connection,
-            state_id=state_id,
-            specimen_id=str(specimen_id),
-            study_id=str(specimen_study_id),
-            context_id=baseline_context_id,
-            source_kind="specimen_baseline",
-            source_ref=str(specimen_id),
-            recorded_at=recorded_at,
-            state_json=_state_payload(
-                raw_axes=raw_axes,
-                study_id=str(specimen_study_id),
-                specimen_id=str(specimen_id),
-                context_id=baseline_context_id,
-                source_kind="specimen_baseline",
-                family_kind=str(family_kind) if family_kind is not None else None,
-                regime_family=str(regime_family) if regime_family is not None else None,
-                geometry_family=str(geometry_family) if geometry_family is not None else None,
-                canonical_family=(
-                    str(canonical_family) if canonical_family is not None else None
-                ),
-            ),
+        state_ids.append((state_id,))
+        state_insert_rows.append(
+            (
+                state_id,
+                str(specimen_id),
+                str(specimen_study_id),
+                baseline_context_id,
+                "specimen_baseline",
+                str(specimen_id),
+                recorded_at,
+                json_text(_state_payload(
+                    raw_axes=raw_axes,
+                    study_id=str(specimen_study_id),
+                    specimen_id=str(specimen_id),
+                    context_id=baseline_context_id,
+                    source_kind="specimen_baseline",
+                    family_kind=str(family_kind) if family_kind is not None else None,
+                    regime_family=str(regime_family) if regime_family is not None else None,
+                    geometry_family=str(geometry_family) if geometry_family is not None else None,
+                    canonical_family=(
+                        str(canonical_family) if canonical_family is not None else None
+                    ),
+                )),
+            )
         )
-        replace_anatomical_state_axes(connection, state_id=state_id, axis_rows=axis_rows)
-        updated += 1
-    return updated
+        state_axis_rows.extend(
+            (state_id, axis_id, raw_value, transformed_value)
+            for axis_id, raw_value, transformed_value in axis_rows
+        )
+
+    if not state_insert_rows:
+        return 0
+
+    connection.execute("CREATE OR REPLACE TEMP TABLE tmp_anatomical_state_ids (state_id TEXT)")
+    connection.executemany(
+        "INSERT INTO tmp_anatomical_state_ids (state_id) VALUES (?)",
+        state_ids,
+    )
+    connection.execute(
+        """
+        DELETE FROM anatomical_state_axes
+        WHERE state_id IN (SELECT state_id FROM tmp_anatomical_state_ids)
+        """
+    )
+    connection.executemany(
+        """
+        INSERT OR REPLACE INTO anatomical_states (
+            state_id, specimen_id, study_id, context_id, source_kind, source_ref,
+            recorded_at, state_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        state_insert_rows,
+    )
+    connection.executemany(
+        """
+        INSERT INTO anatomical_state_axes (
+            state_id, axis_id, raw_value, transformed_value
+        )
+        VALUES (?, ?, ?, ?)
+        """,
+        state_axis_rows,
+    )
+    return len(state_insert_rows)
 
 
 def _replace_context_trial_states(

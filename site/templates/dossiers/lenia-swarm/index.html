@@ -8,7 +8,7 @@
         <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
         <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="stylesheet" href="../../style.css?v=20260518-sitecss" />
+        <link rel="stylesheet" href="../../style.css" />
     </head>
     <body>
         <div class="site-shell">
@@ -146,68 +146,82 @@
                 <section class="section-block" id="morphospace">
                     <div class="site-section-title">Morphospace as a Fiber Bundle</div>
                     <p>
-                        Continuous-CA creatures live in the same
-                        morphospace as biological development. Lenia
-                        parameters reach shapes that EmbryoMaker
-                        embryos and adult fish occupy, and all three
-                        populations share the same first-order
-                        topology. The genotype-to-phenotype map
-                        <code>&pi;</code> carries universal non-trivial
-                        structure: its local derivative reliably
-                        stretches parameter distance more than
-                        morphology distance, for every specimen we
-                        tested. Closed-loop holonomy, a sharper
-                        curvature test, surfaces at specific hotspots
-                        rather than across the cohort.
+                        The morphospace track is separate from the
+                        creature-discovery track. Here the question is
+                        not whether every specimen looks beautiful; it
+                        is whether Flow Lenia's genotype-to-phenotype
+                        map has measurable topology, how that synthetic
+                        cloud sits near developmental and biological
+                        shape clouds, and where loop transport leaves
+                        residue.
                     </p>
                     <p>What the measurements say:</p>
                     <ul>
                         <li>
-                            Across <code>4,802</code> flow-supported
-                            specimens, transported state closure
-                            exceeded phenotype closure for every one
-                            (median ratio <code>3.16</code>, minimum
-                            <code>1.82</code>). The bundle is
-                            non-trivial specimen by specimen, not just
-                            on average.
+                            Shared 12-axis shape-descriptor space now
+                            covers <code>25,167</code> Flow Lenia
+                            specimens, <code>859</code> EmbryoMaker
+                            <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">morphology snapshots</a>,
+                            and <code>232</code>
+                            <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad fish body outlines</a>.
                         </li>
                         <li>
-                            Matched loop-versus-axis-retrace deltas in
-                            local <code>m.0</code>/<code>s.0</code>
-                            coordinates were centered near zero across
-                            the cohort. <code>109</code> specimens
-                            (<code>2.3%</code>) passed a strict
-                            positive-surplus criterion at small, medium,
-                            and wide rectangle scales for both state
-                            closure and ratio.
+                            On the full Lenia cloud, the
+                            <code>4,096</code>-landmark TDA run finds
+                            <code>4,930</code>
+                            <code>H<sub>1</sub></code> intervals, with
+                            top persistence <code>2.78</code>. On the
+                            no-food <code>8,192</code> cohort, exact
+                            dense TDA finds <code>7,275</code>
+                            <code>H<sub>1</sub></code> intervals, with
+                            top persistence <code>0.80</code>.
                         </li>
                         <li>
-                            Shared 12-axis shape-descriptor space across
-                            substrates: <code>4,096</code> Lenia
-                            specimens carry <code>3,383</code>
-                            first-order cycles (top persistence
-                            <code>0.66</code>), <code>859</code>
-                            EmbryoMaker embryos carry <code>283</code>
-                            (<code>0.36</code>), <code>232</code> Dryad
-                            fish carry <code>62</code>
-                            (<code>0.89</code>). Each cloud has one
-                            path-connected <code>H<sub>0</sub></code>
-                            component.
+                            <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">EmbryoMaker morphology snapshots</a>
+                            have
+                            <code>297</code> exact
+                            <code>H<sub>1</sub></code> intervals with
+                            top persistence <code>0.29</code>. The
+                            <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad fish-outline cohort</a>
+                            has
+                            <code>66</code> exact
+                            <code>H<sub>1</sub></code> intervals with
+                            top persistence <code>0.64</code>. The
+                            interval counts are sample-size dependent;
+                            the comparable fact is that the same
+                            descriptor layer sees loop structure in all
+                            three clouds.
                         </li>
                         <li>
-                            Each fish's nearest Lenia neighbor sits at
-                            median <code>5.8</code> normalized units,
-                            comparable to the within-Lenia pairwise
-                            mean of <code>4.8</code>.
+                            The best local result is fish-near:
+                            an <code>H<sub>1</sub></code> neighborhood
+                            near the
+                            <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad outline cohort</a>,
+                            with
+                            persistence <code>0.563</code>,
+                            Dryad-outline median distance
+                            <code>3.30</code> against a global
+                            Dryad-outline median of <code>5.90</code>,
+                            and a stratified transport-enrichment p-value
+                            around <code>0.0002</code>.
+                        </li>
+                        <li>
+                            Transport gives us the curvature test: move
+                            around a phenotype neighborhood, return near
+                            the same form, and measure the residue left
+                            in state. The broad corpus has
+                            <code>4,802</code> flow-supported transport
+                            groups and a real transport tail, with the
+                            fish-near neighborhood carrying the strongest
+                            localized signal so far.
                         </li>
                     </ul>
                     <p>
-                        <a href="../../blog/lenia-morphospace-report/"
-                            >The Geometry of a Synthetic Morphospace</a
+                        <a href="fiber-theory/"
+                            >Fiber Theory</a
                         >
-                        covers the bridge studies, the holonomy
-                        analysis, and a polynomial-functor decomposition
-                        into kernel interfaces and arrangement.
+                        keeps the geometry, topology, and comparison
+                        data in one place.
                     </p>
                 </section>
 

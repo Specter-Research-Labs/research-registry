@@ -13,8 +13,8 @@ struct IndexCommand: ParsableCommand {
     @Option(name: [.customLong("output-root"), .customLong("output-roots")], parsing: .upToNextOption, help: "Output root path(s) containing hosts/<node>/runs/<runId>")
     var outputRoots: [String] = []
 
-    @Option(name: .long, help: "Run directory to index (hosts/<node>/runs/<runId>)")
-    var runDir: String?
+    @Option(name: .customLong("run-dir"), parsing: .upToNextOption, help: "Run directory/directories to index")
+    var runDirs: [String] = []
 
     @Option(name: [.customLong("db"), .customLong("db-path")], help: "SQLite database path (default: <output-root>/compendium.sqlite or <run-dir>/compendium.sqlite)")
     var dbPath: String?
@@ -37,7 +37,7 @@ struct IndexCommand: ParsableCommand {
     func run() throws {
         let resolvedPlan = try resolveCompendiumIngestPlan(
             outputRoots: outputRoots,
-            runDir: runDir,
+            runDirs: runDirs,
             dbPath: dbPath,
             repairOnly: repairOnly
         )
@@ -57,7 +57,7 @@ struct IndexCommand: ParsableCommand {
                 try resolveArtifactPath($0, dossier: dossierName)
             },
             warehouseTopology: warehouseRefresh.warehouseTopology,
-            defaultEnabled: true
+            defaultEnabled: false
         )
 
         if stats {
@@ -434,6 +434,7 @@ final class SQLiteIndexer {
             FROM (
                 SELECT canonical_specimen_id
                 FROM creatures
+                WHERE canonical_specimen_id IS NOT NULL
                 GROUP BY canonical_specimen_id
                 HAVING COUNT(*) > 1
             )
@@ -478,10 +479,7 @@ final class SQLiteIndexer {
             guard let creatureID = columnText(stmt, index: 0),
                   let name = columnText(stmt, index: 1),
                   let ownerID = columnText(stmt, index: 2),
-                  let runID = columnText(stmt, index: 3),
-                  let genotypeJSON = columnText(stmt, index: 12),
-                  let initialConditionJSON = columnText(stmt, index: 13),
-                  let metricsJSON = columnText(stmt, index: 14) else {
+                  let runID = columnText(stmt, index: 3) else {
                 throw SQLiteIndexError.sqliteError(message: "Invalid creature row while resolving canonical specimen gaps.")
             }
             let score = sqlite3_column_type(stmt, 7) == SQLITE_NULL ? nil : Float(sqlite3_column_double(stmt, 7))
@@ -495,6 +493,14 @@ final class SQLiteIndexer {
                 as: [String: AnyCodable].self,
                 decoder: decoder
             )
+            guard let genotypeJSON = columnText(stmt, index: 12),
+                  let initialConditionJSON = columnText(stmt, index: 13),
+                  let metricsJSON = columnText(stmt, index: 14) else {
+                if manifest == nil {
+                    continue
+                }
+                throw SQLiteIndexError.sqliteError(message: "Invalid creature row while resolving canonical specimen gaps.")
+            }
             let projection = resolveSpecimenProjection(
                 id: UUID(uuidString: creatureID) ?? deterministicResearchUUID(creatureID),
                 name: name,
@@ -2401,6 +2407,7 @@ final class SQLiteIndexer {
         try db.exec("CREATE UNIQUE INDEX IF NOT EXISTS specimens_result_id ON specimens(result_id) WHERE result_id IS NOT NULL")
         try db.exec("CREATE UNIQUE INDEX IF NOT EXISTS specimens_creature_id ON specimens(creature_id) WHERE creature_id IS NOT NULL")
         try db.exec("CREATE INDEX IF NOT EXISTS specimens_run_campaign_seed ON specimens(run_id, campaign_id, seed)")
+        try db.exec("CREATE INDEX IF NOT EXISTS specimens_run_campaign_init_source ON specimens(run_id, campaign_id, init_seed, source_kind, source_mode)")
         try db.exec("CREATE INDEX IF NOT EXISTS specimens_init_family ON specimens(initial_condition_family, symmetry_policy, descriptor_version)")
         try db.exec("CREATE INDEX IF NOT EXISTS specimens_source_kind ON specimens(source_kind)")
         try db.exec("CREATE INDEX IF NOT EXISTS attractor_nodes_family_policy ON attractor_nodes(initial_condition_family, symmetry_policy, descriptor_version)")
@@ -2445,10 +2452,7 @@ final class SQLiteIndexer {
             guard let id = columnText(select, index: 0),
                   let name = columnText(select, index: 1),
                   let ownerID = columnText(select, index: 2),
-                  let runID = columnText(select, index: 3),
-                  let genotypeJSON = columnText(select, index: 12),
-                  let initialConditionJSON = columnText(select, index: 13),
-                  let metricsJSON = columnText(select, index: 15) else {
+                  let runID = columnText(select, index: 3) else {
                 throw SQLiteIndexError.sqliteError(message: "Invalid creature row while backfilling specimen contracts.")
             }
 
@@ -2462,6 +2466,14 @@ final class SQLiteIndexer {
                 as: [String: AnyCodable].self,
                 decoder: decoder
             )
+            guard let genotypeJSON = columnText(select, index: 12),
+                  let initialConditionJSON = columnText(select, index: 13),
+                  let metricsJSON = columnText(select, index: 15) else {
+                if manifest == nil {
+                    continue
+                }
+                throw SQLiteIndexError.sqliteError(message: "Invalid creature row while backfilling specimen contracts.")
+            }
             let projection = resolveSpecimenProjection(
                 id: UUID(uuidString: id) ?? deterministicResearchUUID(id),
                 name: name,

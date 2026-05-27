@@ -8,12 +8,12 @@ struct CompendiumIngestPlan {
 
 func resolveCompendiumIngestPlan(
     outputRoots: [String],
-    runDir: String?,
+    runDirs: [String],
     dbPath: String?,
     repairOnly: Bool
 ) throws -> CompendiumIngestPlan {
     let hasOutputRoot = !outputRoots.isEmpty
-    let hasRunDir = runDir != nil
+    let hasRunDir = !runDirs.isEmpty
 
     if repairOnly {
         guard !(hasOutputRoot && hasRunDir) else {
@@ -28,7 +28,7 @@ func resolveCompendiumIngestPlan(
 
     let runInputs = try hasOutputRoot
         ? collectRunInputs(outputRoots: outputRoots)
-        : runDir.map { [try makeRunInput(runDir: $0)] } ?? []
+        : runDirs.map { try makeRunInput(runDir: $0) }
     if hasOutputRoot && runInputs.isEmpty {
         throw ValidationError("No run directories found under output root(s).")
     }

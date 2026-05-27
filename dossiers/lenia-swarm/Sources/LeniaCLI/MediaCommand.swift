@@ -1,5 +1,7 @@
 import ArgumentParser
+import CoreGraphics
 import Foundation
+import ImageIO
 import LeniaCore
 import MLX
 
@@ -29,6 +31,9 @@ struct MediaCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "Simulation steps to replay per specimen; defaults to the native replay length")
     var steps: Int?
+
+    @Option(name: .long, parsing: .upToNextOption, help: "Exact native QD replay steps to capture for qd-2024 specimens")
+    var nativeStep: [Int] = []
 
     @Option(name: .long, help: "Simulation steps between captured frames for Flow-Lenia ecology replay bundles")
     var captureStride: Int = 300
@@ -77,9 +82,15 @@ struct MediaCommand: AsyncParsableCommand {
         if let limit, limit <= 0 {
             throw ValidationError("--limit must be > 0")
         }
+        guard nativeStep.allSatisfy({ $0 >= 0 }) else {
+            throw ValidationError("--native-step values must be non-negative")
+        }
         let sceneModes = [scene, sharedScene, localizedSharedScene].filter { $0 }.count
         guard sceneModes <= 1 else {
             throw ValidationError("--scene, --shared-scene, and --localized-shared-scene are mutually exclusive")
+        }
+        if !nativeStep.isEmpty && sceneModes > 0 {
+            throw ValidationError("--native-step is only supported for individual qd-2024 cell renders")
         }
         let inputURL = URL(fileURLWithPath: try resolveArtifactPath(input, dossier: dossierName), isDirectory: true)
         let configDirURL = try configDir.map { URL(fileURLWithPath: try resolvePath($0, dossier: dossierName), isDirectory: true) }
@@ -94,6 +105,7 @@ struct MediaCommand: AsyncParsableCommand {
             top: top,
             frameBudget: frameBudget,
             steps: steps,
+            nativeSteps: nativeStep,
             captureStride: captureStride,
             limit: limit,
             scene: scene,
@@ -107,7 +119,9 @@ struct MediaCommand: AsyncParsableCommand {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(records).write(to: outputURL.appendingPathComponent("index.json"))
-        print("Media: rendered=\(records.count) output=\(outputURL.path)")
+        let contactSheetURL = try writeMediaContactSheetIfUseful(records: records, outputURL: outputURL)
+        let contactSheetSuffix = contactSheetURL.map { " contactSheet=\($0.path)" } ?? ""
+        print("Media: rendered=\(records.count) output=\(outputURL.path)\(contactSheetSuffix)")
     }
 }
 
@@ -123,6 +137,10 @@ struct MediaRenderRecord: Codable {
     let fps: Int
     let framesPath: String
     let framesColorPath: String
+    let framesChannelPath: String?
+    let framesMaskPath: String?
+    let templatePatchesPath: String?
+    let nativeSteps: [Int]?
     let videoPath: String
 }
 
@@ -134,6 +152,7 @@ private func renderMedia(
     top: Int,
     frameBudget: Int,
     steps: Int?,
+    nativeSteps: [Int],
     captureStride: Int,
     limit: Int?,
     scene: Bool,
@@ -154,6 +173,7 @@ private func renderMedia(
             top: top,
             frameBudget: frameBudget,
             steps: steps,
+            nativeSteps: nativeSteps,
             scene: scene,
             sharedScene: sharedScene,
             localizedSharedScene: localizedSharedScene,
@@ -212,6 +232,318 @@ private func renderMedia(
     throw ValidationError("No media renderer matched \(inputURL.path). Expected a replay-capable run directory.")
 }
 
+private func writeMediaContactSheetIfUseful(records: [MediaRenderRecord], outputURL: URL) throws -> URL? {
+    let colorSheet = try writeMediaContactSheetIfUseful(
+        records: records,
+        outputURL: outputURL,
+        framesPath: \.framesColorPath,
+        fileName: "contact_sheet.png"
+    )
+    _ = try writeMediaContactSheetIfUseful(
+        records: records,
+        outputURL: outputURL,
+        framesPath: \.framesPath,
+        fileName: "contact_sheet_truth.png"
+    )
+    _ = try writeMediaOptionalContactSheetIfUseful(
+        records: records,
+        outputURL: outputURL,
+        framesPath: \.framesChannelPath,
+        fileName: "contact_sheet_channels.png"
+    )
+    _ = try writeMediaOptionalContactSheetIfUseful(
+        records: records,
+        outputURL: outputURL,
+        framesPath: \.framesMaskPath,
+        fileName: "contact_sheet_mask.png"
+    )
+    _ = try writeMediaReviewContactSheetIfUseful(records: records, outputURL: outputURL)
+    return colorSheet
+}
+
+private func writeMediaOptionalContactSheetIfUseful(
+    records: [MediaRenderRecord],
+    outputURL: URL,
+    framesPath: KeyPath<MediaRenderRecord, String?>,
+    fileName: String
+) throws -> URL? {
+    guard records.count > 1 else { return nil }
+    let rows = try records.prefix(24).compactMap { record -> [CGImage]? in
+        guard let path = record[keyPath: framesPath] else { return nil }
+        let framesURL = URL(fileURLWithPath: path, isDirectory: true)
+        let frameFiles = try selectedContactSheetFrames(in: framesURL)
+        guard !frameFiles.isEmpty else { return nil }
+        let images = frameFiles.compactMap(loadContactSheetImage)
+        return images.isEmpty ? nil : images
+    }
+    guard !rows.isEmpty else { return nil }
+
+    let tileSize = 160
+    let gap = 12
+    let margin = 16
+    let columns = 3
+    let width = margin * 2 + columns * tileSize + (columns - 1) * gap
+    let height = margin * 2 + rows.count * tileSize + max(rows.count - 1, 0) * gap
+    let bytesPerRow = width * 4
+    var rgba = [UInt8](repeating: 0, count: bytesPerRow * height)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: &rgba,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw FrameExportError.imageFailed
+    }
+    context.setFillColor(red: 0.015, green: 0.018, blue: 0.024, alpha: 1)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    context.interpolationQuality = .high
+
+    for (rowIndex, images) in rows.enumerated() {
+        let y = margin + rowIndex * (tileSize + gap)
+        for column in 0..<columns {
+            let image = images[min(column, images.count - 1)]
+            let x = margin + column * (tileSize + gap)
+            context.setFillColor(red: 0.05, green: 0.055, blue: 0.07, alpha: 1)
+            context.fill(CGRect(x: x, y: y, width: tileSize, height: tileSize))
+            let rect = contactSheetImageRect(image: image, x: x, y: y, tileSize: tileSize)
+            context.draw(image, in: rect)
+        }
+    }
+
+    guard let provider = CGDataProvider(data: Data(rgba) as CFData),
+          let image = CGImage(
+              width: width,
+              height: height,
+              bitsPerComponent: 8,
+              bitsPerPixel: 32,
+              bytesPerRow: bytesPerRow,
+              space: colorSpace,
+              bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+              provider: provider,
+              decode: nil,
+              shouldInterpolate: true,
+              intent: .defaultIntent
+          )
+    else {
+        throw FrameExportError.imageFailed
+    }
+    let sheetURL = outputURL.appendingPathComponent(fileName)
+    try writePNGImage(image: image, url: sheetURL)
+    return sheetURL
+}
+
+private func writeMediaReviewContactSheetIfUseful(records: [MediaRenderRecord], outputURL: URL) throws -> URL? {
+    guard records.count > 1 else { return nil }
+    let rows = try records.prefix(24).compactMap { record -> ([CGImage], [CGImage], [CGImage]?, [CGImage]?)? in
+        let colorFramesURL = URL(fileURLWithPath: record.framesColorPath, isDirectory: true)
+        let truthFramesURL = URL(fileURLWithPath: record.framesPath, isDirectory: true)
+        let colorImages = try selectedContactSheetFrames(in: colorFramesURL).compactMap(loadContactSheetImage)
+        let truthImages = try selectedContactSheetFrames(in: truthFramesURL).compactMap(loadContactSheetImage)
+        guard !colorImages.isEmpty, !truthImages.isEmpty else { return nil }
+        let channelImages: [CGImage]?
+        if let channelPath = record.framesChannelPath {
+            let channelFramesURL = URL(fileURLWithPath: channelPath, isDirectory: true)
+            let loaded = try selectedContactSheetFrames(in: channelFramesURL).compactMap(loadContactSheetImage)
+            channelImages = loaded.isEmpty ? nil : loaded
+        } else {
+            channelImages = nil
+        }
+        let maskImages: [CGImage]?
+        if let maskPath = record.framesMaskPath {
+            let maskFramesURL = URL(fileURLWithPath: maskPath, isDirectory: true)
+            let loaded = try selectedContactSheetFrames(in: maskFramesURL).compactMap(loadContactSheetImage)
+            maskImages = loaded.isEmpty ? nil : loaded
+        } else {
+            maskImages = nil
+        }
+        return (colorImages, truthImages, channelImages, maskImages)
+    }
+    guard !rows.isEmpty else { return nil }
+
+    let hasChannelRows = rows.contains { $0.2 != nil }
+    let hasMaskRows = rows.contains { $0.3 != nil }
+    let groupCount = 2 + (hasChannelRows ? 1 : 0) + (hasMaskRows ? 1 : 0)
+    let tileSize = groupCount >= 4 ? 96 : (groupCount == 3 ? 112 : 128)
+    let gap = 10
+    let groupGap = 18
+    let margin = 16
+    let columns = groupCount * 3
+    let width = margin * 2 + columns * tileSize + (columns - groupCount) * gap + (groupCount - 1) * groupGap
+    let height = margin * 2 + rows.count * tileSize + max(rows.count - 1, 0) * gap
+    let bytesPerRow = width * 4
+    var rgba = [UInt8](repeating: 0, count: bytesPerRow * height)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: &rgba,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw FrameExportError.imageFailed
+    }
+    context.setFillColor(red: 0.015, green: 0.018, blue: 0.024, alpha: 1)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    context.interpolationQuality = .high
+
+    for (rowIndex, row) in rows.enumerated() {
+        let y = margin + rowIndex * (tileSize + gap)
+        var groups = [row.0, row.1]
+        if hasChannelRows {
+            groups.append(row.2 ?? row.1)
+        }
+        if hasMaskRows {
+            groups.append(row.3 ?? row.1)
+        }
+        for column in 0..<columns {
+            let groupIndex = column / 3
+            let images = groups[groupIndex]
+            let image = images[min(column % 3, images.count - 1)]
+            let groupOffset = groupIndex * (groupGap - gap)
+            let x = margin + column * (tileSize + gap) + groupOffset
+            context.setFillColor(red: 0.05, green: 0.055, blue: 0.07, alpha: 1)
+            context.fill(CGRect(x: x, y: y, width: tileSize, height: tileSize))
+            let rect = contactSheetImageRect(image: image, x: x, y: y, tileSize: tileSize)
+            context.draw(image, in: rect)
+        }
+    }
+
+    guard let provider = CGDataProvider(data: Data(rgba) as CFData),
+          let image = CGImage(
+              width: width,
+              height: height,
+              bitsPerComponent: 8,
+              bitsPerPixel: 32,
+              bytesPerRow: bytesPerRow,
+              space: colorSpace,
+              bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+              provider: provider,
+              decode: nil,
+              shouldInterpolate: true,
+              intent: .defaultIntent
+          )
+    else {
+        throw FrameExportError.imageFailed
+    }
+    let sheetURL = outputURL.appendingPathComponent("contact_sheet_review.png")
+    try writePNGImage(image: image, url: sheetURL)
+    return sheetURL
+}
+
+private func writeMediaContactSheetIfUseful(
+    records: [MediaRenderRecord],
+    outputURL: URL,
+    framesPath: KeyPath<MediaRenderRecord, String>,
+    fileName: String
+) throws -> URL? {
+    guard records.count > 1 else { return nil }
+    let rows = try records.prefix(24).compactMap { record -> [CGImage]? in
+        let framesURL = URL(fileURLWithPath: record[keyPath: framesPath], isDirectory: true)
+        let frameFiles = try selectedContactSheetFrames(in: framesURL)
+        guard !frameFiles.isEmpty else { return nil }
+        let images = frameFiles.compactMap(loadContactSheetImage)
+        return images.isEmpty ? nil : images
+    }
+    guard !rows.isEmpty else { return nil }
+
+    let tileSize = 160
+    let gap = 12
+    let margin = 16
+    let columns = 3
+    let width = margin * 2 + columns * tileSize + (columns - 1) * gap
+    let height = margin * 2 + rows.count * tileSize + max(rows.count - 1, 0) * gap
+    let bytesPerRow = width * 4
+    var rgba = [UInt8](repeating: 0, count: bytesPerRow * height)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: &rgba,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw FrameExportError.imageFailed
+    }
+    context.setFillColor(red: 0.015, green: 0.018, blue: 0.024, alpha: 1)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    context.interpolationQuality = .high
+
+    for (rowIndex, images) in rows.enumerated() {
+        let y = margin + rowIndex * (tileSize + gap)
+        for column in 0..<columns {
+            let image = images[min(column, images.count - 1)]
+            let x = margin + column * (tileSize + gap)
+            context.setFillColor(red: 0.05, green: 0.055, blue: 0.07, alpha: 1)
+            context.fill(CGRect(x: x, y: y, width: tileSize, height: tileSize))
+            let rect = contactSheetImageRect(image: image, x: x, y: y, tileSize: tileSize)
+            context.draw(image, in: rect)
+        }
+    }
+
+    guard let provider = CGDataProvider(data: Data(rgba) as CFData),
+          let image = CGImage(
+              width: width,
+              height: height,
+              bitsPerComponent: 8,
+              bitsPerPixel: 32,
+              bytesPerRow: bytesPerRow,
+              space: colorSpace,
+              bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+              provider: provider,
+              decode: nil,
+              shouldInterpolate: true,
+              intent: .defaultIntent
+          )
+    else {
+        throw FrameExportError.imageFailed
+    }
+    let sheetURL = outputURL.appendingPathComponent(fileName)
+    try writePNGImage(image: image, url: sheetURL)
+    return sheetURL
+}
+
+private func selectedContactSheetFrames(in directory: URL) throws -> [URL] {
+    let files = try FileManager.default.contentsOfDirectory(
+        at: directory,
+        includingPropertiesForKeys: nil,
+        options: [.skipsHiddenFiles]
+    )
+    .filter { $0.pathExtension.lowercased() == "png" }
+    .sorted { $0.lastPathComponent < $1.lastPathComponent }
+    guard !files.isEmpty else { return [] }
+    let indices = [0, files.count / 2, files.count - 1]
+    var selected: [URL] = []
+    for index in indices where !selected.contains(files[index]) {
+        selected.append(files[index])
+    }
+    return selected
+}
+
+private func loadContactSheetImage(url: URL) -> CGImage? {
+    guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(source, 0, nil)
+}
+
+private func contactSheetImageRect(image: CGImage, x: Int, y: Int, tileSize: Int) -> CGRect {
+    let scale = min(Double(tileSize) / Double(image.width), Double(tileSize) / Double(image.height))
+    let width = Double(image.width) * scale
+    let height = Double(image.height) * scale
+    return CGRect(
+        x: Double(x) + (Double(tileSize) - width) * 0.5,
+        y: Double(y) + (Double(tileSize) - height) * 0.5,
+        width: width,
+        height: height
+    )
+}
+
 private func renderQD2024Media(
     runURL: URL,
     configDirURL: URL?,
@@ -220,6 +552,7 @@ private func renderQD2024Media(
     top: Int,
     frameBudget: Int,
     steps: Int?,
+    nativeSteps: [Int],
     scene: Bool,
     sharedScene: Bool,
     localizedSharedScene: Bool,
@@ -259,6 +592,7 @@ private func renderQD2024Media(
             outputRoot: outputURL,
             frameBudget: frameBudget,
             steps: steps,
+            nativeSteps: nativeSteps,
             fps: fps,
             ffmpeg: ffmpeg
         )
@@ -292,6 +626,7 @@ private func renderQD2024MediaElite(
     outputRoot: URL,
     frameBudget: Int,
     steps: Int?,
+    nativeSteps: [Int],
     fps: Int,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
@@ -299,22 +634,56 @@ private func renderQD2024MediaElite(
     let cellDir = outputRoot.appendingPathComponent(label, isDirectory: true)
     let framesURL = cellDir.appendingPathComponent("frames", isDirectory: true)
     let colorFramesURL = cellDir.appendingPathComponent("frames_color", isDirectory: true)
+    let templatePatchesURL = cellDir.appendingPathComponent("template_patches.json")
     try FileManager.default.createDirectory(at: framesURL, withIntermediateDirectories: true)
     try FileManager.default.createDirectory(at: colorFramesURL, withIntermediateDirectories: true)
 
-    let frames = try captureLeniaBreeder2024ReplayFrames(
-        run: run,
-        elite: elite,
-        algorithmOverride: "me",
-        frameBudget: frameBudget,
-        stepsOverride: steps
-    )
+    let templatePatches: [InitStatePatchConfig]
+    let frames: [Data]
+    let frameSteps: [Int]
+    if nativeSteps.isEmpty {
+        templatePatches = try captureLeniaBreeder2024ReplayStatePatches(
+            run: run,
+            elite: elite,
+            algorithmOverride: "me",
+            frameBudget: frameBudget,
+            stepsOverride: steps
+        )
+        frames = try captureLeniaBreeder2024ReplayFrames(
+            run: run,
+            elite: elite,
+            algorithmOverride: "me",
+            frameBudget: frameBudget,
+            stepsOverride: steps
+        )
+        frameSteps = Array(frames.indices)
+    } else {
+        templatePatches = try captureLeniaBreeder2024ReplayStatePatchesAtSteps(
+            run: run,
+            elite: elite,
+            algorithmOverride: "me",
+            steps: nativeSteps,
+            stepsOverride: steps
+        )
+        frames = try captureLeniaBreeder2024ReplayFramesAtSteps(
+            run: run,
+            elite: elite,
+            algorithmOverride: "me",
+            steps: nativeSteps,
+            stepsOverride: steps
+        )
+        frameSteps = nativeSteps
+    }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    try encoder.encode(templatePatches).write(to: templatePatchesURL)
     let frameWriter = FrameWriter(outputDir: framesURL)
     let colorFrameWriter = ColorFrameWriter(outputDir: colorFramesURL)
     let size = run.base.worldSize
     for (index, frame) in frames.enumerated() {
-        frameWriter.write(step: index, width: size, height: size, data: frame)
-        colorFrameWriter.write(step: index, width: size, height: size, grayscale: frame)
+        let step = frameSteps[index]
+        frameWriter.write(step: step, width: size, height: size, data: frame)
+        colorFrameWriter.write(step: step, width: size, height: size, grayscale: frame)
     }
     if let error = frameWriter.error {
         throw error
@@ -338,6 +707,10 @@ private func renderQD2024MediaElite(
         fps: fps,
         framesPath: framesURL.path,
         framesColorPath: colorFramesURL.path,
+        framesChannelPath: nil,
+        framesMaskPath: nil,
+        templatePatchesPath: templatePatchesURL.path,
+        nativeSteps: nativeSteps.isEmpty ? nil : nativeSteps,
         videoPath: videoURL.path
     )
 }
@@ -427,6 +800,10 @@ private func renderQD2024MediaScene(
         fps: fps,
         framesPath: framesURL.path,
         framesColorPath: colorFramesURL.path,
+        framesChannelPath: nil,
+        framesMaskPath: nil,
+        templatePatchesPath: nil,
+        nativeSteps: nil,
         videoPath: videoURL.path
     )
 }
@@ -545,6 +922,10 @@ private func renderEcologyMediaBundle(
         fps: fps,
         framesPath: framesURL.path,
         framesColorPath: colorFramesURL.path,
+        framesChannelPath: nil,
+        framesMaskPath: nil,
+        templatePatchesPath: nil,
+        nativeSteps: nil,
         videoPath: videoURL.path
     )
 }
@@ -616,6 +997,10 @@ private func renderEcologyRecordedFrames(
         fps: fps,
         framesPath: framesOutputURL.path,
         framesColorPath: colorFramesURL.path,
+        framesChannelPath: nil,
+        framesMaskPath: nil,
+        templatePatchesPath: nil,
+        nativeSteps: nil,
         videoPath: videoURL.path
     )
 }
@@ -671,6 +1056,10 @@ private func renderEcologyRecordedPNGFrames(
         fps: fps,
         framesPath: mediaDirs.framesURL.path,
         framesColorPath: mediaDirs.colorFramesURL.path,
+        framesChannelPath: nil,
+        framesMaskPath: nil,
+        templatePatchesPath: nil,
+        nativeSteps: nil,
         videoPath: videoURL.path
     )
 }

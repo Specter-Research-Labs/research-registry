@@ -122,13 +122,14 @@ func validateBaseConfig(_ config: LeniaBaseConfig) throws -> Int {
         try require(config.`init`.p_uniform == nil, "init.p_state_patch cannot be combined with init.p_uniform.")
     }
 
-    let allowedModes = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "custom"]
+    let allowedModes = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "custom", "qd24_additive_v1"]
     try require(allowedModes.contains(config.implementation.mode),
-                "implementation.mode must be one of: flowlenia_2022_paper_equations, flowlenia_2022_colab, custom.")
+                "implementation.mode must be one of: flowlenia_2022_paper_equations, flowlenia_2022_colab, custom, qd24_additive_v1.")
 
     let hasCustomFields = config.implementation.gradient_boundary != nil ||
         config.implementation.alpha_mode != nil ||
         config.implementation.kernel_profile != nil ||
+        config.implementation.growth_profile != nil ||
         config.implementation.flow_clip != nil
 
     if config.implementation.mode == "custom" {
@@ -147,12 +148,33 @@ func validateBaseConfig(_ config: LeniaBaseConfig) throws -> Int {
             let alphaOptions = ["mass", "per_channel"]
             try require(alphaOptions.contains(alphaMode),
                         "implementation.alpha_mode must be one of: \(alphaOptions.joined(separator: ", ")).")
-            let kernelOptions = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_bucketed_v1"]
+            let kernelOptions = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_bucketed_v1", "qd24_bump4_v1", "qd24_quad4_v1", "qd24_step_v1", "qd24_life_v1"]
             try require(kernelOptions.contains(kernelProfile),
                         "implementation.kernel_profile must be one of: \(kernelOptions.joined(separator: ", ")).")
+            if let growthProfile = config.implementation.growth_profile {
+                let growthOptions = ["gaussian", "quad4", "stpz"]
+                try require(growthOptions.contains(growthProfile),
+                            "implementation.growth_profile must be one of: \(growthOptions.joined(separator: ", ")).")
+            }
             let clipOptions = ["none", "params_only", "always"]
             try require(clipOptions.contains(flowClip),
                         "implementation.flow_clip must be one of: \(clipOptions.joined(separator: ", ")).")
+        }
+    } else if config.implementation.mode == "qd24_additive_v1" {
+        let hasUnsupportedOverrides = config.implementation.gradient_boundary != nil ||
+            config.implementation.alpha_mode != nil ||
+            config.implementation.flow_clip != nil
+        try require(!hasUnsupportedOverrides,
+                    "implementation.mode=qd24_additive_v1 only allows kernel_profile and growth_profile as implementation overrides.")
+        if let kernelProfile = config.implementation.kernel_profile {
+            let kernelOptions = ["qd24_bucketed_v1", "qd24_bump4_v1", "qd24_quad4_v1", "qd24_step_v1", "qd24_life_v1"]
+            try require(kernelOptions.contains(kernelProfile),
+                        "implementation.kernel_profile for qd24_additive_v1 must be one of: \(kernelOptions.joined(separator: ", ")).")
+        }
+        if let growthProfile = config.implementation.growth_profile {
+            let growthOptions = ["gaussian", "quad4", "stpz"]
+            try require(growthOptions.contains(growthProfile),
+                        "implementation.growth_profile for qd24_additive_v1 must be one of: \(growthOptions.joined(separator: ", ")).")
         }
     } else {
         try require(!hasCustomFields, "implementation.mode=\(config.implementation.mode) does not allow custom implementation overrides.")
@@ -218,13 +240,15 @@ func validateBaseConfig(_ config: LeniaBaseConfig) throws -> Int {
             try require(w.count == nbK, "params.w must have \(nbK) rows.")
             try require(a.count == nbK, "params.a must have \(nbK) rows.")
             try require(R > 0, "params.R must be > 0.")
-            let kernelProfile = config.implementation.kernel_profile ?? config.implementation.mode
+            let kernelProfile = config.implementation.mode == "qd24_additive_v1"
+                ? (config.implementation.kernel_profile ?? "qd24_bucketed_v1")
+                : (config.implementation.kernel_profile ?? config.implementation.mode)
             for idx in 0..<nbK {
                 try require(!b[idx].isEmpty, "params.b[\(idx)] must have at least one value.")
                 try require(w[idx].count == b[idx].count, "params.w[\(idx)] must match params.b[\(idx)] length.")
                 try require(a[idx].count == b[idx].count, "params.a[\(idx)] must match params.b[\(idx)] length.")
                 try require(s[idx] > 0, "params.s[\(idx)] must be > 0.")
-                if kernelProfile != "qd24_bucketed_v1" {
+                if !kernelProfile.hasPrefix("qd24_") {
                     for wVal in w[idx] {
                         try require(wVal > 0, "params.w[\(idx)] values must be > 0.")
                     }
