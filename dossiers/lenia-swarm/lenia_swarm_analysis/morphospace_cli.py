@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -46,6 +47,63 @@ from lenia_swarm_analysis.morphospace.warehouse import (
     connect_database,
     connect_read_only_database,
 )
+
+ConnectionCallback = Callable[[Any], dict[str, Any]]
+
+
+def _using_warehouse(
+    warehouse_path: Path,
+    callback: ConnectionCallback,
+    *,
+    read_only: bool = False,
+) -> dict[str, Any]:
+    connector = connect_read_only_database if read_only else connect_database
+    connection = connector(warehouse_path)
+    try:
+        return callback(connection)
+    finally:
+        connection.close()
+
+
+def _resolve_optional_path(path: Path | None) -> Path | None:
+    return path.resolve() if path is not None else None
+
+
+def _add_json(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--json", action="store_true")
+
+
+def _add_feature_filter_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--source-id")
+    parser.add_argument("--study-id")
+    parser.add_argument("--run-id")
+    parser.add_argument("--observation-kind")
+    parser.add_argument("--source-algorithm")
+
+
+def _feature_filter_kwargs(args: argparse.Namespace) -> dict[str, str | None]:
+    return {
+        "source_id": args.source_id,
+        "study_id": args.study_id,
+        "run_id": args.run_id,
+        "observation_kind": args.observation_kind,
+        "source_algorithm": args.source_algorithm,
+    }
+
+
+def _add_cohort_filter_args(parser: argparse.ArgumentParser, prefix: str) -> None:
+    for name in ("source-id", "study-id", "run-id", "observation-kind", "source-algorithm"):
+        parser.add_argument(f"--{prefix}-{name}")
+
+
+def _cohort_filter_kwargs(args: argparse.Namespace, prefix: str) -> dict[str, str | None]:
+    return {
+        f"{prefix}_source_id": getattr(args, f"{prefix}_source_id"),
+        f"{prefix}_study_id": getattr(args, f"{prefix}_study_id"),
+        f"{prefix}_run_id": getattr(args, f"{prefix}_run_id"),
+        f"{prefix}_observation_kind": getattr(args, f"{prefix}_observation_kind"),
+        f"{prefix}_source_algorithm": getattr(args, f"{prefix}_source_algorithm"),
+    }
 
 
 def refresh_compendium_warehouse(
@@ -147,8 +205,7 @@ def run_topology_for_study(
     min_group_size: int,
     max_homology_dim: int,
 ) -> dict[str, Any]:
-    connection = connect_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         topology_study_id = run_topology(
             connection,
             study_id=study_id,
@@ -161,8 +218,8 @@ def run_topology_for_study(
             "studyId": study_id,
             "topologyStudyId": topology_study_id,
         }
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run)
 
 
 def export_biological_packet(
@@ -171,15 +228,14 @@ def export_biological_packet(
     study_id: str,
     context_study_id: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return export_biological_study(
             connection,
             study_id=study_id,
             context_study_id=context_study_id,
         )
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run)
 
 
 def export_creature_discovery_packet(
@@ -188,15 +244,14 @@ def export_creature_discovery_packet(
     study_id: str | None = None,
     lens: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return export_creature_discovery(
             connection,
             study_id=study_id,
             lens=lens,
         )
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run)
 
 
 def import_dryad_fish_dataset(
@@ -205,8 +260,7 @@ def import_dryad_fish_dataset(
     dataset_root: Path,
     label: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         payload = ingest_dryad_fish_body_shape(
             connection,
             dataset_root=dataset_root,
@@ -216,8 +270,8 @@ def import_dryad_fish_dataset(
             "warehousePath": str(warehouse_path),
             **payload,
         }
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run)
 
 
 def derive_lenia_features_packet(
@@ -225,14 +279,13 @@ def derive_lenia_features_packet(
     warehouse_path: Path,
     study_id: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return {
             "warehousePath": str(warehouse_path),
             **derive_lenia_terminal_features(connection, study_id=study_id),
         }
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run)
 
 
 def derive_common_morphology_packet(
@@ -241,8 +294,7 @@ def derive_common_morphology_packet(
     dryad_fish_root: Path | None = None,
     study_id: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return {
             "warehousePath": str(warehouse_path),
             **derive_common_morphology(
@@ -251,8 +303,8 @@ def derive_common_morphology_packet(
                 study_id=study_id,
             ),
         }
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run)
 
 
 def export_feature_matrix_packet(
@@ -266,8 +318,7 @@ def export_feature_matrix_packet(
     observation_kind: str | None = None,
     source_algorithm: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_read_only_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return export_feature_matrix(
             connection,
             feature_space_id=feature_space_id,
@@ -278,8 +329,8 @@ def export_feature_matrix_packet(
             observation_kind=observation_kind,
             source_algorithm=source_algorithm,
         )
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run, read_only=True)
 
 
 def run_feature_tda_packet(
@@ -294,8 +345,7 @@ def run_feature_tda_packet(
     source_algorithm: str | None = None,
     max_homology_dim: int = 1,
 ) -> dict[str, Any]:
-    connection = connect_read_only_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return run_feature_tda(
             connection,
             feature_space_id=feature_space_id,
@@ -307,8 +357,8 @@ def run_feature_tda_packet(
             source_algorithm=source_algorithm,
             max_homology_dim=max_homology_dim,
         )
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run, read_only=True)
 
 
 def run_feature_tda_profile_packet(
@@ -326,8 +376,7 @@ def run_feature_tda_profile_packet(
     stratify_by: str = "rule_family_key",
     seed: int = 0,
 ) -> dict[str, Any]:
-    connection = connect_read_only_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return run_feature_tda_profile(
             connection,
             feature_space_id=feature_space_id,
@@ -342,8 +391,8 @@ def run_feature_tda_profile_packet(
             stratify_by=stratify_by,
             seed=seed,
         )
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run, read_only=True)
 
 
 def compare_feature_cohorts_packet(
@@ -364,8 +413,7 @@ def compare_feature_cohorts_packet(
     right_observation_kind: str | None = None,
     right_source_algorithm: str | None = None,
 ) -> dict[str, Any]:
-    connection = connect_read_only_database(warehouse_path)
-    try:
+    def run(connection: Any) -> dict[str, Any]:
         return compare_feature_cohorts(
             connection,
             feature_space_id=feature_space_id,
@@ -383,8 +431,8 @@ def compare_feature_cohorts_packet(
             right_observation_kind=right_observation_kind,
             right_source_algorithm=right_source_algorithm,
         )
-    finally:
-        connection.close()
+
+    return _using_warehouse(warehouse_path, run, read_only=True)
 
 
 def build_atlas_evidence_packet(
@@ -487,7 +535,19 @@ def _build_parser() -> argparse.ArgumentParser:
     refresh.add_argument("--source-packet-kind", default="focal")
     refresh.add_argument("--min-group-size", type=int, default=2)
     refresh.add_argument("--max-homology-dim", type=int, default=1)
-    refresh.add_argument("--json", action="store_true")
+    _add_json(refresh)
+    refresh.set_defaults(
+        handler=lambda args: refresh_compendium_warehouse(
+            warehouse_path=args.warehouse.resolve(),
+            compendium_path=args.compendium.resolve(),
+            label=args.label,
+            run_id=args.run_id,
+            topology=bool(args.topology),
+            source_packet_kind=str(args.source_packet_kind),
+            min_group_size=int(args.min_group_size),
+            max_homology_dim=int(args.max_homology_dim),
+        )
+    )
 
     promote = subparsers.add_parser(
         "promote-results",
@@ -499,7 +559,17 @@ def _build_parser() -> argparse.ArgumentParser:
     promote.add_argument("--source-mode", default="atlas-random")
     promote.add_argument("--source-algorithm", default="fl-2c20-motion-scorev2")
     promote.add_argument("--batch-size", type=int, default=2048)
-    promote.add_argument("--json", action="store_true")
+    _add_json(promote)
+    promote.set_defaults(
+        handler=lambda args: promote_results_packet(
+            compendium_path=args.compendium.resolve(),
+            run_dir=args.run_dir.resolve(),
+            run_id=str(args.run_id),
+            source_mode=str(args.source_mode),
+            source_algorithm=str(args.source_algorithm),
+            batch_size=int(args.batch_size),
+        )
+    )
 
     catalog_qc = subparsers.add_parser(
         "apply-catalog-qc",
@@ -507,7 +577,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     catalog_qc.add_argument("--compendium", required=True, type=Path)
     catalog_qc.add_argument("--audit-db", type=Path)
-    catalog_qc.add_argument("--json", action="store_true")
+    _add_json(catalog_qc)
+    catalog_qc.set_defaults(
+        handler=lambda args: apply_catalog_qc_packet(
+            compendium_path=args.compendium.resolve(),
+            audit_db=_resolve_optional_path(args.audit_db),
+        )
+    )
 
     topology = subparsers.add_parser(
         "run-topology",
@@ -518,7 +594,16 @@ def _build_parser() -> argparse.ArgumentParser:
     topology.add_argument("--source-packet-kind", default="focal")
     topology.add_argument("--min-group-size", type=int, default=2)
     topology.add_argument("--max-homology-dim", type=int, default=1)
-    topology.add_argument("--json", action="store_true")
+    _add_json(topology)
+    topology.set_defaults(
+        handler=lambda args: run_topology_for_study(
+            warehouse_path=args.warehouse.resolve(),
+            study_id=str(args.study_id),
+            source_packet_kind=str(args.source_packet_kind),
+            min_group_size=int(args.min_group_size),
+            max_homology_dim=int(args.max_homology_dim),
+        )
+    )
 
     biological = subparsers.add_parser(
         "export-biological",
@@ -527,7 +612,14 @@ def _build_parser() -> argparse.ArgumentParser:
     biological.add_argument("--warehouse", required=True, type=Path)
     biological.add_argument("--study-id", required=True)
     biological.add_argument("--context-study-id")
-    biological.add_argument("--json", action="store_true")
+    _add_json(biological)
+    biological.set_defaults(
+        handler=lambda args: export_biological_packet(
+            warehouse_path=args.warehouse.resolve(),
+            study_id=str(args.study_id),
+            context_study_id=args.context_study_id,
+        )
+    )
 
     discovery = subparsers.add_parser(
         "export-creature-discovery",
@@ -536,7 +628,14 @@ def _build_parser() -> argparse.ArgumentParser:
     discovery.add_argument("--warehouse", required=True, type=Path)
     discovery.add_argument("--study-id")
     discovery.add_argument("--lens")
-    discovery.add_argument("--json", action="store_true")
+    _add_json(discovery)
+    discovery.set_defaults(
+        handler=lambda args: export_creature_discovery_packet(
+            warehouse_path=args.warehouse.resolve(),
+            study_id=args.study_id,
+            lens=args.lens,
+        )
+    )
 
     dryad_fish = subparsers.add_parser(
         "import-dryad-fish",
@@ -545,7 +644,14 @@ def _build_parser() -> argparse.ArgumentParser:
     dryad_fish.add_argument("--warehouse", required=True, type=Path)
     dryad_fish.add_argument("--dataset-root", required=True, type=Path)
     dryad_fish.add_argument("--label")
-    dryad_fish.add_argument("--json", action="store_true")
+    _add_json(dryad_fish)
+    dryad_fish.set_defaults(
+        handler=lambda args: import_dryad_fish_dataset(
+            warehouse_path=args.warehouse.resolve(),
+            dataset_root=args.dataset_root.resolve(),
+            label=args.label,
+        )
+    )
 
     lenia_features = subparsers.add_parser(
         "derive-lenia-features",
@@ -553,7 +659,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     lenia_features.add_argument("--warehouse", required=True, type=Path)
     lenia_features.add_argument("--study-id")
-    lenia_features.add_argument("--json", action="store_true")
+    _add_json(lenia_features)
+    lenia_features.set_defaults(
+        handler=lambda args: derive_lenia_features_packet(
+            warehouse_path=args.warehouse.resolve(),
+            study_id=args.study_id,
+        )
+    )
 
     common_morphology = subparsers.add_parser(
         "derive-common-morphology",
@@ -562,7 +674,14 @@ def _build_parser() -> argparse.ArgumentParser:
     common_morphology.add_argument("--warehouse", required=True, type=Path)
     common_morphology.add_argument("--dryad-fish-root", type=Path)
     common_morphology.add_argument("--study-id")
-    common_morphology.add_argument("--json", action="store_true")
+    _add_json(common_morphology)
+    common_morphology.set_defaults(
+        handler=lambda args: derive_common_morphology_packet(
+            warehouse_path=args.warehouse.resolve(),
+            dryad_fish_root=_resolve_optional_path(args.dryad_fish_root),
+            study_id=args.study_id,
+        )
+    )
 
     matrix = subparsers.add_parser(
         "export-feature-matrix",
@@ -571,12 +690,16 @@ def _build_parser() -> argparse.ArgumentParser:
     matrix.add_argument("--warehouse", required=True, type=Path)
     matrix.add_argument("--feature-space-id", required=True)
     matrix.add_argument("--value-column", default="normalized_value")
-    matrix.add_argument("--source-id")
-    matrix.add_argument("--study-id")
-    matrix.add_argument("--run-id")
-    matrix.add_argument("--observation-kind")
-    matrix.add_argument("--source-algorithm")
-    matrix.add_argument("--json", action="store_true")
+    _add_feature_filter_args(matrix)
+    _add_json(matrix)
+    matrix.set_defaults(
+        handler=lambda args: export_feature_matrix_packet(
+            warehouse_path=args.warehouse.resolve(),
+            feature_space_id=str(args.feature_space_id),
+            value_column=str(args.value_column),
+            **_feature_filter_kwargs(args),
+        )
+    )
 
     feature_tda = subparsers.add_parser(
         "run-feature-tda",
@@ -585,13 +708,18 @@ def _build_parser() -> argparse.ArgumentParser:
     feature_tda.add_argument("--warehouse", required=True, type=Path)
     feature_tda.add_argument("--feature-space-id", required=True)
     feature_tda.add_argument("--value-column", default="normalized_value")
-    feature_tda.add_argument("--source-id")
-    feature_tda.add_argument("--study-id")
-    feature_tda.add_argument("--run-id")
-    feature_tda.add_argument("--observation-kind")
-    feature_tda.add_argument("--source-algorithm")
+    _add_feature_filter_args(feature_tda)
     feature_tda.add_argument("--max-homology-dim", type=int, default=1)
-    feature_tda.add_argument("--json", action="store_true")
+    _add_json(feature_tda)
+    feature_tda.set_defaults(
+        handler=lambda args: run_feature_tda_packet(
+            warehouse_path=args.warehouse.resolve(),
+            feature_space_id=str(args.feature_space_id),
+            value_column=str(args.value_column),
+            **_feature_filter_kwargs(args),
+            max_homology_dim=int(args.max_homology_dim),
+        )
+    )
 
     feature_tda_profile = subparsers.add_parser(
         "run-feature-tda-profile",
@@ -601,15 +729,23 @@ def _build_parser() -> argparse.ArgumentParser:
     feature_tda_profile.add_argument("--feature-space-id", required=True)
     feature_tda_profile.add_argument("--profile", choices=profile_names(), default="current")
     feature_tda_profile.add_argument("--value-column", default="normalized_value")
-    feature_tda_profile.add_argument("--source-id")
-    feature_tda_profile.add_argument("--study-id")
-    feature_tda_profile.add_argument("--run-id")
-    feature_tda_profile.add_argument("--observation-kind")
-    feature_tda_profile.add_argument("--source-algorithm")
+    _add_feature_filter_args(feature_tda_profile)
     feature_tda_profile.add_argument("--max-homology-dim", type=int, default=1)
     feature_tda_profile.add_argument("--stratify-by", default="rule_family_key")
     feature_tda_profile.add_argument("--seed", type=int, default=0)
-    feature_tda_profile.add_argument("--json", action="store_true")
+    _add_json(feature_tda_profile)
+    feature_tda_profile.set_defaults(
+        handler=lambda args: run_feature_tda_profile_packet(
+            warehouse_path=args.warehouse.resolve(),
+            feature_space_id=str(args.feature_space_id),
+            profile=str(args.profile),
+            value_column=str(args.value_column),
+            **_feature_filter_kwargs(args),
+            max_homology_dim=int(args.max_homology_dim),
+            stratify_by=str(args.stratify_by),
+            seed=int(args.seed),
+        )
+    )
 
     compare = subparsers.add_parser(
         "compare-feature-cohorts",
@@ -620,17 +756,20 @@ def _build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--value-column", default="normalized_value")
     compare.add_argument("--left-label", default="left")
     compare.add_argument("--right-label", default="right")
-    compare.add_argument("--left-source-id")
-    compare.add_argument("--left-study-id")
-    compare.add_argument("--left-run-id")
-    compare.add_argument("--left-observation-kind")
-    compare.add_argument("--left-source-algorithm")
-    compare.add_argument("--right-source-id")
-    compare.add_argument("--right-study-id")
-    compare.add_argument("--right-run-id")
-    compare.add_argument("--right-observation-kind")
-    compare.add_argument("--right-source-algorithm")
-    compare.add_argument("--json", action="store_true")
+    _add_cohort_filter_args(compare, "left")
+    _add_cohort_filter_args(compare, "right")
+    _add_json(compare)
+    compare.set_defaults(
+        handler=lambda args: compare_feature_cohorts_packet(
+            warehouse_path=args.warehouse.resolve(),
+            feature_space_id=str(args.feature_space_id),
+            value_column=str(args.value_column),
+            left_label=str(args.left_label),
+            right_label=str(args.right_label),
+            **_cohort_filter_kwargs(args, "left"),
+            **_cohort_filter_kwargs(args, "right"),
+        )
+    )
 
     evidence = subparsers.add_parser(
         "build-atlas-evidence",
@@ -642,7 +781,17 @@ def _build_parser() -> argparse.ArgumentParser:
     evidence.add_argument("--validation256", type=Path)
     evidence.add_argument("--terminal-tda", type=Path)
     evidence.add_argument("--output", type=Path)
-    evidence.add_argument("--json", action="store_true")
+    _add_json(evidence)
+    evidence.set_defaults(
+        handler=lambda args: build_atlas_evidence_packet(
+            atlas_findings_path=args.atlas_findings.resolve(),
+            common_tda_path=args.common_tda.resolve(),
+            h1_regions_path=_resolve_optional_path(args.h1_regions),
+            validation256_path=_resolve_optional_path(args.validation256),
+            terminal_tda_path=_resolve_optional_path(args.terminal_tda),
+            output_path=_resolve_optional_path(args.output),
+        )
+    )
 
     finite_size = subparsers.add_parser(
         "build-finite-size-validation",
@@ -655,7 +804,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Run label and run directory or results.jsonl path, formatted label=path",
     )
     finite_size.add_argument("--output", type=Path)
-    finite_size.add_argument("--json", action="store_true")
+    _add_json(finite_size)
+    finite_size.set_defaults(
+        handler=lambda args: build_finite_size_packet(
+            run_specs=list(args.run),
+            output_path=_resolve_optional_path(args.output),
+        )
+    )
 
     track1_raw = subparsers.add_parser(
         "summarize-track1-raw",
@@ -664,7 +819,14 @@ def _build_parser() -> argparse.ArgumentParser:
     track1_raw.add_argument("--run-root", required=True, type=Path)
     track1_raw.add_argument("--output", required=True, type=Path)
     track1_raw.add_argument("--candidate-manifest", type=Path)
-    track1_raw.add_argument("--json", action="store_true")
+    _add_json(track1_raw)
+    track1_raw.set_defaults(
+        handler=lambda args: summarize_track1_raw_packet(
+            run_root=args.run_root.resolve(),
+            output_path=args.output.resolve(),
+            candidate_manifest_path=_resolve_optional_path(args.candidate_manifest),
+        )
+    )
 
     return parser
 
@@ -679,202 +841,9 @@ def _print_payload(payload: dict[str, Any], *, as_json: bool) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
-
-    if args.command == "refresh-compendium":
-        payload = refresh_compendium_warehouse(
-            warehouse_path=args.warehouse.resolve(),
-            compendium_path=args.compendium.resolve(),
-            label=args.label,
-            run_id=args.run_id,
-            topology=bool(args.topology),
-            source_packet_kind=str(args.source_packet_kind),
-            min_group_size=int(args.min_group_size),
-            max_homology_dim=int(args.max_homology_dim),
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "promote-results":
-        payload = promote_results_packet(
-            compendium_path=args.compendium.resolve(),
-            run_dir=args.run_dir.resolve(),
-            run_id=str(args.run_id),
-            source_mode=str(args.source_mode),
-            source_algorithm=str(args.source_algorithm),
-            batch_size=int(args.batch_size),
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "apply-catalog-qc":
-        payload = apply_catalog_qc_packet(
-            compendium_path=args.compendium.resolve(),
-            audit_db=args.audit_db.resolve() if args.audit_db is not None else None,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "run-topology":
-        payload = run_topology_for_study(
-            warehouse_path=args.warehouse.resolve(),
-            study_id=str(args.study_id),
-            source_packet_kind=str(args.source_packet_kind),
-            min_group_size=int(args.min_group_size),
-            max_homology_dim=int(args.max_homology_dim),
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "export-biological":
-        payload = export_biological_packet(
-            warehouse_path=args.warehouse.resolve(),
-            study_id=str(args.study_id),
-            context_study_id=args.context_study_id,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "export-creature-discovery":
-        payload = export_creature_discovery_packet(
-            warehouse_path=args.warehouse.resolve(),
-            study_id=args.study_id,
-            lens=args.lens,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "import-dryad-fish":
-        payload = import_dryad_fish_dataset(
-            warehouse_path=args.warehouse.resolve(),
-            dataset_root=args.dataset_root.resolve(),
-            label=args.label,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "derive-lenia-features":
-        payload = derive_lenia_features_packet(
-            warehouse_path=args.warehouse.resolve(),
-            study_id=args.study_id,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "derive-common-morphology":
-        payload = derive_common_morphology_packet(
-            warehouse_path=args.warehouse.resolve(),
-            dryad_fish_root=(
-                args.dryad_fish_root.resolve()
-                if args.dryad_fish_root is not None
-                else None
-            ),
-            study_id=args.study_id,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "export-feature-matrix":
-        payload = export_feature_matrix_packet(
-            warehouse_path=args.warehouse.resolve(),
-            feature_space_id=str(args.feature_space_id),
-            value_column=str(args.value_column),
-            source_id=args.source_id,
-            study_id=args.study_id,
-            run_id=args.run_id,
-            observation_kind=args.observation_kind,
-            source_algorithm=args.source_algorithm,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "run-feature-tda":
-        payload = run_feature_tda_packet(
-            warehouse_path=args.warehouse.resolve(),
-            feature_space_id=str(args.feature_space_id),
-            value_column=str(args.value_column),
-            source_id=args.source_id,
-            study_id=args.study_id,
-            run_id=args.run_id,
-            observation_kind=args.observation_kind,
-            source_algorithm=args.source_algorithm,
-            max_homology_dim=int(args.max_homology_dim),
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "run-feature-tda-profile":
-        payload = run_feature_tda_profile_packet(
-            warehouse_path=args.warehouse.resolve(),
-            feature_space_id=str(args.feature_space_id),
-            profile=str(args.profile),
-            value_column=str(args.value_column),
-            source_id=args.source_id,
-            study_id=args.study_id,
-            run_id=args.run_id,
-            observation_kind=args.observation_kind,
-            source_algorithm=args.source_algorithm,
-            max_homology_dim=int(args.max_homology_dim),
-            stratify_by=str(args.stratify_by),
-            seed=int(args.seed),
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "compare-feature-cohorts":
-        payload = compare_feature_cohorts_packet(
-            warehouse_path=args.warehouse.resolve(),
-            feature_space_id=str(args.feature_space_id),
-            value_column=str(args.value_column),
-            left_label=str(args.left_label),
-            right_label=str(args.right_label),
-            left_source_id=args.left_source_id,
-            left_study_id=args.left_study_id,
-            left_run_id=args.left_run_id,
-            left_observation_kind=args.left_observation_kind,
-            left_source_algorithm=args.left_source_algorithm,
-            right_source_id=args.right_source_id,
-            right_study_id=args.right_study_id,
-            right_run_id=args.right_run_id,
-            right_observation_kind=args.right_observation_kind,
-            right_source_algorithm=args.right_source_algorithm,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "build-atlas-evidence":
-        payload = build_atlas_evidence_packet(
-            atlas_findings_path=args.atlas_findings.resolve(),
-            common_tda_path=args.common_tda.resolve(),
-            h1_regions_path=args.h1_regions.resolve() if args.h1_regions else None,
-            validation256_path=args.validation256.resolve() if args.validation256 else None,
-            terminal_tda_path=args.terminal_tda.resolve() if args.terminal_tda else None,
-            output_path=args.output.resolve() if args.output else None,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "build-finite-size-validation":
-        payload = build_finite_size_packet(
-            run_specs=list(args.run),
-            output_path=args.output.resolve() if args.output else None,
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    if args.command == "summarize-track1-raw":
-        payload = summarize_track1_raw_packet(
-            run_root=args.run_root.resolve(),
-            output_path=args.output.resolve(),
-            candidate_manifest_path=(
-                args.candidate_manifest.resolve()
-                if args.candidate_manifest is not None
-                else None
-            ),
-        )
-        _print_payload(payload, as_json=bool(args.json))
-        return 0
-
-    raise SystemExit(f"unsupported command: {args.command}")
+    payload = args.handler(args)
+    _print_payload(payload, as_json=bool(args.json))
+    return 0
 
 
 if __name__ == "__main__":
