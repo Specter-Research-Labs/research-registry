@@ -54,17 +54,20 @@ public struct FrameCapture {
     public let includeWarmup: Bool
     public let sampleIndex: Int
     public let handler: (_ step: Int, _ width: Int, _ height: Int, _ data: Data) -> Void
+    public let stateHandler: ((_ step: Int, _ width: Int, _ height: Int, _ channels: Int, _ values: [Float]) -> Void)?
 
     public init(
         stride: Int,
         includeWarmup: Bool = false,
         sampleIndex: Int = 0,
-        handler: @escaping (_ step: Int, _ width: Int, _ height: Int, _ data: Data) -> Void
+        handler: @escaping (_ step: Int, _ width: Int, _ height: Int, _ data: Data) -> Void,
+        stateHandler: ((_ step: Int, _ width: Int, _ height: Int, _ channels: Int, _ values: [Float]) -> Void)? = nil
     ) {
         self.stride = stride
         self.includeWarmup = includeWarmup
         self.sampleIndex = sampleIndex
         self.handler = handler
+        self.stateHandler = stateHandler
     }
 }
 

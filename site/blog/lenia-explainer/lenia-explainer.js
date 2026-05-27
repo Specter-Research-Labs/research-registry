@@ -5,9 +5,11 @@
     if (!content) return;
 
     const WIDGET_INIT = {
+        creaturewall: initCreatureWall,
         sandbox: initSandbox,
         kernel: initKernel,
         growth: initGrowth,
+        massconservation: initMassConservation,
         search: initSearch,
         cvt: initCVT,
         mapelites: initMapElites,
@@ -15,6 +17,16 @@
     };
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const LENIA_SPECTRUM = [
+        [5, 4, 10],
+        [124, 245, 255],
+        [80, 123, 255],
+        [191, 55, 255],
+        [255, 58, 175],
+        [255, 113, 56],
+        [255, 204, 69],
+    ];
 
     function lazyInit(el, initFn) {
         const observer = new IntersectionObserver(
@@ -43,20 +55,24 @@
         lazyInit(el, initFn);
     }
 
-    // -- helpers --
-
-    function makeHeader(el, title) {
+    function makeHeader(el, title, subtitle) {
         const header = document.createElement("div");
         header.className = "lenia-widget-header";
         const titleEl = document.createElement("div");
         titleEl.className = "lenia-widget-title";
         titleEl.textContent = title;
         header.appendChild(titleEl);
-        el.prepend(header);
+        if (subtitle) {
+            const sub = document.createElement("div");
+            sub.className = "lenia-widget-subtitle";
+            sub.textContent = subtitle;
+            header.appendChild(sub);
+        }
+        el.appendChild(header);
         return header;
     }
 
-    function makeSlider(label, min, max, step, value, onChange) {
+    function makeSlider(label, min, max, step, value, onChange, format) {
         const group = document.createElement("div");
         group.className = "lenia-slider-group";
         const lbl = document.createElement("label");
@@ -69,10 +85,11 @@
         input.value = String(value);
         const readout = document.createElement("span");
         readout.className = "lenia-slider-value";
-        readout.textContent = Number(value).toFixed(3);
+        const fmt = format || ((v) => Number(v).toFixed(3));
+        readout.textContent = fmt(value);
         input.addEventListener("input", () => {
             const v = Number(input.value);
-            readout.textContent = v.toFixed(3);
+            readout.textContent = fmt(v);
             onChange(v);
         });
         group.append(lbl, input, readout);
@@ -103,6 +120,8 @@
         const ratio = dpr();
         canvas.width = width * ratio;
         canvas.height = height * ratio;
+        canvas.style.width = "100%";
+        canvas.style.height = "auto";
         const ctx = canvas.getContext("2d");
         ctx.scale(ratio, ratio);
         return { canvas, ctx, w: width, h: height, ratio };
@@ -114,20 +133,29 @@
         tmp.height = cvs.h;
         const tmpCtx = tmp.getContext("2d");
         tmpCtx.putImageData(imageData, 0, 0);
+        cvs.ctx.imageSmoothingEnabled = false;
         cvs.ctx.drawImage(tmp, 0, 0);
+        cvs.ctx.imageSmoothingEnabled = true;
     }
 
-    function makeMetric(label, value) {
+    function makeMetric(label, value, kind) {
         const m = document.createElement("div");
         m.className = "lenia-metric";
         const lbl = document.createElement("span");
         lbl.className = "lenia-metric-label";
         lbl.textContent = label;
         const val = document.createElement("span");
-        val.className = "lenia-metric-value";
+        val.className = "lenia-metric-value" + (kind ? " " + kind : "");
         val.textContent = value;
         m.append(lbl, val);
         return m;
+    }
+
+    function makeCaption(text) {
+        const cap = document.createElement("div");
+        cap.className = "lenia-canvas-caption";
+        cap.textContent = text;
+        return cap;
     }
 
     function splitmix32(seed) {
@@ -142,103 +170,75 @@
         };
     }
 
-    // -- W1: Live Lenia Sandbox --
-
-    function initSandbox(el) {
-        makeHeader(el, "Live Lenia simulation");
-
-        const creatureName = el.dataset.creature || "orbium";
-        const wrap = document.createElement("div");
-        wrap.className = "lenia-canvas-wrap";
-        const canvas = document.createElement("canvas");
-        canvas.width = 128;
-        canvas.height = 128;
-        canvas.style.width = "100%";
-        canvas.style.height = "auto";
-        canvas.style.imageRendering = "pixelated";
-        wrap.appendChild(canvas);
-
-        const controls = document.createElement("div");
-        controls.className = "lenia-controls";
-        const playingRef = { value: !reducedMotion };
-        const playBtn = makeBtn(playingRef.value ? "Pause" : "Play", () => {
-            playingRef.value = !playingRef.value;
-            playBtn.textContent = playingRef.value ? "Pause" : "Play";
-        });
-        const resetBtn = makeBtn("Reset", () => {
-            if (engine) engine.reset();
-        });
-        controls.append(playBtn, resetBtn);
-
-        const body = document.createElement("div");
-        body.className = "lenia-widget-body";
-        body.append(wrap, controls);
-        el.appendChild(body);
-
-        let engine = null;
-
-        if (typeof LeniaGPU !== "undefined" && navigator.gpu) {
-            LeniaGPU.load(creatureName, canvas).then((e) => {
-                if (e) {
-                    engine = e;
-                    if (!reducedMotion) gpuTick();
-                } else {
-                    engine = loadReplayFallback(canvas, creatureName, playingRef);
-                }
-            }).catch(() => {
-                engine = loadReplayFallback(canvas, creatureName, playingRef);
-            });
-        } else {
-            engine = loadReplayFallback(canvas, creatureName, playingRef);
-        }
-
-        function gpuTick() {
-            if (!engine || !engine.step) return;
-            if (playingRef.value) {
-                engine.step();
-                engine.render();
-            }
-            requestAnimationFrame(gpuTick);
-        }
+    function spectrumColor(t) {
+        const corrected = Math.pow(Math.max(0, Math.min(1, t)), 0.88);
+        const scaled = corrected * (LENIA_SPECTRUM.length - 1);
+        const lo = Math.floor(scaled);
+        const hi = Math.min(lo + 1, LENIA_SPECTRUM.length - 1);
+        const b = scaled - lo;
+        return [
+            Math.round(LENIA_SPECTRUM[lo][0] + (LENIA_SPECTRUM[hi][0] - LENIA_SPECTRUM[lo][0]) * b),
+            Math.round(LENIA_SPECTRUM[lo][1] + (LENIA_SPECTRUM[hi][1] - LENIA_SPECTRUM[lo][1]) * b),
+            Math.round(LENIA_SPECTRUM[lo][2] + (LENIA_SPECTRUM[hi][2] - LENIA_SPECTRUM[lo][2]) * b),
+        ];
     }
-
-    const LENIA_SPECTRUM = [
-        [5, 4, 10], [124, 245, 255], [80, 123, 255],
-        [191, 55, 255], [255, 58, 175], [255, 113, 56], [255, 204, 69],
-    ];
 
     function buildSpectrumLookup() {
         const lookup = new Uint8ClampedArray(256 * 4);
         for (let v = 0; v < 256; v++) {
-            const norm = v / 255;
-            const corrected = Math.pow(norm, 0.88);
-            const scaled = corrected * (LENIA_SPECTRUM.length - 1);
-            const lo = Math.floor(scaled);
-            const hi = Math.min(lo + 1, LENIA_SPECTRUM.length - 1);
-            const t = scaled - lo;
+            const c = spectrumColor(v / 255);
             const base = v * 4;
-            lookup[base] = Math.round(LENIA_SPECTRUM[lo][0] + (LENIA_SPECTRUM[hi][0] - LENIA_SPECTRUM[lo][0]) * t);
-            lookup[base + 1] = Math.round(LENIA_SPECTRUM[lo][1] + (LENIA_SPECTRUM[hi][1] - LENIA_SPECTRUM[lo][1]) * t);
-            lookup[base + 2] = Math.round(LENIA_SPECTRUM[lo][2] + (LENIA_SPECTRUM[hi][2] - LENIA_SPECTRUM[lo][2]) * t);
+            lookup[base] = c[0];
+            lookup[base + 1] = c[1];
+            lookup[base + 2] = c[2];
             lookup[base + 3] = 255;
         }
         return lookup;
     }
 
-    function loadReplayFallback(canvas, creature, playingRef) {
-        const ctx = canvas.getContext("2d", { alpha: false });
-        if (!ctx) return null;
+    function makeCanvasWrap(cls) {
+        const wrap = document.createElement("div");
+        wrap.className = "lenia-canvas-wrap " + (cls || "");
+        return wrap;
+    }
 
-        const sx = 128, sy = 128;
-        canvas.width = sx;
-        canvas.height = sy;
+    function makeLegend(items) {
+        const legend = document.createElement("div");
+        legend.className = "lenia-legend";
+        for (const it of items) {
+            const span = document.createElement("span");
+            span.className = "lenia-legend-item";
+            const sw = document.createElement("span");
+            sw.className = "lenia-legend-swatch";
+            sw.style.background = it.color;
+            span.append(sw, document.createTextNode(it.label));
+            legend.appendChild(span);
+        }
+        return legend;
+    }
 
-        const R = 13, rK = 0.5;
-        const bK = [1.0], wK = [0.2], aK = [0.5];
-        const mu = 0.15, sigma = 0.017, h = 0.1, dt = 0.2;
+    // ---------------------------------------------------------------
+    // shared: CPU Lenia engine used by smaller widgets
+    // ---------------------------------------------------------------
+
+    function makeCPUEngine(opts) {
+        const sx = opts.sx;
+        const sy = opts.sy;
+        const R = opts.R;
+        const rK = opts.r;
+        const bK = opts.b;
+        const wK = opts.w;
+        const aK = opts.a;
+        const mu = opts.mu;
+        const sigma = opts.sigma;
+        const h = opts.h;
+        const dt = opts.dt;
+        const seed = opts.seed ?? 0;
+        const patchR = (opts.patchR ?? 0.18) * Math.min(sx, sy);
+
         const kernelRadius = Math.ceil(R * rK);
-
-        const kernel = new Float32Array((2 * kernelRadius + 1) * (2 * kernelRadius + 1));
+        const kSize = 2 * kernelRadius + 1;
+        const kernel = new Float32Array(kSize * kSize);
         let kernelSum = 0;
         for (let ky = -kernelRadius; ky <= kernelRadius; ky++) {
             for (let kx = -kernelRadius; kx <= kernelRadius; kx++) {
@@ -249,120 +249,276 @@
                     const diff = D - aK[g];
                     val += bK[g] * Math.exp(-(diff * diff) / (2 * wK[g] * wK[g]));
                 }
-                const idx = (ky + kernelRadius) * (2 * kernelRadius + 1) + (kx + kernelRadius);
-                kernel[idx] = val;
+                kernel[(ky + kernelRadius) * kSize + (kx + kernelRadius)] = val;
                 kernelSum += val;
             }
         }
-        if (kernelSum > 0) {
-            for (let i = 0; i < kernel.length; i++) kernel[i] /= kernelSum;
-        }
+        if (kernelSum > 0) for (let i = 0; i < kernel.length; i++) kernel[i] /= kernelSum;
 
         let state = new Float32Array(sx * sy);
-        const rng = splitmix32(0);
-        const patchR = 0.16 * sx;
-        const patchR2 = patchR * patchR;
-        const cx = sx / 2, cy = sy / 2;
-        for (let y = 0; y < sy; y++) {
-            for (let x = 0; x < sx; x++) {
-                const dx = x - cx, dy = y - cy;
-                if (dx * dx + dy * dy <= patchR2) {
-                    state[y * sx + x] = rng();
+
+        function seedPatch(cx, cy, rng) {
+            const r2 = patchR * patchR;
+            for (let y = 0; y < sy; y++) {
+                for (let x = 0; x < sx; x++) {
+                    const dx = x - cx, dy = y - cy;
+                    if (dx * dx + dy * dy <= r2) {
+                        state[y * sx + x] = rng();
+                    }
                 }
             }
         }
 
-        const lookup = buildSpectrumLookup();
-        const imageData = ctx.createImageData(sx, sy);
-        const kSize = 2 * kernelRadius + 1;
+        function reset(extraSeed) {
+            state = new Float32Array(sx * sy);
+            const rng = splitmix32(seed + (extraSeed || 0));
+            seedPatch(sx / 2, sy / 2, rng);
+        }
 
-        function stepCPU() {
+        function step(massPreserving) {
             const next = new Float32Array(sx * sy);
+            let dMass = 0;
             for (let y = 0; y < sy; y++) {
                 for (let x = 0; x < sx; x++) {
                     let U = 0;
                     for (let ky = -kernelRadius; ky <= kernelRadius; ky++) {
                         for (let kx = -kernelRadius; kx <= kernelRadius; kx++) {
                             const kIdx = (ky + kernelRadius) * kSize + (kx + kernelRadius);
-                            const w = kernel[kIdx];
-                            if (w < 1e-10) continue;
+                            const wK = kernel[kIdx];
+                            if (wK < 1e-10) continue;
                             const nx = ((x + kx) % sx + sx) % sx;
                             const ny = ((y + ky) % sy + sy) % sy;
-                            U += state[ny * sx + nx] * w;
+                            U += state[ny * sx + nx] * wK;
                         }
                     }
                     const diff = (U - mu) / sigma;
                     const G = (2 * Math.exp(-(diff * diff) / 2) - 1) * h;
-                    next[y * sx + x] = Math.max(0, Math.min(1, state[y * sx + x] + dt * G));
+                    const cur = state[y * sx + x];
+                    const candidate = Math.max(0, Math.min(1, cur + dt * G));
+                    dMass += candidate - cur;
+                    next[y * sx + x] = candidate;
+                }
+            }
+            if (massPreserving) {
+                const totalMass = next.reduce((a, b) => a + b, 0);
+                const targetMass = state.reduce((a, b) => a + b, 0);
+                if (totalMass > 0) {
+                    const f = targetMass / totalMass;
+                    for (let i = 0; i < next.length; i++) next[i] = Math.min(1, next[i] * f);
                 }
             }
             state = next;
+            return dMass;
         }
 
-        function renderFrame() {
-            for (let i = 0; i < sx * sy; i++) {
-                const byteVal = Math.round(Math.max(0, Math.min(1, state[i])) * 255);
-                const src = byteVal * 4;
-                const dst = i * 4;
-                imageData.data[dst] = lookup[src];
-                imageData.data[dst + 1] = lookup[src + 1];
-                imageData.data[dst + 2] = lookup[src + 2];
-                imageData.data[dst + 3] = 255;
-            }
-            ctx.putImageData(imageData, 0, 0);
-        }
-
-        renderFrame();
-
-        let lastFrame = 0;
-        function tick(now) {
-            if (playingRef.value && now - lastFrame > 80) {
-                stepCPU();
-                renderFrame();
-                lastFrame = now;
-            }
-            requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-
+        reset();
         return {
-            reset() {
-                state = new Float32Array(sx * sy);
-                const rng2 = splitmix32(0);
-                for (let y = 0; y < sy; y++) {
-                    for (let x = 0; x < sx; x++) {
-                        const dx = x - cx, dy = y - cy;
-                        if (dx * dx + dy * dy <= patchR2) {
-                            state[y * sx + x] = rng2();
-                        }
-                    }
-                }
-                renderFrame();
-            }
+            step,
+            reset,
+            mass() { let m = 0; for (let i = 0; i < state.length; i++) m += state[i]; return m; },
+            getState() { return state; },
+            seedAt(cx, cy, rng) { seedPatch(cx, cy, rng); },
+            sx, sy,
         };
     }
 
-    // -- W2: Kernel Visualizer --
+    function renderStateToImageData(state, sx, sy, imageData, lookup) {
+        for (let i = 0; i < sx * sy; i++) {
+            const byteVal = Math.round(Math.max(0, Math.min(1, state[i])) * 255);
+            const src = byteVal * 4;
+            const dst = i * 4;
+            imageData.data[dst] = lookup[src];
+            imageData.data[dst + 1] = lookup[src + 1];
+            imageData.data[dst + 2] = lookup[src + 2];
+            imageData.data[dst + 3] = 255;
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // W0: Creature wall (hero, top of page)
+    // ---------------------------------------------------------------
+
+    function initCreatureWall(el) {
+        makeHeader(el, "Orbium", "single-channel single-Gaussian Lenia, running on WebGPU");
+
+        const wrap = makeCanvasWrap("dark");
+        const canvas = document.createElement("canvas");
+        canvas.style.imageRendering = "pixelated";
+        wrap.appendChild(canvas);
+        const caption = makeCaption("loading...");
+        wrap.appendChild(caption);
+
+        const body = document.createElement("div");
+        body.className = "lenia-widget-body";
+        body.append(wrap);
+        el.appendChild(body);
+
+        if (typeof LeniaGPU === "undefined" || !navigator.gpu) {
+            caption.textContent = "WebGPU required";
+            return;
+        }
+
+        LeniaGPU.load("orbium", canvas).then((engine) => {
+            if (!engine) {
+                caption.textContent = "init failed";
+                return;
+            }
+            caption.textContent = "";
+            engine.render();
+            const tick = () => {
+                if (!reducedMotion) engine.step();
+                engine.render();
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // W1: Sandbox (the big live simulation)
+    // ---------------------------------------------------------------
+
+    function initSandbox(el) {
+        makeHeader(el, "Live Lenia simulation", "switch creature in the dropdown, click to reseed");
+
+        const defaultCreature = el.dataset.creature || "orbium";
+        const wrap = makeCanvasWrap("dark");
+        const canvas = document.createElement("canvas");
+        canvas.style.imageRendering = "pixelated";
+        wrap.appendChild(canvas);
+        const caption = makeCaption("loading...");
+        wrap.appendChild(caption);
+
+        const side = document.createElement("div");
+        side.style.display = "flex";
+        side.style.flexDirection = "column";
+        side.style.gap = "10px";
+
+        const select = document.createElement("select");
+        select.className = "lenia-select";
+        for (const c of ["orbium", "geminium", "aquarium"]) {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            select.appendChild(opt);
+        }
+        select.value = defaultCreature;
+
+        const playingRef = { value: !reducedMotion };
+        const playBtn = makeBtn(playingRef.value ? "Pause" : "Play", () => {
+            playingRef.value = !playingRef.value;
+            playBtn.textContent = playingRef.value ? "Pause" : "Play";
+        });
+        const resetBtn = makeBtn("Reset", () => engine && engine.reset && engine.reset());
+        const resetSpeed = { value: 1 };
+        const speedSlider = makeSlider("speed", 0.25, 4.0, 0.25, 1, (v) => { resetSpeed.value = v; }, (v) => Number(v).toFixed(2) + "x");
+
+        const row1 = document.createElement("div");
+        row1.style.display = "flex";
+        row1.style.gap = "8px";
+        row1.style.alignItems = "center";
+        row1.append(select, playBtn, resetBtn);
+
+        const fpsMetric = makeMetric("fps", "—");
+        const stepMetric = makeMetric("steps", "0");
+        const metricsBox = document.createElement("div");
+        metricsBox.style.display = "flex";
+        metricsBox.style.flexWrap = "wrap";
+        metricsBox.style.gap = "6px";
+        metricsBox.append(fpsMetric, stepMetric);
+
+        side.append(row1, speedSlider.group, metricsBox);
+
+        const body = document.createElement("div");
+        body.className = "lenia-widget-body sandbox-layout";
+        body.append(wrap, side);
+        el.appendChild(body);
+
+        let engine = null;
+        let stepCount = 0;
+        let lastFpsTime = performance.now();
+        let frames = 0;
+
+        function loadCreature(name) {
+            stepCount = 0;
+            stepMetric.querySelector(".lenia-metric-value").textContent = "0";
+            caption.textContent = name;
+            if (typeof LeniaGPU === "undefined" || !navigator.gpu) {
+                caption.textContent = "WebGPU required";
+                return;
+            }
+            LeniaGPU.load(name, canvas).then((e) => {
+                if (!e) {
+                    caption.textContent = "WebGPU init failed";
+                    return;
+                }
+                engine = e;
+                runLoop();
+            });
+        }
+
+        select.addEventListener("change", () => loadCreature(select.value));
+
+        canvas.addEventListener("click", () => {
+            if (!engine || !engine.reset) return;
+            engine.reset();
+        });
+
+        loadCreature(defaultCreature);
+
+        function runLoop() {
+            let acc = 0;
+            const target = 16;
+            let lastTime = performance.now();
+            function frame(now) {
+                const dt = now - lastTime;
+                lastTime = now;
+                acc += dt * resetSpeed.value;
+                if (playingRef.value && engine && engine.step) {
+                    while (acc >= target) {
+                        engine.step();
+                        stepCount++;
+                        acc -= target;
+                    }
+                    if (engine.render) engine.render();
+                }
+                frames++;
+                if (now - lastFpsTime > 500) {
+                    const fps = (frames * 1000) / (now - lastFpsTime);
+                    fpsMetric.querySelector(".lenia-metric-value").textContent = fps.toFixed(0);
+                    lastFpsTime = now;
+                    frames = 0;
+                    stepMetric.querySelector(".lenia-metric-value").textContent = String(stepCount);
+                }
+                requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // W2: Kernel visualizer
+    // ---------------------------------------------------------------
 
     function initKernel(el) {
-        makeHeader(el, "Kernel visualizer");
+        makeHeader(el, "Kernel visualizer", "the donut profile every cell convolves against");
         const defaults = parseDefaults(el);
         let R = defaults.R ?? 13;
         let r = defaults.r ?? 0.5;
-        const bArr = defaults.b ?? [1];
-        const wArr = defaults.w ?? [0.2];
-        const aArr = defaults.a ?? [0.5];
+        let bArr = (defaults.b ?? [1]).slice();
+        let wArr = (defaults.w ?? [0.2]).slice();
+        let aArr = (defaults.a ?? [0.5]).slice();
 
-        const profileCvs = initCanvas(300, 180);
-        const heatCvs = initCanvas(200, 200);
+        const profileCvs = initCanvas(420, 220);
+        const heatCvs = initCanvas(260, 260);
 
-        const profileWrap = document.createElement("div");
-        profileWrap.className = "lenia-canvas-wrap plot";
+        const profileWrap = makeCanvasWrap("plot");
         profileWrap.appendChild(profileCvs.canvas);
+        profileWrap.appendChild(makeCaption("radial profile K(D)"));
 
-        const heatWrap = document.createElement("div");
-        heatWrap.className = "lenia-canvas-wrap plot";
+        const heatWrap = makeCanvasWrap("dark");
         heatWrap.appendChild(heatCvs.canvas);
+        heatWrap.appendChild(makeCaption("2D kernel weights"));
 
         const body = document.createElement("div");
         body.className = "lenia-widget-body dual-panel";
@@ -370,9 +526,11 @@
 
         const controls = document.createElement("div");
         controls.className = "lenia-controls";
-        const sR = makeSlider("R", 4, 30, 1, R, (v) => { R = v; draw(); });
+        const sR = makeSlider("R", 4, 30, 1, R, (v) => { R = v; draw(); }, (v) => Number(v).toFixed(0));
         const sr = makeSlider("r", 0.1, 1.0, 0.01, r, (v) => { r = v; draw(); });
-        controls.append(sR.group, sr.group);
+        const sa = makeSlider("a", 0.0, 1.0, 0.01, aArr[0], (v) => { aArr[0] = v; draw(); });
+        const sw = makeSlider("w", 0.01, 0.5, 0.01, wArr[0], (v) => { wArr[0] = v; draw(); });
+        controls.append(sR.group, sr.group, sa.group, sw.group);
 
         el.append(body, controls);
         draw();
@@ -395,13 +553,13 @@
             const { ctx, w, h } = profileCvs;
             ctx.clearRect(0, 0, w, h);
 
-            const pad = { left: 36, right: 12, top: 12, bottom: 24 };
+            const pad = { left: 44, right: 18, top: 18, bottom: 28 };
             const pw = w - pad.left - pad.right;
             const ph = h - pad.top - pad.bottom;
 
-            let maxVal = 0;
-            const steps = 200;
+            const steps = 240;
             const values = [];
+            let maxVal = 0;
             for (let i = 0; i <= steps; i++) {
                 const D = i / steps;
                 const v = kernelProfile(D);
@@ -410,8 +568,18 @@
             }
             if (maxVal === 0) maxVal = 1;
 
-            ctx.strokeStyle = "rgba(11, 14, 20, 0.15)";
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.06)";
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 5; i++) {
+                const y = pad.top + (i / 5) * ph;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(pad.left + pw, y);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.35)";
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(pad.left, pad.top + ph);
             ctx.lineTo(pad.left + pw, pad.top + ph);
@@ -421,27 +589,21 @@
             ctx.lineTo(pad.left, pad.top + ph);
             ctx.stroke();
 
-            ctx.fillStyle = "#657694";
-            ctx.font = "10px sans-serif";
+            ctx.fillStyle = "rgba(11, 14, 20, 0.55)";
+            ctx.font = "10px var(--sl-font-mono, monospace)";
             ctx.textAlign = "center";
-            ctx.fillText("0", pad.left, pad.top + ph + 14);
-            ctx.fillText("1", pad.left + pw, pad.top + ph + 14);
+            ctx.fillText("D=0", pad.left, pad.top + ph + 16);
+            ctx.fillText("D=1", pad.left + pw, pad.top + ph + 16);
             ctx.textAlign = "right";
-            ctx.fillText("0", pad.left - 4, pad.top + ph + 3);
-            ctx.fillText(maxVal.toFixed(2), pad.left - 4, pad.top + 10);
+            ctx.fillText("0", pad.left - 6, pad.top + ph + 3);
+            ctx.fillText(maxVal.toFixed(2), pad.left - 6, pad.top + 10);
 
-            ctx.beginPath();
-            ctx.strokeStyle = "#5367bf";
-            ctx.lineWidth = 2;
-            for (let i = 0; i <= steps; i++) {
-                const x = pad.left + (i / steps) * pw;
-                const y = pad.top + ph - (values[i] / maxVal) * ph;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
+            const grad = ctx.createLinearGradient(pad.left, 0, pad.left + pw, 0);
+            grad.addColorStop(0.0, "rgba(80, 123, 255, 0.18)");
+            grad.addColorStop(0.5, "rgba(255, 58, 175, 0.20)");
+            grad.addColorStop(1.0, "rgba(255, 204, 69, 0.10)");
 
-            ctx.fillStyle = "rgba(83, 103, 191, 0.12)";
+            ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(pad.left, pad.top + ph);
             for (let i = 0; i <= steps; i++) {
@@ -452,6 +614,34 @@
             ctx.lineTo(pad.left + pw, pad.top + ph);
             ctx.closePath();
             ctx.fill();
+
+            ctx.strokeStyle = "#ff6600";
+            ctx.lineWidth = 2.2;
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+                const x = pad.left + (i / steps) * pw;
+                const y = pad.top + ph - (values[i] / maxVal) * ph;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            for (let g = 0; g < aArr.length; g++) {
+                const x = pad.left + aArr[g] * pw;
+                ctx.strokeStyle = "rgba(255, 102, 0, 0.5)";
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(x, pad.top);
+                ctx.lineTo(x, pad.top + ph);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = "rgba(255, 102, 0, 0.9)";
+                ctx.font = "10px var(--sl-font-mono, monospace)";
+                ctx.textAlign = "center";
+                ctx.fillText("a=" + aArr[g].toFixed(2), x, pad.top - 4);
+            }
         }
 
         function drawHeatmap() {
@@ -460,66 +650,136 @@
             const scale = w / (2 * R * 1.2);
 
             let maxVal = 0;
-            const grid = [];
+            const grid = new Float32Array(w * h);
             for (let y = 0; y < h; y++) {
-                const row = [];
                 for (let x = 0; x < w; x++) {
                     const dx = x - mid;
                     const dy = y - mid;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     const D = dist / (R * r * scale);
                     const v = kernelProfile(D);
-                    row.push(v);
+                    grid[y * w + x] = v;
                     if (v > maxVal) maxVal = v;
                 }
-                grid.push(row);
             }
             if (maxVal === 0) maxVal = 1;
 
             const imageData = ctx.createImageData(w, h);
             for (let y = 0; y < h; y++) {
                 for (let x = 0; x < w; x++) {
-                    const t = grid[y][x] / maxVal;
+                    const t = grid[y * w + x] / maxVal;
+                    const c = spectrumColor(t);
                     const idx = (y * w + x) * 4;
-                    imageData.data[idx] = Math.round(11 + t * 72);
-                    imageData.data[idx + 1] = Math.round(14 + t * 89);
-                    imageData.data[idx + 2] = Math.round(20 + t * 171);
+                    imageData.data[idx] = c[0];
+                    imageData.data[idx + 1] = c[1];
+                    imageData.data[idx + 2] = c[2];
                     imageData.data[idx + 3] = 255;
                 }
             }
             putPixels(heatCvs, imageData);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+            ctx.lineWidth = 1;
+            const isoLevels = [0.25, 0.5, 0.75];
+            for (const lvl of isoLevels) {
+                ctx.beginPath();
+                for (let theta = 0; theta < Math.PI * 2; theta += 0.04) {
+                    let bestR = 0;
+                    for (let rr = 0; rr < w / 2; rr += 0.5) {
+                        const D = rr / (R * r * scale);
+                        const v = kernelProfile(D) / maxVal;
+                        if (v >= lvl) bestR = rr;
+                    }
+                    if (bestR > 0) {
+                        const px = mid + Math.cos(theta) * bestR;
+                        const py = mid + Math.sin(theta) * bestR;
+                        if (theta === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.font = "10px var(--sl-font-mono, monospace)";
+            ctx.textAlign = "left";
+            ctx.fillText("R=" + R + "  r=" + r.toFixed(2), 8, 16);
         }
     }
 
-    // -- W3: Growth Function Explorer --
+    // ---------------------------------------------------------------
+    // W3: Growth function explorer
+    // ---------------------------------------------------------------
 
     function initGrowth(el) {
-        makeHeader(el, "Growth function explorer");
+        makeHeader(el, "Growth function explorer", "drag along the curve to read G(U)");
         const defaults = parseDefaults(el);
         let m = defaults.m ?? 0.15;
         let s = defaults.s ?? 0.017;
         let h = defaults.h ?? 0.1;
         let uIndicator = m;
 
-        const cvs = initCanvas(500, 220);
-        const wrap = document.createElement("div");
-        wrap.className = "lenia-canvas-wrap plot";
+        const cvs = initCanvas(440, 280);
+        const wrap = makeCanvasWrap("plot");
         wrap.appendChild(cvs.canvas);
+        wrap.appendChild(makeCaption("G(U) = (2·exp(-(U-mu)²/(2σ²)) - 1)·h"));
+
+        const sx = 96, sy = 96;
+        const previewCvs = document.createElement("canvas");
+        previewCvs.width = sx;
+        previewCvs.height = sy;
+        previewCvs.style.imageRendering = "pixelated";
+        const previewWrap = makeCanvasWrap("dark");
+        previewWrap.appendChild(previewCvs);
+        const previewCard = document.createElement("div");
+        previewCard.className = "lenia-creature-card";
+        const previewTitle = document.createElement("div");
+        previewTitle.className = "lenia-panel-title";
+        previewTitle.textContent = "Live preview";
+        previewCard.append(previewTitle, previewWrap);
 
         const controls = document.createElement("div");
         controls.className = "lenia-controls";
-        const sM = makeSlider("\u03bc", 0.01, 0.5, 0.001, m, (v) => { m = v; draw(); });
-        const sS = makeSlider("\u03c3", 0.005, 0.2, 0.001, s, (v) => { s = v; draw(); });
-        const sH = makeSlider("h", 0.01, 1.0, 0.001, h, (v) => { h = v; draw(); });
+        const sM = makeSlider("μ", 0.01, 0.5, 0.001, m, (v) => { m = v; rebuildPreview(); draw(); });
+        const sS = makeSlider("σ", 0.005, 0.2, 0.001, s, (v) => { s = v; rebuildPreview(); draw(); });
+        const sH = makeSlider("h", 0.01, 1.0, 0.001, h, (v) => { h = v; rebuildPreview(); draw(); });
         controls.append(sM.group, sS.group, sH.group);
 
         const body = document.createElement("div");
-        body.className = "lenia-widget-body";
-        body.append(wrap, controls);
-        el.appendChild(body);
+        body.className = "lenia-widget-body sandbox-layout";
+        body.append(wrap, previewCard);
+        el.append(body, controls);
+
+        const previewCtx = previewCvs.getContext("2d", { alpha: false });
+        const previewImg = previewCtx.createImageData(sx, sy);
+        const previewLookup = buildSpectrumLookup();
+        let previewEngine = null;
+        function rebuildPreview() {
+            previewEngine = makeCPUEngine({
+                sx, sy, R: 11, r: 0.5, b: [1], w: [0.2], a: [0.5],
+                mu: m, sigma: s, h, dt: 0.2, seed: 0, patchR: 0.18,
+            });
+        }
+        rebuildPreview();
+        function renderPreview() {
+            renderStateToImageData(previewEngine.getState(), sx, sy, previewImg, previewLookup);
+            previewCtx.putImageData(previewImg, 0, 0);
+        }
+        renderPreview();
+        let previewLast = 0;
+        function previewTick(now) {
+            if (now - previewLast > 80) {
+                previewEngine.step();
+                renderPreview();
+                previewLast = now;
+            }
+            requestAnimationFrame(previewTick);
+        }
+        requestAnimationFrame(previewTick);
 
         let dragging = false;
-        const pad = { left: 42, right: 16, top: 16, bottom: 24 };
+        const pad = { left: 48, right: 20, top: 24, bottom: 36 };
 
         cvs.canvas.addEventListener("mousedown", startDrag);
         cvs.canvas.addEventListener("mousemove", onDrag);
@@ -532,21 +792,13 @@
         function xToU(clientX) {
             const rect = cvs.canvas.getBoundingClientRect();
             const x = clientX - rect.left;
-            const plotW = cvs.w - pad.left - pad.right;
-            return Math.max(0, Math.min(1, (x - pad.left) / plotW));
+            const visiblePlotW = (cvs.w - pad.left - pad.right) * (rect.width / cvs.w);
+            const xInPlot = x - pad.left * (rect.width / cvs.w);
+            return Math.max(0, Math.min(1, xInPlot / visiblePlotW));
         }
 
-        function startDrag(e) {
-            dragging = true;
-            uIndicator = xToU(e.clientX);
-            draw();
-        }
-
-        function onDrag(e) {
-            if (!dragging) return;
-            uIndicator = xToU(e.clientX);
-            draw();
-        }
+        function startDrag(e) { dragging = true; uIndicator = xToU(e.clientX); draw(); }
+        function onDrag(e) { if (!dragging) return; uIndicator = xToU(e.clientX); draw(); }
 
         draw();
 
@@ -563,8 +815,18 @@
             const ph = ch - pad.top - pad.bottom;
             const midY = pad.top + ph / 2;
 
-            ctx.strokeStyle = "rgba(11, 14, 20, 0.15)";
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.06)";
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 4; i++) {
+                const y = pad.top + (i / 4) * ph;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(pad.left + pw, y);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.4)";
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(pad.left, midY);
             ctx.lineTo(pad.left + pw, midY);
@@ -574,59 +836,50 @@
             ctx.lineTo(pad.left, pad.top + ph);
             ctx.stroke();
 
-            ctx.fillStyle = "#657694";
-            ctx.font = "10px sans-serif";
+            ctx.fillStyle = "rgba(11, 14, 20, 0.55)";
+            ctx.font = "10px var(--sl-font-mono, monospace)";
             ctx.textAlign = "center";
-            ctx.fillText("0", pad.left, ch - pad.bottom + 14);
-            ctx.fillText("1", pad.left + pw, ch - pad.bottom + 14);
+            ctx.fillText("U=0", pad.left, ch - pad.bottom + 18);
+            ctx.fillText("U=1", pad.left + pw, ch - pad.bottom + 18);
             ctx.textAlign = "right";
-            ctx.fillText("0", pad.left - 4, midY + 3);
-            ctx.fillText(h.toFixed(2), pad.left - 4, pad.top + 10);
-            ctx.fillText((-h).toFixed(2), pad.left - 4, pad.top + ph + 3);
+            ctx.fillText("0", pad.left - 6, midY + 3);
+            ctx.fillText("+" + h.toFixed(2), pad.left - 6, pad.top + 10);
+            ctx.fillText("-" + h.toFixed(2), pad.left - 6, pad.top + ph + 3);
 
-            const steps = 400;
+            const steps = 500;
             const vals = [];
-            for (let i = 0; i <= steps; i++) {
-                vals.push(growthFn(i / steps));
-            }
+            for (let i = 0; i <= steps; i++) vals.push(growthFn(i / steps));
 
+            ctx.fillStyle = "rgba(63, 132, 88, 0.15)";
             ctx.beginPath();
-            ctx.fillStyle = "rgba(63, 132, 88, 0.12)";
             ctx.moveTo(pad.left, midY);
             for (let i = 0; i <= steps; i++) {
                 const x = pad.left + (i / steps) * pw;
                 const v = vals[i];
-                if (v >= 0) {
-                    const y = midY - (v / h) * (ph / 2);
-                    ctx.lineTo(x, y);
-                } else {
-                    ctx.lineTo(x, midY);
-                }
+                if (v >= 0) ctx.lineTo(x, midY - (v / h) * (ph / 2));
+                else ctx.lineTo(x, midY);
+            }
+            ctx.lineTo(pad.left + pw, midY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = "rgba(193, 98, 63, 0.13)";
+            ctx.beginPath();
+            ctx.moveTo(pad.left, midY);
+            for (let i = 0; i <= steps; i++) {
+                const x = pad.left + (i / steps) * pw;
+                const v = vals[i];
+                if (v < 0) ctx.lineTo(x, midY - (v / h) * (ph / 2));
+                else ctx.lineTo(x, midY);
             }
             ctx.lineTo(pad.left + pw, midY);
             ctx.closePath();
             ctx.fill();
 
             ctx.beginPath();
-            ctx.fillStyle = "rgba(193, 98, 63, 0.12)";
-            ctx.moveTo(pad.left, midY);
-            for (let i = 0; i <= steps; i++) {
-                const x = pad.left + (i / steps) * pw;
-                const v = vals[i];
-                if (v < 0) {
-                    const y = midY - (v / h) * (ph / 2);
-                    ctx.lineTo(x, y);
-                } else {
-                    ctx.lineTo(x, midY);
-                }
-            }
-            ctx.lineTo(pad.left + pw, midY);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.strokeStyle = "#5367bf";
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#ff6600";
+            ctx.lineWidth = 2.4;
+            ctx.lineJoin = "round";
             for (let i = 0; i <= steps; i++) {
                 const x = pad.left + (i / steps) * pw;
                 const y = midY - (vals[i] / h) * (ph / 2);
@@ -635,11 +888,25 @@
             }
             ctx.stroke();
 
+            const muX = pad.left + m * pw;
+            ctx.strokeStyle = "rgba(80, 123, 255, 0.65)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.moveTo(muX, pad.top);
+            ctx.lineTo(muX, pad.top + ph);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = "rgba(80, 123, 255, 0.95)";
+            ctx.font = "10px var(--sl-font-mono, monospace)";
+            ctx.textAlign = "center";
+            ctx.fillText("μ=" + m.toFixed(3), muX, pad.top - 8);
+
             const uX = pad.left + uIndicator * pw;
             ctx.beginPath();
-            ctx.strokeStyle = "#ff6600";
-            ctx.lineWidth = 1.5;
-            ctx.setLineDash([4, 3]);
+            ctx.strokeStyle = "#0b0e14";
+            ctx.lineWidth = 1.4;
+            ctx.setLineDash([5, 4]);
             ctx.moveTo(uX, pad.top);
             ctx.lineTo(uX, pad.top + ph);
             ctx.stroke();
@@ -648,64 +915,249 @@
             const gVal = growthFn(uIndicator);
             const dotY = midY - (gVal / h) * (ph / 2);
             ctx.beginPath();
-            ctx.arc(uX, dotY, 4, 0, Math.PI * 2);
-            ctx.fillStyle = "#ff6600";
+            ctx.fillStyle = gVal >= 0 ? "#3f8458" : "#c1623f";
+            ctx.arc(uX, dotY, 5, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
 
             ctx.fillStyle = "#0b0e14";
-            ctx.font = "11px sans-serif";
+            ctx.font = "11px var(--sl-font-mono, monospace)";
             ctx.textAlign = "left";
-            ctx.fillText(
-                "U=" + uIndicator.toFixed(3) + "  G=" + gVal.toFixed(4),
-                uX + 8,
-                dotY - 6
-            );
+            const label = "U=" + uIndicator.toFixed(3) + "  G=" + (gVal >= 0 ? "+" : "") + gVal.toFixed(4);
+            const textX = Math.min(uX + 10, cw - pad.right - 130);
+            const textY = Math.max(dotY - 10, pad.top + 14);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+            ctx.fillRect(textX - 4, textY - 12, 130, 16);
+            ctx.fillStyle = "#0b0e14";
+            ctx.fillText(label, textX, textY);
         }
     }
 
-    // -- W4: Search Landscape Comparison --
+    // ---------------------------------------------------------------
+    // W4: Mass conservation (basic Lenia vs Flow Lenia)
+    // ---------------------------------------------------------------
+
+    function initMassConservation(el) {
+        makeHeader(el, "Mass: lost vs conserved", "same seed, same K and G, different update");
+
+        const sx = 96, sy = 96;
+        const opts = {
+            sx, sy,
+            R: 13, r: 0.5, b: [1], w: [0.2], a: [0.5],
+            mu: 0.15, sigma: 0.017, h: 0.1, dt: 0.2,
+            seed: 3, patchR: 0.18,
+        };
+
+        const engineA = makeCPUEngine(opts);
+        const engineB = makeCPUEngine(opts);
+
+        const cvsA = document.createElement("canvas");
+        cvsA.width = sx; cvsA.height = sy; cvsA.style.imageRendering = "pixelated";
+        const cvsB = document.createElement("canvas");
+        cvsB.width = sx; cvsB.height = sy; cvsB.style.imageRendering = "pixelated";
+
+        const cardA = document.createElement("div");
+        cardA.className = "lenia-creature-card";
+        const titleA = document.createElement("div");
+        titleA.className = "lenia-panel-title";
+        titleA.textContent = "Basic Lenia";
+        const wrapA = makeCanvasWrap("dark");
+        wrapA.appendChild(cvsA);
+        const massPlotA = document.createElement("div");
+        massPlotA.className = "lenia-mass-plot-wrap";
+        const plotCanvasA = document.createElement("canvas");
+        plotCanvasA.width = 360; plotCanvasA.height = 60;
+        massPlotA.appendChild(plotCanvasA);
+        cardA.append(titleA, wrapA, massPlotA);
+
+        const cardB = document.createElement("div");
+        cardB.className = "lenia-creature-card";
+        const titleB = document.createElement("div");
+        titleB.className = "lenia-panel-title";
+        titleB.textContent = "Flow Lenia (mass-preserving)";
+        const wrapB = makeCanvasWrap("dark");
+        wrapB.appendChild(cvsB);
+        const massPlotB = document.createElement("div");
+        massPlotB.className = "lenia-mass-plot-wrap";
+        const plotCanvasB = document.createElement("canvas");
+        plotCanvasB.width = 360; plotCanvasB.height = 60;
+        massPlotB.appendChild(plotCanvasB);
+        cardB.append(titleB, wrapB, massPlotB);
+
+        const body = document.createElement("div");
+        body.className = "lenia-widget-body dual-panel";
+        body.append(cardA, cardB);
+        el.appendChild(body);
+
+        const controls = document.createElement("div");
+        controls.className = "lenia-controls";
+        let playing = !reducedMotion;
+        const playBtn = makeBtn(playing ? "Pause" : "Play", () => { playing = !playing; playBtn.textContent = playing ? "Pause" : "Play"; });
+        const resetBtn = makeBtn("Reset", () => {
+            engineA.reset(); engineB.reset();
+            massHistA.length = 0; massHistB.length = 0;
+            initialMassA = engineA.mass(); initialMassB = engineB.mass();
+            renderAll();
+        });
+        controls.append(playBtn, resetBtn);
+
+        const legend = makeLegend([
+            { label: "Basic", color: "#c1623f" },
+            { label: "Flow (rescaled)", color: "#3f8458" },
+            { label: "initial mass reference", color: "rgba(11,14,20,0.35)" },
+        ]);
+        controls.append(legend);
+        el.appendChild(controls);
+
+        const ctxA = cvsA.getContext("2d");
+        const ctxB = cvsB.getContext("2d");
+        const lookup = buildSpectrumLookup();
+        const imgA = ctxA.createImageData(sx, sy);
+        const imgB = ctxB.createImageData(sx, sy);
+        const pctxA = plotCanvasA.getContext("2d");
+        const pctxB = plotCanvasB.getContext("2d");
+
+        let initialMassA = engineA.mass();
+        let initialMassB = engineB.mass();
+        const massHistA = [];
+        const massHistB = [];
+        const maxHistLen = 240;
+
+        function renderState() {
+            renderStateToImageData(engineA.getState(), sx, sy, imgA, lookup);
+            ctxA.putImageData(imgA, 0, 0);
+            renderStateToImageData(engineB.getState(), sx, sy, imgB, lookup);
+            ctxB.putImageData(imgB, 0, 0);
+        }
+
+        function renderPlot(ctx, data, refMass, color, cw, ch) {
+            ctx.clearRect(0, 0, cw, ch);
+            ctx.fillStyle = "rgba(11, 14, 20, 0.02)";
+            ctx.fillRect(0, 0, cw, ch);
+
+            const padX = 2, padY = 4;
+            const pw = cw - padX * 2;
+            const ph = ch - padY * 2;
+            let maxV = refMass * 1.3;
+            for (const v of data) if (v > maxV) maxV = v;
+
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.3)";
+            ctx.setLineDash([3, 3]);
+            ctx.lineWidth = 1;
+            const refY = padY + ph - (refMass / maxV) * ph;
+            ctx.beginPath();
+            ctx.moveTo(padX, refY);
+            ctx.lineTo(padX + pw, refY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            for (let i = 0; i < data.length; i++) {
+                const x = padX + (i / Math.max(1, maxHistLen - 1)) * pw;
+                const y = padY + ph - (data[i] / maxV) * ph;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = "rgba(11, 14, 20, 0.55)";
+            ctx.font = "9px var(--sl-font-mono, monospace)";
+            ctx.textAlign = "right";
+            const last = data[data.length - 1];
+            if (last !== undefined) {
+                const pct = ((last / refMass - 1) * 100);
+                const sign = pct >= 0 ? "+" : "";
+                ctx.fillText("mass " + sign + pct.toFixed(1) + "%", cw - 4, 11);
+            } else {
+                ctx.fillText("mass —", cw - 4, 11);
+            }
+        }
+
+        function renderAll() {
+            renderState();
+            renderPlot(pctxA, massHistA, initialMassA, "#c1623f", plotCanvasA.width, plotCanvasA.height);
+            renderPlot(pctxB, massHistB, initialMassB, "#3f8458", plotCanvasB.width, plotCanvasB.height);
+        }
+
+        renderAll();
+
+        let lastFrame = 0;
+        function tick(now) {
+            if (playing && now - lastFrame > 60) {
+                engineA.step(false);
+                engineB.step(true);
+                massHistA.push(engineA.mass());
+                massHistB.push(engineB.mass());
+                if (massHistA.length > maxHistLen) massHistA.shift();
+                if (massHistB.length > maxHistLen) massHistB.shift();
+                renderAll();
+                lastFrame = now;
+            }
+            requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // ---------------------------------------------------------------
+    // W5: Search strategy comparison
+    // ---------------------------------------------------------------
 
     function initSearch(el) {
-        makeHeader(el, "Search strategy comparison");
+        makeHeader(el, "Search strategy comparison", "200-step fitness budget on the same multimodal landscape");
         const maxSteps = parseInt(el.dataset.steps) || 200;
         const autoPlay = el.dataset.autoPlay !== "false";
 
-        const panelW = 200;
-        const panelH = 200;
+        const panelW = 240;
+        const panelH = 240;
 
         function landscape(x, y) {
-            const d1 = Math.sqrt((x - 0.3) * (x - 0.3) + (y - 0.7) * (y - 0.7));
-            const d2 = Math.sqrt((x - 0.75) * (x - 0.75) + (y - 0.25) * (y - 0.25));
+            const d1 = Math.sqrt((x - 0.3) ** 2 + (y - 0.7) ** 2);
+            const d2 = Math.sqrt((x - 0.75) ** 2 + (y - 0.25) ** 2);
             const p1 = 0.7 * Math.exp(-(d1 * d1) / 0.02);
-            const p2 = 1.0 * Math.exp(-(d2 * d2) / 0.01);
+            const p2 = 1.0 * Math.exp(-(d2 * d2) / 0.012);
             const ripple = 0.15 * Math.sin(x * 12) * Math.sin(y * 12);
             return Math.max(0, Math.min(1, p1 + p2 + ripple));
         }
 
-        function makePanel(title) {
+        function makePanel(title, color) {
+            const card = document.createElement("div");
+            card.className = "lenia-strategy-card";
+            const t = document.createElement("div");
+            t.className = "lenia-panel-title";
+            t.textContent = title;
             const { canvas, ctx, w, h } = initCanvas(panelW, panelH);
-            const wrap = document.createElement("div");
-            wrap.className = "lenia-canvas-wrap plot";
+            const wrap = makeCanvasWrap("dark");
             wrap.appendChild(canvas);
-            const col = document.createElement("div");
-            const label = document.createElement("div");
-            label.className = "lenia-widget-title";
-            label.style.marginBottom = "6px";
-            label.textContent = title;
-            const metric = document.createElement("div");
-            metric.className = "lenia-metric";
-            metric.style.fontSize = "11px";
-            col.append(label, wrap, metric);
-            return { canvas, ctx, w, h, col, metric };
+            const caption = makeCaption("0 / " + maxSteps);
+            wrap.appendChild(caption);
+            const captionRow = document.createElement("div");
+            captionRow.className = "lenia-canvas-caption-row";
+            const lhs = document.createElement("span");
+            lhs.textContent = "best";
+            const rhs = document.createElement("span");
+            rhs.className = "accent";
+            rhs.textContent = "0.000";
+            captionRow.append(lhs, rhs);
+            const sparkWrap = document.createElement("div");
+            sparkWrap.className = "lenia-mass-plot-wrap";
+            const sparkCvs = document.createElement("canvas");
+            sparkCvs.width = panelW; sparkCvs.height = 40;
+            sparkWrap.appendChild(sparkCvs);
+            card.append(t, wrap, captionRow, sparkWrap);
+            return { canvas, ctx, w, h, card, captionRow, caption, bestVal: rhs, sparkCtx: sparkCvs.getContext("2d"), sparkW: panelW, sparkH: 40, color };
         }
 
-        const pRandom = makePanel("Random search");
-        const pES = makePanel("ES (gradient)");
-        const pME = makePanel("MAP-Elites");
+        const pRandom = makePanel("Random search", "#ffcc45");
+        const pES = makePanel("ES (gradient)", "#7cf5ff");
+        const pME = makePanel("MAP-Elites", "#ff6600");
 
         const body = document.createElement("div");
         body.className = "lenia-widget-body triple-panel";
-        body.append(pRandom.col, pES.col, pME.col);
+        body.append(pRandom.card, pES.card, pME.card);
 
         const controls = document.createElement("div");
         controls.className = "lenia-controls";
@@ -715,7 +1167,7 @@
         const stepSlider = makeSlider("step", 0, maxSteps, 1, 0, (v) => {
             step = Math.round(v);
             drawAll();
-        });
+        }, (v) => String(Math.round(v)));
         const playBtn = makeBtn(playing ? "Pause" : "Play", () => {
             playing = !playing;
             playBtn.textContent = playing ? "Pause" : "Play";
@@ -736,8 +1188,9 @@
             const rng = splitmix32(42);
             randomTrace = [];
             for (let i = 0; i < maxSteps; i++) {
-                randomTrace.push({ x: rng(), y: rng(), f: 0 });
-                randomTrace[i].f = landscape(randomTrace[i].x, randomTrace[i].y);
+                const p = { x: rng(), y: rng() };
+                p.f = landscape(p.x, p.y);
+                randomTrace.push(p);
             }
 
             const esRng = splitmix32(77);
@@ -780,14 +1233,60 @@
                 for (let x = 0; x < panel.w; x++) {
                     const f = landscape(x / panel.w, y / panel.h);
                     const idx = (y * panel.w + x) * 4;
-                    const v = Math.round(f * 40 + 220);
-                    imgData.data[idx] = v;
-                    imgData.data[idx + 1] = v;
-                    imgData.data[idx + 2] = v;
+                    const c = spectrumColor(f * 0.6);
+                    imgData.data[idx] = Math.round(c[0] * 0.7 + 25);
+                    imgData.data[idx + 1] = Math.round(c[1] * 0.7 + 30);
+                    imgData.data[idx + 2] = Math.round(c[2] * 0.7 + 38);
                     imgData.data[idx + 3] = 255;
                 }
             }
-            putPixels(panel, imgData);
+            const tmp = document.createElement("canvas");
+            tmp.width = panel.w; tmp.height = panel.h;
+            tmp.getContext("2d").putImageData(imgData, 0, 0);
+            panel.ctx.imageSmoothingEnabled = false;
+            panel.ctx.drawImage(tmp, 0, 0);
+            panel.ctx.imageSmoothingEnabled = true;
+        }
+
+        function drawSpark(panel, bestOverTime) {
+            const ctx = panel.sparkCtx;
+            const sw = panel.sparkW, sh = panel.sparkH;
+            ctx.clearRect(0, 0, sw, sh);
+            ctx.fillStyle = "rgba(11, 14, 20, 0.02)";
+            ctx.fillRect(0, 0, sw, sh);
+            const padX = 4, padY = 6;
+            const pw = sw - padX * 2;
+            const ph = sh - padY * 2;
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.18)";
+            ctx.setLineDash([2, 3]);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padX, padY + ph * 0.5);
+            ctx.lineTo(padX + pw, padY + ph * 0.5);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            if (bestOverTime.length === 0) return;
+            ctx.fillStyle = panel.color + "33";
+            ctx.beginPath();
+            ctx.moveTo(padX, padY + ph);
+            for (let i = 0; i < bestOverTime.length; i++) {
+                const x = padX + (i / Math.max(1, maxSteps - 1)) * pw;
+                const y = padY + ph - bestOverTime[i] * ph;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(padX + (bestOverTime.length - 1) / Math.max(1, maxSteps - 1) * pw, padY + ph);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = panel.color;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            for (let i = 0; i < bestOverTime.length; i++) {
+                const x = padX + (i / Math.max(1, maxSteps - 1)) * pw;
+                const y = padY + ph - bestOverTime[i] * ph;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
         }
 
         function drawAll() {
@@ -796,52 +1295,68 @@
             drawBackground(pME);
 
             let rBest = 0;
+            const rSpark = [];
             for (let i = 0; i < step && i < randomTrace.length; i++) {
                 const p = randomTrace[i];
-                pRandom.ctx.fillStyle = "rgba(83, 103, 191, 0.5)";
+                const t = (i + 1) / maxSteps;
+                pRandom.ctx.fillStyle = `rgba(255, 204, 69, ${0.35 + 0.55 * t})`;
                 pRandom.ctx.beginPath();
-                pRandom.ctx.arc(p.x * panelW, p.y * panelH, 2, 0, Math.PI * 2);
+                pRandom.ctx.arc(p.x * panelW, p.y * panelH, 2.5, 0, Math.PI * 2);
                 pRandom.ctx.fill();
                 if (p.f > rBest) rBest = p.f;
+                rSpark.push(rBest);
             }
-            pRandom.metric.textContent = "best: " + rBest.toFixed(3);
+            pRandom.caption.textContent = step + " / " + maxSteps;
+            pRandom.bestVal.textContent = rBest.toFixed(3);
+            drawSpark(pRandom, rSpark);
 
-            pES.ctx.strokeStyle = "rgba(83, 103, 191, 0.6)";
-            pES.ctx.lineWidth = 1;
+            pES.ctx.strokeStyle = "rgba(124, 245, 255, 0.7)";
+            pES.ctx.lineWidth = 1.5;
             pES.ctx.beginPath();
+            const eSpark = [];
+            let eBest = 0;
             for (let i = 0; i < step && i < esTrace.length; i++) {
                 const p = esTrace[i];
                 if (i === 0) pES.ctx.moveTo(p.x * panelW, p.y * panelH);
                 else pES.ctx.lineTo(p.x * panelW, p.y * panelH);
+                if (p.f > eBest) eBest = p.f;
+                eSpark.push(eBest);
             }
             pES.ctx.stroke();
             if (step > 0 && step <= esTrace.length) {
                 const last = esTrace[Math.min(step - 1, esTrace.length - 1)];
                 pES.ctx.fillStyle = "#ff6600";
                 pES.ctx.beginPath();
-                pES.ctx.arc(last.x * panelW, last.y * panelH, 4, 0, Math.PI * 2);
+                pES.ctx.arc(last.x * panelW, last.y * panelH, 5, 0, Math.PI * 2);
                 pES.ctx.fill();
-                pES.metric.textContent = "fitness: " + last.f.toFixed(3);
+                pES.ctx.strokeStyle = "rgba(255,255,255,0.85)";
+                pES.ctx.lineWidth = 1.5;
+                pES.ctx.stroke();
+                pES.bestVal.textContent = last.f.toFixed(3);
+            } else {
+                pES.bestVal.textContent = "0.000";
             }
+            pES.caption.textContent = step + " / " + maxSteps;
+            drawSpark(pES, eSpark);
 
             const gridN = 8;
             const cellW = panelW / gridN;
             const cellH = panelH / gridN;
             let coverage = 0;
+            let meBest = 0;
             for (let i = 0; i < meGrid.length; i++) {
                 const cell = meGrid[i];
                 if (cell && cell.step < step) {
                     coverage++;
+                    if (cell.f > meBest) meBest = cell.f;
                     const gx = i % gridN;
                     const gy = Math.floor(i / gridN);
-                    const cr = Math.round(60 + cell.f * 130);
-                    const cg = Math.round(130 + cell.f * 60);
-                    const cb = Math.round(80 + cell.f * 100);
-                    pME.ctx.fillStyle = "rgba(" + cr + "," + cg + "," + cb + ",0.7)";
+                    const c = spectrumColor(0.25 + cell.f * 0.7);
+                    pME.ctx.fillStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.82)`;
                     pME.ctx.fillRect(gx * cellW + 1, gy * cellH + 1, cellW - 2, cellH - 2);
                 }
             }
-            pME.ctx.strokeStyle = "rgba(11, 14, 20, 0.12)";
+            pME.ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
             pME.ctx.lineWidth = 0.5;
             for (let i = 1; i < gridN; i++) {
                 pME.ctx.beginPath();
@@ -853,7 +1368,21 @@
                 pME.ctx.lineTo(panelW, i * cellH);
                 pME.ctx.stroke();
             }
-            pME.metric.textContent = "coverage: " + coverage + "/" + (gridN * gridN);
+            pME.caption.textContent = coverage + " / " + (gridN * gridN) + " niches";
+            pME.bestVal.textContent = meBest.toFixed(3);
+
+            const mSpark = [];
+            let runningMax = 0;
+            const sortedByStep = meGrid.filter((c) => c !== null).sort((a, b) => a.step - b.step);
+            let cur = 0;
+            for (let i = 0; i < step; i++) {
+                while (cur < sortedByStep.length && sortedByStep[cur].step <= i) {
+                    if (sortedByStep[cur].f > runningMax) runningMax = sortedByStep[cur].f;
+                    cur++;
+                }
+                mSpark.push(runningMax);
+            }
+            drawSpark(pME, mSpark);
         }
 
         drawAll();
@@ -872,25 +1401,24 @@
         }
     }
 
-    // -- W5: CVT Builder --
+    // ---------------------------------------------------------------
+    // W6: CVT builder
+    // ---------------------------------------------------------------
 
     function initCVT(el) {
-        makeHeader(el, "Centroidal Voronoi tessellation (Lloyd's algorithm)");
+        makeHeader(el, "Centroidal Voronoi tessellation", "Lloyd's algorithm partitioning descriptor space");
         const nCentroids = parseInt(el.dataset.centroids) || 64;
-        const cvs = initCanvas(400, 400);
-        const wrap = document.createElement("div");
-        wrap.className = "lenia-canvas-wrap plot";
+        const cvs = initCanvas(480, 480);
+        const wrap = makeCanvasWrap("plot");
         wrap.appendChild(cvs.canvas);
+        wrap.appendChild(makeCaption("descriptor space (2D)"));
 
         const controls = document.createElement("div");
         controls.className = "lenia-controls";
         let iteration = 0;
         let playing = false;
 
-        const iterLabel = document.createElement("span");
-        iterLabel.className = "lenia-metric";
-        iterLabel.textContent = "iteration: 0";
-
+        const iterMetric = makeMetric("iteration", "0");
         const stepBtn = makeBtn("Step", () => { lloydStep(); draw(); });
         const playBtn = makeBtn("Play", () => {
             playing = !playing;
@@ -901,26 +1429,30 @@
             playBtn.textContent = "Play";
             iteration = 0;
             initCentroids();
+            iterMetric.querySelector(".lenia-metric-value").textContent = "0";
             draw();
         });
-        controls.append(stepBtn, playBtn, resetBtn, iterLabel);
+        controls.append(stepBtn, playBtn, resetBtn, iterMetric);
 
         const body = document.createElement("div");
         body.className = "lenia-widget-body";
-        body.append(wrap, controls);
-        el.appendChild(body);
+        body.append(wrap);
+        el.append(body, controls);
 
         let centroids;
+        let prevCentroids;
+        let anim = { progress: 1 };
 
         function initCentroids() {
             const rng = splitmix32(7);
             centroids = [];
-            for (let i = 0; i < nCentroids; i++) {
-                centroids.push([rng(), rng()]);
-            }
+            for (let i = 0; i < nCentroids; i++) centroids.push([rng(), rng()]);
+            prevCentroids = centroids.map((c) => c.slice());
+            anim.progress = 1;
         }
 
         function lloydStep() {
+            prevCentroids = centroids.map((c) => c.slice());
             const sums = Array.from({ length: nCentroids }, () => [0, 0, 0]);
             const res = 128;
             for (let y = 0; y < res; y++) {
@@ -946,17 +1478,24 @@
                 }
             }
             iteration++;
-            iterLabel.textContent = "iteration: " + iteration;
+            iterMetric.querySelector(".lenia-metric-value").textContent = String(iteration);
+            anim.progress = 0;
+        }
+
+        function lerpCentroid(k) {
+            const t = anim.progress;
+            return [
+                prevCentroids[k][0] + (centroids[k][0] - prevCentroids[k][0]) * t,
+                prevCentroids[k][1] + (centroids[k][1] - prevCentroids[k][1]) * t,
+            ];
         }
 
         function draw() {
             const { ctx, w, h } = cvs;
             const imgData = ctx.createImageData(w, h);
 
-            const colors = centroids.map((_, i) => {
-                const hue = (i * 360 / nCentroids + 30) % 360;
-                return hslToRgb(hue, 0.25, 0.88);
-            });
+            const interp = centroids.map((_, k) => lerpCentroid(k));
+            const colors = interp.map((_, i) => spectrumColor(0.15 + ((i * 37) % nCentroids) / nCentroids * 0.7));
 
             for (let y = 0; y < h; y++) {
                 for (let x = 0; x < w; x++) {
@@ -964,60 +1503,58 @@
                     const py = (y + 0.5) / h;
                     let minD = Infinity, minK = 0;
                     for (let k = 0; k < nCentroids; k++) {
-                        const dx = px - centroids[k][0];
-                        const dy = py - centroids[k][1];
+                        const dx = px - interp[k][0];
+                        const dy = py - interp[k][1];
                         const d = dx * dx + dy * dy;
                         if (d < minD) { minD = d; minK = k; }
                     }
                     const idx = (y * w + x) * 4;
                     const c = colors[minK];
-                    imgData.data[idx] = c[0];
-                    imgData.data[idx + 1] = c[1];
-                    imgData.data[idx + 2] = c[2];
+                    imgData.data[idx] = Math.round(c[0] * 0.32 + 200);
+                    imgData.data[idx + 1] = Math.round(c[1] * 0.32 + 200);
+                    imgData.data[idx + 2] = Math.round(c[2] * 0.32 + 200);
                     imgData.data[idx + 3] = 255;
                 }
             }
             putPixels(cvs, imgData);
 
-            ctx.fillStyle = "#0b0e14";
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.06)";
+            ctx.lineWidth = 1;
+            for (let i = 0; i < interp.length; i++) {
+                for (let j = i + 1; j < interp.length; j++) {
+                    const dx = interp[i][0] - interp[j][0];
+                    const dy = interp[i][1] - interp[j][1];
+                    if (dx * dx + dy * dy < 0.025) {
+                        ctx.beginPath();
+                        ctx.moveTo(interp[i][0] * w, interp[i][1] * h);
+                        ctx.lineTo(interp[j][0] * w, interp[j][1] * h);
+                        ctx.stroke();
+                    }
+                }
+            }
+
             for (let k = 0; k < nCentroids; k++) {
                 ctx.beginPath();
-                ctx.arc(centroids[k][0] * w, centroids[k][1] * h, 3, 0, Math.PI * 2);
+                ctx.fillStyle = "#0b0e14";
+                ctx.arc(interp[k][0] * w, interp[k][1] * h, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
-        }
-
-        function hslToRgb(h, s, l) {
-            h /= 360;
-            let r, g, b;
-            if (s === 0) {
-                r = g = b = l;
-            } else {
-                const hue2rgb = (p, q, t) => {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1/6) return p + (q - p) * 6 * t;
-                    if (t < 1/2) return q;
-                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                    return p;
-                };
-                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                const p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1/3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1/3);
-            }
-            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
         }
 
         initCentroids();
         draw();
 
         if (!reducedMotion) {
-            function tick() {
-                if (playing) {
+            let lastStep = 0;
+            function tick(now) {
+                if (anim.progress < 1) {
+                    anim.progress = Math.min(1, anim.progress + 0.05);
+                    draw();
+                }
+                if (playing && anim.progress >= 1 && now - lastStep > 600) {
                     lloydStep();
                     draw();
+                    lastStep = now;
                 }
                 requestAnimationFrame(tick);
             }
@@ -1025,25 +1562,27 @@
         }
     }
 
-    // -- W6: MAP-Elites Step-Through --
+    // ---------------------------------------------------------------
+    // W7: MAP-Elites step-through
+    // ---------------------------------------------------------------
 
     function initMapElites(el) {
-        makeHeader(el, "MAP-Elites step-through");
+        makeHeader(el, "MAP-Elites step-through", "select, vary, evaluate, place");
         const traceSrc = el.dataset.traceSrc;
         const nCentroids = parseInt(el.dataset.centroids) || 64;
 
-        const gridCvs = initCanvas(300, 300);
-        const gridWrap = document.createElement("div");
-        gridWrap.className = "lenia-canvas-wrap plot";
+        const gridCvs = initCanvas(380, 380);
+        const gridWrap = makeCanvasWrap("plot");
         gridWrap.appendChild(gridCvs.canvas);
+        gridWrap.appendChild(makeCaption("descriptor archive"));
 
         const narration = document.createElement("div");
         narration.className = "lenia-narration";
-        narration.textContent = "Loading trace data...";
+        narration.textContent = "Loading trace...";
 
         const body = document.createElement("div");
-        body.className = "lenia-widget-body dual-panel";
-        body.append(gridWrap, narration);
+        body.className = "lenia-widget-body";
+        body.append(gridWrap);
 
         const controls = document.createElement("div");
         controls.className = "lenia-controls";
@@ -1051,7 +1590,7 @@
         const metricsBar = document.createElement("div");
         metricsBar.className = "lenia-metrics-bar";
 
-        el.append(body, controls, metricsBar);
+        el.append(body, narration, controls, metricsBar);
 
         let trace = null;
         let gen = 0;
@@ -1059,10 +1598,7 @@
         let repertoire = [];
 
         function loadTrace() {
-            if (!traceSrc) {
-                useSyntheticTrace();
-                return;
-            }
+            if (!traceSrc) { useSyntheticTrace(); return; }
             fetch(traceSrc)
                 .then((r) => r.json())
                 .then((data) => {
@@ -1070,18 +1606,13 @@
                     setupControls();
                     drawState();
                 })
-                .catch(() => {
-                    useSyntheticTrace();
-                });
+                .catch(() => useSyntheticTrace());
         }
 
         function useSyntheticTrace() {
             const rng = splitmix32(42);
             const cents = [];
-            for (let i = 0; i < nCentroids; i++) {
-                cents.push([rng(), rng()]);
-            }
-
+            for (let i = 0; i < nCentroids; i++) cents.push([rng(), rng()]);
             const gens = [];
             for (let i = 0; i < 80; i++) {
                 const parentIdx = Math.floor(rng() * nCentroids);
@@ -1116,7 +1647,7 @@
             const slider = makeSlider("gen", 0, maxGen, 1, 0, (v) => {
                 gen = Math.round(v);
                 drawState();
-            });
+            }, (v) => String(Math.round(v)));
             const playBtn = makeBtn("Play", () => {
                 playing = !playing;
                 playBtn.textContent = playing ? "Pause" : "Play";
@@ -1135,7 +1666,7 @@
             if (!reducedMotion) {
                 let lastTick = 0;
                 function tick(now) {
-                    if (playing && now - lastTick > 400) {
+                    if (playing && now - lastTick > 350) {
                         if (gen < maxGen) {
                             gen++;
                             slider.input.value = String(gen);
@@ -1181,13 +1712,14 @@
                     const idx = (py * w + px) * 4;
                     if (repertoire[minK] !== null) {
                         const f = repertoire[minK];
-                        imgData.data[idx] = Math.round(30 + f * 50);
-                        imgData.data[idx + 1] = Math.round(80 + f * 120);
-                        imgData.data[idx + 2] = Math.round(60 + f * 100);
+                        const c = spectrumColor(0.25 + f * 0.7);
+                        imgData.data[idx] = Math.round(c[0] * 0.7 + 50);
+                        imgData.data[idx + 1] = Math.round(c[1] * 0.7 + 50);
+                        imgData.data[idx + 2] = Math.round(c[2] * 0.7 + 50);
                     } else {
-                        imgData.data[idx] = 240;
-                        imgData.data[idx + 1] = 240;
-                        imgData.data[idx + 2] = 240;
+                        imgData.data[idx] = 244;
+                        imgData.data[idx + 1] = 245;
+                        imgData.data[idx + 2] = 247;
                     }
                     imgData.data[idx + 3] = 255;
                 }
@@ -1197,7 +1729,7 @@
             for (let k = 0; k < trace.centroids.length; k++) {
                 const cx = trace.centroids[k][0] * w;
                 const cy = trace.centroids[k][1] * h;
-                ctx.fillStyle = repertoire[k] !== null ? "#0b0e14" : "rgba(11,14,20,0.25)";
+                ctx.fillStyle = repertoire[k] !== null ? "#0b0e14" : "rgba(11,14,20,0.18)";
                 ctx.beginPath();
                 ctx.arc(cx, cy, 2, 0, Math.PI * 2);
                 ctx.fill();
@@ -1207,21 +1739,26 @@
                 const ev = trace.generations[gen - 1];
                 const cx = ev.child_descriptor[0] * w;
                 const cy = ev.child_descriptor[1] * h;
-                ctx.strokeStyle = ev.outcome === "placed" ? "#3c7f61" : "#c1623f";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = ev.outcome === "placed" ? "#3f8458" : "#c1623f";
+                ctx.lineWidth = 2.5;
                 ctx.beginPath();
-                ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                ctx.arc(cx, cy, 8, 0, Math.PI * 2);
                 ctx.stroke();
 
                 const parentC = trace.centroids[ev.parent_idx];
-                ctx.strokeStyle = "rgba(83, 103, 191, 0.6)";
-                ctx.lineWidth = 1;
-                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = "rgba(255, 102, 0, 0.7)";
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
                 ctx.beginPath();
                 ctx.moveTo(parentC[0] * w, parentC[1] * h);
                 ctx.lineTo(cx, cy);
                 ctx.stroke();
                 ctx.setLineDash([]);
+
+                ctx.fillStyle = "#ff6600";
+                ctx.beginPath();
+                ctx.arc(parentC[0] * w, parentC[1] * h, 3.5, 0, Math.PI * 2);
+                ctx.fill();
             }
 
             let coverage = 0, totalFit = 0, maxFit = 0;
@@ -1235,8 +1772,8 @@
 
             metricsBar.replaceChildren(
                 makeMetric("generation", String(gen)),
-                makeMetric("coverage", coverage + "/" + trace.centroids.length),
-                makeMetric("QD score", totalFit.toFixed(2)),
+                makeMetric("coverage", coverage + " / " + trace.centroids.length),
+                makeMetric("QD score", totalFit.toFixed(2), "accent"),
                 makeMetric("max fitness", maxFit.toFixed(3))
             );
 
@@ -1246,18 +1783,18 @@
                     narration.textContent = ev.previous_fitness !== null
                         ? "Child placed in cell " + ev.landing_cell +
                           " (fitness " + ev.child_fitness.toFixed(3) +
-                          " > " + ev.previous_fitness.toFixed(3) + ")"
+                          " > incumbent " + ev.previous_fitness.toFixed(3) + ")"
                         : "Child placed in empty cell " + ev.landing_cell +
                           " (fitness " + ev.child_fitness.toFixed(3) + ")";
                 } else {
                     narration.textContent =
                         "Child discarded from cell " + ev.landing_cell +
                         " (fitness " + ev.child_fitness.toFixed(3) +
-                        " did not exceed incumbent)";
+                        " did not beat incumbent)";
                 }
             } else {
                 narration.textContent = gen === 0
-                    ? "Press Play or Step to begin the MAP-Elites loop."
+                    ? "Press Play to walk through the MAP-Elites loop generation by generation."
                     : "Repertoire complete.";
             }
         }
@@ -1265,34 +1802,43 @@
         loadTrace();
     }
 
-    // -- W7: Isoline Variation Visualizer --
+    // ---------------------------------------------------------------
+    // W8: Isoline variation
+    // ---------------------------------------------------------------
 
     function initIsoline(el) {
-        makeHeader(el, "Isoline variation");
-        let isoSigma = parseFloat(el.dataset.isoSigma) || 0.005;
-        let lineSigma = parseFloat(el.dataset.lineSigma) || 0.05;
+        makeHeader(el, "Isoline variation", "drag A and B to set the line; samples redraw live");
+        let isoSigma = parseFloat(el.dataset.isoSigma) || 0.03;
+        let lineSigma = parseFloat(el.dataset.lineSigma) || 0.12;
 
-        const cvs = initCanvas(400, 400);
-        const wrap = document.createElement("div");
-        wrap.className = "lenia-canvas-wrap plot";
+        const cvs = initCanvas(460, 460);
+        const wrap = makeCanvasWrap("plot");
         wrap.appendChild(cvs.canvas);
+        wrap.appendChild(makeCaption("descriptor space"));
 
         const controls = document.createElement("div");
         controls.className = "lenia-controls";
-        const sIso = makeSlider("iso \u03c3", 0.001, 0.05, 0.001, isoSigma, (v) => {
+        const sIso = makeSlider("iso σ", 0.001, 0.08, 0.001, isoSigma, (v) => {
             isoSigma = v;
             draw();
         });
-        const sLine = makeSlider("line \u03c3", 0.005, 0.2, 0.005, lineSigma, (v) => {
+        const sLine = makeSlider("line σ", 0.005, 0.25, 0.005, lineSigma, (v) => {
             lineSigma = v;
             draw();
         });
         controls.append(sIso.group, sLine.group);
 
+        const legend = makeLegend([
+            { label: "isotropic", color: "rgba(80, 123, 255, 0.7)" },
+            { label: "directional", color: "rgba(255, 113, 56, 0.7)" },
+            { label: "combined", color: "rgba(63, 132, 88, 0.85)" },
+        ]);
+        controls.append(legend);
+
         const body = document.createElement("div");
         body.className = "lenia-widget-body";
-        body.append(wrap, controls);
-        el.appendChild(body);
+        body.append(wrap);
+        el.append(body, controls);
 
         let pointA = [0.3, 0.5];
         let pointB = [0.7, 0.5];
@@ -1350,8 +1896,21 @@
             const { ctx, w, h } = cvs;
             ctx.clearRect(0, 0, w, h);
 
-            ctx.fillStyle = "#f5f5f5";
+            const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.7);
+            grad.addColorStop(0, "rgba(255, 102, 0, 0.04)");
+            grad.addColorStop(1, "rgba(11, 14, 20, 0.02)");
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.04)";
+            ctx.lineWidth = 1;
+            const gridStep = w / 10;
+            for (let i = 1; i < 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * gridStep, 0); ctx.lineTo(i * gridStep, h); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * gridStep); ctx.lineTo(w, i * gridStep); ctx.stroke();
+            }
 
             const ax = pointA[0] * w, ay = pointA[1] * h;
             const bx = pointB[0] * w, by = pointB[1] * h;
@@ -1359,78 +1918,70 @@
             const dx = pointB[0] - pointA[0];
             const dy = pointB[1] - pointA[1];
             const len = Math.sqrt(dx * dx + dy * dy) || 1e-6;
-            const dirX = dx / len;
-            const dirY = dy / len;
+            const dirX = dx / len, dirY = dy / len;
+
+            const nSamples = 100;
 
             const rng = splitmix32(123);
-            const nSamples = 80;
-
-            ctx.fillStyle = "rgba(83, 103, 191, 0.2)";
+            ctx.fillStyle = "rgba(80, 123, 255, 0.35)";
             for (let i = 0; i < nSamples; i++) {
                 const isoX = gaussRandom(rng) * isoSigma;
                 const isoY = gaussRandom(rng) * isoSigma;
-                const cx = pointA[0] + isoX;
-                const cy = pointA[1] + isoY;
                 ctx.beginPath();
-                ctx.arc(cx * w, cy * h, 2.5, 0, Math.PI * 2);
+                ctx.arc((pointA[0] + isoX) * w, (pointA[1] + isoY) * h, 2.5, 0, Math.PI * 2);
                 ctx.fill();
             }
 
             const rng2 = splitmix32(456);
-            ctx.fillStyle = "rgba(193, 98, 63, 0.2)";
+            ctx.fillStyle = "rgba(255, 113, 56, 0.35)";
             for (let i = 0; i < nSamples; i++) {
                 const lineT = gaussRandom(rng2) * lineSigma;
-                const cx = pointA[0] + dirX * lineT;
-                const cy = pointA[1] + dirY * lineT;
                 ctx.beginPath();
-                ctx.arc(cx * w, cy * h, 2.5, 0, Math.PI * 2);
+                ctx.arc((pointA[0] + dirX * lineT) * w, (pointA[1] + dirY * lineT) * h, 2.5, 0, Math.PI * 2);
                 ctx.fill();
             }
 
             const rng3 = splitmix32(789);
-            ctx.fillStyle = "rgba(63, 132, 88, 0.35)";
+            ctx.fillStyle = "rgba(63, 132, 88, 0.6)";
             for (let i = 0; i < nSamples; i++) {
                 const isoX = gaussRandom(rng3) * isoSigma;
                 const isoY = gaussRandom(rng3) * isoSigma;
                 const lineT = gaussRandom(rng3) * lineSigma;
-                const cx = pointA[0] + isoX + dirX * lineT;
-                const cy = pointA[1] + isoY + dirY * lineT;
                 ctx.beginPath();
-                ctx.arc(cx * w, cy * h, 3, 0, Math.PI * 2);
+                ctx.arc((pointA[0] + isoX + dirX * lineT) * w, (pointA[1] + isoY + dirY * lineT) * h, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            ctx.setLineDash([5, 4]);
-            ctx.strokeStyle = "rgba(11, 14, 20, 0.3)";
-            ctx.lineWidth = 1;
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = "rgba(11, 14, 20, 0.35)";
+            ctx.lineWidth = 1.2;
             ctx.beginPath();
             ctx.moveTo(ax, ay);
             ctx.lineTo(bx, by);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            ctx.fillStyle = "#5367bf";
+            ctx.fillStyle = "#0b0e14";
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(ax, ay, 7, 0, Math.PI * 2);
+            ctx.arc(ax, ay, 9, 0, Math.PI * 2);
             ctx.fill();
+            ctx.stroke();
             ctx.fillStyle = "#fff";
-            ctx.font = "bold 10px sans-serif";
+            ctx.font = "bold 11px var(--sl-font-mono, monospace)";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("A", ax, ay);
 
-            ctx.fillStyle = "#c1623f";
+            ctx.fillStyle = "#ff6600";
+            ctx.strokeStyle = "#fff";
             ctx.beginPath();
-            ctx.arc(bx, by, 7, 0, Math.PI * 2);
+            ctx.arc(bx, by, 9, 0, Math.PI * 2);
             ctx.fill();
+            ctx.stroke();
             ctx.fillStyle = "#fff";
             ctx.fillText("B", bx, by);
-
-            ctx.fillStyle = "#657694";
-            ctx.font = "11px sans-serif";
-            ctx.textAlign = "left";
-            ctx.textBaseline = "top";
-            ctx.fillText("isotropic (blue) + directional (red) = combined (green)", 8, h - 18);
         }
 
         draw();

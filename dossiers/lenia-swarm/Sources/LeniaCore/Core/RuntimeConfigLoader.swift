@@ -139,6 +139,7 @@ public func loadRuntimeConfig(from jsonData: Data, overrides: [String: Any]? = n
             border: model.reintegration.border
         ),
         params: resolvedParams,
+        randomParamRanges: model.params.mode == "random" ? model.params.ranges : nil,
         initSeed: initialState.seed,
         patches: initialState.patches,
         aUniform: initialState.a_uniform,

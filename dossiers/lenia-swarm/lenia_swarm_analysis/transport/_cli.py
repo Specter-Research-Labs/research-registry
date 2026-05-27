@@ -16,6 +16,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("repro-report", add_help=False, help="Build transport reproducibility report")
     sub.add_parser("dense-report", add_help=False, help="Build transport dense report")
     sub.add_parser("winner", add_help=False, help="Build transport winner packet")
+    sub.add_parser("confidence-report", add_help=False, help="Build transport confidence report")
 
     args, remaining = parser.parse_known_args(argv)
 
@@ -45,6 +46,10 @@ def main(argv: list[str] | None = None) -> int:
         return run(remaining)
     if args.command == "winner":
         from .winner import main as run
+
+        return run(remaining)
+    if args.command == "confidence-report":
+        from .confidence_report import main as run
 
         return run(remaining)
 

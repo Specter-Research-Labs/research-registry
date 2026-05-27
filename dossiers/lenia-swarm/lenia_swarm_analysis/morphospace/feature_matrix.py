@@ -16,6 +16,8 @@ from lenia_swarm_analysis.topology.analysis import (
 
 ValueColumn = Literal["raw_value", "normalized_value"]
 MatrixFilters = dict[str, str | None]
+EXACT_CROSS_DISTANCE_MAX = 1_000_000
+CROSS_DISTANCE_SAMPLE_COUNT = 250_000
 
 
 def _validate_value_column(value_column: str) -> ValueColumn:
@@ -45,6 +47,91 @@ def _distribution_summary(values: np.ndarray) -> dict[str, Any]:
         "p90": _finite_or_none(float(np.quantile(values, 0.9))),
         "max": _finite_or_none(float(np.max(values))),
     }
+
+
+def _euclidean_distance_matrix(left_matrix: np.ndarray, right_matrix: np.ndarray) -> np.ndarray:
+    distances_sq = (
+        np.sum(left_matrix * left_matrix, axis=1)[:, None]
+        + np.sum(right_matrix * right_matrix, axis=1)[None, :]
+        - 2.0 * (left_matrix @ right_matrix.T)
+    )
+    np.maximum(distances_sq, 0.0, out=distances_sq)
+    return np.sqrt(distances_sq)
+
+
+def _sample_cross_distances(
+    *,
+    left_matrix: np.ndarray,
+    right_matrix: np.ndarray,
+    sample_count: int = CROSS_DISTANCE_SAMPLE_COUNT,
+) -> dict[str, Any]:
+    pair_count = left_matrix.shape[0] * right_matrix.shape[0]
+    if pair_count <= EXACT_CROSS_DISTANCE_MAX:
+        distances = _euclidean_distance_matrix(left_matrix, right_matrix)
+        return {
+            "method": "exact_all_pairs",
+            "pairCount": int(pair_count),
+            "distribution": _distribution_summary(distances.reshape(-1)),
+        }
+    rng = np.random.default_rng(20260521)
+    resolved_count = min(sample_count, pair_count)
+    left_indices = rng.integers(0, left_matrix.shape[0], size=resolved_count)
+    right_indices = rng.integers(0, right_matrix.shape[0], size=resolved_count)
+    distances = np.linalg.norm(left_matrix[left_indices] - right_matrix[right_indices], axis=1)
+    return {
+        "method": "sampled_pairs",
+        "pairCount": int(pair_count),
+        "sampleCount": int(resolved_count),
+        "seed": 20260521,
+        "distribution": _distribution_summary(distances),
+    }
+
+
+def _nearest_neighbors(
+    *,
+    source_matrix: np.ndarray,
+    target_matrix: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    if source_matrix.shape[0] == 0 or target_matrix.shape[0] == 0:
+        return np.empty((0,), dtype=np.float64), np.empty((0,), dtype=np.int64)
+    try:
+        from scipy.spatial import cKDTree  # type: ignore[import-not-found]
+    except ImportError:
+        return _nearest_neighbors_chunked(
+            source_matrix=source_matrix,
+            target_matrix=target_matrix,
+        )
+    tree = cKDTree(target_matrix)
+    distances, indices = tree.query(source_matrix, k=1, workers=-1)
+    return np.asarray(distances, dtype=np.float64), np.asarray(indices, dtype=np.int64)
+
+
+def _nearest_neighbors_chunked(
+    *,
+    source_matrix: np.ndarray,
+    target_matrix: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    max_distance_elements = 8_000_000
+    chunk_size = max(
+        1,
+        min(source_matrix.shape[0], max_distance_elements // target_matrix.shape[0]),
+    )
+    target_norms = np.sum(target_matrix * target_matrix, axis=1)
+    distances = np.empty((source_matrix.shape[0],), dtype=np.float64)
+    indices = np.empty((source_matrix.shape[0],), dtype=np.int64)
+    for start in range(0, source_matrix.shape[0], chunk_size):
+        stop = min(source_matrix.shape[0], start + chunk_size)
+        chunk = source_matrix[start:stop]
+        distances_sq = (
+            np.sum(chunk * chunk, axis=1)[:, None]
+            + target_norms[None, :]
+            - 2.0 * (chunk @ target_matrix.T)
+        )
+        np.maximum(distances_sq, 0.0, out=distances_sq)
+        nearest = np.argmin(distances_sq, axis=1)
+        indices[start:stop] = nearest
+        distances[start:stop] = np.sqrt(distances_sq[np.arange(stop - start), nearest])
+    return distances, indices
 
 
 def _feature_space_payload(
@@ -172,12 +259,73 @@ def _axis_delta_sort_key(row: dict[str, Any]) -> float:
     return abs(float(absolute_delta)) if isinstance(absolute_delta, (int, float)) else 0.0
 
 
+def _nearest_axis_deltas(
+    *,
+    axes: list[dict[str, Any]],
+    left_values: np.ndarray,
+    right_values: np.ndarray,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for index, axis in enumerate(axes):
+        delta = float(right_values[index] - left_values[index])
+        rows.append(
+            {
+                "axisId": axis["axisId"],
+                "axisIndex": axis["axisIndex"],
+                "axisLabel": axis["label"],
+                "leftValue": _finite_or_none(float(left_values[index])),
+                "rightValue": _finite_or_none(float(right_values[index])),
+                "deltaRightMinusLeft": _finite_or_none(delta),
+                "absoluteDelta": _finite_or_none(abs(delta)),
+            }
+        )
+    return sorted(rows, key=lambda row: float(row["absoluteDelta"] or 0.0), reverse=True)
+
+
+def _nearest_match_rows_from_indices(
+    *,
+    direction: str,
+    axes: list[dict[str, Any]],
+    left_observations: list[dict[str, Any]],
+    right_observations: list[dict[str, Any]],
+    left_matrix: np.ndarray,
+    right_matrix: np.ndarray,
+    left_indices: np.ndarray,
+    right_indices: np.ndarray,
+    nearest_distances: np.ndarray,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    if nearest_distances.size == 0:
+        return []
+    order = np.argsort(nearest_distances, kind="stable")[:limit]
+    rows: list[dict[str, Any]] = []
+    for rank, nearest_index in enumerate(order):
+        left_index = int(left_indices[nearest_index])
+        right_index = int(right_indices[nearest_index])
+        rows.append(
+            {
+                "rank": rank,
+                "direction": direction,
+                "distance": _finite_or_none(float(nearest_distances[nearest_index])),
+                "left": left_observations[left_index],
+                "right": right_observations[right_index],
+                "axisDeltas": _nearest_axis_deltas(
+                    axes=axes,
+                    left_values=left_matrix[left_index],
+                    right_values=right_matrix[right_index],
+                ),
+            }
+        )
+    return rows
+
+
 def _filter_sql(
     *,
     source_id: str | None,
     study_id: str | None,
     run_id: str | None,
     observation_kind: str | None,
+    source_algorithm: str | None,
 ) -> tuple[str, list[str]]:
     clauses: list[str] = []
     params: list[str] = []
@@ -193,6 +341,9 @@ def _filter_sql(
     if observation_kind is not None:
         clauses.append("comparison_observations_vw.observation_kind = ?")
         params.append(observation_kind)
+    if source_algorithm is not None:
+        clauses.append("comparison_observations_vw.source_algorithm = ?")
+        params.append(source_algorithm)
     if not clauses:
         return "", []
     return " AND " + " AND ".join(clauses), params
@@ -206,12 +357,14 @@ def _observation_payloads(
     study_id: str | None,
     run_id: str | None,
     observation_kind: str | None,
+    source_algorithm: str | None,
 ) -> list[dict[str, Any]]:
     filter_sql, filter_params = _filter_sql(
         source_id=source_id,
         study_id=study_id,
         run_id=run_id,
         observation_kind=observation_kind,
+        source_algorithm=source_algorithm,
     )
     rows = connection.execute(
         f"""
@@ -285,6 +438,7 @@ def export_feature_matrix(
     study_id: str | None = None,
     run_id: str | None = None,
     observation_kind: str | None = None,
+    source_algorithm: str | None = None,
 ) -> dict[str, Any]:
     resolved_value_column = _validate_value_column(value_column)
     feature_space = _feature_space_payload(connection, feature_space_id=feature_space_id)
@@ -298,6 +452,7 @@ def export_feature_matrix(
         study_id=study_id,
         run_id=run_id,
         observation_kind=observation_kind,
+        source_algorithm=source_algorithm,
     )
     observation_index = {
         str(observation["observationId"]): index for index, observation in enumerate(observations)
@@ -357,6 +512,7 @@ def run_feature_tda(
     study_id: str | None = None,
     run_id: str | None = None,
     observation_kind: str | None = None,
+    source_algorithm: str | None = None,
     max_homology_dim: int = 1,
 ) -> dict[str, Any]:
     matrix_packet = export_feature_matrix(
@@ -367,6 +523,7 @@ def run_feature_tda(
         study_id=study_id,
         run_id=run_id,
         observation_kind=observation_kind,
+        source_algorithm=source_algorithm,
     )
     matrix = np.asarray(matrix_packet["matrix"], dtype=np.float64)
     if matrix.shape[0] < 2:
@@ -406,22 +563,26 @@ def compare_feature_cohorts(
     left_study_id: str | None = None,
     left_run_id: str | None = None,
     left_observation_kind: str | None = None,
+    left_source_algorithm: str | None = None,
     right_source_id: str | None = None,
     right_study_id: str | None = None,
     right_run_id: str | None = None,
     right_observation_kind: str | None = None,
+    right_source_algorithm: str | None = None,
 ) -> dict[str, Any]:
     left_filters: MatrixFilters = {
         "sourceId": left_source_id,
         "studyId": left_study_id,
         "runId": left_run_id,
         "observationKind": left_observation_kind,
+        "sourceAlgorithm": left_source_algorithm,
     }
     right_filters: MatrixFilters = {
         "sourceId": right_source_id,
         "studyId": right_study_id,
         "runId": right_run_id,
         "observationKind": right_observation_kind,
+        "sourceAlgorithm": right_source_algorithm,
     }
     left_packet = export_feature_matrix(
         connection,
@@ -431,6 +592,7 @@ def compare_feature_cohorts(
         study_id=left_study_id,
         run_id=left_run_id,
         observation_kind=left_observation_kind,
+        source_algorithm=left_source_algorithm,
     )
     right_packet = export_feature_matrix(
         connection,
@@ -440,6 +602,7 @@ def compare_feature_cohorts(
         study_id=right_study_id,
         run_id=right_run_id,
         observation_kind=right_observation_kind,
+        source_algorithm=right_source_algorithm,
     )
     left_matrix = np.asarray(left_packet["matrix"], dtype=np.float64)
     right_matrix = np.asarray(right_packet["matrix"], dtype=np.float64)
@@ -450,21 +613,48 @@ def compare_feature_cohorts(
     if left_matrix.shape[1] != right_matrix.shape[1]:
         raise ValueError("cohorts must have the same axis count")
 
-    distances = np.sqrt(
-        np.sum(
-            (left_matrix[:, None, :] - right_matrix[None, :, :]) ** 2,
-            axis=2,
-            dtype=np.float64,
-        )
+    cross_distance_sample = _sample_cross_distances(
+        left_matrix=left_matrix,
+        right_matrix=right_matrix,
     )
-    left_to_right = np.min(distances, axis=1)
-    right_to_left = np.min(distances, axis=0)
+    left_to_right, left_to_right_indices = _nearest_neighbors(
+        source_matrix=left_matrix,
+        target_matrix=right_matrix,
+    )
+    right_to_left, right_to_left_indices = _nearest_neighbors(
+        source_matrix=right_matrix,
+        target_matrix=left_matrix,
+    )
     axis_comparisons = _axis_comparisons(
         axes=left_packet["axes"],
         left_matrix=left_matrix,
         right_matrix=right_matrix,
     )
     top_axis_deltas = sorted(axis_comparisons, key=_axis_delta_sort_key, reverse=True)[:10]
+    nearest_matches = {
+        "leftToRight": _nearest_match_rows_from_indices(
+            direction="leftToRight",
+            axes=left_packet["axes"],
+            left_observations=left_packet["observations"],
+            right_observations=right_packet["observations"],
+            left_matrix=left_matrix,
+            right_matrix=right_matrix,
+            left_indices=np.arange(left_matrix.shape[0], dtype=np.int64),
+            right_indices=left_to_right_indices,
+            nearest_distances=left_to_right,
+        ),
+        "rightToLeft": _nearest_match_rows_from_indices(
+            direction="rightToLeft",
+            axes=left_packet["axes"],
+            left_observations=left_packet["observations"],
+            right_observations=right_packet["observations"],
+            left_matrix=left_matrix,
+            right_matrix=right_matrix,
+            left_indices=right_to_left_indices,
+            right_indices=np.arange(right_matrix.shape[0], dtype=np.int64),
+            nearest_distances=right_to_left,
+        ),
+    }
     return {
         "packetKind": "comparative_feature_cohort_comparison_v1",
         "summary": {
@@ -473,7 +663,12 @@ def compare_feature_cohorts(
             "axisCount": left_matrix.shape[1],
             "left": _matrix_summary(left_packet, label=left_label, filters=left_filters),
             "right": _matrix_summary(right_packet, label=right_label, filters=right_filters),
-            "crossDistance": _distribution_summary(distances.reshape(-1)),
+            "crossDistance": cross_distance_sample["distribution"],
+            "crossDistanceMethod": {
+                key: value
+                for key, value in cross_distance_sample.items()
+                if key != "distribution"
+            },
             "leftToRightNearestDistance": _distribution_summary(left_to_right),
             "rightToLeftNearestDistance": _distribution_summary(right_to_left),
         },
@@ -481,4 +676,5 @@ def compare_feature_cohorts(
         "axes": left_packet["axes"],
         "axisComparisons": axis_comparisons,
         "topAxisDeltas": top_axis_deltas,
+        "nearestMatches": nearest_matches,
     }

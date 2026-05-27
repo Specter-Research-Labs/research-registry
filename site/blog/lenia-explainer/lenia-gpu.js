@@ -116,14 +116,71 @@ var LeniaGPU = (() => {
         return mask;
     }
 
-    function generateInitialState(phenotype, config) {
+    function rle2cells(rle) {
+        const stripped = rle.replace(/!$/, "") + "$";
+        const twoCharPrefix = "pqrstuvwxy@";
+        const rows = [];
+        let row = [];
+        let count = "";
+        let last = "";
+        for (let i = 0; i < stripped.length; i++) {
+            const ch = stripped[i];
+            if (ch >= "0" && ch <= "9") { count += ch; continue; }
+            if (twoCharPrefix.indexOf(ch) >= 0) { last = ch; continue; }
+            const token = last + ch;
+            last = "";
+            if (token === "$") {
+                const n = count === "" ? 1 : parseInt(count, 10);
+                rows.push(row);
+                for (let k = 1; k < n; k++) rows.push([]);
+                row = [];
+                count = "";
+                continue;
+            }
+            let val;
+            if (token === "." || token === "b") val = 0;
+            else if (token === "o") val = 255;
+            else if (token.length === 1) val = token.charCodeAt(0) - 64;
+            else val = (token.charCodeAt(0) - 112) * 24 + (token.charCodeAt(1) - 65 + 25);
+            const n = count === "" ? 1 : parseInt(count, 10);
+            for (let k = 0; k < n; k++) row.push(val / 255);
+            count = "";
+        }
+        const w = rows.reduce((m, r) => Math.max(m, r.length), 0);
+        const h = rows.length;
+        const data = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) {
+            const r = rows[y];
+            for (let x = 0; x < r.length; x++) data[y * w + x] = r[x];
+        }
+        return { w, h, data };
+    }
+
+    function initFromRle(init, config) {
         const { sx, sy, channels } = config;
         const state = new Float32Array(sx * sy * channels);
-        const rng = splitmix32(phenotype.seed);
-        const low = phenotype.a_uniform.low;
-        const high = phenotype.a_uniform.high;
+        const { w, h, data } = rle2cells(init.cells);
+        const x0 = Math.floor(init.cx * sx - w / 2);
+        const y0 = Math.floor(init.cy * sy - h / 2);
+        const ch = init.channel;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const px = ((x0 + x) % sx + sx) % sx;
+                const py = ((y0 + y) % sy + sy) % sy;
+                state[(py * sx + px) * channels + ch] = data[y * w + x];
+            }
+        }
+        return state;
+    }
 
-        for (const patch of phenotype.patches) {
+    function initFromPatches(init, config) {
+        const { sx, sy, channels } = config;
+        const state = new Float32Array(sx * sy * channels);
+        const rng = splitmix32(init.seed);
+        const low = init.a_uniform.low;
+        const high = init.a_uniform.high;
+
+        for (const patch of init.patches) {
             const cx = patch.cx * sx;
             const cy = patch.cy * sy;
             const r = patch.radius * Math.min(sx, sy);
@@ -144,6 +201,13 @@ var LeniaGPU = (() => {
         }
 
         return state;
+    }
+
+    function generateInitialState(phenotype, config) {
+        const init = phenotype.init;
+        if (init.kind === "rle") return initFromRle(init, config);
+        if (init.kind === "patches") return initFromPatches(init, config);
+        throw new Error(`unknown init kind: ${init.kind}`);
     }
 
     async function fetchShader(basePath, name) {
@@ -348,7 +412,7 @@ var LeniaGPU = (() => {
                 device.queue.submit([encoder.finish()]);
             },
 
-            render(canvasFormat, gpuCtx, renderPipeline, renderBindGroup) {
+            render(gpuCtx, renderPipeline, renderBindGroup) {
                 const encoder = device.createCommandEncoder();
                 const pass = encoder.beginRenderPass({
                     colorAttachments: [{
@@ -437,7 +501,7 @@ var LeniaGPU = (() => {
             },
 
             render() {
-                engine.render(canvasFormat, gpuCtx, renderPipeline, renderBindGroup);
+                engine.render(gpuCtx, renderPipeline, renderBindGroup);
             },
 
             reset() {

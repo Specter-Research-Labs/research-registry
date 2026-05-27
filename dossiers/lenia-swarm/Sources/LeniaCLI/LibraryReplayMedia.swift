@@ -35,7 +35,7 @@ func discoverLibraryReplayBundles(from inputURL: URL) throws -> [LibraryReplayBu
         let manifestURL = campaignDir.appendingPathComponent("replay-manifest.json")
         guard FileManager.default.fileExists(atPath: manifestURL.path) else { continue }
         let manifest = try decoder.decode(LibraryReplayManifest.self, from: Data(contentsOf: manifestURL))
-        guard manifest.inputKind == "library_index" else { continue }
+        guard manifest.inputKind == "library_index" || manifest.inputKind == "export_index" else { continue }
 
         let libraryURL = campaignDir.appendingPathComponent("library/index.jsonl")
         let configURL = campaignDir.appendingPathComponent("config.json")
@@ -147,13 +147,29 @@ private func captureLibraryReplayFrames(
     seed: Int,
     searchConfig: SearchConfig,
     frameBudget: Int
-) throws -> [Data] {
+) throws -> [CapturedStateFrame] {
     let stride = max(1, max(searchConfig.steps - searchConfig.warmupSteps, 1) / max(frameBudget, 1))
     var capturedFrames: [Data] = []
+    var capturedStateFrames: [CapturedStateFrame] = []
     capturedFrames.reserveCapacity(frameBudget + 8)
-    let capture = FrameCapture(stride: stride, includeWarmup: false, sampleIndex: 0) { _, _, _, data in
-        capturedFrames.append(data)
-    }
+    capturedStateFrames.reserveCapacity(frameBudget + 8)
+    let capture = FrameCapture(
+        stride: stride,
+        includeWarmup: false,
+        sampleIndex: 0,
+        handler: { _, _, _, data in
+            capturedFrames.append(data)
+        },
+        stateHandler: { step, width, height, channels, values in
+            capturedStateFrames.append(CapturedStateFrame(
+                step: step,
+                width: width,
+                height: height,
+                channels: channels,
+                values: values
+            ))
+        }
+    )
     let engine = SearchEngine(runtimeConfig: runtimeConfig)
     _ = engine.runBatch(
         seeds: [seed],
@@ -161,10 +177,21 @@ private func captureLibraryReplayFrames(
         searchConfig: searchConfig,
         frameCapture: capture
     )
-    guard !capturedFrames.isEmpty else {
+    guard !capturedStateFrames.isEmpty || !capturedFrames.isEmpty else {
         throw ValidationError("Failed to capture library replay frames for seed \(seed).")
     }
-    return Array(capturedFrames.prefix(frameBudget))
+    if !capturedStateFrames.isEmpty {
+        return Array(capturedStateFrames.prefix(frameBudget))
+    }
+    return Array(capturedFrames.prefix(frameBudget).enumerated().map { index, data in
+        CapturedStateFrame(
+            step: index,
+            width: runtimeConfig.sx,
+            height: runtimeConfig.sy,
+            channels: 1,
+            values: data.map { Float($0) / 255.0 }
+        )
+    })
 }
 
 func renderLibraryReplayMediaBundle(
@@ -182,8 +209,14 @@ func renderLibraryReplayMediaBundle(
     if FileManager.default.fileExists(atPath: runURL.path) {
         try FileManager.default.removeItem(at: runURL)
     }
+    let framesURL = runURL.appendingPathComponent("frames", isDirectory: true)
     let colorFramesURL = runURL.appendingPathComponent("frames_color", isDirectory: true)
+    let channelFramesURL = runURL.appendingPathComponent("frames_channels", isDirectory: true)
+    let maskFramesURL = runURL.appendingPathComponent("frames_mask", isDirectory: true)
+    try FileManager.default.createDirectory(at: framesURL, withIntermediateDirectories: true)
     try FileManager.default.createDirectory(at: colorFramesURL, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: channelFramesURL, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: maskFramesURL, withIntermediateDirectories: true)
 
     let replayConfig = try libraryReplayBaseConfig(bundle: bundle, steps: steps)
     let runtimeConfig = try loadRuntimeConfig(from: JSONEncoder().encode(replayConfig))
@@ -199,11 +232,44 @@ func renderLibraryReplayMediaBundle(
         frameBudget: frameBudget
     )
 
-    let colorWriter = ColorFrameWriter(outputDir: colorFramesURL)
+    let matterScale = robustMatterScale(frames)
+    let frameWriter = FrameWriter(outputDir: framesURL)
+    let colorWriter = ChannelAwareColorFrameWriter(outputDir: colorFramesURL)
+    let channelWriter = ChannelDiagnosticFrameWriter(outputDir: channelFramesURL)
+    let maskWriter = FrameWriter(outputDir: maskFramesURL)
     for (index, frame) in frames.enumerated() {
-        colorWriter.write(step: index, width: runtimeConfig.sx, height: runtimeConfig.sy, grayscale: frame)
+        frameWriter.write(
+            step: index,
+            width: runtimeConfig.sx,
+            height: runtimeConfig.sy,
+            data: frame.matterBytes(scale: matterScale)
+        )
+        let indexedFrame = CapturedStateFrame(
+            step: index,
+            width: frame.width,
+            height: frame.height,
+            channels: frame.channels,
+            values: frame.values
+        )
+        colorWriter.write(frame: indexedFrame, scale: matterScale)
+        channelWriter.write(frame: indexedFrame, scale: matterScale)
+        maskWriter.write(
+            step: index,
+            width: runtimeConfig.sx,
+            height: runtimeConfig.sy,
+            data: indexedFrame.supportMaskBytes(scale: matterScale)
+        )
+    }
+    if let error = frameWriter.error {
+        throw error
     }
     if let error = colorWriter.error {
+        throw error
+    }
+    if let error = channelWriter.error {
+        throw error
+    }
+    if let error = maskWriter.error {
         throw error
     }
 
@@ -230,8 +296,12 @@ func renderLibraryReplayMediaBundle(
         selectionReason: specimenId,
         frames: frames.count,
         fps: fps,
-        framesPath: colorFramesURL.path,
+        framesPath: framesURL.path,
         framesColorPath: colorFramesURL.path,
+        framesChannelPath: channelFramesURL.path,
+        framesMaskPath: maskFramesURL.path,
+        templatePatchesPath: nil,
+        nativeSteps: nil,
         videoPath: videoURL.path
     )
 }

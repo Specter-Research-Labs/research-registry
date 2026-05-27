@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>fig-fish-near-witnesses</title>
+<style>
+html, body { margin: 0; padding: 0; background: #ffffff; }
+.fnw-figure {
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: #0b0e14;
+  background: #ffffff;
+  padding: 26px 32px 22px;
+}
+.fnw-figure .fnw-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: #b4573d; margin: 0 0 10px;
+}
+.fnw-figure .fnw-title {
+  font-size: 20px; font-weight: 700; margin: 0 0 6px; line-height: 1.25;
+}
+.fnw-figure .fnw-subtitle {
+  font-size: 13px; color: rgba(11,14,20,0.66); margin: 0 0 20px; line-height: 1.5;
+}
+.fnw-figure .fnw-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.fnw-figure .fnw-cell {
+  display: flex; flex-direction: column;
+  background: #0b0e14;
+  border: 1px solid #d7d7d2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.fnw-figure .fnw-cell video {
+  width: 100%; aspect-ratio: 1; display: block; background: #0b0e14;
+}
+.fnw-figure .fnw-cell .fnw-meta {
+  background: #ffffff;
+  padding: 10px 12px 11px;
+  border-top: 1px solid #d7d7d2;
+}
+.fnw-figure .fnw-cell .fnw-label {
+  font-size: 13px; font-weight: 700; color: #0b0e14;
+  letter-spacing: 0.02em; margin: 0;
+}
+.fnw-figure .fnw-cell .fnw-source {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(11,14,20,0.50);
+  margin: 4px 0 0;
+}
+.fnw-figure .fnw-footer {
+  font-size: 11px; color: rgba(11,14,20,0.55); margin: 18px 0 0;
+  line-height: 1.55;
+}
+@media (max-width: 720px) {
+  .fnw-figure { padding: 18px 18px 14px; }
+  .fnw-figure .fnw-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .fnw-figure .fnw-title { font-size: 17px; }
+  .fnw-figure .fnw-subtitle { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<figure class="fnw-figure">
+  <p class="fnw-eyebrow">Fish-near patch · 6 of 256 specimens</p>
+  <p class="fnw-title">What the fish-pulling patch actually looks like</p>
+  <p class="fnw-subtitle">Six specimens from the 256-member H<sub>1</sub> neighborhood whose median fish distance is 3.30 (against a global 5.90). All 96-frame replays at 8 fps.</p>
+  <div class="fnw-grid">
+    <div class="fnw-cell">
+      <video src="fish-near/library-0-flow-map-elite-53.mp4" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="fnw-meta">
+        <p class="fnw-label">flow-map-elite-53</p>
+        <p class="fnw-source">coherent-biomorph-2c-128 · 2026-05-06</p>
+      </div>
+    </div>
+    <div class="fnw-cell">
+      <video src="fish-near/library-0-flow-map-elite-58.mp4" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="fnw-meta">
+        <p class="fnw-label">flow-map-elite-58</p>
+        <p class="fnw-source">coherent-biomorph-2c-128 · 2026-05-06</p>
+      </div>
+    </div>
+    <div class="fnw-cell">
+      <video src="fish-near/library-0-flow-map-elite-45.mp4" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="fnw-meta">
+        <p class="fnw-label">flow-map-elite-45</p>
+        <p class="fnw-source">coherent-biomorph-2c-128 · 2026-05-06</p>
+      </div>
+    </div>
+    <div class="fnw-cell">
+      <video src="fish-near/library-0-flow-map-elite-28.mp4" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="fnw-meta">
+        <p class="fnw-label">flow-map-elite-28</p>
+        <p class="fnw-source">coherent-biomorph-2c-128 · 2026-05-06</p>
+      </div>
+    </div>
+    <div class="fnw-cell">
+      <video src="fish-near/library-0-flow-map-elite-38.mp4" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="fnw-meta">
+        <p class="fnw-label">flow-map-elite-38</p>
+        <p class="fnw-source">coherent-biomorph-2c-128 · 2026-05-06 · transport winner</p>
+      </div>
+    </div>
+    <div class="fnw-cell">
+      <video src="fish-near/library-6938-glowing-pulse-6186.mp4" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="fnw-meta">
+        <p class="fnw-label">6938-glowing-pulse-6186</p>
+        <p class="fnw-source">no-food-256x2c · 2026-05-05</p>
+      </div>
+    </div>
+  </div>
+  <p class="fnw-footer">Each clip is one specimen replayed from its library config. The bodies are elongated and directional rather than radially blob-shaped, which is what pulls them away from the EmbryoMaker cohort and toward the fish outlines under our descriptors.</p>
+</figure>
+</body>
+</html>

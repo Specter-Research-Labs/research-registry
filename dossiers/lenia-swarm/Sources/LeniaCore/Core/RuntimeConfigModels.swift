@@ -179,6 +179,7 @@ public struct LeniaRuntimeConfig: Sendable {
     public let border: String
     public let implementation: ImplementationSettings
     public let params: ResolvedParams
+    public let randomParamRanges: KernelParamRanges?
     public let initSeed: Int
     public let patches: [PatchConfig]
     public let aUniform: UniformRange
@@ -212,6 +213,7 @@ public struct LeniaRuntimeConfig: Sendable {
         border: String,
         implementation: ImplementationSettings,
         params: ResolvedParams,
+        randomParamRanges: KernelParamRanges? = nil,
         initSeed: Int,
         patches: [PatchConfig],
         aUniform: UniformRange,
@@ -244,6 +246,7 @@ public struct LeniaRuntimeConfig: Sendable {
         self.border = border
         self.implementation = implementation
         self.params = params
+        self.randomParamRanges = randomParamRanges
         self.initSeed = initSeed
         self.patches = patches
         self.aUniform = aUniform

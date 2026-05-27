@@ -3,24 +3,28 @@
     "name": "Orbium",
     "genotype": {
       "R": 13,
-      "r": [0.5],
+      "r": [1.0],
       "b": [[1.0]],
-      "w": [[0.2]],
+      "w": [[0.15]],
       "a": [[0.5]],
       "m": [0.15],
-      "s": [0.017],
-      "h": [0.1]
+      "s": [0.015],
+      "h": [1.0]
     },
     "phenotype": {
-      "seed": 0,
-      "patches": [{ "cx": 0.5, "cy": 0.5, "radius": 0.16 }],
-      "a_uniform": { "low": 0, "high": 1 }
+      "init": {
+        "kind": "rle",
+        "cx": 0.5,
+        "cy": 0.5,
+        "channel": 0,
+        "cells": "7.MD6.qL$6.pKqEqFURpApBRAqQ$5.VqTrSsBrOpXpWpTpWpUpCrQ$4.CQrQsTsWsApITNPpGqGvL$3.IpIpWrOsGsBqXpJ4.LsFrL$A.DpKpSpJpDqOqUqSqE5.ExD$qL.pBpTT2.qCrGrVrWqM5.sTpP$.pGpWpD3.qUsMtItQtJ6.tL$.uFqGH3.pXtOuR2vFsK5.sM$.tUqL4.GuNwAwVxBwNpC4.qXpA$2.uH5.vBxGyEyMyHtW4.qIpL$2.wV5.tIyG3yOxQqW2.FqHpJ$2.tUS4.rM2yOyJyOyHtVpPMpFqNV$2.HsR4.pUxAyOxLxDxEuVrMqBqGqKJ$3.sLpE3.pEuNxHwRwGvUuLsHrCqTpR$3.TrMS2.pFsLvDvPvEuPtNsGrGqIP$4.pRqRpNpFpTrNtGtVtStGsMrNqNpF$5.pMqKqLqRrIsCsLsIrTrFqJpHE$6.RpSqJqPqVqWqRqKpRXE$8.OpBpIpJpFTK!"
+      }
     },
     "runConfig": {
       "grid": { "sx": 128, "sy": 128 },
       "channels": 1,
       "connectivity": [[0], [[0]]],
-      "flow": { "dt": 0.2, "dd": 5, "sigma": 0.65, "n": 2, "theta_a": 2.0 },
+      "flow": { "dt": 0.1, "dd": 5, "sigma": 0.65, "n": 2, "theta_a": 2.0 },
       "reintegration": { "border": "torus" }
     }
   },
@@ -37,9 +41,12 @@
       "h": [0.174]
     },
     "phenotype": {
-      "seed": 17,
-      "patches": [{ "cx": 0.5, "cy": 0.5, "radius": 0.14 }],
-      "a_uniform": { "low": 0, "high": 1 }
+      "init": {
+        "kind": "patches",
+        "seed": 17,
+        "patches": [{ "cx": 0.5, "cy": 0.5, "radius": 0.14 }],
+        "a_uniform": { "low": 0, "high": 1 }
+      }
     },
     "runConfig": {
       "grid": { "sx": 128, "sy": 128 },
@@ -62,9 +69,12 @@
       "h": [0.174, 0.46, 0.31, 0.242, 0.508, 0.566, 0.406, 0.27, 0.588, 0.294, 0.388, 0.62, 0.348, 0.436, 0.39]
     },
     "phenotype": {
-      "seed": 42,
-      "patches": [{ "cx": 0.5, "cy": 0.5, "radius": 0.12 }],
-      "a_uniform": { "low": 0, "high": 1 }
+      "init": {
+        "kind": "patches",
+        "seed": 42,
+        "patches": [{ "cx": 0.5, "cy": 0.5, "radius": 0.12 }],
+        "a_uniform": { "low": 0, "high": 1 }
+      }
     },
     "runConfig": {
       "grid": { "sx": 128, "sy": 128 },

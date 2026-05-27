@@ -78,7 +78,8 @@ public func scoreMetrics(_ metrics: SimulationMetrics, weights: [String: Float])
         case "activity_ean_mean": value = metrics.activityEanMean ?? 0
         case "activity_diversity_mean": value = metrics.activityDiversityMean ?? 0
         case "activity_species_mean": value = metrics.activitySpeciesMean ?? 0
-        default: continue
+        default:
+            fatalError("scoreMetrics: unknown score key '\(key)'")
         }
         score += weight * value
     }

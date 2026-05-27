@@ -31,6 +31,7 @@ lenia-swarm-arrangement-packet = "lenia_swarm_analysis.arrangement_packet:main"
 lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibration_packet:main"
 lenia-swarm-local-results-library = "lenia_swarm_analysis.local_results_library:main"
 lenia-swarm-loop-variant-report = "lenia_swarm_analysis.loop_variant_report:main"
+lenia-swarm-chakazul-presets = "lenia_swarm_analysis.chakazul_presets:main"
 
 [build-system]
 requires = ["hatchling>=1.27.0"]

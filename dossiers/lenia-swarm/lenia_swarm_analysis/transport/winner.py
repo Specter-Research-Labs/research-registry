@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 KNOWN_VARIANTS = {"mh", "hbias", "mbias"}
-KNOWN_SCALES = {"small", "medium", "large"}
+KNOWN_SCALES = {"small", "medium", "large", "wide"}
 KNOWN_PROFILES = {"tight", "wide"}
 
 

@@ -585,6 +585,41 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(result.count[0], 2.0, accuracy: 1e-6)
         XCTAssertEqual(result.largestFraction[0], 0.75, accuracy: 1e-6)
         XCTAssertGreaterThan(result.largestAnisotropy[0], 0.95)
+        XCTAssertEqual(result.massEvenness[0], 0.8112781, accuracy: 1e-5)
+    }
+
+    func testComponentMassEvennessRewardsBalancedFleets() {
+        let width = 10
+        let height = 4
+        var balanced = [Float](repeating: 0, count: width * height)
+        var dominated = [Float](repeating: 0, count: width * height)
+        for x in [0, 2, 4, 6, 8] {
+            balanced[1 * width + x] = 1.0
+        }
+        for x in 0..<5 {
+            dominated[1 * width + x] = 1.0
+        }
+        for x in [7, 9] {
+            dominated[1 * width + x] = 0.1
+        }
+        dominated[3 * width + 0] = 0.1
+        dominated[3 * width + 9] = 0.1
+        let result = computeComponentMetricsBatch(
+            materialized: MassBatchCPU(
+                flat: balanced + dominated,
+                batch: 2,
+                height: height,
+                width: width,
+                sampleSize: width * height
+            ),
+            threshold: 0.05,
+            useTorus: false
+        )
+
+        XCTAssertEqual(result.count[0], 5.0, accuracy: 1e-6)
+        XCTAssertEqual(result.massEvenness[0], 1.0, accuracy: 1e-6)
+        XCTAssertEqual(result.count[1], 5.0, accuracy: 1e-6)
+        XCTAssertLessThan(result.massEvenness[1], 0.55)
     }
 
     func testComponentMetricScoringAndFilters() {
@@ -623,6 +658,189 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertFalse(passesFilters(metrics, filters: ["largest_component_fraction_min": 0.9]))
         XCTAssertTrue(passesFilters(metrics, filters: ["largest_component_anisotropy_max": 1.0]))
         XCTAssertFalse(passesFilters(metrics, filters: ["largest_component_anisotropy_max": 0.9]))
+    }
+
+    func testComponentCountTargetMismatchSupportsFamilyObjectives() {
+        XCTAssertEqual(componentCountTargetMismatch(3.0, target: 3.0), 0.0, accuracy: 1e-6)
+        XCTAssertEqual(componentCountTargetMismatch(2.0, target: 3.0), 1.0, accuracy: 1e-6)
+        XCTAssertEqual(componentCountTargetMismatch(5.0, target: 3.0), 2.0, accuracy: 1e-6)
+
+        let decoded = try! JSONDecoder().decode(
+            FitnessConfig.self,
+            from: Data(
+                """
+                {
+                  "objective": "template_sequence",
+                  "target_step": 120,
+                  "angle_threshold": 0.0,
+                  "component_count_target": 3.0,
+                  "component_count_target_penalty": 2.0,
+                  "minimum_component_count": 1.0,
+                  "maximum_component_count": 3.0,
+                  "component_count_limit_penalty": 7.0,
+                  "minimum_largest_component_fraction": 0.95,
+                  "maximum_largest_component_fraction": 0.98,
+                  "largest_component_fraction_penalty": 9.0,
+                  "largest_component_fraction_limit_penalty": 4.0,
+                  "maximum_largest_component_anisotropy": 0.45,
+                  "minimum_component_mass_evenness": 0.60,
+                  "component_mass_evenness_penalty": 15.0,
+                  "component_mass_evenness_reward": 1.5,
+                  "minimum_moment_mass": 50.0,
+                  "maximum_moment_mass": 115.0,
+                  "minimum_moment_density": 0.05,
+                  "maximum_moment_density": 0.50,
+                  "moment_density_penalty": 11.0,
+                  "maximum_moment_anisotropy": 0.20,
+                  "moment_anisotropy_limit_penalty": 13.0,
+                  "morphology_guard_failure_fitness": -1000000.0,
+                  "largest_component_internal_stripe_penalty": 23.0,
+                  "largest_component_oriented_ridge_penalty": 29.0,
+                  "minimum_trajectory_path_length": 0.11,
+                  "trajectory_path_length_penalty": 5.0,
+                  "trajectory_path_length_reward": 0.25,
+                  "minimum_trajectory_displacement": 0.07,
+                  "trajectory_displacement_penalty": 6.0,
+                  "trajectory_displacement_reward": 0.35,
+                  "minimum_movement_efficiency": 0.40,
+                  "movement_efficiency_penalty": 7.0,
+                  "movement_efficiency_reward": 0.45,
+                  "minimum_center_velocity": 0.015,
+                  "center_velocity_penalty": 3.0,
+                  "center_velocity_reward": 100.0,
+                  "sector_transport_reward": 17.0,
+                  "sector_transport_bin_count": 48,
+                  "sector_transport_minimum_contrast": 0.04,
+                  "minimum_sector_transport": 0.08,
+                  "sector_transport_penalty": 19.0
+                }
+                """.utf8
+            )
+        )
+
+        XCTAssertEqual(decoded.componentCountTarget, 3.0)
+        XCTAssertEqual(decoded.componentCountTargetPenalty, 2.0)
+        XCTAssertEqual(decoded.minimumComponentCount, 1.0)
+        XCTAssertEqual(decoded.maximumComponentCount, 3.0)
+        XCTAssertEqual(decoded.componentCountLimitPenalty, 7.0)
+        XCTAssertEqual(decoded.minimumLargestComponentFraction, 0.95)
+        XCTAssertEqual(decoded.maximumLargestComponentFraction, 0.98)
+        XCTAssertEqual(decoded.largestComponentFractionPenalty, 9.0)
+        XCTAssertEqual(decoded.largestComponentFractionLimitPenalty, 4.0)
+        XCTAssertEqual(decoded.maximumLargestComponentAnisotropy, 0.45)
+        XCTAssertEqual(decoded.minimumComponentMassEvenness, 0.60)
+        XCTAssertEqual(decoded.componentMassEvennessPenalty, 15.0)
+        XCTAssertEqual(decoded.componentMassEvennessReward, 1.5)
+        XCTAssertEqual(decoded.minimumMomentMass, 50.0)
+        XCTAssertEqual(decoded.maximumMomentMass, 115.0)
+        XCTAssertEqual(decoded.minimumMomentDensity, 0.05)
+        XCTAssertEqual(decoded.maximumMomentDensity, 0.50)
+        XCTAssertEqual(decoded.momentDensityPenalty, 11.0)
+        XCTAssertEqual(decoded.maximumMomentAnisotropy, 0.20)
+        XCTAssertEqual(decoded.momentAnisotropyLimitPenalty, 13.0)
+        XCTAssertEqual(decoded.morphologyGuardFailureFitness, -1000000.0)
+        XCTAssertEqual(decoded.largestComponentInternalStripePenalty, 23.0)
+        XCTAssertEqual(decoded.largestComponentOrientedRidgePenalty, 29.0)
+        XCTAssertTrue(decoded.usesMorphologyGuard)
+	        XCTAssertEqual(decoded.minimumTrajectoryPathLength, 0.11)
+	        XCTAssertEqual(decoded.trajectoryPathLengthPenalty, 5.0)
+	        XCTAssertEqual(decoded.trajectoryPathLengthReward, 0.25)
+	        XCTAssertEqual(decoded.minimumTrajectoryDisplacement, 0.07)
+	        XCTAssertEqual(decoded.trajectoryDisplacementPenalty, 6.0)
+	        XCTAssertEqual(decoded.trajectoryDisplacementReward, 0.35)
+	        XCTAssertEqual(decoded.minimumMovementEfficiency, 0.40)
+	        XCTAssertEqual(decoded.movementEfficiencyPenalty, 7.0)
+	        XCTAssertEqual(decoded.movementEfficiencyReward, 0.45)
+	        XCTAssertEqual(decoded.minimumCenterVelocity, 0.015)
+	        XCTAssertEqual(decoded.centerVelocityPenalty, 3.0)
+	        XCTAssertEqual(decoded.centerVelocityReward, 100.0)
+        XCTAssertEqual(decoded.sectorTransportReward, 17.0)
+        XCTAssertEqual(decoded.sectorTransportBinCount, 48)
+        XCTAssertEqual(decoded.sectorTransportMinimumContrast, 0.04)
+        XCTAssertEqual(decoded.minimumSectorTransport, 0.08)
+        XCTAssertEqual(decoded.sectorTransportPenalty, 19.0)
+        XCTAssertTrue(decoded.usesMorphologyMetrics)
+        XCTAssertTrue(decoded.usesTrajectoryMetrics)
+        XCTAssertTrue(decoded.usesSectorTransport)
+    }
+
+    func testEvolutionMorphologyGuardRejectsDeadCandidateBeforeMotionScore() throws {
+        let statePatch = InitStatePatchConfig(
+            center: [16, 16],
+            width: 4,
+            height: 4,
+            channels: 1,
+            values: [Float](repeating: 0.0, count: 4 * 4)
+        )
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 1,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [],
+            aUniform: UniformRange(low: 0.0, high: 0.0),
+            statePatch: statePatch
+        )
+        let esConfig = ESConfig(
+            outputDir: "/tmp/evolution-morphology-guard-test",
+            generations: 1,
+            population: 2,
+            sigma: 0.01,
+            learningRate: 0.01,
+            seed: 123,
+            steps: 2,
+            fitness: FitnessConfig(
+                objective: "directed_motion",
+                targetStep: 2,
+                angleThreshold: 0.0,
+                minimumComponentCount: 1.0,
+                minimumLargestComponentFraction: 0.95,
+                minimumMomentMass: 1.0,
+                minimumMomentDensity: 0.05,
+                maximumMomentAnisotropy: 0.4,
+                morphologyGuardFailureFitness: -123.0
+            ),
+            fitnessShaping: "raw",
+            initPatch: nil,
+            initialInitPatchValues: nil,
+            paramRanges: nil,
+            obstacleField: nil
+        )
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 10.0),
+        ]
+        let engine = EvolutionEngine(runtimeConfig: runtimeConfig, esConfig: esConfig, ranges: ranges)
+        let candidate = paramsToVector(
+            runtimeConfig.params,
+            space: ParamSpace(nbK: runtimeConfig.nbK, ranges: ranges)
+        )
+
+        let export = engine.evaluateCandidateForResearchExport(candidate)
+
+        XCTAssertEqual(export.fitness, -123.0, accuracy: 1e-6)
+        let morphology = try XCTUnwrap(export.finalMorphology)
+        XCTAssertTrue(morphology.guardFailed)
+        XCTAssertEqual(morphology.componentCount ?? -1, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(export.resultData.metrics.componentCount ?? -1, 0.0, accuracy: 1e-6)
+        XCTAssertNotNil(export.resultData.metrics.momentDensity)
+        XCTAssertNotNil(export.resultData.metrics.largestComponentInternalStripe)
+        XCTAssertNotNil(export.resultData.metrics.largestComponentOrientedRidge)
+        let metadata = try researchMetadataValue(morphology.metadataPayload)
+        let metadataData = try JSONEncoder().encode(metadata)
+        let metadataJSON = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: metadataData) as? [String: Any]
+        )
+        XCTAssertEqual(metadataJSON["guard_failed"] as? Bool, true)
+        XCTAssertEqual(try XCTUnwrap(metadataJSON["component_count"] as? Double), 0.0, accuracy: 1e-6)
     }
 
     func testEvolutionHelpersExcludeExternalChannels() {
@@ -1100,6 +1318,964 @@ final class LeniaCoreTests: XCTestCase {
                 }
             }
         }
+    }
+
+    func testEvolutionInitialStateUsesRuntimeStatePatch() throws {
+        let values = (0..<(4 * 4 * 2)).map { Float($0 + 1) / 100.0 }
+        let statePatch = InitStatePatchConfig(
+            center: [16, 16],
+            width: 4,
+            height: 4,
+            channels: 2,
+            values: values
+        )
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 2,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [],
+            aUniform: UniformRange(low: 0.0, high: 0.0),
+            statePatch: statePatch
+        )
+        let esConfig = ESConfig(
+            outputDir: "/tmp/evolution-state-patch-test",
+            generations: 1,
+            population: 2,
+            sigma: 0.01,
+            learningRate: 0.01,
+            seed: 123,
+            steps: 4,
+            fitness: FitnessConfig(objective: "directed_motion", targetStep: 2, angleThreshold: 0.0),
+            fitnessShaping: "raw",
+            initPatch: nil,
+            initialInitPatchValues: nil,
+            paramRanges: nil,
+            obstacleField: nil
+        )
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 10.0),
+        ]
+
+        let engine = EvolutionEngine(runtimeConfig: runtimeConfig, esConfig: esConfig, ranges: ranges)
+        let state = engine.buildInitialState(seed: 999)
+        eval(state)
+        let data = state.flattened().asArray(Float.self)
+
+        let x0 = 14
+        let y0 = 14
+        var patchIndex = 0
+        for x in x0..<(x0 + 4) {
+            for y in y0..<(y0 + 4) {
+                for c in 0..<2 {
+                    let idx = (x * runtimeConfig.sy + y) * runtimeConfig.channels + c
+                    XCTAssertEqual(data[idx], values[patchIndex], accuracy: 1e-6)
+                    patchIndex += 1
+                }
+            }
+        }
+        XCTAssertEqual(data.reduce(0, +), values.reduce(0, +), accuracy: 1e-5)
+    }
+
+    func testEvolutionResearchExportPreservesRuntimeStatePatch() throws {
+        let values = (0..<(4 * 4 * 2)).map { Float($0 + 1) / 100.0 }
+        let statePatch = InitStatePatchConfig(
+            center: [16, 16],
+            width: 4,
+            height: 4,
+            channels: 2,
+            values: values
+        )
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 2,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [],
+            aUniform: UniformRange(low: 0.0, high: 0.0),
+            statePatch: statePatch
+        )
+        let esConfig = ESConfig(
+            outputDir: "/tmp/evolution-state-patch-export-test",
+            generations: 1,
+            population: 2,
+            sigma: 0.01,
+            learningRate: 0.01,
+            seed: 123,
+            steps: 4,
+            fitness: FitnessConfig(objective: "directed_motion", targetStep: 2, angleThreshold: 0.0),
+            fitnessShaping: "raw",
+            initPatch: nil,
+            initialInitPatchValues: nil,
+            paramRanges: nil,
+            obstacleField: nil
+        )
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 10.0),
+        ]
+
+        let engine = EvolutionEngine(runtimeConfig: runtimeConfig, esConfig: esConfig, ranges: ranges)
+        let candidate = paramsToVector(
+            runtimeConfig.params,
+            space: ParamSpace(nbK: runtimeConfig.nbK, ranges: ranges)
+        )
+        let export = engine.evaluateCandidateForResearchExport(candidate)
+
+        let exportedPatch = try XCTUnwrap(export.initConfig.state_patch)
+        XCTAssertEqual(exportedPatch.width, statePatch.width)
+        XCTAssertEqual(exportedPatch.height, statePatch.height)
+        XCTAssertEqual(exportedPatch.channels, statePatch.channels)
+        XCTAssertEqual(exportedPatch.center, statePatch.center)
+        XCTAssertEqual(export.initConfig.patches.count, 0)
+        XCTAssertEqual(export.initConfig.a_uniform.low, 0.0)
+        XCTAssertEqual(export.initConfig.a_uniform.high, 0.0)
+    }
+
+    func testEvolutionTemplateSequenceObjectiveScoresRuntimeStatePatchFrames() throws {
+        var values = [Float](repeating: 0.0, count: 8 * 8)
+        for x in 2..<6 {
+            for y in 2..<6 {
+                values[x * 8 + y] = 0.75
+            }
+        }
+        let statePatch = InitStatePatchConfig(
+            center: [16, 16],
+            width: 8,
+            height: 8,
+            channels: 1,
+            values: values
+        )
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 1,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [],
+            aUniform: UniformRange(low: 0.0, high: 0.0),
+            statePatch: statePatch
+        )
+        let esConfig = ESConfig(
+            outputDir: "/tmp/evolution-template-sequence-test",
+            generations: 1,
+            population: 2,
+            sigma: 0.01,
+            learningRate: 0.01,
+            seed: 321,
+            steps: 3,
+            fitness: FitnessConfig(
+                objective: "template_sequence",
+                targetStep: 3,
+                angleThreshold: 0.0,
+                templateSequenceReward: 1.0,
+                templateSequenceSteps: [0, 1, 3]
+            ),
+            fitnessShaping: "raw",
+            initPatch: nil,
+            initialInitPatchValues: nil,
+            paramRanges: nil,
+            obstacleField: nil
+        )
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 10.0),
+        ]
+
+        let engine = EvolutionEngine(runtimeConfig: runtimeConfig, esConfig: esConfig, ranges: ranges)
+        let result = engine.runGeneration(gen: 0)
+        XCTAssertTrue(result.bestFitness.isFinite)
+        XCTAssertGreaterThan(result.bestFitness, 0.0)
+
+        let candidate = paramsToVector(
+            runtimeConfig.params,
+            space: ParamSpace(nbK: runtimeConfig.nbK, ranges: ranges)
+        )
+        let export = engine.evaluateCandidateForResearchExport(candidate)
+        XCTAssertTrue(export.fitness.isFinite)
+        XCTAssertGreaterThan(export.fitness, 0.0)
+    }
+
+    func testEvolutionTemplateSequenceObjectiveAcceptsExplicitSequencePatches() throws {
+        var values = [Float](repeating: 0.0, count: 8 * 8)
+        for x in 2..<6 {
+            for y in 2..<6 {
+                values[x * 8 + y] = 0.75
+            }
+        }
+        let statePatch = InitStatePatchConfig(
+            center: [16, 16],
+            width: 8,
+            height: 8,
+            channels: 1,
+            values: values
+        )
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 1,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [],
+            aUniform: UniformRange(low: 0.0, high: 0.0),
+            statePatch: statePatch
+        )
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 10.0),
+        ]
+        let candidate = paramsToVector(
+            runtimeConfig.params,
+            space: ParamSpace(nbK: runtimeConfig.nbK, ranges: ranges)
+        )
+
+        func score(with templates: [InitStatePatchConfig]) -> Float {
+            let esConfig = ESConfig(
+                outputDir: "/tmp/evolution-explicit-template-sequence-test",
+                generations: 1,
+                population: 2,
+                sigma: 0.01,
+                learningRate: 0.01,
+                seed: 321,
+                steps: 1,
+                fitness: FitnessConfig(
+                    objective: "template_sequence",
+                    targetStep: 1,
+                    angleThreshold: 0.0,
+                    templateSequenceReward: 1.0,
+                    templateSequenceSteps: [0],
+                    templateSequenceStatePatches: templates
+                ),
+                fitnessShaping: "raw",
+                initPatch: nil,
+                initialInitPatchValues: nil,
+                paramRanges: nil,
+                obstacleField: nil
+            )
+            let engine = EvolutionEngine(runtimeConfig: runtimeConfig, esConfig: esConfig, ranges: ranges)
+            return engine.evaluateCandidateForResearchExport(candidate).fitness
+        }
+
+        let matchingScore = score(with: [statePatch])
+        let emptyTemplate = InitStatePatchConfig(
+            center: [16, 16],
+            width: 8,
+            height: 8,
+            channels: 1,
+            values: [Float](repeating: 0.0, count: 8 * 8)
+        )
+        let emptyTemplateScore = score(with: [emptyTemplate])
+
+        XCTAssertGreaterThan(matchingScore, 0.9)
+        XCTAssertLessThan(emptyTemplateScore, 0.1)
+    }
+
+    func testEvolutionTemplateSequenceMassPenaltyRejectsScaleDrift() throws {
+        var values = [Float](repeating: 0.0, count: 8 * 8)
+        for x in 2..<6 {
+            for y in 2..<6 {
+                values[x * 8 + y] = 0.5
+            }
+        }
+        let statePatch = InitStatePatchConfig(
+            center: [16, 16],
+            width: 8,
+            height: 8,
+            channels: 1,
+            values: values
+        )
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 1,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [],
+            aUniform: UniformRange(low: 0.0, high: 0.0),
+            statePatch: statePatch
+        )
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 10.0),
+        ]
+        let candidate = paramsToVector(
+            runtimeConfig.params,
+            space: ParamSpace(nbK: runtimeConfig.nbK, ranges: ranges)
+        )
+
+        func score(with template: InitStatePatchConfig) -> Float {
+            let esConfig = ESConfig(
+                outputDir: "/tmp/evolution-template-sequence-mass-penalty-test",
+                generations: 1,
+                population: 2,
+                sigma: 0.01,
+                learningRate: 0.01,
+                seed: 321,
+                steps: 1,
+                fitness: FitnessConfig(
+                    objective: "template_sequence",
+                    targetStep: 1,
+                    angleThreshold: 0.0,
+                    templateSequenceReward: 1.0,
+                    templateSequenceMassPenalty: 1.0,
+                    templateSequenceSteps: [0],
+                    templateSequenceStatePatches: [template]
+                ),
+                fitnessShaping: "raw",
+                initPatch: nil,
+                initialInitPatchValues: nil,
+                paramRanges: nil,
+                obstacleField: nil
+            )
+            let engine = EvolutionEngine(runtimeConfig: runtimeConfig, esConfig: esConfig, ranges: ranges)
+            return engine.evaluateCandidateForResearchExport(candidate).fitness
+        }
+
+        let matchingScore = score(with: statePatch)
+        let doubledMassTemplate = InitStatePatchConfig(
+            center: [16, 16],
+            width: 8,
+            height: 8,
+            channels: 1,
+            values: values.map { $0 * 2 }
+        )
+        let doubledMassScore = score(with: doubledMassTemplate)
+
+        XCTAssertGreaterThan(matchingScore, 0.9)
+        XCTAssertLessThan(doubledMassScore, matchingScore - 0.4)
+    }
+
+    func testTemplateSupportMismatchDetectsSwollenSupport() throws {
+        var compactValues = [Float](repeating: 0.0, count: 8 * 8)
+        for x in 3..<5 {
+            for y in 3..<5 {
+                compactValues[x * 8 + y] = 0.5
+            }
+        }
+        let compactPatch = InitStatePatchConfig(
+            center: [8, 8],
+            width: 8,
+            height: 8,
+            channels: 1,
+            values: compactValues
+        )
+        let template = makeStatePatchMassTemplate(
+            statePatch: compactPatch,
+            gridHeight: 16,
+            gridWidth: 16,
+            includedChannels: [0],
+            threshold: 0.03
+        )
+
+        var compactSample = [Float](repeating: 0.0, count: 16 * 16)
+        var swollenSample = [Float](repeating: 0.0, count: 16 * 16)
+        for x in 7..<9 {
+            for y in 7..<9 {
+                compactSample[x * 16 + y] = 0.5
+            }
+        }
+        for x in 5..<11 {
+            for y in 5..<11 {
+                swollenSample[x * 16 + y] = 0.06
+            }
+        }
+        let materialized = MassBatchCPU(
+            flat: compactSample + swollenSample,
+            batch: 2,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+
+        let mismatches = computeTemplateSupportMismatchBatch(
+            materialized: materialized,
+            template: template,
+            threshold: 0.03
+        )
+
+        XCTAssertEqual(mismatches[0], 0, accuracy: 1e-6)
+        XCTAssertGreaterThan(mismatches[1], 0.8)
+    }
+
+    func testTemplateChangeMismatchRejectsStaticSequenceClone() throws {
+        var previousTemplateValues = [Float](repeating: 0.0, count: 16 * 16)
+        var currentTemplateValues = [Float](repeating: 0.0, count: 16 * 16)
+        for x in 7..<9 {
+            for y in 7..<9 {
+                previousTemplateValues[x * 16 + y] = 0.5
+                currentTemplateValues[(x + 1) * 16 + y] = 0.5
+            }
+        }
+        let previousTemplate = MassTemplate(
+            flat: previousTemplateValues,
+            height: 16,
+            width: 16,
+            mass: previousTemplateValues.reduce(0, +),
+            support: 4,
+            centerRow: 7.5,
+            centerCol: 7.5
+        )
+        let currentTemplate = MassTemplate(
+            flat: currentTemplateValues,
+            height: 16,
+            width: 16,
+            mass: currentTemplateValues.reduce(0, +),
+            support: 4,
+            centerRow: 8.5,
+            centerCol: 7.5
+        )
+        let matchingSequence = previousTemplateValues + currentTemplateValues
+        let staticSequence = previousTemplateValues + previousTemplateValues
+        let previous = MassBatchCPU(
+            flat: Array(matchingSequence[0..<(16 * 16)]) + Array(staticSequence[0..<(16 * 16)]),
+            batch: 2,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+        let current = MassBatchCPU(
+            flat: Array(matchingSequence[(16 * 16)..<matchingSequence.count]) +
+                Array(staticSequence[(16 * 16)..<staticSequence.count]),
+            batch: 2,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+
+        let mismatches = computeTemplateChangeMismatchBatch(
+            previous: previous,
+            current: current,
+            previousTemplate: previousTemplate,
+            currentTemplate: currentTemplate,
+            threshold: 0.03
+        )
+
+        XCTAssertEqual(mismatches[0], 0, accuracy: 1e-6)
+        XCTAssertEqual(mismatches[1], 1, accuracy: 1e-6)
+    }
+
+    func testTemplateDeltaSimilarityRejectsStaticSequenceClone() throws {
+        var previousTemplateValues = [Float](repeating: 0.0, count: 16 * 16)
+        var currentTemplateValues = [Float](repeating: 0.0, count: 16 * 16)
+        for x in 7..<9 {
+            for y in 7..<9 {
+                previousTemplateValues[x * 16 + y] = 0.5
+                currentTemplateValues[(x + 1) * 16 + y] = 0.5
+            }
+        }
+        let previousTemplate = MassTemplate(
+            flat: previousTemplateValues,
+            height: 16,
+            width: 16,
+            mass: previousTemplateValues.reduce(0, +),
+            support: 4,
+            centerRow: 7.5,
+            centerCol: 7.5
+        )
+        let currentTemplate = MassTemplate(
+            flat: currentTemplateValues,
+            height: 16,
+            width: 16,
+            mass: currentTemplateValues.reduce(0, +),
+            support: 4,
+            centerRow: 8.5,
+            centerCol: 7.5
+        )
+        let previous = MassBatchCPU(
+            flat: previousTemplateValues + previousTemplateValues,
+            batch: 2,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+        let current = MassBatchCPU(
+            flat: currentTemplateValues + previousTemplateValues,
+            batch: 2,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+
+        let similarities = computeTemplateDeltaSimilarityBatch(
+            previous: previous,
+            current: current,
+            previousTemplate: previousTemplate,
+            currentTemplate: currentTemplate,
+            threshold: 0.03,
+            useTorus: false
+        )
+
+        XCTAssertGreaterThan(similarities[0], 0.99)
+        XCTAssertEqual(similarities[1], 0, accuracy: 1e-6)
+    }
+
+    func testTemplateSignedDeltaSimilarityRejectsStaticAndReversedSequence() throws {
+        var previousTemplateValues = [Float](repeating: 0.0, count: 16 * 16)
+        var currentTemplateValues = [Float](repeating: 0.0, count: 16 * 16)
+        for row in 7..<9 {
+            for col in 7..<9 {
+                previousTemplateValues[row * 16 + col] = 0.5
+                currentTemplateValues[(row + 1) * 16 + col] = 0.5
+            }
+        }
+        let previousTemplate = MassTemplate(
+            flat: previousTemplateValues,
+            height: 16,
+            width: 16,
+            mass: previousTemplateValues.reduce(0, +),
+            support: 4,
+            centerRow: 7.5,
+            centerCol: 7.5
+        )
+        let currentTemplate = MassTemplate(
+            flat: currentTemplateValues,
+            height: 16,
+            width: 16,
+            mass: currentTemplateValues.reduce(0, +),
+            support: 4,
+            centerRow: 8.5,
+            centerCol: 7.5
+        )
+        let previous = MassBatchCPU(
+            flat: previousTemplateValues + previousTemplateValues + currentTemplateValues,
+            batch: 3,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+        let current = MassBatchCPU(
+            flat: currentTemplateValues + previousTemplateValues + previousTemplateValues,
+            batch: 3,
+            height: 16,
+            width: 16,
+            sampleSize: 16 * 16
+        )
+
+        let similarities = computeTemplateSignedDeltaSimilarityBatch(
+            previous: previous,
+            current: current,
+            previousTemplate: previousTemplate,
+            currentTemplate: currentTemplate,
+            threshold: 0.03,
+            useTorus: false
+        )
+
+        XCTAssertGreaterThan(similarities[0], 0.99)
+        XCTAssertEqual(similarities[1], 0, accuracy: 1e-6)
+        XCTAssertEqual(similarities[2], 0, accuracy: 1e-6)
+    }
+
+    func testEvolutionParamSpaceSupportsFourRadialKernelEntries() throws {
+        let ranges: [String: (Float, Float)] = [
+            "r": (0.1, 1.0),
+            "b": (0.0, 1.0),
+            "w": (0.0, 1.0),
+            "a": (0.0, 1.0),
+            "m": (0.0, 1.0),
+            "s": (0.01, 0.2),
+            "h": (0.0, 1.0),
+            "R": (1.0, 40.0),
+        ]
+        let params = ResolvedParams(
+            r: [0.5],
+            b: [[1.0, 0.5, 0.33333334, 0.41666666]],
+            w: [[0.2, 0.2, 0.2, 0.2]],
+            a: [[0.5, 0.5, 0.5, 0.5]],
+            m: [0.22],
+            s: [0.022],
+            h: [0.1],
+            R: 36.0,
+            seed: 0
+        )
+        let space = ParamSpace(nbK: 1, ranges: ranges, radialParamCount: 4)
+
+        let vector = paramsToVector(params, space: space)
+        let decoded = vectorToParams(vector, space: space)
+
+        XCTAssertEqual(space.radialParamCount, 4)
+        XCTAssertEqual(space.slices["b"]?.shape, [1, 4])
+        XCTAssertEqual(decoded.b[0].count, 4)
+        XCTAssertEqual(decoded.w[0].count, 4)
+        XCTAssertEqual(decoded.a[0].count, 4)
+        XCTAssertEqual(decoded.b[0][3], params.b[0][3], accuracy: 1e-5)
+    }
+
+    func testInternalStripeContrastDetectsInteriorRidges() throws {
+        let width = 8
+        let height = 8
+        var smooth = [Float](repeating: 0, count: width * height)
+        var striped = [Float](repeating: 0, count: width * height)
+        for y in 1..<7 {
+            for x in 1..<7 {
+                smooth[y * width + x] = 0.5
+                striped[y * width + x] = (x + y).isMultiple(of: 2) ? 0.9 : 0.1
+            }
+        }
+        let materialized = MassBatchCPU(
+            flat: smooth + striped,
+            batch: 2,
+            height: height,
+            width: width,
+            sampleSize: width * height
+        )
+
+        let scores = computeInternalStripeContrastBatch(
+            materialized: materialized,
+            threshold: 0.03,
+            useTorus: false
+        )
+
+        XCTAssertEqual(scores[0], 0, accuracy: 1e-6)
+        XCTAssertGreaterThan(scores[1], 0.3)
+    }
+
+    func testOrientedRidgeDominanceDetectsLongBrightLines() throws {
+        let width = 16
+        let height = 16
+        var filled = [Float](repeating: 0, count: width * height)
+        var ridge = [Float](repeating: 0, count: width * height)
+        var spot = [Float](repeating: 0, count: width * height)
+        for y in 3..<13 {
+            for x in 3..<13 {
+                filled[y * width + x] = 0.5
+                ridge[y * width + x] = 0.35
+            }
+        }
+        for i in 3..<13 {
+            ridge[i * width + i] = 1.0
+        }
+        spot[8 * width + 8] = 1.0
+        let materialized = MassBatchCPU(
+            flat: filled + ridge + spot,
+            batch: 3,
+            height: height,
+            width: width,
+            sampleSize: width * height
+        )
+
+        let scores = computeOrientedRidgeDominanceBatch(
+            materialized: materialized,
+            threshold: 0.03
+        )
+
+        XCTAssertLessThan(scores[0], 0.2)
+        XCTAssertGreaterThan(scores[1], 0.8)
+        XCTAssertLessThan(scores[2], 0.2)
+    }
+
+    func testLargestComponentStripeMetricsIgnoreSmallStripedComponents() throws {
+        let width = 16
+        let height = 16
+        var largeSmoothSmallStriped = [Float](repeating: 0, count: width * height)
+        var largeStripedSmallSmooth = [Float](repeating: 0, count: width * height)
+
+        for y in 2..<10 {
+            for x in 2..<10 {
+                largeSmoothSmallStriped[y * width + x] = 0.5
+                largeStripedSmallSmooth[y * width + x] = (x + y).isMultiple(of: 2) ? 0.9 : 0.1
+            }
+        }
+        for y in 12..<15 {
+            for x in 12..<15 {
+                largeSmoothSmallStriped[y * width + x] = (x + y).isMultiple(of: 2) ? 0.9 : 0.1
+                largeStripedSmallSmooth[y * width + x] = 0.5
+            }
+        }
+        let materialized = MassBatchCPU(
+            flat: largeSmoothSmallStriped + largeStripedSmallSmooth,
+            batch: 2,
+            height: height,
+            width: width,
+            sampleSize: width * height
+        )
+
+        let largestStripe = computeLargestComponentInternalStripeContrastBatch(
+            materialized: materialized,
+            threshold: 0.03,
+            useTorus: false
+        )
+
+        XCTAssertLessThan(largestStripe[0], 0.05)
+        XCTAssertGreaterThan(largestStripe[1], 0.3)
+    }
+
+    func testLargestComponentStripeMetricsExportAsCodableFields() throws {
+        let metrics = SimulationMetrics(
+            massMean: 1.0,
+            massStd: 0.1,
+            massMin: 0.9,
+            massMax: 1.1,
+            occupancyMean: 0.08,
+            varianceMean: 0.02,
+            energyMean: 0.03,
+            speedMean: 0.01,
+            pathLength: 10.0,
+            displacement: 9.8,
+            sampleCount: 16,
+            speedCount: 16,
+            gyration: 120.0,
+            centerVelocity: 0.012,
+            isStable: true,
+            largestComponentInternalStripe: 0.125,
+            largestComponentOrientedRidge: 0.25
+        )
+        let decodedMetrics = try JSONDecoder().decode(
+            SimulationMetrics.self,
+            from: JSONEncoder().encode(metrics)
+        )
+
+        XCTAssertEqual(try XCTUnwrap(decodedMetrics.largestComponentInternalStripe), 0.125, accuracy: 1e-6)
+        XCTAssertEqual(try XCTUnwrap(decodedMetrics.largestComponentOrientedRidge), 0.25, accuracy: 1e-6)
+
+        let terminal = MorphospaceTerminalDescriptor(
+            massChannel: 0,
+            borderMode: "torus",
+            symmetryPolicy: "translation_kernel_permutation_v1",
+            fingerprintResolution: 32,
+            fingerprintU8: Data(repeating: 3, count: 32 * 32),
+            angularSymmetry: MorphospaceAngularSymmetryDescriptor(
+                binCount: 32,
+                maxOrder: 8,
+                harmonics: [0.05, 0.15, 0.75, 0.1, 0.0, 0.0, 0.0, 0.0],
+                dominantOrder: 3,
+                dominantAmplitude: 0.75,
+                normalizedEntropy: 0.28
+            ),
+            fingerprintHash12: "1234abcd5678",
+            finalMass: 1.2,
+            finalOccupancy: 0.18,
+            finalGyration: 4.5,
+            momentMass: nil,
+            momentVolume: nil,
+            momentDensity: nil,
+            momentAnisotropy: nil,
+            componentCount: 1,
+            largestComponentFraction: 1,
+            largestComponentAnisotropy: 0.42,
+            largestComponentInternalStripe: 0.125,
+            largestComponentOrientedRidge: 0.25,
+            hu1: nil,
+            hu2: nil,
+            hu3: nil,
+            hu4: nil,
+            hu5: nil,
+            hu6: nil,
+            hu7: nil,
+            flusser1: nil,
+            flusser2: nil,
+            flusser3: nil,
+            flusser4: nil,
+            windowMassStd: nil,
+            windowOccupancyStd: nil,
+            windowGyrationStd: nil,
+            isStable: true
+        )
+        let decodedTerminal = try JSONDecoder().decode(
+            MorphospaceTerminalDescriptor.self,
+            from: JSONEncoder().encode(terminal)
+        )
+
+        XCTAssertEqual(try XCTUnwrap(decodedTerminal.largestComponentInternalStripe), 0.125, accuracy: 1e-6)
+        XCTAssertEqual(try XCTUnwrap(decodedTerminal.largestComponentOrientedRidge), 0.25, accuracy: 1e-6)
+    }
+
+    func testOrientationPhaseMotionDetectsAxialRotation() throws {
+        func frame(_ fill: (inout [Float]) -> Void) -> MassBatchCPU {
+            let width = 16
+            let height = 16
+            var flat = [Float](repeating: 0, count: width * height)
+            fill(&flat)
+            return MassBatchCPU(flat: flat, batch: 1, height: height, width: width, sampleSize: width * height)
+        }
+
+        let horizontal = frame { flat in
+            for col in 4..<12 {
+                flat[8 * 16 + col] = 1.0
+            }
+        }
+        let vertical = frame { flat in
+            for row in 4..<12 {
+                flat[row * 16 + 8] = 1.0
+            }
+        }
+
+        let moving = computeOrientationPhaseMotionBatch(
+            materialized: [horizontal, vertical],
+            threshold: 0.03
+        )
+        let staticScore = computeOrientationPhaseMotionBatch(
+            materialized: [horizontal, horizontal],
+            threshold: 0.03
+        )
+
+        XCTAssertGreaterThan(moving[0], 0.95)
+        XCTAssertLessThan(staticScore[0], 0.01)
+    }
+
+    func testAngularPhaseMotionDetectsSectorRotation() throws {
+        func spokeFrame(rotation: Float) -> MassBatchCPU {
+            let width = 33
+            let height = 33
+            let center = 16
+            var flat = [Float](repeating: 0, count: width * height)
+            for arm in 0..<4 {
+                let angle = rotation + Float(arm) * Float.pi / 2
+                for radius in 3...12 {
+                    let x = center + Int(round(cos(angle) * Float(radius)))
+                    let y = center + Int(round(sin(angle) * Float(radius)))
+                    flat[y * width + x] = 1.0
+                }
+            }
+            return MassBatchCPU(flat: flat, batch: 1, height: height, width: width, sampleSize: width * height)
+        }
+
+        let initial = spokeFrame(rotation: 0)
+        let rotated = spokeFrame(rotation: Float.pi / 4)
+        let moving = computeAngularPhaseMotionBatch(
+            materialized: [initial, rotated],
+            threshold: 0.03,
+            order: 4,
+            minimumAmplitude: 0.05
+        )
+        let staticScore = computeAngularPhaseMotionBatch(
+            materialized: [initial, initial],
+            threshold: 0.03,
+            order: 4,
+            minimumAmplitude: 0.05
+        )
+
+        XCTAssertGreaterThan(moving[0], 0.8)
+        XCTAssertLessThan(staticScore[0], 0.01)
+    }
+
+    func testSectorTransportDetectsCoherentSectorShift() throws {
+        func sectorFrame(rotation: Float) -> MassBatchCPU {
+            let width = 33
+            let height = 33
+            let center = 16
+            var flat = [Float](repeating: 0, count: width * height)
+            for arm in 0..<4 {
+                let angle = rotation + Float(arm) * Float.pi / 2
+                for radius in 4...12 {
+                    let x = center + Int(round(cos(angle) * Float(radius)))
+                    let y = center + Int(round(sin(angle) * Float(radius)))
+                    flat[y * width + x] = 1.0
+                }
+            }
+            return MassBatchCPU(flat: flat, batch: 1, height: height, width: width, sampleSize: width * height)
+        }
+
+        let initial = sectorFrame(rotation: 0)
+        let rotated = sectorFrame(rotation: Float.pi / 4)
+        let moving = computeSectorTransportMotionBatch(
+            materialized: [initial, rotated],
+            threshold: 0.03,
+            binCount: 48,
+            minimumContrast: 0.05
+        )
+        let staticScore = computeSectorTransportMotionBatch(
+            materialized: [initial, initial],
+            threshold: 0.03,
+            binCount: 48,
+            minimumContrast: 0.05
+        )
+
+        XCTAssertGreaterThan(moving[0], 0.15)
+        XCTAssertLessThan(staticScore[0], 0.01)
+    }
+
+    func testTemplateSimilarityTracksTranslatedShape() throws {
+        let width = 10
+        let height = 10
+        var patchValues = [Float](repeating: 0, count: 4 * 4)
+        patchValues[1 * 4 + 1] = 1.0
+        patchValues[1 * 4 + 2] = 0.8
+        patchValues[2 * 4 + 1] = 0.5
+
+        let statePatch = InitStatePatchConfig(
+            center: [5, 5],
+            width: 4,
+            height: 4,
+            channels: 1,
+            values: patchValues
+        )
+        let template = makeStatePatchMassTemplate(
+            statePatch: statePatch,
+            gridHeight: height,
+            gridWidth: width,
+            includedChannels: [0],
+            threshold: 0.03
+        )
+
+        var identical = [Float](repeating: 0, count: width * height)
+        var shifted = [Float](repeating: 0, count: width * height)
+        var unrelated = [Float](repeating: 0, count: width * height)
+        for row in 0..<height {
+            for col in 0..<width {
+                let value = template.flat[row * width + col]
+                identical[row * width + col] = value
+                if row + 2 < height && col + 1 < width {
+                    shifted[(row + 2) * width + col + 1] = value
+                }
+            }
+        }
+        unrelated[7 * width + 7] = 1
+
+        let materialized = MassBatchCPU(
+            flat: identical + shifted + unrelated,
+            batch: 3,
+            height: height,
+            width: width,
+            sampleSize: width * height
+        )
+        let scores = computeTemplateSimilarityBatch(
+            materialized: materialized,
+            template: template,
+            threshold: 0.03,
+            useTorus: false
+        )
+
+        XCTAssertEqual(scores[0], 1, accuracy: 1e-6)
+        XCTAssertEqual(scores[1], 1, accuracy: 1e-6)
+        XCTAssertLessThan(scores[2], 0.5)
     }
 
     func testFlowLenia2022ColabParamEmbeddingInitIsPatchConstant() throws {
@@ -1748,6 +2924,618 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertTrue(bundle.aurora.useDataAugmentation)
     }
 
+    func testLeniaBreeder2024VisualizationRuntimeUsesQD24BucketedKernelProfile() throws {
+        let packageRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let configDirectory = packageRoot.appendingPathComponent("configs/papers/leniabreeder-2024", isDirectory: true)
+        let run = try loadLeniaBreeder2024ResolvedRun(runDirectory: configDirectory)
+        let pattern = run.pattern
+        let placeholder = pattern.kernels.map { Array(repeating: Float(0), count: $0.b.count) }
+        let kernelParams = KernelParams(
+            r: pattern.kernels.map(\.r),
+            b: pattern.kernels.map(\.b),
+            w: placeholder,
+            a: placeholder,
+            m: pattern.kernels.map(\.m),
+            s: pattern.kernels.map(\.s),
+            h: pattern.kernels.map(\.h),
+            R: Float(pattern.R)
+        )
+
+        let runtime = leniaBreeder2024VisualizationRuntimeConfig(run: run, kernelParams: kernelParams)
+
+        XCTAssertEqual(runtime.implementation.kernelProfile, "qd24_bucketed_v1")
+        XCTAssertEqual(runtime.params.b, pattern.kernels.map(\.b))
+        XCTAssertEqual(runtime.nbK, pattern.kernels.count)
+    }
+
+    func testQD24AdditiveImplementationResolvesBucketedKernelProfile() throws {
+        let baseConfig = LeniaBaseConfig(
+            backend: "mlx",
+            profile: .experimental,
+            grid: GridConfig(sx: 16, sy: 16),
+            channels: 1,
+            connectivity: [[1]],
+            flow: FlowConfig(dt: 0.2, n: 2, theta_A: 2.0),
+            implementation: ImplementationConfig(mode: "qd24_additive_v1"),
+            reintegration: ReintegrationConfig(dd: 5, sigma: 0.65, border: "torus"),
+            parameter_embedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            chemotaxis: nil,
+            obstacle_field: nil,
+            food: nil,
+            walls: nil,
+            environment: nil,
+            beam_mutation: nil,
+            params: ParamsConfig(
+                mode: "explicit",
+                seed: 0,
+                ranges: nil,
+                r: [0.5],
+                b: [[1.0, 0.5]],
+                w: [[0.0, 0.0]],
+                a: [[0.0, 0.0]],
+                m: [0.15],
+                s: [0.05],
+                h: [0.0],
+                R: 6.0
+            ),
+            init: InitConfig(
+                seed: 0,
+                patches: [],
+                a_uniform: UniformRange(low: 0.0, high: 0.0),
+                p_uniform: nil
+            ),
+            run: RunConfig(steps: 1),
+            interventions: nil
+        )
+
+        let runtime = try loadRuntimeConfig(from: JSONEncoder().encode(baseConfig))
+
+        XCTAssertEqual(runtime.implementation.mode, "qd24_additive_v1")
+        XCTAssertEqual(runtime.implementation.kernelProfile, "qd24_bucketed_v1")
+        XCTAssertEqual(runtime.backend, FlowLeniaComputeBackend.mlx)
+    }
+
+    func testQD24AdditiveImplementationAllowsNativeKernelCoreProfiles() throws {
+        let baseConfig = LeniaBaseConfig(
+            backend: "mlx",
+            profile: .experimental,
+            grid: GridConfig(sx: 16, sy: 16),
+            channels: 1,
+            connectivity: [[1]],
+            flow: FlowConfig(dt: 0.2, n: 2, theta_A: 2.0),
+            implementation: ImplementationConfig(mode: "qd24_additive_v1", kernel_profile: "qd24_quad4_v1"),
+            reintegration: ReintegrationConfig(dd: 5, sigma: 0.65, border: "torus"),
+            parameter_embedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            chemotaxis: nil,
+            obstacle_field: nil,
+            food: nil,
+            walls: nil,
+            environment: nil,
+            beam_mutation: nil,
+            params: ParamsConfig(
+                mode: "explicit",
+                seed: 0,
+                ranges: nil,
+                r: [1.0],
+                b: [[1.0, 0.5]],
+                w: [[0.0, 0.0]],
+                a: [[0.0, 0.0]],
+                m: [0.15],
+                s: [0.05],
+                h: [0.0],
+                R: 6.0
+            ),
+            init: InitConfig(
+                seed: 0,
+                patches: [],
+                a_uniform: UniformRange(low: 0.0, high: 0.0),
+                p_uniform: nil
+            ),
+            run: RunConfig(steps: 1),
+            interventions: nil
+        )
+
+        let runtime = try loadRuntimeConfig(from: JSONEncoder().encode(baseConfig))
+
+        XCTAssertEqual(runtime.implementation.mode, "qd24_additive_v1")
+        XCTAssertEqual(runtime.implementation.kernelProfile, "qd24_quad4_v1")
+        XCTAssertEqual(runtime.backend, FlowLeniaComputeBackend.mlx)
+    }
+
+    func testQD24AdditiveImplementationAllowsNativeStepKernelAndGrowthProfiles() throws {
+        let baseConfig = LeniaBaseConfig(
+            backend: "mlx",
+            profile: .experimental,
+            grid: GridConfig(sx: 16, sy: 16),
+            channels: 1,
+            connectivity: [[1]],
+            flow: FlowConfig(dt: 0.2, n: 2, theta_A: 2.0),
+            implementation: ImplementationConfig(
+                mode: "qd24_additive_v1",
+                kernel_profile: "qd24_step_v1",
+                growth_profile: "stpz"
+            ),
+            reintegration: ReintegrationConfig(dd: 5, sigma: 0.65, border: "torus"),
+            parameter_embedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            chemotaxis: nil,
+            obstacle_field: nil,
+            food: nil,
+            walls: nil,
+            environment: nil,
+            beam_mutation: nil,
+            params: ParamsConfig(
+                mode: "explicit",
+                seed: 0,
+                ranges: nil,
+                r: [1.0],
+                b: [[1.0]],
+                w: [[0.0]],
+                a: [[0.0]],
+                m: [0.545],
+                s: [0.186],
+                h: [1.0],
+                R: 6.0
+            ),
+            init: InitConfig(
+                seed: 0,
+                patches: [],
+                a_uniform: UniformRange(low: 0.0, high: 0.0),
+                p_uniform: nil
+            ),
+            run: RunConfig(steps: 1),
+            interventions: nil
+        )
+
+        let runtime = try loadRuntimeConfig(from: JSONEncoder().encode(baseConfig))
+
+        XCTAssertEqual(runtime.implementation.mode, "qd24_additive_v1")
+        XCTAssertEqual(runtime.implementation.kernelProfile, "qd24_step_v1")
+        XCTAssertEqual(runtime.implementation.growthProfile, "stpz")
+    }
+
+    func testQD24AdditiveImplementationAllowsNativeLifeKernel() throws {
+        let baseConfig = LeniaBaseConfig(
+            backend: "mlx",
+            profile: .experimental,
+            grid: GridConfig(sx: 16, sy: 16),
+            channels: 1,
+            connectivity: [[1]],
+            flow: FlowConfig(dt: 1.0, n: 2, theta_A: 2.0),
+            implementation: ImplementationConfig(
+                mode: "qd24_additive_v1",
+                kernel_profile: "qd24_life_v1",
+                growth_profile: "stpz"
+            ),
+            reintegration: ReintegrationConfig(dd: 5, sigma: 0.65, border: "torus"),
+            parameter_embedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            chemotaxis: nil,
+            obstacle_field: nil,
+            food: nil,
+            walls: nil,
+            environment: nil,
+            beam_mutation: nil,
+            params: ParamsConfig(
+                mode: "explicit",
+                seed: 0,
+                ranges: nil,
+                r: [1.0],
+                b: [[1.0]],
+                w: [[0.0]],
+                a: [[0.0]],
+                m: [0.35],
+                s: [0.07],
+                h: [1.0],
+                R: 2.0
+            ),
+            init: InitConfig(
+                seed: 0,
+                patches: [],
+                a_uniform: UniformRange(low: 0.0, high: 0.0),
+                p_uniform: nil
+            ),
+            run: RunConfig(steps: 1),
+            interventions: nil
+        )
+
+        let runtime = try loadRuntimeConfig(from: JSONEncoder().encode(baseConfig))
+
+        XCTAssertEqual(runtime.implementation.mode, "qd24_additive_v1")
+        XCTAssertEqual(runtime.implementation.kernelProfile, "qd24_life_v1")
+        XCTAssertEqual(runtime.implementation.growthProfile, "stpz")
+    }
+
+    func testQD24NativeKernelCoreProfilesChangeSpatialKernel() throws {
+        let params = ResolvedParams(
+            r: [1.0],
+            b: [[1.0, 0.5]],
+            w: [[0.0, 0.0]],
+            a: [[0.0, 0.0]],
+            m: [0.15],
+            s: [0.05],
+            h: [1.0],
+            R: 6.0,
+            seed: 0
+        )
+        let bucketedConfig = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 1,
+            nbK: 1,
+            dt: 0.2,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "qd24_additive_v1",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "qd24_bucketed_v1",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let quadConfig = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 1,
+            nbK: 1,
+            dt: 0.2,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "qd24_additive_v1",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "qd24_quad4_v1",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let stepConfig = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 1,
+            nbK: 1,
+            dt: 0.2,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "qd24_additive_v1",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "qd24_step_v1",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+
+        let bucketed = normalizedSpatialKernelStack(params: params, config: bucketedConfig).asArray(Float.self)
+        let quad = normalizedSpatialKernelStack(params: params, config: quadConfig).asArray(Float.self)
+        let step = normalizedSpatialKernelStack(params: params, config: stepConfig).asArray(Float.self)
+        let absoluteDifference = zip(bucketed, quad).map { abs($0 - $1) }.reduce(0, +)
+        let stepDifference = zip(bucketed, step).map { abs($0 - $1) }.reduce(0, +)
+
+        XCTAssertGreaterThan(absoluteDifference, 0.05)
+        XCTAssertGreaterThan(stepDifference, 0.05)
+    }
+
+    func testQD24LifeKernelWeightsCenterAndNeighborShell() throws {
+        let params = ResolvedParams(
+            r: [1.0],
+            b: [[1.0]],
+            w: [[0.0]],
+            a: [[0.0]],
+            m: [0.35],
+            s: [0.07],
+            h: [1.0],
+            R: 2.0,
+            seed: 0
+        )
+        let config = BatchedConfig(
+            sx: 9,
+            sy: 9,
+            channels: 1,
+            nbK: 1,
+            dt: 1.0,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "qd24_additive_v1",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "qd24_life_v1",
+                growthProfile: "stpz",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+
+        let kernel = normalizedSpatialKernelStack(params: params, config: config).asArray(Float.self)
+        func cell(_ x: Int, _ y: Int) -> Float {
+            kernel[(y * 9 + x)]
+        }
+
+        let center = cell(4, 4)
+        let orthogonalNeighbor = cell(5, 4)
+        let diagonalNeighbor = cell(5, 5)
+        let farCell = cell(0, 0)
+        let total = kernel.reduce(Float(0), +)
+
+        XCTAssertEqual(total, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(center, 0.5 / 8.5, accuracy: 0.0001)
+        XCTAssertEqual(orthogonalNeighbor, 1.0 / 8.5, accuracy: 0.0001)
+        XCTAssertEqual(diagonalNeighbor, 1.0 / 8.5, accuracy: 0.0001)
+        XCTAssertEqual(farCell, 0.0, accuracy: 0.0001)
+    }
+
+    func testQD24GrowthProfilesChangeAdditiveGrowth() throws {
+        let values = MLXArray([Float(0.5), Float(0.7)]).reshaped([1, 1, 2, 1])
+        let m = MLXArray([Float(0.5)])
+        let s = MLXArray([Float(0.1)])
+        let h = MLXArray([Float(1.0)])
+
+        let gaussian = growth(values, m: m, s: s, h: h, profile: "gaussian").asArray(Float.self)
+        let step = growth(values, m: m, s: s, h: h, profile: "stpz").asArray(Float.self)
+        let quad = growth(values, m: m, s: s, h: h, profile: "quad4").asArray(Float.self)
+
+        XCTAssertEqual(step, [1.0, -1.0])
+        XCTAssertGreaterThan(abs(gaussian[1] - step[1]), 0.2)
+        XCTAssertGreaterThan(abs(quad[1] - gaussian[1]), 0.05)
+    }
+
+    func testQD24AdditiveStepperDoesNotReintegrateWhenGrowthIsZero() throws {
+        let config = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 1,
+            nbK: 1,
+            dt: 0.2,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "qd24_additive_v1",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "qd24_bucketed_v1",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let params = ResolvedParams(
+            r: [0.5],
+            b: [[1.0, 0.5]],
+            w: [[0.0, 0.0]],
+            a: [[0.0, 0.0]],
+            m: [0.15],
+            s: [0.05],
+            h: [0.0],
+            R: 6.0,
+            seed: 0
+        )
+        let kernels = compileKernels(params: params, config: config, c0: [0], c1: [[0]])
+        let engine = FlowLeniaBatched(config: config, kernels: kernels)
+        var values = [Float](repeating: 0, count: 16 * 16)
+        values[8 * 16 + 8] = 1.0
+        values[8 * 16 + 9] = 0.5
+        values[9 * 16 + 8] = 0.25
+        let state = MLXArray(values).reshaped([1, 16, 16, 1])
+
+        let next = engine.stepUncompiled(state)
+        eval(next)
+
+        XCTAssertEqual(next.asArray(Float.self), values)
+    }
+
+    func testQD24AdditiveStepperRecentersBeforeNextStep() throws {
+        let config = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 1,
+            nbK: 1,
+            dt: 0.2,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "qd24_additive_v1",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "qd24_bucketed_v1",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let params = ResolvedParams(
+            r: [0.5],
+            b: [[1.0, 0.5]],
+            w: [[0.0, 0.0]],
+            a: [[0.0, 0.0]],
+            m: [0.15],
+            s: [0.05],
+            h: [0.0],
+            R: 6.0,
+            seed: 0
+        )
+        let kernels = compileKernels(params: params, config: config, c0: [0], c1: [[0]])
+        let engine = FlowLeniaBatched(config: config, kernels: kernels)
+        var values = [Float](repeating: 0, count: 16 * 16)
+        values[10 * 16 + 8] = 1.0
+        let state = MLXArray(values).reshaped([1, 16, 16, 1])
+
+        _ = engine.stepUncompiled(state)
+        let recentered = engine.stepUncompiled(state)
+        eval(recentered)
+        var expected = [Float](repeating: 0, count: 16 * 16)
+        expected[8 * 16 + 8] = 1.0
+
+        XCTAssertEqual(recentered.asArray(Float.self), expected)
+    }
+
+    func testLeniaBreeder2024ReplayCapturesExactRequestedSteps() throws {
+        let packageRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let configDirectory = packageRoot.appendingPathComponent("configs/papers/leniabreeder-2024", isDirectory: true)
+        let bundle = try loadLeniaBreeder2024ConfigBundle(configDirectory: configDirectory)
+        let run = try loadLeniaBreeder2024ResolvedRun(runDirectory: configDirectory)
+        let assets = try leniaBreeder2024LoadAssets(
+            base: run.base,
+            pattern: run.pattern,
+            mode: leniaBreeder2024MAPElitesSettings(config: bundle.mapElites)
+        )
+        let elite = LeniaBreeder2024EliteSummary(
+            cell: 0,
+            generation: 0,
+            centroid: [],
+            descriptor: [],
+            fitness: 0,
+            genotype: assets.initialGenotype
+        )
+
+        let contiguous = try captureLeniaBreeder2024ReplayMassMaps(
+            run: run,
+            elite: elite,
+            frameBudget: 4,
+            stepsOverride: 3
+        )
+        let exact = try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+            run: run,
+            elite: elite,
+            steps: [3, 0, 1, 3],
+            stepsOverride: 3
+        )
+
+        XCTAssertEqual(contiguous.count, 4)
+        XCTAssertEqual(exact[0], contiguous[3])
+        XCTAssertEqual(exact[1], contiguous[0])
+        XCTAssertEqual(exact[2], contiguous[1])
+        XCTAssertEqual(exact[3], contiguous[3])
+
+        let patches = try captureLeniaBreeder2024ReplayStatePatchesAtSteps(
+            run: run,
+            elite: elite,
+            steps: [1],
+            stepsOverride: 3
+        )
+        XCTAssertEqual(patches.count, 1)
+        XCTAssertEqual(patches[0].width, run.base.worldSize)
+        XCTAssertEqual(patches[0].height, run.base.worldSize)
+        XCTAssertEqual(patches[0].channels, 1)
+        XCTAssertEqual(patches[0].decodedValues(), contiguous[1])
+
+        XCTAssertThrowsError(
+            try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+                run: run,
+                elite: elite,
+                steps: [4],
+                stepsOverride: 3
+            )
+        )
+        XCTAssertThrowsError(
+            try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+                run: run,
+                elite: elite,
+                steps: [-1],
+                stepsOverride: 3
+            )
+        )
+    }
+
+    func testLeniaBreeder2024PatternKernelCoreAffectsReplay() throws {
+        let packageRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let sourceDirectory = packageRoot.appendingPathComponent("configs/papers/leniabreeder-2024", isDirectory: true)
+        let tempRoot = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let bucketedDirectory = tempRoot.appendingPathComponent("bucketed", isDirectory: true)
+        let bump4Directory = tempRoot.appendingPathComponent("bump4", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempRoot) }
+        try FileManager.default.copyItem(at: sourceDirectory, to: bucketedDirectory)
+        try FileManager.default.copyItem(at: sourceDirectory, to: bump4Directory)
+
+        let bump4Bundle = try loadLeniaBreeder2024ConfigBundle(configDirectory: bump4Directory)
+        let bump4PatternURL = bump4Directory
+            .appendingPathComponent("patterns", isDirectory: true)
+            .appendingPathComponent("\(bump4Bundle.base.patternID).json")
+        try rewriteJSONFile(at: bump4PatternURL) { root in
+            root["parsed_rule"] = ["kernel_core": "bump4"]
+        }
+
+        let bucketedRun = try loadLeniaBreeder2024ResolvedRun(runDirectory: bucketedDirectory)
+        let bump4Run = try loadLeniaBreeder2024ResolvedRun(runDirectory: bump4Directory)
+        XCTAssertNil(bucketedRun.pattern.parsedRule?.kernelCore)
+        XCTAssertEqual(bump4Run.pattern.parsedRule?.kernelCore, "bump4")
+
+        func initialElite(run: LeniaBreeder2024ResolvedRun, directory: URL) throws -> LeniaBreeder2024EliteSummary {
+            let bundle = try loadLeniaBreeder2024ConfigBundle(configDirectory: directory)
+            let assets = try leniaBreeder2024LoadAssets(
+                base: run.base,
+                pattern: run.pattern,
+                mode: leniaBreeder2024MAPElitesSettings(config: bundle.mapElites)
+            )
+            return LeniaBreeder2024EliteSummary(
+                cell: 0,
+                generation: 0,
+                centroid: [],
+                descriptor: [],
+                fitness: 0,
+                genotype: assets.initialGenotype
+            )
+        }
+
+        let bucketed = try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+            run: bucketedRun,
+            elite: initialElite(run: bucketedRun, directory: bucketedDirectory),
+            steps: [8],
+            stepsOverride: 8
+        )[0]
+        let bump4 = try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+            run: bump4Run,
+            elite: initialElite(run: bump4Run, directory: bump4Directory),
+            steps: [8],
+            stepsOverride: 8
+        )[0]
+
+        let l1 = zip(bucketed, bump4).reduce(Float(0)) { total, pair in
+            total + abs(pair.0 - pair.1)
+        }
+        XCTAssertGreaterThan(l1, 1e-3)
+    }
+
     func testLeniaBreeder2024RunnerCompletesTinySmoke() throws {
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -1805,6 +3593,7 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("summary.json").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("history.jsonl").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("metrics.csv").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("patterns/5N7KKM.json").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("repertoire/centroids.json").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("repertoire/occupied.json").path))
     }
@@ -2396,8 +4185,95 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(config.steps, 24)
         XCTAssertTrue(config.activity?.enabled == true)
         XCTAssertTrue(config.moments?.enabled == true)
+        XCTAssertEqual(config.moments?.threshold, 0.01)
+        XCTAssertEqual(config.occupancyThreshold, 0.01)
         XCTAssertTrue(config.stability?.enabled == true)
+        XCTAssertEqual(config.stability?.massMinFraction, 0.001)
         XCTAssertEqual(config.collection?.enabled, false)
+    }
+
+    func testBuildStrictReplaySearchConfigUsesRequestedMorphologyThreshold() {
+        let config = buildStrictReplaySearchConfig(
+            steps: 24,
+            initSeedOffset: 11,
+            morphologyThreshold: 0.03
+        )
+
+        XCTAssertEqual(config.moments?.threshold, 0.03)
+        XCTAssertEqual(config.occupancyThreshold, 0.03)
+    }
+
+    func testSearchResultBuilderUsesTerminalMassForFinalMorphology() {
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 5,
+            sy: 5,
+            channels: 1,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            patches: [PatchConfig(center: [2, 2], size: 2)]
+        )
+        let builder = SearchBatchResultBuilder(runtimeConfig: runtimeConfig, excludedMassChannels: [])
+        let searchConfig = buildStrictReplaySearchConfig(
+            steps: 4,
+            initSeedOffset: 0,
+            morphologyThreshold: 0.5
+        )
+        var sampledMass = [Float](repeating: 0, count: 25)
+        sampledMass[1 * 5 + 1] = 1
+        var terminalMass = sampledMass
+        terminalMass[3 * 5 + 3] = 1
+        let sampledMassMap = MLXArray(sampledMass).reshaped([1, 5, 5])
+        let terminalMassMap = MLXArray(terminalMass).reshaped([1, 5, 5])
+        let summary = SearchRolloutFinalizedStats(
+            effectiveSampleCount: 1,
+            speedCount: 0,
+            massMean: [1],
+            massStd: [0],
+            massMin: [1],
+            massMax: [1],
+            varianceMean: [0],
+            energyMean: [0],
+            occupancyMean: [0.04],
+            gyration: [0],
+            finalMass: [2],
+            windowMassStd: nil,
+            windowOccupancyStd: nil,
+            windowGyrationStd: nil,
+            pathLength: [0],
+            speedMean: [0],
+            velocity: [0],
+            velocityX: [0],
+            velocityY: [0],
+            heading: [0],
+            displacement: [0],
+            headingCircularVariance: [nil],
+            accumulatedTurnAbs: [0],
+            activityLogs: nil,
+            activitySummaries: nil,
+            activityEacMean: [nil],
+            activityEanMean: [nil],
+            activityDiversityMean: [nil],
+            activitySpeciesMean: [nil],
+            survivalDeathStep: [nil],
+            lastMassMap: sampledMassMap
+        )
+
+        let results = builder.build(
+            seeds: [0],
+            initSeedOffset: 0,
+            searchConfig: searchConfig.toSearchConfig(),
+            initialConditionFamily: "test",
+            activityConfig: nil,
+            stabilityConfig: StabilityConfig.defaultConfig,
+            usesActivityMetrics: false,
+            rolloutSummary: summary,
+            terminalMassMap: terminalMassMap,
+            terminalStateBatch: nil,
+            terminalParamBatch: nil
+        )
+
+        XCTAssertEqual(results[0].metrics.componentCount, 2)
     }
 
     func testFlowLeniaEcology2025RunnerAcceptsCuratedSeedsWithFewerChannels() throws {
@@ -5721,7 +7597,9 @@ private func makeRuntimeConfigForSearchEngine(
     chemotaxis: ChemotaxisConfig?,
     profile: RuntimeProfile = .paper,
     implementationMode: String = "flowlenia_2022_paper_equations",
-    patches: [PatchConfig]? = nil
+    patches: [PatchConfig]? = nil,
+    aUniform: UniformRange = UniformRange(low: 0.0, high: 1.0),
+    statePatch: InitStatePatchConfig? = nil
 ) -> LeniaRuntimeConfig {
     var connectivity = Array(repeating: Array(repeating: 0, count: channels), count: channels)
     connectivity[0][0] = 1
@@ -5782,8 +7660,9 @@ private func makeRuntimeConfigForSearchEngine(
         params: params,
         initSeed: 0,
         patches: patches ?? [PatchConfig(center: [sx / 2, sy / 2], size: 40)],
-        aUniform: UniformRange(low: 0.0, high: 1.0),
+        aUniform: aUniform,
         pUniform: pUniform,
+        statePatch: statePatch,
         steps: 10,
         parameterEmbedding: parameterEmbedding,
         chemotaxis: chemotaxis,

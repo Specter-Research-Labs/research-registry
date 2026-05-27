@@ -4,6 +4,7 @@ struct ComponentMetricsBatchResult: Sendable {
     let count: [Float]
     let largestFraction: [Float]
     let largestAnisotropy: [Float]
+    let massEvenness: [Float]
 }
 
 struct ComponentStructureBatchResult: Sendable {
@@ -28,9 +29,11 @@ func computeComponentMetricsBatch(
     var counts: [Float] = []
     var largestFractions: [Float] = []
     var largestAnisotropies: [Float] = []
+    var massEvennesses: [Float] = []
     counts.reserveCapacity(batch)
     largestFractions.reserveCapacity(batch)
     largestAnisotropies.reserveCapacity(batch)
+    massEvennesses.reserveCapacity(batch)
 
     for sampleIndex in 0..<batch {
         let start = sampleIndex * sampleSize
@@ -39,6 +42,7 @@ func computeComponentMetricsBatch(
         var totalMass: Float = 0
         var largestMass: Float = 0
         var largestAnisotropy: Float = 0
+        var componentMasses: [Float] = []
 
         for y in 0..<height {
             for x in 0..<width {
@@ -93,6 +97,7 @@ func computeComponentMetricsBatch(
 
                 componentCount += 1
                 totalMass += componentMass
+                componentMasses.append(componentMass)
                 if componentMass > largestMass {
                     largestMass = componentMass
                     largestAnisotropy = componentAnisotropy(
@@ -110,12 +115,14 @@ func computeComponentMetricsBatch(
         counts.append(Float(componentCount))
         largestFractions.append(totalMass > 0 ? largestMass / totalMass : 0)
         largestAnisotropies.append(largestAnisotropy)
+        massEvennesses.append(componentMassEvenness(componentMasses, totalMass: totalMass))
     }
 
     return ComponentMetricsBatchResult(
         count: counts,
         largestFraction: largestFractions,
-        largestAnisotropy: largestAnisotropies
+        largestAnisotropy: largestAnisotropies,
+        massEvenness: massEvennesses
     )
 }
 
@@ -271,4 +278,18 @@ private func componentAnisotropy(
     let discSquared = max((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY, 0)
     let disc = sqrt(discSquared)
     return min(max(disc / trace, 0), 1)
+}
+
+private func componentMassEvenness(_ masses: [Float], totalMass: Float) -> Float {
+    guard totalMass > 1e-12, masses.count > 1 else {
+        return masses.count == 1 ? 1 : 0
+    }
+    var entropy: Float = 0
+    for mass in masses where mass > 0 {
+        let p = mass / totalMass
+        entropy -= p * log(p)
+    }
+    let normalizer = log(Float(masses.count))
+    guard normalizer > 1e-12 else { return 0 }
+    return min(max(entropy / normalizer, 0), 1)
 }

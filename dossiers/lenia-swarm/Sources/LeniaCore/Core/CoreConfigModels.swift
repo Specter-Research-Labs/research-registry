@@ -33,6 +33,7 @@ public struct ImplementationConfig: Codable, Sendable {
     public let gradient_boundary: String?
     public let alpha_mode: String?
     public let kernel_profile: String?
+    public let growth_profile: String?
     public let flow_clip: String?
 
     public init(
@@ -40,12 +41,14 @@ public struct ImplementationConfig: Codable, Sendable {
         gradient_boundary: String? = nil,
         alpha_mode: String? = nil,
         kernel_profile: String? = nil,
+        growth_profile: String? = nil,
         flow_clip: String? = nil
     ) {
         self.mode = mode
         self.gradient_boundary = gradient_boundary
         self.alpha_mode = alpha_mode
         self.kernel_profile = kernel_profile
+        self.growth_profile = growth_profile
         self.flow_clip = flow_clip
     }
 }
@@ -68,6 +71,7 @@ public struct ImplementationSettings: Codable, Sendable {
     public let gradientBoundary: String
     public let alphaMode: String
     public let kernelProfile: String
+    public let growthProfile: String
     public let flowClip: String
 
     public init(
@@ -76,6 +80,7 @@ public struct ImplementationSettings: Codable, Sendable {
         gradientBoundary: String,
         alphaMode: String,
         kernelProfile: String,
+        growthProfile: String = "gaussian",
         flowClip: String
     ) {
         self.mode = mode
@@ -83,6 +88,7 @@ public struct ImplementationSettings: Codable, Sendable {
         self.gradientBoundary = gradientBoundary
         self.alphaMode = alphaMode
         self.kernelProfile = kernelProfile
+        self.growthProfile = growthProfile
         self.flowClip = flowClip
     }
 }

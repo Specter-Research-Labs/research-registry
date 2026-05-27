@@ -132,6 +132,7 @@ def run_stateful_continuation(
 
         command = [
             str(cli_binary),
+            "intervene",
             "holonomy",
             "--bundle",
             str(bundle),

@@ -32,6 +32,25 @@ private struct TestExportRecord: Codable {
 }
 
 final class CompendiumIndexingTests: XCTestCase {
+    func testIndexPlanAcceptsMultipleRunDirs() throws {
+        let root = try makeTempDirectory(prefix: "lenia-multi-run-ingest")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let runA = root.appendingPathComponent("run-a", isDirectory: true)
+        let runB = root.appendingPathComponent("run-b", isDirectory: true)
+        try makeRunLayout(at: runA)
+        try makeRunLayout(at: runB)
+
+        let plan = try resolveCompendiumIngestPlan(
+            outputRoots: [],
+            runDirs: [runA.path, runB.path],
+            dbPath: root.appendingPathComponent("compendium.sqlite").path,
+            repairOnly: false
+        )
+
+        XCTAssertEqual(plan.runInputs.map(\.runId), ["run-a", "run-b"])
+    }
+
     func testIndexIngestsEcologyArenaRuns() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory
@@ -1159,6 +1178,79 @@ final class CompendiumIndexingTests: XCTestCase {
         XCTAssertEqual(sqliteText(runStmt, 2), "cfg-qd-001")
     }
 
+    func testIndexToleratesLegacyCreatureRowsWithoutInitialCondition() throws {
+        let root = try makeTempDirectory(prefix: "lenia-legacy-creature-repair")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let legacyRunDir = root.appendingPathComponent("legacy-run", isDirectory: true)
+        try makeRunLayout(at: legacyRunDir)
+        let legacyID = UUID(uuidString: "43434343-3434-4343-3434-434343434343")!
+        let legacyEntry = ResearchLibraryEntry(
+            creature: makeCreature(id: legacyID, name: "legacy-row", seed: 31),
+            campaignId: nil,
+            runId: "legacy-run",
+            recordedAt: fixedDate,
+            configHash: "cfg-legacy",
+            sourceMode: "replay-specimens",
+            sourceAlgorithm: "legacy"
+        )
+        _ = try ResearchLibraryWriter.write(entries: [legacyEntry], runDirectory: legacyRunDir)
+
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+        var command = try IndexCommand.parseAsRoot([
+            "--run-dir", legacyRunDir.path,
+            "--db", dbPath,
+            "--rebuild",
+        ])
+        try command.run()
+
+        let db = try SQLiteDB(path: dbPath)
+        try db.exec("""
+            UPDATE creatures
+            SET initial_condition_json = NULL,
+                specimen_manifest_json = NULL,
+                runtime_family = NULL,
+                runtime_capabilities_json = NULL,
+                canonical_specimen_id = NULL,
+                source_mode = 'replay-specimens'
+            WHERE id = '\(legacyID.uuidString)'
+        """)
+        try db.exec("DELETE FROM specimens WHERE creature_id = '\(legacyID.uuidString)'")
+
+        let freshRunDir = root.appendingPathComponent("fresh-run", isDirectory: true)
+        try makeRunLayout(at: freshRunDir)
+        let freshID = UUID(uuidString: "56565656-5656-5656-5656-565656565656")!
+        let freshEntry = ResearchLibraryEntry(
+            creature: makeCreature(id: freshID, name: "fresh-row", seed: 56),
+            campaignId: nil,
+            runId: "fresh-run",
+            recordedAt: fixedDate,
+            configHash: "cfg-fresh",
+            sourceMode: "flow-map-elites",
+            sourceAlgorithm: "local"
+        )
+        _ = try ResearchLibraryWriter.write(entries: [freshEntry], runDirectory: freshRunDir)
+
+        command = try IndexCommand.parseAsRoot([
+            "--run-dir", freshRunDir.path,
+            "--db", dbPath,
+        ])
+        try command.run()
+
+        XCTAssertEqual(
+            try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE id = '\(freshID.uuidString)'"),
+            1
+        )
+        XCTAssertEqual(
+            try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE id = '\(freshID.uuidString)' AND canonical_specimen_id IS NOT NULL"),
+            1
+        )
+        XCTAssertEqual(
+            try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE id = '\(legacyID.uuidString)' AND canonical_specimen_id IS NULL"),
+            1
+        )
+    }
+
     func testQD2024LocalRunEmitsIndexableLibraryEntries() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory
@@ -1642,6 +1734,26 @@ final class CompendiumIndexingTests: XCTestCase {
         let searchConfigPath = try XCTUnwrap(exportRecord.searchConfigPath)
         XCTAssertTrue(fm.fileExists(atPath: baseConfigPath))
         XCTAssertTrue(fm.fileExists(atPath: searchConfigPath))
+        let exportBase = try JSONDecoder().decode(
+            LeniaBaseConfig.self,
+            from: Data(contentsOf: URL(fileURLWithPath: baseConfigPath))
+        )
+        let bestConfig = try JSONDecoder().decode(
+            LeniaBaseConfig.self,
+            from: Data(contentsOf: runDir.appendingPathComponent("best_config.json"))
+        )
+        let bestJSON = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(contentsOf: runDir.appendingPathComponent("best.json")))
+                as? [String: Any]
+        )
+        let bestFitness = try XCTUnwrap(bestJSON["fitness"] as? Double)
+        XCTAssertEqual(exportBase.params.mode, "explicit")
+        XCTAssertEqual(exportBase.params.R, bestConfig.params.R)
+        XCTAssertEqual(exportBase.params.r, bestConfig.params.r)
+        XCTAssertEqual(exportBase.params.m, bestConfig.params.m)
+        XCTAssertEqual(exportBase.params.s, bestConfig.params.s)
+        XCTAssertNil(exportBase.params.ranges)
+        XCTAssertEqual(try XCTUnwrap(exportRecord.score), Float(bestFitness), accuracy: 1e-5)
         let replaySearch = try JSONDecoder().decode(
             ParsedSearchConfig.self,
             from: Data(contentsOf: URL(fileURLWithPath: searchConfigPath))

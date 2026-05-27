@@ -17,16 +17,17 @@ struct SearchBatchResultBuilder {
         terminalMassMap: MLXArray?,
         terminalStateBatch: MLXArray?,
         terminalParamBatch: MLXArray?,
+        paramsBySample: [ResolvedParams]? = nil,
         foodInitialMass: [Float]? = nil,
         foodFinalMass: [Float]? = nil
     ) -> [BatchSimulationResult] {
         let massForPostProcessing: MLXArray
-        if let lastMassMap = rolloutSummary.lastMassMap {
-            massForPostProcessing = lastMassMap
-        } else if let terminalMassMap {
+        if let terminalMassMap {
             massForPostProcessing = terminalMassMap
         } else if let terminalStateBatch {
             massForPostProcessing = massMapFromBatch(terminalStateBatch, searchConfig: searchConfig)
+        } else if let lastMassMap = rolloutSummary.lastMassMap {
+            massForPostProcessing = lastMassMap
         } else {
             fatalError("Search result building requires a terminal mass map or terminal state batch.")
         }
@@ -63,10 +64,20 @@ struct SearchBatchResultBuilder {
             threshold: componentThreshold,
             useTorus: runtimeConfig.border == "torus"
         )
-        let genotypeDescriptor = morphospaceGenotypeDescriptor(runtimeConfig.params)
-
+        let largestComponentInternalStripe = computeLargestComponentInternalStripeContrastBatch(
+            materialized: postProcessingMass,
+            threshold: componentThreshold,
+            useTorus: runtimeConfig.border == "torus"
+        )
+        let largestComponentOrientedRidge = computeLargestComponentOrientedRidgeDominanceBatch(
+            materialized: postProcessingMass,
+            threshold: componentThreshold,
+            useTorus: runtimeConfig.border == "torus"
+        )
         var results: [BatchSimulationResult] = []
         for (i, seed) in seeds.enumerated() {
+            let resolvedParams = paramsBySample?[i] ?? runtimeConfig.params
+            let genotypeDescriptor = morphospaceGenotypeDescriptor(resolvedParams)
             var activityEacMean: Float? = nil
             var activityEanMean: Float? = nil
             var activityDiversityMean: Float? = nil
@@ -124,7 +135,9 @@ struct SearchBatchResultBuilder {
                 momentAnisotropy: momentsResult.anisotropy[i],
                 componentCount: componentMetricsResult.count[i],
                 largestComponentFraction: componentMetricsResult.largestFraction[i],
-                largestComponentAnisotropy: componentMetricsResult.largestAnisotropy[i]
+                largestComponentAnisotropy: componentMetricsResult.largestAnisotropy[i],
+                largestComponentInternalStripe: largestComponentInternalStripe[i],
+                largestComponentOrientedRidge: largestComponentOrientedRidge[i]
             )
 
             let stable = isStableCreature(
@@ -200,6 +213,8 @@ struct SearchBatchResultBuilder {
                 componentCount: metrics.componentCount,
                 largestComponentFraction: metrics.largestComponentFraction,
                 largestComponentAnisotropy: metrics.largestComponentAnisotropy,
+                largestComponentInternalStripe: metrics.largestComponentInternalStripe,
+                largestComponentOrientedRidge: metrics.largestComponentOrientedRidge,
                 hu1: metrics.hu1,
                 hu2: metrics.hu2,
                 hu3: metrics.hu3,
@@ -226,7 +241,7 @@ struct SearchBatchResultBuilder {
                 seed: seed,
                 initSeed: seed + initSeedOffset,
                 metrics: metrics,
-                params: runtimeConfig.params,
+                params: resolvedParams,
                 activity: activitySnapshots,
                 initialConditionFamily: initialConditionFamily,
                 descriptorBundle: descriptorBundle,
