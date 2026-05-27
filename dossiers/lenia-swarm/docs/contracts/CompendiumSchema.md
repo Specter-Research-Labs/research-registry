@@ -19,7 +19,7 @@ Consumers:
 
 ## Schema Version
 
-Current schema version is `14` (see `Sources/LeniaCLI/CompendiumSchema.swift`).
+Current schema version is `15` (see `Sources/LeniaCLI/Compendium/Schema.swift`).
 
 The indexer enforces an exact match for read commands that depend on schema shape (`analyze ecology`, `compendium-sanity`, and canonical browse/warehouse surfaces).
 
@@ -31,6 +31,7 @@ Core tables:
 - `runs`: indexed run roots and provenance (`run_id`, `run_dir`, host/output metadata, `config_hash`).
 - `campaigns`: run-scoped campaign IDs linked to runs.
 - `creatures`: browse/publish rows plus denormalized metrics, taxonomy slots, morphometrics, and a required canonical `canonical_specimen_id` link.
+- `creature_qc_events`: append-only catalog QC status changes for audit/review.
 - `exports`: records for exported configs tied to creatures, keyed independently from the user-facing `export_dir`.
 - `results`: optional per-seed records when indexing includes results.
 - `specimens`: strict canonical specimen rows for replayable/warehouse-derived analysis.
@@ -67,6 +68,14 @@ Core tables:
 - normalizes replay naming,
 - adds `initial_condition_json` and canonical `creatures.canonical_specimen_id`,
 - requires every canonical creature row to resolve to one strict specimen.
+
+`v14 -> v15`:
+
+- adds catalog QC fields on `creatures`:
+  - `catalog_status` (`active`, `protected`, `quarantine`, `rejected`),
+  - `quality_flags_json`.
+- adds `creature_qc_events` for reversible curation audit trails.
+- normal browse and warehouse ingest surfaces default to `active` plus `protected`.
 
 ## Static Publish Contract
 

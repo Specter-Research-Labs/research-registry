@@ -23,11 +23,20 @@ from .warehouse import (
 )
 
 
-def _load_sqlite_rows(path: Path, table_name: str) -> list[dict[str, Any]]:
+def _load_sqlite_rows(
+    path: Path,
+    table_name: str,
+    *,
+    where_sql: str | None = None,
+    params: tuple[Any, ...] = (),
+) -> list[dict[str, Any]]:
     connection = sqlite3.connect(path)
     connection.row_factory = sqlite3.Row
     try:
-        return [dict(row) for row in connection.execute(f"SELECT * FROM {table_name}")]
+        sql = f"SELECT * FROM {table_name}"
+        if where_sql:
+            sql += f" WHERE {where_sql}"
+        return [dict(row) for row in connection.execute(sql, params)]
     finally:
         connection.close()
 
@@ -42,6 +51,17 @@ def _sqlite_columns(path: Path, table_name: str) -> set[str]:
         }
     finally:
         connection.close()
+
+
+def _active_creature_filter(path: Path, run_id: str | None) -> tuple[str | None, tuple[Any, ...]]:
+    clauses: list[str] = []
+    params: list[Any] = []
+    if run_id is not None:
+        clauses.append("run_id = ?")
+        params.append(run_id)
+    if "catalog_status" in _sqlite_columns(path, "creatures"):
+        clauses.append("catalog_status IN ('active', 'protected')")
+    return (" AND ".join(clauses) if clauses else None, tuple(params))
 
 
 def _bool_or_none(value: Any) -> bool | None:
@@ -309,7 +329,13 @@ def ingest_compendium(
             "Compendium is missing creatures.canonical_specimen_id; rebuild the canonical compendium before warehouse ingest."
         )
 
-    creature_rows = _load_sqlite_rows(compendium_path, "creatures")
+    creature_where_sql, creature_params = _active_creature_filter(compendium_path, None)
+    creature_rows = _load_sqlite_rows(
+        compendium_path,
+        "creatures",
+        where_sql=creature_where_sql,
+        params=creature_params,
+    )
     creature_by_specimen_id = {
         str(row["canonical_specimen_id"]): row
         for row in creature_rows
