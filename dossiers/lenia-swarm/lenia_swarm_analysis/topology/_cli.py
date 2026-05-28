@@ -1,22 +1,14 @@
 from __future__ import annotations
 
-from lenia_swarm_analysis._dispatch import Subcommand, dispatch_subcommands
+from lenia_swarm_analysis._commands import GROUPS_BY_NAME
+from lenia_swarm_analysis._dispatch import dispatch_command_group
 
-COMMANDS = (
-    Subcommand("analyze", "analysis", "Compute persistent topology summaries"),
-    Subcommand("compare", "compare", "Compare topology across representations"),
-    Subcommand("robustness", "robustness", "Subsample robustness analysis"),
-)
+GROUP = GROUPS_BY_NAME["topology"]
+COMMANDS = GROUP.commands
 
 
 def main(argv: list[str] | None = None) -> int:
-    return dispatch_subcommands(
-        argv,
-        prog="lenia-swarm-topology",
-        description="Persistent topology analysis tools",
-        package=__package__ or "lenia_swarm_analysis.topology",
-        commands=COMMANDS,
-    )
+    return dispatch_command_group(argv, GROUP)
 
 
 if __name__ == "__main__":
