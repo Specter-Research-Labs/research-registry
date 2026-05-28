@@ -17,6 +17,7 @@ dev = [
 ]
 
 [project.scripts]
+lenia-swarm-analysis = "lenia_swarm_analysis._cli:main"
 lenia-swarm-topology = "lenia_swarm_analysis.topology._cli:main"
 lenia-swarm-generators = "lenia_swarm_analysis.generators._cli:main"
 lenia-swarm-fiber = "lenia_swarm_analysis.fiber._cli:main"

@@ -103,6 +103,10 @@ Useful individual targets:
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
 - `LeniaCLI tt run`: Tenstorrent backend trajectory execution with optional quietbox SSH/container orchestration and Studio frame export.
 - `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility surfaces.
+- `lenia-swarm-analysis`: canonical Python analysis surface for TDA, fibers,
+  transport, packet builders, named-family preset extraction, and warehouse
+  bridge operations. Existing `lenia-swarm-*` Python commands remain
+  compatibility aliases.
 
 ### Tenstorrent Runs
 
