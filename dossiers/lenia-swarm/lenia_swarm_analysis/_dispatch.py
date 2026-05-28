@@ -11,6 +11,16 @@ class Subcommand(NamedTuple):
     help: str
 
 
+class CommandGroup(NamedTuple):
+    name: str
+    module: str
+    help: str
+    prog: str
+    description: str
+    package: str
+    commands: tuple[Subcommand, ...]
+
+
 def dispatch_subcommands(
     argv: list[str] | None,
     *,
@@ -31,3 +41,13 @@ def dispatch_subcommands(
         raise SystemExit(f"unknown command: {args.command}")
     run = import_module(f"{package}.{module_name}").main
     return run(remaining)
+
+
+def dispatch_command_group(argv: list[str] | None, group: CommandGroup) -> int:
+    return dispatch_subcommands(
+        argv,
+        prog=group.prog,
+        description=group.description,
+        package=group.package,
+        commands=group.commands,
+    )

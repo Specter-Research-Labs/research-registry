@@ -1,22 +1,14 @@
 from __future__ import annotations
 
-from lenia_swarm_analysis._dispatch import Subcommand, dispatch_subcommands
+from lenia_swarm_analysis._commands import GROUPS_BY_NAME
+from lenia_swarm_analysis._dispatch import dispatch_command_group
 
-COMMANDS = (
-    Subcommand("facing-packet", "facing_packet", "Build Agda-facing packet"),
-    Subcommand("codegen", "codegen", "Generate Agda module from facing packet"),
-    Subcommand("package", "package", "Build complete Agda package"),
-)
+GROUP = GROUPS_BY_NAME["agda"]
+COMMANDS = GROUP.commands
 
 
 def main(argv: list[str] | None = None) -> int:
-    return dispatch_subcommands(
-        argv,
-        prog="lenia-swarm-agda",
-        description="Agda proof generation tools",
-        package=__package__ or "lenia_swarm_analysis.agda",
-        commands=COMMANDS,
-    )
+    return dispatch_command_group(argv, GROUP)
 
 
 if __name__ == "__main__":

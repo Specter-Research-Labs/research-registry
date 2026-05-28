@@ -1,23 +1,14 @@
 from __future__ import annotations
 
-from lenia_swarm_analysis._dispatch import Subcommand, dispatch_subcommands
+from lenia_swarm_analysis._commands import GROUPS_BY_NAME
+from lenia_swarm_analysis._dispatch import dispatch_command_group
 
-COMMANDS = (
-    Subcommand("history-seed", "history_seed", "Build IMGEP history seed from bundles"),
-    Subcommand("hotspot-batch", "hotspot_batch", "Build IMGEP hotspot batch spec"),
-    Subcommand("hotspot-report", "hotspot_report", "Build IMGEP hotspot report"),
-    Subcommand("hotspot-export", "hotspot_export", "Export IMGEP hotspot results"),
-)
+GROUP = GROUPS_BY_NAME["imgep"]
+COMMANDS = GROUP.commands
 
 
 def main(argv: list[str] | None = None) -> int:
-    return dispatch_subcommands(
-        argv,
-        prog="lenia-swarm-imgep",
-        description="IMGEP curiosity-driven exploration tools",
-        package=__package__ or "lenia_swarm_analysis.imgep",
-        commands=COMMANDS,
-    )
+    return dispatch_command_group(argv, GROUP)
 
 
 if __name__ == "__main__":

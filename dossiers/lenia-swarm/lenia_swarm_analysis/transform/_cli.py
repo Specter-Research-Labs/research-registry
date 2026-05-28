@@ -1,24 +1,14 @@
 from __future__ import annotations
 
-from lenia_swarm_analysis._dispatch import Subcommand, dispatch_subcommands
+from lenia_swarm_analysis._commands import GROUPS_BY_NAME
+from lenia_swarm_analysis._dispatch import dispatch_command_group
 
-COMMANDS = (
-    Subcommand("replay", "replay", "Build transformation replay packet"),
-    Subcommand("atlas", "atlas", "Build transformation atlas packet"),
-    Subcommand("focal", "focal", "Build transformation focal packet"),
-    Subcommand("topology", "topology_packet", "Build transformation topology packet"),
-    Subcommand("family-comparison", "family_comparison", "Build family comparison packet"),
-)
+GROUP = GROUPS_BY_NAME["transform"]
+COMMANDS = GROUP.commands
 
 
 def main(argv: list[str] | None = None) -> int:
-    return dispatch_subcommands(
-        argv,
-        prog="lenia-swarm-transform",
-        description="Transformation analysis packet tools",
-        package=__package__ or "lenia_swarm_analysis.transform",
-        commands=COMMANDS,
-    )
+    return dispatch_command_group(argv, GROUP)
 
 
 if __name__ == "__main__":
