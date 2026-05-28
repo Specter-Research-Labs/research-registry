@@ -108,12 +108,6 @@
                         wave of growth and decay. We use it to search
                         parameter space and index what stays alive.
                     </p>
-                    <p>
-                        For the mechanics with interactive widgets, see
-                        <a href="../../blog/lenia-explainer/"
-                            >A Primer on Lenia</a
-                        >.
-                    </p>
                 </section>
 
                 <section class="section-block" id="perturbation-response">
@@ -155,73 +149,24 @@
                         shape clouds, and where loop transport leaves
                         residue.
                     </p>
-                    <p>What the measurements say:</p>
-                    <ul>
-                        <li>
-                            Shared 12-axis shape-descriptor space now
-                            covers <code>25,167</code> Flow Lenia
-                            specimens, <code>859</code> EmbryoMaker
-                            <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">morphology snapshots</a>,
-                            and <code>232</code>
-                            <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad fish body outlines</a>.
-                        </li>
-                        <li>
-                            On the full Lenia cloud, the
-                            <code>4,096</code>-landmark TDA run finds
-                            <code>4,930</code>
-                            <code>H<sub>1</sub></code> intervals, with
-                            top persistence <code>2.78</code>. On the
-                            no-food <code>8,192</code> cohort, exact
-                            dense TDA finds <code>7,275</code>
-                            <code>H<sub>1</sub></code> intervals, with
-                            top persistence <code>0.80</code>.
-                        </li>
-                        <li>
-                            <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">EmbryoMaker morphology snapshots</a>
-                            have
-                            <code>297</code> exact
-                            <code>H<sub>1</sub></code> intervals with
-                            top persistence <code>0.29</code>. The
-                            <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad fish-outline cohort</a>
-                            has
-                            <code>66</code> exact
-                            <code>H<sub>1</sub></code> intervals with
-                            top persistence <code>0.64</code>. The
-                            interval counts are sample-size dependent;
-                            the comparable fact is that the same
-                            descriptor layer sees loop structure in all
-                            three clouds.
-                        </li>
-                        <li>
-                            The best local result is fish-near:
-                            an <code>H<sub>1</sub></code> neighborhood
-                            near the
-                            <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad outline cohort</a>,
-                            with
-                            persistence <code>0.563</code>,
-                            Dryad-outline median distance
-                            <code>3.30</code> against a global
-                            Dryad-outline median of <code>5.90</code>,
-                            and a stratified transport-enrichment p-value
-                            around <code>0.0002</code>.
-                        </li>
-                        <li>
-                            Transport gives us the curvature test: move
-                            around a phenotype neighborhood, return near
-                            the same form, and measure the residue left
-                            in state. The broad corpus has
-                            <code>4,802</code> flow-supported transport
-                            groups and a real transport tail, with the
-                            fish-near neighborhood carrying the strongest
-                            localized signal so far.
-                        </li>
-                    </ul>
                     <p>
-                        <a href="fiber-theory/"
-                            >Fiber Theory</a
-                        >
-                        keeps the geometry, topology, and comparison
-                        data in one place.
+                        The approach is deliberately comparative. We put
+                        Flow Lenia specimens, developmental model
+                        snapshots, and biological outline cohorts into a
+                        shared descriptor layer so the same questions can
+                        be asked of each cloud: where loops appear, which
+                        neighborhoods sit near external shape families,
+                        and which regions deserve denser follow-up.
+                    </p>
+                    <p>
+                        Topological data analysis gives the first pass at
+                        loop structure. Local cohort comparison asks
+                        whether particular Lenia neighborhoods lean
+                        toward developmental or biological shapes.
+                        Transport then walks around those neighborhoods
+                        and checks whether the underlying state returns
+                        with the phenotype, or whether hidden residue
+                        remains in the rule layer.
                     </p>
                 </section>
 
@@ -255,8 +200,7 @@
                         Controller-worker topology over a SWIM gossip
                         cluster, with an MLX Swift engine for
                         GPU-accelerated Flow Lenia across Apple
-                        machines. Worker failures are detected
-                        automatically and pending jobs requeued.
+                        machines.
                     </p>
                     <ul>
                         <li>
@@ -277,11 +221,7 @@
                         </li>
                     </ul>
                     <p>
-                        For deeper internals see the
-                        <a href="../../cabinet/lenia-swarm/universe/Primer/"
-                            >Universe Primer</a
-                        >
-                        and the
+                        For deeper internals, see the
                         <a href="../../cabinet/lenia-swarm/README/"
                             >cabinet docs</a
                         >.
