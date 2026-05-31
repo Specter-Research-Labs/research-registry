@@ -24,6 +24,7 @@ stage = "candidate"
 name = "source"
 kind = "source_bundle"
 publish = true
+include_docs = false
 
 [[release.surfaces]]
 name = "python"

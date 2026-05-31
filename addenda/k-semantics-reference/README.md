@@ -194,14 +194,3 @@ metrics as `sweep`/`report`, plus wall-clock timings per case. The test suite
 also pins a golden Markdown report in
 `tests/fixtures/report_markdown_golden.md` so CLI formatting changes show up as
 explicit diffs.
-
-## Next Domains To Try (Suggested)
-
-These keep the operator set small and the cost currency unambiguous:
-
-- Small ML models (careful with cost currency):
-  - `S`: parameter vectors; `O`: update step; `w`: "1 gradient eval" (or "1 forward pass").
-  - agent: SGD; blind: random steps; horizon: fixed eval budget.
-- Combinational puzzles with crisp operators:
-  - `S`: puzzle configurations; `O`: one legal move; goal: solved state.
-  - agent: heuristic search; blind: random legal moves.

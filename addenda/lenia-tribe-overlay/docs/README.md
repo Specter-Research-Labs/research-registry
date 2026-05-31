@@ -1,15 +1,16 @@
-# Lenia TRIBE Overlay: Design Overview
+# Lenia TRIBE Overlay
 
 ## Question
-lenia-swarm already gives each creature 16 shape-and-motion numbers
+`lenia-swarm` already gives each creature 16 shape-and-motion numbers
 (`lenia_terminal_v1`: spread, compactness, boundary complexity, symmetry,
-displacement, etc.). This addendum computes a 17th number a totally
-different way: feed the video to TRIBE v2 and average the predicted
+displacement, etc.). This addendum computes a 17th number by a separate
+route: feed the video to TRIBE v2 and average the predicted
 cortical activation in a few regions.
 
-Is the 17th number basically a duplicate of one of the 16, or actually
-new? If it correlates ~0.9 with `boundary_complexity`, drop it. If it's
-uncorrelated with all 16, keep it as a new way to sort creatures.
+Is the 17th number redundant with the existing 16-axis descriptor space? If
+it correlates near `0.9` with `boundary_complexity` or another axis, drop it.
+If it stays decorrelated from all 16 axes, keep it as a new sorting
+coordinate.
 
 We do not claim Lenia creatures are alive because the cortex says so, and
 the score is not a "lifelikeness" measurement.
@@ -53,7 +54,7 @@ manifest derived from content-addressed MP4s, torch and CUDA versions,
 seed for any preprocessing randomness. Reports are timestamped under
 `.artifacts/`.
 
-## Limitations recorded up front
+## Limits
 - TRIBE predicts fMRI, not perception. A predicted activation in any ROI
   is evidence of model-internal engagement, not of conscious perception.
 - Single observer. TRIBE averages 720 subjects into a learned mapping;
@@ -63,4 +64,4 @@ seed for any preprocessing randomness. Reports are timestamped under
 - ROI masks are anatomical (Destrieux), not functional. `sts`,
   `lateral_ot`, and `v1_proxy` are loose proxies; small-effect contrasts
   at this resolution are not interpretable.
-- License. CC BY-NC. No downstream commercial surface.
+- License. CC BY-NC. No commercial use.

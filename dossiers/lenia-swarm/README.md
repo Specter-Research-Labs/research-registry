@@ -10,6 +10,9 @@ Distributed parameter search for Flow Lenia across Apple machines using Swift Di
 - `docs/contracts/`: CLI/schema/artifact/reproducibility contracts.
 - `docs/internals/`: implementation-level references and maps.
 - `docs/decisions/`: ADRs for long-lived doc and schema decisions.
+- `docs/internals/TTBackend.md`: TT backend operation and launcher rules.
+- `docs/internals/TTBackendPerformance.md`: accepted TT backend performance facts and rejected
+  optimization probes.
 
 ## Architecture
 
@@ -87,23 +90,23 @@ Useful individual targets:
 
 - `make check-swift`: package-level Swift tests.
 - `make check-python`: Ruff, Ty, and Pytest for `lenia_swarm_analysis/`.
-- `make smoke-deterministic`: fixed-seed local determinism harness.
+- `make smoke-deterministic`: fixed-seed local determinism check.
 - `make smoke-cluster`: controller+worker smoke run.
 
 ## Usage
 
 ### Grouped CLI Tree
 
-- `LeniaCLI discover local`: deterministic local run harness and auto-indexing.
-- `LeniaCLI discover evolve|mutate|rd-2023|sensorimotor-2024|qd-2024|ecology-2025|curiosity-2025|atlas-2026`: paper-grounded discovery lanes.
+- `LeniaCLI discover local`: deterministic local runs and auto-indexing.
+- `LeniaCLI discover evolve|mutate|rd-2023|sensorimotor-2024|qd-2024|ecology-2025|curiosity-2025|atlas-2026`: paper-grounded discovery commands.
 - `LeniaCLI orchestrate controller|worker|campaign`: distributed sweep, worker, and campaign dispatch.
 - `LeniaCLI index ingest|sanity|backfill`: compendium ingest and repair.
 - `LeniaCLI analyze warehouse|topology|biological|discovery|ecology|taxonomy`: warehouse refresh and derived analysis.
 - `LeniaCLI intervene battery|holonomy`: intervention batteries and transport experiments.
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
 - `LeniaCLI tt run`: Tenstorrent backend trajectory execution with optional quietbox SSH/container orchestration and Studio frame export.
-- `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility surfaces.
-- `lenia-swarm-analysis`: canonical Python analysis surface for TDA, fibers,
+- `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.
+- `lenia-swarm-analysis`: canonical Python analysis CLI for TDA, fibers,
   transport, packet builders, named-family preset extraction, and warehouse
   bridge operations. Existing `lenia-swarm-*` Python commands remain
   compatibility aliases.
@@ -146,8 +149,8 @@ LeniaCLI tt run \
 ```
 
 Use `LeniaCLI --host` for the main Studio/export path. Use
-`dispatch run --on quietbox --device wormhole:... -- ...` when dispatch should
-own TT device reservation for backend profiling; in that mode the command is
+`dispatch run --on quietbox --device wormhole:... -- ...` when dispatch owns
+TT device reservation for backend profiling; in that mode the command is
 already running in the remote workspace, so do not wrap it in another
 `LeniaCLI --host` SSH hop.
 
@@ -204,7 +207,7 @@ LeniaCLI orchestrate controller \
   --auto-exit
 ```
 
-Run `LeniaCLI orchestrate controller --help` for the full flag surface.
+Run `LeniaCLI orchestrate controller --help` for all flags.
 
 ### Worker
 
@@ -216,7 +219,7 @@ LeniaCLI orchestrate worker \
 
 Workers discover the controller and register automatically. The controller assigns seed ranges
 until exhausted.
-Run `LeniaCLI orchestrate worker --help` for the full flag surface.
+Run `LeniaCLI orchestrate worker --help` for all flags.
 
 ### Evolve
 
@@ -229,7 +232,7 @@ LeniaCLI discover evolve \
   --output ./evolution_results
 ```
 
-Run `LeniaCLI discover evolve --help` for the full flag surface.
+Run `LeniaCLI discover evolve --help` for all flags.
 
 ### Mutate
 
@@ -244,7 +247,7 @@ LeniaCLI discover mutate \
   --clip
 ```
 
-Run `LeniaCLI discover mutate --help` for the full flag surface.
+Run `LeniaCLI discover mutate --help` for all flags.
 
 ## Output
 

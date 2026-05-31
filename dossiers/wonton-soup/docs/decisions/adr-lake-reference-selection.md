@@ -94,4 +94,4 @@ When publishing K-style results from lake jobs, report:
 ## References
 
 - `analysis/lake/job.py`
-- [Lake Jobs (Materialized Datasets)](docs/ops/lake-jobs.md)
+- [Lake](../ops/lake.md)

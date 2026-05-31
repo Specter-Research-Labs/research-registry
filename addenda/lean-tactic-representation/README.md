@@ -3,10 +3,10 @@
 Research agenda and toy interpreter for structured Lean tactic representations.
 
 The question is whether proof tactics can be represented as compositional
-objects instead of strings, with an execution story and evaluation plan.
+objects instead of strings, with executable semantics and a testable evaluation protocol.
 
-Start with `research.md` for the argument, then
-`docs/general-algebraic-tactic-calculus-spec.md` for the technical target.
+Start with `docs/general-algebraic-tactic-calculus-spec.md` for the technical
+target.
 
 The runnable code is a toy interpreter and visualizer for calculus fragments.
 

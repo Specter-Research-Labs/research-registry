@@ -32,7 +32,9 @@ Visual anchors used in this corpus:
 ![Taxonomy pre-stage fast exemplar](./assets/examples/crossmap-magma.webp)
 ![Taxonomy pre-stage slow exemplar](./assets/examples/nnea-magma.webp)
 
-## Planned Taxonomy Pipeline (Conceptual)
+## Taxonomy Pipeline
+
+Target protocol:
 
 1. canonicalize genotype (order-invariant kernel representation),
 2. cluster into coarse families,

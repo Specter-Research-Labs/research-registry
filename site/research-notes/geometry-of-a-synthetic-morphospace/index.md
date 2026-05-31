@@ -57,7 +57,7 @@ Phenotype distance: **0.218**. Interface distance (normalized genotype delta): *
 
 ### Bridge studies
 
-Linear interpolation between two creature genotypes tests whether the section tears (genotypes that should interpolate fail to produce viable intermediates). A bridge study from seed 196 to 241 showed a clear failure band — intermediate genotypes between the two phenotypes collapsed into non-viable regions. These barriers are topological obstructions in the bundle.
+Linear interpolation between two creature genotypes tests whether the section tears: intermediate genotypes between seed 196 and seed 241 collapsed into non-viable regions instead of producing viable intermediates. These barriers are topological obstructions in the bundle.
 
 ![Fiber bundle schematic](../../assets/blog/lenia-morphospace-report/fig-fiber-bundle.svg)
 
@@ -75,7 +75,7 @@ The weight matrix $w_{ij}$ is the **arrangement**: the wiring diagram coupling k
 
 ## What this connects to
 
-The fiber-bundle picture maps onto questions from Levin's program:
+The fiber-bundle picture maps onto Levin's questions:
 
 - **Attractor discreteness** maps to $H_0$ components in persistent homology. If these persist across different Lenia rule families, discreteness is a topological property of the space, not a quirk of one physics.
 - **Navigation hierarchy** maps to geodesics in the fiber bundle with a metric. Greedy navigators versus topology-aware ones become well-defined comparison classes.

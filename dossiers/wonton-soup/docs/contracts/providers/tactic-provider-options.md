@@ -1,6 +1,6 @@
 # Tactic Provider Options for Tactic Suggestion
 
-Reference for the Lean tactic-provider surface used by MCTS and distributed MCTS.
+Reference for the Lean tactic-provider API used by MCTS and distributed MCTS.
 
 ## Provider Interface
 
@@ -13,7 +13,8 @@ class TacticProvider(ABC):
         """Return up to n (tactic, probability) pairs."""
 ```
 
-Serves as the compatibility boundary: search code consumes `(tactic, probability)` pairs and does not need provider-specific branching.
+This is the compatibility boundary: search code consumes `(tactic,
+probability)` pairs without provider-specific branching.
 
 ## Provider Registry and Exposure
 
@@ -123,7 +124,7 @@ Violations raise `ValueError` immediately.
 
 - Model: `kaiyuy/leandojo-lean4-tacgen-byt5-small`
 - Strengths: lightweight baseline, comparability with LeanDojo-style work
-- Limitations: may emit some Mathlib3-style tactics
+- Limitations: can emit some Mathlib3-style tactics
 - Default provider for `wonton.py lean run`
 
 ### DeepSeek (`deepseek`)
@@ -154,7 +155,7 @@ Violations raise `ValueError` immediately.
 
 - Implementation: `GoalAwareTacticProvider`
 - Strengths: deterministic, no model weights
-- Limitations: narrower tactic surface than model-backed providers
+- Limitations: narrower tactic set than model-backed providers
 
 ## Adding Another Lean Provider
 
@@ -166,7 +167,7 @@ If you add a new provider, keep one path:
 4. Extend CLI help text and validation docs here.
 5. Capture provider config in `_provider_config(...)` so logs remain reproducible.
 
-Avoid adding a second provider-selection stack outside `create_provider(...)`.
+Avoid adding a second provider-selection path outside `create_provider(...)`.
 
 ## Related Notes
 

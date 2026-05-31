@@ -2,7 +2,8 @@
 
 ## Scope
 
-How LeniaStudio consumes compendium data surfaces and what assumptions matter for compatibility.
+How LeniaStudio consumes compendium data and what assumptions matter for
+compatibility.
 
 ## Source Surfaces
 
@@ -20,7 +21,7 @@ Studio compendium behavior depends on:
 ## Practical Implications
 
 - Schema additions must be migration-backed and version-gated before Studio consumes them.
-- New derived fields should carry method/version tags so UI logic can branch explicitly.
+- New derived fields carry method/version tags so UI logic can branch explicitly.
 - Null taxonomy fields are valid current-state data and must not be treated as ingest corruption.
 
 ## Change Discipline

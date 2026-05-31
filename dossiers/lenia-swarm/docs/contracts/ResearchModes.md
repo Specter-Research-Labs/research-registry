@@ -2,7 +2,7 @@
 
 Defines the paper-grounded entrypoints in `lenia-swarm`.
 
-Implementation detail belongs in [PaperGroundedLanes](../internals/PaperGroundedLanes.md). Config families and canonical entry files are mapped in [Config Map](../configs/README.md).
+Implementation detail belongs in [PaperGroundedRuns](../internals/PaperGroundedRuns.md). Config families and canonical entry files are mapped in [Config Map](../configs/README.md).
 
 ## Registry
 
@@ -22,17 +22,17 @@ Retired user-facing names:
 - `flowlenia-ecology-2025`
 - `ai-scientist-2025`
 
-Those names may still appear in config directories and older artifacts because they remain provenance labels.
+Those names can still appear in config directories and older artifacts because they remain provenance labels.
 
 ## Shared Rules
 
 - Paper-specific logic must live above the shared simulator.
-- No research mode may silently change the core Flow-Lenia equations.
+- No research mode can silently change the core Flow-Lenia equations.
 - The invariant guard is [LeniaCoreTests.swift](../../Tests/LeniaCoreTests/LeniaCoreTests.swift), especially `testPopulationKernelsMatchSingleKernelPath`.
-- Durable run outputs should go to `SPECTER_ARTIFACT_ROOT` when set; otherwise the mode writes to the explicit `--output` path.
+- Durable run outputs go to `SPECTER_ARTIFACT_ROOT` when set; otherwise the mode writes to the explicit `--output` path.
 - Contract changes to run outputs must remain deterministic and rerunnable from captured configs.
 
-## Mode Surfaces
+## Modes
 
 ### Flow tasks
 
@@ -65,7 +65,7 @@ Primary outputs:
 Notes:
 
 - This mode is a validator.
-- It is not a discovery lane and it does not write compendium rows.
+- It is not a discovery command and it does not write compendium rows.
 
 ### Sensorimotor
 
@@ -175,7 +175,7 @@ Relevant docs:
 - [ArtifactLayout](./ArtifactLayout.md)
 - [IndexerInternals](../internals/IndexerInternals.md)
 
-Current writer-of-record surfaces:
+Current writers:
 
 - `LeniaCLI index ingest`
 - `LeniaCLI discover local` when auto-indexing is enabled

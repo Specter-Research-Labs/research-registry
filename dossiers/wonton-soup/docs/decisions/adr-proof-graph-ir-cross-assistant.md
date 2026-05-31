@@ -136,5 +136,4 @@ Any structural claim across assistants must report whether it is same-kind or cr
 - `$SPECTER_SYNTHETIC_BUREAU_ROOT/cross_assistant_paired_benchmark_2026-03-02_v3_ir1.json`
 - `$SPECTER_SYNTHETIC_BUREAU_ROOT/cross_assistant_alignment_diagnostic_2026-03-02_v3.json`
 - `$SPECTER_SYNTHETIC_BUREAU_ROOT/cross_assistant_alignment_diagnostic_2026-03-02_v3_ir1.json`
-- [Cross-Assistant Alignment (Diagnostic)](docs/ops/cross-assistant-alignment.md)
-- [Cross-Assistant Paired Benchmark (Primary Gate)](docs/ops/cross-assistant-paired-benchmark.md)
+- [Verification](../ops/verification.md)

@@ -1,22 +1,25 @@
-# Paper-Grounded Lanes
+# Paper-Grounded Runs
 
-Treats the major paper reproductions as first-class research lanes, not as ad hoc sweeps.
+Paper reproductions are separate run families, not ad hoc sweeps.
 
-The lane model exists for one reason: each paper asks a different question, uses a different search space, and evaluates success differently. A single generic search surface cannot represent all of them without becoming vague or misleading.
+Each paper asks a different question, searches a different space, and measures
+success differently. One generic command would hide those differences.
 
-## Main Surfaces
+## Entrypoints
 
 The current paper-grounded entrypoints are:
 
 - `evolve` with [paper configs](../../configs/papers/flowlenia-2022/) for the 2022 Flow-Lenia task suite
-- `reaction-diffusion-2023` for the 2023 reaction-diffusion validation lane
-- `sensorimotor-2024` for the 2024 agency-discovery lane
-- `qd-2024` for the 2024 quality-diversity lane
-- `ecology-2025` for the 2025 Flow-Lenia intrinsic-evolution ecology lane
-- `curiosity-2025` for the 2025 curiosity-driven universe exploration lane
+- `reaction-diffusion-2023` for the 2023 reaction-diffusion validation work
+- `sensorimotor-2024` for the 2024 agency-discovery work
+- `qd-2024` for the 2024 quality-diversity work
+- `ecology-2025` for the 2025 Flow-Lenia intrinsic-evolution ecology work
+- `curiosity-2025` for the 2025 curiosity-driven universe exploration work
 - `atlas-2026` for the 2026 classical Lenia parameter-space atlas
 
-The old user-facing names `leniabreeder-2024`, `flowlenia-ecology-2025`, and `ai-scientist-2025` are retired. The config directories keep the paper names because they are provenance surfaces, not the main CLI vocabulary.
+The old user-facing names `leniabreeder-2024`, `flowlenia-ecology-2025`, and
+`ai-scientist-2025` are retired. Config directories keep paper names for
+provenance, not as CLI vocabulary.
 
 ## Source Papers
 
@@ -28,7 +31,7 @@ The old user-facing names `leniabreeder-2024`, `flowlenia-ecology-2025`, and `ai
 - [Flow-Lenia Emergent Evolutionary Dynamics 2025](https://releases.specterlab.org/records/lenia/2025/002-2025-flow-lenia-emergent-evolutionary-dynamics-in-mass-conservative-continuous-cellular-automata.pdf)
 - [Visualizing the Structure of Lenia Parameter Space 2026](https://releases.specterlab.org/records/lenia/2026/001-2026-visualizing-the-structure-of-lenia-parameter-space.pdf)
 
-## Why These Lanes Exist
+## Why These Are Separate
 
 - The 2022 paper is task-conditioned optimization, not open-ended discovery.
 - The 2024 agency paper is goal-conditioned diversity search with a curriculum and robustness battery.
@@ -36,9 +39,10 @@ The old user-facing names `leniabreeder-2024`, `flowlenia-ecology-2025`, and `ai
 - The 2025 papers move from isolated organisms to ecosystem- and universe-scale discovery metrics.
 - The 2026 atlas paper maps parameter space before glider or creature hunting.
 
-Those are different research programs. They should share core simulation code when possible, but they should not be flattened into one search API.
+These are different experiments. Share core simulation code where possible; do
+not flatten them into one search API.
 
-## Lane Map
+## Map
 
 ### Flow-Lenia 2022
 
@@ -57,12 +61,12 @@ What we re-implemented:
 - paper-style OpenES loop with antithetic Gaussian noise
 - paper-locked task configs and output capture
 
-Why it is useful:
+Role:
 
-- It gives a reproducible task harness for motion and navigation.
-- It lets us debug optimization and morphology separately from open-ended discovery.
+- Reproducible task runner for motion and navigation.
+- Separates optimization and morphology debugging from open-ended discovery.
 
-Main remaining gap:
+Known gap:
 
 - Public sources do not include every original experiment wrapper, so parity is against the published paper/config regime rather than unpublished internal scripts.
 
@@ -76,17 +80,18 @@ Primary code:
 
 What we re-implemented:
 
-- validation and emulation harnesses around the reaction-diffusion interpretation
+- validation and emulation tools around the reaction-diffusion interpretation
 - asymptotic/original comparison outputs
 
-Why it is useful:
+Role:
 
-- It is the core-validation lane.
-- It checks whether our continuous Lenia-like dynamics remain mathematically defensible rather than only visually plausible.
+- Core validation path.
+- Checks whether the continuous dynamics remain mathematically defensible,
+  rather than only visually plausible.
 
-Main remaining gap:
+Known gap:
 
-- This lane is a validator, not a discovery engine. It should stay small and sharp.
+- This is a validator, not a discovery engine. Keep it small.
 
 ### Sensorimotor 2024
 
@@ -104,14 +109,15 @@ What we re-implemented:
 - local optimization toward sampled goals
 - paper-style evaluation battery for movement, agency, and obstacle robustness
 
-Why it is useful:
+Role:
 
-- This is the lane closest to our earlier “motion without convincing organisms” failure mode.
-- It gives a principled discovery loop instead of score-only sweeps.
+- Closest to the earlier "motion without convincing organisms" failure mode.
+- Principled discovery loop instead of score-only sweeps.
 
-Main remaining gap:
+Known gap:
 
-- Real paper-scale runs still matter more than more harness code. This lane now needs broad experiments and result comparison.
+- Real paper-scale runs matter more than more support code. This work now
+  needs broad experiments and result comparison.
 
 ### QD 2024
 
@@ -132,12 +138,12 @@ What we re-implemented:
 - unsupervised descriptor as mean latent trajectory
 - unsupervised fitness as negative average latent dispersion
 
-Why it is useful:
+Role:
 
-- This lane discovers repertoires, not one winner.
-- It is the right tool for broad species discovery when we care about stepping stones and diversity.
+- Repertoire discovery, not one-winner search.
+- Broad species discovery when stepping stones and diversity matter.
 
-Main remaining gap:
+Known gap:
 
 - The open issue is paper-scale validation, not missing AURORA machinery.
 
@@ -155,14 +161,14 @@ What we re-implemented:
 - evolutionary activity and diversity-oriented summaries
 - strict validation of the paper regime before execution
 
-Why it is useful:
+Role:
 
-- It moves us from isolated specimens to ecosystem behavior.
-- It is the correct lane for long-run multispecies questions.
+- Moves the dossier from isolated specimens to ecosystem behavior.
+- Long-run multispecies work.
 
-Main remaining gap:
+Known gap:
 
-- This lane should be judged by long-horizon ecology outputs, not by small smoke tests.
+- Judge this work by long-horizon ecology outputs, not small smoke tests.
 
 ### Curiosity 2025
 
@@ -179,12 +185,12 @@ What we re-implemented:
 - archive/coverage accounting
 - MP4-size and non-neutral activity style metrics
 
-Why it is useful:
+Role:
 
-- It is the open-ended universe discovery lane.
-- It replaces narrow creature ranking with system-level novelty metrics.
+- Open-ended universe discovery.
+- Replaces narrow creature ranking with system-level novelty metrics.
 
-Main remaining gap:
+Known gap:
 
 - As with ecology, the real test is paper-scale exploration, not tiny smoke coverage.
 
@@ -198,22 +204,23 @@ Primary code:
 
 What we re-implemented:
 
-- classical Lenia `mu`/`sigma` atlas lane
+- classical Lenia `mu`/`sigma` atlas
 - public-style polygon-library input
 - paper-style batch semantics and phase-map export
 
-Why it is useful:
+Role:
 
-- It maps the search space before we try to mine it for gliders or creatures.
-- It is the cleanest correction to blind classical Lenia sweeps.
+- Maps the search space before glider or creature mining.
+- Corrects blind classical Lenia sweeps.
 
-Main remaining gap:
+Known gap:
 
 - The remaining work is full atlas scale and result inspection, not another sweep heuristic.
 
 ## Shared Engineering Choices
 
-These lanes share one principle: paper-specific logic lives above the core simulator.
+These run families share one principle: paper-specific logic lives above the
+core simulator.
 
 That means:
 
@@ -226,7 +233,7 @@ This separation matters because it lets us reproduce papers without silently cha
 
 ## Metal and MLX
 
-The heavy lanes are intended to run on the MLX/Metal path on Apple Silicon.
+The heavy runs use the MLX/Metal path on Apple Silicon.
 
 Relevant code:
 
@@ -236,7 +243,7 @@ Relevant code:
 
 What has already been done:
 
-- release-path runs for long paper lanes
+- release-path runs for long paper jobs
 - Instruments/signpost support for hot-path profiling
 - rollout sync cleanup so metrics do not force unnecessary host/device barriers
 - external artifact/log routing for long runs on remote volumes
@@ -247,25 +254,26 @@ The current hotspot conclusion is still the same:
 
 ## Invariants
 
-The paper lanes are allowed to add runners, descriptors, and evaluation logic. They are not allowed to silently rewrite the core Flow-Lenia equations.
+Paper-specific commands can add runners, descriptors, and evaluation logic.
+They must not silently rewrite the core Flow-Lenia equations.
 
 The guardrail is the invariant test in [LeniaCoreTests.swift](../../Tests/LeniaCoreTests/LeniaCoreTests.swift), especially `testPopulationKernelsMatchSingleKernelPath`.
 
-When a lane needs a paper-specific surface, the correct move is:
+When paper work needs a new command, the rule is:
 
 - add it in a paper runner
 - prove it with focused tests
 - keep the core path numerically consistent
 
-## What To Read Next
+## Reading Order
 
 For the current architecture:
 
 1. [FlowLeniaImplementationMap](./FlowLeniaImplementationMap.md)
-2. [PaperGroundedLanes](./PaperGroundedLanes.md)
+2. [PaperGroundedRuns](./PaperGroundedRuns.md)
 3. [SpeciesKnobs](./SpeciesKnobs.md)
 
-For operating these lanes:
+For operating these runs:
 
 1. [LocalCLI](../contracts/LocalCLI.md)
 2. [ArtifactLayout](../contracts/ArtifactLayout.md)

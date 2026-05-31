@@ -8,7 +8,7 @@ Config families are organized by use-case, not by entrypoint. The filenames belo
 | --- | --- | --- |
 | `base/` | Base runtime configs and smoke baselines. | `paper_base_1c_128.json`, `paper_base_2c_128.json`, `paper_search_random.json` |
 | `search/` | Search definitions, filters, and run schedules. | `search_smoke.json`, `search_motion.json`, `search_corpus_v1_core_neutral.json` |
-| `presets/` | Ready-to-run simulation presets exposed in Studio and paper-grounded lanes. | `orbium_like_classic_1c_128.json`, `flow_motile_2c_128.json`, `crossmap_1c_128.json` |
+| `presets/` | Ready-to-run simulation presets exposed in Studio and paper-grounded runs. | `orbium_like_classic_1c_128.json`, `flow_motile_2c_128.json`, `crossmap_1c_128.json` |
 | `sweeps/` | Sweep manifests that expand into many jobs. | `discovery_sweeps.json`, `glider_sweeps.json`, `mover_sweeps.json` |
 | `campaigns/` | Campaign templates for orchestrated runs. | `exploration.json`, `full-discovery.json`, `intervention-battery.json` |
 | `es/` | Evolution-strategy configs. | `es_directed_motion.json`, `es_directed_compact.json` |

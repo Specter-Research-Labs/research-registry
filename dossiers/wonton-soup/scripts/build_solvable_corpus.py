@@ -10,9 +10,8 @@ Phases:
   harvest     Scan all existing run logs for solvability data.
   assemble    Build final corpus from confirmed-both theorems.
 
-Screening is done directly via `wonton.py lean run` — see
-scripts/solvable_1000_runbook.md for the exact commands.
-This script handles harvest (collecting results) and assembly.
+Screening is done directly via `wonton.py lean run`. This script handles
+harvest (collecting results) and assembly.
 
 Usage (on quietbox):
   .venv/bin/python scripts/build_solvable_corpus.py harvest

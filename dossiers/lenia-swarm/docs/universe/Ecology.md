@@ -53,11 +53,11 @@ Slow/meandering exemplar frame:
 
 ![NNEA ecology exemplar](./assets/examples/nnea-magma.webp)
 
-## What Is Still Planned
+## Not Implemented
 
 - automated niche labeling and naming,
 - taxonomy-aware ecological maps,
-- stronger causal tests for "edge of chaos" claims.
+- causal tests for "edge of chaos" claims.
 
 ## Related Docs
 
