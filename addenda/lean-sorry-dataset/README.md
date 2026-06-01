@@ -73,5 +73,5 @@ Each row includes:
 - Optional license metadata (`repo_license_spdx`, `repo_license_open`).
 
 ## Integration Contract (Benchmark Addendum)
-`addenda/lean-sorry-repos-benchmark` should treat `index.jsonl` + manifest as its canonical input.
-That keeps dataset ingestion and benchmark policy as separate surfaces.
+`addenda/lean-sorry-repos-benchmark` treats `index.jsonl` + manifest as its canonical input.
+That keeps dataset ingestion and benchmark policy separate.

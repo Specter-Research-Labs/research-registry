@@ -6,16 +6,15 @@ Canonical index for analysis terminology, artifact semantics, and metric familie
 
 Use this page to find the canonical definition source for a term. Detailed definitions live in:
 
-- [Analysis Artifacts Reference](docs/contracts/analysis/analysis-artifacts.md)
-- [Analysis Metrics Reference](docs/concepts/analysis-metrics.md)
-- [Log File Schemas](docs/contracts/logs/log-file-schemas.md)
+- [Analysis Artifacts Reference](../contracts/analysis/analysis-artifacts.md)
+- [Analysis Metrics Reference](analysis-metrics.md)
+- [Log File Schemas](../contracts/logs/log-file-schemas.md)
 
 ## Canonical References
 
-- Log schemas: [Log File Schemas](docs/contracts/logs/log-file-schemas.md)
-- Run inspection workflows: [Log Query Cookbook](docs/ops/log-query-cookbook.md)
-- Cross-run lake operations: [Run Lake (Cross-Run DuckDB)](docs/ops/run-lake.md)
-- Lake job materialization and references: [Lake Jobs (Materialized Datasets)](docs/ops/lake-jobs.md)
+- Log schemas: [Log File Schemas](../contracts/logs/log-file-schemas.md)
+- Run inspection workflows: [Verification](../ops/verification.md)
+- Cross-run lake operations and jobs: [Lake](../ops/lake.md)
 
 ## Artifact Lexicon (Where/What)
 
@@ -26,7 +25,7 @@ Canonical artifact definitions and implementation pointers:
 - `GoalCache` and signature mapping artifacts
 - aggregate outputs (`summary.json.gz`, `analysis_report.json`, `failure_analysis.json`, etc.)
 
-See: [Analysis Artifacts Reference](docs/contracts/analysis/analysis-artifacts.md).
+See: [Analysis Artifacts Reference](../contracts/analysis/analysis-artifacts.md).
 
 ## Metric Lexicon (Meaning/Validity)
 
@@ -38,7 +37,7 @@ Canonical metric families and validity boundaries:
 - basin and K-style efficiency metrics
 - novelty/sheaf/tactic-goal aggregate metrics
 
-See: [Analysis Metrics Reference](docs/concepts/analysis-metrics.md).
+See: [Analysis Metrics Reference](analysis-metrics.md).
 
 ## Naming and Comparison Invariants
 
@@ -61,6 +60,6 @@ Current postprocess-heavy fields include:
 
 ## Related Design Records
 
-- Reference leakage guardrail: [ADR: Explicit Reference Selection for Lake Jobs](docs/decisions/adr-lake-reference-selection.md)
-- Goal-ID scheme decision: [ADR: Checkpoint-Scoped Goal IDs](docs/decisions/adr-checkpoint-goal-ids.md)
-- Backend trace/search feasibility: [ADR: Search-Graph Feasibility by Backend](docs/decisions/adr-search-graph-feasibility-by-backend.md)
+- Reference leakage guardrail: [ADR: Explicit Reference Selection for Lake Jobs](../decisions/adr-lake-reference-selection.md)
+- Goal-ID scheme decision: [ADR: Checkpoint-Scoped Goal IDs](../decisions/adr-checkpoint-goal-ids.md)
+- Backend trace/search feasibility: [ADR: Search-Graph Feasibility by Backend](../decisions/adr-search-graph-feasibility-by-backend.md)

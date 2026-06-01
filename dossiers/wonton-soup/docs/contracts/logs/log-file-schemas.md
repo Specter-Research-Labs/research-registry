@@ -8,7 +8,7 @@ Schema index for wonton-soup run artifacts.
 - For per-theorem variant artifacts: [Log Schemas: Per-Theorem Artifacts](docs/contracts/logs/log-schemas-theorem-level.md)
 - For backend capability/artifact-family mapping: [Log Schemas: Backend Artifact Mapping](docs/contracts/logs/log-schemas-backend-mapping.md)
 - For distributed trace JSONL event fields: [Distributed MCTS Trace Event Dictionary](docs/contracts/logs/distributed-mcts-trace-events.md)
-- For operational inspection workflows: [Log Query Cookbook](docs/ops/log-query-cookbook.md)
+- For operational inspection workflows: [Verification](../../ops/verification.md)
 
 ## Scope Boundary
 

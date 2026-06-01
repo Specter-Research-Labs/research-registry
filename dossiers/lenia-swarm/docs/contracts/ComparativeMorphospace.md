@@ -27,7 +27,7 @@ Assay axes record probes of a form under a context: perturbation, replay, resour
 
 ## Common Morphology Axes
 
-These axes should be readable without knowing the generator.
+These axes are readable without knowing the generator.
 
 | Axis | Meaning | Example |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ Start with metric geometry and TDA.
 
 Each feature space declares which value column carries its metric. The initial Dryad fish import uses Euclidean distance over `normalized_value`, a per-PC z-score within the imported corpus.
 
-The first analyses should report:
+The first analyses report:
 
 - within-source persistent homology,
 - coverage and nearest-neighbor distances across sources in a shared feature space,
@@ -58,7 +58,7 @@ This is enough to ask whether Lenia no-food, EmbryoMaker artifacts, and biologic
 
 ## Sheaf Layer
 
-Cellular sheaves become useful once local charts exist.
+Cellular sheaves enter once local charts exist.
 
 Use a cover of each morphospace, with stalks carrying local feature summaries or local coordinate charts. Restriction maps compare overlapping neighborhoods. A successful gluing says local descriptions are compatible. A gluing failure is evidence that two systems look locally similar but cannot be globally aligned under the chosen descriptors.
 

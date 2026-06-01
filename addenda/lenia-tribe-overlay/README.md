@@ -1,28 +1,29 @@
 # Lenia TRIBE Overlay (A-013)
 
-Status: incubating. Addendum to `dossiers/lenia-swarm/`.
+Status: experimental. Addendum to `dossiers/lenia-swarm/`.
 
-lenia-swarm already gives each creature 16 shape-and-motion numbers
-(`lenia_terminal_v1`). This addendum computes a 17th number a totally
-different way: render the Lenia run as video, push it through Meta's TRIBE
+`lenia-swarm` already gives each creature 16 shape-and-motion numbers
+(`lenia_terminal_v1`). This addendum computes a 17th number by a separate
+route: render the Lenia run as video, push it through Meta's TRIBE
 v2 ([weights](https://huggingface.co/facebook/tribev2),
 [code](https://github.com/facebookresearch/tribev2)) to predict per-voxel
 fMRI activation on `fsaverage5`, and average that activation inside three
 anatomical ROIs (STS, lateral occipitotemporal, V1 as control).
 
-The question is whether that 17th number is a duplicate of one of the 16
-or actually new. If a ROI score correlates ~0.9 with `boundary_complexity`
-or any other axis, drop it. If it's uncorrelated with all 16, keep it as a
-new way to sort creatures. The score is not a "lifelikeness" measurement.
+The question is whether that 17th number is redundant with the existing
+descriptor space. If a ROI score correlates near `0.9` with
+`boundary_complexity` or any other axis, drop it. If it stays decorrelated
+from all 16 axes, keep it as a new sorting coordinate. The score is not a
+"lifelikeness" measurement.
 
-## Why this might fail
+## Failure Modes
 TRIBE was trained on naturalistic video; Lenia is far outside that
 distribution. The sanity gate (`lenia-tribe-sanity`) only checks
 model-level health: that whole-cortex predictions vary across visually
 distinct OOD probes. It hard-errors on variance collapse, no fallback.
 
-ROI masks are anatomical proxies via the Destrieux atlas, not functional
-ROIs, so small within-ROI effects should not be over-interpreted.
+ROI masks are anatomical proxies via the Destrieux atlas, not functional ROIs.
+Small within-ROI effects are not interpretable.
 
 ## License
 TRIBE v2 weights are CC BY-NC. This addendum is research and

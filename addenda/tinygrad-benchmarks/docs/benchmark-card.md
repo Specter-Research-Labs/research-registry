@@ -57,7 +57,7 @@ The first lane is CPU correctness:
 - no live upstream fetches,
 - no hidden fallback to mutable task sources.
 
-Deferred:
+Out of scope for phase 0:
 
 - GPU correctness,
 - GPU performance,

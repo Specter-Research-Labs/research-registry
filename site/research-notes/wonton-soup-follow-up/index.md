@@ -10,7 +10,7 @@ toc: true
 
 The follow-up splits into smaller pieces: provider differences, blocked-tactic responses, distributed MCTS sweeps, and the cases where a failure becomes informative once we perturb the prover.
 
-Three figures anchor the current draft:
+Three figures anchor the result:
 
 ![Paired-panel intervention taxonomy](../../assets/blog/wonton-soup-follow-up/fig16-followup-taxonomy.png)
 
@@ -55,28 +55,28 @@ Basin multistability is rare. reprover has >1 structure on 1% of theorems, deeps
 | `block_cases` | 77 | 0.00 |
 | `block_induction` | 25 | 0.00 |
 
-`block_simp` and `block_rw` kill the proof entirely—non-negotiable rewrite tactics. `block_left`, `block_push_neg`, `block_contrapose!` are fully survivable: the prover finds an alternate route every time. `block_exact` at 11% is interesting: it kills most proofs but a minority survive through `assumption` or direct term discharge.
+`block_simp` and `block_rw` kill the proof entirely: non-negotiable rewrite tactics. `block_left`, `block_push_neg`, and `block_contrapose!` are fully survivable; the prover finds an alternate route every time. `block_exact` kills most proofs, but 11% survive through `assumption` or direct term discharge.
 
-The paired intervention panel is not simply "damage search" versus "help search." Some perturbations expose an alternate successful route, some block the obvious route and collapse, and some shift tactic usage without changing terminal success. If two perturbations solve the same theorem but travel through different tactic roles, they should not be collapsed into the same outcome class too early.
+The paired intervention panel is not simply "damage search" versus "help search." Some perturbations expose an alternate successful route, some block the obvious route and collapse, and some shift tactic usage without changing terminal success. If two perturbations solve the same theorem through different tactic roles, do not collapse them into the same outcome class too early.
 
 ## Provider Differences
 
 The cross-provider notes mostly keep us honest. Early comparison runs looked like high structural convergence, but much of that came from trivial one-step proofs—the convergence was expected and uninformative.
 
-The divergent multi-step examples are the ones worth keeping. One provider leans on library lemmas where another performs explicit construction; tactic overlap can be low even when both systems reach the theorem. Provider-specific basin structure becomes visible when we score interventions below the solved/failed surface.
+The divergent multi-step examples are the ones worth keeping. One provider leans on library lemmas where another performs explicit construction; tactic overlap can be low even when both systems reach the theorem. Provider-specific basin structure becomes visible when we score interventions below the solved/failed outcome.
 
 ## Sampling Broke One Failure Mode
 
-The tactic-generation experiments exposed a simple failure mode in beam search. Repetitive beams often generated many surface variants of the same broken tactic family.
+The tactic-generation experiments exposed a simple failure mode in beam search. Repetitive beams often generated many text variants of the same broken tactic family.
 
-Temperature sampling changed that surface:
+Temperature sampling changed the candidate set:
 
 | Metric | Beam Search | Sampling 1x | Sampling 3x |
 |---|---:|---:|---:|
 | Correct base tactic found | 4/6 | 5/6 | 5/6 |
 | Average unique base tactics | 2.7 | 4.2 | 4.7 |
 
-Diversity itself is an intervention variable. When a prover is trapped in repeated malformed tactic families, sampling can expose alternate base tactics that beam search fails to surface.
+Diversity itself is an intervention variable. When a prover is trapped in repeated malformed tactic families, sampling can expose alternate base tactics that beam search misses.
 
 DeepSeek-style generation gave a different tradeoff. It had better tactic quality on a small panel, much slower inference, and a larger runtime footprint. That makes it attractive as a fallback or diagnostic provider, not obviously as the main MCTS provider.
 
@@ -102,8 +102,8 @@ The damage-block-f0.5 condition added eight interventions relative to baseline. 
 
 ## Where The Signal Is
 
-Blocking tactics is interesting when the prover reroutes. The writeup should separate terminal outcome from tactic-role structure: which tactic families become necessary or brittle, where one provider reroutes while another collapses, whether extra interventions produce solved routes or only churn.
+Blocking tactics matters when the prover reroutes. Separate terminal outcome from tactic-role structure: which tactic families become necessary or brittle, where one provider reroutes while another collapses, and whether extra interventions produce solved routes or only churn.
 
-This connects directly to the competency-motif idea—a blocked local channel is only interesting when the system reroutes through a nontrivial alternate path.
+This is the competency-motif test: a blocked local channel matters when the system reroutes through a nontrivial alternate path.
 
 For the broader framing on cognition across heterogeneous systems, see Robert Chis-Ciure and Michael Levin, "Cognition all the way down 2.0: neuroscience beyond neurons in the diverse intelligence era," *Synthese* 206, 257 (2025), [doi:10.1007/s11229-025-05319-6](https://doi.org/10.1007/s11229-025-05319-6).

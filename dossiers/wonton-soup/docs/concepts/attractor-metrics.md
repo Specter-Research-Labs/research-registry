@@ -1,8 +1,13 @@
 # Attractor Metrics for Proof Search
 
-These metrics treat proofs as attractors in a stochastic search process and quantify robustness and convergence behavior in perturbed MCTS theorem proving.
+These metrics treat proofs as attractors in stochastic search and quantify
+robustness, convergence, rerouting, and collapse under perturbed MCTS theorem
+proving.
 
-In practice, these metrics define the cleanest structural baseline in centralized MCTS: proof families, basin mass, reroute versus collapse, and recovery after intervention. Distributed MCTS still produces compatible structural artifacts, but the primary scientific role of distributed mode is to test how collective control changes access to the landscape measured here.
+Centralized MCTS supplies the structural baseline: proof families, basin mass,
+reroute versus collapse, and recovery after intervention. Distributed MCTS
+produces compatible artifacts, but its role is different: test how collective
+control changes access to that landscape.
 
 ## Core Concept: Algorithmic Basins
 
@@ -18,11 +23,11 @@ Unlike basins of attraction in dynamical systems, MCTS basins are distributions 
 
 ## When Basin Size Is Meaningful
 
-Basin analysis produces useful signal when:
+Basin analysis is meaningful when:
 
 1. **Real stochasticity exists.** If the provider is deterministic (beam search) and MCTS tie-breaking rarely triggers, basin size will be trivial (all seeds converge to the same outcome). Enable provider sampling when available (ReProver only) or ensure UCB ties occur frequently enough to matter.
 
-2. **Budget and parameters are fixed.** Basin size is strongly budget-dependent in MCTS. A theorem might have basin size 0.3 at budget 100 but 0.9 at budget 1000 as the algorithm has more opportunity to explore alternatives. Always report the configuration.
+2. **Budget and parameters are fixed.** Basin size is strongly budget-dependent in MCTS. A theorem can have basin size 0.3 at budget 100 and 0.9 at budget 1000 as the algorithm explores alternatives. Always report the configuration.
 
 3. **Structure notion matches attractor definition.** We use AST-based `goal_signature` for nodes and `tactic_family` for edges when hashing proof structures.
 
@@ -34,12 +39,13 @@ Keep these caveats in mind when interpreting results:
 |------------|-------------|
 | Algorithm-specific | Basin size changes if you swap providers, adjust UCB constants, or modify the MCTS tree policy. It's not an intrinsic property of the proof space. |
 | Goal signature dedup | Semantically equivalent goals collapse to the same signature, which can shrink the apparent number of distinct basins. |
-| Budget-dependent | Longer runs may converge to structures that shorter runs miss entirely. |
-| Provider cache | If the provider caches suggestions, different seeds may receive identical tactics for repeated goal states. Cache clearing is best-effort: we clear between seeds only when the provider implements `clear_cache`. |
+| Budget-dependent | Longer runs can converge to structures that shorter runs miss entirely. |
+| Provider cache | If the provider caches suggestions, different seeds can receive identical tactics for repeated goal states. Cache clearing is best-effort: we clear between seeds only when the provider implements `clear_cache`. |
 
 ## Confounds in Cross-Prover Comparison
 
-If different provers converge to similar proof structures, this could indicate:
+Similar proof structures across provers do not identify one cause. Main
+confounds:
 
 1. **Intrinsic structure** - something "platonic" about the theorem's proof space
 2. **Training data overlap** - Mathlib is the dominant corpus; learned models inherit its statistical patterns
@@ -57,13 +63,13 @@ To distinguish these explanations, compare provers that differ on multiple axes:
 The **heuristic provider** (`--provider heuristic`) serves as a control: it has no learned statistics, only hard-coded rules. If it converges to structures similar to learned models, that's stronger evidence for intrinsic structure than two transformers trained on overlapping data agreeing with each other.
 
 **Current status (March 2, 2026):**
-- Implemented pilot: paired Lean↔Coq benchmark gate over a curated 84-pair logic micro set
-- Implemented companion diagnostic: unpaired cross-assistant alignment report
+- paired Lean/Coq benchmark gate over a curated 84-pair logic micro set
+- unpaired cross-assistant alignment report
 
-**Still required for stronger claims:**
-- Provers trained on additional proof assistants beyond Lean/Coq (for example Isabelle) and translation controls
-- Provers with fundamentally different architectures (symbolic search, neurosymbolic hybrids)
-- Human expert proofs as ground truth for "natural" structure
+**Evidence needed for stronger claims:**
+- provers trained on additional proof assistants beyond Lean/Coq, with translation controls
+- fundamentally different architectures, including symbolic search and neurosymbolic hybrids
+- human expert proofs as ground truth for "natural" structure
 
 When reporting cross-prover comparisons, always note which confounds apply. Two Mathlib-trained transformers agreeing tells us less than a transformer and a rule-based system agreeing.
 
