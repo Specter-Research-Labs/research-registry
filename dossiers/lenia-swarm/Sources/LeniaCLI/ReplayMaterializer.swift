@@ -162,6 +162,11 @@ func executeReplayResolvedInput(
 ) throws -> ReplayExecutionOutcome {
     switch resolvedInput.executionPlan {
     case let .flow(baseConfig, searchConfig):
+        let sourceCreature = replayCreatureWithExplicitInitPatch(
+            resolvedInput.sourceCreature,
+            baseConfig: baseConfig,
+            researchMetadata: resolvedInput.sourceResearchMetadata
+        )
         let sourceReplayBaseConfig: LeniaBaseConfig
         let replaySearchConfig: ParsedSearchConfig
         switch resolvedInput.inputKind {
@@ -172,11 +177,11 @@ func executeReplayResolvedInput(
             sourceReplayBaseConfig = try buildReplayBaseConfig(
                 baseConfig: baseConfig,
                 searchConfig: searchConfig,
-                creature: resolvedInput.sourceCreature
+                creature: sourceCreature
             )
             replaySearchConfig = buildReplaySearchConfig(
                 from: searchConfig,
-                initSeedOffset: resolvedInput.sourceCreature.initialCondition.seed,
+                initSeedOffset: sourceCreature.initialCondition.seed,
                 enableMorphospaceSignals: true,
                 supportsActivity: replaySupportsReplayActivity(baseConfig: sourceReplayBaseConfig)
             )
@@ -207,14 +212,14 @@ func executeReplayResolvedInput(
             sweep: [:]
         )
         let replayCreature = archivedCreatureFromResult(
-            stableKey: "\(runID)|\(resolvedInput.sourceCreature.id.uuidString)",
-            name: resolvedInput.sourceCreature.name,
-            ownerId: resolvedInput.sourceCreature.ownerId,
+            stableKey: "\(runID)|\(sourceCreature.id.uuidString)",
+            name: sourceCreature.name,
+            ownerId: sourceCreature.ownerId,
             result: resultData,
-            initialCondition: resolvedInput.sourceCreature.initialCondition,
+            initialCondition: sourceCreature.initialCondition,
             configHash: configHash,
-            score: resolvedInput.sourceCreature.score,
-            scoreWeights: resolvedInput.sourceCreature.scoreWeights
+            score: sourceCreature.score,
+            scoreWeights: sourceCreature.scoreWeights
         )
         let activityRecord = activitySummaryRecord(for: resultData, config: replaySearchConfig.activity)
         return ReplayExecutionOutcome(
@@ -554,7 +559,136 @@ func validateReplayLibraryEntry(_ entry: ResearchLibraryEntry) throws {
     let payload = entry.researchMetadata?["morphospace_payload"]?.value as? String
     let ready = entry.researchMetadata?["morphospace_ready"]?.value as? Bool
     if payload == "summary_only_metrics_v1" || ready == false {
+        let exportKind = entry.researchMetadata?["canonical_export_kind"]?.value as? String
+        if exportKind == LeniaArtifactBundleKind.strictReplayBundleV1.rawValue,
+           replayInitPatchValues(from: entry.researchMetadata) != nil {
+            return
+        }
         throw ValidationError("Library input contains summary-only row '\(entry.creature.name)'; replay from exports or add a dedicated adapter instead.")
+    }
+}
+
+private func replayCreatureWithExplicitInitPatch(
+    _ creature: SavedCreature,
+    baseConfig: LeniaBaseConfig,
+    researchMetadata: [String: AnyCodable]?
+) -> SavedCreature {
+    let originalInit = creature.initialCondition
+    guard originalInit.state_patch == nil,
+          originalInit.patches.count == 1,
+          let patchValues = replayInitPatchValues(from: researchMetadata) else {
+        return creature
+    }
+
+    let patch = originalInit.patches[0]
+    let fullValues = replayExpandedInitPatchValues(
+        patchValues,
+        patchSize: patch.size,
+        baseConfig: baseConfig
+    )
+    guard let fullValues else {
+        return creature
+    }
+
+    let parameterPatches = baseConfig.parameter_embedding.enabled ? originalInit.patches : []
+    let explicitInit = InitConfig(
+        seed: originalInit.seed,
+        patches: parameterPatches,
+        a_uniform: UniformRange(low: 0, high: 0),
+        p_uniform: originalInit.p_uniform,
+        state_patch: InitStatePatchConfig(
+            center: patch.center,
+            width: patch.size,
+            height: patch.size,
+            channels: baseConfig.channels,
+            values: fullValues
+        ),
+        p_state_patch: originalInit.p_state_patch
+    )
+    return derivedCreature(
+        from: creature,
+        id: creature.id,
+        genotype: creature.genotype,
+        initialCondition: explicitInit,
+        score: creature.score,
+        scoreWeights: creature.scoreWeights,
+        configHash: creature.configHash
+    )
+}
+
+private func replayExpandedInitPatchValues(
+    _ patchValues: [Float],
+    patchSize: Int,
+    baseConfig: LeniaBaseConfig
+) -> [Float]? {
+    let cellCount = patchSize * patchSize
+    let fullCount = cellCount * baseConfig.channels
+    if patchValues.count == fullCount {
+        return patchValues
+    }
+
+    let obstacleChannels = baseConfig.obstacle_field?.enabled == true
+        ? [baseConfig.obstacle_field!.channel_index]
+        : []
+    let creatureChannels = flowCreatureChannels(
+        channels: baseConfig.channels,
+        chemotaxis: baseConfig.chemotaxis,
+        food: baseConfig.food,
+        additionalExcludedChannels: obstacleChannels
+    )
+    guard patchValues.count == cellCount * creatureChannels.count else {
+        return nil
+    }
+
+    var fullValues = [Float](repeating: 0, count: fullCount)
+    var patchIndex = 0
+    for x in 0..<patchSize {
+        for y in 0..<patchSize {
+            for channel in creatureChannels {
+                let fullIndex = (x * patchSize + y) * baseConfig.channels + channel
+                fullValues[fullIndex] = patchValues[patchIndex]
+                patchIndex += 1
+            }
+        }
+    }
+    return fullValues
+}
+
+private func replayInitPatchValues(from researchMetadata: [String: AnyCodable]?) -> [Float]? {
+    guard let rawValue = researchMetadata?["init_patch_values"]?.value else {
+        return nil
+    }
+    return replayFloatArray(rawValue)
+}
+
+private func replayFloatArray(_ value: Any) -> [Float]? {
+    switch value {
+    case let values as [Float]:
+        return values
+    case let values as [Double]:
+        return values.map(Float.init)
+    case let values as [Int]:
+        return values.map(Float.init)
+    case let values as [Any]:
+        var floats: [Float] = []
+        floats.reserveCapacity(values.count)
+        for element in values {
+            switch element {
+            case let value as Float:
+                floats.append(value)
+            case let value as Double:
+                floats.append(Float(value))
+            case let value as Int:
+                floats.append(Float(value))
+            case let value as NSNumber:
+                floats.append(value.floatValue)
+            default:
+                return nil
+            }
+        }
+        return floats
+    default:
+        return nil
     }
 }
 

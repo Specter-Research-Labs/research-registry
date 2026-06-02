@@ -3,6 +3,7 @@ struct SearchMetricRequirements {
     let usesMoments: Bool
     let usesActivity: Bool
     let usesSurvival: Bool
+    let usesCoherentTransport: Bool
 
     init(searchConfig: SearchConfig, stabilityFilters: [String: Float]) {
         usesComplexity = searchConfig.scoreWeights.keys.contains { $0.hasPrefix("complexity") }
@@ -17,6 +18,9 @@ struct SearchMetricRequirements {
         usesSurvival = searchMetricKeysRequireSurvival(searchConfig.scoreWeights)
             || searchMetricKeysRequireSurvival(searchConfig.filters)
             || searchMetricKeysRequireSurvival(stabilityFilters)
+        usesCoherentTransport = searchMetricKeysRequireCoherentTransport(searchConfig.scoreWeights)
+            || searchMetricKeysRequireCoherentTransport(searchConfig.filters)
+            || searchMetricKeysRequireCoherentTransport(stabilityFilters)
     }
 }
 
@@ -275,5 +279,16 @@ private func searchMetricKeysRequireActivity(_ filters: [String: Float]) -> Bool
 private func searchMetricKeysRequireMoments(_ keys: [String: Float]) -> Bool {
     keys.keys.contains { key in
         key.hasPrefix("hu") || key.hasPrefix("flusser") || key.hasPrefix("moment_")
+    }
+}
+
+func searchMetricKeysRequireCoherentTransport(_ keys: [String: Float]) -> Bool {
+    keys.keys.contains { key in
+        key == "transport_displacement"
+            || key.hasPrefix("transport_displacement_")
+            || key == "translated_shape_overlap"
+            || key.hasPrefix("translated_shape_overlap_")
+            || key == "coherent_transport"
+            || key.hasPrefix("coherent_transport_")
     }
 }

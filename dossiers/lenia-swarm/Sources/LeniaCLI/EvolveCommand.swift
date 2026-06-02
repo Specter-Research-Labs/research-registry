@@ -3,7 +3,7 @@ import Foundation
 import LeniaCore
 import Logging
 
-private func evolveCreatureChannelCount(
+func evolveCreatureChannelCount(
     channels: Int,
     chemotaxis: ChemotaxisConfig?,
     food: FoodConfig?,
@@ -17,7 +17,7 @@ private func evolveCreatureChannelCount(
     ).count
 }
 
-private func replacingNonPositiveKernelWeights(
+func replacingNonPositiveKernelWeights(
     in params: KernelParams,
     with replacement: Float
 ) throws -> KernelParams {
@@ -107,6 +107,9 @@ struct EvolveCommand: AsyncParsableCommand {
     @Option(name: .long, help: "When using --seed-kernel-params, replace non-positive seed kernel weights with this explicit value")
     var seedKernelZeroWeight: Float?
 
+    @Option(name: .long, help: "Warmup steps used when expressing a research seed patch; use 0 to preserve the original initialization")
+    var seedWarmupSteps: Int?
+
     @Flag(name: .long, help: "Validate configs and exit without running")
     var validateOnly: Bool = false
 
@@ -134,6 +137,9 @@ struct EvolveCommand: AsyncParsableCommand {
         if seedKernelZeroWeight != nil && !seedKernelParams {
             throw ValidationError("--seed-kernel-zero-weight requires --seed-kernel-params.")
         }
+        if let seedWarmupSteps, seedWarmupSteps < 0 {
+            throw ValidationError("--seed-warmup-steps must be >= 0.")
+        }
 
         logger.info("Loading configs...")
 
@@ -158,6 +164,7 @@ struct EvolveCommand: AsyncParsableCommand {
                 steps: esConfig.steps,
                 fitness: esConfig.fitness,
                 fitnessShaping: esConfig.fitnessShaping,
+                includeParent: esConfig.includeParent,
                 initPatch: esConfig.initPatch,
                 initialInitPatchValues: initialInitPatchValues,
                 initialKernelParams: initialKernelParams,
@@ -183,8 +190,9 @@ struct EvolveCommand: AsyncParsableCommand {
         let runtimeConfig = try loadRuntimeConfig(from: baseConfigData)
 
         if let seedLibrary {
-            guard let initPatch = esConfig.initPatch, initPatch.enabled else {
-                throw ValidationError("--seed-library requires init_patch.enabled in the ES config.")
+            let canSeedInitPatch = esConfig.initPatch?.enabled == true
+            if !canSeedInitPatch && !seedKernelParams {
+                throw ValidationError("--seed-library without --seed-kernel-params requires init_patch.enabled in the ES config.")
             }
             let resolvedSeedLibrary = try resolveArtifactPath(seedLibrary, dossier: dossierName)
             let resolvedQDConfigDir = try seedQDConfigDir.map { try resolvePath($0, dossier: dossierName) }
@@ -193,6 +201,7 @@ struct EvolveCommand: AsyncParsableCommand {
                 libraryURL: URL(fileURLWithPath: resolvedSeedLibrary),
                 qdConfigDirectoryOverride: resolvedQDConfigDir.map { URL(fileURLWithPath: $0, isDirectory: true) },
                 cells: seedCell.isEmpty ? nil : seedCell,
+                warmupSteps: seedWarmupSteps,
                 selection: selection
             )
             let patch = try resolveSingleResearchSeedPatch(
@@ -201,17 +210,22 @@ struct EvolveCommand: AsyncParsableCommand {
                 commandName: "evolve",
                 selection: selection
             )
-            let creatureChannelCount = evolveCreatureChannelCount(
-                channels: runtimeConfig.channels,
-                chemotaxis: runtimeConfig.chemotaxis,
-                food: runtimeConfig.food,
-                obstacleField: esConfig.obstacleField
-            )
-            let patchValues = try researchSeedCenterCropPatchValues(
-                patch: patch,
-                size: initPatch.size,
-                outputChannels: creatureChannelCount
-            )
+            let patchValues: [Float]?
+            if let initPatch = esConfig.initPatch, initPatch.enabled {
+                let creatureChannelCount = evolveCreatureChannelCount(
+                    channels: runtimeConfig.channels,
+                    chemotaxis: runtimeConfig.chemotaxis,
+                    food: runtimeConfig.food,
+                    obstacleField: esConfig.obstacleField
+                )
+                patchValues = try researchSeedCenterCropPatchValues(
+                    patch: patch,
+                    size: initPatch.size,
+                    outputChannels: creatureChannelCount
+                )
+            } else {
+                patchValues = esConfig.initialInitPatchValues
+            }
             let kernelParams: KernelParams?
             if seedKernelParams {
                 guard let seedKernelParams = patch.kernelParams else {
@@ -228,7 +242,9 @@ struct EvolveCommand: AsyncParsableCommand {
                 initialInitPatchValues: patchValues,
                 initialKernelParams: kernelParams
             )
-            logger.info("Using research seed warm start '\(patch.name)' for evolve init patch")
+            if canSeedInitPatch {
+                logger.info("Using research seed warm start '\(patch.name)' for evolve init patch")
+            }
             if seedKernelParams {
                 logger.info("Using research seed warm start '\(patch.name)' for evolve kernel parameters")
             }
@@ -483,7 +499,7 @@ private func evolveWinnerCreature(
     )
 }
 
-private func buildEvolveReplayBaseConfig(
+func buildEvolveReplayBaseConfig(
     baseConfig: LeniaBaseConfig,
     esConfig: ESConfig
 ) -> LeniaBaseConfig {

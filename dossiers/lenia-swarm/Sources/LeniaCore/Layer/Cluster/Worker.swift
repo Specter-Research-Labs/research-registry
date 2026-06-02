@@ -478,6 +478,7 @@ public distributed actor LeniaWorker {
             steps: 200,
             fitness: fitnessConfig,
             fitnessShaping: "centered_rank",
+            includeParent: nil,
             initPatch: nil,
             initialInitPatchValues: nil,
             paramRanges: nil,

@@ -69,6 +69,8 @@ from lenia_swarm_analysis.morphospace.warehouse import (
 from lenia_swarm_analysis.morphospace_cli import (
     derive_common_morphology_packet,
     import_dryad_fish_dataset,
+    import_embryomaker_snapshots_dataset,
+    import_reference_bundle_dataset,
     refresh_compendium_warehouse,
 )
 from lenia_swarm_analysis.morphospace_cli import (
@@ -2074,9 +2076,9 @@ def test_morphospace_cli_compares_feature_cohorts(
             context_kind="baseline",
             label="baseline",
         )
-        for specimen_id, run_id, source_algorithm, values in [
-            ("fixture-left", "run-left", "manual-left", {"x": 0.0, "y": 0.0}),
-            ("fixture-right", "run-right", "manual-right", {"x": 3.0, "y": 4.0}),
+        for specimen_id, run_id, canonical_family, values in [
+            ("fixture-left", "run-left-nofood", "left-family", {"x": 0.0, "y": 0.0}),
+            ("fixture-right", "run-right-food", "right-family", {"x": 3.0, "y": 4.0}),
         ]:
             upsert_specimen(
                 connection,
@@ -2086,7 +2088,8 @@ def test_morphospace_cli_compares_feature_cohorts(
                     "run_id": run_id,
                     "source_kind": "fixture",
                     "source_mode": "cohort-test",
-                    "source_algorithm": source_algorithm,
+                    "source_algorithm": "manual",
+                    "canonical_family": canonical_family,
                     "provenance_json": {},
                 },
             )
@@ -2122,12 +2125,24 @@ def test_morphospace_cli_compares_feature_cohorts(
             "fixture_space",
             "--left-label",
             "left",
+            "--left-run-id-contains",
+            "run-left",
+            "--left-source-mode",
+            "cohort-test",
             "--left-source-algorithm",
-            "manual-left",
+            "manual",
+            "--left-canonical-family",
+            "left-family",
             "--right-label",
             "right",
+            "--right-run-id-contains",
+            "run-right",
+            "--right-source-mode",
+            "cohort-test",
             "--right-source-algorithm",
-            "manual-right",
+            "manual",
+            "--right-canonical-family",
+            "right-family",
             "--json",
         ]
     ) == 0
@@ -2135,6 +2150,8 @@ def test_morphospace_cli_compares_feature_cohorts(
     assert payload["packetKind"] == "comparative_feature_cohort_comparison_v1"
     assert payload["summary"]["left"]["observationCount"] == 1
     assert payload["summary"]["right"]["observationCount"] == 1
+    assert payload["summary"]["left"]["filters"]["runIdContains"] == "run-left"
+    assert payload["summary"]["right"]["filters"]["canonicalFamily"] == "right-family"
     assert payload["summary"]["crossDistance"]["count"] == 1
     assert payload["summary"]["crossDistance"]["mean"] == 5.0
     assert payload["summary"]["leftToRightNearestDistance"]["max"] == 5.0
@@ -2420,6 +2437,75 @@ def _write_distinct_dryad_fish_fixture(root: Path) -> None:
     )
 
 
+def _embryomaker_node_row(
+    *,
+    x: float,
+    y: float,
+    z: float,
+    icel: int,
+    tipus: int = 3,
+) -> str:
+    values = [0.0] * 35
+    values[0] = x
+    values[1] = y
+    values[2] = z
+    values[4] = 0.25
+    values[5] = 0.5
+    values[28] = float(tipus)
+    values[29] = float(icel)
+    return " ".join(f"{value:.16E}" for value in values)
+
+
+def _write_embryomaker_snapshot_fixture(path: Path, *, offset: float = 0.0) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(
+            [
+                "THIS FILE WAS WRITTEN IN THE FORMAT OF THE TEST VERSION",
+                "fixture-run",
+                "35 number of node parameters",
+                "5 number of global variables",
+                "",
+                "30 functions",
+                "",
+                "0 unused",
+                "",
+                "parameters",
+                "",
+                " 1 1.0000000000000000E+01 getot",
+                "10 3.0000000000000000E+00 nd",
+                "13 1.0000000000000000E+00 rtime",
+                "18 3.0000000000000000E+00 ncels",
+                "19 2.0000000000000000E+00 ng",
+                "",
+                "G matrix: gene expression",
+                "",
+                "node  gene 1                 gene 2    etc...",
+                "1 1.0000000000000000E+00 0.0000000000000000E+00",
+                "2 0.0000000000000000E+00 1.0000000000000000E+00",
+                "3 1.0000000000000000E+00 0.0000000000000000E+00",
+                "",
+                "node properties",
+                "",
+                "x y z ...",
+                _embryomaker_node_row(x=offset, y=0.0, z=0.0, icel=1),
+                _embryomaker_node_row(x=offset + 1.0, y=0.0, z=0.0, icel=2),
+                _embryomaker_node_row(x=offset + 0.0, y=1.0, z=0.0, icel=3),
+                "",
+                "node properties at time 0 (nodeo)",
+                "",
+                "x y z ...",
+                _embryomaker_node_row(x=offset, y=0.0, z=0.0, icel=1),
+                _embryomaker_node_row(x=offset + 1.0, y=0.0, z=0.0, icel=2),
+                _embryomaker_node_row(x=offset + 0.0, y=1.0, z=0.0, icel=3),
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def test_morphospace_import_dryad_fish_populates_comparison_layer(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -2521,6 +2607,7 @@ def test_morphospace_import_dryad_fish_populates_comparison_layer(
             "fish_gpa_pc_v1",
             "--max-homology-dim",
             "1",
+            "--summary-only",
             "--json",
         ]
     ) == 0
@@ -2529,6 +2616,163 @@ def test_morphospace_import_dryad_fish_populates_comparison_layer(
     assert tda_payload["summary"]["backend"] == "ripser-euclidean"
     assert tda_payload["summary"]["pairwiseDistance"]["count"] == 1
     assert tda_payload["topology"]["summaries"][0]["featureCount"] == 2
+    assert "observations" not in tda_payload
+
+
+def test_morphospace_import_embryomaker_snapshots_populates_comparison_layer(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    snapshot_root = tmp_path / "embryomaker"
+    _write_embryomaker_snapshot_fixture(snapshot_root / "IC1.fixture.output.dat")
+    _write_embryomaker_snapshot_fixture(
+        snapshot_root / "IC2.fixture.output.dat",
+        offset=2.0,
+    )
+    warehouse_path = tmp_path / "warehouse.duckdb"
+
+    direct_payload = import_embryomaker_snapshots_dataset(
+        warehouse_path=warehouse_path,
+        snapshot_roots=[snapshot_root],
+        label="embryomaker-fixture",
+    )
+    assert direct_payload["snapshotCount"] == 2
+    assert direct_payload["observationCount"] == 2
+    assert direct_payload["axisCount"] == 7
+    assert direct_payload["featureValueCount"] == 14
+    assert direct_payload["familyCounts"] == {"IC1": 1, "IC2": 1}
+
+    replay_payload = import_embryomaker_snapshots_dataset(
+        warehouse_path=warehouse_path,
+        snapshot_roots=[snapshot_root],
+    )
+    assert replay_payload["studyId"] == direct_payload["studyId"]
+    assert replay_payload["observationCount"] == 2
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM morphospace_sources") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_axes") == 7
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == 14
+        families = {
+            row[0]
+            for row in connection.execute(
+                "SELECT canonical_family FROM specimens ORDER BY canonical_family"
+            ).fetchall()
+        }
+        assert families == {"IC1", "IC2"}
+    finally:
+        connection.close()
+
+    replayed_warehouse = tmp_path / "warehouse-cli.duckdb"
+    assert morphospace_main(
+        [
+            "import-embryomaker-snapshots",
+            "--warehouse",
+            str(replayed_warehouse),
+            "--snapshot-root",
+            str(snapshot_root),
+            "--label",
+            "embryomaker-fixture-cli",
+            "--limit",
+            "1",
+            "--json",
+        ]
+    ) == 0
+    cli_payload = json.loads(capsys.readouterr().out)
+    assert cli_payload["snapshotCount"] == 1
+    assert cli_payload["featureSpaceId"] == "embryomaker_legacy_snapshot_v1"
+
+    common_payload = derive_common_morphology_packet(
+        warehouse_path=warehouse_path,
+    )
+    assert common_payload["featureSpaceId"] == COMMON_MORPHOLOGY_FEATURE_SPACE_ID
+    assert common_payload["observationCount"] == 2
+    assert common_payload["sourceCounts"] == {"embryomaker_legacy_snapshots": 2}
+
+    assert morphospace_main(
+        [
+            "export-feature-matrix",
+            "--warehouse",
+            str(warehouse_path),
+            "--feature-space-id",
+            COMMON_MORPHOLOGY_FEATURE_SPACE_ID,
+            "--source-id",
+            "embryomaker_legacy_snapshots",
+            "--json",
+        ]
+    ) == 0
+    matrix_payload = json.loads(capsys.readouterr().out)
+    assert matrix_payload["summary"]["observationCount"] == 2
+    assert matrix_payload["summary"]["axisCount"] == len(COMMON_MORPHOLOGY_AXIS_IDS)
+
+
+def test_morphospace_import_reference_bundle_registers_external_artifacts(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    bundle_root = tmp_path / "morphospace-v6"
+    bundle_root.mkdir()
+    (bundle_root / "within_substrate_topology.json").write_text(
+        json.dumps(
+            {
+                "packetKind": "within_substrate_topology_v1",
+                "summary": {"spaceCount": 2},
+            }
+        ),
+        encoding="utf-8",
+    )
+    np.save(bundle_root / "dist_lenia.npy", np.asarray([[0.0, 1.0], [1.0, 0.0]]))
+    warehouse_path = tmp_path / "warehouse.duckdb"
+
+    direct_payload = import_reference_bundle_dataset(
+        warehouse_path=warehouse_path,
+        bundle_root=bundle_root,
+        label="v6-fixture",
+    )
+    assert direct_payload["artifactCount"] == 2
+    assert direct_payload["jsonObjectCount"] == 1
+    assert direct_payload["npyArrayCount"] == 1
+    assert direct_payload["artifactKinds"] == {"reference_json": 1, "reference_npy": 1}
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM artifacts") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM raw_json_objects") == 1
+        metadata_row = connection.execute(
+            """
+            SELECT metadata_json
+            FROM artifacts
+            WHERE artifact_kind = 'reference_npy'
+            """
+        ).fetchone()
+        assert metadata_row is not None
+        metadata = json.loads(metadata_row[0])
+        assert metadata["arrayShape"] == [2, 2]
+        assert metadata["arrayDtype"] == "float64"
+    finally:
+        connection.close()
+
+    replayed_warehouse = tmp_path / "warehouse-cli.duckdb"
+    assert morphospace_main(
+        [
+            "import-reference-bundle",
+            "--warehouse",
+            str(replayed_warehouse),
+            "--bundle-root",
+            str(bundle_root),
+            "--label",
+            "v6-fixture-cli",
+            "--json",
+        ]
+    ) == 0
+    cli_payload = json.loads(capsys.readouterr().out)
+    assert cli_payload["artifactCount"] == 2
+    assert cli_payload["sourceId"] == "external_morphospace_reference_bundles"
 
 
 def test_scoped_common_morphology_uses_metadata_roots_for_other_fish_studies(

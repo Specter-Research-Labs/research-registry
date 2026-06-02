@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import LeniaCore
+import LeniaVisuals
 
 struct PortfolioMediaBundle {
     let directoryURL: URL
@@ -282,6 +283,7 @@ func renderPortfolioCandidateMediaBundle(
     frameBudget: Int,
     steps: Int?,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
     let label = "portfolio-\(bundle.manifest.contentHash.prefix(12))"

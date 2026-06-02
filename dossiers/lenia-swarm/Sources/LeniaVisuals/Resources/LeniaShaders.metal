@@ -58,6 +58,23 @@ half4 applyLeniaColormap(half4 color, float3 (*cmap)(float)) {
     return half4(half3(rgb), half(alpha));
 }
 
+half4 bodyLeniaColor(float mass) {
+    float presence = smoothstep(0.001, 0.035, mass);
+    float density = pow(clamp(mass, 0.0, 1.0), 0.42);
+    float3 low = float3(0.035, 0.080, 0.095);
+    float3 mid = float3(0.125, 0.360, 0.340);
+    float3 high = float3(0.900, 0.940, 0.780);
+    float3 body = mix(low, mid, smoothstep(0.0, 0.38, density));
+    body = mix(body, high, smoothstep(0.38, 1.0, density));
+    float3 rgb = body * presence;
+    rgb += float3(0.090, 0.060, 0.025) * smoothstep(0.55, 0.95, mass);
+    return half4(half3(rgb), half(presence));
+}
+
+[[ stitchable ]] half4 bodyLenia(float2 position, half4 color) {
+    return bodyLeniaColor(float(color.r));
+}
+
 [[ stitchable ]] half4 smoothLenia(float2 position, half4 color) {
     return applyLeniaColormap(color, magma);
 }
@@ -109,6 +126,9 @@ fragment half4 labStageFragment(
         float alpha = smoothstep(0.01, 0.12, mass);
         return half4(half3(mass), half(alpha));
     }
+    if (uniforms.renderMode == 1) {
+        return bodyLeniaColor(mass);
+    }
 
     float cleaned = smoothstep(0.02, 0.08, mass) * mass;
     float contrasted = pow(cleaned, 0.85);
@@ -116,16 +136,16 @@ fragment half4 labStageFragment(
 
     float3 rgb;
     switch (uniforms.renderMode) {
-        case 1:
+        case 2:
             rgb = magma(boosted);
             break;
-        case 2:
+        case 3:
             rgb = viridis(boosted);
             break;
-        case 3:
+        case 4:
             rgb = inferno(boosted);
             break;
-        case 4:
+        case 5:
             rgb = plasma(boosted);
             break;
         default:

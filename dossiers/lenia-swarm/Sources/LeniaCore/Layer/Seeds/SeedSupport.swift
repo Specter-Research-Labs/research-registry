@@ -193,7 +193,8 @@ public func loadResearchSeedPatches(
             indexURL: libraryURL,
             warmupSteps: warmupSteps,
             cropThreshold: cropThreshold,
-            padding: padding
+            padding: padding,
+            selection: selection
         )
     case .seedPatches:
         guard cells == nil || cells?.isEmpty == true else {
@@ -237,7 +238,13 @@ public func researchSeedCenterCropPatchValues(
         for y in startY..<(startY + size) {
             let sourceBase = ((x * patch.world.height) + y) * patch.world.channels
             for channel in 0..<outputChannels {
-                out.append(channel < patch.world.channels ? patch.world.values[sourceBase + channel] : 0)
+                if channel < patch.world.channels {
+                    out.append(patch.world.values[sourceBase + channel])
+                } else if patch.world.channels == 1 {
+                    out.append(patch.world.values[sourceBase])
+                } else {
+                    out.append(0)
+                }
             }
         }
     }
@@ -392,9 +399,13 @@ private func loadResearchSeedPatchesFromExportIndex(
     indexURL: URL,
     warmupSteps: Int?,
     cropThreshold: Float,
-    padding: Int
+    padding: Int,
+    selection: ResearchSeedSelection? = nil
 ) throws -> [ResearchSeedPatch] {
-    let records: [CreatureExportRecord] = try decodeJSONLines(indexURL)
+    let records = preselectCreatureExportRecords(
+        try decodeJSONLines(indexURL),
+        selection: selection
+    )
     return try records.map { record in
         let exportDir = URL(fileURLWithPath: record.exportDir, isDirectory: true)
         let metaURL = exportDir.appendingPathComponent("meta.json")
@@ -465,6 +476,95 @@ private func loadResearchSeedPatchesFromExportIndex(
         case .flowLeniaEcology2025ArenaReplayBundleV1:
             throw ConfigError.invalidConfig("Flow Lenia ecology arena bundles are replay trajectories, not seed extraction bundles: \(record.exportDir)")
         }
+    }
+}
+
+private func preselectCreatureExportRecords(
+    _ records: [CreatureExportRecord],
+    selection: ResearchSeedSelection?
+) -> [CreatureExportRecord] {
+    guard let selection else {
+        return records
+    }
+
+    var selected = records
+    if !selection.sourceIDs.isEmpty {
+        selected = selected.filter { record in
+            let candidateIDs = [
+                record.creatureId.uuidString,
+                record.specimenManifest.creatureID,
+                record.specimenManifest.specimenID,
+            ].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            return selection.sourceIDs.contains { requested in
+                let normalizedRequested = requested.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return candidateIDs.contains { candidate in
+                    candidate == normalizedRequested || candidate.hasPrefix(normalizedRequested)
+                }
+            }
+        }
+    }
+
+    if !selection.names.isEmpty {
+        let normalizedNames = Set(selection.names.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
+        selected = selected.filter { record in
+            normalizedNames.contains(record.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        }
+    }
+
+    let rankMetric = selection.rankBy ?? (selection.top != nil ? .score : nil)
+    if let rankMetric, creatureExportRecordSupportsPreselectionRank(rankMetric) {
+        selected = selected
+            .enumerated()
+            .sorted { lhsEntry, rhsEntry in
+                let lhsValue = creatureExportRecordRankValue(lhsEntry.element, metric: rankMetric)
+                let rhsValue = creatureExportRecordRankValue(rhsEntry.element, metric: rankMetric)
+                switch (lhsValue, rhsValue) {
+                case let (lhsRank?, rhsRank?):
+                    if lhsRank == rhsRank {
+                        return lhsEntry.offset < rhsEntry.offset
+                    }
+                    return selection.ascending ? lhsRank < rhsRank : lhsRank > rhsRank
+                case (_?, nil):
+                    return true
+                case (nil, _?):
+                    return false
+                case (nil, nil):
+                    return lhsEntry.offset < rhsEntry.offset
+                }
+            }
+            .map(\.element)
+    }
+
+    if let top = selection.top, rankMetric.map(creatureExportRecordSupportsPreselectionRank) ?? true {
+        selected = Array(selected.prefix(top))
+    }
+    return selected
+}
+
+private func creatureExportRecordSupportsPreselectionRank(_ metric: ResearchSeedRankMetric) -> Bool {
+    switch metric {
+    case .score, .recordedAt:
+        return true
+    case .displacement, .pathLength, .speedMean, .occupancyMean, .massMean,
+         .varianceMean, .energyMean, .gyration, .centerVelocity,
+         .activityDiversityMean, .activitySpeciesMean, .isStable:
+        return false
+    }
+}
+
+private func creatureExportRecordRankValue(
+    _ record: CreatureExportRecord,
+    metric: ResearchSeedRankMetric
+) -> Double? {
+    switch metric {
+    case .score:
+        return record.score.map(Double.init)
+    case .recordedAt:
+        return record.exportedAt.timeIntervalSinceReferenceDate
+    case .displacement, .pathLength, .speedMean, .occupancyMean, .massMean,
+         .varianceMean, .energyMean, .gyration, .centerVelocity,
+         .activityDiversityMean, .activitySpeciesMean, .isStable:
+        return nil
     }
 }
 
@@ -558,12 +658,16 @@ private func expressResearchSeedPatch(
     padding: Int
 ) throws -> ResearchSeedPatch {
     let decoder = JSONDecoder()
-    let baseConfig = try decoder.decode(LeniaBaseConfig.self, from: Data(contentsOf: baseConfigURL))
+    let baseConfig = researchSeedRuntimeBaseConfig(
+        try decoder.decode(LeniaBaseConfig.self, from: Data(contentsOf: baseConfigURL))
+    )
     let searchConfig = try decoder.decode(ParsedSearchConfig.self, from: Data(contentsOf: searchConfigURL))
-    let replayBaseConfig = try buildReplayBaseConfig(
-        baseConfig: baseConfig,
-        searchConfig: searchConfig,
-        creature: creature
+    let replayBaseConfig = researchSeedRuntimeBaseConfig(
+        try buildReplayBaseConfig(
+            baseConfig: baseConfig,
+            searchConfig: searchConfig,
+            creature: creature
+        )
     )
     let replaySearchConfig = buildReplaySearchConfig(from: searchConfig)
     let baseData = try JSONEncoder().encode(replayBaseConfig)
@@ -581,6 +685,40 @@ private func expressResearchSeedPatch(
         warmupSteps: effectiveWarmup,
         cropThreshold: cropThreshold,
         padding: padding
+    )
+}
+
+private func researchSeedRuntimeBaseConfig(_ config: LeniaBaseConfig) -> LeniaBaseConfig {
+    guard config.implementation.mode == "paper" else {
+        return config
+    }
+
+    return LeniaBaseConfig(
+        backend: config.backend,
+        profile: config.profile,
+        grid: config.grid,
+        channels: config.channels,
+        connectivity: config.connectivity,
+        flow: config.flow,
+        implementation: ImplementationConfig(
+            mode: "flowlenia_2022_paper_equations",
+            gradient_boundary: config.implementation.gradient_boundary,
+            alpha_mode: config.implementation.alpha_mode,
+            kernel_profile: config.implementation.kernel_profile,
+            flow_clip: config.implementation.flow_clip
+        ),
+        reintegration: config.reintegration,
+        parameter_embedding: config.parameter_embedding,
+        chemotaxis: config.chemotaxis,
+        obstacle_field: config.obstacle_field,
+        food: config.food,
+        walls: config.walls,
+        environment: config.environment,
+        beam_mutation: config.beam_mutation,
+        params: config.params,
+        init: config.`init`,
+        run: config.run,
+        interventions: config.interventions
     )
 }
 

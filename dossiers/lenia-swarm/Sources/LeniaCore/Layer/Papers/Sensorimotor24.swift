@@ -2442,7 +2442,11 @@ import MLXFFT
          momentAnisotropy: moments.anisotropy.first,
          componentCount: components.count.first,
          largestComponentFraction: components.largestFraction.first,
-         largestComponentAnisotropy: components.largestAnisotropy.first
+         largestComponentAnisotropy: components.largestAnisotropy.first,
+         largestComponentSolidity: components.largestSolidity.first,
+         largestComponentMeanThickness: components.largestMeanThickness.first,
+         largestComponentMaxThickness: components.largestMaxThickness.first,
+         largestComponentFilamentarity: components.largestFilamentarity.first
      )
      let morphometrics = Morphometrics.from(metrics: metrics, activity: nil)
      let descriptorBundle = MorphospaceDescriptorBundle(
@@ -2470,6 +2474,10 @@ import MLXFFT
              componentCount: components.count.first,
              largestComponentFraction: components.largestFraction.first,
              largestComponentAnisotropy: components.largestAnisotropy.first,
+             largestComponentSolidity: components.largestSolidity.first,
+             largestComponentMeanThickness: components.largestMeanThickness.first,
+             largestComponentMaxThickness: components.largestMaxThickness.first,
+             largestComponentFilamentarity: components.largestFilamentarity.first,
              hu1: moments.hu.first?[0],
              hu2: moments.hu.first?[1],
              hu3: moments.hu.first?[2],

@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import base64
 import csv
-import importlib.util
 import json
 import math
 import re
-import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 
 import numpy as np
@@ -19,6 +16,15 @@ from duckdb import DuckDBPyConnection
 from lenia_swarm_analysis.transformation_metrics import robust_center_scale, zscore
 
 from .ingest_dryad_fish import SOURCE_ID as DRYAD_FISH_SOURCE_ID
+from .ingest_embryomaker import (
+    OBSERVATION_KIND as EMBRYOMAKER_OBSERVATION_KIND,
+)
+from .ingest_embryomaker import (
+    SOURCE_ID as EMBRYOMAKER_SOURCE_ID,
+)
+from .ingest_embryomaker import (
+    load_embryomaker_node_points,
+)
 from .warehouse import (
     json_text,
     normalize_optional_timestamp,
@@ -30,8 +36,6 @@ from .warehouse import (
 )
 
 LENIA_SOURCE_ID = "lenia_swarm"
-EMBRYOMAKER_SOURCE_ID = "embryomaker_legacy_snapshots"
-EMBRYOMAKER_OBSERVATION_KIND = "embryomaker_legacy_snapshot_summary"
 FEATURE_SPACE_ID = "common_morphology_v1"
 FEATURE_SPACE_LABEL = "Common point-cloud morphology"
 OBSERVATION_KIND = "common_point_cloud_morphology"
@@ -891,36 +895,6 @@ def _collect_fish_rows(
             )
     return rows
 
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[4]
-
-
-def _load_legacy_snapshot_module() -> ModuleType:
-    module_path = _repo_root() / "addenda/embryomaker-v2/embryomaker_v2/legacy_snapshot.py"
-    if not module_path.exists():
-        raise FileNotFoundError(
-            "EmbryoMaker parser is missing; expected "
-            f"{module_path}. Keep addenda/embryomaker-v2 available."
-        )
-    spec = importlib.util.spec_from_file_location(
-        "_specter_embryomaker_legacy_snapshot",
-        module_path,
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError(f"failed to load EmbryoMaker parser from {module_path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _load_embryomaker_node_points(path: Path) -> list[tuple[float, float, float]]:
-    module = _load_legacy_snapshot_module()
-    snapshot = module.parse_legacy_snapshot(path.resolve())
-    return [(float(node.x), float(node.y), float(node.z)) for node in snapshot.nodes]
-
-
 def _embryomaker_study_ids(
     connection: DuckDBPyConnection,
     study_id: str | None,
@@ -981,7 +955,10 @@ def _collect_embryomaker_rows(
         for observation_id, specimen_id, source_ref, step, payload_json in observation_rows:
             if not source_ref:
                 continue
-            points = np.asarray(_load_embryomaker_node_points(Path(str(source_ref))))
+            points = np.asarray(
+                load_embryomaker_node_points(Path(str(source_ref))),
+                dtype=np.float64,
+            )
             if points.shape[0] < 2:
                 continue
             payload = _json_dict(payload_json)

@@ -1,0 +1,43 @@
+{
+  "output_dir": "artifacts/flow-map-elites/screen-organismness-curriculum-2c-128",
+  "generations": 4,
+  "population": 128,
+  "sigma": 0.08,
+  "line_sigma": 0.12,
+  "seed": 202605061,
+  "steps": 700,
+  "fitness": {
+    "objective": "organismness",
+    "target_step": 700,
+    "angle_threshold": 0.0,
+    "component_count_penalty": 0.08,
+    "component_count_max": 2.0,
+    "largest_component_fraction_reward": 0.12,
+    "largest_component_fraction_min": 0.92,
+    "largest_component_anisotropy_penalty": 0.04,
+    "moment_density_reward": 0.02,
+    "occupied_fraction_min": 0.03,
+    "occupied_fraction_max": 0.16,
+    "organismness_penalty": 0.30,
+    "morphology_threshold": 0.03
+  },
+  "include_parent": true,
+  "descriptors": [
+    {"name": "component_count", "min": 1.0, "max": 5.0, "bins": 5},
+    {"name": "largest_component_fraction", "min": 0.60, "max": 1.0, "bins": 8},
+    {"name": "largest_component_anisotropy", "min": 0.0, "max": 1.0, "bins": 8},
+    {"name": "occupied_fraction", "min": 0.02, "max": 0.20, "bins": 8}
+  ],
+  "export_top": 32,
+  "init_patch": {
+    "enabled": true,
+    "size": 24,
+    "center": [64, 64],
+    "value_low": 0.0,
+    "value_high": 1.0
+  },
+  "initial_init_patch_values": null,
+  "initial_kernel_params": null,
+  "param_ranges": null,
+  "obstacle_field": null
+}

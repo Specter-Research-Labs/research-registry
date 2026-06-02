@@ -5,6 +5,10 @@ struct ComponentMetricsBatchResult: Sendable {
     let largestFraction: [Float]
     let largestAnisotropy: [Float]
     let massEvenness: [Float]
+    let largestSolidity: [Float]
+    let largestMeanThickness: [Float]
+    let largestMaxThickness: [Float]
+    let largestFilamentarity: [Float]
 }
 
 struct ComponentStructureBatchResult: Sendable {
@@ -30,10 +34,18 @@ func computeComponentMetricsBatch(
     var largestFractions: [Float] = []
     var largestAnisotropies: [Float] = []
     var massEvennesses: [Float] = []
+    var largestSolidities: [Float] = []
+    var largestMeanThicknesses: [Float] = []
+    var largestMaxThicknesses: [Float] = []
+    var largestFilamentarities: [Float] = []
     counts.reserveCapacity(batch)
     largestFractions.reserveCapacity(batch)
     largestAnisotropies.reserveCapacity(batch)
     massEvennesses.reserveCapacity(batch)
+    largestSolidities.reserveCapacity(batch)
+    largestMeanThicknesses.reserveCapacity(batch)
+    largestMaxThicknesses.reserveCapacity(batch)
+    largestFilamentarities.reserveCapacity(batch)
 
     for sampleIndex in 0..<batch {
         let start = sampleIndex * sampleSize
@@ -43,6 +55,7 @@ func computeComponentMetricsBatch(
         var largestMass: Float = 0
         var largestAnisotropy: Float = 0
         var componentMasses: [Float] = []
+        var largestPixels: [(x: Int, y: Int)] = []
 
         for y in 0..<height {
             for x in 0..<width {
@@ -60,6 +73,7 @@ func computeComponentMetricsBatch(
                 var sumUx2: Float = 0
                 var sumUxUy: Float = 0
                 var sumUy2: Float = 0
+                var componentPixels: [(x: Int, y: Int)] = []
 
                 while !queue.isEmpty {
                     let current = queue.removeLast()
@@ -67,6 +81,7 @@ func computeComponentMetricsBatch(
                     let cy = current.y
                     let currentIndex = cy * width + cx
                     let currentMass = flat[start + currentIndex]
+                    componentPixels.append((x: current.ux, y: current.uy))
                     componentMass += currentMass
                     let ux = Float(current.ux)
                     let uy = Float(current.uy)
@@ -108,21 +123,31 @@ func computeComponentMetricsBatch(
                         sumXY: sumUxUy,
                         sumYY: sumUy2
                     )
+                    largestPixels = componentPixels
                 }
             }
         }
 
+        let shape = componentShapeMetrics(pixels: largestPixels)
         counts.append(Float(componentCount))
         largestFractions.append(totalMass > 0 ? largestMass / totalMass : 0)
         largestAnisotropies.append(largestAnisotropy)
         massEvennesses.append(componentMassEvenness(componentMasses, totalMass: totalMass))
+        largestSolidities.append(shape.solidity)
+        largestMeanThicknesses.append(shape.meanThickness)
+        largestMaxThicknesses.append(shape.maxThickness)
+        largestFilamentarities.append(shape.filamentarity)
     }
 
     return ComponentMetricsBatchResult(
         count: counts,
         largestFraction: largestFractions,
         largestAnisotropy: largestAnisotropies,
-        massEvenness: massEvennesses
+        massEvenness: massEvennesses,
+        largestSolidity: largestSolidities,
+        largestMeanThickness: largestMeanThicknesses,
+        largestMaxThickness: largestMaxThicknesses,
+        largestFilamentarity: largestFilamentarities
     )
 }
 
@@ -292,4 +317,168 @@ private func componentMassEvenness(_ masses: [Float], totalMass: Float) -> Float
     let normalizer = log(Float(masses.count))
     guard normalizer > 1e-12 else { return 0 }
     return min(max(entropy / normalizer, 0), 1)
+}
+
+private struct ComponentShapeMetrics: Sendable {
+    let solidity: Float
+    let meanThickness: Float
+    let maxThickness: Float
+    let filamentarity: Float
+}
+
+private struct ComponentHullPoint {
+    let x: Float
+    let y: Float
+}
+
+private func componentShapeMetrics(pixels: [(x: Int, y: Int)]) -> ComponentShapeMetrics {
+    guard !pixels.isEmpty else {
+        return ComponentShapeMetrics(solidity: 0, meanThickness: 0, maxThickness: 0, filamentarity: 1)
+    }
+
+    let pixelArea = Float(pixels.count)
+    let hullArea = max(componentConvexHullArea(pixels: pixels), pixelArea)
+    let solidity = hullArea > 0 ? min(max(pixelArea / hullArea, 0), 1) : 0
+    let thickness = componentThicknessStats(pixels: pixels)
+    let filamentarity = 1.0 / (1.0 + max(thickness.mean - 1.0, 0.0))
+    return ComponentShapeMetrics(
+        solidity: solidity,
+        meanThickness: thickness.mean,
+        maxThickness: thickness.max,
+        filamentarity: filamentarity
+    )
+}
+
+private func componentConvexHullArea(pixels: [(x: Int, y: Int)]) -> Float {
+    var points: [ComponentHullPoint] = []
+    points.reserveCapacity(pixels.count * 4)
+    for pixel in pixels {
+        let x = Float(pixel.x)
+        let y = Float(pixel.y)
+        points.append(ComponentHullPoint(x: x - 0.5, y: y - 0.5))
+        points.append(ComponentHullPoint(x: x + 0.5, y: y - 0.5))
+        points.append(ComponentHullPoint(x: x - 0.5, y: y + 0.5))
+        points.append(ComponentHullPoint(x: x + 0.5, y: y + 0.5))
+    }
+    points.sort {
+        if $0.x == $1.x { return $0.y < $1.y }
+        return $0.x < $1.x
+    }
+
+    var unique: [ComponentHullPoint] = []
+    unique.reserveCapacity(points.count)
+    for point in points {
+        if let last = unique.last, last.x == point.x, last.y == point.y {
+            continue
+        }
+        unique.append(point)
+    }
+    guard unique.count >= 3 else { return Float(pixels.count) }
+
+    var lower: [ComponentHullPoint] = []
+    for point in unique {
+        while lower.count >= 2,
+              componentCross(lower[lower.count - 2], lower[lower.count - 1], point) <= 0 {
+            lower.removeLast()
+        }
+        lower.append(point)
+    }
+
+    var upper: [ComponentHullPoint] = []
+    for point in unique.reversed() {
+        while upper.count >= 2,
+              componentCross(upper[upper.count - 2], upper[upper.count - 1], point) <= 0 {
+            upper.removeLast()
+        }
+        upper.append(point)
+    }
+
+    let hull = lower.dropLast() + upper.dropLast()
+    guard hull.count >= 3 else { return Float(pixels.count) }
+
+    var area: Float = 0
+    for index in hull.indices {
+        let next = hull.index(after: index) == hull.endIndex ? hull.startIndex : hull.index(after: index)
+        area += hull[index].x * hull[next].y - hull[next].x * hull[index].y
+    }
+    return abs(area) * 0.5
+}
+
+private func componentCross(
+    _ origin: ComponentHullPoint,
+    _ a: ComponentHullPoint,
+    _ b: ComponentHullPoint
+) -> Float {
+    (a.x - origin.x) * (b.y - origin.y) - (a.y - origin.y) * (b.x - origin.x)
+}
+
+private func componentThicknessStats(pixels: [(x: Int, y: Int)]) -> (mean: Float, max: Float) {
+    guard let minX = pixels.map(\.x).min(),
+          let maxX = pixels.map(\.x).max(),
+          let minY = pixels.map(\.y).min(),
+          let maxY = pixels.map(\.y).max() else {
+        return (0, 0)
+    }
+
+    let width = maxX - minX + 3
+    let height = maxY - minY + 3
+    let count = width * height
+    var inside = [Bool](repeating: false, count: count)
+    var distance = [Float](repeating: 0, count: count)
+    let large = Float(width + height + 4)
+
+    for pixel in pixels {
+        let x = pixel.x - minX + 1
+        let y = pixel.y - minY + 1
+        let index = y * width + x
+        inside[index] = true
+        distance[index] = large
+    }
+
+    let diagonal = Float(2.0).squareRoot()
+    for y in 0..<height {
+        for x in 0..<width {
+            let index = y * width + x
+            guard inside[index] else { continue }
+            if x > 0 {
+                distance[index] = min(distance[index], distance[index - 1] + 1)
+            }
+            if y > 0 {
+                distance[index] = min(distance[index], distance[index - width] + 1)
+                if x > 0 {
+                    distance[index] = min(distance[index], distance[index - width - 1] + diagonal)
+                }
+                if x + 1 < width {
+                    distance[index] = min(distance[index], distance[index - width + 1] + diagonal)
+                }
+            }
+        }
+    }
+
+    for y in stride(from: height - 1, through: 0, by: -1) {
+        for x in stride(from: width - 1, through: 0, by: -1) {
+            let index = y * width + x
+            guard inside[index] else { continue }
+            if x + 1 < width {
+                distance[index] = min(distance[index], distance[index + 1] + 1)
+            }
+            if y + 1 < height {
+                distance[index] = min(distance[index], distance[index + width] + 1)
+                if x > 0 {
+                    distance[index] = min(distance[index], distance[index + width - 1] + diagonal)
+                }
+                if x + 1 < width {
+                    distance[index] = min(distance[index], distance[index + width + 1] + diagonal)
+                }
+            }
+        }
+    }
+
+    var sum: Float = 0
+    var maxValue: Float = 0
+    for index in 0..<count where inside[index] {
+        sum += distance[index]
+        maxValue = max(maxValue, distance[index])
+    }
+    return (sum / Float(pixels.count), maxValue)
 }

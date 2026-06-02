@@ -46,11 +46,23 @@ public struct SimulationMetrics: Codable, Sendable {
     public let momentVolume: Float?
     public let momentDensity: Float?
     public let momentAnisotropy: Float?
+    public let occupiedFraction: Float?
+    public let midOccupiedFraction: Float?
+    public let targetOccupiedFraction: Float?
+    public let occupiedGrowth: Float?
     public let componentCount: Float?
     public let largestComponentFraction: Float?
     public let largestComponentAnisotropy: Float?
     public let largestComponentInternalStripe: Float?
     public let largestComponentOrientedRidge: Float?
+    public let largestComponentSolidity: Float?
+    public let largestComponentMeanThickness: Float?
+    public let largestComponentMaxThickness: Float?
+    public let largestComponentFilamentarity: Float?
+    public let transportDisplacement: Float?
+    public let translatedShapeOverlap: Float?
+    public let coherentTransport: Float?
+    public let bodyLocomotion: Float?
 
     enum CodingKeys: String, CodingKey {
         case massMean = "mass_mean"
@@ -89,11 +101,23 @@ public struct SimulationMetrics: Codable, Sendable {
         case momentVolume = "moment_volume"
         case momentDensity = "moment_density"
         case momentAnisotropy = "moment_anisotropy"
+        case occupiedFraction = "occupied_fraction"
+        case midOccupiedFraction = "mid_occupied_fraction"
+        case targetOccupiedFraction = "target_occupied_fraction"
+        case occupiedGrowth = "occupied_growth"
         case componentCount = "component_count"
         case largestComponentFraction = "largest_component_fraction"
         case largestComponentAnisotropy = "largest_component_anisotropy"
         case largestComponentInternalStripe = "largest_component_internal_stripe"
         case largestComponentOrientedRidge = "largest_component_oriented_ridge"
+        case largestComponentSolidity = "largest_component_solidity"
+        case largestComponentMeanThickness = "largest_component_mean_thickness"
+        case largestComponentMaxThickness = "largest_component_max_thickness"
+        case largestComponentFilamentarity = "largest_component_filamentarity"
+        case transportDisplacement = "transport_displacement"
+        case translatedShapeOverlap = "translated_shape_overlap"
+        case coherentTransport = "coherent_transport"
+        case bodyLocomotion = "body_locomotion"
     }
 
     public init(
@@ -142,11 +166,23 @@ public struct SimulationMetrics: Codable, Sendable {
         momentVolume: Float? = nil,
         momentDensity: Float? = nil,
         momentAnisotropy: Float? = nil,
+        occupiedFraction: Float? = nil,
+        midOccupiedFraction: Float? = nil,
+        targetOccupiedFraction: Float? = nil,
+        occupiedGrowth: Float? = nil,
         componentCount: Float? = nil,
         largestComponentFraction: Float? = nil,
         largestComponentAnisotropy: Float? = nil,
         largestComponentInternalStripe: Float? = nil,
-        largestComponentOrientedRidge: Float? = nil
+        largestComponentOrientedRidge: Float? = nil,
+        largestComponentSolidity: Float? = nil,
+        largestComponentMeanThickness: Float? = nil,
+        largestComponentMaxThickness: Float? = nil,
+        largestComponentFilamentarity: Float? = nil,
+        transportDisplacement: Float? = nil,
+        translatedShapeOverlap: Float? = nil,
+        coherentTransport: Float? = nil,
+        bodyLocomotion: Float? = nil
     ) {
         self.massMean = massMean
         self.massStd = massStd
@@ -193,11 +229,23 @@ public struct SimulationMetrics: Codable, Sendable {
         self.momentVolume = momentVolume
         self.momentDensity = momentDensity
         self.momentAnisotropy = momentAnisotropy
+        self.occupiedFraction = occupiedFraction
+        self.midOccupiedFraction = midOccupiedFraction
+        self.targetOccupiedFraction = targetOccupiedFraction
+        self.occupiedGrowth = occupiedGrowth
         self.componentCount = componentCount
         self.largestComponentFraction = largestComponentFraction
         self.largestComponentAnisotropy = largestComponentAnisotropy
         self.largestComponentInternalStripe = largestComponentInternalStripe
         self.largestComponentOrientedRidge = largestComponentOrientedRidge
+        self.largestComponentSolidity = largestComponentSolidity
+        self.largestComponentMeanThickness = largestComponentMeanThickness
+        self.largestComponentMaxThickness = largestComponentMaxThickness
+        self.largestComponentFilamentarity = largestComponentFilamentarity
+        self.transportDisplacement = transportDisplacement
+        self.translatedShapeOverlap = translatedShapeOverlap
+        self.coherentTransport = coherentTransport
+        self.bodyLocomotion = bodyLocomotion
     }
 
     public init(from decoder: Decoder) throws {
@@ -247,11 +295,23 @@ public struct SimulationMetrics: Codable, Sendable {
         momentVolume = try container.decodeIfPresent(Float.self, forKey: .momentVolume)
         momentDensity = try container.decodeIfPresent(Float.self, forKey: .momentDensity)
         momentAnisotropy = try container.decodeIfPresent(Float.self, forKey: .momentAnisotropy)
+        occupiedFraction = try container.decodeIfPresent(Float.self, forKey: .occupiedFraction)
+        midOccupiedFraction = try container.decodeIfPresent(Float.self, forKey: .midOccupiedFraction)
+        targetOccupiedFraction = try container.decodeIfPresent(Float.self, forKey: .targetOccupiedFraction)
+        occupiedGrowth = try container.decodeIfPresent(Float.self, forKey: .occupiedGrowth)
         componentCount = try container.decodeIfPresent(Float.self, forKey: .componentCount)
         largestComponentFraction = try container.decodeIfPresent(Float.self, forKey: .largestComponentFraction)
         largestComponentAnisotropy = try container.decodeIfPresent(Float.self, forKey: .largestComponentAnisotropy)
         largestComponentInternalStripe = try container.decodeIfPresent(Float.self, forKey: .largestComponentInternalStripe)
         largestComponentOrientedRidge = try container.decodeIfPresent(Float.self, forKey: .largestComponentOrientedRidge)
+        largestComponentSolidity = try container.decodeIfPresent(Float.self, forKey: .largestComponentSolidity)
+        largestComponentMeanThickness = try container.decodeIfPresent(Float.self, forKey: .largestComponentMeanThickness)
+        largestComponentMaxThickness = try container.decodeIfPresent(Float.self, forKey: .largestComponentMaxThickness)
+        largestComponentFilamentarity = try container.decodeIfPresent(Float.self, forKey: .largestComponentFilamentarity)
+        transportDisplacement = try container.decodeIfPresent(Float.self, forKey: .transportDisplacement)
+        translatedShapeOverlap = try container.decodeIfPresent(Float.self, forKey: .translatedShapeOverlap)
+        coherentTransport = try container.decodeIfPresent(Float.self, forKey: .coherentTransport)
+        bodyLocomotion = try container.decodeIfPresent(Float.self, forKey: .bodyLocomotion)
     }
 
     func withStability(_ isStable: Bool) -> SimulationMetrics {
@@ -301,11 +361,23 @@ public struct SimulationMetrics: Codable, Sendable {
             momentVolume: momentVolume,
             momentDensity: momentDensity,
             momentAnisotropy: momentAnisotropy,
+            occupiedFraction: occupiedFraction,
+            midOccupiedFraction: midOccupiedFraction,
+            targetOccupiedFraction: targetOccupiedFraction,
+            occupiedGrowth: occupiedGrowth,
             componentCount: componentCount,
             largestComponentFraction: largestComponentFraction,
             largestComponentAnisotropy: largestComponentAnisotropy,
             largestComponentInternalStripe: largestComponentInternalStripe,
-            largestComponentOrientedRidge: largestComponentOrientedRidge
+            largestComponentOrientedRidge: largestComponentOrientedRidge,
+            largestComponentSolidity: largestComponentSolidity,
+            largestComponentMeanThickness: largestComponentMeanThickness,
+            largestComponentMaxThickness: largestComponentMaxThickness,
+            largestComponentFilamentarity: largestComponentFilamentarity,
+            transportDisplacement: transportDisplacement,
+            translatedShapeOverlap: translatedShapeOverlap,
+            coherentTransport: coherentTransport,
+            bodyLocomotion: bodyLocomotion
         )
     }
 }

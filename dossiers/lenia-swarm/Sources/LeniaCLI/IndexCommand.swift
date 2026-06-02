@@ -412,6 +412,7 @@ final class SQLiteIndexer {
             WHERE c.canonical_specimen_id IN (
                 SELECT canonical_specimen_id
                 FROM creatures
+                WHERE canonical_specimen_id IS NOT NULL
                 GROUP BY canonical_specimen_id
                 HAVING COUNT(*) > 1
             )
@@ -422,6 +423,7 @@ final class SQLiteIndexer {
             WHERE canonical_specimen_id IN (
                 SELECT canonical_specimen_id
                 FROM creatures
+                WHERE canonical_specimen_id IS NOT NULL
                 GROUP BY canonical_specimen_id
                 HAVING COUNT(*) > 1
             )
@@ -467,6 +469,9 @@ final class SQLiteIndexer {
                 c.specimen_manifest_json
             FROM creatures c
             WHERE c.canonical_specimen_id IS NULL
+              AND c.genotype_json IS NOT NULL
+              AND c.initial_condition_json IS NOT NULL
+              AND c.metrics_json IS NOT NULL
             ORDER BY c.run_id, COALESCE(c.campaign_id, ''), c.init_seed, c.id
         """
         let stmt = try db.prepare(sql)

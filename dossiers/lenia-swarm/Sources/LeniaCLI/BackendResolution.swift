@@ -132,6 +132,9 @@ private func isEvolutionMetalBackendCompatible(runtimeConfig: LeniaRuntimeConfig
         "obstacle_navigation",
         "chemotaxis",
         "template_sequence",
+        "coherent_transport",
+        "body_locomotion",
+        "organismness",
     ]
     return supportedObjectives.contains(esConfig.fitness.objective)
 }

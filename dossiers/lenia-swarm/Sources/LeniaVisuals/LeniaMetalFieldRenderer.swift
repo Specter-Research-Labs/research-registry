@@ -429,10 +429,11 @@ private extension LeniaRenderMode {
     var shaderIndex: UInt32 {
         switch self {
         case .truth: return 0
-        case .smoothMagma: return 1
-        case .viridis: return 2
-        case .inferno: return 3
-        case .plasma: return 4
+        case .body: return 1
+        case .smoothMagma: return 2
+        case .viridis: return 3
+        case .inferno: return 4
+        case .plasma: return 5
         }
     }
 }

@@ -8,6 +8,7 @@ public struct FitnessConfig: Codable {
     public let objective: String
     public let targetStep: Int
     public let angleThreshold: Float
+    public let minimumDisplacement: Float?
     public let gyrationPenalty: Float?
     public let componentCountPenalty: Float?
     public let componentCountTarget: Float?
@@ -27,6 +28,9 @@ public struct FitnessConfig: Codable {
     public let componentMassEvennessPenalty: Float?
     public let minimumMomentMass: Float?
     public let maximumMomentMass: Float?
+    public let largestComponentSolidityReward: Float?
+    public let largestComponentMeanThicknessReward: Float?
+    public let largestComponentFilamentarityPenalty: Float?
     public let momentDensityReward: Float?
     public let minimumMomentDensity: Float?
     public let maximumMomentDensity: Float?
@@ -73,12 +77,23 @@ public struct FitnessConfig: Codable {
     public let minimumCenterVelocity: Float?
     public let centerVelocityPenalty: Float?
     public let centerVelocityReward: Float?
+    public let translatedShapeOverlapMin: Float?
+    public let componentCountMax: Float?
+    public let largestComponentFractionMin: Float?
+    public let largestComponentSolidityMin: Float?
+    public let largestComponentMeanThicknessMin: Float?
+    public let largestComponentFilamentarityMax: Float?
+    public let occupiedFractionMin: Float?
+    public let occupiedFractionMax: Float?
+    public let occupiedGrowthMax: Float?
+    public let organismnessPenalty: Float?
     public let morphologyThreshold: Float?
 
     enum CodingKeys: String, CodingKey {
         case objective
         case targetStep = "target_step"
         case angleThreshold = "angle_threshold"
+        case minimumDisplacement = "minimum_displacement"
         case gyrationPenalty = "gyration_penalty"
         case componentCountPenalty = "component_count_penalty"
         case componentCountTarget = "component_count_target"
@@ -98,6 +113,9 @@ public struct FitnessConfig: Codable {
         case componentMassEvennessPenalty = "component_mass_evenness_penalty"
         case minimumMomentMass = "minimum_moment_mass"
         case maximumMomentMass = "maximum_moment_mass"
+        case largestComponentSolidityReward = "largest_component_solidity_reward"
+        case largestComponentMeanThicknessReward = "largest_component_mean_thickness_reward"
+        case largestComponentFilamentarityPenalty = "largest_component_filamentarity_penalty"
         case momentDensityReward = "moment_density_reward"
         case minimumMomentDensity = "minimum_moment_density"
         case maximumMomentDensity = "maximum_moment_density"
@@ -144,6 +162,16 @@ public struct FitnessConfig: Codable {
         case minimumCenterVelocity = "minimum_center_velocity"
         case centerVelocityPenalty = "center_velocity_penalty"
         case centerVelocityReward = "center_velocity_reward"
+        case translatedShapeOverlapMin = "translated_shape_overlap_min"
+        case componentCountMax = "component_count_max"
+        case largestComponentFractionMin = "largest_component_fraction_min"
+        case largestComponentSolidityMin = "largest_component_solidity_min"
+        case largestComponentMeanThicknessMin = "largest_component_mean_thickness_min"
+        case largestComponentFilamentarityMax = "largest_component_filamentarity_max"
+        case occupiedFractionMin = "occupied_fraction_min"
+        case occupiedFractionMax = "occupied_fraction_max"
+        case occupiedGrowthMax = "occupied_growth_max"
+        case organismnessPenalty = "organismness_penalty"
         case morphologyThreshold = "morphology_threshold"
     }
 
@@ -151,6 +179,7 @@ public struct FitnessConfig: Codable {
         objective: String,
         targetStep: Int,
         angleThreshold: Float,
+        minimumDisplacement: Float? = nil,
         gyrationPenalty: Float? = nil,
         componentCountPenalty: Float? = nil,
         componentCountTarget: Float? = nil,
@@ -170,6 +199,9 @@ public struct FitnessConfig: Codable {
         componentMassEvennessPenalty: Float? = nil,
         minimumMomentMass: Float? = nil,
         maximumMomentMass: Float? = nil,
+        largestComponentSolidityReward: Float? = nil,
+        largestComponentMeanThicknessReward: Float? = nil,
+        largestComponentFilamentarityPenalty: Float? = nil,
         momentDensityReward: Float? = nil,
         minimumMomentDensity: Float? = nil,
         maximumMomentDensity: Float? = nil,
@@ -216,11 +248,22 @@ public struct FitnessConfig: Codable {
         minimumCenterVelocity: Float? = nil,
         centerVelocityPenalty: Float? = nil,
         centerVelocityReward: Float? = nil,
+        translatedShapeOverlapMin: Float? = nil,
+        componentCountMax: Float? = nil,
+        largestComponentFractionMin: Float? = nil,
+        largestComponentSolidityMin: Float? = nil,
+        largestComponentMeanThicknessMin: Float? = nil,
+        largestComponentFilamentarityMax: Float? = nil,
+        occupiedFractionMin: Float? = nil,
+        occupiedFractionMax: Float? = nil,
+        occupiedGrowthMax: Float? = nil,
+        organismnessPenalty: Float? = nil,
         morphologyThreshold: Float? = nil
     ) {
         self.objective = objective
         self.targetStep = targetStep
         self.angleThreshold = angleThreshold
+        self.minimumDisplacement = minimumDisplacement
         self.gyrationPenalty = gyrationPenalty
         self.componentCountPenalty = componentCountPenalty
         self.componentCountTarget = componentCountTarget
@@ -240,6 +283,9 @@ public struct FitnessConfig: Codable {
         self.componentMassEvennessPenalty = componentMassEvennessPenalty
         self.minimumMomentMass = minimumMomentMass
         self.maximumMomentMass = maximumMomentMass
+        self.largestComponentSolidityReward = largestComponentSolidityReward
+        self.largestComponentMeanThicknessReward = largestComponentMeanThicknessReward
+        self.largestComponentFilamentarityPenalty = largestComponentFilamentarityPenalty
         self.momentDensityReward = momentDensityReward
         self.minimumMomentDensity = minimumMomentDensity
         self.maximumMomentDensity = maximumMomentDensity
@@ -286,6 +332,16 @@ public struct FitnessConfig: Codable {
         self.minimumCenterVelocity = minimumCenterVelocity
         self.centerVelocityPenalty = centerVelocityPenalty
         self.centerVelocityReward = centerVelocityReward
+        self.translatedShapeOverlapMin = translatedShapeOverlapMin
+        self.componentCountMax = componentCountMax
+        self.largestComponentFractionMin = largestComponentFractionMin
+        self.largestComponentSolidityMin = largestComponentSolidityMin
+        self.largestComponentMeanThicknessMin = largestComponentMeanThicknessMin
+        self.largestComponentFilamentarityMax = largestComponentFilamentarityMax
+        self.occupiedFractionMin = occupiedFractionMin
+        self.occupiedFractionMax = occupiedFractionMax
+        self.occupiedGrowthMax = occupiedGrowthMax
+        self.organismnessPenalty = organismnessPenalty
         self.morphologyThreshold = morphologyThreshold
     }
 
@@ -294,6 +350,8 @@ public struct FitnessConfig: Codable {
             componentCountPenalty != nil ||
             componentCountTargetPenalty != nil ||
             componentCountLimitPenalty != nil ||
+            objective == "body_locomotion" ||
+            componentCountPenalty != nil ||
             largestComponentFractionReward != nil ||
             largestComponentFractionPenalty != nil ||
             largestComponentFractionLimitPenalty != nil ||
@@ -305,6 +363,9 @@ public struct FitnessConfig: Codable {
             minimumComponentMassEvenness != nil ||
             minimumMomentMass != nil ||
             maximumMomentMass != nil ||
+            largestComponentSolidityReward != nil ||
+            largestComponentMeanThicknessReward != nil ||
+            largestComponentFilamentarityPenalty != nil ||
             momentDensityReward != nil ||
             momentDensityPenalty != nil ||
             maximumMomentDensity != nil ||
@@ -437,6 +498,7 @@ public struct ESConfig: Codable {
     public let steps: Int
     public let fitness: FitnessConfig
     public let fitnessShaping: String  // "centered_rank", "standardize", "raw"
+    public let includeParent: Bool?
     public let initPatch: InitPatchConfig?
     public let initialInitPatchValues: [Float]?
     public let initialKernelParams: KernelParams?
@@ -453,6 +515,7 @@ public struct ESConfig: Codable {
         case steps
         case fitness
         case fitnessShaping = "fitness_shaping"
+        case includeParent = "include_parent"
         case initPatch = "init_patch"
         case initialInitPatchValues = "initial_init_patch_values"
         case initialKernelParams = "initial_kernel_params"
@@ -470,6 +533,7 @@ public struct ESConfig: Codable {
         steps: Int,
         fitness: FitnessConfig,
         fitnessShaping: String,
+        includeParent: Bool? = nil,
         initPatch: InitPatchConfig?,
         initialInitPatchValues: [Float]?,
         initialKernelParams: KernelParams? = nil,
@@ -485,11 +549,136 @@ public struct ESConfig: Codable {
         self.steps = steps
         self.fitness = fitness
         self.fitnessShaping = fitnessShaping
+        self.includeParent = includeParent
         self.initPatch = initPatch
         self.initialInitPatchValues = initialInitPatchValues
         self.initialKernelParams = initialKernelParams
         self.paramRanges = paramRanges
         self.obstacleField = obstacleField
+    }
+}
+
+public struct FlowMAPElitesDescriptorConfig: Codable {
+    public let name: String
+    public let min: Float
+    public let max: Float
+    public let bins: Int
+
+    public init(name: String, min: Float, max: Float, bins: Int) {
+        self.name = name
+        self.min = min
+        self.max = max
+        self.bins = bins
+    }
+}
+
+public struct FlowMAPElitesConfig: Codable {
+    public let outputDir: String
+    public let generations: Int
+    public let population: Int
+    public let sigma: Float
+    public let lineSigma: Float
+    public let seed: Int
+    public let steps: Int
+    public let fitness: FitnessConfig
+    public let includeParent: Bool?
+    public let descriptors: [FlowMAPElitesDescriptorConfig]
+    public let exportTop: Int?
+    public let exportReplayPoolLimit: Int?
+    public let initPatch: InitPatchConfig?
+    public let initialInitPatchValues: [Float]?
+    public let initialKernelParams: KernelParams?
+    public let paramRanges: [String: [Float]]?
+    public let obstacleField: ESObstacleFieldConfig?
+
+    enum CodingKeys: String, CodingKey {
+        case outputDir = "output_dir"
+        case generations
+        case population
+        case sigma
+        case lineSigma = "line_sigma"
+        case seed
+        case steps
+        case fitness
+        case includeParent = "include_parent"
+        case descriptors
+        case exportTop = "export_top"
+        case exportReplayPoolLimit = "export_replay_pool_limit"
+        case initPatch = "init_patch"
+        case initialInitPatchValues = "initial_init_patch_values"
+        case initialKernelParams = "initial_kernel_params"
+        case paramRanges = "param_ranges"
+        case obstacleField = "obstacle_field"
+    }
+
+    public init(
+        outputDir: String,
+        generations: Int,
+        population: Int,
+        sigma: Float,
+        lineSigma: Float,
+        seed: Int,
+        steps: Int,
+        fitness: FitnessConfig,
+        includeParent: Bool? = nil,
+        descriptors: [FlowMAPElitesDescriptorConfig],
+        exportTop: Int? = nil,
+        exportReplayPoolLimit: Int? = nil,
+        initPatch: InitPatchConfig?,
+        initialInitPatchValues: [Float]?,
+        initialKernelParams: KernelParams? = nil,
+        paramRanges: [String: [Float]]?,
+        obstacleField: ESObstacleFieldConfig?
+    ) {
+        self.outputDir = outputDir
+        self.generations = generations
+        self.population = population
+        self.sigma = sigma
+        self.lineSigma = lineSigma
+        self.seed = seed
+        self.steps = steps
+        self.fitness = fitness
+        self.includeParent = includeParent
+        self.descriptors = descriptors
+        self.exportTop = exportTop
+        self.exportReplayPoolLimit = exportReplayPoolLimit
+        self.initPatch = initPatch
+        self.initialInitPatchValues = initialInitPatchValues
+        self.initialKernelParams = initialKernelParams
+        self.paramRanges = paramRanges
+        self.obstacleField = obstacleField
+    }
+
+    public func asESConfig(outputDir overrideOutputDir: String? = nil) -> ESConfig {
+        ESConfig(
+            outputDir: overrideOutputDir ?? outputDir,
+            generations: generations,
+            population: population,
+            sigma: sigma,
+            learningRate: 0.0,
+            seed: seed,
+            steps: steps,
+            fitness: fitness,
+            fitnessShaping: "raw",
+            includeParent: includeParent,
+            initPatch: initPatch,
+            initialInitPatchValues: initialInitPatchValues,
+            initialKernelParams: initialKernelParams,
+            paramRanges: paramRanges,
+            obstacleField: obstacleField
+        )
+    }
+}
+
+public struct FlowMAPElitesCandidateEvaluation: Sendable {
+    public let candidate: [Float]
+    public let fitness: Float
+    public let descriptors: [String: Float]
+
+    public init(candidate: [Float], fitness: Float, descriptors: [String: Float]) {
+        self.candidate = candidate
+        self.fitness = fitness
+        self.descriptors = descriptors
     }
 }
 
@@ -985,13 +1174,22 @@ public final class EvolutionEngine {
         let initial: CenterSnapshot
         let mid: CenterSnapshot?
         let target: CenterSnapshot?
+        let translatedShapeOverlap: Float?
+        let midOccupiedFraction: Float?
+        let targetOccupiedFraction: Float?
+        let occupiedGrowth: Float?
         let gyration: Float?
         let componentCount: Float?
         let largestComponentFraction: Float?
         let largestComponentAnisotropy: Float?
         let componentMassEvenness: Float?
         let momentMass: Float?
+        let largestComponentSolidity: Float?
+        let largestComponentMeanThickness: Float?
+        let largestComponentMaxThickness: Float?
+        let largestComponentFilamentarity: Float?
         let momentDensity: Float?
+        let occupiedFraction: Float?
         let momentAnisotropy: Float?
         let internalStripe: Float?
         let orientedRidge: Float?
@@ -1020,7 +1218,12 @@ public final class EvolutionEngine {
         let largestComponentAnisotropy: [Float]?
         let componentMassEvenness: [Float]?
         let momentMass: [Float]?
+        let largestComponentSolidity: [Float]?
+        let largestComponentMeanThickness: [Float]?
+        let largestComponentMaxThickness: [Float]?
+        let largestComponentFilamentarity: [Float]?
         let momentDensity: [Float]?
+        let occupiedFraction: [Float]?
         let momentAnisotropy: [Float]?
         let internalStripe: [Float]?
         let orientedRidge: [Float]?
@@ -1107,6 +1310,9 @@ public final class EvolutionEngine {
             "orientation_phase_motion",
             "angular_phase_motion",
             "sector_transport_motion",
+            "coherent_transport",
+            "body_locomotion",
+            "organismness",
         ]
         if !supportedObjectives.contains(esConfig.fitness.objective) {
             fatalError("Unsupported evolution objective: \(esConfig.fitness.objective)")
@@ -1523,7 +1729,7 @@ public final class EvolutionEngine {
 
     public func buildStateFromPatch(_ patchValues: [Float]) -> MLXArray {
         guard let initPatch = esConfig.initPatch else {
-            return buildInitialState(seed: esConfig.seed)
+            return buildInitialState(seed: runtimeConfig.initSeed)
         }
 
         var data = [Float](repeating: 0.0, count: config.sx * config.sy * config.channels)
@@ -1550,7 +1756,7 @@ public final class EvolutionEngine {
 
     private func buildStateForCandidate(_ candidate: [Float]) -> MLXArray {
         if initPatchDim == 0 {
-            return buildInitialState(seed: esConfig.seed)
+            return buildInitialState(seed: runtimeConfig.initSeed)
         }
         let patchVec = Array(candidate[thetaParamsDim...])
         let patchValues = patchVec.map { val -> Float in
@@ -1672,12 +1878,13 @@ public final class EvolutionEngine {
         let objective = esConfig.fitness.objective
         let usesCenterOfMass = objective == "directed_motion" ||
             objective == "obstacle_navigation" ||
-            objective == "angular_motion"
+            objective == "angular_motion" ||
+            objectiveUsesTranslatedShapeOverlap(objective)
         let targetStep = esConfig.fitness.targetStep
         return (
             objective,
             usesCenterOfMass,
-            objective == "angular_motion",
+            objective == "angular_motion" || objectiveUsesTranslatedShapeOverlap(objective),
             targetStep,
             targetStep / 2
         )
@@ -1970,6 +2177,10 @@ public final class EvolutionEngine {
         )
     }
 
+    private func objectiveUsesTranslatedShapeOverlap(_ objective: String) -> Bool {
+        objective == "coherent_transport" || objective == "body_locomotion"
+    }
+
     private func deadSnapshot() -> CenterSnapshot {
         CenterSnapshot(alive: false, x: 0.0, y: 0.0)
     }
@@ -2016,6 +2227,120 @@ public final class EvolutionEngine {
             x: summary.centerXIndex[index] / Float(config.sx) - 0.5,
             y: summary.centerYIndex[index] / Float(config.sy) - 0.5
         )
+    }
+
+    private func translatedShapeOverlapBatch(
+        source: MassBatchCPU,
+        target: MassBatchCPU,
+        sourceCenters: BatchCenterOfMassCPU,
+        targetCenters: BatchCenterOfMassCPU,
+        threshold: Float,
+        useTorus: Bool
+    ) -> [Float] {
+        guard source.batch == target.batch,
+              source.height == target.height,
+              source.width == target.width else {
+            fatalError("translated shape overlap requires matching source and target mass batches.")
+        }
+        guard sourceCenters.alive.count == source.batch,
+              sourceCenters.x.count == source.batch,
+              sourceCenters.y.count == source.batch,
+              targetCenters.alive.count == target.batch,
+              targetCenters.x.count == target.batch,
+              targetCenters.y.count == target.batch else {
+            fatalError("translated shape overlap center batch size mismatch.")
+        }
+
+        return (0..<source.batch).map { sampleIndex in
+            guard sourceCenters.alive[sampleIndex] > 0.0,
+                  targetCenters.alive[sampleIndex] > 0.0 else {
+                return 0.0
+            }
+            let rowShift = Int(((targetCenters.x[sampleIndex] - sourceCenters.x[sampleIndex]) * Float(source.height)).rounded())
+            let colShift = Int(((targetCenters.y[sampleIndex] - sourceCenters.y[sampleIndex]) * Float(source.width)).rounded())
+            return translatedMaskOverlap(
+                source: source,
+                target: target,
+                sampleIndex: sampleIndex,
+                rowShift: rowShift,
+                colShift: colShift,
+                threshold: threshold,
+                useTorus: useTorus
+            )
+        }
+    }
+
+    private func occupiedFractionBatch(
+        materialized batch: MassBatchCPU,
+        threshold: Float
+    ) -> [Float] {
+        (0..<batch.batch).map { sampleIndex in
+            let start = sampleIndex * batch.sampleSize
+            var occupied = 0
+            for index in 0..<batch.sampleSize where batch.flat[start + index] > threshold {
+                occupied += 1
+            }
+            return Float(occupied) / Float(max(batch.sampleSize, 1))
+        }
+    }
+
+    private func occupiedGrowth(mid: Float?, target: Float?) -> Float? {
+        guard let mid, let target else { return nil }
+        guard target > 0 else { return 0.0 }
+        return target / max(mid, 1e-6)
+    }
+
+    private func translatedMaskOverlap(
+        source: MassBatchCPU,
+        target: MassBatchCPU,
+        sampleIndex: Int,
+        rowShift: Int,
+        colShift: Int,
+        threshold: Float,
+        useTorus: Bool
+    ) -> Float {
+        let sourceStart = sampleIndex * source.sampleSize
+        let targetStart = sampleIndex * target.sampleSize
+        var targetCount = 0
+        for index in 0..<target.sampleSize where target.flat[targetStart + index] > threshold {
+            targetCount += 1
+        }
+        guard targetCount > 0 else { return 0.0 }
+
+        var best: Float = 0.0
+        let localSearchRadius = 2
+        for rowDelta in (-localSearchRadius)...localSearchRadius {
+            for colDelta in (-localSearchRadius)...localSearchRadius {
+                var shiftedCount = 0
+                var intersection = 0
+                for row in 0..<source.height {
+                    for col in 0..<source.width {
+                        let sourceIndex = sourceStart + row * source.width + col
+                        guard source.flat[sourceIndex] > threshold else { continue }
+
+                        var targetRow = row + rowShift + rowDelta
+                        var targetCol = col + colShift + colDelta
+                        if useTorus {
+                            targetRow = (targetRow % target.height + target.height) % target.height
+                            targetCol = (targetCol % target.width + target.width) % target.width
+                        } else if targetRow < 0 || targetCol < 0 || targetRow >= target.height || targetCol >= target.width {
+                            continue
+                        }
+
+                        shiftedCount += 1
+                        let targetIndex = targetStart + targetRow * target.width + targetCol
+                        if target.flat[targetIndex] > threshold {
+                            intersection += 1
+                        }
+                    }
+                }
+                let union = shiftedCount + targetCount - intersection
+                if union > 0 {
+                    best = max(best, Float(intersection) / Float(union))
+                }
+            }
+        }
+        return best
     }
 
     private func evaluatePopulation(
@@ -2098,6 +2423,9 @@ public final class EvolutionEngine {
         }
 
         captureTemplateSequenceStep(0)
+        let usesTranslatedShapeOverlap = objectiveUsesTranslatedShapeOverlap(requirements.objective)
+        var midMassMapDevice: MLXArray? = nil
+        var targetMassMapDevice: MLXArray? = nil
 
         for step in 1...esConfig.steps {
             if let field = chemFieldBatch, let chemotaxis = runtimeConfig.chemotaxis {
@@ -2110,9 +2438,15 @@ public final class EvolutionEngine {
 
             if requirements.usesMidCenter && step == requirements.midStep {
                 comMidDevice = centerOfMassBatchDevice(ABatch)
+                if usesTranslatedShapeOverlap {
+                    midMassMapDevice = evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels)
+                }
             }
             if requirements.usesCenterOfMass && step == requirements.targetStep {
                 comTargetDevice = centerOfMassBatchDevice(ABatch)
+                if usesTranslatedShapeOverlap {
+                    targetMassMapDevice = evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels)
+                }
             }
             captureTemplateSequenceStep(step)
         }
@@ -2145,6 +2479,31 @@ public final class EvolutionEngine {
         let orientationPhaseMotion = orientationPhaseMotionValues(from: sequenceMassMaps)
         let angularPhaseMotion = angularPhaseMotionValues(from: sequenceMassMaps)
         let sectorTransport = sectorTransportValues(from: sequenceMassMaps)
+        let midMassBatchCPU = midMassMapDevice.map(materializeMassBatch)
+        let targetMassBatchCPU = targetMassMapDevice.map(materializeMassBatch)
+        let midOccupiedFractionValues = midMassBatchCPU.map {
+            occupiedFractionBatch(materialized: $0, threshold: esConfig.fitness.morphologyThreshold ?? 0.03)
+        }
+        let targetOccupiedFractionValues = targetMassBatchCPU.map {
+            occupiedFractionBatch(materialized: $0, threshold: esConfig.fitness.morphologyThreshold ?? 0.03)
+        }
+        let translatedShapeOverlapValues: [Float]?
+        if usesTranslatedShapeOverlap,
+           let midMassBatchCPU,
+           let targetMassBatchCPU,
+           let midCenters,
+           let targetCenters {
+            translatedShapeOverlapValues = translatedShapeOverlapBatch(
+                source: midMassBatchCPU,
+                target: targetMassBatchCPU,
+                sourceCenters: midCenters,
+                targetCenters: targetCenters,
+                threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
+                useTorus: runtimeConfig.border == "torus"
+            )
+        } else {
+            translatedShapeOverlapValues = nil
+        }
         let chemotaxisScores: [Float]?
         if requirements.objective == "chemotaxis" {
             guard let field = chemFieldBatch else {
@@ -2156,13 +2515,22 @@ public final class EvolutionEngine {
                         initial: deadSnapshot(),
                         mid: nil,
                         target: nil,
+                        translatedShapeOverlap: nil,
+                        midOccupiedFraction: nil,
+                        targetOccupiedFraction: nil,
+                        occupiedGrowth: nil,
                         gyration: nil,
                         componentCount: morphologyValues?.componentCount?[index],
                         largestComponentFraction: morphologyValues?.largestComponentFraction?[index],
                         largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?[index],
                         componentMassEvenness: morphologyValues?.componentMassEvenness?[index],
                         momentMass: morphologyValues?.momentMass?[index],
+                        largestComponentSolidity: morphologyValues?.largestComponentSolidity?[index],
+                        largestComponentMeanThickness: morphologyValues?.largestComponentMeanThickness?[index],
+                        largestComponentMaxThickness: morphologyValues?.largestComponentMaxThickness?[index],
+                        largestComponentFilamentarity: morphologyValues?.largestComponentFilamentarity?[index],
                         momentDensity: morphologyValues?.momentDensity?[index],
+                        occupiedFraction: morphologyValues?.occupiedFraction?[index],
                         momentAnisotropy: morphologyValues?.momentAnisotropy?[index],
                         internalStripe: morphologyValues?.internalStripe?[index],
                         orientedRidge: morphologyValues?.orientedRidge?[index],
@@ -2212,13 +2580,25 @@ public final class EvolutionEngine {
                 initial: centerSnapshot(from: initialCenters, index: index) ?? deadSnapshot(),
                 mid: centerSnapshot(from: midCenters, index: index),
                 target: centerSnapshot(from: targetCenters, index: index),
+                translatedShapeOverlap: translatedShapeOverlapValues?[index],
+                midOccupiedFraction: midOccupiedFractionValues?[index],
+                targetOccupiedFraction: targetOccupiedFractionValues?[index],
+                occupiedGrowth: occupiedGrowth(
+                    mid: midOccupiedFractionValues?[index],
+                    target: targetOccupiedFractionValues?[index]
+                ),
                 gyration: gyrationValues?[index],
                 componentCount: morphologyValues?.componentCount?[index],
                 largestComponentFraction: morphologyValues?.largestComponentFraction?[index],
                 largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?[index],
                 componentMassEvenness: morphologyValues?.componentMassEvenness?[index],
                 momentMass: morphologyValues?.momentMass?[index],
+                largestComponentSolidity: morphologyValues?.largestComponentSolidity?[index],
+                largestComponentMeanThickness: morphologyValues?.largestComponentMeanThickness?[index],
+                largestComponentMaxThickness: morphologyValues?.largestComponentMaxThickness?[index],
+                largestComponentFilamentarity: morphologyValues?.largestComponentFilamentarity?[index],
                 momentDensity: morphologyValues?.momentDensity?[index],
+                occupiedFraction: morphologyValues?.occupiedFraction?[index],
                 momentAnisotropy: morphologyValues?.momentAnisotropy?[index],
                 internalStripe: morphologyValues?.internalStripe?[index],
                 orientedRidge: morphologyValues?.orientedRidge?[index],
@@ -2267,6 +2647,9 @@ public final class EvolutionEngine {
         var initialSnapshots = deadSnapshots
         var midSnapshots = [CenterSnapshot?](repeating: nil, count: pop)
         var targetSnapshots = [CenterSnapshot?](repeating: nil, count: pop)
+        let usesTranslatedShapeOverlap = objectiveUsesTranslatedShapeOverlap(requirements.objective)
+        var midMassBatch: MassBatchCPU? = nil
+        var targetMassBatch: MassBatchCPU? = nil
         var kernelCompileMs = 0.0
         var stateBuildMs = 0.0
         var fieldBuildMs = 0.0
@@ -2386,6 +2769,12 @@ public final class EvolutionEngine {
             if requirements.usesCenterOfMass && step == requirements.targetStep {
                 targetSnapshots = measureCenterSnapshots()
             }
+            if usesTranslatedShapeOverlap && step == requirements.midStep {
+                midMassBatch = materializeMassBatch(runner.materializeMassMap(channelWeights: metalMatterWeights()))
+            }
+            if usesTranslatedShapeOverlap && step == requirements.targetStep {
+                targetMassBatch = materializeMassBatch(runner.materializeMassMap(channelWeights: metalMatterWeights()))
+            }
             captureTemplateSequenceStep(step)
             captureTrajectoryStep(step)
             measurementMs += durationMs(stepMeasurementStart.duration(to: ContinuousClock.now))
@@ -2447,6 +2836,35 @@ public final class EvolutionEngine {
         } else {
             chemotaxisScores = nil
         }
+        let translatedShapeOverlapValues: [Float]?
+        if usesTranslatedShapeOverlap,
+           let midMassBatch,
+           let targetMassBatch {
+            translatedShapeOverlapValues = translatedShapeOverlapBatch(
+                source: midMassBatch,
+                target: targetMassBatch,
+                sourceCenters: BatchCenterOfMassCPU(
+                    alive: midSnapshots.map { $0?.alive == true ? 1.0 : 0.0 },
+                    x: midSnapshots.map { $0?.x ?? 0.0 },
+                    y: midSnapshots.map { $0?.y ?? 0.0 }
+                ),
+                targetCenters: BatchCenterOfMassCPU(
+                    alive: targetSnapshots.map { $0?.alive == true ? 1.0 : 0.0 },
+                    x: targetSnapshots.map { $0?.x ?? 0.0 },
+                    y: targetSnapshots.map { $0?.y ?? 0.0 }
+                ),
+                threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
+                useTorus: runtimeConfig.border == "torus"
+            )
+        } else {
+            translatedShapeOverlapValues = nil
+        }
+        let midOccupiedFractionValues = midMassBatch.map {
+            occupiedFractionBatch(materialized: $0, threshold: esConfig.fitness.morphologyThreshold ?? 0.03)
+        }
+        let targetOccupiedFractionValues = targetMassBatch.map {
+            occupiedFractionBatch(materialized: $0, threshold: esConfig.fitness.morphologyThreshold ?? 0.03)
+        }
         measurementMs += durationMs(finalMeasurementStart.duration(to: ContinuousClock.now))
 
         for index in 0..<pop {
@@ -2455,13 +2873,25 @@ public final class EvolutionEngine {
                     initial: initialSnapshots[index],
                     mid: midSnapshots[index],
                     target: targetSnapshots[index],
+                    translatedShapeOverlap: translatedShapeOverlapValues?[index],
+                    midOccupiedFraction: midOccupiedFractionValues?[index],
+                    targetOccupiedFraction: targetOccupiedFractionValues?[index],
+                    occupiedGrowth: occupiedGrowth(
+                        mid: midOccupiedFractionValues?[index],
+                        target: targetOccupiedFractionValues?[index]
+                    ),
                     gyration: gyrationValues?[index],
                     componentCount: morphologyValues?.componentCount?[index],
                     largestComponentFraction: morphologyValues?.largestComponentFraction?[index],
                     largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?[index],
                     componentMassEvenness: morphologyValues?.componentMassEvenness?[index],
                     momentMass: morphologyValues?.momentMass?[index],
+                    largestComponentSolidity: morphologyValues?.largestComponentSolidity?[index],
+                    largestComponentMeanThickness: morphologyValues?.largestComponentMeanThickness?[index],
+                    largestComponentMaxThickness: morphologyValues?.largestComponentMaxThickness?[index],
+                    largestComponentFilamentarity: morphologyValues?.largestComponentFilamentarity?[index],
                     momentDensity: morphologyValues?.momentDensity?[index],
+                    occupiedFraction: morphologyValues?.occupiedFraction?[index],
                     momentAnisotropy: morphologyValues?.momentAnisotropy?[index],
                     internalStripe: morphologyValues?.internalStripe?[index],
                     orientedRidge: morphologyValues?.orientedRidge?[index],
@@ -2531,6 +2961,41 @@ public final class EvolutionEngine {
              "angular_phase_motion",
              "sector_transport_motion":
             return adjustedFitness(base: 0.0, measurement: measurement)
+        case "organismness":
+            return adjustedFitness(base: 0.0, measurement: measurement)
+        case "coherent_transport":
+            guard let mid = measurement.mid, mid.alive,
+                  let target = measurement.target, target.alive else {
+                return 0.0
+            }
+            guard let translatedShapeOverlap = measurement.translatedShapeOverlap else {
+                fatalError("coherent_transport objective requires translated shape overlap.")
+            }
+            let dx = target.x - mid.x
+            let dy = target.y - mid.y
+            let displacement = sqrt(dx * dx + dy * dy)
+            return coherentTransportAdjustedFitness(
+                base: displacement * translatedShapeOverlap,
+                displacement: displacement,
+                measurement: measurement
+            )
+        case "body_locomotion":
+            guard let mid = measurement.mid, mid.alive,
+                  let target = measurement.target, target.alive else {
+                return 0.0
+            }
+            guard let translatedShapeOverlap = measurement.translatedShapeOverlap else {
+                fatalError("body_locomotion objective requires translated shape overlap.")
+            }
+            let dx = target.x - mid.x
+            let dy = target.y - mid.y
+            let displacement = sqrt(dx * dx + dy * dy)
+            let base = bodyLocomotionScore(
+                displacement: displacement,
+                translatedShapeOverlap: translatedShapeOverlap,
+                measurement: measurement
+            )
+            return bodyLocomotionAdjustedFitness(base: base, measurement: measurement)
         default:
             return 0.0
         }
@@ -2610,6 +3075,24 @@ public final class EvolutionEngine {
                 fatalError("component_mass_evenness_penalty requested but component metrics were not computed.")
             }
             value -= penalty * max(minimum - componentMassEvenness, 0)
+        }
+        if let reward = esConfig.fitness.largestComponentSolidityReward {
+            guard let largestComponentSolidity = measurement.largestComponentSolidity else {
+                fatalError("largest_component_solidity_reward requested but component metrics were not computed.")
+            }
+            value += reward * largestComponentSolidity
+        }
+        if let reward = esConfig.fitness.largestComponentMeanThicknessReward {
+            guard let largestComponentMeanThickness = measurement.largestComponentMeanThickness else {
+                fatalError("largest_component_mean_thickness_reward requested but component metrics were not computed.")
+            }
+            value += reward * largestComponentMeanThickness
+        }
+        if let penalty = esConfig.fitness.largestComponentFilamentarityPenalty {
+            guard let largestComponentFilamentarity = measurement.largestComponentFilamentarity else {
+                fatalError("largest_component_filamentarity_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * largestComponentFilamentarity
         }
         if let reward = esConfig.fitness.momentDensityReward {
             guard let momentDensity = measurement.momentDensity else {
@@ -2794,7 +3277,186 @@ public final class EvolutionEngine {
             }
             value += reward * centerVelocity
         }
-        return value
+        return applyOrganismnessPenalty(value, measurement: measurement)
+    }
+
+    private func bodyLocomotionAdjustedFitness(base: Float, measurement: CandidateMeasurement) -> Float {
+        var value = base
+        if let penalty = esConfig.fitness.gyrationPenalty {
+            guard let gyration = measurement.gyration else {
+                fatalError("gyration_penalty requested but gyration was not computed.")
+            }
+            value -= penalty * gyration
+        }
+        if let penalty = esConfig.fitness.componentCountPenalty {
+            guard let componentCount = measurement.componentCount else {
+                fatalError("component_count_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * max(componentCount - 1.0, 0.0)
+        }
+        return applyOrganismnessPenalty(value, measurement: measurement)
+    }
+
+    private func bodyLocomotionScore(
+        displacement: Float,
+        translatedShapeOverlap: Float,
+        measurement: CandidateMeasurement
+    ) -> Float {
+        let overlapTerm = 0.2 + 0.8 * unitInterval(translatedShapeOverlap)
+        let growthTerm = bodyLocomotionGrowthTerm(measurement.occupiedGrowth ?? 1.0)
+        let connectedTerm = 0.25 + 0.75 * unitInterval(measurement.largestComponentFraction ?? 0.0)
+        let solidityTerm = 0.35 + 0.65 * unitInterval(measurement.largestComponentSolidity ?? 0.0)
+        let anisotropyTerm = 0.35 + 0.65 * (1.0 - unitInterval(measurement.largestComponentAnisotropy ?? 1.0))
+        let filamentTerm = 0.35 + 0.65 * (1.0 - unitInterval(measurement.largestComponentFilamentarity ?? 1.0))
+        let morphologyTerm = (connectedTerm + solidityTerm + anisotropyTerm + filamentTerm) / 4.0
+        return max(displacement, 0.0) * overlapTerm * growthTerm * morphologyTerm
+    }
+
+    private func bodyLocomotionGrowthTerm(_ value: Float) -> Float {
+        guard value.isFinite, value > 0 else { return 0.0 }
+        let deviation = abs(log(value))
+        return 1.0 / (1.0 + 2.0 * deviation)
+    }
+
+    private func unitInterval(_ value: Float) -> Float {
+        guard value.isFinite else { return 0.0 }
+        return max(0.0, min(1.0, value))
+    }
+
+    private func organismnessViolation(measurement: CandidateMeasurement) -> Float {
+        var violation: Float = 0.0
+        if let minimum = esConfig.fitness.translatedShapeOverlapMin {
+            guard let metric = measurement.translatedShapeOverlap else {
+                fatalError("translated_shape_overlap_min requested but translated overlap was not computed.")
+            }
+            violation += max(minimum - metric, 0.0)
+        }
+        if let maximum = esConfig.fitness.componentCountMax {
+            guard let metric = measurement.componentCount else {
+                fatalError("component_count_max requested but component metrics were not computed.")
+            }
+            violation += max(metric - maximum, 0.0)
+        }
+        if let minimum = esConfig.fitness.largestComponentFractionMin {
+            guard let metric = measurement.largestComponentFraction else {
+                fatalError("largest_component_fraction_min requested but component metrics were not computed.")
+            }
+            violation += max(minimum - metric, 0.0)
+        }
+        if let minimum = esConfig.fitness.largestComponentSolidityMin {
+            guard let metric = measurement.largestComponentSolidity else {
+                fatalError("largest_component_solidity_min requested but component metrics were not computed.")
+            }
+            violation += max(minimum - metric, 0.0)
+        }
+        if let minimum = esConfig.fitness.largestComponentMeanThicknessMin {
+            guard let metric = measurement.largestComponentMeanThickness else {
+                fatalError("largest_component_mean_thickness_min requested but component metrics were not computed.")
+            }
+            violation += max(minimum - metric, 0.0)
+        }
+        if let maximum = esConfig.fitness.largestComponentFilamentarityMax {
+            guard let metric = measurement.largestComponentFilamentarity else {
+                fatalError("largest_component_filamentarity_max requested but component metrics were not computed.")
+            }
+            violation += max(metric - maximum, 0.0)
+        }
+        if let minimum = esConfig.fitness.occupiedFractionMin {
+            guard let metric = measurement.occupiedFraction else {
+                fatalError("occupied_fraction_min requested but moment metrics were not computed.")
+            }
+            violation += max(minimum - metric, 0.0)
+        }
+        if let maximum = esConfig.fitness.occupiedFractionMax {
+            guard let metric = measurement.occupiedFraction else {
+                fatalError("occupied_fraction_max requested but moment metrics were not computed.")
+            }
+            violation += max(metric - maximum, 0.0)
+        }
+        if let maximum = esConfig.fitness.occupiedGrowthMax {
+            guard let metric = measurement.occupiedGrowth else {
+                fatalError("occupied_growth_max requested but mid/target occupancy was not computed.")
+            }
+            violation += max(metric - maximum, 0.0)
+        }
+        return violation
+    }
+
+    private func applyOrganismnessPenalty(_ value: Float, measurement: CandidateMeasurement) -> Float {
+        let violation = organismnessViolation(measurement: measurement)
+        guard violation > 0 else { return value }
+        return value - (esConfig.fitness.organismnessPenalty ?? 1.0) * violation
+    }
+
+    private func coherentTransportAdjustedFitness(
+        base: Float,
+        displacement: Float,
+        measurement: CandidateMeasurement
+    ) -> Float {
+        var value = base
+        let minimumDisplacement = max(esConfig.fitness.minimumDisplacement ?? esConfig.fitness.angleThreshold, 0.0)
+        let rewardGate: Float
+        if minimumDisplacement <= 0.0 {
+            rewardGate = 1.0
+        } else {
+            rewardGate = min(max((displacement - minimumDisplacement) / minimumDisplacement, 0.0), 1.0)
+        }
+
+        if let penalty = esConfig.fitness.gyrationPenalty {
+            guard let gyration = measurement.gyration else {
+                fatalError("gyration_penalty requested but gyration was not computed.")
+            }
+            value -= penalty * gyration
+        }
+        if let penalty = esConfig.fitness.componentCountPenalty {
+            guard let componentCount = measurement.componentCount else {
+                fatalError("component_count_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * max(componentCount - 1.0, 0.0)
+        }
+        if let reward = esConfig.fitness.largestComponentFractionReward {
+            guard let largestComponentFraction = measurement.largestComponentFraction else {
+                fatalError("largest_component_fraction_reward requested but component metrics were not computed.")
+            }
+            value += rewardGate * reward * largestComponentFraction
+        }
+        if let penalty = esConfig.fitness.largestComponentAnisotropyPenalty {
+            guard let largestComponentAnisotropy = measurement.largestComponentAnisotropy else {
+                fatalError("largest_component_anisotropy_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * largestComponentAnisotropy
+        }
+        if let reward = esConfig.fitness.largestComponentSolidityReward {
+            guard let largestComponentSolidity = measurement.largestComponentSolidity else {
+                fatalError("largest_component_solidity_reward requested but component metrics were not computed.")
+            }
+            value += rewardGate * reward * largestComponentSolidity
+        }
+        if let reward = esConfig.fitness.largestComponentMeanThicknessReward {
+            guard let largestComponentMeanThickness = measurement.largestComponentMeanThickness else {
+                fatalError("largest_component_mean_thickness_reward requested but component metrics were not computed.")
+            }
+            value += rewardGate * reward * largestComponentMeanThickness
+        }
+        if let penalty = esConfig.fitness.largestComponentFilamentarityPenalty {
+            guard let largestComponentFilamentarity = measurement.largestComponentFilamentarity else {
+                fatalError("largest_component_filamentarity_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * largestComponentFilamentarity
+        }
+        if let reward = esConfig.fitness.momentDensityReward {
+            guard let momentDensity = measurement.momentDensity else {
+                fatalError("moment_density_reward requested but moment metrics were not computed.")
+            }
+            value += rewardGate * reward * momentDensity
+        }
+        if let penalty = esConfig.fitness.momentAnisotropyPenalty {
+            guard let momentAnisotropy = measurement.momentAnisotropy else {
+                fatalError("moment_anisotropy_penalty requested but moment metrics were not computed.")
+            }
+            value -= penalty * momentAnisotropy
+        }
+        return applyOrganismnessPenalty(value, measurement: measurement)
     }
 
     private func failsMorphologyGuard(_ measurement: CandidateMeasurement) -> Bool {
@@ -2897,6 +3559,7 @@ public final class EvolutionEngine {
             esConfig.fitness.componentCountLimitPenalty != nil ||
             esConfig.fitness.minimumComponentCount != nil ||
             esConfig.fitness.maximumComponentCount != nil ||
+            esConfig.fitness.objective == "body_locomotion" ||
             esConfig.fitness.largestComponentFractionReward != nil ||
             esConfig.fitness.minimumLargestComponentFraction != nil ||
             esConfig.fitness.maximumLargestComponentFraction != nil ||
@@ -2905,7 +3568,15 @@ public final class EvolutionEngine {
             esConfig.fitness.largestComponentAnisotropyPenalty != nil ||
             esConfig.fitness.componentMassEvennessReward != nil ||
             esConfig.fitness.minimumComponentMassEvenness != nil ||
-            esConfig.fitness.componentMassEvennessPenalty != nil
+            esConfig.fitness.componentMassEvennessPenalty != nil ||
+            esConfig.fitness.largestComponentSolidityReward != nil ||
+            esConfig.fitness.largestComponentMeanThicknessReward != nil ||
+            esConfig.fitness.largestComponentFilamentarityPenalty != nil ||
+            esConfig.fitness.componentCountMax != nil ||
+            esConfig.fitness.largestComponentFractionMin != nil ||
+            esConfig.fitness.largestComponentSolidityMin != nil ||
+            esConfig.fitness.largestComponentMeanThicknessMin != nil ||
+            esConfig.fitness.largestComponentFilamentarityMax != nil
         let componentMetrics = componentMetricsNeeded
             ? computeComponentMetricsBatch(
                 materialized: materialized,
@@ -2922,7 +3593,9 @@ public final class EvolutionEngine {
             esConfig.fitness.momentDensityPenalty != nil ||
             esConfig.fitness.momentAnisotropyPenalty != nil ||
             esConfig.fitness.maximumMomentAnisotropy != nil ||
-            esConfig.fitness.momentAnisotropyLimitPenalty != nil
+            esConfig.fitness.momentAnisotropyLimitPenalty != nil ||
+            esConfig.fitness.occupiedFractionMin != nil ||
+            esConfig.fitness.occupiedFractionMax != nil
         let momentMetrics = !momentMetricsNeeded
             ? nil
             : computeMomentsBatch(
@@ -2970,7 +3643,14 @@ public final class EvolutionEngine {
             largestComponentAnisotropy: componentMetrics?.largestAnisotropy,
             componentMassEvenness: componentMetrics?.massEvenness,
             momentMass: momentMetrics?.mass,
+            largestComponentSolidity: componentMetrics?.largestSolidity,
+            largestComponentMeanThickness: componentMetrics?.largestMeanThickness,
+            largestComponentMaxThickness: componentMetrics?.largestMaxThickness,
+            largestComponentFilamentarity: componentMetrics?.largestFilamentarity,
             momentDensity: momentMetrics?.density,
+            occupiedFraction: momentMetrics?.volume.map {
+                $0 / Float(max(materialized.sampleSize, 1))
+            },
             momentAnisotropy: momentMetrics?.anisotropy,
             internalStripe: internalStripe,
             orientedRidge: orientedRidge,
@@ -3030,6 +3710,9 @@ public final class EvolutionEngine {
             "orientation_phase_motion",
             "angular_phase_motion",
             "sector_transport_motion",
+            "coherent_transport",
+            "body_locomotion",
+            "organismness",
         ]
         if !supportedObjectives.contains(esConfig.fitness.objective) {
             fatalError("EvolutionEngine Metal backends do not support objective \(esConfig.fitness.objective).")
@@ -3050,6 +3733,10 @@ public final class EvolutionEngine {
             dimensions: totalDim,
             rng: &rng
         )
+        var candidateNoise = noise
+        if esConfig.includeParent == true {
+            candidateNoise[0] = Array(repeating: 0, count: totalDim)
+        }
 
         let evalStart = evaluationCounter
         evaluationCounter += pop
@@ -3061,7 +3748,7 @@ public final class EvolutionEngine {
         for i in 0..<pop {
             var candidate: [Float] = []
             for j in 0..<totalDim {
-                candidate.append(theta[j] + esConfig.sigma * noise[i][j])
+                candidate.append(theta[j] + esConfig.sigma * candidateNoise[i][j])
             }
             candidates.append(candidate)
             let paramsVec = Array(candidate[0..<thetaParamsDim])
@@ -3095,7 +3782,7 @@ public final class EvolutionEngine {
         for j in 0..<totalDim {
             var sum: Float = 0.0
             for i in 0..<pop {
-                sum += noise[i][j] * shaped[i]
+                sum += candidateNoise[i][j] * shaped[i]
             }
             grad[j] = sum / (Float(pop) * esConfig.sigma)
         }
@@ -3138,6 +3825,221 @@ public final class EvolutionEngine {
         return vectorToParams(paramsVec, space: paramSpace)
     }
 
+    public func sampleMAPElitesInitialCandidates(
+        count: Int,
+        sigma: Float,
+        includeParent: Bool
+    ) -> [[Float]] {
+        guard count > 0 else { return [] }
+        let totalDim = theta.count
+        return (0..<count).map { index in
+            if includeParent && index == 0 {
+                return theta
+            }
+            return (0..<totalDim).map { dimension in
+                theta[dimension] + sigma * sampleStandardNormal(rng: &rng)
+            }
+        }
+    }
+
+    public func mapElitesCandidate(
+        kernelParams: KernelParams?,
+        initPatchValues: [Float]?
+    ) throws -> [Float] {
+        var candidate = kernelParams.map {
+            paramsToVector(
+                resolvedParams(from: $0, space: paramSpace, seed: runtimeConfig.params.seed),
+                space: paramSpace
+            )
+        } ?? Array(theta[0..<thetaParamsDim])
+
+        if initPatchDim > 0 {
+            guard let initPatch = esConfig.initPatch, initPatch.enabled else {
+                throw ConfigError.invalidConfig("Flow MAP-Elites init patch dimensions are active, but init_patch is missing.")
+            }
+            let values: [Float]
+            if let initPatchValues {
+                guard initPatchValues.count == initPatchDim else {
+                    throw ConfigError.invalidConfig("seed init patch values count \(initPatchValues.count) does not match expected patch size \(initPatchDim).")
+                }
+                values = initPatchValues
+            } else {
+                values = Array(theta[thetaParamsDim..<theta.count]).map {
+                    initPatch.valueLow + sigmoid($0) * (initPatch.valueHigh - initPatch.valueLow)
+                }
+            }
+            candidate.reserveCapacity(theta.count)
+            for value in values {
+                let normalized = (value - initPatch.valueLow) / (initPatch.valueHigh - initPatch.valueLow)
+                let clipped = max(1e-6, min(1.0 - 1e-6, normalized))
+                candidate.append(logit(clipped))
+            }
+        } else if initPatchValues != nil {
+            throw ConfigError.invalidConfig("seed init patch values require init_patch.enabled in the MAP-Elites config.")
+        }
+
+        guard candidate.count == theta.count else {
+            throw ConfigError.invalidConfig("Flow MAP-Elites candidate dimension \(candidate.count) does not match expected dimension \(theta.count).")
+        }
+        return candidate
+    }
+
+    public func sampleMAPElitesInitialCandidates(
+        anchors: [[Float]],
+        count: Int,
+        sigma: Float,
+        includeParent: Bool
+    ) throws -> [[Float]] {
+        guard count > 0 else { return [] }
+        guard !anchors.isEmpty else {
+            return sampleMAPElitesInitialCandidates(count: count, sigma: sigma, includeParent: includeParent)
+        }
+        for (index, anchor) in anchors.enumerated() {
+            guard anchor.count == theta.count else {
+                throw ConfigError.invalidConfig("Flow MAP-Elites seed anchor \(index) has dimension \(anchor.count), expected \(theta.count).")
+            }
+        }
+        return (0..<count).map { index in
+            let anchor = anchors[index % anchors.count]
+            if includeParent && index < anchors.count {
+                return anchor
+            }
+            return anchor.map { value in
+                value + sigma * sampleStandardNormal(rng: &rng)
+            }
+        }
+    }
+
+    public func sampleMAPElitesChildren(
+        parents: [[Float]],
+        count: Int,
+        sigma: Float,
+        lineSigma: Float
+    ) -> [[Float]] {
+        guard count > 0 else { return [] }
+        guard !parents.isEmpty else {
+            return sampleMAPElitesInitialCandidates(count: count, sigma: sigma, includeParent: false)
+        }
+        let dimensions = parents[0].count
+        return (0..<count).map { _ in
+            let first = parents[Int.random(in: 0..<parents.count, using: &rng)]
+            let second = parents[Int.random(in: 0..<parents.count, using: &rng)]
+            return (0..<dimensions).map { dimension in
+                let isotropic = sigma * sampleStandardNormal(rng: &rng)
+                let directional = lineSigma * sampleStandardNormal(rng: &rng) * (second[dimension] - first[dimension])
+                return first[dimension] + isotropic + directional
+            }
+        }
+    }
+
+    public func evaluateMAPElitesCandidates(
+        _ candidates: [[Float]],
+        descriptorNames: [String]
+    ) throws -> [FlowMAPElitesCandidateEvaluation] {
+        guard !candidates.isEmpty else { return [] }
+        let evalStart = evaluationCounter
+        evaluationCounter += candidates.count
+        let paramsBatch = candidates.map { candidate in
+            vectorToParams(Array(candidate[0..<thetaParamsDim]), space: paramSpace)
+        }
+        let evaluation = evaluatePopulation(
+            candidates: candidates,
+            paramsBatch: paramsBatch,
+            evaluationStart: evalStart
+        )
+        let fitnesses = fitnessValues(from: evaluation.measurements)
+        return try zip(zip(candidates, fitnesses), evaluation.measurements).map { pair, measurement in
+            let (candidate, fitness) = pair
+            var descriptors: [String: Float] = [:]
+            for name in descriptorNames {
+                guard let value = mapElitesDescriptorValue(
+                    name: name,
+                    measurement: measurement,
+                    fitness: fitness
+                ) else {
+                    throw ConfigError.invalidConfig("Flow MAP-Elites descriptor '\(name)' is unavailable for objective '\(esConfig.fitness.objective)'.")
+                }
+                descriptors[name] = value
+            }
+            return FlowMAPElitesCandidateEvaluation(
+                candidate: candidate,
+                fitness: fitness,
+                descriptors: descriptors
+            )
+        }
+    }
+
+    private func mapElitesDescriptorValue(
+        name: String,
+        measurement: CandidateMeasurement,
+        fitness: Float
+    ) -> Float? {
+        switch name {
+        case "fitness":
+            return fitness
+        case "coherent_transport":
+            guard let displacement = transportDisplacementPixels(from: measurement),
+                  let translatedShapeOverlap = measurement.translatedShapeOverlap else {
+                return nil
+            }
+            return displacement * translatedShapeOverlap
+        case "body_locomotion":
+            guard let displacement = transportDisplacementPixels(from: measurement),
+                  let translatedShapeOverlap = measurement.translatedShapeOverlap else {
+                return nil
+            }
+            return bodyLocomotionScore(
+                displacement: displacement,
+                translatedShapeOverlap: translatedShapeOverlap,
+                measurement: measurement
+            )
+        case "transport_displacement":
+            return transportDisplacementPixels(from: measurement)
+        case "translated_shape_overlap":
+            return measurement.translatedShapeOverlap
+        case "gyration":
+            return measurement.gyration
+        case "component_count":
+            return measurement.componentCount
+        case "largest_component_fraction":
+            return measurement.largestComponentFraction
+        case "largest_component_anisotropy":
+            return measurement.largestComponentAnisotropy
+        case "largest_component_solidity", "solidity":
+            return measurement.largestComponentSolidity
+        case "largest_component_mean_thickness", "thickness":
+            return measurement.largestComponentMeanThickness
+        case "largest_component_max_thickness":
+            return measurement.largestComponentMaxThickness
+        case "largest_component_filamentarity", "filamentarity":
+            return measurement.largestComponentFilamentarity
+        case "moment_density":
+            return measurement.momentDensity
+        case "occupied_fraction":
+            return measurement.occupiedFraction
+        case "mid_occupied_fraction":
+            return measurement.midOccupiedFraction
+        case "target_occupied_fraction":
+            return measurement.targetOccupiedFraction
+        case "occupied_growth":
+            return measurement.occupiedGrowth
+        case "moment_anisotropy":
+            return measurement.momentAnisotropy
+        default:
+            return nil
+        }
+    }
+
+    private func transportDisplacementPixels(from measurement: CandidateMeasurement) -> Float? {
+        guard let mid = measurement.mid, mid.alive,
+              let target = measurement.target, target.alive else {
+            return nil
+        }
+        let dx = target.x - mid.x
+        let dy = target.y - mid.y
+        return sqrt(dx * dx + dy * dy) * Float(max(config.sx, config.sy))
+    }
+
     public func evaluateCandidateForResearchExport(
         _ candidate: [Float],
         evaluationIndex: Int = 0
@@ -3158,7 +4060,7 @@ public final class EvolutionEngine {
         )
 
         var ABatch = MLX.stacked([
-            patchValues.map(buildStateFromPatch) ?? buildInitialState(seed: esConfig.seed)
+            patchValues.map(buildStateFromPatch) ?? buildInitialState(seed: runtimeConfig.initSeed)
         ])
         let chemFieldBatch = buildChemotaxisFieldBatch(startIndex: evaluationIndex, count: 1)
         let obstacleFieldBatch = buildObstacleFieldBatch(startIndex: evaluationIndex, count: 1)
@@ -3174,6 +4076,10 @@ public final class EvolutionEngine {
         let sequenceStepSet = Set(templateSequenceSteps())
         var sequenceMassMaps: [MLXArray] = []
         var sequenceCenterSnapshots: [[CenterSnapshot]] = []
+        let requirements = objectiveRequirements()
+        let usesTranslatedShapeOverlap = objectiveUsesTranslatedShapeOverlap(requirements.objective)
+        var midMassBatch: MassBatchCPU? = nil
+        var targetMassBatch: MassBatchCPU? = nil
 
         func applyFields() {
             if let field = chemFieldBatch, let chemotaxis = runtimeConfig.chemotaxis {
@@ -3225,6 +4131,12 @@ public final class EvolutionEngine {
             applyFields()
             ABatch = sim.step(ABatch)
             record(step: step)
+            if usesTranslatedShapeOverlap && step == requirements.midStep {
+                midMassBatch = materializeMassBatch(evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels))
+            }
+            if usesTranslatedShapeOverlap && step == requirements.targetStep {
+                targetMassBatch = materializeMassBatch(evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels))
+            }
         }
 
         let speeds = evolutionSpeeds(
@@ -3246,40 +4158,8 @@ public final class EvolutionEngine {
         let massMean = evolutionMean(massHistory)
         let massStd = evolutionStd(massHistory, mean: massMean)
         let morphologyValues = morphologyMeasurements(from: ABatch, includeDiagnostics: true)
-        let metrics = SimulationMetrics(
-            massMean: massMean,
-            massStd: massStd,
-            massMin: massHistory.min() ?? 0,
-            massMax: massHistory.max() ?? 0,
-            occupancyMean: evolutionMean(occupancyHistory),
-            varianceMean: evolutionMean(varianceHistory),
-            energyMean: evolutionMean(energyHistory),
-            speedMean: evolutionMean(speedValues),
-            pathLength: pathLength,
-            displacement: displacement,
-            sampleCount: massHistory.count,
-            speedCount: speedValues.count,
-            gyration: computeGyrationBatch(ABatch)[0],
-            centerVelocity: lastSpeed,
-            velocityX: velocityX,
-            velocityY: velocityY,
-            headingRad: heading,
-            isStable: evolutionIsStable(
-                massMean: massMean,
-                massStd: massStd,
-                finalMass: massHistory.last ?? 0
-            ),
-            momentMass: morphologyValues?.momentMass?.first,
-            momentDensity: morphologyValues?.momentDensity?.first,
-            momentAnisotropy: morphologyValues?.momentAnisotropy?.first,
-            componentCount: morphologyValues?.componentCount?.first,
-            largestComponentFraction: morphologyValues?.largestComponentFraction?.first,
-            largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?.first,
-            largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?.first,
-            largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?.first
-        )
+        let gyration = computeGyrationBatch(ABatch)[0]
 
-        let requirements = objectiveRequirements()
         let chemotaxisScore: Float?
         if esConfig.fitness.objective == "chemotaxis", let field = chemFieldBatch {
             let massMap = evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels)
@@ -3290,6 +4170,57 @@ public final class EvolutionEngine {
         } else {
             chemotaxisScore = nil
         }
+        let translatedShapeOverlap: Float?
+        let transportDisplacement: Float?
+        if usesTranslatedShapeOverlap,
+           let midMassBatch,
+           let targetMassBatch {
+            let mid = centerSnapshot(
+                centerXHistory: centerXHistory,
+                centerYHistory: centerYHistory,
+                aliveHistory: aliveHistory,
+                index: requirements.midStep
+            )
+            let target = centerSnapshot(
+                centerXHistory: centerXHistory,
+                centerYHistory: centerYHistory,
+                aliveHistory: aliveHistory,
+                index: requirements.targetStep
+            )
+            if mid.alive && target.alive {
+                let dx = target.x - mid.x
+                let dy = target.y - mid.y
+                transportDisplacement = sqrt(dx * dx + dy * dy) * Float(max(config.sx, config.sy))
+            } else {
+                transportDisplacement = 0
+            }
+            translatedShapeOverlap = translatedShapeOverlapBatch(
+                source: midMassBatch,
+                target: targetMassBatch,
+                sourceCenters: BatchCenterOfMassCPU(
+                    alive: [mid.alive ? 1.0 : 0.0],
+                    x: [mid.x],
+                    y: [mid.y]
+                ),
+                targetCenters: BatchCenterOfMassCPU(
+                    alive: [target.alive ? 1.0 : 0.0],
+                    x: [target.x],
+                    y: [target.y]
+                ),
+                threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
+                useTorus: runtimeConfig.border == "torus"
+            ).first
+        } else {
+            translatedShapeOverlap = nil
+            transportDisplacement = nil
+        }
+        let midOccupiedFraction = midMassBatch.flatMap {
+            occupiedFractionBatch(materialized: $0, threshold: esConfig.fitness.morphologyThreshold ?? 0.03).first
+        }
+        let targetOccupiedFraction = targetMassBatch.flatMap {
+            occupiedFractionBatch(materialized: $0, threshold: esConfig.fitness.morphologyThreshold ?? 0.03).first
+        }
+        let occupiedGrowthValue = occupiedGrowth(mid: midOccupiedFraction, target: targetOccupiedFraction)
         let templateSequenceValues = templateSequenceMetricValues(from: sequenceMassMaps)
         let orientationPhaseMotion = orientationPhaseMotionValues(from: sequenceMassMaps)
         let angularPhaseMotion = angularPhaseMotionValues(from: sequenceMassMaps)
@@ -3298,7 +4229,7 @@ public final class EvolutionEngine {
             from: sequenceCenterSnapshots,
             stepSpan: trajectoryMetricStepSpan()
         )
-        let measurement = CandidateMeasurement(
+        let candidateMeasurement = CandidateMeasurement(
             initial: centerSnapshot(
                 centerXHistory: centerXHistory,
                 centerYHistory: centerYHistory,
@@ -3321,13 +4252,22 @@ public final class EvolutionEngine {
                     index: requirements.targetStep
                 )
                 : nil,
-            gyration: metrics.gyration,
+            translatedShapeOverlap: translatedShapeOverlap,
+            midOccupiedFraction: midOccupiedFraction,
+            targetOccupiedFraction: targetOccupiedFraction,
+            occupiedGrowth: occupiedGrowthValue,
+            gyration: gyration,
             componentCount: morphologyValues?.componentCount?.first,
             largestComponentFraction: morphologyValues?.largestComponentFraction?.first,
             largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?.first,
             componentMassEvenness: morphologyValues?.componentMassEvenness?.first,
             momentMass: morphologyValues?.momentMass?.first,
+            largestComponentSolidity: morphologyValues?.largestComponentSolidity?.first,
+            largestComponentMeanThickness: morphologyValues?.largestComponentMeanThickness?.first,
+            largestComponentMaxThickness: morphologyValues?.largestComponentMaxThickness?.first,
+            largestComponentFilamentarity: morphologyValues?.largestComponentFilamentarity?.first,
             momentDensity: morphologyValues?.momentDensity?.first,
+            occupiedFraction: morphologyValues?.occupiedFraction?.first,
             momentAnisotropy: morphologyValues?.momentAnisotropy?.first,
             internalStripe: morphologyValues?.internalStripe?.first,
             orientedRidge: morphologyValues?.orientedRidge?.first,
@@ -3349,8 +4289,69 @@ public final class EvolutionEngine {
             centerVelocity: trajectoryValues.centerVelocity?.first,
             chemotaxisScore: chemotaxisScore
         )
-        let fitness = fitnessValue(from: measurement)
-        let morphologyGuardFailed = esConfig.fitness.usesMorphologyGuard && failsMorphologyGuard(measurement)
+        let fitness = fitnessValue(from: candidateMeasurement)
+        let coherentTransport: Float?
+        if let transportDisplacement, let translatedShapeOverlap {
+            coherentTransport = transportDisplacement * translatedShapeOverlap
+        } else {
+            coherentTransport = nil
+        }
+        let bodyLocomotion: Float?
+        if let transportDisplacement, let translatedShapeOverlap {
+            bodyLocomotion = bodyLocomotionScore(
+                displacement: transportDisplacement,
+                translatedShapeOverlap: translatedShapeOverlap,
+                measurement: candidateMeasurement
+            )
+        } else {
+            bodyLocomotion = nil
+        }
+        let metrics = SimulationMetrics(
+            massMean: massMean,
+            massStd: massStd,
+            massMin: massHistory.min() ?? 0,
+            massMax: massHistory.max() ?? 0,
+            occupancyMean: evolutionMean(occupancyHistory),
+            varianceMean: evolutionMean(varianceHistory),
+            energyMean: evolutionMean(energyHistory),
+            speedMean: evolutionMean(speedValues),
+            pathLength: pathLength,
+            displacement: displacement,
+            sampleCount: massHistory.count,
+            speedCount: speedValues.count,
+            gyration: gyration,
+            centerVelocity: lastSpeed,
+            velocityX: velocityX,
+            velocityY: velocityY,
+            headingRad: heading,
+            isStable: evolutionIsStable(
+                massMean: massMean,
+                massStd: massStd,
+                finalMass: massHistory.last ?? 0
+            ),
+            momentMass: morphologyValues?.momentMass?.first,
+            momentDensity: morphologyValues?.momentDensity?.first,
+            momentAnisotropy: morphologyValues?.momentAnisotropy?.first,
+            occupiedFraction: morphologyValues?.occupiedFraction?.first,
+            midOccupiedFraction: midOccupiedFraction,
+            targetOccupiedFraction: targetOccupiedFraction,
+            occupiedGrowth: occupiedGrowthValue,
+            componentCount: morphologyValues?.componentCount?.first,
+            largestComponentFraction: morphologyValues?.largestComponentFraction?.first,
+            largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?.first,
+            largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?.first,
+            largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?.first,
+            largestComponentSolidity: morphologyValues?.largestComponentSolidity?.first,
+            largestComponentMeanThickness: morphologyValues?.largestComponentMeanThickness?.first,
+            largestComponentMaxThickness: morphologyValues?.largestComponentMaxThickness?.first,
+            largestComponentFilamentarity: morphologyValues?.largestComponentFilamentarity?.first,
+            transportDisplacement: transportDisplacement,
+            translatedShapeOverlap: translatedShapeOverlap,
+            coherentTransport: coherentTransport,
+            bodyLocomotion: bodyLocomotion
+        )
+
+        let morphologyGuardFailed = esConfig.fitness.usesMorphologyGuard && failsMorphologyGuard(candidateMeasurement)
         let resultData = materializeReplayResultData(
             seed: evaluationIndex,
             initSeed: initConfig.seed,
@@ -3370,18 +4371,18 @@ public final class EvolutionEngine {
             ? ESFinalMorphologyDiagnostics(
                 threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
                 guardFailed: morphologyGuardFailed,
-                componentCount: measurement.componentCount,
-                largestComponentFraction: measurement.largestComponentFraction,
-                largestComponentAnisotropy: measurement.largestComponentAnisotropy,
-                componentMassEvenness: measurement.componentMassEvenness,
-                momentMass: measurement.momentMass,
-                momentDensity: measurement.momentDensity,
-                momentAnisotropy: measurement.momentAnisotropy,
-                internalStripe: measurement.internalStripe,
-                orientedRidge: measurement.orientedRidge,
-                largestComponentInternalStripe: measurement.largestComponentInternalStripe,
-                largestComponentOrientedRidge: measurement.largestComponentOrientedRidge,
-                templateSimilarity: measurement.templateSimilarity
+                componentCount: candidateMeasurement.componentCount,
+                largestComponentFraction: candidateMeasurement.largestComponentFraction,
+                largestComponentAnisotropy: candidateMeasurement.largestComponentAnisotropy,
+                componentMassEvenness: candidateMeasurement.componentMassEvenness,
+                momentMass: candidateMeasurement.momentMass,
+                momentDensity: candidateMeasurement.momentDensity,
+                momentAnisotropy: candidateMeasurement.momentAnisotropy,
+                internalStripe: candidateMeasurement.internalStripe,
+                orientedRidge: candidateMeasurement.orientedRidge,
+                largestComponentInternalStripe: candidateMeasurement.largestComponentInternalStripe,
+                largestComponentOrientedRidge: candidateMeasurement.largestComponentOrientedRidge,
+                templateSimilarity: candidateMeasurement.templateSimilarity
             )
             : nil
 
@@ -3406,8 +4407,25 @@ public final class EvolutionEngine {
 
     private func resolvedResearchInitConfig(patchValues: [Float]?) -> InitConfig {
         if let initPatch = esConfig.initPatch, initPatch.enabled {
+            if let patchValues {
+                let statePatch = explicitInitStatePatch(
+                    from: patchValues,
+                    initPatch: initPatch
+                )
+                let parameterPatches = runtimeConfig.parameterEmbedding.enabled
+                    ? [PatchConfig(center: initPatch.center, size: initPatch.size)]
+                    : []
+                return InitConfig(
+                    seed: runtimeConfig.initSeed,
+                    patches: parameterPatches,
+                    a_uniform: UniformRange(low: 0, high: 0),
+                    p_uniform: runtimeConfig.pUniform,
+                    state_patch: statePatch,
+                    p_state_patch: runtimeConfig.paramPatch
+                )
+            }
             return InitConfig(
-                seed: esConfig.seed,
+                seed: runtimeConfig.initSeed,
                 patches: [PatchConfig(center: initPatch.center, size: initPatch.size)],
                 a_uniform: UniformRange(low: initPatch.valueLow, high: initPatch.valueHigh),
                 p_uniform: nil
@@ -3422,12 +4440,39 @@ public final class EvolutionEngine {
             patches = runtimeConfig.patches
         }
         return InitConfig(
-            seed: esConfig.seed,
+            seed: runtimeConfig.initSeed,
             patches: patches,
             a_uniform: runtimeConfig.aUniform,
             p_uniform: runtimeConfig.pUniform,
             state_patch: runtimeConfig.statePatch,
             p_state_patch: runtimeConfig.paramPatch
+        )
+    }
+
+    private func explicitInitStatePatch(
+        from patchValues: [Float],
+        initPatch: InitPatchConfig
+    ) -> InitStatePatchConfig {
+        let size = initPatch.size
+        var values = [Float](repeating: 0, count: size * size * config.channels)
+        var patchIndex = 0
+        for x in 0..<size {
+            for y in 0..<size {
+                for channel in creatureChannels {
+                    let valueIndex = (x * size + y) * config.channels + channel
+                    if valueIndex < values.count && patchIndex < patchValues.count {
+                        values[valueIndex] = patchValues[patchIndex]
+                    }
+                    patchIndex += 1
+                }
+            }
+        }
+        return InitStatePatchConfig(
+            center: initPatch.center,
+            width: size,
+            height: size,
+            channels: config.channels,
+            values: values
         )
     }
 
@@ -3544,6 +4589,12 @@ public func loadESConfig(path: String) throws -> ESConfig {
     let url = URL(fileURLWithPath: path)
     let data = try Data(contentsOf: url)
     return try JSONDecoder().decode(ESConfig.self, from: data)
+}
+
+public func loadFlowMAPElitesConfig(path: String) throws -> FlowMAPElitesConfig {
+    let url = URL(fileURLWithPath: path)
+    let data = try Data(contentsOf: url)
+    return try JSONDecoder().decode(FlowMAPElitesConfig.self, from: data)
 }
 
 // Extract param ranges from base config
@@ -3821,6 +4872,7 @@ public func benchmarkEvolutionEngineBackend(
             gyrationPenalty: 0.01
         ),
         fitnessShaping: "centered_rank",
+        includeParent: nil,
         initPatch: nil,
         initialInitPatchValues: nil,
         paramRanges: nil,

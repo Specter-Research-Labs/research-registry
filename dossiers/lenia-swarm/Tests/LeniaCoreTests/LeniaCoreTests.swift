@@ -586,6 +586,10 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(result.largestFraction[0], 0.75, accuracy: 1e-6)
         XCTAssertGreaterThan(result.largestAnisotropy[0], 0.95)
         XCTAssertEqual(result.massEvenness[0], 0.8112781, accuracy: 1e-5)
+        XCTAssertEqual(result.largestSolidity[0], 1.0, accuracy: 1e-6)
+        XCTAssertEqual(result.largestMeanThickness[0], 1.0, accuracy: 1e-6)
+        XCTAssertEqual(result.largestMaxThickness[0], 1.0, accuracy: 1e-6)
+        XCTAssertEqual(result.largestFilamentarity[0], 1.0, accuracy: 1e-6)
     }
 
     func testComponentMassEvennessRewardsBalancedFleets() {
@@ -644,7 +648,11 @@ final class LeniaCoreTests: XCTestCase {
             isStable: true,
             componentCount: 2.0,
             largestComponentFraction: 0.88,
-            largestComponentAnisotropy: 0.96
+            largestComponentAnisotropy: 0.96,
+            largestComponentSolidity: 0.72,
+            largestComponentMeanThickness: 1.8,
+            largestComponentMaxThickness: 3.0,
+            largestComponentFilamentarity: 0.55
         )
 
         XCTAssertEqual(
@@ -658,6 +666,11 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertFalse(passesFilters(metrics, filters: ["largest_component_fraction_min": 0.9]))
         XCTAssertTrue(passesFilters(metrics, filters: ["largest_component_anisotropy_max": 1.0]))
         XCTAssertFalse(passesFilters(metrics, filters: ["largest_component_anisotropy_max": 0.9]))
+        XCTAssertEqual(scoreMetrics(metrics, weights: ["solidity": 1.0, "thickness": 0.5, "filamentarity": -1.0]), 1.07, accuracy: 1e-6)
+        XCTAssertTrue(passesFilters(metrics, filters: ["solidity_min": 0.7]))
+        XCTAssertFalse(passesFilters(metrics, filters: ["solidity_min": 0.8]))
+        XCTAssertTrue(passesFilters(metrics, filters: ["thickness_min": 1.5]))
+        XCTAssertFalse(passesFilters(metrics, filters: ["filamentarity_max": 0.5]))
     }
 
     func testComponentCountTargetMismatchSupportsFamilyObjectives() {
@@ -4148,6 +4161,68 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(patches[0].score, betaCreature.score)
     }
 
+    func testLoadResearchSeedPatchesPrefiltersNamedExportIndexBeforeExpression() throws {
+        let (baseConfig, searchConfig, selectedCreature) = try testResearchSeedCreature(name: "selected-export", score: 1.0)
+        let tempRoot = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let exportsDirectory = tempRoot.appendingPathComponent("exports", isDirectory: true)
+        try FileManager.default.createDirectory(at: exportsDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempRoot) }
+
+        let selectedArtifacts = try XCTUnwrap(
+            writeReplayExportArtifacts(
+                exportRoot: exportsDirectory,
+                baseConfig: baseConfig,
+                searchConfig: searchConfig,
+                creature: selectedCreature,
+                runId: "test-run",
+                campaignId: nil,
+                score: selectedCreature.score,
+                filtersPassed: true,
+                reason: "test",
+                exportedAt: Date(timeIntervalSinceReferenceDate: 0)
+            )
+        )
+        let missingRecord = CreatureExportRecord(
+            creatureId: UUID(),
+            name: "missing-export",
+            ownerId: "test",
+            runId: "test-run",
+            campaignId: nil,
+            bundleKind: .strictReplayBundleV1,
+            exportDir: tempRoot.appendingPathComponent("missing-export", isDirectory: true).path,
+            baseConfigPath: tempRoot.appendingPathComponent("missing-export/base.json").path,
+            searchConfigPath: tempRoot.appendingPathComponent("missing-export/search.json").path,
+            exportedAt: Date(timeIntervalSinceReferenceDate: 1),
+            reason: "test",
+            score: 2.0,
+            filtersPassed: true,
+            runtimeFamily: "flow_lenia",
+            runtimeCapabilities: ["archive", "replay"]
+        )
+
+        let indexURL = exportsDirectory.appendingPathComponent("index.jsonl")
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        encoder.dateEncodingStrategy = .deferredToDate
+        let records = [selectedArtifacts.record, missingRecord]
+        let content = try records.reduce(into: Data()) { data, record in
+            data.append(try encoder.encode(record))
+            data.append(0x0A)
+        }
+        try content.write(to: indexURL)
+
+        let patches = try loadResearchSeedPatches(
+            libraryURL: indexURL,
+            warmupSteps: 4,
+            cropThreshold: 0.01,
+            padding: 2,
+            selection: ResearchSeedSelection(names: [selectedCreature.name])
+        )
+
+        XCTAssertEqual(patches.count, 1)
+        XCTAssertEqual(patches[0].name, selectedCreature.name)
+    }
+
     func testLoadResearchSeedPatchesDetectsLargePatchJSONLBySchema() throws {
         let tempRoot = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: tempRoot) }
@@ -4256,7 +4331,9 @@ final class LeniaCoreTests: XCTestCase {
             activityDiversityMean: [nil],
             activitySpeciesMean: [nil],
             survivalDeathStep: [nil],
-            lastMassMap: sampledMassMap
+            lastMassMap: sampledMassMap,
+            coherentTransportSourceMassMap: nil,
+            needsCoherentTransport: false
         )
 
         let results = builder.build(

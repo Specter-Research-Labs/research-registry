@@ -1,0 +1,45 @@
+{
+  "output_dir": "artifacts/flow-map-elites/screen-coherent-strict-2c-128",
+  "generations": 4,
+  "population": 128,
+  "sigma": 0.08,
+  "line_sigma": 0.12,
+  "seed": 202605062,
+  "steps": 900,
+  "fitness": {
+    "objective": "coherent_transport",
+    "target_step": 760,
+    "angle_threshold": 0.03,
+    "minimum_displacement": 0.035,
+    "translated_shape_overlap_min": 0.35,
+    "component_count_penalty": 0.06,
+    "component_count_max": 3.0,
+    "largest_component_fraction_reward": 0.08,
+    "largest_component_fraction_min": 0.90,
+    "moment_density_reward": 0.02,
+    "occupied_fraction_min": 0.03,
+    "occupied_fraction_max": 0.16,
+    "occupied_growth_max": 1.35,
+    "organismness_penalty": 0.35,
+    "morphology_threshold": 0.03
+  },
+  "include_parent": true,
+  "descriptors": [
+    {"name": "coherent_transport", "min": 0.0, "max": 8.0, "bins": 12},
+    {"name": "translated_shape_overlap", "min": 0.35, "max": 0.90, "bins": 8},
+    {"name": "occupied_fraction", "min": 0.03, "max": 0.16, "bins": 8},
+    {"name": "occupied_growth", "min": 0.70, "max": 1.40, "bins": 8}
+  ],
+  "export_top": 32,
+  "init_patch": {
+    "enabled": true,
+    "size": 24,
+    "center": [64, 64],
+    "value_low": 0.0,
+    "value_high": 1.0
+  },
+  "initial_init_patch_values": null,
+  "initial_kernel_params": null,
+  "param_ranges": null,
+  "obstacle_field": null
+}

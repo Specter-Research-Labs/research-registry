@@ -3,6 +3,7 @@ import CoreGraphics
 import Foundation
 import ImageIO
 import LeniaCore
+import LeniaVisuals
 import MLX
 
 struct MediaCommand: AsyncParsableCommand {
@@ -56,6 +57,9 @@ struct MediaCommand: AsyncParsableCommand {
     @Option(name: .long, help: "MP4 frames per second")
     var fps: Int = 6
 
+    @Option(name: .long, help: "Render mode for mass-only videos: body, truth, magma, viridis, inferno, or plasma")
+    var renderMode: String = "body"
+
     @Option(name: .long, help: "ffmpeg executable")
     var ffmpeg: String = "ffmpeg"
 
@@ -79,6 +83,7 @@ struct MediaCommand: AsyncParsableCommand {
         guard captureStride > 0 else {
             throw ValidationError("--capture-stride must be > 0")
         }
+        let resolvedRenderMode = try parseLeniaRenderMode(renderMode)
         if let limit, limit <= 0 {
             throw ValidationError("--limit must be > 0")
         }
@@ -113,6 +118,7 @@ struct MediaCommand: AsyncParsableCommand {
             localizedSharedScene: localizedSharedScene,
             canvasSize: canvasSize,
             fps: fps,
+            renderMode: resolvedRenderMode,
             ffmpeg: ffmpeg
         )
 
@@ -160,6 +166,7 @@ private func renderMedia(
     localizedSharedScene: Bool,
     canvasSize: Int,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> [MediaRenderRecord] {
     if FileManager.default.fileExists(atPath: inputURL.appendingPathComponent("repertoire/occupied.json").path),
@@ -179,6 +186,7 @@ private func renderMedia(
             localizedSharedScene: localizedSharedScene,
             canvasSize: canvasSize,
             fps: fps,
+            renderMode: renderMode,
             ffmpeg: ffmpeg
         )
     }
@@ -195,6 +203,7 @@ private func renderMedia(
                 captureStride: captureStride,
                 frameBudget: frameBudget,
                 fps: fps,
+                renderMode: renderMode,
                 ffmpeg: ffmpeg
             )
         }
@@ -209,6 +218,7 @@ private func renderMedia(
                 frameBudget: frameBudget,
                 steps: steps,
                 fps: fps,
+                renderMode: renderMode,
                 ffmpeg: ffmpeg
             )
         }
@@ -224,6 +234,7 @@ private func renderMedia(
                 frameBudget: frameBudget,
                 steps: steps,
                 fps: fps,
+                renderMode: renderMode,
                 ffmpeg: ffmpeg
             )
         }
@@ -558,6 +569,7 @@ private func renderQD2024Media(
     localizedSharedScene: Bool,
     canvasSize: Int,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> [MediaRenderRecord] {
     let run = try loadLeniaBreeder2024ResolvedRun(
@@ -581,6 +593,7 @@ private func renderQD2024Media(
                 localizedSharedScene: localizedSharedScene,
                 canvasSize: canvasSize,
                 fps: fps,
+                renderMode: renderMode,
                 ffmpeg: ffmpeg
             )
         ]
@@ -594,6 +607,7 @@ private func renderQD2024Media(
             steps: steps,
             nativeSteps: nativeSteps,
             fps: fps,
+            renderMode: renderMode,
             ffmpeg: ffmpeg
         )
     }
@@ -628,6 +642,7 @@ private func renderQD2024MediaElite(
     steps: Int?,
     nativeSteps: [Int],
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
     let label = "qd-2024-cell-\(elite.cell)"
@@ -678,7 +693,7 @@ private func renderQD2024MediaElite(
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     try encoder.encode(templatePatches).write(to: templatePatchesURL)
     let frameWriter = FrameWriter(outputDir: framesURL)
-    let colorFrameWriter = ColorFrameWriter(outputDir: colorFramesURL)
+    let colorFrameWriter = ColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
     let size = run.base.worldSize
     for (index, frame) in frames.enumerated() {
         let step = frameSteps[index]
@@ -725,6 +740,7 @@ private func renderQD2024MediaScene(
     localizedSharedScene: Bool,
     canvasSize: Int,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
     let cellLabel = elites.map { String($0.cell) }.joined(separator: "-")
@@ -771,7 +787,7 @@ private func renderQD2024MediaScene(
         )
     }
     let frameWriter = FrameWriter(outputDir: framesURL)
-    let colorFrameWriter = ColorFrameWriter(outputDir: colorFramesURL)
+    let colorFrameWriter = ColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
     for (index, frame) in frames.enumerated() {
         frameWriter.write(step: index, width: canvasSize, height: canvasSize, data: frame)
         colorFrameWriter.write(step: index, width: canvasSize, height: canvasSize, grayscale: frame)
@@ -814,6 +830,7 @@ private func renderEcologyMediaBundle(
     captureStride: Int,
     frameBudget: Int,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
     let decoder = JSONDecoder()
@@ -833,6 +850,7 @@ private func renderEcologyMediaBundle(
             outputRoot: outputRoot,
             frameBudget: frameBudget,
             fps: fps,
+            renderMode: renderMode,
             ffmpeg: ffmpeg
         )
     }
@@ -885,7 +903,7 @@ private func renderEcologyMediaBundle(
     let colorFramesURL = mediaDirs.colorFramesURL
 
     let frameWriter = FrameWriter(outputDir: framesURL)
-    let colorWriter = ColorFrameWriter(outputDir: colorFramesURL)
+    let colorWriter = ColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
     for frame in rollout.recordedFrames {
         frameWriter.write(step: frame.step, width: frame.width, height: frame.height, data: frame.bytes)
         if let foodBytes = frame.foodBytes {
@@ -936,6 +954,7 @@ private func renderEcologyRecordedFrames(
     outputRoot: URL,
     frameBudget: Int,
     fps: Int,
+    renderMode: LeniaRenderMode,
     ffmpeg: String
 ) throws -> MediaRenderRecord {
     var isDirectory: ObjCBool = false
@@ -960,7 +979,7 @@ private func renderEcologyRecordedFrames(
     let colorFramesURL = mediaDirs.colorFramesURL
 
     let frameWriter = FrameWriter(outputDir: framesOutputURL)
-    let colorWriter = ColorFrameWriter(outputDir: colorFramesURL)
+    let colorWriter = ColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
     for frame in frames {
         frameWriter.write(step: frame.step, width: frame.width, height: frame.height, data: frame.bytes)
         if let foodBytes = frame.foodBytes {
