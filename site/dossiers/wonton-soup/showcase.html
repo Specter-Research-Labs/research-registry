@@ -1,0 +1,3699 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light" />
+        <title>Wonton Soup Dossier | SPECTER Labs</title>
+        <style>
+            :root {
+                --ws-bg: #f7f8fb;
+                --ws-paper: #ffffff;
+                --ws-ink: #15171a;
+                --ws-ink-soft: #2b3036;
+                --ws-muted: #616873;
+                --ws-rule: #d8dde6;
+                --ws-rule-strong: #9aa5b5;
+                --ws-orange: #d45f24;
+                --ws-blue: #2468b5;
+                --ws-green: #258763;
+                --ws-purple: #6d49ad;
+                --ws-red: #b43b3b;
+                --ws-yellow: #c28a1a;
+                --ws-mono: "Berkeley Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+                --ws-serif: "IBM Plex Serif", Georgia, serif;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                background: var(--ws-bg);
+                color: var(--ws-ink);
+                font-size: 14px;
+            }
+
+            body {
+                margin: 0;
+                background:
+                    linear-gradient(90deg, rgba(21, 23, 26, 0.045) 1px, transparent 1px),
+                    linear-gradient(rgba(21, 23, 26, 0.04) 1px, transparent 1px),
+                    var(--ws-bg);
+                background-size: 46px 46px;
+                font-family: var(--ws-mono);
+                line-height: 1.55;
+            }
+
+            a {
+                color: inherit;
+                font-weight: 700;
+                text-decoration: underline dotted;
+                text-underline-offset: 3px;
+            }
+
+            p {
+                margin: 0;
+            }
+
+            code {
+                word-break: break-word;
+                overflow-wrap: anywhere;
+            }
+
+            .site-shell {
+                width: min(1440px, 100%);
+                min-height: 100vh;
+                margin: 0 auto;
+                padding: 24px clamp(14px, 4vw, 42px) 60px;
+                background: rgba(255, 255, 255, 0.96);
+                border-inline: 1px solid rgba(21, 23, 26, 0.08);
+            }
+
+            .site-topnav {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-bottom: 16px;
+            }
+
+            .site-brand {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+            }
+
+            .site-brand-name {
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                font-weight: 800;
+                font-size: 14px;
+            }
+
+            .ws-mark {
+                width: 22px;
+                height: 22px;
+                border: 2px solid var(--ws-ink);
+                display: inline-grid;
+                place-items: center;
+                font-size: 12px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .site-topnav-links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .nav-link {
+                border: 1px solid var(--ws-rule-strong);
+                padding: 3px 7px;
+                text-decoration: none;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                font-size: 11px;
+                line-height: 1.2;
+            }
+
+            .nav-link[aria-current="page"] {
+                border-color: var(--ws-ink);
+                color: var(--ws-orange);
+                box-shadow: inset 0 -2px 0 var(--ws-orange);
+            }
+
+            .site-rules {
+                margin: 12px 0 20px;
+            }
+
+            .site-rule {
+                height: 1px;
+                background: var(--ws-rule);
+            }
+
+            .site-rule.strong {
+                height: 2px;
+                margin-bottom: 1px;
+                background: var(--ws-rule-strong);
+            }
+
+            .dossier-hub-header {
+                margin-bottom: 22px;
+            }
+
+            .dossier-hub-title {
+                margin: 0 0 6px;
+                font-size: 22px;
+                letter-spacing: 0.03em;
+            }
+
+            .dossier-hub-deck {
+                margin: 0 0 12px;
+                max-width: 860px;
+                font-family: var(--ws-serif);
+                color: var(--ws-muted);
+                font-size: 17px;
+                line-height: 1.5;
+            }
+
+            .dossier-hub-metabar,
+            .dossier-hub-footer-row {
+                display: flex;
+                gap: 14px;
+                flex-wrap: wrap;
+                border-top: 1px solid var(--ws-rule);
+                border-bottom: 1px solid var(--ws-rule);
+                padding: 7px 0;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 11px;
+                color: var(--ws-muted);
+            }
+
+            .dossier-hub-metabar-value,
+            .dossier-hub-footer-row a {
+                color: var(--ws-ink);
+            }
+
+            .site-main {
+                min-width: 0;
+            }
+
+            .ws-chapter-nav {
+                position: sticky;
+                top: 0;
+                z-index: 40;
+                margin: 6px 0 18px;
+                padding: 8px 0;
+                background: rgba(255, 255, 255, 0.97);
+                backdrop-filter: blur(6px);
+                border-top: 1px solid var(--ws-rule);
+                border-bottom: 1px solid var(--ws-ink);
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 14px;
+                overflow-x: auto;
+                font-family: var(--ws-mono);
+                font-size: 10.5px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                scrollbar-width: thin;
+            }
+
+            .ws-chapter-nav a {
+                flex: 0 0 auto;
+                color: var(--ws-muted);
+                text-decoration: none;
+                padding: 4px 0;
+                border-bottom: 2px solid transparent;
+                white-space: nowrap;
+                transition: color 120ms, border-color 120ms;
+            }
+
+            .ws-chapter-nav a:hover {
+                color: var(--ws-ink);
+                border-bottom-color: var(--ws-ink);
+            }
+
+            .ws-chapter-nav a.is-active {
+                color: var(--ws-orange);
+                border-bottom-color: var(--ws-orange);
+            }
+
+            @media (max-width: 720px) {
+                .ws-chapter-nav {
+                    font-size: 9.5px;
+                    gap: 10px;
+                }
+            }
+
+            .ws-section {
+                padding: 56px 0;
+                border-top: 0;
+            }
+
+            .ws-section + .ws-section {
+                border-top: 1px solid var(--ws-rule);
+            }
+
+            .ws-section:first-of-type {
+                border-top: 0;
+                padding-top: 4px;
+            }
+
+            .ws-title {
+                margin: 0 0 18px;
+                font-size: clamp(30px, 5.2vw, 60px);
+                line-height: 1.02;
+                letter-spacing: -0.005em;
+                text-transform: uppercase;
+                max-width: 960px;
+            }
+
+            .ws-deck {
+                max-width: 840px;
+                font-family: var(--ws-serif);
+                font-size: clamp(17px, 1.9vw, 20px);
+                line-height: 1.5;
+                color: var(--ws-ink);
+            }
+
+            .ws-section-title {
+                margin: 0 0 14px;
+                font-size: clamp(24px, 3.4vw, 36px);
+                line-height: 1.05;
+                letter-spacing: 0.01em;
+                text-transform: uppercase;
+                max-width: 900px;
+            }
+
+            .ws-section-lede {
+                max-width: 820px;
+                margin-bottom: 22px;
+                font-family: var(--ws-serif);
+                color: var(--ws-ink);
+                font-size: clamp(16px, 1.7vw, 19px);
+                line-height: 1.45;
+            }
+
+            .ws-small {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 14px;
+                line-height: 1.5;
+            }
+
+            .ws-hero {
+                display: grid;
+                grid-template-columns: minmax(0, 0.92fr) minmax(380px, 1.08fr);
+                gap: 26px;
+                align-items: center;
+            }
+
+            .ws-hero-copy,
+            .ws-panel,
+            .ws-card,
+            .ws-lane,
+            .ws-bar-row,
+            .ws-table-wrap {
+                min-width: 0;
+            }
+
+            .ws-action-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            .ws-button {
+                display: inline-flex;
+                align-items: center;
+                min-height: 34px;
+                border: 1px solid var(--ws-rule-strong);
+                padding: 6px 10px;
+                text-decoration: none;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 11px;
+                background: var(--ws-paper);
+            }
+
+            .ws-button.primary {
+                border-color: var(--ws-ink);
+                box-shadow: inset 4px 0 0 var(--ws-orange);
+            }
+
+            .ws-button.ghost {
+                border-style: dashed;
+            }
+
+            .ws-visual {
+                border: 2px solid var(--ws-ink);
+                background: var(--ws-paper);
+                padding: 8px;
+            }
+
+            .ws-visual svg {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .ws-response-board {
+                position: relative;
+                min-height: 520px;
+                overflow: hidden;
+                border: 1px solid var(--ws-rule);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.7) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.7) 1px, transparent 1px),
+                    #fff;
+                background-size: 34px 34px;
+                padding: 18px;
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                gap: 16px;
+            }
+
+            .ws-response-title {
+                max-width: 620px;
+            }
+
+            .ws-response-title span,
+            .ws-response-label {
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 800;
+            }
+
+            .ws-response-title strong {
+                display: block;
+                margin-top: 6px;
+                font-family: var(--ws-serif);
+                font-size: clamp(19px, 2.2vw, 26px);
+                line-height: 1.22;
+                font-weight: 600;
+            }
+
+            .ws-response-core {
+                position: relative;
+                display: grid;
+                grid-template-columns: 148px 118px minmax(0, 1fr);
+                gap: 20px;
+                align-items: center;
+                min-height: 330px;
+            }
+
+            .ws-response-core::before {
+                content: "";
+                position: absolute;
+                z-index: 0;
+                left: 74px;
+                width: 252px;
+                top: 50%;
+                border-top: 2px solid var(--ws-rule-strong);
+            }
+
+            .ws-node,
+            .ws-lesion-gate,
+            .ws-outcome {
+                position: relative;
+                z-index: 1;
+                background: #fff;
+            }
+
+            .ws-node {
+                min-height: 142px;
+                border: 2px solid var(--ws-ink);
+                padding: 12px;
+                display: grid;
+                align-content: center;
+                gap: 8px;
+            }
+
+            .ws-node-symbol {
+                font-size: 34px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .ws-node-caption {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 14px;
+                line-height: 1.35;
+            }
+
+            .ws-lesion-gate {
+                min-height: 230px;
+                border: 2px solid var(--ws-red);
+                display: grid;
+                grid-template-rows: 1fr auto 1fr;
+                gap: 9px;
+                padding: 10px;
+                text-align: center;
+            }
+
+            .ws-lesion-gate::before,
+            .ws-lesion-gate::after {
+                content: "";
+                margin-inline: auto;
+                width: 14px;
+                background:
+                    repeating-linear-gradient(
+                        180deg,
+                        var(--ws-red) 0 8px,
+                        transparent 8px 15px
+                    );
+            }
+
+            .ws-gate-title {
+                color: var(--ws-red);
+                font-size: 13px;
+                line-height: 1.2;
+                font-weight: 900;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .ws-outcome-stack {
+                display: grid;
+                gap: 10px;
+            }
+
+            .ws-outcome {
+                display: grid;
+                grid-template-columns: 72px minmax(0, 1fr);
+                gap: 10px;
+                min-height: 78px;
+                border: 1px solid var(--ws-rule);
+                padding: 10px;
+                align-items: center;
+            }
+
+            .ws-outcome::before {
+                content: "";
+                position: absolute;
+                left: -22px;
+                top: 50%;
+                width: 22px;
+                border-top: 3px solid currentColor;
+            }
+
+            .ws-outcome.replicate {
+                color: var(--ws-blue);
+                border-left: 4px solid var(--ws-blue);
+            }
+
+            .ws-outcome.reroute {
+                color: var(--ws-purple);
+                border-left: 4px solid var(--ws-purple);
+                transform: translateY(-10px);
+            }
+
+            .ws-outcome.collapse {
+                color: var(--ws-red);
+                border-left: 4px solid var(--ws-red);
+            }
+
+            .ws-outcome.rescue {
+                color: var(--ws-green);
+                border-left: 4px solid var(--ws-green);
+                transform: translateY(10px);
+            }
+
+            .ws-outcome-signal {
+                height: 44px;
+                border: 1px solid currentColor;
+                background:
+                    linear-gradient(90deg, currentColor 0 18%, transparent 18% 27%, currentColor 27% 52%, transparent 52% 64%, currentColor 64% 100%),
+                    #fff;
+                opacity: 0.86;
+            }
+
+            .ws-outcome.collapse .ws-outcome-signal {
+                background:
+                    linear-gradient(90deg, currentColor 0 22%, transparent 22% 34%, currentColor 34% 43%, transparent 43% 100%),
+                    #fff;
+            }
+
+            .ws-outcome.rescue .ws-outcome-signal {
+                background:
+                    linear-gradient(90deg, transparent 0 16%, currentColor 16% 38%, transparent 38% 48%, currentColor 48% 100%),
+                    #fff;
+            }
+
+            .ws-outcome-copy {
+                color: var(--ws-ink);
+                min-width: 0;
+            }
+
+            .ws-outcome-copy strong {
+                display: block;
+                font-size: 13px;
+                line-height: 1.25;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .ws-outcome-copy span {
+                display: block;
+                margin-top: 4px;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 13px;
+                line-height: 1.35;
+            }
+
+            .ws-response-key {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                padding-bottom: 4px;
+            }
+
+            .ws-outcome-cards {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+
+            .ws-outcome-card {
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                padding: 12px;
+                display: grid;
+                gap: 8px;
+            }
+
+            .ws-outcome-card > header {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                border-bottom: 1px solid var(--ws-rule);
+                padding-bottom: 6px;
+            }
+
+            .ws-outcome-tag {
+                font-family: var(--ws-mono);
+                font-size: 11px;
+                letter-spacing: 0.14em;
+                font-weight: 800;
+                color: var(--ws-ink);
+            }
+
+            .ws-outcome-card[data-outcome="replicate"] .ws-outcome-tag { color: var(--ws-blue); }
+            .ws-outcome-card[data-outcome="reroute"] .ws-outcome-tag { color: var(--ws-purple); }
+            .ws-outcome-card[data-outcome="collapse"] .ws-outcome-tag { color: var(--ws-red); }
+            .ws-outcome-card[data-outcome="rescue"] .ws-outcome-tag { color: var(--ws-green); }
+
+            .ws-outcome-rate {
+                font-family: var(--ws-mono);
+                font-size: 11px;
+                color: var(--ws-muted);
+                letter-spacing: 0.04em;
+            }
+
+            .ws-outcome-card svg {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .ws-outcome-card p {
+                margin: 0;
+                font-family: var(--ws-serif);
+                font-size: 13.5px;
+                line-height: 1.5;
+                color: var(--ws-ink-soft);
+            }
+
+            .ws-outcome-card p code {
+                font-family: var(--ws-mono);
+                font-size: 11.5px;
+                background: var(--ws-paper);
+                padding: 1px 4px;
+                border: 1px solid var(--ws-rule);
+            }
+
+            .ws-response-foot {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 14px;
+                font-family: var(--ws-mono);
+                font-size: 10px;
+                letter-spacing: 0.06em;
+                color: var(--ws-muted);
+                padding-top: 10px;
+                border-top: 1px solid var(--ws-rule);
+                margin-top: 4px;
+            }
+
+            .ws-response-foot i {
+                width: 10px;
+                height: 10px;
+                background: currentColor;
+                display: inline-block;
+                margin-right: 6px;
+                vertical-align: middle;
+            }
+
+            .ws-key-item {
+                border-top: 3px solid var(--key-color);
+                padding-top: 7px;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            .ws-key-item.same {
+                --key-color: var(--ws-blue);
+            }
+
+            .ws-key-item.new {
+                --key-color: var(--ws-purple);
+            }
+
+            .ws-key-item.fail {
+                --key-color: var(--ws-red);
+            }
+
+            .ws-key-item.improve {
+                --key-color: var(--ws-green);
+            }
+
+            .ws-thesis-card {
+                border: 2px solid var(--ws-ink);
+                background: var(--ws-paper);
+                padding: 22px;
+                display: grid;
+                grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+                gap: 26px;
+                align-items: start;
+            }
+
+            .ws-thesis-card::before {
+                content: "WONTON SOUP / PROTO-COGNITIVE SIGNATURES / FRAMING";
+                grid-column: 1 / -1;
+                margin: -22px -22px 0;
+                padding: 6px 12px;
+                background: var(--ws-ink);
+                color: #fff;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                font-size: 10px;
+                font-weight: 900;
+            }
+
+            .ws-thesis-prose {
+                font-family: var(--ws-serif);
+                font-size: clamp(16px, 1.6vw, 19px);
+                line-height: 1.5;
+            }
+
+            .ws-thesis-prose p + p {
+                margin-top: 12px;
+            }
+
+            .ws-thesis-prose strong {
+                color: var(--ws-orange);
+                font-style: normal;
+                font-weight: 800;
+            }
+
+            .ws-thesis-quote {
+                margin: 14px 0 0;
+                padding: 12px 14px;
+                border-left: 4px solid var(--ws-orange);
+                background: #fbf7f3;
+                font-family: var(--ws-serif);
+                font-size: 15px;
+                line-height: 1.45;
+                color: var(--ws-ink);
+                font-style: italic;
+            }
+
+            .ws-thesis-quote cite {
+                display: block;
+                margin-top: 8px;
+                color: var(--ws-muted);
+                font-family: var(--ws-mono);
+                font-style: normal;
+                font-size: 11px;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+            }
+
+            .ws-thesis-stats {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .ws-headline {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 14px;
+                margin-top: 22px;
+            }
+
+            .ws-headline-stat {
+                border: 1px solid var(--ws-ink);
+                background: #fff;
+                padding: 18px;
+                display: grid;
+                gap: 14px;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .ws-headline-stat .label {
+                color: var(--ws-ink);
+                font-size: 13px;
+                letter-spacing: 0.02em;
+                font-family: var(--ws-serif);
+                font-weight: 600;
+                line-height: 1.25;
+            }
+
+            .ws-headline-stat .ws-stat-viz {
+                width: 100%;
+                height: auto;
+                display: block;
+                align-self: center;
+            }
+
+            .ws-headline-stat .note {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 13px;
+                line-height: 1.45;
+            }
+
+            .ws-headline-stat.orange { --accent: var(--ws-orange); }
+            .ws-headline-stat.blue { --accent: var(--ws-blue); }
+            .ws-headline-stat.purple { --accent: var(--ws-purple); }
+            .ws-headline-stat.red { --accent: var(--ws-red); }
+            .ws-headline-stat.green { --accent: var(--ws-green); }
+            .ws-headline-stat.yellow { --accent: var(--ws-yellow); }
+
+            .ws-experiment-board {
+                position: relative;
+                overflow: hidden;
+                border: 1px solid var(--ws-ink);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.82) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.82) 1px, transparent 1px),
+                    #fff;
+                background-size: 34px 34px;
+                padding: 0 16px 16px;
+                display: grid;
+                gap: 14px;
+            }
+
+            .ws-experiment-board::before,
+            .ws-attractor-board::before {
+                content: "SPECTER / WONTON SOUP / EVIDENCE PLATE";
+                margin: 0 -16px;
+                padding: 6px 10px;
+                background: var(--ws-ink);
+                color: #fff;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                font-size: 10px;
+                line-height: 1.2;
+                font-weight: 900;
+            }
+
+            .ws-attractor-board::before {
+                content: "SPECTER / BASIN PLATE / 64 SEEDS";
+                margin: 0 -14px;
+            }
+
+            .ws-experiment-title span {
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 800;
+            }
+
+            .ws-experiment-title strong {
+                display: block;
+                max-width: 640px;
+                margin-top: 6px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--ws-ink);
+                font-family: var(--ws-serif);
+                font-size: clamp(19px, 2.1vw, 25px);
+                line-height: 1.2;
+                font-weight: 600;
+            }
+
+            .ws-lab-grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 170px;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .ws-proof-card,
+            .ws-lesion-card,
+            .ws-result-card {
+                position: relative;
+                background: #fff;
+            }
+
+            .ws-proof-card {
+                border: 2px solid var(--ws-ink);
+                box-shadow: inset 0 5px 0 var(--ws-ink);
+                padding: 12px;
+                display: grid;
+                gap: 10px;
+                align-content: start;
+            }
+
+            .ws-card-label,
+            .ws-result-type {
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 10px;
+                font-weight: 800;
+            }
+
+            .ws-proof-card .ws-card-label {
+                margin-top: 5px;
+            }
+
+            .ws-theorem-strip {
+                border: 1px solid var(--ws-rule);
+                background: #f3f6fb;
+                padding: 8px;
+                font-size: 12px;
+                line-height: 1.35;
+                font-weight: 800;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-theorem-strip span {
+                display: block;
+                margin-top: 3px;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                font-weight: 400;
+            }
+
+            .ws-trace {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                gap: 7px;
+            }
+
+            .ws-trace li {
+                display: grid;
+                grid-template-columns: 58px minmax(0, 1fr);
+                gap: 7px;
+                align-items: center;
+            }
+
+            .ws-tactic {
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                padding: 4px 5px;
+                color: var(--ws-ink);
+                text-align: center;
+                font-size: 11px;
+                line-height: 1.1;
+                font-weight: 900;
+            }
+
+            .ws-tactic.hot {
+                border-color: var(--ws-ink);
+                box-shadow:
+                    inset 0 -3px 0 rgba(212, 95, 36, 0.28),
+                    inset 3px 0 0 var(--ws-orange);
+            }
+
+            .ws-tactic.blocked {
+                position: relative;
+                border-color: var(--ws-red);
+                color: var(--ws-red);
+                background:
+                    repeating-linear-gradient(
+                        -45deg,
+                        rgba(180, 59, 59, 0.18) 0 5px,
+                        transparent 5px 10px
+                    ),
+                    #fff;
+            }
+
+            .ws-tactic.blocked::after {
+                content: "";
+                position: absolute;
+                left: -4px;
+                right: -4px;
+                top: 50%;
+                border-top: 2px solid var(--ws-red);
+                transform: rotate(-13deg);
+            }
+
+            .ws-trace-note {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.3;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-lesion-card {
+                border: 2px solid var(--ws-red);
+                background:
+                    linear-gradient(90deg, rgba(180, 59, 59, 0.06) 1px, transparent 1px),
+                    linear-gradient(rgba(180, 59, 59, 0.06) 1px, transparent 1px),
+                    #fff;
+                background-size: 18px 18px;
+                padding: 10px;
+                display: grid;
+                align-content: center;
+                gap: 10px;
+                min-height: 280px;
+            }
+
+            .ws-lesion-stamp {
+                width: fit-content;
+                margin-inline: auto;
+                border: 1px solid var(--ws-red);
+                padding: 5px 7px;
+                color: var(--ws-red);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 900;
+                transform: rotate(-2deg);
+            }
+
+            .ws-block-chip {
+                border: 2px solid var(--ws-red);
+                background:
+                    linear-gradient(90deg, rgba(180, 59, 59, 0.14), rgba(180, 59, 59, 0)),
+                    #fff;
+                padding: 10px 8px;
+                color: var(--ws-red);
+                text-align: center;
+                font-size: 20px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .ws-block-chip span {
+                display: block;
+                margin-bottom: 5px;
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 9px;
+            }
+
+            .ws-lesion-patch {
+                border-top: 1px dotted var(--ws-rule-strong);
+                padding-top: 9px;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.45;
+            }
+
+            .ws-lesion-patch strong {
+                color: var(--ws-ink);
+            }
+
+            .ws-result-grid {
+                display: grid;
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-result-card {
+                border: 1px solid var(--ws-rule-strong);
+                border-left: 4px solid var(--result-color);
+                border-top: 3px solid var(--result-color);
+                padding: 10px;
+                display: grid;
+                grid-template-columns: minmax(96px, 0.76fr) minmax(0, 1.24fr);
+                gap: 9px;
+                min-height: 118px;
+                color: var(--ws-ink);
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+            }
+
+            .ws-result-card.replicate { --result-color: var(--ws-blue); }
+            .ws-result-card.reroute { --result-color: var(--ws-purple); }
+            .ws-result-card.collapse { --result-color: var(--ws-red); }
+            .ws-result-card.rescue { --result-color: var(--ws-green); }
+
+            .ws-result-head {
+                display: grid;
+                align-items: start;
+                gap: 6px;
+            }
+
+            .ws-result-head strong {
+                display: block;
+                margin-top: 2px;
+                font-size: 13px;
+                line-height: 1.2;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-result-badge {
+                flex: 0 0 auto;
+                border: 1px solid var(--result-color);
+                padding: 2px 5px;
+                color: var(--result-color);
+                background: #fff;
+                font-size: 10px;
+                line-height: 1.2;
+                font-weight: 900;
+                text-transform: uppercase;
+                text-align: center;
+            }
+
+            .ws-mini-log {
+                display: grid;
+                gap: 4px;
+                border: 1px solid var(--ws-rule-strong);
+                background:
+                    linear-gradient(90deg, rgba(21, 23, 26, 0.035) 1px, transparent 1px),
+                    #f8fafc;
+                background-size: 18px 18px;
+                padding: 6px;
+            }
+
+            .ws-log-line {
+                display: grid;
+                grid-template-columns: 18px minmax(0, 1fr);
+                gap: 5px;
+                align-items: baseline;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.25;
+            }
+
+            .ws-log-line b {
+                color: var(--result-color);
+                font-weight: 900;
+            }
+
+            .ws-result-caption {
+                grid-column: 1 / -1;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-specimen-meta {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+            }
+
+            .ws-specimen-meta span {
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                padding: 5px 6px;
+                color: var(--ws-muted);
+                font-size: 10px;
+                line-height: 1.25;
+            }
+
+            .ws-specimen-meta strong {
+                display: block;
+                margin-top: 2px;
+                color: var(--ws-ink);
+                font-size: 13px;
+                line-height: 1.1;
+            }
+
+            .ws-figplate {
+                border: 1px solid var(--ws-ink);
+                background: var(--ws-paper);
+                display: grid;
+                grid-template-rows: auto auto 1fr;
+                gap: 0;
+                overflow: hidden;
+            }
+
+            .ws-figplate-head {
+                padding: 6px 12px;
+                background: var(--ws-ink);
+                color: #fff;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                font-size: 10px;
+                font-weight: 900;
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .ws-figplate-img {
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.5) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.5) 1px, transparent 1px),
+                    #fff;
+                background-size: 22px 22px;
+                padding: 18px;
+                display: grid;
+                place-items: center;
+                border-bottom: 1px solid var(--ws-rule-strong);
+            }
+
+            .ws-figplate-img img {
+                max-width: 100%;
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .ws-figplate-body {
+                padding: 14px;
+                display: grid;
+                gap: 10px;
+            }
+
+            .ws-figplate-cap {
+                font-family: var(--ws-serif);
+                font-size: 14px;
+                line-height: 1.45;
+                color: var(--ws-ink);
+            }
+
+            .ws-figplate-cap strong {
+                color: var(--ws-orange);
+                font-weight: 800;
+            }
+
+            .ws-figplate-read {
+                border-top: 1px dotted var(--ws-rule-strong);
+                padding-top: 9px;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .ws-figplate-read b {
+                color: var(--ws-ink);
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 11px;
+                font-family: var(--ws-mono);
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            .ws-figrow {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 18px;
+            }
+
+            .ws-figrow-wide {
+                display: grid;
+                grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+                gap: 18px;
+                align-items: start;
+            }
+
+            .ws-attractor-board {
+                border: 2px solid var(--ws-ink);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.72) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.72) 1px, transparent 1px),
+                    #fff;
+                background-size: 30px 30px;
+                padding: 0 14px 14px;
+                display: grid;
+                gap: 12px;
+            }
+
+            .ws-attractor-head {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                align-items: start;
+            }
+
+            .ws-attractor-name {
+                font-size: 15px;
+                line-height: 1.25;
+                font-weight: 900;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-attractor-badge {
+                flex: 0 0 auto;
+                border: 1px solid var(--ws-green);
+                background: #fff;
+                color: var(--ws-green);
+                padding: 3px 6px;
+                font-size: 10px;
+                line-height: 1.2;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .ws-seed-grid {
+                display: grid;
+                grid-template-columns: repeat(8, minmax(0, 1fr));
+                gap: 4px;
+            }
+
+            .ws-seed {
+                aspect-ratio: 1;
+                display: grid;
+                place-items: center;
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                color: var(--ws-muted);
+                font-size: 9px;
+                line-height: 1;
+                font-weight: 800;
+            }
+
+            .ws-seed.solved {
+                border-color: var(--seed-color);
+                background: color-mix(in srgb, var(--seed-color) 22%, #fff);
+                color: var(--ws-ink);
+            }
+
+            .ws-seed.failed {
+                background:
+                    repeating-linear-gradient(
+                        -45deg,
+                        rgba(180, 59, 59, 0.12) 0 4px,
+                        transparent 4px 8px
+                    ),
+                    #fff;
+                border-color: rgba(180, 59, 59, 0.35);
+            }
+
+            .ws-seed.bucket-0 { --seed-color: var(--ws-rule-strong); }
+            .ws-seed.bucket-1 { --seed-color: var(--ws-blue); }
+            .ws-seed.bucket-2 { --seed-color: var(--ws-purple); }
+            .ws-seed.bucket-3 { --seed-color: var(--ws-green); }
+            .ws-seed.bucket-4 { --seed-color: var(--ws-yellow); }
+            .ws-seed.bucket-5 { --seed-color: var(--ws-orange); }
+            .ws-seed.bucket-6 { --seed-color: #2f8c9d; }
+
+            .ws-structure-list {
+                display: grid;
+                gap: 6px;
+            }
+
+            .ws-structure-row {
+                display: grid;
+                grid-template-columns: 76px minmax(0, 1fr) 24px;
+                align-items: center;
+                gap: 6px;
+                font-size: 11px;
+            }
+
+            .ws-structure-track {
+                height: 12px;
+                border: 1px solid var(--ws-rule-strong);
+                background: #f3f6fb;
+            }
+
+            .ws-structure-track i {
+                display: block;
+                width: var(--w);
+                height: 100%;
+                background: var(--ws-purple);
+            }
+
+            .ws-structure-more {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-attractor-cards {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-attractor-card {
+                border: 1px solid var(--ws-rule-strong);
+                border-top: 3px solid var(--ws-ink);
+                background: var(--ws-paper);
+                padding: 10px;
+                display: grid;
+                gap: 8px;
+            }
+
+            .ws-attractor-card strong {
+                font-size: 12px;
+                line-height: 1.25;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-attractor-card p {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-basin-meter {
+                height: 10px;
+                border: 1px solid var(--ws-rule-strong);
+                background:
+                    linear-gradient(90deg, var(--ws-green) 0 var(--solve), transparent var(--solve) 100%),
+                    #f3f6fb;
+            }
+
+            .ws-metrics {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+                margin-top: 18px;
+            }
+
+            .ws-metric {
+                border: 1px solid var(--ws-rule-strong);
+                border-top: 3px solid var(--ws-ink);
+                background: var(--ws-paper);
+                min-height: 126px;
+                padding: 11px;
+                display: grid;
+                align-content: space-between;
+            }
+
+            .ws-metric.orange { border-top-color: var(--ws-orange); }
+            .ws-metric.blue { border-top-color: var(--ws-blue); }
+            .ws-metric.purple { border-top-color: var(--ws-purple); }
+            .ws-metric.green { border-top-color: var(--ws-green); }
+            .ws-metric.red { border-top-color: var(--ws-red); }
+            .ws-metric.yellow { border-top-color: var(--ws-yellow); }
+
+            .ws-metric-label {
+                color: var(--ws-muted);
+                letter-spacing: 0.11em;
+                text-transform: uppercase;
+                font-size: 10px;
+                line-height: 1.35;
+            }
+
+            .ws-metric-value {
+                margin-top: 10px;
+                font-size: clamp(24px, 3.6vw, 38px);
+                line-height: 1;
+                font-weight: 900;
+                color: var(--ws-ink);
+            }
+
+            .ws-metric-note {
+                margin-top: 8px;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            .ws-grid-2 {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 22px;
+                align-items: start;
+            }
+
+            .ws-grid-3 {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .ws-grid-4 {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-panel {
+                border: 1px solid var(--ws-rule);
+                background: var(--ws-paper);
+                padding: 14px;
+            }
+
+            .ws-panel.accent-orange { border-left: 4px solid var(--ws-orange); }
+            .ws-panel.accent-blue { border-left: 4px solid var(--ws-blue); }
+            .ws-panel.accent-green { border-left: 4px solid var(--ws-green); }
+            .ws-panel.accent-purple { border-left: 4px solid var(--ws-purple); }
+            .ws-panel.accent-red { border-left: 4px solid var(--ws-red); }
+            .ws-panel.accent-yellow { border-left: 4px solid var(--ws-yellow); }
+
+            .ws-panel-title {
+                margin: 0 0 8px;
+                font-size: 15px;
+                line-height: 1.25;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }
+
+            .ws-panel p,
+            .ws-card p,
+            .ws-lane p,
+            .ws-source-list li {
+                font-family: var(--ws-serif);
+                color: var(--ws-muted);
+                font-size: 15px;
+                line-height: 1.48;
+            }
+
+            .ws-panel p + p {
+                margin-top: 8px;
+            }
+
+            .ws-pipeline {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(140px, 1fr));
+                gap: 8px;
+            }
+
+            .ws-stage {
+                position: relative;
+                min-height: 230px;
+                border: 1px solid var(--ws-rule);
+                background: var(--ws-paper);
+                padding: 12px;
+                display: grid;
+                grid-template-rows: auto auto 1fr auto;
+                gap: 8px;
+            }
+
+            .ws-stage + .ws-stage::before {
+                content: "";
+                position: absolute;
+                left: -8px;
+                top: 50%;
+                width: 8px;
+                border-top: 1px solid var(--ws-rule-strong);
+            }
+
+            .ws-stage-num {
+                color: var(--ws-orange);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-weight: 800;
+            }
+
+            .ws-stage-title {
+                margin: 0;
+                font-size: 13px;
+                line-height: 1.3;
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .ws-stage p {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12.5px;
+                line-height: 1.42;
+                margin: 0;
+            }
+
+            .ws-stage-foot {
+                border-top: 1px dotted var(--ws-rule-strong);
+                padding-top: 7px;
+                font-family: var(--ws-mono);
+                font-size: 10px;
+                line-height: 1.35;
+                color: var(--ws-ink);
+                overflow-wrap: anywhere;
+            }
+
+            .ws-stage-foot span {
+                display: block;
+                color: var(--ws-muted);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                font-size: 9px;
+                margin-bottom: 1px;
+            }
+
+            .ws-tiny-label {
+                color: var(--ws-muted);
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+
+            .ws-bar-list {
+                display: grid;
+                gap: 7px;
+            }
+
+            .ws-bar-row {
+                display: grid;
+                grid-template-columns: 168px minmax(0, 1fr) 56px 240px;
+                gap: 12px;
+                align-items: center;
+                font-size: 12px;
+            }
+
+            .ws-bar-row .ws-bar-label {
+                font-weight: 800;
+            }
+
+            .ws-bar-track {
+                position: relative;
+                height: 16px;
+                border: 1px solid var(--ws-rule);
+                background:
+                    linear-gradient(90deg, var(--bar-color, var(--ws-green)) 0 var(--solve), transparent var(--solve) 100%),
+                    linear-gradient(90deg, rgba(180, 59, 59, 0.16), rgba(180, 59, 59, 0.04));
+            }
+
+            .ws-bar-row.t-redundant { --bar-color: var(--ws-blue); }
+            .ws-bar-row.t-moderate { --bar-color: var(--ws-green); }
+            .ws-bar-row.t-essential { --bar-color: var(--ws-yellow); }
+            .ws-bar-row.t-critical { --bar-color: var(--ws-orange); }
+            .ws-bar-row.t-choke { --bar-color: var(--ws-red); }
+
+            .ws-bar-pct {
+                font-weight: 900;
+                font-size: 13px;
+            }
+
+            .ws-bar-tag {
+                font-size: 10.5px;
+                line-height: 1.4;
+                color: var(--ws-muted);
+                white-space: normal;
+                font-family: var(--ws-mono);
+                letter-spacing: 0.04em;
+                text-align: right;
+            }
+
+            .ws-ged-mark {
+                position: absolute;
+                top: -4px;
+                left: var(--ged);
+                width: 2px;
+                height: 24px;
+                background: var(--ws-purple);
+            }
+
+            .ws-table-wrap {
+                overflow-x: auto;
+                border: 1px solid var(--ws-rule);
+            }
+
+            .ws-data-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: auto;
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-data-table th,
+            .ws-data-table td {
+                border: 1px solid var(--ws-rule);
+                padding: 7px 8px;
+                text-align: left;
+                vertical-align: top;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-data-table td.num,
+            .ws-data-table th.num {
+                text-align: right;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .ws-data-table th {
+                color: var(--ws-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                font-size: 10px;
+                background: #f0f3f8;
+                position: sticky;
+                top: 0;
+            }
+
+            .ws-data-table tbody tr:nth-child(even) {
+                background: #fafbfd;
+            }
+
+            .ws-split {
+                display: grid;
+                grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+                gap: 20px;
+                align-items: start;
+            }
+
+            .ws-code {
+                font-family: var(--ws-mono);
+                overflow-wrap: anywhere;
+                font-size: 0.92em;
+                color: var(--ws-ink);
+                background: #f0f3f8;
+                padding: 1px 4px;
+                border: 1px solid var(--ws-rule);
+            }
+
+            .ws-pill-row {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin-top: 10px;
+            }
+
+            .ws-pill {
+                border: 1px solid var(--ws-rule-strong);
+                padding: 2px 6px;
+                font-size: 10px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--ws-muted);
+                background: var(--ws-paper);
+            }
+
+            .ws-pill.live {
+                border-color: var(--ws-green);
+                color: var(--ws-green);
+            }
+
+            .ws-pill.warn {
+                border-color: var(--ws-red);
+                color: var(--ws-red);
+            }
+
+            .ws-cut {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .ws-cut-box {
+                border: 1px solid var(--ws-rule);
+                padding: 14px;
+                background: var(--ws-paper);
+                min-height: 156px;
+                display: grid;
+                gap: 8px;
+                align-content: start;
+            }
+
+            .ws-cut-box.intact { border-left: 4px solid var(--ws-green); }
+            .ws-cut-box.collapsed { border-left: 4px solid var(--ws-red); }
+            .ws-cut-box.intact-alt { border-left: 4px solid var(--ws-blue); }
+
+            .ws-cut-arrow {
+                display: grid;
+                place-items: center;
+                color: var(--ws-red);
+                font-weight: 900;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                font-size: 11px;
+            }
+
+            .ws-cut-big {
+                font-size: 38px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .ws-cut-big.green { color: var(--ws-green); }
+            .ws-cut-big.red { color: var(--ws-red); }
+            .ws-cut-big.blue { color: var(--ws-blue); }
+
+            .ws-cut-caption {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .ws-cut-title {
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-weight: 800;
+            }
+
+            .ws-lanes {
+                display: grid;
+                gap: 10px;
+            }
+
+            .ws-lane {
+                display: grid;
+                grid-template-columns: 138px minmax(0, 1fr) 84px;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .ws-lane-line {
+                position: relative;
+                height: 22px;
+                border: 1px solid var(--ws-rule);
+                background:
+                    linear-gradient(90deg, var(--ws-green) 0 var(--rate), transparent var(--rate) 100%),
+                    #f3f6fb;
+            }
+
+            .ws-lane-line span {
+                position: absolute;
+                top: 50%;
+                left: 6px;
+                transform: translateY(-50%);
+                color: #fff;
+                font-size: 10px;
+                letter-spacing: 0.06em;
+                font-weight: 900;
+            }
+
+            .ws-lane-pct {
+                font-weight: 900;
+                font-size: 14px;
+                text-align: right;
+            }
+
+            .ws-rescue-list {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-rescue-card {
+                border: 1px solid var(--ws-rule-strong);
+                border-left: 4px solid var(--ws-green);
+                background: var(--ws-paper);
+                padding: 12px;
+                display: grid;
+                gap: 6px;
+            }
+
+            .ws-rescue-card .name {
+                font-size: 14px;
+                font-weight: 900;
+            }
+
+            .ws-rescue-card .count {
+                font-size: 28px;
+                line-height: 1;
+                font-weight: 900;
+                color: var(--ws-green);
+            }
+
+            .ws-rescue-card .copy {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .ws-dashpreview {
+                border: 2px solid var(--ws-ink);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.5) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.5) 1px, transparent 1px),
+                    #fff;
+                background-size: 30px 30px;
+                padding: 0;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            }
+
+            .ws-dashpreview::before {
+                content: "SPECTER / DUCKDB-WASM / LIVE DASHBOARD";
+                grid-column: 1 / -1;
+                padding: 6px 12px;
+                background: var(--ws-ink);
+                color: #fff;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                font-size: 10px;
+                font-weight: 900;
+            }
+
+            .ws-dashpreview-copy {
+                padding: 18px;
+                display: grid;
+                gap: 12px;
+                align-content: start;
+                border-right: 1px solid var(--ws-rule-strong);
+            }
+
+            .ws-dashpreview-views {
+                padding: 18px;
+                display: grid;
+                gap: 10px;
+                align-content: start;
+            }
+
+            .ws-view-chip {
+                border: 1px solid var(--ws-rule-strong);
+                padding: 10px;
+                background: var(--ws-paper);
+                display: grid;
+                gap: 4px;
+            }
+
+            .ws-view-chip strong {
+                font-size: 12px;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--ws-orange);
+            }
+
+            .ws-view-chip p {
+                font-family: var(--ws-serif);
+                color: var(--ws-muted);
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .ws-source-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                gap: 10px;
+            }
+
+            .ws-source-list li {
+                border-bottom: 1px dotted var(--ws-rule-strong);
+                padding-bottom: 10px;
+            }
+
+            .ws-source-list li:last-child {
+                border-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            .ws-quote-block {
+                border-left: 3px solid var(--ws-ink);
+                padding: 6px 14px;
+                font-family: var(--ws-serif);
+                font-style: italic;
+                font-size: 16px;
+                line-height: 1.5;
+                color: var(--ws-ink);
+            }
+
+            .ws-quote-block cite {
+                display: block;
+                margin-top: 8px;
+                font-style: normal;
+                font-family: var(--ws-mono);
+                font-size: 11px;
+                letter-spacing: 0.06em;
+                color: var(--ws-muted);
+                text-transform: uppercase;
+            }
+
+            .ws-falsify {
+                border: 1px solid var(--ws-red);
+                background: #fdf6f6;
+                padding: 14px;
+                display: grid;
+                gap: 8px;
+            }
+
+            .ws-falsify-title {
+                color: var(--ws-red);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-weight: 900;
+            }
+
+            .ws-falsify ul {
+                margin: 0;
+                padding-left: 18px;
+                font-family: var(--ws-serif);
+                color: var(--ws-ink);
+                font-size: 14px;
+                line-height: 1.5;
+            }
+
+            .ws-falsify ul li + li {
+                margin-top: 4px;
+            }
+
+            @media (max-width: 1200px) {
+                .ws-headline {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .ws-pipeline {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .ws-stage + .ws-stage::before {
+                    display: none;
+                }
+
+                .ws-rescue-list {
+                    grid-template-columns: 1fr 1fr;
+                }
+            }
+
+            @media (max-width: 1120px) {
+                .ws-hero,
+                .ws-split,
+                .ws-thesis-card,
+                .ws-figrow,
+                .ws-figrow-wide,
+                .ws-dashpreview {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-lab-grid {
+                    grid-template-columns: minmax(0, 1fr);
+                }
+
+                .ws-lesion-card {
+                    min-height: 0;
+                }
+
+                .ws-dashpreview-copy {
+                    border-right: 0;
+                    border-bottom: 1px solid var(--ws-rule-strong);
+                }
+            }
+
+            @media (max-width: 860px) {
+                .ws-metrics,
+                .ws-grid-2,
+                .ws-grid-3,
+                .ws-grid-4,
+                .ws-headline {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .ws-bar-row {
+                    grid-template-columns: 130px minmax(0, 1fr) 56px;
+                }
+
+                .ws-bar-tag {
+                    display: none;
+                }
+
+                .ws-response-core {
+                    grid-template-columns: 1fr;
+                    min-height: 0;
+                }
+
+                .ws-response-core::before,
+                .ws-outcome::before {
+                    display: none;
+                }
+
+                .ws-lesion-gate {
+                    min-height: 72px;
+                    grid-template-columns: minmax(42px, 1fr) auto minmax(42px, 1fr);
+                    grid-template-rows: 1fr;
+                    align-items: center;
+                }
+
+                .ws-lesion-gate::before,
+                .ws-lesion-gate::after {
+                    width: 100%;
+                    height: 14px;
+                    margin-block: auto;
+                    background:
+                        repeating-linear-gradient(
+                            90deg,
+                            var(--ws-red) 0 8px,
+                            transparent 8px 15px
+                        );
+                }
+
+                .ws-outcome.reroute,
+                .ws-outcome.rescue {
+                    transform: none;
+                }
+
+                .ws-response-key {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .ws-result-grid,
+                .ws-rescue-list {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-attractor-cards {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .ws-cut {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-cut-arrow {
+                    min-height: 28px;
+                }
+
+                .ws-lane {
+                    grid-template-columns: 110px minmax(0, 1fr) 64px;
+                }
+            }
+
+            @media (max-width: 560px) {
+                .site-shell {
+                    padding-inline: 12px;
+                }
+
+                .ws-title {
+                    font-size: 42px;
+                }
+
+                .ws-pipeline,
+                .ws-headline {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-response-board {
+                    min-height: 0;
+                    padding: 12px;
+                }
+
+                .ws-outcome {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-outcome-signal {
+                    height: 28px;
+                }
+
+                .ws-response-key {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-outcome-cards {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-experiment-board {
+                    padding: 12px;
+                }
+
+                .ws-trace li {
+                    grid-template-columns: 1fr;
+                    gap: 4px;
+                }
+
+                .ws-specimen-meta,
+                .ws-attractor-cards {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-attractor-head {
+                    display: grid;
+                }
+
+                .ws-result-head {
+                    display: grid;
+                }
+
+                .ws-result-card {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-bar-row {
+                    grid-template-columns: 1fr;
+                    gap: 4px;
+                }
+
+                .ws-lane {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .ws-fig {
+                position: relative;
+                background:
+                    linear-gradient(90deg, rgba(21, 23, 26, 0.05) 1px, transparent 1px),
+                    linear-gradient(rgba(21, 23, 26, 0.05) 1px, transparent 1px),
+                    var(--ws-paper);
+                background-size: 24px 24px;
+                border: 1px solid var(--ws-rule-strong);
+                padding: 18px 18px 22px;
+            }
+
+            .ws-fig-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 12px;
+                font-family: var(--ws-mono);
+                font-size: 11px;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                color: var(--ws-muted);
+                border-bottom: 1px solid var(--ws-rule);
+                padding-bottom: 8px;
+                margin-bottom: 14px;
+            }
+
+            .ws-fig-head strong {
+                color: var(--ws-ink);
+                font-weight: 700;
+            }
+
+            .ws-fig svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+            .ws-fig-foot {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 14px 22px;
+                margin-top: 12px;
+                font-family: var(--ws-mono);
+                font-size: 11px;
+                color: var(--ws-muted);
+                letter-spacing: 0.04em;
+            }
+
+            .ws-fig-foot span {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .ws-fig-foot i {
+                width: 10px;
+                height: 10px;
+                display: inline-block;
+                background: currentColor;
+                font-style: normal;
+            }
+
+            .ws-fig text { font-family: var(--ws-mono); font-size: 11px; fill: var(--ws-ink); }
+            .ws-fig text.muted { fill: var(--ws-muted); }
+            .ws-fig text.label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ws-muted); }
+            .ws-fig text.value { font-family: var(--ws-mono); font-weight: 700; fill: var(--ws-ink); }
+            .ws-fig text.title { font-family: var(--ws-serif); font-size: 13px; font-style: italic; fill: var(--ws-ink); }
+            .ws-fig .axis { stroke: var(--ws-rule-strong); stroke-width: 1; fill: none; }
+            .ws-fig .grid { stroke: var(--ws-rule); stroke-width: 1; fill: none; }
+            .ws-fig .rule-strong { stroke: var(--ws-ink); stroke-width: 1.4; fill: none; }
+            .ws-fig .rule-dashed { stroke-dasharray: 4 4; }
+        </style>
+    </head>
+    <body>
+        <div class="site-shell">
+            <header class="site-topnav">
+                <a class="site-brand" href="../../">
+                    <span class="ws-mark">SL</span>
+                    <span class="site-brand-name">SPECTER LABS</span>
+                </a>
+                <nav class="site-topnav-links" aria-label="Site navigation">
+                    <a class="nav-link" href="../../dossiers/" aria-current="page">Dossiers</a>
+                    <a class="nav-link" href="../../addenda/">Addenda</a>
+                    <a class="nav-link" href="../../blog/">Blog</a>
+                    <a class="nav-link" href="../../cabinet/">Cabinet</a>
+                </nav>
+            </header>
+            <div class="site-rules" aria-hidden="true">
+                <div class="site-rule strong"></div>
+                <div class="site-rule"></div>
+            </div>
+
+            <main class="site-main">
+                <!-- GENERATED:DOSSIER_HUB_HEADER START -->
+<header class="dossier-hub-header" id="dossier-header"><h1 class="dossier-hub-title">Wonton Soup</h1><p class="dossier-hub-deck">Intervention framework for proof-search structure: centralized MCTS maps proof families, basin stability, and search efficiency, while distributed MCTS tests how collective control changes access to that landscape.</p><div class="dossier-hub-metabar"><span class="dossier-hub-metabar-item">SPCTR <span class="dossier-hub-metabar-value">D-002</span></span><span class="dossier-hub-metabar-item">status <span class="project-status active">active</span></span><span class="dossier-hub-metabar-item">activity <span class="dossier-hub-metabar-value">2026-06-03</span></span><span class="dossier-hub-metabar-item">license <span class="dossier-hub-metabar-value">Mixed</span></span><span class="dossier-hub-metabar-item">scope <span class="dossier-hub-metabar-value">expansion</span></span><span class="dossier-hub-metabar-item dossier-hub-metabar-repo"><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup" target="_blank" rel="noopener noreferrer">Repository &rarr;</a></span></div></header>
+                <!-- GENERATED:DOSSIER_HUB_HEADER END -->
+
+                <nav class="ws-chapter-nav" aria-label="Section navigation">
+                    <a href="#overview">Overview</a>
+                    <a href="#thesis">Thesis</a>
+                    <a href="#paper-plates">Figures</a>
+                    <a href="#pipeline">Pipeline</a>
+                    <a href="#tactic-map">Per-tactic</a>
+                    <a href="#resource-cut">Cut sensitivity</a>
+                    <a href="#basin-verdict">Basin</a>
+                    <a href="#rescue">Rescue</a>
+                    <a href="#distributed">Distributed</a>
+                    <a href="#monodromy">Monodromy</a>
+                    <a href="#interpretation">Interpretation</a>
+                    <a href="#dashboard">Dashboard</a>
+                    <a href="#reproducibility">Reproduce</a>
+                    <a href="#sources">Sources</a>
+                </nav>
+
+                <section class="ws-section ws-hero" id="overview">
+                    <div class="ws-hero-copy">
+                        <h2 class="ws-title">Tactic lesions on a distributed MCTS theorem prover</h2>
+                        <p class="ws-deck">
+                            Solve a theorem with distributed MCTS, then block a specific tactic family and rerun under matched seed and budget. The search graph either reaches the goal the same way it did before, finds a structurally different proof, fails to close at all, or closes faster than the wild type. The lake holds 25,798 such reruns across 340 distributed runs and three providers.
+                        </p>
+                        <div class="ws-action-row">
+                            <a class="ws-button primary" href="paper.pdf">Read the preprint &darr;</a>
+                            <a class="ws-button" href="../../dashboards/wonton-soup/">Open dashboard &rarr;</a>
+                            <a class="ws-button" href="../../blog/wonton-soup/">Companion blog post &rarr;</a>
+                            <a class="ws-button ghost" href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup" target="_blank" rel="noopener noreferrer">Source &rarr;</a>
+                        </div>
+                    </div>
+                    <div class="ws-response-board" aria-label="Lesion response diagram">
+                        <div class="ws-response-title">
+                            <span>Four outcomes of a matched-budget tactic block</span>
+                        </div>
+                        <div class="ws-outcome-cards">
+                            <article class="ws-outcome-card" data-outcome="replicate">
+                                <header>
+                                    <span class="ws-outcome-tag">REPLICATE</span>
+                                    <span class="ws-outcome-rate">0.00 GED</span>
+                                </header>
+                                <svg viewBox="0 0 300 180" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" stroke-linecap="round">
+                                        <text x="62" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">WILD TYPE</text>
+                                        <text x="222" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">LESIONED</text>
+                                        <g transform="translate(20,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="14" y2="38" />
+                                            <line x1="42" y1="6" x2="42" y2="38" />
+                                            <line x1="42" y1="6" x2="70" y2="38" />
+                                            <line x1="14" y1="38" x2="4" y2="74" />
+                                            <line x1="14" y1="38" x2="24" y2="74" />
+                                            <line x1="42" y1="38" x2="42" y2="74" />
+                                            <line x1="70" y1="38" x2="60" y2="74" />
+                                            <line x1="70" y1="38" x2="80" y2="74" />
+                                            <line x1="42" y1="74" x2="42" y2="106" />
+                                        </g>
+                                        <g transform="translate(20,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="14" cy="38" r="4" />
+                                            <circle cx="42" cy="38" r="4" />
+                                            <circle cx="70" cy="38" r="4" />
+                                            <circle cx="4" cy="74" r="3.5" />
+                                            <circle cx="24" cy="74" r="3.5" />
+                                            <circle cx="42" cy="74" r="3.5" />
+                                            <circle cx="60" cy="74" r="3.5" />
+                                            <circle cx="80" cy="74" r="3.5" />
+                                        </g>
+                                        <circle cx="62" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                        <g transform="translate(180,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="14" y2="38" />
+                                            <line x1="42" y1="6" x2="42" y2="38" />
+                                            <line x1="42" y1="6" x2="70" y2="38" />
+                                            <line x1="14" y1="38" x2="4" y2="74" />
+                                            <line x1="14" y1="38" x2="24" y2="74" stroke="#b43b3b" stroke-width="1.8" />
+                                            <line x1="42" y1="38" x2="42" y2="74" />
+                                            <line x1="70" y1="38" x2="60" y2="74" />
+                                            <line x1="70" y1="38" x2="80" y2="74" />
+                                            <line x1="42" y1="74" x2="42" y2="106" />
+                                        </g>
+                                        <g transform="translate(180,22)">
+                                            <line x1="14" y1="51" x2="24" y2="61" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                            <line x1="14" y1="61" x2="24" y2="51" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                        </g>
+                                        <g transform="translate(180,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="14" cy="38" r="4" />
+                                            <circle cx="42" cy="38" r="4" />
+                                            <circle cx="70" cy="38" r="4" />
+                                            <circle cx="4" cy="74" r="3.5" />
+                                            <circle cx="24" cy="74" r="3.5" />
+                                            <circle cx="42" cy="74" r="3.5" />
+                                            <circle cx="60" cy="74" r="3.5" />
+                                            <circle cx="80" cy="74" r="3.5" />
+                                        </g>
+                                        <circle cx="222" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                    </g>
+                                </svg>
+                                <p>Same proof family. The blocked edge lay off the path the prover actually used, so the rerun produces a search graph identical to the wild type. <code>not_or_and</code> under <code>block_exact</code> closes both runs.</p>
+                            </article>
+                            <article class="ws-outcome-card" data-outcome="reroute">
+                                <header>
+                                    <span class="ws-outcome-tag">REROUTE</span>
+                                    <span class="ws-outcome-rate">0.70 GED</span>
+                                </header>
+                                <svg viewBox="0 0 300 180" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" stroke-linecap="round">
+                                        <text x="62" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">WILD TYPE</text>
+                                        <text x="222" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">LESIONED</text>
+                                        <g transform="translate(20,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="14" y2="38" />
+                                            <line x1="42" y1="6" x2="70" y2="38" />
+                                            <line x1="14" y1="38" x2="14" y2="74" stroke="#258763" stroke-width="2.4" />
+                                            <line x1="70" y1="38" x2="60" y2="74" />
+                                            <line x1="70" y1="38" x2="80" y2="74" />
+                                            <line x1="14" y1="74" x2="14" y2="106" stroke="#258763" stroke-width="2.4" />
+                                        </g>
+                                        <g transform="translate(20,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="14" cy="38" r="4" />
+                                            <circle cx="70" cy="38" r="4" />
+                                            <circle cx="14" cy="74" r="3.5" fill="#258763" stroke="#258763" />
+                                            <circle cx="60" cy="74" r="3.5" />
+                                            <circle cx="80" cy="74" r="3.5" />
+                                        </g>
+                                        <circle cx="62" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                        <g transform="translate(180,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="14" y2="38" stroke="#b43b3b" stroke-width="1.8" />
+                                            <line x1="42" y1="6" x2="70" y2="38" />
+                                            <line x1="70" y1="38" x2="48" y2="74" />
+                                            <line x1="70" y1="38" x2="90" y2="74" stroke="#6d49ad" stroke-width="2.4" />
+                                            <line x1="90" y1="74" x2="90" y2="106" stroke="#6d49ad" stroke-width="2.4" />
+                                        </g>
+                                        <g transform="translate(180,22)">
+                                            <line x1="23" y1="17" x2="33" y2="27" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                            <line x1="23" y1="27" x2="33" y2="17" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                        </g>
+                                        <g transform="translate(180,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="14" cy="38" r="4" fill="#fbecec" stroke="#b43b3b" />
+                                            <circle cx="70" cy="38" r="4" />
+                                            <circle cx="48" cy="74" r="3.5" />
+                                            <circle cx="90" cy="74" r="3.5" fill="#6d49ad" stroke="#6d49ad" />
+                                        </g>
+                                        <circle cx="222" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                    </g>
+                                </svg>
+                                <p>Same goal, structurally different proof. The lesion cuts the wild path and the prover finds an alternative through a different branch. <code>AEMeasurable.sum_measure</code> under <code>block_exact</code> closes via a different family.</p>
+                            </article>
+                            <article class="ws-outcome-card" data-outcome="collapse">
+                                <header>
+                                    <span class="ws-outcome-tag">COLLAPSE</span>
+                                    <span class="ws-outcome-rate">0 / 16 solves</span>
+                                </header>
+                                <svg viewBox="0 0 300 180" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" stroke-linecap="round">
+                                        <text x="62" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">WILD TYPE</text>
+                                        <text x="222" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">LESIONED</text>
+                                        <g transform="translate(20,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="22" y2="38" />
+                                            <line x1="42" y1="6" x2="62" y2="38" stroke="#258763" stroke-width="2.4" />
+                                            <line x1="22" y1="38" x2="10" y2="74" />
+                                            <line x1="22" y1="38" x2="34" y2="74" />
+                                            <line x1="62" y1="38" x2="62" y2="74" stroke="#258763" stroke-width="2.4" />
+                                            <line x1="62" y1="74" x2="62" y2="106" stroke="#258763" stroke-width="2.4" />
+                                        </g>
+                                        <g transform="translate(20,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="22" cy="38" r="4" />
+                                            <circle cx="62" cy="38" r="4" fill="#258763" stroke="#258763" />
+                                            <circle cx="10" cy="74" r="3.5" />
+                                            <circle cx="34" cy="74" r="3.5" />
+                                            <circle cx="62" cy="74" r="3.5" fill="#258763" stroke="#258763" />
+                                        </g>
+                                        <circle cx="62" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                        <g transform="translate(180,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="22" y2="38" />
+                                            <line x1="42" y1="6" x2="62" y2="38" stroke="#b43b3b" stroke-width="1.8" />
+                                            <line x1="22" y1="38" x2="10" y2="74" />
+                                            <line x1="22" y1="38" x2="34" y2="74" />
+                                        </g>
+                                        <g transform="translate(180,22)">
+                                            <line x1="47" y1="17" x2="57" y2="27" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                            <line x1="47" y1="27" x2="57" y2="17" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                        </g>
+                                        <g transform="translate(180,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="22" cy="38" r="4" />
+                                            <circle cx="62" cy="38" r="4" fill="#fbecec" stroke="#b43b3b" />
+                                            <circle cx="10" cy="74" r="3.5" />
+                                            <circle cx="34" cy="74" r="3.5" />
+                                        </g>
+                                        <g transform="translate(222,148)">
+                                            <line x1="-5" y1="-5" x2="5" y2="5" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                            <line x1="-5" y1="5" x2="5" y2="-5" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                        </g>
+                                    </g>
+                                </svg>
+                                <p>The blocked tactic carried the only viable closing edge. The lesioned tree truncates before reaching the goal. <code>hf_..._11756</code> under <code>block_linarith</code> drops from 16/16 wild-type solves to 0/16.</p>
+                            </article>
+                            <article class="ws-outcome-card" data-outcome="rescue">
+                                <header>
+                                    <span class="ws-outcome-tag">RESCUE</span>
+                                    <span class="ws-outcome-rate">&minus;204 iter</span>
+                                </header>
+                                <svg viewBox="0 0 300 180" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" stroke-linecap="round">
+                                        <text x="62" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">WILD TYPE</text>
+                                        <text x="222" y="14" font-size="9" fill="#616873" text-anchor="middle" letter-spacing="0.1em">LESIONED</text>
+                                        <g transform="translate(20,22)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="42" y1="6" x2="14" y2="32" />
+                                            <line x1="42" y1="6" x2="70" y2="32" />
+                                            <line x1="14" y1="32" x2="4" y2="58" />
+                                            <line x1="14" y1="32" x2="22" y2="58" />
+                                            <line x1="70" y1="32" x2="60" y2="58" />
+                                            <line x1="70" y1="32" x2="82" y2="58" />
+                                            <line x1="22" y1="58" x2="22" y2="84" stroke="#258763" stroke-width="2.4" />
+                                            <line x1="60" y1="58" x2="60" y2="84" />
+                                            <line x1="82" y1="58" x2="82" y2="84" />
+                                            <line x1="22" y1="84" x2="22" y2="106" stroke="#258763" stroke-width="2.4" />
+                                        </g>
+                                        <g transform="translate(20,22)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="42" cy="6" r="4" />
+                                            <circle cx="14" cy="32" r="4" />
+                                            <circle cx="70" cy="32" r="4" />
+                                            <circle cx="4" cy="58" r="3.5" />
+                                            <circle cx="22" cy="58" r="3.5" />
+                                            <circle cx="60" cy="58" r="3.5" />
+                                            <circle cx="82" cy="58" r="3.5" />
+                                            <circle cx="22" cy="84" r="3.5" fill="#258763" stroke="#258763" />
+                                            <circle cx="60" cy="84" r="3.5" />
+                                            <circle cx="82" cy="84" r="3.5" />
+                                        </g>
+                                        <circle cx="62" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                        <text x="62" y="164" font-size="9" fill="#616873" text-anchor="middle">224 iter</text>
+                                        <g transform="translate(190,52)" stroke="#15171a" stroke-width="1.2" fill="none">
+                                            <line x1="32" y1="6" x2="32" y2="32" stroke="#258763" stroke-width="2.4" />
+                                            <line x1="32" y1="32" x2="32" y2="58" stroke="#258763" stroke-width="2.4" />
+                                        </g>
+                                        <g transform="translate(190,52)">
+                                            <line x1="52" y1="-4" x2="62" y2="6" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                            <line x1="52" y1="6" x2="62" y2="-4" stroke="#b43b3b" stroke-width="2" stroke-linecap="round" />
+                                        </g>
+                                        <g transform="translate(190,52)" fill="#ffffff" stroke="#15171a" stroke-width="1.2">
+                                            <circle cx="32" cy="6" r="4" />
+                                            <circle cx="32" cy="32" r="3.5" fill="#258763" stroke="#258763" />
+                                        </g>
+                                        <circle cx="222" cy="148" r="5" fill="#258763" stroke="#258763" />
+                                        <text x="222" y="164" font-size="9" fill="#258763" text-anchor="middle">20 iter</text>
+                                    </g>
+                                </svg>
+                                <p>The blocked tactic was a learned habit that sent the prover on a tour. Without it the search closes in a small fraction of the iterations. <code>hf_..._19703</code> under <code>block_obtain</code> drops 204 iterations and closes.</p>
+                            </article>
+                        </div>
+                        <footer class="ws-response-foot">
+                            <span><i style="color:var(--ws-green);"></i>closing path</span>
+                            <span><i style="color:var(--ws-red);"></i>blocked edge</span>
+                            <span><i style="color:var(--ws-purple);"></i>alternate closure</span>
+                            <span style="margin-left:auto;">examples are real lake rows; rates are reported per outcome in their dedicated sections below</span>
+                        </footer>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="thesis">
+                    <div class="ws-thesis-card">
+                        <div class="ws-thesis-prose">
+                            <p>
+                                Matched-budget tactic and scheduler lesions on a distributed MCTS prover produce intervention-defined proto-cognitive signatures in the sense of Levin's TAME program. Same goal pursued by variable means is the James criterion, measured here in 25,798 intervention comparisons across 340 distributed runs.
+                            </p>
+                            <p>
+                                Reroutes are structural and cheap; the gradient from redundant scaffolding to irreplaceable chokepoint comes out continuous. The naive prediction that wider basins should predict resilience fails in the same data at r = &minus;0.18, which sets up the next question rather than answering it.
+                            </p>
+                            <blockquote class="ws-thesis-quote">
+                                Under perturbation, some theorem-runs preserve goal reachability by rerouting through structurally distinct proof families, while others reveal compressed infrastructure whose removal disconnects the empirically accessible basin.
+                            </blockquote>
+                        </div>
+                        <div class="ws-thesis-stats">
+                            <div class="ws-metric orange">
+                                <span class="ws-metric-label">Lesion rows</span>
+                                <span class="ws-metric-value">5,161</span>
+                                <span class="ws-metric-note">across 340 distributed MCTS runs and three tactic providers.</span>
+                            </div>
+                            <div class="ws-metric purple">
+                                <span class="ws-metric-label">Reroute survival</span>
+                                <span class="ws-metric-value">34.0%</span>
+                                <span class="ws-metric-note">1,754 of 5,161 lesioned rows preserve goal reachability through a different proof family.</span>
+                            </div>
+                            <div class="ws-metric green">
+                                <span class="ws-metric-label">Structural drift</span>
+                                <span class="ws-metric-value">58%</span>
+                                <span class="ws-metric-note">of solved-strict rows show non-zero normalized search-graph edit distance. Reroutes are real, not noise.</span>
+                            </div>
+                            <div class="ws-metric red">
+                                <span class="ws-metric-label">Naive basin hypothesis</span>
+                                <span class="ws-metric-value">r = &minus;0.18</span>
+                                <span class="ws-metric-note">unique-structure count vs lesion recovery. Wider basins recover <em>less</em>, not more.</span>
+                            </div>
+                        </div>
+                        <div class="ws-headline" aria-label="Headline visualizations">
+                            <div class="ws-headline-stat orange">
+                                <span class="label">Recovery rate by tactic, redundant to load-bearing</span>
+                                <svg class="ws-stat-viz" viewBox="0 0 280 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" font-size="9.5">
+                                        <text x="100" y="14" text-anchor="end" fill="#15171a">block_push_neg</text>
+                                        <line x1="106" y1="11" x2="246" y2="11" stroke="#e8e9eb" stroke-width="6" />
+                                        <line x1="106" y1="11" x2="246" y2="11" stroke="#d45f24" stroke-width="6" />
+                                        <text x="252" y="14" fill="#d45f24" font-weight="700">100%</text>
+                                        <text x="100" y="36" text-anchor="end" fill="#15171a">block_left</text>
+                                        <line x1="106" y1="33" x2="246" y2="33" stroke="#e8e9eb" stroke-width="6" />
+                                        <line x1="106" y1="33" x2="238" y2="33" stroke="#d45f24" stroke-width="6" />
+                                        <text x="252" y="36" fill="#d45f24" font-weight="700">94%</text>
+                                        <text x="100" y="58" text-anchor="end" fill="#15171a">block_intros</text>
+                                        <line x1="106" y1="55" x2="246" y2="55" stroke="#e8e9eb" stroke-width="6" />
+                                        <line x1="106" y1="55" x2="192" y2="55" stroke="#d45f24" stroke-width="6" />
+                                        <text x="252" y="58" fill="#d45f24" font-weight="700">61%</text>
+                                        <text x="100" y="80" text-anchor="end" fill="#15171a">block_apply</text>
+                                        <line x1="106" y1="77" x2="246" y2="77" stroke="#e8e9eb" stroke-width="6" />
+                                        <line x1="106" y1="77" x2="181" y2="77" stroke="#d45f24" stroke-width="6" />
+                                        <text x="252" y="80" fill="#d45f24" font-weight="700">53%</text>
+                                        <text x="100" y="102" text-anchor="end" fill="#15171a">block_dsimp</text>
+                                        <line x1="106" y1="99" x2="246" y2="99" stroke="#e8e9eb" stroke-width="6" />
+                                        <line x1="106" y1="99" x2="109" y2="99" stroke="#d45f24" stroke-width="6" />
+                                        <text x="252" y="102" fill="#d45f24" font-weight="700">2%</text>
+                                    </g>
+                                </svg>
+                                <span class="note">A continuous gradient. The same lesion protocol that fully recovers when <code>block_push_neg</code> is removed almost never recovers when <code>block_dsimp</code> is removed.</span>
+                            </div>
+                            <div class="ws-headline-stat red">
+                                <span class="label">A single irreplaceable tactic erases every solve</span>
+                                <svg class="ws-stat-viz" viewBox="0 0 280 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" font-size="9">
+                                        <text x="0" y="14" fill="#616873" letter-spacing="0.08em">LINARITH ALLOWED</text>
+                                        <text x="280" y="14" text-anchor="end" fill="#258763" font-weight="700">16 / 16 SOLVE</text>
+                                        <g fill="#258763">
+                                            <circle cx="10" cy="40" r="5" /><circle cx="27" cy="40" r="5" /><circle cx="45" cy="40" r="5" /><circle cx="62" cy="40" r="5" /><circle cx="80" cy="40" r="5" /><circle cx="97" cy="40" r="5" /><circle cx="114" cy="40" r="5" /><circle cx="131" cy="40" r="5" /><circle cx="149" cy="40" r="5" /><circle cx="166" cy="40" r="5" /><circle cx="184" cy="40" r="5" /><circle cx="201" cy="40" r="5" /><circle cx="218" cy="40" r="5" /><circle cx="235" cy="40" r="5" /><circle cx="253" cy="40" r="5" /><circle cx="270" cy="40" r="5" />
+                                        </g>
+                                        <text x="0" y="74" fill="#616873" letter-spacing="0.08em">LINARITH BLOCKED</text>
+                                        <text x="280" y="74" text-anchor="end" fill="#b43b3b" font-weight="700">0 / 16 SOLVE</text>
+                                        <g stroke="#b43b3b" stroke-width="1.6" stroke-linecap="round">
+                                            <line x1="5" y1="95" x2="15" y2="105" /><line x1="5" y1="105" x2="15" y2="95" />
+                                            <line x1="22" y1="95" x2="32" y2="105" /><line x1="22" y1="105" x2="32" y2="95" />
+                                            <line x1="40" y1="95" x2="50" y2="105" /><line x1="40" y1="105" x2="50" y2="95" />
+                                            <line x1="57" y1="95" x2="67" y2="105" /><line x1="57" y1="105" x2="67" y2="95" />
+                                            <line x1="75" y1="95" x2="85" y2="105" /><line x1="75" y1="105" x2="85" y2="95" />
+                                            <line x1="92" y1="95" x2="102" y2="105" /><line x1="92" y1="105" x2="102" y2="95" />
+                                            <line x1="109" y1="95" x2="119" y2="105" /><line x1="109" y1="105" x2="119" y2="95" />
+                                            <line x1="126" y1="95" x2="136" y2="105" /><line x1="126" y1="105" x2="136" y2="95" />
+                                            <line x1="144" y1="95" x2="154" y2="105" /><line x1="144" y1="105" x2="154" y2="95" />
+                                            <line x1="161" y1="95" x2="171" y2="105" /><line x1="161" y1="105" x2="171" y2="95" />
+                                            <line x1="179" y1="95" x2="189" y2="105" /><line x1="179" y1="105" x2="189" y2="95" />
+                                            <line x1="196" y1="95" x2="206" y2="105" /><line x1="196" y1="105" x2="206" y2="95" />
+                                            <line x1="213" y1="95" x2="223" y2="105" /><line x1="213" y1="105" x2="223" y2="95" />
+                                            <line x1="230" y1="95" x2="240" y2="105" /><line x1="230" y1="105" x2="240" y2="95" />
+                                            <line x1="248" y1="95" x2="258" y2="105" /><line x1="248" y1="105" x2="258" y2="95" />
+                                            <line x1="265" y1="95" x2="275" y2="105" /><line x1="265" y1="105" x2="275" y2="95" />
+                                        </g>
+                                    </g>
+                                </svg>
+                                <span class="note">One ReProver theorem under matched budget. Blocking <code>linarith</code> turns every wild-type seed from a solve into a failure.</span>
+                            </div>
+                            <div class="ws-headline-stat green">
+                                <span class="label">Some lesions speed search up, not down</span>
+                                <svg class="ws-stat-viz" viewBox="0 0 280 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                                    <g font-family="Berkeley Mono, monospace" font-size="9.5">
+                                        <text x="0" y="16" fill="#616873" letter-spacing="0.06em">WILD TYPE</text>
+                                        <text x="280" y="16" text-anchor="end" fill="#15171a">224 iter</text>
+                                        <line x1="0" y1="30" x2="245" y2="30" stroke="#15171a" stroke-width="8" />
+                                        <text x="0" y="60" fill="#616873" letter-spacing="0.06em">+ BLOCK_OBTAIN</text>
+                                        <text x="280" y="60" text-anchor="end" fill="#258763" font-weight="700">20 iter</text>
+                                        <line x1="0" y1="74" x2="22" y2="74" stroke="#258763" stroke-width="8" />
+                                        <text x="0" y="104" fill="#258763" font-style="italic">closes the goal 204 iterations sooner</text>
+                                    </g>
+                                </svg>
+                                <span class="note">~3% of lesions accelerate search (785 of 25,798 rows). Blocking a tactic that anchors a habitual commitment frees the prover's budget for the goal.</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="paper-plates">
+                    <h2 class="ws-section-title">Preprint figures</h2>
+                    <p class="ws-section-lede">
+                        The three figures that carry the argument in
+                        <a href="../../blog/wonton-soup/wonton-soup.pdf">"Proto-Cognitive Signatures in Distributed MCTS Theorem Proving"</a>: provider-split outcome counts, the GED distribution that shows reroutes are structural, and the basin-vs-recovery scatter that produces the negative correlation.
+                    </p>
+                    <div class="ws-figrow-wide">
+                        <figure class="ws-figplate" style="margin:0;">
+                            <div class="ws-figplate-head"><span>Fig 17 &middot; Provider splits</span><span>Lesion outcomes &middot; 340 runs</span></div>
+                            <div class="ws-figplate-img">
+                                <img src="../../assets/blog/wonton-soup-follow-up/fig17-followup-provider-splits.png" alt="Lesion outcomes across providers, split by null-stable vs rescue vs spillover." loading="lazy" />
+                            </div>
+                            <figcaption class="ws-figplate-body">
+                                <p class="ws-figplate-cap">
+                                    <strong>Right panel:</strong> strict main-text denominator restricted to <code>baseline_solved = true</code>
+                                    rows whose matched <code>control_null</code> rerun also solves.
+                                    <strong>Left panel:</strong> rows excluded from that denominator, split into rescue cases and
+                                    null-unstable spillover. Three providers (ReProver, DeepSeek, heuristic) reach the same
+                                    qualitative picture; DeepSeek is the noisy denominator (72.0% null-solve vs 99.9% for ReProver,
+                                    100% heuristic).
+                                </p>
+                                <div class="ws-figplate-read">
+                                    <b>Read this as</b>
+                                    The provider asymmetry is what forces the strict denominator; DeepSeek's null instability is why the headline is 34% rather than smaller.
+                                </div>
+                            </figcaption>
+                        </figure>
+                        <figure class="ws-figplate" style="margin:0;">
+                            <div class="ws-figplate-head"><span>Fig 16 &middot; GED bimodality</span><span>1,250 solved strict rows</span></div>
+                            <div class="ws-figplate-img">
+                                <img src="../../assets/blog/wonton-soup-follow-up/fig16-followup-taxonomy.png" alt="Normalized search-graph edit distance distribution among solved strict-denominator rows." loading="lazy" />
+                            </div>
+                            <figcaption class="ws-figplate-body">
+                                <p class="ws-figplate-cap">
+                                    <strong>Normalized search-graph edit distance</strong> across solved strict-denominator rows. Of 1,250
+                                    rows, 602 (48%) are explicit reroutes by the hash-mismatch criterion; 730 (58%) show non-zero
+                                    structural drift. Mean = 0.405, max = 1.091.
+                                </p>
+                                <div class="ws-figplate-read">
+                                    <b>Read this as</b>
+                                    The distribution has real mass away from zero, so structural divergence is the norm when goal reachability survives a lesion.
+                                </div>
+                            </figcaption>
+                        </figure>
+                    </div>
+                    <div class="ws-figrow" style="margin-top:18px;">
+                        <figure class="ws-figplate" style="margin:0;">
+                            <div class="ws-figplate-head"><span>Fig 18 &middot; Basin width vs recovery</span><span>The surprise &middot; negative result</span></div>
+                            <div class="ws-figplate-img">
+                                <img src="../../assets/blog/wonton-soup-follow-up/fig18-followup-basins.png" alt="Basin width vs lesion recovery, showing the negative correlation." loading="lazy" />
+                            </div>
+                            <figcaption class="ws-figplate-body">
+                                <p class="ws-figplate-cap">
+                                    <strong>Wider basins recover less, not more.</strong> Higher unique-structure counts do not imply
+                                    higher lesion recovery. Correlation r = <strong>&minus;0.18</strong>. The highest-width
+                                    quartile (3 to 9 unique structures) recovers at 25.8%, lower than Q1 (37.5%), Q2 (36.5%), and
+                                    Q3 (47.2%).
+                                </p>
+                                <div class="ws-figplate-read">
+                                    <b>Read this as</b>
+                                    Raw variant count is the wrong axis; the candidate replacement is whether variants cross independent resource channels.
+                                </div>
+                            </figcaption>
+                        </figure>
+                        <figure class="ws-figplate" style="margin:0;">
+                            <div class="ws-figplate-head"><span>Search structure &middot; MCTS tree</span><span>From the companion blog</span></div>
+                            <div class="ws-figplate-img">
+                                <img src="../../assets/blog/wonton-soup/fig1-mcts-tree.png" alt="MCTS tree with goal-deduplication and preview-commit semantics, showing AND/OR branching over Lean goal signatures." loading="lazy" />
+                            </div>
+                            <figcaption class="ws-figplate-body">
+                                <p class="ws-figplate-cap">
+                                    The <strong>centralized MCTS</strong> over Lean goal signatures with AND/OR branching:
+                                    each node is one obligation, OR-branches are tactic choices, AND-sets are subgoals all
+                                    required. Distributed MCTS shares this frontier across controllers and exposes a second
+                                    intervention surface (scheduler lesions) on top of the same tree.
+                                </p>
+                                <div class="ws-figplate-read">
+                                    <b>Read this as</b>
+                                    Centralized MCTS maps the structural landscape; distributed MCTS adds scheduler-level interventions on top of the same tree.
+                                </div>
+                            </figcaption>
+                        </figure>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="pipeline">
+                    <h2 class="ws-section-title">Pipeline</h2>
+                    <div class="ws-fig" style="margin-top:14px;">
+                        <div class="ws-fig-head">
+                            <span><strong>Pipeline schematic</strong> &middot; data contracts between stages</span>
+                            <span>wonton.py lean run -m distributed</span>
+                        </div>
+                        <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid meet" aria-label="Pipeline data contracts">
+                            <defs>
+                                <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+                                    <path d="M0,0 L10,5 L0,10 z" fill="#15171a" />
+                                </marker>
+                            </defs>
+                            <g font-family="Berkeley Mono, monospace">
+                                <g>
+                                    <rect x="20" y="120" width="150" height="120" fill="#ffffff" stroke="#15171a" stroke-width="1.4" />
+                                    <text x="32" y="140" class="label">01 / Corpus</text>
+                                    <text x="32" y="162" class="value" font-size="13">Theorems</text>
+                                    <text x="32" y="184" font-size="11" fill="#d45f24" font-weight="700">5,068</text>
+                                    <text x="32" y="200" class="muted" font-size="10">Mathlib + miniF2F</text>
+                                    <text x="32" y="214" class="muted" font-size="10">ProverBench + registry</text>
+                                    <text x="32" y="232" class="muted" font-size="9">artifacts/corpora/lean/</text>
+                                </g>
+                                <g>
+                                    <rect x="210" y="40" width="180" height="120" fill="#ffffff" stroke="#15171a" stroke-width="1.4" />
+                                    <text x="222" y="60" class="label">02a / Wild type</text>
+                                    <text x="222" y="82" class="value" font-size="13">Centralized MCTS</text>
+                                    <text x="222" y="100" class="muted" font-size="10">AND/OR over goal sigs</text>
+                                    <text x="222" y="114" class="muted" font-size="10">UCB1, checkpoint rollback</text>
+                                    <text x="222" y="138" font-size="11" fill="#258763">solved path discovered</text>
+                                    <text x="222" y="152" class="muted" font-size="9">prover/mcts.py</text>
+                                </g>
+                                <g>
+                                    <rect x="210" y="200" width="180" height="120" fill="#ffffff" stroke="#15171a" stroke-width="1.4" />
+                                    <text x="222" y="220" class="label">02b / Lesion</text>
+                                    <text x="222" y="242" class="value" font-size="13">PegRule / PegBudget</text>
+                                    <text x="222" y="260" class="muted" font-size="10">block &lt;tactic&gt;</text>
+                                    <text x="222" y="274" class="muted" font-size="10">matched seed &amp; budget</text>
+                                    <text x="222" y="298" font-size="11" fill="#b43b3b">25,798 rerun rows</text>
+                                    <text x="222" y="312" class="muted" font-size="9">prover/intervention.py</text>
+                                </g>
+                                <g>
+                                    <rect x="430" y="120" width="170" height="120" fill="#ffffff" stroke="#15171a" stroke-width="1.4" />
+                                    <text x="442" y="140" class="label">03 / Orchestrator</text>
+                                    <text x="442" y="162" class="value" font-size="13">Distributed MCTS</text>
+                                    <text x="442" y="180" class="muted" font-size="10">shared frontier</text>
+                                    <text x="442" y="194" class="muted" font-size="10">scheduler lesions</text>
+                                    <text x="442" y="208" font-size="11" fill="#2468b5">340 runs &middot; 850 controllers</text>
+                                    <text x="442" y="226" class="muted" font-size="9">orchestrator/lean.py</text>
+                                </g>
+                                <g>
+                                    <rect x="640" y="120" width="170" height="120" fill="#ffffff" stroke="#15171a" stroke-width="1.4" />
+                                    <text x="652" y="140" class="label">04 / Postprocess</text>
+                                    <text x="652" y="162" class="value" font-size="13">Metrics</text>
+                                    <text x="652" y="180" font-size="11" fill="#6d49ad">GED &middot; K &middot; attractors</text>
+                                    <text x="652" y="196" class="muted" font-size="10">266 GED matrices</text>
+                                    <text x="652" y="210" class="muted" font-size="10">summary.json.gz</text>
+                                    <text x="652" y="226" class="muted" font-size="9">analysis/*.py</text>
+                                </g>
+                                <g>
+                                    <rect x="850" y="120" width="170" height="120" fill="#ffffff" stroke="#15171a" stroke-width="1.4" />
+                                    <text x="862" y="140" class="label">05 / Lake</text>
+                                    <text x="862" y="162" class="value" font-size="13">DuckDB reconcile</text>
+                                    <text x="862" y="180" font-size="11" fill="#c28a1a">9.9 GB &middot; 37 tables</text>
+                                    <text x="862" y="196" class="muted" font-size="10">ADR-pinned references</text>
+                                    <text x="862" y="210" class="muted" font-size="10">no in-sample leakage</text>
+                                    <text x="862" y="226" class="muted" font-size="9">artifacts/lake/lake.duckdb</text>
+                                </g>
+                                <g>
+                                    <rect x="1030" y="120" width="160" height="120" fill="#15171a" />
+                                    <text x="1044" y="140" style="fill:#ffffff; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; font-weight:700;">06 / Paper</text>
+                                    <text x="1044" y="162" style="fill:#ffffff; font-size:13px; font-weight:700;">Figures &amp; PDF</text>
+                                    <text x="1044" y="184" style="fill:#e6772f; font-size:11px; font-weight:700;">3 plates + appendices</text>
+                                    <text x="1044" y="200" style="fill:#d4dbe5; font-size:10px;">ged &middot; splits &middot; basins</text>
+                                    <text x="1044" y="214" style="fill:#d4dbe5; font-size:10px;">A / B / C</text>
+                                    <text x="1044" y="232" style="fill:#a8b2bf; font-size:9px;">paper/main.typ</text>
+                                </g>
+                                <path d="M170,180 L210,100" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M170,180 L210,260" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M390,100 L430,170" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M390,260 L430,200" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M600,180 L640,180" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M810,180 L850,180" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M1020,180 L1030,180" class="rule-strong" marker-end="url(#arr)" />
+                                <text x="270" y="178" class="muted" font-size="9">theorem &amp;</text>
+                                <text x="270" y="190" class="muted" font-size="9">matched seed</text>
+                                <text x="620" y="110" class="muted" font-size="9" text-anchor="middle">logs/&lt;run-id&gt;/</text>
+                                <text x="830" y="110" class="muted" font-size="9" text-anchor="middle">parquet rows</text>
+                                <text x="1025" y="110" class="muted" font-size="9" text-anchor="middle">SQL views</text>
+                            </g>
+                        </svg>
+                        <div class="ws-fig-foot">
+                            <span style="color:#d45f24;"><i></i>corpus selection</span>
+                            <span style="color:#258763;"><i></i>wild-type discovery</span>
+                            <span style="color:#b43b3b;"><i></i>matched intervention</span>
+                            <span style="color:#2468b5;"><i></i>distributed orchestration</span>
+                            <span style="color:#6d49ad;"><i></i>metrics</span>
+                            <span style="color:#c28a1a;"><i></i>lake</span>
+                        </div>
+                    </div>
+                    <p class="ws-small" style="margin-top:14px;">
+                        Search graph, proof graph, and trace graph are kept as distinct surfaces gated by run-capability flags. Lean provides search and proof; Coq adds the proof-term DAG; ATP backends (E, Vampire, Z3) provide trace only.
+                    </p>
+                    <div class="ws-metrics" style="margin-top:18px;">
+                        <div class="ws-metric orange">
+                            <span class="ws-metric-label">Lake</span>
+                            <span class="ws-metric-value">9.9 GB</span>
+                            <span class="ws-metric-note">37 tables, 340 distributed runs, 25,798 intervention comparisons, 17,400 wild rows, 4,640 search graphs.</span>
+                        </div>
+                        <div class="ws-metric blue">
+                            <span class="ws-metric-label">Corpus</span>
+                            <span class="ws-metric-value">5,068</span>
+                            <span class="ws-metric-note">Lean theorems: Mathlib, miniF2F, ProverBench, registry. Coq SerAPI and TPTP backends extend the surface.</span>
+                        </div>
+                        <div class="ws-metric purple">
+                            <span class="ws-metric-label">Active providers</span>
+                            <span class="ws-metric-value">3</span>
+                            <span class="ws-metric-note">ReProver 347 runs, DeepSeek 253, heuristic 208. BFS, InternLM-step, Coq, Z3 are present but small-n.</span>
+                        </div>
+                        <div class="ws-metric green">
+                            <span class="ws-metric-label">Proof-term DAG</span>
+                            <span class="ws-metric-value">2.48M</span>
+                            <span class="ws-metric-note">Constant nodes and 881K constant edges, queryable per theorem.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="tactic-map">
+                    <h2 class="ws-section-title">Per-tactic recovery rate</h2>
+                    <p class="ws-section-lede">
+                        Block one tactic family, measure how often the system still solves the same theorem under matched budget. Headline percentages use the strict denominator (matched-control rows where the null rerun also solves); the marginal column shows the lake's raw aggregate across all 25,798 block_x rows.
+                    </p>
+                    <div class="ws-bar-list">
+                        <div class="ws-bar-row t-redundant" style="--solve: 100%;">
+                            <span class="ws-bar-label"><code>block_push_neg</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">100.0%</span>
+                            <span class="ws-bar-tag">Redundant scaffolding &middot; strict n=61</span>
+                        </div>
+                        <div class="ws-bar-row t-redundant" style="--solve: 93.9%;">
+                            <span class="ws-bar-label"><code>block_left</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">93.9%</span>
+                            <span class="ws-bar-tag">Highly substitutable &middot; strict n=66</span>
+                        </div>
+                        <div class="ws-bar-row t-moderate" style="--solve: 61.2%;">
+                            <span class="ws-bar-label"><code>block_intros</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">61.2%</span>
+                            <span class="ws-bar-tag">Lake-wide 21.9% &middot; 546 rescues / 2,488 attempts</span>
+                        </div>
+                        <div class="ws-bar-row t-moderate" style="--solve: 53.4%;">
+                            <span class="ws-bar-label"><code>block_apply</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">53.4%</span>
+                            <span class="ws-bar-tag">Lake-wide 17.2% &middot; 87 / 507</span>
+                        </div>
+                        <div class="ws-bar-row t-essential" style="--solve: 27.0%;">
+                            <span class="ws-bar-label"><code>block_intro</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">27.0%</span>
+                            <span class="ws-bar-tag">Lake-wide 9.6% &middot; 206 / 2,151</span>
+                        </div>
+                        <div class="ws-bar-row t-essential" style="--solve: 22.4%;">
+                            <span class="ws-bar-label"><code>block_rw</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">22.4%</span>
+                            <span class="ws-bar-tag">Lake-wide 7.5% &middot; 183 / 2,450</span>
+                        </div>
+                        <div class="ws-bar-row t-critical" style="--solve: 10.3%;">
+                            <span class="ws-bar-label"><code>block_linarith</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">10.3%</span>
+                            <span class="ws-bar-tag">Lake-wide 5.6% &middot; 37 / 660</span>
+                        </div>
+                        <div class="ws-bar-row t-choke" style="--solve: 6.6%;">
+                            <span class="ws-bar-label"><code>block_cases</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">6.6%</span>
+                            <span class="ws-bar-tag">Lake-wide 8.7% &middot; 48 / 553</span>
+                        </div>
+                        <div class="ws-bar-row t-choke" style="--solve: 2.0%;">
+                            <span class="ws-bar-label"><code>block_dsimp</code></span>
+                            <div class="ws-bar-track"></div>
+                            <span class="ws-bar-pct">2.0%</span>
+                            <span class="ws-bar-tag">Irreplaceable &middot; strict n=99</span>
+                        </div>
+                    </div>
+                    <div class="ws-fig" style="margin-top:18px;">
+                        <div class="ws-fig-head">
+                            <span><strong>Trajectory divergence under lesion</strong> &middot; solved vs failed</span>
+                            <span>n = 25,798 &middot; lake</span>
+                        </div>
+                        <svg viewBox="0 0 1200 230" preserveAspectRatio="xMidYMid meet" aria-label="Trajectory differences solved vs failed">
+                            <g font-family="Berkeley Mono, monospace">
+                                <line x1="600" y1="30" x2="600" y2="200" class="axis" />
+                                <line x1="120" y1="115" x2="1080" y2="115" class="axis" />
+                                <text x="120" y="22" class="label">SHORTER</text>
+                                <text x="1080" y="22" class="label" text-anchor="end">LONGER</text>
+                                <text x="600" y="22" class="label" text-anchor="middle">WILD-TYPE LENGTH</text>
+                                <rect x="400" y="70" width="200" height="34" fill="#258763" opacity="0.85" />
+                                <text x="390" y="92" class="value" font-size="13" text-anchor="end" style="fill:#258763;">solved under lesion</text>
+                                <text x="610" y="92" class="value" font-size="13" style="fill:#258763;">-2.21 iter, -1.08 backtracks</text>
+                                <rect x="600" y="130" width="22" height="34" fill="#b43b3b" opacity="0.85" />
+                                <text x="590" y="152" class="value" font-size="13" text-anchor="end" style="fill:#b43b3b;">failed under lesion</text>
+                                <text x="630" y="152" class="value" font-size="13" style="fill:#b43b3b;">+0.22 iter, +0.15 backtracks</text>
+                                <text x="120" y="208" class="muted" font-size="10">Damage that the prover survives shortens its trajectory by a full backtrack on average:</text>
+                                <text x="120" y="222" class="muted" font-size="10">when the prover has a shorter route, the blocked tactic was leading it away from the goal.</text>
+                            </g>
+                        </svg>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="resource-cut">
+                    <h2 class="ws-section-title">Cut sensitivity for a single tactic</h2>
+                    <p class="ws-section-lede">
+                        For the theorem <code>hf_deepseek_prover_v1_train_11756</code>, blocking
+                        <code>linarith</code> doesn't slow the prover down. It severs the basin
+                        entirely. Across the lake the proof-term DAG for this theorem records 128
+                        <code>linarith</code> input facts, 96 preprocessed facts, and 32 certificates;
+                        the cut is not abstract.
+                    </p>
+                    <div class="ws-cut">
+                        <div class="ws-cut-box intact">
+                            <span class="ws-cut-title" style="color:var(--ws-green);">Wild type &middot; ReProver</span>
+                            <span class="ws-cut-big green">16 / 16</span>
+                            <p class="ws-cut-caption">
+                                Every seed solves. The proof family uses <code>linarith</code> at the
+                                arithmetic-closing step; the surrounding tactics carry the structure.
+                            </p>
+                        </div>
+                        <div class="ws-cut-arrow">block linarith &rarr;</div>
+                        <div class="ws-cut-box collapsed">
+                            <span class="ws-cut-title" style="color:var(--ws-red);">Lesion &middot; ReProver</span>
+                            <span class="ws-cut-big red">0 / 16</span>
+                            <p class="ws-cut-caption">
+                                Total collapse. DeepSeek confirms cross-provider with 6/7 &rarr; 0/7. The
+                                arithmetic chokepoint is not provider-specific.
+                            </p>
+                        </div>
+                    </div>
+                    <p class="ws-small" style="margin:14px 0 18px;">
+                        A second case shows the chokepoint is provider-relative. For
+                        <code>list_append_nil</code>, blocking <code>cases</code> collapses ReProver but
+                        the heuristic provider routes around it. The chokepoint is a property of the learned
+                        policy, not the theorem.
+                    </p>
+                    <div class="ws-cut">
+                        <div class="ws-cut-box collapsed">
+                            <span class="ws-cut-title" style="color:var(--ws-red);">ReProver / block cases</span>
+                            <span class="ws-cut-big red">0 / 16</span>
+                            <p class="ws-cut-caption">
+                                Down from 16/16 wild type. ReProver leans on the case split; no alternative fires.
+                            </p>
+                        </div>
+                        <div class="ws-cut-arrow" style="color:var(--ws-muted);">vs</div>
+                        <div class="ws-cut-box intact-alt">
+                            <span class="ws-cut-title" style="color:var(--ws-blue);">Heuristic / block cases</span>
+                            <span class="ws-cut-big blue">16 / 16</span>
+                            <p class="ws-cut-caption">
+                                Heuristic routes through induction. Same goal, fully substitutable. The chokepoint is in the policy, not the math.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="basin-verdict">
+                    <h2 class="ws-section-title">Basin width does not predict resilience</h2>
+                    <p class="ws-section-lede">
+                        Rerun the same theorem 64 times with reshuffled seeds and the attractor structure comes out. <code>coq_pair_andb_prop</code> distributes across seven structural buckets, with one dominant attractor. Across the corpus, wider basins recover from lesions less often, not more.
+                    </p>
+                    <div class="ws-grid-2">
+                        <div class="ws-attractor-board">
+                            <div class="ws-attractor-head">
+                                <div class="ws-attractor-name">coq_pair_andb_prop &middot; 64 seeds</div>
+                                <div class="ws-attractor-badge">7 buckets</div>
+                            </div>
+                            <div class="ws-seed-grid" aria-label="Seed outcome grid">
+                                <div class="ws-seed solved bucket-1">01</div>
+                                <div class="ws-seed solved bucket-1">02</div>
+                                <div class="ws-seed solved bucket-2">03</div>
+                                <div class="ws-seed solved bucket-1">04</div>
+                                <div class="ws-seed solved bucket-1">05</div>
+                                <div class="ws-seed solved bucket-3">06</div>
+                                <div class="ws-seed solved bucket-1">07</div>
+                                <div class="ws-seed solved bucket-1">08</div>
+                                <div class="ws-seed solved bucket-1">09</div>
+                                <div class="ws-seed solved bucket-4">10</div>
+                                <div class="ws-seed solved bucket-1">11</div>
+                                <div class="ws-seed solved bucket-1">12</div>
+                                <div class="ws-seed solved bucket-2">13</div>
+                                <div class="ws-seed solved bucket-1">14</div>
+                                <div class="ws-seed solved bucket-5">15</div>
+                                <div class="ws-seed solved bucket-1">16</div>
+                                <div class="ws-seed solved bucket-1">17</div>
+                                <div class="ws-seed solved bucket-3">18</div>
+                                <div class="ws-seed solved bucket-1">19</div>
+                                <div class="ws-seed solved bucket-1">20</div>
+                                <div class="ws-seed solved bucket-1">21</div>
+                                <div class="ws-seed solved bucket-2">22</div>
+                                <div class="ws-seed solved bucket-1">23</div>
+                                <div class="ws-seed solved bucket-6">24</div>
+                                <div class="ws-seed solved bucket-1">25</div>
+                                <div class="ws-seed solved bucket-1">26</div>
+                                <div class="ws-seed solved bucket-1">27</div>
+                                <div class="ws-seed solved bucket-4">28</div>
+                                <div class="ws-seed solved bucket-1">29</div>
+                                <div class="ws-seed solved bucket-1">30</div>
+                                <div class="ws-seed solved bucket-1">31</div>
+                                <div class="ws-seed solved bucket-2">32</div>
+                                <div class="ws-seed solved bucket-1">33</div>
+                                <div class="ws-seed solved bucket-1">34</div>
+                                <div class="ws-seed solved bucket-3">35</div>
+                                <div class="ws-seed solved bucket-1">36</div>
+                                <div class="ws-seed solved bucket-1">37</div>
+                                <div class="ws-seed solved bucket-5">38</div>
+                                <div class="ws-seed solved bucket-1">39</div>
+                                <div class="ws-seed solved bucket-1">40</div>
+                                <div class="ws-seed solved bucket-1">41</div>
+                                <div class="ws-seed solved bucket-2">42</div>
+                                <div class="ws-seed solved bucket-1">43</div>
+                                <div class="ws-seed solved bucket-1">44</div>
+                                <div class="ws-seed solved bucket-1">45</div>
+                                <div class="ws-seed solved bucket-1">46</div>
+                                <div class="ws-seed solved bucket-1">47</div>
+                                <div class="ws-seed solved bucket-3">48</div>
+                                <div class="ws-seed solved bucket-1">49</div>
+                                <div class="ws-seed solved bucket-1">50</div>
+                                <div class="ws-seed solved bucket-1">51</div>
+                                <div class="ws-seed solved bucket-2">52</div>
+                                <div class="ws-seed solved bucket-1">53</div>
+                                <div class="ws-seed solved bucket-1">54</div>
+                                <div class="ws-seed solved bucket-1">55</div>
+                                <div class="ws-seed solved bucket-1">56</div>
+                                <div class="ws-seed failed">57</div>
+                                <div class="ws-seed solved bucket-1">58</div>
+                                <div class="ws-seed solved bucket-4">59</div>
+                                <div class="ws-seed solved bucket-1">60</div>
+                                <div class="ws-seed solved bucket-1">61</div>
+                                <div class="ws-seed solved bucket-2">62</div>
+                                <div class="ws-seed solved bucket-1">63</div>
+                                <div class="ws-seed solved bucket-1">64</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="ws-fig">
+                                <div class="ws-fig-head">
+                                    <span><strong>Basin width vs lesion recovery</strong></span>
+                                    <span>r = &minus;0.18</span>
+                                </div>
+                                <svg viewBox="0 0 520 320" preserveAspectRatio="xMidYMid meet" aria-label="Basin width vs recovery scatter">
+                                    <g font-family="Berkeley Mono, monospace">
+                                        <line x1="60" y1="40" x2="60" y2="270" class="axis" />
+                                        <line x1="60" y1="270" x2="490" y2="270" class="axis" />
+                                        <g class="grid">
+                                            <line x1="60" y1="220" x2="490" y2="220" />
+                                            <line x1="60" y1="170" x2="490" y2="170" />
+                                            <line x1="60" y1="120" x2="490" y2="120" />
+                                            <line x1="60" y1="70" x2="490" y2="70" />
+                                            <line x1="146" y1="40" x2="146" y2="270" />
+                                            <line x1="232" y1="40" x2="232" y2="270" />
+                                            <line x1="318" y1="40" x2="318" y2="270" />
+                                            <line x1="404" y1="40" x2="404" y2="270" />
+                                        </g>
+                                        <text x="56" y="274" class="muted" font-size="10" text-anchor="end">0%</text>
+                                        <text x="56" y="224" class="muted" font-size="10" text-anchor="end">20</text>
+                                        <text x="56" y="174" class="muted" font-size="10" text-anchor="end">40</text>
+                                        <text x="56" y="124" class="muted" font-size="10" text-anchor="end">60</text>
+                                        <text x="56" y="74" class="muted" font-size="10" text-anchor="end">80</text>
+                                        <text x="60" y="288" class="muted" font-size="10" text-anchor="middle">1</text>
+                                        <text x="146" y="288" class="muted" font-size="10" text-anchor="middle">7</text>
+                                        <text x="232" y="288" class="muted" font-size="10" text-anchor="middle">14</text>
+                                        <text x="318" y="288" class="muted" font-size="10" text-anchor="middle">21</text>
+                                        <text x="404" y="288" class="muted" font-size="10" text-anchor="middle">28</text>
+                                        <text x="275" y="306" class="label" text-anchor="middle">UNIQUE BASIN STRUCTURES (theorem)</text>
+                                        <text x="18" y="155" class="label" text-anchor="middle" transform="rotate(-90,18,155)">LESION RECOVERY</text>
+                                        <rect x="60" y="143" width="98" height="55" fill="#258763" opacity="0.12" />
+                                        <rect x="158" y="151" width="98" height="55" fill="#258763" opacity="0.15" />
+                                        <rect x="256" y="138" width="98" height="55" fill="#258763" opacity="0.20" />
+                                        <rect x="354" y="174" width="136" height="55" fill="#b43b3b" opacity="0.18" />
+                                        <text x="109" y="138" font-size="10" class="muted" text-anchor="middle">Q1 37.5%</text>
+                                        <text x="207" y="146" font-size="10" class="muted" text-anchor="middle">Q2 36.5%</text>
+                                        <text x="305" y="133" font-size="10" class="muted" text-anchor="middle">Q3 47.2%</text>
+                                        <text x="422" y="169" font-size="10" fill="#b43b3b" text-anchor="middle">Q4 25.8%</text>
+                                        <line x1="60" y1="105" x2="490" y2="180" class="rule-strong rule-dashed" stroke="#b43b3b" />
+                                        <circle cx="73" cy="180" r="3.5" fill="#15171a" />
+                                        <circle cx="86" cy="166" r="3.5" fill="#15171a" />
+                                        <circle cx="98" cy="195" r="3.5" fill="#15171a" />
+                                        <circle cx="110" cy="155" r="3.5" fill="#15171a" />
+                                        <circle cx="135" cy="180" r="3.5" fill="#15171a" />
+                                        <circle cx="160" cy="172" r="3.5" fill="#15171a" />
+                                        <circle cx="185" cy="142" r="3.5" fill="#15171a" />
+                                        <circle cx="210" cy="170" r="3.5" fill="#15171a" />
+                                        <circle cx="240" cy="158" r="3.5" fill="#15171a" />
+                                        <circle cx="270" cy="148" r="3.5" fill="#15171a" />
+                                        <circle cx="300" cy="138" r="3.5" fill="#15171a" />
+                                        <circle cx="335" cy="155" r="3.5" fill="#15171a" />
+                                        <circle cx="360" cy="180" r="3.5" fill="#15171a" />
+                                        <circle cx="390" cy="195" r="3.5" fill="#15171a" />
+                                        <circle cx="410" cy="200" r="3.5" fill="#15171a" />
+                                        <circle cx="440" cy="210" r="3.5" fill="#15171a" />
+                                        <circle cx="465" cy="200" r="3.5" fill="#15171a" />
+                                        <circle cx="318" cy="155" r="6" fill="none" stroke="#d45f24" stroke-width="2" />
+                                        <line x1="318" y1="161" x2="290" y2="232" stroke="#d45f24" stroke-width="1" />
+                                        <text x="286" y="244" font-size="10.5" fill="#d45f24" text-anchor="end">coq_pair_andb_prop</text>
+                                        <text x="286" y="256" font-size="9" class="muted" text-anchor="end">21 unique basins</text>
+                                        <circle cx="404" cy="195" r="6" fill="none" stroke="#d45f24" stroke-width="2" />
+                                        <line x1="404" y1="201" x2="430" y2="232" stroke="#d45f24" stroke-width="1" />
+                                        <text x="434" y="244" font-size="10.5" fill="#d45f24" text-anchor="start">div_eq_of_eq_mul'</text>
+                                        <text x="434" y="256" font-size="9" class="muted" text-anchor="start">28 unique basins</text>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div class="ws-panel accent-red" style="margin-top:14px;">
+                                <h3 class="ws-panel-title">Wider basins recover less, not more</h3>
+                                <p>
+                                    Top-quartile theorems sit between 21 and 28 unique basin structures and recover from lesions less often than narrower-basin theorems. The candidate refinement is to count variants that cross independent resource channels rather than variants that reuse the same infrastructure.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ws-panel accent-blue" style="margin-top:14px;">
+                        <h3 class="ws-panel-title">Within-tree convergence is rare</h3>
+                        <p>
+                            Across 4,640 search graphs, only about 1% (68) show within-tree goal convergence. The structural variation surfaces across reshuffled seeds, not inside a single MCTS rollout.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="rescue">
+                    <h2 class="ws-section-title">Rescue cases</h2>
+                    <p class="ws-section-lede">
+                        4,508 lesioned rows solve under matched budget when the wild-type solve is also matched. The largest instance, <code>hf_deepseek_prover_v1_train_19703</code> under <code>block_obtain</code>, closes 204 iterations sooner than the wild type. Blocking a tactic that anchors a habitual subgoal frees the budget for the actual goal.
+                    </p>
+                    <div class="ws-fig" style="margin-top:8px;">
+                        <div class="ws-fig-head">
+                            <span><strong>Paired trace</strong> &middot; hf_deepseek_prover_v1_train_19703 &middot; wild-type vs block_obtain</span>
+                            <span>GED 1.00 &middot; iter diff &minus;204</span>
+                        </div>
+                        <svg viewBox="0 0 1200 220" preserveAspectRatio="xMidYMid meet" aria-label="Paired trace wild type vs lesioned">
+                            <g font-family="Berkeley Mono, monospace">
+                                <text x="40" y="42" class="label">WILD TYPE &middot; 224 iter</text>
+                                <line x1="40" y1="60" x2="1160" y2="60" stroke="#2468b5" stroke-width="2.5" />
+                                <circle cx="40" cy="60" r="5" fill="#2468b5" />
+                                <circle cx="1160" cy="60" r="6" fill="#258763" />
+                                <text x="1130" y="50" font-size="10" fill="#258763" text-anchor="end">goal closes</text>
+                                <g stroke="#2468b5" stroke-width="1" opacity="0.7">
+                                    <line x1="160" y1="60" x2="200" y2="44" />
+                                    <line x1="200" y1="44" x2="260" y2="60" />
+                                    <line x1="280" y1="60" x2="340" y2="80" />
+                                    <line x1="340" y1="80" x2="380" y2="60" />
+                                    <line x1="430" y1="60" x2="480" y2="42" />
+                                    <line x1="480" y1="42" x2="540" y2="60" />
+                                    <line x1="560" y1="60" x2="610" y2="78" />
+                                    <line x1="610" y1="78" x2="660" y2="60" />
+                                    <line x1="700" y1="60" x2="750" y2="44" />
+                                    <line x1="750" y1="44" x2="810" y2="60" />
+                                    <line x1="840" y1="60" x2="890" y2="78" />
+                                    <line x1="890" y1="78" x2="940" y2="60" />
+                                    <line x1="970" y1="60" x2="1020" y2="46" />
+                                    <line x1="1020" y1="46" x2="1080" y2="60" />
+                                </g>
+                                <text x="700" y="100" font-size="10" class="muted" text-anchor="middle">14 detours through obtain-anchored subgoals</text>
+                                <text x="40" y="142" class="label">LESIONED &middot; 20 iter</text>
+                                <line x1="40" y1="160" x2="148" y2="160" stroke="#d45f24" stroke-width="2.5" />
+                                <circle cx="40" cy="160" r="5" fill="#d45f24" />
+                                <circle cx="148" cy="160" r="6" fill="#258763" />
+                                <text x="156" y="164" font-size="10" fill="#258763">goal closes</text>
+                                <text x="700" y="200" font-size="11" class="muted" text-anchor="middle">When the prover cannot reach for obtain, it routes through the goal in 11x fewer iterations. The lesion did not hurt the prover; it removed a learned anchor that was sending it on a tour.</text>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="ws-fig" style="margin-top:18px;">
+                        <div class="ws-fig-head">
+                            <span><strong>Rescue inventory</strong> &middot; lake aggregate</span>
+                            <span>4,508 solved-strict reruns &middot; top sources</span>
+                        </div>
+                        <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid meet" aria-label="Rescue inventory by intervention">
+                            <g font-family="Berkeley Mono, monospace">
+                                <text x="20" y="28" class="label">RESCUE COUNT (LEFT BAR) &middot; RATE WITHIN INTERVENTION (RIGHT MARKER)</text>
+                                <g transform="translate(20,50)">
+                                    <text y="14" class="value">block_intros</text>
+                                    <rect x="150" y="0" width="546" height="20" fill="#d45f24" />
+                                    <text x="700" y="14" class="value" style="fill:#d45f24;">546</text>
+                                    <text x="740" y="14" class="muted">21.9% of 2,488 attempts</text>
+                                </g>
+                                <g transform="translate(20,82)">
+                                    <text y="14" class="value">block_exact</text>
+                                    <rect x="150" y="0" width="258" height="20" fill="#2468b5" />
+                                    <text x="412" y="14" class="value" style="fill:#2468b5;">258</text>
+                                    <text x="450" y="14" class="muted">11.3% of 2,278</text>
+                                </g>
+                                <g transform="translate(20,114)">
+                                    <text y="14" class="value">block_norm_num</text>
+                                    <rect x="150" y="0" width="211" height="20" fill="#258763" />
+                                    <text x="365" y="14" class="value" style="fill:#258763;">211</text>
+                                    <text x="402" y="14" class="muted">25.0% of 845 &middot; high-density rescue</text>
+                                </g>
+                                <g transform="translate(20,146)">
+                                    <text y="14" class="value">block_intro</text>
+                                    <rect x="150" y="0" width="206" height="20" fill="#6d49ad" />
+                                    <text x="360" y="14" class="value" style="fill:#6d49ad;">206</text>
+                                    <text x="398" y="14" class="muted">9.6% of 2,151</text>
+                                </g>
+                                <g transform="translate(20,178)">
+                                    <text y="14" class="value">block_rw</text>
+                                    <rect x="150" y="0" width="183" height="20" fill="#c28a1a" />
+                                    <text x="337" y="14" class="value" style="fill:#c28a1a;">183</text>
+                                    <text x="375" y="14" class="muted">7.5% of 2,450</text>
+                                </g>
+                                <g transform="translate(20,210)">
+                                    <text y="14" class="value">block_simp</text>
+                                    <rect x="150" y="0" width="172" height="20" fill="#b43b3b" />
+                                    <text x="326" y="14" class="value" style="fill:#b43b3b;">172</text>
+                                    <text x="364" y="14" class="muted">4.8% of 3,618 &middot; most-attempted block</text>
+                                </g>
+                                <g transform="translate(20,242)">
+                                    <text y="14" class="value">block_apply</text>
+                                    <rect x="150" y="0" width="87" height="20" fill="#2468b5" />
+                                    <text x="241" y="14" class="value" style="fill:#2468b5;">87</text>
+                                    <text x="270" y="14" class="muted">17.2% of 507</text>
+                                </g>
+                                <g transform="translate(20,274)">
+                                    <text y="14" class="value">block_have</text>
+                                    <rect x="150" y="0" width="71" height="20" fill="#6d49ad" />
+                                    <text x="225" y="14" class="value" style="fill:#6d49ad;">71</text>
+                                    <text x="254" y="14" class="muted">17.3% of 410</text>
+                                </g>
+                                <g transform="translate(20,306)">
+                                    <text y="14" class="value">block_norm_num1</text>
+                                    <rect x="150" y="0" width="57" height="20" fill="#258763" />
+                                    <text x="211" y="14" class="value" style="fill:#258763;">57</text>
+                                    <text x="240" y="14" class="muted">49.1% of 116 &middot; highest rescue rate</text>
+                                </g>
+                                <g transform="translate(20,338)">
+                                    <text y="14" class="value">block_constructor</text>
+                                    <rect x="150" y="0" width="67" height="20" fill="#c28a1a" />
+                                    <text x="221" y="14" class="value" style="fill:#c28a1a;">67</text>
+                                    <text x="250" y="14" class="muted">14.9% of 450</text>
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+                    <p class="ws-small" style="margin-top:14px;">
+                        Two patterns share the column. Dense rescues like <code>block_norm_num1</code> at 49% mean the wild-type provider over-uses a tactic that was rarely the cleanest closer for those goals. Big-volume rescues like <code>block_intros</code> at 546 are the population effect: a tactic that appears everywhere also acts as a habit everywhere, and habit costs budget when the goal would have closed faster without it.
+                    </p>
+                </section>
+
+                <section class="ws-section" id="distributed">
+                    <h2 class="ws-section-title">Distributed MCTS and scheduler lesions</h2>
+                    <div class="ws-fig" style="margin-top:14px;">
+                        <div class="ws-fig-head">
+                            <span><strong>Shared-frontier topology</strong> &middot; controllers, AND/OR tree, scheduler-lesion injection points</span>
+                            <span>orchestrator/lean.py</span>
+                        </div>
+                        <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid meet" aria-label="Shared frontier diagram">
+                            <g font-family="Berkeley Mono, monospace">
+                                <g>
+                                    <rect x="20" y="40" width="170" height="48" fill="#ffffff" stroke="#15171a" stroke-width="1.2" />
+                                    <text x="32" y="62" class="value" font-size="12">controller A</text>
+                                    <text x="32" y="78" class="muted" font-size="10">ReProver policy</text>
+                                </g>
+                                <g>
+                                    <rect x="20" y="108" width="170" height="48" fill="#ffffff" stroke="#15171a" stroke-width="1.2" />
+                                    <text x="32" y="130" class="value" font-size="12">controller B</text>
+                                    <text x="32" y="146" class="muted" font-size="10">DeepSeek policy</text>
+                                </g>
+                                <g>
+                                    <rect x="20" y="176" width="170" height="48" fill="#ffffff" stroke="#15171a" stroke-width="1.2" />
+                                    <text x="32" y="198" class="value" font-size="12">controller C</text>
+                                    <text x="32" y="214" class="muted" font-size="10">heuristic</text>
+                                </g>
+                                <g>
+                                    <rect x="20" y="244" width="170" height="48" fill="#ffffff" stroke="#15171a" stroke-width="1.2" />
+                                    <text x="32" y="266" class="value" font-size="12">controller D</text>
+                                    <text x="32" y="282" class="muted" font-size="10">BFS / fallback</text>
+                                </g>
+                                <g>
+                                    <rect x="220" y="116" width="210" height="128" fill="#15171a" />
+                                    <text x="234" y="140" style="fill:#ffffff; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; font-weight:700;">SCHEDULER</text>
+                                    <text x="234" y="162" style="fill:#ffffff; font-size:12px; font-weight:700;">frontier dispatch</text>
+                                    <text x="234" y="180" style="fill:#d4dbe5; font-size:10px;">PriorityQueue&lt;Goal&gt;</text>
+                                    <text x="234" y="198" style="fill:#e6772f; font-size:10px; font-weight:700;">block_f &middot; delay_f &middot; reroute_f</text>
+                                    <text x="234" y="216" style="fill:#d4dbe5; font-size:10px;">budget accounting</text>
+                                    <text x="234" y="232" style="fill:#d4dbe5; font-size:10px;">deduplicate goals</text>
+                                </g>
+                                <path d="M190,64 L220,140" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M190,132 L220,160" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M190,200 L220,200" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M190,268 L220,220" class="rule-strong" marker-end="url(#arr)" />
+                                <path d="M220,160 L190,64" stroke="#15171a" fill="none" stroke-dasharray="3 3" opacity="0.5" />
+                                <path d="M220,180 L190,132" stroke="#15171a" fill="none" stroke-dasharray="3 3" opacity="0.5" />
+                                <text x="198" y="58" class="muted" font-size="9">claim</text>
+                                <text x="198" y="120" class="muted" font-size="9">claim</text>
+                                <g>
+                                    <circle cx="660" cy="60" r="14" fill="#ffffff" stroke="#15171a" stroke-width="1.5" />
+                                    <text x="660" y="64" font-size="10" text-anchor="middle">root</text>
+                                </g>
+                                <g stroke="#15171a" stroke-width="1.2" fill="none">
+                                    <line x1="660" y1="74" x2="580" y2="120" />
+                                    <line x1="660" y1="74" x2="740" y2="120" />
+                                    <line x1="580" y1="148" x2="530" y2="200" />
+                                    <line x1="580" y1="148" x2="640" y2="200" />
+                                    <line x1="740" y1="148" x2="700" y2="200" />
+                                    <line x1="740" y1="148" x2="800" y2="200" />
+                                    <line x1="530" y1="228" x2="500" y2="270" />
+                                    <line x1="530" y1="228" x2="560" y2="270" />
+                                    <line x1="640" y1="228" x2="620" y2="270" />
+                                    <line x1="700" y1="228" x2="680" y2="270" />
+                                    <line x1="800" y1="228" x2="820" y2="270" />
+                                </g>
+                                <g>
+                                    <circle cx="580" cy="134" r="10" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="740" cy="134" r="10" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="530" cy="214" r="10" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="640" cy="214" r="10" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="700" cy="214" r="10" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="800" cy="214" r="10" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="500" cy="284" r="8" fill="#258763" />
+                                    <circle cx="560" cy="284" r="8" fill="#ffffff" stroke="#b43b3b" stroke-dasharray="2 2" />
+                                    <circle cx="620" cy="284" r="8" fill="#ffffff" stroke="#15171a" />
+                                    <circle cx="680" cy="284" r="8" fill="#258763" />
+                                    <circle cx="820" cy="284" r="8" fill="#ffffff" stroke="#b43b3b" stroke-dasharray="2 2" />
+                                </g>
+                                <text x="500" y="306" font-size="9" class="muted" text-anchor="middle">closed</text>
+                                <text x="560" y="306" font-size="9" fill="#b43b3b" text-anchor="middle">blocked</text>
+                                <text x="680" y="306" font-size="9" class="muted" text-anchor="middle">closed</text>
+                                <text x="820" y="306" font-size="9" fill="#b43b3b" text-anchor="middle">blocked</text>
+                                <text x="680" y="40" class="label" text-anchor="middle">SHARED AND/OR TREE</text>
+                                <g>
+                                    <rect x="880" y="40" width="300" height="280" fill="#ffffff" stroke="#15171a" stroke-width="1.2" />
+                                    <text x="892" y="62" class="label">DOSE RESPONSE (paper)</text>
+                                    <text x="892" y="84" font-size="11">f = 0.1 &rarr; 14.0% (7 / 50)</text>
+                                    <text x="892" y="100" font-size="11">f = 0.3 &rarr; 10.4% (7 / 67)</text>
+                                    <text x="892" y="116" font-size="11">f = 0.5 &rarr; 10.6% (7 / 66)</text>
+                                    <text x="892" y="146" class="label">LAKE PROVIDER SPLIT</text>
+                                    <g transform="translate(892,166)">
+                                        <text font-size="10" fill="#2468b5" font-weight="700">ReProver</text>
+                                        <text x="120" font-size="10" class="muted">14,185 lesions</text>
+                                        <text font-size="11" y="14">9.1% rescue &middot; GED 0.247</text>
+                                    </g>
+                                    <g transform="translate(892,202)">
+                                        <text font-size="10" fill="#d45f24" font-weight="700">DeepSeek</text>
+                                        <text x="120" font-size="10" class="muted">6,746 lesions</text>
+                                        <text font-size="11" y="14">18.5% rescue &middot; GED 0.444</text>
+                                    </g>
+                                    <g transform="translate(892,238)">
+                                        <text font-size="10" fill="#258763" font-weight="700">heuristic</text>
+                                        <text x="120" font-size="10" class="muted">4,056 lesions</text>
+                                        <text font-size="11" y="14">4.0% rescue &middot; GED 0.121</text>
+                                    </g>
+                                    <text x="892" y="278" class="muted" font-size="10">DeepSeek's GED is 2x ReProver's;</text>
+                                    <text x="892" y="292" class="muted" font-size="10">rescue rate is 2x as well.</text>
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+                    <p class="ws-small" style="margin-top:14px;">
+                        Scheduler lesions act above the tree. Block fraction <em>f</em> is the share of dispatch decisions the scheduler is forced to reject, so the controller has to find another goal to claim. Recovery falls modestly with <em>f</em>; the centralized AND/OR search is doing most of the load-bearing work. The provider split tells the same story from another angle: a noisier policy like DeepSeek generates more rescues because it has more removable habits.
+                    </p>
+                    <div class="ws-grid-3" style="margin-top:18px;">
+                        <div class="ws-panel accent-purple">
+                            <h3 class="ws-panel-title">Collapsed runs expand more, not less</h3>
+                            <p>
+                                Collapsed runs average 6.7 iterations and 1.7 backtracks with 2.9 unique goals visited. Solved runs average 3.0, 0.1, and 2.1. Failure is blind expansion, not exhaustion.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-blue">
+                            <h3 class="ws-panel-title">K is net-negative</h3>
+                            <p>
+                                Across 1,905 K-scored rows the mean of <code>log10(&tau;_blind / &tau;_agent)</code> is <strong>&minus;0.04</strong> with sd 0.20. The prover does not beat blind on average. The interesting structure lives in the dispersion, not the mean.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-green">
+                            <h3 class="ws-panel-title">Where K is positive</h3>
+                            <p>
+                                <code>add_add_neg_cancel'_right</code> and <code>add_sub_sub_cancel</code> sit at K = +0.41 and +0.39 respectively: 2 prover iterations against ~5 blind.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="monodromy">
+                    <h2 class="ws-section-title">Proof-term monodromy</h2>
+                    <p class="ws-section-lede">
+                        Below the search graph sits the proof object itself, a typed term that type-checks to the theorem's statement. For each theorem we hash the closing proof term per wild-type solve and count how many distinct hashes the prover produced. The fiber widens monotonically with provider diversity: 16% of theorems have two or more closing terms within a single provider, 72% across two providers, 95% across three or more.
+                    </p>
+                    <div class="ws-fig" style="margin-top:8px;">
+                        <div class="ws-fig-head">
+                            <span><strong>Proof-term fiber width per theorem</strong> &middot; wild-type solves, Lean backend</span>
+                            <span>fraction with 2+ distinct closing terms</span>
+                        </div>
+                        <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid meet" aria-label="Proof-term fiber width per theorem, three diversity conditions">
+                            <g font-family="Berkeley Mono, monospace">
+                                <text x="200" y="32" class="label" text-anchor="middle" style="fill:#6d49ad;">WITHIN PROVIDER</text>
+                                <text x="200" y="50" class="muted" font-size="10" text-anchor="middle">same provider, multiple seeds</text>
+                                <circle cx="156" cy="80" r="7" fill="#6d49ad" />
+                                <circle cx="178" cy="80" r="7" fill="#6d49ad" />
+                                <circle cx="200" cy="80" r="7" fill="#6d49ad" />
+                                <circle cx="222" cy="80" r="7" fill="#6d49ad" />
+                                <circle cx="244" cy="80" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="156" cy="102" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="178" cy="102" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="200" cy="102" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="222" cy="102" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="244" cy="102" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="156" cy="124" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="178" cy="124" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="200" cy="124" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="222" cy="124" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="244" cy="124" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="156" cy="146" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="178" cy="146" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="200" cy="146" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="222" cy="146" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="244" cy="146" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="156" cy="168" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="178" cy="168" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="200" cy="168" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="222" cy="168" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <circle cx="244" cy="168" r="7" fill="#ffffff" stroke="#6d49ad" stroke-width="1.4" />
+                                <text x="200" y="222" style="fill:#6d49ad; font-size:32px; font-weight:700;" text-anchor="middle">16%</text>
+                                <text x="200" y="244" class="muted" font-size="11" text-anchor="middle">fiber width &ge; 2</text>
+                                <text x="200" y="260" class="muted" font-size="10" text-anchor="middle">n = 975 theorems</text>
+
+                                <text x="600" y="32" class="label" text-anchor="middle" style="fill:#d45f24;">ACROSS 2 PROVIDERS</text>
+                                <text x="600" y="50" class="muted" font-size="10" text-anchor="middle">provider reshuffle</text>
+                                <circle cx="556" cy="80" r="7" fill="#d45f24" />
+                                <circle cx="578" cy="80" r="7" fill="#d45f24" />
+                                <circle cx="600" cy="80" r="7" fill="#d45f24" />
+                                <circle cx="622" cy="80" r="7" fill="#d45f24" />
+                                <circle cx="644" cy="80" r="7" fill="#d45f24" />
+                                <circle cx="556" cy="102" r="7" fill="#d45f24" />
+                                <circle cx="578" cy="102" r="7" fill="#d45f24" />
+                                <circle cx="600" cy="102" r="7" fill="#d45f24" />
+                                <circle cx="622" cy="102" r="7" fill="#d45f24" />
+                                <circle cx="644" cy="102" r="7" fill="#d45f24" />
+                                <circle cx="556" cy="124" r="7" fill="#d45f24" />
+                                <circle cx="578" cy="124" r="7" fill="#d45f24" />
+                                <circle cx="600" cy="124" r="7" fill="#d45f24" />
+                                <circle cx="622" cy="124" r="7" fill="#d45f24" />
+                                <circle cx="644" cy="124" r="7" fill="#d45f24" />
+                                <circle cx="556" cy="146" r="7" fill="#d45f24" />
+                                <circle cx="578" cy="146" r="7" fill="#d45f24" />
+                                <circle cx="600" cy="146" r="7" fill="#d45f24" />
+                                <circle cx="622" cy="146" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <circle cx="644" cy="146" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <circle cx="556" cy="168" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <circle cx="578" cy="168" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <circle cx="600" cy="168" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <circle cx="622" cy="168" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <circle cx="644" cy="168" r="7" fill="#ffffff" stroke="#d45f24" stroke-width="1.4" />
+                                <text x="600" y="222" style="fill:#d45f24; font-size:32px; font-weight:700;" text-anchor="middle">72%</text>
+                                <text x="600" y="244" class="muted" font-size="11" text-anchor="middle">fiber width &ge; 2</text>
+                                <text x="600" y="260" class="muted" font-size="10" text-anchor="middle">n = 452 theorems</text>
+
+                                <text x="1000" y="32" class="label" text-anchor="middle" style="fill:#b43b3b;">ACROSS 3+ PROVIDERS</text>
+                                <text x="1000" y="50" class="muted" font-size="10" text-anchor="middle">full provider diversity</text>
+                                <circle cx="956" cy="80" r="7" fill="#b43b3b" />
+                                <circle cx="978" cy="80" r="7" fill="#b43b3b" />
+                                <circle cx="1000" cy="80" r="7" fill="#b43b3b" />
+                                <circle cx="1022" cy="80" r="7" fill="#b43b3b" />
+                                <circle cx="1044" cy="80" r="7" fill="#b43b3b" />
+                                <circle cx="956" cy="102" r="7" fill="#b43b3b" />
+                                <circle cx="978" cy="102" r="7" fill="#b43b3b" />
+                                <circle cx="1000" cy="102" r="7" fill="#b43b3b" />
+                                <circle cx="1022" cy="102" r="7" fill="#b43b3b" />
+                                <circle cx="1044" cy="102" r="7" fill="#b43b3b" />
+                                <circle cx="956" cy="124" r="7" fill="#b43b3b" />
+                                <circle cx="978" cy="124" r="7" fill="#b43b3b" />
+                                <circle cx="1000" cy="124" r="7" fill="#b43b3b" />
+                                <circle cx="1022" cy="124" r="7" fill="#b43b3b" />
+                                <circle cx="1044" cy="124" r="7" fill="#b43b3b" />
+                                <circle cx="956" cy="146" r="7" fill="#b43b3b" />
+                                <circle cx="978" cy="146" r="7" fill="#b43b3b" />
+                                <circle cx="1000" cy="146" r="7" fill="#b43b3b" />
+                                <circle cx="1022" cy="146" r="7" fill="#b43b3b" />
+                                <circle cx="1044" cy="146" r="7" fill="#b43b3b" />
+                                <circle cx="956" cy="168" r="7" fill="#b43b3b" />
+                                <circle cx="978" cy="168" r="7" fill="#b43b3b" />
+                                <circle cx="1000" cy="168" r="7" fill="#b43b3b" />
+                                <circle cx="1022" cy="168" r="7" fill="#b43b3b" />
+                                <circle cx="1044" cy="168" r="7" fill="#ffffff" stroke="#b43b3b" stroke-width="1.4" />
+                                <text x="1000" y="222" style="fill:#b43b3b; font-size:32px; font-weight:700;" text-anchor="middle">95%</text>
+                                <text x="1000" y="244" class="muted" font-size="11" text-anchor="middle">fiber width &ge; 2</text>
+                                <text x="1000" y="260" class="muted" font-size="10" text-anchor="middle">n = 43 theorems</text>
+
+                                <line x1="40" y1="296" x2="1160" y2="296" class="grid" />
+                                <text x="40" y="316" class="label">EACH DOT IS ONE THEOREM</text>
+                                <text x="40" y="332" class="muted" font-size="10">Filled: the prover landed on 2 or more distinct closing terms across its wild-type reruns. Outlined: the same closing term every time.</text>
+                                <text x="40" y="346" class="muted" font-size="10">Within-provider counts the noise floor under fixed corpus and provider. Across-provider widens the fiber to between-provider diversity.</text>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="ws-panel accent-yellow" style="margin-top:14px;">
+                        <h3 class="ws-panel-title">Whole-proof hashes, not per-goal yet</h3>
+                        <p>
+                            The fractions above use <code>theorem_wild.proof_term_hash</code>, the whole-proof hash recorded per wild-type solve. The column is 88% populated across 7,068 Lean solves, enough to call fiber width per theorem. The missing piece is per-goal monodromy: <code>completed_proof_term_hash</code> on the goal table, the hash of the subterm that closes each goal node along the search path. The assembly hook at <code>prover/assembly.py</code> is wired but currently passes <code>None</code> on most goal records.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="interpretation">
+                    <h2 class="ws-section-title">What the lake says</h2>
+                    <div class="ws-grid-2">
+                        <div class="ws-panel accent-orange">
+                            <h3 class="ws-panel-title">Same goal, variable means</h3>
+                            <p>
+                                Among solved-strict rows, 48% are explicit reroutes by the hash criterion, 58% show non-zero structural drift, and mean GED is 0.405. The theorem is fixed and the proof family varies; the cost of that variation is invisible in the trajectory.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-purple">
+                            <h3 class="ws-panel-title">The block is syntactic, the response is structural</h3>
+                            <p>
+                                The prover is not told it was perturbed. <code>block_dsimp</code> stops the search at 2% recovery; <code>block_push_neg</code> leaves it at 100%. The same kind of edit lands very different anatomies underneath.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-blue">
+                            <h3 class="ws-panel-title">Basin width is the wrong axis</h3>
+                            <p>
+                                The prediction that wider basins survive lesions better gets r = &minus;0.18. The candidate refinement is whether basin variants cross independent resource channels rather than re-using the same infrastructure. The next dataset is a basin partition by axiom and lemma usage.
+                            </p>
+                        </div>
+                        <div class="ws-falsify">
+                            <span class="ws-falsify-title">What would change the reading</span>
+                            <ul>
+                                <li>Reroutes collapse to noise around a single trajectory under tighter controls.</li>
+                                <li>Scheduler lesions produce no theorem-level effects at any block fraction.</li>
+                                <li>Cut sensitivities vanish when budgets absorb them.</li>
+                                <li>A basin partition by independent channels does no better than raw width.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="dashboard">
+                    <h2 class="ws-section-title">Dashboard</h2>
+                    <p class="ws-section-lede">
+                        The dashboard ships the published lake as parquet, executes queries client-side
+                        in the browser, and lets you scrub through wild-type and intervention runs side
+                        by side. Four views, each tied to a paper claim.
+                    </p>
+                    <div class="ws-dashpreview">
+                        <div class="ws-dashpreview-copy">
+                            <h3 style="margin:0; font-size:18px; letter-spacing:0.02em;">Open the dashboard</h3>
+                            <p class="ws-small">
+                                Vite + DuckDB-WASM. Filter pinned to <code>backend = 'lean'</code> in the published
+                                preset. The dashboard pulls parquet exports from the lake at build time; no server
+                                is involved at runtime.
+                            </p>
+                            <a class="ws-button primary" href="../../dashboards/wonton-soup/" style="width:fit-content;">Launch dashboard &rarr;</a>
+                            <div class="ws-pill-row">
+                                <span class="ws-pill live">live</span>
+                                <span class="ws-pill">DuckDB-WASM</span>
+                                <span class="ws-pill">parquet</span>
+                                <span class="ws-pill">KaTeX</span>
+                                <span class="ws-pill">client-only</span>
+                            </div>
+                        </div>
+                        <div class="ws-dashpreview-views">
+                            <div class="ws-view-chip">
+                                <strong>Hero / paired player</strong>
+                                <p>Side-by-side wild vs intervention MCTS tree with a scrubber, theorem and intervention selectors, blocked-tactic badge, and KaTeX-rendered goal panels.</p>
+                            </div>
+                            <div class="ws-view-chip">
+                                <strong>Explorer</strong>
+                                <p>Run / theorem / intervention drilldown. Same data plane as the figures above, with arbitrary filters.</p>
+                            </div>
+                            <div class="ws-view-chip">
+                                <strong>Proof graph</strong>
+                                <p>Render the proof-graph (Coq) or trace-graph (ATP) for any solved row. Respects the search/proof/trace gating from the ADRs.</p>
+                            </div>
+                            <div class="ws-view-chip">
+                                <strong>Rescue matrix</strong>
+                                <p>Theorem &times; intervention heatmap of rescued / collapsed / unchanged / no-data. The 256 <code>block_intros</code> rescues are the row to look at.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="reproducibility">
+                    <h2 class="ws-section-title">Reproducing locally</h2>
+                    <div class="ws-grid-2">
+                        <div class="ws-panel accent-orange">
+                            <h3 class="ws-panel-title">Run a distributed sweep</h3>
+                            <p style="font-family:var(--ws-mono); color:var(--ws-ink); font-size:13px;">
+                                <code>uv run python wonton.py lean run -m distributed --sample 32 --seed 0</code>
+                            </p>
+                            <p>
+                                Writes <code>logs/&lt;run-id&gt;/</code> with per-theorem exploration history,
+                                MCTS tree, search graph, goal cache, proof-term (when present), and
+                                assembly trace. Run capabilities are flagged at write time and travel with
+                                the run.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-blue">
+                            <h3 class="ws-panel-title">Postprocess and reconcile</h3>
+                            <p style="font-family:var(--ws-mono); color:var(--ws-ink); font-size:13px;">
+                                <code>uv run python wonton.py postprocess</code><br />
+                                <code>uv run python wonton.py lake reconcile</code>
+                            </p>
+                            <p>
+                                Builds GED matrices, K-metric rows, attractor counts, and trajectory
+                                metrics; reconciles them into the DuckDB lake under
+                                <code>artifacts/lake/lake.duckdb</code>.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-purple">
+                            <h3 class="ws-panel-title">Rebuild the figures</h3>
+                            <p style="font-family:var(--ws-mono); color:var(--ws-ink); font-size:13px;">
+                                <code>uv run python paper/build_figures.py</code>
+                            </p>
+                            <p>
+                                Renders <code>fig16-ged-bimodality.svg</code>, <code>fig17-followup-provider-splits.svg</code>,
+                                <code>fig18-followup-basins.svg</code> directly from the lake. The dashboard
+                                view payloads share the same query layer.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-green">
+                            <h3 class="ws-panel-title">Compile the preprint</h3>
+                            <p style="font-family:var(--ws-mono); color:var(--ws-ink); font-size:13px;">
+                                <code>typst compile --root ../.. paper/main.typ paper/artifacts/main.pdf \<br />
+                                &nbsp;&nbsp;--font-path ../../addenda/typst-field-manual/assets/fonts</code>
+                            </p>
+                            <p>
+                                Typst 0.14.2 against the vendored IBM Plex bundle in the field manual.
+                                Source-of-truth is <code>main.typ</code>; the PDF is rebuilt from it.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="sources">
+                    <h2 class="ws-section-title">Sources</h2>
+                    <ul class="ws-source-list">
+                        <li>
+                            <a href="paper.pdf">Preprint PDF</a> &mdash;
+                            "Proto-Cognitive Signatures in Distributed MCTS Theorem Proving",
+                            Ludwig P. (Specter Labs), April 2026. The full TAME-framed argument with the
+                            three figures embedded above and appendices A/B/C on cohorts, lesion
+                            taxonomy, and rescue cases.
+                        </li>
+                        <li>
+                            <a href="../../dashboards/wonton-soup/">Live dashboard</a> &mdash;
+                            DuckDB-WASM, four views (paired player, explorer, proof graph, rescue
+                            matrix). The fastest way to verify any specific claim on the page
+                            against the lake.
+                        </li>
+                        <li>
+                            <a href="../../blog/wonton-soup/">Companion blog post</a> &mdash;
+                            longer-form prose treatment with the K-metric framing, the two-gate
+                            validity protocol, and an inline vignette-stepper for three lesion
+                            specimens (contrapositive, nat_succ_pred, iff_intro).
+                        </li>
+                        <li>
+                            <a href="../../blog/wonton-soup-follow-up/">Follow-up blog</a> &mdash;
+                            the paired panel is three-way not bimodal; provider differences are real;
+                            constraint generates competency. Smaller pieces that didn't make the main
+                            paper.
+                        </li>
+                        <li>
+                            <a href="../../cabinet/wonton-soup/README/">Cabinet documentation</a> &mdash;
+                            lake schema, artifact contracts, distributed MCTS semantics, ADRs
+                            (checkpoint goal IDs, search-graph feasibility by backend, lake reference
+                            selection, ProofGraphIR for cross-assistant alignment), runbooks.
+                        </li>
+                        <li>
+                            <a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup" target="_blank" rel="noopener noreferrer">Source repository</a> &mdash;
+                            <code>wonton.py</code> CLI root with prover, atp, orchestrator, experiments, and analysis modules. <code>docs/concepts/</code> carries the lexicon (search vs proof vs trace graph, attractor metrics, distributed MCTS, tactic-action IR, UCB1, K-metric); <code>docs/contracts/</code> is the per-stage input and output contract; <code>docs/adrs/</code> records the design decisions that the lake schema reflects.
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
+<footer class="dossier-hub-footer-row"><a href="../../cabinet/wonton-soup/README/">Cabinet docs</a><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup" target="_blank" rel="noopener noreferrer">Repository</a></footer>
+                <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
+            </main>
+        </div>
+        <script>
+            (function () {
+                const links = Array.from(document.querySelectorAll('.ws-chapter-nav a'));
+                if (!links.length) return;
+                const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+                const sections = Array.from(map.keys())
+                    .map(id => document.getElementById(id))
+                    .filter(Boolean);
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        const link = map.get(e.target.id);
+                        if (!link) return;
+                        if (e.isIntersecting) {
+                            links.forEach(l => l.classList.remove('is-active'));
+                            link.classList.add('is-active');
+                        }
+                    });
+                }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+                sections.forEach(s => observer.observe(s));
+            })();
+        </script>
+    </body>
+</html>

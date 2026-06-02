@@ -5,20 +5,1507 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="color-scheme" content="light" />
         <title>Wonton Soup Dossier | SPECTER Labs</title>
-        <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
-        <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="stylesheet" href="../../style.css?v=20260518-sitecss" />
+        <style>
+            :root {
+                --ws-bg: #f7f8fb;
+                --ws-paper: #ffffff;
+                --ws-ink: #15171a;
+                --ws-ink-soft: #2b3036;
+                --ws-muted: #616873;
+                --ws-rule: #d8dde6;
+                --ws-rule-strong: #9aa5b5;
+                --ws-orange: #d45f24;
+                --ws-blue: #2468b5;
+                --ws-green: #258763;
+                --ws-purple: #6d49ad;
+                --ws-red: #b43b3b;
+                --ws-yellow: #c28a1a;
+                --ws-mono: "Berkeley Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+                --ws-serif: "IBM Plex Serif", Georgia, serif;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                background: var(--ws-bg);
+                color: var(--ws-ink);
+                font-size: 14px;
+            }
+
+            body {
+                margin: 0;
+                background:
+                    linear-gradient(90deg, rgba(21, 23, 26, 0.045) 1px, transparent 1px),
+                    linear-gradient(rgba(21, 23, 26, 0.04) 1px, transparent 1px),
+                    var(--ws-bg);
+                background-size: 46px 46px;
+                font-family: var(--ws-mono);
+                line-height: 1.55;
+            }
+
+            a {
+                color: inherit;
+                font-weight: 700;
+                text-decoration: underline dotted;
+                text-underline-offset: 3px;
+            }
+
+            p {
+                margin: 0;
+            }
+
+            .site-shell {
+                width: min(1440px, 100%);
+                min-height: 100vh;
+                margin: 0 auto;
+                padding: 24px clamp(14px, 4vw, 42px) 60px;
+                background: rgba(255, 255, 255, 0.96);
+                border-inline: 1px solid rgba(21, 23, 26, 0.08);
+            }
+
+            .site-topnav {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-bottom: 16px;
+            }
+
+            .site-brand {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+            }
+
+            .site-brand-name {
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                font-weight: 800;
+                font-size: 14px;
+            }
+
+            .ws-mark {
+                width: 22px;
+                height: 22px;
+                border: 2px solid var(--ws-ink);
+                display: inline-grid;
+                place-items: center;
+                font-size: 12px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .site-topnav-links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .nav-link {
+                border: 1px solid var(--ws-rule-strong);
+                padding: 3px 7px;
+                text-decoration: none;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                font-size: 11px;
+                line-height: 1.2;
+            }
+
+            .nav-link[aria-current="page"] {
+                border-color: var(--ws-ink);
+                color: var(--ws-orange);
+                box-shadow: inset 0 -2px 0 var(--ws-orange);
+            }
+
+            .site-rules {
+                margin: 12px 0 20px;
+            }
+
+            .site-rule {
+                height: 1px;
+                background: var(--ws-rule);
+            }
+
+            .site-rule.strong {
+                height: 2px;
+                margin-bottom: 1px;
+                background: var(--ws-rule-strong);
+            }
+
+            .dossier-hub-header {
+                margin-bottom: 22px;
+            }
+
+            .dossier-hub-title {
+                margin: 0 0 6px;
+                font-size: 22px;
+                letter-spacing: 0.03em;
+            }
+
+            .dossier-hub-deck {
+                margin: 0 0 12px;
+                max-width: 860px;
+                font-family: var(--ws-serif);
+                color: var(--ws-muted);
+                font-size: 17px;
+                line-height: 1.5;
+            }
+
+            .dossier-hub-metabar,
+            .dossier-hub-footer-row {
+                display: flex;
+                gap: 14px;
+                flex-wrap: wrap;
+                border-top: 1px solid var(--ws-rule);
+                border-bottom: 1px solid var(--ws-rule);
+                padding: 7px 0;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 11px;
+                color: var(--ws-muted);
+            }
+
+            .dossier-hub-metabar-value,
+            .dossier-hub-footer-row a {
+                color: var(--ws-ink);
+            }
+
+            .site-main {
+                min-width: 0;
+            }
+
+            .ws-section {
+                padding: 26px 0;
+                border-top: 1px solid var(--ws-rule);
+            }
+
+            .ws-section:first-of-type {
+                border-top: 0;
+                padding-top: 4px;
+            }
+
+            .ws-kicker {
+                display: inline-block;
+                margin-bottom: 10px;
+                color: var(--ws-muted);
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 800;
+            }
+
+            .ws-title {
+                margin: 0 0 14px;
+                font-size: clamp(34px, 7vw, 82px);
+                line-height: 0.94;
+                letter-spacing: 0;
+                text-transform: uppercase;
+                max-width: 960px;
+            }
+
+            .ws-deck {
+                max-width: 840px;
+                font-family: var(--ws-serif);
+                font-size: clamp(18px, 2.4vw, 24px);
+                line-height: 1.42;
+                color: var(--ws-ink);
+            }
+
+            .ws-small {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 14px;
+                line-height: 1.5;
+            }
+
+            .ws-hero {
+                display: grid;
+                grid-template-columns: minmax(0, 0.92fr) minmax(380px, 1.08fr);
+                gap: 26px;
+                align-items: center;
+            }
+
+            .ws-hero-copy,
+            .ws-panel,
+            .ws-card,
+            .ws-lane,
+            .ws-bar-row,
+            .ws-table-wrap {
+                min-width: 0;
+            }
+
+            .ws-action-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            .ws-button {
+                display: inline-flex;
+                align-items: center;
+                min-height: 34px;
+                border: 1px solid var(--ws-rule-strong);
+                padding: 6px 10px;
+                text-decoration: none;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 11px;
+                background: var(--ws-paper);
+            }
+
+            .ws-button.primary {
+                border-color: var(--ws-ink);
+                box-shadow: inset 4px 0 0 var(--ws-orange);
+            }
+
+            .ws-visual {
+                border: 2px solid var(--ws-ink);
+                background: var(--ws-paper);
+                padding: 8px;
+            }
+
+            .ws-visual svg {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .ws-response-board {
+                position: relative;
+                min-height: 520px;
+                overflow: hidden;
+                border: 1px solid var(--ws-rule);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.7) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.7) 1px, transparent 1px),
+                    #fff;
+                background-size: 34px 34px;
+                padding: 18px;
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                gap: 16px;
+            }
+
+            .ws-response-title {
+                max-width: 620px;
+            }
+
+            .ws-response-title span,
+            .ws-response-label {
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 800;
+            }
+
+            .ws-response-title strong {
+                display: block;
+                margin-top: 6px;
+                font-family: var(--ws-serif);
+                font-size: clamp(19px, 2.2vw, 26px);
+                line-height: 1.22;
+                font-weight: 600;
+            }
+
+            .ws-response-core {
+                position: relative;
+                display: grid;
+                grid-template-columns: 148px 118px minmax(0, 1fr);
+                gap: 20px;
+                align-items: center;
+                min-height: 330px;
+            }
+
+            .ws-response-core::before {
+                content: "";
+                position: absolute;
+                z-index: 0;
+                left: 74px;
+                width: 252px;
+                top: 50%;
+                border-top: 2px solid var(--ws-rule-strong);
+            }
+
+            .ws-node,
+            .ws-lesion-gate,
+            .ws-outcome {
+                position: relative;
+                z-index: 1;
+                background: #fff;
+            }
+
+            .ws-node {
+                min-height: 142px;
+                border: 2px solid var(--ws-ink);
+                padding: 12px;
+                display: grid;
+                align-content: center;
+                gap: 8px;
+            }
+
+            .ws-node-symbol {
+                font-size: 34px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .ws-node-caption {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 14px;
+                line-height: 1.35;
+            }
+
+            .ws-lesion-gate {
+                min-height: 230px;
+                border: 2px solid var(--ws-red);
+                display: grid;
+                grid-template-rows: 1fr auto 1fr;
+                gap: 9px;
+                padding: 10px;
+                text-align: center;
+            }
+
+            .ws-lesion-gate::before,
+            .ws-lesion-gate::after {
+                content: "";
+                margin-inline: auto;
+                width: 14px;
+                background:
+                    repeating-linear-gradient(
+                        180deg,
+                        var(--ws-red) 0 8px,
+                        transparent 8px 15px
+                    );
+            }
+
+            .ws-gate-title {
+                color: var(--ws-red);
+                font-size: 13px;
+                line-height: 1.2;
+                font-weight: 900;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .ws-outcome-stack {
+                display: grid;
+                gap: 10px;
+            }
+
+            .ws-outcome {
+                display: grid;
+                grid-template-columns: 72px minmax(0, 1fr);
+                gap: 10px;
+                min-height: 78px;
+                border: 1px solid var(--ws-rule);
+                padding: 10px;
+                align-items: center;
+            }
+
+            .ws-outcome::before {
+                content: "";
+                position: absolute;
+                left: -22px;
+                top: 50%;
+                width: 22px;
+                border-top: 3px solid currentColor;
+            }
+
+            .ws-outcome.replicate {
+                color: var(--ws-blue);
+                border-left: 4px solid var(--ws-blue);
+            }
+
+            .ws-outcome.reroute {
+                color: var(--ws-purple);
+                border-left: 4px solid var(--ws-purple);
+                transform: translateY(-10px);
+            }
+
+            .ws-outcome.collapse {
+                color: var(--ws-red);
+                border-left: 4px solid var(--ws-red);
+            }
+
+            .ws-outcome.rescue {
+                color: var(--ws-green);
+                border-left: 4px solid var(--ws-green);
+                transform: translateY(10px);
+            }
+
+            .ws-outcome-signal {
+                height: 44px;
+                border: 1px solid currentColor;
+                background:
+                    linear-gradient(90deg, currentColor 0 18%, transparent 18% 27%, currentColor 27% 52%, transparent 52% 64%, currentColor 64% 100%),
+                    #fff;
+                opacity: 0.86;
+            }
+
+            .ws-outcome.collapse .ws-outcome-signal {
+                background:
+                    linear-gradient(90deg, currentColor 0 22%, transparent 22% 34%, currentColor 34% 43%, transparent 43% 100%),
+                    #fff;
+            }
+
+            .ws-outcome.rescue .ws-outcome-signal {
+                background:
+                    linear-gradient(90deg, transparent 0 16%, currentColor 16% 38%, transparent 38% 48%, currentColor 48% 100%),
+                    #fff;
+            }
+
+            .ws-outcome-copy {
+                color: var(--ws-ink);
+                min-width: 0;
+            }
+
+            .ws-outcome-copy strong {
+                display: block;
+                font-size: 13px;
+                line-height: 1.25;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .ws-outcome-copy span {
+                display: block;
+                margin-top: 4px;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 13px;
+                line-height: 1.35;
+            }
+
+            .ws-response-key {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                padding-bottom: 4px;
+            }
+
+            .ws-key-item {
+                border-top: 3px solid var(--key-color);
+                padding-top: 7px;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            .ws-key-item.same {
+                --key-color: var(--ws-blue);
+            }
+
+            .ws-key-item.new {
+                --key-color: var(--ws-purple);
+            }
+
+            .ws-key-item.fail {
+                --key-color: var(--ws-red);
+            }
+
+            .ws-key-item.improve {
+                --key-color: var(--ws-green);
+            }
+
+            .ws-experiment-board {
+                position: relative;
+                overflow: hidden;
+                border: 1px solid var(--ws-ink);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.82) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.82) 1px, transparent 1px),
+                    #fff;
+                background-size: 34px 34px;
+                padding: 0 16px 16px;
+                display: grid;
+                gap: 14px;
+            }
+
+            .ws-experiment-board::before,
+            .ws-attractor-board::before {
+                content: "SPECTER / WONTON SOUP / EVIDENCE PLATE";
+                margin: 0 -16px;
+                padding: 6px 10px;
+                background: var(--ws-ink);
+                color: #fff;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                font-size: 10px;
+                line-height: 1.2;
+                font-weight: 900;
+            }
+
+            .ws-attractor-board::before {
+                content: "SPECTER / BASIN PLATE / 64 SEEDS";
+                margin: 0 -14px;
+            }
+
+            .ws-experiment-title span {
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 800;
+            }
+
+            .ws-experiment-title strong {
+                display: block;
+                max-width: 640px;
+                margin-top: 6px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--ws-ink);
+                font-family: var(--ws-serif);
+                font-size: clamp(19px, 2.1vw, 25px);
+                line-height: 1.2;
+                font-weight: 600;
+            }
+
+            .ws-lab-grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 170px;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .ws-proof-card,
+            .ws-lesion-card,
+            .ws-result-card {
+                position: relative;
+                background: #fff;
+            }
+
+            .ws-proof-card {
+                border: 2px solid var(--ws-ink);
+                box-shadow: inset 0 5px 0 var(--ws-ink);
+                padding: 12px;
+                display: grid;
+                gap: 10px;
+                align-content: start;
+            }
+
+            .ws-card-label,
+            .ws-result-type {
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 10px;
+                font-weight: 800;
+            }
+
+            .ws-proof-card .ws-card-label {
+                margin-top: 5px;
+            }
+
+            .ws-theorem-strip {
+                border: 1px solid var(--ws-rule);
+                background: #f3f6fb;
+                padding: 8px;
+                font-size: 12px;
+                line-height: 1.35;
+                font-weight: 800;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-theorem-strip span {
+                display: block;
+                margin-top: 3px;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                font-weight: 400;
+            }
+
+            .ws-trace {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                gap: 7px;
+            }
+
+            .ws-trace li {
+                display: grid;
+                grid-template-columns: 58px minmax(0, 1fr);
+                gap: 7px;
+                align-items: center;
+            }
+
+            .ws-tactic {
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                padding: 4px 5px;
+                color: var(--ws-ink);
+                text-align: center;
+                font-size: 11px;
+                line-height: 1.1;
+                font-weight: 900;
+            }
+
+            .ws-tactic.hot {
+                border-color: var(--ws-ink);
+                box-shadow:
+                    inset 0 -3px 0 rgba(212, 95, 36, 0.28),
+                    inset 3px 0 0 var(--ws-orange);
+            }
+
+            .ws-tactic.blocked {
+                position: relative;
+                border-color: var(--ws-red);
+                color: var(--ws-red);
+                background:
+                    repeating-linear-gradient(
+                        -45deg,
+                        rgba(180, 59, 59, 0.18) 0 5px,
+                        transparent 5px 10px
+                    ),
+                    #fff;
+            }
+
+            .ws-tactic.blocked::after {
+                content: "";
+                position: absolute;
+                left: -4px;
+                right: -4px;
+                top: 50%;
+                border-top: 2px solid var(--ws-red);
+                transform: rotate(-13deg);
+            }
+
+            .ws-trace-note {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.3;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-lesion-card {
+                border: 2px solid var(--ws-red);
+                background:
+                    linear-gradient(90deg, rgba(180, 59, 59, 0.06) 1px, transparent 1px),
+                    linear-gradient(rgba(180, 59, 59, 0.06) 1px, transparent 1px),
+                    #fff;
+                background-size: 18px 18px;
+                padding: 10px;
+                display: grid;
+                align-content: center;
+                gap: 10px;
+                min-height: 280px;
+            }
+
+            .ws-lesion-stamp {
+                width: fit-content;
+                margin-inline: auto;
+                border: 1px solid var(--ws-red);
+                padding: 5px 7px;
+                color: var(--ws-red);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: 900;
+                transform: rotate(-2deg);
+            }
+
+            .ws-block-chip {
+                border: 2px solid var(--ws-red);
+                background:
+                    linear-gradient(90deg, rgba(180, 59, 59, 0.14), rgba(180, 59, 59, 0)),
+                    #fff;
+                padding: 10px 8px;
+                color: var(--ws-red);
+                text-align: center;
+                font-size: 20px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .ws-block-chip span {
+                display: block;
+                margin-bottom: 5px;
+                color: var(--ws-muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-size: 9px;
+            }
+
+            .ws-lesion-patch {
+                border-top: 1px dotted var(--ws-rule-strong);
+                padding-top: 9px;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.45;
+            }
+
+            .ws-lesion-patch strong {
+                color: var(--ws-ink);
+            }
+
+            .ws-result-grid {
+                display: grid;
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-result-card {
+                border: 1px solid var(--ws-rule-strong);
+                border-left: 4px solid var(--result-color);
+                border-top: 3px solid var(--result-color);
+                padding: 10px;
+                display: grid;
+                grid-template-columns: minmax(96px, 0.76fr) minmax(0, 1.24fr);
+                gap: 9px;
+                min-height: 118px;
+                color: var(--ws-ink);
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+            }
+
+            .ws-result-card.replicate {
+                --result-color: var(--ws-blue);
+            }
+
+            .ws-result-card.reroute {
+                --result-color: var(--ws-purple);
+            }
+
+            .ws-result-card.collapse {
+                --result-color: var(--ws-red);
+            }
+
+            .ws-result-card.rescue {
+                --result-color: var(--ws-green);
+            }
+
+            .ws-result-head {
+                display: grid;
+                align-items: start;
+                gap: 6px;
+            }
+
+            .ws-result-head strong {
+                display: block;
+                margin-top: 2px;
+                font-size: 13px;
+                line-height: 1.2;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-result-badge {
+                flex: 0 0 auto;
+                border: 1px solid var(--result-color);
+                padding: 2px 5px;
+                color: var(--result-color);
+                background: #fff;
+                font-size: 10px;
+                line-height: 1.2;
+                font-weight: 900;
+                text-transform: uppercase;
+                text-align: center;
+            }
+
+            .ws-mini-log {
+                display: grid;
+                gap: 4px;
+                border: 1px solid var(--ws-rule-strong);
+                background:
+                    linear-gradient(90deg, rgba(21, 23, 26, 0.035) 1px, transparent 1px),
+                    #f8fafc;
+                background-size: 18px 18px;
+                padding: 6px;
+            }
+
+            .ws-log-line {
+                display: grid;
+                grid-template-columns: 18px minmax(0, 1fr);
+                gap: 5px;
+                align-items: baseline;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.25;
+            }
+
+            .ws-log-line b {
+                color: var(--result-color);
+                font-weight: 900;
+            }
+
+            .ws-result-caption {
+                grid-column: 1 / -1;
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-specimen-meta {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+            }
+
+            .ws-specimen-meta span {
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                padding: 5px 6px;
+                color: var(--ws-muted);
+                font-size: 10px;
+                line-height: 1.25;
+            }
+
+            .ws-specimen-meta strong {
+                display: block;
+                margin-top: 2px;
+                color: var(--ws-ink);
+                font-size: 13px;
+                line-height: 1.1;
+            }
+
+            .ws-attractor-board {
+                border: 2px solid var(--ws-ink);
+                background:
+                    linear-gradient(90deg, rgba(216, 221, 230, 0.72) 1px, transparent 1px),
+                    linear-gradient(rgba(216, 221, 230, 0.72) 1px, transparent 1px),
+                    #fff;
+                background-size: 30px 30px;
+                padding: 0 14px 14px;
+                display: grid;
+                gap: 12px;
+            }
+
+            .ws-attractor-head {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                align-items: start;
+            }
+
+            .ws-attractor-name {
+                font-size: 15px;
+                line-height: 1.25;
+                font-weight: 900;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-attractor-badge {
+                flex: 0 0 auto;
+                border: 1px solid var(--ws-green);
+                background: #fff;
+                color: var(--ws-green);
+                padding: 3px 6px;
+                font-size: 10px;
+                line-height: 1.2;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .ws-seed-grid {
+                display: grid;
+                grid-template-columns: repeat(8, minmax(0, 1fr));
+                gap: 4px;
+            }
+
+            .ws-seed {
+                aspect-ratio: 1;
+                display: grid;
+                place-items: center;
+                border: 1px solid var(--ws-rule-strong);
+                background: #fff;
+                color: var(--ws-muted);
+                font-size: 9px;
+                line-height: 1;
+                font-weight: 800;
+            }
+
+            .ws-seed.solved {
+                border-color: var(--seed-color);
+                background: color-mix(in srgb, var(--seed-color) 22%, #fff);
+                color: var(--ws-ink);
+            }
+
+            .ws-seed.failed {
+                background:
+                    repeating-linear-gradient(
+                        -45deg,
+                        rgba(180, 59, 59, 0.12) 0 4px,
+                        transparent 4px 8px
+                    ),
+                    #fff;
+                border-color: rgba(180, 59, 59, 0.35);
+            }
+
+            .ws-seed.bucket-0 {
+                --seed-color: var(--ws-rule-strong);
+            }
+
+            .ws-seed.bucket-1 {
+                --seed-color: var(--ws-blue);
+            }
+
+            .ws-seed.bucket-2 {
+                --seed-color: var(--ws-purple);
+            }
+
+            .ws-seed.bucket-3 {
+                --seed-color: var(--ws-green);
+            }
+
+            .ws-seed.bucket-4 {
+                --seed-color: var(--ws-yellow);
+            }
+
+            .ws-seed.bucket-5 {
+                --seed-color: var(--ws-orange);
+            }
+
+            .ws-seed.bucket-6 {
+                --seed-color: #2f8c9d;
+            }
+
+            .ws-structure-list {
+                display: grid;
+                gap: 6px;
+            }
+
+            .ws-structure-row {
+                display: grid;
+                grid-template-columns: 76px minmax(0, 1fr) 24px;
+                align-items: center;
+                gap: 6px;
+                font-size: 11px;
+            }
+
+            .ws-structure-track {
+                height: 12px;
+                border: 1px solid var(--ws-rule-strong);
+                background: #f3f6fb;
+            }
+
+            .ws-structure-track i {
+                display: block;
+                width: var(--w);
+                height: 100%;
+                background: var(--ws-purple);
+            }
+
+            .ws-structure-more {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-attractor-cards {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-attractor-card {
+                border: 1px solid var(--ws-rule-strong);
+                border-top: 3px solid var(--ws-ink);
+                background: var(--ws-paper);
+                padding: 10px;
+                display: grid;
+                gap: 8px;
+            }
+
+            .ws-attractor-card strong {
+                font-size: 12px;
+                line-height: 1.25;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-attractor-card p {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-basin-meter {
+                height: 10px;
+                border: 1px solid var(--ws-rule-strong);
+                background:
+                    linear-gradient(90deg, var(--ws-green) 0 var(--solve), transparent var(--solve) 100%),
+                    #f3f6fb;
+            }
+
+            .ws-metrics {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+                margin-top: 18px;
+            }
+
+            .ws-metric {
+                border: 1px solid var(--ws-rule-strong);
+                border-top: 3px solid var(--ws-ink);
+                background: var(--ws-paper);
+                min-height: 126px;
+                padding: 11px;
+                display: grid;
+                align-content: space-between;
+            }
+
+            .ws-metric-label {
+                color: var(--ws-muted);
+                letter-spacing: 0.11em;
+                text-transform: uppercase;
+                font-size: 10px;
+                line-height: 1.35;
+            }
+
+            .ws-metric-value {
+                margin-top: 10px;
+                font-size: clamp(24px, 3.6vw, 38px);
+                line-height: 1;
+                font-weight: 900;
+                color: var(--ws-ink);
+            }
+
+            .ws-metric-note {
+                margin-top: 8px;
+                color: var(--ws-muted);
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            .ws-grid-2 {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 22px;
+                align-items: start;
+            }
+
+            .ws-grid-3 {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .ws-grid-4 {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .ws-panel {
+                border: 1px solid var(--ws-rule);
+                background: var(--ws-paper);
+                padding: 14px;
+            }
+
+            .ws-panel.accent-orange {
+                border-left: 4px solid var(--ws-orange);
+            }
+
+            .ws-panel.accent-blue {
+                border-left: 4px solid var(--ws-blue);
+            }
+
+            .ws-panel.accent-green {
+                border-left: 4px solid var(--ws-green);
+            }
+
+            .ws-panel.accent-purple {
+                border-left: 4px solid var(--ws-purple);
+            }
+
+            .ws-panel-title {
+                margin: 0 0 8px;
+                font-size: 15px;
+                line-height: 1.25;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }
+
+            .ws-panel p,
+            .ws-card p,
+            .ws-lane p,
+            .ws-source-list li {
+                font-family: var(--ws-serif);
+                color: var(--ws-muted);
+                font-size: 15px;
+                line-height: 1.48;
+            }
+
+            .ws-pipeline {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(118px, 1fr));
+                gap: 8px;
+            }
+
+            .ws-stage {
+                position: relative;
+                min-height: 164px;
+                border: 1px solid var(--ws-rule);
+                background: var(--ws-paper);
+                padding: 10px;
+            }
+
+            .ws-stage-num {
+                color: var(--ws-orange);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-weight: 800;
+            }
+
+            .ws-stage-title {
+                margin: 8px 0 6px;
+                font-size: 13px;
+                line-height: 1.3;
+                font-weight: 900;
+            }
+
+            .ws-stage p {
+                color: var(--ws-muted);
+                font-family: var(--ws-serif);
+                font-size: 13px;
+                line-height: 1.42;
+            }
+
+            .ws-tiny-label {
+                color: var(--ws-muted);
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+
+            .ws-bar-list {
+                display: grid;
+                gap: 7px;
+            }
+
+            .ws-bar-row {
+                display: grid;
+                grid-template-columns: 142px minmax(0, 1fr) 64px 60px;
+                gap: 8px;
+                align-items: center;
+                font-size: 12px;
+            }
+
+            .ws-bar-track {
+                position: relative;
+                height: 14px;
+                border: 1px solid var(--ws-rule);
+                background:
+                    linear-gradient(90deg, var(--ws-green) 0 var(--solve), transparent var(--solve) 100%),
+                    linear-gradient(90deg, rgba(180, 59, 59, 0.16), rgba(180, 59, 59, 0.04));
+            }
+
+            .ws-ged-mark {
+                position: absolute;
+                top: -4px;
+                left: var(--ged);
+                width: 2px;
+                height: 22px;
+                background: var(--ws-purple);
+            }
+
+            .ws-table-wrap {
+                overflow-x: auto;
+            }
+
+            .ws-data-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .ws-data-table th,
+            .ws-data-table td {
+                border: 1px solid var(--ws-rule);
+                padding: 7px 8px;
+                text-align: left;
+                vertical-align: top;
+                overflow-wrap: anywhere;
+            }
+
+            .ws-data-table th {
+                color: var(--ws-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                font-size: 10px;
+                background: #f0f3f8;
+            }
+
+            .ws-split {
+                display: grid;
+                grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+                gap: 20px;
+                align-items: start;
+            }
+
+            .ws-code {
+                font-family: var(--ws-mono);
+                overflow-wrap: anywhere;
+                font-size: 0.9em;
+                color: var(--ws-ink);
+            }
+
+            .ws-pill-row {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin-top: 10px;
+            }
+
+            .ws-pill {
+                border: 1px solid var(--ws-rule-strong);
+                padding: 2px 6px;
+                font-size: 10px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--ws-muted);
+                background: var(--ws-paper);
+            }
+
+            .ws-cut {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .ws-cut-box {
+                border: 1px solid var(--ws-rule);
+                padding: 12px;
+                background: var(--ws-paper);
+                min-height: 136px;
+            }
+
+            .ws-cut-arrow {
+                display: grid;
+                place-items: center;
+                color: var(--ws-red);
+                font-weight: 900;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                font-size: 11px;
+            }
+
+            .ws-cut-big {
+                font-size: 34px;
+                line-height: 1;
+                font-weight: 900;
+            }
+
+            .ws-lanes {
+                display: grid;
+                gap: 8px;
+            }
+
+            .ws-lane {
+                display: grid;
+                grid-template-columns: 118px minmax(0, 1fr);
+                gap: 10px;
+                align-items: center;
+            }
+
+            .ws-lane-line {
+                height: 18px;
+                border: 1px solid var(--ws-rule);
+                background:
+                    linear-gradient(90deg, var(--ws-blue) 0 22%, transparent 22% 30%, var(--ws-purple) 30% 46%, transparent 46% 58%, var(--ws-green) 58% 78%, transparent 78% 100%),
+                    #f3f6fb;
+            }
+
+            .ws-lane-line.damage {
+                background:
+                    linear-gradient(90deg, var(--ws-blue) 0 16%, transparent 16% 28%, var(--ws-red) 28% 38%, transparent 38% 52%, var(--ws-purple) 52% 65%, transparent 65% 100%),
+                    #f3f6fb;
+            }
+
+            .ws-source-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                gap: 10px;
+            }
+
+            .ws-source-list li {
+                border-bottom: 1px dotted var(--ws-rule-strong);
+                padding-bottom: 10px;
+            }
+
+            .ws-source-list li:last-child {
+                border-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            @media (max-width: 1120px) {
+                .ws-hero,
+                .ws-split {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-pipeline {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .ws-lab-grid {
+                    grid-template-columns: minmax(0, 1fr);
+                }
+
+                .ws-lesion-card {
+                    min-height: 0;
+                }
+
+            }
+
+            @media (max-width: 860px) {
+                .ws-metrics,
+                .ws-grid-2,
+                .ws-grid-3,
+                .ws-grid-4 {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-bar-row {
+                    grid-template-columns: 112px minmax(0, 1fr) 48px 48px;
+                }
+
+                .ws-response-core {
+                    grid-template-columns: 1fr;
+                    min-height: 0;
+                }
+
+                .ws-response-core::before,
+                .ws-outcome::before {
+                    display: none;
+                }
+
+                .ws-lesion-gate {
+                    min-height: 72px;
+                    grid-template-columns: minmax(42px, 1fr) auto minmax(42px, 1fr);
+                    grid-template-rows: 1fr;
+                    align-items: center;
+                }
+
+                .ws-lesion-gate::before,
+                .ws-lesion-gate::after {
+                    width: 100%;
+                    height: 14px;
+                    margin-block: auto;
+                    background:
+                        repeating-linear-gradient(
+                            90deg,
+                            var(--ws-red) 0 8px,
+                            transparent 8px 15px
+                        );
+                }
+
+                .ws-outcome.reroute,
+                .ws-outcome.rescue {
+                    transform: none;
+                }
+
+                .ws-response-key {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .ws-result-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-attractor-cards {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .ws-cut {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-cut-arrow {
+                    min-height: 28px;
+                }
+            }
+
+            @media (max-width: 560px) {
+                .site-shell {
+                    padding-inline: 12px;
+                }
+
+                .ws-title {
+                    font-size: 42px;
+                }
+
+                .ws-pipeline {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-response-board {
+                    min-height: 0;
+                    padding: 12px;
+                }
+
+                .ws-outcome {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-outcome-signal {
+                    height: 28px;
+                }
+
+                .ws-response-key {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-experiment-board {
+                    padding: 12px;
+                }
+
+                .ws-trace li {
+                    grid-template-columns: 1fr;
+                    gap: 4px;
+                }
+
+                .ws-specimen-meta,
+                .ws-attractor-cards {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-attractor-head {
+                    display: grid;
+                }
+
+                .ws-result-head {
+                    display: grid;
+                }
+
+                .ws-result-card {
+                    grid-template-columns: 1fr;
+                }
+
+                .ws-bar-row {
+                    grid-template-columns: 1fr;
+                    gap: 4px;
+                }
+
+                .ws-lane {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
     </head>
     <body>
         <div class="site-shell">
             <header class="site-topnav">
                 <a class="site-brand" href="../../">
-                    <img
-                        src="../../assets/logo-black.svg"
-                        alt="SPECTER Labs logo"
-                        class="logo"
-                    />
+                    <span class="ws-mark">SL</span>
                     <span class="site-brand-name">SPECTER LABS</span>
                 </a>
                 <nav class="site-topnav-links" aria-label="Site navigation">
@@ -37,109 +1524,715 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER START -->
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-                <section class="section-block" id="research-questions">
-                    <div class="site-section-title">Research Questions</div>
-                    <p class="section-lead">
-                        When we lesion a solver's search process, blocking a
-                        tactic or altering coordination, does it return to
-                        the same proof structure or settle into a different
-                        one? Do proof spaces exhibit multistability under
-                        fixed configuration and controlled perturbation?
-                    </p>
-                    <p class="section-lead">
-                        Can search efficiency (K) be measured on a shared
-                        scale across substrates, following the Chis-Ciure
-                        and Levin framework for comparing directed search
-                        to blind baselines? Does collective control change
-                        which regions of the landscape are accessible, and
-                        does collective search create efficiency that
-                        individual search does not access?
-                    </p>
+                <section class="ws-section ws-hero" id="overview">
+                    <div class="ws-hero-copy">
+                        <span class="ws-kicker">Single page research map</span>
+                        <h2 class="ws-title">A lesion atlas for proof search</h2>
+                        <p class="ws-deck">
+                            Wonton Soup turns theorem proving into an intervention
+                            assay. First solve a theorem. Then damage the path or the
+                            distributed scheduler. The result is not just pass or fail:
+                            the same formal goal can replicate, reroute, collapse, or
+                            occasionally improve when a bad habit is blocked.
+                        </p>
+                        <div class="ws-action-row">
+                            <a class="ws-button primary" href="../../blog/wonton-soup/wonton-soup.pdf">Read the preprint</a>
+                            <a class="ws-button" href="showcase.html">Visual showcase</a>
+                            <a class="ws-button" href="../../dashboards/wonton-soup/">Open dashboard</a>
+                            <a class="ws-button" href="../../cabinet/wonton-soup/README/">Docs map</a>
+                        </div>
+                    </div>
+                    <div class="ws-visual" aria-label="Wonton proof search intervention board">
+                        <div class="ws-experiment-board" aria-label="A proof-search lesion experiment using real rows from the Wonton lake.">
+                            <div class="ws-experiment-title">
+                                <span>Real specimen from the lake</span>
+                                <strong>One theorem, three lesions: one cut reroutes into a new proof family while two adjacent cuts collapse.</strong>
+                            </div>
+                            <div class="ws-lab-grid">
+                                <div class="ws-proof-card">
+                                    <div class="ws-card-label">specimen run</div>
+                                    <div class="ws-theorem-strip">
+                                        div_eq_of_eq_mul''
+                                        <span>lake theorem div_x5feq_x5fof_x5feq_x5fmul_x27_x27, run 00a60f38fb553678</span>
+                                    </div>
+                                    <div class="ws-specimen-meta">
+                                        <span>wild type<strong>solved</strong></span>
+                                        <span>iterations<strong>3</strong></span>
+                                        <span>hash<strong>7a2764c0</strong></span>
+                                    </div>
+                                    <ol class="ws-trace">
+                                        <li>
+                                            <span class="ws-tactic">intros</span>
+                                            <span class="ws-trace-note">control path opens the theorem directly</span>
+                                        </li>
+                                        <li>
+                                            <span class="ws-tactic">subst</span>
+                                            <span class="ws-trace-note">then substitutes variables</span>
+                                        </li>
+                                        <li>
+                                            <span class="ws-tactic hot">rw</span>
+                                            <span class="ws-trace-note">rewrites with mul_div_cancel_right</span>
+                                        </li>
+                                        <li>
+                                            <span class="ws-tactic">hash</span>
+                                            <span class="ws-trace-note">control proof term has 435 nodes</span>
+                                        </li>
+                                    </ol>
+                                </div>
+                                <div class="ws-lesion-card">
+                                    <div class="ws-lesion-stamp">lesion panel</div>
+                                    <div class="ws-block-chip"><span>deny tactic</span>intros</div>
+                                    <div class="ws-lesion-patch">
+                                        same theorem<br />
+                                        <strong>block_intros</strong><br />
+                                        solved by a different proof family: hash b160eca8, GED norm 0.800, proof term 427 nodes
+                                    </div>
+                                </div>
+                                <div class="ws-result-grid">
+                                    <div class="ws-result-card replicate">
+                                        <div class="ws-result-head">
+                                            <div>
+                                                <span class="ws-result-type">replicate</span>
+                                                <strong>control_null</strong>
+                                            </div>
+                                            <span class="ws-result-badge">proved</span>
+                                        </div>
+                                        <div class="ws-mini-log">
+                                            <div class="ws-log-line"><b>1</b><span>blocked simp</span></div>
+                                            <div class="ws-log-line"><b>2</b><span>hash 7a2764c0 unchanged</span></div>
+                                            <div class="ws-log-line"><b>3</b><span>GED norm 0.000</span></div>
+                                        </div>
+                                        <p class="ws-result-caption">A same-family control lesion: the proof endpoint and structure remain stable.</p>
+                                    </div>
+                                    <div class="ws-result-card reroute">
+                                        <div class="ws-result-head">
+                                            <div>
+                                                <span class="ws-result-type">reroute</span>
+                                                <strong>block_intros</strong>
+                                            </div>
+                                            <span class="ws-result-badge">proved</span>
+                                        </div>
+                                        <div class="ws-mini-log">
+                                            <div class="ws-log-line"><b>1</b><span>baseline tactic denied</span></div>
+                                            <div class="ws-log-line"><b>2</b><span>new hash b160eca8</span></div>
+                                            <div class="ws-log-line"><b>3</b><span>1 iteration, GED 0.800</span></div>
+                                        </div>
+                                        <p class="ws-result-caption">Same theorem, new proof family, shorter trajectory.</p>
+                                    </div>
+                                    <div class="ws-result-card collapse">
+                                        <div class="ws-result-head">
+                                            <div>
+                                                <span class="ws-result-type">collapse</span>
+                                                <strong>block_rw</strong>
+                                            </div>
+                                            <span class="ws-result-badge">failed</span>
+                                        </div>
+                                        <div class="ws-mini-log">
+                                            <div class="ws-log-line"><b>1</b><span>rewrite step denied</span></div>
+                                            <div class="ws-log-line"><b>2</b><span>trajectory +5 iterations</span></div>
+                                            <div class="ws-log-line"><b>3</b><span>no intervention hash</span></div>
+                                        </div>
+                                        <p class="ws-result-caption">The rewrite resource is load-bearing in the control basin.</p>
+                                    </div>
+                                    <div class="ws-result-card collapse">
+                                        <div class="ws-result-head">
+                                            <div>
+                                                <span class="ws-result-type">collapse</span>
+                                                <strong>block_subst_vars</strong>
+                                            </div>
+                                            <span class="ws-result-badge">failed</span>
+                                        </div>
+                                        <div class="ws-mini-log">
+                                            <div class="ws-log-line"><b>1</b><span>substitution denied</span></div>
+                                            <div class="ws-log-line"><b>2</b><span>GED norm 0.400</span></div>
+                                            <div class="ws-log-line"><b>3</b><span>trajectory +3 iterations</span></div>
+                                        </div>
+                                        <p class="ws-result-caption">The run still moves through search space, but never reaches proof.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
-                <section class="section-block" id="start-here">
-                    <div class="site-section-title">Start Here</div>
-                    <ol class="quickstart-list">
-                        <li>
-                            <a href="../../blog/wonton-soup/"
-                                >Read the dossier framing article</a
-                            >.
-                        </li>
-                        <li>
-                            <a href="../../cabinet/wonton-soup/README/"
-                                >Use the Wonton Soup docs map</a
-                            >
-                            for concepts, schemas, and runbooks.
-                        </li>
-                        <li>
-                            <a href="../../dashboards/wonton-soup/"
-                                >Open the dashboard</a
-                            >
-                            for run-level and theorem-level inspection.
-                        </li>
-                    </ol>
-                    <span class="path-note"
-                        >Repository path: dossiers/wonton-soup</span
-                    >
+                <section class="ws-section" id="evidence">
+                    <span class="ws-kicker">Two evidence layers</span>
+                    <div class="ws-grid-2">
+                        <div>
+                            <h2 class="ws-panel-title">Paper snapshot</h2>
+                            <p class="ws-small">
+                                The preprint pins a fixed analysis cohort. Those
+                                numbers are the headline claim: baseline-solved
+                                interventions preserve reachability often enough, and
+                                many recoveries are structurally different proofs.
+                            </p>
+                            <div class="ws-metrics">
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">main denominator</div>
+                                    <div class="ws-metric-value">5,161</div>
+                                    <div class="ws-metric-note">baseline-solved intervention rows</div>
+                                </div>
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">preserve reachability</div>
+                                    <div class="ws-metric-value">34.0%</div>
+                                    <div class="ws-metric-note">1,754 solved after lesion</div>
+                                </div>
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">strict reroutes</div>
+                                    <div class="ws-metric-value">602</div>
+                                    <div class="ws-metric-note">hash-mismatch solved rows</div>
+                                </div>
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">nonzero GED</div>
+                                    <div class="ws-metric-value">730</div>
+                                    <div class="ws-metric-note">structural drift among strict solves</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="ws-panel-title">Repo-local lake</h2>
+                            <p class="ws-small">
+                                The local lake is broader than the paper snapshot. It
+                                is useful for the live showcase because it reveals the
+                                shape of the measurement system: runs, intervention
+                                rows, graph rows, proof resources, basin seeds, and
+                                reference K scores.
+                            </p>
+                            <div class="ws-metrics">
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">runs indexed</div>
+                                    <div class="ws-metric-value">844</div>
+                                    <div class="ws-metric-note">across providers and modes</div>
+                                </div>
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">intervention rows</div>
+                                    <div class="ws-metric-value">27,732</div>
+                                    <div class="ws-metric-note">1,814 theorems, 240 labels</div>
+                                </div>
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">control-null solves</div>
+                                    <div class="ws-metric-value">92.61%</div>
+                                    <div class="ws-metric-note">sanity check surface</div>
+                                </div>
+                                <div class="ws-metric">
+                                    <div class="ws-metric-label">proof constants</div>
+                                    <div class="ws-metric-value">3.36M</div>
+                                    <div class="ws-metric-note">DAG nodes plus edges</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
-                <section class="section-block" id="updates" hidden="hidden">
-                    <div class="site-section-title">Latest Updates</div>
-                    <ul class="timeline">
-                        <li class="timeline-item">
-                            <div class="timeline-date">March 1, 2026</div>
-                            <div class="timeline-note">
-                                Cabinet docs rebuilt with updated Wonton
-                                Soup references and stable doc IDs.
+                <section class="ws-section" id="pipeline">
+                    <span class="ws-kicker">Assay pipeline</span>
+                    <h2 class="ws-panel-title">The page should read like an instrument, not a report appendix.</h2>
+                    <div class="ws-pipeline">
+                        <div class="ws-stage">
+                            <div class="ws-stage-num">01</div>
+                            <div class="ws-stage-title">Choose a theorem slice</div>
+                            <p>Manifest-backed corpus selection fixes theorem identity, ordering, seed, and budget.</p>
+                        </div>
+                        <div class="ws-stage">
+                            <div class="ws-stage-num">02</div>
+                            <div class="ws-stage-title">Map the wild type</div>
+                            <p>Centralized MCTS records the baseline path, tree, graph, goals, tactics, and proof term.</p>
+                        </div>
+                        <div class="ws-stage">
+                            <div class="ws-stage-num">03</div>
+                            <div class="ws-stage-title">Damage the system</div>
+                            <p>Path lesions block tactics. Scheduler lesions block, delay, or reroute controller work.</p>
+                        </div>
+                        <div class="ws-stage">
+                            <div class="ws-stage-num">04</div>
+                            <div class="ws-stage-title">Compare the recovery</div>
+                            <p>Hash families, graph edit distance, trajectory drift, and solve status separate outcomes.</p>
+                        </div>
+                        <div class="ws-stage">
+                            <div class="ws-stage-num">05</div>
+                            <div class="ws-stage-title">Reconcile the lake</div>
+                            <p>Run artifacts become DuckDB tables for cross-run aggregation and dashboard export.</p>
+                        </div>
+                        <div class="ws-stage">
+                            <div class="ws-stage-num">06</div>
+                            <div class="ws-stage-title">Interpret the anatomy</div>
+                            <p>Replicates, reroutes, collapses, and rescues become evidence about proof dependence.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="outcomes">
+                    <span class="ws-kicker">Outcome structure</span>
+                    <div class="ws-metrics" style="margin-bottom: 14px">
+                        <div class="ws-metric">
+                            <div class="ws-metric-label">replicate</div>
+                            <div class="ws-metric-value">521</div>
+                            <div class="ws-metric-note">solved, same hash or zero GED</div>
+                        </div>
+                        <div class="ws-metric">
+                            <div class="ws-metric-label">reroute</div>
+                            <div class="ws-metric-value">1,441</div>
+                            <div class="ws-metric-note">solved, changed hash or GED</div>
+                        </div>
+                        <div class="ws-metric">
+                            <div class="ws-metric-label">collapse</div>
+                            <div class="ws-metric-value">3,796</div>
+                            <div class="ws-metric-note">baseline solved, lesion failed</div>
+                        </div>
+                        <div class="ws-metric">
+                            <div class="ws-metric-label">rescue</div>
+                            <div class="ws-metric-value">1,164</div>
+                            <div class="ws-metric-note">baseline failed, lesion solved</div>
+                        </div>
+                    </div>
+                    <div class="ws-grid-3">
+                        <div class="ws-panel accent-blue">
+                            <h3 class="ws-panel-title">Resilience</h3>
+                            <p>
+                                A lesioned run still solves. This is the minimum
+                                evidence for flexible goal pursuit under damage.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-purple">
+                            <h3 class="ws-panel-title">Reroute</h3>
+                            <p>
+                                A solved lesion lands in a different proof family or
+                                shows nonzero graph distance. This is where the signal
+                                becomes structural.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-green">
+                            <h3 class="ws-panel-title">Rescue</h3>
+                            <p>
+                                The baseline fails but the damaged run solves. These
+                                are not ordinary recoveries; they are search
+                                regularization cases.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="tactic-map">
+                    <span class="ws-kicker">Live intervention map</span>
+                    <div class="ws-split">
+                        <div>
+                            <h2 class="ws-panel-title">A tactic block is a scalpel.</h2>
+                            <p class="ws-small">
+                                The most frequent local-lake interventions show why a
+                                single solve-rate number is not enough. Low recovery
+                                marks dependency. High GED marks structural movement.
+                                Together they distinguish redundant scaffolding from
+                                real chokepoints.
+                            </p>
+                            <div class="ws-pill-row">
+                                <span class="ws-pill">green bar = solved percent</span>
+                                <span class="ws-pill">purple mark = avg normalized GED</span>
+                                <span class="ws-pill">rows from repo-local lake</span>
                             </div>
+                        </div>
+                        <div class="ws-panel">
+                            <div class="ws-bar-list">
+                                <div class="ws-bar-row">
+                                    <strong>intervention</strong>
+                                    <span class="ws-tiny-label">recovery and drift</span>
+                                    <span class="ws-tiny-label">solve</span>
+                                    <span class="ws-tiny-label">GED</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_simp</span>
+                                    <span class="ws-bar-track" style="--solve: 5.05%; --ged: 8.5%"><span class="ws-ged-mark"></span></span>
+                                    <span>5.05%</span>
+                                    <span>0.085</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_rw</span>
+                                    <span class="ws-bar-track" style="--solve: 8.38%; --ged: 27.1%"><span class="ws-ged-mark"></span></span>
+                                    <span>8.38%</span>
+                                    <span>0.271</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_intros</span>
+                                    <span class="ws-bar-track" style="--solve: 22.2%; --ged: 52.1%"><span class="ws-ged-mark"></span></span>
+                                    <span>22.2%</span>
+                                    <span>0.521</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_exact</span>
+                                    <span class="ws-bar-track" style="--solve: 13.17%; --ged: 13.8%"><span class="ws-ged-mark"></span></span>
+                                    <span>13.17%</span>
+                                    <span>0.138</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_intro</span>
+                                    <span class="ws-bar-track" style="--solve: 10.57%; --ged: 65.3%"><span class="ws-ged-mark"></span></span>
+                                    <span>10.57%</span>
+                                    <span>0.653</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_norm_num</span>
+                                    <span class="ws-bar-track" style="--solve: 25.2%; --ged: 25.4%"><span class="ws-ged-mark"></span></span>
+                                    <span>25.2%</span>
+                                    <span>0.254</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_linarith</span>
+                                    <span class="ws-bar-track" style="--solve: 6.32%; --ged: 27%"><span class="ws-ged-mark"></span></span>
+                                    <span>6.32%</span>
+                                    <span>0.270</span>
+                                </div>
+                                <div class="ws-bar-row">
+                                    <span>block_apply</span>
+                                    <span class="ws-bar-track" style="--solve: 18.77%; --ged: 37.1%"><span class="ws-ged-mark"></span></span>
+                                    <span>18.77%</span>
+                                    <span>0.371</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="resource-cut">
+                    <span class="ws-kicker">Load-bearing proof infrastructure</span>
+                    <div class="ws-cut">
+                        <div class="ws-cut-box">
+                            <div class="ws-tiny-label">wild type</div>
+                            <div class="ws-cut-big">16/16</div>
+                            <p class="ws-small">
+                                ReProver solves the fixed arithmetic theorem when
+                                <span class="ws-code">linarith</span> is available.
+                            </p>
+                        </div>
+                        <div class="ws-cut-arrow">block linarith</div>
+                        <div class="ws-cut-box">
+                            <div class="ws-tiny-label">lesioned</div>
+                            <div class="ws-cut-big">0/16</div>
+                            <p class="ws-small">
+                                The same panel collapses when the arithmetic
+                                compression channel is removed.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ws-grid-4" style="margin-top: 12px">
+                        <div class="ws-panel accent-purple">
+                            <h3 class="ws-panel-title">2,441</h3>
+                            <p>tactic dependency rows</p>
+                        </div>
+                        <div class="ws-panel accent-blue">
+                            <h3 class="ws-panel-title">226</h3>
+                            <p>simp used-rule rows</p>
+                        </div>
+                        <div class="ws-panel accent-green">
+                            <h3 class="ws-panel-title">167</h3>
+                            <p>linarith fact rows</p>
+                        </div>
+                        <div class="ws-panel accent-orange">
+                            <h3 class="ws-panel-title">37</h3>
+                            <p>linarith certificate rows</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="lake">
+                    <span class="ws-kicker">Lake constellation</span>
+                    <div class="ws-grid-2">
+                        <div class="ws-visual" aria-label="Wonton lake schema constellation">
+                            <svg viewBox="0 0 760 520" role="img">
+                                <rect x="0" y="0" width="760" height="520" fill="#fff" />
+                                <line x1="380" y1="250" x2="150" y2="104" stroke="#d8dde6" stroke-width="3" />
+                                <line x1="380" y1="250" x2="610" y2="104" stroke="#d8dde6" stroke-width="3" />
+                                <line x1="380" y1="250" x2="134" y2="392" stroke="#d8dde6" stroke-width="3" />
+                                <line x1="380" y1="250" x2="626" y2="392" stroke="#d8dde6" stroke-width="3" />
+                                <line x1="380" y1="250" x2="380" y2="84" stroke="#d8dde6" stroke-width="3" />
+                                <circle cx="380" cy="250" r="82" fill="#f7f8fb" stroke="#15171a" stroke-width="2" />
+                                <text x="380" y="238" text-anchor="middle" font-family="monospace" font-size="18" font-weight="900">lake.duckdb</text>
+                                <text x="380" y="264" text-anchor="middle" font-family="monospace" font-size="13" fill="#616873">37 tables</text>
+                                <g>
+                                    <rect x="55" y="56" width="190" height="96" fill="#fff" stroke="#2468b5" stroke-width="3" />
+                                    <text x="150" y="90" text-anchor="middle" font-family="monospace" font-size="14" font-weight="900">runs</text>
+                                    <text x="150" y="118" text-anchor="middle" font-family="monospace" font-size="26" font-weight="900">844</text>
+                                </g>
+                                <g>
+                                    <rect x="515" y="56" width="190" height="96" fill="#fff" stroke="#b43b3b" stroke-width="3" />
+                                    <text x="610" y="88" text-anchor="middle" font-family="monospace" font-size="13" font-weight="900">interventions</text>
+                                    <text x="610" y="118" text-anchor="middle" font-family="monospace" font-size="25" font-weight="900">27,732</text>
+                                </g>
+                                <g>
+                                    <rect x="39" y="344" width="190" height="96" fill="#fff" stroke="#6d49ad" stroke-width="3" />
+                                    <text x="134" y="378" text-anchor="middle" font-family="monospace" font-size="14" font-weight="900">graphs</text>
+                                    <text x="134" y="406" text-anchor="middle" font-family="monospace" font-size="24" font-weight="900">454,772</text>
+                                </g>
+                                <g>
+                                    <rect x="531" y="344" width="190" height="96" fill="#fff" stroke="#258763" stroke-width="3" />
+                                    <text x="626" y="378" text-anchor="middle" font-family="monospace" font-size="14" font-weight="900">basin rows</text>
+                                    <text x="626" y="406" text-anchor="middle" font-family="monospace" font-size="24" font-weight="900">3,097</text>
+                                </g>
+                                <g>
+                                    <rect x="285" y="36" width="190" height="96" fill="#fff" stroke="#c28a1a" stroke-width="3" />
+                                    <text x="380" y="70" text-anchor="middle" font-family="monospace" font-size="14" font-weight="900">proof DAG</text>
+                                    <text x="380" y="98" text-anchor="middle" font-family="monospace" font-size="24" font-weight="900">3.36M</text>
+                                </g>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="ws-panel-title">This is why the showcase can be more than prose.</h2>
+                            <p class="ws-small">
+                                The page is backed by normalized surfaces, not a pile
+                                of screenshots. The important schema names are stable
+                                enough to explain directly:
+                                <span class="ws-code">runs</span>,
+                                <span class="ws-code">theorem_intervention</span>,
+                                <span class="ws-code">theorem_intervention_comparison</span>,
+                                <span class="ws-code">theorem_variant_metrics</span>,
+                                <span class="ws-code">basin_runs</span>,
+                                <span class="ws-code">basin_seed</span>,
+                                <span class="ws-code">k_reference_score</span>,
+                                <span class="ws-code">graph_nodes</span>,
+                                <span class="ws-code">graph_edges</span>, and
+                                <span class="ws-code">proof_term_const_edges</span>.
+                            </p>
+                            <div class="ws-table-wrap" style="margin-top: 12px">
+                                <table class="ws-data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Provider</th>
+                                            <th>Runs</th>
+                                            <th>Completed</th>
+                                            <th>Lean research</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>reprover</td><td>347</td><td>347</td><td>158</td></tr>
+                                        <tr><td>deepseek</td><td>252</td><td>251</td><td>154</td></tr>
+                                        <tr><td>heuristic</td><td>208</td><td>207</td><td>93</td></tr>
+                                        <tr><td>coq</td><td>18</td><td>18</td><td>0</td></tr>
+                                        <tr><td>bfs</td><td>8</td><td>8</td><td>3</td></tr>
+                                        <tr><td>z3</td><td>6</td><td>6</td><td>0</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="basin-verdict">
+                    <span class="ws-kicker">Basins and attractors</span>
+                    <div class="ws-grid-2">
+                        <div>
+                            <h2 class="ws-panel-title">Seed reruns reveal proof attractors, not just solve rates.</h2>
+                            <p class="ws-small">
+                                The basin tables rerun the same theorem across seeds
+                                and record which proof-structure hash each solved seed
+                                falls into. In the 64-seed
+                                <span class="ws-code">coq_pair_andb_prop</span>
+                                run, only 26 seeds solve, and those 26 successes split
+                                into 21 distinct structures. The largest attractor has
+                                only three seeds. That is a shattered basin: reachable,
+                                but not organized around one proof form.
+                            </p>
+                            <div class="ws-pill-row">
+                                <span class="ws-pill">64 seeds</span>
+                                <span class="ws-pill">26 solved</span>
+                                <span class="ws-pill">21 structures</span>
+                                <span class="ws-pill">dominant attractor 11.5%</span>
+                            </div>
+                        </div>
+                        <div class="ws-attractor-board" aria-label="Seed-level basin map for coq_pair_andb_prop">
+                            <div class="ws-attractor-head">
+                                <div>
+                                    <div class="ws-card-label">seed-level basin map</div>
+                                    <div class="ws-attractor-name">coq_pair_andb_prop</div>
+                                </div>
+                                <div class="ws-attractor-badge">run 81890158</div>
+                            </div>
+                            <div class="ws-seed-grid">
+                                <span class="ws-seed solved bucket-0" title="seed 0: solved, structure aae12154, 7 iterations, 10 attempts">0</span>
+                                <span class="ws-seed failed" title="seed 1: failed, 19 attempts">1</span>
+                                <span class="ws-seed solved bucket-0" title="seed 2: solved, structure d1c9b2be, 10 iterations, 16 attempts">2</span>
+                                <span class="ws-seed solved bucket-0" title="seed 3: solved, structure 11f3d250, 10 iterations, 18 attempts">3</span>
+                                <span class="ws-seed solved bucket-0" title="seed 4: solved, structure 540ea71f, 6 iterations, 11 attempts">4</span>
+                                <span class="ws-seed failed" title="seed 5: failed, 26 attempts">5</span>
+                                <span class="ws-seed failed" title="seed 6: failed, 14 attempts">6</span>
+                                <span class="ws-seed failed" title="seed 7: failed, 16 attempts">7</span>
+                                <span class="ws-seed failed" title="seed 8: failed, 18 attempts">8</span>
+                                <span class="ws-seed failed" title="seed 9: failed, 18 attempts">9</span>
+                                <span class="ws-seed failed" title="seed 10: failed, 21 attempts">10</span>
+                                <span class="ws-seed failed" title="seed 11: failed, 20 attempts">11</span>
+                                <span class="ws-seed solved bucket-0" title="seed 12: solved, structure 4195ccb1, 9 iterations, 16 attempts">12</span>
+                                <span class="ws-seed solved bucket-3" title="seed 13: solved, structure 2aac1769, 2 iterations, 3 attempts">13</span>
+                                <span class="ws-seed solved bucket-4" title="seed 14: solved, structure 545529e4, 1 iterations, 1 attempts">14</span>
+                                <span class="ws-seed solved bucket-1" title="seed 15: solved, structure c62bd5d9, 8 iterations, 13 attempts">15</span>
+                                <span class="ws-seed solved bucket-0" title="seed 16: solved, structure c16b704f, 9 iterations, 16 attempts">16</span>
+                                <span class="ws-seed failed" title="seed 17: failed, 9 attempts">17</span>
+                                <span class="ws-seed failed" title="seed 18: failed, 22 attempts">18</span>
+                                <span class="ws-seed failed" title="seed 19: failed, 28 attempts">19</span>
+                                <span class="ws-seed failed" title="seed 20: failed, 12 attempts">20</span>
+                                <span class="ws-seed failed" title="seed 21: failed, 24 attempts">21</span>
+                                <span class="ws-seed failed" title="seed 22: failed, 21 attempts">22</span>
+                                <span class="ws-seed failed" title="seed 23: failed, 17 attempts">23</span>
+                                <span class="ws-seed solved bucket-2" title="seed 24: solved, structure 188b4e5d, 6 iterations, 7 attempts">24</span>
+                                <span class="ws-seed solved bucket-0" title="seed 25: solved, structure 7b2cd400, 11 iterations, 18 attempts">25</span>
+                                <span class="ws-seed failed" title="seed 26: failed, 16 attempts">26</span>
+                                <span class="ws-seed solved bucket-0" title="seed 27: solved, structure 243ef0c7, 9 iterations, 15 attempts">27</span>
+                                <span class="ws-seed failed" title="seed 28: failed, 16 attempts">28</span>
+                                <span class="ws-seed solved bucket-0" title="seed 29: solved, structure 8f05aa1e, 10 iterations, 16 attempts">29</span>
+                                <span class="ws-seed failed" title="seed 30: failed, 16 attempts">30</span>
+                                <span class="ws-seed failed" title="seed 31: failed, 14 attempts">31</span>
+                                <span class="ws-seed failed" title="seed 32: failed, 13 attempts">32</span>
+                                <span class="ws-seed failed" title="seed 33: failed, 14 attempts">33</span>
+                                <span class="ws-seed failed" title="seed 34: failed, 12 attempts">34</span>
+                                <span class="ws-seed solved bucket-0" title="seed 35: solved, structure bd6588c8, 11 iterations, 20 attempts">35</span>
+                                <span class="ws-seed solved bucket-1" title="seed 36: solved, structure c62bd5d9, 8 iterations, 11 attempts">36</span>
+                                <span class="ws-seed failed" title="seed 37: failed, 21 attempts">37</span>
+                                <span class="ws-seed solved bucket-0" title="seed 38: solved, structure faa89dfc, 11 iterations, 27 attempts">38</span>
+                                <span class="ws-seed failed" title="seed 39: failed, 25 attempts">39</span>
+                                <span class="ws-seed failed" title="seed 40: failed, 24 attempts">40</span>
+                                <span class="ws-seed failed" title="seed 41: failed, 24 attempts">41</span>
+                                <span class="ws-seed solved bucket-3" title="seed 42: solved, structure 2aac1769, 2 iterations, 4 attempts">42</span>
+                                <span class="ws-seed failed" title="seed 43: failed, 14 attempts">43</span>
+                                <span class="ws-seed solved bucket-2" title="seed 44: solved, structure 188b4e5d, 6 iterations, 11 attempts">44</span>
+                                <span class="ws-seed solved bucket-0" title="seed 45: solved, structure 104d6f4d, 9 iterations, 18 attempts">45</span>
+                                <span class="ws-seed failed" title="seed 46: failed, 16 attempts">46</span>
+                                <span class="ws-seed failed" title="seed 47: failed, 17 attempts">47</span>
+                                <span class="ws-seed solved bucket-5" title="seed 48: solved, structure 09befb91, 11 iterations, 11 attempts">48</span>
+                                <span class="ws-seed failed" title="seed 49: failed, 15 attempts">49</span>
+                                <span class="ws-seed failed" title="seed 50: failed, 16 attempts">50</span>
+                                <span class="ws-seed failed" title="seed 51: failed, 14 attempts">51</span>
+                                <span class="ws-seed solved bucket-4" title="seed 52: solved, structure 545529e4, 1 iterations, 1 attempts">52</span>
+                                <span class="ws-seed failed" title="seed 53: failed, 20 attempts">53</span>
+                                <span class="ws-seed solved bucket-6" title="seed 54: solved, structure 0f67a932, 10 iterations, 19 attempts">54</span>
+                                <span class="ws-seed failed" title="seed 55: failed, 12 attempts">55</span>
+                                <span class="ws-seed failed" title="seed 56: failed, 16 attempts">56</span>
+                                <span class="ws-seed failed" title="seed 57: failed, 13 attempts">57</span>
+                                <span class="ws-seed failed" title="seed 58: failed, 15 attempts">58</span>
+                                <span class="ws-seed solved bucket-0" title="seed 59: solved, structure c8b71aef, 10 iterations, 14 attempts">59</span>
+                                <span class="ws-seed solved bucket-0" title="seed 60: solved, structure a404af44, 4 iterations, 4 attempts">60</span>
+                                <span class="ws-seed solved bucket-1" title="seed 61: solved, structure c62bd5d9, 8 iterations, 9 attempts">61</span>
+                                <span class="ws-seed failed" title="seed 62: failed, 13 attempts">62</span>
+                                <span class="ws-seed solved bucket-0" title="seed 63: solved, structure 56d73343, 9 iterations, 15 attempts">63</span>
+                            </div>
+                            <div class="ws-structure-list">
+                                <div class="ws-structure-row"><span>c62bd5d9</span><span class="ws-structure-track" style="--w: 11.5%"><i></i></span><strong>3</strong></div>
+                                <div class="ws-structure-row"><span>188b4e5d</span><span class="ws-structure-track" style="--w: 7.7%"><i></i></span><strong>2</strong></div>
+                                <div class="ws-structure-row"><span>2aac1769</span><span class="ws-structure-track" style="--w: 7.7%"><i></i></span><strong>2</strong></div>
+                                <div class="ws-structure-row"><span>545529e4</span><span class="ws-structure-track" style="--w: 7.7%"><i></i></span><strong>2</strong></div>
+                                <div class="ws-structure-row"><span>09befb91</span><span class="ws-structure-track" style="--w: 3.8%"><i></i></span><strong>1</strong></div>
+                                <div class="ws-structure-row"><span>0f67a932</span><span class="ws-structure-track" style="--w: 3.8%"><i></i></span><strong>1</strong></div>
+                                <div class="ws-structure-row"><span>104d6f4d</span><span class="ws-structure-track" style="--w: 3.8%"><i></i></span><strong>1</strong></div>
+                                <div class="ws-structure-row"><span>11f3d250</span><span class="ws-structure-track" style="--w: 3.8%"><i></i></span><strong>1</strong></div>
+                                <div class="ws-structure-more">13 more one-seed structures</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ws-attractor-cards" style="margin-top: 12px">
+                        <div class="ws-attractor-card">
+                            <strong>AddSemigroup.to_isAssociative</strong>
+                            <div class="ws-basin-meter" style="--solve: 78%"></div>
+                            <p>50 seeds, 39 solved, 5 structures. The top attractors hold 16, 14, and 7 seeds.</p>
+                        </div>
+                        <div class="ws-attractor-card">
+                            <strong>div_eq_of_eq_mul'</strong>
+                            <div class="ws-basin-meter" style="--solve: 34%"></div>
+                            <p>50 seeds, 17 solved, 14 structures. Blind solve rate is slightly higher at 36%.</p>
+                        </div>
+                        <div class="ws-attractor-card">
+                            <strong>div_div</strong>
+                            <div class="ws-basin-meter" style="--solve: 40%"></div>
+                            <p>50 seeds, 20 solved, 5 structures. One attractor holds 14 of the solved seeds.</p>
+                        </div>
+                        <div class="ws-attractor-card">
+                            <strong>add_left_iterate</strong>
+                            <div class="ws-basin-meter" style="--solve: 100%"></div>
+                            <p>50 seeds, one structure, K 2.764. A single attractor with a large guided advantage.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="scheduler">
+                    <span class="ws-kicker">Distributed controller layer</span>
+                    <div class="ws-grid-2">
+                        <div>
+                            <h2 class="ws-panel-title">Scheduler lesions matter because coordination is part of the system.</h2>
+                            <p class="ws-small">
+                                Distributed MCTS is not just faster centralized MCTS.
+                                It creates a controller surface: agents reserve
+                                frontier nodes, virtual loss pushes them apart, and
+                                one Lean REPL serializes expansion. Blocking or
+                                delaying controller actions changes theorem outcomes.
+                            </p>
+                        </div>
+                        <div class="ws-panel">
+                            <div class="ws-lanes">
+                                <div class="ws-lane"><strong>agent 0</strong><span class="ws-lane-line"></span></div>
+                                <div class="ws-lane"><strong>agent 1</strong><span class="ws-lane-line damage"></span></div>
+                                <div class="ws-lane"><strong>agent 2</strong><span class="ws-lane-line"></span></div>
+                                <div class="ws-lane"><strong>agent 3</strong><span class="ws-lane-line damage"></span></div>
+                            </div>
+                            <div class="ws-pill-row">
+                                <span class="ws-pill">reserve</span>
+                                <span class="ws-pill">expand</span>
+                                <span class="ws-pill">backpropagate</span>
+                                <span class="ws-pill">release</span>
+                                <span class="ws-pill">damage blocks or delays lanes</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="interpretation">
+                    <span class="ws-kicker">What the data says</span>
+                    <div class="ws-grid-3">
+                        <div class="ws-panel accent-purple">
+                            <h3 class="ws-panel-title">The theorem is an endpoint, not the object.</h3>
+                            <p>
+                                The object is the fiber of histories and proof
+                                structures that can realize that endpoint.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-orange">
+                            <h3 class="ws-panel-title">Damage turns tactics into questions.</h3>
+                            <p>
+                                If a block recovers, the removed resource was
+                                substitutable. If it collapses, that resource carried
+                                the basin.
+                            </p>
+                        </div>
+                        <div class="ws-panel accent-green">
+                            <h3 class="ws-panel-title">Rescue is the surprise.</h3>
+                            <p>
+                                Some constraints improve search by pruning bad
+                                branches. That makes lesions instruments, not just
+                                sabotage.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-section" id="sources">
+                    <span class="ws-kicker">Evidence surfaces</span>
+                    <ul class="ws-source-list">
+                        <li>
+                            <a href="../../blog/wonton-soup/wonton-soup.pdf">Preprint PDF</a>
+                            is the fixed manuscript snapshot for the headline
+                            results.
                         </li>
-                        <li class="timeline-item">
-                            <div class="timeline-date">
-                                February 6, 2026
-                            </div>
-                            <div class="timeline-note">
-                                Dashboard manifest defaulted to run
-                                <code>corpus-2026-02-06-003808</code> with
-                                522 theorems.
-                            </div>
+                        <li>
+                            <a href="../../dashboards/wonton-soup/">Dashboard</a>
+                            is the inspection surface for theorem traces and run
+                            payloads.
                         </li>
-                        <li class="timeline-item">
-                            <div class="timeline-date">
-                                February 3-12, 2026
-                            </div>
-                            <div class="timeline-note">
-                                Follow-up analysis window logged with 355
-                                run entries and intervention taxonomy
-                                pressure tests.
-                            </div>
+                        <li>
+                            <a href="../../cabinet/wonton-soup/README/">Cabinet docs</a>
+                            map the lake, artifact contracts, distributed MCTS
+                            semantics, and runbooks.
+                        </li>
+                        <li>
+                            <span class="ws-code">dossiers/wonton-soup/artifacts/lake/lake.duckdb</span>
+                            is the local evidence lake used for the live inventory and
+                            intervention bars on this page.
                         </li>
                     </ul>
                 </section>
 
-                <section class="section-block" id="dashboard">
-                    <div class="site-section-title">Dashboard</div>
-                    <div class="feature-card">
-                        <div class="feature-title">Wonton Dashboard</div>
-                        <p>
-                            Theorem-level traces, intervention splits,
-                            and run metrics. The active run is selected by
-                            a manifest rather than hardcoded, so payloads
-                            in the
-                            <a href="../../dashboards/wonton-soup/data/"
-                                >data directory</a
-                            >
-                            can rotate without touching the page.
-                        </p>
-                        <div class="link-row">
-                            <a href="../../dashboards/wonton-soup/"
-                                >Open Dashboard</a
-                            >
-                            <a href="../../dashboards/wonton-soup/data/manifest.json"
-                                >Manifest</a
-                            >
-                        </div>
-                    </div>
-                </section>
                 <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
                 <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
             </main>
