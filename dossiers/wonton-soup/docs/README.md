@@ -1,12 +1,10 @@
 # Wonton Soup Docs
 
-Canonical documentation map for `dossiers/wonton-soup`.
+Documentation map for `dossiers/wonton-soup`.
 
 ## Mode Framing
 
-`wonton-soup` is an intervention framework for studying proof-search structure. Centralized MCTS establishes the structural landscape: proof families, basin stability, recovery after lesion, and blind-relative efficiency (K). Distributed MCTS tests how collective control changes access to that landscape through multiple local controllers, coordination pressure, and scheduler lesions over a shared frontier.
-
-The research stack is sequential. Centralized runs map the morphology and measure K as a single-controller baseline, comparable to the single-agent examples in Chis-Ciure and Levin (2025). Distributed runs then ask whether collective search creates efficiency that individual search does not access, and whether K decomposes across agents following the framework's compositionality property.
+`wonton-soup` perturbs MCTS proof search and measures what survives. Centralized runs map proof families, basin stability, rerouting, collapse, and blind-relative efficiency (K). Distributed runs test whether coordinated controllers change access to the same landscape.
 
 ## Concepts
 
@@ -36,13 +34,8 @@ The research stack is sequential. Centralized runs map the morphology and measur
 
 ## Operations
 
-- Setup Lean + REPL environment: [Lean REPL Setup](ops/lean-repl-setup.md)
-- Build/validate/sweep corpus artifacts: [Corpus Pipeline](ops/corpus-pipeline.md)
-- Verification and representative command coverage: [Verification Matrix](ops/verification-matrix.md)
-- Inspect run outputs with `jq` workflows: [Log Query Cookbook](ops/log-query-cookbook.md)
-- Paired Lean↔Coq primary gate: [Cross-Assistant Paired Benchmark (Primary Gate)](ops/cross-assistant-paired-benchmark.md)
-- Unpaired alignment diagnostic: [Cross-Assistant Alignment (Diagnostic)](ops/cross-assistant-alignment.md)
-- Cross-run lake reconcile/export/sync: [Run Lake (Cross-Run DuckDB)](ops/run-lake.md)
-- Lake jobs and reference selection: [Lake Jobs (Materialized Datasets)](ops/lake-jobs.md)
-- Paper workflow runbook: [Paper Workflow Runbook](ops/paper-freeze.md)
-- Follow-up run matrix and execution script: [Follow-Up Run Program (March 2026)](ops/followup-run-program.md)
+- Setup: [Setup](ops/setup.md)
+- Corpus artifacts: [Corpus](ops/corpus.md)
+- Lake, jobs, exports, and preservation: [Lake](ops/lake.md)
+- Verification, cross-assistant gates, and run inspection: [Verification](ops/verification.md)
+- Paper rebuild workflow: [Paper](ops/paper.md)

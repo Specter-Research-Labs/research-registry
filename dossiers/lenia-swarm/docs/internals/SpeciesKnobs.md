@@ -94,10 +94,10 @@ For this repository, the correct order is:
 - Controls which kernel lobes matter and by how much.
 - In this repo's random sampler, `b` is sampled independently for three lobes, so broad random search here quickly stops being "unimodal Orbium-like" and becomes a different kernel family.
 
-## Why parameter embedding and cross-map search are wrong for Orbium-like reconstruction
+## Parameter Embedding and Cross-Map Search
 
-- `parameter_embedding.enabled` turns the local rule into a spatially varying field of parameters. That is useful for multispecies ecology, not for recreating a single canonical glider family.
-- `environment.type = "cross_map"` adds structured obstacles/passages. That is useful for navigation and mover discovery, but it promotes repeated field motifs and distributed patterns.
+- `parameter_embedding.enabled` turns the local rule into a spatially varying field of parameters. Use it for multispecies ecology, not for recreating a single canonical glider family.
+- `environment.type = "cross_map"` adds structured obstacles/passages. Use it for navigation and mover discovery, but expect repeated field motifs and distributed patterns.
 - `beam_mutation` and in-run interventions explicitly mutate the rule during the simulation. That is the opposite of fixed-species reconstruction.
 
 If the target is "something like the Chakazul glider", those features must stay off.

@@ -57,6 +57,126 @@ final class ColorFrameWriter {
     }
 }
 
+struct CapturedStateFrame {
+    let step: Int
+    let width: Int
+    let height: Int
+    let channels: Int
+    let values: [Float]
+
+    func matterTotals() -> [Float] {
+        var totals = [Float](repeating: 0, count: width * height)
+        for cell in 0..<(width * height) {
+            let base = cell * channels
+            var total: Float = 0
+            for channel in 0..<channels {
+                let value = values[base + channel]
+                if value.isFinite {
+                    total += max(0, value)
+                }
+            }
+            totals[cell] = total
+        }
+        return totals
+    }
+
+    func matterBytes(scale explicitScale: Float? = nil) -> Data {
+        let totals = matterTotals()
+        let scale = max(explicitScale ?? robustPositiveScale(totals), 1e-6)
+        let denominator = log1p(scale)
+        var bytes = [UInt8](repeating: 0, count: width * height)
+        for cell in 0..<(width * height) {
+            let value = max(0, totals[cell])
+            let normalized = max(0, min(1, log1p(value) / denominator))
+            bytes[cell] = UInt8(normalized * 255)
+        }
+        return Data(bytes)
+    }
+
+    func occupancyMaskBytes(threshold: Float = 0.05) -> Data {
+        let totals = matterTotals()
+        var bytes = [UInt8](repeating: 0, count: width * height)
+        for cell in 0..<(width * height) {
+            bytes[cell] = totals[cell] >= threshold ? 255 : 0
+        }
+        return Data(bytes)
+    }
+
+    func supportMaskBytes(scale: Float? = nil) -> Data {
+        let totals = matterTotals()
+        let supportThreshold = max(0.005, 0.015 * max(scale ?? robustPositiveScale(totals), 1e-6))
+        var bytes = [UInt8](repeating: 0, count: width * height)
+        for cell in 0..<(width * height) {
+            bytes[cell] = totals[cell] >= supportThreshold ? 255 : 0
+        }
+        return Data(bytes)
+    }
+}
+
+final class ChannelAwareColorFrameWriter {
+    let outputDir: URL
+    private(set) var error: Error?
+    private let fallbackWriter: ColorFrameWriter
+
+    init(outputDir: URL) {
+        self.outputDir = outputDir
+        self.fallbackWriter = ColorFrameWriter(outputDir: outputDir)
+    }
+
+    func write(frame: CapturedStateFrame, scale: Float? = nil) {
+        guard error == nil else { return }
+        let name = String(format: "frame_%06d.png", frame.step)
+        let url = outputDir.appendingPathComponent(name)
+        do {
+            if frame.channels <= 1 {
+                fallbackWriter.write(
+                    step: frame.step,
+                    width: frame.width,
+                    height: frame.height,
+                    grayscale: frame.matterBytes(scale: scale)
+                )
+                if let error = fallbackWriter.error {
+                    throw error
+                }
+            } else {
+                try writePNGColorFrame(
+                    rgba: channelAwareRGBA(frame: frame, scale: scale),
+                    width: frame.width,
+                    height: frame.height,
+                    url: url
+                )
+            }
+        } catch {
+            self.error = error
+        }
+    }
+}
+
+final class ChannelDiagnosticFrameWriter {
+    let outputDir: URL
+    private(set) var error: Error?
+
+    init(outputDir: URL) {
+        self.outputDir = outputDir
+    }
+
+    func write(frame: CapturedStateFrame, scale: Float? = nil) {
+        guard error == nil else { return }
+        let name = String(format: "frame_%06d.png", frame.step)
+        let url = outputDir.appendingPathComponent(name)
+        do {
+            try writePNGColorFrame(
+                rgba: channelDiagnosticRGBA(frame: frame, scale: scale),
+                width: frame.width,
+                height: frame.height,
+                url: url
+            )
+        } catch {
+            self.error = error
+        }
+    }
+}
+
 enum FrameExportError: Error, LocalizedError {
     case invalidSize(expected: Int, actual: Int)
     case providerFailed
@@ -87,6 +207,118 @@ enum FrameExportError: Error, LocalizedError {
             return "Failed to render Lenia color frame"
         }
     }
+}
+
+func channelAwareRGBA(frame: CapturedStateFrame, scale explicitScale: Float? = nil) -> Data {
+    let cellCount = frame.width * frame.height
+    var totals = [Float](repeating: 0, count: cellCount)
+    totals.withUnsafeMutableBufferPointer { totalsPtr in
+        for cell in 0..<cellCount {
+            let base = cell * frame.channels
+            var total: Float = 0
+            for channel in 0..<frame.channels {
+                let value = frame.values[base + channel]
+                if value.isFinite {
+                    total += max(0, value)
+                }
+            }
+            totalsPtr[cell] = total
+        }
+    }
+
+    let scale = max(explicitScale ?? robustPositiveScale(totals), 1e-6)
+    let logDenominator = log1p(scale)
+    let palette: [(Float, Float, Float)] = [
+        (0.18, 0.92, 0.42),
+        (1.00, 0.25, 0.16),
+        (0.18, 0.48, 1.00),
+        (0.95, 0.82, 0.20),
+        (0.82, 0.35, 1.00),
+        (0.10, 0.85, 0.86),
+    ]
+    var rgba = [UInt8](repeating: 0, count: cellCount * 4)
+    for cell in 0..<cellCount {
+        rgba[cell * 4 + 3] = 255
+    }
+
+    for cell in 0..<cellCount {
+        let total = totals[cell]
+        guard total > 1e-9 else { continue }
+        let base = cell * frame.channels
+        var red: Float = 0
+        var green: Float = 0
+        var blue: Float = 0
+        for channel in 0..<frame.channels {
+            let value = frame.values[base + channel]
+            let positive = value.isFinite ? max(0, value) : 0
+            guard positive > 0 else { continue }
+            let weight = positive / total
+            let color = palette[channel % palette.count]
+            red += weight * color.0
+            green += weight * color.1
+            blue += weight * color.2
+        }
+        let intensity = max(0, min(1, log1p(total) / logDenominator))
+        let lifted = pow(intensity, 0.72)
+        let out = cell * 4
+        rgba[out + 0] = UInt8(max(0, min(1, red * lifted)) * 255)
+        rgba[out + 1] = UInt8(max(0, min(1, green * lifted)) * 255)
+        rgba[out + 2] = UInt8(max(0, min(1, blue * lifted)) * 255)
+    }
+    return Data(rgba)
+}
+
+func channelDiagnosticRGBA(frame: CapturedStateFrame, scale explicitScale: Float? = nil) -> Data {
+    let cellCount = frame.width * frame.height
+    let scale = max(explicitScale ?? robustPositiveScale(frame.matterTotals()), 1e-6)
+    let logDenominator = log1p(scale)
+    var rgba = [UInt8](repeating: 0, count: cellCount * 4)
+    for cell in 0..<cellCount {
+        let base = cell * frame.channels
+        let red: Float
+        let green: Float
+        let blue: Float
+        if frame.channels == 1 {
+            let value = normalizedChannelValue(frame.values[base], logDenominator: logDenominator)
+            red = value
+            green = value
+            blue = value
+        } else if frame.channels == 2 {
+            let first = normalizedChannelValue(frame.values[base], logDenominator: logDenominator)
+            let second = normalizedChannelValue(frame.values[base + 1], logDenominator: logDenominator)
+            red = first
+            green = first
+            blue = second
+        } else {
+            red = normalizedChannelValue(frame.values[base], logDenominator: logDenominator)
+            green = normalizedChannelValue(frame.values[base + 1], logDenominator: logDenominator)
+            blue = normalizedChannelValue(frame.values[base + 2], logDenominator: logDenominator)
+        }
+        let out = cell * 4
+        rgba[out + 0] = UInt8(max(0, min(1, red)) * 255)
+        rgba[out + 1] = UInt8(max(0, min(1, green)) * 255)
+        rgba[out + 2] = UInt8(max(0, min(1, blue)) * 255)
+        rgba[out + 3] = 255
+    }
+    return Data(rgba)
+}
+
+private func normalizedChannelValue(_ value: Float, logDenominator: Float) -> Float {
+    guard value.isFinite else { return 0 }
+    return max(0, min(1, log1p(max(0, value)) / logDenominator))
+}
+
+func robustMatterScale(_ frames: [CapturedStateFrame]) -> Float {
+    frames.reduce(Float(1)) { scale, frame in
+        max(scale, robustPositiveScale(frame.matterTotals()))
+    }
+}
+
+func robustPositiveScale(_ values: [Float]) -> Float {
+    let positives = values.filter { $0.isFinite && $0 > 0 }.sorted()
+    guard !positives.isEmpty else { return 1 }
+    let index = min(positives.count - 1, max(0, Int(Double(positives.count - 1) * 0.995)))
+    return positives[index]
 }
 
 func writePNGFrame(data: Data, width: Int, height: Int, url: URL) throws {

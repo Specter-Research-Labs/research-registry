@@ -184,7 +184,7 @@ public distributed actor LeniaWorker {
             // Use searchConfig directly from job (no parsing needed)
             let searchConfig = materializedJob.searchConfig
             let batchSize = searchConfig.batchSize
-            let initSeedOffset = searchConfig.initSeedOffset ?? 0
+            var initSeedOffset = searchConfig.initSeedOffset ?? 0
 
             guard materializedJob.count > 0 else {
                 throw WorkerError.invalidConfig("Job count must be > 0")
@@ -207,8 +207,23 @@ public distributed actor LeniaWorker {
                 }
             }
 
-            let firstSeed = seeds[0]
-            overrides["params.seed"] = firstSeed
+            if overrides["params.seed"] == nil {
+                overrides["params.seed"] = seeds[0]
+            }
+            if let initSeedOverride = overrides["init.seed"] {
+                let asInt: Int? = {
+                    if let int = initSeedOverride as? Int { return int }
+                    if let double = initSeedOverride as? Double { return Int(double) }
+                    return nil
+                }()
+                guard let extra = asInt else {
+                    throw WorkerError.invalidConfig(
+                        "Worker \(workerId) job \(materializedJob.id) init.seed override must be an integer."
+                    )
+                }
+                initSeedOffset += extra
+                overrides.removeValue(forKey: "init.seed")
+            }
             overrides["run.steps"] = searchConfig.steps
 
             // Re-encode baseConfig to Data to apply overrides via loadRuntimeConfig

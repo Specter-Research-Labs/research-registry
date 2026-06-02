@@ -11,6 +11,7 @@ import duckdb
 import numpy as np
 import pytest
 
+from lenia_swarm_analysis.morphospace import feature_tda_profile as feature_tda_profile_module
 from lenia_swarm_analysis.morphospace.common_morphology import (
     AXIS_IDS as COMMON_MORPHOLOGY_AXIS_IDS,
 )
@@ -1861,17 +1862,19 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
     assert direct_payload["comparisonFeatureSpaceId"] == "lenia_terminal_v1"
     assert direct_payload["comparisonObservationsUpdated"] == 1
     assert direct_payload["comparisonFeatureValuesUpdated"] == len(TERMINAL_AXIS_IDS)
+    assert direct_payload["commonFeatureSpaceId"] == "common_morphology_v1"
+    assert direct_payload["commonObservationsUpdated"] == 1
     assert direct_payload["topologyStudyId"] is None
 
     connection = connect_database(warehouse_path)
     try:
         assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 1
         assert _scalar_int(connection, "SELECT COUNT(*) FROM study_specimens") == 1
-        assert _scalar_int(connection, "SELECT COUNT(*) FROM morphospace_sources") == 1
-        assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 1
-        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 1
-        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == len(
-            TERMINAL_AXIS_IDS
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM morphospace_sources") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 2
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == (
+            len(TERMINAL_AXIS_IDS) + 12
         )
     finally:
         connection.close()
@@ -1895,6 +1898,7 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
     assert payload["statusUpdated"] == 1
     assert payload["comparisonFeatureSpaceId"] == "lenia_terminal_v1"
     assert payload["comparisonFeatureValuesUpdated"] == len(TERMINAL_AXIS_IDS)
+    assert payload["commonFeatureSpaceId"] == "common_morphology_v1"
     assert payload["topologyStudyId"] is None
 
 
@@ -1962,6 +1966,8 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
             study_id,
             "--run-id",
             "run-1",
+            "--source-algorithm",
+            "discovery",
             "--json",
         ]
     ) == 0
@@ -1971,6 +1977,7 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
     assert matrix_payload["summary"]["axisCount"] == len(TERMINAL_AXIS_IDS)
     assert matrix_payload["summary"]["runCounts"] == {"run-1": 1}
     assert matrix_payload["observations"][0]["runId"] == "run-1"
+    assert matrix_payload["observations"][0]["sourceAlgorithm"] == "discovery"
     assert len(matrix_payload["matrix"][0]) == len(TERMINAL_AXIS_IDS)
 
     with pytest.raises(SystemExit, match="missing numeric axis"):
@@ -2067,9 +2074,9 @@ def test_morphospace_cli_compares_feature_cohorts(
             context_kind="baseline",
             label="baseline",
         )
-        for specimen_id, run_id, values in [
-            ("fixture-left", "run-left", {"x": 0.0, "y": 0.0}),
-            ("fixture-right", "run-right", {"x": 3.0, "y": 4.0}),
+        for specimen_id, run_id, source_algorithm, values in [
+            ("fixture-left", "run-left", "manual-left", {"x": 0.0, "y": 0.0}),
+            ("fixture-right", "run-right", "manual-right", {"x": 3.0, "y": 4.0}),
         ]:
             upsert_specimen(
                 connection,
@@ -2079,7 +2086,7 @@ def test_morphospace_cli_compares_feature_cohorts(
                     "run_id": run_id,
                     "source_kind": "fixture",
                     "source_mode": "cohort-test",
-                    "source_algorithm": "manual",
+                    "source_algorithm": source_algorithm,
                     "provenance_json": {},
                 },
             )
@@ -2115,12 +2122,12 @@ def test_morphospace_cli_compares_feature_cohorts(
             "fixture_space",
             "--left-label",
             "left",
-            "--left-run-id",
-            "run-left",
+            "--left-source-algorithm",
+            "manual-left",
             "--right-label",
             "right",
-            "--right-run-id",
-            "run-right",
+            "--right-source-algorithm",
+            "manual-right",
             "--json",
         ]
     ) == 0
@@ -2133,6 +2140,160 @@ def test_morphospace_cli_compares_feature_cohorts(
     assert payload["summary"]["leftToRightNearestDistance"]["max"] == 5.0
     assert payload["topAxisDeltas"][0]["axisId"] == "y"
     assert payload["topAxisDeltas"][0]["deltaRightMinusLeft"] == 4.0
+    assert payload["nearestMatches"]["leftToRight"][0]["distance"] == 5.0
+    assert payload["nearestMatches"]["leftToRight"][0]["left"]["specimenId"] == "fixture-left"
+    assert payload["nearestMatches"]["leftToRight"][0]["right"]["specimenId"] == "fixture-right"
+    assert payload["nearestMatches"]["leftToRight"][0]["axisDeltas"][0]["axisId"] == "y"
+
+
+def test_feature_tda_profile_bounds_thresholded_large_cohorts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    warehouse_path = tmp_path / "warehouse.duckdb"
+    connection = connect_database(warehouse_path)
+    calls: list[dict[str, Any]] = []
+
+    def fake_ripser(matrix: np.ndarray, **kwargs: Any) -> dict[str, Any]:
+        calls.append({"shape": tuple(matrix.shape), "kwargs": kwargs})
+        return {
+            "dgms": [
+                np.asarray([[0.0, 1.0], [0.0, np.inf]], dtype=np.float64),
+                np.asarray([[0.2, 0.4]], dtype=np.float64),
+            ]
+        }
+
+    monkeypatch.setattr(feature_tda_profile_module, "ripser", fake_ripser)
+    monkeypatch.setitem(
+        feature_tda_profile_module.PROFILE_PRESETS,
+        "unit",
+        {
+            "exact_max_observations": 4,
+            "threshold_max_observations": 4,
+            "threshold_sample_points": 5,
+            "landmark_counts": (3,),
+            "subsample_sizes": (),
+            "subsample_replicates": 0,
+            "threshold_quantiles": (0.50,),
+            "pairwise_sample_points": 5,
+            "min_stratum_size": 99,
+            "max_strata": 0,
+        },
+    )
+    try:
+        study_id = register_study(
+            connection,
+            study_kind="fixture",
+            label="tda-fixture",
+            run_id="run-tda",
+        )
+        context_id = register_context(
+            connection,
+            study_id=study_id,
+            context_kind="baseline",
+            label="fixture",
+        )
+        upsert_morphospace_source(
+            connection,
+            source_id="synthetic_fixture",
+            source_kind="fixture",
+            label="Synthetic fixture",
+        )
+        upsert_feature_space(
+            connection,
+            feature_space_id="tda_fixture_space",
+            feature_space_kind="fixture",
+            label="TDA fixture space",
+            version_label="v1",
+            coordinate_policy="unit-test",
+        )
+        replace_feature_axes(
+            connection,
+            feature_space_id="tda_fixture_space",
+            axis_rows=[
+                {
+                    "axis_id": "x",
+                    "axis_index": 0,
+                    "axis_family": "fixture",
+                    "label": "x",
+                    "units": None,
+                    "metadata_json": {},
+                },
+                {
+                    "axis_id": "y",
+                    "axis_index": 1,
+                    "axis_family": "fixture",
+                    "label": "y",
+                    "units": None,
+                    "metadata_json": {},
+                },
+            ],
+        )
+        for index in range(10):
+            specimen_id = f"specimen-{index}"
+            upsert_specimen(
+                connection,
+                {
+                    "specimen_id": specimen_id,
+                    "study_id": study_id,
+                    "run_id": "run-tda",
+                    "source_kind": "fixture",
+                    "source_mode": "unit",
+                    "source_algorithm": "manual",
+                    "provenance_json": {},
+                },
+            )
+            register_specimen_study(
+                connection,
+                study_id=study_id,
+                specimen_id=specimen_id,
+            )
+            observation_id = f"observation-{index}"
+            upsert_observation(
+                connection,
+                observation_id=observation_id,
+                specimen_id=specimen_id,
+                study_id=study_id,
+                source_id="synthetic_fixture",
+                context_id=context_id,
+                observation_kind="fixture_embedding",
+            )
+            replace_feature_values(
+                connection,
+                observation_id=observation_id,
+                feature_space_id="tda_fixture_space",
+                value_rows=[
+                    {
+                        "axis_id": "x",
+                        "raw_value": float(index),
+                        "normalized_value": float(index) / 10.0,
+                    },
+                    {
+                        "axis_id": "y",
+                        "raw_value": float(index % 3),
+                        "normalized_value": float(index % 3) / 3.0,
+                    },
+                ],
+            )
+
+        payload = feature_tda_profile_module.run_feature_tda_profile(
+            connection,
+            feature_space_id="tda_fixture_space",
+            profile="unit",
+        )
+    finally:
+        connection.close()
+
+    assert payload["summary"]["observationCount"] == 10
+    assert payload["exact"]["status"] == "skipped"
+    assert payload["summary"]["thresholdMaxObservations"] == 4
+    assert payload["summary"]["thresholdSamplePoints"] == 5
+    threshold_case = payload["thresholded"][0]
+    assert threshold_case["pointCount"] == 5
+    assert threshold_case["sample"]["sourcePointCount"] == 10
+    assert threshold_case["sample"]["samplePointCount"] == 5
+    assert calls[0]["shape"] == (5, 2)
+    assert calls[0]["kwargs"]["thresh"] == threshold_case["threshold"]
 
 
 def test_common_morphology_point_cloud_features_distinguish_shapes() -> None:

@@ -11,9 +11,10 @@ Michael Levin's experimental work on basal cognition suggests that cognition is 
 
 Frameworks like the cognitive light cone—the spatiotemporal range over which a system can pursue goals—and TAME (Technological Approach to Mind Everywhere) propose that intelligence exists at every scale. Under this view, the formal tools used to describe neural computation can also describe goal-directed problem-solving in non-neural tissue. Instead of micromanaging individual cells, the goal becomes finding the right level of description to "prompt" or persuade the system toward a target morphology.
 
-Levin provides the biological evidence and the conceptual framework: navigation in morphospace, polycomputing across nested scales, and the hypothesis that physical systems act as interfaces to a deeper space of patterns. The central question for this lab is whether that structure can be formalized. We want to provide the mathematical characterization of the spaces these systems navigate—what is the distance between two forms? What are the geodesics? Where are the barriers between attractor basins? We want to make the idea of "pattern space" precise enough that we can actually run experiments on it across different substrates.
+Levin provides the biological evidence: navigation in morphospace, polycomputing across nested scales, and physical systems acting as interfaces to deeper pattern structure. The lab question is formalization. What is the distance between two forms? What are the geodesics? Where are the barriers between attractor basins? "Pattern space" has to become precise enough to run experiments across substrates.
 
-We are a small, independent lab running this work on top of our day jobs. Because we do not have the time to manually redact every finding into a formal paper, we publish Research Notes—smaller results, methods, and framing pieces that we have LLMs help us draft from our discussions. This keeps the momentum going and lets us publish dead ends and intermediate steps without pretending every useful artifact is a finished paper.
+Research Notes are small result and method packets. They can carry dead ends,
+intermediate measurements, and revised framing without pretending to be papers.
 
 ## Morphospace Versus Platonic Space
 
@@ -29,7 +30,7 @@ We are coming at this through a few small worlds we can actually perturb.
 
 [Lenia](geometry-of-a-synthetic-morphospace/): a visible synthetic morphospace. It is not biology, and that is partly the point—we can see more of the machinery and ask how persistent forms, parameter moves, and hidden-state transport relate.
 
-[Material-memory](material-memory-without-a-controller/): a physical substrate with local history-dependent updates. Can it remember anything useful?
+[Material-memory](material-memory-without-a-controller/): a physical substrate with local history-dependent updates. Does past stimulus change future response?
 
 [Categorical morphogenesis](where-tissues-break/): cutting as a typed operation on a wiring diagram. The worst cut is not always the one that removes the most connectivity; sometimes it is the one that leaves a fragment too small to sustain its pattern.
 
@@ -55,7 +56,7 @@ Is a system actually computing in a counterfactual sense, or merely converging?
 
 A ball in a bowl converges, just like a Boolean network, a tissue, or a proof search. Convergence alone is cheap; we care about what happens under intervention.
 
-If the system recovers under perturbation, preserves a macro-family while changing micro-path, or exposes the same invariant across implementations, then there is more going on than falling downhill. If it does not, we should stop using pattern-space language for that case.
+If the system recovers under perturbation, preserves a macro-family while changing micro-path, or exposes the same invariant across implementations, then there is more going on than falling downhill. If it does not, drop the pattern-space language for that case.
 
 The specific patterns we look for across systems:
 
@@ -63,4 +64,4 @@ The specific patterns we look for across systems:
 - Productive backtracking: get locally worse to do better globally.
 - Basin-preserving degeneracy: many micro-trajectories land in the same functional family.
 
-Any one of these in a single system could be a local quirk. The same pattern appearing across proof search, morphogenesis, and a physical substrate is the actual signal.
+A single-system hit can be a local quirk. The same pattern across proof search, morphogenesis, and a physical substrate is the signal.

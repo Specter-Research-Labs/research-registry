@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light" />
+        <meta name="robots" content="noindex" />
+        <title>Fiber Theory | Lenia Swarm | SPECTER Labs</title>
+        <link rel="icon" href="../../../assets/logo-black.svg" type="image/svg+xml" />
+        <link rel="preload" href="../../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="../../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="../../../style.css" />
+        <style>
+            .fiber-page {
+                max-width: 1100px;
+            }
+
+            .fiber-kicker {
+                color: var(--sl-color-accent);
+            }
+
+            .fiber-hero {
+                border-bottom: 1px solid var(--site-rule);
+                margin-bottom: 2.2em;
+                padding-bottom: 1em;
+            }
+
+            .fiber-grid {
+                display: grid;
+                border-bottom: 1px solid var(--site-rule);
+                border-top: 1px solid var(--site-rule);
+                gap: 0;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                margin: 1.25em 0 2em;
+            }
+
+            .fiber-card {
+                padding: 12px 14px 12px 0;
+            }
+
+            .fiber-card + .fiber-card {
+                border-left: 1px solid var(--site-rule);
+                padding-left: 14px;
+            }
+
+            .fiber-card strong {
+                display: block;
+                font-size: 22px;
+                letter-spacing: 0.02em;
+                line-height: 1.1;
+                margin-bottom: 0.35em;
+            }
+
+            .fiber-card span {
+                color: var(--site-muted);
+                font-family: var(--site-font-prose);
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .fiber-section {
+                margin-bottom: 3em;
+            }
+
+            .fiber-section h2 {
+                border-top: 1px solid var(--site-rule);
+                font-size: 15px;
+                letter-spacing: 0.16em;
+                margin-bottom: 0.8em;
+                padding-top: 1em;
+                text-transform: uppercase;
+            }
+
+            .fiber-section p,
+            .fiber-section li {
+                font-family: var(--site-font-prose);
+                font-size: 16px;
+                font-weight: 300;
+                line-height: 1.62;
+            }
+
+            .fiber-section ul {
+                margin: 0.8em 0 1em 1.35em;
+            }
+
+            .fiber-figure {
+                margin: 1.4em 0 0;
+            }
+
+            .fiber-figure img {
+                border: 0;
+                display: block;
+                height: auto;
+                width: 100%;
+            }
+
+            .fiber-caption {
+                border-top: 1px solid var(--site-rule);
+                color: var(--site-muted);
+                font-family: var(--sl-font-mono);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                line-height: 1.45;
+                margin-top: 0.6em;
+                padding-top: 0.55em;
+                text-transform: uppercase;
+            }
+
+            .fiber-note {
+                background: var(--sl-overlay-ink-2-5);
+                border-left: 2px solid var(--sl-color-accent);
+                font-family: var(--site-font-prose);
+                margin: 1.2em 0;
+                padding: 12px 14px;
+            }
+
+            .fiber-link-list {
+                display: grid;
+                gap: 8px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                margin-top: 1em;
+            }
+
+            .fiber-link-list a {
+                border: 1px solid var(--site-rule);
+                font-family: var(--sl-font-mono);
+                font-size: 12px;
+                letter-spacing: 0.08em;
+                padding: 9px 10px;
+                text-decoration: none;
+                text-transform: uppercase;
+            }
+
+            .fiber-link-list a:hover {
+                border-color: var(--sl-color-accent);
+            }
+
+            .fiber-section a,
+            .section-lead a,
+            .fiber-card a {
+                text-decoration-thickness: 1px;
+                text-underline-offset: 0.18em;
+            }
+
+            @media (max-width: 800px) {
+                .fiber-grid,
+                .fiber-link-list {
+                    grid-template-columns: 1fr;
+                }
+
+                .fiber-card {
+                    padding-right: 0;
+                }
+
+                .fiber-card + .fiber-card {
+                    border-left: 0;
+                    border-top: 1px solid var(--site-rule);
+                    padding-left: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="site-shell fiber-page">
+            <header class="site-topnav">
+                <a class="site-brand" href="../../../">
+                    <img src="../../../assets/logo-black.svg" alt="SPECTER Labs logo" class="logo" />
+                    <span class="site-brand-name">SPECTER LABS</span>
+                </a>
+                <nav class="site-topnav-links" aria-label="Site navigation">
+                    <a class="nav-link" href="../../" aria-current="page">Dossiers</a>
+                    <a class="nav-link" href="../../../addenda/">Addenda</a>
+                    <a class="nav-link" href="../../../blog/">Blog</a>
+                    <a class="nav-link" href="../../../cabinet/">Cabinet</a>
+                </nav>
+            </header>
+            <div class="site-rules" aria-hidden="true">
+                <div class="site-rule strong"></div>
+                <div class="site-rule"></div>
+            </div>
+
+            <main class="site-main">
+                <section class="fiber-hero">
+                    <span class="site-kicker fiber-kicker">Lenia Swarm / Morphospace</span>
+                    <div class="site-page-title">Fiber Theory</div>
+                    <p class="section-lead">
+                        We use <a href="https://arxiv.org/abs/2212.07906">Flow Lenia</a>
+                        as a clean genotype-to-phenotype map: choose rule parameters,
+                        run the system, measure the form, then ask how the resulting
+                        morphology space bends, loops, and overlaps with
+                        <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">859 EmbryoMaker morphology snapshots</a>
+                        and
+                        <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">232 Dryad fish body outlines</a>.
+                    </p>
+                </section>
+
+                <section class="fiber-grid" aria-label="Current counts">
+                    <div class="fiber-card">
+                        <strong>25,167</strong>
+                        <span>Flow Lenia specimens in the shared common-morphology layer.</span>
+                    </div>
+                    <div class="fiber-card">
+                        <strong>8,192</strong>
+                        <span>No-food 256x256 2-channel specimens with exact dense TDA.</span>
+                    </div>
+                    <div class="fiber-card">
+                        <strong>859 + 232</strong>
+                        <span><a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">EmbryoMaker morphology snapshots</a> and <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad fish body outlines</a> in the same descriptor space.</span>
+                    </div>
+                </section>
+
+                <section class="fiber-section" id="map">
+                    <h2>1. The Map</h2>
+                    <p>
+                        The object is the genotype-to-phenotype projection. A genotype is a
+                        Flow Lenia rule parameterization. A phenotype is the measured shape
+                        and trajectory after simulation. The fiber over a phenotype is the
+                        set of parameterizations that land near the same measured form.
+                    </p>
+                    <figure class="fiber-figure">
+                        <img src="../../../assets/blog/lenia-morphospace-report/fig-fiber-bundle.svg" alt="Fiber bundle schematic." />
+                        <figcaption class="fiber-caption">
+                            Phenotype space sits below the rule parameters. The fiber over
+                            a measured form is the set of parameterizations that reach it.
+                        </figcaption>
+                    </figure>
+                </section>
+
+                <section class="fiber-section" id="topology">
+                    <h2>2. Topology</h2>
+                    <p>
+                        On the full Lenia cloud, the 4,096-landmark run finds 4,930 H1
+                        intervals, with top persistence 2.78. On the no-food 8,192
+                        cohort, exact dense TDA finds 7,275 H1 intervals, with top
+                        persistence 0.80.
+                    </p>
+                    <p>
+                        The <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">EmbryoMaker morphology snapshots</a>
+                        have 297 exact H1 intervals with top persistence 0.29. The
+                        <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad fish-outline cohort</a>
+                        has 66 exact H1 intervals with top persistence 0.64.
+                        The interval counts are sample-size dependent; the comparable fact
+                        is that the same descriptor layer sees loop structure in all three
+                        clouds.
+                    </p>
+                    <figure class="fiber-figure">
+                        <img src="../../../assets/blog/lenia-morphospace-report/fig-persistence.svg?v=axis-20260520" alt="Persistent homology schematic." />
+                        <figcaption class="fiber-caption">
+                            Longer bars mark components and loops that persist across a
+                            wider filtration range.
+                        </figcaption>
+                    </figure>
+                </section>
+
+                <section class="fiber-section" id="transport">
+                    <h2>3. Transport</h2>
+                    <p>
+                        The strongest local result is fish-near, meaning near the
+                        <a href="https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t">Dryad outline cohort</a>
+                        in the shared descriptor layer. A
+                        localized H1 neighborhood has persistence 0.563, Dryad-outline
+                        median distance 3.30 against a global Dryad-outline median of
+                        5.90, and 32 matched transport groups with a stratified
+                        transport-enrichment p-value around 0.0002.
+                    </p>
+                    <p>
+                        Transport is where the geometry starts acting like physics. We
+                        move through nearby parameterizations and ask whether returning to
+                        a similar phenotype also returns the same internal state. Across
+                        4,802 flow-supported transport groups, the broad corpus has a real
+                        tail of non-trivial residue; the strongest localized signal is the
+                        fish-near loop neighborhood.
+                    </p>
+                    <figure class="fiber-figure">
+                        <img src="../../../assets/blog/lenia-morphospace-report/fig-holonomy-schematic.svg?v=transport-20260520" alt="Loop transport schematic." />
+                        <figcaption class="fiber-caption">
+                            Loop transport gives us a concrete curvature test: move around
+                            a phenotype neighborhood and measure the residue left in state.
+                        </figcaption>
+                    </figure>
+                </section>
+
+                <section class="fiber-section" id="arrangement">
+                    <h2>4. Interfaces and Arrangement</h2>
+                    <p>
+                        The polynomial-functor split is still useful. Kernels behave like
+                        interfaces: they sense neighborhood densities and contribute
+                        responses. The channel-weight matrix is arrangement: it wires those
+                        interfaces together.
+                    </p>
+                    <figure class="fiber-figure">
+                        <img src="../../../assets/blog/lenia-morphospace-report/fig-weight-matrices.svg" alt="Weight matrix arrangement schematic." />
+                        <figcaption class="fiber-caption">
+                            Similar forms can share an interface with tuned weights, or
+                            arrive through different arrangements.
+                        </figcaption>
+                    </figure>
+                </section>
+
+                <div class="fiber-link-list">
+                        <a href="../">Back to Lenia Swarm</a>
+                        <a href="../../../blog/lenia-morphospace-report/">Article</a>
+                        <a href="https://doi.org/10.1002/jez.b.23279">EmbryoMaker Paper</a>
+                        <a href="https://doi.org/10.5061/dryad.n2z34tn2t">Dryad Dataset</a>
+                    </div>
+            </main>
+        </div>
+    </body>
+</html>

@@ -16,10 +16,10 @@ Keep taxonomy storage fields in schema now, while writing null taxonomy values d
 
 - Preserves forward-compatible schema for downstream consumers.
 - Avoids shipping unstable taxonomy heuristics as if they were canonical.
-- Allows ecology/studio surfaces to consume taxonomy fields when available without schema churn.
+- Allows ecology and Studio code to consume taxonomy fields when available without schema churn.
 
 ## Consequences
 
 - Consumers must treat taxonomy fields as optional.
-- Documentation must clearly separate current implementation from planned taxonomy pipeline.
-- Future taxonomy rollout requires method/version provenance fields and reproducible assignment protocol.
+- Documentation must separate current implementation from taxonomy targets.
+- Taxonomy rollout requires method/version provenance fields and a reproducible assignment protocol.

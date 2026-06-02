@@ -2,16 +2,14 @@
 
 Research target for a tactic representation richer than strings.
 
-This is not the current `wonton-soup` contract. It is the strongest useful
+This is not the current `wonton-soup` contract. It is the strongest defensible
 version of the idea: executable in Lean, explicit about effects, able to carry
-proof-state coupling, and able to forget back into the artifacts the repo
+proof-state coupling, and able to project back into the artifacts the repo
 already uses.
 
 Companion files:
 
 - [README.md](../README.md)
-- [goals.md](../goals.md)
-- [research.md](../research.md)
 - [theorem-agenda.md](theorem-agenda.md)
 
 ## Boundary
@@ -24,7 +22,7 @@ Any calculus in this repo must do two things:
 1. interpret into Lean,
 2. project into the current step-level and graph-level artifacts.
 
-If either fails, the representation is not useful here.
+If either fails, reject the representation.
 
 ## Minimum Target
 
@@ -76,7 +74,7 @@ Coupling =
     coupling_kind >
 ```
 
-`coupling_kind` may summarize to `none`, `independent`, `coupled`, or
+`coupling_kind` summarizes to `none`, `independent`, `coupled`, or
 `unknown`.
 
 ```text

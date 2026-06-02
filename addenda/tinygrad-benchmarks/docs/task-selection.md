@@ -1,6 +1,6 @@
 # Task Selection
 
-This document defines which history-mined tasks belong in phase-0 and which do not.
+Phase-0 rules for history-mined tinygrad tasks.
 
 ## Selection Goals
 
@@ -30,7 +30,7 @@ Exclude tasks that:
 - require manual intervention during evaluation
 - have no stable acceptance command
 - are only meaningful under undocumented local machine state
-- depend on GPU hardware before the CPU lane is stable
+- depend on GPU hardware before the CPU path is stable
 - cannot be made reproducible inside a fixed time window
 - cannot be evaluated without network access
 
@@ -103,7 +103,7 @@ Each selected task retains enough evidence to explain why it was chosen:
 - source thread or commit reference
 - why the task is reproducible
 - why the acceptance command is stable
-- why the task belongs in the CPU correctness lane
+- why the task belongs in the CPU correctness path
 - what gold resolution was used for comparison
 - any known caveats or environment assumptions
 

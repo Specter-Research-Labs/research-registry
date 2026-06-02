@@ -5,15 +5,74 @@ import MLXRandom
 // ES Configuration structures matching es.py
 
 public struct FitnessConfig: Codable {
-    public let objective: String  // "directed_motion", "angular_motion", "obstacle_navigation", "chemotaxis"
+    public let objective: String
     public let targetStep: Int
     public let angleThreshold: Float
     public let gyrationPenalty: Float?
     public let componentCountPenalty: Float?
+    public let componentCountTarget: Float?
+    public let componentCountTargetPenalty: Float?
+    public let minimumComponentCount: Float?
+    public let maximumComponentCount: Float?
+    public let componentCountLimitPenalty: Float?
     public let largestComponentFractionReward: Float?
+    public let minimumLargestComponentFraction: Float?
+    public let maximumLargestComponentFraction: Float?
+    public let largestComponentFractionPenalty: Float?
+    public let largestComponentFractionLimitPenalty: Float?
+    public let maximumLargestComponentAnisotropy: Float?
     public let largestComponentAnisotropyPenalty: Float?
+    public let componentMassEvennessReward: Float?
+    public let minimumComponentMassEvenness: Float?
+    public let componentMassEvennessPenalty: Float?
+    public let minimumMomentMass: Float?
+    public let maximumMomentMass: Float?
     public let momentDensityReward: Float?
+    public let minimumMomentDensity: Float?
+    public let maximumMomentDensity: Float?
+    public let momentDensityPenalty: Float?
     public let momentAnisotropyPenalty: Float?
+    public let maximumMomentAnisotropy: Float?
+    public let momentAnisotropyLimitPenalty: Float?
+    public let morphologyGuardFailureFitness: Float?
+    public let internalStripePenalty: Float?
+    public let orientedRidgePenalty: Float?
+    public let largestComponentInternalStripePenalty: Float?
+    public let largestComponentOrientedRidgePenalty: Float?
+    public let templateSimilarityReward: Float?
+    public let templateSequenceReward: Float?
+    public let templateSequenceMassPenalty: Float?
+    public let templateSequenceSupportPenalty: Float?
+    public let templateSequenceChangePenalty: Float?
+    public let templateSequenceDeltaReward: Float?
+    public let templateSequenceSignedDeltaReward: Float?
+    public let templateSequenceSteps: [Int]?
+    public let templateSequenceStatePatches: [InitStatePatchConfig]?
+    public let orientationPhaseMotionReward: Float?
+    public let minimumOrientationPhaseMotion: Float?
+    public let orientationPhaseMotionPenalty: Float?
+    public let angularPhaseMotionReward: Float?
+    public let angularPhaseMotionOrder: Int?
+    public let angularPhaseMotionMinimumAmplitude: Float?
+    public let minimumAngularPhaseMotion: Float?
+    public let angularPhaseMotionPenalty: Float?
+    public let sectorTransportReward: Float?
+    public let sectorTransportBinCount: Int?
+    public let sectorTransportMinimumContrast: Float?
+    public let minimumSectorTransport: Float?
+    public let sectorTransportPenalty: Float?
+    public let minimumTrajectoryPathLength: Float?
+    public let trajectoryPathLengthPenalty: Float?
+    public let trajectoryPathLengthReward: Float?
+    public let minimumTrajectoryDisplacement: Float?
+    public let trajectoryDisplacementPenalty: Float?
+    public let trajectoryDisplacementReward: Float?
+    public let minimumMovementEfficiency: Float?
+    public let movementEfficiencyPenalty: Float?
+    public let movementEfficiencyReward: Float?
+    public let minimumCenterVelocity: Float?
+    public let centerVelocityPenalty: Float?
+    public let centerVelocityReward: Float?
     public let morphologyThreshold: Float?
 
     enum CodingKeys: String, CodingKey {
@@ -22,10 +81,69 @@ public struct FitnessConfig: Codable {
         case angleThreshold = "angle_threshold"
         case gyrationPenalty = "gyration_penalty"
         case componentCountPenalty = "component_count_penalty"
+        case componentCountTarget = "component_count_target"
+        case componentCountTargetPenalty = "component_count_target_penalty"
+        case minimumComponentCount = "minimum_component_count"
+        case maximumComponentCount = "maximum_component_count"
+        case componentCountLimitPenalty = "component_count_limit_penalty"
         case largestComponentFractionReward = "largest_component_fraction_reward"
+        case minimumLargestComponentFraction = "minimum_largest_component_fraction"
+        case maximumLargestComponentFraction = "maximum_largest_component_fraction"
+        case largestComponentFractionPenalty = "largest_component_fraction_penalty"
+        case largestComponentFractionLimitPenalty = "largest_component_fraction_limit_penalty"
+        case maximumLargestComponentAnisotropy = "maximum_largest_component_anisotropy"
         case largestComponentAnisotropyPenalty = "largest_component_anisotropy_penalty"
+        case componentMassEvennessReward = "component_mass_evenness_reward"
+        case minimumComponentMassEvenness = "minimum_component_mass_evenness"
+        case componentMassEvennessPenalty = "component_mass_evenness_penalty"
+        case minimumMomentMass = "minimum_moment_mass"
+        case maximumMomentMass = "maximum_moment_mass"
         case momentDensityReward = "moment_density_reward"
+        case minimumMomentDensity = "minimum_moment_density"
+        case maximumMomentDensity = "maximum_moment_density"
+        case momentDensityPenalty = "moment_density_penalty"
         case momentAnisotropyPenalty = "moment_anisotropy_penalty"
+        case maximumMomentAnisotropy = "maximum_moment_anisotropy"
+        case momentAnisotropyLimitPenalty = "moment_anisotropy_limit_penalty"
+        case morphologyGuardFailureFitness = "morphology_guard_failure_fitness"
+        case internalStripePenalty = "internal_stripe_penalty"
+        case orientedRidgePenalty = "oriented_ridge_penalty"
+        case largestComponentInternalStripePenalty = "largest_component_internal_stripe_penalty"
+        case largestComponentOrientedRidgePenalty = "largest_component_oriented_ridge_penalty"
+        case templateSimilarityReward = "template_similarity_reward"
+        case templateSequenceReward = "template_sequence_reward"
+        case templateSequenceMassPenalty = "template_sequence_mass_penalty"
+        case templateSequenceSupportPenalty = "template_sequence_support_penalty"
+        case templateSequenceChangePenalty = "template_sequence_change_penalty"
+        case templateSequenceDeltaReward = "template_sequence_delta_reward"
+        case templateSequenceSignedDeltaReward = "template_sequence_signed_delta_reward"
+        case templateSequenceSteps = "template_sequence_steps"
+        case templateSequenceStatePatches = "template_sequence_state_patches"
+        case orientationPhaseMotionReward = "orientation_phase_motion_reward"
+        case minimumOrientationPhaseMotion = "minimum_orientation_phase_motion"
+        case orientationPhaseMotionPenalty = "orientation_phase_motion_penalty"
+        case angularPhaseMotionReward = "angular_phase_motion_reward"
+        case angularPhaseMotionOrder = "angular_phase_motion_order"
+        case angularPhaseMotionMinimumAmplitude = "angular_phase_motion_minimum_amplitude"
+        case minimumAngularPhaseMotion = "minimum_angular_phase_motion"
+        case angularPhaseMotionPenalty = "angular_phase_motion_penalty"
+        case sectorTransportReward = "sector_transport_reward"
+        case sectorTransportBinCount = "sector_transport_bin_count"
+        case sectorTransportMinimumContrast = "sector_transport_minimum_contrast"
+        case minimumSectorTransport = "minimum_sector_transport"
+        case sectorTransportPenalty = "sector_transport_penalty"
+        case minimumTrajectoryPathLength = "minimum_trajectory_path_length"
+        case trajectoryPathLengthPenalty = "trajectory_path_length_penalty"
+        case trajectoryPathLengthReward = "trajectory_path_length_reward"
+        case minimumTrajectoryDisplacement = "minimum_trajectory_displacement"
+        case trajectoryDisplacementPenalty = "trajectory_displacement_penalty"
+        case trajectoryDisplacementReward = "trajectory_displacement_reward"
+        case minimumMovementEfficiency = "minimum_movement_efficiency"
+        case movementEfficiencyPenalty = "movement_efficiency_penalty"
+        case movementEfficiencyReward = "movement_efficiency_reward"
+        case minimumCenterVelocity = "minimum_center_velocity"
+        case centerVelocityPenalty = "center_velocity_penalty"
+        case centerVelocityReward = "center_velocity_reward"
         case morphologyThreshold = "morphology_threshold"
     }
 
@@ -35,10 +153,69 @@ public struct FitnessConfig: Codable {
         angleThreshold: Float,
         gyrationPenalty: Float? = nil,
         componentCountPenalty: Float? = nil,
+        componentCountTarget: Float? = nil,
+        componentCountTargetPenalty: Float? = nil,
+        minimumComponentCount: Float? = nil,
+        maximumComponentCount: Float? = nil,
+        componentCountLimitPenalty: Float? = nil,
         largestComponentFractionReward: Float? = nil,
+        minimumLargestComponentFraction: Float? = nil,
+        maximumLargestComponentFraction: Float? = nil,
+        largestComponentFractionPenalty: Float? = nil,
+        largestComponentFractionLimitPenalty: Float? = nil,
+        maximumLargestComponentAnisotropy: Float? = nil,
         largestComponentAnisotropyPenalty: Float? = nil,
+        componentMassEvennessReward: Float? = nil,
+        minimumComponentMassEvenness: Float? = nil,
+        componentMassEvennessPenalty: Float? = nil,
+        minimumMomentMass: Float? = nil,
+        maximumMomentMass: Float? = nil,
         momentDensityReward: Float? = nil,
+        minimumMomentDensity: Float? = nil,
+        maximumMomentDensity: Float? = nil,
+        momentDensityPenalty: Float? = nil,
         momentAnisotropyPenalty: Float? = nil,
+        maximumMomentAnisotropy: Float? = nil,
+        momentAnisotropyLimitPenalty: Float? = nil,
+        morphologyGuardFailureFitness: Float? = nil,
+        internalStripePenalty: Float? = nil,
+        orientedRidgePenalty: Float? = nil,
+        largestComponentInternalStripePenalty: Float? = nil,
+        largestComponentOrientedRidgePenalty: Float? = nil,
+        templateSimilarityReward: Float? = nil,
+        templateSequenceReward: Float? = nil,
+        templateSequenceMassPenalty: Float? = nil,
+        templateSequenceSupportPenalty: Float? = nil,
+        templateSequenceChangePenalty: Float? = nil,
+        templateSequenceDeltaReward: Float? = nil,
+        templateSequenceSignedDeltaReward: Float? = nil,
+        templateSequenceSteps: [Int]? = nil,
+        templateSequenceStatePatches: [InitStatePatchConfig]? = nil,
+        orientationPhaseMotionReward: Float? = nil,
+        minimumOrientationPhaseMotion: Float? = nil,
+        orientationPhaseMotionPenalty: Float? = nil,
+        angularPhaseMotionReward: Float? = nil,
+        angularPhaseMotionOrder: Int? = nil,
+        angularPhaseMotionMinimumAmplitude: Float? = nil,
+        minimumAngularPhaseMotion: Float? = nil,
+        angularPhaseMotionPenalty: Float? = nil,
+        sectorTransportReward: Float? = nil,
+        sectorTransportBinCount: Int? = nil,
+        sectorTransportMinimumContrast: Float? = nil,
+        minimumSectorTransport: Float? = nil,
+        sectorTransportPenalty: Float? = nil,
+        minimumTrajectoryPathLength: Float? = nil,
+        trajectoryPathLengthPenalty: Float? = nil,
+        trajectoryPathLengthReward: Float? = nil,
+        minimumTrajectoryDisplacement: Float? = nil,
+        trajectoryDisplacementPenalty: Float? = nil,
+        trajectoryDisplacementReward: Float? = nil,
+        minimumMovementEfficiency: Float? = nil,
+        movementEfficiencyPenalty: Float? = nil,
+        movementEfficiencyReward: Float? = nil,
+        minimumCenterVelocity: Float? = nil,
+        centerVelocityPenalty: Float? = nil,
+        centerVelocityReward: Float? = nil,
         morphologyThreshold: Float? = nil
     ) {
         self.objective = objective
@@ -46,19 +223,137 @@ public struct FitnessConfig: Codable {
         self.angleThreshold = angleThreshold
         self.gyrationPenalty = gyrationPenalty
         self.componentCountPenalty = componentCountPenalty
+        self.componentCountTarget = componentCountTarget
+        self.componentCountTargetPenalty = componentCountTargetPenalty
+        self.minimumComponentCount = minimumComponentCount
+        self.maximumComponentCount = maximumComponentCount
+        self.componentCountLimitPenalty = componentCountLimitPenalty
         self.largestComponentFractionReward = largestComponentFractionReward
+        self.minimumLargestComponentFraction = minimumLargestComponentFraction
+        self.maximumLargestComponentFraction = maximumLargestComponentFraction
+        self.largestComponentFractionPenalty = largestComponentFractionPenalty
+        self.largestComponentFractionLimitPenalty = largestComponentFractionLimitPenalty
+        self.maximumLargestComponentAnisotropy = maximumLargestComponentAnisotropy
         self.largestComponentAnisotropyPenalty = largestComponentAnisotropyPenalty
+        self.componentMassEvennessReward = componentMassEvennessReward
+        self.minimumComponentMassEvenness = minimumComponentMassEvenness
+        self.componentMassEvennessPenalty = componentMassEvennessPenalty
+        self.minimumMomentMass = minimumMomentMass
+        self.maximumMomentMass = maximumMomentMass
         self.momentDensityReward = momentDensityReward
+        self.minimumMomentDensity = minimumMomentDensity
+        self.maximumMomentDensity = maximumMomentDensity
+        self.momentDensityPenalty = momentDensityPenalty
         self.momentAnisotropyPenalty = momentAnisotropyPenalty
+        self.maximumMomentAnisotropy = maximumMomentAnisotropy
+        self.momentAnisotropyLimitPenalty = momentAnisotropyLimitPenalty
+        self.morphologyGuardFailureFitness = morphologyGuardFailureFitness
+        self.internalStripePenalty = internalStripePenalty
+        self.orientedRidgePenalty = orientedRidgePenalty
+        self.largestComponentInternalStripePenalty = largestComponentInternalStripePenalty
+        self.largestComponentOrientedRidgePenalty = largestComponentOrientedRidgePenalty
+        self.templateSimilarityReward = templateSimilarityReward
+        self.templateSequenceReward = templateSequenceReward
+        self.templateSequenceMassPenalty = templateSequenceMassPenalty
+        self.templateSequenceSupportPenalty = templateSequenceSupportPenalty
+        self.templateSequenceChangePenalty = templateSequenceChangePenalty
+        self.templateSequenceDeltaReward = templateSequenceDeltaReward
+        self.templateSequenceSignedDeltaReward = templateSequenceSignedDeltaReward
+        self.templateSequenceSteps = templateSequenceSteps
+        self.templateSequenceStatePatches = templateSequenceStatePatches
+        self.orientationPhaseMotionReward = orientationPhaseMotionReward
+        self.minimumOrientationPhaseMotion = minimumOrientationPhaseMotion
+        self.orientationPhaseMotionPenalty = orientationPhaseMotionPenalty
+        self.angularPhaseMotionReward = angularPhaseMotionReward
+        self.angularPhaseMotionOrder = angularPhaseMotionOrder
+        self.angularPhaseMotionMinimumAmplitude = angularPhaseMotionMinimumAmplitude
+        self.minimumAngularPhaseMotion = minimumAngularPhaseMotion
+        self.angularPhaseMotionPenalty = angularPhaseMotionPenalty
+        self.sectorTransportReward = sectorTransportReward
+        self.sectorTransportBinCount = sectorTransportBinCount
+        self.sectorTransportMinimumContrast = sectorTransportMinimumContrast
+        self.minimumSectorTransport = minimumSectorTransport
+        self.sectorTransportPenalty = sectorTransportPenalty
+        self.minimumTrajectoryPathLength = minimumTrajectoryPathLength
+        self.trajectoryPathLengthPenalty = trajectoryPathLengthPenalty
+        self.trajectoryPathLengthReward = trajectoryPathLengthReward
+        self.minimumTrajectoryDisplacement = minimumTrajectoryDisplacement
+        self.trajectoryDisplacementPenalty = trajectoryDisplacementPenalty
+        self.trajectoryDisplacementReward = trajectoryDisplacementReward
+        self.minimumMovementEfficiency = minimumMovementEfficiency
+        self.movementEfficiencyPenalty = movementEfficiencyPenalty
+        self.movementEfficiencyReward = movementEfficiencyReward
+        self.minimumCenterVelocity = minimumCenterVelocity
+        self.centerVelocityPenalty = centerVelocityPenalty
+        self.centerVelocityReward = centerVelocityReward
         self.morphologyThreshold = morphologyThreshold
     }
 
     var usesMorphologyMetrics: Bool {
-        componentCountPenalty != nil ||
+            usesMorphologyGuard ||
+            componentCountPenalty != nil ||
+            componentCountTargetPenalty != nil ||
+            componentCountLimitPenalty != nil ||
             largestComponentFractionReward != nil ||
+            largestComponentFractionPenalty != nil ||
+            largestComponentFractionLimitPenalty != nil ||
+            maximumLargestComponentFraction != nil ||
+            maximumLargestComponentAnisotropy != nil ||
             largestComponentAnisotropyPenalty != nil ||
+            componentMassEvennessReward != nil ||
+            componentMassEvennessPenalty != nil ||
+            minimumComponentMassEvenness != nil ||
+            minimumMomentMass != nil ||
+            maximumMomentMass != nil ||
             momentDensityReward != nil ||
-            momentAnisotropyPenalty != nil
+            momentDensityPenalty != nil ||
+            maximumMomentDensity != nil ||
+            momentAnisotropyPenalty != nil ||
+            momentAnisotropyLimitPenalty != nil ||
+            internalStripePenalty != nil ||
+            orientedRidgePenalty != nil ||
+            largestComponentInternalStripePenalty != nil ||
+            largestComponentOrientedRidgePenalty != nil ||
+            templateSimilarityReward != nil
+    }
+
+    var usesMorphologyGuard: Bool {
+        morphologyGuardFailureFitness != nil
+    }
+
+    var usesTemplateSequence: Bool {
+        templateSequenceReward != nil ||
+            templateSequenceMassPenalty != nil ||
+            templateSequenceSupportPenalty != nil ||
+            templateSequenceChangePenalty != nil ||
+            templateSequenceDeltaReward != nil ||
+            templateSequenceSignedDeltaReward != nil
+    }
+
+    var usesOrientationPhaseMotion: Bool {
+        orientationPhaseMotionReward != nil ||
+            orientationPhaseMotionPenalty != nil
+    }
+
+    var usesAngularPhaseMotion: Bool {
+        angularPhaseMotionReward != nil ||
+            angularPhaseMotionPenalty != nil
+    }
+
+    var usesSectorTransport: Bool {
+        sectorTransportReward != nil ||
+            sectorTransportPenalty != nil
+    }
+
+    var usesTrajectoryMetrics: Bool {
+        trajectoryPathLengthPenalty != nil ||
+            trajectoryPathLengthReward != nil ||
+            trajectoryDisplacementPenalty != nil ||
+            trajectoryDisplacementReward != nil ||
+            movementEfficiencyPenalty != nil ||
+            movementEfficiencyReward != nil ||
+            centerVelocityPenalty != nil ||
+            centerVelocityReward != nil
     }
 }
 
@@ -217,8 +512,10 @@ public struct ParamSpace {
     public let low: [Float]
     public let high: [Float]
     public let totalDim: Int
+    public let radialParamCount: Int
 
-    public init(nbK: Int, ranges: [String: (Float, Float)]) {
+    public init(nbK: Int, ranges: [String: (Float, Float)], radialParamCount: Int = 3) {
+        precondition(radialParamCount > 0, "ParamSpace radialParamCount must be positive.")
         var slices: [String: ParamSlice] = [:]
         var low: [Float] = []
         var high: [Float] = []
@@ -234,9 +531,9 @@ public struct ParamSpace {
         }
 
         add("r", [nbK])
-        add("b", [nbK, 3])
-        add("w", [nbK, 3])
-        add("a", [nbK, 3])
+        add("b", [nbK, radialParamCount])
+        add("w", [nbK, radialParamCount])
+        add("a", [nbK, radialParamCount])
         add("m", [nbK])
         add("s", [nbK])
         add("h", [nbK])
@@ -246,6 +543,7 @@ public struct ParamSpace {
         self.low = low
         self.high = high
         self.totalDim = offset
+        self.radialParamCount = radialParamCount
     }
 }
 
@@ -310,9 +608,9 @@ public func vectorToParams(_ vec: [Float], space: ParamSpace, seed: Int = 0) -> 
 
     return ResolvedParams(
         r: decode1D("r"),
-        b: decode2D("b", cols: 3),
-        w: decode2D("w", cols: 3),
-        a: decode2D("a", cols: 3),
+        b: decode2D("b", cols: space.radialParamCount),
+        w: decode2D("w", cols: space.radialParamCount),
+        a: decode2D("a", cols: space.radialParamCount),
         m: decode1D("m"),
         s: decode1D("s"),
         h: decode1D("h"),
@@ -333,26 +631,44 @@ private func resolvedParams(from kernelParams: KernelParams, space: ParamSpace, 
         fatalError("initial_kernel_params shape does not match ES topology nbK=\(kernelCount).")
     }
 
-    func rows3(_ name: String, _ rows: [[Float]], fill: Float) -> [[Float]] {
+    func radialRows(_ name: String, _ rows: [[Float]], fill: Float) -> [[Float]] {
         rows.enumerated().map { index, row in
-            guard row.count <= 3 else {
-                fatalError("initial_kernel_params.\(name)[\(index)] has \(row.count) entries; expected at most 3.")
+            guard row.count <= space.radialParamCount else {
+                fatalError("initial_kernel_params.\(name)[\(index)] has \(row.count) entries; expected at most \(space.radialParamCount).")
             }
-            return Array((row + Array(repeating: fill, count: 3)).prefix(3))
+            return Array((row + Array(repeating: fill, count: space.radialParamCount)).prefix(space.radialParamCount))
         }
     }
 
     return ResolvedParams(
         r: kernelParams.r,
-        b: rows3("b", kernelParams.b, fill: 0.0),
-        w: rows3("w", kernelParams.w, fill: 0.0),
-        a: rows3("a", kernelParams.a, fill: 0.0),
+        b: radialRows("b", kernelParams.b, fill: 0.0),
+        w: radialRows("w", kernelParams.w, fill: 0.0),
+        a: radialRows("a", kernelParams.a, fill: 0.0),
         m: kernelParams.m,
         s: kernelParams.s,
         h: kernelParams.h,
         R: kernelParams.R,
         seed: seed
     )
+}
+
+private func radialParamCount(runtimeParams: ResolvedParams, initialKernelParams: KernelParams?) -> Int {
+    var count = 1
+    func include(_ rows: [[Float]]) {
+        for row in rows {
+            count = max(count, row.count)
+        }
+    }
+    include(runtimeParams.b)
+    include(runtimeParams.w)
+    include(runtimeParams.a)
+    if let initialKernelParams {
+        include(initialKernelParams.b)
+        include(initialKernelParams.w)
+        include(initialKernelParams.a)
+    }
+    return count
 }
 
 // Adam Optimizer (matches es.py)
@@ -647,6 +963,10 @@ private func durationMs(_ duration: Duration) -> Double {
         Double(duration.components.attoseconds) / 1_000_000_000_000_000.0
 }
 
+func componentCountTargetMismatch(_ componentCount: Float, target: Float) -> Float {
+    abs(componentCount - target)
+}
+
 // Evolution Engine (matches es.py)
 
 public final class EvolutionEngine {
@@ -669,8 +989,28 @@ public final class EvolutionEngine {
         let componentCount: Float?
         let largestComponentFraction: Float?
         let largestComponentAnisotropy: Float?
+        let componentMassEvenness: Float?
+        let momentMass: Float?
         let momentDensity: Float?
         let momentAnisotropy: Float?
+        let internalStripe: Float?
+        let orientedRidge: Float?
+        let largestComponentInternalStripe: Float?
+        let largestComponentOrientedRidge: Float?
+        let templateSimilarity: Float?
+        let templateSequenceSimilarity: Float?
+        let templateSequenceMassMismatch: Float?
+        let templateSequenceSupportMismatch: Float?
+        let templateSequenceChangeMismatch: Float?
+        let templateSequenceDeltaSimilarity: Float?
+        let templateSequenceSignedDeltaSimilarity: Float?
+        let orientationPhaseMotion: Float?
+        let angularPhaseMotion: Float?
+        let sectorTransport: Float?
+        let trajectoryPathLength: Float?
+        let trajectoryDisplacement: Float?
+        let movementEfficiency: Float?
+        let centerVelocity: Float?
         let chemotaxisScore: Float?
     }
 
@@ -678,8 +1018,15 @@ public final class EvolutionEngine {
         let componentCount: [Float]?
         let largestComponentFraction: [Float]?
         let largestComponentAnisotropy: [Float]?
+        let componentMassEvenness: [Float]?
+        let momentMass: [Float]?
         let momentDensity: [Float]?
         let momentAnisotropy: [Float]?
+        let internalStripe: [Float]?
+        let orientedRidge: [Float]?
+        let largestComponentInternalStripe: [Float]?
+        let largestComponentOrientedRidge: [Float]?
+        let templateSimilarity: [Float]?
     }
 
     private struct PopulationEvaluation {
@@ -701,6 +1048,8 @@ public final class EvolutionEngine {
     public let creatureChannels: [Int]
     public let metricGridX: MLXArray
     public let metricGridY: MLXArray
+    private let morphologyTemplate: MassTemplate?
+    private let templateSequenceTemplates: [MassTemplate]?
     private let populationEvaluator: PopulationEvaluator
     private var metalFullPopulationRunner: FlowLeniaMetalFullStateRunner?
 
@@ -719,21 +1068,30 @@ public final class EvolutionEngine {
     ) {
         self.esConfig = esConfig
         self.runtimeConfig = runtimeConfig
-        self.config = batchedConfigFromRuntime(runtimeConfig)
+        let builtConfig = batchedConfigFromRuntime(runtimeConfig)
+        self.config = builtConfig
         self.excludedMassChannels = excludedMassChannelsForEvolution(
             channels: runtimeConfig.channels,
             chemotaxis: runtimeConfig.chemotaxis,
             food: runtimeConfig.food,
             obstacleField: esConfig.obstacleField
         )
-        self.creatureChannels = creatureChannelsForEvolution(
+        let builtCreatureChannels = creatureChannelsForEvolution(
             channels: runtimeConfig.channels,
             chemotaxis: runtimeConfig.chemotaxis,
             food: runtimeConfig.food,
             obstacleField: esConfig.obstacleField
         )
+        self.creatureChannels = builtCreatureChannels
 
-        let builtParamSpace = ParamSpace(nbK: config.nbK, ranges: ranges)
+        let builtParamSpace = ParamSpace(
+            nbK: builtConfig.nbK,
+            ranges: ranges,
+            radialParamCount: radialParamCount(
+                runtimeParams: runtimeConfig.params,
+                initialKernelParams: esConfig.initialKernelParams
+            )
+        )
         self.paramSpace = builtParamSpace
         self.thetaParamsDim = builtParamSpace.totalDim
         self.optimizer = Adam(lr: esConfig.learningRate)
@@ -744,6 +1102,11 @@ public final class EvolutionEngine {
             "angular_motion",
             "obstacle_navigation",
             "chemotaxis",
+            "trajectory_motion",
+            "template_sequence",
+            "orientation_phase_motion",
+            "angular_phase_motion",
+            "sector_transport_motion",
         ]
         if !supportedObjectives.contains(esConfig.fitness.objective) {
             fatalError("Unsupported evolution objective: \(esConfig.fitness.objective)")
@@ -758,6 +1121,197 @@ public final class EvolutionEngine {
         if esConfig.fitness.objective == "obstacle_navigation",
            esConfig.obstacleField?.enabled != true {
             fatalError("obstacle_navigation objective requires obstacle_field.enabled in the ES config.")
+        }
+        if esConfig.fitness.templateSimilarityReward != nil && runtimeConfig.statePatch == nil {
+            fatalError("template_similarity_reward requires init.state_patch in the base config.")
+        }
+        if (esConfig.fitness.componentCountTarget == nil) !=
+            (esConfig.fitness.componentCountTargetPenalty == nil) {
+            fatalError("component_count_target and component_count_target_penalty must be provided together.")
+        }
+        if esConfig.fitness.componentCountLimitPenalty != nil &&
+            esConfig.fitness.minimumComponentCount == nil &&
+            esConfig.fitness.maximumComponentCount == nil {
+            fatalError("component_count_limit_penalty requires minimum_component_count or maximum_component_count.")
+        }
+        if (esConfig.fitness.minimumComponentCount != nil || esConfig.fitness.maximumComponentCount != nil) &&
+            esConfig.fitness.componentCountLimitPenalty == nil &&
+            !esConfig.fitness.usesMorphologyGuard {
+            fatalError("minimum_component_count/maximum_component_count require component_count_limit_penalty or morphology_guard_failure_fitness.")
+        }
+        if let minimum = esConfig.fitness.minimumComponentCount,
+           let maximum = esConfig.fitness.maximumComponentCount,
+           minimum > maximum {
+            fatalError("minimum_component_count cannot exceed maximum_component_count.")
+        }
+        if (esConfig.fitness.minimumLargestComponentFraction == nil) !=
+            (esConfig.fitness.largestComponentFractionPenalty == nil) &&
+            !esConfig.fitness.usesMorphologyGuard {
+            fatalError("minimum_largest_component_fraction and largest_component_fraction_penalty must be provided together unless morphology_guard_failure_fitness is set.")
+        }
+        if esConfig.fitness.largestComponentFractionPenalty != nil &&
+            esConfig.fitness.minimumLargestComponentFraction == nil {
+            fatalError("largest_component_fraction_penalty requires minimum_largest_component_fraction.")
+        }
+        if esConfig.fitness.largestComponentFractionLimitPenalty != nil &&
+            esConfig.fitness.maximumLargestComponentFraction == nil {
+            fatalError("largest_component_fraction_limit_penalty requires maximum_largest_component_fraction.")
+        }
+        if let minimum = esConfig.fitness.minimumLargestComponentFraction,
+           let maximum = esConfig.fitness.maximumLargestComponentFraction,
+           minimum > maximum {
+            fatalError("minimum_largest_component_fraction cannot exceed maximum_largest_component_fraction.")
+        }
+        if (esConfig.fitness.minimumComponentMassEvenness == nil) !=
+            (esConfig.fitness.componentMassEvennessPenalty == nil) &&
+            !esConfig.fitness.usesMorphologyGuard {
+            fatalError("minimum_component_mass_evenness and component_mass_evenness_penalty must be provided together unless morphology_guard_failure_fitness is set.")
+        }
+        if esConfig.fitness.componentMassEvennessPenalty != nil &&
+            esConfig.fitness.minimumComponentMassEvenness == nil {
+            fatalError("component_mass_evenness_penalty requires minimum_component_mass_evenness.")
+        }
+        if let minimum = esConfig.fitness.minimumComponentMassEvenness,
+           (minimum < 0 || minimum > 1) {
+            fatalError("minimum_component_mass_evenness must be between 0 and 1.")
+        }
+        if (esConfig.fitness.minimumMomentDensity == nil) !=
+            (esConfig.fitness.momentDensityPenalty == nil) &&
+            !esConfig.fitness.usesMorphologyGuard {
+            fatalError("minimum_moment_density and moment_density_penalty must be provided together unless morphology_guard_failure_fitness is set.")
+        }
+        if esConfig.fitness.momentDensityPenalty != nil &&
+            esConfig.fitness.minimumMomentDensity == nil {
+            fatalError("moment_density_penalty requires minimum_moment_density.")
+        }
+        if (esConfig.fitness.maximumMomentAnisotropy == nil) !=
+            (esConfig.fitness.momentAnisotropyLimitPenalty == nil) &&
+            !esConfig.fitness.usesMorphologyGuard {
+            fatalError("maximum_moment_anisotropy and moment_anisotropy_limit_penalty must be provided together unless morphology_guard_failure_fitness is set.")
+        }
+        if esConfig.fitness.momentAnisotropyLimitPenalty != nil &&
+            esConfig.fitness.maximumMomentAnisotropy == nil {
+            fatalError("moment_anisotropy_limit_penalty requires maximum_moment_anisotropy.")
+        }
+        if let minimum = esConfig.fitness.minimumMomentMass,
+           let maximum = esConfig.fitness.maximumMomentMass,
+           minimum > maximum {
+            fatalError("minimum_moment_mass cannot exceed maximum_moment_mass.")
+        }
+        if let minimum = esConfig.fitness.minimumMomentDensity,
+           let maximum = esConfig.fitness.maximumMomentDensity,
+           minimum > maximum {
+            fatalError("minimum_moment_density cannot exceed maximum_moment_density.")
+        }
+        let guardOnlyThresholdsPresent = esConfig.fitness.minimumMomentMass != nil ||
+            esConfig.fitness.maximumMomentMass != nil ||
+            esConfig.fitness.maximumMomentDensity != nil ||
+            esConfig.fitness.maximumLargestComponentFraction != nil ||
+            esConfig.fitness.maximumLargestComponentAnisotropy != nil ||
+            esConfig.fitness.minimumComponentMassEvenness != nil
+        if guardOnlyThresholdsPresent && !esConfig.fitness.usesMorphologyGuard {
+            fatalError("guard-only morphology thresholds require morphology_guard_failure_fitness.")
+        }
+        if (esConfig.fitness.minimumTrajectoryPathLength == nil) !=
+            (esConfig.fitness.trajectoryPathLengthPenalty == nil) {
+            fatalError("minimum_trajectory_path_length and trajectory_path_length_penalty must be provided together.")
+        }
+        if (esConfig.fitness.minimumTrajectoryDisplacement == nil) !=
+            (esConfig.fitness.trajectoryDisplacementPenalty == nil) {
+            fatalError("minimum_trajectory_displacement and trajectory_displacement_penalty must be provided together.")
+        }
+        if (esConfig.fitness.minimumMovementEfficiency == nil) !=
+            (esConfig.fitness.movementEfficiencyPenalty == nil) {
+            fatalError("minimum_movement_efficiency and movement_efficiency_penalty must be provided together.")
+        }
+        if let minimum = esConfig.fitness.minimumMovementEfficiency,
+           !(0...1).contains(minimum) {
+            fatalError("minimum_movement_efficiency must be between 0 and 1.")
+        }
+        if (esConfig.fitness.minimumCenterVelocity == nil) !=
+            (esConfig.fitness.centerVelocityPenalty == nil) {
+            fatalError("minimum_center_velocity and center_velocity_penalty must be provided together.")
+        }
+        if (esConfig.fitness.minimumOrientationPhaseMotion == nil) !=
+            (esConfig.fitness.orientationPhaseMotionPenalty == nil) {
+            fatalError("minimum_orientation_phase_motion and orientation_phase_motion_penalty must be provided together.")
+        }
+        if (esConfig.fitness.minimumAngularPhaseMotion == nil) !=
+            (esConfig.fitness.angularPhaseMotionPenalty == nil) {
+            fatalError("minimum_angular_phase_motion and angular_phase_motion_penalty must be provided together.")
+        }
+        if (esConfig.fitness.minimumSectorTransport == nil) !=
+            (esConfig.fitness.sectorTransportPenalty == nil) {
+            fatalError("minimum_sector_transport and sector_transport_penalty must be provided together.")
+        }
+        if esConfig.fitness.usesAngularPhaseMotion {
+            if let order = esConfig.fitness.angularPhaseMotionOrder, order <= 0 {
+                fatalError("angular_phase_motion_order must be positive.")
+            }
+            if let minimumAmplitude = esConfig.fitness.angularPhaseMotionMinimumAmplitude,
+               minimumAmplitude < 0 {
+                fatalError("angular_phase_motion_minimum_amplitude cannot be negative.")
+            }
+        }
+        if esConfig.fitness.usesSectorTransport {
+            if let binCount = esConfig.fitness.sectorTransportBinCount, binCount < 8 {
+                fatalError("sector_transport_bin_count must be at least 8.")
+            }
+            if let minimumContrast = esConfig.fitness.sectorTransportMinimumContrast,
+               minimumContrast < 0 {
+                fatalError("sector_transport_minimum_contrast cannot be negative.")
+            }
+        }
+        let normalizedSequenceSteps = !(
+            esConfig.fitness.usesTemplateSequence ||
+                esConfig.fitness.usesTrajectoryMetrics ||
+                esConfig.fitness.usesOrientationPhaseMotion ||
+                esConfig.fitness.usesAngularPhaseMotion ||
+                esConfig.fitness.usesSectorTransport
+        )
+            ? []
+            : Array(Set(esConfig.fitness.templateSequenceSteps ?? [esConfig.fitness.targetStep])).sorted()
+        if esConfig.fitness.usesTrajectoryMetrics && normalizedSequenceSteps.count < 2 {
+            fatalError("trajectory no-regression metrics require at least two unique template_sequence_steps.")
+        }
+        if esConfig.fitness.usesOrientationPhaseMotion && normalizedSequenceSteps.count < 2 {
+            fatalError("orientation_phase_motion metrics require at least two unique template_sequence_steps.")
+        }
+        if esConfig.fitness.usesAngularPhaseMotion && normalizedSequenceSteps.count < 2 {
+            fatalError("angular_phase_motion metrics require at least two unique template_sequence_steps.")
+        }
+        if esConfig.fitness.usesSectorTransport && normalizedSequenceSteps.count < 2 {
+            fatalError("sector_transport metrics require at least two unique template_sequence_steps.")
+        }
+        if esConfig.fitness.usesTemplateSequence &&
+            runtimeConfig.statePatch == nil &&
+            esConfig.fitness.templateSequenceStatePatches == nil {
+            fatalError("template_sequence metrics require init.state_patch or template_sequence_state_patches.")
+        }
+        if let sequenceSteps = esConfig.fitness.templateSequenceSteps {
+            if sequenceSteps.isEmpty {
+                fatalError("template_sequence_steps must contain at least one step when provided.")
+            }
+            for step in sequenceSteps where step < 0 || step > esConfig.steps {
+                fatalError("template_sequence_steps entries must be within 0...steps.")
+            }
+        }
+        if esConfig.fitness.templateSequenceChangePenalty != nil && normalizedSequenceSteps.count < 2 {
+            fatalError("template_sequence_change_penalty requires at least two unique template_sequence_steps.")
+        }
+        if esConfig.fitness.templateSequenceDeltaReward != nil && normalizedSequenceSteps.count < 2 {
+            fatalError("template_sequence_delta_reward requires at least two unique template_sequence_steps.")
+        }
+        if esConfig.fitness.templateSequenceSignedDeltaReward != nil && normalizedSequenceSteps.count < 2 {
+            fatalError("template_sequence_signed_delta_reward requires at least two unique template_sequence_steps.")
+        }
+        if let sequencePatches = esConfig.fitness.templateSequenceStatePatches {
+            if sequencePatches.isEmpty {
+                fatalError("template_sequence_state_patches must contain at least one patch when provided.")
+            }
+            if sequencePatches.count != normalizedSequenceSteps.count {
+                fatalError("template_sequence_state_patches count must match unique template_sequence_steps count.")
+            }
         }
         if let obstacleField = esConfig.obstacleField, obstacleField.enabled {
             if obstacleField.channelIndex < 0 || obstacleField.channelIndex >= runtimeConfig.channels {
@@ -809,6 +1363,26 @@ public final class EvolutionEngine {
         let coordsY = MLXArray(Array(0..<config.sy).map { Float($0) }).reshaped([1, 1, config.sy])
         self.metricGridX = coordsX
         self.metricGridY = coordsY
+        self.morphologyTemplate = runtimeConfig.statePatch.map {
+            makeStatePatchMassTemplate(
+                statePatch: $0,
+                gridHeight: builtConfig.sx,
+                gridWidth: builtConfig.sy,
+                includedChannels: builtCreatureChannels,
+                threshold: esConfig.fitness.morphologyThreshold ?? 0.03
+            )
+        }
+        self.templateSequenceTemplates = esConfig.fitness.templateSequenceStatePatches.map { patches in
+            patches.map {
+                makeStatePatchMassTemplate(
+                    statePatch: $0,
+                    gridHeight: builtConfig.sx,
+                    gridWidth: builtConfig.sy,
+                    includedChannels: builtCreatureChannels,
+                    threshold: esConfig.fitness.morphologyThreshold ?? 0.03
+                )
+            }
+        }
 
         let seedParams = Array(repeating: initialParams, count: esConfig.population)
         self.populationSim = FlowLeniaBatched(
@@ -875,6 +1449,10 @@ public final class EvolutionEngine {
     }
 
     public func buildInitialState(seed: Int) -> MLXArray {
+        if let statePatch = runtimeConfig.statePatch {
+            return buildExplicitRuntimeStatePatch(statePatch)
+        }
+
         var localRng = SeededRandomNumberGenerator(seed: UInt64(seed))
         var data = [Float](repeating: 0.0, count: config.sx * config.sy * config.channels)
 
@@ -896,6 +1474,46 @@ public final class EvolutionEngine {
                             data[idx] = Float.random(in: low...high, using: &localRng)
                         }
                     }
+                }
+            }
+        }
+
+        return MLXArray(data).reshaped([config.sx, config.sy, config.channels])
+    }
+
+    private func buildExplicitRuntimeStatePatch(_ statePatch: InitStatePatchConfig) -> MLXArray {
+        let values = statePatch.decodedValues()
+        precondition(statePatch.center.count >= 2, "init.state_patch.center must have x/y coordinates.")
+        precondition(
+            statePatch.channels == config.channels,
+            "init.state_patch.channels must match runtime channels."
+        )
+        precondition(
+            values.count == statePatch.width * statePatch.height * statePatch.channels,
+            "init.state_patch.data length must match width*height*channels."
+        )
+        var data = [Float](repeating: 0.0, count: config.sx * config.sy * config.channels)
+
+        let cx = statePatch.center[0]
+        let cy = statePatch.center[1]
+        let halfWidth = statePatch.width / 2
+        let halfHeight = statePatch.height / 2
+        let x0 = cx - halfWidth
+        let x1 = cx + (statePatch.width - halfWidth)
+        let y0 = cy - halfHeight
+        let y1 = cy + (statePatch.height - halfHeight)
+        precondition(
+            x0 >= 0 && y0 >= 0 && x1 <= config.sx && y1 <= config.sy,
+            "init.state_patch bounds must fit within the ES runtime grid."
+        )
+
+        var patchIndex = 0
+        for x in x0..<x1 {
+            for y in y0..<y1 {
+                for channel in 0..<config.channels {
+                    let idx = (x * config.sy + y) * config.channels + channel
+                    data[idx] = values[patchIndex]
+                    patchIndex += 1
                 }
             }
         }
@@ -1065,6 +1683,293 @@ public final class EvolutionEngine {
         )
     }
 
+    private func templateSequenceSteps() -> [Int] {
+        guard esConfig.fitness.usesTemplateSequence ||
+            esConfig.fitness.usesTrajectoryMetrics ||
+            esConfig.fitness.usesOrientationPhaseMotion ||
+            esConfig.fitness.usesAngularPhaseMotion ||
+            esConfig.fitness.usesSectorTransport else {
+            return []
+        }
+        let steps = esConfig.fitness.templateSequenceSteps ?? [esConfig.fitness.targetStep]
+        return Array(Set(steps)).sorted()
+    }
+
+    private func trajectoryMetricValues(from centers: [BatchCenterOfMassCPU], stepSpan: Float) -> (
+        pathLength: [Float]?,
+        displacement: [Float]?,
+        movementEfficiency: [Float]?,
+        centerVelocity: [Float]?
+    ) {
+        guard esConfig.fitness.usesTrajectoryMetrics else {
+            return (nil, nil, nil, nil)
+        }
+        guard centers.count >= 2, let count = centers.first?.alive.count else {
+            return (nil, nil, nil, nil)
+        }
+        var pathLengths = [Float](repeating: 0, count: count)
+        var displacements = [Float](repeating: 0, count: count)
+        var movementEfficiencies = [Float](repeating: 0, count: count)
+        var centerVelocities = [Float](repeating: 0, count: count)
+        for stepIndex in 1..<centers.count {
+            let previous = centers[stepIndex - 1]
+            let current = centers[stepIndex]
+            for index in 0..<count where previous.alive[index] > 0 && current.alive[index] > 0 {
+                let dx = current.x[index] - previous.x[index]
+                let dy = current.y[index] - previous.y[index]
+                let speed = sqrt(dx * dx + dy * dy)
+                pathLengths[index] += speed
+            }
+        }
+        let first = centers[0]
+        let last = centers[centers.count - 1]
+        for index in 0..<count where first.alive[index] > 0 && last.alive[index] > 0 {
+            let dx = last.x[index] - first.x[index]
+            let dy = last.y[index] - first.y[index]
+            let displacement = sqrt(dx * dx + dy * dy)
+            displacements[index] = displacement
+            movementEfficiencies[index] = movementEfficiency(pathLength: pathLengths[index], displacement: displacement)
+            centerVelocities[index] = displacement / max(stepSpan, 1)
+        }
+        return (pathLengths, displacements, movementEfficiencies, centerVelocities)
+    }
+
+    private func trajectoryMetricValues(from snapshots: [[CenterSnapshot]], stepSpan: Float) -> (
+        pathLength: [Float]?,
+        displacement: [Float]?,
+        movementEfficiency: [Float]?,
+        centerVelocity: [Float]?
+    ) {
+        guard esConfig.fitness.usesTrajectoryMetrics else {
+            return (nil, nil, nil, nil)
+        }
+        guard snapshots.count >= 2, let count = snapshots.first?.count else {
+            return (nil, nil, nil, nil)
+        }
+        var pathLengths = [Float](repeating: 0, count: count)
+        var displacements = [Float](repeating: 0, count: count)
+        var movementEfficiencies = [Float](repeating: 0, count: count)
+        var centerVelocities = [Float](repeating: 0, count: count)
+        for stepIndex in 1..<snapshots.count {
+            let previous = snapshots[stepIndex - 1]
+            let current = snapshots[stepIndex]
+            for index in 0..<count where previous[index].alive && current[index].alive {
+                let dx = current[index].x - previous[index].x
+                let dy = current[index].y - previous[index].y
+                let speed = sqrt(dx * dx + dy * dy)
+                pathLengths[index] += speed
+            }
+        }
+        let first = snapshots[0]
+        let last = snapshots[snapshots.count - 1]
+        for index in 0..<count where first[index].alive && last[index].alive {
+            let dx = last[index].x - first[index].x
+            let dy = last[index].y - first[index].y
+            let displacement = sqrt(dx * dx + dy * dy)
+            displacements[index] = displacement
+            movementEfficiencies[index] = movementEfficiency(pathLength: pathLengths[index], displacement: displacement)
+            centerVelocities[index] = displacement / max(stepSpan, 1)
+        }
+        return (pathLengths, displacements, movementEfficiencies, centerVelocities)
+    }
+
+    private func trajectoryMetricStepSpan() -> Float {
+        let steps = templateSequenceSteps()
+        guard let first = steps.first, let last = steps.last, last > first else {
+            return Float(max(1, steps.count - 1))
+        }
+        return Float(last - first)
+    }
+
+    private func templateSequenceMetricValues(from massMaps: [MLXArray]) -> (
+        similarity: [Float]?,
+        massMismatch: [Float]?,
+        supportMismatch: [Float]?,
+        changeMismatch: [Float]?,
+        deltaSimilarity: [Float]?,
+        signedDeltaSimilarity: [Float]?
+    ) {
+        guard esConfig.fitness.usesTemplateSequence else {
+            return (nil, nil, nil, nil, nil, nil)
+        }
+        guard !massMaps.isEmpty else {
+            fatalError("template_sequence metrics requested but no sequence frames were captured.")
+        }
+        let templates: [MassTemplate]
+        if let templateSequenceTemplates {
+            templates = templateSequenceTemplates
+        } else if let morphologyTemplate {
+            templates = Array(repeating: morphologyTemplate, count: massMaps.count)
+        } else {
+            fatalError("template_sequence metrics require init.state_patch or template_sequence_state_patches.")
+        }
+        guard templates.count == massMaps.count else {
+            fatalError("template_sequence_state_patches count must match captured sequence frames.")
+        }
+        let threshold = esConfig.fitness.morphologyThreshold ?? 0.03
+        let materializedMaps = massMaps.map { materializeMassBatch($0) }
+        var similarityTotals: [Float]?
+        var mismatchTotals: [Float]?
+        var supportMismatchTotals: [Float]?
+        var changeMismatchTotals: [Float]?
+        var deltaSimilarityTotals: [Float]?
+        var signedDeltaSimilarityTotals: [Float]?
+        for (materialized, template) in zip(materializedMaps, templates) {
+            if esConfig.fitness.templateSequenceReward != nil {
+                let values = computeTemplateSimilarityBatch(
+                    materialized: materialized,
+                    template: template,
+                    threshold: threshold,
+                    useTorus: runtimeConfig.border == "torus"
+                )
+                if similarityTotals == nil {
+                    similarityTotals = Array(repeating: 0, count: values.count)
+                }
+                for index in values.indices {
+                    similarityTotals![index] += values[index]
+                }
+            }
+            if esConfig.fitness.templateSequenceMassPenalty != nil {
+                let values = computeTemplateMassMismatchBatch(
+                    materialized: materialized,
+                    template: template,
+                    threshold: threshold
+                )
+                if mismatchTotals == nil {
+                    mismatchTotals = Array(repeating: 0, count: values.count)
+                }
+                for index in values.indices {
+                    mismatchTotals![index] += values[index]
+                }
+            }
+            if esConfig.fitness.templateSequenceSupportPenalty != nil {
+                let values = computeTemplateSupportMismatchBatch(
+                    materialized: materialized,
+                    template: template,
+                    threshold: threshold
+                )
+                if supportMismatchTotals == nil {
+                    supportMismatchTotals = Array(repeating: 0, count: values.count)
+                }
+                for index in values.indices {
+                    supportMismatchTotals![index] += values[index]
+                }
+            }
+        }
+        if esConfig.fitness.templateSequenceChangePenalty != nil ||
+            esConfig.fitness.templateSequenceDeltaReward != nil ||
+            esConfig.fitness.templateSequenceSignedDeltaReward != nil {
+            guard materializedMaps.count >= 2 else {
+                fatalError("temporal template_sequence metrics require at least two captured sequence frames.")
+            }
+            for index in 1..<materializedMaps.count {
+                if esConfig.fitness.templateSequenceChangePenalty != nil {
+                    let values = computeTemplateChangeMismatchBatch(
+                        previous: materializedMaps[index - 1],
+                        current: materializedMaps[index],
+                        previousTemplate: templates[index - 1],
+                        currentTemplate: templates[index],
+                        threshold: threshold
+                    )
+                    if changeMismatchTotals == nil {
+                        changeMismatchTotals = Array(repeating: 0, count: values.count)
+                    }
+                    for index in values.indices {
+                        changeMismatchTotals![index] += values[index]
+                    }
+                }
+                if esConfig.fitness.templateSequenceDeltaReward != nil {
+                    let values = computeTemplateDeltaSimilarityBatch(
+                        previous: materializedMaps[index - 1],
+                        current: materializedMaps[index],
+                        previousTemplate: templates[index - 1],
+                        currentTemplate: templates[index],
+                        threshold: threshold,
+                        useTorus: runtimeConfig.border == "torus"
+                    )
+                    if deltaSimilarityTotals == nil {
+                        deltaSimilarityTotals = Array(repeating: 0, count: values.count)
+                    }
+                    for index in values.indices {
+                        deltaSimilarityTotals![index] += values[index]
+                    }
+                }
+                if esConfig.fitness.templateSequenceSignedDeltaReward != nil {
+                    let values = computeTemplateSignedDeltaSimilarityBatch(
+                        previous: materializedMaps[index - 1],
+                        current: materializedMaps[index],
+                        previousTemplate: templates[index - 1],
+                        currentTemplate: templates[index],
+                        threshold: threshold,
+                        useTorus: runtimeConfig.border == "torus"
+                    )
+                    if signedDeltaSimilarityTotals == nil {
+                        signedDeltaSimilarityTotals = Array(repeating: 0, count: values.count)
+                    }
+                    for index in values.indices {
+                        signedDeltaSimilarityTotals![index] += values[index]
+                    }
+                }
+            }
+        }
+        let divisor = Float(massMaps.count)
+        let changeDivisor = Float(max(1, massMaps.count - 1))
+        return (
+            similarityTotals?.map { $0 / divisor },
+            mismatchTotals?.map { $0 / divisor },
+            supportMismatchTotals?.map { $0 / divisor },
+            changeMismatchTotals?.map { $0 / changeDivisor },
+            deltaSimilarityTotals?.map { $0 / changeDivisor },
+            signedDeltaSimilarityTotals?.map { $0 / changeDivisor }
+        )
+    }
+
+    private func orientationPhaseMotionValues(from massMaps: [MLXArray]) -> [Float]? {
+        guard esConfig.fitness.usesOrientationPhaseMotion else {
+            return nil
+        }
+        guard massMaps.count >= 2 else {
+            fatalError("orientation_phase_motion metrics require at least two captured sequence frames.")
+        }
+        let materializedMaps = massMaps.map { materializeMassBatch($0) }
+        return computeOrientationPhaseMotionBatch(
+            materialized: materializedMaps,
+            threshold: esConfig.fitness.morphologyThreshold ?? 0.03
+        )
+    }
+
+    private func angularPhaseMotionValues(from massMaps: [MLXArray]) -> [Float]? {
+        guard esConfig.fitness.usesAngularPhaseMotion else {
+            return nil
+        }
+        guard massMaps.count >= 2 else {
+            fatalError("angular_phase_motion metrics require at least two captured sequence frames.")
+        }
+        let materializedMaps = massMaps.map { materializeMassBatch($0) }
+        return computeAngularPhaseMotionBatch(
+            materialized: materializedMaps,
+            threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
+            order: esConfig.fitness.angularPhaseMotionOrder ?? 8,
+            minimumAmplitude: esConfig.fitness.angularPhaseMotionMinimumAmplitude ?? 0.02
+        )
+    }
+
+    private func sectorTransportValues(from massMaps: [MLXArray]) -> [Float]? {
+        guard esConfig.fitness.usesSectorTransport else {
+            return nil
+        }
+        guard massMaps.count >= 2 else {
+            fatalError("sector_transport metrics require at least two captured sequence frames.")
+        }
+        let materializedMaps = massMaps.map { materializeMassBatch($0) }
+        return computeSectorTransportMotionBatch(
+            materialized: materializedMaps,
+            threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
+            binCount: esConfig.fitness.sectorTransportBinCount ?? 48,
+            minimumContrast: esConfig.fitness.sectorTransportMinimumContrast ?? 0.05
+        )
+    }
+
     private func deadSnapshot() -> CenterSnapshot {
         CenterSnapshot(alive: false, x: 0.0, y: 0.0)
     }
@@ -1179,6 +2084,20 @@ public final class EvolutionEngine {
         let com0Device = requirements.usesCenterOfMass ? centerOfMassBatchDevice(ABatch) : nil
         var comMidDevice: BatchCenterOfMassDevice? = nil
         var comTargetDevice: BatchCenterOfMassDevice? = nil
+        let sequenceStepSet = Set(templateSequenceSteps())
+        var sequenceMassMaps: [MLXArray] = []
+        var sequenceCenterDevices: [BatchCenterOfMassDevice] = []
+
+        func captureTemplateSequenceStep(_ step: Int) {
+            if sequenceStepSet.contains(step) {
+                sequenceMassMaps.append(evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels))
+                if esConfig.fitness.usesTrajectoryMetrics {
+                    sequenceCenterDevices.append(centerOfMassBatchDevice(ABatch))
+                }
+            }
+        }
+
+        captureTemplateSequenceStep(0)
 
         for step in 1...esConfig.steps {
             if let field = chemFieldBatch, let chemotaxis = runtimeConfig.chemotaxis {
@@ -1195,6 +2114,7 @@ public final class EvolutionEngine {
             if requirements.usesCenterOfMass && step == requirements.targetStep {
                 comTargetDevice = centerOfMassBatchDevice(ABatch)
             }
+            captureTemplateSequenceStep(step)
         }
 
         LeniaSignposts.end(rolloutSignpost)
@@ -1214,9 +2134,17 @@ public final class EvolutionEngine {
         let initialCenters = requirements.usesCenterOfMass ? centerMetrics[0] : nil
         let midCenters = requirements.usesMidCenter ? centerMetrics[1] : nil
         let targetCenters = requirements.usesMidCenter ? centerMetrics[2] : (requirements.usesCenterOfMass ? centerMetrics[1] : nil)
+        let trajectoryValues = trajectoryMetricValues(
+            from: materializeCenterOfMassBatch(sequenceCenterDevices),
+            stepSpan: trajectoryMetricStepSpan()
+        )
 
         let gyrationValues = esConfig.fitness.gyrationPenalty == nil ? nil : computeGyrationBatch(ABatch)
         let morphologyValues = morphologyMeasurements(from: ABatch)
+        let templateSequenceValues = templateSequenceMetricValues(from: sequenceMassMaps)
+        let orientationPhaseMotion = orientationPhaseMotionValues(from: sequenceMassMaps)
+        let angularPhaseMotion = angularPhaseMotionValues(from: sequenceMassMaps)
+        let sectorTransport = sectorTransportValues(from: sequenceMassMaps)
         let chemotaxisScores: [Float]?
         if requirements.objective == "chemotaxis" {
             guard let field = chemFieldBatch else {
@@ -1232,8 +2160,28 @@ public final class EvolutionEngine {
                         componentCount: morphologyValues?.componentCount?[index],
                         largestComponentFraction: morphologyValues?.largestComponentFraction?[index],
                         largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?[index],
+                        componentMassEvenness: morphologyValues?.componentMassEvenness?[index],
+                        momentMass: morphologyValues?.momentMass?[index],
                         momentDensity: morphologyValues?.momentDensity?[index],
                         momentAnisotropy: morphologyValues?.momentAnisotropy?[index],
+                        internalStripe: morphologyValues?.internalStripe?[index],
+                        orientedRidge: morphologyValues?.orientedRidge?[index],
+                        largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?[index],
+                        largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?[index],
+                        templateSimilarity: morphologyValues?.templateSimilarity?[index],
+                        templateSequenceSimilarity: templateSequenceValues.similarity?[index],
+                        templateSequenceMassMismatch: templateSequenceValues.massMismatch?[index],
+                        templateSequenceSupportMismatch: templateSequenceValues.supportMismatch?[index],
+                        templateSequenceChangeMismatch: templateSequenceValues.changeMismatch?[index],
+                        templateSequenceDeltaSimilarity: templateSequenceValues.deltaSimilarity?[index],
+                        templateSequenceSignedDeltaSimilarity: templateSequenceValues.signedDeltaSimilarity?[index],
+                        orientationPhaseMotion: orientationPhaseMotion?[index],
+                        angularPhaseMotion: angularPhaseMotion?[index],
+                        sectorTransport: sectorTransport?[index],
+                        trajectoryPathLength: nil,
+                        trajectoryDisplacement: nil,
+                        movementEfficiency: nil,
+                        centerVelocity: nil,
                         chemotaxisScore: 0.0
                     )
                 }
@@ -1268,8 +2216,28 @@ public final class EvolutionEngine {
                 componentCount: morphologyValues?.componentCount?[index],
                 largestComponentFraction: morphologyValues?.largestComponentFraction?[index],
                 largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?[index],
+                componentMassEvenness: morphologyValues?.componentMassEvenness?[index],
+                momentMass: morphologyValues?.momentMass?[index],
                 momentDensity: morphologyValues?.momentDensity?[index],
                 momentAnisotropy: morphologyValues?.momentAnisotropy?[index],
+                internalStripe: morphologyValues?.internalStripe?[index],
+                orientedRidge: morphologyValues?.orientedRidge?[index],
+                largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?[index],
+                largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?[index],
+                templateSimilarity: morphologyValues?.templateSimilarity?[index],
+                templateSequenceSimilarity: templateSequenceValues.similarity?[index],
+                templateSequenceMassMismatch: templateSequenceValues.massMismatch?[index],
+                templateSequenceSupportMismatch: templateSequenceValues.supportMismatch?[index],
+                templateSequenceChangeMismatch: templateSequenceValues.changeMismatch?[index],
+                templateSequenceDeltaSimilarity: templateSequenceValues.deltaSimilarity?[index],
+                templateSequenceSignedDeltaSimilarity: templateSequenceValues.signedDeltaSimilarity?[index],
+                orientationPhaseMotion: orientationPhaseMotion?[index],
+                angularPhaseMotion: angularPhaseMotion?[index],
+                sectorTransport: sectorTransport?[index],
+                trajectoryPathLength: trajectoryValues.pathLength?[index],
+                trajectoryDisplacement: trajectoryValues.displacement?[index],
+                movementEfficiency: trajectoryValues.movementEfficiency?[index],
+                centerVelocity: trajectoryValues.centerVelocity?[index],
                 chemotaxisScore: chemotaxisScores?[index]
             )
         }
@@ -1368,43 +2336,61 @@ public final class EvolutionEngine {
             }
         }
 
+        let sequenceStepSet = Set(templateSequenceSteps())
+        var sequenceMassMaps: [MLXArray] = []
+        var sequenceSnapshots: [[CenterSnapshot]] = []
+
+        func captureTemplateSequenceStep(_ step: Int) {
+            if sequenceStepSet.contains(step) {
+                sequenceMassMaps.append(runner.materializeMassMap(channelWeights: metalMatterWeights()))
+            }
+        }
+
+        func measureCenterSnapshots() -> [CenterSnapshot] {
+            if runner.supportsMassSummary {
+                let summary = runner.summarizeMass(
+                    occupancyThreshold: 0.0,
+                    includeGyration: false,
+                    channelWeights: metalMatterWeights()
+                )
+                return (0..<pop).map { centerSnapshot(from: summary, index: $0) }
+            }
+            let massMap = runner.materializeMassMap(channelWeights: metalMatterWeights())
+            let centers = materializeCenterOfMassBatch([centerOfMassBatchDeviceFromMassMap(massMap)])[0]
+            return (0..<pop).map { centerSnapshot(from: centers, index: $0) ?? deadSnapshot() }
+        }
+
+        func captureTrajectoryStep(_ step: Int) {
+            if esConfig.fitness.usesTrajectoryMetrics && sequenceStepSet.contains(step) {
+                sequenceSnapshots.append(measureCenterSnapshots())
+            }
+        }
+
+        captureTemplateSequenceStep(0)
+        captureTrajectoryStep(0)
+        var measurementSteps = Set(sequenceStepSet)
         if requirements.usesMidCenter {
-            let midMeasurementStart = ContinuousClock.now
-            advanceRunner(to: requirements.midStep)
-            if runner.supportsMassSummary {
-                let summary = runner.summarizeMass(
-                    occupancyThreshold: 0.0,
-                    includeGyration: false,
-                    channelWeights: metalMatterWeights()
-                )
-                midSnapshots = (0..<pop).map { centerSnapshot(from: summary, index: $0) }
-            } else {
-                let massMap = runner.materializeMassMap(channelWeights: metalMatterWeights())
-                let centers = materializeCenterOfMassBatch([centerOfMassBatchDeviceFromMassMap(massMap)])[0]
-                midSnapshots = (0..<pop).map { centerSnapshot(from: centers, index: $0) ?? deadSnapshot() }
-            }
-            measurementMs += durationMs(midMeasurementStart.duration(to: ContinuousClock.now))
+            measurementSteps.insert(requirements.midStep)
         }
-
         if requirements.usesCenterOfMass {
-            let targetMeasurementStart = ContinuousClock.now
-            advanceRunner(to: requirements.targetStep)
-            if runner.supportsMassSummary {
-                let summary = runner.summarizeMass(
-                    occupancyThreshold: 0.0,
-                    includeGyration: false,
-                    channelWeights: metalMatterWeights()
-                )
-                targetSnapshots = (0..<pop).map { centerSnapshot(from: summary, index: $0) }
-            } else {
-                let massMap = runner.materializeMassMap(channelWeights: metalMatterWeights())
-                let centers = materializeCenterOfMassBatch([centerOfMassBatchDeviceFromMassMap(massMap)])[0]
-                targetSnapshots = (0..<pop).map { centerSnapshot(from: centers, index: $0) ?? deadSnapshot() }
+            measurementSteps.insert(requirements.targetStep)
+        }
+        measurementSteps.insert(esConfig.steps)
+
+        for step in measurementSteps.sorted() where step > 0 {
+            let stepMeasurementStart = ContinuousClock.now
+            advanceRunner(to: step)
+            if requirements.usesMidCenter && step == requirements.midStep {
+                midSnapshots = measureCenterSnapshots()
             }
-            measurementMs += durationMs(targetMeasurementStart.duration(to: ContinuousClock.now))
+            if requirements.usesCenterOfMass && step == requirements.targetStep {
+                targetSnapshots = measureCenterSnapshots()
+            }
+            captureTemplateSequenceStep(step)
+            captureTrajectoryStep(step)
+            measurementMs += durationMs(stepMeasurementStart.duration(to: ContinuousClock.now))
         }
 
-        advanceRunner(to: esConfig.steps)
         rolloutMs = durationMs(rolloutStart.duration(to: ContinuousClock.now))
 
         let finalMeasurementStart = ContinuousClock.now
@@ -1436,6 +2422,11 @@ public final class EvolutionEngine {
         } else {
             morphologyValues = nil
         }
+        let templateSequenceValues = templateSequenceMetricValues(from: sequenceMassMaps)
+        let orientationPhaseMotion = orientationPhaseMotionValues(from: sequenceMassMaps)
+        let angularPhaseMotion = angularPhaseMotionValues(from: sequenceMassMaps)
+        let sectorTransport = sectorTransportValues(from: sequenceMassMaps)
+        let trajectoryValues = trajectoryMetricValues(from: sequenceSnapshots, stepSpan: trajectoryMetricStepSpan())
         let chemotaxisScores: [Float]?
         if requirements.objective == "chemotaxis" {
             if let field = chemFieldBatch {
@@ -1468,8 +2459,28 @@ public final class EvolutionEngine {
                     componentCount: morphologyValues?.componentCount?[index],
                     largestComponentFraction: morphologyValues?.largestComponentFraction?[index],
                     largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?[index],
+                    componentMassEvenness: morphologyValues?.componentMassEvenness?[index],
+                    momentMass: morphologyValues?.momentMass?[index],
                     momentDensity: morphologyValues?.momentDensity?[index],
                     momentAnisotropy: morphologyValues?.momentAnisotropy?[index],
+                    internalStripe: morphologyValues?.internalStripe?[index],
+                    orientedRidge: morphologyValues?.orientedRidge?[index],
+                    largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?[index],
+                    largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?[index],
+                    templateSimilarity: morphologyValues?.templateSimilarity?[index],
+                    templateSequenceSimilarity: templateSequenceValues.similarity?[index],
+                    templateSequenceMassMismatch: templateSequenceValues.massMismatch?[index],
+                    templateSequenceSupportMismatch: templateSequenceValues.supportMismatch?[index],
+                    templateSequenceChangeMismatch: templateSequenceValues.changeMismatch?[index],
+                    templateSequenceDeltaSimilarity: templateSequenceValues.deltaSimilarity?[index],
+                    templateSequenceSignedDeltaSimilarity: templateSequenceValues.signedDeltaSimilarity?[index],
+                    orientationPhaseMotion: orientationPhaseMotion?[index],
+                    angularPhaseMotion: angularPhaseMotion?[index],
+                    sectorTransport: sectorTransport?[index],
+                    trajectoryPathLength: trajectoryValues.pathLength?[index],
+                    trajectoryDisplacement: trajectoryValues.displacement?[index],
+                    movementEfficiency: trajectoryValues.movementEfficiency?[index],
+                    centerVelocity: trajectoryValues.centerVelocity?[index],
                     chemotaxisScore: chemotaxisScores?[index]
                 )
             )
@@ -1489,7 +2500,7 @@ public final class EvolutionEngine {
         switch esConfig.fitness.objective {
         case "directed_motion", "obstacle_navigation":
             guard measurement.initial.alive, let target = measurement.target, target.alive else {
-                return 0.0
+                return adjustedFitness(base: 0.0, measurement: measurement)
             }
             let dx = target.x - measurement.initial.x
             let dy = target.y - measurement.initial.y
@@ -1499,7 +2510,7 @@ public final class EvolutionEngine {
             guard measurement.initial.alive,
                   let mid = measurement.mid, mid.alive,
                   let target = measurement.target, target.alive else {
-                return 0.0
+                return adjustedFitness(base: 0.0, measurement: measurement)
             }
             let v1 = (mid.x - measurement.initial.x, mid.y - measurement.initial.y)
             let v2 = (target.x - mid.x, target.y - mid.y)
@@ -1514,6 +2525,12 @@ public final class EvolutionEngine {
             return adjustedFitness(base: d1 + d2 + acos(cosAngle), measurement: measurement)
         case "chemotaxis":
             return adjustedFitness(base: measurement.chemotaxisScore ?? 0.0, measurement: measurement)
+        case "trajectory_motion",
+             "template_sequence",
+             "orientation_phase_motion",
+             "angular_phase_motion",
+             "sector_transport_motion":
+            return adjustedFitness(base: 0.0, measurement: measurement)
         default:
             return 0.0
         }
@@ -1521,6 +2538,10 @@ public final class EvolutionEngine {
 
     private func adjustedFitness(base: Float, measurement: CandidateMeasurement) -> Float {
         var value = base
+        if let failureFitness = esConfig.fitness.morphologyGuardFailureFitness,
+           failsMorphologyGuard(measurement) {
+            return failureFitness
+        }
         if let penalty = esConfig.fitness.gyrationPenalty {
             guard let gyration = measurement.gyration else {
                 fatalError("gyration_penalty requested but gyration was not computed.")
@@ -1533,11 +2554,43 @@ public final class EvolutionEngine {
             }
             value -= penalty * max(componentCount - 1.0, 0.0)
         }
+        if let target = esConfig.fitness.componentCountTarget,
+           let penalty = esConfig.fitness.componentCountTargetPenalty {
+            guard let componentCount = measurement.componentCount else {
+                fatalError("component_count_target_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * componentCountTargetMismatch(componentCount, target: target)
+        }
+        if let penalty = esConfig.fitness.componentCountLimitPenalty {
+            guard let componentCount = measurement.componentCount else {
+                fatalError("component_count_limit_penalty requested but component metrics were not computed.")
+            }
+            if let minimum = esConfig.fitness.minimumComponentCount {
+                value -= penalty * max(minimum - componentCount, 0)
+            }
+            if let maximum = esConfig.fitness.maximumComponentCount {
+                value -= penalty * max(componentCount - maximum, 0)
+            }
+        }
         if let reward = esConfig.fitness.largestComponentFractionReward {
             guard let largestComponentFraction = measurement.largestComponentFraction else {
                 fatalError("largest_component_fraction_reward requested but component metrics were not computed.")
             }
             value += reward * largestComponentFraction
+        }
+        if let minimum = esConfig.fitness.minimumLargestComponentFraction,
+           let penalty = esConfig.fitness.largestComponentFractionPenalty {
+            guard let largestComponentFraction = measurement.largestComponentFraction else {
+                fatalError("largest_component_fraction_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * max(minimum - largestComponentFraction, 0)
+        }
+        if let maximum = esConfig.fitness.maximumLargestComponentFraction,
+           let penalty = esConfig.fitness.largestComponentFractionLimitPenalty {
+            guard let largestComponentFraction = measurement.largestComponentFraction else {
+                fatalError("largest_component_fraction_limit_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * max(largestComponentFraction - maximum, 0)
         }
         if let penalty = esConfig.fitness.largestComponentAnisotropyPenalty {
             guard let largestComponentAnisotropy = measurement.largestComponentAnisotropy else {
@@ -1545,11 +2598,31 @@ public final class EvolutionEngine {
             }
             value -= penalty * largestComponentAnisotropy
         }
+        if let reward = esConfig.fitness.componentMassEvennessReward {
+            guard let componentMassEvenness = measurement.componentMassEvenness else {
+                fatalError("component_mass_evenness_reward requested but component metrics were not computed.")
+            }
+            value += reward * componentMassEvenness
+        }
+        if let minimum = esConfig.fitness.minimumComponentMassEvenness,
+           let penalty = esConfig.fitness.componentMassEvennessPenalty {
+            guard let componentMassEvenness = measurement.componentMassEvenness else {
+                fatalError("component_mass_evenness_penalty requested but component metrics were not computed.")
+            }
+            value -= penalty * max(minimum - componentMassEvenness, 0)
+        }
         if let reward = esConfig.fitness.momentDensityReward {
             guard let momentDensity = measurement.momentDensity else {
                 fatalError("moment_density_reward requested but moment metrics were not computed.")
             }
             value += reward * momentDensity
+        }
+        if let minimum = esConfig.fitness.minimumMomentDensity,
+           let penalty = esConfig.fitness.momentDensityPenalty {
+            guard let momentDensity = measurement.momentDensity else {
+                fatalError("moment_density_penalty requested but moment metrics were not computed.")
+            }
+            value -= penalty * max(minimum - momentDensity, 0)
         }
         if let penalty = esConfig.fitness.momentAnisotropyPenalty {
             guard let momentAnisotropy = measurement.momentAnisotropy else {
@@ -1557,30 +2630,282 @@ public final class EvolutionEngine {
             }
             value -= penalty * momentAnisotropy
         }
+        if let maximum = esConfig.fitness.maximumMomentAnisotropy,
+           let penalty = esConfig.fitness.momentAnisotropyLimitPenalty {
+            guard let momentAnisotropy = measurement.momentAnisotropy else {
+                fatalError("moment_anisotropy_limit_penalty requested but moment metrics were not computed.")
+            }
+            value -= penalty * max(momentAnisotropy - maximum, 0)
+        }
+        if let penalty = esConfig.fitness.internalStripePenalty {
+            guard let internalStripe = measurement.internalStripe else {
+                fatalError("internal_stripe_penalty requested but stripe metrics were not computed.")
+            }
+            value -= penalty * internalStripe
+        }
+        if let penalty = esConfig.fitness.orientedRidgePenalty {
+            guard let orientedRidge = measurement.orientedRidge else {
+                fatalError("oriented_ridge_penalty requested but ridge metrics were not computed.")
+            }
+            value -= penalty * orientedRidge
+        }
+        if let penalty = esConfig.fitness.largestComponentInternalStripePenalty {
+            guard let largestComponentInternalStripe = measurement.largestComponentInternalStripe else {
+                fatalError("largest_component_internal_stripe_penalty requested but largest-component stripe metrics were not computed.")
+            }
+            value -= penalty * largestComponentInternalStripe
+        }
+        if let penalty = esConfig.fitness.largestComponentOrientedRidgePenalty {
+            guard let largestComponentOrientedRidge = measurement.largestComponentOrientedRidge else {
+                fatalError("largest_component_oriented_ridge_penalty requested but largest-component ridge metrics were not computed.")
+            }
+            value -= penalty * largestComponentOrientedRidge
+        }
+        if let reward = esConfig.fitness.templateSimilarityReward {
+            guard let templateSimilarity = measurement.templateSimilarity else {
+                fatalError("template_similarity_reward requested but template similarity was not computed.")
+            }
+            value += reward * templateSimilarity
+        }
+        if let reward = esConfig.fitness.templateSequenceReward {
+            guard let templateSequenceSimilarity = measurement.templateSequenceSimilarity else {
+                fatalError("template_sequence_reward requested but template sequence similarity was not computed.")
+            }
+            value += reward * templateSequenceSimilarity
+        }
+        if let penalty = esConfig.fitness.templateSequenceMassPenalty {
+            guard let templateSequenceMassMismatch = measurement.templateSequenceMassMismatch else {
+                fatalError("template_sequence_mass_penalty requested but template sequence mass mismatch was not computed.")
+            }
+            value -= penalty * templateSequenceMassMismatch
+        }
+        if let penalty = esConfig.fitness.templateSequenceSupportPenalty {
+            guard let templateSequenceSupportMismatch = measurement.templateSequenceSupportMismatch else {
+                fatalError("template_sequence_support_penalty requested but template sequence support mismatch was not computed.")
+            }
+            value -= penalty * templateSequenceSupportMismatch
+        }
+        if let penalty = esConfig.fitness.templateSequenceChangePenalty {
+            guard let templateSequenceChangeMismatch = measurement.templateSequenceChangeMismatch else {
+                fatalError("template_sequence_change_penalty requested but template sequence change mismatch was not computed.")
+            }
+            value -= penalty * templateSequenceChangeMismatch
+        }
+        if let reward = esConfig.fitness.templateSequenceDeltaReward {
+            guard let templateSequenceDeltaSimilarity = measurement.templateSequenceDeltaSimilarity else {
+                fatalError("template_sequence_delta_reward requested but template sequence delta similarity was not computed.")
+            }
+            value += reward * templateSequenceDeltaSimilarity
+        }
+        if let reward = esConfig.fitness.templateSequenceSignedDeltaReward {
+            guard let templateSequenceSignedDeltaSimilarity = measurement.templateSequenceSignedDeltaSimilarity else {
+                fatalError("template_sequence_signed_delta_reward requested but template sequence signed-delta similarity was not computed.")
+            }
+            value += reward * templateSequenceSignedDeltaSimilarity
+        }
+        if let reward = esConfig.fitness.orientationPhaseMotionReward {
+            guard let orientationPhaseMotion = measurement.orientationPhaseMotion else {
+                fatalError("orientation_phase_motion_reward requested but orientation phase motion was not computed.")
+            }
+            value += reward * orientationPhaseMotion
+        }
+        if let minimum = esConfig.fitness.minimumOrientationPhaseMotion,
+           let penalty = esConfig.fitness.orientationPhaseMotionPenalty {
+            guard let orientationPhaseMotion = measurement.orientationPhaseMotion else {
+                fatalError("orientation_phase_motion_penalty requested but orientation phase motion was not computed.")
+            }
+            value -= penalty * max(minimum - orientationPhaseMotion, 0)
+        }
+        if let reward = esConfig.fitness.angularPhaseMotionReward {
+            guard let angularPhaseMotion = measurement.angularPhaseMotion else {
+                fatalError("angular_phase_motion_reward requested but angular phase motion was not computed.")
+            }
+            value += reward * angularPhaseMotion
+        }
+        if let minimum = esConfig.fitness.minimumAngularPhaseMotion,
+           let penalty = esConfig.fitness.angularPhaseMotionPenalty {
+            guard let angularPhaseMotion = measurement.angularPhaseMotion else {
+                fatalError("angular_phase_motion_penalty requested but angular phase motion was not computed.")
+            }
+            value -= penalty * max(minimum - angularPhaseMotion, 0)
+        }
+        if let reward = esConfig.fitness.sectorTransportReward {
+            guard let sectorTransport = measurement.sectorTransport else {
+                fatalError("sector_transport_reward requested but sector transport was not computed.")
+            }
+            value += reward * sectorTransport
+        }
+        if let minimum = esConfig.fitness.minimumSectorTransport,
+           let penalty = esConfig.fitness.sectorTransportPenalty {
+            guard let sectorTransport = measurement.sectorTransport else {
+                fatalError("sector_transport_penalty requested but sector transport was not computed.")
+            }
+            value -= penalty * max(minimum - sectorTransport, 0)
+        }
+        if let minimum = esConfig.fitness.minimumTrajectoryPathLength,
+           let penalty = esConfig.fitness.trajectoryPathLengthPenalty {
+            guard let trajectoryPathLength = measurement.trajectoryPathLength else {
+                fatalError("trajectory_path_length_penalty requested but trajectory path length was not computed.")
+            }
+            value -= penalty * max(minimum - trajectoryPathLength, 0)
+        }
+        if let reward = esConfig.fitness.trajectoryPathLengthReward {
+            guard let trajectoryPathLength = measurement.trajectoryPathLength else {
+                fatalError("trajectory_path_length_reward requested but trajectory path length was not computed.")
+            }
+            value += reward * trajectoryPathLength
+        }
+        if let minimum = esConfig.fitness.minimumTrajectoryDisplacement,
+           let penalty = esConfig.fitness.trajectoryDisplacementPenalty {
+            guard let trajectoryDisplacement = measurement.trajectoryDisplacement else {
+                fatalError("trajectory_displacement_penalty requested but trajectory displacement was not computed.")
+            }
+            value -= penalty * max(minimum - trajectoryDisplacement, 0)
+        }
+        if let reward = esConfig.fitness.trajectoryDisplacementReward {
+            guard let trajectoryDisplacement = measurement.trajectoryDisplacement else {
+                fatalError("trajectory_displacement_reward requested but trajectory displacement was not computed.")
+            }
+            value += reward * trajectoryDisplacement
+        }
+        if let minimum = esConfig.fitness.minimumMovementEfficiency,
+           let penalty = esConfig.fitness.movementEfficiencyPenalty {
+            guard let movementEfficiency = measurement.movementEfficiency else {
+                fatalError("movement_efficiency_penalty requested but movement efficiency was not computed.")
+            }
+            value -= penalty * max(minimum - movementEfficiency, 0)
+        }
+        if let reward = esConfig.fitness.movementEfficiencyReward {
+            guard let movementEfficiency = measurement.movementEfficiency else {
+                fatalError("movement_efficiency_reward requested but movement efficiency was not computed.")
+            }
+            value += reward * movementEfficiency
+        }
+        if let minimum = esConfig.fitness.minimumCenterVelocity,
+           let penalty = esConfig.fitness.centerVelocityPenalty {
+            guard let centerVelocity = measurement.centerVelocity else {
+                fatalError("center_velocity_penalty requested but center velocity was not computed.")
+            }
+            value -= penalty * max(minimum - centerVelocity, 0)
+        }
+        if let reward = esConfig.fitness.centerVelocityReward {
+            guard let centerVelocity = measurement.centerVelocity else {
+                fatalError("center_velocity_reward requested but center velocity was not computed.")
+            }
+            value += reward * centerVelocity
+        }
         return value
+    }
+
+    private func failsMorphologyGuard(_ measurement: CandidateMeasurement) -> Bool {
+        if let minimum = esConfig.fitness.minimumComponentCount {
+            guard let componentCount = measurement.componentCount else {
+                fatalError("minimum_component_count guard requested but component metrics were not computed.")
+            }
+            if componentCount < minimum { return true }
+        }
+        if let maximum = esConfig.fitness.maximumComponentCount {
+            guard let componentCount = measurement.componentCount else {
+                fatalError("maximum_component_count guard requested but component metrics were not computed.")
+            }
+            if componentCount > maximum { return true }
+        }
+        if let minimum = esConfig.fitness.minimumLargestComponentFraction {
+            guard let largestComponentFraction = measurement.largestComponentFraction else {
+                fatalError("minimum_largest_component_fraction guard requested but component metrics were not computed.")
+            }
+            if largestComponentFraction < minimum { return true }
+        }
+        if let maximum = esConfig.fitness.maximumLargestComponentFraction {
+            guard let largestComponentFraction = measurement.largestComponentFraction else {
+                fatalError("maximum_largest_component_fraction guard requested but component metrics were not computed.")
+            }
+            if largestComponentFraction > maximum { return true }
+        }
+        if let maximum = esConfig.fitness.maximumLargestComponentAnisotropy {
+            guard let largestComponentAnisotropy = measurement.largestComponentAnisotropy else {
+                fatalError("maximum_largest_component_anisotropy guard requested but component metrics were not computed.")
+            }
+            if largestComponentAnisotropy > maximum { return true }
+        }
+        if let minimum = esConfig.fitness.minimumComponentMassEvenness {
+            guard let componentMassEvenness = measurement.componentMassEvenness else {
+                fatalError("minimum_component_mass_evenness guard requested but component metrics were not computed.")
+            }
+            if componentMassEvenness < minimum { return true }
+        }
+        if let minimum = esConfig.fitness.minimumMomentMass {
+            guard let momentMass = measurement.momentMass else {
+                fatalError("minimum_moment_mass guard requested but moment metrics were not computed.")
+            }
+            if momentMass < minimum { return true }
+        }
+        if let maximum = esConfig.fitness.maximumMomentMass {
+            guard let momentMass = measurement.momentMass else {
+                fatalError("maximum_moment_mass guard requested but moment metrics were not computed.")
+            }
+            if momentMass > maximum { return true }
+        }
+        if let minimum = esConfig.fitness.minimumMomentDensity {
+            guard let momentDensity = measurement.momentDensity else {
+                fatalError("minimum_moment_density guard requested but moment metrics were not computed.")
+            }
+            if momentDensity < minimum { return true }
+        }
+        if let maximum = esConfig.fitness.maximumMomentDensity {
+            guard let momentDensity = measurement.momentDensity else {
+                fatalError("maximum_moment_density guard requested but moment metrics were not computed.")
+            }
+            if momentDensity > maximum { return true }
+        }
+        if let maximum = esConfig.fitness.maximumMomentAnisotropy {
+            guard let momentAnisotropy = measurement.momentAnisotropy else {
+                fatalError("maximum_moment_anisotropy guard requested but moment metrics were not computed.")
+            }
+            if momentAnisotropy > maximum { return true }
+        }
+        return false
     }
 
     private func fitnessValues(from measurements: [CandidateMeasurement]) -> [Float] {
         measurements.map(fitnessValue(from:))
     }
 
-    private func morphologyMeasurements(from stateBatch: MLXArray) -> MorphologyMeasurementBatch? {
+    private func morphologyMeasurements(
+        from stateBatch: MLXArray,
+        includeDiagnostics: Bool = false
+    ) -> MorphologyMeasurementBatch? {
         guard esConfig.fitness.usesMorphologyMetrics else {
             return nil
         }
         let massMap = evolutionMassMapBatch(stateBatch, excludedChannels: excludedMassChannels)
-        return morphologyMeasurements(fromMassMap: massMap)
+        return morphologyMeasurements(fromMassMap: massMap, includeDiagnostics: includeDiagnostics)
     }
 
-    private func morphologyMeasurements(fromMassMap massMap: MLXArray) -> MorphologyMeasurementBatch? {
+    private func morphologyMeasurements(
+        fromMassMap massMap: MLXArray,
+        includeDiagnostics: Bool = false
+    ) -> MorphologyMeasurementBatch? {
         guard esConfig.fitness.usesMorphologyMetrics else {
             return nil
         }
         let materialized = materializeMassBatch(massMap)
         let threshold = esConfig.fitness.morphologyThreshold ?? 0.03
-        let componentMetricsNeeded = esConfig.fitness.componentCountPenalty != nil ||
+        let componentMetricsNeeded = includeDiagnostics ||
+            esConfig.fitness.componentCountPenalty != nil ||
+            esConfig.fitness.componentCountTargetPenalty != nil ||
+            esConfig.fitness.componentCountLimitPenalty != nil ||
+            esConfig.fitness.minimumComponentCount != nil ||
+            esConfig.fitness.maximumComponentCount != nil ||
             esConfig.fitness.largestComponentFractionReward != nil ||
-            esConfig.fitness.largestComponentAnisotropyPenalty != nil
+            esConfig.fitness.minimumLargestComponentFraction != nil ||
+            esConfig.fitness.maximumLargestComponentFraction != nil ||
+            esConfig.fitness.largestComponentFractionLimitPenalty != nil ||
+            esConfig.fitness.maximumLargestComponentAnisotropy != nil ||
+            esConfig.fitness.largestComponentAnisotropyPenalty != nil ||
+            esConfig.fitness.componentMassEvennessReward != nil ||
+            esConfig.fitness.minimumComponentMassEvenness != nil ||
+            esConfig.fitness.componentMassEvennessPenalty != nil
         let componentMetrics = componentMetricsNeeded
             ? computeComponentMetricsBatch(
                 materialized: materialized,
@@ -1588,20 +2913,70 @@ public final class EvolutionEngine {
                 useTorus: runtimeConfig.border == "torus"
             )
             : nil
-        let momentMetricsNeeded = esConfig.fitness.momentDensityReward != nil ||
-            esConfig.fitness.momentAnisotropyPenalty != nil
+        let momentMetricsNeeded = includeDiagnostics ||
+            esConfig.fitness.momentDensityReward != nil ||
+            esConfig.fitness.minimumMomentMass != nil ||
+            esConfig.fitness.maximumMomentMass != nil ||
+            esConfig.fitness.minimumMomentDensity != nil ||
+            esConfig.fitness.maximumMomentDensity != nil ||
+            esConfig.fitness.momentDensityPenalty != nil ||
+            esConfig.fitness.momentAnisotropyPenalty != nil ||
+            esConfig.fitness.maximumMomentAnisotropy != nil ||
+            esConfig.fitness.momentAnisotropyLimitPenalty != nil
         let momentMetrics = !momentMetricsNeeded
             ? nil
             : computeMomentsBatch(
                 materialized: materialized,
                 config: MomentsConfig(enabled: true, threshold: threshold)
             )
+        let internalStripe = !includeDiagnostics && esConfig.fitness.internalStripePenalty == nil
+            ? nil
+            : computeInternalStripeContrastBatch(
+                materialized: materialized,
+                threshold: threshold,
+                useTorus: runtimeConfig.border == "torus"
+            )
+        let orientedRidge = !includeDiagnostics && esConfig.fitness.orientedRidgePenalty == nil
+            ? nil
+            : computeOrientedRidgeDominanceBatch(
+                materialized: materialized,
+                threshold: threshold
+            )
+        let largestComponentInternalStripe = !includeDiagnostics && esConfig.fitness.largestComponentInternalStripePenalty == nil
+            ? nil
+            : computeLargestComponentInternalStripeContrastBatch(
+                materialized: materialized,
+                threshold: threshold,
+                useTorus: runtimeConfig.border == "torus"
+            )
+        let largestComponentOrientedRidge = !includeDiagnostics && esConfig.fitness.largestComponentOrientedRidgePenalty == nil
+            ? nil
+            : computeLargestComponentOrientedRidgeDominanceBatch(
+                materialized: materialized,
+                threshold: threshold,
+                useTorus: runtimeConfig.border == "torus"
+            )
+        let templateSimilarity = esConfig.fitness.templateSimilarityReward == nil
+            ? nil
+            : computeTemplateSimilarityBatch(
+                materialized: materialized,
+                template: morphologyTemplate!,
+                threshold: threshold,
+                useTorus: runtimeConfig.border == "torus"
+            )
         return MorphologyMeasurementBatch(
             componentCount: componentMetrics?.count,
             largestComponentFraction: componentMetrics?.largestFraction,
             largestComponentAnisotropy: componentMetrics?.largestAnisotropy,
+            componentMassEvenness: componentMetrics?.massEvenness,
+            momentMass: momentMetrics?.mass,
             momentDensity: momentMetrics?.density,
-            momentAnisotropy: momentMetrics?.anisotropy
+            momentAnisotropy: momentMetrics?.anisotropy,
+            internalStripe: internalStripe,
+            orientedRidge: orientedRidge,
+            largestComponentInternalStripe: largestComponentInternalStripe,
+            largestComponentOrientedRidge: largestComponentOrientedRidge,
+            templateSimilarity: templateSimilarity
         )
     }
 
@@ -1645,7 +3020,17 @@ public final class EvolutionEngine {
         if let food = runtimeConfig.food, food.enabled {
             fatalError("EvolutionEngine Metal backends do not support food fields yet.")
         }
-        let supportedObjectives: Set<String> = ["directed_motion", "angular_motion", "obstacle_navigation", "chemotaxis"]
+        let supportedObjectives: Set<String> = [
+            "directed_motion",
+            "angular_motion",
+            "obstacle_navigation",
+            "chemotaxis",
+            "trajectory_motion",
+            "template_sequence",
+            "orientation_phase_motion",
+            "angular_phase_motion",
+            "sector_transport_motion",
+        ]
         if !supportedObjectives.contains(esConfig.fitness.objective) {
             fatalError("EvolutionEngine Metal backends do not support objective \(esConfig.fitness.objective).")
         }
@@ -1786,6 +3171,9 @@ public final class EvolutionEngine {
         var centerXHistory: [Float] = []
         var centerYHistory: [Float] = []
         var aliveHistory: [Bool] = []
+        let sequenceStepSet = Set(templateSequenceSteps())
+        var sequenceMassMaps: [MLXArray] = []
+        var sequenceCenterSnapshots: [[CenterSnapshot]] = []
 
         func applyFields() {
             if let field = chemFieldBatch, let chemotaxis = runtimeConfig.chemotaxis {
@@ -1796,7 +3184,7 @@ public final class EvolutionEngine {
             }
         }
 
-        func record() {
+        func record(step: Int) {
             let massMap = evolutionMassMapBatch(ABatch, excludedChannels: excludedMassChannels)
             let total = massMap.sum(axes: [1, 2])
             let occupancy = MLX.greater(massMap, MLXArray(Float(1e-3))).asType(.float32).mean(axes: [1, 2])
@@ -1822,14 +3210,21 @@ public final class EvolutionEngine {
             centerXHistory.append(centerX)
             centerYHistory.append(centerY)
             aliveHistory.append(alive)
+
+            if sequenceStepSet.contains(step) {
+                sequenceMassMaps.append(massMap)
+                if esConfig.fitness.usesTrajectoryMetrics {
+                    sequenceCenterSnapshots.append([CenterSnapshot(alive: alive, x: centerX, y: centerY)])
+                }
+            }
         }
 
         applyFields()
-        record()
-        for _ in 1...esConfig.steps {
+        record(step: 0)
+        for step in 1...esConfig.steps {
             applyFields()
             ABatch = sim.step(ABatch)
-            record()
+            record(step: step)
         }
 
         let speeds = evolutionSpeeds(
@@ -1850,6 +3245,7 @@ public final class EvolutionEngine {
         let speedValues = speeds.map(\.speed)
         let massMean = evolutionMean(massHistory)
         let massStd = evolutionStd(massHistory, mean: massMean)
+        let morphologyValues = morphologyMeasurements(from: ABatch, includeDiagnostics: true)
         let metrics = SimulationMetrics(
             massMean: massMean,
             massStd: massStd,
@@ -1872,7 +3268,15 @@ public final class EvolutionEngine {
                 massMean: massMean,
                 massStd: massStd,
                 finalMass: massHistory.last ?? 0
-            )
+            ),
+            momentMass: morphologyValues?.momentMass?.first,
+            momentDensity: morphologyValues?.momentDensity?.first,
+            momentAnisotropy: morphologyValues?.momentAnisotropy?.first,
+            componentCount: morphologyValues?.componentCount?.first,
+            largestComponentFraction: morphologyValues?.largestComponentFraction?.first,
+            largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?.first,
+            largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?.first,
+            largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?.first
         )
 
         let requirements = objectiveRequirements()
@@ -1886,40 +3290,67 @@ public final class EvolutionEngine {
         } else {
             chemotaxisScore = nil
         }
-        let morphologyValues = morphologyMeasurements(from: ABatch)
-        let fitness = fitnessValue(
-            from: CandidateMeasurement(
-                initial: centerSnapshot(
+        let templateSequenceValues = templateSequenceMetricValues(from: sequenceMassMaps)
+        let orientationPhaseMotion = orientationPhaseMotionValues(from: sequenceMassMaps)
+        let angularPhaseMotion = angularPhaseMotionValues(from: sequenceMassMaps)
+        let sectorTransport = sectorTransportValues(from: sequenceMassMaps)
+        let trajectoryValues = trajectoryMetricValues(
+            from: sequenceCenterSnapshots,
+            stepSpan: trajectoryMetricStepSpan()
+        )
+        let measurement = CandidateMeasurement(
+            initial: centerSnapshot(
+                centerXHistory: centerXHistory,
+                centerYHistory: centerYHistory,
+                aliveHistory: aliveHistory,
+                index: 0
+            ),
+            mid: requirements.usesMidCenter
+                ? centerSnapshot(
                     centerXHistory: centerXHistory,
                     centerYHistory: centerYHistory,
                     aliveHistory: aliveHistory,
-                    index: 0
-                ),
-                mid: requirements.usesMidCenter
-                    ? centerSnapshot(
-                        centerXHistory: centerXHistory,
-                        centerYHistory: centerYHistory,
-                        aliveHistory: aliveHistory,
-                        index: requirements.midStep
-                    )
-                    : nil,
-                target: requirements.usesCenterOfMass
-                    ? centerSnapshot(
-                        centerXHistory: centerXHistory,
-                        centerYHistory: centerYHistory,
-                        aliveHistory: aliveHistory,
-                        index: requirements.targetStep
-                    )
-                    : nil,
-                gyration: metrics.gyration,
-                componentCount: morphologyValues?.componentCount?.first,
-                largestComponentFraction: morphologyValues?.largestComponentFraction?.first,
-                largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?.first,
-                momentDensity: morphologyValues?.momentDensity?.first,
-                momentAnisotropy: morphologyValues?.momentAnisotropy?.first,
-                chemotaxisScore: chemotaxisScore
-            )
+                    index: requirements.midStep
+                )
+                : nil,
+            target: requirements.usesCenterOfMass
+                ? centerSnapshot(
+                    centerXHistory: centerXHistory,
+                    centerYHistory: centerYHistory,
+                    aliveHistory: aliveHistory,
+                    index: requirements.targetStep
+                )
+                : nil,
+            gyration: metrics.gyration,
+            componentCount: morphologyValues?.componentCount?.first,
+            largestComponentFraction: morphologyValues?.largestComponentFraction?.first,
+            largestComponentAnisotropy: morphologyValues?.largestComponentAnisotropy?.first,
+            componentMassEvenness: morphologyValues?.componentMassEvenness?.first,
+            momentMass: morphologyValues?.momentMass?.first,
+            momentDensity: morphologyValues?.momentDensity?.first,
+            momentAnisotropy: morphologyValues?.momentAnisotropy?.first,
+            internalStripe: morphologyValues?.internalStripe?.first,
+            orientedRidge: morphologyValues?.orientedRidge?.first,
+            largestComponentInternalStripe: morphologyValues?.largestComponentInternalStripe?.first,
+            largestComponentOrientedRidge: morphologyValues?.largestComponentOrientedRidge?.first,
+            templateSimilarity: morphologyValues?.templateSimilarity?.first,
+            templateSequenceSimilarity: templateSequenceValues.similarity?.first,
+            templateSequenceMassMismatch: templateSequenceValues.massMismatch?.first,
+            templateSequenceSupportMismatch: templateSequenceValues.supportMismatch?.first,
+            templateSequenceChangeMismatch: templateSequenceValues.changeMismatch?.first,
+            templateSequenceDeltaSimilarity: templateSequenceValues.deltaSimilarity?.first,
+            templateSequenceSignedDeltaSimilarity: templateSequenceValues.signedDeltaSimilarity?.first,
+            orientationPhaseMotion: orientationPhaseMotion?.first,
+            angularPhaseMotion: angularPhaseMotion?.first,
+            sectorTransport: sectorTransport?.first,
+            trajectoryPathLength: trajectoryValues.pathLength?.first,
+            trajectoryDisplacement: trajectoryValues.displacement?.first,
+            movementEfficiency: trajectoryValues.movementEfficiency?.first,
+            centerVelocity: trajectoryValues.centerVelocity?.first,
+            chemotaxisScore: chemotaxisScore
         )
+        let fitness = fitnessValue(from: measurement)
+        let morphologyGuardFailed = esConfig.fitness.usesMorphologyGuard && failsMorphologyGuard(measurement)
         let resultData = materializeReplayResultData(
             seed: evaluationIndex,
             initSeed: initConfig.seed,
@@ -1935,10 +3366,30 @@ public final class EvolutionEngine {
             params: params.toKernelParams()
         )
 
+        let finalMorphology = esConfig.fitness.usesMorphologyMetrics
+            ? ESFinalMorphologyDiagnostics(
+                threshold: esConfig.fitness.morphologyThreshold ?? 0.03,
+                guardFailed: morphologyGuardFailed,
+                componentCount: measurement.componentCount,
+                largestComponentFraction: measurement.largestComponentFraction,
+                largestComponentAnisotropy: measurement.largestComponentAnisotropy,
+                componentMassEvenness: measurement.componentMassEvenness,
+                momentMass: measurement.momentMass,
+                momentDensity: measurement.momentDensity,
+                momentAnisotropy: measurement.momentAnisotropy,
+                internalStripe: measurement.internalStripe,
+                orientedRidge: measurement.orientedRidge,
+                largestComponentInternalStripe: measurement.largestComponentInternalStripe,
+                largestComponentOrientedRidge: measurement.largestComponentOrientedRidge,
+                templateSimilarity: measurement.templateSimilarity
+            )
+            : nil
+
         return ESEvaluatedCreatureExport(
             initConfig: initConfig,
             initPatchValues: patchValues,
             fitness: fitness,
+            finalMorphology: finalMorphology,
             resultData: resultData
         )
     }
@@ -1962,14 +3413,21 @@ public final class EvolutionEngine {
                 p_uniform: nil
             )
         }
-        let patches = runtimeConfig.patches.isEmpty
-            ? [PatchConfig(center: [config.sx / 2, config.sy / 2], size: 40)]
-            : runtimeConfig.patches
+        let patches: [PatchConfig]
+        if runtimeConfig.statePatch != nil {
+            patches = runtimeConfig.patches
+        } else if runtimeConfig.patches.isEmpty {
+            patches = [PatchConfig(center: [config.sx / 2, config.sy / 2], size: 40)]
+        } else {
+            patches = runtimeConfig.patches
+        }
         return InitConfig(
             seed: esConfig.seed,
             patches: patches,
             a_uniform: runtimeConfig.aUniform,
-            p_uniform: runtimeConfig.pUniform
+            p_uniform: runtimeConfig.pUniform,
+            state_patch: runtimeConfig.statePatch,
+            p_state_patch: runtimeConfig.paramPatch
         )
     }
 
@@ -1979,7 +3437,51 @@ public struct ESEvaluatedCreatureExport: Sendable {
     public let initConfig: InitConfig
     public let initPatchValues: [Float]?
     public let fitness: Float
+    public let finalMorphology: ESFinalMorphologyDiagnostics?
     public let resultData: SimulationResultData
+}
+
+public struct ESFinalMorphologyDiagnostics: Sendable {
+    public let threshold: Float
+    public let guardFailed: Bool
+    public let componentCount: Float?
+    public let largestComponentFraction: Float?
+    public let largestComponentAnisotropy: Float?
+    public let componentMassEvenness: Float?
+    public let momentMass: Float?
+    public let momentDensity: Float?
+    public let momentAnisotropy: Float?
+    public let internalStripe: Float?
+    public let orientedRidge: Float?
+    public let largestComponentInternalStripe: Float?
+    public let largestComponentOrientedRidge: Float?
+    public let templateSimilarity: Float?
+
+    public var metadataPayload: [String: Any] {
+        var payload: [String: Any] = [
+            "version": 1,
+            "threshold": threshold,
+            "guard_failed": guardFailed,
+        ]
+        func add(_ key: String, _ value: Float?) {
+            if let value {
+                payload[key] = value
+            }
+        }
+        add("component_count", componentCount)
+        add("largest_component_fraction", largestComponentFraction)
+        add("largest_component_anisotropy", largestComponentAnisotropy)
+        add("component_mass_evenness", componentMassEvenness)
+        add("moment_mass", momentMass)
+        add("moment_density", momentDensity)
+        add("moment_anisotropy", momentAnisotropy)
+        add("internal_stripe", internalStripe)
+        add("oriented_ridge", orientedRidge)
+        add("largest_component_internal_stripe", largestComponentInternalStripe)
+        add("largest_component_oriented_ridge", largestComponentOrientedRidge)
+        add("template_similarity", templateSimilarity)
+        return payload
+    }
 }
 
 private func evolutionMean(_ values: [Float]) -> Float {
@@ -2008,6 +3510,11 @@ private func evolutionDisplacement(
     let dx = centerXHistory[lastIndex] - centerXHistory[firstIndex]
     let dy = centerYHistory[lastIndex] - centerYHistory[firstIndex]
     return sqrt(dx * dx + dy * dy)
+}
+
+private func movementEfficiency(pathLength: Float, displacement: Float) -> Float {
+    guard pathLength > 1e-6 else { return 0 }
+    return max(0, min(1, displacement / pathLength))
 }
 
 private func evolutionSpeeds(

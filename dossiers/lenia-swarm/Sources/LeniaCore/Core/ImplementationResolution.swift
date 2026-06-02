@@ -30,6 +30,7 @@ private func validateImplementationValues(
     gradientBoundary: String,
     alphaMode: String,
     kernelProfile: String,
+    growthProfile: String,
     flowClip: String
 ) {
     let gradientOptions = ["periodic", "zero_pad"]
@@ -40,9 +41,13 @@ private func validateImplementationValues(
     if !alphaOptions.contains(alphaMode) {
         fatalError("implementation.alpha_mode must be one of: \(alphaOptions.joined(separator: ", ")).")
     }
-    let kernelOptions = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_bucketed_v1"]
+    let kernelOptions = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_bucketed_v1", "qd24_bump4_v1", "qd24_quad4_v1", "qd24_step_v1", "qd24_life_v1"]
     if !kernelOptions.contains(kernelProfile) {
         fatalError("implementation.kernel_profile must be one of: \(kernelOptions.joined(separator: ", ")).")
+    }
+    let growthOptions = ["gaussian", "quad4", "stpz"]
+    if !growthOptions.contains(growthProfile) {
+        fatalError("implementation.growth_profile must be one of: \(growthOptions.joined(separator: ", ")).")
     }
     let clipOptions = ["none", "params_only", "always"]
     if !clipOptions.contains(flowClip) {
@@ -62,6 +67,10 @@ public func resolveImplementationSettings(
     let hasCustomFields = implementation.gradient_boundary != nil ||
         implementation.alpha_mode != nil ||
         implementation.kernel_profile != nil ||
+        implementation.growth_profile != nil ||
+        implementation.flow_clip != nil
+    let hasQD24UnsupportedOverrides = implementation.gradient_boundary != nil ||
+        implementation.alpha_mode != nil ||
         implementation.flow_clip != nil
 
     switch implementation.mode {
@@ -96,10 +105,12 @@ public func resolveImplementationSettings(
               let flowClip = implementation.flow_clip else {
             fatalError("implementation.mode=custom requires gradient_boundary, alpha_mode, kernel_profile, and flow_clip.")
         }
+        let growthProfile = implementation.growth_profile ?? "gaussian"
         validateImplementationValues(
             gradientBoundary: gradientBoundary,
             alphaMode: alphaMode,
             kernelProfile: kernelProfile,
+            growthProfile: growthProfile,
             flowClip: flowClip
         )
         return ImplementationSettings(
@@ -108,9 +119,33 @@ public func resolveImplementationSettings(
             gradientBoundary: gradientBoundary,
             alphaMode: alphaMode,
             kernelProfile: kernelProfile,
+            growthProfile: growthProfile,
             flowClip: flowClip
         )
+    case "qd24_additive_v1":
+        if hasQD24UnsupportedOverrides {
+            fatalError("implementation.mode=qd24_additive_v1 only allows kernel_profile and growth_profile as implementation overrides.")
+        }
+        let kernelProfile = implementation.kernel_profile ?? "qd24_bucketed_v1"
+        let kernelOptions = ["qd24_bucketed_v1", "qd24_bump4_v1", "qd24_quad4_v1", "qd24_step_v1", "qd24_life_v1"]
+        if !kernelOptions.contains(kernelProfile) {
+            fatalError("implementation.kernel_profile for qd24_additive_v1 must be one of: \(kernelOptions.joined(separator: ", ")).")
+        }
+        let growthProfile = implementation.growth_profile ?? "gaussian"
+        let growthOptions = ["gaussian", "quad4", "stpz"]
+        if !growthOptions.contains(growthProfile) {
+            fatalError("implementation.growth_profile for qd24_additive_v1 must be one of: \(growthOptions.joined(separator: ", ")).")
+        }
+        return ImplementationSettings(
+            mode: "qd24_additive_v1",
+            border: border,
+            gradientBoundary: border == "torus" ? "periodic" : "zero_pad",
+            alphaMode: "mass",
+            kernelProfile: kernelProfile,
+            growthProfile: growthProfile,
+            flowClip: "none"
+        )
     default:
-        fatalError("implementation.mode must be one of: flowlenia_2022_paper_equations, flowlenia_2022_colab, custom.")
+        fatalError("implementation.mode must be one of: flowlenia_2022_paper_equations, flowlenia_2022_colab, custom, qd24_additive_v1.")
     }
 }

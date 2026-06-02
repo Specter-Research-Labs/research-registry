@@ -46,9 +46,11 @@ declared surfaces such as `lenia-compendium`.
 ## Internals
 
 - [FlowLeniaImplementationMap](./internals/FlowLeniaImplementationMap.md)
-- [PaperGroundedLanes](./internals/PaperGroundedLanes.md)
+- [PaperGroundedRuns](./internals/PaperGroundedRuns.md)
 - [IndexerInternals](./internals/IndexerInternals.md)
 - [StudioCompendiumInternals](./internals/StudioCompendiumInternals.md)
+- [TTBackend](./internals/TTBackend.md)
+- [TTBackendPerformance](./internals/TTBackendPerformance.md)
 
 ## Reading Paths
 
@@ -72,6 +74,8 @@ Run and operate:
 Implement and debug:
 
 1. `internals/FlowLeniaImplementationMap.md`
-2. `internals/PaperGroundedLanes.md`
+2. `internals/PaperGroundedRuns.md`
 3. `internals/IndexerInternals.md`
 4. `internals/StudioCompendiumInternals.md`
+5. `internals/TTBackend.md`
+6. `internals/TTBackendPerformance.md`

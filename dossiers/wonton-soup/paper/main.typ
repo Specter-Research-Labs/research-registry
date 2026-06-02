@@ -391,7 +391,7 @@ typst compile --root ../.. paper/main.typ paper/artifacts/main.pdf \
   --font-path ../../addenda/typst-field-manual/assets/fonts
 ```
 
-The lake schema and extraction logic are documented in `docs/ops/run-lake.md` and
+The lake schema and extraction logic are documented in `docs/ops/lake.md` and
 `analysis/lake/`. Raw run logs reside on `quietbox` under
 `/shared/specter-runtime/wonton-soup/logs/`.
 

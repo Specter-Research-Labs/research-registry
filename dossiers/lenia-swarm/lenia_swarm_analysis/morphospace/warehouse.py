@@ -5,7 +5,7 @@ import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 
 import duckdb
 from duckdb import DuckDBPyConnection
@@ -30,6 +30,18 @@ def stable_id(*parts: object) -> str:
 
 def json_text(value: Any) -> str:
     return json.dumps(value, sort_keys=True)
+
+
+def _replace_rows(
+    connection: DuckDBPyConnection,
+    delete_sql: str,
+    delete_params: Sequence[Any],
+    insert_sql: str,
+    rows: Sequence[Sequence[Any]],
+) -> None:
+    connection.execute(delete_sql, list(delete_params))
+    if rows:
+        connection.executemany(insert_sql, rows)
 
 
 def normalize_optional_timestamp(value: Any) -> datetime | None:
@@ -67,6 +79,12 @@ def connect_database(path: Path) -> DuckDBPyConnection:
     connection.execute("SET checkpoint_threshold='1.0 GiB'")
     create_schema(connection)
     return connection
+
+
+def connect_read_only_database(path: Path) -> DuckDBPyConnection:
+    if not path.exists():
+        raise FileNotFoundError(path)
+    return duckdb.connect(str(path), read_only=True)
 
 
 def file_sha256(path: Path) -> str:
@@ -126,9 +144,15 @@ def register_artifact(
     artifact_kind: str,
     path: Path,
     metadata_json: dict[str, Any] | None = None,
+    hash_content: bool = True,
 ) -> str:
-    artifact_id = stable_id("artifact", artifact_kind, path.resolve(), file_sha256(path))
     stat = path.stat()
+    content_fingerprint = (
+        file_sha256(path)
+        if hash_content
+        else f"stat:{stat.st_size}:{stat.st_mtime_ns}"
+    )
+    artifact_id = stable_id("artifact", artifact_kind, path.resolve(), content_fingerprint)
     connection.execute(
         """
         INSERT OR REPLACE INTO artifacts (
@@ -142,10 +166,15 @@ def register_artifact(
             study_id,
             artifact_kind,
             str(path),
-            file_sha256(path),
+            content_fingerprint,
             stat.st_size,
             utc_now(),
-            json_text(metadata_json or {}),
+            json_text(
+                {
+                    **(metadata_json or {}),
+                    "contentHashPolicy": "sha256" if hash_content else "stat-fingerprint",
+                }
+            ),
         ],
     )
     return artifact_id
@@ -444,18 +473,17 @@ def replace_feature_axes(
     feature_space_id: str,
     axis_rows: list[dict[str, Any]],
 ) -> None:
-    connection.execute(
+    _replace_rows(
+        connection,
         "DELETE FROM feature_axes WHERE feature_space_id = ?",
         [feature_space_id],
-    )
-    for row in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO feature_axes (
-                feature_space_id, axis_id, axis_index, axis_family, label, units, metadata_json
-            )
-            VALUES (?, ?, ?, ?, ?, ?, CAST(? AS JSON))
-            """,
+        """
+        INSERT INTO feature_axes (
+            feature_space_id, axis_id, axis_index, axis_family, label, units, metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
             [
                 feature_space_id,
                 row["axis_id"],
@@ -464,8 +492,10 @@ def replace_feature_axes(
                 row.get("label"),
                 row.get("units"),
                 json_text(row.get("metadata_json") or {}),
-            ],
-        )
+            ]
+            for row in axis_rows
+        ],
+    )
 
 
 def upsert_observation(
@@ -512,22 +542,21 @@ def replace_feature_values(
     feature_space_id: str,
     value_rows: list[dict[str, Any]],
 ) -> None:
-    connection.execute(
+    _replace_rows(
+        connection,
         """
         DELETE FROM feature_values
         WHERE observation_id = ? AND feature_space_id = ?
         """,
         [observation_id, feature_space_id],
-    )
-    for row in value_rows:
-        connection.execute(
-            """
-            INSERT INTO feature_values (
-                observation_id, feature_space_id, axis_id, raw_value,
-                normalized_value, metadata_json
-            )
-            VALUES (?, ?, ?, ?, ?, CAST(? AS JSON))
-            """,
+        """
+        INSERT INTO feature_values (
+            observation_id, feature_space_id, axis_id, raw_value,
+            normalized_value, metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
             [
                 observation_id,
                 feature_space_id,
@@ -535,8 +564,10 @@ def replace_feature_values(
                 row.get("raw_value"),
                 row.get("normalized_value"),
                 json_text(row.get("metadata_json") or {}),
-            ],
-        )
+            ]
+            for row in value_rows
+        ],
+    )
 
 
 def replace_specimen_axes(
@@ -545,17 +576,21 @@ def replace_specimen_axes(
     specimen_id: str,
     axis_rows: list[tuple[str, str, float | None, float | None]],
 ) -> None:
-    connection.execute("DELETE FROM specimen_axes WHERE specimen_id = ?", [specimen_id])
-    for axis_id, axis_family, raw_value, transformed_value in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO specimen_axes (
-                specimen_id, axis_id, axis_family, raw_value, transformed_value
-            )
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            [specimen_id, axis_id, axis_family, raw_value, transformed_value],
+    _replace_rows(
+        connection,
+        "DELETE FROM specimen_axes WHERE specimen_id = ?",
+        [specimen_id],
+        """
+        INSERT INTO specimen_axes (
+            specimen_id, axis_id, axis_family, raw_value, transformed_value
         )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        [
+            [specimen_id, axis_id, axis_family, raw_value, transformed_value]
+            for axis_id, axis_family, raw_value, transformed_value in axis_rows
+        ],
+    )
 
 
 def replace_development_sample_axes(
@@ -564,20 +599,21 @@ def replace_development_sample_axes(
     specimen_id: str,
     axis_rows: list[tuple[int, str, float | None]],
 ) -> None:
-    connection.execute(
+    _replace_rows(
+        connection,
         "DELETE FROM development_sample_axes WHERE specimen_id = ?",
         [specimen_id],
-    )
-    for step, axis_id, raw_value in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO development_sample_axes (
-                specimen_id, step, axis_id, raw_value
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            [specimen_id, step, axis_id, raw_value],
+        """
+        INSERT INTO development_sample_axes (
+            specimen_id, step, axis_id, raw_value
         )
+        VALUES (?, ?, ?, ?)
+        """,
+        [
+            [specimen_id, step, axis_id, raw_value]
+            for step, axis_id, raw_value in axis_rows
+        ],
+    )
 
 
 def replace_perturbation_axes(
@@ -586,17 +622,21 @@ def replace_perturbation_axes(
     trial_id: str,
     axis_rows: list[tuple[str, float | None, float | None]],
 ) -> None:
-    connection.execute("DELETE FROM perturbation_axes WHERE trial_id = ?", [trial_id])
-    for axis_id, raw_value, transformed_value in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO perturbation_axes (
-                trial_id, axis_id, raw_value, transformed_value
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            [trial_id, axis_id, raw_value, transformed_value],
+    _replace_rows(
+        connection,
+        "DELETE FROM perturbation_axes WHERE trial_id = ?",
+        [trial_id],
+        """
+        INSERT INTO perturbation_axes (
+            trial_id, axis_id, raw_value, transformed_value
         )
+        VALUES (?, ?, ?, ?)
+        """,
+        [
+            [trial_id, axis_id, raw_value, transformed_value]
+            for axis_id, raw_value, transformed_value in axis_rows
+        ],
+    )
 
 
 def register_context(
@@ -707,17 +747,21 @@ def replace_anatomical_state_axes(
     state_id: str,
     axis_rows: list[tuple[str, float | None, float | None]],
 ) -> None:
-    connection.execute("DELETE FROM anatomical_state_axes WHERE state_id = ?", [state_id])
-    for axis_id, raw_value, transformed_value in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO anatomical_state_axes (
-                state_id, axis_id, raw_value, transformed_value
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            [state_id, axis_id, raw_value, transformed_value],
+    _replace_rows(
+        connection,
+        "DELETE FROM anatomical_state_axes WHERE state_id = ?",
+        [state_id],
+        """
+        INSERT INTO anatomical_state_axes (
+            state_id, axis_id, raw_value, transformed_value
         )
+        VALUES (?, ?, ?, ?)
+        """,
+        [
+            [state_id, axis_id, raw_value, transformed_value]
+            for axis_id, raw_value, transformed_value in axis_rows
+        ],
+    )
 
 
 def replace_creature_signal_axes(
@@ -726,17 +770,21 @@ def replace_creature_signal_axes(
     state_id: str,
     axis_rows: list[tuple[str, float | None, float | None]],
 ) -> None:
-    connection.execute("DELETE FROM creature_signal_axes WHERE state_id = ?", [state_id])
-    for axis_id, raw_value, transformed_value in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO creature_signal_axes (
-                state_id, axis_id, raw_value, transformed_value
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            [state_id, axis_id, raw_value, transformed_value],
+    _replace_rows(
+        connection,
+        "DELETE FROM creature_signal_axes WHERE state_id = ?",
+        [state_id],
+        """
+        INSERT INTO creature_signal_axes (
+            state_id, axis_id, raw_value, transformed_value
         )
+        VALUES (?, ?, ?, ?)
+        """,
+        [
+            [state_id, axis_id, raw_value, transformed_value]
+            for axis_id, raw_value, transformed_value in axis_rows
+        ],
+    )
 
 
 def upsert_creature_state_labels(
@@ -844,20 +892,21 @@ def replace_context_sample_axes(
     context_trial_id: str,
     axis_rows: list[tuple[int, str, float | None]],
 ) -> None:
-    connection.execute(
+    _replace_rows(
+        connection,
         "DELETE FROM context_sample_axes WHERE context_trial_id = ?",
         [context_trial_id],
-    )
-    for step, axis_id, raw_value in axis_rows:
-        connection.execute(
-            """
-            INSERT INTO context_sample_axes (
-                context_trial_id, step, axis_id, raw_value
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            [context_trial_id, step, axis_id, raw_value],
+        """
+        INSERT INTO context_sample_axes (
+            context_trial_id, step, axis_id, raw_value
         )
+        VALUES (?, ?, ?, ?)
+        """,
+        [
+            [context_trial_id, step, axis_id, raw_value]
+            for step, axis_id, raw_value in axis_rows
+        ],
+    )
 
 
 def replace_context_outcomes(
@@ -866,28 +915,29 @@ def replace_context_outcomes(
     context_trial_id: str,
     rows: list[tuple[str, float | None, dict[str, Any] | None]],
 ) -> None:
-    connection.execute(
-        "DELETE FROM context_outcomes WHERE context_trial_id = ?",
-        [context_trial_id],
-    )
     deduplicated: dict[str, tuple[float | None, dict[str, Any] | None]] = {}
     for outcome_kind, outcome_value, metadata_json in rows:
         deduplicated[str(outcome_kind)] = (outcome_value, metadata_json)
-    for outcome_kind, (outcome_value, metadata_json) in deduplicated.items():
-        connection.execute(
-            """
-            INSERT INTO context_outcomes (
-                context_trial_id, outcome_kind, outcome_value, metadata_json
-            )
-            VALUES (?, ?, ?, CAST(? AS JSON))
-            """,
+    _replace_rows(
+        connection,
+        "DELETE FROM context_outcomes WHERE context_trial_id = ?",
+        [context_trial_id],
+        """
+        INSERT INTO context_outcomes (
+            context_trial_id, outcome_kind, outcome_value, metadata_json
+        )
+        VALUES (?, ?, ?, CAST(? AS JSON))
+        """,
+        [
             [
                 context_trial_id,
                 outcome_kind,
                 outcome_value,
                 json_text(metadata_json or {}),
-            ],
-        )
+            ]
+            for outcome_kind, (outcome_value, metadata_json) in deduplicated.items()
+        ],
+    )
 
 
 def replace_trajectory_segments(

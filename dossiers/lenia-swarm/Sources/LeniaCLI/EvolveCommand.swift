@@ -36,6 +36,41 @@ private func replacingNonPositiveKernelWeights(
     )
 }
 
+private func validateEvolutionSequenceMetricConfig(_ esConfig: ESConfig) throws {
+    let fitness = esConfig.fitness
+    let usesTrajectoryMetrics = fitness.trajectoryPathLengthPenalty != nil ||
+        fitness.trajectoryPathLengthReward != nil ||
+        fitness.trajectoryDisplacementPenalty != nil ||
+        fitness.trajectoryDisplacementReward != nil ||
+        fitness.movementEfficiencyPenalty != nil ||
+        fitness.movementEfficiencyReward != nil ||
+        fitness.centerVelocityPenalty != nil ||
+        fitness.centerVelocityReward != nil
+    let usesOrientationPhaseMotion = fitness.orientationPhaseMotionReward != nil ||
+        fitness.orientationPhaseMotionPenalty != nil
+    let usesAngularPhaseMotion = fitness.angularPhaseMotionReward != nil ||
+        fitness.angularPhaseMotionPenalty != nil
+    let usesSectorTransport = fitness.sectorTransportReward != nil ||
+        fitness.sectorTransportPenalty != nil
+    let usesSequenceMetrics = usesTrajectoryMetrics ||
+        usesOrientationPhaseMotion ||
+        usesAngularPhaseMotion ||
+        usesSectorTransport
+    guard usesSequenceMetrics else {
+        return
+    }
+
+    let normalizedSteps = Array(Set(fitness.templateSequenceSteps ?? [fitness.targetStep])).sorted()
+    guard normalizedSteps.count >= 2 else {
+        throw ValidationError(
+            "trajectory, orientation, angular, and sector ES metrics require at least two unique template_sequence_steps."
+        )
+    }
+    if let invalidStep = normalizedSteps.first(where: { $0 < 0 || $0 > esConfig.steps }) {
+        throw ValidationError("template_sequence_steps entries must be within 0...\(esConfig.steps); found \(invalidStep).")
+    }
+}
+
 struct EvolveCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "evolve",
@@ -206,6 +241,7 @@ struct EvolveCommand: AsyncParsableCommand {
         } else {
             ranges = try extractRangesFromConfig(baseConfig)
         }
+        try validateEvolutionSequenceMetricConfig(esConfig)
 
         if validateOnly {
             logger.info("Configs validated successfully (backend=\(resolvedBackend.rawValue))")
@@ -290,20 +326,7 @@ struct EvolveCommand: AsyncParsableCommand {
                 try bestData.write(to: outputDir.appendingPathComponent("best.json"))
 
                 // Save best config (with explicit params)
-                var bestConfig = baseConfig
-                bestConfig.params = ParamsConfig(
-                    mode: "explicit",
-                    seed: nil,
-                    ranges: nil,
-                    r: bestParams.r,
-                    b: bestParams.b,
-                    w: bestParams.w,
-                    a: bestParams.a,
-                    m: bestParams.m,
-                    s: bestParams.s,
-                    h: bestParams.h,
-                    R: bestParams.R
-                )
+                let bestConfig = evolveBaseConfigWithExplicitParams(baseConfig, params: bestParams)
                 let bestConfigData = try JSONEncoder().encode(bestConfig)
                 try bestConfigData.write(to: outputDir.appendingPathComponent("best_config.json"))
             }
@@ -356,11 +379,16 @@ struct EvolveCommand: AsyncParsableCommand {
         logger.info("Results saved to: \(esConfig.outputDir)")
 
         if let overallBestCandidate {
+            let overallBestParams = vectorToParams(
+                Array(overallBestCandidate[0..<evo.thetaParamsDim]),
+                space: evo.paramSpace
+            )
             let evaluation = evo.evaluateCandidateForResearchExport(overallBestCandidate)
             let creature = evolveWinnerCreature(
                 runId: resolvedRunId,
                 objective: esConfig.fitness.objective,
                 configHash: configHash,
+                fitness: bestFitness,
                 evaluation: evaluation
             )
             let libraryEntry = try evolveLibraryEntry(
@@ -370,13 +398,16 @@ struct EvolveCommand: AsyncParsableCommand {
                 bestCandidate: overallBestCandidate,
                 esConfig: esConfig,
                 configHash: configHash,
+                fitness: bestFitness,
                 evaluation: evaluation,
                 creature: creature
             )
-            let replayBaseConfig = buildEvolveReplayBaseConfig(baseConfig: baseConfig, esConfig: esConfig)
+            let replayWinnerBaseConfig = evolveBaseConfigWithExplicitParams(baseConfig, params: overallBestParams)
+            let replayBaseConfig = buildEvolveReplayBaseConfig(baseConfig: replayWinnerBaseConfig, esConfig: esConfig)
             let replaySearchConfig = buildStrictReplaySearchConfig(
                 steps: esConfig.steps,
-                initSeedOffset: creature.initialCondition.seed
+                initSeedOffset: creature.initialCondition.seed,
+                morphologyThreshold: esConfig.fitness.morphologyThreshold ?? 0.03
             )
             _ = try persistResearchArchiveArtifacts(
                 runDirectory: outputDir,
@@ -391,7 +422,7 @@ struct EvolveCommand: AsyncParsableCommand {
                     creature: creature,
                     runId: resolvedRunId,
                     campaignId: nil,
-                    score: evaluation.fitness,
+                    score: bestFitness,
                     filtersPassed: nil,
                     reason: "flow-tasks:\(esConfig.fitness.objective)"
                 )
@@ -412,10 +443,32 @@ struct EvolveCommand: AsyncParsableCommand {
     }
 }
 
+private func evolveBaseConfigWithExplicitParams(
+    _ baseConfig: LeniaBaseConfig,
+    params: ResolvedParams
+) -> LeniaBaseConfig {
+    var explicitConfig = baseConfig
+    explicitConfig.params = ParamsConfig(
+        mode: "explicit",
+        seed: nil,
+        ranges: nil,
+        r: params.r,
+        b: params.b,
+        w: params.w,
+        a: params.a,
+        m: params.m,
+        s: params.s,
+        h: params.h,
+        R: params.R
+    )
+    return explicitConfig
+}
+
 private func evolveWinnerCreature(
     runId: String,
     objective: String,
     configHash: String,
+    fitness: Float,
     evaluation: ESEvaluatedCreatureExport
 ) -> SavedCreature {
     archivedCreatureFromResult(
@@ -425,7 +478,7 @@ private func evolveWinnerCreature(
         result: evaluation.resultData,
         initialCondition: evaluation.initConfig,
         configHash: configHash,
-        score: evaluation.fitness,
+        score: fitness,
         scoreWeights: ["fitness": 1.0]
     )
 }
@@ -480,10 +533,11 @@ private func evolveLibraryEntry(
     bestCandidate: [Float],
     esConfig: ESConfig,
     configHash: String,
+    fitness: Float,
     evaluation: ESEvaluatedCreatureExport,
     creature: SavedCreature
 ) throws -> ResearchLibraryEntry {
-    let metadata: [String: AnyCodable] = try [
+    var metadata: [String: AnyCodable] = try [
         "version": researchMetadataValue(1),
         "mode": researchMetadataValue("flow-tasks"),
         "morphospace_payload": researchMetadataValue("summary_only_metrics_v1"),
@@ -492,12 +546,17 @@ private func evolveLibraryEntry(
         "canonical_export_kind": researchMetadataValue("strict_replay_bundle_v1"),
         "task": researchMetadataValue(objective),
         "generation": researchMetadataValue(generation),
-        "fitness": researchMetadataValue(evaluation.fitness),
+        "fitness": researchMetadataValue(fitness),
+        "export_evaluation_fitness": researchMetadataValue(evaluation.fitness),
         "fitness_shaping": researchMetadataValue(esConfig.fitnessShaping),
         "winner_rank": researchMetadataValue(0),
         "init_patch_values": researchMetadataValue(evaluation.initPatchValues ?? NSNull()),
         "candidate_vector": researchMetadataValue(bestCandidate),
     ]
+    if let finalMorphology = evaluation.finalMorphology {
+        metadata["es_final_morphology"] = try researchMetadataValue(finalMorphology.metadataPayload)
+        metadata["es_morphology_guard_failed"] = try researchMetadataValue(finalMorphology.guardFailed)
+    }
     return archiveResearchLibraryEntry(
         creature: creature,
         runId: runId,

@@ -2,10 +2,10 @@
 
 ## Context
 
-Raw Lean metavariable IDs are not globally unique across rollback-heavy search. The search stack
+Raw Lean metavariable IDs are not globally unique across rollback-heavy search. The search code
 rolls REPL state back to prior checkpoints, and Lean can reuse raw `mvar_id` values after rollback.
 
-Collision risk surfaces:
+Collision risks:
 
 - `MCTSTree.nodes_by_mvar`
 - adapter state maps (`LeanAdapter.states`)
@@ -42,8 +42,8 @@ Chosen option preserves tree semantics while fixing rollback collisions.
 ## Behavioral Impact
 
 - Search policy semantics: unchanged (tree of attempts remains tree-shaped)
-- Node cardinality: may increase because raw-ID reuse no longer collapses states
-- Structural metrics: absolute counts may shift; post-migration runs remain comparable under one scheme
+- Node cardinality: can increase because raw-ID reuse no longer collapses states
+- Structural metrics: absolute counts can shift; post-migration runs remain comparable under one scheme
 - Goal-cache accounting: now counts checkpoint-scoped occurrences explicitly
 
 ## Schema and Migration Impact
@@ -64,7 +64,7 @@ Compatibility guidance:
 
 - adapter identity generation and state keys: `prover/adapters/lean.py`
 - MCTS node identity handling: `prover/mcts.py`
-- artifact readers should treat `mvar_id` as opaque, scheme-tagged identity
+- artifact readers treat `mvar_id` as opaque, scheme-tagged identity
 
 ## Consequences
 

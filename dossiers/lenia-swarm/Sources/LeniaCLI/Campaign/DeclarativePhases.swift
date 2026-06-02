@@ -127,13 +127,15 @@ private func executeLocalPlannedPhase(
     request: CampaignExecutionRequest,
     jobs: [LeniaCampaignJob],
     metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil,
-    creaturesFound: (LeniaCampaignJobExecution) -> Int
+    creaturesFound: (LeniaCampaignJobExecution) -> Int,
+    postCompendiumIngest: ((LeniaCampaignJobExecution, String) throws -> Void)? = nil
 ) throws -> LeniaCampaignPhaseResult {
     let execution = try executeLocalCampaignPhase(
         request: request,
         jobs: jobs,
         logger: context.logger,
-        metricsTransform: metricsTransform
+        metricsTransform: metricsTransform,
+        postCompendiumIngest: postCompendiumIngest
     )
     return context.result(
         phase: phase,
@@ -410,6 +412,9 @@ private func executeInterventionBatteryPhase(
         configDirectory: configURL.deletingLastPathComponent(),
         logger: context.logger
     )
+    let perturbationFamilies = Dictionary(
+        uniqueKeysWithValues: interventionConfig.perturbations.map { ($0.id, $0.family) }
+    )
     return try executeLocalPlannedPhase(
         phase: phase,
         type: .interventionBattery,
@@ -418,8 +423,17 @@ private func executeInterventionBatteryPhase(
         jobs: jobs,
         metricsTransform: applyBaselineComparisons,
         creaturesFound: { execution in
-        execution.metrics.count
-    })
+            execution.metrics.count
+        },
+        postCompendiumIngest: { execution, compendiumPath in
+            _ = try writeInterventionTrialRows(
+                metrics: execution.metrics,
+                perturbationFamilies: perturbationFamilies,
+                compendiumPath: compendiumPath,
+                logger: context.logger
+            )
+        }
+    )
 }
 
 private func executeEcologyPhase(

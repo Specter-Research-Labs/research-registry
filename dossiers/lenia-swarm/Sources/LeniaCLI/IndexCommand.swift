@@ -13,8 +13,8 @@ struct IndexCommand: ParsableCommand {
     @Option(name: [.customLong("output-root"), .customLong("output-roots")], parsing: .upToNextOption, help: "Output root path(s) containing hosts/<node>/runs/<runId>")
     var outputRoots: [String] = []
 
-    @Option(name: .long, help: "Run directory to index (hosts/<node>/runs/<runId>)")
-    var runDir: String?
+    @Option(name: .customLong("run-dir"), parsing: .upToNextOption, help: "Run directory/directories to index")
+    var runDirs: [String] = []
 
     @Option(name: [.customLong("db"), .customLong("db-path")], help: "SQLite database path (default: <output-root>/compendium.sqlite or <run-dir>/compendium.sqlite)")
     var dbPath: String?
@@ -37,7 +37,7 @@ struct IndexCommand: ParsableCommand {
     func run() throws {
         let resolvedPlan = try resolveCompendiumIngestPlan(
             outputRoots: outputRoots,
-            runDir: runDir,
+            runDirs: runDirs,
             dbPath: dbPath,
             repairOnly: repairOnly
         )
@@ -57,7 +57,7 @@ struct IndexCommand: ParsableCommand {
                 try resolveArtifactPath($0, dossier: dossierName)
             },
             warehouseTopology: warehouseRefresh.warehouseTopology,
-            defaultEnabled: true
+            defaultEnabled: false
         )
 
         if stats {
@@ -434,6 +434,7 @@ final class SQLiteIndexer {
             FROM (
                 SELECT canonical_specimen_id
                 FROM creatures
+                WHERE canonical_specimen_id IS NOT NULL
                 GROUP BY canonical_specimen_id
                 HAVING COUNT(*) > 1
             )
@@ -478,10 +479,7 @@ final class SQLiteIndexer {
             guard let creatureID = columnText(stmt, index: 0),
                   let name = columnText(stmt, index: 1),
                   let ownerID = columnText(stmt, index: 2),
-                  let runID = columnText(stmt, index: 3),
-                  let genotypeJSON = columnText(stmt, index: 12),
-                  let initialConditionJSON = columnText(stmt, index: 13),
-                  let metricsJSON = columnText(stmt, index: 14) else {
+                  let runID = columnText(stmt, index: 3) else {
                 throw SQLiteIndexError.sqliteError(message: "Invalid creature row while resolving canonical specimen gaps.")
             }
             let score = sqlite3_column_type(stmt, 7) == SQLITE_NULL ? nil : Float(sqlite3_column_double(stmt, 7))
@@ -495,6 +493,14 @@ final class SQLiteIndexer {
                 as: [String: AnyCodable].self,
                 decoder: decoder
             )
+            guard let genotypeJSON = columnText(stmt, index: 12),
+                  let initialConditionJSON = columnText(stmt, index: 13),
+                  let metricsJSON = columnText(stmt, index: 14) else {
+                if manifest == nil {
+                    continue
+                }
+                throw SQLiteIndexError.sqliteError(message: "Invalid creature row while resolving canonical specimen gaps.")
+            }
             let projection = resolveSpecimenProjection(
                 id: UUID(uuidString: creatureID) ?? deterministicResearchUUID(creatureID),
                 name: name,
@@ -1456,6 +1462,9 @@ final class SQLiteIndexer {
         if version < 14 {
             try migrate13to14()
         }
+        if version < 15 {
+            try migrate14to15()
+        }
 
         try createSchema()
         try repairCurrentSchema()
@@ -1799,6 +1808,13 @@ final class SQLiteIndexer {
         }
     }
 
+    private func migrate14to15() throws {
+        try db.withImmediateTransaction {
+            try ensureCreatureCatalogQCColumns()
+            try db.exec("UPDATE compendium_meta SET schema_version = 15")
+        }
+    }
+
     private func repairCurrentSchema() throws {
         guard try db.tableExists("compendium_meta") else {
             return
@@ -1809,6 +1825,7 @@ final class SQLiteIndexer {
             }
             try ensureCanonicalCreatureSnapshotColumns()
             try ensureSpecimenContractColumns()
+            try ensureCreatureCatalogQCColumns()
             try normalizeLegacyReplaySourceMode()
             try backfillSpecimenContracts()
             try db.exec("UPDATE compendium_meta SET schema_version = \(Self.schemaVersion)")
@@ -1819,7 +1836,43 @@ final class SQLiteIndexer {
         try legacyCreatureSnapshotNeedsRepair()
             || specimenContractColumnsNeedRepair()
             || canonicalCreatureLinkNeedsRepair()
+            || creatureCatalogQCColumnsNeedRepair()
             || legacyReplaySourceModeNeedsRepair()
+    }
+
+    private func creatureCatalogQCColumnsNeedRepair() throws -> Bool {
+        guard try db.tableExists("creatures") else {
+            return false
+        }
+        let columns = try db.tableColumns("creatures")
+        return !columns.contains("catalog_status") || !columns.contains("quality_flags_json")
+    }
+
+    private func ensureCreatureCatalogQCColumns() throws {
+        guard try db.tableExists("creatures") else {
+            return
+        }
+        let columns = try db.tableColumns("creatures")
+        if !columns.contains("catalog_status") {
+            try db.exec("ALTER TABLE creatures ADD COLUMN catalog_status TEXT NOT NULL DEFAULT 'active'")
+        }
+        if !columns.contains("quality_flags_json") {
+            try db.exec("ALTER TABLE creatures ADD COLUMN quality_flags_json TEXT NOT NULL DEFAULT '[]'")
+        }
+        try db.exec("""
+            CREATE TABLE IF NOT EXISTS creature_qc_events (
+                id TEXT PRIMARY KEY,
+                creature_id TEXT NOT NULL,
+                old_status TEXT,
+                new_status TEXT NOT NULL,
+                policy_id TEXT NOT NULL,
+                reasons_json TEXT NOT NULL,
+                metrics_snapshot_json TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
     }
 
     private func legacyCreatureSnapshotNeedsRepair() throws -> Bool {
@@ -2125,6 +2178,8 @@ final class SQLiteIndexer {
                 specimen_manifest_json TEXT,
                 canonical_specimen_id TEXT,
                 trait_labels_json TEXT,
+                catalog_status TEXT NOT NULL DEFAULT 'active',
+                quality_flags_json TEXT NOT NULL DEFAULT '[]',
                 score_weights_json TEXT,
                 genotype_json TEXT,
                 initial_condition_json TEXT,
@@ -2193,6 +2248,20 @@ final class SQLiteIndexer {
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_stable ON creatures(is_stable)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_config_hash ON creatures(config_hash)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_canonical_specimen ON creatures(canonical_specimen_id)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
+        try db.exec("""
+            CREATE TABLE IF NOT EXISTS creature_qc_events (
+                id TEXT PRIMARY KEY,
+                creature_id TEXT NOT NULL,
+                old_status TEXT,
+                new_status TEXT NOT NULL,
+                policy_id TEXT NOT NULL,
+                reasons_json TEXT NOT NULL,
+                metrics_snapshot_json TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+        try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
         try db.exec("CREATE INDEX IF NOT EXISTS exports_creature ON exports(creature_id)")
         try db.exec("CREATE INDEX IF NOT EXISTS exports_run_dir ON exports(run_id, export_dir)")
         try db.exec("CREATE INDEX IF NOT EXISTS results_score ON results(score DESC)")
@@ -2338,6 +2407,7 @@ final class SQLiteIndexer {
         try db.exec("CREATE UNIQUE INDEX IF NOT EXISTS specimens_result_id ON specimens(result_id) WHERE result_id IS NOT NULL")
         try db.exec("CREATE UNIQUE INDEX IF NOT EXISTS specimens_creature_id ON specimens(creature_id) WHERE creature_id IS NOT NULL")
         try db.exec("CREATE INDEX IF NOT EXISTS specimens_run_campaign_seed ON specimens(run_id, campaign_id, seed)")
+        try db.exec("CREATE INDEX IF NOT EXISTS specimens_run_campaign_init_source ON specimens(run_id, campaign_id, init_seed, source_kind, source_mode)")
         try db.exec("CREATE INDEX IF NOT EXISTS specimens_init_family ON specimens(initial_condition_family, symmetry_policy, descriptor_version)")
         try db.exec("CREATE INDEX IF NOT EXISTS specimens_source_kind ON specimens(source_kind)")
         try db.exec("CREATE INDEX IF NOT EXISTS attractor_nodes_family_policy ON attractor_nodes(initial_condition_family, symmetry_policy, descriptor_version)")
@@ -2382,10 +2452,7 @@ final class SQLiteIndexer {
             guard let id = columnText(select, index: 0),
                   let name = columnText(select, index: 1),
                   let ownerID = columnText(select, index: 2),
-                  let runID = columnText(select, index: 3),
-                  let genotypeJSON = columnText(select, index: 12),
-                  let initialConditionJSON = columnText(select, index: 13),
-                  let metricsJSON = columnText(select, index: 15) else {
+                  let runID = columnText(select, index: 3) else {
                 throw SQLiteIndexError.sqliteError(message: "Invalid creature row while backfilling specimen contracts.")
             }
 
@@ -2399,6 +2466,14 @@ final class SQLiteIndexer {
                 as: [String: AnyCodable].self,
                 decoder: decoder
             )
+            guard let genotypeJSON = columnText(select, index: 12),
+                  let initialConditionJSON = columnText(select, index: 13),
+                  let metricsJSON = columnText(select, index: 15) else {
+                if manifest == nil {
+                    continue
+                }
+                throw SQLiteIndexError.sqliteError(message: "Invalid creature row while backfilling specimen contracts.")
+            }
             let projection = resolveSpecimenProjection(
                 id: UUID(uuidString: id) ?? deterministicResearchUUID(id),
                 name: name,

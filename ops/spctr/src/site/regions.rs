@@ -35,67 +35,10 @@ fn inline_markdown(text: &str) -> Markup {
     PreEscaped(html)
 }
 
-fn release_chip(record: &SiteRecord) -> Markup {
-    html! {
-        span class=(format!("project-chip release-chip release-{}", record.release_stage)) {
-            "release:" (record.release_stage)
-        }
-    }
-}
-
-fn release_link_row(record: &SiteRecord) -> Markup {
-    let links: Vec<Markup> = record
-        .published_surface_links()
-        .into_iter()
-        .map(|(label, href)| markup::link(href, label))
-        .collect();
-    html! {
-        @for link_markup in &links {
-            (link_markup)
-        }
-    }
-}
-
-fn dossier_label_row(record: &SiteRecord, include_series: bool, include_activity: bool) -> Markup {
-    html! {
-        div class="project-label-row" {
-            @if include_series {
-                @if let Some(ref sid) = record.series {
-                    span class="project-chip series-chip" { (sid) }
-                }
-            }
-            div class=(format!("project-status {}", record.status)) {
-                "status:" (record.status)
-            }
-            (release_chip(record))
-            @if let Some(scope) = record.labels.get("scope") {
-                span class="project-chip scope-chip" { "scope:" (scope) }
-            }
-            @if let Some(publication) = record.labels.get("publication") {
-                span class="project-chip" { "publication:" (publication) }
-            }
-            @if include_activity {
-                span class="project-chip activity-chip" { "activity:" (record.last_activity) }
-            }
-        }
-    }
-}
-
-fn addenda_meta(record: &SiteRecord, include_activity: bool) -> Markup {
-    let label_type = record.labels.get("type").map_or("", String::as_str);
-    html! {
-        div class="addenda-meta" {
-            span class=(format!("addenda-chip class-{label_type}")) {
-                "type:" (label_type)
-            }
-            span class=(format!("addenda-chip status-{}", record.status)) {
-                "status:" (record.status)
-            }
-            (release_chip(record))
-            @if include_activity {
-                span class="addenda-chip activity-chip" { "activity:" (record.last_activity) }
-            }
-        }
+fn license_short(license: &str) -> &str {
+    match license.split_once(':') {
+        Some((prefix, _)) => prefix.trim(),
+        None => license.trim(),
     }
 }
 
@@ -113,9 +56,8 @@ pub fn render_home_active_projects(records: &[SiteRecord]) -> String {
             }
         };
         let block = html! {
-            div class=(format!("project")) id=(format!("project-{}", record.slug)) {
+            div class="project" id=(format!("project-{}", record.slug)) {
                 (title_html)
-                (dossier_label_row(record, false, false))
                 p { (record.summary) }
             }
         };
@@ -131,7 +73,6 @@ pub fn render_home_featured_addenda(records: &[SiteRecord]) -> String {
         let block = html! {
             div class="addenda-list-item" role="listitem" {
                 div class="addenda-title" { (record.title) }
-                (addenda_meta(record, false))
                 p { (inline_markdown(&record.summary)) }
             }
         };
@@ -176,28 +117,6 @@ fn render_dossier_links(record: &SiteRecord, page_path: &str) -> Markup {
     }
 }
 
-fn dossier_page_path(record: &SiteRecord) -> &str {
-    record
-        .hub_path
-        .as_deref()
-        .and_then(|hub_path| hub_path.strip_prefix("site/"))
-        .expect("dossier hubs must be site-relative output paths")
-}
-
-fn related_addenda<'a>(records: &'a [SiteRecord], dossier_slug: &str) -> Vec<&'a SiteRecord> {
-    let mut addenda = records
-        .iter()
-        .filter(|record| record.kind == "addendum" && record.visible)
-        .filter(|record| record.related_dossier.as_deref() == Some(dossier_slug))
-        .collect::<Vec<_>>();
-    addenda.sort_by(|left, right| {
-        left.title
-            .to_lowercase()
-            .cmp(&right.title.to_lowercase())
-            .then_with(|| left.slug.cmp(&right.slug))
-    });
-    addenda
-}
 
 pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
     let slices = records::slice_records(records);
@@ -222,10 +141,6 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
                                     (record.status)
                                 }
                             }
-                        }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Release" }
-                            span class="card-meta-value" { (record.release_stage) }
                         }
                         @if let Some(scope) = record.labels.get("scope") {
                             div class="card-meta-row" {
@@ -309,10 +224,6 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
                             }
                         }
                         div class="card-meta-row" {
-                            span class="card-meta-label" { "Release" }
-                            span class="card-meta-value" { (record.release_stage) }
-                        }
-                        div class="card-meta-row" {
                             span class="card-meta-label" { "Activity" }
                             span class="card-meta-value" { (record.last_activity) }
                         }
@@ -350,53 +261,35 @@ pub fn render_blog_index_posts(posts: &[BlogPostRecord], page_path: &str) -> Str
 }
 
 pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
+    let scope = record.labels.get("scope").map(String::as_str);
     let markup = html! {
-        section class="project-header" id="overview" {
-            div class="site-page-title" { (record.title) }
-            div class="hub-meta" {
+        header class="dossier-hub-header" id="overview" {
+            h1 class="dossier-hub-title" { (record.title) }
+            p class="dossier-hub-deck" { (record.summary) }
+            div class="dossier-hub-metabar" {
                 @if let Some(ref sid) = record.series {
-                    div class="hub-meta-row" {
-                        span class="hub-meta-label" { "Series" }
-                        span class="hub-meta-value artifact-plate-id" { "SPCTR " (sid) }
+                    span class="dossier-hub-metabar-item" {
+                        "SPCTR " span class="dossier-hub-metabar-value" { (sid) }
                     }
                 }
-                div class="hub-meta-row" {
-                    span class="hub-meta-label" { "Status" }
-                    span class="hub-meta-value" {
-                        span class=(format!("project-status {}", record.status)) {
-                            (record.status)
-                        }
+                span class="dossier-hub-metabar-item" {
+                    "status " span class=(format!("project-status {}", record.status)) {
+                        (record.status)
                     }
                 }
-                div class="hub-meta-row" {
-                    span class="hub-meta-label" { "Release" }
-                    span class="hub-meta-value" { (record.release_stage) }
+                span class="dossier-hub-metabar-item" {
+                    "activity " span class="dossier-hub-metabar-value" { (record.last_activity) }
                 }
-                div class="hub-meta-row" {
-                    span class="hub-meta-label" { "License" }
-                    span class="hub-meta-value" { (record.license) }
+                span class="dossier-hub-metabar-item" {
+                    "license " span class="dossier-hub-metabar-value" { (license_short(&record.license)) }
                 }
-                @if let Some(scope) = record.labels.get("scope") {
-                    div class="hub-meta-row" {
-                        span class="hub-meta-label" { "Scope" }
-                        span class="hub-meta-value" { (scope) }
+                @if let Some(scope_label) = scope {
+                    span class="dossier-hub-metabar-item" {
+                        "scope " span class="dossier-hub-metabar-value" { (scope_label) }
                     }
                 }
-                div class="hub-meta-row" {
-                    span class="hub-meta-label" { "Activity" }
-                    span class="hub-meta-value" { (record.last_activity) }
-                }
-                div class="hub-meta-row" {
-                    span class="hub-meta-label" { "Repository" }
-                    span class="hub-meta-value" {
-                        (markup::link(&record.repo_url, &record.repo_path))
-                    }
-                }
-            }
-            p class="section-lead" { (record.summary) }
-            @if record.has_published_release_surfaces() {
-                div class="link-row" {
-                    (release_link_row(record))
+                span class="dossier-hub-metabar-item dossier-hub-metabar-repo" {
+                    (markup::link(&record.repo_url, "Repository \u{2192}"))
                 }
             }
         }
@@ -404,89 +297,39 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
     markup.into_string()
 }
 
-pub fn render_generated_dossier_hub(record: &SiteRecord, records: &[SiteRecord]) -> String {
-    let page_path = dossier_page_path(record);
+pub fn render_dossier_hub_footer(record: &SiteRecord) -> String {
+    let page_path = dossier_page_path_or_default(record);
     let cabinet_href = record.relative_cabinet_href(page_path);
-    let addenda_href = discover::relative_href(page_path, "addenda/");
     let published_surfaces = record.published_surface_links();
-    let related_addenda = related_addenda(records, &record.slug);
 
     let markup = html! {
-        (PreEscaped(render_dossier_hub_header(record)))
-
-        section class="section-block section-card" id="start-here" {
-            div class="site-section-title" { "Start Here" }
-            ol class="quickstart-list" {
-                @if let Some(ref href) = cabinet_href {
-                    li {
-                        a href=(href) { "Read the cabinet docs" }
-                        "."
-                    }
-                }
-                @if !published_surfaces.is_empty() {
-                    li {
-                        "Open the release bundle."
-                    }
-                }
-                li {
-                    (markup::link(&record.repo_url, "Inspect the project repository"))
-                    "."
-                }
+        footer class="dossier-hub-footer-row" {
+            @if let Some(ref href) = cabinet_href {
+                a href=(href) { "Cabinet docs" }
             }
-            span class="path-note" { "Repository path: " (record.repo_path) }
-        }
-
-        section class="section-block section-card" id="public-surfaces" {
-            div class="site-section-title" { "Public Surfaces" }
-            div class="resource-grid" {
-                @if let Some(ref href) = cabinet_href {
-                    article class="resource-card" {
-                        div class="resource-title" { "Cabinet Docs" }
-                        p { "Runbooks, contracts, and reference docs for this dossier." }
-                        div class="link-row" {
-                            a href=(discover::relative_href(page_path, "cabinet/")) { "Cabinet Index" }
-                            a href=(href) { "Cabinet Docs" }
-                        }
-                    }
-                }
-                @for (label, href) in &published_surfaces {
-                    article class="resource-card" {
-                        div class="resource-title" { (label) }
-                        p { "Source snapshots and published artifacts." }
-                        div class="link-row" {
-                            (markup::link(href, label))
-                        }
-                    }
-                }
-                article class="resource-card" {
-                    div class="resource-title" { "Repository" }
-                    p { "Source, manifests, run scripts, and implementation details." }
-                    div class="link-row" {
-                        (markup::link(&record.repo_url, "Repository Directory"))
-                    }
-                }
-            }
-        }
-
-        @if !related_addenda.is_empty() {
-            section class="section-block section-card" id="related-addenda" {
-                div class="site-section-title" { "Related Addenda" }
-                div class="resource-grid" {
-                    @for addendum in &related_addenda {
-                        article class="resource-card" {
-                            div class="resource-title" { (addendum.title) }
-                            p { (inline_markdown(&addendum.summary)) }
-                            div class="link-row" {
-                                a href=(format!("{addenda_href}#{}", addendum.slug)) { "Open in Addenda Index" }
-                                (markup::link(&addendum.repo_url, "Repository"))
-                            }
-                        }
-                    }
-                }
+            (markup::link(&record.repo_url, "Repository"))
+            @for (label, href) in &published_surfaces {
+                (markup::link(href, label))
             }
         }
     };
     markup.into_string()
+}
+
+fn dossier_page_path_or_default(record: &SiteRecord) -> &str {
+    record
+        .hub_path
+        .as_deref()
+        .and_then(|hub_path| hub_path.strip_prefix("site/"))
+        .unwrap_or("dossiers/index.html")
+}
+
+pub fn render_generated_dossier_hub(record: &SiteRecord, _records: &[SiteRecord]) -> String {
+    let mut output = String::new();
+    output.push_str(&render_dossier_hub_header(record));
+    output.push('\n');
+    output.push_str(&render_dossier_hub_footer(record));
+    output
 }
 
 struct SitemapNode {
@@ -706,4 +549,24 @@ pub fn render_sitemap_registry(records: &[SiteRecord], blog_posts: &[BlogPostRec
         }
     };
     markup.into_string()
+}
+
+#[cfg(test)]
+mod license_short_tests {
+    use super::license_short;
+
+    #[test]
+    fn returns_prefix_before_colon() {
+        assert_eq!(license_short("Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"), "Mixed");
+    }
+
+    #[test]
+    fn returns_full_string_when_no_colon() {
+        assert_eq!(license_short("MIT"), "MIT");
+    }
+
+    #[test]
+    fn trims_whitespace_around_prefix() {
+        assert_eq!(license_short("  Apache-2.0  : extra"), "Apache-2.0");
+    }
 }

@@ -9,11 +9,8 @@ from lenia_swarm_analysis.transformation_metrics import TERMINAL_AXIS_SPECS
 from .warehouse import (
     register_context,
     replace_feature_axes,
-    replace_feature_values,
-    stable_id,
     upsert_feature_space,
     upsert_morphospace_source,
-    upsert_observation,
 )
 
 SOURCE_ID = "lenia_swarm"
@@ -149,6 +146,31 @@ def _feature_value_rows(
     return sorted(value_rows, key=lambda row: AXIS_ORDER[str(row["axis_id"])])
 
 
+def _feature_axis_rows_for_study(
+    connection: DuckDBPyConnection,
+    *,
+    study_id: str,
+) -> list[tuple[Any, ...]]:
+    return connection.execute(
+        """
+        SELECT
+            specimen_axes.specimen_id,
+            specimen_axes.axis_id,
+            specimen_axes.raw_value,
+            specimen_axes.transformed_value
+        FROM study_specimens
+        JOIN specimen_axes USING (specimen_id)
+        WHERE study_specimens.study_id = ?
+          AND specimen_axes.axis_family = 'terminal'
+          AND specimen_axes.axis_id IN (
+              SELECT unnest(?)
+          )
+        ORDER BY specimen_axes.specimen_id, specimen_axes.axis_id
+        """,
+        [study_id, list(AXIS_IDS)],
+    ).fetchall()
+
+
 def derive_lenia_terminal_features(
     connection: DuckDBPyConnection,
     *,
@@ -167,56 +189,124 @@ def derive_lenia_terminal_features(
             label="terminal_descriptor",
             metadata_json={"sourceId": SOURCE_ID, "featureSpaceId": FEATURE_SPACE_ID},
         )
-        for row in _specimen_rows(connection, study_id=resolved_study_id):
-            (
-                specimen_id,
-                recorded_at,
-                results_path,
-                export_dir,
-                activity_path,
-                fingerprint_path,
-                source_kind,
-                source_mode,
-                source_algorithm,
-            ) = row
-            observation_id = stable_id(
-                SOURCE_ID,
-                "observation",
-                resolved_study_id,
-                specimen_id,
-                FEATURE_SPACE_ID,
-            )
-            source_ref = results_path or export_dir or activity_path or fingerprint_path
-            upsert_observation(
-                connection,
-                observation_id=observation_id,
-                specimen_id=str(specimen_id),
-                study_id=resolved_study_id,
-                source_id=SOURCE_ID,
-                context_id=context_id,
-                observation_kind="synthetic_ca_terminal_embedding",
-                observed_at=recorded_at,
-                source_ref=str(source_ref) if source_ref is not None else None,
-                payload_json={
-                    "featureSpaceId": FEATURE_SPACE_ID,
-                    "sourceKind": source_kind,
-                    "sourceMode": source_mode,
-                    "sourceAlgorithm": source_algorithm,
-                },
-            )
-            value_rows = _feature_value_rows(connection, specimen_id=str(specimen_id))
-            replace_feature_values(
-                connection,
-                observation_id=observation_id,
-                feature_space_id=FEATURE_SPACE_ID,
-                value_rows=value_rows,
-            )
-            observation_count += 1
-            feature_value_count += len(value_rows)
-            study_counts[resolved_study_id] = study_counts.get(resolved_study_id, 0) + 1
+        observation_count_row = connection.execute(
+            """
+            SELECT COUNT(DISTINCT specimens.specimen_id)
+            FROM study_specimens
+            JOIN specimens USING (specimen_id)
+            JOIN specimen_axes USING (specimen_id)
+            WHERE study_specimens.study_id = ?
+              AND specimen_axes.axis_family = 'terminal'
+            """,
+            [resolved_study_id],
+        ).fetchone()
+        resolved_observation_count = int(observation_count_row[0]) if observation_count_row else 0
 
-    if study_id is not None and observation_count == 0:
-        raise ValueError(f"{study_id}: no Lenia terminal axes found")
+        observation_id_sql = """
+            substr(sha256(concat(
+                ?, chr(0), 'observation', chr(0), ?, chr(0),
+                specimens.specimen_id, chr(0), ?, chr(0)
+            )), 1, 24)
+        """
+        connection.execute(
+            f"""
+            CREATE OR REPLACE TEMP TABLE tmp_lenia_terminal_observations AS
+            SELECT DISTINCT
+                {observation_id_sql} AS observation_id,
+                specimens.specimen_id,
+                specimens.recorded_at,
+                coalesce(
+                    specimens.results_path,
+                    specimens.export_dir,
+                    specimens.activity_path,
+                    specimens.fingerprint_path
+                ) AS source_ref,
+                specimens.source_kind,
+                specimens.source_mode,
+                specimens.source_algorithm
+            FROM study_specimens
+            JOIN specimens USING (specimen_id)
+            JOIN specimen_axes USING (specimen_id)
+            WHERE study_specimens.study_id = ?
+              AND specimen_axes.axis_family = 'terminal'
+            """,
+            [SOURCE_ID, resolved_study_id, FEATURE_SPACE_ID, resolved_study_id],
+        )
+        connection.execute(
+            """
+            INSERT OR REPLACE INTO observations (
+                observation_id, specimen_id, study_id, source_id, context_id,
+                observation_kind, observed_at, step, source_ref, payload_json
+            )
+            SELECT
+                observation_id,
+                specimen_id,
+                ?,
+                ?,
+                ?,
+                'synthetic_ca_terminal_embedding',
+                recorded_at,
+                NULL,
+                source_ref,
+                json_object(
+                    'featureSpaceId', ?,
+                    'sourceKind', source_kind,
+                    'sourceMode', source_mode,
+                    'sourceAlgorithm', source_algorithm
+                )
+            FROM tmp_lenia_terminal_observations
+            """,
+            [resolved_study_id, SOURCE_ID, context_id, FEATURE_SPACE_ID],
+        )
+        connection.execute(
+            """
+            DELETE FROM feature_values
+            WHERE feature_space_id = ?
+              AND observation_id IN (
+                  SELECT observation_id FROM tmp_lenia_terminal_observations
+              )
+            """,
+            [FEATURE_SPACE_ID],
+        )
+        connection.execute(
+            """
+            INSERT INTO feature_values (
+                observation_id, feature_space_id, axis_id, raw_value,
+                normalized_value, metadata_json
+            )
+            SELECT
+                tmp_lenia_terminal_observations.observation_id,
+                ?,
+                specimen_axes.axis_id,
+                specimen_axes.raw_value,
+                specimen_axes.transformed_value,
+                json_object('sourceTable', 'specimen_axes')
+            FROM tmp_lenia_terminal_observations
+            JOIN specimen_axes USING (specimen_id)
+            WHERE specimen_axes.axis_family = 'terminal'
+              AND specimen_axes.axis_id IN (SELECT unnest(?))
+            """,
+            [FEATURE_SPACE_ID, list(AXIS_IDS)],
+        )
+        feature_value_count_row = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM feature_values
+            WHERE feature_space_id = ?
+              AND observation_id IN (
+                  SELECT observation_id FROM tmp_lenia_terminal_observations
+              )
+            """,
+            [FEATURE_SPACE_ID],
+        ).fetchone()
+        resolved_feature_value_count = (
+            int(feature_value_count_row[0]) if feature_value_count_row else 0
+        )
+        observation_count += resolved_observation_count
+        feature_value_count += resolved_feature_value_count
+        study_counts[resolved_study_id] = (
+            study_counts.get(resolved_study_id, 0) + resolved_observation_count
+        )
 
     return {
         "sourceId": SOURCE_ID,

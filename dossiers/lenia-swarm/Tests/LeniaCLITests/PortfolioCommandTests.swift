@@ -148,8 +148,10 @@ final class PortfolioCommandTests: XCTestCase {
         XCTAssertEqual(mediaIndex.count, 1)
         XCTAssertEqual(mediaIndex[0]["sourceMode"] as? String, "portfolio-candidate")
         XCTAssertEqual(mediaIndex[0]["selectionReason"] as? String, "single-compact")
+        let framesPath = try XCTUnwrap(mediaIndex[0]["framesPath"] as? String)
         let colorFramesPath = try XCTUnwrap(mediaIndex[0]["framesColorPath"] as? String)
-        XCTAssertEqual(mediaIndex[0]["framesPath"] as? String, colorFramesPath)
+        XCTAssertNotEqual(framesPath, colorFramesPath)
+        XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: framesPath).isEmpty)
         XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: colorFramesPath).isEmpty)
         let videoPath = try XCTUnwrap(mediaIndex[0]["videoPath"] as? String)
         XCTAssertTrue(FileManager.default.fileExists(atPath: videoPath))
@@ -345,7 +347,11 @@ final class PortfolioCommandTests: XCTestCase {
         )
         XCTAssertEqual(mediaIndex.count, 1)
         XCTAssertEqual(mediaIndex[0]["frames"] as? Int, 2)
-        XCTAssertEqual(mediaIndex[0]["framesPath"] as? String, mediaIndex[0]["framesColorPath"] as? String)
+        let framesPath = try XCTUnwrap(mediaIndex[0]["framesPath"] as? String)
+        let colorFramesPath = try XCTUnwrap(mediaIndex[0]["framesColorPath"] as? String)
+        XCTAssertNotEqual(framesPath, colorFramesPath)
+        XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: framesPath).isEmpty)
+        XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: colorFramesPath).isEmpty)
     }
 
     func testPortfolioReplayPreservesParameterEmbeddingPatches() throws {

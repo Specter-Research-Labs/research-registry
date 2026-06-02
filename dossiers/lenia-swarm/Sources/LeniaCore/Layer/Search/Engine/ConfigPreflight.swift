@@ -127,6 +127,9 @@ enum SearchRuntimePreflight {
         runtimeConfig: LeniaRuntimeConfig,
         hasEnvironmentPotential _: Bool
     ) {
+        if runtimeConfig.implementation.mode == "qd24_additive_v1" {
+            fatalError("implementation.mode=qd24_additive_v1 currently requires backend=mlx.")
+        }
         if runtimeConfig.parameterEmbedding.enabled {
             let supportedMixModes = runtimeConfig.channels == 1 ? ["avg"] : ["avg", "stoch"]
             guard supportedMixModes.contains(runtimeConfig.parameterEmbedding.mix) else {

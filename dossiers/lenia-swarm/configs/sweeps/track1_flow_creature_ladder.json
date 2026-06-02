@@ -1,0 +1,28 @@
+{
+  "variants": [
+    {
+      "id": "track1-2c10-harvest-128",
+      "config": "configs/base/paper_random_2c_10k_128.json",
+      "search": "configs/search/search_track1_harvest_128.json",
+      "count": 4096
+    },
+    {
+      "id": "track1-2c20-harvest-128",
+      "config": "configs/base/paper_random_2c_20k_128.json",
+      "search": "configs/search/search_track1_harvest_128.json",
+      "count": 8192
+    },
+    {
+      "id": "track1-3c15-harvest-128",
+      "config": "configs/base/paper_random_3c_15k_128.json",
+      "search": "configs/search/search_track1_harvest_128.json",
+      "count": 4096
+    },
+    {
+      "id": "track1-2c20-coherent-128",
+      "config": "configs/base/paper_random_2c_20k_128.json",
+      "search": "configs/search/search_track1_coherent_128.json",
+      "count": 2048
+    }
+  ]
+}

@@ -173,7 +173,7 @@
     "A-006": {
       "next_counter": 2,
       "entries": {
-        "modal-lora-plan": "A-006.001"
+        "README": "A-006.001"
       }
     },
     "A-007": {
@@ -247,21 +247,15 @@
         "decisions/adr-lake-reference-selection": "D-002.019",
         "decisions/adr-proof-graph-ir-cross-assistant": "D-002.030",
         "decisions/adr-search-graph-feasibility-by-backend": "D-002.020",
-        "ops/corpus-pipeline": "D-002.021",
-        "ops/cross-assistant-alignment": "D-002.031",
-        "ops/cross-assistant-paired-benchmark": "D-002.032",
-        "ops/deepseek-p4-recovery-note": "D-002.034",
-        "ops/followup-run-program": "D-002.026",
-        "ops/lake-jobs": "D-002.022",
-        "ops/lean-repl-setup": "D-002.023",
-        "ops/log-query-cookbook": "D-002.024",
-        "ops/paper-freeze": "D-002.035",
-        "ops/run-lake": "D-002.025",
-        "ops/verification-matrix": "D-002.036"
+        "ops/corpus": "D-002.021",
+        "ops/lake": "D-002.025",
+        "ops/paper": "D-002.035",
+        "ops/setup": "D-002.023",
+        "ops/verification": "D-002.036"
       }
     },
     "D-003": {
-      "next_counter": 24,
+      "next_counter": 26,
       "entries": {
         "README": "D-003.001",
         "configs/README": "D-003.022",
@@ -277,9 +271,11 @@
         "decisions/ADR-002-schema-versioning": "D-003.009",
         "internals/FlowLeniaImplementationMap": "D-003.010",
         "internals/IndexerInternals": "D-003.011",
-        "internals/PaperGroundedLanes": "D-003.021",
+        "internals/PaperGroundedRuns": "D-003.021",
         "internals/SpeciesKnobs": "D-003.019",
         "internals/StudioCompendiumInternals": "D-003.012",
+        "internals/TTBackend": "D-003.025",
+        "internals/TTBackendPerformance": "D-003.024",
         "universe/Ecology": "D-003.013",
         "universe/Glossary": "D-003.014",
         "universe/Morphology": "D-003.015",

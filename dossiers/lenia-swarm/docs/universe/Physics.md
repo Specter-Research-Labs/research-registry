@@ -40,7 +40,7 @@ Prior Lenia literature mentions invariance under scale/transform/deformation. In
 Physics is currently partially operationalized:
 
 - motion regime separation: implemented,
-- full invariance test battery (scale/flip/rotate/deformation): planned.
+- full invariance test battery (scale/flip/rotate/deformation): not implemented.
 
 ## Related Docs
 

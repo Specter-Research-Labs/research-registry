@@ -1,8 +1,8 @@
 # Wonton Soup
 
-`wonton-soup` is an intervention framework for studying proof-search structure in Lean. Controlled lesions on MCTS-driven theorem proving reveal how proof families, basin stability, and search efficiency respond to perturbation, drawing on the diverse-intelligence research program.
+`wonton-soup` studies proof-search structure in Lean by perturbing MCTS theorem proving. Controlled lesions expose proof families, basin stability, rerouting, collapse, and blind-relative efficiency.
 
-Centralized MCTS establishes the structural landscape: proof families, basin stability, recovery after lesion, and blind-relative efficiency (K) as a single-controller baseline. Distributed MCTS tests how collective control changes access to that landscape and whether search efficiency decomposes across agents.
+Centralized MCTS maps the single-controller landscape. Distributed MCTS tests whether coordinated controllers reach that landscape differently.
 
 ## Start Here
 
@@ -11,9 +11,9 @@ Centralized MCTS establishes the structural landscape: proof families, basin sta
    - or `direnv allow` if you use direnv
 2. The local shell auto-runs `uv sync` and provides the Coq-backed toolchain (`coqc`, `coqtop`,
    `sertop`, `coq-lsp`).
-3. Environment setup: `docs/ops/lean-repl-setup.md`
-4. Corpus pipeline and reproducible artifact refs: `docs/ops/corpus-pipeline.md`
-5. Run the canonical verification lane:
+3. Environment setup: `docs/ops/setup.md`
+4. Corpus pipeline and reproducible artifact refs: `docs/ops/corpus.md`
+5. Run the standard verification check:
 
 ```
 ./scripts/verify.sh
@@ -50,20 +50,20 @@ export LEAN_PROJECT_PATH=/shared/specter-runtime/common/wonton-soup/lean_project
 export LEAN_REPL_EXE=/shared/specter-runtime/machines/<machine>/wonton-soup/bin/repl
 ```
 
-The full setup and verification lane is in `docs/ops/lean-repl-setup.md`.
+The full setup and verification path is in `docs/ops/setup.md`.
 
 ## Documentation Index
 
-Use [Wonton Soup Docs](docs/README.md) as the canonical map for runbooks, internals, ADRs, and provider/backend notes.
+Use [Wonton Soup Docs](docs/README.md) for runbooks, internals, ADRs, and provider/backend notes.
 
-## Project Surfaces
+## Project Paths
 
 - `prover/`: core search engine, adapters, proof/trace artifacts
 - `orchestrator/`: CLI-facing run orchestration
 - `corpus/`: corpus definitions and artifact pipeline
 - `analysis/`: postprocess, metrics, lake extraction/export
 - `experiments/`: experiment-specific runners and analyses
-- `paper/`: Typst manuscript scaffold for the perturbation / proto-cognition paper
+- `paper/`: Typst manuscript source for the perturbation / proto-cognition paper
 - `docs/`: canonical project documentation
 
 `wonton.py` computes proof-search logs and the local Wonton lake under the

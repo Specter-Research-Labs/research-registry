@@ -21,7 +21,7 @@
 
 ## Species and Taxonomy
 
-- taxonomy: family/genus/species grouping framework over indexed creatures.
+- taxonomy: family/genus/species grouping layer over indexed creatures.
 - species fingerprint: canonical genotype vector hash used for species-level identity.
 
 ## Core Terms

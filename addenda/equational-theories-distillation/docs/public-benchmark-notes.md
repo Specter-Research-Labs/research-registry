@@ -1,8 +1,9 @@
 # Public Benchmark Notes
 
-Current findings as of 2026-03-15 from the addendum pipeline.
+Findings from the addendum pipeline as of 2026-03-15.
 
-Use `docs/approach.md` for the method overview. Serves as the detailed metric/reference companion.
+Use `docs/approach.md` for the method overview. This file keeps the detailed
+metrics and reference notes.
 
 ## Public Labels Match The Graph
 
@@ -108,7 +109,7 @@ Across the full `4694`-law universe:
 - laws of the form `x = t` where the leftmost leaf of `t` is still `x`: `0/816` imply every target law
 - laws of the form `x = t` where `x` occurs exactly once and is not leftmost: `504/924` imply every target law
 
-The first two lines are the cleanest true-side invariants in the current stack.
+The first two lines are the cleanest true-side invariants in the current analysis.
 
 ## Theorem Rules Cover Most Public TRUE Cases
 
@@ -211,7 +212,7 @@ tail is purely false-side.
 
 ## The Remaining Tail Is Small And Structured
 
-After theorem-backed TRUE families, exact source rows, and the explicit false witness stack, the
+After theorem-backed TRUE families, exact source rows, and the explicit false witness search, the
 exact public-decision tail is still `36` problems:
 
 - `15` unresolved true
@@ -235,13 +236,13 @@ The unresolved false cases are even more concentrated:
 
 By unique pair, the false tail is only `10` source-target pairs over `9` unique source laws.
 
-## What The Full Stack Decides On The Public Set
+## What The Full Analysis Decides On The Public Set
 
-If we stack:
+If we combine:
 
 - theorem-backed TRUE families
 - exact `2`-element source-row semantics
-- explicit false witnesses from the finite-model search stack
+- explicit false witnesses from the finite-model search
 
 then the current public decision count is:
 
@@ -265,7 +266,7 @@ candidate count moves again to:
 
 ## Public-Only Candidate Rules Still Stay Hypotheses
 
-These are public-set patterns only. They are useful for triage, but they are not theorem-backed
+These are public-set patterns only. They help triage, but they are not theorem-backed
 and remain hypotheses:
 
 - non-collapse TRUE candidate: `source_more_vars + target_more_ops + target_two_vars` is `17/17`

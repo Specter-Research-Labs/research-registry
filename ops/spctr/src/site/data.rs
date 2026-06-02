@@ -16,8 +16,13 @@ pub struct ResolvedMount {
 }
 
 fn site_data_root() -> String {
-    publish::optional_env("SPECTER_SITE_DATA_ROOT")
-        .unwrap_or_else(|| "/srv/www/site/data".to_owned())
+    let site_root =
+        publish::optional_env("SPECTER_SITE_ROOT").unwrap_or_else(|| "/srv/www/site".to_owned());
+    site_data_root_for_site_root(&site_root)
+}
+
+fn site_data_root_for_site_root(site_root: &str) -> String {
+    format!("{}/data", site_root.trim_end_matches('/'))
 }
 
 pub fn resolve_mounts(repo_root: &Utf8Path) -> Result<Vec<ResolvedMount>> {
@@ -194,4 +199,25 @@ pub fn rsync_excludes(repo_root: &Utf8Path) -> Result<Vec<String>> {
         .into_iter()
         .map(|(_, config)| config.site_path)
         .collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::site_data_root_for_site_root;
+
+    #[test]
+    fn site_data_root_is_derived_from_site_root() {
+        assert_eq!(
+            site_data_root_for_site_root("/srv/www/site"),
+            "/srv/www/site/data"
+        );
+        assert_eq!(
+            site_data_root_for_site_root("/srv/www/site/"),
+            "/srv/www/site/data"
+        );
+        assert_eq!(
+            site_data_root_for_site_root("/tmp/site-preview"),
+            "/tmp/site-preview/data"
+        );
+    }
 }

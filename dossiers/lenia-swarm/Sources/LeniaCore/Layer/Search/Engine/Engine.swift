@@ -7,6 +7,7 @@ private func durationMs(_ duration: Duration) -> Double {
 }
 
 private struct SearchBatchSetup {
+    let resolvedParamsBySample: [ResolvedParams]?
     let initialConditionFamily: String
     let activityConfig: ActivityConfig?
     let stabilityConfig: StabilityConfig
@@ -169,6 +170,7 @@ public final class SearchEngine: @unchecked Sendable {
         let runtimeOperators = makeRuntimeOperators()
         if let runner = persistentMetalRunnerCache[batchSize] {
             runner.setMatterWeights(runtimeOperators.matterWeights())
+            runner.updateKernels(kernels)
             return runner
         }
         let runner = FlowLeniaMetalFullStateRunner(
@@ -434,6 +436,24 @@ public final class SearchEngine: @unchecked Sendable {
                 let sampleMap = massMap[capture.sampleIndex, 0..., 0...]
                 let data = frameDataFromMassMap(sampleMap)
                 capture.handler(step, runtimeConfig.sx, runtimeConfig.sy, data)
+                if let stateHandler = capture.stateHandler {
+                    let massState: MLXArray
+                    if let runner = persistentMetalRunner {
+                        massState = runner.materializeMass()
+                    } else {
+                        massState = ABatch
+                    }
+                    let sampleState = massState[capture.sampleIndex, 0..., 0..., 0...]
+                    let flatState = sampleState.flattened()
+                    eval(flatState)
+                    stateHandler(
+                        step,
+                        runtimeConfig.sx,
+                        runtimeConfig.sy,
+                        runtimeConfig.channels,
+                        flatState.asArray(Float.self)
+                    )
+                }
             }
 
             if shouldCaptureActivity {
@@ -491,12 +511,8 @@ public final class SearchEngine: @unchecked Sendable {
                     terminalStateBatch = runner.materializeMass()
                     terminalParamBatch = nil
                 }
-            } else if rolloutSummary.lastMassMap == nil {
-                terminalMassMap = runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
-                terminalStateBatch = nil
-                terminalParamBatch = nil
             } else {
-                terminalMassMap = nil
+                terminalMassMap = runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
                 terminalStateBatch = nil
                 terminalParamBatch = nil
             }
@@ -521,6 +537,7 @@ public final class SearchEngine: @unchecked Sendable {
             terminalMassMap: terminalMassMap,
             terminalStateBatch: terminalStateBatch,
             terminalParamBatch: terminalParamBatch,
+            paramsBySample: batchSetup.resolvedParamsBySample,
             foodInitialMass: batchSetup.initialFoodMass,
             foodFinalMass: terminalFoodMass
         )
@@ -540,6 +557,24 @@ public final class SearchEngine: @unchecked Sendable {
         let batchSize = seeds.count
         let initializationBuilder = makeInitializationBuilder()
         let runtimeOperators = makeRuntimeOperators()
+        let randomParamsBySample: [ResolvedParams]?
+        let activeMetalKernels: CompiledKernels?
+        if !useParamEmbedding,
+           runtimeConfig.backend == .metalFull,
+           let ranges = runtimeConfig.randomParamRanges {
+            randomParamsBySample = seeds.map {
+                generateRandomParams(seed: $0, nbK: runtimeConfig.nbK, ranges: ranges)
+            }
+            activeMetalKernels = compilePopulationKernels(
+                paramsBatch: randomParamsBySample!,
+                config: batchedConfig,
+                c0: runtimeConfig.c0,
+                c1: runtimeConfig.c1
+            )
+        } else {
+            randomParamsBySample = nil
+            activeMetalKernels = metalFullKernels
+        }
         let initialConditionFamily = morphospaceInitialConditionFamily(
             InitConfig(
                 seed: runtimeConfig.initSeed,
@@ -571,12 +606,22 @@ public final class SearchEngine: @unchecked Sendable {
             }
             paramBatch = MLX.stacked(initialParams)
             timings.parameterBuildMs = durationMs(parameterBuildStart.duration(to: ContinuousClock.now))
-        } else if let template = staticParamTemplate {
+        } else if let kernels = activeMetalKernels {
             let parameterBuildStart = ContinuousClock.now
-            paramBatch = MLX.broadcast(
-                template,
-                to: [batchSize, runtimeConfig.sx, runtimeConfig.sy, template.shape[3]]
-            )
+            let h = kernels.h
+            if h.shape.count == 2 {
+                paramBatch = MLX.broadcast(
+                    h.reshaped([batchSize, 1, 1, runtimeConfig.nbK]),
+                    to: [batchSize, runtimeConfig.sx, runtimeConfig.sy, runtimeConfig.nbK]
+                )
+            } else if let template = staticParamTemplate {
+                paramBatch = MLX.broadcast(
+                    template,
+                    to: [batchSize, runtimeConfig.sx, runtimeConfig.sy, template.shape[3]]
+                )
+            } else {
+                fatalError("Metal full static parameter template is unavailable.")
+            }
             timings.parameterBuildMs = durationMs(parameterBuildStart.duration(to: ContinuousClock.now))
         }
 
@@ -601,7 +646,7 @@ public final class SearchEngine: @unchecked Sendable {
         timings.chemFieldBuildMs = durationMs(chemFieldBuildStart.duration(to: ContinuousClock.now))
 
         let persistentMetalRunner: FlowLeniaMetalFullStateRunner?
-        if let kernels = metalFullKernels {
+        if let kernels = activeMetalKernels {
             let runnerSetupStart = ContinuousClock.now
             let runner = reusableMetalFullRunner(batchSize: batchSize, kernels: kernels)
             runner.setWallMask(wallMask)
@@ -621,6 +666,7 @@ public final class SearchEngine: @unchecked Sendable {
         }
 
         return SearchBatchSetup(
+            resolvedParamsBySample: randomParamsBySample,
             initialConditionFamily: initialConditionFamily,
             activityConfig: activityConfig,
             stabilityConfig: stabilityConfig,

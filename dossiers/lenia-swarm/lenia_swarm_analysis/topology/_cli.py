@@ -1,34 +1,14 @@
 from __future__ import annotations
 
-import argparse
+from lenia_swarm_analysis._commands import GROUPS_BY_NAME
+from lenia_swarm_analysis._dispatch import dispatch_command_group
+
+GROUP = GROUPS_BY_NAME["topology"]
+COMMANDS = GROUP.commands
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="lenia-swarm-topology",
-        description="Persistent topology analysis tools",
-    )
-    sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("analyze", add_help=False, help="Compute persistent topology summaries")
-    sub.add_parser("compare", add_help=False, help="Compare topology across representations")
-    sub.add_parser("robustness", add_help=False, help="Subsample robustness analysis")
-
-    args, remaining = parser.parse_known_args(argv)
-
-    if args.command == "analyze":
-        from .analysis import main as run
-
-        return run(remaining)
-    if args.command == "compare":
-        from .compare import main as run
-
-        return run(remaining)
-    if args.command == "robustness":
-        from .robustness import main as run
-
-        return run(remaining)
-
-    raise SystemExit(f"unknown command: {args.command}")
+    return dispatch_command_group(argv, GROUP)
 
 
 if __name__ == "__main__":

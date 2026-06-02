@@ -1,8 +1,7 @@
-# Lenia TRIBE Overlay: Findings (Incubation)
+# Lenia TRIBE Overlay Findings
 
-Status as of 2026-05-04. The addendum is staged: pipeline is wired end-to-end
-through correlation, sanity gate passes, but no real (non-fake) scoring batch
-with warehouse-linked specimens has been run yet.
+Status as of 2026-05-04: pipeline wired through correlation; sanity gate
+passes; no real warehouse-linked scoring batch yet.
 
 ## What was built
 
@@ -33,10 +32,10 @@ bio-motion control. STS engagement went the wrong direction. Instead of
 chasing a clean control (Vanrie & Verfaillie etc.), we rescoped: ROI
 engagement is a relative score over Lenia creatures.
 
-The question we keep is whether the TRIBE score is a duplicate of one of
-the 16 `lenia_terminal_v1` axes or actually new. High correlation with an
-existing axis means drop it. Low correlation with all 16 means keep it.
-The score is not a "lifelikeness" measurement.
+The retained question is redundancy. High correlation with an existing
+`lenia_terminal_v1` axis means drop the ROI score. Low correlation with all
+16 axes means keep it as a candidate coordinate. The score is not a
+"lifelikeness" measurement.
 
 ## Smoke run (fake client)
 
@@ -70,7 +69,7 @@ lenia-swarm replay and media pipelines from a curated specimen list:
 Until that pipeline is driven, the "TRIBE-engagement vs descriptor" plot is
 not interpretable.
 
-## Open questions for the first real batch
+## First Real Batch Decisions
 
 - How many specimens to render. ~30-50 covers the warehouse's family
   diversity without taking days on CPU TRIBE inference.
@@ -78,8 +77,8 @@ not interpretable.
   If `replay` produces shorter native trajectories we have to either pad or
   reject; the corpus loader already hard-errors on under-length sources.
 - Whether to mix scene composites with single-creature renders.
-  Single-creature is cleaner for the warehouse join (one specimen per MP4);
-  composites are interesting but conflate ROI signals across specimens.
+  Single-creature renders keep one specimen per MP4. Composites conflate ROI
+  signals across specimens.
 
 ## Limitations carried forward
 
@@ -90,4 +89,4 @@ not interpretable.
   sanity gate is necessary but not sufficient.
 - ROI masks are anatomical (Destrieux), not functional. Small-effect
   contrasts within-ROI are not interpretable at this resolution.
-- License: CC BY-NC; no commercial surface.
+- License: CC BY-NC; no commercial use.

@@ -42,7 +42,7 @@ struct ArchivePromotionOptions: ParsableArguments {
             throw ValidationError("--warehouse and --warehouse-topology require a compendium path (--db or a default).")
         }
         let resolvedWarehouse = try warehouseRefresh.warehouse.map { try resolveArtifactPath($0, dossier: dossier) }
-            ?? resolvedCompendium.map(defaultWarehousePath)
+            ?? (warehouseRefresh.warehouseTopology ? resolvedCompendium.map(defaultWarehousePath) : nil)
 
         return ArchivePromotionConfig(
             compendiumPath: resolvedCompendium,
@@ -67,7 +67,8 @@ func promoteRunArtifacts(
     includeResults: Bool = true,
     stats: Bool = false,
     warehousePath: String? = nil,
-    warehouseTopology: Bool = false
+    warehouseTopology: Bool = false,
+    postCompendiumIngest: ((String) throws -> Void)? = nil
 ) throws -> String {
     let compendiumURL = URL(fileURLWithPath: compendiumPath)
     try FileManager.default.createDirectory(
@@ -87,11 +88,12 @@ func promoteRunArtifacts(
     if stats {
         print("Compendium: \(try indexer.stats())")
     }
+    try postCompendiumIngest?(compendiumPath)
     if let warehouseResult = try refreshWarehouseProjection(
         compendiumPath: compendiumPath,
         warehousePath: warehousePath,
         warehouseTopology: warehouseTopology,
-        defaultEnabled: true
+        defaultEnabled: false
     ), stats {
         print(
             "Warehouse: study=\(warehouseResult.studyId) axes=\(warehouseResult.axesUpdated) status=\(warehouseResult.statusUpdated) anatomy=\(warehouseResult.anatomyUpdated)"
@@ -105,7 +107,8 @@ func applyPromotionIfEnabled(
     config: ArchivePromotionConfig,
     runDir: String,
     includeResults: Bool = true,
-    stats: Bool = false
+    stats: Bool = false,
+    postCompendiumIngest: ((String) throws -> Void)? = nil
 ) throws -> ArchivePromotionConfig {
     if let compendiumPath = config.compendiumPath {
         try promoteRunArtifacts(
@@ -114,7 +117,8 @@ func applyPromotionIfEnabled(
             includeResults: includeResults,
             stats: stats,
             warehousePath: config.warehousePath,
-            warehouseTopology: config.warehouseTopology
+            warehouseTopology: config.warehouseTopology,
+            postCompendiumIngest: postCompendiumIngest
         )
     }
     return config

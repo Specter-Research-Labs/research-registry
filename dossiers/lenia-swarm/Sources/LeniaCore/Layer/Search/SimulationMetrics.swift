@@ -49,6 +49,8 @@ public struct SimulationMetrics: Codable, Sendable {
     public let componentCount: Float?
     public let largestComponentFraction: Float?
     public let largestComponentAnisotropy: Float?
+    public let largestComponentInternalStripe: Float?
+    public let largestComponentOrientedRidge: Float?
 
     enum CodingKeys: String, CodingKey {
         case massMean = "mass_mean"
@@ -90,6 +92,8 @@ public struct SimulationMetrics: Codable, Sendable {
         case componentCount = "component_count"
         case largestComponentFraction = "largest_component_fraction"
         case largestComponentAnisotropy = "largest_component_anisotropy"
+        case largestComponentInternalStripe = "largest_component_internal_stripe"
+        case largestComponentOrientedRidge = "largest_component_oriented_ridge"
     }
 
     public init(
@@ -140,7 +144,9 @@ public struct SimulationMetrics: Codable, Sendable {
         momentAnisotropy: Float? = nil,
         componentCount: Float? = nil,
         largestComponentFraction: Float? = nil,
-        largestComponentAnisotropy: Float? = nil
+        largestComponentAnisotropy: Float? = nil,
+        largestComponentInternalStripe: Float? = nil,
+        largestComponentOrientedRidge: Float? = nil
     ) {
         self.massMean = massMean
         self.massStd = massStd
@@ -190,6 +196,8 @@ public struct SimulationMetrics: Codable, Sendable {
         self.componentCount = componentCount
         self.largestComponentFraction = largestComponentFraction
         self.largestComponentAnisotropy = largestComponentAnisotropy
+        self.largestComponentInternalStripe = largestComponentInternalStripe
+        self.largestComponentOrientedRidge = largestComponentOrientedRidge
     }
 
     public init(from decoder: Decoder) throws {
@@ -242,6 +250,8 @@ public struct SimulationMetrics: Codable, Sendable {
         componentCount = try container.decodeIfPresent(Float.self, forKey: .componentCount)
         largestComponentFraction = try container.decodeIfPresent(Float.self, forKey: .largestComponentFraction)
         largestComponentAnisotropy = try container.decodeIfPresent(Float.self, forKey: .largestComponentAnisotropy)
+        largestComponentInternalStripe = try container.decodeIfPresent(Float.self, forKey: .largestComponentInternalStripe)
+        largestComponentOrientedRidge = try container.decodeIfPresent(Float.self, forKey: .largestComponentOrientedRidge)
     }
 
     func withStability(_ isStable: Bool) -> SimulationMetrics {
@@ -293,7 +303,9 @@ public struct SimulationMetrics: Codable, Sendable {
             momentAnisotropy: momentAnisotropy,
             componentCount: componentCount,
             largestComponentFraction: largestComponentFraction,
-            largestComponentAnisotropy: largestComponentAnisotropy
+            largestComponentAnisotropy: largestComponentAnisotropy,
+            largestComponentInternalStripe: largestComponentInternalStripe,
+            largestComponentOrientedRidge: largestComponentOrientedRidge
         )
     }
 }

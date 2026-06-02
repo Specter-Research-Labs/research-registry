@@ -116,11 +116,11 @@ Pairwise variant distances per theorem and optional cross-theorem aggregations.
 Cross-run lake extraction consumes run artifacts into normalized tables.
 
 - Implementations: `analysis/lake/reconcile.py`, `analysis/lake/db.py`, `analysis/lake/extract_basin.py`
-- See operational reference: [Run Lake (Cross-Run DuckDB)](docs/ops/run-lake.md)
+- See operational reference: [Lake](../../ops/lake.md)
 
 ## Artifact Integrity Invariants
 
-- Artifact capability should be gated by `run_status.json` capability flags.
+- Artifact capability is gated by `run_status.json` capability flags.
 - Goal IDs in Lean artifacts are checkpoint-scoped IDs, not raw Lean IDs.
 - Backend-specific artifacts must set correct family metadata
   (`graph_family`, `graph_backend`, `graph_provenance`, legacy `graph_kind`,

@@ -100,7 +100,7 @@ The aligner can now ablate lexical channels explicitly:
   explicit coupling data.
 - Current motif ontology is lightweight and requires expansion for richer proof-process semantics.
 
-## Next Steps
+## Required Work
 
 - Expand `TacticActionIR` so Lean search traces can distinguish explicit continuation builders and
   real goal coupling.

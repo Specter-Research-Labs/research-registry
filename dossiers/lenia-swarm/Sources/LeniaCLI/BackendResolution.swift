@@ -126,7 +126,13 @@ private func isEvolutionMetalBackendCompatible(runtimeConfig: LeniaRuntimeConfig
     if let food = runtimeConfig.food, food.enabled {
         return false
     }
-    let supportedObjectives: Set<String> = ["directed_motion", "angular_motion", "obstacle_navigation", "chemotaxis"]
+    let supportedObjectives: Set<String> = [
+        "directed_motion",
+        "angular_motion",
+        "obstacle_navigation",
+        "chemotaxis",
+        "template_sequence",
+    ]
     return supportedObjectives.contains(esConfig.fitness.objective)
 }
 

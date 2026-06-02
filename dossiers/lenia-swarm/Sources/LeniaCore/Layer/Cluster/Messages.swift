@@ -6,6 +6,7 @@ import Foundation
 public struct ParsedSearchConfig: Codable, Sendable {
     public let count: Int
     public let seedStart: Int
+    public let seeds: [Int]?
     public let seedStride: Int
     public let initSeedOffset: Int?
     public let steps: Int
@@ -30,6 +31,7 @@ public struct ParsedSearchConfig: Codable, Sendable {
     public enum CodingKeys: String, CodingKey {
         case count
         case seedStart = "seed_start"
+        case seeds
         case seedStride = "seed_stride"
         case initSeedOffset = "init_seed_offset"
         case steps
@@ -55,6 +57,7 @@ public struct ParsedSearchConfig: Codable, Sendable {
     public init(
         count: Int,
         seedStart: Int,
+        seeds: [Int]? = nil,
         seedStride: Int = 1,
         initSeedOffset: Int? = nil,
         steps: Int,
@@ -78,6 +81,7 @@ public struct ParsedSearchConfig: Codable, Sendable {
     ) {
         self.count = count
         self.seedStart = seedStart
+        self.seeds = seeds
         self.seedStride = seedStride
         self.initSeedOffset = initSeedOffset
         self.steps = steps
@@ -104,6 +108,7 @@ public struct ParsedSearchConfig: Codable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         count = try container.decode(Int.self, forKey: .count)
         seedStart = try container.decode(Int.self, forKey: .seedStart)
+        seeds = try container.decodeIfPresent([Int].self, forKey: .seeds)
         seedStride = try container.decode(Int.self, forKey: .seedStride)
         initSeedOffset = try container.decodeIfPresent(Int.self, forKey: .initSeedOffset)
         steps = try container.decode(Int.self, forKey: .steps)
@@ -130,6 +135,7 @@ public struct ParsedSearchConfig: Codable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(count, forKey: .count)
         try container.encode(seedStart, forKey: .seedStart)
+        try container.encodeIfPresent(seeds, forKey: .seeds)
         try container.encode(seedStride, forKey: .seedStride)
         try container.encodeIfPresent(initSeedOffset, forKey: .initSeedOffset)
         try container.encode(steps, forKey: .steps)

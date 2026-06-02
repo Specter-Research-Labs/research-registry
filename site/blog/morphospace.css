@@ -1,0 +1,30 @@
+.doc-content figure.morphospace-figure {
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+
+.doc-content figure.morphospace-figure img {
+    border: 0;
+}
+
+.doc-content figure.morphospace-figure figcaption {
+    border-top: 1px solid var(--doc-rule);
+    padding-top: 0.45em;
+}
+
+.doc-content figure.morphospace-figure.wide {
+    margin-left: 0;
+    max-width: 100%;
+    transform: none;
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .doc-content figure.morphospace-figure.wide {
+        margin-left: 0;
+        max-width: 100%;
+        transform: none;
+        width: 100%;
+    }
+}

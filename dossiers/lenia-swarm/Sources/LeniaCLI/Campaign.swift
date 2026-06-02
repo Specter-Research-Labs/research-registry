@@ -267,7 +267,8 @@ func executeLocalCampaignPhase(
     request: CampaignExecutionRequest,
     jobs: [LeniaCampaignJob],
     logger: Logger,
-    metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil
+    metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil,
+    postCompendiumIngest: ((LeniaCampaignJobExecution, String) throws -> Void)? = nil
 ) throws -> LeniaCampaignJobExecution {
     let execution = try executeLocalCampaignJobs(jobs, logger: logger, metricsTransform: metricsTransform)
     try writeCampaignBundle(
@@ -277,7 +278,12 @@ func executeLocalCampaignPhase(
         outputURL: request.outputURL,
         logger: logger
     )
-    try runCampaignCompendiumIndex(outputURL: request.outputURL)
+    try runCampaignCompendiumIndex(
+        outputURL: request.outputURL,
+        postCompendiumIngest: postCompendiumIngest.map { hook in
+            { compendiumPath in try hook(execution, compendiumPath) }
+        }
+    )
     return execution
 }
 
@@ -666,7 +672,8 @@ func runCampaignCompendiumIndex(
     outputURL: URL,
     compendiumPath: String? = nil,
     warehousePath: String? = nil,
-    warehouseTopology: Bool = false
+    warehouseTopology: Bool = false,
+    postCompendiumIngest: ((String) throws -> Void)? = nil
 ) throws {
     try applyPromotionIfEnabled(
         config: ArchivePromotionConfig(
@@ -675,7 +682,8 @@ func runCampaignCompendiumIndex(
             warehouseTopology: warehouseTopology
         ),
         runDir: outputURL.path,
-        includeResults: true
+        includeResults: true,
+        postCompendiumIngest: postCompendiumIngest
     )
 }
 
@@ -724,7 +732,7 @@ func mergeCompendiumDatabases(sources: [URL], into centralPath: String, logger: 
     let centralDir = URL(fileURLWithPath: centralPath).deletingLastPathComponent()
     try fileManager.createDirectory(at: centralDir, withIntermediateDirectories: true)
 
-    let tables = ["runs", "campaigns", "creatures", "exports", "results", "ecology_runs"]
+    let tables = ["runs", "campaigns", "creatures", "exports", "results", "ecology_runs", "perturbation_trials"]
 
     if !fileManager.fileExists(atPath: centralPath) {
         try fileManager.copyItem(atPath: existingSources[0].path, toPath: centralPath)

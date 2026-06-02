@@ -12,16 +12,22 @@
   ],
   "perturbations": [
     {
-      "id": "param-jitter",
-      "family": "param_noise",
-      "overrides": { "params.seed": 999 },
-      "payload": { "description": "re-seed params to perturb growth dynamics" }
+      "id": "init-jitter",
+      "family": "init_state",
+      "overrides": { "init.seed": 999 },
+      "payload": { "description": "re-seed initial mass placement noise" }
     },
     {
       "id": "low-dt",
       "family": "flow_regime",
       "overrides": { "flow.dt": 0.05 },
       "payload": { "description": "halve timestep to slow advection" }
+    },
+    {
+      "id": "params-jitter",
+      "family": "param_noise",
+      "overrides": { "params.seed": 999 },
+      "payload": { "description": "re-roll growth-function parameters" }
     }
   ]
 }

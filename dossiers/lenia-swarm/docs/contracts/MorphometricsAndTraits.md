@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Defines the morphology surface used by compendium indexing and downstream ecology/warehouse analysis.
+Defines the morphology data written by compendium indexing and used by
+downstream ecology/warehouse analysis.
 
 Scope:
 
@@ -42,7 +43,7 @@ If activity summaries are missing, all `activity*` morphometric fields are `null
 - When only two samples exist, `pathLength == displacement` is expected and does not imply a bug.
 - Tortuosity distributions are only meaningful when recordings include enough temporal samples.
 
-## Trait Policy (Planned)
+## Trait Labels
 
 Trait labels (for example mover, wanderer, swarm, complex) are not yet first-class stored outputs.
 
@@ -50,7 +51,7 @@ Current status:
 
 - the indexer stores raw morphometrics, not discrete trait labels.
 
-When trait labels become first-class, we will persist:
+If trait labels become first-class, persist:
 
 - trait method name,
 - trait version,
@@ -58,4 +59,6 @@ When trait labels become first-class, we will persist:
 
 ## Analysis Workflow
 
-The supported CLI surface is `LeniaCLI analyze ecology`, which exports parameter-space embeddings and summary artifacts from the canonical compendium.
+The supported command is `LeniaCLI analyze ecology`, which exports
+parameter-space embeddings and summary artifacts from the canonical
+compendium.

@@ -428,7 +428,7 @@ private func strictReplayMomentsConfig(existing: MomentsConfig?) -> MomentsConfi
 private func strictReplayStabilityConfig(existing: StabilityConfig?) -> StabilityConfig {
     StabilityConfig(
         enabled: true,
-        massMinFraction: existing?.massMinFraction ?? StabilityConfig.defaultConfig.massMinFraction,
+        massMinFraction: existing?.massMinFraction ?? 0.001,
         massMaxFraction: existing?.massMaxFraction ?? StabilityConfig.defaultConfig.massMaxFraction,
         requireSurvival: existing?.requireSurvival ?? StabilityConfig.defaultConfig.requireSurvival,
         windowSamples: existing?.windowSamples ?? StabilityConfig.defaultConfig.windowSamples,
@@ -442,9 +442,11 @@ private func strictReplayStabilityConfig(existing: StabilityConfig?) -> Stabilit
 public func buildStrictReplaySearchConfig(
     steps: Int,
     initSeedOffset: Int,
-    supportsActivity: Bool = true
+    supportsActivity: Bool = true,
+    morphologyThreshold: Float = 0.01
 ) -> ParsedSearchConfig {
     let clampedSteps = max(1, steps)
+    let threshold = max(morphologyThreshold, 0)
     return ParsedSearchConfig(
         count: 1,
         seedStart: 0,
@@ -453,7 +455,7 @@ public func buildStrictReplaySearchConfig(
         steps: clampedSteps,
         recordInterval: max(1, clampedSteps / 8),
         warmupSteps: 0,
-        occupancyThreshold: 0.01,
+        occupancyThreshold: threshold,
         massChannel: 0,
         scoreWeights: [:],
         filters: [:],
@@ -464,7 +466,7 @@ public func buildStrictReplaySearchConfig(
         complexity: nil,
         activity: supportsActivity ? strictReplayActivityConfig(steps: clampedSteps) : nil,
         stability: strictReplayStabilityConfig(existing: nil),
-        moments: strictReplayMomentsConfig(existing: nil),
+        moments: MomentsConfig(enabled: true, threshold: threshold),
         collection: CollectionConfig(
             enabled: false,
             requireStable: false,

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light" />
+        <title>Morphogenetic Signatures in Sorting Algorithms | SPECTER Labs</title>
+        <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
+        <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="../../style.css?v=20260518-sitecss" />
+    </head>
+    <body>
+        <div class="site-shell">
+            <header class="site-topnav">
+                <a class="site-brand" href="../../">
+                    <img src="../../assets/logo-black.svg" alt="SPECTER Labs logo" class="logo" />
+                    <span class="site-brand-name">SPECTER LABS</span>
+                </a>
+                <nav class="site-topnav-links" aria-label="Site navigation">
+                    <a class="nav-link" href="../../dossiers/" aria-current="page">Dossiers</a>
+                    <a class="nav-link" href="../../addenda/">Addenda</a>
+                    <a class="nav-link" href="../../blog/">Blog</a>
+                    <a class="nav-link" href="../../cabinet/">Cabinet</a>
+                </nav>
+            </header>
+            <div class="site-rules" aria-hidden="true">
+                <div class="site-rule strong"></div>
+                <div class="site-rule"></div>
+            </div>
+
+            <main class="site-main">
+                <!-- GENERATED:DOSSIER_HUB_HEADER START -->
+                <!-- GENERATED:DOSSIER_HUB_HEADER END -->
+
+                <section class="section-block" id="start-here">
+                    <div class="site-section-title">Start Here</div>
+                    <ol class="quickstart-list">
+                        <li>
+                            <a href="../../cabinet/zang-levin-playground/README/"
+                                >Read the cabinet docs map</a
+                            >
+                            for concepts, semantics, and the paper-facing
+                            reproduction path.
+                        </li>
+                        <li>
+                            The paper PDF and TeX source live under the
+                            repository at <code>paper/</code>, with all
+                            figures regenerable from committed result JSON.
+                        </li>
+                    </ol>
+                    <span class="path-note"
+                        >Repository path: dossiers/zang-levin-playground</span
+                    >
+                </section>
+
+                <section class="section-block" id="model">
+                    <div class="site-section-title">The Model</div>
+                    <p>
+                        Zhang et al. (2024) propose a minimal morphogenesis
+                        substrate. A 1D line, or 2D grid, of agents update
+                        from a local cell-view state using rules derived
+                        from classical sorting algorithms. Each cell is a
+                        thread that decides whether to swap using bounded
+                        local state and shared state protected by a lock.
+                        From those ingredients the system exhibits three
+                        behaviors: convergence to an ordered configuration
+                        in 1D, algotype clustering where cells running the
+                        same algorithm become spatially adjacent, and
+                        robustness in the presence of frozen cells.
+                    </p>
+                    <p>
+                        The wrinkle is in the operator class. Bubble,
+                        Insertion, Gnome, and Shaker use adjacent swaps.
+                        Published 1D Selection performs direct transpositions
+                        toward an explicit ideal index, and under blocked
+                        targets it reroutes. ``Cell-view'' describes the
+                        decision substrate, not the move operator. This
+                        distinction carries most of the load when the
+                        original claims are stress-tested.
+                    </p>
+                </section>
+
+                <section class="section-block" id="timing-clustering">
+                    <div class="site-section-title">Timing as the Clustering Mechanism</div>
+                    <p>
+                        Algotype clustering does not require attraction,
+                        type-aware communication, or explicit coordination.
+                        Temporal separation between algorithm classes is the
+                        dominant contributor. Selection cells finish early
+                        and fall quiescent. Insertion cells activate late
+                        because their sorted-prefix gate delays
+                        participation until the left portion of the array
+                        is already ordered. The mismatch produces
+                        temporally correlated swap bursts in which only one
+                        class is still rearranging, and cells active during
+                        the same burst end up adjacent.
+                    </p>
+                    <p>
+                        Two ablations support the timing-based reading.
+                        Removing Insertion's waiting gate
+                        (<code>InsertionNoWait</code>) sharply reduces
+                        clustering. Exporting the same waiting gate to
+                        Bubble and Gnome clones reproduces the predicted
+                        rise in temporal separation and clustering. The
+                        morphogenetic analogy survives, but the emphasis
+                        shifts from intelligence to heterochrony: timing
+                        shifts between developmental phases produce spatial
+                        pattern without any explicit patterning instruction.
+                    </p>
+                </section>
+
+                <section class="section-block" id="robustness">
+                    <div class="site-section-title">Robustness Under Hard Barriers</div>
+                    <p>
+                        Robustness depends on operator class and obstacle
+                        semantics. Movable frozen cells can be displaced;
+                        immovable frozen indices cannot participate in
+                        swaps at all. A 2x2 factorization of 1D Selection
+                        crosses action range (adjacent vs long-range)
+                        against blocked-target policy (stubborn vs
+                        rerouting). Under immovable barriers, neither
+                        long-range reach alone nor rerouting alone
+                        survives; only the combination does. Within the
+                        published long-range Selection operator class, the
+                        rerouting ablation is decisive on its own.
+                    </p>
+                    <p>
+                        Under matched immovable-index semantics, the
+                        distributed cell-view substrate does not out-perform
+                        a centralized baseline. Threaded and sequential
+                        cell-view schedules agree on which conditions
+                        succeed, with the main substrate effect appearing
+                        in compare-count work rather than in outcomes.
+                        Whatever competency the sorting cells display sits
+                        in the policy, the mapping from sensory state to
+                        action, and is independent of the distributed
+                        substrate. This sharpens, rather than dissolves,
+                        the basal-cognition analogy: the architectural
+                        constraint matters for physically embodied systems
+                        where a centralized loop is impossible, but it is
+                        not what produces the navigation behavior in
+                        silico.
+                    </p>
+                </section>
+
+                <section class="section-block" id="search-efficiency">
+                    <div class="site-section-title">Search Efficiency</div>
+                    <p>
+                        The K-computation framework of Chis-Ciure and Levin
+                        translates the operator-and-constraint story into
+                        a graded efficiency metric. We treat the analysis
+                        as matched and exact for an explicit reachable-state
+                        proposal null, and conservative relative to blind
+                        operator-walk search. Because the state-space null
+                        is recomputed under each frozen pattern, long-range
+                        Selection's K falls as the reachable space contracts,
+                        rather than rising artificially under harder
+                        conditions. The same framework separates two
+                        failure modes: stubborn long-range Selection
+                        retains a reachable problem space but loses all
+                        successful trajectories, while adjacent operators
+                        under immovable barriers lose reachability outright
+                        in the sampled instances.
+                    </p>
+                </section>
+
+                <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
+                <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
+            </main>
+        </div>
+    </body>
+</html>

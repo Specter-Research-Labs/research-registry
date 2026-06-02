@@ -17,6 +17,7 @@ dev = [
 ]
 
 [project.scripts]
+lenia-swarm-analysis = "lenia_swarm_analysis._cli:main"
 lenia-swarm-topology = "lenia_swarm_analysis.topology._cli:main"
 lenia-swarm-generators = "lenia_swarm_analysis.generators._cli:main"
 lenia-swarm-fiber = "lenia_swarm_analysis.fiber._cli:main"
@@ -31,6 +32,7 @@ lenia-swarm-arrangement-packet = "lenia_swarm_analysis.arrangement_packet:main"
 lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibration_packet:main"
 lenia-swarm-local-results-library = "lenia_swarm_analysis.local_results_library:main"
 lenia-swarm-loop-variant-report = "lenia_swarm_analysis.loop_variant_report:main"
+lenia-swarm-chakazul-presets = "lenia_swarm_analysis.chakazul_presets:main"
 
 [build-system]
 requires = ["hatchling>=1.27.0"]

@@ -7,8 +7,8 @@ The target is modest: reproduce the closed-loop peak-counting controller at the
 algorithmic level, then express the phase composition with a small Poly-style
 layer.
 
-Start by running the test suite. The interesting result is the single-cut
-wiring search near the end of this README.
+Start by running the test suite. The key result is the single-cut wiring
+search near the end of this README.
 
 ## Current Model
 

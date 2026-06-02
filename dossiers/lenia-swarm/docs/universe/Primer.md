@@ -30,7 +30,7 @@ The research loop is:
 3. index into a versioned compendium,
 4. analyze structure (taxonomy/ecology) offline.
 
-## Where to Go Next
+## Reading Order
 
 - For model mechanics: `Physics.md`.
 - For descriptive language: `Morphology.md` and `Glossary.md`.

@@ -17,7 +17,7 @@ Structural realism [Ladyman and Ross 2007](https://doi.org/10.1093/acprof:oso/97
 
 ## What Platonic Space Would Add
 
-Platonic space is the heavier version of the story. It says the relevant patterns live in a structured nonphysical space, that bodies point into that space somehow, and that the space may contain mathematical regularities as well as higher-agency patterns.
+Platonic space is the stronger claim. It says the relevant patterns live in a structured nonphysical space, that bodies point into that space somehow, and that the space contains mathematical regularities as well as higher-agency patterns.
 
 The stronger version only becomes worth talking about after recurrence, modeling, and comparison across representations. Otherwise it is just a beautiful name for a vibe.
 
@@ -25,7 +25,7 @@ The stronger version only becomes worth talking about after recurrence, modeling
 
 Similar-looking behavior is not enough; the shared structure has to survive transfer across embodiments. Intervention tests are harder to game. If the structure only appears under a convenient decoding, the decoding is probably doing the work.
 
-The same structure should show up through more than one measurement channel—one representation in one model is too easy to fool—and we need an operational account of what it means for a physical system to point into a pattern space. Right now "interface" is still a metaphor. [Spivak (2022)](https://topos.institute/people/david-spivak/Levin20220607.pdf) gives one candidate: polynomial functors as a formal language for state-dependent interfaces, and Levin's TAME framework [(2022)](https://arxiv.org/abs/2201.10346) frames behavioral structure as substrate-independent pattern persistence.
+The same structure has to appear through more than one measurement channel; one representation in one model is too easy to fool. We also need an operational account of what it means for a physical system to point into a pattern space. Right now "interface" is still a metaphor. [Spivak (2022)](https://topos.institute/people/david-spivak/Levin20220607.pdf) gives one candidate: polynomial functors as a formal language for state-dependent interfaces, and Levin's TAME framing [(2022)](https://arxiv.org/abs/2201.10346) treats behavioral structure as substrate-independent pattern persistence.
 
 Platonic space has to buy predictions that weaker views do not explain. If ordinary attractor stories or multiscale control theory account for the same result with less machinery, use the smaller story.
 

@@ -35,8 +35,8 @@ def _loop_vertices(loop_row: dict[str, Any]) -> tuple[list[str], list[list[float
         raise SystemExit("loopSpec is missing coordinates")
     if not isinstance(vertices, list) or any(not isinstance(row, list) for row in vertices):
         raise SystemExit("loopSpec is missing vertices")
-    if len(coordinates) != 2 or len(vertices) < 5:
-        raise SystemExit("validation batch expects 2D closed loops with five vertices")
+    if len(coordinates) != 2 or len(vertices) < 4:
+        raise SystemExit("validation batch expects 2D closed loops with four vertices")
     return (
         [str(value) for value in coordinates],
         [[float(item) for item in row] for row in vertices],
@@ -52,6 +52,25 @@ def _control_values(control_row: dict[str, Any]) -> tuple[str, list[float]]:
     if not isinstance(values, list) or any(not isinstance(v, (int, float)) for v in values):
         raise SystemExit("control row is missing values")
     return coordinate, [float(value) for value in values]
+
+
+def _control_loop_spec(
+    control_row: dict[str, Any],
+) -> tuple[list[str], list[list[float]], bool] | None:
+    loop_spec = control_row.get("loopSpec")
+    if not isinstance(loop_spec, dict):
+        return None
+    coordinates = loop_spec.get("coordinates")
+    vertices = loop_spec.get("vertices")
+    if not isinstance(coordinates, list) or any(not isinstance(v, str) for v in coordinates):
+        return None
+    if not isinstance(vertices, list) or any(not isinstance(row, list) for row in vertices):
+        return None
+    return (
+        [str(value) for value in coordinates],
+        [[float(item) for item in row] for row in vertices],
+        bool(loop_spec.get("closed", False)),
+    )
 
 
 def _winner_sources(packet: dict[str, Any]) -> dict[str, Path]:
@@ -157,8 +176,10 @@ def build_transport_validation_batch_spec(
         batch_rows = _batch_rows(batch_packet, control_group)
         loop_rows = _loop_rows(batch_rows)
         control_rows = _control_rows(batch_rows)
-        if len(loop_rows) < 2 or len(control_rows) < 2:
-            raise SystemExit(f"{control_group}: validation batch needs two loops and two controls")
+        if not loop_rows or not control_rows:
+            raise SystemExit(
+                f"{control_group}: validation batch needs one loop and one control"
+            )
 
         specimen = None
         bundle = None
@@ -166,10 +187,14 @@ def build_transport_validation_batch_spec(
             tags = row.get("tags")
             if isinstance(tags, dict) and isinstance(tags.get("specimen"), str):
                 specimen = str(tags["specimen"])
+            elif isinstance(tags, dict) and isinstance(tags.get("creatureId"), str):
+                specimen = str(tags["creatureId"])
             if isinstance(row.get("bundle"), str):
                 bundle = str(row["bundle"])
             if specimen and bundle:
                 break
+        if specimen is None:
+            specimen = control_group
         if specimen is None or bundle is None:
             raise SystemExit(f"{control_group}: missing specimen or bundle")
 
@@ -195,22 +220,34 @@ def build_transport_validation_batch_spec(
             )
 
         for row in control_rows:
-            coordinate, values = _control_values(row)
             kind = str(row["tags"]["kind"])
-            runs.append(
-                {
+            control_loop = _control_loop_spec(row)
+            control_run: dict[str, Any]
+            if control_loop is not None:
+                coordinates, vertices, closed = control_loop
+                control_run = {
+                    "name": f"{row['name']}-dense",
+                    "bundle": bundle,
+                    "coordinates": coordinates,
+                    "vertices": vertices,
+                    "closed": closed,
+                    "samplesPerSegment": samples_per_segment,
+                }
+            else:
+                coordinate, values = _control_values(row)
+                control_run = {
                     "name": f"{row['name']}-dense",
                     "bundle": bundle,
                     "coordinate": coordinate,
                     "values": values,
-                    "tags": {
-                        "specimen": specimen,
-                        "controlGroup": validation_group,
-                        "kind": f"{kind}-dense",
-                        "role": "control",
-                    },
                 }
-            )
+            control_run["tags"] = {
+                "specimen": specimen,
+                "controlGroup": validation_group,
+                "kind": f"{kind}-dense",
+                "role": "control",
+            }
+            runs.append(control_run)
 
         coordinates, vertices, _ = _loop_vertices(loop_rows[0])
         p0, p1, p2, p3 = vertices[:4]

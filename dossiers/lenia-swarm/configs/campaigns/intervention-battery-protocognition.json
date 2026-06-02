@@ -1,0 +1,31 @@
+{
+  "mode": "seeded-ecology",
+  "ecology_config_dir": "artifacts/ecology-configs/qd-arena18-food-256",
+  "variant_name": "food",
+  "warmup_steps": 0,
+  "observation_steps": 12000,
+  "record_every_steps": 50,
+  "repeats": 3,
+  "environments": [
+    { "id": "food-on" },
+    {
+      "id": "food-off",
+      "variant_overrides": {
+        "food_patch_count": 0,
+        "food_spawn.probability": 0.0
+      }
+    }
+  ],
+  "perturbations": [
+    {
+      "id": "param-jitter",
+      "family": "param_noise",
+      "overrides": { "params.seed": 999 }
+    },
+    {
+      "id": "low-dt",
+      "family": "flow_regime",
+      "overrides": { "flow.dt": 0.05 }
+    }
+  ]
+}

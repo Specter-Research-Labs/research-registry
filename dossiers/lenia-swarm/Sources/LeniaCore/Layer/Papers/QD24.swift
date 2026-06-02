@@ -574,6 +574,18 @@ public func loadLeniaBreeder2024ConfigBundle(
  }
  
  public struct LeniaBreeder2024PatternSpec: Codable, Sendable {
+     public struct ParsedRule: Codable, Sendable {
+         let kernelCore: String?
+
+         enum CodingKeys: String, CodingKey {
+             case kernelCore = "kernel_core"
+         }
+
+         public init(kernelCore: String? = nil) {
+             self.kernelCore = kernelCore
+         }
+     }
+
      public struct Kernel: Codable, Sendable {
          let b: [Float]
          let c0: Int
@@ -607,19 +619,31 @@ public func loadLeniaBreeder2024ConfigBundle(
      let cells: [[[Float]]]
      let kernels: [Kernel]
      let name: String
+     let parsedRule: ParsedRule?
+
+     enum CodingKeys: String, CodingKey {
+         case R
+         case T
+         case cells
+         case kernels
+         case name
+         case parsedRule = "parsed_rule"
+     }
  
      public init(
          R: Int,
          T: Int,
          cells: [[[Float]]],
          kernels: [Kernel],
-         name: String
+         name: String,
+         parsedRule: ParsedRule? = nil
      ) {
          self.R = R
          self.T = T
          self.cells = cells
          self.kernels = kernels
          self.name = name
+         self.parsedRule = parsedRule
      }
  }
  
@@ -1079,6 +1103,14 @@ public final class LeniaBreeder2024Runner {
          try encoder.encode(configs.base).write(to: outputDirectory.appendingPathComponent("base.json"))
         try encoder.encode(configs.mapElites).write(to: outputDirectory.appendingPathComponent("me.json"))
         try encoder.encode(configs.aurora).write(to: outputDirectory.appendingPathComponent("aurora.json"))
+        let patternsDirectory = outputDirectory.appendingPathComponent("patterns", isDirectory: true)
+        try FileManager.default.createDirectory(at: patternsDirectory, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(
+            at: configs.configDirectory
+                .appendingPathComponent("patterns", isDirectory: true)
+                .appendingPathComponent("\(configs.base.patternID).json"),
+            to: patternsDirectory.appendingPathComponent("\(configs.base.patternID).json")
+        )
         let metadata: [String: Any] = [
             "seed": seed,
             "arena_mode": leniaBreeder2024ArenaModeLabel(arenaMode),
@@ -1976,6 +2008,7 @@ public final class LeniaBreeder2024Runner {
      let (Y, X) = meshgrid(MLXArray(y), MLXArray(x))
      let D = MLX.sqrt(X * X + Y * Y)
  
+     let kernelCore = pattern.parsedRule?.kernelCore?.lowercased() ?? "bucketed"
      let kernels: [MLXArray] = pattern.kernels.map { kernel in
          let betaCount = kernel.b.count
          let scaled = D * MLXArray(Float(betaCount) / kernel.r)
@@ -1987,7 +2020,7 @@ public final class LeniaBreeder2024Runner {
          }
          let bucketArray = MLXArray(buckets).reshaped(scaled.shape)
          let fractional = scaled - MLX.floor(scaled)
-         let bell = MLX.exp(-(((fractional - MLXArray(0.5)) / MLXArray(0.15)) * ((fractional - MLXArray(0.5)) / MLXArray(0.15))) / MLXArray(2.0))
+         let bell = leniaBreeder2024KernelCore(fractional: fractional, core: kernelCore)
          return gate * bucketArray * bell
      }
      let kernelStack = MLX.stacked(kernels, axis: 2)
@@ -2003,6 +2036,48 @@ public final class LeniaBreeder2024Runner {
      var shifted = MLX.roll(array, shift: array.shape[0] / 2, axis: 0)
      shifted = MLX.roll(shifted, shift: array.shape[1] / 2, axis: 1)
      return shifted
+ }
+
+ private func leniaBreeder2024KernelCore(fractional: MLXArray, core: String) -> MLXArray {
+     switch core {
+     case "bump4", "qd24_bump4_v1":
+         let alpha = MLXArray(Float(4.0))
+         let denominator = MLXArray(Float(4.0)) * fractional * (MLXArray(1.0) - fractional)
+         let body = MLX.exp(alpha - alpha / denominator)
+         let valid = MLXArray(fractional.asArray(Float.self).map { value in
+             value > 0 && value < 1 ? Float(1) : Float(0)
+         })
+             .reshaped(fractional.shape)
+         return valid * body
+     case "quad4", "qd24_quad4_v1":
+         let body = MLX.pow(MLX.maximum(MLXArray(0.0), MLXArray(Float(4.0)) * fractional * (MLXArray(1.0) - fractional)), Float(4.0))
+         let valid = MLXArray(fractional.asArray(Float.self).map { value in
+             value > 0 && value < 1 ? Float(1) : Float(0)
+         })
+             .reshaped(fractional.shape)
+         return valid * body
+     case "stpz1/4", "qd24_step_v1":
+         return MLXArray(fractional.asArray(Float.self).map { value in
+             value >= 0.25 && value <= 0.75 ? Float(1) : Float(0)
+         })
+             .reshaped(fractional.shape)
+     case "life", "qd24_life_v1":
+         return MLXArray(fractional.asArray(Float.self).map { value in
+             if value >= 0 && value < 0.25 {
+                 return Float(0.5)
+             }
+             if value >= 0.25 && value <= 0.75 {
+                 return Float(1)
+             }
+             return Float(0)
+         })
+             .reshaped(fractional.shape)
+     case "bucketed", "gaussian", "gaus":
+         let bellInput = (fractional - MLXArray(0.5)) / MLXArray(0.15)
+         return MLX.exp(-(bellInput * bellInput) / MLXArray(2.0))
+     default:
+         fatalError("Unsupported leniabreeder-2024 kernel core: \(core)")
+     }
  }
  
  func leniaBreeder2024PerturbInitialGenotype(
@@ -3962,6 +4037,140 @@ public func captureLeniaBreeder2024ReplayFrames(
     frameBudget: Int,
     stepsOverride: Int? = nil
 ) throws -> [Data] {
+    let selected = try captureLeniaBreeder2024ReplayMassMaps(
+        run: run,
+        elite: elite,
+        algorithmOverride: algorithmOverride,
+        frameBudget: frameBudget,
+        stepsOverride: stepsOverride
+    )
+    return leniaBreeder2024ByteFrames(selected)
+}
+
+public func captureLeniaBreeder2024ReplayStatePatches(
+    run: LeniaBreeder2024ResolvedRun,
+    elite: LeniaBreeder2024EliteSummary,
+    algorithmOverride: String? = nil,
+    frameBudget: Int,
+    stepsOverride: Int? = nil
+) throws -> [InitStatePatchConfig] {
+    let selected = try captureLeniaBreeder2024ReplayMassMaps(
+        run: run,
+        elite: elite,
+        algorithmOverride: algorithmOverride,
+        frameBudget: frameBudget,
+        stepsOverride: stepsOverride
+    )
+    return selected.map { frame in
+        InitStatePatchConfig(
+            center: [run.base.worldSize / 2, run.base.worldSize / 2],
+            width: run.base.worldSize,
+            height: run.base.worldSize,
+            channels: 1,
+            values: frame
+        )
+    }
+}
+
+public func captureLeniaBreeder2024ReplayFramesAtSteps(
+    run: LeniaBreeder2024ResolvedRun,
+    elite: LeniaBreeder2024EliteSummary,
+    algorithmOverride: String? = nil,
+    steps: [Int],
+    stepsOverride: Int? = nil
+) throws -> [Data] {
+    let selected = try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+        run: run,
+        elite: elite,
+        algorithmOverride: algorithmOverride,
+        steps: steps,
+        stepsOverride: stepsOverride
+    )
+    return leniaBreeder2024ByteFrames(selected)
+}
+
+public func captureLeniaBreeder2024ReplayStatePatchesAtSteps(
+    run: LeniaBreeder2024ResolvedRun,
+    elite: LeniaBreeder2024EliteSummary,
+    algorithmOverride: String? = nil,
+    steps: [Int],
+    stepsOverride: Int? = nil
+) throws -> [InitStatePatchConfig] {
+    let selected = try captureLeniaBreeder2024ReplayMassMapsAtSteps(
+        run: run,
+        elite: elite,
+        algorithmOverride: algorithmOverride,
+        steps: steps,
+        stepsOverride: stepsOverride
+    )
+    return selected.map { frame in
+        InitStatePatchConfig(
+            center: [run.base.worldSize / 2, run.base.worldSize / 2],
+            width: run.base.worldSize,
+            height: run.base.worldSize,
+            channels: 1,
+            values: frame
+        )
+    }
+}
+
+public func captureLeniaBreeder2024ReplayMassMapsAtSteps(
+    run: LeniaBreeder2024ResolvedRun,
+    elite: LeniaBreeder2024EliteSummary,
+    algorithmOverride: String? = nil,
+    steps: [Int],
+    stepsOverride: Int? = nil
+) throws -> [[Float]] {
+    guard !steps.isEmpty else { return [] }
+    guard let maxRequestedStep = steps.max(), maxRequestedStep >= 0, steps.allSatisfy({ $0 >= 0 }) else {
+        throw ConfigError.invalidConfig("leniabreeder-2024 replay steps must be non-negative.")
+    }
+    if let stepsOverride, stepsOverride < 0 {
+        throw ConfigError.invalidConfig("leniabreeder-2024 steps_override must be non-negative.")
+    }
+
+    let algorithm = leniaBreeder2024ResolvedAlgorithm(run: run, override: algorithmOverride)
+    let assets = try leniaBreeder2024ResolvedAssets(run: run, algorithm: algorithm)
+    let horizon = stepsOverride ?? assets.steps
+    guard maxRequestedStep <= horizon else {
+        throw ConfigError.invalidConfig("leniabreeder-2024 requested replay step \(maxRequestedStep) exceeds horizon \(horizon).")
+    }
+
+    let requested = Set(steps)
+    var captured: [Int: [Float]] = [:]
+    var carry = try leniaBreeder2024ExpressPopulation(genotypes: [elite.genotype], assets: assets)
+    if requested.contains(0) {
+        captured[0] = try leniaBreeder2024WorldMassMap(carry.world)
+    }
+    if maxRequestedStep > 0 {
+        for stepIndex in 1...maxRequestedStep {
+            let stepped = leniaBreeder2024StepBatch(
+                carry: carry,
+                assets: assets,
+                recordPhenotype: false
+            )
+            carry = stepped.carry
+            if requested.contains(stepIndex) {
+                captured[stepIndex] = try leniaBreeder2024WorldMassMap(carry.world)
+            }
+        }
+    }
+
+    return try steps.map { step in
+        guard let frame = captured[step] else {
+            throw ConfigError.invalidConfig("leniabreeder-2024 failed to capture requested replay step \(step).")
+        }
+        return frame
+    }
+}
+
+public func captureLeniaBreeder2024ReplayMassMaps(
+    run: LeniaBreeder2024ResolvedRun,
+    elite: LeniaBreeder2024EliteSummary,
+    algorithmOverride: String? = nil,
+    frameBudget: Int,
+    stepsOverride: Int? = nil
+) throws -> [[Float]] {
      let algorithm = leniaBreeder2024ResolvedAlgorithm(run: run, override: algorithmOverride)
      let assets = try leniaBreeder2024ResolvedAssets(run: run, algorithm: algorithm)
      var carry = try leniaBreeder2024ExpressPopulation(genotypes: [elite.genotype], assets: assets)
@@ -3985,7 +4194,7 @@ public func captureLeniaBreeder2024ReplayFrames(
      }
  
     let selected = sampled.count > frameBudget ? downsampleReplayFloatFrames(sampled, target: max(frameBudget, 1)) : sampled
-    return leniaBreeder2024ByteFrames(selected)
+    return selected
 }
 
 public func captureLeniaBreeder2024SceneFrames(
@@ -4166,9 +4375,6 @@ public func leniaBreeder2024VisualizationRuntimeConfig(
  ) -> LeniaRuntimeConfig {
      let connectivity = leniaBreeder2024ConnectivityMatrix(pattern: run.pattern)
      let (c0, c1) = connFromMatrix(connectivity)
-     let kernelProfile = leniaBreeder2024ResolvedAlgorithm(run: run, override: algorithmOverride) == "aurora"
-         ? "flowlenia_2022_paper_equations"
-         : "flowlenia_2022_paper_equations"
      return LeniaRuntimeConfig(
          backend: .metalFull,
          sx: run.base.worldSize,
@@ -4189,7 +4395,7 @@ public func leniaBreeder2024VisualizationRuntimeConfig(
              border: "wall",
              gradientBoundary: "zero_pad",
              alphaMode: "per_channel",
-             kernelProfile: kernelProfile,
+             kernelProfile: "qd24_bucketed_v1",
              flowClip: "params_only"
          ),
          params: ResolvedParams(

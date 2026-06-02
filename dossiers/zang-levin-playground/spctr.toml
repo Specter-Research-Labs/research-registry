@@ -9,6 +9,7 @@ status = "active-writing"
 visible = true
 featured = true
 featured_order = 1
+hub_path = "site/dossiers/zang-levin-playground/index.html"
 
 [release]
 stage = "candidate"
