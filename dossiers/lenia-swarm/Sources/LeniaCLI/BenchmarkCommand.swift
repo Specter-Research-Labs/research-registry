@@ -44,6 +44,9 @@ struct BenchmarkCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Comma-separated kernel counts for --metal-sweep")
     var metalKernelCounts: String = "4,10"
 
+    @Option(name: .long, help: "Comma-separated parameter reintegration modes for --metal-sweep: true,false")
+    var metalReintegrateParams: String = "true"
+
     @Option(name: .long, help: "Warmup steps before timing each --metal-sweep case")
     var metalWarmupSteps: Int = 5
 
@@ -91,6 +94,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 gridSizes: parsePositiveIntegerList(metalGridSizes, option: "--metal-grid-sizes"),
                 channelCounts: parsePositiveIntegerList(metalChannelCounts, option: "--metal-channel-counts"),
                 kernelCounts: parsePositiveIntegerList(metalKernelCounts, option: "--metal-kernel-counts"),
+                reintegrateParamModes: parseBooleanList(metalReintegrateParams, option: "--metal-reintegrate-params"),
                 batchSize: batchSize,
                 steps: steps,
                 warmupSteps: metalWarmupSteps,
@@ -556,10 +560,31 @@ private func parsePositiveIntegerList(_ value: String, option: String) throws ->
     return parsed
 }
 
+private func parseBooleanList(_ value: String, option: String) throws -> [Bool] {
+    let parts = value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+    guard !parts.isEmpty else {
+        throw ValidationError("\(option) must contain at least one boolean")
+    }
+    var parsed: [Bool] = []
+    parsed.reserveCapacity(parts.count)
+    for part in parts {
+        switch part {
+        case "true", "yes", "on", "1":
+            parsed.append(true)
+        case "false", "no", "off", "0":
+            parsed.append(false)
+        default:
+            throw ValidationError("\(option) contains invalid value '\(part)'; expected true or false")
+        }
+    }
+    return parsed
+}
+
 private func runMetalSweepBenchmark(
     gridSizes: [Int],
     channelCounts: [Int],
     kernelCounts: [Int],
+    reintegrateParamModes: [Bool],
     batchSize: Int,
     steps: Int,
     warmupSteps: Int,
@@ -574,8 +599,9 @@ private func runMetalSweepBenchmark(
     print("Grids: \(gridSizes.map(String.init).joined(separator: ","))")
     print("Channels: \(channelCounts.map(String.init).joined(separator: ","))")
     print("Kernels: \(kernelCounts.map(String.init).joined(separator: ","))")
+    print("Reintegrate params: \(reintegrateParamModes.map { $0 ? "true" : "false" }.joined(separator: ","))")
     print("")
-    let baseColumns = "grid,channels,kernels,batch,steps,duration_s,steps_per_s,gcell_channel_steps_per_s,visible_working_set_mb"
+    let baseColumns = "grid,channels,kernels,reintegrate_params,batch,steps,duration_s,steps_per_s,gcell_channel_steps_per_s,visible_working_set_mb"
     if profileStages {
         print(baseColumns + ",fft_ms,growth_ms,flow_ms,reintegrate_ms,total_profile_ms")
     } else {
@@ -585,34 +611,38 @@ private func runMetalSweepBenchmark(
     for gridSize in gridSizes {
         for channels in channelCounts {
             for kernels in kernelCounts {
-                let result = benchmarkFlowLeniaMetalSweepCase(
-                    FlowLeniaMetalSweepCase(gridSize: gridSize, channels: channels, kernels: kernels),
-                    batchSize: batchSize,
-                    steps: steps,
-                    warmupSteps: warmupSteps,
-                    profileStages: profileStages
-                )
-                let baseLine =
-                    "\(result.gridSize)," +
-                        "\(result.channels)," +
-                        "\(result.kernels)," +
-                        "\(result.batchSize)," +
-                        "\(result.steps)," +
-                        "\(String(format: "%.6f", result.duration))," +
-                        "\(String(format: "%.2f", result.stepsPerSecond))," +
-                        "\(String(format: "%.3f", result.cellChannelStepsPerSecond / 1_000_000_000.0))," +
-                        "\(String(format: "%.1f", Double(result.visibleWorkingSetBytes) / 1_048_576.0))"
-                if let stageTimings = result.stageTimings {
-                    print(
-                        baseLine + "," +
-                            "\(String(format: "%.3f", stageTimings.fftMs))," +
-                            "\(String(format: "%.3f", stageTimings.growthReduceMs))," +
-                            "\(String(format: "%.3f", stageTimings.flowMs))," +
-                            "\(String(format: "%.3f", stageTimings.reintegrateMs))," +
-                            "\(String(format: "%.3f", stageTimings.totalMs))"
+                for reintegrateParams in reintegrateParamModes {
+                    let result = benchmarkFlowLeniaMetalSweepCase(
+                        FlowLeniaMetalSweepCase(gridSize: gridSize, channels: channels, kernels: kernels),
+                        batchSize: batchSize,
+                        steps: steps,
+                        warmupSteps: warmupSteps,
+                        reintegrateParams: reintegrateParams,
+                        profileStages: profileStages
                     )
-                } else {
-                    print(baseLine)
+                    let baseLine =
+                        "\(result.gridSize)," +
+                            "\(result.channels)," +
+                            "\(result.kernels)," +
+                            "\(result.reintegrateParams ? "true" : "false")," +
+                            "\(result.batchSize)," +
+                            "\(result.steps)," +
+                            "\(String(format: "%.6f", result.duration))," +
+                            "\(String(format: "%.2f", result.stepsPerSecond))," +
+                            "\(String(format: "%.3f", result.cellChannelStepsPerSecond / 1_000_000_000.0))," +
+                            "\(String(format: "%.1f", Double(result.visibleWorkingSetBytes) / 1_048_576.0))"
+                    if let stageTimings = result.stageTimings {
+                        print(
+                            baseLine + "," +
+                                "\(String(format: "%.3f", stageTimings.fftMs))," +
+                                "\(String(format: "%.3f", stageTimings.growthReduceMs))," +
+                                "\(String(format: "%.3f", stageTimings.flowMs))," +
+                                "\(String(format: "%.3f", stageTimings.reintegrateMs))," +
+                                "\(String(format: "%.3f", stageTimings.totalMs))"
+                        )
+                    } else {
+                        print(baseLine)
+                    }
                 }
             }
         }

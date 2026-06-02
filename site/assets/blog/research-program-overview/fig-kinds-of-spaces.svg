@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 470" width="860" height="470">
+<style>
+  text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
+  .title { font-size: 15px; font-weight: 700; }
+  .kind { font-size: 10px; fill: rgba(11,14,20,0.62); }
+  .ex { font-size: 9.5px; fill: rgba(11,14,20,0.5); font-style: italic; }
+  .arrow { font-size: 10px; fill: rgba(11,14,20,0.6); }
+  .leap { font-size: 11px; fill: #b4573d; font-weight: 700; }
+  .leapsub { font-size: 10px; fill: #b4573d; font-style: italic; }
+</style>
+<rect width="860" height="470" fill="#ffffff"/>
+
+<defs>
+  <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(11,14,20,0.55)"/>
+  </marker>
+  <marker id="ahr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ff6600"/>
+  </marker>
+</defs>
+
+<!-- boxes -->
+<g>
+  <rect x="25" y="60" width="210" height="118" rx="6" fill="#f5f6f8" stroke="rgba(11,14,20,0.18)"/>
+  <text class="title" x="130" y="86" text-anchor="middle">Configuration</text>
+  <text class="kind" x="130" y="106" text-anchor="middle">points = states a system</text>
+  <text class="kind" x="130" y="120" text-anchor="middle">can actually sit in</text>
+  <text class="ex" x="130" y="146" text-anchor="middle">morphospaces, Lenia</text>
+  <text class="ex" x="130" y="159" text-anchor="middle">params, gene expression</text>
+
+  <rect x="325" y="60" width="210" height="118" rx="6" fill="#f5f6f8" stroke="rgba(11,14,20,0.18)"/>
+  <text class="title" x="430" y="86" text-anchor="middle">Model</text>
+  <text class="kind" x="430" y="106" text-anchor="middle">points = formal objects in</text>
+  <text class="kind" x="430" y="120" text-anchor="middle">a chosen framework</text>
+  <text class="ex" x="430" y="146" text-anchor="middle">attractor landscapes,</text>
+  <text class="ex" x="430" y="159" text-anchor="middle">Fourier, phase space</text>
+
+  <rect x="625" y="60" width="210" height="118" rx="6" fill="#fff3ec" stroke="#ff6600" stroke-opacity="0.5"/>
+  <text class="title" x="730" y="86" text-anchor="middle">Ambient</text>
+  <text class="kind" x="730" y="106" text-anchor="middle">points = patterns</text>
+  <text class="kind" x="730" y="120" text-anchor="middle">independent of systems</text>
+  <text class="ex" x="730" y="146" text-anchor="middle">Platonic space, Fibonacci,</text>
+  <text class="ex" x="730" y="159" text-anchor="middle">Feigenbaum</text>
+</g>
+
+<!-- config -> model -->
+<line x1="235" y1="119" x2="325" y2="119" stroke="rgba(11,14,20,0.5)" stroke-width="1.4" marker-end="url(#ah)"/>
+<text class="arrow" x="280" y="111" text-anchor="middle">formalize</text>
+<text class="arrow" x="280" y="137" text-anchor="middle">fit / predict</text>
+
+<!-- model -> ambient -->
+<line x1="535" y1="119" x2="625" y2="119" stroke="rgba(11,14,20,0.5)" stroke-width="1.4" marker-end="url(#ah)"/>
+<text class="arrow" x="580" y="111" text-anchor="middle">reify</text>
+<text class="arrow" x="580" y="137" text-anchor="middle">derive</text>
+
+<!-- meta-space -->
+<rect x="345" y="250" width="170" height="64" rx="6" fill="#f5f6f8" stroke="rgba(11,14,20,0.14)" stroke-dasharray="4,3"/>
+<text class="title" x="430" y="276" text-anchor="middle" font-size="13">Meta-space</text>
+<text class="ex" x="430" y="298" text-anchor="middle">all valid models</text>
+<line x1="430" y1="250" x2="430" y2="178" stroke="rgba(11,14,20,0.4)" stroke-width="1.2" marker-end="url(#ah)"/>
+<text class="arrow" x="445" y="218" text-anchor="start">relativizes</text>
+
+<!-- model -> ambient: unreasonable effectiveness -->
+<path d="M 500 178 C 590 252, 625 252, 690 178" fill="none" stroke="#ff6600" stroke-width="1.6" stroke-dasharray="6,5" marker-end="url(#ahr)"/>
+<text class="leapsub" x="598" y="251" text-anchor="middle">"unreasonable effectiveness"</text>
+
+<!-- config -> ambient: the inferential leap -->
+<path d="M 110 178 C 200 442, 660 442, 760 178" fill="none" stroke="#ff6600" stroke-width="1.8" stroke-dasharray="6,5" marker-end="url(#ahr)"/>
+<text class="leap" x="435" y="422" text-anchor="middle">inferential leap ("conjecture territory")</text>
+</svg>

@@ -78,6 +78,7 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             commandQueue: commandQueue,
             wallPotential: wallPotential,
             parameterFieldMode: parameterFieldMode,
+            reintegrateParams: reintegrateParams,
             parameterMix: parameterMix,
             mixSeed: mixSeed
         )

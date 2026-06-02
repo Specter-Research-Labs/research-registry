@@ -117,7 +117,6 @@ fn render_dossier_links(record: &SiteRecord, page_path: &str) -> Markup {
     }
 }
 
-
 pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
     let slices = records::slice_records(records);
     let mut blocks: Vec<String> = Vec::new();
@@ -557,7 +556,10 @@ mod license_short_tests {
 
     #[test]
     fn returns_prefix_before_colon() {
-        assert_eq!(license_short("Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"), "Mixed");
+        assert_eq!(
+            license_short("Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"),
+            "Mixed"
+        );
     }
 
     #[test]

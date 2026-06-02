@@ -52,6 +52,41 @@ def test_postprocess_provider_run_coq_stdlib_writes_explicit_skip_report(tmp_pat
     assert any("not implemented" in note for note in notes if isinstance(note, str))
 
 
+def test_postprocess_provider_run_smtlib_missing_root_writes_explicit_skip_report(
+    tmp_path: Path,
+) -> None:
+    run_dir = tmp_path / "smtlib-run"
+    missing_root = tmp_path / "missing-smtlib"
+    _write_json_gz(run_dir / "summary.json.gz", {"theorems": [], "aggregates": {}})
+    _write_json(
+        run_dir / "run_config.json",
+        {
+            "mode": "external",
+            "corpus": "smtlib",
+            "corpus_meta": {"root": str(missing_root)},
+            "problem_selection": {
+                "selected_problems": ["bench/a", "bench/b"],
+            },
+        },
+    )
+
+    report = postprocess_provider_run(
+        ProviderRun(run_dir=run_dir, provider="z3"),
+        params=PostprocessParams(),
+    )
+
+    ext = report["external_statement_similarity"]
+    assert ext["valid"] is False
+    assert ext["problem_count_total"] == 2
+
+    artifact = json.loads((run_dir / "external_statement_similarity.json").read_text())
+    notes = artifact.get("validity_notes")
+    assert artifact["valid"] is False
+    assert artifact["root"] == str(missing_root)
+    assert isinstance(notes, list)
+    assert any("not available on this machine" in note for note in notes if isinstance(note, str))
+
+
 def test_postprocess_provider_run_external_unknown_corpus_raises(tmp_path: Path) -> None:
     run_dir = tmp_path / "unknown-external-run"
     _write_json_gz(run_dir / "summary.json.gz", {"theorems": [], "aggregates": {}})

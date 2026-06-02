@@ -161,9 +161,9 @@ fn assign_missing_series(
 
     for note in series::missing_research_note_series_records(repo_root, planned_registry)? {
         let series_id =
-            registry::allocate_series(planned_registry, "article", &note.slug, &note.title)?;
+            registry::allocate_series(planned_registry, "research-note", &note.slug, &note.title)?;
         report.series_assignments.push(SeriesAssignment {
-            kind: "article".to_owned(),
+            kind: "research-note".to_owned(),
             slug: note.slug,
             series_id,
             path: note.path.to_string(),

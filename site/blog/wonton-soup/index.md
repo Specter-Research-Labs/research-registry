@@ -3,6 +3,7 @@ title: "Wonton Soup: Proof Structures Under Interventions"
 release: "published"
 summary: Intervention studies in proof search, with structural comparison across runs.
 series: B-001
+pdf: wonton-soup.pdf
 ---
 
 # Wonton Soup: Proof Structures Under Interventions

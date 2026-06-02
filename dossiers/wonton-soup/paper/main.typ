@@ -20,7 +20,7 @@
   abstract: [
     We study a distributed Monte Carlo tree search theorem prover in which multiple
     local controllers coordinate over a shared frontier, and ask whether targeted
-    perturbations reveal bounded proto-cognitive signatures in proof search. Guided by
+    perturbations reveal intervention-defined proto-cognitive signatures in proof search. Guided by
     Levin's Technological Approach to Mind Everywhere (TAME), we treat mentalistic
     language as an operational research stance rather than a metaphysical claim: the
     question is whether it improves prediction, intervention, and structural
@@ -30,12 +30,13 @@
     baseline-solved theorem-runs, with a stricter null-stable subset to separate true
     lesion effects from provider stochasticity. We compare proof outcomes using
     proof-family labels, graph edit distance over goal- and tactic-labeled proof
-    graphs, trajectory divergence and recovery metrics, and explicit basin analysis
-    across repeated runs. The central claim is narrow: under perturbation, some
-    theorem-runs preserve goal reachability by rerouting through structurally distinct
-    proof families. Whether this resilience correlates with proof-basin width remains
-    open. This makes distributed theorem proving a useful assay for intervention-defined
-    proto-cognitive signatures in a non-biological search system.
+    graphs, trajectory divergence and recovery metrics, explicit basin analysis across
+    repeated runs, and cut-sensitivity tests over load-bearing proof resources. The
+    central claim is operational: under perturbation, some theorem-runs preserve goal
+    reachability by rerouting through structurally distinct proof families, while others
+    reveal compressed infrastructure whose removal disconnects the empirically
+    accessible basin. This makes distributed theorem proving a useful assay for
+    intervention-defined proto-cognitive signatures in a non-biological search system.
   ],
 )[
 
@@ -63,11 +64,11 @@ resemblance to humans, but flexible navigation in a problem space: the ability t
 reach a fixed goal by variable means under changing conditions
 @levin2022tame @levin2025cognition @levin2026mind2.
 
-Our claim is deliberately bounded. We do not argue that theorem provers are conscious,
-sentient, or biologically equivalent. We ask instead whether intervention-response
-signatures in this system support a limited proto-cognitive interpretation: that some
-distributed proof-search processes maintain or regain goal-directed competence under
-perturbation by shifting to alternative proof-graph pathways.
+The claim is operational, not metaphysical. We do not argue that theorem provers are
+conscious, sentient, or biologically equivalent. We ask whether intervention-response
+signatures in this system support a proto-cognitive interpretation in the TAME sense:
+some distributed proof-search processes maintain or regain goal-directed competence
+under perturbation by shifting to alternative proof-graph pathways.
 
 This paper makes three concrete contributions. First, it defines a lesion-based
 framework for theorem proving that distinguishes `replicate`, `reroute`, and
@@ -276,43 +277,101 @@ alternative paths through the proof space without additional search cost.
   ],
 )
 
+== Load-Bearing Proof Infrastructure
+
+Rerouting shows that a proof-search system can pursue the same theorem by variable
+means. Cut sensitivity exposes the complementary fact: some theorems are reachable
+only through compressed infrastructure that functions as a load-bearing channel in the
+empirical proof basin. Wonton therefore does more than label outcomes after damage. It
+can estimate which mathematical resources carry goal reachability.
+
+This turns the lesion protocol into a language-game-style interface with the prover's
+own dynamics. Zhang and Levin argue that a shared game can act as a lingua franca
+between otherwise incompatible cognitive architectures: meaning is grounded in use
+inside the task, not in the observer's preferred representation @zhang2026languagegame.
+Here, the theorem-proving environment plays the same role. A tactic block is not merely
+a syntactic deletion; it is a query posed to the search system in the language of its
+own problem space. If the system reroutes, the removed resource was substitutable. If
+it collapses across seeds and providers, the resource was carrying part of the proof
+basin.
+
+The cleanest current example is
+`hf_deepseek_prover_v1_train_11756`, an arithmetic theorem whose successful trajectory
+uses `linarith`. After disabling a fragile per-step proof-term request that caused Lean
+REPL crashes, ReProver solved the wild-type condition in 16 of 16 seeded runs. Blocking
+`linarith` solved 0 of those 16 runs. The same cut is supported by cross-provider
+evidence in the validation lake: DeepSeek and ReProver both show non-zero wild-type
+solve rates and zero `block_linarith` solve rate on the reconciled rows. This is not a
+generic statement that arithmetic tactics are useful. It is an observed cut: removing
+one resource disconnects the accessible basin under matched provider, budget, and seed
+controls.
+
+Lean trace capture sharpens the interpretation. For this fixed 16-seed panel, the lake
+records 128 `linarith` input facts, 96 preprocessed facts, and 32 certificates, in
+addition to tactic-dependency and rewrite-resource rows. The intervention therefore
+targets a real certificate-producing compression mechanism, not only the surface token
+`linarith`. More broadly, the lake now contains 226 `simp` used-rule rows, 167
+`linarith` fact rows, 123 preprocessed `linarith` fact rows, 37 `linarith` certificate
+rows, and typeclass-instance traces. Proof-term constant dependency DAGs are indexed as
+edges, not flat constant sets: the current lake contains 2,478,426 constant nodes and
+881,320 constant edges.
+
+#figure(
+  table(
+    columns: (1.35fr, 0.9fr, 1.2fr, 2.0fr),
+    table.header([Cut], [Provider], [Outcome], [Interpretation]),
+    [`hf...11756 / linarith`], [ReProver], [`16/16 → 0/16`], [Validated arithmetic chokepoint],
+    [`hf...11756 / linarith`], [DeepSeek], [`6/7 → 0/7`], [Cross-provider support],
+    [`list_append_nil / cases`], [ReProver], [`16/16 → 0/16`], [Provider-specific chokepoint],
+    [`list_append_nil / cases`], [heuristic], [`16/16 → 16/16`], [Substitutable route],
+  ),
+  caption: [
+    Cut-sensitivity examples. A validated cut is a resource whose removal drives solve
+    probability to zero on rows where the wild-type condition solves. Provider-specific
+    cuts reveal solver habits; provider-stable cuts are stronger evidence for
+    load-bearing proof infrastructure.
+  ],
+)
+
+The distinction between provider-specific and provider-stable cuts matters. Blocking
+`cases` on `list_append_nil` collapses ReProver but not the heuristic provider, so the
+cut primarily exposes a provider habit. Blocking `linarith` on
+`hf_deepseek_prover_v1_train_11756` survives this check: the accessible proof basin is
+organized around arithmetic compression itself. In this sense, Wonton measures an
+anatomy of proof dependence. Replicates identify redundant channels, reroutes identify
+alternative routes of competence, and validated cuts identify resources without which
+the observed proof process cannot maintain goal-directed behavior.
+
 == Basin Width And Lesion Resilience
 
-The basin dataset contains 2,472 runs across 1,941 theorems, with unique-structure
-counts ranging from 0 to 9. Joining this to the intervention data yields 78 theorems
-with both basin and lesion outcomes. Preliminary stratification by basin width does not
-show a clear positive correlation: theorems with unique-structure counts in the 0--1
-range show 51.7% recovery (52 theorems), while those with counts above 3 show 27.7%
-recovery (11 theorems). The remaining buckets fall between 13% and 20%.
+The current lake contains 3,097 basin rows across 2,008 theorem names, with
+unique-structure counts ranging from 0 to 21. The strict all-lake join used for this
+section matches 62 theorem-provider rows with both null-stable lesion outcomes and
+basin measurements. This is no longer an untested hypothesis: the current compendium
+has enough variance to reject the simplest version of the story.
 
-// TODO(basin-width): The multibasin hypothesis is UNTESTED. Current slice has no
-// variance (unique_structures clusters at 0-1). Experiment plan ready:
-//
-// Curated theorems: experiments/basin_width_curated_v1.json (306 theorems)
-//   - 27 theorems with basin_width >= 2 in existing data
-//   - Theorems with 80%+ reroute rate (known multi-proof)
-//   - Theorems solved by 2+ providers
-//   - Domains: AEMeasurable (avg 4.32), Action (4.29), AbsoluteValue (3.43)
-//
-// Run script: scripts/basin_width_experiment_v1.sh
-//   Phase 1: Build corpus from curated theorems
-//   Phase 2: 20-seed basin sweeps (measure unique_structures variance)
-//   Phase 3: Lesion interventions on same theorems
-//   Phase 4: Fit correlation basin_width vs recovery_rate
-//
-// Expected runtime: ~6 hours on quietbox (306 theorems x 20 seeds + interventions)
+The simple prediction was that wider basins should yield higher lesion resilience. The
+observed relationship points the other way. In the strict join, unique-structure counts
+range from 0 to 9, with 20 rows at or above two structures. The correlation between
+unique-structure count and lesion recovery is -0.18. Quartile stratification tells the
+same story: the highest-width quartile (unique-structure counts 3--9) recovers at 25.8%,
+lower than the first two quartiles (37.5% and 36.5%) and below the third quartile
+(47.2%).
 
-#block(fill: rgb("#fff3cd"), inset: 1em, radius: 4pt)[
-  *DRAFT GAP: Basin-width hypothesis untested.* Current data clusters at
-  unique-structure counts 0--1. Need targeted runs on theorems with known multi-proof
-  structure before this section can make a claim.
-]
+This does not mean basin structure is irrelevant. It means that `unique_structures` is
+too crude to stand in for usable resilience. A wide basin can be wide because it
+contains many fragile local variants, because the provider wanders through
+near-duplicate proof families, or because the theorem admits several real routes that
+nevertheless share the same load-bearing resource. The cut-sensitivity results above
+explain why: what matters is not only the number of accessible proof families, but
+whether those families cross independent resource channels.
 
 #figure(
   image("artifacts/fig18-followup-basins.svg", width: 100%),
   caption: [
-    Basin width vs. lesion recovery across 78 theorems. Data clusters at low
-    unique-structure counts; hypothesis untested.
+    Basin width vs. lesion recovery in the current lake. The strict all-lake join has
+    enough variance to test the simple positive-width hypothesis, and does not support
+    it: higher unique-structure counts do not imply higher lesion recovery.
   ],
 )
 
@@ -353,18 +412,19 @@ This pattern meets the threshold for a TAME-style proto-cognitive signature: fle
 goal pursuit under changing conditions @levin2022tame @levin2026mind2. The relevant
 criterion is not resemblance to biological cognition but the ability to reach a fixed
 goal by variable means. Distributed theorem proving exhibits this structure. The
-proto-cognitive label names a bounded intervention-response pattern that improves
+proto-cognitive label names an operational intervention-response pattern that improves
 structural explanation.
 
-The limits are equally clear. The basin-width hypothesis is untested (see Section 5.3).
-Scheduler perturbations confirm the distributed layer as a genuine intervention
-surface, though the dose-response effect is modest. Cross-assistant (Lean--Rocq)
-results are incomplete.
+The limits are equally clear. The simple basin-width hypothesis is not supported by
+the current compendium: more observed proof-family structures do not by themselves
+predict lesion resilience. Scheduler perturbations confirm the distributed layer as a
+genuine intervention surface, though the dose-response effect is modest.
+Cross-assistant (Lean--Rocq) results are incomplete.
 
 What would weaken the claim? If broader corpora show that reroutes disappear under
 tighter controls, if structural drift collapses to noise, or if scheduler damage
 produces no theorem-level effects, then the proto-cognitive reading should be revised
-downward. The paper stakes a narrow claim on intervention-defined flexibility; that
+downward. The paper stakes an operational claim on intervention-defined flexibility; that
 claim holds on the current data but remains falsifiable.
 
 = Reproducibility

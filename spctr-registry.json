@@ -3,7 +3,8 @@
   "counters": {
     "A": 15,
     "B": 13,
-    "D": 6
+    "D": 6,
+    "N": 5
   },
   "series": {
     "A-001": {
@@ -129,6 +130,22 @@
     "D-005": {
       "slug": "fly-competency-atlas",
       "title": "Fly Competency Atlas"
+    },
+    "N-001": {
+      "slug": "material-memory-without-a-controller",
+      "title": "Material Memory Without a Controller"
+    },
+    "N-002": {
+      "slug": "wonton-soup-follow-up",
+      "title": "Wonton Soup Follow-Up"
+    },
+    "N-003": {
+      "slug": "where-tissues-break",
+      "title": "Critical Fragment Size and Morphogenetic Vulnerability"
+    },
+    "N-004": {
+      "slug": "from-structural-realism-to-platonic-space",
+      "title": "Structural Realism Is The Guardrail"
     }
   },
   "docs": {

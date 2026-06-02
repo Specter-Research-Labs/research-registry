@@ -1546,15 +1546,11 @@ fn collect_release_evidence_paths(dir: &Utf8Path, out: &mut Vec<Utf8PathBuf>) ->
 fn should_skip_release_evidence_dir(path: &Utf8Path) -> bool {
     matches!(
         path.file_name(),
-        Some(".git")
-            | Some(".jj")
-            | Some(".direnv")
-            | Some(".venv")
-            | Some("node_modules")
-            | Some("target")
-            | Some(".pytest_cache")
-            | Some(".ruff_cache")
-            | Some("__pycache__")
+        Some(
+            ".git" | ".jj" | ".build" | ".swiftpm" | ".direnv" | ".venv" | "node_modules"
+            | "target" | "DerivedData" | "compendium" | "exports" | "flow-universe-runs"
+            | "logs" | "outputs" | "tmp" | ".pytest_cache" | ".ruff_cache" | "__pycache__",
+        )
     )
 }
 

@@ -2076,9 +2076,21 @@ def test_morphospace_cli_compares_feature_cohorts(
             context_kind="baseline",
             label="baseline",
         )
-        for specimen_id, run_id, canonical_family, values in [
-            ("fixture-left", "run-left-nofood", "left-family", {"x": 0.0, "y": 0.0}),
-            ("fixture-right", "run-right-food", "right-family", {"x": 3.0, "y": 4.0}),
+        for specimen_id, run_id, source_algorithm, canonical_family, values in [
+            (
+                "fixture-left",
+                "run-left-nofood",
+                "manual-left",
+                "left-family",
+                {"x": 0.0, "y": 0.0},
+            ),
+            (
+                "fixture-right",
+                "run-right-food",
+                "manual-right",
+                "right-family",
+                {"x": 3.0, "y": 4.0},
+            ),
         ]:
             upsert_specimen(
                 connection,
@@ -2088,7 +2100,7 @@ def test_morphospace_cli_compares_feature_cohorts(
                     "run_id": run_id,
                     "source_kind": "fixture",
                     "source_mode": "cohort-test",
-                    "source_algorithm": "manual",
+                    "source_algorithm": source_algorithm,
                     "canonical_family": canonical_family,
                     "provenance_json": {},
                 },
@@ -2130,7 +2142,7 @@ def test_morphospace_cli_compares_feature_cohorts(
             "--left-source-mode",
             "cohort-test",
             "--left-source-algorithm",
-            "manual",
+            "manual-left",
             "--left-canonical-family",
             "left-family",
             "--right-label",
@@ -2140,7 +2152,7 @@ def test_morphospace_cli_compares_feature_cohorts(
             "--right-source-mode",
             "cohort-test",
             "--right-source-algorithm",
-            "manual",
+            "manual-right",
             "--right-canonical-family",
             "right-family",
             "--json",
@@ -2151,6 +2163,7 @@ def test_morphospace_cli_compares_feature_cohorts(
     assert payload["summary"]["left"]["observationCount"] == 1
     assert payload["summary"]["right"]["observationCount"] == 1
     assert payload["summary"]["left"]["filters"]["runIdContains"] == "run-left"
+    assert payload["summary"]["left"]["filters"]["sourceAlgorithm"] == "manual-left"
     assert payload["summary"]["right"]["filters"]["canonicalFamily"] == "right-family"
     assert payload["summary"]["crossDistance"]["count"] == 1
     assert payload["summary"]["crossDistance"]["mean"] == 5.0
@@ -2189,8 +2202,8 @@ def test_feature_tda_profile_bounds_thresholded_large_cohorts(
             "threshold_max_observations": 4,
             "threshold_sample_points": 5,
             "landmark_counts": (3,),
-            "subsample_sizes": (),
-            "subsample_replicates": 0,
+            "subsample_sizes": (4,),
+            "subsample_replicates": 2,
             "threshold_quantiles": (0.50,),
             "pairwise_sample_points": 5,
             "min_stratum_size": 99,
@@ -2311,6 +2324,24 @@ def test_feature_tda_profile_bounds_thresholded_large_cohorts(
     assert threshold_case["sample"]["samplePointCount"] == 5
     assert calls[0]["shape"] == (5, 2)
     assert calls[0]["kwargs"]["thresh"] == threshold_case["threshold"]
+    assert threshold_case["caseKind"] == "thresholded_vietoris_rips"
+    assert payload["landmarks"][0]["caseKind"] == "deterministic_greedy_landmark"
+    assert payload["subsamples"][0]["tda"]["caseKind"] == "fixed_random_subsample"
+    assert payload["subsampleSummary"]["4"]["replicateCount"] == 2
+    assert payload["subsampleSummary"]["4"]["h1CountGe010"]["count"] == 2
+    claim_status = {row["id"]: row["status"] for row in payload["claimLevels"]}
+    assert claim_status["deterministic_landmark_replay"] == "measured"
+    assert claim_status["stochastic_subsample_robustness"] == "measured"
+    assert claim_status["paper_level_topological_stability"] == (
+        "not_established_by_single_packet"
+    )
+
+
+def test_feature_tda_full_profile_declares_strict_subsample_ladder() -> None:
+    full = feature_tda_profile_module.PROFILE_PRESETS["full"]
+
+    assert full["subsample_sizes"] == (1024, 2048, 4096, 8192, 16384)
+    assert full["subsample_replicates"] >= 5
 
 
 def test_common_morphology_point_cloud_features_distinguish_shapes() -> None:

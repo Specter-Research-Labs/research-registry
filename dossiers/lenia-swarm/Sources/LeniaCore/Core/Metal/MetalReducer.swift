@@ -73,6 +73,7 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
                 alphaMode: config.implementation.alphaMode,
                 flowClip: config.implementation.flowClip,
                 parameterFieldMode: .kernelGain,
+                reintegrateParams: true,
                 parameterMixMode: .average
             )
         )

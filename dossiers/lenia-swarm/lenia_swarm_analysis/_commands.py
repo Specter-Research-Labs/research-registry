@@ -74,6 +74,11 @@ ANALYSIS_GROUPS = (
                 "continuation_batch",
                 "Run batch of stateful continuations",
             ),
+            Subcommand(
+                "survival-assay",
+                "survival_assay",
+                "Build, summarize, and compare fiber survival assay specs",
+            ),
         ),
     ),
     CommandGroup(

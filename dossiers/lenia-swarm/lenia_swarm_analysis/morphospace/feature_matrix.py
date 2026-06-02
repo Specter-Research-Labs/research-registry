@@ -360,6 +360,9 @@ def _filter_sql(
     if observation_kind is not None:
         clauses.append("comparison_observations_vw.observation_kind = ?")
         params.append(observation_kind)
+    if source_algorithm is not None:
+        clauses.append("comparison_observations_vw.source_algorithm = ?")
+        params.append(source_algorithm)
     if not clauses:
         return "", []
     return " AND " + " AND ".join(clauses), params
