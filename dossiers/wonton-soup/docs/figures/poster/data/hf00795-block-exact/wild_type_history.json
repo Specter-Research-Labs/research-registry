@@ -1,0 +1,328 @@
+{
+  "theorem": "theorem hf_deepseek_prover_v1_train_00795_w937 :\n    let A := 4444;\n    let B := (Nat.digits 10 A).sum;\n    let C := (Nat.digits 10 B).sum;\n    C = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0 := by\n  sorry",
+  "blocked_tactics": [],
+  "iteration_count": 6,
+  "start_time_ms": 1775492062470,
+  "detour_metrics": {
+    "total_iterations": 6,
+    "total_attempts": 12,
+    "success_count": 6,
+    "failure_count": 2,
+    "blocked_count": 4,
+    "failure_ratio": 0.167,
+    "max_depth": 6,
+    "depth_at_solution": 6,
+    "terminal_iteration": 5
+  },
+  "solution_path": [
+    {
+      "goal": "let A := 4444;\nlet B := (Nat.digits 10 A).sum;\nlet C := (Nat.digits 10 B).sum;\nC = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0",
+      "tactic": "intro H",
+      "mvar_id": "cp1:_uniq.114380"
+    },
+    {
+      "goal": "let B := (Nat.digits 10 H).sum;\nlet C := (Nat.digits 10 B).sum;\nC = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0",
+      "tactic": "intro H'",
+      "mvar_id": "cp2:_uniq.114397.2"
+    },
+    {
+      "goal": "let C := (Nat.digits 10 H').sum;\nC = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+      "tactic": "intro H''",
+      "mvar_id": "cp3:_uniq.114397.5"
+    },
+    {
+      "goal": "H'' = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+      "tactic": "intro H'''",
+      "mvar_id": "cp4:_uniq.114397.8"
+    },
+    {
+      "goal": "H' % 9 = 0 \u2192 H' % 9 = 0",
+      "tactic": "intro H''",
+      "mvar_id": "cp5:_uniq.114397.11"
+    },
+    {
+      "goal": "H' % 9 = 0",
+      "tactic": "exact H''",
+      "mvar_id": "cp6:_uniq.114397.14"
+    }
+  ],
+  "iterations": [
+    {
+      "iteration": 0,
+      "selected_path": [
+        "cp1:_uniq.114380"
+      ],
+      "attempts": [
+        {
+          "iteration": 0,
+          "node_mvar_id": "cp1:_uniq.114380",
+          "tactic": "intro H",
+          "outcome": "success",
+          "child_mvar_ids": [
+            "cp2:_uniq.114397.2"
+          ],
+          "timestamp_ms": 8370,
+          "tactic_norm": "intro H",
+          "goal_sig": "4071d81a9ba1",
+          "goal_sig_strict": "4071d81a9ba1",
+          "goal_type": "let A := 4444;\nlet B := (Nat.digits 10 A).sum;\nlet C := (Nat.digits 10 B).sum;\nC = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        }
+      ],
+      "backprop_success": true,
+      "terminal_reached": false
+    },
+    {
+      "iteration": 1,
+      "selected_path": [
+        "cp1:_uniq.114380",
+        "cp2:_uniq.114397.2"
+      ],
+      "attempts": [
+        {
+          "iteration": 1,
+          "node_mvar_id": "cp2:_uniq.114397.2",
+          "tactic": "intro H'",
+          "outcome": "success",
+          "child_mvar_ids": [
+            "cp3:_uniq.114397.5"
+          ],
+          "timestamp_ms": 9631,
+          "tactic_norm": "intro H'",
+          "goal_sig": "c4ffd42a3592",
+          "goal_sig_strict": "7fd87794899c",
+          "goal_type": "let B := (Nat.digits 10 H).sum;\nlet C := (Nat.digits 10 B).sum;\nC = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        }
+      ],
+      "backprop_success": true,
+      "terminal_reached": false
+    },
+    {
+      "iteration": 2,
+      "selected_path": [
+        "cp1:_uniq.114380",
+        "cp2:_uniq.114397.2",
+        "cp3:_uniq.114397.5"
+      ],
+      "attempts": [
+        {
+          "iteration": 2,
+          "node_mvar_id": "cp3:_uniq.114397.5",
+          "tactic": "simp only [Nat.digits_one]",
+          "outcome": "blocked",
+          "child_mvar_ids": [],
+          "timestamp_ms": 11479,
+          "tactic_norm": "simp only [Nat.digits_one]",
+          "goal_sig": "360d922bdfe7",
+          "goal_sig_strict": "9709203093e5",
+          "goal_type": "let C := (Nat.digits 10 H').sum;\nC = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": "block_tactic",
+          "peg_kind": "tactic",
+          "block_reason": "explicit",
+          "provider_id": null
+        },
+        {
+          "iteration": 2,
+          "node_mvar_id": "cp3:_uniq.114397.5",
+          "tactic": "simp only [Nat.digits_one, Nat.sum_empty, sum_single, Nat.digits_zero] at H'",
+          "outcome": "blocked",
+          "child_mvar_ids": [],
+          "timestamp_ms": 11479,
+          "tactic_norm": "simp only [Nat.digits_one, Nat.sum_empty, sum_single, Nat.digits_zero] at H'",
+          "goal_sig": "360d922bdfe7",
+          "goal_sig_strict": "9709203093e5",
+          "goal_type": "let C := (Nat.digits 10 H').sum;\nC = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": "block_tactic",
+          "peg_kind": "tactic",
+          "block_reason": "explicit",
+          "provider_id": null
+        },
+        {
+          "iteration": 2,
+          "node_mvar_id": "cp3:_uniq.114397.5",
+          "tactic": "exact fun _ _ => H'",
+          "outcome": "failure",
+          "child_mvar_ids": [],
+          "timestamp_ms": 12789,
+          "tactic_norm": "exact fun _ _ => H'",
+          "goal_sig": "360d922bdfe7",
+          "goal_sig_strict": "9709203093e5",
+          "goal_type": "let C := (Nat.digits 10 H').sum;\nC = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        },
+        {
+          "iteration": 2,
+          "node_mvar_id": "cp3:_uniq.114397.5",
+          "tactic": "intro H''",
+          "outcome": "success",
+          "child_mvar_ids": [
+            "cp4:_uniq.114397.8"
+          ],
+          "timestamp_ms": 12874,
+          "tactic_norm": "intro H''",
+          "goal_sig": "360d922bdfe7",
+          "goal_sig_strict": "9709203093e5",
+          "goal_type": "let C := (Nat.digits 10 H').sum;\nC = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        }
+      ],
+      "backprop_success": true,
+      "terminal_reached": false
+    },
+    {
+      "iteration": 3,
+      "selected_path": [
+        "cp1:_uniq.114380",
+        "cp2:_uniq.114397.2",
+        "cp3:_uniq.114397.5",
+        "cp4:_uniq.114397.8"
+      ],
+      "attempts": [
+        {
+          "iteration": 3,
+          "node_mvar_id": "cp4:_uniq.114397.8",
+          "tactic": "intro H'''",
+          "outcome": "success",
+          "child_mvar_ids": [
+            "cp5:_uniq.114397.11"
+          ],
+          "timestamp_ms": 15480,
+          "tactic_norm": "intro H'''",
+          "goal_sig": "6455853015e9",
+          "goal_sig_strict": "2836cc865766",
+          "goal_type": "H'' = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        }
+      ],
+      "backprop_success": true,
+      "terminal_reached": false
+    },
+    {
+      "iteration": 4,
+      "selected_path": [
+        "cp1:_uniq.114380",
+        "cp2:_uniq.114397.2",
+        "cp3:_uniq.114397.5",
+        "cp4:_uniq.114397.8",
+        "cp5:_uniq.114397.11"
+      ],
+      "attempts": [
+        {
+          "iteration": 4,
+          "node_mvar_id": "cp5:_uniq.114397.11",
+          "tactic": "simp only [H''', add_zero, mod_eq_of_lt, Nat.mod_eq_of_lt, mod_mod_of_dvd] at H'",
+          "outcome": "blocked",
+          "child_mvar_ids": [],
+          "timestamp_ms": 17368,
+          "tactic_norm": "simp only [H''', add_zero, mod_eq_of_lt, Nat.mod_eq_of_lt, mod_mod_of_dvd] at H'",
+          "goal_sig": "c810056f86e1",
+          "goal_sig_strict": "66803feef10f",
+          "goal_type": "H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": "block_tactic",
+          "peg_kind": "tactic",
+          "block_reason": "explicit",
+          "provider_id": null
+        },
+        {
+          "iteration": 4,
+          "node_mvar_id": "cp5:_uniq.114397.11",
+          "tactic": "exact mod_eq_zero_of_dvd _ (dvd_mul_right _ (2 ^ 8))",
+          "outcome": "failure",
+          "child_mvar_ids": [],
+          "timestamp_ms": 20736,
+          "tactic_norm": "exact mod_eq_zero_of_dvd _ (dvd_mul_right _ (2 ^ 8))",
+          "goal_sig": "c810056f86e1",
+          "goal_sig_strict": "66803feef10f",
+          "goal_type": "H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        },
+        {
+          "iteration": 4,
+          "node_mvar_id": "cp5:_uniq.114397.11",
+          "tactic": "intro H''",
+          "outcome": "success",
+          "child_mvar_ids": [
+            "cp6:_uniq.114397.14"
+          ],
+          "timestamp_ms": 20827,
+          "tactic_norm": "intro H''",
+          "goal_sig": "c810056f86e1",
+          "goal_sig_strict": "66803feef10f",
+          "goal_type": "H' % 9 = 0 \u2192 H' % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        }
+      ],
+      "backprop_success": true,
+      "terminal_reached": false
+    },
+    {
+      "iteration": 5,
+      "selected_path": [
+        "cp1:_uniq.114380",
+        "cp2:_uniq.114397.2",
+        "cp3:_uniq.114397.5",
+        "cp4:_uniq.114397.8",
+        "cp5:_uniq.114397.11",
+        "cp6:_uniq.114397.14"
+      ],
+      "attempts": [
+        {
+          "iteration": 5,
+          "node_mvar_id": "cp6:_uniq.114397.14",
+          "tactic": "simp only [H''] at H'''",
+          "outcome": "blocked",
+          "child_mvar_ids": [],
+          "timestamp_ms": 22951,
+          "tactic_norm": "simp only [H''] at H'''",
+          "goal_sig": "81d685bae119",
+          "goal_sig_strict": "2f55e5717068",
+          "goal_type": "H' % 9 = 0",
+          "peg_id": "block_tactic",
+          "peg_kind": "tactic",
+          "block_reason": "explicit",
+          "provider_id": null
+        },
+        {
+          "iteration": 5,
+          "node_mvar_id": "cp6:_uniq.114397.14",
+          "tactic": "exact H''",
+          "outcome": "success",
+          "child_mvar_ids": [],
+          "timestamp_ms": 23042,
+          "tactic_norm": "exact H''",
+          "goal_sig": "81d685bae119",
+          "goal_sig_strict": "2f55e5717068",
+          "goal_type": "H' % 9 = 0",
+          "peg_id": null,
+          "peg_kind": null,
+          "block_reason": null,
+          "provider_id": null
+        }
+      ],
+      "backprop_success": true,
+      "terminal_reached": true
+    }
+  ]
+}

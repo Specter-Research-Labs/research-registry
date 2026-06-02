@@ -1,0 +1,119 @@
+{
+  "root_mvar_id": "cp1:_uniq.114380",
+  "expansion_count": 6,
+  "aborted": false,
+  "nodes": {
+    "cp1:_uniq.114380": {
+      "mvar_id": "cp1:_uniq.114380",
+      "goal_type": "let A := 4444;\nlet B := (Nat.digits 10 A).sum;\nlet C := (Nat.digits 10 B).sum;\nC = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0",
+      "goal_sig": "4071d81a9ba1",
+      "goal_sig_strict": "4071d81a9ba1",
+      "parent_mvar_id": null,
+      "visit_count": 6,
+      "success_count": 6,
+      "is_terminal": false,
+      "is_dead": false,
+      "dead_reason": null,
+      "depth": 0,
+      "expansion_order": 0,
+      "children": {
+        "intro H": [
+          "cp2:_uniq.114397.2"
+        ]
+      }
+    },
+    "cp2:_uniq.114397.2": {
+      "mvar_id": "cp2:_uniq.114397.2",
+      "goal_type": "let B := (Nat.digits 10 H).sum;\nlet C := (Nat.digits 10 B).sum;\nC = 7 \u2192 B % 9 = 0 \u2192 B % 9 = 0",
+      "goal_sig": "c4ffd42a3592",
+      "goal_sig_strict": "7fd87794899c",
+      "parent_mvar_id": "cp1:_uniq.114380",
+      "visit_count": 5,
+      "success_count": 5,
+      "is_terminal": false,
+      "is_dead": false,
+      "dead_reason": null,
+      "depth": 1,
+      "expansion_order": 1,
+      "children": {
+        "intro H'": [
+          "cp3:_uniq.114397.5"
+        ]
+      }
+    },
+    "cp3:_uniq.114397.5": {
+      "mvar_id": "cp3:_uniq.114397.5",
+      "goal_type": "let C := (Nat.digits 10 H').sum;\nC = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+      "goal_sig": "360d922bdfe7",
+      "goal_sig_strict": "9709203093e5",
+      "parent_mvar_id": "cp2:_uniq.114397.2",
+      "visit_count": 4,
+      "success_count": 4,
+      "is_terminal": false,
+      "is_dead": false,
+      "dead_reason": null,
+      "depth": 2,
+      "expansion_order": 2,
+      "children": {
+        "intro H''": [
+          "cp4:_uniq.114397.8"
+        ]
+      }
+    },
+    "cp4:_uniq.114397.8": {
+      "mvar_id": "cp4:_uniq.114397.8",
+      "goal_type": "H'' = 7 \u2192 H' % 9 = 0 \u2192 H' % 9 = 0",
+      "goal_sig": "6455853015e9",
+      "goal_sig_strict": "2836cc865766",
+      "parent_mvar_id": "cp3:_uniq.114397.5",
+      "visit_count": 3,
+      "success_count": 3,
+      "is_terminal": false,
+      "is_dead": false,
+      "dead_reason": null,
+      "depth": 3,
+      "expansion_order": 3,
+      "children": {
+        "intro H'''": [
+          "cp5:_uniq.114397.11"
+        ]
+      }
+    },
+    "cp5:_uniq.114397.11": {
+      "mvar_id": "cp5:_uniq.114397.11",
+      "goal_type": "H' % 9 = 0 \u2192 H' % 9 = 0",
+      "goal_sig": "c810056f86e1",
+      "goal_sig_strict": "66803feef10f",
+      "parent_mvar_id": "cp4:_uniq.114397.8",
+      "visit_count": 2,
+      "success_count": 2,
+      "is_terminal": false,
+      "is_dead": false,
+      "dead_reason": null,
+      "depth": 4,
+      "expansion_order": 4,
+      "children": {
+        "intro H''": [
+          "cp6:_uniq.114397.14"
+        ]
+      }
+    },
+    "cp6:_uniq.114397.14": {
+      "mvar_id": "cp6:_uniq.114397.14",
+      "goal_type": "H' % 9 = 0",
+      "goal_sig": "81d685bae119",
+      "goal_sig_strict": "2f55e5717068",
+      "parent_mvar_id": "cp5:_uniq.114397.11",
+      "visit_count": 1,
+      "success_count": 1,
+      "is_terminal": true,
+      "is_dead": false,
+      "dead_reason": null,
+      "depth": 5,
+      "expansion_order": 5,
+      "children": {
+        "exact H''": []
+      }
+    }
+  }
+}

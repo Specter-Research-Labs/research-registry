@@ -221,7 +221,7 @@
       }
     },
     "D-002": {
-      "next_counter": 37,
+      "next_counter": 38,
       "entries": {
         "README": "D-002.001",
         "concepts/analysis-lexicon": "D-002.002",
@@ -247,6 +247,7 @@
         "decisions/adr-lake-reference-selection": "D-002.019",
         "decisions/adr-proof-graph-ir-cross-assistant": "D-002.030",
         "decisions/adr-search-graph-feasibility-by-backend": "D-002.020",
+        "figures/poster/README": "D-002.037",
         "ops/corpus": "D-002.021",
         "ops/lake": "D-002.025",
         "ops/paper": "D-002.035",
