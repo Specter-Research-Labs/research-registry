@@ -39,13 +39,12 @@ pub(crate) fn figure_source_patterns(slug: &str) -> Vec<String> {
 
 pub fn build_blog(repo_root: &Utf8Path, write: bool) -> Result<()> {
     let posts = discover::discover_all_blog_posts(repo_root)?;
-    if !posts
-        .iter()
-        .any(|p| p.release == discover::RELEASE_PUBLISHED)
-    {
+    let has_published = posts.iter().any(is_published_post);
+    build_blog_for_posts(repo_root, &posts, write)?;
+    if !has_published {
         bail!("no published blog posts found (set 'release: published' in YAML front matter)");
     }
-    build_blog_for_posts(repo_root, &posts, write)
+    Ok(())
 }
 
 struct ResearchNoteRecord {
@@ -159,14 +158,6 @@ pub(crate) fn build_blog_for_posts(
         bail!("missing pandoc template: blog/pandoc-template.html");
     }
 
-    if write {
-        sync_all_figures(repo_root)?;
-    }
-
-    if posts.is_empty() {
-        return Ok(());
-    }
-
     let blog_root = site_root.join("blog");
     let mut dirs: Vec<_> = Vec::new();
     for entry in
@@ -178,8 +169,9 @@ pub(crate) fn build_blog_for_posts(
         }
     }
 
-    let known_slugs: HashSet<String> = posts
+    let published_slugs: HashSet<String> = posts
         .iter()
+        .filter(|post| is_published_post(post))
         .map(|p| {
             p.href
                 .trim_start_matches("blog/")
@@ -188,10 +180,14 @@ pub(crate) fn build_blog_for_posts(
         })
         .collect();
 
+    if write {
+        sync_figures_for_slugs(repo_root, &published_slugs)?;
+    }
+
     for entry in &dirs {
         let slug = entry.file_name().to_string_lossy().to_string();
         let output = entry.path().join("index.html");
-        if !known_slugs.contains(&slug) && output.is_file() && write {
+        if !published_slugs.contains(&slug) && output.is_file() && write {
             fs::remove_file(&output).with_context(|| {
                 format!("failed to remove stale draft output {}", output.display())
             })?;
@@ -200,6 +196,9 @@ pub(crate) fn build_blog_for_posts(
     }
 
     posts.par_iter().try_for_each(|post| -> Result<()> {
+        if !is_published_post(post) {
+            return Ok(());
+        }
         let slug = discover::blog_slug_from_href(&post.href)?;
         let md_path = discover::blog_markdown_path(repo_root, slug);
         let out_path = site_root.join(format!("blog/{slug}/index.html"));
@@ -247,6 +246,10 @@ pub(crate) fn build_blog_for_posts(
     })?;
 
     Ok(())
+}
+
+fn is_published_post(post: &discover::BlogPostRecord) -> bool {
+    post.release == discover::RELEASE_PUBLISHED
 }
 
 pub(crate) fn load_published_posts(repo_root: &Utf8Path) -> Result<Vec<discover::BlogPostRecord>> {
@@ -423,8 +426,11 @@ fn required_attr(node: &graph::GraphNode, key: &str) -> Result<String> {
         .ok_or_else(|| anyhow!("{}: missing article attr '{key}'", node.id))
 }
 
-fn sync_all_figures(repo_root: &Utf8Path) -> Result<()> {
+fn sync_figures_for_slugs(repo_root: &Utf8Path, published_slugs: &HashSet<String>) -> Result<()> {
     for source in FIGURE_SOURCES {
+        if !published_slugs.contains(source.slug) {
+            continue;
+        }
         let md_path = discover::blog_markdown_path(repo_root, source.slug);
         if !md_path.is_file() {
             if source.required {
@@ -442,6 +448,53 @@ fn sync_all_figures(repo_root: &Utf8Path) -> Result<()> {
         sync_figures(repo_root, source.slug, &pdf_dir)?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn write(root: &Utf8Path, rel: &str, content: &str) {
+        let path = root.join(rel);
+        fs::create_dir_all(path.parent().expect("test path has parent")).unwrap();
+        fs::write(path, content).unwrap();
+    }
+
+    #[test]
+    fn build_blog_write_removes_stale_draft_outputs() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+        write(root, "site/blog/pandoc-template.html", "$body$");
+        write(
+            root,
+            "site/blog/draft-note/index.md",
+            r#"---
+title: Draft Note
+release: draft
+summary: Not public yet.
+---
+
+# Draft Note
+"#,
+        );
+        write(
+            root,
+            "site/blog/draft-note/index.html",
+            "stale draft output",
+        );
+
+        let error = build_blog(root, true).unwrap_err();
+        let message = format!("{error:#}");
+
+        assert!(
+            message.contains("no published blog posts found"),
+            "got: {message}"
+        );
+        assert!(
+            !root.join("site/blog/draft-note/index.html").exists(),
+            "draft output should be removed, not retained or regenerated"
+        );
+    }
 }
 
 fn sync_figures(repo_root: &Utf8Path, slug: &str, pdf_dir: &Utf8Path) -> Result<()> {
