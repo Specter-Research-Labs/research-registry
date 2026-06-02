@@ -33,6 +33,9 @@ from lenia_swarm_analysis.morphospace.feature_tda_profile import (
 from lenia_swarm_analysis.morphospace.finite_size_validation import (
     build_finite_size_validation_packet,
 )
+from lenia_swarm_analysis.morphospace.high_fiber_null_validation import (
+    build_high_fiber_null_validation_packet,
+)
 from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.ingest_dryad_fish import (
     ingest_dryad_fish_body_shape,
@@ -588,6 +591,33 @@ def build_finite_size_packet(
     return payload
 
 
+def build_high_fiber_null_validation(
+    *,
+    warehouse_path: Path,
+    source_packet_path: Path,
+    target_region_limit: int = 3,
+    null_replicates: int = 256,
+    seed: int = 20260527,
+    min_region_count: int = 128,
+    output_path: Path | None = None,
+) -> dict[str, Any]:
+    def run(connection: Any) -> dict[str, Any]:
+        return build_high_fiber_null_validation_packet(
+            connection,
+            source_packet_path=source_packet_path,
+            target_region_limit=target_region_limit,
+            null_replicates=null_replicates,
+            seed=seed,
+            min_region_count=min_region_count,
+        )
+
+    payload = _using_warehouse(warehouse_path, run, read_only=True)
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return payload
+
+
 def summarize_track1_raw_packet(
     *,
     run_root: Path,
@@ -963,6 +993,30 @@ def _build_parser() -> argparse.ArgumentParser:
     finite_size.set_defaults(
         handler=lambda args: build_finite_size_packet(
             run_specs=list(args.run),
+            output_path=_resolve_optional_path(args.output),
+        )
+    )
+
+    high_fiber_null = subparsers.add_parser(
+        "build-high-fiber-null-validation",
+        help="Validate high-fiber regions against terminal-label shuffle nulls",
+    )
+    high_fiber_null.add_argument("--warehouse", required=True, type=Path)
+    high_fiber_null.add_argument("--source-packet", required=True, type=Path)
+    high_fiber_null.add_argument("--target-region-limit", type=int, default=3)
+    high_fiber_null.add_argument("--null-replicates", type=int, default=256)
+    high_fiber_null.add_argument("--seed", type=int, default=20260527)
+    high_fiber_null.add_argument("--min-region-count", type=int, default=128)
+    high_fiber_null.add_argument("--output", type=Path)
+    _add_json(high_fiber_null)
+    high_fiber_null.set_defaults(
+        handler=lambda args: build_high_fiber_null_validation(
+            warehouse_path=args.warehouse.resolve(),
+            source_packet_path=args.source_packet.resolve(),
+            target_region_limit=int(args.target_region_limit),
+            null_replicates=int(args.null_replicates),
+            seed=int(args.seed),
+            min_region_count=int(args.min_region_count),
             output_path=_resolve_optional_path(args.output),
         )
     )

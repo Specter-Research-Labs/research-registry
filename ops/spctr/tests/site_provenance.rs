@@ -341,9 +341,9 @@ fn repo_aware_research_note_page_accepts_markdown_change() {
             "spctr-registry.json",
             r#"{
   "version": 1,
-  "counters": { "A": 0, "B": 2, "D": 0 },
+  "counters": { "A": 0, "B": 2, "D": 0, "N": 2 },
   "series": {
-    "B-001": { "slug": "field-note", "title": "Field Note" }
+    "N-001": { "slug": "field-note", "title": "Field Note" }
   },
   "docs": {}
 }

@@ -220,31 +220,36 @@ def query_basin_rows(conn: duckdb.DuckDBPyConnection) -> list[dict]:
           SELECT run_key, theorem, solved AS control_null_solved
           FROM theorem_intervention WHERE intervention = 'control_null'
         ),
-        p2 AS (
+        intervention AS (
           SELECT r.provider, i.theorem,
                  AVG(CASE WHEN i.solved IS NULL THEN NULL ELSE CAST(i.solved AS DOUBLE) END) AS lesion_recovery_rate
           FROM theorem_intervention i
-          JOIN selected_p2_runs s USING(run_key)
           JOIN runs r USING(run_key)
           LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem
           WHERE COALESCE(i.is_control, FALSE) = FALSE
             AND i.intervention <> 'control_null'
             AND i.baseline_solved IS TRUE
             AND cn.control_null_solved IS TRUE
+            AND r.provider IN ('deepseek','heuristic','reprover')
+            AND r.backend = 'lean'
+            AND r.mode = 'research'
           GROUP BY r.provider, i.theorem
-        ),
-        p4 AS (
+        ), basin AS (
           SELECT r.provider, b.theorem,
                  AVG(b.unique_structures) AS unique_structures,
                  AVG(b.paper_k) AS paper_k
           FROM basin_runs b
-          JOIN selected_p4_runs s USING(run_key)
           JOIN runs r USING(run_key)
+          WHERE r.provider IN ('deepseek','heuristic','reprover')
+            AND r.backend = 'lean'
+            AND r.mode = 'research'
           GROUP BY r.provider, b.theorem
         )
-        SELECT p2.provider, p2.theorem, p2.lesion_recovery_rate, p4.unique_structures, p4.paper_k
-        FROM p2 JOIN p4 ON p4.provider = p2.provider AND p4.theorem = p2.theorem
-        ORDER BY p2.provider, p2.theorem
+        SELECT intervention.provider, intervention.theorem,
+               intervention.lesion_recovery_rate, basin.unique_structures, basin.paper_k
+        FROM intervention JOIN basin
+          ON basin.provider = intervention.provider AND basin.theorem = intervention.theorem
+        ORDER BY intervention.provider, intervention.theorem
         """
     ).fetchall()
     return [
@@ -425,20 +430,20 @@ def build_basin_resilience(rows: list[dict], out_path: Path) -> None:
     missing_providers = [provider for provider in TARGET_PROVIDERS if provider not in providers_present]
 
     if not rows:
-        subtitle = "No matched p4-deep basin rows survive the join from March p2 lesion outcomes to March p4 basin runs."
+        subtitle = "No strict basin/intervention rows survive the all-lake provider-theorem join."
     elif math.isclose(min(x_values), max(x_values)):
         subtitle = (
-            f"Matched p4-deep join spans {len(rows)} rows; all rows have unique-structure count {x_values[0]:.0f}, "
+            f"Strict all-lake join spans {len(rows)} rows; all rows have unique-structure count {x_values[0]:.0f}, "
             "so this slice cannot identify a basin-width effect yet."
         )
     else:
         subtitle = (
-            f"Matched p4-deep join spans {len(rows)} rows with unique-structure counts from {min(x_values):.0f} to {max(x_values):.0f}."
+            f"Strict all-lake join spans {len(rows)} rows with unique-structure counts from {min(x_values):.0f} to {max(x_values):.0f}."
         )
 
     lines = svg_header(width, height)
     lines += [
-        '<text x="40" y="34" class="title">March p4 deep-basin slice from the shared lake</text>',
+        '<text x="40" y="34" class="title">Basin width vs lesion recovery in the current lake</text>',
         f'<text x="40" y="58" class="subtitle">{subtitle}</text>',
         f'<rect x="40" y="82" width="880" height="320" rx="10" fill="{PANEL}" stroke="{GRID}"/>',
         f'<line x1="{left}" y1="{bottom}" x2="{left+chart_w}" y2="{bottom}" stroke="{INK}" stroke-width="1.5"/>',

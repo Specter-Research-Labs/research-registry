@@ -49,6 +49,14 @@ pub fn article_release(front_matter: &HashMap<String, String>) -> Result<String>
 }
 
 pub fn discover_published_blog_posts(repo_root: &Utf8Path) -> Result<Vec<BlogPostRecord>> {
+    discover_blog_posts(repo_root, /* include_drafts */ false)
+}
+
+pub fn discover_all_blog_posts(repo_root: &Utf8Path) -> Result<Vec<BlogPostRecord>> {
+    discover_blog_posts(repo_root, /* include_drafts */ true)
+}
+
+fn discover_blog_posts(repo_root: &Utf8Path, include_drafts: bool) -> Result<Vec<BlogPostRecord>> {
     let blog_root = repo_root.join("site/blog");
     if !blog_root.is_dir() {
         return Ok(Vec::new());
@@ -75,7 +83,7 @@ pub fn discover_published_blog_posts(repo_root: &Utf8Path) -> Result<Vec<BlogPos
         let fm = markdown::parse_front_matter(&text);
         let release = article_release(&fm)
             .with_context(|| format!("blog/{}/index.md", entry.file_name().to_string_lossy()))?;
-        if release != RELEASE_PUBLISHED {
+        if !include_drafts && release != RELEASE_PUBLISHED {
             continue;
         }
         let slug = entry.file_name().to_string_lossy().into_owned();

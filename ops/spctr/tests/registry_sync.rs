@@ -235,7 +235,7 @@ toc: true
     let report = spctr::registry_sync::plan(root).unwrap();
     assert_eq!(report.series_assignments.len(), 1);
     assert_eq!(report.series_assignments[0].slug, "field-note");
-    assert_eq!(report.series_assignments[0].series_id, "B-001");
+    assert_eq!(report.series_assignments[0].series_id, "N-001");
     assert!(!report.series_assignments[0].patch_source);
 
     let before_note =
@@ -250,7 +250,7 @@ toc: true
         serde_json::from_str(&fs::read_to_string(root.join("spctr-registry.json")).unwrap())
             .unwrap();
     assert_eq!(
-        registry["series"]["B-001"]["slug"],
+        registry["series"]["N-001"]["slug"],
         Value::String("field-note".to_owned())
     );
 }
@@ -265,10 +265,10 @@ fn research_note_addendum_source_does_not_render_missing_href() {
         "spctr-registry.json",
         r#"{
   "version": 1,
-  "counters": { "A": 2, "B": 2, "D": 1 },
+  "counters": { "A": 2, "B": 2, "D": 1, "N": 2 },
   "series": {
     "A-001": { "slug": "tooling", "title": "Tooling" },
-    "B-001": { "slug": "field-note", "title": "Field Note" }
+    "N-001": { "slug": "field-note", "title": "Field Note" }
   },
   "docs": {}
 }

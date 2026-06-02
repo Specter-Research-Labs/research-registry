@@ -46,7 +46,7 @@ PROFILE_PRESETS: dict[str, dict[str, Any]] = {
         "threshold_max_observations": 8192,
         "threshold_sample_points": 8192,
         "landmark_counts": (1024, 2048, 4096, 8192),
-        "subsample_sizes": (1024, 2048, 4096),
+        "subsample_sizes": (1024, 2048, 4096, 8192, 16384),
         "subsample_replicates": 5,
         "threshold_quantiles": (0.005, 0.01, 0.02),
         "pairwise_sample_points": 8192,
@@ -142,6 +142,37 @@ def _peak_betti_one(betti_curves: list[dict[str, Any]]) -> dict[str, Any] | None
     return {"count": int(betti[peak_index]), "scale": float(scale[peak_index])}
 
 
+def _numeric_summary(values: list[float]) -> dict[str, Any]:
+    if not values:
+        return {
+            "count": 0,
+            "min": None,
+            "mean": None,
+            "median": None,
+            "max": None,
+            "standardDeviation": None,
+            "normalApprox95Ci": None,
+        }
+    array = np.asarray(values, dtype=np.float64)
+    mean_value = float(np.mean(array))
+    if array.size > 1:
+        standard_deviation = float(np.std(array, ddof=1))
+        half_width = 1.96 * standard_deviation / math.sqrt(float(array.size))
+        interval: list[float] | None = [mean_value - half_width, mean_value + half_width]
+    else:
+        standard_deviation = 0.0
+        interval = [mean_value, mean_value]
+    return {
+        "count": int(array.size),
+        "min": _finite_or_none(float(np.min(array))),
+        "mean": _finite_or_none(mean_value),
+        "median": _finite_or_none(float(np.median(array))),
+        "max": _finite_or_none(float(np.max(array))),
+        "standardDeviation": _finite_or_none(standard_deviation),
+        "normalApprox95Ci": interval,
+    }
+
+
 def _topology_metrics(
     diagrams: list[np.ndarray],
     *,
@@ -161,6 +192,7 @@ def _run_tda_case(
     matrix: np.ndarray,
     *,
     label: str,
+    case_kind: str,
     max_homology_dim: int,
     pairwise_sample_points: int,
     rng: np.random.Generator,
@@ -187,6 +219,7 @@ def _run_tda_case(
         extra["edgeCount"] = int(result["num_edges"])
     return {
         "label": label,
+        "caseKind": case_kind,
         "pointCount": int(matrix.shape[0]),
         "dimension": int(matrix.shape[1]),
         "maxHomologyDim": max_homology_dim,
@@ -260,6 +293,120 @@ def _bounded_tda_matrix(
     }
 
 
+def _h1_threshold_count(tda: dict[str, Any], threshold: str) -> int | None:
+    value = tda.get("topology", {}).get("h1ThresholdCounts", {}).get(threshold)
+    return int(value) if isinstance(value, int) else None
+
+
+def _h1_top_persistence(tda: dict[str, Any]) -> float | None:
+    value = tda.get("topology", {}).get("h1TopPersistence")
+    return float(value) if isinstance(value, (int, float)) and math.isfinite(float(value)) else None
+
+
+def _peak_betti_count(tda: dict[str, Any]) -> int | None:
+    value = tda.get("topology", {}).get("peakBetti1")
+    if isinstance(value, dict) and isinstance(value.get("count"), int):
+        return int(value["count"])
+    return None
+
+
+def _summarize_subsamples(subsamples: list[dict[str, Any]]) -> dict[str, Any]:
+    by_size: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for row in subsamples:
+        sample_size = row.get("sampleSize")
+        tda = row.get("tda")
+        if isinstance(sample_size, int) and isinstance(tda, dict):
+            by_size[sample_size].append(tda)
+    return {
+        str(sample_size): {
+            "sampleSize": sample_size,
+            "replicateCount": len(rows),
+            "h1CountGe010": _numeric_summary(
+                [
+                    float(value)
+                    for row in rows
+                    if (value := _h1_threshold_count(row, ">=0.100")) is not None
+                ]
+            ),
+            "h1CountGe025": _numeric_summary(
+                [
+                    float(value)
+                    for row in rows
+                    if (value := _h1_threshold_count(row, ">=0.250")) is not None
+                ]
+            ),
+            "h1TopPersistence": _numeric_summary(
+                [
+                    value
+                    for row in rows
+                    if (value := _h1_top_persistence(row)) is not None
+                ]
+            ),
+            "peakBetti1Count": _numeric_summary(
+                [
+                    float(value)
+                    for row in rows
+                    if (value := _peak_betti_count(row)) is not None
+                ]
+            ),
+        }
+        for sample_size, rows in sorted(by_size.items())
+    }
+
+
+def _claim_levels(
+    *,
+    exact: dict[str, Any],
+    landmarks: list[dict[str, Any]],
+    subsamples: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    fixed_sizes = sorted(
+        {
+            int(row["sampleSize"])
+            for row in subsamples
+            if isinstance(row.get("sampleSize"), int)
+        }
+    )
+    exact_status = "measured" if exact.get("status") != "skipped" else "skipped"
+    return [
+        {
+            "id": "exact_or_bounded_vietoris_rips",
+            "status": exact_status,
+            "reason": exact.get("reason"),
+        },
+        {
+            "id": "deterministic_landmark_replay",
+            "status": "measured" if landmarks else "not_measured",
+            "landmarkCounts": [
+                int(row["landmarkCount"])
+                for row in landmarks
+                if isinstance(row.get("landmarkCount"), int)
+            ],
+            "interpretation": (
+                "ripser n_perm is a greedy-permutation landmark approximation for "
+                "this ordered matrix. It is not a stochastic bootstrap replicate."
+            ),
+        },
+        {
+            "id": "stochastic_subsample_robustness",
+            "status": "measured" if fixed_sizes else "not_measured",
+            "fixedSubsampleSizes": fixed_sizes,
+            "interpretation": (
+                "Use replicated fixed-size subsamples and their variance before "
+                "promoting a topology result beyond landmark replay."
+            ),
+        },
+        {
+            "id": "paper_level_topological_stability",
+            "status": "not_established_by_single_packet",
+            "interpretation": (
+                "Requires a preregistered ladder across feature spaces, seeds, "
+                "sample sizes, and matched null/control analyses."
+            ),
+        },
+    ]
+
+
 def run_feature_tda_profile(
     connection: DuckDBPyConnection,
     *,
@@ -268,7 +415,6 @@ def run_feature_tda_profile(
     value_column: str = "normalized_value",
     source_id: str | None = None,
     study_id: str | None = None,
-    study_kind: str | None = None,
     run_id: str | None = None,
     run_id_contains: str | None = None,
     source_mode: str | None = None,
@@ -288,7 +434,6 @@ def run_feature_tda_profile(
         value_column=value_column,
         source_id=source_id,
         study_id=study_id,
-        study_kind=study_kind,
         run_id=run_id,
         run_id_contains=run_id_contains,
         source_mode=source_mode,
@@ -312,6 +457,7 @@ def run_feature_tda_profile(
         exact = _run_tda_case(
             matrix,
             label="exact",
+            case_kind="exact_vietoris_rips",
             max_homology_dim=max_homology_dim,
             pairwise_sample_points=pairwise_sample_points,
             rng=rng,
@@ -350,6 +496,7 @@ def run_feature_tda_profile(
         case = _run_tda_case(
             threshold_matrix,
             label=label,
+            case_kind="thresholded_vietoris_rips",
             max_homology_dim=max_homology_dim,
             pairwise_sample_points=pairwise_sample_points,
             rng=rng,
@@ -368,6 +515,7 @@ def run_feature_tda_profile(
             _run_tda_case(
                 matrix,
                 label=f"landmark-{landmark_count}",
+                case_kind="deterministic_greedy_landmark",
                 max_homology_dim=max_homology_dim,
                 pairwise_sample_points=pairwise_sample_points,
                 rng=rng,
@@ -392,6 +540,7 @@ def run_feature_tda_profile(
                     "tda": _run_tda_case(
                         matrix[indices],
                         label=f"subsample-{sample_size}-{replicate}",
+                        case_kind="fixed_random_subsample",
                         max_homology_dim=max_homology_dim,
                         pairwise_sample_points=pairwise_sample_points,
                         rng=rng,
@@ -417,6 +566,7 @@ def run_feature_tda_profile(
                 _run_tda_case(
                     stratum_matrix,
                     label=f"{key}-landmark-{landmark_count}",
+                    case_kind="stratum_deterministic_greedy_landmark",
                     max_homology_dim=max_homology_dim,
                     pairwise_sample_points=pairwise_sample_points,
                     rng=rng,
@@ -428,6 +578,7 @@ def run_feature_tda_profile(
             stratum_exact = _run_tda_case(
                 stratum_matrix,
                 label=f"{key}-exact",
+                case_kind="stratum_exact_vietoris_rips",
                 max_homology_dim=max_homology_dim,
                 pairwise_sample_points=pairwise_sample_points,
                 rng=rng,
@@ -459,6 +610,17 @@ def run_feature_tda_profile(
             "thresholdMaxObservations": threshold_max,
             "thresholdSamplePoints": threshold_sample_points,
         },
+        "methodNotes": [
+            (
+                "Landmark rows use ripser n_perm, a greedy-permutation landmark "
+                "approximation on the ordered input matrix."
+            ),
+            (
+                "Subsample rows are the stochastic robustness surface; read their "
+                "replicate variance before promoting a topological claim."
+            ),
+        ],
+        "claimLevels": _claim_levels(exact=exact, landmarks=landmarks, subsamples=subsamples),
         "featureSpace": matrix_packet["featureSpace"],
         "axes": matrix_packet["axes"],
         "pairwiseDistanceSample": pairwise,
@@ -466,5 +628,6 @@ def run_feature_tda_profile(
         "thresholded": thresholded,
         "landmarks": landmarks,
         "subsamples": subsamples,
+        "subsampleSummary": _summarize_subsamples(subsamples),
         "strata": stratum_rows,
     }

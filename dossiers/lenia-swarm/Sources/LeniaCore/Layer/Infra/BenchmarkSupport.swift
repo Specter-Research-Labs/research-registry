@@ -17,6 +17,7 @@ public struct FlowLeniaMetalSweepResult: Sendable {
     public let gridSize: Int
     public let channels: Int
     public let kernels: Int
+    public let reintegrateParams: Bool
     public let batchSize: Int
     public let steps: Int
     public let duration: TimeInterval
@@ -29,6 +30,7 @@ public struct FlowLeniaMetalSweepResult: Sendable {
         gridSize: Int,
         channels: Int,
         kernels: Int,
+        reintegrateParams: Bool,
         batchSize: Int,
         steps: Int,
         duration: TimeInterval,
@@ -40,6 +42,7 @@ public struct FlowLeniaMetalSweepResult: Sendable {
         self.gridSize = gridSize
         self.channels = channels
         self.kernels = kernels
+        self.reintegrateParams = reintegrateParams
         self.batchSize = batchSize
         self.steps = steps
         self.duration = duration
@@ -130,6 +133,7 @@ public func benchmarkFlowLeniaMetalSweepCase(
     batchSize: Int,
     steps: Int,
     warmupSteps: Int,
+    reintegrateParams: Bool = true,
     profileStages: Bool = false
 ) -> FlowLeniaMetalSweepResult {
     precondition(benchmarkCase.gridSize > 0, "Metal sweep grid size must be > 0.")
@@ -171,7 +175,8 @@ public func benchmarkFlowLeniaMetalSweepCase(
     let runner = FlowLeniaMetalFullStateRunner(
         config: config,
         kernels: kernels,
-        batchCount: batchSize
+        batchCount: batchSize,
+        reintegrateParams: reintegrateParams
     )
     runner.setState(
         mass: deterministicMetalSweepMass(
@@ -200,6 +205,7 @@ public func benchmarkFlowLeniaMetalSweepCase(
         gridSize: benchmarkCase.gridSize,
         channels: benchmarkCase.channels,
         kernels: benchmarkCase.kernels,
+        reintegrateParams: reintegrateParams,
         batchSize: batchSize,
         steps: steps,
         duration: duration,

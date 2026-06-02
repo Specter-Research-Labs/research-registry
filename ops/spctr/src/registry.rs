@@ -54,7 +54,7 @@ fn validate_registry(reg: &Registry) -> Result<()> {
     }
 
     for (key, _) in &reg.counters {
-        if key != "D" && key != "A" && key != "B" {
+        if key != "D" && key != "A" && key != "B" && key != "N" {
             bail!("{REGISTRY_FILE}: unknown counter key '{key}'");
         }
     }
@@ -105,7 +105,10 @@ fn validate_registry(reg: &Registry) -> Result<()> {
 }
 
 fn validate_series_id(id: &str) -> Result<()> {
-    let valid = (id.starts_with("D-") || id.starts_with("A-") || id.starts_with("B-"))
+    let valid = (id.starts_with("D-")
+        || id.starts_with("A-")
+        || id.starts_with("B-")
+        || id.starts_with("N-"))
         && id.len() >= 5
         && id[2..].chars().all(|c| c.is_ascii_digit());
     if !valid {
@@ -203,6 +206,7 @@ pub fn allocate_series(
         "dossier" => "D",
         "addendum" => "A",
         "article" => "B",
+        "research-note" => "N",
         _ => bail!("unknown project kind '{kind}'"),
     };
 

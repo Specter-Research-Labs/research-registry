@@ -38,7 +38,13 @@ pub(crate) fn figure_source_patterns(slug: &str) -> Vec<String> {
 }
 
 pub fn build_blog(repo_root: &Utf8Path, write: bool) -> Result<()> {
-    let posts = load_published_posts(repo_root)?;
+    let posts = discover::discover_all_blog_posts(repo_root)?;
+    if !posts
+        .iter()
+        .any(|p| p.release == discover::RELEASE_PUBLISHED)
+    {
+        bail!("no published blog posts found (set 'release: published' in YAML front matter)");
+    }
     build_blog_for_posts(repo_root, &posts, write)
 }
 
@@ -158,7 +164,7 @@ pub(crate) fn build_blog_for_posts(
     }
 
     if posts.is_empty() {
-        bail!("no published blog posts found (set 'release: published' in YAML front matter)");
+        return Ok(());
     }
 
     let blog_root = site_root.join("blog");
@@ -172,7 +178,7 @@ pub(crate) fn build_blog_for_posts(
         }
     }
 
-    let published_slugs: HashSet<String> = posts
+    let known_slugs: HashSet<String> = posts
         .iter()
         .map(|p| {
             p.href
@@ -185,11 +191,11 @@ pub(crate) fn build_blog_for_posts(
     for entry in &dirs {
         let slug = entry.file_name().to_string_lossy().to_string();
         let output = entry.path().join("index.html");
-        if !published_slugs.contains(&slug) && output.is_file() && write {
+        if !known_slugs.contains(&slug) && output.is_file() && write {
             fs::remove_file(&output).with_context(|| {
                 format!("failed to remove stale draft output {}", output.display())
             })?;
-            eprintln!("removed stale draft output blog/{slug}/index.html");
+            eprintln!("removed stale output blog/{slug}/index.html");
         }
     }
 
@@ -310,10 +316,10 @@ fn load_research_notes(
             loaded_registry = Some(registry::load_registry(repo_root)?);
         }
         let registry = loaded_registry.as_ref().expect("registry loaded");
-        let spctr_id = registry::series_for_slug(registry, "B", &slug)
+        let spctr_id = registry::series_for_slug(registry, "N", &slug)
             .map(|series_id| format!("SPCTR {series_id}"))
             .with_context(|| {
-                format!("research-notes/{slug}/index.md: missing registry B-series assignment")
+                format!("research-notes/{slug}/index.md: missing registry N-series assignment")
             })?;
         let source_id = research_note_source_id(&front_matter, registry)
             .with_context(|| format!("research-notes/{slug}/index.md"))?;
@@ -396,6 +402,7 @@ fn research_note_source_href(
         "B" if is_published_md(&site_root.join("blog").join(slug).join("index.md")) => {
             Some(format!("../../blog/{slug}/"))
         }
+        "N" if notes_root.join(slug).join("index.md").is_file() => Some(format!("../{slug}/")),
         _ => None,
     }
 }

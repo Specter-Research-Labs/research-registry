@@ -94,6 +94,7 @@ final class FlowLeniaMetalFullPipeline {
         commandQueue: MTLCommandQueue,
         wallPotential: MLXArray? = nil,
         parameterFieldMode: FlowLeniaParameterFieldMode = .kernelGain,
+        reintegrateParams: Bool = true,
         parameterMix: String = "avg",
         mixSeed: Int? = nil
     ) {
@@ -135,6 +136,7 @@ final class FlowLeniaMetalFullPipeline {
                 alphaMode: config.implementation.alphaMode,
                 flowClip: config.implementation.flowClip,
                 parameterFieldMode: self.parameterFieldMode,
+                reintegrateParams: reintegrateParams,
                 parameterMixMode: self.parameterMixMode
             )
         )
@@ -1104,6 +1106,7 @@ final class FlowLeniaMetalFullPipeline {
         alphaMode: String,
         flowClip: String,
         parameterFieldMode: FlowLeniaParameterFieldMode,
+        reintegrateParams: Bool,
         parameterMixMode: ParameterMixMode
     ) -> String {
         let clipMax = min(1.0 as Float, sigma * 2.0)
@@ -1112,6 +1115,141 @@ final class FlowLeniaMetalFullPipeline {
         let alphaPerChannel = alphaMode == "per_channel"
         let clipFlow = flowClip == "always" ||
             (flowClip == "params_only" && parameterFieldMode == .localizedGrowthParameters)
+        let alphaPowerExpression: String
+        switch n {
+        case 0:
+            alphaPowerExpression = "1.0f"
+        case 1:
+            alphaPowerExpression = "alphaBase"
+        case 2:
+            alphaPowerExpression = "alphaBase * alphaBase"
+        case 3:
+            alphaPowerExpression = "alphaBase * alphaBase * alphaBase"
+        case 4:
+            alphaPowerExpression = "alphaBase * alphaBase * alphaBase * alphaBase"
+        default:
+            alphaPowerExpression = "metal::pow(alphaBase, \(Float(n))f)"
+        }
+        let channelIndices = Array(0..<channelCount)
+        let matterMapAccumulation = channelIndices.map { channel in
+            "            total += mass[massBase + \(channel)] * matterWeights[\(channel)];"
+        }.joined(separator: "\n")
+        let growthChannelDeclarations = channelIndices.map { channel in
+            "            float channelSum\(channel) = 0.0f;"
+        }.joined(separator: "\n")
+        let growthChannelAccumulations = channelIndices.map { channel in
+            "                channelSum\(channel) += contribution * outputWeights[\(channel) * kKernelCount + k];"
+        }.joined(separator: "\n")
+        let growthChannelWrites = channelIndices.map { channel in
+            "            u[outputBase + \(channel)] = channelSum\(channel);"
+        }.joined(separator: "\n")
+        let wallPotentialWrites = channelIndices.map { channel in
+            "            u[outputBase + \(channel)] += potential;"
+        }.joined(separator: "\n")
+        let totalMassDeclarations = channelIndices.map { channel in
+            "            float totalMass\(channel) = 0.0f;"
+        }.joined(separator: "\n")
+        let reintegrateMassWrites = channelIndices.map { channel in
+            "            nextMass[outputMassBase + \(channel)] = totalMass\(channel) * kAreaScale;"
+        }.joined(separator: "\n")
+        let flowChannelBodies = channelIndices.map { channel in
+            """
+            {
+                float u00 = sampleU(u, batch, x - 1, y - 1, \(channel));
+                float u01 = sampleU(u, batch, x - 1, y, \(channel));
+                float u02 = sampleU(u, batch, x - 1, y + 1, \(channel));
+                float u10 = sampleU(u, batch, x, y - 1, \(channel));
+                float u12 = sampleU(u, batch, x, y + 1, \(channel));
+                float u20 = sampleU(u, batch, x + 1, y - 1, \(channel));
+                float u21 = sampleU(u, batch, x + 1, y, \(channel));
+                float u22 = sampleU(u, batch, x + 1, y + 1, \(channel));
+                float gxU = (u00 + 2.0f * u10 + u20) - (u02 + 2.0f * u12 + u22);
+                float gyU = (u00 + 2.0f * u01 + u02) - (u20 + 2.0f * u21 + u22);
+                float alphaSource = kAlphaPerChannel ? mass[massBase + \(channel)] : matterCenter;
+                float alphaBase = alphaSource / kThetaA;
+                float alpha = \(alphaPowerExpression);
+                alpha = metal::fmin(metal::fmax(alpha, 0.0f), 1.0f);
+                float flowY = gyU * (1.0f - alpha) - gyA * alpha;
+                float flowX = gxU * (1.0f - alpha) - gxA * alpha;
+                if (kClipFlow) {
+                    flowY = metal::fmin(metal::fmax(flowY, -kMaxAdvection), kMaxAdvection);
+                    flowX = metal::fmin(metal::fmax(flowX, -kMaxAdvection), kMaxAdvection);
+                }
+                int outputBase = flowIndex(batch, x, y, \(channel));
+                flow[outputBase] = flowY;
+                flow[outputBase + 1] = flowX;
+            }
+            """
+        }.joined(separator: "\n")
+        let reintegrateMassChannelBodies = channelIndices.map { channel in
+            """
+                        {
+                            float sourceMass = mass[sourceMassBase + \(channel)];
+                            if (sourceMass > 0.0f) {
+                                int sourceFlowIndex = sourceFlowBase + \(channel * 2);
+                                float flowY = flow[sourceFlowIndex];
+                                float flowX = flow[sourceFlowIndex + 1];
+                                float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
+                                float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
+
+                                float murY = float(srcY) + 0.5f + clippedY;
+                                float murX = float(srcX) + 0.5f + clippedX;
+                                if (!kUseTorus) {
+                                    murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
+                                    murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
+                                }
+
+                                float dY = metal::fabs(targetY - murY);
+                                float dX = metal::fabs(targetX - murX);
+                                if (kUseTorus) {
+                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
+                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
+                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
+                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
+                                }
+
+                                float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
+                                float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
+                                float transportedMass = sourceMass * szY * szX;
+                                totalMass\(channel) += transportedMass;
+                                if (kReintegrateParams) {
+                                    candidateWeight += transportedMass;
+                                }
+                            }
+                        }
+            """
+        }.joined(separator: "\n")
+        let reintegrateCandidateChannelBodies = channelIndices.map { channel in
+            """
+                        {
+                            float sourceMass = mass[sourceMassBase + \(channel)];
+                            if (sourceMass > 0.0f) {
+                                int sourceFlowIndex = sourceFlowBase + \(channel * 2);
+                                float flowY = flow[sourceFlowIndex];
+                                float flowX = flow[sourceFlowIndex + 1];
+                                float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
+                                float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
+                                float murY = float(srcY) + 0.5f + clippedY;
+                                float murX = float(srcX) + 0.5f + clippedX;
+                                if (!kUseTorus) {
+                                    murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
+                                    murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
+                                }
+                                float dY = metal::fabs(targetY - murY);
+                                float dX = metal::fabs(targetX - murX);
+                                if (kUseTorus) {
+                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
+                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
+                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
+                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
+                                }
+                                float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
+                                float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
+                                candidateWeight += sourceMass * szY * szX;
+                            }
+                        }
+            """
+        }.joined(separator: "\n")
 
         return """
         #include <metal_stdlib>
@@ -1135,6 +1273,7 @@ final class FlowLeniaMetalFullPipeline {
         constant bool kAlphaPerChannel = \(alphaPerChannel ? "true" : "false");
         constant bool kClipFlow = \(clipFlow ? "true" : "false");
         constant bool kUsesLocalizedGrowthParameters = \(parameterFieldMode == .localizedGrowthParameters ? "true" : "false");
+        constant bool kReintegrateParams = \(reintegrateParams ? "true" : "false");
         constant int kParameterMixMode = \(parameterMixMode.rawValue);
         constant uint kSummaryThreads = \(summaryThreadCount)u;
         constant uint kSummaryChunkSpan = \(Self.summaryChunkSpan)u;
@@ -1254,9 +1393,8 @@ final class FlowLeniaMetalFullPipeline {
             int x = int(gid.x);
             int y = int(gid.y);
             float total = 0.0f;
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                total += mass[massIndex(batch, x, y, channel)] * matterWeights[channel];
-            }
+            int massBase = massIndex(batch, x, y, 0);
+        \(matterMapAccumulation)
             matter[scalarIndex(batch, x, y)] = total;
         }
 
@@ -1298,10 +1436,7 @@ final class FlowLeniaMetalFullPipeline {
             int batch = int(gid.z);
             int x = int(gid.x);
             int y = int(gid.y);
-            float channelSums[kChannelCount];
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                channelSums[channel] = 0.0f;
-            }
+        \(growthChannelDeclarations)
             int paramBase = paramIndex(batch, x, y, 0);
             for (int k = 0; k < kKernelCount; ++k) {
                 int kernelIndex = batch * kKernelCount + k;
@@ -1310,13 +1445,10 @@ final class FlowLeniaMetalFullPipeline {
                 float localH = kUsesLocalizedGrowthParameters ? params[paramBase + 2 * kKernelCount + k] : params[paramBase + k];
                 float diff = (uk[ukIndex(batch, x, y, k)] - localM) / localS;
                 float contribution = (2.0f * metal::exp(-0.5f * diff * diff) - 1.0f) * localH;
-                for (int channel = 0; channel < kChannelCount; ++channel) {
-                    channelSums[channel] += contribution * outputWeights[channel * kKernelCount + k];
-                }
+        \(growthChannelAccumulations)
             }
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                u[uIndex(batch, x, y, channel)] = channelSums[channel];
-            }
+            int outputBase = uIndex(batch, x, y, 0);
+        \(growthChannelWrites)
         }
 
         kernel void flowMetalAddWallPotential(
@@ -1331,9 +1463,8 @@ final class FlowLeniaMetalFullPipeline {
             int x = int(gid.x);
             int y = int(gid.y);
             float potential = wallPotential[scalarIndex(batch, x, y)];
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                u[uIndex(batch, x, y, channel)] += potential;
-            }
+            int outputBase = uIndex(batch, x, y, 0);
+        \(wallPotentialWrites)
         }
 
         kernel void flowMetalFlowFromScalarField(
@@ -1361,30 +1492,9 @@ final class FlowLeniaMetalFullPipeline {
 
             float gxA = (matterGrid[0][0] + 2.0f * matterGrid[1][0] + matterGrid[2][0]) - (matterGrid[0][2] + 2.0f * matterGrid[1][2] + matterGrid[2][2]);
             float gyA = (matterGrid[0][0] + 2.0f * matterGrid[0][1] + matterGrid[0][2]) - (matterGrid[2][0] + 2.0f * matterGrid[2][1] + matterGrid[2][2]);
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                float uGrid[3][3];
-                for (int ox = 0; ox < 3; ++ox) {
-                    int sampleX = x + ox - 1;
-                    for (int oy = 0; oy < 3; ++oy) {
-                        int sampleY = y + oy - 1;
-                        uGrid[ox][oy] = sampleU(u, batch, sampleX, sampleY, channel);
-                    }
-                }
-                float gxU = (uGrid[0][0] + 2.0f * uGrid[1][0] + uGrid[2][0]) - (uGrid[0][2] + 2.0f * uGrid[1][2] + uGrid[2][2]);
-                float gyU = (uGrid[0][0] + 2.0f * uGrid[0][1] + uGrid[0][2]) - (uGrid[2][0] + 2.0f * uGrid[2][1] + uGrid[2][2]);
-                float alphaSource = kAlphaPerChannel ? mass[massIndex(batch, x, y, channel)] : matterGrid[1][1];
-                float alpha = metal::pow(alphaSource / kThetaA, \(Float(n))f);
-                alpha = metal::fmin(metal::fmax(alpha, 0.0f), 1.0f);
-                float flowY = gyU * (1.0f - alpha) - gyA * alpha;
-                float flowX = gxU * (1.0f - alpha) - gxA * alpha;
-                if (kClipFlow) {
-                    flowY = metal::fmin(metal::fmax(flowY, -kMaxAdvection), kMaxAdvection);
-                    flowX = metal::fmin(metal::fmax(flowX, -kMaxAdvection), kMaxAdvection);
-                }
-                int outputBase = flowIndex(batch, x, y, channel);
-                flow[outputBase] = flowY;
-                flow[outputBase + 1] = flowX;
-            }
+            int massBase = massIndex(batch, x, y, 0);
+            float matterCenter = matterGrid[1][1];
+        \(flowChannelBodies)
         }
 
         kernel void flowMetalReintegrateAverage(
@@ -1403,16 +1513,15 @@ final class FlowLeniaMetalFullPipeline {
             int x = int(gid.x);
             int y = int(gid.y);
             float paramSum[kParamCount];
-            float totalMassByChannel[kChannelCount];
-            for (int k = 0; k < kParamCount; ++k) {
-                paramSum[k] = 0.0f;
+            if (kReintegrateParams) {
+                for (int k = 0; k < kParamCount; ++k) {
+                    paramSum[k] = 0.0f;
+                }
             }
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                totalMassByChannel[channel] = 0.0f;
-            }
+        \(totalMassDeclarations)
 
             float totalWeight = 0.0f;
-            float maxCandidateWeight = -1.0e30f;
+            float maxCandidateWeight = kParameterMixMode == 0 ? 0.0f : -1.0e30f;
             float targetY = float(y) + 0.5f;
             float targetX = float(x) + 0.5f;
 
@@ -1424,57 +1533,31 @@ final class FlowLeniaMetalFullPipeline {
                     srcY = wrappedY(srcY);
 
                     float candidateWeight = 0.0f;
-                    for (int channel = 0; channel < kChannelCount; ++channel) {
-                        int sourceMassIndex = massIndex(batch, srcX, srcY, channel);
-                        float sourceMass = mass[sourceMassIndex];
-                        if (sourceMass <= 0.0f) {
-                            continue;
+                    int sourceMassBase = massIndex(batch, srcX, srcY, 0);
+                    int sourceFlowBase = flowIndex(batch, srcX, srcY, 0);
+        \(reintegrateMassChannelBodies)
+                    if (kReintegrateParams) {
+                        totalWeight += candidateWeight;
+                        if (kParameterMixMode == 0 && candidateWeight > 0.0f) {
+                            int paramBase = paramIndex(batch, srcX, srcY, 0);
+                            for (int k = 0; k < kParamCount; ++k) {
+                                paramSum[k] += params[paramBase + k] * candidateWeight;
+                            }
                         }
-                        int sourceFlowIndex = flowIndex(batch, srcX, srcY, channel);
-                        float flowY = flow[sourceFlowIndex];
-                        float flowX = flow[sourceFlowIndex + 1];
-                        float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
-                        float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
-
-                        float murY = float(srcY) + 0.5f + clippedY;
-                        float murX = float(srcX) + 0.5f + clippedX;
-                        if (!kUseTorus) {
-                            murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
-                            murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
-                        }
-
-                        float dY = metal::fabs(targetY - murY);
-                        float dX = metal::fabs(targetX - murX);
-                        if (kUseTorus) {
-                            dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
-                            dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
-                            dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
-                            dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
-                        }
-
-                        float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
-                        float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
-                        float area = szY * szX;
-                        float transportedMass = sourceMass * area;
-                        totalMassByChannel[channel] += transportedMass;
-                        candidateWeight += transportedMass;
-                        totalWeight += transportedMass;
-                    }
-                    if (kParameterMixMode == 0 && candidateWeight > 0.0f) {
-                        int paramBase = paramIndex(batch, srcX, srcY, 0);
-                        for (int k = 0; k < kParamCount; ++k) {
-                            paramSum[k] += params[paramBase + k] * candidateWeight;
+                        if (kParameterMixMode != 0) {
+                            maxCandidateWeight = metal::fmax(maxCandidateWeight, candidateWeight);
                         }
                     }
-                    maxCandidateWeight = metal::fmax(maxCandidateWeight, candidateWeight);
                 }
             }
 
-            int outputScalarIndex = scalarIndex(batch, x, y);
-            for (int channel = 0; channel < kChannelCount; ++channel) {
-                nextMass[massIndex(batch, x, y, channel)] = totalMassByChannel[channel] * kAreaScale;
+            int outputMassBase = massIndex(batch, x, y, 0);
+        \(reintegrateMassWrites)
+            if (!kReintegrateParams) {
+                return;
             }
 
+            int outputScalarIndex = scalarIndex(batch, x, y);
             float denom = totalWeight > 1.0e-10f ? totalWeight : 1.0e-10f;
             int outputParamBase = outputScalarIndex * kParamCount;
             if (kParameterMixMode == 0) {
@@ -1492,35 +1575,9 @@ final class FlowLeniaMetalFullPipeline {
                     srcX = wrappedX(srcX);
                     srcY = wrappedY(srcY);
                     float candidateWeight = 0.0f;
-                    for (int channel = 0; channel < kChannelCount; ++channel) {
-                        int sourceMassIndex = massIndex(batch, srcX, srcY, channel);
-                        float sourceMass = mass[sourceMassIndex];
-                        if (sourceMass <= 0.0f) {
-                            continue;
-                        }
-                        int sourceFlowIndex = flowIndex(batch, srcX, srcY, channel);
-                        float flowY = flow[sourceFlowIndex];
-                        float flowX = flow[sourceFlowIndex + 1];
-                        float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
-                        float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
-                        float murY = float(srcY) + 0.5f + clippedY;
-                        float murX = float(srcX) + 0.5f + clippedX;
-                        if (!kUseTorus) {
-                            murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
-                            murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
-                        }
-                        float dY = metal::fabs(targetY - murY);
-                        float dX = metal::fabs(targetX - murX);
-                        if (kUseTorus) {
-                            dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
-                            dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
-                            dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
-                            dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
-                        }
-                        float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
-                        float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
-                        candidateWeight += sourceMass * szY * szX;
-                    }
+                    int sourceMassBase = massIndex(batch, srcX, srcY, 0);
+                    int sourceFlowBase = flowIndex(batch, srcX, srcY, 0);
+        \(reintegrateCandidateChannelBodies)
                     expTotal += metal::exp(candidateWeight - maxCandidateWeight);
                 }
             }
@@ -1537,35 +1594,9 @@ final class FlowLeniaMetalFullPipeline {
                     srcX = wrappedX(srcX);
                     srcY = wrappedY(srcY);
                     float candidateWeight = 0.0f;
-                    for (int channel = 0; channel < kChannelCount; ++channel) {
-                        int sourceMassIndex = massIndex(batch, srcX, srcY, channel);
-                        float sourceMass = mass[sourceMassIndex];
-                        if (sourceMass <= 0.0f) {
-                            continue;
-                        }
-                        int sourceFlowIndex = flowIndex(batch, srcX, srcY, channel);
-                        float flowY = flow[sourceFlowIndex];
-                        float flowX = flow[sourceFlowIndex + 1];
-                        float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
-                        float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
-                        float murY = float(srcY) + 0.5f + clippedY;
-                        float murX = float(srcX) + 0.5f + clippedX;
-                        if (!kUseTorus) {
-                            murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
-                            murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
-                        }
-                        float dY = metal::fabs(targetY - murY);
-                        float dX = metal::fabs(targetX - murX);
-                        if (kUseTorus) {
-                            dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
-                            dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
-                            dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
-                            dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
-                        }
-                        float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
-                        float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
-                        candidateWeight += sourceMass * szY * szX;
-                    }
+                    int sourceMassBase = massIndex(batch, srcX, srcY, 0);
+                    int sourceFlowBase = flowIndex(batch, srcX, srcY, 0);
+        \(reintegrateCandidateChannelBodies)
                     cumulative += metal::exp(candidateWeight - maxCandidateWeight);
                     if (!chosen && cumulative >= threshold) {
                         chosenX = srcX;

@@ -788,17 +788,28 @@ def postprocess_provider_run(
                     "run_config.problem_selection.selected_problems missing for external runs"
                 )
 
-            if corpus == "tptp" and not root.exists():
-                stmt_report = compute_tptp_statement_similarity_from_logs(
-                    run_dir,
-                    selected_names=selected,
-                    mode=params.external_statement_mode,
-                    max_theorems_full=params.external_statement_max_full,
-                    max_knn_theorems=params.external_statement_max_knn,
-                    knn_k=params.external_statement_knn_k,
-                    knn_sample_size=params.external_statement_knn_sample,
-                    sample_size=params.external_statement_sample_size,
-                )
+            if not root.exists():
+                if corpus == "tptp":
+                    stmt_report = compute_tptp_statement_similarity_from_logs(
+                        run_dir,
+                        selected_names=selected,
+                        mode=params.external_statement_mode,
+                        max_theorems_full=params.external_statement_max_full,
+                        max_knn_theorems=params.external_statement_max_knn,
+                        knn_k=params.external_statement_knn_k,
+                        knn_sample_size=params.external_statement_knn_sample,
+                        sample_size=params.external_statement_sample_size,
+                    )
+                else:
+                    stmt_report = _unsupported_external_statement_similarity(
+                        corpus=corpus,
+                        root=root,
+                        selected_count=len(selected),
+                        reason=(
+                            f"statement similarity requires external corpus root {root}, "
+                            "but that path is not available on this machine"
+                        ),
+                    )
             else:
                 stmt_report = compute_external_statement_similarity(
                     corpus=corpus,

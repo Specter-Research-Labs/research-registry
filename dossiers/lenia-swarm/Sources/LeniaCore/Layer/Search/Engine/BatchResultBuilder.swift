@@ -88,7 +88,6 @@ struct SearchBatchResultBuilder {
         } else {
             coherentTransportResult = nil
         }
-        let genotypeDescriptor = morphospaceGenotypeDescriptor(runtimeConfig.params)
         var results: [BatchSimulationResult] = []
         for (i, seed) in seeds.enumerated() {
             let resolvedParams = paramsBySample?[i] ?? runtimeConfig.params

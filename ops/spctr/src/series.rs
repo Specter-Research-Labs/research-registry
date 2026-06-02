@@ -67,7 +67,7 @@ pub(crate) fn missing_research_note_series_records(
             continue;
         }
         let slug = entry.file_name().to_string_lossy().into_owned();
-        if crate::registry::series_for_slug(registry, "B", &slug).is_some() {
+        if crate::registry::series_for_slug(registry, "N", &slug).is_some() {
             continue;
         }
         let path = notes_root.join(&slug).join("index.md");

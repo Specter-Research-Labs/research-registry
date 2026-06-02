@@ -11,6 +11,7 @@ import duckdb
 import pytest
 
 from analysis.lake.db import (
+    SCHEMA_VERSION,
     connect,
     ensure_schema,
     root_id_for_path,
@@ -488,7 +489,7 @@ def test_ensure_schema_migrates_v5_nested_duplicates(tmp_path: Path) -> None:
     conn = connect(db_path)
     try:
         ensure_schema(conn)
-        assert _scalar(conn, "SELECT max(schema_version) FROM schema_meta") == 11
+        assert _scalar(conn, "SELECT max(schema_version) FROM schema_meta") == SCHEMA_VERSION
 
         assert conn.execute(
             "SELECT run_key, root_id, rel_run_dir, run_dir FROM runs ORDER BY run_key"

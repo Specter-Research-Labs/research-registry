@@ -12,7 +12,7 @@ from analysis.logs import relpath_under, resolve_artifacts_dir
 from analysis.logs import utc_timestamp as _utc_timestamp
 
 # Bump when any persisted table schema changes (columns or meanings).
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 
 RUN_KEY_TABLE_PRIMARY_KEYS: dict[str, tuple[str, ...]] = {
@@ -34,6 +34,14 @@ RUN_KEY_TABLE_PRIMARY_KEYS: dict[str, tuple[str, ...]] = {
     "graph_nodes": ("run_key", "theorem", "rel_path", "node_id"),
     "graph_edges": ("run_key", "theorem", "rel_path", "edge_idx"),
     "mcts_trace_stats": ("run_key", "theorem", "rel_path"),
+    "mcts_controller_iterations": (
+        "run_key",
+        "theorem",
+        "rel_path",
+        "iteration",
+        "event",
+    ),
+    "mcts_controller_metrics": ("run_key", "theorem", "rel_path"),
     "mcts_tree_nodes": ("run_key", "theorem", "rel_path", "mvar_id"),
     "mcts_tree_edges": (
         "run_key",
@@ -42,6 +50,22 @@ RUN_KEY_TABLE_PRIMARY_KEYS: dict[str, tuple[str, ...]] = {
         "parent_mvar_id",
         "child_mvar_id",
         "tactic",
+    ),
+    "proof_action_resources": (
+        "run_key",
+        "theorem",
+        "rel_path",
+        "source_kind",
+        "source_id",
+        "resource_idx",
+    ),
+    "proof_term_const_nodes": ("run_key", "theorem", "rel_path", "node_id"),
+    "proof_term_const_edges": (
+        "run_key",
+        "theorem",
+        "rel_path",
+        "src_node_id",
+        "dst_node_id",
     ),
     "basin_runs": ("run_key", "theorem"),
     "basin_seed": ("run_key", "theorem", "seed"),
@@ -809,6 +833,67 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
         """
     )
 
+    # Resources observed in tactic action summaries and tactic syntax. This is
+    # intentionally edge/node anchored so later validation can ask which observed
+    # proof step mentioned a simp rule, linarith fact, or typeclass tactic.
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS proof_action_resources (
+          run_key VARCHAR NOT NULL,
+          theorem VARCHAR NOT NULL,
+          variant VARCHAR,
+          rel_path VARCHAR NOT NULL,
+          source_kind VARCHAR NOT NULL,
+          source_id VARCHAR NOT NULL,
+          resource_idx BIGINT NOT NULL,
+          tactic VARCHAR,
+          tactic_family VARCHAR,
+          in_proof BOOLEAN,
+          resource_kind VARCHAR NOT NULL,
+          resource_name VARCHAR NOT NULL,
+          origin VARCHAR NOT NULL,
+          source_sha256 VARCHAR,
+          PRIMARY KEY (run_key, theorem, rel_path, source_kind, source_id, resource_idx)
+        )
+        """
+    )
+
+    # Syntactic proof-term dependency surface. Edges connect a constant to the
+    # constants occurring in its argument subterms, aggregated across proof-term
+    # application nodes.
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS proof_term_const_nodes (
+          run_key VARCHAR NOT NULL,
+          theorem VARCHAR NOT NULL,
+          variant VARCHAR,
+          rel_path VARCHAR NOT NULL,
+          node_id VARCHAR NOT NULL,
+          const_name VARCHAR NOT NULL,
+          depth BIGINT,
+          source_sha256 VARCHAR,
+          PRIMARY KEY (run_key, theorem, rel_path, node_id)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS proof_term_const_edges (
+          run_key VARCHAR NOT NULL,
+          theorem VARCHAR NOT NULL,
+          variant VARCHAR,
+          rel_path VARCHAR NOT NULL,
+          src_node_id VARCHAR NOT NULL,
+          dst_node_id VARCHAR NOT NULL,
+          src_const_name VARCHAR NOT NULL,
+          dst_const_name VARCHAR NOT NULL,
+          edge_count BIGINT NOT NULL,
+          source_sha256 VARCHAR,
+          PRIMARY KEY (run_key, theorem, rel_path, src_node_id, dst_node_id)
+        )
+        """
+    )
+
     # Compact MCTS trace summaries (full trace bodies stay in artifacts).
     conn.execute(
         """
@@ -828,6 +913,85 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
           candidate_total BIGINT NOT NULL,
           candidate_max BIGINT NOT NULL,
           event_counts_json JSON,
+          PRIMARY KEY (run_key, theorem, rel_path)
+        )
+        """
+    )
+
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS mcts_controller_iterations (
+          run_key VARCHAR NOT NULL,
+          theorem VARCHAR NOT NULL,
+          variant VARCHAR,
+          rel_path VARCHAR NOT NULL,
+          iteration BIGINT NOT NULL,
+          event VARCHAR NOT NULL,
+          reason VARCHAR,
+          tier BIGINT,
+          budget BIGINT,
+          selected_path_json JSON,
+          node_mvar_id VARCHAR,
+          node_goal_sig VARCHAR,
+          node_goal_sig_strict VARCHAR,
+          node_goal_type VARCHAR,
+          node_visit_count BIGINT,
+          node_success_count BIGINT,
+          node_depth BIGINT,
+          node_is_terminal BOOLEAN,
+          node_is_dead BOOLEAN,
+          candidate_count BIGINT NOT NULL,
+          attempt_count BIGINT NOT NULL,
+          candidates_json JSON,
+          attempts_json JSON,
+          expanded BOOLEAN,
+          terminal_reached BOOLEAN,
+          backprop_success BOOLEAN,
+          agent_id BIGINT,
+          tree_nodes BIGINT,
+          tree_expansions BIGINT,
+          tree_max_depth BIGINT,
+          tree_solved BOOLEAN,
+          tree_aborted BOOLEAN,
+          tree_inflight BIGINT,
+          block_json JSON,
+          delay_json JSON,
+          reroute_json JSON,
+          source_sha256 VARCHAR,
+          PRIMARY KEY (run_key, theorem, rel_path, iteration, event)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS mcts_controller_metrics (
+          run_key VARCHAR NOT NULL,
+          theorem VARCHAR NOT NULL,
+          variant VARCHAR,
+          rel_path VARCHAR NOT NULL,
+          record_count BIGINT NOT NULL,
+          iteration_count BIGINT NOT NULL,
+          abort_count BIGINT NOT NULL,
+          unique_agent_count BIGINT NOT NULL,
+          unique_node_mvar_count BIGINT NOT NULL,
+          expanded_count BIGINT NOT NULL,
+          no_expansion_count BIGINT NOT NULL,
+          blocked_count BIGINT NOT NULL,
+          delayed_count BIGINT NOT NULL,
+          terminal_node_count BIGINT NOT NULL,
+          dead_node_count BIGINT NOT NULL,
+          no_goal_count BIGINT NOT NULL,
+          backprop_success_count BIGINT NOT NULL,
+          avg_candidate_count DOUBLE,
+          max_candidate_count BIGINT,
+          avg_attempt_count DOUBLE,
+          max_attempt_count BIGINT,
+          max_tree_nodes BIGINT,
+          max_tree_expansions BIGINT,
+          max_tree_depth BIGINT,
+          max_tree_inflight BIGINT,
+          reason_counts_json JSON,
+          source_sha256 VARCHAR,
           PRIMARY KEY (run_key, theorem, rel_path)
         )
         """
