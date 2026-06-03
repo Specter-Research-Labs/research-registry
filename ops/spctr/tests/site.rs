@@ -876,15 +876,17 @@ local_source = "artifacts/site-data"
 
     assert!(page.contains("Project Health"), "page should contain title");
     assert!(
-        page.contains("Alpha Project") && page.contains("Proof Paths Ready"),
+        page.contains("Alpha Project") && page.contains("Docs Maps Ready"),
         "page should contain project and summary"
     );
     assert!(
-        page.contains("check: ok")
-            && page.contains("smoke: ok")
-            && page.contains("build: ok")
-            && page.contains("publish: ok"),
-        "page should contain canonical action state"
+        !page.contains("Proof Paths Ready")
+            && !page.contains("Last Exec")
+            && !page.contains("check: ok")
+            && !page.contains("smoke: ok")
+            && !page.contains("build: ok")
+            && !page.contains("publish: ok"),
+        "page should omit proof and exec presentation state"
     );
     assert!(
         !root.join("site/projects/artifacts/index.html").exists(),
