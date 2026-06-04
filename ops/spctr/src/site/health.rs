@@ -144,10 +144,6 @@ pub fn render_html(report: &ProjectHealthReport) -> String {
                     span { (report.summary.visible_projects) }
                 }
                 li class="update-meta-item" {
-                    span class="update-meta-label" { "Proof Paths Ready" }
-                    span { (report.summary.proof_ready_projects) }
-                }
-                li class="update-meta-item" {
                     span class="update-meta-label" { "Docs Maps Ready" }
                     span { (report.summary.docs_ready_projects) }
                 }
@@ -464,26 +460,6 @@ fn render_project_card(project: &ProjectHealthEntry, page_path: &str) -> Markup 
                         }
                     }
                     div class="card-meta-row" {
-                        span class="card-meta-label" { "Proof" }
-                        span class="card-meta-value" {
-                            span class="project-chip" { (project.gate_state) }
-                            " "
-                            (render_action_chip(&project.check))
-                            " "
-                            (render_action_chip(&project.smoke))
-                            " "
-                            (render_action_chip(&project.build))
-                            @if project.publish.declared {
-                                " "
-                                (render_action_chip(&project.publish))
-                            }
-                            @for action in &project.additional_actions {
-                                " "
-                                (render_action_chip(action))
-                            }
-                        }
-                    }
-                    div class="card-meta-row" {
                         span class="card-meta-label" { "Docs" }
                         span class="card-meta-value" {
                             @if project.has_docs_readme {
@@ -508,16 +484,6 @@ fn render_project_card(project: &ProjectHealthEntry, page_path: &str) -> Markup 
                                 }
                             } @else {
                                 span class="project-chip" { (project.hub_mode) }
-                            }
-                        }
-                    }
-                    div class="card-meta-row" {
-                        span class="card-meta-label" { "Last Exec" }
-                        span class="card-meta-value" {
-                            @if let Some(ref ts) = project.last_exec_at {
-                                (compact_timestamp(ts))
-                            } @else {
-                                "no evidence"
                             }
                         }
                     }
@@ -568,19 +534,6 @@ fn render_status_value(project: &ProjectHealthEntry) -> Markup {
             " "
             span class="project-chip" { "release:" (project.release_stage) }
         }
-    }
-}
-
-fn render_action_chip(action: &ActionHealth) -> Markup {
-    let label = if !action.declared {
-        format!("{}: not-declared", action.name)
-    } else if let Some(ref status) = action.status {
-        format!("{}: {status}", action.name)
-    } else {
-        format!("{}: no-evidence", action.name)
-    };
-    html! {
-        span class="project-chip" { (label) }
     }
 }
 
