@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.request import Request, urlopen
 
 from leantree.core.lean import LeanGoal
 
@@ -29,6 +31,38 @@ Put the next tactic inside [TAC]...[/TAC]
 DEFAULT_IMPORTS = "import Mathlib\nopen BigOperators Real Nat Topology"
 
 STOP_SEQUENCES = ["[/TAC]", "\n\n\n", "---"]
+
+
+def _bytes_to_unicode() -> dict[int, str]:
+    visible = (
+        list(range(ord("!"), ord("~") + 1))
+        + list(range(ord("¡"), ord("¬") + 1))
+        + list(range(ord("®"), ord("ÿ") + 1))
+    )
+    byte_values = visible[:]
+    codepoints = visible[:]
+    n = 0
+    for byte in range(256):
+        if byte in byte_values:
+            continue
+        byte_values.append(byte)
+        codepoints.append(256 + n)
+        n += 1
+    return dict(zip(byte_values, (chr(cp) for cp in codepoints), strict=True))
+
+
+_BYTELEVEL_BYTE_DECODER = {char: byte for byte, char in _bytes_to_unicode().items()}
+
+
+def _decode_bytelevel_artifacts(text: str) -> str:
+    raw = bytearray()
+    for char in text:
+        byte = _BYTELEVEL_BYTE_DECODER.get(char)
+        if byte is None:
+            raw.extend(char.encode("utf-8"))
+        else:
+            raw.append(byte)
+    return raw.decode("utf-8", errors="replace")
 
 
 @dataclass
@@ -152,6 +186,7 @@ class DeepSeekTacticProvider(TacticProvider):
         self._vllm_next = 0
         self._model: Any = None
         self._tokenizer: Any = None
+        self._prompt_tokenizer: Any = None
         self._loaded = False
         self._cache: OrderedDict[str, list[tuple[str, float]]] = OrderedDict()
         self._cache_size = cache_size
@@ -170,8 +205,41 @@ class DeepSeekTacticProvider(TacticProvider):
         if not self._loaded:
             from mlx_lm import load
 
+            self._validate_mlx_model_config(self._model_path)
             self._model, self._tokenizer = load(self._model_path)
+            self._prompt_tokenizer = self._load_prompt_tokenizer(self._model_path)
             self._loaded = True
+
+    @staticmethod
+    def _validate_mlx_model_config(model_path: str) -> None:
+        config_path = Path(model_path) / "config.json"
+        if not config_path.exists():
+            return
+        with config_path.open() as f:
+            config = json.load(f)
+        if (
+            isinstance(config.get("rope_parameters"), dict)
+            and "rope_theta" not in config
+            and "rope_scaling" not in config
+        ):
+            raise RuntimeError(
+                "DeepSeek MLX model config is incompatible with mlx_lm: it "
+                "contains Hugging Face `rope_parameters` but lacks the "
+                "`rope_theta`/`rope_scaling` fields that mlx_lm reads. Refresh "
+                "the local model metadata from l3lab/ntp-mathlib-context-"
+                "deepseek-coder-1.3b or use a repaired MLX model path."
+            )
+
+    @staticmethod
+    def _load_prompt_tokenizer(model_path: str) -> Any | None:
+        tokenizer_path = Path(model_path) / "tokenizer.json"
+        if not tokenizer_path.exists():
+            return None
+        try:
+            from tokenizers import Tokenizer
+        except Exception:
+            return None
+        return Tokenizer.from_file(str(tokenizer_path))
 
     def _cache_get(self, prompt: str) -> list[tuple[str, float]] | None:
         cached = self._cache.get(prompt)
@@ -296,14 +364,26 @@ class DeepSeekTacticProvider(TacticProvider):
             self.avg_latency_ms = (self.avg_latency_ms * 0.9) + (elapsed_ms * 0.1)
 
     def _extract_tactic_from_generated(self, generated_only: str) -> str | None:
-        if "[/TAC]" in generated_only:
-            tactic = generated_only.split("[/TAC]")[0].strip()
+        text = _decode_bytelevel_artifacts(generated_only)
+        stop_positions = [
+            pos
+            for stop in ("[/TAC]", "</s>", "<｜end of sentence｜>", "<|EOT|>", "\n\n\n", "---")
+            if (pos := text.find(stop)) >= 0
+        ]
+        if stop_positions:
+            tactic = text[: min(stop_positions)].strip()
             if tactic:
                 return tactic
-        first_line = generated_only.strip().split("\n")[0].strip()
+        first_line = text.strip().split("\n")[0].strip()
         if first_line:
             return first_line
         return None
+
+    def _encode_prompt(self, prompt: str) -> list[int]:
+        tokenizer = self._prompt_tokenizer
+        if tokenizer is not None:
+            return list(tokenizer.encode(prompt, add_special_tokens=True).ids)
+        return list(self._tokenizer.encode(prompt))
 
     def _generate_tactics(self, prompt: str, n: int) -> list[tuple[str, float]]:
         self._ensure_loaded()
@@ -312,7 +392,7 @@ class DeepSeekTacticProvider(TacticProvider):
 
         num_to_generate = max(1, min(n, self._num_samples))
         sampler = make_sampler(temp=0.6, top_p=0.9)
-        encoded_prompt = list(self._tokenizer.encode(prompt))
+        encoded_prompt = self._encode_prompt(prompt)
         if len(encoded_prompt) > self.MAX_INPUT_LENGTH:
             keep_prefix = self.MAX_INPUT_LENGTH // 2
             keep_suffix = self.MAX_INPUT_LENGTH - keep_prefix

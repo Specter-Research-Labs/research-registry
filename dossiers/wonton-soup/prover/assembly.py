@@ -16,6 +16,25 @@ class AssemblyStep:
     goals_opened: list[str] = field(default_factory=list)
     action_metadata: dict[str, object] = field(default_factory=dict)
 
+    @classmethod
+    def from_json(cls, data: dict) -> "AssemblyStep":
+        partial_before = data.get("partialTermBefore")
+        partial_after = data.get("partialTermAfter")
+        action_metadata = data.get("actionMetadata")
+        return cls(
+            tactic=str(data["tactic"]),
+            mvar_id=str(data["mvarId"]),
+            partial_term_before=PartialProofTerm.from_json(partial_before)
+            if isinstance(partial_before, dict)
+            else None,
+            partial_term_after=PartialProofTerm.from_json(partial_after)
+            if isinstance(partial_after, dict)
+            else None,
+            goals_closed=[str(item) for item in data.get("goalsClosed", [])],
+            goals_opened=[str(item) for item in data.get("goalsOpened", [])],
+            action_metadata=deepcopy(action_metadata) if isinstance(action_metadata, dict) else {},
+        )
+
     def serialize(self) -> dict:
         return {
             "tactic": self.tactic,
@@ -38,6 +57,20 @@ class ProofAssemblyTrace:
     root_mvar_id: str
     steps: list[AssemblyStep] = field(default_factory=list)
     final_term: ExprDAG | None = None
+
+    @classmethod
+    def from_json(cls, data: dict) -> "ProofAssemblyTrace":
+        final_term = data.get("finalTerm")
+        return cls(
+            theorem=str(data["theorem"]),
+            root_mvar_id=str(data["rootMvarId"]),
+            steps=[
+                AssemblyStep.from_json(step)
+                for step in data.get("steps", [])
+                if isinstance(step, dict)
+            ],
+            final_term=ExprDAG.from_json(final_term) if isinstance(final_term, dict) else None,
+        )
 
     def add_step(
         self,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
@@ -30,18 +31,64 @@ def _lean_helpers():
     from orchestrator import lean as lean_mod
 
     return lean_mod
+
+
+def _optional_nonnegative_int_env(name: str) -> int | None:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        return None
+    return max(value, 0)
+
+
+def _optional_positive_int_env(name: str) -> int | None:
+    value = _optional_nonnegative_int_env(name)
+    if value is None or value == 0:
+        return None
+    return value
+
+
+def _graph_size(graph: ProofGraph) -> tuple[int, int]:
+    return graph.graph.number_of_nodes(), graph.graph.number_of_edges()
+
+
 def compute_pairwise_ged(result: TheoremResult) -> dict[str, Any]:
     variants = [("wild_type", result.wild_type.graph)]
     for int_result in result.interventions:
         variants.append((int_result.intervention.name, int_result.intervention_run.graph))
 
+    max_variants = _optional_nonnegative_int_env("WONTON_SUMMARY_MAX_PAIRWISE_GED_VARIANTS")
+    max_nodes = _optional_positive_int_env("WONTON_SUMMARY_MAX_PAIRWISE_GED_NODES")
+    max_edges = _optional_positive_int_env("WONTON_SUMMARY_MAX_PAIRWISE_GED_EDGES")
+    run_skip_reason = None
+    if max_variants is not None and len(variants) > max_variants:
+        run_skip_reason = f"variant_count>{max_variants}"
+
+    graph_sizes = {name: _graph_size(graph) for name, graph in variants}
+    skipped_pairs = 0
     matrix: dict[str, dict[str, float | None]] = {}
     for name1, graph1 in variants:
         matrix[name1] = {}
         for name2, graph2 in variants:
             if name1 == name2:
                 matrix[name1][name2] = 0.0
+            elif run_skip_reason is not None:
+                matrix[name1][name2] = None
+                skipped_pairs += 1
             else:
+                nodes1, edges1 = graph_sizes[name1]
+                nodes2, edges2 = graph_sizes[name2]
+                if max_nodes is not None and max(nodes1, nodes2) > max_nodes:
+                    matrix[name1][name2] = None
+                    skipped_pairs += 1
+                    continue
+                if max_edges is not None and max(edges1, edges2) > max_edges:
+                    matrix[name1][name2] = None
+                    skipped_pairs += 1
+                    continue
                 try:
                     matrix[name1][name2] = _lean_runner._canonical_graph_edit_distance(
                         graph1.to_canonical(),
@@ -54,6 +101,13 @@ def compute_pairwise_ged(result: TheoremResult) -> dict[str, Any]:
         "theorem": result.theorem.name,
         "variants": [variant[0] for variant in variants],
         "ged_matrix": matrix,
+        "ged_policy": {
+            "max_variants": max_variants,
+            "max_nodes": max_nodes,
+            "max_edges": max_edges,
+            "skip_reason": run_skip_reason,
+            "skipped_pairs": skipped_pairs,
+        },
     }
 
 
