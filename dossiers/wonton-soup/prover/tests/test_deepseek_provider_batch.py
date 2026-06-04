@@ -6,9 +6,10 @@ from types import SimpleNamespace
 
 import mlx_lm
 import mlx_lm.sample_utils as sample_utils
+import pytest
 from leantree.core.lean import LeanGoal
 
-from prover.providers.deepseek import DeepSeekTacticProvider
+from prover.providers.deepseek import DeepSeekTacticProvider, _decode_bytelevel_artifacts
 
 
 def test_deepseek_batches_concurrent_requests(tmp_path: Path) -> None:
@@ -124,3 +125,51 @@ def test_deepseek_generate_tactics_uses_batch_generate(
     assert calls[1]["max_tokens"] == provider.MAX_NEW_TOKENS
     assert calls[1]["sampler"] == "sampler"
     assert tactics == [("simp", 1.0), ("rw [h]", 0.75)]
+
+
+def test_deepseek_extracts_bytelevel_batch_output(tmp_path: Path) -> None:
+    model_dir = tmp_path / "dummy-mlx-model"
+    model_dir.mkdir()
+    provider = DeepSeekTacticProvider(model_path=str(model_dir))
+
+    assert provider._extract_tactic_from_generated("trivialĊ[/TAC]</s>noise") == "trivial"
+    assert (
+        provider._extract_tactic_from_generated("simpĠonlyĠ[Nat.cast_succ]Ċ[/TAC]")
+        == "simp only [Nat.cast_succ]"
+    )
+    assert _decode_bytelevel_artifacts("exactĠ(2Ġ:ĠâĦĿ)") == "exact (2 : ℝ)"
+
+
+def test_deepseek_uses_raw_tokenizer_for_prompt_encoding(tmp_path: Path) -> None:
+    model_dir = tmp_path / "dummy-mlx-model"
+    model_dir.mkdir()
+    provider = DeepSeekTacticProvider(model_path=str(model_dir))
+
+    class _Encoding:
+        ids = [32013, 185, 123]
+
+    class _PromptTokenizer:
+        def encode(self, prompt: str, *, add_special_tokens: bool):
+            assert prompt == "prompt"
+            assert add_special_tokens is True
+            return _Encoding()
+
+    class _FallbackTokenizer:
+        def encode(self, prompt: str) -> list[int]:
+            return [999]
+
+    provider._prompt_tokenizer = _PromptTokenizer()
+    provider._tokenizer = _FallbackTokenizer()
+
+    assert provider._encode_prompt("prompt") == [32013, 185, 123]
+
+
+def test_deepseek_rejects_stale_rope_parameters(tmp_path: Path) -> None:
+    model_dir = tmp_path / "stale-mlx-model"
+    model_dir.mkdir()
+    (model_dir / "config.json").write_text(
+        '{"rope_parameters": {"type": "linear", "factor": 4.0, "rope_theta": 100000}}'
+    )
+
+    with pytest.raises(RuntimeError, match="rope_parameters"):
+        DeepSeekTacticProvider._validate_mlx_model_config(str(model_dir))

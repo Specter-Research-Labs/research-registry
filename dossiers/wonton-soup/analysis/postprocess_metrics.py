@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
@@ -34,6 +35,7 @@ from prover.providers.base import normalize_tactic, tactic_family
 # bounded even when proof graphs are large.
 DEFAULT_MAX_SOFT_GED_NODES = 60
 DEFAULT_MAX_SOFT_GED_EDGES = 120
+DEFAULT_SOFT_GED_TIMEOUT_SEC = 5.0
 DEFAULT_MAX_NOVELTY_PAIRS = 200_000
 DEFAULT_MAX_PATH_DP_CELLS = 2_000_000
 DEFAULT_MAX_ROOT_GOAL_THEOREMS = 400
@@ -48,6 +50,39 @@ DEFAULT_EXTERNAL_STATEMENT_KNN_K = 12
 DEFAULT_EXTERNAL_STATEMENT_KNN_SAMPLE = 200
 DEFAULT_EXTERNAL_STATEMENT_SAMPLE_SIZE = 400
 DEFAULT_EXTERNAL_STATEMENT_MODE = "auto"
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer, got {raw!r}") from exc
+    if value < 0:
+        raise ValueError(f"{name} must be non-negative, got {value}")
+    return value
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a float, got {raw!r}") from exc
+    if value < 0:
+        raise ValueError(f"{name} must be non-negative, got {value}")
+    return value
+
+
+def _env_str(name: str, default: str) -> str:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    return raw
 
 
 def _load_graph(path: Path) -> ProofGraph:
@@ -393,6 +428,15 @@ def compute_goal_novelty(
 
     novel = sorted(int_sigs - wild_sigs)
     dropped = sorted(wild_sigs - int_sigs)
+    if max_pairs <= 0:
+        return {
+            "valid": False,
+            "validity_notes": ["skipped: max_pairs=0"],
+            "novel_goal_count": len(novel),
+            "dropped_goal_count": len(dropped),
+            "novel_min_distance": None,
+            "dropped_min_distance": None,
+        }
 
     def min_distances(
         sources: list[str],
@@ -458,6 +502,7 @@ def compute_soft_search_graph_ged(
     goal_sig_ted: GoalSigTedDistance | None,
     max_nodes: int = DEFAULT_MAX_SOFT_GED_NODES,
     max_edges: int = DEFAULT_MAX_SOFT_GED_EDGES,
+    timeout_sec: float = DEFAULT_SOFT_GED_TIMEOUT_SEC,
 ) -> dict[str, Any]:
     if goal_sig_ted is None:
         return {
@@ -543,7 +588,10 @@ def compute_soft_search_graph_ged(
         edge_subst_cost=edge_subst_cost,
         edge_del_cost=edge_del_cost,
         edge_ins_cost=edge_ins_cost,
+        timeout=timeout_sec,
     )
+    if ged is None:
+        validity_notes.append(f"timeout: soft GED exceeded {timeout_sec:g}s")
 
     if sig_errors:
         examples = list(sorted(sig_errors.items()))[:5]
@@ -608,16 +656,47 @@ def compute_solution_path_soft_distance(
 
 @dataclass(frozen=True)
 class PostprocessParams:
-    max_soft_ged_nodes: int = DEFAULT_MAX_SOFT_GED_NODES
-    max_soft_ged_edges: int = DEFAULT_MAX_SOFT_GED_EDGES
-    max_novelty_pairs: int = DEFAULT_MAX_NOVELTY_PAIRS
-    max_path_dp_cells: int = DEFAULT_MAX_PATH_DP_CELLS
+    max_soft_ged_nodes: int = field(
+        default_factory=lambda: _env_int(
+            "WONTON_POSTPROCESS_MAX_SOFT_GED_NODES",
+            DEFAULT_MAX_SOFT_GED_NODES,
+        )
+    )
+    max_soft_ged_edges: int = field(
+        default_factory=lambda: _env_int(
+            "WONTON_POSTPROCESS_MAX_SOFT_GED_EDGES",
+            DEFAULT_MAX_SOFT_GED_EDGES,
+        )
+    )
+    soft_ged_timeout_sec: float = field(
+        default_factory=lambda: _env_float(
+            "WONTON_POSTPROCESS_SOFT_GED_TIMEOUT_SEC",
+            DEFAULT_SOFT_GED_TIMEOUT_SEC,
+        )
+    )
+    max_novelty_pairs: int = field(
+        default_factory=lambda: _env_int(
+            "WONTON_POSTPROCESS_MAX_NOVELTY_PAIRS",
+            DEFAULT_MAX_NOVELTY_PAIRS,
+        )
+    )
+    max_path_dp_cells: int = field(
+        default_factory=lambda: _env_int(
+            "WONTON_POSTPROCESS_MAX_PATH_DP_CELLS",
+            DEFAULT_MAX_PATH_DP_CELLS,
+        )
+    )
     max_root_goal_theorems: int = DEFAULT_MAX_ROOT_GOAL_THEOREMS
     max_root_goal_knn_theorems: int = DEFAULT_MAX_ROOT_GOAL_KNN_THEOREMS
     root_goal_knn_k: int = DEFAULT_ROOT_GOAL_KNN_K
     root_goal_knn_sample: int = DEFAULT_ROOT_GOAL_KNN_SAMPLE
     root_goal_sample_size: int = DEFAULT_ROOT_GOAL_SAMPLE_SIZE
-    root_goal_mode: str = DEFAULT_ROOT_GOAL_MODE
+    root_goal_mode: str = field(
+        default_factory=lambda: _env_str(
+            "WONTON_POSTPROCESS_ROOT_GOAL_MODE",
+            DEFAULT_ROOT_GOAL_MODE,
+        )
+    )
     external_statement_max_full: int = DEFAULT_EXTERNAL_STATEMENT_MAX_FULL
     external_statement_max_knn: int = DEFAULT_EXTERNAL_STATEMENT_MAX_KNN
     external_statement_knn_k: int = DEFAULT_EXTERNAL_STATEMENT_KNN_K
@@ -643,6 +722,7 @@ def _staleness_params(params: PostprocessParams) -> dict[str, Any]:
     return {
         "max_soft_ged_nodes": params.max_soft_ged_nodes,
         "max_soft_ged_edges": params.max_soft_ged_edges,
+        "soft_ged_timeout_sec": params.soft_ged_timeout_sec,
         "max_novelty_pairs": params.max_novelty_pairs,
         "max_path_dp_cells": params.max_path_dp_cells,
         "max_root_goal_theorems": params.max_root_goal_theorems,
@@ -1069,6 +1149,7 @@ def postprocess_provider_run(
                             goal_sig_ted=goal_sig_ted,
                             max_nodes=params.max_soft_ged_nodes,
                             max_edges=params.max_soft_ged_edges,
+                            timeout_sec=params.soft_ged_timeout_sec,
                         )
                     except Exception as e:
                         soft_ged = _soft_ged_exception_entry(e)
@@ -1172,22 +1253,30 @@ def postprocess_provider_run(
     write_json_gz_atomic(summary_path, summary)
 
     root_goal_similarity_path = run_dir / "root_goal_similarity.json"
-    try:
-        root_report = compute_root_goal_similarity(
-            run_dir,
-            max_theorems=params.max_root_goal_theorems,
-            max_knn_theorems=params.max_root_goal_knn_theorems,
-            knn_k=params.root_goal_knn_k,
-            knn_sample_size=params.root_goal_knn_sample,
-            sample_size=params.root_goal_sample_size,
-            mode=params.root_goal_mode,
-        )
-    except Exception as e:
+    if params.root_goal_mode == "skip":
         root_report = {
             "schema_version": 1,
             "valid": False,
-            "validity_notes": [f"exception: {type(e).__name__}: {e}"],
+            "validity_notes": ["skipped: root_goal_mode=skip"],
+            "matrix_mode": None,
         }
+    else:
+        try:
+            root_report = compute_root_goal_similarity(
+                run_dir,
+                max_theorems=params.max_root_goal_theorems,
+                max_knn_theorems=params.max_root_goal_knn_theorems,
+                knn_k=params.root_goal_knn_k,
+                knn_sample_size=params.root_goal_knn_sample,
+                sample_size=params.root_goal_sample_size,
+                mode=params.root_goal_mode,
+            )
+        except Exception as e:
+            root_report = {
+                "schema_version": 1,
+                "valid": False,
+                "validity_notes": [f"exception: {type(e).__name__}: {e}"],
+            }
     write_json_atomic(root_goal_similarity_path, root_report)
 
     return {
@@ -1274,6 +1363,7 @@ def postprocess_run(
         "params": {
             "max_soft_ged_nodes": params.max_soft_ged_nodes,
             "max_soft_ged_edges": params.max_soft_ged_edges,
+            "soft_ged_timeout_sec": params.soft_ged_timeout_sec,
             "max_novelty_pairs": params.max_novelty_pairs,
             "max_path_dp_cells": params.max_path_dp_cells,
             "max_root_goal_theorems": params.max_root_goal_theorems,

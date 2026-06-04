@@ -8,6 +8,12 @@ Runtime settings and reproducibility constraints for `DeepSeekTacticProvider`.
 - Runtime: local MLX (`mlx_lm`)
 - Expected converted model location (default):
   - `$SPECTER_ARTIFACT_ROOT/wonton-soup/models/ntp-mathlib-deepseek-1.3b-mlx-bf16`
+- The MLX config must expose the rotary settings in the fields read by
+  `mlx_lm`: `rope_theta: 100000` and
+  `rope_scaling: {"type": "linear", "factor": 4.0}`.
+- The tokenizer must match the upstream ByteLevel tokenizer from the model repo.
+  Stale local snapshots with Metaspace tokenizer metadata produce literal
+  byte-level artifacts such as `Ġ` and `Ċ`.
 
 Implementation: `prover/providers/deepseek.py` (`_resolve_model_path`).
 
@@ -23,6 +29,10 @@ Current code path uses stochastic sampling:
   Python-side serial loop
 - prompt tokens are truncated to the 2048-token window by keeping both the prefix
   and suffix when the assembled prompt is too long
+- prompt encoding uses the raw `tokenizer.json` when available so ByteLevel
+  newlines and spaces are preserved
+- generated batch text is normalized from ByteLevel artifacts before tactic
+  extraction
 
 Implementation: `prover/providers/deepseek.py` (`_generate_tactics`).
 
@@ -78,6 +88,12 @@ Primary knobs affecting cost/variance:
 
 - Model path missing:
   - Ensure `$SPECTER_ARTIFACT_ROOT` is set and converted MLX model exists.
+- Stale or incompatible converted metadata:
+  - Refresh local tokenizer/config files from
+    `l3lab/ntp-mathlib-context-deepseek-coder-1.3b`.
+  - The provider rejects configs that contain only Hugging Face
+    `rope_parameters` without the MLX-readable `rope_theta`/`rope_scaling`
+    fields.
 - Low diversity despite sampling:
   - Check prompt cache hit rate and effective `num_samples`.
 - Unstable outputs across runs:

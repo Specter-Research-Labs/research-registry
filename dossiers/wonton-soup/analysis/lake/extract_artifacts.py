@@ -277,6 +277,11 @@ def _open_jsonl(path: Path):
     return path.open("r", encoding="utf-8")
 
 
+def _table_columns(conn: duckdb.DuckDBPyConnection, table: str) -> set[str]:
+    rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+    return {str(row[1]) for row in rows if len(row) > 1 and isinstance(row[1], str)}
+
+
 def _summarize_mcts_trace(path: Path) -> dict[str, Any]:
     line_count = 0
     bad_json_lines = 0
@@ -341,6 +346,7 @@ def _summarize_mcts_trace(path: Path) -> dict[str, Any]:
         "candidate_total": candidate_total,
         "candidate_max": candidate_max,
         "event_counts": event_counts,
+        "iteration_rows": [],
     }
 
 
@@ -516,30 +522,72 @@ def extract_artifact_facts(
                         payload = _read_json_auto(cand.abs_path)
                         if not isinstance(payload, dict):
                             raise ValueError("graph payload must be object")
-                        graph_kind = _graph_kind(cand, payload)
+                        graph_family = _graph_kind(cand, payload)
+                        graph_backend = payload.get("graph_backend")
+                        if not isinstance(graph_backend, str) or not graph_backend.strip():
+                            graph_backend = "unknown"
+                        graph_provenance = payload.get("graph_provenance")
+                        if (
+                            not isinstance(graph_provenance, str)
+                            or not graph_provenance.strip()
+                        ):
+                            graph_provenance = "unknown"
+                        graph_schema_version = payload.get("graph_schema_version")
+                        if not isinstance(graph_schema_version, int):
+                            graph_schema_version = 0
                         node_rows = _parse_graph_nodes(payload=payload)
                         edge_rows = _parse_graph_edges(payload=payload)
+                        graph_node_columns = _table_columns(conn, "graph_nodes")
+                        graph_edge_columns = _table_columns(conn, "graph_edges")
                         for node_id, goal_sig, in_proof, attrs in node_rows:
-                            conn.execute(
-                                """
-                                INSERT INTO graph_nodes(
-                                  run_key, theorem, variant, graph_kind, rel_path,
-                                  node_id, goal_sig, in_proof, attrs_json, source_sha256
-                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                """,
-                                [
-                                    run_key,
-                                    cand.theorem,
-                                    cand.variant,
-                                    graph_kind,
-                                    cand.rel_path,
-                                    node_id,
-                                    goal_sig,
-                                    in_proof,
-                                    json.dumps(attrs) if attrs is not None else None,
-                                    sha,
-                                ],
-                            )
+                            node_values = [
+                                run_key,
+                                cand.theorem,
+                                cand.variant,
+                                graph_family,
+                                cand.rel_path,
+                                node_id,
+                                goal_sig,
+                                in_proof,
+                                json.dumps(attrs) if attrs is not None else None,
+                                sha,
+                            ]
+                            if "graph_family" in graph_node_columns:
+                                conn.execute(
+                                    """
+                                    INSERT INTO graph_nodes(
+                                      run_key, theorem, variant,
+                                      graph_family, graph_backend, graph_provenance,
+                                      graph_schema_version, rel_path,
+                                      node_id, goal_sig, in_proof, attrs_json, source_sha256
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    """,
+                                    [
+                                        run_key,
+                                        cand.theorem,
+                                        cand.variant,
+                                        graph_family,
+                                        graph_backend,
+                                        graph_provenance,
+                                        graph_schema_version,
+                                        cand.rel_path,
+                                        node_id,
+                                        goal_sig,
+                                        in_proof,
+                                        json.dumps(attrs) if attrs is not None else None,
+                                        sha,
+                                    ],
+                                )
+                            else:
+                                conn.execute(
+                                    """
+                                    INSERT INTO graph_nodes(
+                                      run_key, theorem, variant, graph_kind, rel_path,
+                                      node_id, goal_sig, in_proof, attrs_json, source_sha256
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    """,
+                                    node_values,
+                                )
                         for (
                             edge_idx,
                             src,
@@ -549,30 +597,62 @@ def extract_artifact_facts(
                             in_proof,
                             attrs,
                         ) in edge_rows:
-                            conn.execute(
-                                """
-                                INSERT INTO graph_edges(
-                                  run_key, theorem, variant, graph_kind, rel_path,
-                                  edge_idx, src_node_id, dst_node_id,
-                                  tactic, tactic_family, in_proof, attrs_json, source_sha256
-                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                """,
-                                [
-                                    run_key,
-                                    cand.theorem,
-                                    cand.variant,
-                                    graph_kind,
-                                    cand.rel_path,
-                                    edge_idx,
-                                    src,
-                                    dst,
-                                    tactic,
-                                    family,
-                                    in_proof,
-                                    json.dumps(attrs) if attrs is not None else None,
-                                    sha,
-                                ],
-                            )
+                            edge_values = [
+                                run_key,
+                                cand.theorem,
+                                cand.variant,
+                                graph_family,
+                                cand.rel_path,
+                                edge_idx,
+                                src,
+                                dst,
+                                tactic,
+                                family,
+                                in_proof,
+                                json.dumps(attrs) if attrs is not None else None,
+                                sha,
+                            ]
+                            if "graph_family" in graph_edge_columns:
+                                conn.execute(
+                                    """
+                                    INSERT INTO graph_edges(
+                                      run_key, theorem, variant,
+                                      graph_family, graph_backend, graph_provenance,
+                                      graph_schema_version, rel_path,
+                                      edge_idx, src_node_id, dst_node_id,
+                                      tactic, tactic_family, in_proof, attrs_json, source_sha256
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    """,
+                                    [
+                                        run_key,
+                                        cand.theorem,
+                                        cand.variant,
+                                        graph_family,
+                                        graph_backend,
+                                        graph_provenance,
+                                        graph_schema_version,
+                                        cand.rel_path,
+                                        edge_idx,
+                                        src,
+                                        dst,
+                                        tactic,
+                                        family,
+                                        in_proof,
+                                        json.dumps(attrs) if attrs is not None else None,
+                                        sha,
+                                    ],
+                                )
+                            else:
+                                conn.execute(
+                                    """
+                                    INSERT INTO graph_edges(
+                                      run_key, theorem, variant, graph_kind, rel_path,
+                                      edge_idx, src_node_id, dst_node_id,
+                                      tactic, tactic_family, in_proof, attrs_json, source_sha256
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    """,
+                                    edge_values,
+                                )
                         _set_extract_state(
                             conn,
                             run_key=run_key,
@@ -660,6 +740,9 @@ def extract_artifact_facts(
                                 json.dumps(summary["event_counts"]),
                             ],
                         )
+                        iteration_rows = summary.get("iteration_rows")
+                        if not isinstance(iteration_rows, list):
+                            iteration_rows = []
                         if iteration_rows:
                             conn.executemany(
                                 """
@@ -694,14 +777,8 @@ def extract_artifact_facts(
                                     for row in iteration_rows
                                 ],
                             )
-                        _insert_mcts_controller_metrics(
-                            conn,
-                            run_key=run_key,
-                            theorem=cand.theorem,
-                            variant=cand.variant,
-                            rel_path=cand.rel_path,
-                            source_sha256=sha,
-                        )
+                            # Controller metrics require richer per-iteration controller rows.
+                            # Plain MCTS trace files only contribute mcts_trace_stats.
                         _set_extract_state(
                             conn,
                             run_key=run_key,

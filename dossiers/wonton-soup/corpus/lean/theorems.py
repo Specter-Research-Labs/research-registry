@@ -1,8 +1,11 @@
 # ruff: noqa: E402, E501
+import re
 from dataclasses import dataclass
 
 from prover.history import ExplorationHistory
 from prover.providers.base import normalize_tactic
+
+_TACTIC_HEAD_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_'.?]*")
 
 
 @dataclass
@@ -23,13 +26,21 @@ class Theorem:
         else:
             used_tactics = sorted(wild_type_history.attempted_tactics())
 
-        used_heads = {_tactic_head(tactic) for tactic in used_tactics if tactic}
+        used_heads = {
+            head
+            for tactic in used_tactics
+            if tactic and (head := _tactic_head(tactic)) is not None
+        }
         interventions = [
             Intervention(name=f"block_{head}", blocked={head})
             for head in sorted(used_heads)
         ]
 
-        attempted_heads = {_tactic_head(tactic) for tactic in wild_type_history.attempted_tactics()}
+        attempted_heads = {
+            head
+            for tactic in wild_type_history.attempted_tactics()
+            if (head := _tactic_head(tactic)) is not None
+        }
         unused_heads = sorted(attempted_heads - used_heads)
         if unused_heads:
             control_tactic = unused_heads[0]
@@ -42,9 +53,14 @@ class Theorem:
         return interventions
 
 
-def _tactic_head(tactic: str) -> str:
+def _tactic_head(tactic: str) -> str | None:
     tactic_norm = normalize_tactic(tactic)
-    return tactic_norm.split(" ", 1)[0]
+    if not tactic_norm:
+        return None
+    head = tactic_norm.split(" ", 1)[0]
+    if _TACTIC_HEAD_RE.fullmatch(head) is None:
+        return None
+    return head
 
 
 CORPUS: list[Theorem] = [

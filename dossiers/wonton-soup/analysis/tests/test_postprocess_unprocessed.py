@@ -28,6 +28,7 @@ def _params_dict(params: PostprocessParams) -> dict[str, object]:
     return {
         "max_soft_ged_nodes": params.max_soft_ged_nodes,
         "max_soft_ged_edges": params.max_soft_ged_edges,
+        "soft_ged_timeout_sec": params.soft_ged_timeout_sec,
         "max_novelty_pairs": params.max_novelty_pairs,
         "max_path_dp_cells": params.max_path_dp_cells,
         "max_root_goal_theorems": params.max_root_goal_theorems,

@@ -329,22 +329,27 @@ class ProofGraph:
         if not roots:
             return None
 
-        terminals = [
+        terminals = {
             n for n in self.graph.nodes if self.graph.nodes[n].get("is_terminal", False)
-        ]
+        }
         if not terminals:
             return None
 
+        terminal_reachable = set(terminals)
+        stack = list(terminals)
+        while stack:
+            node_id = stack.pop()
+            for pred in self.graph.predecessors(node_id):
+                if pred not in terminal_reachable:
+                    terminal_reachable.add(pred)
+                    stack.append(pred)
+
         result: list[dict] = []
-        visited: set[str] = set()
+        active: set[str] = set()
 
         def visit(node_id: str) -> bool:
-            if node_id in visited:
-                return node_id in terminals or any(
-                    self.graph.nodes[succ].get("is_terminal", False)
-                    for succ in nx.descendants(self.graph, node_id)
-                )
-            visited.add(node_id)
+            if node_id in active or node_id not in terminal_reachable:
+                return False
 
             node_data = self.graph.nodes[node_id]
             if node_data.get("is_terminal", False):
@@ -355,15 +360,21 @@ class ProofGraph:
                 })
                 return True
 
-            for succ in self.graph.successors(node_id):
-                edge_data = self.graph.edges[node_id, succ]
-                if visit(succ):
-                    result.append({
-                        "goal": node_data.get("goal_type", ""),
-                        "tactic": edge_data.get("tactic", ""),
-                        "mvar_id": node_id,
-                    })
-                    return True
+            active.add(node_id)
+            try:
+                for succ in self.graph.successors(node_id):
+                    if succ not in terminal_reachable:
+                        continue
+                    edge_data = self.graph.edges[node_id, succ]
+                    if visit(succ):
+                        result.append({
+                            "goal": node_data.get("goal_type", ""),
+                            "tactic": edge_data.get("tactic", ""),
+                            "mvar_id": node_id,
+                        })
+                        return True
+            finally:
+                active.remove(node_id)
 
             return False
 
