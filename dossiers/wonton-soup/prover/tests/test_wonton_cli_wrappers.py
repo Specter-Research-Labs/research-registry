@@ -117,6 +117,7 @@ def test_lean_run_forwards_defaults_sync_and_extended_options(monkeypatch) -> No
         deepseek_model_path="/tmp/deepseek.gguf",
         search_seed=17,
         no_solution_artifacts=True,
+        baseline_solved_only=True,
         intervention_name=["cut"],
         extra_intervention=["nocases:cases"],
     )
@@ -137,6 +138,7 @@ def test_lean_run_forwards_defaults_sync_and_extended_options(monkeypatch) -> No
     assert extended["deepseek_model_path"] == "/tmp/deepseek.gguf"
     assert extended["search_seed"] == 17
     assert extended["no_solution_artifacts"] is True
+    assert extended["baseline_solved_only"] is True
     assert extended["intervention_name"] == ["cut"]
     assert extended["extra_intervention"] == ["nocases:cases"]
 
@@ -146,7 +148,12 @@ def test_lean_basin_forces_basin_mode_without_interventions(monkeypatch) -> None
 
     calls = _capture_keyword_calls(monkeypatch, wonton, "_run_lean_command")
 
-    wonton.lean_basin(seeds=7, blind=True, sync=False)
+    wonton.lean_basin(
+        seeds=7,
+        blind=True,
+        mcts_expansion_policy="first-success",
+        sync=False,
+    )
 
     captured = calls[0]
     assert captured["basin_seeds"] == 7
@@ -154,6 +161,7 @@ def test_lean_basin_forces_basin_mode_without_interventions(monkeypatch) -> None
     assert captured["wild_only"] is False
     assert captured["with_interventions"] is False
     assert captured["analysis"] is False
+    assert captured["mcts_expansion_policy"] == "first-success"
     assert captured["no_sync"] is True
 
 

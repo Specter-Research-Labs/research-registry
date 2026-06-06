@@ -1889,6 +1889,7 @@ def lean_run(
     trace_mcts: bool = typer.Option(False, "--trace-mcts", help="Enable MCTS tracing"),
     no_trace_mcts: bool = typer.Option(False, "--no-trace-mcts", help="Disable MCTS tracing"),
     mcts_mode: str | None = _lean_typer_option("mcts_mode"),
+    mcts_expansion_policy: str | None = _lean_typer_option("mcts_expansion_policy"),
     mcts_agents: int | None = _lean_typer_option("mcts_agents"),
     mcts_inflight: int | None = _lean_typer_option("mcts_inflight"),
     mcts_block_fraction: float | None = _lean_typer_option("mcts_block_fraction"),
@@ -1929,6 +1930,7 @@ def lean_run(
     resume: bool = _lean_typer_option("resume"),
     analysis: bool = _lean_typer_option("analysis"),
     no_solution_artifacts: bool = _lean_typer_option("no_solution_artifacts"),
+    baseline_solved_only: bool = _lean_typer_option("baseline_solved_only"),
     intervention_name: list[str] | None = _lean_typer_option("intervention_name"),
     extra_intervention: list[str] | None = _lean_typer_option("extra_intervention"),
     tactic_ranker: str | None = _lean_typer_option("tactic_ranker"),
@@ -1956,6 +1958,7 @@ def lean_basin(
     trace_mcts: bool = typer.Option(False, "--trace-mcts", help="Enable MCTS tracing"),
     no_trace_mcts: bool = typer.Option(False, "--no-trace-mcts", help="Disable MCTS tracing"),
     mcts_mode: str | None = _lean_typer_option("mcts_mode"),
+    mcts_expansion_policy: str | None = _lean_typer_option("mcts_expansion_policy"),
     mcts_agents: int | None = _lean_typer_option("mcts_agents"),
     mcts_inflight: int | None = _lean_typer_option("mcts_inflight"),
     mcts_block_fraction: float | None = _lean_typer_option("mcts_block_fraction"),
@@ -2026,6 +2029,7 @@ def lean_suite(
     trace_mcts: bool = typer.Option(False, "--trace-mcts", help="Enable MCTS tracing"),
     no_trace_mcts: bool = typer.Option(False, "--no-trace-mcts", help="Disable MCTS tracing"),
     mcts_mode: str | None = _lean_typer_option("mcts_mode"),
+    mcts_expansion_policy: str | None = _lean_typer_option("mcts_expansion_policy"),
     mcts_agents: int | None = _lean_typer_option("mcts_agents"),
     mcts_inflight: int | None = _lean_typer_option("mcts_inflight"),
     mcts_block_fraction: float | None = _lean_typer_option("mcts_block_fraction"),
@@ -2065,6 +2069,7 @@ def lean_suite(
     run_id: str | None = _lean_typer_option("run_id"),
     analysis: bool = _lean_typer_option("analysis"),
     no_solution_artifacts: bool = _lean_typer_option("no_solution_artifacts"),
+    baseline_solved_only: bool = _lean_typer_option("baseline_solved_only"),
     intervention_name: list[str] | None = _lean_typer_option("intervention_name"),
     extra_intervention: list[str] | None = _lean_typer_option("extra_intervention"),
     tactic_ranker: str | None = _lean_typer_option("tactic_ranker"),
@@ -2169,6 +2174,25 @@ def corpus_build_lean_coq_paired_micro(
         corpus_id=corpus_id,
         pairs_path=Path(pairs_path),
         limit=limit,
+    )
+
+
+@corpus_app.command("build-lean-subset")
+def corpus_build_lean_subset(
+    corpus_id: str = typer.Option(..., "--corpus-id"),
+    source_ref: str = typer.Option(..., "--source-ref"),
+    theorems_path: str = typer.Option(..., "--theorems-path"),
+    sync: bool = typer.Option(False, "--sync/--no-sync", help="Sync outputs to remote"),
+) -> None:
+    from corpus.pipeline.build import build_lean_subset
+
+    _build_and_emit_corpus(
+        build_lean_subset,
+        sync=sync,
+        sync_reason="corpus-build-lean-subset",
+        corpus_id=corpus_id,
+        source_ref=source_ref,
+        theorems_path=Path(theorems_path),
     )
 
 

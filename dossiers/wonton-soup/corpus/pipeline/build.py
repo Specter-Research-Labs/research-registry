@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,11 @@ import yaml
 from analysis.cross_assistant_paired_benchmark import load_benchmark_manifest
 from corpus.artifacts import (
     compute_build_id,
+    iter_jsonl,
+    load_manifest,
     make_manifest,
+    parse_corpus_ref,
+    resolve_build_dir,
     resolve_corpus_artifact_root,
     sha256_file,
     write_current_id,
@@ -221,6 +226,158 @@ def _read_mathlib_pins(lean_project: Path) -> tuple[str, str]:
     if not rev:
         raise ValueError("mathlib rev missing in lake-manifest.json")
     return toolchain, rev
+
+
+def _source_items_path(build_dir: Path, manifest: dict[str, Any]) -> Path:
+    items_file = manifest.get("items_file") or "items.jsonl"
+    if not isinstance(items_file, str) or not items_file:
+        raise ValueError(f"Invalid source manifest items_file: {build_dir / 'manifest.json'}")
+    items_path = build_dir / items_file
+    if not items_path.exists():
+        raise FileNotFoundError(f"Source corpus items not found: {items_path}")
+    return items_path
+
+
+def build_lean_subset(
+    *,
+    corpus_id: str,
+    source_ref: str,
+    theorems_path: Path,
+) -> BuiltCorpus:
+    requested = [
+        line.strip()
+        for line in theorems_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if not requested:
+        raise ValueError(f"No theorem identifiers found in {theorems_path}")
+    if len(set(requested)) != len(requested):
+        dupes = [
+            theorem
+            for theorem, count in Counter(requested).items()
+            if count > 1
+        ]
+        raise ValueError(f"Duplicate theorem identifiers in {theorems_path}: {dupes[:10]}")
+
+    if ":" not in source_ref:
+        return _build_lean_subset_from_named_corpus(
+            corpus_id=corpus_id,
+            source_name=source_ref,
+            theorems_path=theorems_path,
+            requested=requested,
+        )
+
+    ref = parse_corpus_ref(source_ref)
+    if ref.backend != "lean":
+        raise ValueError(f"Expected Lean source ref, got {source_ref!r}")
+    if ref.derived is not None:
+        raise ValueError("build_lean_subset does not support derived source refs")
+    source = resolve_build_dir(ref.backend, ref.corpus_id, build_id=ref.build_id)
+    manifest = load_manifest(source.build_dir)
+    items_path = _source_items_path(source.build_dir, manifest)
+    by_id = {str(item.get("item_id")): item for item in iter_jsonl(items_path)}
+    missing = [theorem for theorem in requested if theorem not in by_id]
+    if missing:
+        preview = ", ".join(missing[:10])
+        raise ValueError(
+            f"{len(missing)} requested theorem identifiers were not found in {source_ref}: "
+            f"{preview}"
+        )
+
+    selected = [dict(by_id[theorem]) for theorem in requested]
+    provenance = list(manifest.get("provenance") or [])
+    provenance.append(
+        {
+            "kind": "lean_subset",
+            "source_ref": source_ref,
+            "source_build_id": source.build_id,
+            "theorems_path": str(theorems_path),
+        }
+    )
+    return _finalize_build(
+        backend="lean",
+        corpus_id=corpus_id,
+        provenance=provenance,
+        build_config={
+            "source_ref": source_ref,
+            "source_build_id": source.build_id,
+            "requested_count": len(requested),
+            "selected_count": len(selected),
+            "theorems_path": str(theorems_path),
+        },
+        item_id_scheme=str(manifest.get("item_id_scheme") or "source_item_id"),
+        items=selected,
+    )
+
+
+def _build_lean_subset_from_named_corpus(
+    *,
+    corpus_id: str,
+    source_name: str,
+    theorems_path: Path,
+    requested: list[str],
+) -> BuiltCorpus:
+    from corpus.lean.harder_theorems import CORPUS_HARD
+    from corpus.lean.research import CORPUS_RESEARCH
+    from corpus.lean.theorems import (
+        CORPUS,
+        CORPUS_EXPANDED,
+        CORPUS_MATHLIB,
+        CORPUS_MINIF2F,
+        CORPUS_PROVERBENCH,
+        DEEPSEEK_CORPUS,
+    )
+
+    named = {
+        "easy": CORPUS,
+        "hard": CORPUS_HARD,
+        "research": CORPUS_RESEARCH,
+        "deepseek": DEEPSEEK_CORPUS,
+        "expanded": CORPUS_EXPANDED,
+        "mathlib": CORPUS_MATHLIB,
+        "minif2f": CORPUS_MINIF2F,
+        "proverbench": CORPUS_PROVERBENCH,
+    }
+    if source_name not in named:
+        raise ValueError(f"Unknown named Lean source corpus: {source_name}")
+    by_id = {theorem.name: theorem for theorem in named[source_name]}
+    missing = [theorem for theorem in requested if theorem not in by_id]
+    if missing:
+        preview = ", ".join(missing[:10])
+        raise ValueError(
+            f"{len(missing)} requested theorem identifiers were not found in {source_name}: "
+            f"{preview}"
+        )
+    selected = [
+        {
+            "item_id": theorem,
+            "payload": {
+                "statement": by_id[theorem].statement,
+                "display_name": theorem,
+                "source_corpus": source_name,
+            },
+        }
+        for theorem in requested
+    ]
+    return _finalize_build(
+        backend="lean",
+        corpus_id=corpus_id,
+        provenance=[
+            {
+                "kind": "lean_named_subset",
+                "source_ref": source_name,
+                "theorems_path": str(theorems_path),
+            }
+        ],
+        build_config={
+            "source_ref": source_name,
+            "requested_count": len(requested),
+            "selected_count": len(selected),
+            "theorems_path": str(theorems_path),
+        },
+        item_id_scheme="named_corpus_item_id",
+        items=selected,
+    )
 
 
 def build_lean_mathlib(
