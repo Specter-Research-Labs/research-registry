@@ -48,6 +48,11 @@ def _parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument("--mcts-agents", type=int, required=True)
+    parser.add_argument(
+        "--mcts-expansion-policy",
+        choices=("first-success", "all-successes"),
+        default="all-successes",
+    )
     parser.add_argument("--mcts-inflight", type=int, required=True)
     parser.add_argument("--mcts-virtual-loss", type=int, default=0)
     parser.add_argument("--mcts-depth-bias", type=float, default=0.0)
@@ -220,12 +225,14 @@ async def _run_scenarios(args: argparse.Namespace, scenarios: Iterable[Scenario]
             skip_interventions=False,
             block_easy=block_easy,
             mcts_mode="distributed",
+            expansion_policy=args.mcts_expansion_policy,
             distributed_settings=scenario.settings,
             provider_label=f"{args.provider}+{scenario.name}",
             mode="distributed_mcts_sweep",
             mode_defaults={"budget": args.budget},
             cli_args={
                 "scenario": scenario.name,
+                "mcts_expansion_policy": args.mcts_expansion_policy,
                 "block_fractions": args.block_fractions,
                 "delay_probabilities": args.delay_probabilities,
                 "adaptation": args.adaptation,

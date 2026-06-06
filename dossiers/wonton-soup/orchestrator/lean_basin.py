@@ -17,7 +17,7 @@ from orchestrator.lean_runner import (
 from prover import GoalCache, LeanAdapter
 from prover.goal_signature import GoalSignatureConfig
 from prover.k import k_log10_ratio
-from prover.mcts import SearchPolicy
+from prover.mcts import ExpansionPolicy, SearchPolicy
 from prover.providers import TacticProvider
 
 
@@ -207,6 +207,7 @@ async def run_basin_analysis(
     seeds: list[int],
     include_blind: bool = False,
     mcts_mode: str = "centralized",
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES,
     distributed_settings: dict[str, Any] | None = None,
     goal_cache: GoalCache | None = None,
     goal_sig_config: GoalSignatureConfig | None = None,
@@ -238,6 +239,7 @@ async def run_basin_analysis(
             goal_cache=goal_cache_for_run,
             goal_sig_config=goal_sig_config,
             mcts_mode=mcts_mode,
+            expansion_policy=expansion_policy,
             distributed_settings=distributed_settings,
             rng=rng,
             provenance="basin_mcts",

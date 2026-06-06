@@ -17,7 +17,7 @@ from experiments.distributed_mcts import (
     DistributedReroutePolicy,
 )
 from prover import FilteredTacticProvider, mcts_search
-from prover.mcts import BackpropStrategy
+from prover.mcts import BackpropStrategy, ExpansionPolicy, coerce_expansion_policy
 from prover.providers import DeepSeekTacticProvider, ReProverTacticProvider, TacticProvider
 from prover.providers.base import GoalAwareTacticProvider
 from prover.providers.reprover_client import ReProverModel
@@ -108,6 +108,7 @@ def guidance_snapshot(cli_args: dict[str, Any] | None) -> dict[str, Any] | None:
 def build_distributed_config(
     settings: dict[str, Any],
     budget: int,
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES,
 ) -> DistributedMCTSConfig:
     c, backprop = _distributed_defaults()
     block_policy = None
@@ -145,6 +146,7 @@ def build_distributed_config(
         path_bias=settings.get("path_bias", 0.0),
         history_cache=settings.get("history_cache", False),
         deterministic_inference=settings.get("deterministic_inference", False),
+        expansion_policy=coerce_expansion_policy(expansion_policy),
     )
 
 
@@ -210,6 +212,8 @@ def provider_config(provider: TacticProvider) -> dict[str, Any]:
         config.update(
             {
                 "provider": "deepseek",
+                "backend": provider._backend,
+                "device": provider._device,
                 "model_path": provider._model_path,
                 "cache_size": provider._cache_size,
                 "num_samples": provider._num_samples,
@@ -218,7 +222,6 @@ def provider_config(provider: TacticProvider) -> dict[str, Any]:
                 "max_new_tokens": provider.MAX_NEW_TOKENS,
                 "stop_sequences": provider.STOP_SEQUENCES,
                 "system_prompt": provider.SYSTEM_PROMPT,
-                "backend": "mlx",
             }
         )
         return config
@@ -250,6 +253,7 @@ def build_resolved_config(
     selection_seed: int | None,
     search_seed: int | None,
     wild_only: bool,
+    skip_interventions_after_wild_failure: bool,
     trace_mcts: bool,
     analysis: bool,
     device: str | None,
@@ -264,6 +268,7 @@ def build_resolved_config(
     basin_blind: bool,
     project_path: str,
     mcts_mode: str,
+    expansion_policy: str,
     distributed_mcts: dict[str, Any] | None,
     solution_artifacts: bool | None = None,
     corpus_artifact: dict[str, Any] | None = None,
@@ -281,6 +286,7 @@ def build_resolved_config(
         "seed": selection_seed,
         "search_seed": search_seed,
         "wild_only": wild_only,
+        "skip_interventions_after_wild_failure": skip_interventions_after_wild_failure,
         "trace_mcts": trace_mcts,
         "analysis": analysis,
         "device": device,
@@ -295,6 +301,7 @@ def build_resolved_config(
         "basin_blind": basin_blind,
         "project_path": project_path,
         "mcts_mode": mcts_mode,
+        "mcts_expansion_policy": expansion_policy,
         "distributed_mcts": distributed_mcts,
     }
     if solution_artifacts is not None:
@@ -330,6 +337,7 @@ def build_theorem_selection(
 def build_mcts_metadata(
     *,
     mcts_mode: str,
+    expansion_policy: str,
     distributed_mcts: dict[str, Any] | None,
     budget_tiers: list[int],
     trace_mcts: bool,
@@ -338,6 +346,7 @@ def build_mcts_metadata(
     return {
         "defaults": mcts_defaults(),
         "mode": mcts_mode,
+        "expansion_policy": expansion_policy,
         "distributed": distributed_mcts,
         "budget_tiers": budget_tiers,
         "budget_total": sum(budget_tiers),
@@ -450,8 +459,10 @@ def _build_shared_run_config(
     selection_seed: int | None,
     search_seed: int | None,
     wild_only: bool,
+    skip_interventions_after_wild_failure: bool,
     trace_mcts: bool,
     run_analysis: bool,
+    postprocess_metrics: bool,
     device: str | None,
     num_workers: int,
     goal_sig_scheme: str,
@@ -468,6 +479,7 @@ def _build_shared_run_config(
     corpus_artifact_ref: dict[str, Any] | None,
     corpus_meta: dict[str, Any],
     mcts_mode: str,
+    expansion_policy: str,
     distributed_snapshot: dict[str, Any] | None,
     selection_method: str,
     selected_theorems: list[str],
@@ -499,8 +511,10 @@ def _build_shared_run_config(
         "seed": selection_seed,
         "search_seed": search_seed,
         "wild_only": wild_only,
+        "skip_interventions_after_wild_failure": skip_interventions_after_wild_failure,
         "trace_mcts": trace_mcts,
         "analysis": run_analysis,
+        "postprocess_metrics": postprocess_metrics,
         "device": device,
         "workers": num_workers,
         "goal_sig_scheme": goal_sig_scheme,
@@ -515,6 +529,7 @@ def _build_shared_run_config(
         "mode_defaults": mode_defaults or {},
         "cli_args": cli_args or {},
         "mcts_mode": mcts_mode,
+        "mcts_expansion_policy": expansion_policy,
         "distributed_mcts": distributed_snapshot,
         "resolved": build_resolved_config(
             corpus=corpus_label,
@@ -527,6 +542,7 @@ def _build_shared_run_config(
             selection_seed=selection_seed,
             search_seed=search_seed,
             wild_only=wild_only,
+            skip_interventions_after_wild_failure=skip_interventions_after_wild_failure,
             trace_mcts=trace_mcts,
             analysis=run_analysis,
             device=device,
@@ -541,6 +557,7 @@ def _build_shared_run_config(
             basin_blind=basin_blind,
             project_path=project_path,
             mcts_mode=mcts_mode,
+            expansion_policy=expansion_policy,
             distributed_mcts=distributed_snapshot,
             solution_artifacts=solution_artifacts,
             corpus_artifact=corpus_artifact_ref,
@@ -558,6 +575,7 @@ def _build_shared_run_config(
         "providers_meta": providers_meta,
         "mcts": build_mcts_metadata(
             mcts_mode=mcts_mode,
+            expansion_policy=expansion_policy,
             distributed_mcts=distributed_snapshot,
             budget_tiers=budget_tiers,
             trace_mcts=trace_mcts,
@@ -610,8 +628,10 @@ def build_run_config(
     selection_seed: int | None,
     search_seed: int | None,
     skip_interventions: bool,
+    skip_interventions_after_wild_failure: bool,
     trace_mcts: bool,
     collect_solution_artifacts: bool,
+    postprocess_metrics: bool,
     run_analysis: bool,
     device: str | None,
     num_workers: int,
@@ -629,6 +649,7 @@ def build_run_config(
     corpus_artifact_ref: dict[str, Any] | None,
     corpus_meta: dict[str, Any],
     mcts_mode: str,
+    expansion_policy: str,
     distributed_snapshot: dict[str, Any] | None,
     selection_method: str,
     selected_theorems: list[str],
@@ -653,8 +674,10 @@ def build_run_config(
         selection_seed=selection_seed,
         search_seed=search_seed,
         wild_only=skip_interventions,
+        skip_interventions_after_wild_failure=skip_interventions_after_wild_failure,
         trace_mcts=trace_mcts,
         run_analysis=run_analysis,
+        postprocess_metrics=postprocess_metrics,
         device=device,
         num_workers=num_workers,
         goal_sig_scheme=goal_sig_scheme,
@@ -671,6 +694,7 @@ def build_run_config(
         corpus_artifact_ref=corpus_artifact_ref,
         corpus_meta=corpus_meta,
         mcts_mode=mcts_mode,
+        expansion_policy=expansion_policy,
         distributed_snapshot=distributed_snapshot,
         selection_method=selection_method,
         selected_theorems=selected_theorems,
@@ -720,8 +744,10 @@ def build_multi_provider_run_config(
     selection_seed: int | None,
     search_seed: int | None,
     wild_only: bool,
+    skip_interventions_after_wild_failure: bool,
     trace_mcts: bool,
     run_analysis: bool,
+    postprocess_metrics: bool,
     device: str | None,
     num_workers: int,
     goal_sig_scheme: str,
@@ -738,6 +764,7 @@ def build_multi_provider_run_config(
     corpus_artifact_ref: dict[str, Any] | None,
     corpus_meta: dict[str, Any],
     mcts_mode: str,
+    expansion_policy: str,
     distributed_snapshot: dict[str, Any] | None,
     selection_method: str,
     selected_theorems: list[str],
@@ -761,8 +788,10 @@ def build_multi_provider_run_config(
         selection_seed=selection_seed,
         search_seed=search_seed,
         wild_only=wild_only,
+        skip_interventions_after_wild_failure=skip_interventions_after_wild_failure,
         trace_mcts=trace_mcts,
         run_analysis=run_analysis,
+        postprocess_metrics=postprocess_metrics,
         device=device,
         num_workers=num_workers,
         goal_sig_scheme=goal_sig_scheme,
@@ -779,6 +808,7 @@ def build_multi_provider_run_config(
         corpus_artifact_ref=corpus_artifact_ref,
         corpus_meta=corpus_meta,
         mcts_mode=mcts_mode,
+        expansion_policy=expansion_policy,
         distributed_snapshot=distributed_snapshot,
         selection_method=selection_method,
         selected_theorems=selected_theorems,

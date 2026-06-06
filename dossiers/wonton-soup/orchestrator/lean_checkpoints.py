@@ -159,7 +159,11 @@ def _intervention_result_from_payload(data: Mapping[str, Any]) -> InterventionRe
         intervention=_intervention_from_payload(intervention_payload),
         wild_type=_run_result_from_payload(wild_type_payload),
         intervention_run=_run_result_from_payload(intervention_run_payload),
-        ged=float(data.get("ged", 0.0)),
+        ged=(
+            float(data["ged"])
+            if isinstance(data.get("ged"), (int, float))
+            else None
+        ),
         ged_normalized=(
             float(data["ged_normalized"])
             if isinstance(data.get("ged_normalized"), (int, float))

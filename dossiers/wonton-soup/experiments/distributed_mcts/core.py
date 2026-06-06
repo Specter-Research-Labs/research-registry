@@ -12,6 +12,7 @@ from prover.history import ExplorationHistory, IterationRecord, TacticAttempt, T
 from prover.intervention import BlockedTactic
 from prover.mcts import (
     BackpropStrategy,
+    ExpansionPolicy,
     MCTSNode,
     MCTSTraceWriter,
     MCTSTree,
@@ -19,6 +20,7 @@ from prover.mcts import (
     _blocked_goal_sigs_for_expansion,
     _family_index,
     _get_path_to_root,
+    coerce_expansion_policy,
 )
 from prover.providers.base import goal_signature, normalize_tactic, tactic_family
 
@@ -45,6 +47,7 @@ class DistributedMCTSConfig:
     path_bias: float = 0.0
     history_cache: bool = False
     deterministic_inference: bool = False
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES
 
 
 @dataclass(frozen=True)
@@ -237,6 +240,7 @@ def _validate_config(config: DistributedMCTSConfig) -> None:
         raise ValueError("virtual_loss must be >= 0")
     if config.adapter_mode != "single":
         raise NotImplementedError("only adapter_mode='single' is supported in distributed MCTS")
+    coerce_expansion_policy(config.expansion_policy)
     if config.block_policy is not None:
         if not (0.0 < config.block_policy.fraction < 1.0):
             raise ValueError("block_policy.fraction must be between 0 and 1 (exclusive)")
@@ -412,6 +416,7 @@ async def distributed_mcts_search(
         raise ValueError("distributed MCTS config is required")
 
     _validate_config(config)
+    expansion_policy = coerce_expansion_policy(config.expansion_policy)
 
     if warmstart_tree is not None:
         tree = warmstart_tree
@@ -1097,6 +1102,7 @@ async def distributed_mcts_search(
                                 )
 
                     expanded = False
+                    pending_expansions = []
 
                     for tactic in tactics:
                         async with tree_lock:
@@ -1137,18 +1143,6 @@ async def distributed_mcts_search(
                         tactic_norm = normalize_tactic(tactic)
 
                         if len(preview.child_mvar_ids) == 0:
-                            adapter.commit_tactic(preview)
-                            expanded = True
-                            terminal_reached = True
-                            backprop_success = True
-                            reason = "expanded"
-                            async with tree_lock:
-                                last_tactic = tactic
-                            if goal_cache is not None:
-                                fam = tactic_family(tactic_norm)
-                                goal_cache.record_outcome(
-                                    node.mvar_id, _family_index(fam), success=True
-                                )
                             if history is not None:
                                 attempts.append(
                                     TacticAttempt(
@@ -1165,24 +1159,12 @@ async def distributed_mcts_search(
                                         provider_id=provider_id,
                                     )
                                 )
-                            async with tree_lock:
-                                tree.expand(node, tactic, [], [])
-                                if graph is not None:
-                                    graph.add_expansion(
-                                        node.mvar_id,
-                                        tactic,
-                                        [],
-                                        [],
-                                        [],
-                                        action_attrs=preview.action_metadata(
-                                            expanded_child_count=0
-                                        ),
-                                    )
-                                tree.backpropagate(node, success=True)
-                                solved_now = tree.is_solved()
-                                if solved_now:
-                                    stop_event.set()
-                            break
+                            pending_expansions.append(
+                                (tactic, tactic_norm, preview, [], [], [], [], True)
+                            )
+                            if expansion_policy == ExpansionPolicy.FIRST_SUCCESS:
+                                break
+                            continue
 
                         novel_mvars: list[str] = []
                         novel_goal_types: list[str] = []
@@ -1243,17 +1225,6 @@ async def distributed_mcts_search(
                                 )
                             continue
 
-                        adapter.commit_tactic(preview)
-                        expanded = True
-                        backprop_success = True
-                        reason = "expanded"
-                        async with tree_lock:
-                            last_tactic = tactic
-                        if goal_cache is not None:
-                            fam = tactic_family(tactic_norm)
-                            goal_cache.record_outcome(
-                                node.mvar_id, _family_index(fam), success=True
-                            )
                         if history is not None:
                             attempts.append(
                                 TacticAttempt(
@@ -1269,6 +1240,44 @@ async def distributed_mcts_search(
                                     goal_type=node.goal_type,
                                     provider_id=provider_id,
                                 )
+                            )
+
+                        pending_expansions.append(
+                            (
+                                tactic,
+                                tactic_norm,
+                                preview,
+                                novel_mvars,
+                                novel_goal_types,
+                                novel_goal_sigs,
+                                novel_goal_sigs_strict,
+                                False,
+                            )
+                        )
+                        if expansion_policy == ExpansionPolicy.FIRST_SUCCESS:
+                            break
+
+                    for (
+                        tactic,
+                        tactic_norm,
+                        preview,
+                        novel_mvars,
+                        novel_goal_types,
+                        novel_goal_sigs,
+                        novel_goal_sigs_strict,
+                        closes_goal,
+                    ) in pending_expansions:
+                        adapter.commit_tactic(preview)
+                        expanded = True
+                        reason = "expanded"
+                        async with tree_lock:
+                            last_tactic = tactic
+                        if closes_goal:
+                            terminal_reached = True
+                        if goal_cache is not None:
+                            fam = tactic_family(tactic_norm)
+                            goal_cache.record_outcome(
+                                node.mvar_id, _family_index(fam), success=True
                             )
 
                         async with tree_lock:
@@ -1291,11 +1300,14 @@ async def distributed_mcts_search(
                                         expanded_child_count=len(novel_mvars)
                                     ),
                                 )
+
+                    if expanded:
+                        backprop_success = True
+                        async with tree_lock:
                             tree.backpropagate(node, success=True)
                             solved_now = tree.is_solved()
                             if solved_now:
                                 stop_event.set()
-                        break
 
                     if expanded is False:
                         async with tree_lock:

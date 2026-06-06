@@ -26,7 +26,7 @@ from prover import (
     mcts_search,
 )
 from prover.goal_signature import GoalSignatureConfig
-from prover.mcts import SearchPolicy
+from prover.mcts import ExpansionPolicy, SearchPolicy
 from prover.providers import TacticProvider
 
 if TYPE_CHECKING:
@@ -179,6 +179,7 @@ async def _run_theorem_variant(
     goal_cache: GoalCache | None,
     goal_sig_config: GoalSignatureConfig,
     mcts_mode: str,
+    expansion_policy: ExpansionPolicy | str,
     distributed_settings: dict[str, Any] | None,
     progress: CorpusProgress | None,
     log_dir: Path | None,
@@ -213,6 +214,7 @@ async def _run_theorem_variant(
             goal_cache=goal_cache,
             goal_sig_config=goal_sig_config,
             mcts_mode=mcts_mode,
+            expansion_policy=expansion_policy,
             distributed_settings=distributed_settings,
             progress=progress,
             trace=trace,
@@ -294,6 +296,7 @@ async def _run_search_budget(
     goal_cache: GoalCache | None,
     goal_sig_config: GoalSignatureConfig,
     mcts_mode: str,
+    expansion_policy: ExpansionPolicy | str,
     budget: int,
     tree: MCTSTree | None,
     distributed_settings: dict[str, Any] | None = None,
@@ -327,7 +330,7 @@ async def _run_search_budget(
             tactic_ranker_agent=tactic_ranker_agent,
             tie_breaker=tie_breaker,
             tie_breaker_agent=tie_breaker_agent,
-            config=build_distributed_config(distributed_settings, budget),
+            config=build_distributed_config(distributed_settings, budget, expansion_policy),
         )
     if mcts_mode == "centralized":
         return await mcts_search(
@@ -347,6 +350,7 @@ async def _run_search_budget(
             rng=rng,
             tactic_ranker=tactic_ranker,
             tie_breaker=tie_breaker,
+            expansion_policy=expansion_policy,
         )
     raise ValueError(f"Unknown mcts_mode: {mcts_mode}")
 
@@ -360,6 +364,7 @@ async def run_single(
     goal_cache: GoalCache | None = None,
     goal_sig_config: GoalSignatureConfig | None = None,
     mcts_mode: str = "centralized",
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES,
     distributed_settings: dict[str, Any] | None = None,
     progress: CorpusProgress | None = None,
     trace: MCTSTraceWriter | None = None,
@@ -394,6 +399,7 @@ async def run_single(
             goal_cache=goal_cache,
             goal_sig_config=goal_sig_config,
             mcts_mode=mcts_mode,
+            expansion_policy=expansion_policy,
             budget=budget,
             tree=tree,
             distributed_settings=distributed_settings,
@@ -448,9 +454,11 @@ async def run_theorem(
     budget_tiers: list[int],
     counter: list[int],
     skip_interventions: bool = False,
+    skip_interventions_after_wild_failure: bool = False,
     goal_cache: GoalCache | None = None,
     goal_sig_config: GoalSignatureConfig | None = None,
     mcts_mode: str = "centralized",
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES,
     distributed_settings: dict[str, Any] | None = None,
     progress: CorpusProgress | None = None,
     log_dir: Path | None = None,
@@ -487,6 +495,7 @@ async def run_theorem(
         "goal_cache": goal_cache,
         "goal_sig_config": goal_sig_config,
         "mcts_mode": mcts_mode,
+        "expansion_policy": expansion_policy,
         "distributed_settings": distributed_settings,
         "progress": progress,
         "log_dir": log_dir,
@@ -522,14 +531,17 @@ async def run_theorem(
         search_seed=theorem_search_seed,
     )
 
+    if skip_interventions:
+        return result
+
     if not wild_result.solved:
         if was_aborted:
             logger.warning("  Skipping interventions - wild type aborted")
             return result
+        if skip_interventions_after_wild_failure:
+            logger.warning("  Skipping interventions - wild type failed")
+            return result
         logger.warning("  Wild type failed; running interventions anyway")
-
-    if skip_interventions:
-        return result
 
     interventions = theorem.generate_interventions(wild_result.history)
     interventions = _merge_interventions(interventions, list(extra_interventions or []))
@@ -565,15 +577,20 @@ async def run_theorem(
         wild_canonical = wild_result.graph.to_canonical()
         int_canonical = int_result.graph.to_canonical()
         ged = _canonical_graph_edit_distance(wild_canonical, int_canonical)
-        if ged is None:
-            raise TimeoutError("Graph edit distance computation timed out")
         wild_size = wild_canonical.number_of_nodes() + wild_canonical.number_of_edges()
         int_size = int_canonical.number_of_nodes() + int_canonical.number_of_edges()
         max_size = max(wild_size, int_size)
-        normalized_ged = ged / max_size if max_size > 0 else None
+        normalized_ged = ged / max_size if ged is not None and max_size > 0 else None
 
         status = "SOLVED" if int_result.solved else "FAILED"
-        logger.info(f"  {intervention.name}: {status}, GED={ged:.1f}")
+        if ged is None:
+            logger.warning(
+                "  %s: %s, GED unavailable (computation timed out)",
+                intervention.name,
+                status,
+            )
+        else:
+            logger.info(f"  {intervention.name}: {status}, GED={ged:.1f}")
 
         if progress:
             progress.end_theorem(int_result.solved)

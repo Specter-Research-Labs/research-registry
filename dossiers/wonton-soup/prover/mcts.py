@@ -79,6 +79,21 @@ class SearchPolicy(Enum):
     BLIND_UNIFORM = "blind_uniform"
 
 
+class ExpansionPolicy(Enum):
+    FIRST_SUCCESS = "first-success"
+    ALL_SUCCESSES = "all-successes"
+
+
+def coerce_expansion_policy(value: ExpansionPolicy | str) -> ExpansionPolicy:
+    if isinstance(value, ExpansionPolicy):
+        return value
+    try:
+        return ExpansionPolicy(value)
+    except ValueError as exc:
+        valid = ", ".join(policy.value for policy in ExpansionPolicy)
+        raise ValueError(f"Unknown expansion_policy: {value!r}. Valid values: {valid}") from exc
+
+
 @dataclass
 class MCTSNode:
     mvar_id: str
@@ -554,12 +569,14 @@ async def mcts_search(
     | None = None,
     tie_breaker: Callable[[list[tuple[str, MCTSNode]], int], tuple[str, MCTSNode]]
     | None = None,
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES,
 ) -> MCTSTree:
     import logging
     logger = logging.getLogger(__name__)
 
     if goal_sig_config is None:
         raise ValueError("goal_sig_config is required")
+    expansion_policy = coerce_expansion_policy(expansion_policy)
 
     def mark_dead(node: MCTSNode, reason: str) -> None:
         node.is_dead = True
@@ -985,6 +1002,7 @@ async def mcts_search(
                     )
 
         expanded = False
+        pending_expansions = []
 
         for tactic in tactics:
             if tactic in node.children:
@@ -1029,22 +1047,6 @@ async def mcts_search(
             tactic_norm = normalize_tactic(tactic)
 
             if len(preview.child_mvar_ids) == 0:
-                try:
-                    adapter.commit_tactic(preview)
-                except Exception:
-                    mark_dead(node, "adapter_exception:commit_tactic")
-                    logger.exception(
-                        "MCTS adapter.commit_tactic failed for mvar_id=%s tactic=%s; "
-                        "treating as no-moves",
-                        node.mvar_id,
-                        tactic,
-                    )
-                    break
-                expanded = True
-                last_tactic = tactic
-                if goal_cache is not None:
-                    fam = tactic_family(tactic_norm)
-                    goal_cache.record_outcome(node.mvar_id, _family_index(fam), success=True)
                 if history:
                     attempts.append(
                         TacticAttempt(
@@ -1061,20 +1063,10 @@ async def mcts_search(
                             provider_id=provider_id,
                         )
                     )
-                tree.expand(node, tactic, [], [])
-                if graph is not None:
-                    graph.add_expansion(
-                        node.mvar_id,
-                        tactic,
-                        [],
-                        [],
-                        [],
-                        action_attrs=preview.action_metadata(expanded_child_count=0),
-                    )
-                backprop_success = True
-                terminal_reached = True
-                tree.backpropagate(node, success=True)
-                break
+                pending_expansions.append((tactic, tactic_norm, preview, [], [], [], [], True))
+                if expansion_policy == ExpansionPolicy.FIRST_SUCCESS:
+                    break
+                continue
 
             novel_mvars = []
             novel_goal_types = []
@@ -1130,23 +1122,6 @@ async def mcts_search(
                     )
                 continue
 
-            try:
-                adapter.commit_tactic(preview)
-            except Exception:
-                mark_dead(node, "adapter_exception:commit_tactic")
-                logger.exception(
-                    "MCTS adapter.commit_tactic failed for mvar_id=%s tactic=%s; "
-                    "treating as no-moves",
-                    node.mvar_id,
-                    tactic,
-                )
-                break
-            expanded = True
-            last_tactic = tactic
-
-            if goal_cache is not None:
-                fam = tactic_family(tactic_norm)
-                goal_cache.record_outcome(node.mvar_id, _family_index(fam), success=True)
             if history:
                 attempts.append(
                     TacticAttempt(
@@ -1165,6 +1140,50 @@ async def mcts_search(
                     )
                 )
 
+            pending_expansions.append(
+                (
+                    tactic,
+                    tactic_norm,
+                    preview,
+                    novel_mvars,
+                    novel_goal_types,
+                    novel_goal_sigs,
+                    novel_goal_sigs_strict,
+                    False,
+                )
+            )
+            if expansion_policy == ExpansionPolicy.FIRST_SUCCESS:
+                break
+
+        for (
+            tactic,
+            tactic_norm,
+            preview,
+            novel_mvars,
+            novel_goal_types,
+            novel_goal_sigs,
+            novel_goal_sigs_strict,
+            closes_goal,
+        ) in pending_expansions:
+            try:
+                adapter.commit_tactic(preview)
+            except Exception:
+                logger.exception(
+                    "MCTS adapter.commit_tactic failed for mvar_id=%s tactic=%s; "
+                    "skipping this branch",
+                    node.mvar_id,
+                    tactic,
+                )
+                continue
+            expanded = True
+            last_tactic = tactic
+            if closes_goal:
+                terminal_reached = True
+
+            if goal_cache is not None:
+                fam = tactic_family(tactic_norm)
+                goal_cache.record_outcome(node.mvar_id, _family_index(fam), success=True)
+
             tree.expand(
                 node,
                 tactic,
@@ -1182,9 +1201,10 @@ async def mcts_search(
                     novel_goal_sigs,
                     action_attrs=preview.action_metadata(expanded_child_count=len(novel_mvars)),
                 )
+
+        if expanded:
             backprop_success = True
             tree.backpropagate(node, success=True)
-            break
 
         if not expanded:
             node.is_dead = True

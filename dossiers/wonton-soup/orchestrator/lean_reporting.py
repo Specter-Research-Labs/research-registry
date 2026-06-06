@@ -120,12 +120,10 @@ def _build_ged_entry(
     valid: bool,
     validity_notes: list[str] | None = None,
 ) -> dict[str, Any] | None:
-    if value is None:
-        return None
     return {
         "value": value,
         "normalized": normalized,
-        "valid": valid,
+        "valid": valid and value is not None,
         "validity_notes": validity_notes or [],
         "trace_source": trace_source,
         "trace_completeness": trace_completeness,
@@ -258,7 +256,7 @@ def _compare_proof_terms(
     baseline: _ProofTermSnapshot,
     variant: _ProofTermSnapshot,
     *,
-    graph_distance: float,
+    graph_distance: float | None,
 ) -> dict[str, Any]:
     axiom_delta, axiom_removed = _axiom_delta(baseline.axioms, variant.axioms)
     hash_mismatch = (
@@ -267,7 +265,9 @@ def _compare_proof_terms(
         else None
     )
     proof_term_diff = None
-    if (graph_distance > 0 or hash_mismatch) and baseline.term and variant.term:
+    if (
+        (graph_distance is not None and graph_distance > 0) or hash_mismatch
+    ) and baseline.term and variant.term:
         proof_term_diff = baseline.term.structural_diff(variant.term)
     return {
         "wild_type_hash": baseline.structural_hash,
@@ -970,10 +970,12 @@ def generate_report(
             for int_result in result.interventions:
                 blocked = ", ".join(sorted(int_result.intervention.blocked))
                 solved = "Yes" if int_result.intervention_run.solved else "No"
-                ged = f"{int_result.ged:.1f}"
+                ged = f"{int_result.ged:.1f}" if int_result.ged is not None else "n/a"
 
                 if not int_result.intervention_run.solved:
                     notes = "Tactic essential"
+                elif int_result.ged is None:
+                    notes = "GED unavailable"
                 elif int_result.ged == 0:
                     notes = "Same structure"
                 elif int_result.ged < 3:
@@ -1004,6 +1006,7 @@ def complete_corpus_run(
     budget_tiers: list[int],
     skip_interventions: bool,
     run_analysis: bool,
+    postprocess_metrics: bool,
 ) -> list[TheoremResult]:
     logger = lifecycle.logger
 
@@ -1051,7 +1054,7 @@ def complete_corpus_run(
             stage_note="failure and corpus summaries",
         )
         run_post_analysis(lifecycle.log_dir)
-    if not lifecycle.failed:
+    if not lifecycle.failed and postprocess_metrics:
         try:
             progress.set_phase_progress(
                 "postprocess",
