@@ -133,7 +133,9 @@ build_corpus_from_curated() {
   theorem_count="$(python3 -c "import json; print(len(json.load(open('${CURATED_JSON}'))['theorems']))")"
   echo "Curated theorems: ${theorem_count}"
 
-  local tmp_theorems="${ROOT_DIR}/experiments/.tmp_basin_width_theorems.txt"
+  local tmp_theorems
+  tmp_theorems="$(mktemp "${TMPDIR:-/tmp}/basin-width-theorems.XXXXXX")"
+  trap 'rm -f "${tmp_theorems:-}"; trap - RETURN' RETURN
   python3 -c "
 import json
 with open('${CURATED_JSON}') as f:

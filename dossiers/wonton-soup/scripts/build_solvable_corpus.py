@@ -23,6 +23,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import os
 import shutil
 import sys
 from collections import defaultdict
@@ -30,30 +31,37 @@ from datetime import datetime
 from pathlib import Path
 
 DOSSIER = Path(__file__).resolve().parents[1]
+if str(DOSSIER) not in sys.path:
+    sys.path.insert(0, str(DOSSIER))
+
+from corpus.artifacts import write_current_id  # noqa: E402
+from runtime_paths import resolve_corpora_root, resolve_logs_root  # noqa: E402
 
 
 def _logs_root() -> Path:
-    for p in [
-        Path("/shared/dev/specter-labs-wonton-abstract-runfix/dossiers/wonton-soup"),
-        DOSSIER,
-    ]:
+    candidates = [resolve_logs_root().parent]
+    shared = Path("/shared/dev/specter-labs-wonton-abstract-runfix/dossiers/wonton-soup")
+    if shared.exists():
+        candidates.append(shared)
+    candidates.append(DOSSIER)
+    for p in candidates:
         if (p / "logs").is_dir():
             return p
     raise RuntimeError("Cannot find wonton-soup logs root")
 
 
 def _corpora_root() -> Path:
-    for p in [
-        Path("/shared/specter-runtime/wonton-soup/corpora"),
-        DOSSIER / "corpora",
-    ]:
-        if p.is_dir():
-            return p
-    raise RuntimeError("Cannot find corpora root")
+    root = resolve_corpora_root()
+    root.mkdir(parents=True, exist_ok=True)
+    return root
 
 
 def _work_dir() -> Path:
-    d = Path("/shared/specter-runtime/solvable-corpus-build")
+    runtime_root = os.environ.get("SPECTER_RUNTIME_ROOT", "").strip()
+    if runtime_root:
+        d = Path(runtime_root).expanduser().resolve() / "wonton-soup" / "solvable-corpus-build"
+    else:
+        d = DOSSIER.parents[1] / "tmp" / "wonton-soup" / "solvable-corpus-build"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -74,6 +82,30 @@ def _checkpoint_solved(cp: Path) -> tuple[bool, set[str]]:
     return bool(phases), phases
 
 
+def _provider_for_run_dir(run_dir: Path) -> str | None:
+    cfg_path = run_dir / "run_config.json"
+    if cfg_path.exists():
+        try:
+            cfg = json.loads(cfg_path.read_text())
+        except Exception:
+            cfg = {}
+        provider = cfg.get("provider")
+        if provider in {"reprover", "deepseek"}:
+            return provider
+        providers_meta = cfg.get("providers_meta")
+        if isinstance(providers_meta, dict):
+            primary = providers_meta.get("primary")
+            if primary in {"reprover", "deepseek"}:
+                return primary
+
+    for part in run_dir.parts:
+        if part == "provider=reprover":
+            return "reprover"
+        if part == "provider=deepseek":
+            return "deepseek"
+    return None
+
+
 # All run directories to scan (relative to logs root)
 # Includes both original runs and screening runs
 def _all_run_dirs(root: Path) -> dict[str, tuple[str, Path]]:
@@ -82,18 +114,50 @@ def _all_run_dirs(root: Path) -> dict[str, tuple[str, Path]]:
 
     # Original runs
     known = {
-        "mathlib/reprover_c": ("reprover", "logs/2026-03-23-abstract/p1-shared/provider=reprover/mcts=centralized"),
-        "mathlib/reprover_d": ("reprover", "logs/2026-03-31-abstract-matrix/provider=reprover/mcts=distributed"),
-        "mathlib/deepseek_c": ("deepseek", "logs/2026-03-31-abstract-matrix/provider=deepseek/mcts=centralized"),
-        "mathlib/deepseek_d": ("deepseek", "logs/2026-03-31-abstract-matrix/provider=deepseek/mcts=distributed"),
-        "crossatp/reprover_c": ("reprover", "logs/2026-03-31-cross-atp-expanded/provider=reprover/mcts=centralized"),
-        "crossatp/reprover_d": ("reprover", "logs/2026-04-03-cross-atp-expanded/provider=reprover/mcts=distributed"),
-        "crossatp/deepseek_c": ("deepseek", "logs/2026-04-03-cross-atp-expanded/provider=deepseek/mcts=centralized"),
+        "mathlib/reprover_c": (
+            "reprover",
+            "logs/2026-03-23-abstract/p1-shared/provider=reprover/mcts=centralized",
+        ),
+        "mathlib/reprover_d": (
+            "reprover",
+            "logs/2026-03-31-abstract-matrix/provider=reprover/mcts=distributed",
+        ),
+        "mathlib/deepseek_c": (
+            "deepseek",
+            "logs/2026-03-31-abstract-matrix/provider=deepseek/mcts=centralized",
+        ),
+        "mathlib/deepseek_d": (
+            "deepseek",
+            "logs/2026-03-31-abstract-matrix/provider=deepseek/mcts=distributed",
+        ),
+        "crossatp/reprover_c": (
+            "reprover",
+            "logs/2026-03-31-cross-atp-expanded/provider=reprover/mcts=centralized",
+        ),
+        "crossatp/reprover_d": (
+            "reprover",
+            "logs/2026-04-03-cross-atp-expanded/provider=reprover/mcts=distributed",
+        ),
+        "crossatp/deepseek_c": (
+            "deepseek",
+            "logs/2026-04-03-cross-atp-expanded/provider=deepseek/mcts=centralized",
+        ),
     }
     for label, (prov, rel) in known.items():
         p = root / rel
         if p.is_dir():
             runs[label] = (prov, p)
+
+    for cfg_path in sorted((root / "logs").rglob("run_config.json")):
+        run_dir = cfg_path.parent
+        if not any(run_dir.glob("*/theorem_result.checkpoint.json.gz")):
+            continue
+        provider = _provider_for_run_dir(run_dir)
+        if provider is None:
+            continue
+        rel = run_dir.relative_to(root / "logs")
+        label = "auto/" + str(rel).replace("/", "::")
+        runs.setdefault(label, (provider, run_dir))
 
     # Auto-discover screening runs (*/solvable-1000-screen/*)
     screen_base = root / "logs"
@@ -165,7 +229,7 @@ def harvest():
     deepseek_only = {t for t, p in solvability.items() if "deepseek" in p and "reprover" not in p}
     any_solved = set(solvability.keys())
 
-    print(f"\n=== Results ===")
+    print("\n=== Results ===")
     print(f"Both providers:    {len(both)}")
     print(f"Reprover only:     {len(reprover_only)}  (needs deepseek screen)")
     print(f"Deepseek only:     {len(deepseek_only)}  (needs reprover screen)")
@@ -211,6 +275,7 @@ def assemble(target: int = 1000):
     print(f"Confirmed both: {len(confirmed)}")
     print(f"Reprover only:  {len(reprover_only)}")
     print(f"Deepseek only:  {len(deepseek_only)}")
+    print(f"Any solved:     {len(any_solved)}")
 
     # Build the final set: confirmed-both first, then pad if needed
     final_ids = set(confirmed)
@@ -279,19 +344,23 @@ def assemble(target: int = 1000):
     dest.mkdir(parents=True, exist_ok=True)
     shutil.copy(items_path, dest / "items.jsonl")
     shutil.copy(out_dir / "manifest.json", dest / "manifest.json")
+    write_current_id(corpora / "lean" / "solvable-1000-v1", sha)
 
-    print(f"\n=== Corpus: solvable-1000-v1 ===")
+    print("\n=== Corpus: solvable-1000-v1 ===")
     print(f"Items:          {len(sorted_items)}")
     print(f"Confirmed both: {n_both}")
     print(f"Bonus:          {len(sorted_items) - n_both}")
     print(f"SHA256:         {sha}")
     print(f"Deployed:       {dest}")
-    print(f"\nRun: python wonton.py lean run -m research -c lean:solvable-1000-v1 ...")
+    print("\nRun: python wonton.py lean run -m research -c lean:solvable-1000-v1 ...")
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("harvest")
     sp = sub.add_parser("assemble")
