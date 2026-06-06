@@ -3,8 +3,14 @@ const state = {
   bootstrap: null,
   analysis: null,
   runs: [],
+  contrasts: [],
   jobs: [],
   selectedRun: null,
+  selectedContrast: null,
+  selectedContrastProvider: null,
+  selectedContrastTheorem: null,
+  contrastVariant: "wild_type",
+  contrastDetail: null,
   selectedTheorem: null,
   runDetail: null,
   theoremDetail: null,
@@ -153,6 +159,17 @@ async function refreshRuns() {
   }
 }
 
+async function refreshContrasts() {
+  const payload = await fetchJson("/api/contrasts");
+  state.contrasts = Array.isArray(payload.contrasts) ? payload.contrasts : [];
+  if (state.selectedContrast && !state.contrasts.some((item) => item.rel_dir === state.selectedContrast)) {
+    state.selectedContrast = null;
+    state.contrastDetail = null;
+    state.selectedContrastProvider = null;
+    state.selectedContrastTheorem = null;
+  }
+}
+
 async function refreshJobs() {
   const payload = await fetchJson("/api/jobs");
   state.jobs = Array.isArray(payload.jobs) ? payload.jobs : [];
@@ -169,6 +186,50 @@ async function refreshSelectedTheorem() {
     `/api/theorem?${qs({ run: state.selectedRun, theorem: state.selectedTheorem })}`,
   );
   ensureVariantSelection();
+}
+
+async function refreshSelectedContrast() {
+  if (!state.selectedContrast) return;
+  state.contrastDetail = await fetchJson(`/api/contrast?${qs({ contrast: state.selectedContrast })}`);
+  ensureContrastSelection();
+}
+
+function contrastTheoremRows() {
+  const rows = state.contrastDetail?.theorem_pairs || [];
+  if (!state.selectedContrastProvider) return rows;
+  return rows.filter((row) => row.provider === state.selectedContrastProvider);
+}
+
+function selectedContrastTheoremRow() {
+  return contrastTheoremRows().find((row) => row.theorem === state.selectedContrastTheorem) || null;
+}
+
+function ensureContrastSelection() {
+  const providerRows = state.contrastDetail?.providers || [];
+  if (!providerRows.length) {
+    state.selectedContrastProvider = null;
+    state.selectedContrastTheorem = null;
+    state.contrastVariant = "wild_type";
+    return;
+  }
+  const providerNames = providerRows.map((row) => row.provider).filter(Boolean);
+  if (!state.selectedContrastProvider || !providerNames.includes(state.selectedContrastProvider)) {
+    state.selectedContrastProvider = providerNames[0] || null;
+  }
+  const theoremRows = contrastTheoremRows();
+  if (!theoremRows.length) {
+    state.selectedContrastTheorem = null;
+    state.contrastVariant = "wild_type";
+    return;
+  }
+  if (!state.selectedContrastTheorem || !theoremRows.some((row) => row.theorem === state.selectedContrastTheorem)) {
+    state.selectedContrastTheorem = theoremRows[0].theorem;
+  }
+  const selected = selectedContrastTheoremRow();
+  const variants = selected?.common_variants || [];
+  if (!variants.includes(state.contrastVariant)) {
+    state.contrastVariant = variants.includes("wild_type") ? "wild_type" : variants[0] || "wild_type";
+  }
 }
 
 function ensureVariantSelection() {
@@ -211,18 +272,18 @@ function availableArtifactKinds() {
   return Array.from(kinds);
 }
 
-function artifactCacheKey(filename) {
-  return `${state.selectedRun}::${state.selectedTheorem}::${filename}`;
+function artifactCacheKeyFor(run, theorem, filename) {
+  return `${run}::${theorem || ""}::${filename}`;
 }
 
-function ensureArtifactLoaded(filename) {
-  if (!filename || !state.selectedRun || !state.selectedTheorem) return null;
-  const key = artifactCacheKey(filename);
+function ensureArtifactLoadedFor(run, theorem, filename) {
+  if (!filename || !run) return null;
+  const key = artifactCacheKeyFor(run, theorem, filename);
   if (state.artifactCache.has(key)) {
     return state.artifactCache.get(key);
   }
   state.artifactCache.set(key, { loading: true });
-  fetchArtifact(`/api/file?${qs({ run: state.selectedRun, theorem: state.selectedTheorem, file: filename })}`)
+  fetchArtifact(`/api/file?${qs({ run, theorem, file: filename })}`)
     .then((payload) => {
       state.artifactCache.set(key, { loading: false, ...payload });
       renderDynamic();
@@ -234,6 +295,11 @@ function ensureArtifactLoaded(filename) {
   return { loading: true };
 }
 
+function ensureArtifactLoaded(filename) {
+  if (!filename || !state.selectedRun || !state.selectedTheorem) return null;
+  return ensureArtifactLoadedFor(state.selectedRun, state.selectedTheorem, filename);
+}
+
 async function selectRun(relRunDir, { changeView = true } = {}) {
   state.selectedRun = relRunDir;
   state.selectedTheorem = null;
@@ -243,6 +309,23 @@ async function selectRun(relRunDir, { changeView = true } = {}) {
   if (changeView) {
     state.view = "runs";
   }
+  renderDynamic();
+}
+
+async function selectContrast(relDir, { changeView = true } = {}) {
+  state.selectedContrast = relDir;
+  state.selectedContrastTheorem = null;
+  state.contrastDetail = null;
+  await refreshSelectedContrast();
+  if (changeView) {
+    state.view = "contrasts";
+  }
+  renderDynamic();
+}
+
+function selectContrastTheorem(theoremName) {
+  state.selectedContrastTheorem = theoremName;
+  ensureContrastSelection();
   renderDynamic();
 }
 
@@ -280,6 +363,14 @@ function bindGlobalHandlers() {
     }
     if (action === "select-run") {
       await selectRun(target.dataset.run);
+      return;
+    }
+    if (action === "select-contrast") {
+      await selectContrast(target.dataset.contrast);
+      return;
+    }
+    if (action === "select-contrast-theorem") {
+      selectContrastTheorem(target.dataset.theorem);
       return;
     }
     if (action === "select-theorem") {
@@ -329,6 +420,18 @@ function bindGlobalHandlers() {
     if (target.dataset.control === "right-variant") {
       state.rightVariant = target.value || null;
       ensureVariantSelection();
+      renderDynamic();
+      return;
+    }
+    if (target.dataset.control === "contrast-provider") {
+      state.selectedContrastProvider = target.value || null;
+      state.selectedContrastTheorem = null;
+      ensureContrastSelection();
+      renderDynamic();
+      return;
+    }
+    if (target.dataset.control === "contrast-variant") {
+      state.contrastVariant = target.value || "wild_type";
       renderDynamic();
     }
   });
@@ -1225,6 +1328,257 @@ function graphSvg(graph) {
   `;
 }
 
+function formatDeltaPercent(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "n/a";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${(value * 100).toFixed(1)}%`;
+}
+
+function renderContrastsView() {
+  return `
+    <div class="run-layout">
+      <section class="panel list-panel">
+        <div class="panel-head">
+          <h2>Paired Contrasts</h2>
+          <div class="panel-subtitle">${pluralize(state.contrasts.length, "contrast")}</div>
+        </div>
+        ${
+          state.contrasts.length
+            ? state.contrasts
+                .map((contrast) => {
+                  const selected = contrast.rel_dir === state.selectedContrast;
+                  return `
+                    <button class="run-item ${selected ? "is-selected" : ""}" data-action="select-contrast" data-contrast="${escapeHtml(contrast.rel_dir)}">
+                      <div class="run-title">${escapeHtml(contrast.run_id || contrast.rel_dir)}</div>
+                      <div class="run-subtitle">${escapeHtml(contrast.rel_dir)}</div>
+                      <div class="run-quick">
+                        ${chip("providers", String(contrast.provider_count ?? 0))}
+                        ${chip("pairs", String(contrast.theorem_pair_count ?? 0))}
+                        ${contrast.corpus ? chip("corpus", contrast.corpus) : ""}
+                      </div>
+                    </button>
+                  `;
+                })
+                .join("")
+            : emptyState("No paired contrast summaries found. Launch Causal Contrast from the sidebar.")
+        }
+      </section>
+      ${state.contrastDetail ? renderContrastDetail(state.contrastDetail) : `<section class="panel">${emptyState("Select a contrast from the left column.")}</section>`}
+    </div>
+  `;
+}
+
+function renderContrastDetail(detail) {
+  const providerRows = detail.providers || [];
+  const theoremRows = contrastTheoremRows();
+  const selected = selectedContrastTheoremRow();
+  return `
+    <section class="panel">
+      <div class="panel-head">
+        <h2>${escapeHtml(detail.run_id || detail.rel_dir || "paired contrast")}</h2>
+        <div class="panel-subtitle">${escapeHtml(detail.root_dir || "")}</div>
+      </div>
+      <div class="metric-grid">
+        ${metricsCard("Providers", String(providerRows.length))}
+        ${metricsCard("Theorem pairs", String((detail.theorem_pairs || []).length))}
+        ${metricsCard("Corpus", String(detail.experiment?.corpus || "n/a"))}
+        ${metricsCard("Budget", String(detail.experiment?.budget || "n/a"))}
+      </div>
+      ${renderProviderContrastTable(providerRows)}
+      <div class="artifact-toolbar">
+        <div class="artifact-controls">
+          <div class="field">
+            <label for="contrast-provider">Provider</label>
+            <select id="contrast-provider" data-control="contrast-provider">
+              ${providerRows
+                .map(
+                  (row) => `
+                    <option value="${escapeHtml(row.provider)}" ${row.provider === state.selectedContrastProvider ? "selected" : ""}>
+                      ${escapeHtml(row.provider)}
+                    </option>
+                  `,
+                )
+                .join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label for="contrast-variant">Variant</label>
+            <select id="contrast-variant" data-control="contrast-variant">
+              ${(selected?.common_variants || ["wild_type"])
+                .map(
+                  (variant) => `
+                    <option value="${escapeHtml(variant)}" ${variant === state.contrastVariant ? "selected" : ""}>
+                      ${escapeHtml(variant)}
+                    </option>
+                  `,
+                )
+                .join("")}
+            </select>
+          </div>
+        </div>
+        <div class="chip-row">
+          ${chip("central", detail.modes?.[state.selectedContrastProvider]?.centralized?.rel_run_dir || "n/a")}
+          ${chip("distributed", detail.modes?.[state.selectedContrastProvider]?.distributed?.rel_run_dir || "n/a", "is-blue")}
+        </div>
+      </div>
+      <div class="compare-grid">
+        <div class="subpanel">
+          <div class="panel-head">
+            <h2>Theorem Pairs</h2>
+            <div class="panel-subtitle">same theorem slice, provider, budget, corpus, lesion definitions</div>
+          </div>
+          ${renderContrastTheoremTable(theoremRows)}
+        </div>
+        <div class="subpanel">
+          <div class="panel-head">
+            <h2>Selected Pair</h2>
+            <div class="panel-subtitle">${escapeHtml(selected?.theorem || "none")}</div>
+          </div>
+          ${selected ? renderContrastPairSummary(selected) : emptyState("Select a theorem pair.")}
+        </div>
+      </div>
+      ${selected ? renderContrastGraphCompare(detail, selected) : ""}
+    </section>
+  `;
+}
+
+function renderProviderContrastTable(rows) {
+  if (!rows.length) return emptyState("No provider metrics available.");
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Central recovery</th>
+            <th>Distributed recovery</th>
+            <th>Delta</th>
+            <th>Central reroute</th>
+            <th>Distributed reroute</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows
+            .map(
+              (row) => `
+                <tr>
+                  <td>${escapeHtml(row.provider)}</td>
+                  <td>${escapeHtml(formatPercent(row.centralized?.recovery_rate))}</td>
+                  <td>${escapeHtml(formatPercent(row.distributed?.recovery_rate))}</td>
+                  <td>${escapeHtml(formatDeltaPercent(row.delta?.recovery_rate))}</td>
+                  <td>${escapeHtml(formatPercent(row.centralized?.reroute_rate_among_recovered))}</td>
+                  <td>${escapeHtml(formatPercent(row.distributed?.reroute_rate_among_recovered))}</td>
+                </tr>
+              `,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderContrastTheoremTable(rows) {
+  if (!rows.length) return emptyState("No theorem pairs for the selected provider.");
+  return `
+    <div class="table-wrap compact-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Theorem</th>
+            <th>Central</th>
+            <th>Distributed</th>
+            <th>Recovery delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows
+            .map(
+              (row) => `
+                <tr data-action="select-contrast-theorem" data-theorem="${escapeHtml(row.theorem)}" class="${row.theorem === state.selectedContrastTheorem ? "row-selected" : ""}">
+                  <td>${escapeHtml(row.theorem)}</td>
+                  <td>${row.centralized?.wild_solved ? chip("wild", "solved", "is-accent") : chip("wild", "failed", "is-danger")}</td>
+                  <td>${row.distributed?.wild_solved ? chip("wild", "solved", "is-accent") : chip("wild", "failed", "is-danger")}</td>
+                  <td>${escapeHtml(formatDeltaPercent(row.delta?.recovery_rate))}</td>
+                </tr>
+              `,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderContrastPairSummary(row) {
+  return `
+    <div class="section-stack">
+      <div class="metric-grid">
+        ${metricsCard("Central recovery", formatPercent(row.centralized?.recovery_rate))}
+        ${metricsCard("Distributed recovery", formatPercent(row.distributed?.recovery_rate))}
+        ${metricsCard("Recovery delta", formatDeltaPercent(row.delta?.recovery_rate))}
+        ${metricsCard("Common graph variants", String((row.common_variants || []).length))}
+      </div>
+      <div class="metric-grid">
+        ${metricsCard("Central GED", formatNumber(row.centralized?.mean_ged))}
+        ${metricsCard("Distributed GED", formatNumber(row.distributed?.mean_ged))}
+        ${metricsCard("Central reroutes", String(row.centralized?.rerouted_interventions ?? 0))}
+        ${metricsCard("Distributed reroutes", String(row.distributed?.rerouted_interventions ?? 0))}
+      </div>
+    </div>
+  `;
+}
+
+function renderContrastGraphCompare(detail, row) {
+  const providerModes = detail.modes?.[row.provider] || {};
+  const centralRun = providerModes.centralized?.rel_run_dir;
+  const distributedRun = providerModes.distributed?.rel_run_dir;
+  const centralFile = row.centralized?.variants?.[state.contrastVariant] || null;
+  const distributedFile = row.distributed?.variants?.[state.contrastVariant] || null;
+  return `
+    <div class="subpanel">
+      <div class="panel-head">
+        <h2>Proof Graph Contrast</h2>
+        <div class="panel-subtitle">${escapeHtml(row.theorem)} / ${escapeHtml(state.contrastVariant)}</div>
+      </div>
+      <div class="artifact-compare">
+        <div class="subpanel">
+          <div class="panel-head">
+            <h2>Centralized</h2>
+            <div class="panel-subtitle">${escapeHtml(centralRun || "missing")}</div>
+          </div>
+          ${renderContrastGraphPayload(centralRun, row.theorem, centralFile)}
+        </div>
+        <div class="subpanel">
+          <div class="panel-head">
+            <h2>Distributed</h2>
+            <div class="panel-subtitle">${escapeHtml(distributedRun || "missing")}</div>
+          </div>
+          ${renderContrastGraphPayload(distributedRun, row.theorem, distributedFile)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderContrastGraphPayload(run, theorem, filename) {
+  if (!run || !filename) return emptyState("Missing graph artifact.");
+  const artifact = ensureArtifactLoadedFor(run, theorem, filename);
+  if (!artifact || artifact.loading) return emptyState("Loading graph...");
+  if (artifact.error) return emptyState(artifact.error);
+  const data = artifact.data;
+  if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+    return codeBlock(JSON.stringify(data, null, 2));
+  }
+  if (data.nodes.length > 120) {
+    return `
+      ${emptyState(`Graph has ${data.nodes.length} nodes; raw display only.`)}
+      ${codeBlock(JSON.stringify(data, null, 2))}
+    `;
+  }
+  return `<div class="graph-canvas">${graphSvg(data)}</div>`;
+}
+
 function renderAnalysisView() {
   const runtime = state.analysis;
   const presets = runtime?.presets || [];
@@ -1348,6 +1702,8 @@ function renderWorkspace() {
   switch (state.view) {
     case "runs":
       return renderRunsView();
+    case "contrasts":
+      return renderContrastsView();
     case "analysis":
       return renderAnalysisView();
     case "notebook":
@@ -1395,12 +1751,15 @@ async function openFileDialog({ run, theorem, filename }) {
 
 async function refreshLoop() {
   try {
-    await Promise.all([refreshJobs(), refreshRuns(), refreshAnalysis()]);
+    await Promise.all([refreshJobs(), refreshRuns(), refreshContrasts(), refreshAnalysis()]);
     if (state.selectedRun) {
       await refreshSelectedRun();
       if (state.selectedTheorem) {
         await refreshSelectedTheorem();
       }
+    }
+    if (state.selectedContrast) {
+      await refreshSelectedContrast();
     }
     renderDynamic();
   } catch (error) {
@@ -1411,10 +1770,12 @@ async function refreshLoop() {
 async function init() {
   setupThemeControls();
   bindGlobalHandlers();
-  await Promise.all([loadBootstrap(), refreshRuns(), refreshJobs()]);
+  await Promise.all([loadBootstrap(), refreshRuns(), refreshContrasts(), refreshJobs()]);
   renderLaunchers();
   if (!state.selectedRun && state.runs.length) {
     await selectRun(state.runs[0].rel_run_dir, { changeView: false });
+  } else if (!state.selectedContrast && state.contrasts.length) {
+    await selectContrast(state.contrasts[0].rel_dir, { changeView: false });
   } else {
     renderDynamic();
   }

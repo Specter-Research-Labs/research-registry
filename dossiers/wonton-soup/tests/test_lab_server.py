@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import gzip
+import json
 import sys
 from pathlib import Path
 
@@ -30,6 +32,41 @@ def _context(root: Path) -> LabContext:
         notebook_html=root / "notebooks" / "deep_analysis.html",
         presets_dir=root / "presets",
     )
+
+
+def _write_summary(run_dir: Path, theorem: str, *, wild_solved: bool, recovered: bool) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    theorem_dir = run_dir / theorem
+    theorem_dir.mkdir()
+    (theorem_dir / "wild_type_graph.json").write_text(
+        json.dumps(
+            {
+                "nodes": [{"id": "root", "depth": 0, "goal_sig": theorem, "is_terminal": wild_solved}],
+                "edges": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    payload = {
+        "run_id": run_dir.name,
+        "theorems": [
+            {
+                "name": theorem,
+                "wild_type": {"solved": wild_solved, "iterations": 2},
+                "interventions": [
+                    {
+                        "name": "block_intro",
+                        "solved": recovered,
+                        "baseline_solved": True,
+                        "hash_mismatch": recovered,
+                        "ged_search_graph": {"normalized": 0.5},
+                    }
+                ],
+            }
+        ],
+    }
+    with gzip.open(run_dir / "summary.json.gz", "wt", encoding="utf-8") as handle:
+        json.dump(payload, handle)
 
 
 def test_variant_index_groups_files(tmp_path: Path) -> None:
@@ -134,3 +171,89 @@ def test_build_lean_basin_command_requires_seeds_and_blind(tmp_path: Path) -> No
     assert argv[argv.index("--seeds") + 1] == "6"
     assert "--blind" in argv
     assert "--trace-mcts" in argv
+
+
+def test_build_causal_contrast_command_uses_experiment_module(tmp_path: Path) -> None:
+    app = LabApp(_context(tmp_path))
+
+    argv = app._build_causal_contrast_command(
+        {
+            "providers": "heuristic",
+            "corpus": "easy",
+            "budget": "quick",
+            "limit": 2,
+            "seed": 17,
+            "workers": 1,
+            "run_id": "contrast-smoke",
+            "mcts_agents": 3,
+            "mcts_expansion_policy": "first-success",
+            "mcts_inflight": 8,
+            "mcts_virtual_loss": 1,
+            "mcts_block_fraction": 0.3,
+            "mcts_block_duration": 4,
+            "mcts_block_seed": 19,
+            "mcts_reroute_max": 3,
+            "with_interventions": True,
+            "trace_mcts": True,
+            "no_sync": True,
+        }
+    )
+
+    assert argv[:5] == ["uv", "run", "python", "-m", "experiments.causal_contrast.run"]
+    assert "--providers" in argv
+    assert argv[argv.index("--providers") + 1] == "heuristic"
+    assert "--mcts-agents" in argv
+    assert argv[argv.index("--mcts-agents") + 1] == "3"
+    assert "--mcts-expansion-policy" in argv
+    assert argv[argv.index("--mcts-expansion-policy") + 1] == "first-success"
+    assert "--mcts-block-fraction" in argv
+    assert argv[argv.index("--mcts-block-fraction") + 1] == "0.3"
+    assert "--mcts-reroute-max" in argv
+    assert argv[argv.index("--mcts-reroute-max") + 1] == "3"
+    assert "--with-interventions" in argv
+    assert "--trace-mcts" in argv
+    assert "--no-sync" in argv
+
+    full_corpus_argv = app._build_causal_contrast_command({"limit": ""})
+    assert "--limit" not in full_corpus_argv
+
+
+def test_lab_discovers_paired_contrast_summary(tmp_path: Path) -> None:
+    from experiments.causal_contrast.summary import build_paired_contrast_summary
+
+    logs_dir = tmp_path / "logs"
+    root = logs_dir / "2026-06-02-contrast"
+    central = root / "provider=heuristic" / "mcts=centralized"
+    distributed = root / "provider=heuristic" / "mcts=distributed"
+    _write_summary(central, "and_intro", wild_solved=True, recovered=False)
+    _write_summary(distributed, "and_intro", wild_solved=True, recovered=True)
+    payload = build_paired_contrast_summary(
+        root_dir=root,
+        logs_dir=logs_dir,
+        run_id="2026-06-02-contrast",
+        providers=["heuristic"],
+        run_dirs={"heuristic": {"centralized": central, "distributed": distributed}},
+        experiment={"corpus": "easy", "budget": "quick"},
+    )
+    assert payload["providers"][0]["delta"]["recovery_rate"] == 1.0
+
+    context = _context(tmp_path)
+    app = LabApp(
+        LabContext(
+            logs_dir=logs_dir,
+            artifacts_dir=context.artifacts_dir,
+            state_dir=context.state_dir,
+            static_dir=context.static_dir,
+            fonts_dir=context.fonts_dir,
+            lake_db_path=context.lake_db_path,
+            lake_exports_dir=context.lake_exports_dir,
+            lake_jobs_dir=context.lake_jobs_dir,
+            notebook_html=context.notebook_html,
+            presets_dir=context.presets_dir,
+        )
+    )
+
+    rows = app.list_contrasts()
+    assert rows[0]["rel_dir"] == "2026-06-02-contrast"
+    loaded = app.load_contrast("2026-06-02-contrast")
+    assert loaded["theorem_pairs"][0]["common_variants"] == ["wild_type"]

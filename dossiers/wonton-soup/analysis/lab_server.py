@@ -1037,6 +1037,44 @@ class LabApp:
                 ],
             },
             {
+                "id": "causal_contrast",
+                "label": "Causal Contrast",
+                "description": "Run matched centralized and distributed MCTS proof-search conditions.",
+                "fields": [
+                    {"id": "providers", "label": "Providers", "type": "text", "default": "heuristic"},
+                    {"id": "corpus", "label": "Corpus", "type": "text", "default": "easy"},
+                    {"id": "budget", "label": "Budget", "type": "text", "default": "quick"},
+                    {"id": "limit", "label": "Limit", "type": "number", "default": ""},
+                    {"id": "sample", "label": "Sample", "type": "number", "default": ""},
+                    {"id": "seed", "label": "Seed", "type": "number", "default": 20260602},
+                    {"id": "workers", "label": "Workers", "type": "number", "default": 1},
+                    {"id": "run_id", "label": "Run ID", "type": "text", "default": "causal-contrast"},
+                    {"id": "mcts_agents", "label": "Distributed agents", "type": "number", "default": 4},
+                    {
+                        "id": "mcts_expansion_policy",
+                        "label": "Expansion policy",
+                        "type": "text",
+                        "default": "all-successes",
+                    },
+                    {"id": "mcts_inflight", "label": "Distributed inflight", "type": "number", "default": 16},
+                    {"id": "mcts_virtual_loss", "label": "Virtual loss", "type": "number", "default": 1},
+                    {"id": "mcts_block_fraction", "label": "Block fraction", "type": "number", "default": ""},
+                    {"id": "mcts_block_duration", "label": "Block duration", "type": "number", "default": ""},
+                    {"id": "mcts_block_seed", "label": "Block seed", "type": "number", "default": ""},
+                    {"id": "mcts_block_immovable_fraction", "label": "Immovable fraction", "type": "number", "default": ""},
+                    {"id": "mcts_unfreeze_after", "label": "Unfreeze after", "type": "number", "default": ""},
+                    {"id": "mcts_unfreeze_prob", "label": "Unfreeze probability", "type": "number", "default": ""},
+                    {"id": "mcts_reroute_max", "label": "Reroute max", "type": "number", "default": ""},
+                    {"id": "mcts_delay_prob", "label": "Delay probability", "type": "number", "default": ""},
+                    {"id": "mcts_delay_duration", "label": "Delay duration", "type": "number", "default": ""},
+                    {"id": "mcts_delay_seed", "label": "Delay seed", "type": "number", "default": ""},
+                    {"id": "with_interventions", "label": "Interventions", "type": "boolean", "default": True},
+                    {"id": "trace_mcts", "label": "Trace MCTS", "type": "boolean", "default": True},
+                    {"id": "analysis", "label": "Run post analysis", "type": "boolean", "default": False},
+                    {"id": "no_sync", "label": "No remote sync", "type": "boolean", "default": True},
+                ],
+            },
+            {
                 "id": "postprocess",
                 "label": "Postprocess",
                 "description": "Run heavy metrics over a selected run or the whole logs root.",
@@ -1152,6 +1190,30 @@ class LabApp:
                     }
                 )
                 continue
+            if isinstance(config, dict):
+                datasets = config.get("datasets")
+                if not isinstance(datasets, list):
+                    datasets = []
+                presets.append(
+                    {
+                        "name": config.get("name") or path.stem,
+                        "path": str(path),
+                        "valid": True,
+                        "selection": config.get("selection"),
+                        "reference": config.get("reference"),
+                        "datasets": [
+                            {
+                                "name": dataset.get("name"),
+                                "format": dataset.get("format"),
+                                "query": dataset.get("query"),
+                                "generator": dataset.get("generator"),
+                            }
+                            for dataset in datasets
+                            if isinstance(dataset, dict)
+                        ],
+                    }
+                )
+                continue
             presets.append(
                 {
                     "name": config.name,
@@ -1171,6 +1233,66 @@ class LabApp:
                 }
             )
         return presets
+
+    def list_contrasts(self) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        if not self.context.logs_dir.exists():
+            return rows
+        for summary_path in sorted(self.context.logs_dir.rglob("paired_contrast_summary.json")):
+            try:
+                payload = _read_json_dict(summary_path)
+            except Exception:
+                continue
+            if not isinstance(payload, dict):
+                continue
+            try:
+                rel_dir = summary_path.parent.resolve().relative_to(
+                    self.context.logs_dir.resolve()
+                ).as_posix()
+                stat = summary_path.stat()
+            except OSError:
+                continue
+            providers = payload.get("providers")
+            provider_count = len(providers) if isinstance(providers, list) else 0
+            theorem_pairs = payload.get("theorem_pairs")
+            pair_count = len(theorem_pairs) if isinstance(theorem_pairs, list) else 0
+            experiment = payload.get("experiment") if isinstance(payload.get("experiment"), dict) else {}
+            rows.append(
+                {
+                    "rel_dir": rel_dir,
+                    "run_id": payload.get("run_id") or rel_dir,
+                    "generated_at": payload.get("generated_at"),
+                    "modified_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+                    "provider_count": provider_count,
+                    "theorem_pair_count": pair_count,
+                    "corpus": experiment.get("corpus"),
+                    "budget": experiment.get("budget"),
+                    "summary_file": summary_path.name,
+                    "providers": providers if isinstance(providers, list) else [],
+                }
+            )
+        rows.sort(
+            key=lambda row: (
+                row.get("generated_at") is not None,
+                row.get("generated_at") or row.get("modified_at") or "",
+                row["rel_dir"],
+            ),
+            reverse=True,
+        )
+        return rows
+
+    def load_contrast(self, rel_dir: str) -> dict[str, Any]:
+        if not rel_dir:
+            raise ValueError("missing contrast")
+        contrast_dir = _ensure_under(self.context.logs_dir, self.context.logs_dir / Path(rel_dir))
+        summary_path = contrast_dir / "paired_contrast_summary.json"
+        if not summary_path.exists():
+            raise FileNotFoundError(rel_dir)
+        payload = _read_json_dict(summary_path)
+        if not isinstance(payload, dict):
+            raise ValueError(f"invalid paired contrast summary: {summary_path}")
+        payload["rel_dir"] = rel_dir
+        return payload
 
     def list_runs(self) -> list[dict[str, Any]]:
         runs: list[dict[str, Any]] = []
@@ -1203,7 +1325,8 @@ class LabApp:
                 {
                     "rel_run_dir": rel_run_dir,
                     "run_id": run_config.get("run_id") if isinstance(run_config, dict) else run_dir.name,
-                    "provider": provider_run.provider,
+                    "provider": provider_run.provider
+                    or (run_config.get("provider") if isinstance(run_config, dict) else None),
                     "mode": run_config.get("mode") if isinstance(run_config, dict) else None,
                     "corpus": run_config.get("corpus") if isinstance(run_config, dict) else None,
                     "budget": run_config.get("budget_label") if isinstance(run_config, dict) else None,
@@ -1340,6 +1463,10 @@ class LabApp:
             argv = self._build_lean_command(payload, basin=True)
             label = f"lean basin {payload.get('mode') or 'dev'}"
             return self.jobs.launch(kind=kind, label=label, argv=argv, cwd=DOSSIER_ROOT)
+        if kind == "causal_contrast":
+            argv = self._build_causal_contrast_command(payload)
+            label = f"causal contrast {payload.get('providers') or 'heuristic'}"
+            return self.jobs.launch(kind=kind, label=label, argv=argv, cwd=DOSSIER_ROOT)
         if kind == "postprocess":
             argv = ["uv", "run", "python", "wonton.py", "postprocess", "--agent"]
             run_dir = _coerce_str(payload.get("run_dir"))
@@ -1470,6 +1597,59 @@ class LabApp:
                 argv.append("--analysis")
         return argv
 
+    def _build_causal_contrast_command(self, payload: dict[str, Any]) -> list[str]:
+        argv = ["uv", "run", "python", "-m", "experiments.causal_contrast.run"]
+        for key, flag in (
+            ("providers", "--providers"),
+            ("corpus", "--corpus"),
+            ("budget", "--budget"),
+            ("run_id", "--run-id"),
+            ("mcts_expansion_policy", "--mcts-expansion-policy"),
+        ):
+            value = _coerce_str(payload.get(key))
+            if value is not None:
+                argv.extend([flag, value])
+        for key, flag in (
+            ("limit", "--limit"),
+            ("sample", "--sample"),
+            ("seed", "--seed"),
+            ("workers", "--workers"),
+            ("mcts_agents", "--mcts-agents"),
+            ("mcts_inflight", "--mcts-inflight"),
+            ("mcts_virtual_loss", "--mcts-virtual-loss"),
+            ("mcts_block_duration", "--mcts-block-duration"),
+            ("mcts_block_seed", "--mcts-block-seed"),
+            ("mcts_unfreeze_after", "--mcts-unfreeze-after"),
+            ("mcts_reroute_max", "--mcts-reroute-max"),
+            ("mcts_delay_duration", "--mcts-delay-duration"),
+            ("mcts_delay_seed", "--mcts-delay-seed"),
+        ):
+            value = _coerce_int(payload.get(key))
+            if value is not None:
+                argv.extend([flag, str(value)])
+        for key, flag in (
+            ("mcts_block_fraction", "--mcts-block-fraction"),
+            ("mcts_block_immovable_fraction", "--mcts-block-immovable-fraction"),
+            ("mcts_unfreeze_prob", "--mcts-unfreeze-prob"),
+            ("mcts_delay_prob", "--mcts-delay-prob"),
+        ):
+            value = _coerce_float(payload.get(key))
+            if value is not None:
+                argv.extend([flag, str(value)])
+        if _coerce_bool(payload.get("with_interventions"), default=True):
+            argv.append("--with-interventions")
+        else:
+            argv.append("--wild-only")
+        if _coerce_bool(payload.get("trace_mcts"), default=True):
+            argv.append("--trace-mcts")
+        else:
+            argv.append("--no-trace-mcts")
+        if _coerce_bool(payload.get("analysis")):
+            argv.append("--analysis")
+        if _coerce_bool(payload.get("no_sync"), default=True):
+            argv.append("--no-sync")
+        return argv
+
 
 class LabHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, app: LabApp, static_dir: Path, fonts_dir: Path, **kwargs):
@@ -1531,6 +1711,19 @@ class LabHandler(SimpleHTTPRequestHandler):
             return self._send_json(self.app.analysis_state())
         if parts == ["api", "runs"]:
             return self._send_json({"runs": self.app.list_runs()})
+        if parts == ["api", "contrasts"]:
+            return self._send_json({"contrasts": self.app.list_contrasts()})
+        if parts == ["api", "contrast"]:
+            contrast = self._query_value(query, "contrast")
+            if contrast is None:
+                return self._send_error(HTTPStatus.BAD_REQUEST, "missing contrast")
+            try:
+                payload = self.app.load_contrast(contrast)
+            except FileNotFoundError:
+                return self._send_error(HTTPStatus.NOT_FOUND, f"contrast not found: {contrast}")
+            except ValueError as exc:
+                return self._send_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return self._send_json(payload)
         if parts == ["api", "run"]:
             run = self._query_value(query, "run")
             if run is None:
