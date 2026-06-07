@@ -33,6 +33,10 @@ if [[ -d "/shared/specter-runtime" ]]; then
   export SPECTER_ARTIFACT_ROOT="${SPECTER_ARTIFACT_ROOT:-/shared/specter-runtime}"
 fi
 
+if [[ -z "${LEAN_PROJECT_PATH:-}" && -d "${ROOT_DIR}/lean_project" ]]; then
+  export LEAN_PROJECT_PATH="${ROOT_DIR}/lean_project"
+fi
+
 EXECUTE=0
 PHASE="all"
 
@@ -79,6 +83,8 @@ CURATED_JSON="${ROOT_DIR}/experiments/basin_width_curated_v1.json"
 CORPUS_ID="${CORPUS_ID:-basin-width-curated-v1}"
 SOURCE_REF="${SOURCE_REF:-lean:solvable-1000-v1}"
 BASIN_SEEDS="${BASIN_SEEDS:-20}"
+BASIN_BLIND="${BASIN_BLIND:-0}"
+RESUME="${RESUME:-0}"
 LEAN_WORKERS="${LEAN_WORKERS:-8}"
 RESEARCH_BUDGET="${RESEARCH_BUDGET:-standard}"
 PROVIDER="${PROVIDER:-reprover}"
@@ -111,11 +117,8 @@ phase_header() {
   echo "== $1 =="
 }
 
-limit_args() {
-  LIMIT_ARGS=()
-  if [[ -n "${THEOREM_LIMIT}" ]]; then
-    LIMIT_ARGS=(-n "${THEOREM_LIMIT}" --offset "${THEOREM_OFFSET}")
-  elif [[ "${THEOREM_OFFSET}" != "0" ]]; then
+validate_limit_args() {
+  if [[ -z "${THEOREM_LIMIT}" && "${THEOREM_OFFSET}" != "0" ]]; then
     echo "THEOREM_OFFSET requires THEOREM_LIMIT" >&2
     exit 2
   fi
@@ -133,9 +136,8 @@ build_corpus_from_curated() {
   theorem_count="$(python3 -c "import json; print(len(json.load(open('${CURATED_JSON}'))['theorems']))")"
   echo "Curated theorems: ${theorem_count}"
 
-  local tmp_theorems
-  tmp_theorems="$(mktemp "${TMPDIR:-/tmp}/basin-width-theorems.XXXXXX")"
-  trap 'rm -f "${tmp_theorems:-}"; trap - RETURN' RETURN
+  local tmp_theorems="${ROOT_DIR}/tmp/basin_width_curated_theorems.txt"
+  mkdir -p "$(dirname "${tmp_theorems}")"
   python3 -c "
 import json
 with open('${CURATED_JSON}') as f:
@@ -152,37 +154,57 @@ with open('${tmp_theorems}', 'w') as f:
 
 run_basin_sweeps() {
   phase_header "Run Basin Sweeps (${BASIN_SEEDS} seeds)"
-  limit_args
+  validate_limit_args
 
-  run_cmd uv run python wonton.py lean basin \
-    --seeds "${BASIN_SEEDS}" \
-    --blind \
-    --sampling \
-    -m research \
-    -c "lean:${CORPUS_ID}" \
-    -p "${PROVIDER}" \
-    -b "${RESEARCH_BUDGET}" \
-    --workers "${LEAN_WORKERS}" \
-    --plain \
-    --run-id "${PROGRAM_RUN_ROOT}/basin/provider=${PROVIDER}/seeds=${BASIN_SEEDS}" \
-    --no-sync \
-    "${LIMIT_ARGS[@]}"
+  local cmd=(
+    uv run python wonton.py lean basin
+    --seeds "${BASIN_SEEDS}"
+    --sampling
+    -m research
+    -c "lean:${CORPUS_ID}"
+    -p "${PROVIDER}"
+    -b "${RESEARCH_BUDGET}"
+    --workers "${LEAN_WORKERS}"
+    --plain
+    --run-id "${PROGRAM_RUN_ROOT}/basin/provider=${PROVIDER}/seeds=${BASIN_SEEDS}"
+    --no-sync
+  )
+  if [[ "${BASIN_BLIND}" == "1" ]]; then
+    cmd+=(--blind)
+  fi
+  if [[ "${RESUME}" == "1" ]]; then
+    cmd+=(--resume)
+  fi
+  if [[ -n "${THEOREM_LIMIT}" ]]; then
+    cmd+=(-n "${THEOREM_LIMIT}" --offset "${THEOREM_OFFSET}")
+  fi
+
+  run_cmd "${cmd[@]}"
 }
 
 run_lesion_interventions() {
   phase_header "Run Lesion Interventions"
-  limit_args
+  validate_limit_args
 
-  run_cmd uv run python wonton.py lean run \
-    -m research \
-    -c "lean:${CORPUS_ID}" \
-    -p "${PROVIDER}" \
-    -b "${RESEARCH_BUDGET}" \
-    --workers "${LEAN_WORKERS}" \
-    --plain \
-    --run-id "${PROGRAM_RUN_ROOT}/lesions/provider=${PROVIDER}" \
-    --no-sync \
-    "${LIMIT_ARGS[@]}"
+  local cmd=(
+    uv run python wonton.py lean run
+    -m research
+    -c "lean:${CORPUS_ID}"
+    -p "${PROVIDER}"
+    -b "${RESEARCH_BUDGET}"
+    --workers "${LEAN_WORKERS}"
+    --plain
+    --run-id "${PROGRAM_RUN_ROOT}/lesions/provider=${PROVIDER}"
+    --no-sync
+  )
+  if [[ "${RESUME}" == "1" ]]; then
+    cmd+=(--resume)
+  fi
+  if [[ -n "${THEOREM_LIMIT}" ]]; then
+    cmd+=(-n "${THEOREM_LIMIT}" --offset "${THEOREM_OFFSET}")
+  fi
+
+  run_cmd "${cmd[@]}"
 }
 
 run_postprocess_and_reconcile() {
@@ -209,9 +231,11 @@ echo "Curated theorems:  ${CURATED_JSON}"
 echo "Corpus ID:         ${CORPUS_ID}"
 echo "Source ref:        ${SOURCE_REF}"
 echo "Basin seeds:       ${BASIN_SEEDS}"
+echo "Basin blind:       ${BASIN_BLIND}"
 echo "Provider:          ${PROVIDER}"
 echo "Theorem limit:     ${THEOREM_LIMIT:-all}"
 echo "Theorem offset:    ${THEOREM_OFFSET}"
+echo "Resume:            ${RESUME}"
 echo "Dry run mode:      $([[ "${EXECUTE}" -eq 1 ]] && echo no || echo yes)"
 
 if [[ "${PHASE}" == "all" || "${PHASE}" == "corpus" ]]; then
