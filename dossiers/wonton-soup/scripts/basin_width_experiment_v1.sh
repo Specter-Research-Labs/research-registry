@@ -91,7 +91,7 @@ PROVIDER="${PROVIDER:-reprover}"
 THEOREM_LIMIT="${THEOREM_LIMIT:-}"
 THEOREM_OFFSET="${THEOREM_OFFSET:-0}"
 
-PROGRAM_RUN_ROOT="$(date +%Y-%m-%d)-${PROGRAM_ID}"
+PROGRAM_RUN_ROOT="${PROGRAM_RUN_ROOT:-$(date +%Y-%m-%d)-${PROGRAM_ID}}"
 
 quote_cmd() {
   local out=""
