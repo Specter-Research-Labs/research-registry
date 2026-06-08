@@ -76,7 +76,7 @@
 \title{Sorting Cells as Morphogenesis, Revisited:\\Mechanisms, Ablations, and Robustness Semantics}
 \author{%
   \begin{tabular}{@{}p{0.38\linewidth}@{\hspace{2.5em}}p{0.38\linewidth}@{}}
-  Ludwig Pouey & Philip Rhor \\
+  Ludwig Pouey & Phil Rohr \\
   {\small\color{spectermuted}Specter Labs} & {\small\color{spectermuted}Specter Labs}
   \end{tabular}
 }
@@ -110,9 +110,9 @@ support a timing-based account: exporting the Insertion-style waiting gate to Bu
 clones reproduces the predicted rise in temporal separation and clustering.
 
 We retain the 2D section and Directed Flow diagnostic as narrower, secondary results rather than
-the paper's main evidential core. By contrast, we frame the K-computation surface as a matched
-state-space analysis that is exact for an explicit reachable-state proposal null and conservative
-relative to blind operator-walk search. Across the paper, the main lesson is that claims about robustness
+the paper's main evidential core. By contrast, we frame the K-computation surface as
+$K_{\mathrm{state}}$: an exact reachable-state proposal null that preserves the state-space scale
+and matched-cost contract, while omitting operator-graph traversal geometry. Across the paper, the main lesson is that claims about robustness
 or ``basal intelligence'' in sorting-cell systems depend on explicit operator semantics, obstacle
 semantics, and matched baselines.
 \end{abstract}
@@ -164,8 +164,8 @@ distributed execution itself is not the
 source of the robustness difference: matched baselines reproduce the same paired outcomes, although
 the threaded substrate can require dramatically more work for published Selection. The 2D section
 and Directed Flow remain secondary and more limited in scope than the 1D core, and the K section
-is presented as a matched exact state-space analysis rather than as a descriptive fixed-baseline
-curve.
+is presented as $K_{\mathrm{state}}$, a scalable exact state-proposal surrogate for the
+intractable full operator-walk K at $n=30$.
 
 \section{Model and Metrics}
 \label{sec:methods}
@@ -335,13 +335,15 @@ Figure~\ref{fig:exp25} and Table~\ref{tab:exp25} show a clean decomposition unde
 barriers: only the
 long-range+routing quadrant succeeds once frozen indices are introduced. Long-range+stubborn fails
 immediately when barriers appear, showing that rerouting is necessary within the published operator
-class. Adjacent+routing also fails immediately, showing that rerouting alone is not sufficient when
-action range is restricted to adjacent steps. The adjacent variants remain genuinely local in every
-condition (weighted mean swap span $= 1.00$), but they fail after expending far more work. At
-frozen$=3$, adjacent+routing averages $14{,}917$ swaps and adjacent+stubborn averages $8{,}238$,
-versus $91$ for long-range+routing. Under the smaller movable control, long-range+routing retains
-limited success at one frozen cell ($3/15$), while the other three variants are $0/15$ as soon as
-any frozen cells are introduced.
+class. Adjacent+routing also fails immediately, showing that frozen-target rerouting is not
+sufficient under adjacent-only execution. The reason is structural:
+under immovable 1D barriers, adjacent active-active moves cannot exchange values across frozen
+indices, so many paired trials are unreachable for any such policy. The adjacent variants remain
+genuinely local in every condition (weighted mean swap span $= 1.00$), but they fail after
+expending far more work. At frozen$=3$, adjacent+routing averages $14{,}917$ swaps and
+adjacent+stubborn averages $8{,}238$, versus $91$ for long-range+routing. Under the smaller movable
+control, long-range+routing retains limited success at one frozen cell ($3/15$), while the other
+three variants are $0/15$ as soon as any frozen cells are introduced.
 
 The main implication is that published 1D Selection's robustness is a joint property of operator
 reach and blocked-target adaptation. Published 1D Selection should therefore not be treated as just
@@ -638,7 +640,7 @@ Topological complexity alone is not evidence of problem-solving success.
   \label{fig:h1}
 \end{figure}
 
-\section{Matched State-Space Search Efficiency (K-Computation)}
+\section{Matched State-Space Search Efficiency ($K_{\mathrm{state}}$)}
 \label{sec:k-computation}
 Chis-Ciure and Levin \cite{chisciure2025cognition} operationalize intelligence as search efficiency
 in a problem space $\mathcal{P} = \langle S, O, C, E, H \rangle$, where $S$ is the state space,
@@ -653,6 +655,12 @@ random walk and $\tau_{\text{agent}}$ is the expected cost under the system's ac
 \cite{fields2022competency}.
 $K = 0$ marks chance; each integer increment corresponds to one order of magnitude of search
 advantage.
+Exact operator-walk K is therefore the reference target. Direct computation is intractable at
+$n=30$, where the reachable spaces range up to $30!$ states, and blind random walks are too sparse
+to give a practical first-hit estimate at the paper scale. We therefore report
+$K_{\mathrm{state}}$: an exact reachable-state proposal null using the same operator family,
+constraints, and cost function. $K_{\mathrm{state}}$ preserves the state-space scale and
+matched-cost contract, but intentionally omits operator-graph traversal geometry.
 
 \paragraph{Problem-space mapping.}
 We therefore restrict the metric to the immovable
@@ -673,7 +681,7 @@ each condition. The sorting-cell model then instantiates the formalism as follow
   \item $H$: the finite factorization-trial horizon.
 \end{itemize}
 
-\paragraph{K results.}
+\paragraph{$K_{\mathrm{state}}$ results.}
 Exact maximal-entropy operator-walk hitting times on these $n=30$ state graphs are intractable, so
 we make the null explicit at the state-space level. Our blind baseline proposes a reachable state
 uniformly at random and pays the matched mean operator cost per proposal, giving
@@ -688,13 +696,11 @@ success
 \[
 \tau_{\text{agent}}^{\text{eff}} \;=\; \bar{c}/p_{\text{success}},
 \]
-computed over reachable trial instances only. If $p_{\text{success}} = 0$, K is undefined.
-This null is exact for the stated state-proposal process. If one instead insists on an
-operator-walk interpretation, the same quantity is conservative because blind graph traversal can
-only increase hitting cost relative to direct random state proposals.
+computed over reachable trial instances only. If $p_{\text{success}} = 0$, $K_{\mathrm{state}}$ is undefined.
+This null is exact for the stated state-proposal process, not for a maximal-entropy operator walk.
 
-Under this definition, all four Selection-family variants show large positive state-space
-K at frozen$=0$: published long-range Selection and its stubborn no-frozen control both achieve
+Under this definition, all four Selection-family variants show large positive
+$K_{\mathrm{state}}$ at frozen$=0$: published long-range Selection and its stubborn no-frozen control both achieve
 $K_{\text{state}} \approx 30.44$, while the adjacent variants achieve
 $K_{\text{state}} \approx 29.80$ and $29.79$. Under immovable frozen indices, the matched long-range
 rerouting curve declines monotonically as the reachable state space shrinks from $30!$ to $21!$,
@@ -706,31 +712,30 @@ becomes undefined as soon as any frozen indices are introduced because success d
 The adjacent family exposes a different K-based failure mode. At frozen$=0$, both adjacent variants
 have well-defined positive $K_{\text{state}}$, but at frozen $3/6/9$ the adjacent-plus-immovable
 problem space is disconnected for every sampled factorization trial: reachable fraction $0/30$ in each
-condition. Thus K is undefined there for structural reasons, not merely because the policy is bad.
+condition. Thus $K_{\mathrm{state}}$ is undefined there for structural reasons, not merely because the policy is bad.
 This is precisely the operator-and-constraint point the previous mixed K surface obscured.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig6_k_values.pdf}
   \caption{\textbf{Matched state-space K on the immovable factorization.}
-  Left: all four Selection-family variants have large positive exact state-space K at frozen$=0$, but the
+  Left: all four Selection-family variants have large positive exact $K_{\mathrm{state}}$ at frozen$=0$, but the
   adjacent variants are weaker because they spend more span-weighted work to traverse the same
   reachable state space. Right: when the exact state-space blind baseline is recomputed under each
   frozen pattern, long-range rerouting remains strongly supra-random while declining with the
-  active state-space size. Long-range stubborn has undefined K once success drops to zero. The
-  adjacent family has no reachable trial instances at frozen $3/6/9$, so no K points appear there.
-  Error bars show 95\% bootstrap CIs. The same quantity is also a conservative surrogate for blind
-  operator-walk search.}
+  active state-space size. Long-range stubborn has undefined $K_{\mathrm{state}}$ once success drops to zero. The
+  adjacent family has no reachable trial instances at frozen $3/6/9$, so no $K_{\mathrm{state}}$ points appear there.
+  Error bars show 95\% bootstrap CIs.}
   \label{fig:k-values}
 \end{figure}
 
 \paragraph{Interpretation.}
-This K surface is exact for an explicit state-space null and conservative under a stricter
-operator-walk reading, while remaining
-tied to explicit operator families, explicit frozen constraints, and a distance-weighted cost
-model. That is much closer to the formal role K is meant to play in the Diverse Intelligence
-framework. Within the long-range operator class, rerouting preserves search efficiency under frozen
-barriers; within the adjacent class, the barrier semantics can eliminate reachability altogether.
+This $K_{\mathrm{state}}$ surface is exact for an explicit state-space null while remaining tied to
+explicit operator families, explicit frozen constraints, and a distance-weighted cost model.
+It should be read as a scalable state-space proxy for the formal K target, not as a direct
+operator-walk hitting-time calculation. Within the long-range operator class, rerouting preserves
+search efficiency under frozen barriers; within the adjacent class, the barrier semantics can
+eliminate reachability altogether.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -750,26 +755,30 @@ reduces the pattern sharply, just as eliminating a heterochronic gene shift can 
 morphological distinction.
 
 \paragraph{Active-matter framing (MIPS).}
-The clustering mechanism can be framed as motility-induced phase separation: algorithmic rules define
+The clustering mechanism has a MIPS-like mobility-separation analogy: algorithmic rules define
 effective motility profiles, with Selection exhibiting sustained early motion and Insertion remaining
 quiescent until its enable-to-move condition is met. Temporal separation then creates regions of
 kinematic arrest that accumulate like-typed agents. The InsertionNoWait ablation equalizes motility
 profiles and removes clustering, consistent with this interpretation.
 
 \paragraph{Exclusion-process framing (inhomogeneous TASEP).}
-The 1D lattice with hard-core exclusion admits a TASEP-style interpretation in which frozen cells and
-high-latency algotypes act as transport defects. These defects reduce local flux and induce jammed
-phases with upstream density buildup. Under immovable constraints, local algorithms fail in ways
-consistent with persistent blockages, while Selection’s non-local target assignment effectively
-bypasses local exclusion constraints.
+The 1D lattice with hard-core exclusion suggests an exclusion-process analogy for the adjacent
+immovable-barrier cases, in which frozen cells and high-latency algotypes act as transport defects.
+These defects reduce local flux and induce jammed phases with upstream density buildup. Under
+immovable constraints, local algorithms fail in ways consistent with persistent blockages, while
+Selection’s non-local target assignment effectively bypasses local exclusion constraints.
 
 \paragraph{Robustness is semantic and algorithmic.}
 Our ablations and matched baselines emphasize a simple point: robustness depends strongly on
 operator class, blocked-target policy, and obstacle semantics (movable vs.\ immovable).
-The factorization result is the cleanest result here. Under immovable barriers, rerouting alone is
-not enough and long-range reach alone is not enough; only the combination survives. The rerouting
-ablation then isolates that half of the story within the published long-range Selection operator class. Bubble and
-Insertion fail for combinatorial reasons once adjacent transpositions are blocked by hard barriers.
+The factorization result is the cleanest result here. Under immovable barriers, long-range reach
+without frozen-target rerouting is not enough, and frozen-target rerouting is not sufficient under
+adjacent-only execution; only the combination survives. The structural reason for the adjacent
+failure is that adjacent active-active moves cannot exchange values across immovable frozen
+indices. The rerouting ablation then isolates the policy half of the story within the published
+long-range Selection operator class.
+Bubble and Insertion fail for combinatorial reasons once adjacent transpositions are blocked by
+hard barriers.
 In the same immovable regime, distributed execution does not out-perform centralized baselines
 (in the archived centralized comparison).
 Zhang et al.\ motivate the cell-view model partly through analogy to basal cognition in living
@@ -792,10 +801,10 @@ canonical raw-trial archive, but it remains narrower in scope than the 1D factor
 baseline results.
 
 \paragraph{Search efficiency as a graded metric.}
-The K analysis translates the operator-and-constraint story into a graded efficiency metric without
+The $K_{\mathrm{state}}$ analysis translates the operator-and-constraint story into a graded efficiency metric without
 hiding behind a fixed blind
 baseline. Because the state-space null is recomputed under each frozen pattern, long-range
-Selection's K now falls from $30.44$ to $18.01$ as the reachable state space contracts, rather than
+Selection's $K_{\mathrm{state}}$ now falls from $30.44$ to $18.01$ as the reachable state space contracts, rather than
 artificially rising under harder conditions. The same framework also clarifies two distinct
 failure modes: long-range stubborn Selection retains a reachable problem space but loses all
 successful trajectories, whereas the adjacent family under immovable barriers loses reachability in
@@ -805,7 +814,7 @@ view of competency \cite{levin2022technological,fields2022competency}. It provid
 example of Chis-Ciure and Levin's formalism \cite{chisciure2025cognition} with explicit $O$, $C$,
 and $w$. Because the blind numerator is computed under a reachable-state proposal null rather than
 an exact maximal-entropy operator walk, we interpret it as an exact $K_{\mathrm{state}}$ analysis
-and, secondarily, as a conservative surrogate for blind operator-walk search.
+and leave full operator-walk K to small-$n$ or separately bounded analyses.
 
 \section{Related Work}
 \label{sec:related}
@@ -838,8 +847,9 @@ Levin's ``mind everywhere'' framework treats adaptive, goal-like behaviors as gr
 across substrates \cite{levin2022technological}. Chis-Ciure and Levin \cite{chisciure2025cognition}
 formalize this via the K-computation metric, operationalizing intelligence as search efficiency
 in a problem space $\mathcal{P} = \langle S, O, C, E, H \rangle$. Our
-K analysis provides a worked example of how the abstract formalism maps onto a specific model with
-measurable $\tau_{\text{blind}}$ and $\tau_{\text{agent}}$. Fields and Levin
+$K_{\mathrm{state}}$ analysis provides a worked state-proposal approximation of how the abstract
+formalism maps onto a specific model with explicit state spaces, operators, constraints, and costs.
+Fields and Levin
 \cite{fields2022competency} develop the broader theoretical context of competency navigation; we
 ground their framework in a system small enough that every parameter is inspectable.
 
@@ -882,8 +892,8 @@ Bubble and Gnome clones reproduces the predicted rise in separation and clusteri
 same-family controls. We still do not claim a fully closed universal account, but the mechanism
 extends beyond one native algotype. The 2D section is regenerated from a canonical raw-trial
 archive, but it remains narrower in scope than the 1D core. Directed Flow remains a useful but
-policy-aligned exploratory diagnostic. K-computation, by contrast, is framed as a matched
-state-space analysis rather than as a descriptive fixed-baseline curve.
+policy-aligned exploratory diagnostic. K-computation, by contrast, is framed as
+$K_{\mathrm{state}}$, a matched state-space analysis rather than a descriptive fixed-baseline curve.
 
 The sorting-cell model remains valuable precisely because its components are inspectable. Once the
 operator set, obstacle semantics, and baselines are stated explicitly, it becomes a cleaner test bed
