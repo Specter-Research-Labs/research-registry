@@ -2231,7 +2231,7 @@
 
             <main class="site-main">
                 <!-- GENERATED:DOSSIER_HUB_HEADER START -->
-<header class="dossier-hub-header" id="dossier-header"><h1 class="dossier-hub-title">Wonton Soup</h1><p class="dossier-hub-deck">Intervention framework for proof-search structure: centralized MCTS maps proof families, basin stability, and search efficiency, while distributed MCTS tests how collective control changes access to that landscape.</p><div class="dossier-hub-metabar"><span class="dossier-hub-metabar-item">SPCTR <span class="dossier-hub-metabar-value">D-002</span></span><span class="dossier-hub-metabar-item">status <span class="project-status active">active</span></span><span class="dossier-hub-metabar-item">activity <span class="dossier-hub-metabar-value">2026-06-03</span></span><span class="dossier-hub-metabar-item">license <span class="dossier-hub-metabar-value">Mixed</span></span><span class="dossier-hub-metabar-item">scope <span class="dossier-hub-metabar-value">expansion</span></span><span class="dossier-hub-metabar-item dossier-hub-metabar-repo"><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup" target="_blank" rel="noopener noreferrer">Repository &rarr;</a></span></div></header>
+<header class="dossier-hub-header" id="dossier-header"><h1 class="dossier-hub-title">Wonton Soup</h1><p class="dossier-hub-deck">Intervention framework for proof-search structure: centralized MCTS maps proof families, basin stability, and search efficiency, while distributed MCTS tests how collective control changes which proof families the search can reach.</p><div class="dossier-hub-metabar"><span class="dossier-hub-metabar-item">SPCTR <span class="dossier-hub-metabar-value">D-002</span></span><span class="dossier-hub-metabar-item">status <span class="project-status active">active</span></span><span class="dossier-hub-metabar-item">activity <span class="dossier-hub-metabar-value">2026-06-03</span></span><span class="dossier-hub-metabar-item">license <span class="dossier-hub-metabar-value">Mixed</span></span><span class="dossier-hub-metabar-item">scope <span class="dossier-hub-metabar-value">expansion</span></span><span class="dossier-hub-metabar-item dossier-hub-metabar-repo"><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/wonton-soup" target="_blank" rel="noopener noreferrer">Repository &rarr;</a></span></div></header>
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <nav class="ws-chapter-nav" aria-label="Section navigation">
@@ -2522,12 +2522,12 @@
                             <div class="ws-metric green">
                                 <span class="ws-metric-label">Structural drift</span>
                                 <span class="ws-metric-value">58%</span>
-                                <span class="ws-metric-note">of solved-strict rows show non-zero normalized search-graph edit distance. Reroutes are real, not noise.</span>
+                                <span class="ws-metric-note">of solved-strict rows show non-zero normalized search-graph edit distance. The reroutes are real structure rather than measurement noise.</span>
                             </div>
                             <div class="ws-metric red">
                                 <span class="ws-metric-label">Naive basin hypothesis</span>
                                 <span class="ws-metric-value">r = &minus;0.18</span>
-                                <span class="ws-metric-note">unique-structure count vs lesion recovery. Wider basins recover <em>less</em>, not more.</span>
+                                <span class="ws-metric-note">unique-structure count vs lesion recovery. Wider basins recover from lesions <em>less</em> often.</span>
                             </div>
                         </div>
                         <div class="ws-headline" aria-label="Headline visualizations">
@@ -2664,14 +2664,14 @@
                             </div>
                             <figcaption class="ws-figplate-body">
                                 <p class="ws-figplate-cap">
-                                    <strong>Wider basins recover less, not more.</strong> Higher unique-structure counts do not imply
+                                    <strong>Wider basins recover from lesions less often.</strong> Higher unique-structure counts do not imply
                                     higher lesion recovery. Correlation r = <strong>&minus;0.18</strong>. The highest-width
                                     quartile (3 to 9 unique structures) recovers at 25.8%, lower than Q1 (37.5%), Q2 (36.5%), and
                                     Q3 (47.2%).
                                 </p>
                                 <div class="ws-figplate-read">
                                     <b>Read this as</b>
-                                    Raw variant count is the wrong axis; the candidate replacement is whether variants cross independent resource channels.
+                                    Raw variant count does not predict recovery; what might is whether variants cross independent resource channels.
                                 </div>
                             </figcaption>
                         </figure>
@@ -2941,7 +2941,7 @@
                         A second case shows the chokepoint is provider-relative. For
                         <code>list_append_nil</code>, blocking <code>cases</code> collapses ReProver but
                         the heuristic provider routes around it. The chokepoint is a property of the learned
-                        policy, not the theorem.
+                        policy rather than the theorem.
                     </p>
                     <div class="ws-cut">
                         <div class="ws-cut-box collapsed">
@@ -2956,7 +2956,7 @@
                             <span class="ws-cut-title" style="color:var(--ws-blue);">Heuristic / block cases</span>
                             <span class="ws-cut-big blue">16 / 16</span>
                             <p class="ws-cut-caption">
-                                Heuristic routes through induction. Same goal, fully substitutable. The chokepoint is in the policy, not the math.
+                                Heuristic routes through induction. Same goal, fully substitutable. The chokepoint sits in the policy rather than the math.
                             </p>
                         </div>
                     </div>
@@ -2965,7 +2965,7 @@
                 <section class="ws-section" id="basin-verdict">
                     <h2 class="ws-section-title">Basin width does not predict resilience</h2>
                     <p class="ws-section-lede">
-                        Rerun the same theorem 64 times with reshuffled seeds and the attractor structure comes out. <code>coq_pair_andb_prop</code> distributes across seven structural buckets, with one dominant attractor. Across the corpus, wider basins recover from lesions less often, not more.
+                        Rerun the same theorem 64 times with reshuffled seeds and the attractor structure comes out. <code>coq_pair_andb_prop</code> distributes across seven structural buckets, with one dominant attractor. Across the corpus, wider basins recover from lesions less often.
                     </p>
                     <div class="ws-grid-2">
                         <div class="ws-attractor-board">
@@ -3110,7 +3110,7 @@
                                 </svg>
                             </div>
                             <div class="ws-panel accent-red" style="margin-top:14px;">
-                                <h3 class="ws-panel-title">Wider basins recover less, not more</h3>
+                                <h3 class="ws-panel-title">Wider basins recover from lesions less often</h3>
                                 <p>
                                     Top-quartile theorems sit between 21 and 28 unique basin structures and recover from lesions less often than narrower-basin theorems. The candidate refinement is to count variants that cross independent resource channels rather than variants that reuse the same infrastructure.
                                 </p>
@@ -3120,7 +3120,7 @@
                     <div class="ws-panel accent-blue" style="margin-top:14px;">
                         <h3 class="ws-panel-title">Within-tree convergence is rare</h3>
                         <p>
-                            Across 4,640 search graphs, only about 1% (68) show within-tree goal convergence. The structural variation surfaces across reshuffled seeds, not inside a single MCTS rollout.
+                            Across 4,640 search graphs, only about 1% (68) show within-tree goal convergence. The structural variation surfaces across reshuffled seeds rather than inside a single MCTS rollout.
                         </p>
                     </div>
                 </section>
@@ -3358,15 +3358,15 @@
                     </p>
                     <div class="ws-grid-3" style="margin-top:18px;">
                         <div class="ws-panel accent-purple">
-                            <h3 class="ws-panel-title">Collapsed runs expand more, not less</h3>
+                            <h3 class="ws-panel-title">Collapse is runaway expansion</h3>
                             <p>
-                                Collapsed runs average 6.7 iterations and 1.7 backtracks with 2.9 unique goals visited. Solved runs average 3.0, 0.1, and 2.1. Failure is blind expansion, not exhaustion.
+                                Collapsed runs average 6.7 iterations and 1.7 backtracks with 2.9 unique goals visited against 3.0, 0.1, and 2.1 for solved runs, so the collapses are expanding blindly rather than exhausting the search.
                             </p>
                         </div>
                         <div class="ws-panel accent-blue">
                             <h3 class="ws-panel-title">K is net-negative</h3>
                             <p>
-                                Across 1,905 K-scored rows the mean of <code>log10(&tau;_blind / &tau;_agent)</code> is <strong>&minus;0.04</strong> with sd 0.20. The prover does not beat blind on average. The interesting structure lives in the dispersion, not the mean.
+                                Across 1,905 K-scored rows the mean of <code>log10(&tau;_blind / &tau;_agent)</code> is <strong>&minus;0.04</strong> with sd 0.20, so the prover does not beat blind on average and the signal is in how K spreads across theorems rather than in the mean.
                             </p>
                         </div>
                         <div class="ws-panel accent-green">
@@ -3381,7 +3381,7 @@
                 <section class="ws-section" id="monodromy">
                     <h2 class="ws-section-title">Proof-term monodromy</h2>
                     <p class="ws-section-lede">
-                        Below the search graph sits the proof object itself, a typed term that type-checks to the theorem's statement. For each theorem we hash the closing proof term per wild-type solve and count how many distinct hashes the prover produced. The fiber widens monotonically with provider diversity: 16% of theorems have two or more closing terms within a single provider, 72% across two providers, 95% across three or more.
+                        Each solve also produces the proof object itself, a typed term that type-checks against the theorem's statement, and we hash that closing term on every wild-type solve to ask, per theorem, how many distinct terms the prover actually landed on. The measurement that means something holds everything fixed except the seed: same provider, same corpus, reruns only, and one theorem in six still closes on a structurally different term, so the proof is not canonical even when nothing outside the search has moved. The fraction rises to 72% across two providers and 95% across three or more, but those columns count smaller and harder subsets, 452 and 43 theorems against 975, and a second provider is a second model with its own coding habits, so they bound how wide the fiber can open rather than measure anything about diversity.
                     </p>
                     <div class="ws-fig" style="margin-top:8px;">
                         <div class="ws-fig-head">
@@ -3486,7 +3486,7 @@
                                 <line x1="40" y1="296" x2="1160" y2="296" class="grid" />
                                 <text x="40" y="316" class="label">EACH DOT IS ONE THEOREM</text>
                                 <text x="40" y="332" class="muted" font-size="10">Filled: the prover landed on 2 or more distinct closing terms across its wild-type reruns. Outlined: the same closing term every time.</text>
-                                <text x="40" y="346" class="muted" font-size="10">Within-provider counts the noise floor under fixed corpus and provider. Across-provider widens the fiber to between-provider diversity.</text>
+                                <text x="40" y="346" class="muted" font-size="10">Within-provider is the load-bearing number: fixed model and corpus, only the seed changes. The cross-provider columns count smaller, harder subsets, so they bound the fiber rather than measure diversity.</text>
                             </g>
                         </svg>
                     </div>
@@ -3514,7 +3514,7 @@
                             </p>
                         </div>
                         <div class="ws-panel accent-blue">
-                            <h3 class="ws-panel-title">Basin width is the wrong axis</h3>
+                            <h3 class="ws-panel-title">Partition basins by resource channel</h3>
                             <p>
                                 The prediction that wider basins survive lesions better gets r = &minus;0.18. The candidate refinement is whether basin variants cross independent resource channels rather than re-using the same infrastructure. The next dataset is a basin partition by axiom and lemma usage.
                             </p>
