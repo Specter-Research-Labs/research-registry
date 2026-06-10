@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import base64
 import csv
+import gc
+import itertools
 import json
 import math
 import re
 import tempfile
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -42,6 +45,8 @@ OBSERVATION_KIND = "common_point_cloud_morphology"
 _EPSILON = 1.0e-6
 _MAX_SYMMETRY_POINTS = 512
 _RASTER_GRID_SIZE = 32
+_LENIA_FETCH_BATCH_SIZE = 512
+_WRITE_BATCH_SIZE = 1000
 _LANDMARK_COLUMN_RE = re.compile(r"^LM\s+(\d+)_(X|Y|Z)$")
 
 AXIS_SPECS: tuple[dict[str, Any], ...] = (
@@ -653,12 +658,12 @@ def _lenia_study_ids(connection: DuckDBPyConnection, study_id: str | None) -> li
     return [str(row[0]) for row in rows]
 
 
-def _collect_lenia_rows(
+def _iter_lenia_rows(
     connection: DuckDBPyConnection,
     *,
     study_id: str | None,
-) -> list[_CommonMorphologyRow]:
-    rows: list[_CommonMorphologyRow] = []
+    missing_common_only: bool = False,
+) -> Iterator[_CommonMorphologyRow]:
     for resolved_study_id in _lenia_study_ids(connection, study_id):
         context_id = register_context(
             connection,
@@ -667,61 +672,86 @@ def _collect_lenia_rows(
             label="common_morphology",
             metadata_json={"sourceId": LENIA_SOURCE_ID, "featureSpaceId": FEATURE_SPACE_ID},
         )
-        specimen_rows = connection.execute(
+        missing_clause = ""
+        params: list[Any] = [resolved_study_id]
+        if missing_common_only:
+            missing_clause = """
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM observations
+                      WHERE observations.study_id = ?
+                        AND observations.observation_kind = ?
+                        AND observations.specimen_id = study_specimens.specimen_id
+                  )
             """
-            SELECT DISTINCT
-                specimens.specimen_id,
-                specimens.recorded_at,
-                specimens.results_path,
-                specimens.export_dir,
-                specimens.activity_path,
-                specimens.fingerprint_path,
-                specimens.provenance_json,
-                specimens.specimen_manifest_json
-            FROM study_specimens
-            JOIN specimens USING (specimen_id)
-            WHERE study_specimens.study_id = ?
-              AND EXISTS (
-                  SELECT 1
-                  FROM specimen_axes
-                  WHERE specimen_axes.specimen_id = specimens.specimen_id
-                    AND specimen_axes.axis_family = 'terminal'
-              )
-            ORDER BY specimens.specimen_id
-            """,
-            [resolved_study_id],
-        ).fetchall()
-        for specimen_row in specimen_rows:
-            (
-                specimen_id,
-                recorded_at,
-                results_path,
-                export_dir,
-                activity_path,
-                fingerprint_path,
-                provenance_json,
-                specimen_manifest_json,
-            ) = specimen_row
-            terminal = _terminal_from_payloads(
-                provenance_json=provenance_json,
-                specimen_manifest_json=specimen_manifest_json,
-            )
-            if terminal is None:
-                continue
-            point_cloud = _fingerprint_point_cloud(terminal, specimen_id=str(specimen_id))
-            if point_cloud is None:
-                continue
-            points, weights = point_cloud
-            source_ref = results_path or export_dir or activity_path or fingerprint_path
-            observation_id = stable_id(
-                LENIA_SOURCE_ID,
-                "common-observation",
-                resolved_study_id,
-                specimen_id,
-                FEATURE_SPACE_ID,
-            )
-            rows.append(
-                _CommonMorphologyRow(
+            params.extend([resolved_study_id, OBSERVATION_KIND])
+        specimen_ids = [
+            str(row[0])
+            for row in connection.execute(
+                f"""
+                SELECT DISTINCT study_specimens.specimen_id
+                FROM study_specimens
+                WHERE study_specimens.study_id = ?
+                  AND EXISTS (
+                      SELECT 1
+                      FROM specimen_axes
+                      WHERE specimen_axes.specimen_id = study_specimens.specimen_id
+                        AND specimen_axes.axis_family = 'terminal'
+                  )
+                  {missing_clause}
+                """,
+                params,
+            ).fetchall()
+        ]
+        for start in range(0, len(specimen_ids), _LENIA_FETCH_BATCH_SIZE):
+            batch_ids = specimen_ids[start : start + _LENIA_FETCH_BATCH_SIZE]
+            placeholders = ", ".join("?" for _ in batch_ids)
+            specimen_rows = connection.execute(
+                f"""
+                SELECT
+                    specimens.specimen_id,
+                    specimens.recorded_at,
+                    specimens.results_path,
+                    specimens.export_dir,
+                    specimens.activity_path,
+                    specimens.fingerprint_path,
+                    specimens.provenance_json,
+                    specimens.specimen_manifest_json
+                FROM specimens
+                WHERE specimens.specimen_id IN ({placeholders})
+                """,
+                batch_ids,
+            ).fetchall()
+            for specimen_row in specimen_rows:
+                (
+                    specimen_id,
+                    recorded_at,
+                    results_path,
+                    export_dir,
+                    activity_path,
+                    fingerprint_path,
+                    provenance_json,
+                    specimen_manifest_json,
+                ) = specimen_row
+                terminal = _terminal_from_payloads(
+                    provenance_json=provenance_json,
+                    specimen_manifest_json=specimen_manifest_json,
+                )
+                if terminal is None:
+                    continue
+                point_cloud = _fingerprint_point_cloud(terminal, specimen_id=str(specimen_id))
+                if point_cloud is None:
+                    continue
+                points, weights = point_cloud
+                source_ref = results_path or export_dir or activity_path or fingerprint_path
+                observation_id = stable_id(
+                    LENIA_SOURCE_ID,
+                    "common-observation",
+                    resolved_study_id,
+                    specimen_id,
+                    FEATURE_SPACE_ID,
+                )
+                yield _CommonMorphologyRow(
                     observation_id=observation_id,
                     specimen_id=str(specimen_id),
                     study_id=resolved_study_id,
@@ -737,8 +767,12 @@ def _collect_lenia_rows(
                         "fingerprintResolution": terminal.get("fingerprintResolution"),
                     },
                 )
-            )
-    return rows
+def _collect_lenia_rows(
+    connection: DuckDBPyConnection,
+    *,
+    study_id: str | None,
+) -> list[_CommonMorphologyRow]:
+    return list(_iter_lenia_rows(connection, study_id=study_id))
 
 
 def _fish_studies(
@@ -1086,11 +1120,25 @@ def _selected_study_rows(
     ]
 
 
-def _source_counts_after_replace(
+def _iter_selected_study_rows(
+    connection: DuckDBPyConnection,
+    *,
+    dryad_fish_root: Path | None,
+    study_id: str,
+) -> Iterator[_CommonMorphologyRow]:
+    yield from _iter_lenia_rows(connection, study_id=study_id)
+    yield from _collect_fish_rows(
+        connection,
+        study_id=study_id,
+        dataset_root=dryad_fish_root,
+    )
+    yield from _collect_embryomaker_rows(connection, study_id=study_id)
+
+
+def _source_counts_excluding_study(
     connection: DuckDBPyConnection,
     *,
     study_id: str,
-    replacement_rows: list[_CommonMorphologyRow],
 ) -> dict[str, int]:
     counts: dict[str, int] = {}
     rows = connection.execute(
@@ -1107,9 +1155,54 @@ def _source_counts_after_replace(
     ).fetchall()
     for source_id, count in rows:
         counts[str(source_id)] = int(count)
+    return counts
+
+
+def _source_counts_after_replace(
+    connection: DuckDBPyConnection,
+    *,
+    study_id: str,
+    replacement_rows: list[_CommonMorphologyRow],
+) -> dict[str, int]:
+    counts = _source_counts_excluding_study(connection, study_id=study_id)
     for row in replacement_rows:
         counts[row.source_id] = counts.get(row.source_id, 0) + 1
     return counts
+
+
+def _row_batches(
+    rows: Iterable[_CommonMorphologyRow],
+    *,
+    batch_size: int = _WRITE_BATCH_SIZE,
+) -> Iterator[list[_CommonMorphologyRow]]:
+    iterator = iter(rows)
+    while batch := list(itertools.islice(iterator, batch_size)):
+        yield batch
+
+
+def _increment_source_counts(
+    counts: dict[str, int],
+    rows: Iterable[_CommonMorphologyRow],
+) -> None:
+    for row in rows:
+        counts[row.source_id] = counts.get(row.source_id, 0) + 1
+
+
+def _write_row_batches(
+    connection: DuckDBPyConnection,
+    *,
+    batches: Iterable[list[_CommonMorphologyRow]],
+    stats: dict[str, dict[str, float]],
+) -> tuple[int, int, dict[str, int]]:
+    observation_count = 0
+    feature_value_count = 0
+    source_counts: dict[str, int] = {}
+    for batch in batches:
+        observation_count += len(batch)
+        _increment_source_counts(source_counts, batch)
+        feature_value_count += _write_rows(connection, rows=batch, stats=stats)
+        gc.collect()
+    return observation_count, feature_value_count, source_counts
 
 
 def _clear_existing_rows(
@@ -1232,6 +1325,30 @@ def _write_rows(
     return feature_value_count
 
 
+def _upsert_common_feature_space(
+    connection: DuckDBPyConnection,
+    *,
+    source_counts: dict[str, int],
+) -> None:
+    upsert_feature_space(
+        connection,
+        feature_space_id=FEATURE_SPACE_ID,
+        feature_space_kind="cross_source_shape_descriptor",
+        label=FEATURE_SPACE_LABEL,
+        version_label="v1",
+        coordinate_policy=(
+            "raw_value is a scale-normalized point-cloud descriptor; normalized_value "
+            "is robust z-score across the derived common-morphology corpus"
+        ),
+        metric_json={"metric": "euclidean", "preferredValueColumn": "normalized_value"},
+        metadata_json={
+            "axisCount": len(AXIS_IDS),
+            "sourceCounts": dict(sorted(source_counts.items())),
+            "normalization": "per-axis robust z-score across all derived observations",
+        },
+    )
+
+
 def derive_common_morphology(
     connection: DuckDBPyConnection,
     *,
@@ -1239,6 +1356,8 @@ def derive_common_morphology(
     study_id: str | None = None,
 ) -> dict[str, Any]:
     stats = _existing_axis_stats(connection) if study_id is not None else None
+    streaming_batches: Iterable[list[_CommonMorphologyRow]] | None = None
+    rows: list[_CommonMorphologyRow] | None
     if stats is None:
         all_rows = [
             *_collect_lenia_rows(connection, study_id=None),
@@ -1262,17 +1381,21 @@ def derive_common_morphology(
         stats = _axis_stats(all_rows)
     else:
         assert study_id is not None
-        rows = _selected_study_rows(
+        row_iterator = _iter_selected_study_rows(
             connection,
             dryad_fish_root=dryad_fish_root,
             study_id=study_id,
         )
-        source_counts = _source_counts_after_replace(
-            connection,
-            study_id=study_id,
-            replacement_rows=rows,
+        first_batch = list(itertools.islice(row_iterator, _WRITE_BATCH_SIZE))
+        rows = None
+        source_counts = _source_counts_excluding_study(connection, study_id=study_id)
+        streaming_batches = itertools.chain([first_batch], _row_batches(row_iterator))
+    if rows is not None and not rows:
+        raise ValueError(
+            "no Lenia fingerprints or Dryad fish landmarks available "
+            f"for study_id={study_id}"
         )
-    if not rows:
+    if rows is None and streaming_batches is not None and not first_batch:
         raise ValueError(
             "no Lenia fingerprints or Dryad fish landmarks available "
             f"for study_id={study_id}"
@@ -1294,23 +1417,8 @@ def derive_common_morphology(
         version_label="legacy-output-dat",
         metadata_json={"featureSpaceId": FEATURE_SPACE_ID},
     )
-    upsert_feature_space(
-        connection,
-        feature_space_id=FEATURE_SPACE_ID,
-        feature_space_kind="cross_source_shape_descriptor",
-        label=FEATURE_SPACE_LABEL,
-        version_label="v1",
-        coordinate_policy=(
-            "raw_value is a scale-normalized point-cloud descriptor; normalized_value "
-            "is robust z-score across the derived common-morphology corpus"
-        ),
-        metric_json={"metric": "euclidean", "preferredValueColumn": "normalized_value"},
-        metadata_json={
-            "axisCount": len(AXIS_IDS),
-            "sourceCounts": dict(sorted(source_counts.items())),
-            "normalization": "per-axis robust z-score across all derived observations",
-        },
-    )
+    if rows is not None:
+        _upsert_common_feature_space(connection, source_counts=source_counts)
     replace_feature_axes(
         connection,
         feature_space_id=FEATURE_SPACE_ID,
@@ -1335,12 +1443,24 @@ def derive_common_morphology(
     )
 
     _clear_existing_rows(connection, study_id=study_id)
-    feature_value_count = _write_rows(connection, rows=rows, stats=stats)
+    if rows is None:
+        assert streaming_batches is not None
+        observation_count, feature_value_count, replacement_counts = _write_row_batches(
+            connection,
+            batches=streaming_batches,
+            stats=stats,
+        )
+        for source_id, count in replacement_counts.items():
+            source_counts[source_id] = source_counts.get(source_id, 0) + count
+        _upsert_common_feature_space(connection, source_counts=source_counts)
+    else:
+        observation_count = len(rows)
+        feature_value_count = _write_rows(connection, rows=rows, stats=stats)
 
     return {
         "featureSpaceId": FEATURE_SPACE_ID,
         "observationKind": OBSERVATION_KIND,
-        "observationCount": len(rows),
+        "observationCount": observation_count,
         "axisCount": len(AXIS_IDS),
         "featureValueCount": feature_value_count,
         "sourceCounts": dict(sorted(source_counts.items())),

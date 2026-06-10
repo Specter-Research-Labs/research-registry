@@ -18,25 +18,23 @@
     "proof graphs",
   ),
   abstract: [
-    We study a distributed Monte Carlo tree search theorem prover in which multiple
-    local controllers coordinate over a shared frontier, and ask whether targeted
-    perturbations reveal intervention-defined proto-cognitive signatures in proof search. Guided by
-    Levin's Technological Approach to Mind Everywhere (TAME), we treat mentalistic
-    language as an operational research stance rather than a metaphysical claim: the
-    question is whether it improves prediction, intervention, and structural
-    explanation @levin2022tame @levin2026mind2. We lesion solved proof trajectories by
-    blocking tactic families and by perturbing scheduler decisions, then rerun under
-    matched budgets with LLM tactic providers. The primary analysis conditions on
-    baseline-solved theorem-runs, with a stricter null-stable subset to separate true
-    lesion effects from provider stochasticity. We compare proof outcomes using
-    proof-family labels, graph edit distance over goal- and tactic-labeled proof
-    graphs, trajectory divergence and recovery metrics, explicit basin analysis across
-    repeated runs, and cut-sensitivity tests over load-bearing proof resources. The
-    central claim is operational: under perturbation, some theorem-runs preserve goal
-    reachability by rerouting through structurally distinct proof families, while others
-    reveal compressed infrastructure whose removal disconnects the empirically
-    accessible basin. This makes distributed theorem proving a useful assay for
-    intervention-defined proto-cognitive signatures in a non-biological search system.
+    We ask a simple question about proof search: if a theorem prover finds a proof and
+    we remove one tactic family from that successful path, can it still reach the same
+    theorem? We test this in a distributed Monte Carlo tree search prover whose local
+    controllers share a search frontier. The experiment is a TAME-style perturbation
+    assay: we use goal preservation under changed means as an operational test, not as
+    a claim about consciousness or biological mind @levin2022tame @levin2026mind2. In
+    the current completed-run lake, 367 of 1,064 baseline-solved intervention rows
+    still solve after the tactic block. In the stricter null-stable slice, 96 solved
+    rows produce a different proof-family hash and 187 show non-zero search-graph
+    distance. The prover therefore sometimes reaches the same theorem by a different
+    route. The failures are just as informative: blocking `linarith` on
+    `hf_deepseek_prover_v1_train_11756` collapses every matched ReProver seed in a
+    fixed 16-seed panel and also fails under DeepSeek, showing a real arithmetic
+    bottleneck rather than a generic tactic preference. Other tactic blocks are often
+    survivable, and some even help by pruning bad search habits. The result is a
+    concrete map of what this prover can route around, what it depends on, and when
+    damage becomes a better search bias.
   ],
 )[
 
@@ -168,7 +166,7 @@ Outcome labels are coarse but useful. `replicate` means the intervention reaches
 same proof-family label as the control. `reroute` means the intervention still solves
 the theorem but lands in a distinct proof-family. `collapse` means the lesion destroys
 goal reachability within the matched budget. Rescue cases should be reported
-separately because they represent search regularization rather than damage.
+separately because they are cases where damage helps rather than hurts.
 
 The structural layer of the analysis should make reroutes earn their name. Proof
 families are defined over proof graphs whose nodes are labeled by goal signatures and
@@ -189,7 +187,7 @@ lesion because they have more accessible structural alternatives.
   table.header([Element], [What this section must lock down]),
   [Main denominator], [Only theorem-runs with `baseline_solved = true` contribute to the main lesion story.],
   [Stricter subset], [Also report the null-stable slice where the matched `control_null` run solves.],
-  [Rescue handling], [Track `baseline_fail / intervention_solve` as a separate regularization phenomenon.],
+  [Rescue handling], [Track `baseline_fail / intervention_solve` as a separate case where damage helps.],
   [Structural metrics], [Define proof-family labels, GED, trajectory divergence, recovery, and basin-width measures.],
 )
 
@@ -197,124 +195,117 @@ lesion because they have more accessible structural alternatives.
 
 == Replicate, Reroute, And Collapse
 
-The main denominator contains 5,161 intervention rows across 340 runs, restricted to
-theorem-runs where the baseline solves. Of these, 1,754 preserve goal reachability
-under lesion (34.0%) while 3,407 collapse. The distribution across providers is
-uneven: DeepSeek contributes 536 solved and 969 collapsed (35.6% recovery), heuristic
-25 solved and 28 collapsed (47.2%), and reprover 1,193 solved and 2,410 collapsed
-(33.1%).
+Each intervention is a break test. We first let the prover solve a theorem. Then we
+remove one tactic family from the successful path and ask what happens under the same
+budget. There are three useful answers. The prover may fail. It may solve by roughly
+the same route. Or it may solve by a different route.
 
-Provider-specific null instability is sharply asymmetric. DeepSeek solves 72.0% of
-matched `control_null` reruns, while heuristic solves 100% and reprover 99.9%. This
-asymmetry means the strict denominator---requiring both baseline and control-null to
-solve---is substantially tighter for DeepSeek than for the other providers. Rescue
-cases, where the intervention solves but the baseline does not, are excluded from the
-main denominator and reported separately in Appendix C.
+In the current lake, the completed-run cohort contains 338 DeepSeek, heuristic, and
+ReProver Lean research runs. The main denominator contains 1,064 rows where the
+unperturbed baseline solved the theorem. After a tactic was blocked, 367 of those rows
+still solved (34.5%) and 697 failed. The rate differs by provider: DeepSeek recovers in
+105 of 290 rows (36.2%), the heuristic provider in 148 of 252 rows (58.7%), and
+ReProver in 114 of 522 rows (21.8%).
+
+This comparison is only meaningful if the baseline was stable enough to solve again
+without the lesion. The matched `control_null` run provides that check. It retains 173
+of 290 DeepSeek baseline-solved rows (59.7%), all 252 heuristic rows, and 341 of 522
+ReProver rows (65.3%). The heuristic provider is therefore much less noisy on this
+slice than DeepSeek or ReProver. Rows where the baseline failed but the lesioned run
+solved are a different phenomenon and are handled in Appendix C.
 
 #figure(
   image("artifacts/fig17-followup-provider-splits.svg", width: 100%),
   caption: [
-    Lesion outcomes from the shared lake across 340 runs. Right: the strict main-text
-    denominator restricted to `baseline_solved = true` rows whose matched `control_null`
-    rerun also solves. Left: rows excluded from that denominator, split into rescue
-    cases and null-unstable spillover.
+    What happens after we block part of a solved proof. Right: baseline-solved rows
+    whose matched `control_null` run also solves. Left: cases outside that strict
+    denominator, including rescues and null-unstable rows.
   ],
 )
 
-== Structural Reality Of Reroutes
+== When The Prover Survives, The Proof Often Changes
 
-In the strict denominator, 1,250 intervention rows solve after lesion while both
-baseline and control-null also solve. Of these, 602 (48%) are explicit reroutes under
-the hash-mismatch criterion---the intervention produces a structurally distinct proof
-family from the control. Structural drift extends beyond that coarse label: 730 of the
-1,250 solved strict-denominator rows (58%) have non-zero normalized search-graph edit
-distance. The mean normalized GED is 0.405 and the maximum is 1.091. Structural
-divergence is therefore the norm rather than the exception when goal reachability
-survives.
+The interesting solved cases are not just lucky repeats. In the strict denominator,
+330 rows solve after the tactic block while both the original baseline and the matched
+null control also solve. Of those 330 rows, 96 (29.1%) produce a different proof-family
+hash from the control. They reach the same theorem, but not by the same proof.
 
-Tactic-family heterogeneity produces a quantifiable hierarchy from redundant
-scaffolding to irreplaceable chokepoints:
+The weaker structural signal points the same way. Search-graph edit distance is
+non-zero in 187 of the 330 solved rows (56.7%). The mean normalized distance is 0.362,
+and the maximum is 0.968. In other words, even when the proof-family hash still
+matches, the search often took a measurably different path.
+
+Different tactic families fail differently:
 
 #figure(
   table(
     columns: (1.2fr, 0.8fr, 0.6fr, 1.4fr),
     table.header([Intervention], [Total], [Recovery], [Classification]),
-    [`block_push_neg`], [61], [100.0%], [Redundant scaffolding],
-    [`block_left`], [66], [93.9%], [Highly substitutable],
-    [`block_intros`], [394], [61.2%], [Moderately recoverable],
-    [`block_apply`], [73], [53.4%], [Mixed],
-    [`block_intro`], [592], [27.0%], [Somewhat essential],
-    [`block_rw`], [482], [22.4%], [Essential],
-    [`block_linarith`], [380], [10.3%], [Critical],
-    [`block_cases`], [136], [6.6%], [Chokepoint],
-    [`block_dsimp`], [99], [2.0%], [Irreplaceable],
+    [`block_simp`], [59], [74.6%], [Highly substitutable],
+    [`block_apply`], [15], [60.0%], [Recoverable],
+    [`block_intros`], [108], [59.3%], [Recoverable entry],
+    [`block_intro`], [178], [47.2%], [Mixed entry],
+    [`block_cases`], [44], [45.5%], [Mixed structural],
+    [`block_exact`], [91], [34.1%], [Often essential],
+    [`block_rw`], [113], [11.5%], [Essential],
+    [`block_linarith`], [52], [9.6%], [Critical],
+    [`block_norm_num`], [111], [7.2%], [Critical numeric],
   ),
   caption: [
-    Tactic family recovery rates from the main denominator. Blocking `push_neg` never
-    collapses search; blocking `dsimp` almost always does. The hierarchy spans from
-    redundant scaffolding (100% recovery) to irreplaceable chokepoints (2% recovery).
+    What breaks when each tactic family is blocked. Blocking `simp`, `apply`, and
+    `intros` is often survivable. Blocking `rw`, `linarith`, or `norm_num` usually is
+    not.
   ],
 )
 
-Entry tactics like `intro` and `intros` show divergent behavior: `intros` (plural,
-handling multiple binders) recovers at 61.2%, while `intro` (singular) recovers at
-only 27.0%. Terminal tactics and specialized closers (`dsimp`, `linarith`, `cases`)
-cluster at the chokepoint end. The taxonomy matters because it predicts which lesions
-will collapse search versus which merely force rerouting.
+The table is a map of habits. Blocking `simp`, `apply`, or `intros` often leaves
+another way through. Blocking `rw`, `linarith`, or `norm_num` usually does not. The
+entry tactics are in the middle: `intros` recovers in 59.3% of rows, while `intro`
+recovers in 47.2%. Rewriting and arithmetic closing tactics sit near the hard end.
 
-Reroutes explore genuinely novel territory. Compared to replicates, reroutes visit
-more novel goals (0.48 vs 0.33 on average) and show higher solution-path distance from
-the wild-type trajectory (0.198 vs 0.136). Despite this exploration, reroutes remain
-efficient: 2.94 average iterations versus 3.08 for replicates. The system discovers
-alternative paths through the proof space without additional search cost.
+The reroutes are not free, but they are cheap compared with failure. Reroutes visit
+more new goals than repeats (0.77 vs. 0.21 on average) and move slightly farther from
+the original solution path (0.171 vs. 0.153). They also take more iterations than
+repeats (2.85 vs. 2.26). But collapsed searches average 8.6 iterations, with many more
+backtracks and goals visited. A successful reroute is therefore a real detour, not a
+full search blow-up.
 
 #figure(
   image("artifacts/fig16-ged-bimodality.svg", width: 100%),
   caption: [
-    Normalized search-graph edit distance among solved strict-denominator rows. Of
-    1,250 solved rows, 602 are explicit reroutes (hash mismatch) and 730 show non-zero
-    structural drift.
+    Search-graph distance among solved strict-denominator rows. Of 330 solved rows, 96
+    are explicit reroutes by proof-family hash and 187 show non-zero graph distance.
   ],
 )
 
-== Load-Bearing Proof Infrastructure
+== Some Resources Really Are Load-Bearing
 
-Rerouting shows that a proof-search system can pursue the same theorem by variable
-means. Cut sensitivity exposes the complementary fact: some theorems are reachable
-only through compressed infrastructure that functions as a load-bearing channel in the
-empirical proof basin. Wonton therefore does more than label outcomes after damage. It
-can estimate which mathematical resources carry goal reachability.
+Reroutes show that a theorem can sometimes be reached in more than one way. The
+opposite result is just as informative. Sometimes we remove one resource and every
+nearby attempt fails. That is a cut: the prover had not learned a flexible route around
+that resource.
 
-This turns the lesion protocol into a language-game-style interface with the prover's
-own dynamics. Zhang and Levin argue that a shared game can act as a lingua franca
-between otherwise incompatible cognitive architectures: meaning is grounded in use
-inside the task, not in the observer's preferred representation @zhang2026languagegame.
-Here, the theorem-proving environment plays the same role. A tactic block is not merely
-a syntactic deletion; it is a query posed to the search system in the language of its
-own problem space. If the system reroutes, the removed resource was substitutable. If
-it collapses across seeds and providers, the resource was carrying part of the proof
-basin.
+This makes the intervention more than a token ablation. A tactic block is a question
+asked in the prover's own language: can you still solve the same theorem without this
+move? If the answer is yes, the move was replaceable. If the answer is no across seeds
+or providers, the move was carrying real proof work.
 
-The cleanest current example is
-`hf_deepseek_prover_v1_train_11756`, an arithmetic theorem whose successful trajectory
-uses `linarith`. After disabling a fragile per-step proof-term request that caused Lean
-REPL crashes, ReProver solved the wild-type condition in 16 of 16 seeded runs. Blocking
-`linarith` solved 0 of those 16 runs. The same cut is supported by cross-provider
-evidence in the validation lake: DeepSeek and ReProver both show non-zero wild-type
-solve rates and zero `block_linarith` solve rate on the reconciled rows. This is not a
-generic statement that arithmetic tactics are useful. It is an observed cut: removing
-one resource disconnects the accessible basin under matched provider, budget, and seed
-controls.
+The cleanest example is `hf_deepseek_prover_v1_train_11756`, an arithmetic theorem
+whose solved path uses `linarith`. After a proof-term crash was fixed, ReProver solved
+the unblocked condition in 16 of 16 seeded runs. With `linarith` blocked, it solved 0
+of 16. DeepSeek shows the same shape on the reconciled rows: non-zero wild-type solves,
+zero `block_linarith` solves. The point is not that arithmetic tactics are generally
+useful. The point is that this theorem's observed proof route depends on arithmetic
+compression, and the current search does not find a substitute under the same budget.
 
-Lean trace capture sharpens the interpretation. For this fixed 16-seed panel, the lake
-records 128 `linarith` input facts, 96 preprocessed facts, and 32 certificates, in
-addition to tactic-dependency and rewrite-resource rows. The intervention therefore
-targets a real certificate-producing compression mechanism, not only the surface token
-`linarith`. More broadly, the lake now contains 226 `simp` used-rule rows, 167
-`linarith` fact rows, 123 preprocessed `linarith` fact rows, 37 `linarith` certificate
-rows, and typeclass-instance traces. Proof-term constant dependency DAGs are indexed as
-edges, not flat constant sets: the current lake contains 2,478,426 constant nodes and
-881,320 constant edges.
+The traces make this concrete. In the fixed 16-seed panel, the lake records 128
+`linarith` input facts, 96 preprocessed facts, and 32 certificates, plus tactic and
+rewrite-resource rows. The blocked word is therefore tied to a real compression
+mechanism in Lean, not just a surface string. Across the lake, the same extraction
+tracks 226 `simp` used-rule rows, 167 `linarith` fact rows, 123 preprocessed
+`linarith` fact rows, 37 `linarith` certificate rows, and typeclass-instance traces.
+Proof-term constant dependencies are stored as DAG edges; the current lake contains
+2,478,426 constant nodes and 881,320 constant edges.
 
 #figure(
   table(
@@ -326,136 +317,108 @@ edges, not flat constant sets: the current lake contains 2,478,426 constant node
     [`list_append_nil / cases`], [heuristic], [`16/16 → 16/16`], [Substitutable route],
   ),
   caption: [
-    Cut-sensitivity examples. A validated cut is a resource whose removal drives solve
-    probability to zero on rows where the wild-type condition solves. Provider-specific
-    cuts reveal solver habits; provider-stable cuts are stronger evidence for
-    load-bearing proof infrastructure.
+    Cut-sensitivity examples. Some blocked tactics can be replaced. Others remove the
+    only route this prover currently finds.
   ],
 )
 
-The distinction between provider-specific and provider-stable cuts matters. Blocking
-`cases` on `list_append_nil` collapses ReProver but not the heuristic provider, so the
-cut primarily exposes a provider habit. Blocking `linarith` on
-`hf_deepseek_prover_v1_train_11756` survives this check: the accessible proof basin is
-organized around arithmetic compression itself. In this sense, Wonton measures an
-anatomy of proof dependence. Replicates identify redundant channels, reroutes identify
-alternative routes of competence, and validated cuts identify resources without which
-the observed proof process cannot maintain goal-directed behavior.
+Provider-specific cuts and provider-stable cuts mean different things. Blocking
+`cases` on `list_append_nil` collapses ReProver but not the heuristic provider, so that
+result mostly exposes a ReProver habit. Blocking `linarith` on
+`hf_deepseek_prover_v1_train_11756` survives the cross-provider check. That is stronger
+evidence that the accessible route depends on arithmetic compression itself.
 
 == Basin Width And Lesion Resilience
 
-The current lake contains 3,097 basin rows across 2,008 theorem names, with
-unique-structure counts ranging from 0 to 21. The strict all-lake join used for this
-section matches 62 theorem-provider rows with both null-stable lesion outcomes and
-basin measurements. This is no longer an untested hypothesis: the current compendium
-has enough variance to reject the simplest version of the story.
+We expected the broad-basin theorems to be more resilient. If a theorem has many
+observed proof shapes in repeated control runs, then blocking one tactic should leave
+more ways around the damage. That prediction is natural, but the current lake does not
+support it in this simple form.
 
-The simple prediction was that wider basins should yield higher lesion resilience. The
-observed relationship points the other way. In the strict join, unique-structure counts
-range from 0 to 9, with 20 rows at or above two structures. The correlation between
-unique-structure count and lesion recovery is -0.18. Quartile stratification tells the
-same story: the highest-width quartile (unique-structure counts 3--9) recovers at 25.8%,
-lower than the first two quartiles (37.5% and 36.5%) and below the third quartile
-(47.2%).
+The lake contains 3,145 basin rows across 2,008 theorem names. Unique-structure counts
+range from 0 to 21. When we join basin measurements to null-stable lesion outcomes in
+completed runs, 55 theorem-provider rows remain. In that joined slice, unique-structure
+counts range from 0 to 5.6, and 11 rows have at least two observed structures. The
+correlation between unique-structure count and lesion recovery is 0.03. The quartiles
+are not monotone either: the highest-width quartile recovers at 36.3%, compared with
+34.0%, 45.2%, and 39.3% in the lower three quartiles.
 
-This does not mean basin structure is irrelevant. It means that `unique_structures` is
-too crude to stand in for usable resilience. A wide basin can be wide because it
-contains many fragile local variants, because the provider wanders through
-near-duplicate proof families, or because the theorem admits several real routes that
-nevertheless share the same load-bearing resource. The cut-sensitivity results above
-explain why: what matters is not only the number of accessible proof families, but
-whether those families cross independent resource channels.
+The lesson is not that basins do not matter. It is that counting proof shapes is not
+enough. A theorem can have many variants that all rely on the same arithmetic closer.
+Another theorem can have only a few observed variants, but those variants may pass
+through different resources. The cut experiments above explain why this distinction
+matters: resilience depends on whether the alternatives cross genuinely different
+proof resources, not only on how many alternatives were observed.
 
 #figure(
   image("artifacts/fig18-followup-basins.svg", width: 100%),
   caption: [
-    Basin width vs. lesion recovery in the current lake. The strict all-lake join has
-    enough variance to test the simple positive-width hypothesis, and does not support
-    it: higher unique-structure counts do not imply higher lesion recovery.
+    Basin width versus lesion recovery. In this slice, simply counting observed proof
+    shapes does not predict whether a tactic block will be survivable.
   ],
 )
 
 == Scheduler Perturbations And Controller-Level Effects
 
-Scheduler lesions perturb the coordination layer rather than individual proof tactics.
-The shared lake contains 14 scheduler-damage runs, primarily on reprover with
-damage-block conditions at blocking fractions 0.1, 0.3, and 0.5. On the March 2026
-scheduler matrix, recovery rates show a dose-response pattern: 14.0% at f=0.1 (7/50
-interventions), 10.4% at f=0.3 (7/67), and 10.6% at f=0.5 (7/66). Higher blocking
-fractions slightly reduce recovery, consistent with the intuition that more aggressive
-scheduler damage leaves fewer coordination paths available.
+The tactic lesions damage the proof language directly. Scheduler lesions damage a
+different part of the system: which controller can act, and when. The current
+completed-run lake contains three March 2026 scheduler-damage runs on ReProver, with
+block fractions 0.1, 0.3, and 0.5. Each condition has 30 baseline-solved rows and 6
+recoveries (20.0%). The raw intervention row totals are 50, 67, and 66.
 
-Earlier February 2026 runs on a different corpus show higher recovery rates around 20%
-for similar damage conditions. The corpus difference prevents direct comparison, but
-both datasets confirm that the distributed scheduler is a genuine intervention surface.
-Blocking or delaying controller actions changes theorem-level outcomes, not merely
-internal coordination statistics. This supports the claim that the distributed layer
-contributes meaningfully to collective competence rather than serving only as a
-parallelization wrapper.
+This is a clean negative result. In this slice, increasing the scheduler block
+fraction does not reduce theorem-level recovery. The coordination layer is still a
+real place to intervene, but the sampled theorem outcomes are buffered against this
+range of scheduler damage. To say more, we need either a larger scheduler matrix or a
+separate analysis of controller-level traces.
 
 = Discussion, Limits, And TAME Interpretation
 
-The central finding is that distributed proof search preserves goal reachability under
-perturbation through structurally distinct paths. Across 340 runs, 34% of lesioned
-theorem-runs still solve, and 48% of those solves are explicit reroutes with distinct
-proof-family hashes. The remaining solved rows show non-zero structural drift in 58% of
-cases. This is not superficial label noise: the system reaches the same theorem through
-measurably different proof graphs when the original path is blocked.
+The main observation is simple. When we break a solved proof, the prover often fails,
+but not always. In 367 of 1,064 baseline-solved rows, it still reaches the theorem. In
+the stricter null-stable slice, 96 solved rows produce a different proof-family hash,
+and 187 show non-zero search-graph distance. The prover is not merely replaying the
+same proof with a missing token. It often finds another path.
 
-Rerouting is efficient. Collapsed runs average 6.7 iterations with 1.7 backtracks and
-2.9 unique goals visited; solved runs average 3.0 iterations with 0.1 backtracks and
-2.1 unique goals. Collapsed search explores more broadly but fails. Among solved runs,
-replicates and reroutes show nearly identical cost: 2.8 vs 2.9 iterations. The system
-finds alternative paths without additional search overhead.
+Those paths are constrained. Arithmetic and rewriting tactics can behave like hard
+load-bearing resources. The `linarith` cut on `hf_deepseek_prover_v1_train_11756`
+collapses every matched ReProver seed in the fixed panel and also fails under
+DeepSeek. By contrast, other tactics can be removed with little damage, and some
+lesions even help by pruning bad search habits. The useful picture is therefore not
+"robust" or "brittle" in general. It is a map of which resources can be replaced, which
+cannot, and when damage turns into a better search bias.
 
-This pattern meets the threshold for a TAME-style proto-cognitive signature: flexible
-goal pursuit under changing conditions @levin2022tame @levin2026mind2. The relevant
-criterion is not resemblance to biological cognition but the ability to reach a fixed
-goal by variable means. Distributed theorem proving exhibits this structure. The
-proto-cognitive label names an operational intervention-response pattern that improves
-structural explanation.
+This is the part that connects to TAME. We are not claiming that a theorem prover is
+conscious, alive, or mind-like in any broad sense. We are asking a narrower question:
+does it preserve a fixed goal by changing means when the route is perturbed? In this
+system, sometimes yes. The proto-cognitive language is useful only to the extent that
+it helps organize those intervention results: reroute, collapse, rescue, and cut.
 
-The limits are equally clear. The simple basin-width hypothesis is not supported by
-the current compendium: more observed proof-family structures do not by themselves
-predict lesion resilience. Scheduler perturbations confirm the distributed layer as a
-genuine intervention surface, though the dose-response effect is modest.
-Cross-assistant (Lean--Rocq) results are incomplete.
-
-What would weaken the claim? If broader corpora show that reroutes disappear under
-tighter controls, if structural drift collapses to noise, or if scheduler damage
-produces no theorem-level effects, then the proto-cognitive reading should be revised
-downward. The paper stakes an operational claim on intervention-defined flexibility; that
-claim holds on the current data but remains falsifiable.
+The limits are just as important as the positive result. A wider observed basin does
+not, by itself, predict lesion recovery. The scheduler matrix does not show a
+theorem-level dose response in the current completed-run slice. Cross-assistant
+Lean--Rocq comparisons are incomplete. Broader corpora could show that reroutes vanish
+under tighter controls, that graph distance is mostly noise, or that scheduler damage
+does not affect theorem outcomes. If so, the interpretation should shrink with the
+data.
 
 = Reproducibility
 
-Every number in this paper traces to the shared runtime lake on `quietbox` at
-`/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb` (6.9 GB, 340 runs,
-21,044 intervention rows). The figure-generation script queries this lake directly and
-produces the SVG figures embedded in the paper.
+Every number in this build traces to the current Wonton lake at
+`dossiers/wonton-soup/artifacts/lake/lake.duckdb` (9.9 GB, 857 indexed runs, 338
+completed Lean research runs for the main provider cohort, and 28,313
+theorem-intervention rows). The figure-generation script queries this lake directly
+and produces the SVG figures embedded in the paper.
 
-To regenerate figures and compile the paper:
-
-```bash
-# Sync the shared lake locally (optional, ~7 GB transfer)
-rsync -avP quietbox:/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb \
-  /local/path/to/lake.duckdb
-
-# Generate figures from the synced lake
-cd /path/to/research-registry/dossiers/wonton-soup
-LAKE_DB_PATH=/local/path/to/lake.duckdb \
-uv run python paper/build_figures.py --out-dir paper/artifacts
-
-# Compile the paper
-typst compile --root ../.. paper/main.typ paper/artifacts/main.pdf \
-  --font-path ../../addenda/typst-field-manual/assets/fonts
-```
+To regenerate figures, run `uv run python paper/build_figures.py --out-dir
+paper/artifacts` from `dossiers/wonton-soup`. To use another synced lake, set
+`LAKE_DB_PATH=/local/path/to/lake.duckdb` before that command. To compile the paper,
+run `nix develop -c typst compile --root ../.. paper/main.typ paper/artifacts/main.pdf
+--font-path ../../addenda/typst-field-manual/assets/fonts`.
 
 The lake schema and extraction logic are documented in `docs/ops/lake.md` and
-`analysis/lake/`. Raw run logs reside on `quietbox` under
-`/shared/specter-runtime/wonton-soup/logs/`.
-
-#pagebreak()
+`analysis/lake/`. Raw run logs are preserved outside the paper source; the lake is the
+analysis surface used here.
 
 = Appendix
 
@@ -472,7 +435,7 @@ system cannot reliably solve the theorem even without lesion, observed failures 
 reflect noise rather than damage.
 
 *Rescue bucket.* Rows where `baseline_solved = false` and `intervention_solved = true`
-represent regularization effects---the lesion improves search rather than damaging it.
+are cases where the lesion improves search rather than damaging it.
 These are excluded from the main analysis and reported separately.
 
 *Provider filters.* The main analysis includes DeepSeek, heuristic, and reprover
@@ -500,45 +463,49 @@ closers; blocking collapses search for numeric goals.
 scheduler actions; `damage-delay` --- introduce random delays in controller
 coordination.
 
-== Appendix C: Rescue Cases And Search Regularization
+== Appendix C: When Damage Helps
 
-Rescue cases---where the baseline fails but the intervention solves---total 785 rows
-across all intervention types. This is not noise: blocking certain tactics reliably
-improves search by pruning unproductive branches.
+Rescue cases---where the baseline fails but the intervention solves---total 222 rows
+in the completed-run cohort. These rows are useful because they keep the lesion story
+honest. Blocking a tactic is not always damage. Sometimes it removes a move that was
+wasting the prover's budget.
 
 #figure(
   table(
     columns: (1.5fr, 1fr, 2fr),
     table.header([Intervention], [Rescues], [Interpretation]),
-    [`block_intros`], [256], [Plural intro over-commits early],
-    [`block_simp`], [125], [Simplification loops avoided],
-    [`block_rw`], [90], [Rewrite chains pruned],
-    [`block_exact`], [60], [Forces alternative closers],
-    [`block_apply`], [52], [Reduces blind application],
-    [`block_have`], [43], [Lemma introduction pruned],
-    [`block_rfl`], [38], [Forces non-trivial paths],
+    [`block_simp`], [31], [Simplification loops avoided],
+    [`block_intros`], [28], [Plural intro over-commits early],
+    [`block_rfl`], [17], [Forces non-trivial paths],
+    [`block_decide`], [16], [Avoids brittle decision paths],
+    [`block_intro`], [16], [Changes entry tactic commitment],
+    [`block_rw`], [15], [Rewrite chains pruned],
+    [`block_apply`], [13], [Reduces blind application],
+    [`block_exact`], [11], [Forces alternative closers],
   ),
   caption: [
-    Top rescue interventions. Blocking `intros` produces the most rescues (256),
-    suggesting the baseline over-explores multi-binder introductions. These are cases
-    where lesion regularizes search rather than damaging it.
+    Tactic blocks that most often help after the baseline fails. The largest groups
+    are `block_simp` and `block_intros`.
   ],
 )
 
-The rescue phenomenon inverts the usual lesion interpretation: the "damaged" system
-outperforms the intact one. This occurs when the baseline search wastes budget on
-unproductive branches that the lesion prunes. Among failed baselines, blocking certain
-tactics produces reliably higher rescue rates: `block_apply` (16.0%), `block_intros`
-(15.6%), `block_have` (13.9%), and `block_decide` (13.5%) rescue far more often than
-`block_intro` (2.0%) or `block_rfl` (3.3%). The pattern suggests that tactics
-involving multi-step commitment (`intros`, `apply`, `have`) sometimes lock the prover
-into suboptimal search branches, while atomic closers (`intro`, `rfl`) rarely cause
-such over-commitment.
+The largest rescue counts come from blocking `simp` and `intros`. That is a clear
+warning about search bias. `simp` can pull the prover into simplification work that
+does not pay off. `intros` can commit too early to a shape of the proof. When those
+moves are forbidden, the prover sometimes spends its budget elsewhere and finds a proof
+that the baseline missed.
 
-Some theorems exhibit 100% rescue rates: every baseline fails, but every lesioned
-variant solves. These include `hf_deepseek_prover_v1_train_01679` (128 rescues) and
-`add_eq_of_eq_neg_add` (134 rescues). For these theorems, the baseline proof strategy
-is strictly dominated by the lesioned alternatives.
+The rate view adds a second clue. Smaller groups such as `block_have` (34.5%),
+`block_ext` (12.0%), `block_apply` (8.9%), and `block_exact` (6.3%) rescue less often
+in raw count but more often within their failed-baseline slices. These are not big
+enough to carry the main result, but they point to the same mechanism: some tactics are
+useful in successful proofs and still harmful when the search commits to them at the
+wrong time.
+
+The theorem-level view makes this concrete. `SubtractionMonoid_x2etoSubNegZeroMonoid_x2eeq_x5f1`
+has 20 rescues in 48 failed-baseline rows. `add_x5fzsmul` has 19 rescues in 275. That
+does not mean the original prover was always worse on those theorems. It means that,
+on those rows, removing a tempting tactic opened a path the baseline did not take.
 
 #bibliography("refs.bib", style: "springer-mathphys")
 ]

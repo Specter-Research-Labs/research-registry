@@ -9,11 +9,10 @@ from pathlib import Path
 import duckdb
 
 TARGET_PROVIDERS = ("deepseek", "heuristic", "reprover")
-FOLLOWUP_MARKER = "followup-2026-03"
-P2_PREFIX = "p2-paired/"
-P4_PREFIX = "p4-basin-deep/"
+LOCAL_DB_CANDIDATE = Path(__file__).resolve().parents[1] / "artifacts" / "lake" / "lake.duckdb"
 DEFAULT_DB_CANDIDATES = (
     os.environ.get("LAKE_DB_PATH"),
+    str(LOCAL_DB_CANDIDATE),
     "/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb",
 )
 
@@ -74,34 +73,6 @@ def completed_runs(conn: duckdb.DuckDBPyConnection) -> list[tuple[str, str, str,
     return out
 
 
-def selected_run_keys(
-    runs: list[tuple[str, str, str, str | None]],
-    *,
-    phase_prefixes: tuple[str, ...],
-) -> list[str]:
-    filtered: list[tuple[str, str, str, str | None]] = []
-    for run_key, run_id, provider, created_at in runs:
-        parts = run_id.split("/", 1)
-        if len(parts) != 2:
-            continue
-        root, rest = parts
-        if FOLLOWUP_MARKER not in root:
-            continue
-        if not any(rest.startswith(prefix) for prefix in phase_prefixes):
-            continue
-        filtered.append((run_key, run_id, provider, created_at))
-
-    filtered.sort(key=lambda row: ((row[3] is None), row[3] or "", row[1], row[0]), reverse=True)
-    seen: set[str] = set()
-    deduped: list[str] = []
-    for run_key, run_id, _, _ in filtered:
-        if run_id in seen:
-            continue
-        seen.add(run_id)
-        deduped.append(run_key)
-    return deduped
-
-
 def seed_run_keys(conn: duckdb.DuckDBPyConnection, table_name: str, run_keys: list[str]) -> None:
     conn.execute(f"DROP TABLE IF EXISTS {table_name}")
     conn.execute(f"CREATE TEMP TABLE {table_name}(run_key VARCHAR PRIMARY KEY)")
@@ -141,7 +112,7 @@ def query_provider_outcomes(conn: duckdb.DuckDBPyConnection) -> list[dict]:
           SELECT r.provider, i.solved AS intervention_solved, i.baseline_solved,
                  cn.control_null_solved, c.hash_mismatch
           FROM theorem_intervention i
-          JOIN selected_p2_runs s USING(run_key)
+          JOIN selected_completed_runs s USING(run_key)
           JOIN runs r USING(run_key)
           LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem
           LEFT JOIN theorem_intervention_comparison c
@@ -191,7 +162,7 @@ def query_structural_rows(conn: duckdb.DuckDBPyConnection) -> list[dict]:
         )
         SELECT c.ged_search_norm, c.hash_mismatch
         FROM theorem_intervention i
-        JOIN selected_p2_runs s USING(run_key)
+        JOIN selected_completed_runs s USING(run_key)
         LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem
         LEFT JOIN theorem_intervention_comparison c
           ON c.run_key = i.run_key AND c.theorem = i.theorem AND c.intervention = i.intervention
@@ -224,6 +195,7 @@ def query_basin_rows(conn: duckdb.DuckDBPyConnection) -> list[dict]:
           SELECT r.provider, i.theorem,
                  AVG(CASE WHEN i.solved IS NULL THEN NULL ELSE CAST(i.solved AS DOUBLE) END) AS lesion_recovery_rate
           FROM theorem_intervention i
+          JOIN selected_completed_runs s USING(run_key)
           JOIN runs r USING(run_key)
           LEFT JOIN control_null cn ON cn.run_key = i.run_key AND cn.theorem = i.theorem
           WHERE COALESCE(i.is_control, FALSE) = FALSE
@@ -239,6 +211,7 @@ def query_basin_rows(conn: duckdb.DuckDBPyConnection) -> list[dict]:
                  AVG(b.unique_structures) AS unique_structures,
                  AVG(b.paper_k) AS paper_k
           FROM basin_runs b
+          JOIN selected_completed_runs s USING(run_key)
           JOIN runs r USING(run_key)
           WHERE r.provider IN ('deepseek','heuristic','reprover')
             AND r.backend = 'lean'
@@ -246,7 +219,7 @@ def query_basin_rows(conn: duckdb.DuckDBPyConnection) -> list[dict]:
           GROUP BY r.provider, b.theorem
         )
         SELECT intervention.provider, intervention.theorem,
-               intervention.lesion_recovery_rate, basin.unique_structures, basin.paper_k
+               intervention.lesion_recovery_rate, basin.unique_structures
         FROM intervention JOIN basin
           ON basin.provider = intervention.provider AND basin.theorem = intervention.theorem
         ORDER BY intervention.provider, intervention.theorem
@@ -258,14 +231,12 @@ def query_basin_rows(conn: duckdb.DuckDBPyConnection) -> list[dict]:
             "theorem": theorem,
             "lesion_recovery_rate": float(lesion_recovery_rate),
             "unique_structures": float(unique_structures),
-            "paper_k": float(paper_k),
         }
-        for provider, theorem, lesion_recovery_rate, unique_structures, paper_k in rows
+        for provider, theorem, lesion_recovery_rate, unique_structures in rows
         if isinstance(provider, str)
         and isinstance(theorem, str)
         and isinstance(lesion_recovery_rate, (int, float))
         and isinstance(unique_structures, (int, float))
-        and isinstance(paper_k, (int, float))
     ]
 
 
@@ -290,16 +261,36 @@ def build_lesion_outcomes(rows: list[dict], out_path: Path) -> None:
         values[row["provider"]] = row
 
     width, height = 1040, 420
-    left_scale = 16.0
-    right_scale = 11.0
     left_x = 70
     right_x = 560
+    left_w = 400
+    right_w = 390
     top_y = 125
     row_gap = 82
+    max_left = max(
+        (
+            row["appendix_rescue"]
+            + row["appendix_null_unstable_solved"]
+            + row["appendix_null_unstable_collapse"]
+            for row in values.values()
+        ),
+        default=1,
+    )
+    max_right = max(
+        (
+            row["main_hash_match_solved"]
+            + row["main_reroute_solved"]
+            + row["main_collapse"]
+            for row in values.values()
+        ),
+        default=1,
+    )
+    left_scale = left_w / max(max_left, 1)
+    right_scale = right_w / max(max_right, 1)
     lines = svg_header(width, height)
     lines += [
-        '<text x="40" y="34" class="title">March p2 lesion outcomes from the shared lake</text>',
-        '<text x="40" y="58" class="subtitle">Only followup-2026-03 p2-paired runs. Strict main denominator on the right; appendix-only spillover on the left.</text>',
+        '<text x="40" y="34" class="title">Completed-run lesion outcomes from the current lake</text>',
+        '<text x="40" y="58" class="subtitle">Completed DeepSeek, heuristic, and ReProver Lean research runs. Strict main denominator on the right; appendix-only spillover on the left.</text>',
         f'<rect x="40" y="82" width="470" height="270" rx="10" fill="{PANEL}" stroke="{GRID}"/>',
         f'<rect x="530" y="82" width="470" height="270" rx="10" fill="{PANEL}" stroke="{GRID}"/>',
         '<text x="60" y="108" class="label" style="font-weight:700">Appendix-only spillover</text>',
@@ -315,7 +306,7 @@ def build_lesion_outcomes(rows: list[dict], out_path: Path) -> None:
         y = top_y + idx * row_gap
         row = values[provider]
         lines.append(f'<text x="54" y="{y+4}" class="label" text-anchor="end">{label}</text>')
-        lines.append(f'<rect x="{left_x}" y="{y-14}" width="400" height="28" fill="none" stroke="{GRID}"/>')
+        lines.append(f'<rect x="{left_x}" y="{y-14}" width="{left_w}" height="28" fill="none" stroke="{GRID}"/>')
         rescue = row["appendix_rescue"]
         null_solved = row["appendix_null_unstable_solved"]
         null_collapse = row["appendix_null_unstable_collapse"]
@@ -327,7 +318,7 @@ def build_lesion_outcomes(rows: list[dict], out_path: Path) -> None:
                 lines.append(f'<text x="{offset + width_px/2}" y="{y+5}" class="value" text-anchor="middle" fill="white">{value}</text>')
                 offset += width_px
         lines.append(f'<text x="544" y="{y+4}" class="label" text-anchor="end">{label}</text>')
-        lines.append(f'<rect x="{right_x}" y="{y-14}" width="390" height="28" fill="none" stroke="{GRID}"/>')
+        lines.append(f'<rect x="{right_x}" y="{y-14}" width="{right_w}" height="28" fill="none" stroke="{GRID}"/>')
         exact = row["main_hash_match_solved"]
         reroute = row["main_reroute_solved"]
         collapse = row["main_collapse"]
@@ -372,7 +363,7 @@ def build_structural_drift(rows: list[dict], out_path: Path) -> None:
     max_count = max((a + b for a, b in zip(exact_counts, reroute_counts)), default=1)
     lines = svg_header(width, height)
     lines += [
-        '<text x="40" y="34" class="title">Structural drift among March p2 strict-denominator recoveries</text>',
+        '<text x="40" y="34" class="title">Structural drift among completed-run strict-denominator recoveries</text>',
         f'<text x="40" y="58" class="subtitle">{nonzero} of {total} solved strict-denominator rows have non-zero normalized GED; {reroutes} are explicit solved reroutes.</text>',
         f'<rect x="40" y="82" width="880" height="300" rx="10" fill="{PANEL}" stroke="{GRID}"/>',
         f'<line x1="{left}" y1="{bottom}" x2="{left + 10*(bar_w+gap) + bar_w}" y2="{bottom}" stroke="{INK}" stroke-width="1.5"/>',
@@ -390,7 +381,7 @@ def build_structural_drift(rows: list[dict], out_path: Path) -> None:
         if total_count:
             lines.append(f'<text x="{x + bar_w/2}" y="{bottom-exact_h-reroute_h-8}" class="value" text-anchor="middle">{total_count}</text>')
         lines.append(f'<text x="{x + bar_w/2}" y="{bottom+20}" class="tick" text-anchor="middle">{label}</text>')
-    step = 10 if max_count > 20 else 5 if max_count > 10 else 1
+    step = 25 if max_count > 100 else 20 if max_count > 50 else 10 if max_count > 20 else 5 if max_count > 10 else 1
     for tick in range(0, max_count + 1, step):
         y = bottom - (0 if max_count == 0 else tick / max_count * (chart_h - 10))
         lines.append(f'<line x1="{left-6}" y1="{y}" x2="{left}" y2="{y}" stroke="{INK}" stroke-width="1"/>')
@@ -430,15 +421,15 @@ def build_basin_resilience(rows: list[dict], out_path: Path) -> None:
     missing_providers = [provider for provider in TARGET_PROVIDERS if provider not in providers_present]
 
     if not rows:
-        subtitle = "No strict basin/intervention rows survive the all-lake provider-theorem join."
+        subtitle = "No strict basin/intervention rows survive the completed-run provider-theorem join."
     elif math.isclose(min(x_values), max(x_values)):
         subtitle = (
-            f"Strict all-lake join spans {len(rows)} rows; all rows have unique-structure count {x_values[0]:.0f}, "
+            f"Strict completed-run join spans {len(rows)} rows; all rows have unique-structure count {x_values[0]:.0f}, "
             "so this slice cannot identify a basin-width effect yet."
         )
     else:
         subtitle = (
-            f"Strict all-lake join spans {len(rows)} rows with unique-structure counts from {min(x_values):.0f} to {max(x_values):.0f}."
+            f"Strict completed-run join spans {len(rows)} rows with unique-structure counts from {min(x_values):.0f} to {max(x_values):.1f}."
         )
 
     lines = svg_header(width, height)
@@ -481,14 +472,14 @@ def build_basin_resilience(rows: list[dict], out_path: Path) -> None:
     ]
     if missing_providers:
         lines.append(
-            f'<text x="630" y="132" class="small">Missing completed p4-deep providers in this slice: {", ".join(missing_providers)}.</text>'
+            f'<text x="630" y="132" class="small">Missing providers in this slice: {", ".join(missing_providers)}.</text>'
         )
     write_svg(out_path, lines)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build paper SVG figures directly from the shared Wonton lake")
-    parser.add_argument("--db", help="Path to lake.duckdb (defaults to LAKE_DB_PATH or the shared runtime lake)")
+    parser = argparse.ArgumentParser(description="Build paper SVG figures directly from the current Wonton lake")
+    parser.add_argument("--db", help="Path to lake.duckdb (defaults to LAKE_DB_PATH, dossier-local lake, or shared runtime lake)")
     parser.add_argument("--out-dir", required=True, help="Output directory for generated SVGs")
     args = parser.parse_args()
 
@@ -497,10 +488,7 @@ def main() -> None:
 
     conn = duckdb.connect(str(db_path), read_only=True)
     runs = completed_runs(conn)
-    p2_run_keys = selected_run_keys(runs, phase_prefixes=(P2_PREFIX,))
-    p4_run_keys = selected_run_keys(runs, phase_prefixes=(P4_PREFIX,))
-    seed_run_keys(conn, "selected_p2_runs", p2_run_keys)
-    seed_run_keys(conn, "selected_p4_runs", p4_run_keys)
+    seed_run_keys(conn, "selected_completed_runs", [run_key for run_key, _, _, _ in runs])
 
     provider_rows = query_provider_outcomes(conn)
     structural_rows = query_structural_rows(conn)
