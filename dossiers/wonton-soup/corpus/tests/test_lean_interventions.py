@@ -42,6 +42,22 @@ def test_generate_interventions_skips_invalid_tactic_heads() -> None:
     assert [intervention.blocked for intervention in interventions] == [{"rw"}, {"simp"}]
 
 
+def test_generate_interventions_canonicalizes_numeric_tactic_suffixes() -> None:
+    theorem = Theorem("t", "theorem t : True := by\n  sorry")
+    history = _history_with_attempts("norm_num1", "simp_all2 [h]")
+
+    interventions = theorem.generate_interventions(history)
+
+    assert [intervention.name for intervention in interventions] == [
+        "block_norm_num",
+        "block_simp_all",
+    ]
+    assert [intervention.blocked for intervention in interventions] == [
+        {"norm_num"},
+        {"simp_all"},
+    ]
+
+
 def test_generate_interventions_returns_empty_for_only_invalid_tactic_heads() -> None:
     theorem = Theorem("t", "theorem t : True := by\n  sorry")
     history = _history_with_attempts("]", "])])])])")

@@ -22,6 +22,7 @@ interface TreeEdge {
   source: LayoutNode;
   target: LayoutNode;
   tactic: string;
+  edgeOrder: number;
 }
 
 export interface PreparedMctsTree {
@@ -53,19 +54,19 @@ export interface RenderOpts {
 }
 
 const WILD_PALETTE = {
-  low: "#4a6fa5",
-  high: "#d4a853",
-  edge: "rgba(135, 181, 209, 0.35)",
-  edgeProof: "rgba(212, 168, 83, 0.9)",
-  glow: "#d4a853",
+  low: "#425f7b",
+  high: "#ff6600",
+  edge: "rgba(66, 95, 123, 0.32)",
+  edgeProof: "rgba(255, 102, 0, 0.9)",
+  glow: "#ff6600",
 };
 
 const INT_PALETTE = {
-  low: "#3a5f4a",
-  high: "#6bc88a",
-  edge: "rgba(74, 138, 97, 0.35)",
-  edgeProof: "rgba(107, 200, 138, 0.9)",
-  glow: "#6bc88a",
+  low: "#2f6f64",
+  high: "#00a645",
+  edge: "rgba(47, 111, 100, 0.32)",
+  edgeProof: "rgba(0, 166, 69, 0.9)",
+  glow: "#00a645",
 };
 
 interface HierNode {
@@ -85,15 +86,20 @@ export function prepareMctsTree(
   const byId = new Map<string, MctsTreeNode>();
   for (const n of nodes) byId.set(n.mvar_id, n);
 
-  const childMap = new Map<string, { childId: string; tactic: string }[]>();
+  const childMap = new Map<string, { childId: string; tactic: string; edgeOrder: number }[]>();
   const hasParent = new Set<string>();
+  const seenEdges = new Set<string>();
   for (const e of edges) {
+    const edgeKey = `${e.parent_mvar_id}\u0000${e.child_mvar_id}\u0000${e.tactic}\u0000${e.edge_order}`;
+    if (seenEdges.has(edgeKey)) continue;
+    seenEdges.add(edgeKey);
+
     let arr = childMap.get(e.parent_mvar_id);
     if (!arr) {
       arr = [];
       childMap.set(e.parent_mvar_id, arr);
     }
-    arr.push({ childId: e.child_mvar_id, tactic: e.tactic });
+    arr.push({ childId: e.child_mvar_id, tactic: e.tactic, edgeOrder: Number(e.edge_order) });
     hasParent.add(e.child_mvar_id);
   }
 
@@ -155,7 +161,16 @@ export function prepareMctsTree(
     const src = nodeMap.get(e.parent_mvar_id);
     const tgt = nodeMap.get(e.child_mvar_id);
     if (src && tgt) {
-      treeEdges.push({ source: src, target: tgt, tactic: e.tactic });
+      const edgeKey = `${e.parent_mvar_id}\u0000${e.child_mvar_id}\u0000${e.tactic}\u0000${e.edge_order}`;
+      if (seenEdges.has(edgeKey)) {
+        treeEdges.push({
+          source: src,
+          target: tgt,
+          tactic: e.tactic,
+          edgeOrder: Number(e.edge_order),
+        });
+        seenEdges.delete(edgeKey);
+      }
     }
   }
 
@@ -212,10 +227,11 @@ export function renderMctsTree(
   ctx.translate(t.panX, t.panY);
   ctx.scale(t.zoom, t.zoom);
 
-  for (const edge of tree.edges) {
-    if (!visibleSet.has(edge.source.mvarId) || !visibleSet.has(edge.target.mvarId))
-      continue;
+  const visibleEdges = tree.edges.filter((edge) => (
+    visibleSet.has(edge.source.mvarId) && visibleSet.has(edge.target.mvarId)
+  ));
 
+  for (const edge of visibleEdges) {
     const isProof = opts.highlightProof && edge.source.successCount > 0 && edge.target.successCount > 0;
 
     ctx.beginPath();
@@ -240,18 +256,10 @@ export function renderMctsTree(
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    if (tree.nodes.length < 60) {
-      const labelX = (edge.source.x + edge.target.x) / 2;
-      const labelY = midY - 4;
-      ctx.font = "12px 'Berkeley Mono', monospace";
-      ctx.fillStyle = isProof ? pal.edgeProof : "rgba(110, 127, 141, 0.6)";
-      ctx.textAlign = "center";
-      const label = edge.tactic.length > 20 ? edge.tactic.slice(0, 18) + ".." : edge.tactic;
-      ctx.fillText(label, labelX, labelY);
-    }
   }
 
-  for (const node of tree.byExpansionOrder.slice(0, visibleCount)) {
+  const visibleNodes = tree.byExpansionOrder.slice(0, visibleCount);
+  for (const node of visibleNodes) {
     const isProof = opts.highlightProof && node.successCount > 0;
     const color = colorScale(node.visitCount);
 
@@ -282,7 +290,158 @@ export function renderMctsTree(
     }
   }
 
+  renderEdgeLabels(ctx, visibleEdges, visibleNodes, opts.highlightProof, pal);
+
   ctx.restore();
+}
+
+function renderEdgeLabels(
+  ctx: CanvasRenderingContext2D,
+  edges: TreeEdge[],
+  nodes: LayoutNode[],
+  highlightProof: boolean,
+  pal: typeof WILD_PALETTE,
+): void {
+  if (edges.length === 0 || edges.length > 48) return;
+
+  const occupied: Rect[] = nodes.map((node) => {
+    const r = node.radius + 10;
+    return { left: node.x - r, top: node.y - r, right: node.x + r, bottom: node.y + r };
+  });
+
+  ctx.save();
+  ctx.font = "11px 'Berkeley Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  for (const edge of edges) {
+    const isProof = highlightProof && edge.source.successCount > 0 && edge.target.successCount > 0;
+    if (edges.length > 14 && !isProof) continue;
+
+    const label = compactTactic(edge.tactic);
+    if (!label) continue;
+
+    const labelWidth = Math.min(170, ctx.measureText(label).width);
+    const rectWidth = labelWidth + 14;
+    const rectHeight = 22;
+    const candidates = edgeLabelCandidates(edge, rectWidth, rectHeight);
+    const placement = candidates.find((candidate) => {
+      const rect = toRect(candidate.left, candidate.top, rectWidth, rectHeight);
+      return occupied.every((existing) => !intersects(rect, existing));
+    });
+    if (!placement) continue;
+
+    const rect = toRect(placement.left, placement.top, rectWidth, rectHeight);
+    occupied.push(rect);
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.strokeStyle = isProof ? pal.edgeProof : "rgba(11, 14, 20, 0.18)";
+    ctx.lineWidth = 1;
+    roundedRect(ctx, rect.left, rect.top, rectWidth, rectHeight, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isProof ? pal.edgeProof : "rgba(11, 14, 20, 0.64)";
+    ctx.fillText(label, rect.left + rectWidth / 2, rect.top + rectHeight / 2 + 0.5, labelWidth);
+  }
+
+  ctx.restore();
+}
+
+interface Rect {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+function edgeLabelCandidates(
+  edge: TreeEdge,
+  width: number,
+  height: number,
+): { left: number; top: number }[] {
+  const dy = edge.edgeOrder % 2 === 0 ? -18 : 18;
+  const altDy = -dy;
+  const ts = edge.edgeOrder % 2 === 0
+    ? [0.42, 0.58, 0.28, 0.72]
+    : [0.58, 0.42, 0.72, 0.28];
+
+  return [
+    placeAt(edge, ts[0], width, height, dy),
+    placeAt(edge, ts[1], width, height, altDy),
+    placeAt(edge, ts[2], width, height, dy - 10),
+    placeAt(edge, ts[3], width, height, altDy + 10),
+    placeAt(edge, 0.5, width, height, -32),
+    placeAt(edge, 0.5, width, height, 32),
+  ];
+}
+
+function placeAt(
+  edge: TreeEdge,
+  t: number,
+  width: number,
+  height: number,
+  dy: number,
+): { left: number; top: number } {
+  const p = edgePoint(edge, t);
+  return { left: p.x - width / 2, top: p.y - height / 2 + dy };
+}
+
+function edgePoint(edge: TreeEdge, t: number): { x: number; y: number } {
+  const midY = (edge.source.y + edge.target.y) / 2;
+  const p0 = { x: edge.source.x, y: edge.source.y };
+  const p1 = { x: edge.source.x, y: midY };
+  const p2 = { x: edge.target.x, y: midY };
+  const p3 = { x: edge.target.x, y: edge.target.y };
+  const mt = 1 - t;
+  return {
+    x: mt ** 3 * p0.x + 3 * mt ** 2 * t * p1.x + 3 * mt * t ** 2 * p2.x + t ** 3 * p3.x,
+    y: mt ** 3 * p0.y + 3 * mt ** 2 * t * p1.y + 3 * mt * t ** 2 * p2.y + t ** 3 * p3.y,
+  };
+}
+
+function compactTactic(tactic: string): string {
+  const normalized = tactic.replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  if (/^rw \[/.test(normalized) && normalized.length > 22) return "rw [...]";
+
+  const decideMatch = normalized.match(/^cases decide \((.+)\)$/);
+  if (decideMatch) return `cases decide ${decideMatch[1].replace(/\s+/g, "")}`;
+
+  const byCasesMatch = normalized.match(/^by_cases\s+[^:]+:\s*(.+)$/);
+  if (byCasesMatch) return `by_cases ${byCasesMatch[1].replace(/\s+/g, "")}`;
+
+  return normalized.length > 24 ? `${normalized.slice(0, 22)}..` : normalized;
+}
+
+function toRect(left: number, top: number, width: number, height: number): Rect {
+  return { left, top, right: left + width, bottom: top + height };
+}
+
+function intersects(a: Rect, b: Rect): boolean {
+  return !(a.left >= b.right || a.right <= b.left || a.top >= b.bottom || a.bottom <= b.top);
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  radius: number,
+): void {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(left + r, top);
+  ctx.lineTo(left + width - r, top);
+  ctx.quadraticCurveTo(left + width, top, left + width, top + r);
+  ctx.lineTo(left + width, top + height - r);
+  ctx.quadraticCurveTo(left + width, top + height, left + width - r, top + height);
+  ctx.lineTo(left + r, top + height);
+  ctx.quadraticCurveTo(left, top + height, left, top + height - r);
+  ctx.lineTo(left, top + r);
+  ctx.quadraticCurveTo(left, top, left + r, top);
+  ctx.closePath();
 }
 
 export function renderMathPanels(
@@ -300,6 +459,18 @@ export function renderMathPanels(
 
   const t = transform ?? DEFAULT_TRANSFORM;
   const visibleCount = Math.max(1, Math.floor(progress * tree.byExpansionOrder.length));
+  const visibleNodes = tree.byExpansionOrder.slice(0, visibleCount);
+  const panelNodes = highlightProof
+    ? visibleNodes.filter((node) => node.successCount > 0 || node.isTerminal)
+    : visibleNodes.filter((node, index) => (
+      visibleNodes.length <= 18
+      || index === 0
+      || index === visibleNodes.length - 1
+      || node.isTerminal
+    ));
+  const overlayRect = overlay.getBoundingClientRect();
+  const margin = 12;
+  const maxPanelWidth = Math.max(180, Math.min(460, overlayRect.width - margin * 2));
 
   const existing = new Map<string, HTMLElement>();
   for (const child of overlay.children) {
@@ -310,7 +481,7 @@ export function renderMathPanels(
 
   const keep = new Set<string>();
 
-  for (const node of tree.byExpansionOrder.slice(0, visibleCount)) {
+  for (const node of panelNodes) {
     keep.add(node.mvarId);
     let panel = existing.get(node.mvarId);
 
@@ -321,6 +492,7 @@ export function renderMathPanels(
       panel.title = node.goalType ?? "";
 
       const mathSpan = document.createElement("span");
+      mathSpan.className = "mcts-math";
       if (node.goalType) {
         katex.render(node.goalType, mathSpan, {
           throwOnError: false,
@@ -342,11 +514,33 @@ export function renderMathPanels(
     const isProof = highlightProof && node.successCount > 0;
     panel.classList.toggle("on-proof-path", isProof);
     panel.classList.toggle("dimmed", !isProof && highlightProof);
+    panel.style.maxWidth = `${maxPanelWidth}px`;
+    panel.style.width = "";
 
     const sx = node.x * t.zoom + t.panX;
     const sy = node.y * t.zoom + t.panY;
-    panel.style.left = `${sx + node.radius * t.zoom + 4}px`;
-    panel.style.top = `${sy - 10}px`;
+    const measuredWidth = panel.scrollWidth || panel.offsetWidth || Math.min(320, maxPanelWidth);
+    const panelWidth = Math.min(measuredWidth, maxPanelWidth);
+    panel.style.width = `${panelWidth}px`;
+    const panelHeight = panel.offsetHeight || 28;
+    const nodeRadius = node.radius * t.zoom;
+    const gap = Math.max(18, nodeRadius + 14);
+    const candidates = [
+      { left: sx + gap, top: sy - panelHeight / 2 },
+      { left: sx - gap - panelWidth, top: sy - panelHeight / 2 },
+      { left: sx - panelWidth / 2, top: sy + gap },
+      { left: sx - panelWidth / 2, top: sy - gap - panelHeight },
+    ];
+
+    const placed = candidates.find((candidate) => (
+      withinBounds(candidate.left, candidate.top, panelWidth, panelHeight, overlayRect.width, overlayRect.height, margin)
+      && !overlapsNode(candidate.left, candidate.top, panelWidth, panelHeight, sx, sy, nodeRadius + 6)
+    )) ?? candidates[0];
+
+    const left = clamp(placed.left, margin, overlayRect.width - panelWidth - margin);
+    const top = clamp(placed.top, margin, overlayRect.height - panelHeight - margin);
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
   }
 
   for (const [id, el] of existing) {
@@ -373,4 +567,43 @@ export function hitTestMcts(
     }
   }
   return null;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (max < min) return min;
+  return Math.min(max, Math.max(min, value));
+}
+
+function withinBounds(
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  boundsWidth: number,
+  boundsHeight: number,
+  margin: number,
+): boolean {
+  return (
+    left >= margin
+    && top >= margin
+    && left + width <= boundsWidth - margin
+    && top + height <= boundsHeight - margin
+  );
+}
+
+function overlapsNode(
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  nodeX: number,
+  nodeY: number,
+  radius: number,
+): boolean {
+  return !(
+    left > nodeX + radius
+    || left + width < nodeX - radius
+    || top > nodeY + radius
+    || top + height < nodeY - radius
+  );
 }

@@ -60,7 +60,7 @@ def _tactic_head(tactic: str) -> str | None:
     head = tactic_norm.split(" ", 1)[0]
     if _TACTIC_HEAD_RE.fullmatch(head) is None:
         return None
-    return head
+    return head.rstrip("0123456789") or head
 
 
 CORPUS: list[Theorem] = [

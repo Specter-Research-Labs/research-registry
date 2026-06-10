@@ -1,6 +1,7 @@
 import type { ViewId } from "./types";
 
 type RouteHandler = (viewId: ViewId, params: URLSearchParams) => void;
+type RouteParams = Record<string, string | null | undefined>;
 
 const VALID_VIEWS: ViewId[] = ["hero", "proof-graph", "rescue", "explorer"];
 const DEFAULT_VIEW: ViewId = "hero";
@@ -15,9 +16,31 @@ export function parseHash(): { view: ViewId; params: URLSearchParams } {
   return { view, params };
 }
 
-export function navigate(view: ViewId, params?: Record<string, string>): void {
-  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-  location.hash = `${view}${qs}`;
+function routeHash(view: ViewId, params?: RouteParams): string {
+  const next = new URLSearchParams();
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value != null && value !== "") next.set(key, value);
+  }
+  const qs = next.toString();
+  return qs ? `${view}?${qs}` : view;
+}
+
+function defaultParams(): RouteParams {
+  const { params } = parseHash();
+  const run = params.get("run");
+  return run ? { run } : {};
+}
+
+export function navigate(view: ViewId, params?: RouteParams): void {
+  location.hash = routeHash(view, { ...defaultParams(), ...(params ?? {}) });
+}
+
+export function replaceRoute(view: ViewId, params?: RouteParams): void {
+  const nextUrl = `${location.pathname}${location.search}#${routeHash(view, {
+    ...defaultParams(),
+    ...(params ?? {}),
+  })}`;
+  history.replaceState(null, "", nextUrl);
 }
 
 export function startRouter(handler: RouteHandler): void {

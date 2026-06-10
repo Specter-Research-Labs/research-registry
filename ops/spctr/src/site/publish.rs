@@ -100,6 +100,7 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
     blog::build_blog_for_posts(repo_root, &blog_posts, true)?;
     pdf::build_all_pdfs_for_posts(repo_root, &blog_posts)?;
     cabinet::build_cabinet(repo_root, true)?;
+    build_wonton_dashboard(repo_root)?;
     minify_site_tree(&site_root)?;
     render_status_page(&site_root)?;
 
@@ -201,6 +202,25 @@ fn research_note_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
         excludes,
         remote_prunes,
     })
+}
+
+fn build_wonton_dashboard(repo_root: &Utf8Path) -> Result<()> {
+    let dashboard_root = repo_root.join("site/dashboards/wonton-soup");
+    if !dashboard_root.join("package-lock.json").is_file() {
+        bail!("Wonton dashboard package-lock.json not found at {dashboard_root}");
+    }
+    run_command(
+        Command::new("npm").arg("ci").current_dir(&dashboard_root),
+        "failed to install Wonton dashboard dependencies",
+    )?;
+    run_command(
+        Command::new("npm")
+            .arg("run")
+            .arg("build")
+            .current_dir(&dashboard_root),
+        "failed to build Wonton dashboard",
+    )?;
+    Ok(())
 }
 
 pub fn publish_lenia_compendium(

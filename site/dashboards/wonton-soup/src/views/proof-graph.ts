@@ -1,10 +1,21 @@
-import { getGraphNodes, getGraphEdges, getGraphVariants, getGraphTheorems } from "../db";
+import {
+  getGraphNodes,
+  getGraphEdges,
+  getGraphVariants,
+  getGraphTheorems,
+  resolveGraphTraceRunKey,
+} from "../db";
 import { prepareTree, renderTree, hitTest, type PreparedTree } from "../viz/proof-tree";
 
 interface ProofGraphOpts {
   runKey: string;
   theorem?: string;
   variant?: string;
+  onSelectionChange?: (params: {
+    theorem?: string;
+    variant?: string;
+    intervention?: null;
+  }) => void;
 }
 
 let _animFrame: number | null = null;
@@ -15,8 +26,11 @@ let _wildTree: PreparedTree | null = null;
 let _intTree: PreparedTree | null = null;
 let _wildPanel: Panel | null = null;
 let _intPanel: Panel | null = null;
+let _mountToken = 0;
 
 export async function mountProofGraph(container: HTMLElement, opts: ProofGraphOpts): Promise<void> {
+  const mountToken = ++_mountToken;
+  let renderToken = 0;
   container.className = "view-proof-graph";
 
   const controls = document.createElement("div");
@@ -87,17 +101,21 @@ export async function mountProofGraph(container: HTMLElement, opts: ProofGraphOp
   theoremSelect.addEventListener("change", async () => {
     await loadVariants();
     _progress = 0;
+    updateRoute();
     await renderPair();
   });
 
   variantSelect.addEventListener("change", async () => {
     _progress = 0;
+    updateRoute();
     await renderPair();
   });
 
   await loadVariants();
+  updateRoute();
 
   async function renderPair(): Promise<void> {
+    const activeRender = ++renderToken;
     const theorem = theoremSelect.value;
     const variant = variantSelect.value;
     if (!theorem) return;
@@ -105,27 +123,58 @@ export async function mountProofGraph(container: HTMLElement, opts: ProofGraphOp
     wildPanel.loading.hidden = false;
     interventionPanel.loading.hidden = false;
 
-    const [wildNodes, wildEdges] = await Promise.all([
-      getGraphNodes(opts.runKey, theorem, "wild_type"),
-      getGraphEdges(opts.runKey, theorem, "wild_type"),
-    ]);
+    try {
+      const traceRunKey = await resolveGraphTraceRunKey(
+        opts.runKey,
+        theorem,
+        variant || "wild_type",
+      );
+      if (!traceRunKey) throw new Error(`No proof graph found for ${theorem} / ${variant}`);
 
-    const wildRect = wildPanel.canvas.getBoundingClientRect();
-    _wildTree = prepareTree(wildNodes, wildEdges, wildRect.width, wildRect.height);
-
-    _intTree = null;
-    if (variant) {
-      const [intNodes, intEdges] = await Promise.all([
-        getGraphNodes(opts.runKey, theorem, variant),
-        getGraphEdges(opts.runKey, theorem, variant),
+      const [wildNodes, wildEdges] = await Promise.all([
+        getGraphNodes(traceRunKey, theorem, "wild_type"),
+        getGraphEdges(traceRunKey, theorem, "wild_type"),
       ]);
-      const intRect = interventionPanel.canvas.getBoundingClientRect();
-      _intTree = prepareTree(intNodes, intEdges, intRect.width, intRect.height);
-    }
 
-    wildPanel.loading.hidden = true;
-    interventionPanel.loading.hidden = true;
-    startAnimation(wildPanel, interventionPanel);
+      if (mountToken !== _mountToken || activeRender !== renderToken) return;
+
+      const wildRect = wildPanel.canvas.getBoundingClientRect();
+      _wildTree = prepareTree(wildNodes, wildEdges, wildRect.width, wildRect.height);
+
+      _intTree = null;
+      if (variant) {
+        const [intNodes, intEdges] = await Promise.all([
+          getGraphNodes(traceRunKey, theorem, variant),
+          getGraphEdges(traceRunKey, theorem, variant),
+        ]);
+
+        if (mountToken !== _mountToken || activeRender !== renderToken) return;
+
+        const intRect = interventionPanel.canvas.getBoundingClientRect();
+        _intTree = prepareTree(intNodes, intEdges, intRect.width, intRect.height);
+      }
+
+      startAnimation(wildPanel, interventionPanel);
+    } catch (err) {
+      if (mountToken !== _mountToken || activeRender !== renderToken) return;
+      console.error("Failed to render proof graph", err);
+      _wildTree = null;
+      _intTree = null;
+      renderCurrentFrame();
+    } finally {
+      if (mountToken === _mountToken && activeRender === renderToken) {
+        wildPanel.loading.hidden = true;
+        interventionPanel.loading.hidden = true;
+      }
+    }
+  }
+
+  function updateRoute(): void {
+    opts.onSelectionChange?.({
+      theorem: theoremSelect.value,
+      variant: variantSelect.value,
+      intervention: null,
+    });
   }
 
   await renderPair();
@@ -161,6 +210,7 @@ function createPanel(label: string, variant: "wild" | "intervention"): Panel {
 
   const loading = document.createElement("div");
   loading.className = "hero-loading";
+  loading.setAttribute("aria-live", "polite");
   loading.textContent = "Loading\u2026";
   loading.hidden = true;
 
@@ -262,6 +312,7 @@ function startAnimation(wildPanel: Panel, intPanel: Panel): void {
 }
 
 export function unmountProofGraph(): void {
+  _mountToken++;
   if (_animFrame != null) {
     cancelAnimationFrame(_animFrame);
     _animFrame = null;

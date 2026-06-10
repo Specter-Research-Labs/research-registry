@@ -4,7 +4,7 @@ import gzip
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, cast
 
 import duckdb
 
@@ -180,33 +180,45 @@ def _parse_graph_edges(
     for idx, edge in enumerate(raw_edges):
         if not isinstance(edge, dict):
             raise ValueError(f"graph edge must be object: {edge!r}")
-        src = edge.get("source")
+        edge_obj = cast("dict[str, Any]", edge)
+        src = edge_obj.get("source")
         if not isinstance(src, str) or not src:
-            src = edge.get("src")
-        dst = edge.get("target")
+            src = edge_obj.get("src")
+        dst = edge_obj.get("target")
         if not isinstance(dst, str) or not dst:
-            dst = edge.get("dst")
+            dst = edge_obj.get("dst")
         if not isinstance(src, str) or not src or not isinstance(dst, str) or not dst:
-            raise ValueError(f"graph edge missing source/target: {edge!r}")
+            raise ValueError(f"graph edge missing source/target: {edge_obj!r}")
 
         attrs = {
             k: v
-            for k, v in edge.items()
+            for k, v in edge_obj.items()
             if k not in {"source", "target", "src", "dst"}
         }
-        tactic = attrs.get("tactic")
+        raw_tactic = attrs.get("tactic")
+        raw_tactic_norm = attrs.get("tactic_norm")
+        tactic = raw_tactic
         if not isinstance(tactic, str) or not tactic.strip():
-            tactic = attrs.get("tactic_norm")
+            tactic = raw_tactic_norm
         if not isinstance(tactic, str) or not tactic.strip():
             tactic = attrs.get("action_norm")
         tactic_out = tactic if isinstance(tactic, str) and tactic.strip() else None
 
-        fam = attrs.get("tactic_family")
-        if not isinstance(fam, str) or not fam.strip():
-            fam = attrs.get("action_family")
-        family_out = fam if isinstance(fam, str) and fam.strip() else None
-        if family_out is None and tactic_out is not None:
+        has_tactic_label = (
+            isinstance(raw_tactic, str) and raw_tactic.strip()
+        ) or (
+            isinstance(raw_tactic_norm, str) and raw_tactic_norm.strip()
+        )
+        family_out: str | None = None
+        if tactic_out is not None and has_tactic_label:
             family_out = tactic_family(tactic_out)
+        else:
+            fam = attrs.get("tactic_family")
+            if not isinstance(fam, str) or not fam.strip():
+                fam = attrs.get("action_family")
+            family_out = fam if isinstance(fam, str) and fam.strip() else None
+            if family_out is None and tactic_out is not None:
+                family_out = tactic_family(tactic_out)
 
         in_proof = attrs.get("in_proof")
         rows.append(

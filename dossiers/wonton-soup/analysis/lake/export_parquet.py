@@ -560,10 +560,12 @@ DASHBOARD_DATASETS_AFTER_GRAPHS: list[DatasetQuery] = [
 ]
 
 DASHBOARD_SELECTION: dict[str, Any] = {
+    "provider": ["deepseek", "heuristic", "reprover"],
     "backend": "lean",
+    "mode": "research",
     "require_completed": True,
-    "dedupe_run_id": True,
-    "max_runs": 600,
+    "exclude_partial_results": True,
+    "order_by": "run_key_asc",
 }
 
 

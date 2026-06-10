@@ -61,8 +61,15 @@ export function populateRuns(runKeys: string[], labels: Map<string, string>): vo
     opt.textContent = labels.get(key) ?? key.slice(0, 12);
     _runSelect.appendChild(opt);
   }
+  _runSelect.disabled = runKeys.length <= 1;
 }
 
 export function getSelectedRun(): string | null {
   return _runSelect?.value ?? null;
+}
+
+export function setSelectedRun(runKey: string | null): void {
+  if (!_runSelect || !runKey) return;
+  const hasRun = Array.from(_runSelect.options).some((option) => option.value === runKey);
+  if (hasRun) _runSelect.value = runKey;
 }

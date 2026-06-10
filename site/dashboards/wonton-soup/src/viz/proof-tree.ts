@@ -30,28 +30,28 @@ interface LayoutEdge {
 
 const PALETTE = {
   wild: {
-    node: "#8694ad",
-    nodeFill: "rgba(134,148,173,0.12)",
-    nodeProof: "#a8b8cc",
-    nodeProofFill: "rgba(134,148,173,0.25)",
-    edge: "rgba(134,148,173,0.2)",
-    edgeProof: "rgba(168,184,204,0.5)",
-    glow: "rgba(134,148,173,0.08)",
-    label: "rgba(134,148,173,0.7)",
-    labelProof: "#a8b8cc",
-    tacticLabel: "rgba(134,148,173,0.45)",
+    node: "#425f7b",
+    nodeFill: "rgba(66,95,123,0.13)",
+    nodeProof: "#ff6600",
+    nodeProofFill: "rgba(255,102,0,0.18)",
+    edge: "rgba(66,95,123,0.28)",
+    edgeProof: "rgba(255,102,0,0.75)",
+    glow: "rgba(255,102,0,0.18)",
+    label: "rgba(11,14,20,0.62)",
+    labelProof: "#0b0e14",
+    tacticLabel: "rgba(66,95,123,0.62)",
   },
   intervention: {
-    node: "#4a8a61",
-    nodeFill: "rgba(74,138,97,0.12)",
-    nodeProof: "#6aaa81",
-    nodeProofFill: "rgba(74,138,97,0.25)",
-    edge: "rgba(74,138,97,0.2)",
-    edgeProof: "rgba(106,170,129,0.5)",
-    glow: "rgba(74,138,97,0.08)",
-    label: "rgba(74,138,97,0.7)",
-    labelProof: "#6aaa81",
-    tacticLabel: "rgba(74,138,97,0.45)",
+    node: "#2f6f64",
+    nodeFill: "rgba(47,111,100,0.13)",
+    nodeProof: "#00a645",
+    nodeProofFill: "rgba(0,166,69,0.18)",
+    edge: "rgba(47,111,100,0.28)",
+    edgeProof: "rgba(0,166,69,0.75)",
+    glow: "rgba(0,166,69,0.18)",
+    label: "rgba(11,14,20,0.62)",
+    labelProof: "#0b0e14",
+    tacticLabel: "rgba(47,111,100,0.62)",
   },
 };
 
@@ -293,7 +293,7 @@ function flattenTree(root: LayoutNode): LayoutNode[] {
 
 function renderEmpty(ctx: CanvasRenderingContext2D, w: number, h: number, variant: string): void {
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "rgba(110, 127, 141, 0.4)";
+  ctx.fillStyle = "rgba(11, 14, 20, 0.46)";
   ctx.font = "12px monospace";
   ctx.textAlign = "center";
   ctx.fillText(`No graph data for ${variant} variant`, w / 2, h / 2);

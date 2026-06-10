@@ -60,13 +60,15 @@ lake default used by the notebook.
 
 ```bash
 uv run python wonton.py lake export-parquet \
-  --config dossiers/wonton-soup/analysis/lake/presets/72_site_dashboard_superset_v1.json
+  --out-dir site/dashboards/wonton-soup/data \
+  --profile dashboard \
+  --release-id <release_id>
 ```
 
-This writes a versioned release under
-`site/dashboards/wonton-soup/data/releases/<release_id>/` and promotes it to the
-active dashboard manifest. Use `--no-promote` to stage without switching active
-site data.
+The `dashboard` profile compiles the paper/poster cohort: Lean research runs
+from `deepseek`, `heuristic`, and `reprover`, completed only, excluding partial
+results. It writes `dashboard_manifest.json` and the referenced Parquet files
+for the DuckDB-WASM dashboard.
 
 ## Jobs
 
