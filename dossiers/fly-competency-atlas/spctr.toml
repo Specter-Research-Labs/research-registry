@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Fly Competency Atlas"
 series = "D-005"
-summary = "FlyBrainLab-backed competency assays for motif inventory, backend probing, and local execution."
+summary = "FlyBrainLab-backed competency tests for motif inventory, backend probing, and local execution."
 status = "concept"
 
 [site]

@@ -7,8 +7,7 @@ status = "concept"
 
 [site]
 visible = true
-featured = true
-featured_order = 4
+featured = false
 
 [release]
 stage = "promoted"

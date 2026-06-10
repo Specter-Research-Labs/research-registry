@@ -33,29 +33,7 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER START -->
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-                <section class="section-block" id="start-here">
-                    <div class="site-section-title">Start Here</div>
-                    <ol class="quickstart-list">
-                        <li>
-                            <a href="../../cabinet/zang-levin-playground/README/"
-                                >Read the cabinet docs map</a
-                            >
-                            for concepts, semantics, and the paper-facing
-                            reproduction path.
-                        </li>
-                        <li>
-                            The paper PDF and TeX source live under the
-                            repository at <code>paper/</code>, with all
-                            figures regenerable from committed result JSON.
-                        </li>
-                    </ol>
-                    <span class="path-note"
-                        >Repository path: dossiers/zang-levin-playground</span
-                    >
-                </section>
-
-                <section class="section-block" id="model">
-                    <div class="site-section-title">The Model</div>
+                <section class="section-block">
                     <p>
                         Zhang et al. (2024) propose a minimal morphogenesis
                         substrate. A 1D line, or 2D grid, of agents update
@@ -73,18 +51,14 @@
                         The wrinkle is in the operator class. Bubble,
                         Insertion, Gnome, and Shaker use adjacent swaps.
                         Published 1D Selection performs direct transpositions
-                        toward an explicit ideal index, and under blocked
-                        targets it reroutes. ``Cell-view'' describes the
-                        decision substrate, not the move operator. This
-                        distinction carries most of the load when the
-                        original claims are stress-tested.
+                        toward an explicit ideal index, and reroutes when its
+                        target is blocked. Cell-view describes how each cell
+                        decides, not how it moves. The stress-tests below vary
+                        the move operator while holding that decision rule
+                        fixed.
                     </p>
-                </section>
-
-                <section class="section-block" id="timing-clustering">
-                    <div class="site-section-title">Timing as the Clustering Mechanism</div>
                     <p>
-                        Algotype clustering does not require attraction,
+                        Algotype clustering turns out not to require attraction,
                         type-aware communication, or explicit coordination.
                         Temporal separation between algorithm classes is the
                         dominant contributor. Selection cells finish early
@@ -94,24 +68,17 @@
                         is already ordered. The mismatch produces
                         temporally correlated swap bursts in which only one
                         class is still rearranging, and cells active during
-                        the same burst end up adjacent.
-                    </p>
-                    <p>
-                        Two ablations support the timing-based reading.
-                        Removing Insertion's waiting gate
+                        the same burst end up adjacent. Two ablations support
+                        this reading. Removing Insertion's waiting gate
                         (<code>InsertionNoWait</code>) sharply reduces
-                        clustering. Exporting the same waiting gate to
-                        Bubble and Gnome clones reproduces the predicted
-                        rise in temporal separation and clustering. The
-                        morphogenetic analogy survives, but the emphasis
-                        shifts from intelligence to heterochrony: timing
-                        shifts between developmental phases produce spatial
-                        pattern without any explicit patterning instruction.
+                        clustering, and exporting the same gate to Bubble and
+                        Gnome clones reproduces the predicted rise in temporal
+                        separation and clustering. The morphogenetic analogy
+                        survives, but the emphasis shifts from intelligence to
+                        heterochrony: timing shifts between developmental phases
+                        produce spatial pattern without any explicit patterning
+                        instruction.
                     </p>
-                </section>
-
-                <section class="section-block" id="robustness">
-                    <div class="site-section-title">Robustness Under Hard Barriers</div>
                     <p>
                         Robustness depends on operator class and obstacle
                         semantics. Movable frozen cells can be displaced;
@@ -132,20 +99,13 @@
                         cell-view schedules agree on which conditions
                         succeed, with the main substrate effect appearing
                         in compare-count work rather than in outcomes.
-                        Whatever competency the sorting cells display sits
-                        in the policy, the mapping from sensory state to
-                        action, and is independent of the distributed
-                        substrate. This sharpens, rather than dissolves,
-                        the basal-cognition analogy: the architectural
-                        constraint matters for physically embodied systems
-                        where a centralized loop is impossible, but it is
-                        not what produces the navigation behavior in
-                        silico.
+                        Whatever competency the sorting cells show comes from
+                        the policy, not the distributed substrate. The policy
+                        is the rule mapping each cell's local view to its next
+                        move. The distributed architecture only matters for
+                        embodied systems that cannot run a centralized loop. In
+                        silico it is not what produces the navigation behavior.
                     </p>
-                </section>
-
-                <section class="section-block" id="search-efficiency">
-                    <div class="site-section-title">Search Efficiency</div>
                     <p>
                         The K-computation framework of Chis-Ciure and Levin
                         translates the operator-and-constraint story into
@@ -163,6 +123,14 @@
                         under immovable barriers lose reachability outright
                         in the sampled instances.
                     </p>
+                    <p>
+                        The paper PDF and TeX source live under
+                        <code>paper/</code> in the repository, with every
+                        figure regenerable from committed result JSON.
+                    </p>
+                    <span class="path-note"
+                        >Repository path: dossiers/zang-levin-playground</span
+                    >
                 </section>
 
                 <!-- GENERATED:DOSSIER_HUB_FOOTER START -->

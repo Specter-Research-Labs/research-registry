@@ -287,9 +287,6 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
                         "scope " span class="dossier-hub-metabar-value" { (scope_label) }
                     }
                 }
-                span class="dossier-hub-metabar-item dossier-hub-metabar-repo" {
-                    (markup::link(&record.repo_url, "Repository \u{2192}"))
-                }
             }
         }
     };
