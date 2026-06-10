@@ -21,7 +21,7 @@ We run wild-type and intervention sweeps over deterministic theorem samples, cap
 We treat proof search as a stochastic process over structured states.
 
 - A perturbation can be a blocked tactic or tactic family, a seed change, or a policy/scheduler change.
-- A response can be recovery to the same structural family or migration into a different attractor.
+- A response can be recovery to the same recurring proof shape or migration into a different proof-graph cluster, which the basin analysis treats as an attractor.
 - The object of study is not only solve rate; it is the shape and stability of search trajectories.
 
 This is why we log enough structure to replay and compare runs months later under fixed configuration.
@@ -31,52 +31,52 @@ This is why we log enough structure to replay and compare runs months later unde
 Our intervention protocol applies three specific concepts from the [Diverse Intelligence](https://www.diverseintelligence.org/) research program to formal proof search.
 
 ### Search efficiency as a metric ($K$)
-Following [Chis-Ciure and Levin (2025)](https://link.springer.com/article/10.1007/s11229-025-05319-6), we treat intelligence as search efficiency in problem spaces. We measure the log-ratio between a random walk ($\tau_{blind}$) and our observed agent ($\tau_{agent}$):
+Following [Chis-Ciure and Levin (2025)](https://link.springer.com/article/10.1007/s11229-025-05319-6), we treat intelligence as search efficiency in problem spaces, measuring the log-ratio between a random walk ($\tau_{blind}$) and our observed agent ($\tau_{agent}$):
 $$K = \log_{10}(\tau_{blind} / \tau_{agent})$$
 A positive $K$ quantifies how many orders of magnitude our policy saves over a brute-force baseline.
 
 ### Lesions and Rerouting
-[Zhang et al. (2024)](https://arxiv.org/abs/2401.05375) demonstrate that decentralized systems (like self-sorting arrays) can navigate around "damaged" components to reach a global goal. We replicate this by blocking specific tactics or lemma families from a known solution path. We measure whether the solver reroutes to a new attractor or collapses, quantifying the "competency" of the search process.
+[Zhang et al. (2024)](https://arxiv.org/abs/2401.05375) demonstrate that decentralized systems, such as self-sorting arrays, can navigate around "damaged" components to reach a global goal, whereas our proof-search version blocks specific tactics or lemma families from a known solution path and measures whether the solver finds a different proof route or fails under the block.
 
 ### Pattern Invariance (TAME)
-The TAME framework ([Levin, 2022](https://arxiv.org/abs/2201.10346)) argues that behavioral structures—not just low-level mechanisms—persist under perturbation. In `wonton-soup`, we use Graph Edit Distance (GED) and basin analysis to determine if proof search trajectories settle into stable, recurrent families (attractors) across different seeds and interventions.
+The TAME framework ([Levin, 2022](https://arxiv.org/abs/2201.10346)) argues that behavioral structures, not just low-level mechanisms, persist under perturbation, and in `wonton-soup` we use Graph Edit Distance (GED) and basin analysis to determine whether proof search repeatedly settles into the same proof-graph clusters across different seeds and interventions.
 
 ## 3. Harness and Corpus Design
 
-Corpus and run configuration are first-class artifacts. Corpus builds are manifest-backed and run configs are snapshot-pinned. Downstream analysis reads those artifacts directly, keeping the baseline fixed while only the intervention axis varies.
+Corpus and run configuration are saved as explicit inputs to every comparison: corpus builds are manifest-backed, run configs are snapshot-pinned, and downstream analysis reads those inputs directly, keeping the baseline fixed while only the intervention changes.
 
-We also separate validity from capability. Gate A checks that an item is structurally processable for the chosen backend and schema contract. Gate B checks whether the provider and search policy can do meaningful work on that valid slice under the configured budget. Intervention studies run on slices that pass both gates, so failure modes are easier to interpret.
+We also separate validity from capability: a theorem can be well-formed for a backend even if the provider cannot solve it under budget, so Gate A checks that an item is structurally processable for the chosen backend and schema, whereas Gate B checks whether the provider and search policy can do meaningful work on that valid slice.
 
-Deterministic selection (`--sample` with `--seed`) is how we ensure replayability. If you rerun later with the same corpus ref and selector inputs, you should recover the same theorem slice and comparable outputs.
+Deterministic selection (`--sample` with `--seed`) is how we ensure replayability, since rerunning later with the same corpus ref and selector inputs should recover the same theorem slice and comparable outputs.
 
-Run-level schemas complete the provenance contract with `run_config.json`, `run_status.json`, and `summary.json.gz` being responsible for postprocess, lake extraction, and cross-run audits.
+Run-level schemas complete the provenance record with `run_config.json`, `run_status.json`, and `summary.json.gz` for postprocess, lake extraction, and cross-run audits.
 
 ### What is fixed per comparison run
 
 - Corpus reference plus build provenance (`manifest.json`, item ordering, hash identity).
 - Selection procedure (`--sample`, `--seed`, `--offset`, `--limit`) and resulting theorem slice.
 - Search budget and core execution knobs (mode, iteration budget, intervention declaration).
-- Analysis-facing artifact contract (`run_config.json`, `run_status.json`, `summary.json.gz`, theorem subartifacts).
+- Analysis inputs consumed by downstream tools (`run_config.json`, `run_status.json`, `summary.json.gz`, theorem subfiles).
 
 ## 4. Search Core: Centralized and Distributed MCTS
 
-Both modes walk a tactic-conditioned state graph and use compatible logging contracts, so a mode switch changes execution dynamics without changing what downstream analysis reads.
+Both modes walk a tactic-conditioned state graph and use compatible log formats, so a mode switch changes execution dynamics without changing what downstream analysis reads.
 
-Centralized mode is the structural baseline. A single global selection loop owns frontier choice and expansion order—one policy view over one queue, minimizing coordination effects. This is the cleanest surface for studying proof families, basin structure, reroute versus collapse, recovery after intervention, and blind-relative efficiency.
+Centralized mode is the structural baseline, where a single global selection loop owns frontier choice and expansion order, gives one policy view over one queue, and minimizes coordination effects, making it the simplest setup for studying proof families, basin structure, reroute versus collapse, recovery after intervention, and blind-relative efficiency.
 
-Distributed mode is the collective-control layer over that same proof-space morphology. Multiple local agents operate over a shared frontier. Inflight reservations are used to reduce duplicate expansion pressure, and scheduling controls let us perturb coordination directly: block, delay, reroute, virtual loss, and depth/path bias interventions change who explores what and when.
+Distributed mode adds multiple workers over that same proof-search space, where local agents operate over a shared frontier, inflight reservations reduce duplicate expansion pressure, and scheduling controls let us change coordination directly: block, delay, reroute, virtual loss, and depth/path bias interventions change who explores what and when.
 
-This gives us a research stack. First establish the structural landscape of a theorem slice with centralized MCTS. Then use distributed MCTS to test how coordination changes access to that landscape. The scheduling interventions in distributed mode are deliberate lesions on search dynamics: they ask whether solve behavior depends on one narrow expansion regime or remains robust under changes in local-global coordination.
+Centralized MCTS maps the proof-search space for a theorem slice, whereas distributed MCTS changes how workers choose and reserve parts of that same shared frontier, testing whether solve behavior depends on one expansion regime or stays robust when worker scheduling changes.
 
-Both modes emit compatible tree and trace artifacts, so comparisons can stay within the same analysis contract (`*_mcts_tree.json`, traces, run summaries) instead of requiring mode-specific postprocess logic.
+Both modes emit compatible tree and trace files, so comparisons can use the same analysis path (`*_mcts_tree.json`, traces, run summaries) instead of requiring mode-specific postprocess logic.
 
 ![Distributed Frontier](../../assets/blog/wonton-soup/fig9-distributed-frontier.png)
 
-How to read the figure: each worker lane represents local agent activity against a shared frontier; reservations and scheduler policy shape contention and handoff. Dense synchronized bands suggest strong coupling, while staggered bands indicate looser parallel exploration.
+How to read the figure: each worker lane represents local agent activity against a shared frontier, with reservations and scheduler policy shaping contention and handoff, while dense synchronized bands suggest strong coupling and staggered bands indicate looser parallel exploration.
 
 ## 5. Backend Families and Artifact Compatibility
 
-We use a multi-backend harness to test whether behavioral patterns persist across backends or are implementation artifacts. A pattern that recurs across backend families with different proof objects and trace surfaces is a stronger candidate invariant.
+We use a multi-backend harness to test whether behavioral patterns persist across backends or are implementation artifacts. A pattern that recurs across backend families with different proof objects and trace outputs is a stronger candidate invariant.
 
 `wonton-soup` currently supports five execution backends:
 
@@ -86,25 +86,25 @@ We use a multi-backend harness to test whether behavioral patterns persist acros
 - `vampire`
 - `z3`
 
-Run-level schemas are shared (`run_config.json`, `run_status.json`, `summary.json.gz`), and backend-specific capabilities are explicit via `run_status.json` flags plus file-presence checks. A downstream consumer can fail loud on unavailable artifact families instead of guessing.
+Run-level schemas are shared (`run_config.json`, `run_status.json`, `summary.json.gz`), and `run_status.json` flags plus file-presence checks say which outputs each backend can actually produce, so downstream analysis does not silently compare missing or incompatible files.
 
-This contract matters for mixed analyses. For example, `ged_search_graph` is meaningful only when a true search graph exists; external solver traces may map to `ged_trace_graph` or proof-object families instead. Capability flags and validity metadata keep those distinctions visible.
+This matters for mixed analyses: `ged_search_graph` is meaningful only when a true search graph exists, whereas external solver traces may map to `ged_trace_graph` or proof-object comparisons instead, and capability flags plus validity metadata keep those distinctions visible.
 
-### Backend Artifact Families (Typical)
+### Backend Output Types (Typical)
 
-| Backend | Search-graph family | Proof family | Trace family | Practical note |
+| Backend | Search-graph output | Proof output | Trace output | Practical note |
 | --- | --- | --- | --- | --- |
 | `lean` | `ged_search_graph` | proof-term artifacts when enabled | MCTS traces | Full search-graph comparisons are strongest here. |
 | `coq` | usually unavailable | proof object family (integration dependent) | backend trace varies | Treat proof/trace availability as capability-gated. |
 | `e` | unavailable | proof object family | `ged_trace_graph` from TSTP-style traces | Mark trace completeness explicitly. |
 | `vampire` | unavailable | proof object family | optional trace family | Proof-centric comparison is typical. |
-| `z3` | unavailable | proof object family | optional trace family | Search-graph GED is not the primary signal. |
+| `z3` | unavailable | proof object family | optional trace family | Search-graph GED is not the primary comparison. |
 
-Cross-backend comparisons are safest on shared run-level outcomes and explicitly labeled metric families. Structure-level comparisons should be grouped by compatible artifact families, not collapsed into one undifferentiated score.
+Cross-backend comparisons are safest on shared run-level outcomes and explicitly labeled measurement types. Structure-level comparisons should be grouped by compatible output types, not collapsed into one undifferentiated score.
 
 ### Showcase
 
-We pin two high-signal views used repeatedly in analysis: attractor separation and blind-relative efficiency.
+We pin two recurring analysis views: attractor separation and blind-relative efficiency.
 
 <div class="ws-focus-grid">
   <figure>
@@ -119,11 +119,11 @@ We pin two high-signal views used repeatedly in analysis: attractor separation a
 
 ## 6. Metrics and Comparison Families
 
-We use a metric stack, not a single score:
+Each metric answers a different comparison question:
 
 - K-style search efficiency (`k_search_efficiency`) from trace-derived blind nulls.
 - Paper-style paired blind baseline (`paper_k`) from basin runs with `--basin-blind`.
-- GED families (`ged_search_graph`, `ged_search_graph_soft`, `ged_proof_graph`, `ged_trace_graph`) with explicit validity metadata.
+- GED measurement types (`ged_search_graph`, `ged_search_graph_soft`, `ged_proof_graph`, `ged_trace_graph`) with explicit validity metadata.
 - Trajectory comparison (divergence, reconvergence, recovery iterations).
 - Basin analysis (solve rate, structure hash diversity, dominant basin frequency).
 - Sheaf analyses (equivalence consistency and tactic-transform residuals).
@@ -149,7 +149,7 @@ Example calibration: $K=\log_{10}(120/9)=1.12$ (about $13\times$ fewer attempts 
 ![K-Metric Visualization](../../assets/blog/wonton-soup/fig7-k-metric.png)
 
 - **$\tau_{agent}$**: attempted tactic edges until first terminal solve in the observed search graph.
-- **$\tau_{blind}$**: expected attempted edges for a matched blind null policy over the same action surface.
+- **$\tau_{blind}$**: expected attempted edges for a matched blind null policy over the same available tactic choices.
 - **$K$**: orders-of-magnitude efficiency over blind (`K > 0` is better than blind).
 
 Two related outputs:
@@ -278,7 +278,7 @@ From a recent February corpus sweep:
 - `block_intros`: solved, normalized GED `0.45`.
 - `block_split_ifs`: unsolved, normalized GED `0.57`.
 
-Interpretation: one theorem shows both outcomes we care about—some lesions reroute and recover, others collapse. The split between `GED=0` replicate and `GED>0` reroute/collapse appears inside a single local intervention family.
+Interpretation: one theorem shows both outcomes we care about, since some lesions reroute and recover whereas others collapse, and the split between `GED=0` replicate and `GED>0` reroute/collapse appears inside a single local intervention family.
 
 ### B. Different Theorems, Different Intervention Patterns
 
@@ -291,16 +291,16 @@ From **2026-02-04**:
 ## 9. Observations and Results
 
 ### Multistability in Proof Space
-Proof search is not a linear path but a landscape of stable attractors. We frequently observe multiple recurrent proof families (basins) that different seeds and interventions converge toward. These basins represent distinct structural strategies, suggesting that "the proof" is often a family of related trajectories rather than a single sequence of steps.
+Proof search is not a single path: different seeds and interventions often converge to a small number of recurring proof shapes, suggesting that "the proof" is often a family of related trajectories rather than a single sequence of steps.
 
 ### Competency through Constraint
-Targeted damage to search sometimes improves global outcomes. In cases like `set_inter_self`, blocking the highest-priority tactics forces the system into deeper, more stable basins that the unconstrained policy misses within its budget. This parallels biological morphogenesis, where local disruption occasionally triggers higher-level remapping.
+Targeted damage to search sometimes improves global outcomes, as in cases like `set_inter_self`, where blocking the highest-priority tactics forces the system into routes that the unconstrained policy does not reach within budget, while the relevant parallel to biological morphogenesis is concrete: a local disruption can change the route without preventing the target pattern.
 
-### Efficiency as an Operational Signature
-When $K > 0$, the solver extracts structure from the search space. Normalizing $K$-metrics across systems allows comparison of search efficiency on a shared axis—proof-search policy against, for example, gradient navigation in morphogenesis.
+### Search Efficiency
+When $K > 0$, the observed search reaches a solve with fewer attempted tactic edges than its matched blind null, and the measurement is useful only after calibration to the available tactic choices: evidence that the policy is using useful structure in the action space, not a universal intelligence score.
 
-### Discovery over Construction
-When wild-type and intervention runs converge to the same low-GED family, that structure behaves like an invariant of the problem space. Search exposes patterns that persist across perturbations—consistent with the TAME hypothesis that pattern-level structure, not mechanism-level detail, is what matters.
+### Recurring Proof Families
+When wild-type, blocked-tactic, and seed-variation runs converge to the same low-GED proof shape, the narrow claim is that this policy/corpus slice has a stable cluster of related proofs, with recurrence as the evidence; stronger TAME-style claims require the same family to survive broader backends, encodings, and null calibrations.
 
 Next steps: cross-backend basin agreement tests, calibrated $K$ estimation with matched null models, and wider corpus and provider coverage.
 
