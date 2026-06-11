@@ -2,20 +2,29 @@ import Foundation
 import LeniaCore
 import SQLite3
 
+public enum CompendiumCatalogFilter: String, CaseIterable, Sendable {
+    case active = "Active"
+    case quarantine = "Quarantine"
+    case all = "All"
+}
+
 public struct CompendiumBrowseQuery: Equatable, Sendable {
     public var search: String
     public var stableOnly: Bool
+    public var catalogFilter: CompendiumCatalogFilter
     public var minScore: Float?
     public var limit: Int
 
     public init(
         search: String = "",
         stableOnly: Bool = false,
+        catalogFilter: CompendiumCatalogFilter = .active,
         minScore: Float? = nil,
         limit: Int = 200
     ) {
         self.search = search
         self.stableOnly = stableOnly
+        self.catalogFilter = catalogFilter
         self.minScore = minScore
         self.limit = limit
     }
