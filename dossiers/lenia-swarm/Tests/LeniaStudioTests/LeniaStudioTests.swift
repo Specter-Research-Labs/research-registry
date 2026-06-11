@@ -2,6 +2,7 @@ import XCTest
 import Metal
 import LeniaCore
 import LeniaVisuals
+import MLX
 @testable import LeniaStudio
 
 final class LeniaStudioTests: XCTestCase {
@@ -172,6 +173,25 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(statePatch.channels, 1)
         XCTAssertEqual(statePatch.valueCount, statePatch.width * statePatch.height)
         XCTAssertGreaterThan(statePatch.decodedValues().reduce(0, +), 0)
+    }
+
+    func testLeniaLabFallbackWorldAdvancesWithFiniteStructuredMatter() throws {
+        let draft = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 128)
+        let simulator = FlowLeniaInteractiveSimulator(runtimeConfig: draft.runtimeConfigValue)
+        var state = simulator.makeInitialState()
+        let initial = labMatterSummary(simulator: simulator, state: state)
+
+        for _ in 0..<80 {
+            state = simulator.step(state)
+        }
+
+        let final = labMatterSummary(simulator: simulator, state: state)
+        XCTAssertEqual(state.step, 80)
+        XCTAssertEqual(final.nonFiniteCount, 0)
+        XCTAssertGreaterThan(initial.total, 1.0)
+        XCTAssertGreaterThan(final.total, initial.total * 0.75)
+        XCTAssertGreaterThan(final.occupied, 64)
+        XCTAssertGreaterThan(final.peak, final.mean * 4.0)
     }
 
     func testLeniaLabFallbackWorldUsesSavedExplicitInitialState() throws {
@@ -493,6 +513,32 @@ private func makeMetrics(
         momentAnisotropy: 0.12,
         componentCount: 2,
         largestComponentFraction: 0.8
+    )
+}
+
+private struct LabMatterSummary {
+    let total: Float
+    let mean: Float
+    let peak: Float
+    let occupied: Int
+    let nonFiniteCount: Int
+}
+
+private func labMatterSummary(
+    simulator: FlowLeniaInteractiveSimulator,
+    state: FlowLeniaInteractiveState
+) -> LabMatterSummary {
+    let matter = simulator.matterMap(for: state).contiguous()
+    eval(matter)
+    let values = matter.asArray(Float.self)
+    let finite = values.filter(\.isFinite)
+    let total = finite.reduce(0, +)
+    return LabMatterSummary(
+        total: total,
+        mean: total / Float(max(1, values.count)),
+        peak: finite.max() ?? 0,
+        occupied: finite.filter { $0 > 0.01 }.count,
+        nonFiniteCount: values.count - finite.count
     )
 }
 
