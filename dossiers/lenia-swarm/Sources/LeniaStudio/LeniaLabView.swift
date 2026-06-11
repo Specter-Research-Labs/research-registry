@@ -474,7 +474,7 @@ struct LeniaLabView: View {
     @State private var showTTExportImporter = false
     @State private var showContractEditor = false
     @State private var selectedTrack1FamilyID: String?
-    @State private var inspectorPanel: LabInspectorPanel = .catalog
+    @State private var inspectorPanel: LabInspectorPanel = .bay
 
     private let stampCache = LeniaLabStampCache()
     private static let backendOrder: [FlowSandboxBackend] = [.metalFull, .mlx]
@@ -583,7 +583,7 @@ struct LeniaLabView: View {
                         .padding(12)
                     }
                 } else {
-                    let inspectorWidth = min(480, max(360, proxy.size.width * 0.28))
+                    let inspectorWidth = min(420, max(340, proxy.size.width * 0.25))
                     ScrollView {
                         HStack(alignment: .top, spacing: 12) {
                             VStack(spacing: 10) {
@@ -610,9 +610,12 @@ struct LeniaLabView: View {
         .navigationTitle("Lenia Lab")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Open TT Export") {
+                Button {
                     showTTExportImporter = true
+                } label: {
+                    Image(systemName: "square.and.arrow.down")
                 }
+                .help("Open TT export")
             }
         }
         .fileImporter(isPresented: $showTTExportImporter, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
@@ -674,11 +677,7 @@ struct LeniaLabView: View {
     }
 
     private var stageSurface: some View {
-        StudioSurface(
-            title: "Range Control",
-            subtitle: stageSubtitle,
-            style: .console
-        ) {
+        StudioSurface(style: .console) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Button {
@@ -717,6 +716,12 @@ struct LeniaLabView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .help("Build world from selected stamp")
+
+                    Text(stageStatusLine)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
 
                     Spacer(minLength: 8)
 
@@ -804,7 +809,8 @@ struct LeniaLabView: View {
                     .controlSize(.small)
                 }
 
-                ScrollView(.horizontal, showsIndicators: false) {
+                if diagnosticsEnabled {
+                    ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         LabTacticalReadout(label: "State", value: model.isRunning ? "Running" : "Armed", accent: model.isRunning ? StudioPalette.moss : StudioPalette.ember)
                         LabTacticalReadout(label: "Mode", value: model.runtimeModeLabel, accent: StudioPalette.ink)
@@ -827,6 +833,7 @@ struct LeniaLabView: View {
                         if let hoveredGridPoint {
                             LabTacticalReadout(label: "Cursor", value: "\(hoveredGridPoint.x),\(hoveredGridPoint.y)", accent: StudioPalette.ink)
                         }
+                    }
                     }
                 }
 
@@ -886,26 +893,9 @@ struct LeniaLabView: View {
     }
 
     private var controlSurface: some View {
-        StudioSurface(
-            title: "World Loadout",
-            subtitle: "Runtime basis, topology edits, and field tools",
-            style: .console
-        ) {
+        StudioSurface(style: .console) {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("WORLD PROFILES")
-                            .font(StudioType.labelStrong)
-                            .tracking(0.5)
-                            .foregroundStyle(StudioPalette.mutedInk)
-                        Spacer()
-                        if let worldDraft {
-                            Text("\(worldDraft.channelCount)m · \(worldDraft.kernelCount)k · \(worldDraft.gridSize)x\(worldDraft.gridSize)")
-                                .font(StudioType.dataSmall)
-                                .foregroundStyle(StudioPalette.ink)
-                        }
-                    }
-
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(Self.missionPresets) { preset in
@@ -919,20 +909,6 @@ struct LeniaLabView: View {
                             }
                         }
                         .padding(.vertical, 2)
-                    }
-
-                    if let selectedWorldPreset {
-                        HStack(spacing: 8) {
-                            LabTacticalReadout(label: "Basis", value: selectedWorldPreset.name, accent: StudioPalette.ink)
-                            LabTacticalReadout(label: "Native", value: "\(selectedWorldPreset.channels)m/\(selectedWorldPreset.parameterFields)p", accent: StudioPalette.ocean)
-                            LabTacticalReadout(label: "Kernels", value: "\(selectedWorldPreset.kernelCount)", accent: StudioPalette.ember)
-                            if let fixedGrid = selectedWorldPreset.fixedGrid {
-                                LabTacticalReadout(label: "Source", value: "\(fixedGrid)x\(fixedGrid)", accent: StudioPalette.ocean)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                    } else {
-                        LabCompactKeyValueRow(label: "Stamp basis", value: selectedWorldEntry.name)
                     }
                 }
 
@@ -997,11 +973,11 @@ struct LeniaLabView: View {
                     contractEditorContent
                 } label: {
                     HStack {
-                        Text("CONTRACT EDITOR")
-                            .font(StudioType.labelStrong)
-                            .tracking(0.5)
+                        Text("Advanced")
+                            .font(StudioType.body)
+                            .foregroundStyle(StudioPalette.ink)
                         Spacer()
-                        Text(worldDraft?.connectivitySummary ?? "--")
+                        Text(worldDraft?.sourceSummary ?? "--")
                             .font(StudioType.dataSmall)
                             .foregroundStyle(StudioPalette.mutedInk)
                             .lineLimit(1)
@@ -1174,19 +1150,15 @@ struct LeniaLabView: View {
     }
 
     private var taxonomySurface: some View {
-        StudioSurface(
-            title: "Specimen Catalog",
-            subtitle: "Taxonomy, source, and loadable variants",
-            style: .console
-        ) {
-            VStack(alignment: .leading, spacing: 10) {
+        StudioSurface(style: .console) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     if track1Catalog.isLoading {
                         ProgressView()
                             .controlSize(.small)
                             .scaleEffect(0.72)
                     }
-                    Text(track1Catalog.status)
+                    Text("\(track1Catalog.catalog.families.count) families · \(track1Catalog.catalog.labLoadableCount) loadable")
                         .font(StudioType.dataSmall)
                         .foregroundStyle(StudioPalette.mutedInk)
                         .lineLimit(1)
@@ -1209,18 +1181,6 @@ struct LeniaLabView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .help("Choose Track 1 config root")
-                }
-
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 6)], alignment: .leading, spacing: 6) {
-                    LabTacticalReadout(label: "Class", value: "Flow", accent: StudioPalette.ocean)
-                    LabTacticalReadout(label: "Order", value: "T1", accent: StudioPalette.ember)
-                    LabTacticalReadout(label: "Family", value: "\(track1Catalog.catalog.families.count)", accent: StudioPalette.moss)
-                    LabTacticalReadout(label: "Species", value: "\(track1Catalog.catalog.speciesCount)", accent: StudioPalette.ocean)
-                    LabTacticalReadout(label: "Loadable", value: "\(track1Catalog.catalog.labLoadableCount)", accent: StudioPalette.moss)
-                }
-
-                if !track1ConfigRoot.isEmpty {
-                    LabCompactKeyValueRow(label: "Root", value: track1RootDisplay(track1ConfigRoot))
                 }
 
                 if let error = track1Catalog.error {
@@ -1262,13 +1222,19 @@ struct LeniaLabView: View {
                     }
 
                     if let selectedTrack1Config {
-                        LabInfoSection(title: "Selected lineage") {
-                            LabCompactKeyValueRow(label: "Family", value: selectedTrack1Config.family)
-                            LabCompactKeyValueRow(label: "Genus", value: selectedTrack1Config.genus)
-                            LabCompactKeyValueRow(label: "Species", value: selectedTrack1Config.displayName)
-                            LabCompactKeyValueRow(label: "Pattern", value: selectedTrack1Config.patternID)
-                            LabCompactKeyValueRow(label: "Runtime", value: selectedTrack1Config.runtimeSummary)
+                        DisclosureGroup("Details") {
+                            LabInfoSection(title: "Selected lineage") {
+                                LabCompactKeyValueRow(label: "Family", value: selectedTrack1Config.family)
+                                LabCompactKeyValueRow(label: "Genus", value: selectedTrack1Config.genus)
+                                LabCompactKeyValueRow(label: "Species", value: selectedTrack1Config.displayName)
+                                LabCompactKeyValueRow(label: "Pattern", value: selectedTrack1Config.patternID)
+                                LabCompactKeyValueRow(label: "Runtime", value: selectedTrack1Config.runtimeSummary)
+                                if !track1ConfigRoot.isEmpty {
+                                    LabCompactKeyValueRow(label: "Root", value: track1RootDisplay(track1ConfigRoot))
+                                }
+                            }
                         }
+                        .font(StudioType.body)
                     }
                 } else if !track1Catalog.isLoading {
                     Text("No Track 1 taxonomy loaded.")
@@ -1375,20 +1341,8 @@ struct LeniaLabView: View {
     }
 
     private var paletteSurface: some View {
-        StudioSurface(title: "Specimen Bay", subtitle: "Stamp source and world seed", style: .console) {
-            VStack(alignment: .leading, spacing: 14) {
-                if let activeWorldEntry {
-                    HStack {
-                        Text("World physics")
-                            .font(StudioType.bodySmall)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(activeWorldEntry.name)
-                            .font(StudioType.dataSmall)
-                            .foregroundStyle(StudioPalette.ink)
-                    }
-                }
-
+        StudioSurface(style: .console) {
+            VStack(alignment: .leading, spacing: 12) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
                         ForEach(stampEntries) { entry in
@@ -1459,15 +1413,12 @@ struct LeniaLabView: View {
         }
     }
 
-    private var stageSubtitle: String {
+    private var stageStatusLine: String {
         if let externalReplayTitle = model.externalReplayTitle {
-            return "\(externalReplayTitle) · \(model.isRunning ? "playing" : "loaded") · \(model.runtimeModeLabel)"
+            return "\(externalReplayTitle) · \(model.isRunning ? "playing" : "loaded")"
         }
         if let activeWorldEntry {
-            if let contract = model.worldContract {
-                return "Active world: \(activeWorldEntry.name) · \(model.isRunning ? "running" : "armed") · \(model.runtimeModeLabel) · \(labBackendLabel(model.activeBackend)) · \(contract.channels)m/\(contract.parameterFieldMode.displayName)"
-            }
-            return "Active world: \(activeWorldEntry.name) · \(model.isRunning ? "running" : "armed") · \(model.runtimeModeLabel) · \(labBackendLabel(model.activeBackend))"
+            return "\(activeWorldEntry.name) · \(model.isRunning ? "running" : "ready")"
         }
         return "Building world"
     }
@@ -1976,18 +1927,12 @@ private struct LabTacticalStageOverlay: View {
 
                 VStack {
                     HStack(alignment: .top) {
-                        overlayTag("GRID \(gridSize)", accent: StudioPalette.ocean)
-                        overlayTag("Z \(Int((zoom * 100).rounded()))%", accent: StudioPalette.ink)
-                        overlayTag(projectionLabel.uppercased(), accent: StudioPalette.ember)
                         Spacer()
-                        overlayTag(healthLabel.uppercased(), accent: healthAccent)
+                        if healthLabel != "Armed" {
+                            overlayTag(healthLabel, accent: healthAccent)
+                        }
                     }
                     Spacer()
-                    HStack {
-                        overlayTag("FLOW LENIA RANGE", accent: StudioPalette.mutedInk)
-                        Spacer()
-                        overlayTag("LIVE", accent: healthAccent)
-                    }
                 }
                 .padding(12)
             }
@@ -2043,40 +1988,34 @@ private struct LabMissionPresetCard: View {
 
     var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Circle()
+                    .fill(isSelected ? StudioPalette.ocean : StudioPalette.hairline)
+                    .frame(width: 6, height: 6)
+
+                VStack(alignment: .leading, spacing: 2) {
                     Text(preset.name)
                         .font(StudioType.labelStrong)
                         .foregroundStyle(StudioPalette.ink)
                         .lineLimit(1)
-                    Spacer(minLength: 0)
-                    Text("\(preset.channels)m/\(preset.parameterFields)p")
-                        .font(StudioType.dataSmall)
-                        .foregroundStyle(StudioPalette.ocean)
                 }
-                Text(preset.subtitle)
-                    .font(StudioType.bodySmall)
-                    .foregroundStyle(StudioPalette.mutedInk)
-                    .lineLimit(1)
-                HStack(spacing: 8) {
-                    Text("\(preset.kernelCount) kernels")
-                        .foregroundStyle(StudioPalette.ember)
-                    if let fixedGrid = preset.fixedGrid {
-                        Text("\(fixedGrid)x\(fixedGrid)")
-                            .foregroundStyle(StudioPalette.ocean)
-                    }
-                }
-                .font(StudioType.label)
+
+                Spacer(minLength: 0)
+
+                Text("\(preset.channels)m/\(preset.parameterFields)p")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.ocean)
             }
-            .frame(width: 184, alignment: .leading)
-            .padding(9)
+            .frame(width: 140, alignment: .leading)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
             .background(
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleSurface)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .stroke(isSelected ? StudioPalette.ocean.opacity(0.7) : StudioPalette.hairline, lineWidth: 1)
+                    .stroke(isSelected ? StudioPalette.ocean.opacity(0.7) : StudioPalette.hairline.opacity(0.65), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -2090,37 +2029,24 @@ private struct LabPaletteStampCard: View {
     let onSelect: () -> Void
     let onSetWorld: () -> Void
 
-    private var score: Float {
-        entry.savedCreature?.score ?? entry.creature.score
-    }
-
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             CreatureThumbnailView(creature: entry.creature, size: 72)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
             VStack(alignment: .leading, spacing: 6) {
-                VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(entry.name)
                         .font(StudioType.title)
                         .foregroundStyle(StudioPalette.ink)
                         .lineLimit(1)
-                    Text(entry.subtitle)
-                        .font(StudioType.bodySmall)
-                        .foregroundStyle(StudioPalette.mutedInk)
-                        .lineLimit(1)
                 }
 
                 HStack(spacing: 8) {
-                    StudioMetricPill(label: "Score", value: String(format: "%.3f", score), accent: StudioPalette.ocean, style: .console)
-                    StudioMetricPill(label: "Seed", value: "\(entry.creature.seed)", accent: StudioPalette.ink, style: .console)
-                }
-
-                HStack(spacing: 8) {
-                    Button(isSelected ? "Selected" : "Use Stamp", action: onSelect)
+                    Button(isSelected ? "Selected" : "Stamp", action: onSelect)
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                    Button("Set World", action: onSetWorld)
+                    Button("World", action: onSetWorld)
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                 }
@@ -2146,30 +2072,23 @@ private struct Track1FamilyChip: View {
 
     var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 7) {
+                Circle()
+                    .fill(isSelected ? StudioPalette.ocean : StudioPalette.hairline)
+                    .frame(width: 6, height: 6)
                 Text(family.name)
                     .font(StudioType.labelStrong)
                     .foregroundStyle(isSelected ? StudioPalette.ink : StudioPalette.mutedInk)
                     .lineLimit(1)
-                HStack(spacing: 8) {
-                    Text("\(family.genera.count)g")
-                        .foregroundStyle(StudioPalette.ocean)
-                    Text("\(family.speciesCount)s")
-                        .foregroundStyle(StudioPalette.moss)
-                    Text("\(family.configCount)c")
-                        .foregroundStyle(StudioPalette.ember)
-                }
-                .font(StudioType.dataSmall)
             }
-            .frame(width: 116, alignment: .leading)
+            .frame(width: 116, height: 30, alignment: .leading)
             .padding(.horizontal, 8)
-            .padding(.vertical, 7)
             .background(
-                Rectangle()
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleControl.opacity(0.82))
             )
             .overlay(
-                Rectangle()
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .stroke(isSelected ? StudioPalette.ocean.opacity(0.78) : StudioPalette.hairline, lineWidth: 1)
             )
         }
@@ -2185,12 +2104,11 @@ private struct Track1TaxonomyFamilyPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(family.name.uppercased())
+                Text(family.name)
                     .font(StudioType.labelStrong)
-                    .tracking(0.5)
                     .foregroundStyle(StudioPalette.ink)
                 Spacer(minLength: 6)
-                Text("\(family.genera.count) genera · \(family.speciesCount) species · \(family.configCount) configs")
+                Text("\(family.speciesCount) species")
                     .font(StudioType.dataSmall)
                     .foregroundStyle(StudioPalette.mutedInk)
                     .lineLimit(1)
@@ -2202,9 +2120,6 @@ private struct Track1TaxonomyFamilyPanel: View {
                         Text(genus.name)
                             .font(StudioType.labelStrong)
                             .foregroundStyle(StudioPalette.ocean)
-                        Text("\(genus.configs.count) configs")
-                            .font(StudioType.dataSmall)
-                            .foregroundStyle(StudioPalette.mutedInk)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -2253,16 +2168,14 @@ private struct Track1TaxonomySpeciesRow: View {
                     .foregroundStyle(isSelected ? StudioPalette.ink : StudioPalette.mutedInk)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(activeConfig.runtimeSummary)
-                    .font(StudioType.label)
-                    .foregroundStyle(StudioPalette.mutedInk)
-                    .lineLimit(1)
             }
             Spacer(minLength: 6)
-            Text(group.configs.count == 1 ? activeConfig.patternID : "\(group.configs.count)x")
-                .font(StudioType.dataSmall)
-                .foregroundStyle(hasLoadableConfig ? (isSelected ? StudioPalette.moss : StudioPalette.ocean) : StudioPalette.ember)
-                .frame(width: 38, alignment: .trailing)
+            if group.configs.count > 1 {
+                Text("\(group.configs.count)x")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(hasLoadableConfig ? (isSelected ? StudioPalette.moss : StudioPalette.ocean) : StudioPalette.ember)
+                    .frame(width: 28, alignment: .trailing)
+            }
 
             Button {
                 onLoad(activeConfig)
