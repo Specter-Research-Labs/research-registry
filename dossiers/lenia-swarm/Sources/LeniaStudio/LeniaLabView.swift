@@ -35,9 +35,7 @@ final class LeniaLabModel: ObservableObject {
         baseConfigData: Data,
         backend: FlowSandboxBackend,
         speedCap: Int,
-        shouldRun: Bool = false,
-        initialStampEntry: StudioCompareEntry? = nil,
-        stampCache: LeniaLabStampCache? = nil
+        shouldRun: Bool = false
     ) {
         activeWorldEntryID = sourceEntryID
         activeBackend = backend
@@ -84,11 +82,6 @@ final class LeniaLabModel: ObservableObject {
                     await runtime.start()
                 }
                 let worldContract = await runtime.worldContract()
-                if let initialStampEntry, let stampCache {
-                    let stamp = await stampCache.stamp(for: initialStampEntry)
-                    let center = SIMD2<Int>(worldContract.gridSize / 2, worldContract.gridSize / 2)
-                    await runtime.applyCreatureStamp(stamp, center: center)
-                }
                 let projections = await runtime.availableProjections()
                 let activeProjection = projections.contains(self.activeProjection) ? self.activeProjection : .matter
 
@@ -124,9 +117,7 @@ final class LeniaLabModel: ObservableObject {
         runtimeConfig: LeniaRuntimeConfig,
         backend: FlowSandboxBackend,
         speedCap: Int,
-        shouldRun: Bool = false,
-        initialStampEntry: StudioCompareEntry? = nil,
-        stampCache: LeniaLabStampCache? = nil
+        shouldRun: Bool = false
     ) {
         activeWorldEntryID = sourceEntryID
         activeBackend = backend
@@ -169,11 +160,6 @@ final class LeniaLabModel: ObservableObject {
                     value: 0.35
                 )
                 let worldContract = await runtime.worldContract()
-                if let initialStampEntry, let stampCache {
-                    let stamp = await stampCache.stamp(for: initialStampEntry)
-                    let center = SIMD2<Int>(worldContract.gridSize / 2, worldContract.gridSize / 2)
-                    await runtime.applyCreatureStamp(stamp, center: center)
-                }
                 if currentRunning {
                     await runtime.start()
                 }
@@ -437,11 +423,15 @@ actor LeniaLabStampCache {
         if let cached = cache[entry.id] {
             return cached
         }
-        let stamp = buildSeedCreatureStamp(
+        let stamp = buildWarmCreatureStamp(
             id: UUID(uuidString: entry.id.components(separatedBy: ":").last ?? "") ?? UUID(),
             name: entry.name,
             params: entry.creature.params,
-            seed: entry.creature.seed
+            seed: entry.creature.seed,
+            warmupSteps: 80,
+            warmupGridSize: 128,
+            cropThreshold: 0.01,
+            padding: 4
         )
         cache[entry.id] = stamp
         return stamp
@@ -1423,17 +1413,6 @@ struct LeniaLabView: View {
         return "Building world"
     }
 
-    private var selectedWorldBootstrapStampEntry: StudioCompareEntry? {
-        switch worldSelection {
-        case .stamp:
-            return selectedWorldEntry
-        case .preset(let presetID) where presetID == "orbium-sandbox":
-            return selectedWorldEntry
-        default:
-            return nil
-        }
-    }
-
     private func syncWorldDraft(rebuild: Bool) {
         worldDraftError = nil
         do {
@@ -1483,9 +1462,7 @@ struct LeniaLabView: View {
                 runtimeConfig: nextDraft.runtimeConfig(overridingBackend: backend),
                 backend: backend,
                 speedCap: speedCap,
-                shouldRun: false,
-                initialStampEntry: nil,
-                stampCache: stampCache
+                shouldRun: false
             )
         } catch {
             worldDraft = nil
@@ -1522,9 +1499,7 @@ struct LeniaLabView: View {
                 runtimeConfig: worldDraft.runtimeConfig(overridingBackend: targetBackend),
                 backend: targetBackend,
                 speedCap: speedCap,
-                shouldRun: false,
-                initialStampEntry: selectedWorldBootstrapStampEntry,
-                stampCache: stampCache
+                shouldRun: false
             )
             return
         }
@@ -1540,9 +1515,7 @@ struct LeniaLabView: View {
                 baseConfigData: data,
                 backend: targetBackend,
                 speedCap: speedCap,
-                shouldRun: false,
-                initialStampEntry: selectedWorldBootstrapStampEntry,
-                stampCache: stampCache
+                shouldRun: false
             )
         } catch {
             worldDraftError = "Failed to load replay base: \(labErrorDescription(error))"
@@ -1711,7 +1684,7 @@ private func labErrorDescription(_ error: Error) -> String {
     return error.localizedDescription
 }
 
-enum LabHealthState {
+enum LabHealthState: Equatable {
     case armed
     case active
     case stable
@@ -1754,13 +1727,13 @@ enum LabHealthState {
     }
 }
 
-private struct LabHealthAssessment {
+struct LabHealthAssessment {
     let state: LabHealthState
     let summary: String
     let warnings: [String]
 }
 
-private func labHealthAssessment(
+func labHealthAssessment(
     metrics: FlowSandboxMetrics,
     isRunning: Bool,
     activity: Double,
@@ -1782,8 +1755,8 @@ private func labHealthAssessment(
     if metrics.nonFiniteFraction > 0 {
         warnings.append("Non-finite values were observed in the sampled field.")
     }
-    if metrics.massPeak > 0.985 {
-        warnings.append("Mass is clipping near 1.0.")
+    if metrics.massPeak > 1.0 {
+        warnings.append("Local density is above display range; the renderer clips the brightest cells.")
     }
     if metrics.foodPeak > 0.985 {
         warnings.append("Food field is clipping near 1.0.")
@@ -1800,7 +1773,7 @@ private func labHealthAssessment(
         ? activity
         : recentHistory.reduce(0, +) / Double(recentHistory.count)
 
-    if metrics.nonFiniteFraction > 0 || metrics.massPeak > 1.05 {
+    if metrics.nonFiniteFraction > 0 {
         return LabHealthAssessment(
             state: .exploding,
             summary: "The field is diverging or leaving the finite operating range.",

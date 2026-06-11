@@ -5,6 +5,11 @@ import LeniaVisuals
 @testable import LeniaStudio
 
 final class LeniaStudioTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        StudioMLXTestSupport.ensureMetalLibraryAvailable()
+    }
+
     func testStudioInsightDerivedMotionSignals() throws {
         let metrics = makeMetrics(pathLength: 10, displacement: 2)
 
@@ -153,6 +158,110 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(labBrushRadiusStepping(from: 3, delta: 1), 4)
         XCTAssertEqual(labBrushRadiusStepping(from: 1, delta: -5), 1)
         XCTAssertEqual(labBrushRadiusStepping(from: 16, delta: 5), 16)
+    }
+
+    func testLeniaLabFallbackWorldUsesExplicitWarmInitialState() throws {
+        let draft = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 128)
+        let runtimeConfig = draft.runtimeConfigValue
+        let statePatch = try XCTUnwrap(runtimeConfig.statePatch)
+
+        XCTAssertTrue(runtimeConfig.patches.isEmpty)
+        XCTAssertEqual(runtimeConfig.aUniform.low, 0)
+        XCTAssertEqual(runtimeConfig.aUniform.high, 0)
+        XCTAssertEqual(statePatch.center, [64, 64])
+        XCTAssertEqual(statePatch.channels, 1)
+        XCTAssertEqual(statePatch.valueCount, statePatch.width * statePatch.height)
+        XCTAssertGreaterThan(statePatch.decodedValues().reduce(0, +), 0)
+    }
+
+    func testLeniaLabFallbackWorldUsesSavedExplicitInitialState() throws {
+        let values: [Float] = [0.1, 0.2, 0.3, 0.4]
+        let initialCondition = InitConfig(
+            seed: 7,
+            patches: [],
+            a_uniform: UniformRange(low: 0, high: 0),
+            p_uniform: nil,
+            state_patch: InitStatePatchConfig(
+                center: [11, 13],
+                width: 2,
+                height: 2,
+                channels: 1,
+                values: values
+            )
+        )
+        let saved = SavedCreature(
+            id: UUID(uuidString: "11111111-2222-3333-4444-555555555555")!,
+            name: "Saved Patch",
+            ownerId: "test-node",
+            genotype: KernelParams(
+                r: [1.0],
+                b: [[1.0]],
+                w: [[0.2]],
+                a: [[1.0]],
+                m: [0.2],
+                s: [0.05],
+                h: [1.0],
+                R: 12
+            ),
+            initialCondition: initialCondition,
+            metrics: makeMetrics()
+        )
+        let draft = try makeLabWorldDraft(for: .saved(saved), gridSize: 64)
+        let runtimeConfig = draft.runtimeConfigValue
+        let statePatch = try XCTUnwrap(runtimeConfig.statePatch)
+
+        XCTAssertTrue(runtimeConfig.patches.isEmpty)
+        XCTAssertEqual(runtimeConfig.aUniform.low, 0)
+        XCTAssertEqual(runtimeConfig.aUniform.high, 0)
+        XCTAssertEqual(statePatch.center, [32, 32])
+        XCTAssertEqual(statePatch.decodedValues(), values)
+    }
+
+    func testLeniaLabHealthAllowsFiniteHighDensityFlowStates() {
+        let assessment = labHealthAssessment(
+            metrics: FlowSandboxMetrics(
+                massMean: 0.12,
+                occupancy: 0.2,
+                foodMean: 0,
+                wallFraction: 0,
+                massPeak: 1.2,
+                foodPeak: 0,
+                nonFiniteFraction: 0
+            ),
+            isRunning: true,
+            activity: 0.02,
+            stepDurationMs: 1,
+            stepRateHz: 60,
+            snapshotFps: 60,
+            speedCap: 60,
+            history: [0.02, 0.03]
+        )
+
+        XCTAssertEqual(assessment.state, .active)
+        XCTAssertTrue(assessment.warnings.contains { $0.contains("display range") })
+    }
+
+    func testLeniaLabHealthFlagsNonFiniteStatesAsExploding() {
+        let assessment = labHealthAssessment(
+            metrics: FlowSandboxMetrics(
+                massMean: 0.12,
+                occupancy: 0.2,
+                foodMean: 0,
+                wallFraction: 0,
+                massPeak: 0.8,
+                foodPeak: 0,
+                nonFiniteFraction: 0.01
+            ),
+            isRunning: true,
+            activity: 0.02,
+            stepDurationMs: 1,
+            stepRateHz: 60,
+            snapshotFps: 60,
+            speedCap: 60,
+            history: [0.02, 0.03]
+        )
+
+        XCTAssertEqual(assessment.state, .exploding)
     }
 
     func testTrack1TaxonomyCatalogParsesRuntimeProvenance() throws {
@@ -323,6 +432,23 @@ final class LeniaStudioTests: XCTestCase {
         }
     }
 }
+
+private enum StudioMLXTestSupport {
+    static func ensureMetalLibraryAvailable(
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        do {
+            try LeniaMetalLibrarySupport.ensureAvailable(
+                executableURL: Bundle(for: StudioMLXTestSupportMarker.self).executableURL
+            )
+        } catch {
+            XCTFail("Failed to prepare MLX metallib: \(error)", file: file, line: line)
+        }
+    }
+}
+
+private final class StudioMLXTestSupportMarker {}
 
 private func makeMetrics(
     massMean: Float = 1.5,

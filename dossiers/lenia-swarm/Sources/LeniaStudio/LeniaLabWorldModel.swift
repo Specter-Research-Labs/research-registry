@@ -131,11 +131,15 @@ struct LabWorldDraft {
     mutating func setGridSize(_ size: Int) {
         let clamped = max(32, size)
         guard clamped != gridSize else { return }
+        let recenteredStatePatch = runtimeConfigValue.statePatch.map {
+            labCenteredStatePatch($0, gridSize: clamped)
+        }
         runtimeConfigValue = labCopyRuntimeConfig(
             runtimeConfigValue,
             sx: clamped,
             sy: clamped,
-            patches: labScaledPatches(runtimeConfigValue.patches, from: gridSize, to: clamped)
+            patches: labScaledPatches(runtimeConfigValue.patches, from: gridSize, to: clamped),
+            statePatch: recenteredStatePatch
         )
     }
 
@@ -375,8 +379,12 @@ func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> L
         )
     }
 
-    let resolvedGrid = max(32, gridSize)
+    let savedStatePatch = labSavedInitialStatePatch(for: entry)
+    let resolvedGrid = max(32, gridSize, savedStatePatch?.width ?? 0, savedStatePatch?.height ?? 0)
     let kernelCount = max(1, entry.creature.params.r.count)
+    let initialStatePatch = savedStatePatch.map {
+        labCenteredStatePatch($0, gridSize: resolvedGrid)
+    } ?? labWarmInitialStatePatch(for: entry, gridSize: resolvedGrid)
     let runtimeConfig = LeniaRuntimeConfig(
         backend: .metalFull,
         sx: resolvedGrid,
@@ -412,14 +420,10 @@ func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> L
             seed: entry.creature.seed
         ),
         initSeed: entry.creature.seed,
-        patches: [
-            PatchConfig(
-                center: [resolvedGrid / 2, resolvedGrid / 2],
-                size: max(12, min(resolvedGrid / 5, 48))
-            )
-        ],
-        aUniform: UniformRange(low: 0.0, high: 1.0),
+        patches: [],
+        aUniform: UniformRange(low: 0.0, high: 0.0),
         pUniform: nil,
+        statePatch: initialStatePatch,
         steps: 4_000,
         parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
         chemotaxis: nil,
@@ -434,6 +438,50 @@ func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> L
         basisName: entry.name,
         sourceConfigPath: "",
         runtimeConfig: runtimeConfig
+    )
+}
+
+private func labSavedInitialStatePatch(for entry: StudioCompareEntry) -> InitStatePatchConfig? {
+    guard let statePatch = entry.savedCreature?.initialCondition.state_patch,
+          statePatch.channels == 1,
+          statePatch.valueCount == statePatch.width * statePatch.height * statePatch.channels
+    else {
+        return nil
+    }
+    return statePatch
+}
+
+private func labWarmInitialStatePatch(for entry: StudioCompareEntry, gridSize: Int) -> InitStatePatchConfig {
+    let stamp = buildWarmCreatureStamp(
+        id: UUID(uuidString: entry.id.components(separatedBy: ":").last ?? "") ?? UUID(),
+        name: entry.name,
+        params: entry.creature.params,
+        seed: entry.creature.seed,
+        warmupSteps: 80,
+        warmupGridSize: gridSize,
+        cropThreshold: 0.01,
+        padding: 4
+    )
+    return labInitialStatePatch(from: stamp, gridSize: gridSize)
+}
+
+private func labInitialStatePatch(from stamp: CreatureStamp, gridSize: Int) -> InitStatePatchConfig {
+    InitStatePatchConfig(
+        center: [gridSize / 2, gridSize / 2],
+        width: stamp.width,
+        height: stamp.height,
+        channels: 1,
+        values: stamp.mass
+    )
+}
+
+private func labCenteredStatePatch(_ statePatch: InitStatePatchConfig, gridSize: Int) -> InitStatePatchConfig {
+    InitStatePatchConfig(
+        center: [gridSize / 2, gridSize / 2],
+        width: statePatch.width,
+        height: statePatch.height,
+        channels: statePatch.channels,
+        data: statePatch.data
     )
 }
 
@@ -612,6 +660,7 @@ private func labCopyRuntimeConfig(
     params: ResolvedParams? = nil,
     initSeed: Int? = nil,
     patches: [PatchConfig]? = nil,
+    statePatch: InitStatePatchConfig? = nil,
     overridePUniform: Bool = false,
     pUniform: UniformRange? = nil,
     parameterEmbedding: ParameterEmbeddingConfig? = nil,
@@ -647,7 +696,7 @@ private func labCopyRuntimeConfig(
         patches: patches ?? runtimeConfig.patches,
         aUniform: runtimeConfig.aUniform,
         pUniform: overridePUniform ? pUniform : runtimeConfig.pUniform,
-        statePatch: runtimeConfig.statePatch,
+        statePatch: statePatch ?? runtimeConfig.statePatch,
         paramPatch: runtimeConfig.paramPatch,
         steps: runtimeConfig.steps,
         parameterEmbedding: parameterEmbedding ?? runtimeConfig.parameterEmbedding,

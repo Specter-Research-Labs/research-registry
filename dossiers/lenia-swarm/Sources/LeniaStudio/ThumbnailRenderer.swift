@@ -53,12 +53,15 @@ actor ThumbnailRenderer {
     }
 
     private func generateThumbnail(creature: LeniaCreature) async -> CGImage? {
-        let stamp = buildSeedCreatureStamp(
+        let stamp = buildWarmCreatureStamp(
             id: creature.id,
             name: creature.sourceNode,
             params: creature.params,
             seed: creature.seed,
-            gridSize: thumbnailFieldSize
+            warmupSteps: warmupSteps,
+            warmupGridSize: thumbnailFieldSize,
+            cropThreshold: 0.01,
+            padding: 4
         )
         guard !Task.isCancelled else { return nil }
 
