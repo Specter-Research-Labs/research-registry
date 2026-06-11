@@ -91,6 +91,12 @@ public struct StudioCompareEntry: Identifiable, Hashable, Sendable {
     public let subtitle: String
     public let metrics: SimulationMetrics?
     public let replayReference: StudioReplayReference?
+    public let taxonomy: SpecimenTaxonomyRecord?
+    public let traitLabels: [String]
+    public let runtimeFamily: String?
+    public let sourceMode: String?
+    public let sourceAlgorithm: String?
+    public let runtimeCapabilities: [String]
 
     public init(
         id: String,
@@ -99,7 +105,13 @@ public struct StudioCompareEntry: Identifiable, Hashable, Sendable {
         name: String,
         subtitle: String,
         metrics: SimulationMetrics? = nil,
-        replayReference: StudioReplayReference? = nil
+        replayReference: StudioReplayReference? = nil,
+        taxonomy: SpecimenTaxonomyRecord? = nil,
+        traitLabels: [String] = [],
+        runtimeFamily: String? = nil,
+        sourceMode: String? = nil,
+        sourceAlgorithm: String? = nil,
+        runtimeCapabilities: [String] = []
     ) {
         self.id = id
         self.creature = creature
@@ -108,6 +120,12 @@ public struct StudioCompareEntry: Identifiable, Hashable, Sendable {
         self.subtitle = subtitle
         self.metrics = metrics
         self.replayReference = replayReference
+        self.taxonomy = taxonomy
+        self.traitLabels = traitLabels.sorted()
+        self.runtimeFamily = runtimeFamily
+        self.sourceMode = sourceMode
+        self.sourceAlgorithm = sourceAlgorithm
+        self.runtimeCapabilities = runtimeCapabilities.sorted()
     }
 
     public static func live(
@@ -129,7 +147,13 @@ public struct StudioCompareEntry: Identifiable, Hashable, Sendable {
 
     public static func saved(
         _ creature: SavedCreature,
-        replayReference: StudioReplayReference? = nil
+        replayReference: StudioReplayReference? = nil,
+        taxonomy: SpecimenTaxonomyRecord? = nil,
+        traitLabels: [String] = [],
+        runtimeFamily: String? = nil,
+        sourceMode: String? = nil,
+        sourceAlgorithm: String? = nil,
+        runtimeCapabilities: [String] = []
     ) -> StudioCompareEntry {
         StudioCompareEntry(
             id: "saved:\(creature.id.uuidString)",
@@ -138,7 +162,13 @@ public struct StudioCompareEntry: Identifiable, Hashable, Sendable {
             name: creature.name,
             subtitle: creature.ownerId,
             metrics: creature.metrics,
-            replayReference: replayReference
+            replayReference: replayReference,
+            taxonomy: taxonomy,
+            traitLabels: traitLabels,
+            runtimeFamily: runtimeFamily,
+            sourceMode: sourceMode,
+            sourceAlgorithm: sourceAlgorithm,
+            runtimeCapabilities: runtimeCapabilities
         )
     }
 

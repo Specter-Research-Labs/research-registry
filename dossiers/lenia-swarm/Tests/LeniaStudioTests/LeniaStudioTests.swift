@@ -1,9 +1,72 @@
 import XCTest
 import Metal
+import LeniaCore
 import LeniaVisuals
 @testable import LeniaStudio
 
 final class LeniaStudioTests: XCTestCase {
+    func testStudioInsightDerivedMotionSignals() throws {
+        let metrics = makeMetrics(pathLength: 10, displacement: 2)
+
+        XCTAssertEqual(try XCTUnwrap(studioTortuosity(metrics: metrics)), 5, accuracy: 0.0001)
+        XCTAssertEqual(try XCTUnwrap(studioMovementEfficiency(metrics: metrics)), 0.2, accuracy: 0.0001)
+
+        let items = studioComputationSections(for: metrics).flatMap(\.items)
+        XCTAssertTrue(items.contains { $0.id == "tortuosity" && $0.value == "5.000" })
+        XCTAssertTrue(items.contains { $0.id == "efficiency" && $0.value == "0.200" })
+    }
+
+    func testStudioMetricDiffRowsUseFirstEntryAsBaseline() throws {
+        let baseline = makeEntry(
+            id: "baseline",
+            score: 0.5,
+            metrics: makeMetrics(massMean: 2, centerVelocity: 0.1, pathLength: 4, displacement: 2)
+        )
+        let candidate = makeEntry(
+            id: "candidate",
+            score: 0.7,
+            metrics: makeMetrics(massMean: 3, centerVelocity: 0.25, pathLength: 10, displacement: 2)
+        )
+
+        let rows = studioMetricDiffRows(for: [baseline, candidate])
+        let mass = try XCTUnwrap(rows.first { $0.id == "mass" })
+        XCTAssertEqual(mass.valueText(at: 0), "2.000")
+        XCTAssertEqual(mass.valueText(at: 1), "3.000")
+        XCTAssertEqual(mass.deltaText(at: 1), "+1.000")
+
+        let tortuosity = try XCTUnwrap(rows.first { $0.id == "tortuosity" })
+        XCTAssertEqual(tortuosity.valueText(at: 0), "2.000")
+        XCTAssertEqual(tortuosity.valueText(at: 1), "5.000")
+        XCTAssertEqual(tortuosity.deltaText(at: 1), "+3.000")
+    }
+
+    func testStudioCompareEntryCarriesClassificationContext() {
+        let taxonomy = SpecimenTaxonomyRecord(
+            familyID: "family-gliders",
+            genusID: "genus-loopers",
+            speciesID: "species-001",
+            confidence: 0.82,
+            method: "descriptor-knn",
+            version: 2
+        )
+        let entry = makeEntry(
+            id: "classified",
+            score: 0.9,
+            metrics: makeMetrics(),
+            taxonomy: taxonomy,
+            traitLabels: ["rotor", "glider"],
+            runtimeCapabilities: ["flow", "ecology"]
+        )
+
+        XCTAssertEqual(entry.taxonomy?.familyID, "family-gliders")
+        XCTAssertEqual(entry.taxonomy?.confidence, 0.82)
+        XCTAssertEqual(entry.traitLabels, ["glider", "rotor"])
+        XCTAssertEqual(entry.runtimeCapabilities, ["ecology", "flow"])
+        XCTAssertEqual(entry.runtimeFamily, "flow-lenia")
+        XCTAssertEqual(entry.sourceMode, "imgep")
+        XCTAssertEqual(entry.sourceAlgorithm, "novelty-search")
+    }
+
     func testPreferredStudioSurfaceFollowsProductRouting() {
         XCTAssertEqual(
             preferredStudioSurface(currentSelection: .lab, connectionState: .connected(role: .host)),
@@ -84,6 +147,63 @@ final class LeniaStudioTests: XCTestCase {
             zoomed.gridPoint(for: anchor, viewSize: viewSize, gridSize: 256)
         )
         XCTAssertEqual(zoomed.zoom, 2.0, accuracy: 1e-6)
+    }
+
+    func testLeniaLabBrushRadiusSteppingClampsToRange() {
+        XCTAssertEqual(labBrushRadiusStepping(from: 3, delta: 1), 4)
+        XCTAssertEqual(labBrushRadiusStepping(from: 1, delta: -5), 1)
+        XCTAssertEqual(labBrushRadiusStepping(from: 16, delta: 5), 16)
+    }
+
+    func testTrack1TaxonomyCatalogParsesRuntimeProvenance() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("track1-taxonomy-\(UUID().uuidString)")
+        let configs = root.appendingPathComponent("track1_section2_orbidae_species_panel")
+        try FileManager.default.createDirectory(at: configs, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let configURL = configs.appendingPathComponent("Orbidae-OG2-qd24-additive-native-parity-mlx.json")
+        let config = """
+        {
+          "backend": "mlx",
+          "channels": 1,
+          "connectivity": [[1]],
+          "grid": {"sx": 192, "sy": 192},
+          "implementation": {
+            "mode": "qd24_additive_v1",
+            "kernel_profile": "qd24_bump4_v1"
+          },
+          "params": {"r": [1.0]},
+          "provenance": {
+            "family": "Orbidae",
+            "pattern_id": "OG2",
+            "species": "Gyrorbium"
+          },
+          "run": {"steps": 1600}
+        }
+        """
+        try Data(config.utf8).write(to: configURL)
+
+        let catalog = try loadTrack1TaxonomyCatalog(rootPath: root.path)
+        let parsed = try XCTUnwrap(catalog.configs.first)
+
+        XCTAssertEqual(catalog.families.map(\.name), ["Orbidae"])
+        XCTAssertEqual(catalog.genusCount, 1)
+        XCTAssertEqual(catalog.speciesCount, 1)
+        XCTAssertEqual(catalog.labLoadableCount, 0)
+        XCTAssertEqual(parsed.family, "Orbidae")
+        XCTAssertEqual(parsed.genus, "Gyrorbium")
+        XCTAssertEqual(parsed.displayName, "Gyrorbium")
+        XCTAssertEqual(parsed.patternID, "OG2")
+        XCTAssertFalse(parsed.isLabLoadable)
+        XCTAssertEqual(parsed.backend, "mlx")
+        XCTAssertEqual(parsed.implementationMode, "qd24_additive_v1")
+        XCTAssertEqual(parsed.kernelProfile, "qd24_bump4_v1")
+        XCTAssertEqual(parsed.gridSize, 192)
+        XCTAssertEqual(parsed.kernelCount, 1)
+        XCTAssertEqual(parsed.runSteps, 1600)
     }
 
     func testLeniaMetalFieldRendererProducesOffscreenImage() {
@@ -202,4 +322,90 @@ final class LeniaStudioTests: XCTestCase {
             }
         }
     }
+}
+
+private func makeMetrics(
+    massMean: Float = 1.5,
+    centerVelocity: Float = 0.125,
+    pathLength: Float = 6,
+    displacement: Float = 3
+) -> SimulationMetrics {
+    SimulationMetrics(
+        massMean: massMean,
+        massStd: 0.2,
+        massMin: 0.8,
+        massMax: 2.4,
+        occupancyMean: 0.4,
+        varianceMean: 0.06,
+        energyMean: 0.15,
+        speedMean: centerVelocity,
+        pathLength: pathLength,
+        displacement: displacement,
+        sampleCount: 120,
+        speedCount: 119,
+        gyration: 8.5,
+        centerVelocity: centerVelocity,
+        velocityX: 0.1,
+        velocityY: 0.2,
+        headingRad: 0.5,
+        isStable: true,
+        complexityMean: 0.61,
+        activityEacMean: 0.33,
+        activityEanMean: 0.44,
+        activityDiversityMean: 0.55,
+        activitySpeciesMean: 0.66,
+        survivalTracked: true,
+        survivalSteps: 100,
+        foodInitialMass: 4.0,
+        foodFinalMass: 1.5,
+        foodConsumed: 2.5,
+        hu1: 0.01,
+        flusser1: 0.02,
+        momentMass: massMean,
+        momentVolume: 12,
+        momentDensity: 0.7,
+        momentAnisotropy: 0.12,
+        componentCount: 2,
+        largestComponentFraction: 0.8
+    )
+}
+
+private func makeEntry(
+    id: String,
+    score: Float,
+    metrics: SimulationMetrics,
+    taxonomy: SpecimenTaxonomyRecord? = nil,
+    traitLabels: [String] = [],
+    runtimeCapabilities: [String] = []
+) -> StudioCompareEntry {
+    let params = ResolvedParams(
+        r: [1.0],
+        b: [[1.0]],
+        w: [[0.2]],
+        a: [[1.0]],
+        m: [0.2],
+        s: [0.05],
+        h: [1.0],
+        R: 12,
+        seed: 42
+    )
+    let creature = LeniaCreature(
+        seed: 42,
+        score: score,
+        params: params,
+        sourceNode: "test-node"
+    )
+    return StudioCompareEntry(
+        id: id,
+        creature: creature,
+        name: id,
+        subtitle: "test-node",
+        metrics: metrics,
+        taxonomy: taxonomy,
+        traitLabels: traitLabels,
+        runtimeFamily: "flow-lenia",
+        sourceMode: "imgep",
+        sourceAlgorithm: "novelty-search",
+        runtimeCapabilities: runtimeCapabilities
+    )
 }

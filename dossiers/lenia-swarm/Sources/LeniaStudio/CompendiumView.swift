@@ -15,6 +15,28 @@ private extension CompendiumCreature {
             sourceNode: ownerId
         )
     }
+
+    var replayReference: StudioReplayReference? {
+        guard let baseConfigPath = resolvedReplayBaseConfigPath(for: self) else { return nil }
+        return StudioReplayReference(
+            baseConfigPath: baseConfigPath,
+            searchConfigPath: resolvedReplaySearchConfigPath(for: self),
+            runtimeFamily: runtimeFamily
+        )
+    }
+
+    var studioEntry: StudioCompareEntry {
+        StudioCompareEntry.saved(
+            creature,
+            replayReference: replayReference,
+            taxonomy: taxonomy,
+            traitLabels: traitLabels,
+            runtimeFamily: runtimeFamily,
+            sourceMode: sourceMode,
+            sourceAlgorithm: sourceAlgorithm,
+            runtimeCapabilities: runtimeCapabilities
+        )
+    }
 }
 
 private enum CompendiumViewMode: String, CaseIterable {
@@ -147,12 +169,23 @@ struct CompendiumLayoutView: View {
         return store.creatures.first(where: { $0.id == first })
     }
 
-    private var comparisonPair: (CompendiumCreature, CompendiumCreature)? {
+    private var selectedComparisonPair: (CompendiumCreature, CompendiumCreature)? {
         guard selectedCreatureIds.count == 2 else { return nil }
-        let ids = Array(selectedCreatureIds)
-        guard let a = store.creatures.first(where: { $0.id == ids[0] }),
-              let b = store.creatures.first(where: { $0.id == ids[1] }) else { return nil }
-        return (a, b)
+        let selected = store.creatures.filter { selectedCreatureIds.contains($0.id) }
+        guard selected.count == 2 else { return nil }
+        return (selected[0], selected[1])
+    }
+
+    private var comparisonPair: (CompendiumCreature, CompendiumCreature)? {
+        if let selectedComparisonPair {
+            return selectedComparisonPair
+        }
+        guard store.creatures.count >= 2 else { return nil }
+        return (store.creatures[0], store.creatures[1])
+    }
+
+    private var comparisonButtonTitle: String {
+        selectedComparisonPair == nil ? "Compare Top 2 Results" : "Compare Selected"
     }
 
     var body: some View {
@@ -206,11 +239,12 @@ struct CompendiumLayoutView: View {
                     .font(.caption)
 
                     if comparisonPair != nil {
-                        Button("Compare Selected") {
+                        Button(comparisonButtonTitle) {
                             showComparison = true
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
+                        .accessibilityLabel(comparisonButtonTitle)
                     }
                 }
                 .padding([.top, .horizontal])
@@ -322,8 +356,8 @@ struct CompendiumLayoutView: View {
             if let pair = comparisonPair {
                 NavigationStack {
                     ComparisonView(entries: [
-                        .saved(pair.0.creature),
-                        .saved(pair.1.creature)
+                        pair.0.studioEntry,
+                        pair.1.studioEntry
                     ])
                 }
                 .frame(minWidth: 920, minHeight: 680)
@@ -458,6 +492,7 @@ private struct CompendiumRow: View {
                 Text(entry.displayRun)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                CompendiumTaxonomyLine(entry: entry)
             }
 
             Spacer()
@@ -485,7 +520,7 @@ private struct CompendiumRowBadge: View {
     }
 
     var body: some View {
-            ZStack {
+        ZStack {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(
                     LinearGradient(
@@ -512,10 +547,39 @@ private func qcStatusColor(_ status: String) -> Color {
         return StudioPalette.moss
     case "quarantine":
         return StudioPalette.ember
-    case "rejected":
-        return StudioPalette.mutedInk
     default:
         return StudioPalette.ocean
+    }
+}
+
+private struct CompendiumTaxonomyLine: View {
+    let entry: CompendiumCreature
+
+    private var label: String? {
+        if let taxonomy = entry.taxonomy {
+            let value = taxonomyValue(from: taxonomy)
+            if value != "--" {
+                return value
+            }
+        }
+        if !entry.traitLabels.isEmpty {
+            return entry.traitLabels.prefix(3).joined(separator: " · ")
+        }
+        let source = [entry.sourceMode, entry.sourceAlgorithm]
+            .compactMap { value in
+                value?.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            .filter { !$0.isEmpty }
+        return source.isEmpty ? nil : source.joined(separator: " · ")
+    }
+
+    var body: some View {
+        if let label {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(StudioPalette.mutedInk)
+                .lineLimit(1)
+        }
     }
 }
 
@@ -533,22 +597,16 @@ private struct CompendiumDetailView: View {
 
     var body: some View {
         let creature = entry.creature
-        let specimenManifest = entry.specimenManifest
+        let studioEntry = entry.studioEntry
 
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 LeniaLiveView(
                     creature: entry.liveCreature,
                     savedCreature: creature,
-                    replaySource: resolvedReplayBaseConfigPath(for: entry).map {
-                        StudioReplayReference(
-                            baseConfigPath: $0,
-                            searchConfigPath: resolvedReplaySearchConfigPath(for: entry),
-                            runtimeFamily: entry.runtimeFamily
-                        )
-                    }
+                    replaySource: entry.replayReference
                 )
-                    .frame(minHeight: 280)
+                .frame(minHeight: 280)
 
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
@@ -572,6 +630,9 @@ private struct CompendiumDetailView: View {
                         MetricCell(label: "Mass Std", value: String(format: "%.3f", creature.metrics.massStd))
                         MetricCell(label: "Stable", value: creature.metrics.isStable ? "Yes" : "No")
                     }
+
+                    StudioClassificationPanel(entry: studioEntry)
+                    StudioComputationPanel(metrics: creature.metrics)
 
                     DisclosureGroup("Score Breakdown") {
                         ScoreBreakdownView(creature: creature)
@@ -623,7 +684,7 @@ private struct CompendiumDetailView: View {
                             )
                             MetadataRow(label: "Source Mode", value: entry.sourceMode ?? "--")
                             MetadataRow(label: "Algorithm", value: entry.sourceAlgorithm ?? "--")
-                            if let taxonomy = specimenManifest?.taxonomy {
+                            if let taxonomy = entry.taxonomy {
                                 MetadataRow(
                                     label: "Taxonomy",
                                     value: taxonomyValue(from: taxonomy)

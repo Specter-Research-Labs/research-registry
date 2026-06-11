@@ -12,8 +12,8 @@ struct ComparisonView: View {
     @Environment(\.dismiss) private var dismiss
 
     private func gridColumns(for availableWidth: CGFloat) -> [GridItem] {
-        let count = availableWidth < 1_080 ? 1 : min(max(entries.count, 1), 2)
-        return Array(repeating: GridItem(.flexible(), spacing: 12), count: count)
+        let count = availableWidth < 760 ? 1 : min(max(entries.count, 1), 2)
+        return Array(repeating: GridItem(.flexible(), spacing: 10), count: count)
     }
 
     private var baselineScore: Float? {
@@ -22,32 +22,36 @@ struct ComparisonView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        StudioSurface(title: "Comparison Workspace", subtitle: "Synced playback with metric deltas") {
-                            comparisonSummary
-                        }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ComparisonHeaderStrip(
+                        entries: entries,
+                        baselineScore: baselineScore,
+                        anyPaused: anyPaused,
+                        useFluidVisuals: $useFluidVisuals,
+                        showCharts: $showCharts,
+                        onTogglePause: toggleAllPause,
+                        onReset: resetAll
+                    )
 
-                        LazyVGrid(columns: gridColumns(for: proxy.size.width), spacing: 12) {
-                            ForEach(entries) { entry in
-                                if let model = liveModel(for: entry) {
-                                    ComparisonPanelView(
-                                        entry: entry,
-                                        model: model,
-                                        renderMode: renderMode,
-                                        useFluidVisuals: useFluidVisuals,
-                                        showCharts: showCharts,
-                                        deltaScore: deltaScore(for: entry)
-                                    )
-                                }
+                    LazyVGrid(columns: gridColumns(for: proxy.size.width), spacing: 10) {
+                        ForEach(entries) { entry in
+                            if let model = liveModel(for: entry) {
+                                ComparisonPanelView(
+                                    entry: entry,
+                                    model: model,
+                                    renderMode: renderMode,
+                                    useFluidVisuals: useFluidVisuals,
+                                    showCharts: showCharts,
+                                    deltaScore: deltaScore(for: entry)
+                                )
                             }
                         }
                     }
-                    .padding(16)
-                }
 
-                controlBar
+                    ComparisonMetricMatrix(entries: entries)
+                }
+                .padding(12)
             }
         }
         .background(
@@ -78,62 +82,6 @@ struct ComparisonView: View {
         }
     }
 
-    private var comparisonSummary: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("\(entries.count) creatures loaded")
-                .font(.headline)
-                .foregroundStyle(StudioPalette.ink)
-
-            HStack(spacing: 10) {
-                if let baselineScore {
-                    StudioMetricPill(label: "Baseline", value: String(format: "%.3f", baselineScore), accent: StudioPalette.ember)
-                }
-                let stableCount = entries.filter { ($0.savedCreature?.metrics.isStable ?? $0.metrics?.isStable) == true }.count
-                StudioMetricPill(label: "Stable", value: "\(stableCount)", accent: StudioPalette.moss)
-                let sources = Set(entries.map { $0.creature.sourceNode }).count
-                StudioMetricPill(label: "Sources", value: "\(sources)", accent: StudioPalette.ocean)
-            }
-        }
-    }
-
-    private var controlBar: some View {
-        HStack(spacing: 12) {
-            Button(action: toggleAllPause) {
-                Label(
-                    anyPaused ? "Play All" : "Pause All",
-                    systemImage: anyPaused ? "play.fill" : "pause.fill"
-                )
-            }
-            .buttonStyle(.bordered)
-
-            Button("Reset All") {
-                for entry in entries {
-                    liveModel(for: entry)?.restart(
-                        creature: entry.creature,
-                        replaySource: entry.replayReference
-                    )
-                }
-            }
-            .buttonStyle(.bordered)
-
-            Toggle(isOn: $useFluidVisuals) {
-                Label("Fluid", systemImage: "drop.fill")
-            }
-            .toggleStyle(.button)
-
-            Toggle(isOn: $showCharts) {
-                Label("Charts", systemImage: "chart.xyaxis.line")
-            }
-            .toggleStyle(.button)
-
-            Spacer()
-        }
-        .controlSize(.small)
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-        .background(.bar)
-    }
-
     private var anyPaused: Bool {
         models.values.contains { $0.isPaused }
     }
@@ -160,6 +108,190 @@ struct ComparisonView: View {
             model.isPaused = newState
         }
     }
+
+    private func resetAll() {
+        for entry in entries {
+            liveModel(for: entry)?.restart(
+                creature: entry.creature,
+                replaySource: entry.replayReference
+            )
+        }
+    }
+}
+
+private struct ComparisonHeaderStrip: View {
+    let entries: [StudioCompareEntry]
+    let baselineScore: Float?
+    let anyPaused: Bool
+    @Binding var useFluidVisuals: Bool
+    @Binding var showCharts: Bool
+    let onTogglePause: () -> Void
+    let onReset: () -> Void
+
+    private var stableCount: Int {
+        entries.filter { ($0.savedCreature?.metrics.isStable ?? $0.metrics?.isStable) == true }.count
+    }
+
+    private var sourceCount: Int {
+        Set(entries.map { $0.creature.sourceNode }).count
+    }
+
+    var body: some View {
+        StudioSurface(title: "Compare", subtitle: "Synchronized replay and baseline-normalized measurements", style: .console) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text("\(entries.count) specimens")
+                        .font(StudioType.data)
+                        .foregroundStyle(StudioPalette.ink)
+                        .frame(width: 120, alignment: .leading)
+
+                    if let baselineScore {
+                        StudioMetricPill(label: "Baseline", value: String(format: "%.3f", baselineScore), accent: StudioPalette.ember, style: .console)
+                    }
+                    StudioMetricPill(label: "Stable", value: "\(stableCount)", accent: StudioPalette.moss, style: .console)
+                    StudioMetricPill(label: "Sources", value: "\(sourceCount)", accent: StudioPalette.ocean, style: .console)
+
+                    Spacer(minLength: 8)
+
+                    Button(action: onTogglePause) {
+                        Label(anyPaused ? "Play" : "Pause", systemImage: anyPaused ? "play.fill" : "pause.fill")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button("Reset", action: onReset)
+                        .buttonStyle(.bordered)
+
+                    Toggle(isOn: $useFluidVisuals) {
+                        Label("Fluid", systemImage: "drop.fill")
+                    }
+                    .toggleStyle(.button)
+
+                    Toggle(isOn: $showCharts) {
+                        Label("Charts", systemImage: "chart.xyaxis.line")
+                    }
+                    .toggleStyle(.button)
+                }
+            }
+            .controlSize(.small)
+        }
+    }
+}
+
+private struct ComparisonMetricMatrix: View {
+    let entries: [StudioCompareEntry]
+
+    private var rows: [StudioMetricDiffRow] {
+        studioMetricDiffRows(for: entries)
+    }
+
+    var body: some View {
+        StudioSurface(title: "Metric Matrix", subtitle: "Baseline row plus signed deltas", style: .console) {
+            if rows.isEmpty {
+                Text("No comparable metrics are attached to these entries.")
+                    .font(StudioType.bodySmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+            } else {
+                GeometryReader { proxy in
+                    let metricWidth: CGFloat = 150
+                    let gap: CGFloat = 10
+                    let columnWidth = max(160, (proxy.size.width - metricWidth - gap * CGFloat(max(entries.count, 1))) / CGFloat(max(entries.count, 1)))
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: gap) {
+                            MatrixHeaderCell(title: "Metric", subtitle: "delta")
+                                .frame(width: metricWidth, alignment: .leading)
+                            ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                                MatrixHeaderCell(
+                                    title: index == 0 ? "Baseline" : compactName(entry.name),
+                                    subtitle: entry.subtitle
+                                )
+                                .frame(width: columnWidth, alignment: .leading)
+                            }
+                        }
+                        .padding(.bottom, 8)
+
+                        Rectangle()
+                            .fill(StudioPalette.hairline)
+                            .frame(height: 1)
+
+                        ForEach(rows) { row in
+                            HStack(spacing: gap) {
+                                Text(row.label)
+                                    .font(StudioType.bodySmall)
+                                    .foregroundStyle(StudioPalette.mutedInk)
+                                    .frame(width: metricWidth, alignment: .leading)
+                                ForEach(Array(entries.indices), id: \.self) { index in
+                                    MatrixValueCell(row: row, index: index)
+                                        .frame(width: columnWidth, alignment: .leading)
+                                }
+                            }
+                            .padding(.vertical, 6)
+                            .overlay(alignment: .bottom) {
+                                Rectangle()
+                                    .fill(StudioPalette.hairline.opacity(0.6))
+                                    .frame(height: 1)
+                            }
+                        }
+                    }
+                }
+                .frame(height: CGFloat(42 + rows.count * 40))
+            }
+        }
+    }
+}
+
+private struct MatrixHeaderCell: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.ink)
+                .lineLimit(1)
+            Text(subtitle)
+                .font(StudioType.bodySmall)
+                .foregroundStyle(StudioPalette.mutedInk)
+                .lineLimit(1)
+        }
+    }
+}
+
+private struct MatrixValueCell: View {
+    let row: StudioMetricDiffRow
+    let index: Int
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(row.valueText(at: index))
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.ink)
+                .frame(minWidth: 68, alignment: .leading)
+            Text(row.deltaText(at: index))
+                .font(StudioType.dataSmall)
+                .foregroundStyle(deltaColor)
+                .lineLimit(1)
+        }
+    }
+
+    private var deltaColor: Color {
+        guard index > 0, row.values.indices.contains(index),
+              let baseline = row.values.first.flatMap({ $0 }), let value = row.values[index] else {
+            return StudioPalette.mutedInk
+        }
+        let delta = value - baseline
+        if abs(delta) < 1e-6 {
+            return StudioPalette.mutedInk
+        }
+        return delta > 0 ? StudioPalette.moss : StudioPalette.ember
+    }
+}
+
+private func compactName(_ value: String) -> String {
+    if value.count <= 22 {
+        return value
+    }
+    return String(value.prefix(21)) + "..."
 }
 
 private struct ComparisonPanelView: View {
@@ -171,56 +303,70 @@ private struct ComparisonPanelView: View {
     let deltaScore: Float?
 
     var body: some View {
-        StudioSurface(title: entry.name, subtitle: entry.subtitle) {
-            VStack(spacing: 0) {
+        StudioSurface(title: nil, subtitle: nil, style: .console) {
+            VStack(spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(entry.name)
+                        .font(StudioType.labelStrong)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(1)
+                    Text(entry.subtitle)
+                        .font(StudioType.bodySmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    if let deltaScore {
+                        Text(String(format: "%+.3f", deltaScore))
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(deltaScore >= 0 ? StudioPalette.moss : StudioPalette.ember)
+                    }
+                }
+
                 ZStack {
                     LinearGradient(
                         colors: [StudioPalette.stageTop, StudioPalette.stageBottom],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
                     if let frame = model.displayFrame {
                         LeniaLabStageView(
                             frame: frame,
                             renderMode: renderMode,
-                            zoom: 1.0,
+                            zoom: 2.4,
                             offset: .zero,
                             onTransformChange: { _ in },
                             onPrimaryPoint: { _ in },
                             onSecondaryPoint: { _ in },
-                            onHoverPointChange: { _ in }
+                            onHoverPointChange: { _ in },
+                            onBrushRadiusDelta: nil
                         )
                         .padding(10)
                     } else {
                         ProgressView()
-                            .controlSize(.large)
+                            .controlSize(.small)
                             .tint(.white)
                     }
                 }
-                .frame(height: 250)
+                .frame(height: 170)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
-                        StudioMetricPill(label: "Score", value: String(format: "%.3f", entry.savedCreature?.score ?? entry.creature.score), accent: StudioPalette.ember)
-                        if let deltaScore {
-                            StudioMetricPill(label: "Delta", value: String(format: "%+.3f", deltaScore), accent: deltaScore >= 0 ? StudioPalette.moss : .red)
-                        }
-                    }
-
-                    if let metrics = entry.savedCreature?.metrics ?? entry.metrics {
-                        HStack(spacing: 8) {
-                            StudioMetricPill(label: "Vel", value: String(format: "%.3f", metrics.centerVelocity), accent: StudioPalette.ocean)
+                VStack(alignment: .leading, spacing: 8) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], alignment: .leading, spacing: 8) {
+                        StudioMetricPill(label: "Score", value: String(format: "%.3f", entry.savedCreature?.score ?? entry.creature.score), accent: StudioPalette.ember, style: .console)
+                        if let metrics = entry.savedCreature?.metrics ?? entry.metrics {
+                            StudioMetricPill(label: "Vel", value: String(format: "%.3f", metrics.centerVelocity), accent: StudioPalette.ocean, style: .console)
                             if let complexity = metrics.complexityMean {
-                                StudioMetricPill(label: "Cx", value: String(format: "%.3f", complexity), accent: StudioPalette.moss)
+                                StudioMetricPill(label: "Cx", value: String(format: "%.3f", complexity), accent: StudioPalette.moss, style: .console)
                             }
-                            StudioMetricPill(label: "Gyr", value: String(format: "%.3f", metrics.gyration))
+                            StudioMetricPill(label: "Gyr", value: String(format: "%.3f", metrics.gyration), style: .console)
                         }
                     }
+
+                    ComparisonContextStrip(entry: entry)
 
                     Text(model.stats)
-                        .font(.system(.caption, design: .monospaced))
+                        .font(StudioType.dataSmall)
                         .foregroundStyle(.secondary)
 
                     if showCharts {
@@ -231,4 +377,73 @@ private struct ComparisonPanelView: View {
             }
         }
     }
+}
+
+private struct ComparisonContextStrip: View {
+    let entry: StudioCompareEntry
+
+    private var rows: [(String, String)] {
+        var values: [(String, String)] = []
+        if let runtime = cleanComparisonLabel(entry.runtimeFamily ?? entry.replayReference?.runtimeFamily) {
+            values.append(("Class", runtime))
+        }
+        let order = [entry.sourceMode, entry.sourceAlgorithm]
+            .compactMap(cleanComparisonLabel)
+            .joined(separator: " / ")
+        if !order.isEmpty {
+            values.append(("Order", order))
+        }
+        if let taxonomy = entry.taxonomy {
+            if let family = cleanComparisonLabel(taxonomy.familyID) {
+                values.append(("Family", family))
+            }
+            if let genus = cleanComparisonLabel(taxonomy.genusID) {
+                values.append(("Genus", genus))
+            }
+            if let species = cleanComparisonLabel(taxonomy.speciesID) {
+                values.append(("Species", species))
+            }
+        }
+        if !entry.traitLabels.isEmpty {
+            values.append(("Traits", entry.traitLabels.prefix(4).joined(separator: ", ")))
+        }
+        return values
+    }
+
+    var body: some View {
+        if !rows.isEmpty {
+            VStack(spacing: 4) {
+                ForEach(rows, id: \.0) { row in
+                    ComparisonContextRow(label: row.0, value: row.1)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+}
+
+private struct ComparisonContextRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(label)
+                .font(StudioType.bodySmall)
+                .foregroundStyle(StudioPalette.mutedInk)
+                .frame(width: 48, alignment: .leading)
+            Text(value)
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.ink)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+private func cleanComparisonLabel(_ value: String?) -> String? {
+    guard let value else { return nil }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
 }

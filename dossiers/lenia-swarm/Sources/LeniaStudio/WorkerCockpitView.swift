@@ -581,7 +581,8 @@ private struct CockpitLivePreview: View {
                         onTransformChange: { _ in },
                         onPrimaryPoint: { _ in },
                         onSecondaryPoint: { _ in },
-                        onHoverPointChange: { _ in }
+                        onHoverPointChange: { _ in },
+                        onBrushRadiusDelta: nil
                     )
                     .padding(14)
                 } else {

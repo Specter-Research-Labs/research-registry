@@ -160,8 +160,8 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         }
 
         let samplerDescriptor = MTLSamplerDescriptor()
-        samplerDescriptor.minFilter = .nearest
-        samplerDescriptor.magFilter = .nearest
+        samplerDescriptor.minFilter = .linear
+        samplerDescriptor.magFilter = .linear
         samplerDescriptor.sAddressMode = .clampToEdge
         samplerDescriptor.tAddressMode = .clampToEdge
         guard let samplerState = device.makeSamplerState(descriptor: samplerDescriptor) else {
