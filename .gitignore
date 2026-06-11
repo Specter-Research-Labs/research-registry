@@ -140,6 +140,8 @@ site/blog/*/index.html
 site/blog/*/*.pdf
 site/research-notes/index.html
 site/research-notes/*/index.html
+site/dashboards/wonton-soup/build/
+site/dashboards/wonton-soup/data/
 site/status/index.html
 site/updates/index.html
 site/updates/index.json

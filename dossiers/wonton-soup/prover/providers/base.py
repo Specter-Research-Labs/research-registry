@@ -21,32 +21,33 @@ def normalize_tactic(tactic: str) -> str:
 def tactic_family(tactic: str) -> str:
     tactic_norm = normalize_tactic(tactic)
     head = tactic_norm.split(" ", 1)[0].lower()
+    base_head = head.rstrip("0123456789") or head
 
-    if head in {"simp", "simp_all", "simp_rw"}:
+    if base_head in {"simp", "simp_all", "simp_rw"}:
         return "simplify"
-    if head in {"rw", "rewrite"}:
+    if base_head in {"rw", "rewrite"}:
         return "rewrite"
-    if head in {"intro", "intros"}:
+    if base_head in {"intro", "intros"}:
         return "intro"
-    if head in {"constructor"}:
+    if base_head in {"constructor"}:
         return "split"
-    if head in {"left", "right"}:
+    if base_head in {"left", "right"}:
         return "split"
     if tactic_norm.startswith("apply And.intro") or tactic_norm.startswith("apply Iff.intro"):
         return "split"
     if tactic_norm.startswith("apply Or.inl") or tactic_norm.startswith("apply Or.inr"):
         return "split"
-    if head == "use":
+    if base_head == "use":
         return "split"
-    if head in {"cases", "induction"}:
+    if base_head in {"cases", "induction"}:
         return "cases"
-    if head in {"exact", "assumption", "trivial"}:
+    if base_head in {"exact", "assumption", "trivial"}:
         return "closer"
-    if head in {"exfalso", "contradiction"}:
+    if base_head in {"exfalso", "contradiction"}:
         return "contradiction"
-    if head in {"linarith", "nlinarith", "omega", "ring", "norm_num"}:
+    if base_head in {"linarith", "nlinarith", "omega", "ring", "norm_num"}:
         return "arith"
-    if head in {"aesop", "aesop?"}:
+    if base_head in {"aesop", "aesop?"}:
         return "automation"
     return head
 

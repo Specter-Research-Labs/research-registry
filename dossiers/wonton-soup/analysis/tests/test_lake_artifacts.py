@@ -73,7 +73,13 @@ def test_reconcile_extracts_graph_artifacts_and_trace_stats(tmp_path: Path) -> N
                 {"id": "n1", "goal_sig": "sig1", "depth": 1},
             ],
             "edges": [
-                {"source": "n0", "target": "n1", "tactic": "intro h", "in_proof": True},
+                {
+                    "source": "n0",
+                    "target": "n1",
+                    "tactic": "intro h",
+                    "tactic_family": "stale",
+                    "in_proof": True,
+                },
             ],
         },
     )
@@ -155,6 +161,15 @@ def test_reconcile_extracts_graph_artifacts_and_trace_stats(tmp_path: Path) -> N
         ).fetchone()
         assert trace == (3, 0, 3, 2, 1, 1, 2, 3, 2)
 
+        edge_families = conn.execute(
+            """
+            SELECT tactic, tactic_family
+            FROM graph_edges
+            ORDER BY rel_path, edge_idx
+            """
+        ).fetchall()
+        assert edge_families == [("res", "Resolution"), ("intro h", "intro")]
+
         # Second pass should reuse source-hash watermark and skip heavy parse.
         rep2 = reconcile(conn, logs_dirs=[logs_root])
         assert rep2.artifacts.graph_nodes == 0
@@ -190,8 +205,10 @@ def test_reconcile_extracts_graph_artifacts_and_trace_stats(tmp_path: Path) -> N
         assert rep3.artifacts.graph_nodes == 3
         updated_nodes = conn.execute(
             "SELECT count(*) FROM graph_nodes WHERE rel_path = 't1/wild_type_graph.json'"
-        ).fetchone()[0]
-        assert updated_nodes == 3
+        ).fetchone()
+        assert updated_nodes is not None
+        updated_node_count = updated_nodes[0]
+        assert updated_node_count == 3
     finally:
         conn.close()
 
@@ -223,7 +240,8 @@ def test_reconcile_records_graph_parse_errors_and_continues(tmp_path: Path) -> N
 
         err_count = conn.execute(
             "SELECT count(*) FROM graph_extract_errors WHERE stage = 'parse_graph'"
-        ).fetchone()[0]
-        assert err_count == 1
+        ).fetchone()
+        assert err_count is not None
+        assert err_count[0] == 1
     finally:
         conn.close()

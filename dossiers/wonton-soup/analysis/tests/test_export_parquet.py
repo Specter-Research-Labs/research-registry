@@ -3,11 +3,22 @@ from __future__ import annotations
 import gzip
 import json
 from pathlib import Path
+from typing import TypedDict
 
 from analysis.lake.db import connect, ensure_schema, root_id_for_path
 from analysis.lake.export_parquet import export_parquet
 from analysis.lake.extract import extract_facts
 from analysis.lake.index import index_logs
+
+
+class _ParquetProfileCase(TypedDict):
+    profile: str
+    table_count: int
+    files: list[str]
+    tables: set[str]
+    absent_tables: set[str]
+    selected_runs: int | None
+    selection: dict[str, object]
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -86,7 +97,7 @@ def _setup_lake(tmp_path: Path) -> Path:
 
 
 def test_export_parquet_profiles(tmp_path: Path) -> None:
-    cases = [
+    cases: list[_ParquetProfileCase] = [
         {
             "profile": "full",
             "table_count": 20,
@@ -94,6 +105,7 @@ def test_export_parquet_profiles(tmp_path: Path) -> None:
             "tables": {"runs", "theorem_wild"},
             "absent_tables": set(),
             "selected_runs": 1,
+            "selection": {},
         },
         {
             "profile": "dashboard",
@@ -102,6 +114,14 @@ def test_export_parquet_profiles(tmp_path: Path) -> None:
             "tables": {"runs", "run_aggregates", "mcts_tree_nodes", "mcts_tree_edges"},
             "absent_tables": {"basin_runs", "basin_seed"},
             "selected_runs": None,
+            "selection": {
+                "provider": ["deepseek", "heuristic", "reprover"],
+                "backend": "lean",
+                "mode": "research",
+                "require_completed": True,
+                "exclude_partial_results": True,
+                "order_by": "run_key_asc",
+            },
         },
     ]
 
@@ -127,6 +147,7 @@ def test_export_parquet_profiles(tmp_path: Path) -> None:
         assert manifest["schema_version"] == 1
         assert manifest["format"] == "parquet"
         assert manifest["profile"] == case["profile"]
+        assert manifest["selection"] == case["selection"]
         if case["selected_runs"] is not None:
             assert manifest["selected_runs"] == case["selected_runs"]
         assert "compiled_at" in manifest

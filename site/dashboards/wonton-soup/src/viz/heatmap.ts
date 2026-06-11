@@ -21,10 +21,12 @@ export interface HeatmapOpts {
 export function renderHeatmap(opts: HeatmapOpts): void {
   const { container, cells, rows, cols, colorMap, onCellClick, cellSize = 22 } = opts;
 
-  const labelWidth = 120;
-  const labelHeight = 80;
+  const labelWidth = Math.max(160, Math.min(300, longest(rows) * 8 + 24));
+  const labelHeight = Math.max(150, Math.min(200, longest(cols) * 6.5 + 42));
   const width = labelWidth + cols.length * cellSize;
   const height = labelHeight + rows.length * cellSize;
+  const rowMaxChars = Math.max(14, Math.floor((labelWidth - 18) / 8));
+  const colMaxChars = Math.max(16, Math.floor((labelHeight - 28) / 5.5));
 
   container.replaceChildren();
 
@@ -49,13 +51,16 @@ export function renderHeatmap(opts: HeatmapOpts): void {
     .append("text")
     .attr("class", "rescue-axis-label")
     .attr("x", (_d, i) => labelWidth + i * cellSize + cellSize / 2)
-    .attr("y", labelHeight - 6)
-    .attr("text-anchor", "end")
+    .attr("y", labelHeight - 10)
+    .attr("text-anchor", "start")
+    .attr("dominant-baseline", "middle")
     .attr("transform", (_d, i) => {
       const x = labelWidth + i * cellSize + cellSize / 2;
-      return `rotate(-55, ${x}, ${labelHeight - 6})`;
+      return `rotate(-90, ${x}, ${labelHeight - 10})`;
     })
-    .text((d) => truncate(d, 16));
+    .text((d) => truncate(d, colMaxChars))
+    .append("title")
+    .text((d) => d);
 
   svg
     .selectAll(".hm-row-label")
@@ -64,9 +69,12 @@ export function renderHeatmap(opts: HeatmapOpts): void {
     .append("text")
     .attr("class", "rescue-axis-label")
     .attr("x", labelWidth - 6)
-    .attr("y", (_d, i) => labelHeight + i * cellSize + cellSize / 2 + 3)
+    .attr("y", (_d, i) => labelHeight + i * cellSize + cellSize / 2)
     .attr("text-anchor", "end")
-    .text((d) => truncate(d, 18));
+    .attr("dominant-baseline", "middle")
+    .text((d) => truncate(d, rowMaxChars))
+    .append("title")
+    .text((d) => d);
 
   const cellGroup = svg.append("g").attr("transform", `translate(${labelWidth}, ${labelHeight})`);
 
@@ -90,8 +98,16 @@ export function renderHeatmap(opts: HeatmapOpts): void {
           onCellClick(rows[ri], cols[ci]);
         });
       }
+
+      rect
+        .append("title")
+        .text(`${rows[ri]} x ${cols[ci]}: ${cat}`);
     }
   }
+}
+
+function longest(values: string[]): number {
+  return values.reduce((max, value) => Math.max(max, value.length), 0);
 }
 
 function truncate(s: string, max: number): string {

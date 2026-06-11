@@ -82,6 +82,13 @@ jobs:
       - name: Build spctr
         run: cargo build --release --manifest-path ops/spctr/Cargo.toml
 
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/dashboards/wonton-soup/package-lock.json
+
       - name: Validate registry sync state
         run: ./ops/spctr/target/release/spctr registry check
 

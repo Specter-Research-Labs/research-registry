@@ -1,12 +1,20 @@
-import { initDB, getRunKeys, query } from "./db";
-import { startRouter } from "./router";
-import { mountNav, setActiveTab, populateRuns, getSelectedRun } from "./components/nav";
+import "./style.css";
+import "./specter-polish.css";
+import { initDB, getRunKeys, queryOne, PAPER_POSTER_DATASET_KEY } from "./db";
+import { replaceRoute, startRouter, navigate } from "./router";
+import {
+  mountNav,
+  setActiveTab,
+  populateRuns,
+  getSelectedRun,
+  setSelectedRun,
+} from "./components/nav";
 import { showLoading, hideLoading, showError } from "./components/loading";
 import { mountHero, unmountHero } from "./views/hero";
 import { mountProofGraph, unmountProofGraph } from "./views/proof-graph";
 import { mountRescue, unmountRescue } from "./views/rescue";
 import { mountExplorer, unmountExplorer } from "./views/explorer";
-import type { ViewId, Run, RunAggregate } from "./types";
+import type { ViewId } from "./types";
 
 const app = document.getElementById("app")!;
 let currentView: ViewId | null = null;
@@ -31,58 +39,32 @@ async function boot(): Promise<void> {
     return;
   }
 
-  const runs = await query<Run & RunAggregate>(
-    `SELECT r.*, a.theorem_count, a.wild_type_solve_rate
-     FROM runs r
-     LEFT JOIN run_aggregates a USING(run_key)
-     WHERE r.run_key IN (
-       SELECT run_key FROM mcts_tree_nodes
-       GROUP BY run_key
-       HAVING count(DISTINCT variant) >= 2
-     )
-     ORDER BY r.created_at DESC NULLS LAST`,
+  const datasetStats = await queryOne<{
+    run_count: number | bigint;
+    theorem_count: number | bigint;
+    intervention_rows: number | bigint;
+  }>(
+    `SELECT
+       (SELECT count(DISTINCT run_key) FROM theorem_intervention WHERE is_control = false) AS run_count,
+       (SELECT count(DISTINCT theorem) FROM theorem_intervention WHERE is_control = false) AS theorem_count,
+       (SELECT count(*) FROM theorem_intervention WHERE is_control = false) AS intervention_rows`,
   );
-  const SHORT_MONTHS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
-  const labels = new Map<string, string>();
-  for (const r of runs) {
-    const parts: string[] = [];
-
-    if (r.provider) parts.push(r.provider);
-
-    if (r.theorem_count != null) parts.push(`${r.theorem_count} theorems`);
-
-    const rawId = r.run_id ?? "";
-    const controlMatch = rawId.match(/control=([^/]+)/);
-    if (controlMatch) {
-      parts.push(controlMatch[1]);
-    } else {
-      const segments = rawId.split("/");
-      for (const seg of segments) {
-        if (/\b(centralized|distributed)\b/.test(seg)) {
-          const modeMatch = seg.match(/\b(centralized|distributed)\b/);
-          if (modeMatch) parts.push(modeMatch[1]);
-          break;
-        }
-      }
-    }
-
-    if (r.created_at) {
-      const d = new Date(r.created_at);
-      if (!isNaN(d.getTime())) {
-        parts.push(`${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`);
-      }
-    }
-
-    labels.set(r.run_key, parts.length > 0 ? parts.join(" / ") : r.run_key.slice(0, 16));
+  if (!datasetStats) {
+    showError("No data", "The manifest loaded but the paper/poster cohort is empty.");
+    return;
   }
 
-  mountNav(app, { onRunChange: () => rerenderCurrentView() });
+  const labels = new Map<string, string>();
+  labels.set(
+    PAPER_POSTER_DATASET_KEY,
+    `Paper/poster intervention cohort / ${formatCount(datasetStats.theorem_count)} theorems / ${
+      formatCount(datasetStats.run_count)
+    } runs / ${formatCount(datasetStats.intervention_rows)} interventions`,
+  );
+
+  mountNav(app, { onRunChange: (runKey) => rerenderCurrentView(runKey) });
   populateRuns(
-    runs.map((r) => r.run_key),
+    [PAPER_POSTER_DATASET_KEY],
     labels,
   );
 
@@ -104,6 +86,8 @@ function getViewContainer(): HTMLElement {
 }
 
 async function switchView(viewId: ViewId, params: URLSearchParams): Promise<void> {
+  setSelectedRun(params.get("run"));
+
   if (currentView) {
     teardownView(currentView);
   }
@@ -117,12 +101,21 @@ async function switchView(viewId: ViewId, params: URLSearchParams): Promise<void
   const runKey = getSelectedRun();
   if (!runKey) return;
 
+  const updateRoute = (next: Record<string, string | null | undefined>) => {
+    const merged: Record<string, string | null | undefined> = {
+      run: runKey,
+      ...next,
+    };
+    replaceRoute(viewId, merged);
+  };
+
   switch (viewId) {
     case "hero":
       await mountHero(container, {
         runKey,
         theorem: params.get("theorem") ?? undefined,
         intervention: params.get("intervention") ?? undefined,
+        onSelectionChange: updateRoute,
       });
       break;
     case "proof-graph":
@@ -130,6 +123,7 @@ async function switchView(viewId: ViewId, params: URLSearchParams): Promise<void
         runKey,
         theorem: params.get("theorem") ?? undefined,
         variant: params.get("variant") ?? undefined,
+        onSelectionChange: updateRoute,
       });
       break;
     case "rescue":
@@ -158,9 +152,16 @@ function teardownView(viewId: ViewId): void {
   }
 }
 
-function rerenderCurrentView(): void {
+function rerenderCurrentView(runKey?: string): void {
   if (!currentView) return;
-  switchView(currentView, new URLSearchParams());
+  const next: Record<string, string> = {};
+  const selectedRun = runKey ?? getSelectedRun();
+  if (selectedRun) next.run = selectedRun;
+  navigate(currentView, next);
+}
+
+function formatCount(value: number | bigint): string {
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 boot();

@@ -280,4 +280,10 @@ class FilteredTacticProvider(TacticProvider):
     @staticmethod
     def _matches_tactic(blocked_tactics: frozenset[str], tactic_norm: str) -> bool:
         tactic_name = tactic_norm.split(" ", 1)[0]
-        return tactic_name in blocked_tactics or tactic_norm in blocked_tactics
+        if tactic_name in blocked_tactics or tactic_norm in blocked_tactics:
+            return True
+        return any(
+            tactic_name.startswith(blocked_tactic)
+            and tactic_name[len(blocked_tactic):].isdigit()
+            for blocked_tactic in blocked_tactics
+        )

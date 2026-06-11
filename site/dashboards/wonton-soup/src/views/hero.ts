@@ -1,6 +1,12 @@
 import "katex/dist/katex.min.css";
 import katex from "katex";
-import { getMctsTreeNodes, getMctsTreeEdges, getMctsVariants, getTheorems } from "../db";
+import {
+  getMctsTreeNodes,
+  getMctsTreeEdges,
+  getMctsVariants,
+  getTheorems,
+  resolveMctsTraceRunKey,
+} from "../db";
 import type { MctsTreeNode, MctsTreeEdge } from "../types";
 import {
   prepareMctsTree,
@@ -16,6 +22,11 @@ interface HeroOpts {
   runKey: string;
   theorem?: string;
   intervention?: string;
+  onSelectionChange?: (params: {
+    theorem?: string;
+    intervention?: string;
+    variant?: null;
+  }) => void;
 }
 
 let _animFrame: number | null = null;
@@ -29,9 +40,12 @@ let _scrubber: HTMLInputElement | null = null;
 let _wildTransform: CanvasTransform = { ...DEFAULT_TRANSFORM };
 let _intTransform: CanvasTransform = { ...DEFAULT_TRANSFORM };
 let _panZoomAbort: AbortController | null = null;
+let _mountToken = 0;
 
 
 export async function mountHero(container: HTMLElement, opts: HeroOpts): Promise<void> {
+  const mountToken = ++_mountToken;
+  let renderToken = 0;
   if (_panZoomAbort) _panZoomAbort.abort();
   _panZoomAbort = new AbortController();
 
@@ -135,6 +149,17 @@ export async function mountHero(container: HTMLElement, opts: HeroOpts): Promise
     if (!theorem) return;
     const variants = await getMctsVariants(opts.runKey, theorem);
     const interventions = variants.filter((v) => v !== "wild_type");
+    if (interventions.length === 0) {
+      interventionSelect.replaceChildren();
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No intervention trace";
+      opt.selected = true;
+      interventionSelect.appendChild(opt);
+      interventionSelect.disabled = true;
+      return;
+    }
+    interventionSelect.disabled = false;
     populateSelect(interventionSelect, interventions, opts.intervention);
   }
 
@@ -143,6 +168,7 @@ export async function mountHero(container: HTMLElement, opts: HeroOpts): Promise
     _progress = 0;
     _wildTransform = { ...DEFAULT_TRANSFORM };
     _intTransform = { ...DEFAULT_TRANSFORM };
+    updateRoute();
     await renderPair();
   });
 
@@ -150,12 +176,15 @@ export async function mountHero(container: HTMLElement, opts: HeroOpts): Promise
     _progress = 0;
     _wildTransform = { ...DEFAULT_TRANSFORM };
     _intTransform = { ...DEFAULT_TRANSFORM };
+    updateRoute();
     await renderPair();
   });
 
   await loadInterventions();
+  updateRoute();
 
   async function renderPair(): Promise<void> {
+    const activeRender = ++renderToken;
     const theorem = theoremSelect.value;
     const intervention = interventionSelect.value;
     if (!theorem) return;
@@ -163,41 +192,91 @@ export async function mountHero(container: HTMLElement, opts: HeroOpts): Promise
     wildPanel.loading.hidden = false;
     interventionPanel.loading.hidden = false;
 
-    const [wildNodes, wildEdges] = await Promise.all([
-      getMctsTreeNodes(opts.runKey, theorem, "wild_type"),
-      getMctsTreeEdges(opts.runKey, theorem, "wild_type"),
-    ]);
+    try {
+      const traceRunKey = await resolveMctsTraceRunKey(
+        opts.runKey,
+        theorem,
+        intervention || "wild_type",
+      );
+      if (!traceRunKey) throw new Error(`No MCTS trace found for ${theorem} / ${intervention}`);
 
-    const wildRect = wildPanel.canvas.getBoundingClientRect();
-    _wildTree = prepareMctsTree(wildNodes, wildEdges, wildRect.width, wildRect.height);
-    const wildTrivial = isTrivialTree(_wildTree, wildNodes);
-
-    _intTree = null;
-    let intTrivial = false;
-    let intNodes: MctsTreeNode[] = [];
-    let intEdges: MctsTreeEdge[] = [];
-    if (intervention) {
-      [intNodes, intEdges] = await Promise.all([
-        getMctsTreeNodes(opts.runKey, theorem, intervention),
-        getMctsTreeEdges(opts.runKey, theorem, intervention),
+      const [wildNodes, wildEdges] = await Promise.all([
+        getMctsTreeNodes(traceRunKey, theorem, "wild_type"),
+        getMctsTreeEdges(traceRunKey, theorem, "wild_type"),
       ]);
-      const intRect = interventionPanel.canvas.getBoundingClientRect();
-      _intTree = prepareMctsTree(intNodes, intEdges, intRect.width, intRect.height);
-      intTrivial = isTrivialTree(_intTree, intNodes);
 
-      const blocked = intervention.replace("block_", "");
-      tacticBadge.textContent = `blocked: ${blocked}`;
-      tacticBadge.hidden = false;
-    } else {
-      tacticBadge.hidden = true;
+      if (mountToken !== _mountToken || activeRender !== renderToken) return;
+
+      const wildRect = wildPanel.canvas.getBoundingClientRect();
+      _wildTree = prepareMctsTree(wildNodes, wildEdges, wildRect.width, wildRect.height);
+      const wildTrivial = isTrivialTree(_wildTree, wildNodes);
+
+      _intTree = null;
+      let intTrivial = false;
+      let intNodes: MctsTreeNode[] = [];
+      let intEdges: MctsTreeEdge[] = [];
+      if (intervention) {
+        [intNodes, intEdges] = await Promise.all([
+          getMctsTreeNodes(traceRunKey, theorem, intervention),
+          getMctsTreeEdges(traceRunKey, theorem, intervention),
+        ]);
+
+        if (mountToken !== _mountToken || activeRender !== renderToken) return;
+
+        const intRect = interventionPanel.canvas.getBoundingClientRect();
+        _intTree = prepareMctsTree(intNodes, intEdges, intRect.width, intRect.height);
+        intTrivial = isTrivialTree(_intTree, intNodes);
+
+        const blocked = intervention.replace("block_", "");
+        tacticBadge.textContent = `blocked: ${blocked}`;
+        tacticBadge.hidden = false;
+      } else {
+        tacticBadge.hidden = true;
+      }
+
+      showTrivialOrCanvas(wildPanel, wildTrivial, wildNodes, wildEdges);
+      if (intervention) {
+        showTrivialOrCanvas(interventionPanel, intTrivial, intNodes, intEdges);
+      } else {
+        showEmptyPanel(
+          interventionPanel,
+          "No intervention trace for this theorem in the paper/poster cohort.",
+        );
+      }
+      startAnimation(wildPanel, interventionPanel);
+    } catch (err) {
+      if (mountToken !== _mountToken || activeRender !== renderToken) return;
+      console.error("Failed to render proof trees", err);
+      _wildTree = null;
+      _intTree = null;
+      renderMctsTree(null, {
+        canvas: wildPanel.canvas,
+        variant: "wild",
+        phase: "idle",
+        progress: 1,
+        highlightProof: false,
+      });
+      renderMctsTree(null, {
+        canvas: interventionPanel.canvas,
+        variant: "intervention",
+        phase: "idle",
+        progress: 1,
+        highlightProof: false,
+      });
+    } finally {
+      if (mountToken === _mountToken && activeRender === renderToken) {
+        wildPanel.loading.hidden = true;
+        interventionPanel.loading.hidden = true;
+      }
     }
+  }
 
-    wildPanel.loading.hidden = true;
-    interventionPanel.loading.hidden = true;
-
-    showTrivialOrCanvas(wildPanel, wildTrivial, wildNodes, wildEdges);
-    showTrivialOrCanvas(interventionPanel, intTrivial, intNodes, intEdges);
-    startAnimation(wildPanel, interventionPanel);
+  function updateRoute(): void {
+    opts.onSelectionChange?.({
+      theorem: theoremSelect.value,
+      intervention: interventionSelect.value,
+      variant: null,
+    });
   }
 
   await renderPair();
@@ -208,6 +287,7 @@ interface Panel {
   canvas: HTMLCanvasElement;
   overlay: HTMLElement;
   loading: HTMLElement;
+  empty: HTMLElement;
   canvasWrap: HTMLElement;
   tacticChain: HTMLElement;
 }
@@ -229,6 +309,7 @@ function createPanel(label: string, variant: "wild" | "intervention"): Panel {
   header.append(badge, labelEl);
 
   const canvasWrap = document.createElement("div");
+  canvasWrap.className = "hero-canvas-wrap";
   canvasWrap.style.position = "relative";
   canvasWrap.style.flex = "1";
 
@@ -238,17 +319,22 @@ function createPanel(label: string, variant: "wild" | "intervention"): Panel {
 
   const loading = document.createElement("div");
   loading.className = "hero-loading";
+  loading.setAttribute("aria-live", "polite");
   loading.textContent = "Loading\u2026";
   loading.hidden = true;
+
+  const empty = document.createElement("div");
+  empty.className = "hero-panel-empty";
+  empty.hidden = true;
 
   const tacticChain = document.createElement("div");
   tacticChain.className = "tactic-chain";
   tacticChain.hidden = true;
 
-  canvasWrap.append(canvas, overlay, loading, tacticChain);
+  canvasWrap.append(canvas, overlay, loading, empty, tacticChain);
   el.append(header, canvasWrap);
 
-  return { el, canvas, overlay, loading, canvasWrap, tacticChain };
+  return { el, canvas, overlay, loading, empty, canvasWrap, tacticChain };
 }
 
 function populateSelect(select: HTMLSelectElement, values: string[], preferred?: string): void {
@@ -374,14 +460,25 @@ function showTrivialOrCanvas(
   if (trivial && nodes.length > 0) {
     panel.canvas.hidden = true;
     panel.overlay.hidden = true;
+    panel.empty.hidden = true;
     panel.tacticChain.hidden = false;
     renderTacticChain(panel.tacticChain, nodes, edges);
   } else {
     panel.canvas.hidden = false;
     panel.overlay.hidden = false;
+    panel.empty.hidden = true;
     panel.tacticChain.hidden = true;
     panel.tacticChain.replaceChildren();
   }
+}
+
+function showEmptyPanel(panel: Panel, message: string): void {
+  panel.canvas.hidden = true;
+  panel.overlay.hidden = true;
+  panel.tacticChain.hidden = true;
+  panel.tacticChain.replaceChildren();
+  panel.empty.textContent = message;
+  panel.empty.hidden = false;
 }
 
 function renderTacticChain(
@@ -484,6 +581,7 @@ function startAnimation(
 }
 
 export function unmountHero(): void {
+  _mountToken++;
   if (_panZoomAbort) {
     _panZoomAbort.abort();
     _panZoomAbort = null;

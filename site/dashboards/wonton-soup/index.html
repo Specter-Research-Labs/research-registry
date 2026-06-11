@@ -1,1 +1,24 @@
-<!doctypehtml><html lang=en><head><meta charset=UTF-8><meta content=width=device-width,initial-scale=1.0 name=viewport><title>Wonton Soup Dashboard</title><link href=src/style.css rel=stylesheet></head><body><div id=app></div><script src=src/main.ts type=module></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wonton Soup Dashboard</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      const isViteDev = Boolean(import.meta.env?.DEV);
+      if (isViteDev) {
+        await import("/src/main.ts");
+      } else {
+        const stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.href = "build/assets/main.css";
+        document.head.append(stylesheet);
+        const productionModule = "./build/assets/main.js";
+        await import(productionModule);
+      }
+    </script>
+  </body>
+</html>
