@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "k-semantics-reference"
 series = "A-009"
-summary = "Implementation for reworking CATWD 2.0 semantics and calibrating K across domains to better understand its properties."
+summary = "Reworked CATWD 2.0 semantics and cross-domain calibration of K."
 status = "active"
 
 [site]

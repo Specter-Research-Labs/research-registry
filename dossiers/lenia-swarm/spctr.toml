@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Lenia Swarm"
 series = "D-003"
-summary = "Distributed Flow Lenia search, compendium indexing, and replay tools for studying persistent forms and behavior."
+summary = "Flow Lenia: perturbation experiments that test whether spatially localized patterns cohere, recover, and show goal-directedness, and cartography of the genotype-phenotype morphospace they live in."
 status = "active"
 
 [site]

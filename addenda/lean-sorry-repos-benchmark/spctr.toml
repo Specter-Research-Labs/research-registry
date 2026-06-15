@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "lean-sorry-repos-benchmark"
 series = "A-002"
-summary = "Benchmark harness for Lean `sorry` tactic proposals, with split policy, scoring, and verification protocols."
+summary = "Benchmark harness for scoring and verifying Lean `sorry` tactic proposals."
 status = "operational"
 
 [site]

@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "equational-theories-distillation"
 series = "A-010"
-summary = "Compact decision procedure for equational implication over magmas, distilled from the 4694-law implication graph into a sub-10KB offline cheatsheet for SAIR's Stage 1 benchmark."
+summary = "Sub-10KB offline decision procedure for equational implication over magmas, distilled from the 4694-law implication graph."
 status = "active"
 
 [site]

@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Morphogenetic Signatures in Sorting Algorithms"
 series = "D-001"
-summary = "Sorting-algorithm dynamics analyzed through mechanistic signatures, perturbations, and robustness assays."
+summary = "Sorting algorithms as dynamical systems: mechanistic signatures, perturbations, and robustness tests."
 status = "active-writing"
 
 [site]

@@ -1,262 +1,168 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="color-scheme" content="light" />
-        <title>Lenia Swarm Dossier | SPECTER Labs</title>
-        <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
-        <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="stylesheet" href="../../style.css" />
-    </head>
-    <body>
-        <div class="site-shell">
-            <header class="site-topnav">
-                <a class="site-brand" href="../../">
-                    <img src="../../assets/logo-black.svg" alt="SPECTER Labs logo" class="logo" />
-                    <span class="site-brand-name">SPECTER LABS</span>
-                </a>
-                <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="../../dossiers/" aria-current="page">Dossiers</a>
-                    <a class="nav-link" href="../../addenda/">Addenda</a>
-                    <a class="nav-link" href="../../blog/">Blog</a>
-                    <a class="nav-link" href="../../cabinet/">Cabinet</a>
-                </nav>
-            </header>
-            <div class="site-rules" aria-hidden="true">
-                <div class="site-rule strong"></div>
-                <div class="site-rule"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>Lenia Swarm Dossier | SPECTER Labs</title>
+    <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="../../fonts/BerkeleyMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="../../fonts/IBMPlexSerif-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-topnav">
+        <a class="site-brand" href="../../">
+          <img
+            src="../../assets/logo-black.svg"
+            alt="SPECTER Labs logo"
+            class="logo"
+          />
+          <span class="site-brand-name">SPECTER LABS</span>
+        </a>
+        <nav class="site-topnav-links" aria-label="Site navigation">
+          <a class="nav-link" href="../../dossiers/" aria-current="page"
+            >Dossiers</a
+          >
+          <a class="nav-link" href="../../addenda/">Addenda</a>
+          <a class="nav-link" href="../../blog/">Blog</a>
+          <a class="nav-link" href="../../cabinet/">Cabinet</a>
+        </nav>
+      </header>
+      <div class="site-rules" aria-hidden="true">
+        <div class="site-rule strong"></div>
+        <div class="site-rule"></div>
+      </div>
+
+      <main class="site-main">
+        <!-- GENERATED:DOSSIER_HUB_HEADER START -->
+        <!-- GENERATED:DOSSIER_HUB_HEADER END -->
+
+        <section class="section-block">
+          <p>
+            Flow Lenia generalizes cellular automata to continuous state, time,
+            and space. Two functions define its dynamics: a kernel
+            <code>K</code> for neighborhood sensing and a growth function
+            <code>G</code> for updates over time. Every persistent structure
+            emerges from those two, from gliders and walkers up to
+            self-replicators. The flow variant we use conserves mass for these
+            spatially localized patterns (SLPs) and allows local,
+            position-dependent rules, which is what makes multi-species
+            evolution possible.
+          </p>
+          <p>
+            Because every rule is known and cheap to rerun, this is a clean
+            place to study morphogenesis and emergence. We grow a creature,
+            perturb it, and watch whether it holds together, the same
+            competency-under-stress question Levin's TAME framing asks of living
+            matter. And because a creature's genotype is just its rule
+            parameters, we can map the whole space of forms instead of studying
+            one creature at a time.
+          </p>
+          <p>
+            The perturbation harness matches control-versus-intervention pairs
+            across two environments, flat and high-theta, with three families.
+            <code>init_state</code> re-seeds the initial mass placement,
+            <code>flow_regime</code> halves the integration timestep, and
+            <code>param_noise</code> re-rolls the growth function, holding
+            architecture fixed but resampling rule parameters. Recovery falls
+            off across them: <code>init_state</code> perturbations leave the
+            trajectory intact in nearly all cases, <code>flow_regime</code>
+            recovers in some, and <code>param_noise</code> in few.
+          </p>
+          <p>
+            A related question, prompted by
+            <a
+              href="https://arxiv.org/abs/2605.30708"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Cool et al. 2026</a
+            >, is whether a creature's position in the morphospace predicts how
+            perturbation couples to its heading. Three of their four
+            Chan-catalog creatures swerve around occluded regions that carry no
+            sensory information while the fourth dies on contact, and they find
+            the difference is hardwired per creature without saying which rules
+            cause it. We have thousands of creatures with their rules attached,
+            so we can ask whether the swervers cluster on our map.
+          </p>
+          <p>
+            The morphospace work asks a different question from creature
+            discovery. Instead of looking for beautiful specimens, we ask
+            whether Flow Lenia's genotype-to-phenotype map has measurable
+            topology, and how that synthetic cloud of shapes sits next to
+            developmental and biological ones. So we put Flow Lenia specimens,
+            developmental-model snapshots, and biological outlines into one
+            shared descriptor layer and ask the same things of each.
+            Topological data analysis finds loop structure. Local cohort
+            comparison tells us which Lenia neighborhoods lean toward
+            developmental or biological shapes. Transport then walks around a
+            loop and checks whether the state returns with its phenotype, or
+            whether residue is left behind in the rule layer.
+          </p>
+          <span class="path-note">Repository path: dossiers/lenia-swarm</span>
+        </section>
+
+        <section class="section-block">
+          <div class="feature-card">
+            <div class="feature-title">Compendium Inspector</div>
+            <p>
+              The compendium is the materialized morphospace. 13,390 indexed
+              creatures, 7,664 stable under standard initial conditions, spread
+              across 698 species in 8 families. Each row ties a genotype to its
+              phenotype, provenance, and a replay config.
+            </p>
+            <div class="link-row">
+              <a href="compendium/">Open Inspector</a>
+              <a href="../../cabinet/lenia-swarm/contracts/CompendiumSchema/"
+                >Schema Contract</a
+              >
+              <a href="../../cabinet/lenia-swarm/universe/Taxonomy/"
+                >Taxonomy</a
+              >
             </div>
+          </div>
+        </section>
 
-            <main class="site-main">
-                <!-- GENERATED:DOSSIER_HUB_HEADER START -->
-                <!-- GENERATED:DOSSIER_HUB_HEADER END -->
+        <section class="section-block">
+          <p>
+            The system is a controller-worker topology over a SWIM gossip
+            cluster, with an MLX Swift engine for GPU-accelerated Flow Lenia
+            across Apple machines, split into three components:
+          </p>
+          <ul>
+            <li>
+              <code>LeniaCore</code>: physics engine, distributed actors, search
+              infrastructure.
+            </li>
+            <li>
+              <code>LeniaCLI</code>: headless workflows under
+              <code>discover</code>, <code>orchestrate</code>,
+              <code>index</code>, <code>analyze</code>, <code>intervene</code>,
+              <code>publish</code>.
+            </li>
+            <li>
+              <code>LeniaStudio</code>: macOS SwiftUI app for local exploration,
+              host mode, and worker mode.
+            </li>
+          </ul>
+        </section>
 
-                <section class="section-block" id="start-here">
-                    <div class="site-section-title">Start Here</div>
-                    <ol class="quickstart-list">
-                        <li>
-                            <a href="../../cabinet/lenia-swarm/README/"
-                                >Read the Lenia docs map</a
-                            >.
-                        </li>
-                        <li>
-                            Open the
-                            <a href="compendium/">Compendium Inspector</a>
-                            to browse published creatures. For schema,
-                            taxonomy, and artifact details, use the
-                            <a href="../../cabinet/lenia-swarm/contracts/CompendiumSchema/"
-                                >schema</a
-                            >
-                            and
-                            <a href="../../cabinet/lenia-swarm/universe/Taxonomy/"
-                                >taxonomy docs</a
-                            >.
-                        </li>
-                    </ol>
-                    <span class="path-note"
-                        >Repository path: dossiers/lenia-swarm</span
-                    >
-                </section>
-
-                <section class="section-block" id="updates" hidden="hidden">
-                    <div class="site-section-title">Latest Updates</div>
-                    <ul class="timeline">
-                        <li class="timeline-item">
-                            <div class="timeline-date">March 1, 2026</div>
-                            <div class="timeline-note">
-                                Lenia cabinet docs rebuilt with current
-                                contracts, internals, and universe lanes.
-                            </div>
-                        </li>
-                        <li class="timeline-item">
-                            <div class="timeline-date">
-                                February 3, 2026
-                            </div>
-                            <div class="timeline-note">
-                                Taxonomy/ecology/morphometrics synthesis
-                                reflected in docs and generated analysis
-                                notes.
-                            </div>
-                        </li>
-                        <li class="timeline-item">
-                            <div class="timeline-date">
-                                January 20, 2026
-                            </div>
-                            <div class="timeline-note">
-                                IMGEP and activity-tracking surfaces were
-                                documented in generated implementation
-                                analysis.
-                            </div>
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="section-block" id="substrate">
-                    <div class="site-section-title">The Substrate</div>
-                    <p>
-                        Flow Lenia generalizes cellular automata to
-                        continuous state, time, and space. Two functions
-                        define the dynamics: a kernel <code>K</code> for
-                        neighborhood sensing and a growth function
-                        <code>G</code> for updates. Every persistent
-                        structure emerges from those two, from gliders
-                        and walkers up to self-replicators. The flow
-                        variant adds mass-conserving transport, so a
-                        creature stays a coherent object rather than a
-                        wave of growth and decay. We use it to search
-                        parameter space and index what stays alive.
-                    </p>
-                </section>
-
-                <section class="section-block" id="perturbation-response">
-                    <div class="site-section-title">Perturbation Response</div>
-                    <p>
-                        Under perturbation, a Flow Lenia creature
-                        either returns to its baseline trajectory or
-                        settles into a different attractor. Each trial
-                        runs matched control-versus-intervention pairs
-                        across two environments, flat and high-theta,
-                        with three perturbation families.
-                        <code>init_state</code> re-seeds the initial
-                        mass placement. <code>flow_regime</code>
-                        halves the integration timestep.
-                        <code>param_noise</code> re-rolls the growth
-                        function, holding architecture fixed but
-                        resampling rule parameters.
-                    </p>
-                    <p>
-                        Recovery is graded across the families.
-                        <code>init_state</code> perturbations leave
-                        the trajectory intact in nearly all cases.
-                        <code>flow_regime</code> perturbations recover
-                        in some. <code>param_noise</code>
-                        perturbations recover in few, and the failed
-                        recoveries sit far from baseline.
-                    </p>
-                    <p>
-                        A separate open question, prompted by
-                        <a
-                            href="https://arxiv.org/abs/2605.30708"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >Cool et al. 2026</a
-                        >, is whether position in the morphospace
-                        predicts coupling between perturbation and
-                        heading change, the property that lets three of
-                        their four Chan-catalog creatures swerve around
-                        occluded regions that carry no sensory
-                        information. They leave this open at four
-                        creatures. The compendium gives us a population
-                        to put the question to.
-                    </p>
-                    <p>
-                        When a Lenia creature runs into a patch of the
-                        world it cannot sense, some creatures turn away
-                        and some die on contact. A recent Tufts paper
-                        finds the difference is hardwired into each
-                        creature, and cannot say from the rules alone
-                        which is which. We have thousands of creatures
-                        with their rules attached, so we can ask
-                        whether the swervers cluster on our map.
-                    </p>
-                </section>
-
-                <section class="section-block" id="morphospace">
-                    <div class="site-section-title">Morphospace as a Fiber Bundle</div>
-                    <p>
-                        The morphospace track is separate from the
-                        creature-discovery track. Here the question is
-                        not whether every specimen looks beautiful; it
-                        is whether Flow Lenia's genotype-to-phenotype
-                        map has measurable topology, how that synthetic
-                        cloud sits near developmental and biological
-                        shape clouds, and where loop transport leaves
-                        residue.
-                    </p>
-                    <p>
-                        The approach is deliberately comparative. We put
-                        Flow Lenia specimens, developmental model
-                        snapshots, and biological outline cohorts into a
-                        shared descriptor layer so the same questions can
-                        be asked of each cloud: where loops appear, which
-                        neighborhoods sit near external shape families,
-                        and which regions deserve denser follow-up.
-                    </p>
-                    <p>
-                        Topological data analysis gives the first pass at
-                        loop structure. Local cohort comparison asks
-                        whether particular Lenia neighborhoods lean
-                        toward developmental or biological shapes.
-                        Transport then walks around those neighborhoods
-                        and checks whether the underlying state returns
-                        with the phenotype, or whether hidden residue
-                        remains in the rule layer.
-                    </p>
-                </section>
-
-                <section class="section-block" id="compendium">
-                    <div class="site-section-title">The Compendium</div>
-                    <div class="feature-card">
-                        <div class="feature-title">Compendium Inspector</div>
-                        <p>
-                            The compendium is the materialized
-                            morphospace. 13,390 indexed creatures,
-                            7,664 stable under standard initial
-                            conditions, spread across 698 species in 8
-                            families. Each row ties a genotype to its
-                            phenotype, provenance, and a replay config.
-                        </p>
-                        <div class="link-row">
-                            <a href="compendium/">Open Inspector</a>
-                            <a href="../../cabinet/lenia-swarm/contracts/CompendiumSchema/"
-                                >Schema Contract</a
-                            >
-                            <a href="../../cabinet/lenia-swarm/universe/Taxonomy/"
-                                >Taxonomy</a
-                            >
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-block" id="system-shape">
-                    <div class="site-section-title">System Shape</div>
-                    <p>
-                        Controller-worker topology over a SWIM gossip
-                        cluster, with an MLX Swift engine for
-                        GPU-accelerated Flow Lenia across Apple
-                        machines.
-                    </p>
-                    <ul>
-                        <li>
-                            <code>LeniaCore</code>: physics engine,
-                            distributed actors, search infrastructure.
-                        </li>
-                        <li>
-                            <code>LeniaCLI</code>: headless workflows
-                            under <code>discover</code>,
-                            <code>orchestrate</code>, <code>index</code>,
-                            <code>analyze</code>, <code>intervene</code>,
-                            <code>publish</code>.
-                        </li>
-                        <li>
-                            <code>LeniaStudio</code>: macOS SwiftUI app
-                            for local exploration, host mode, and
-                            worker mode.
-                        </li>
-                    </ul>
-                    <p>
-                        For deeper internals, see the
-                        <a href="../../cabinet/lenia-swarm/README/"
-                            >cabinet docs</a
-                        >.
-                    </p>
-                </section>
-
-                <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
-                <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
-            </main>
-        </div>
-    </body>
+        <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
+        <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
+      </main>
+    </div>
+  </body>
 </html>
