@@ -189,9 +189,6 @@ final class LeniaLabModel: ObservableObject {
     @Published var runtimeStatusMessage: String?
     @Published var stepDurationMs = 0.0
     @Published var realizedStepRateHz = 0.0
-    @Published var healthState: LabHealthState = .armed
-    @Published var healthSummary = "Configure the contract, then launch."
-    @Published var healthWarnings: [String] = []
     @Published var activityHistory: [Double] = []
     @Published var externalReplayTitle: String?
     @Published var hasSnapshot = false
@@ -231,9 +228,6 @@ final class LeniaLabModel: ObservableObject {
         runtimeStatusMessage = nil
         stepDurationMs = 0
         realizedStepRateHz = 0
-        healthState = .armed
-        healthSummary = "Contract is rebuilding."
-        healthWarnings = []
         activityHistory = []
 
         Task {
@@ -290,9 +284,6 @@ final class LeniaLabModel: ObservableObject {
                 self.activeProjection = .matter
                 self.runtimeModeLabel = "Replay failed"
                 self.runtimeStatusMessage = "Failed to load canonical replay world: \(error.localizedDescription)"
-                self.healthState = .exploding
-                self.healthSummary = "The edited runtime config failed validation or could not boot."
-                self.healthWarnings = [error.localizedDescription]
             }
         }
     }
@@ -321,9 +312,6 @@ final class LeniaLabModel: ObservableObject {
         runtimeStatusMessage = nil
         stepDurationMs = 0
         realizedStepRateHz = 0
-        healthState = .armed
-        healthSummary = "Contract is rebuilding."
-        healthWarnings = []
         activityHistory = []
 
         Task {
@@ -375,9 +363,6 @@ final class LeniaLabModel: ObservableObject {
                 self.activeProjection = .matter
                 self.runtimeModeLabel = "Replay failed"
                 self.runtimeStatusMessage = "Failed to load canonical replay world: \(error.localizedDescription)"
-                self.healthState = .exploding
-                self.healthSummary = "The edited runtime config failed validation or could not boot."
-                self.healthWarnings = [error.localizedDescription]
             }
         }
     }
@@ -398,9 +383,6 @@ final class LeniaLabModel: ObservableObject {
         availableProjections = [.matter]
         activeProjection = .matter
         runtimeModeLabel = "TT export replay"
-        healthState = .armed
-        healthSummary = "Loading TT export frames."
-        healthWarnings = []
         activityHistory = []
 
         Task { @MainActor in
@@ -426,9 +408,6 @@ final class LeniaLabModel: ObservableObject {
                 self.externalReplayTitle = sequence.title
                 self.runtimeModeLabel = "TT export replay"
                 self.runtimeStatusMessage = nil
-                self.healthState = .stable
-                self.healthSummary = "TT export loaded. Press Launch to play the sampled quietbox trajectory."
-                self.healthWarnings = []
                 self.startFrameLoop()
             } catch {
                 self.runtime = nil
@@ -437,9 +416,6 @@ final class LeniaLabModel: ObservableObject {
                 self.externalReplayTitle = manifestURL.lastPathComponent
                 self.runtimeModeLabel = "TT export replay failed"
                 self.runtimeStatusMessage = "Failed to load TT export: \(error.localizedDescription)"
-                self.healthState = .exploding
-                self.healthSummary = "The selected TT export manifest could not be loaded."
-                self.healthWarnings = [error.localizedDescription]
             }
         }
     }
@@ -466,9 +442,6 @@ final class LeniaLabModel: ObservableObject {
             }
             await MainActor.run {
                 self.activityHistory = []
-                self.healthState = .armed
-                self.healthSummary = "World reset. Inspect the contract, then relaunch."
-                self.healthWarnings = []
             }
         }
     }
@@ -568,16 +541,6 @@ final class LeniaLabModel: ObservableObject {
         }
         guard update.refreshMetrics else { return }
 
-        let assessment = labHealthAssessment(
-            metrics: update.snapshot.metrics,
-            isRunning: isRunning,
-            activity: update.activity,
-            stepDurationMs: update.runtimeTelemetry.lastStepDurationMs,
-            stepRateHz: update.runtimeTelemetry.realizedStepRateHz,
-            snapshotFps: update.snapshotFps,
-            speedCap: targetSpeedCap,
-            history: activityHistory
-        )
         snapshotFps = update.snapshotFps
         latestStep = update.snapshot.step
         latestMetrics = update.snapshot.metrics
@@ -588,9 +551,6 @@ final class LeniaLabModel: ObservableObject {
         if activityHistory.count > 48 {
             activityHistory.removeFirst(activityHistory.count - 48)
         }
-        healthState = assessment.state
-        healthSummary = assessment.summary
-        healthWarnings = assessment.warnings
     }
 }
 
@@ -1037,9 +997,6 @@ struct LeniaLabView: View {
                         zoom: stageZoom,
                         offset: stageOffset,
                         gridSize: model.fieldWidth ?? gridPreset.rawValue,
-                        projectionLabel: model.activeProjection.label,
-                        healthLabel: model.healthState.label,
-                        healthAccent: model.healthState.accent,
                         hoveredGridPoint: hoveredGridPoint,
                         primaryTool: primaryTool,
                         brushRadius: Int(brushRadius.rounded()),
@@ -1436,7 +1393,6 @@ struct LeniaLabView: View {
                             label: "Backend",
                             value: model.externalReplayTitle == nil ? labBackendLabel(contract.backend) : "Tenstorrent export"
                         )
-                        LabCompactKeyValueRow(label: "Health", value: model.healthState.label)
                         LabCompactKeyValueRow(label: "Projection", value: model.activeProjection.label)
                     }
 
@@ -1533,10 +1489,9 @@ struct LeniaLabView: View {
     }
 
     private var telemetrySurface: some View {
-        StudioSurface(title: "Signal Telemetry", subtitle: "Health, cadence, and saturation", style: .console) {
+        StudioSurface(title: "Signal Telemetry", subtitle: "Cadence and field metrics", style: .console) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    StudioMetricPill(label: "Health", value: model.healthState.label, accent: model.healthState.accent, style: .console)
                     StudioMetricPill(label: "Step", value: model.stepDurationMs > 0 ? String(format: "%.2f ms", model.stepDurationMs) : "--", accent: StudioPalette.ink, style: .console)
                     StudioMetricPill(label: "Solver", value: model.realizedStepRateHz > 0 ? String(format: "%.0f Hz", model.realizedStepRateHz) : "--", accent: StudioPalette.ocean, style: .console)
                     StudioMetricPill(label: "View", value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--", accent: StudioPalette.ink, style: .console)
@@ -1548,20 +1503,6 @@ struct LeniaLabView: View {
                         accent: activityAccent(for: model.activityEstimate)
                     )
                     .frame(height: 74)
-                }
-
-                Text(model.healthSummary)
-                    .font(StudioType.body)
-                    .foregroundStyle(StudioPalette.ink)
-
-                if !model.healthWarnings.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(Array(model.healthWarnings.enumerated()), id: \.offset) { _, warning in
-                            Text(warning)
-                                .font(StudioType.body)
-                                .foregroundStyle(StudioPalette.mutedInk)
-                        }
-                    }
                 }
 
                 if let metrics = model.latestMetrics {
@@ -1864,132 +1805,6 @@ private func labErrorDescription(_ error: Error) -> String {
     return error.localizedDescription
 }
 
-enum LabHealthState: Equatable {
-    case armed
-    case active
-    case stable
-    case drifting
-    case dead
-    case exploding
-
-    var label: String {
-        switch self {
-        case .armed:
-            "Armed"
-        case .active:
-            "Active"
-        case .stable:
-            "Stable"
-        case .drifting:
-            "Drifting"
-        case .dead:
-            "Dead"
-        case .exploding:
-            "Exploding"
-        }
-    }
-
-    var accent: Color {
-        switch self {
-        case .armed:
-            StudioPalette.ink
-        case .active:
-            StudioPalette.moss
-        case .stable:
-            StudioPalette.ocean
-        case .drifting:
-            StudioPalette.ember
-        case .dead:
-            StudioPalette.mutedInk
-        case .exploding:
-            .red
-        }
-    }
-}
-
-struct LabHealthAssessment {
-    let state: LabHealthState
-    let summary: String
-    let warnings: [String]
-}
-
-func labHealthAssessment(
-    metrics: FlowSandboxMetrics,
-    isRunning: Bool,
-    activity: Double,
-    stepDurationMs: Double,
-    stepRateHz: Double,
-    snapshotFps: Double,
-    speedCap: Int,
-    history: [Double]
-) -> LabHealthAssessment {
-    guard isRunning else {
-        return LabHealthAssessment(
-            state: .armed,
-            summary: "Contract is loaded. Launch to run.",
-            warnings: []
-        )
-    }
-
-    var warnings: [String] = []
-    if metrics.nonFiniteFraction > 0 {
-        warnings.append("Non-finite values were observed in the sampled field.")
-    }
-    if metrics.massPeak > 1.0 {
-        warnings.append("Local density is above display range; the renderer clips the brightest cells.")
-    }
-    if metrics.foodPeak > 0.985 {
-        warnings.append("Food field is clipping near 1.0.")
-    }
-    if stepDurationMs > 0, stepDurationMs > (1_000.0 / Double(max(1, speedCap))) * 0.9 {
-        warnings.append("Solver step time is close to the requested cap budget.")
-    }
-    if snapshotFps > 0, snapshotFps < Double(speedCap) * 0.35 {
-        warnings.append("View cadence is well below the requested cap.")
-    }
-
-    let recentHistory = Array(history.suffix(8))
-    let recentActivity = recentHistory.isEmpty
-        ? activity
-        : recentHistory.reduce(0, +) / Double(recentHistory.count)
-
-    if metrics.nonFiniteFraction > 0 {
-        return LabHealthAssessment(
-            state: .exploding,
-            summary: "The field is diverging or leaving the finite operating range.",
-            warnings: warnings
-        )
-    }
-    if metrics.massMean < 0.0005 || metrics.occupancy < 0.0005 {
-        return LabHealthAssessment(
-            state: .dead,
-            summary: "Mass has collapsed into a near-empty field.",
-            warnings: warnings
-        )
-    }
-    if recentActivity < 0.0008 {
-        return LabHealthAssessment(
-            state: .stable,
-            summary: "Activity is near zero; the world looks like a quiet attractor.",
-            warnings: warnings
-        )
-    }
-    if recentActivity < 0.01 || activity < 0.01 {
-        return LabHealthAssessment(
-            state: .drifting,
-            summary: "The world is still changing, but only slowly across the recent window.",
-            warnings: warnings
-        )
-    }
-    return LabHealthAssessment(
-        state: .active,
-        summary: stepRateHz > 0
-            ? String(format: "Solver is advancing at %.0f Hz with visible field motion.", stepRateHz)
-            : "Solver is advancing and the field remains active.",
-        warnings: warnings
-    )
-}
-
 private struct LabTacticalReadout: View {
     let label: String
     let value: String
@@ -2019,12 +1834,6 @@ private struct LabTacticalReadout: View {
 }
 
 private struct LabTacticalStageOverlay: View {
-    let gridSize: Int
-    let zoom: CGFloat
-    let projectionLabel: String
-    let healthLabel: String
-    let healthAccent: Color
-
     var body: some View {
         GeometryReader { proxy in
             let size = proxy.size
@@ -2077,29 +1886,8 @@ private struct LabTacticalStageOverlay: View {
                     path.addLine(to: CGPoint(x: center.x, y: center.y + 20))
                 }
                 .stroke(StudioPalette.ocean.opacity(0.34), lineWidth: 1)
-
-                VStack {
-                    HStack(alignment: .top) {
-                        Spacer()
-                        if healthLabel != "Armed" {
-                            overlayTag(healthLabel, accent: healthAccent)
-                        }
-                    }
-                    Spacer()
-                }
-                .padding(12)
             }
         }
-    }
-
-    private func overlayTag(_ text: String, accent: Color) -> some View {
-        Text(text)
-            .font(StudioType.labelStrong)
-            .foregroundStyle(accent)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 4)
-            .background(Rectangle().fill(Color.black.opacity(0.54)))
-            .overlay(Rectangle().stroke(accent.opacity(0.35), lineWidth: 1))
     }
 }
 
@@ -2576,9 +2364,6 @@ private struct LabStageFrameSurface: View {
     let zoom: CGFloat
     let offset: CGSize
     let gridSize: Int
-    let projectionLabel: String
-    let healthLabel: String
-    let healthAccent: Color
     let hoveredGridPoint: SIMD2<Int>?
     let primaryTool: SandboxTool
     let brushRadius: Int
@@ -2604,13 +2389,7 @@ private struct LabStageFrameSurface: View {
                 onBrushRadiusDelta: onBrushRadiusDelta
             )
 
-            LabTacticalStageOverlay(
-                gridSize: gridSize,
-                zoom: zoom,
-                projectionLabel: projectionLabel,
-                healthLabel: healthLabel,
-                healthAccent: healthAccent
-            )
+            LabTacticalStageOverlay()
             .allowsHitTesting(false)
 
             GeometryReader { proxy in
