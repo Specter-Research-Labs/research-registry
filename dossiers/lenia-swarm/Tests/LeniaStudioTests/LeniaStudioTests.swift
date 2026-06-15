@@ -237,6 +237,157 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(statePatch.decodedValues(), values)
     }
 
+    func testLeniaLabFallbackWorldPreservesMultiChannelSavedInitialState() throws {
+        let values: [Float] = [
+            0.1, 0.2,
+            0.3, 0.4,
+            0.5, 0.6,
+            0.7, 0.8,
+        ]
+        let initialCondition = InitConfig(
+            seed: 11,
+            patches: [],
+            a_uniform: UniformRange(low: 0, high: 0),
+            p_uniform: nil,
+            state_patch: InitStatePatchConfig(
+                center: [9, 9],
+                width: 2,
+                height: 2,
+                channels: 2,
+                values: values
+            )
+        )
+        let saved = SavedCreature(
+            id: UUID(uuidString: "22222222-3333-4444-5555-666666666666")!,
+            name: "Two Channel Patch",
+            ownerId: "test-node",
+            genotype: KernelParams(
+                r: [1.0, 0.8],
+                b: [[1.0], [1.0]],
+                w: [[0.2], [0.15]],
+                a: [[1.0], [1.0]],
+                m: [0.2, 0.18],
+                s: [0.05, 0.04],
+                h: [1.0, 0.9],
+                R: 12
+            ),
+            initialCondition: initialCondition,
+            metrics: makeMetrics()
+        )
+
+        let draft = try makeLabWorldDraft(for: .saved(saved), gridSize: 64)
+        let runtimeConfig = draft.runtimeConfigValue
+        let statePatch = try XCTUnwrap(runtimeConfig.statePatch)
+
+        XCTAssertEqual(runtimeConfig.channels, 2)
+        XCTAssertEqual(runtimeConfig.nbK, 2)
+        XCTAssertEqual(runtimeConfig.c0, [0, 1])
+        XCTAssertEqual(runtimeConfig.c1, [[0], [1]])
+        XCTAssertTrue(runtimeConfig.patches.isEmpty)
+        XCTAssertEqual(runtimeConfig.aUniform.low, 0)
+        XCTAssertEqual(runtimeConfig.aUniform.high, 0)
+        XCTAssertEqual(statePatch.center, [32, 32])
+        XCTAssertEqual(statePatch.channels, 2)
+        XCTAssertEqual(statePatch.decodedValues(), values)
+    }
+
+    func testStudioRuntimeConfigOverlaysSelectedSavedCreatureOnReplayBase() throws {
+        let baseRuntimeConfig = LeniaRuntimeConfig(
+            backend: .metalFull,
+            sx: 64,
+            sy: 64,
+            channels: 2,
+            nbK: 2,
+            profile: .paper,
+            c0: [0, 1],
+            c1: [[0], [1]],
+            dt: 0.2,
+            dd: 5,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "flowlenia_2022_paper_equations",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "flowlenia_2022_paper_equations",
+                flowClip: "none"
+            ),
+            params: ResolvedParams(
+                r: [0.25, 0.35],
+                b: [[1.0], [1.0]],
+                w: [[0.1], [0.1]],
+                a: [[1.0], [1.0]],
+                m: [0.1, 0.1],
+                s: [0.02, 0.02],
+                h: [0.2, 0.2],
+                R: 8,
+                seed: 1
+            ),
+            initSeed: 1,
+            patches: [PatchConfig(center: [32, 32], size: 16)],
+            aUniform: UniformRange(low: 0.2, high: 0.3),
+            pUniform: nil,
+            steps: 400,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            chemotaxis: nil,
+            food: nil,
+            walls: nil,
+            interventions: []
+        )
+        let values: [Float] = [0.9, 0.1, 0.8, 0.2, 0.7, 0.3, 0.6, 0.4]
+        let saved = SavedCreature(
+            id: UUID(uuidString: "33333333-4444-5555-6666-777777777777")!,
+            name: "Replay Creature",
+            ownerId: "test-node",
+            genotype: KernelParams(
+                r: [0.75, 0.85],
+                b: [[1.0], [1.0]],
+                w: [[0.24], [0.18]],
+                a: [[1.0], [1.0]],
+                m: [0.22, 0.19],
+                s: [0.055, 0.045],
+                h: [1.1, 0.95],
+                R: 13
+            ),
+            initialCondition: InitConfig(
+                seed: 77,
+                patches: [],
+                a_uniform: UniformRange(low: 0, high: 0),
+                p_uniform: nil,
+                state_patch: InitStatePatchConfig(
+                    center: [20, 22],
+                    width: 2,
+                    height: 2,
+                    channels: 2,
+                    values: values
+                )
+            ),
+            metrics: makeMetrics()
+        )
+
+        let runtimeConfig = try studioRuntimeConfig(
+            base: baseRuntimeConfig,
+            creature: saved.toLeniaCreature(),
+            savedCreature: saved
+        )
+        let statePatch = try XCTUnwrap(runtimeConfig.statePatch)
+
+        XCTAssertEqual(runtimeConfig.channels, 2)
+        XCTAssertEqual(runtimeConfig.nbK, 2)
+        XCTAssertEqual(runtimeConfig.params.r, [0.75, 0.85])
+        XCTAssertEqual(runtimeConfig.params.m, [0.22, 0.19])
+        XCTAssertEqual(runtimeConfig.params.R, 13)
+        XCTAssertEqual(runtimeConfig.initSeed, 77)
+        XCTAssertTrue(runtimeConfig.patches.isEmpty)
+        XCTAssertEqual(runtimeConfig.aUniform.low, 0)
+        XCTAssertEqual(runtimeConfig.aUniform.high, 0)
+        XCTAssertEqual(statePatch.center, [20, 22])
+        XCTAssertEqual(statePatch.decodedValues(), values)
+    }
+
     func testLeniaLabHealthAllowsFiniteHighDensityFlowStates() {
         let assessment = labHealthAssessment(
             metrics: FlowSandboxMetrics(

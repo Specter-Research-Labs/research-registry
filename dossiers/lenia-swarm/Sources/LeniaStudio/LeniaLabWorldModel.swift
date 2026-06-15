@@ -370,7 +370,12 @@ func buildLabMissionPresets() -> [LabMissionPreset] {
 func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> LabWorldDraft {
     if let replayReference = entry.replayReference {
         let data = try Data(contentsOf: URL(fileURLWithPath: replayReference.baseConfigPath))
-        let runtimeConfig = try loadRuntimeConfig(from: data)
+        let baseRuntimeConfig = try loadRuntimeConfig(from: data)
+        let runtimeConfig = try studioRuntimeConfig(
+            base: baseRuntimeConfig,
+            creature: entry.creature,
+            savedCreature: entry.savedCreature
+        )
         return LabWorldDraft(
             presetID: entry.id,
             basisName: entry.name,
@@ -379,21 +384,171 @@ func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> L
         )
     }
 
-    let savedStatePatch = labSavedInitialStatePatch(for: entry)
-    let resolvedGrid = max(32, gridSize, savedStatePatch?.width ?? 0, savedStatePatch?.height ?? 0)
-    let kernelCount = max(1, entry.creature.params.r.count)
-    let initialStatePatch = savedStatePatch.map {
-        labCenteredStatePatch($0, gridSize: resolvedGrid)
-    } ?? labWarmInitialStatePatch(for: entry, gridSize: resolvedGrid)
-    let runtimeConfig = LeniaRuntimeConfig(
+    let runtimeConfig = try studioFallbackRuntimeConfig(
+        creature: entry.creature,
+        savedCreature: entry.savedCreature,
+        gridSize: gridSize
+    )
+    return LabWorldDraft(
+        presetID: entry.id,
+        basisName: entry.name,
+        sourceConfigPath: "",
+        runtimeConfig: runtimeConfig
+    )
+}
+
+func studioRuntimeConfig(
+    base runtimeConfig: LeniaRuntimeConfig,
+    creature: LeniaCreature,
+    savedCreature: SavedCreature?
+) throws -> LeniaRuntimeConfig {
+    let selectedParams = savedCreature.map(labResolvedParams(from:)) ?? creature.params
+    try labValidateParams(selectedParams, kernelCount: runtimeConfig.nbK, label: "selected creature")
+
+    guard let savedCreature else {
+        return labCopyRuntimeConfig(
+            runtimeConfig,
+            params: selectedParams,
+            initSeed: creature.seed
+        )
+    }
+
+    let initial = savedCreature.initialCondition
+    let statePatch = try initial.state_patch.map {
+        try labPreparedStatePatch(
+            $0,
+            sx: runtimeConfig.sx,
+            sy: runtimeConfig.sy,
+            channels: runtimeConfig.channels,
+            label: "init.state_patch"
+        )
+    }
+    let paramPatch = try initial.p_state_patch.map {
+        try labPreparedStatePatch(
+            $0,
+            sx: runtimeConfig.sx,
+            sy: runtimeConfig.sy,
+            channels: runtimeConfig.nbK,
+            label: "init.p_state_patch"
+        )
+    }
+
+    if !runtimeConfig.parameterEmbedding.enabled,
+       initial.p_uniform != nil || paramPatch != nil {
+        throw ConfigError.invalidConfig(
+            "Selected creature has parameter-field initialization, but replay base has parameter_embedding disabled."
+        )
+    }
+    if paramPatch != nil, initial.p_uniform != nil {
+        throw ConfigError.invalidConfig("init.p_state_patch cannot be combined with init.p_uniform.")
+    }
+
+    let usesExplicitState = statePatch != nil
+    let patches = usesExplicitState && !runtimeConfig.parameterEmbedding.enabled
+        ? []
+        : try labValidatedPatches(initial.patches, sx: runtimeConfig.sx, sy: runtimeConfig.sy, label: "init.patches")
+    let aUniform = usesExplicitState ? UniformRange(low: 0, high: 0) : initial.a_uniform
+    let resolvedParamPatch: InitStatePatchConfig?
+    let resolvedPUniform: UniformRange?
+    if runtimeConfig.parameterEmbedding.enabled {
+        resolvedParamPatch = paramPatch
+        resolvedPUniform = paramPatch == nil ? (initial.p_uniform ?? runtimeConfig.pUniform) : nil
+        if resolvedParamPatch == nil, resolvedPUniform == nil {
+            throw ConfigError.invalidConfig(
+                "parameter_embedding.enabled requires init.p_uniform or init.p_state_patch."
+            )
+        }
+    } else {
+        resolvedParamPatch = nil
+        resolvedPUniform = nil
+    }
+
+    return labCopyRuntimeConfig(
+        runtimeConfig,
+        params: selectedParams,
+        initSeed: initial.seed,
+        patches: patches,
+        aUniform: aUniform,
+        overrideStatePatch: true,
+        statePatch: statePatch,
+        overridePUniform: true,
+        pUniform: resolvedPUniform,
+        overrideParamPatch: true,
+        paramPatch: resolvedParamPatch
+    )
+}
+
+func studioFallbackRuntimeConfig(
+    creature: LeniaCreature,
+    savedCreature: SavedCreature?,
+    gridSize: Int
+) throws -> LeniaRuntimeConfig {
+    let selectedParams = savedCreature.map(labResolvedParams(from:)) ?? creature.params
+    let kernelCount = max(1, selectedParams.r.count)
+    try labValidateParams(selectedParams, kernelCount: kernelCount, label: "selected creature")
+
+    let savedInitial = savedCreature?.initialCondition
+    let savedStatePatch = savedInitial?.state_patch
+    let patchRequiredGrid = savedInitial.map { labRequiredGridSize(for: $0.patches) } ?? 0
+    let resolvedGrid = max(
+        32,
+        gridSize,
+        savedStatePatch?.width ?? 0,
+        savedStatePatch?.height ?? 0,
+        patchRequiredGrid
+    )
+    let channels = max(1, savedStatePatch?.channels ?? 1)
+    let connectivity = labFallbackConnectivity(channels: channels, kernelCount: kernelCount)
+    let adjacency = connFromMatrix(connectivity)
+    let statePatch: InitStatePatchConfig?
+    let patches: [PatchConfig]
+    let aUniform: UniformRange
+
+    if let savedStatePatch {
+        try labValidateStatePatchShape(
+            savedStatePatch,
+            sx: resolvedGrid,
+            sy: resolvedGrid,
+            channels: channels,
+            label: "init.state_patch"
+        )
+        let recentered = labRecenteredStatePatch(savedStatePatch, sx: resolvedGrid, sy: resolvedGrid)
+        guard labStatePatchFits(recentered, sx: resolvedGrid, sy: resolvedGrid) else {
+            throw ConfigError.invalidConfig(
+                "init.state_patch is out of bounds for grid \(resolvedGrid)x\(resolvedGrid)."
+            )
+        }
+        statePatch = recentered
+        patches = []
+        aUniform = UniformRange(low: 0, high: 0)
+    } else if let savedInitial, !savedInitial.patches.isEmpty {
+        statePatch = nil
+        patches = try labValidatedPatches(
+            savedInitial.patches,
+            sx: resolvedGrid,
+            sy: resolvedGrid,
+            label: "init.patches"
+        )
+        aUniform = savedInitial.a_uniform
+    } else {
+        statePatch = labWarmInitialStatePatch(
+            for: creature,
+            savedCreature: savedCreature,
+            gridSize: resolvedGrid
+        )
+        patches = []
+        aUniform = UniformRange(low: 0, high: 0)
+    }
+
+    return LeniaRuntimeConfig(
         backend: .metalFull,
         sx: resolvedGrid,
         sy: resolvedGrid,
-        channels: 1,
+        channels: channels,
         nbK: kernelCount,
         profile: .paper,
-        c0: Array(repeating: 0, count: kernelCount),
-        c1: [Array(0..<kernelCount)],
+        c0: adjacency.c0,
+        c1: adjacency.c1,
         dt: 0.2,
         dd: 5,
         sigma: 0.65,
@@ -408,22 +563,12 @@ func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> L
             kernelProfile: "flowlenia_2022_paper_equations",
             flowClip: "none"
         ),
-        params: ResolvedParams(
-            r: entry.creature.params.r,
-            b: entry.creature.params.b,
-            w: entry.creature.params.w,
-            a: entry.creature.params.a,
-            m: entry.creature.params.m,
-            s: entry.creature.params.s,
-            h: entry.creature.params.h,
-            R: entry.creature.params.R,
-            seed: entry.creature.seed
-        ),
-        initSeed: entry.creature.seed,
-        patches: [],
-        aUniform: UniformRange(low: 0.0, high: 0.0),
+        params: selectedParams,
+        initSeed: savedInitial?.seed ?? creature.seed,
+        patches: patches,
+        aUniform: aUniform,
         pUniform: nil,
-        statePatch: initialStatePatch,
+        statePatch: statePatch,
         steps: 4_000,
         parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
         chemotaxis: nil,
@@ -433,30 +578,32 @@ func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> L
         beamMutation: nil,
         interventions: []
     )
-    return LabWorldDraft(
-        presetID: entry.id,
-        basisName: entry.name,
-        sourceConfigPath: "",
-        runtimeConfig: runtimeConfig
+}
+
+private func labResolvedParams(from creature: SavedCreature) -> ResolvedParams {
+    ResolvedParams(
+        r: creature.genotype.r,
+        b: creature.genotype.b,
+        w: creature.genotype.w,
+        a: creature.genotype.a,
+        m: creature.genotype.m,
+        s: creature.genotype.s,
+        h: creature.genotype.h,
+        R: creature.genotype.R,
+        seed: creature.initialCondition.seed
     )
 }
 
-private func labSavedInitialStatePatch(for entry: StudioCompareEntry) -> InitStatePatchConfig? {
-    guard let statePatch = entry.savedCreature?.initialCondition.state_patch,
-          statePatch.channels == 1,
-          statePatch.valueCount == statePatch.width * statePatch.height * statePatch.channels
-    else {
-        return nil
-    }
-    return statePatch
-}
-
-private func labWarmInitialStatePatch(for entry: StudioCompareEntry, gridSize: Int) -> InitStatePatchConfig {
+private func labWarmInitialStatePatch(
+    for creature: LeniaCreature,
+    savedCreature: SavedCreature?,
+    gridSize: Int
+) -> InitStatePatchConfig {
     let stamp = buildWarmCreatureStamp(
-        id: UUID(uuidString: entry.id.components(separatedBy: ":").last ?? "") ?? UUID(),
-        name: entry.name,
-        params: entry.creature.params,
-        seed: entry.creature.seed,
+        id: savedCreature?.id ?? creature.id,
+        name: savedCreature?.name ?? creature.sourceNode,
+        params: savedCreature.map(labResolvedParams(from:)) ?? creature.params,
+        seed: savedCreature?.initialCondition.seed ?? creature.seed,
         warmupSteps: 80,
         warmupGridSize: gridSize,
         cropThreshold: 0.01,
@@ -476,13 +623,146 @@ private func labInitialStatePatch(from stamp: CreatureStamp, gridSize: Int) -> I
 }
 
 private func labCenteredStatePatch(_ statePatch: InitStatePatchConfig, gridSize: Int) -> InitStatePatchConfig {
+    labRecenteredStatePatch(statePatch, sx: gridSize, sy: gridSize)
+}
+
+private func labRecenteredStatePatch(_ statePatch: InitStatePatchConfig, sx: Int, sy: Int) -> InitStatePatchConfig {
     InitStatePatchConfig(
-        center: [gridSize / 2, gridSize / 2],
+        center: [sx / 2, sy / 2],
         width: statePatch.width,
         height: statePatch.height,
         channels: statePatch.channels,
         data: statePatch.data
     )
+}
+
+private func labPreparedStatePatch(
+    _ statePatch: InitStatePatchConfig,
+    sx: Int,
+    sy: Int,
+    channels: Int,
+    label: String
+) throws -> InitStatePatchConfig {
+    try labValidateStatePatchShape(statePatch, sx: sx, sy: sy, channels: channels, label: label)
+    if labStatePatchFits(statePatch, sx: sx, sy: sy) {
+        return statePatch
+    }
+    let recentered = labRecenteredStatePatch(statePatch, sx: sx, sy: sy)
+    guard labStatePatchFits(recentered, sx: sx, sy: sy) else {
+        throw ConfigError.invalidConfig("\(label) is out of bounds for grid \(sx)x\(sy).")
+    }
+    return recentered
+}
+
+private func labValidateStatePatchShape(
+    _ statePatch: InitStatePatchConfig,
+    sx: Int,
+    sy: Int,
+    channels: Int,
+    label: String
+) throws {
+    guard statePatch.center.count == 2 else {
+        throw ConfigError.invalidConfig("\(label).center must have two coordinates.")
+    }
+    guard statePatch.width > 0, statePatch.height > 0 else {
+        throw ConfigError.invalidConfig("\(label).width and height must be > 0.")
+    }
+    guard statePatch.width <= sx, statePatch.height <= sy else {
+        throw ConfigError.invalidConfig("\(label) is larger than grid \(sx)x\(sy).")
+    }
+    guard statePatch.channels == channels else {
+        throw ConfigError.invalidConfig("\(label).channels must equal \(channels).")
+    }
+    guard statePatch.encoding == "f32le" else {
+        throw ConfigError.invalidConfig("\(label).encoding must be \"f32le\".")
+    }
+    let expectedBytes = statePatch.width * statePatch.height * statePatch.channels * MemoryLayout<Float>.size
+    guard statePatch.data.count == expectedBytes else {
+        throw ConfigError.invalidConfig("\(label).data must contain exactly \(expectedBytes) bytes.")
+    }
+}
+
+private func labStatePatchFits(_ statePatch: InitStatePatchConfig, sx: Int, sy: Int) -> Bool {
+    guard statePatch.center.count == 2 else {
+        return false
+    }
+    let cx = statePatch.center[0]
+    let cy = statePatch.center[1]
+    let halfWidth = statePatch.width / 2
+    let halfHeight = statePatch.height / 2
+    let x0 = cx - halfWidth
+    let x1 = cx + (statePatch.width - halfWidth)
+    let y0 = cy - halfHeight
+    let y1 = cy + (statePatch.height - halfHeight)
+    return x0 >= 0 && y0 >= 0 && x1 <= sx && y1 <= sy
+}
+
+private func labValidatedPatches(
+    _ patches: [PatchConfig],
+    sx: Int,
+    sy: Int,
+    label: String
+) throws -> [PatchConfig] {
+    for (index, patch) in patches.enumerated() {
+        guard patch.center.count == 2 else {
+            throw ConfigError.invalidConfig("\(label)[\(index)].center must have two coordinates.")
+        }
+        guard patch.size > 0 else {
+            throw ConfigError.invalidConfig("\(label)[\(index)].size must be > 0.")
+        }
+        let half = patch.size / 2
+        let x0 = patch.center[0] - half
+        let x1 = patch.center[0] + (patch.size - half)
+        let y0 = patch.center[1] - half
+        let y1 = patch.center[1] + (patch.size - half)
+        guard x0 >= 0, y0 >= 0, x1 <= sx, y1 <= sy else {
+            throw ConfigError.invalidConfig("\(label)[\(index)] is out of bounds for grid \(sx)x\(sy).")
+        }
+    }
+    return patches
+}
+
+private func labRequiredGridSize(for patches: [PatchConfig]) -> Int {
+    patches.reduce(0) { required, patch in
+        guard patch.center.count == 2 else {
+            return required
+        }
+        let half = patch.size / 2
+        let x1 = patch.center[0] + (patch.size - half)
+        let y1 = patch.center[1] + (patch.size - half)
+        return max(required, x1, y1)
+    }
+}
+
+private func labFallbackConnectivity(channels: Int, kernelCount: Int) -> [[Int]] {
+    let resolvedChannels = max(1, channels)
+    var matrix = Array(
+        repeating: Array(repeating: 0, count: resolvedChannels),
+        count: resolvedChannels
+    )
+    for kernel in 0..<max(1, kernelCount) {
+        let channel = kernel % resolvedChannels
+        matrix[channel][channel] += 1
+    }
+    return matrix
+}
+
+private func labValidateParams(
+    _ params: ResolvedParams,
+    kernelCount: Int,
+    label: String
+) throws {
+    guard params.r.count == kernelCount,
+          params.m.count == kernelCount,
+          params.s.count == kernelCount,
+          params.h.count == kernelCount,
+          params.b.count == kernelCount,
+          params.w.count == kernelCount,
+          params.a.count == kernelCount else {
+        throw ConfigError.invalidConfig(
+            "\(label) has \(params.r.count) kernels but runtime contract expects \(kernelCount)."
+        )
+    }
 }
 
 private func bundleLabMissionPreset(
@@ -660,9 +940,13 @@ private func labCopyRuntimeConfig(
     params: ResolvedParams? = nil,
     initSeed: Int? = nil,
     patches: [PatchConfig]? = nil,
+    aUniform: UniformRange? = nil,
+    overrideStatePatch: Bool = false,
     statePatch: InitStatePatchConfig? = nil,
     overridePUniform: Bool = false,
     pUniform: UniformRange? = nil,
+    overrideParamPatch: Bool = false,
+    paramPatch: InitStatePatchConfig? = nil,
     parameterEmbedding: ParameterEmbeddingConfig? = nil,
     overrideFood: Bool = false,
     food: FoodConfig? = nil
@@ -694,10 +978,10 @@ private func labCopyRuntimeConfig(
         params: params ?? runtimeConfig.params,
         initSeed: initSeed ?? runtimeConfig.initSeed,
         patches: patches ?? runtimeConfig.patches,
-        aUniform: runtimeConfig.aUniform,
+        aUniform: aUniform ?? runtimeConfig.aUniform,
         pUniform: overridePUniform ? pUniform : runtimeConfig.pUniform,
-        statePatch: statePatch ?? runtimeConfig.statePatch,
-        paramPatch: runtimeConfig.paramPatch,
+        statePatch: overrideStatePatch ? statePatch : (statePatch ?? runtimeConfig.statePatch),
+        paramPatch: overrideParamPatch ? paramPatch : (paramPatch ?? runtimeConfig.paramPatch),
         steps: runtimeConfig.steps,
         parameterEmbedding: parameterEmbedding ?? runtimeConfig.parameterEmbedding,
         chemotaxis: runtimeConfig.chemotaxis,

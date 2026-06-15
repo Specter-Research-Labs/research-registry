@@ -610,10 +610,18 @@ private struct CockpitLivePreview: View {
                 .stroke(StudioPalette.hairline, lineWidth: 1)
         )
         .onAppear {
-            model.start(creature: entry.creature, replaySource: entry.replayReference)
+            model.start(
+                creature: entry.creature,
+                savedCreature: entry.savedCreature,
+                replaySource: entry.replayReference
+            )
         }
         .onChange(of: entry.id) { _, _ in
-            model.restart(creature: entry.creature, replaySource: entry.replayReference)
+            model.restart(
+                creature: entry.creature,
+                savedCreature: entry.savedCreature,
+                replaySource: entry.replayReference
+            )
         }
         .onDisappear {
             model.stop()

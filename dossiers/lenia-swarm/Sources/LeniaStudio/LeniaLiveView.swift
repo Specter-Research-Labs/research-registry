@@ -77,17 +77,17 @@ struct LeniaLiveView: View {
         .onKeyPress { handleKey($0) }
         .onAppear {
             simulationModel.setDiagnosticsEnabled(displayMode == .diagnostics)
-            simulationModel.start(creature: creature, replaySource: replaySource)
+            simulationModel.start(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
             isFocused = true
         }
         .onDisappear {
             simulationModel.stop()
         }
         .onChange(of: creature.id) { _, _ in
-            simulationModel.restart(creature: creature, replaySource: replaySource)
+            simulationModel.restart(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
         }
         .onChange(of: replaySource) { _, newReplaySource in
-            simulationModel.restart(creature: creature, replaySource: newReplaySource)
+            simulationModel.restart(creature: creature, savedCreature: savedCreature, replaySource: newReplaySource)
         }
         .onChange(of: displayMode) { _, newMode in
             simulationModel.setDiagnosticsEnabled(newMode == .diagnostics)
@@ -334,7 +334,13 @@ struct LeniaLiveView: View {
             }
             .buttonStyle(.bordered)
 
-            Button(action: { simulationModel.restart(creature: creature, replaySource: replaySource) }) {
+            Button(action: {
+                simulationModel.restart(
+                    creature: creature,
+                    savedCreature: savedCreature,
+                    replaySource: replaySource
+                )
+            }) {
                 Label("Reset", systemImage: "arrow.counterclockwise")
             }
             .buttonStyle(.bordered)
@@ -401,7 +407,7 @@ struct LeniaLiveView: View {
             simulationModel.togglePause()
             return .handled
         case "r":
-            simulationModel.restart(creature: creature)
+            simulationModel.restart(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
             return .handled
         case "d":
             displayMode = displayMode == .render ? .diagnostics : .render
@@ -565,7 +571,11 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         task = nil
     }
 
-    func restart(creature: LeniaCreature, replaySource: StudioReplayReference? = nil) {
+    func restart(
+        creature: LeniaCreature,
+        savedCreature: SavedCreature? = nil,
+        replaySource: StudioReplayReference? = nil
+    ) {
         stop()
         displayFrame = nil
         diagnosticImages = nil
@@ -578,14 +588,16 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         availableProjections = [.matter]
         runtimeLabel = replaySource == nil ? "Synthetic preview" : "Loading replay"
         projectionFrames = [:]
-        start(creature: creature, replaySource: replaySource)
+        start(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
     }
 
-    func start(creature: LeniaCreature, replaySource: StudioReplayReference? = nil) {
+    func start(
+        creature: LeniaCreature,
+        savedCreature: SavedCreature? = nil,
+        replaySource: StudioReplayReference? = nil
+    ) {
         stop()
 
-        let params = creature.params
-        let seed = creature.seed
         let gridSize = self.gridSize
         let diagnosticCadence = self.diagnosticCadence
 
@@ -613,216 +625,102 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                 }
             }
 
-            if let replaySource {
-                do {
+            do {
+                let runtimeConfig: LeniaRuntimeConfig
+                let runtimeLabelPrefix: String
+                if let replaySource {
                     let baseData = try Data(contentsOf: URL(fileURLWithPath: replaySource.baseConfigPath))
-                    let runtimeConfig = try loadRuntimeConfig(from: baseData)
-                    let runtime = FlowLeniaInteractiveSimulator(runtimeConfig: runtimeConfig)
-                    var state = runtime.makeInitialState()
-                    let runtimeLabel = "Canonical replay · \(runtimeConfig.channels)c · \(runtimeConfig.nbK)k"
-                    let projections = liveProjectionOptions(channelCount: runtimeConfig.channels)
+                    let baseRuntimeConfig = try loadRuntimeConfig(from: baseData)
+                    runtimeConfig = try studioRuntimeConfig(
+                        base: baseRuntimeConfig,
+                        creature: creature,
+                        savedCreature: savedCreature
+                    )
+                    runtimeLabelPrefix = savedCreature == nil ? "Canonical replay" : "Selected replay"
+                } else {
+                    runtimeConfig = try studioFallbackRuntimeConfig(
+                        creature: creature,
+                        savedCreature: savedCreature,
+                        gridSize: gridSize
+                    )
+                    runtimeLabelPrefix = savedCreature == nil ? "Synthetic preview" : "Saved runtime"
+                }
 
-                    while !Task.isCancelled {
-                        let paused = await self?.pausedValue() ?? false
-                        if paused {
-                            try? await Task.sleep(for: .milliseconds(100))
-                            continue
-                        }
+                let runtime = FlowLeniaInteractiveSimulator(runtimeConfig: runtimeConfig)
+                var state = runtime.makeInitialState()
+                let runtimeLabel = "\(runtimeLabelPrefix) · \(runtimeConfig.channels)c · \(runtimeConfig.nbK)k"
+                let projections = liveProjectionOptions(channelCount: runtimeConfig.channels)
 
-                        let frameStart = ContinuousClock.now
-                        state = runtime.step(state)
-
-                        let matterMap = runtime.matterMap(for: state).contiguous()
-                        eval(matterMap)
-                        let matterData = matterMap.asArray(Float.self)
-                        let sample = metricComputer.compute(
-                            data: matterData,
-                            width: runtimeConfig.sx,
-                            height: runtimeConfig.sy
-                        )
-                        let frames = liveProjectionFrames(
-                            matterData: matterData,
-                            runtime: runtime,
-                            state: state
-                        )
-
-                        var diagnosticImages: DiagnosticImageSet?
-                        var diagnosticTelemetry: DiagnosticTelemetry?
-                        let diagnosticsEnabled = await self?.diagnosticsEnabledValue() ?? false
-                        if diagnosticsEnabled && (state.step == 1 || state.step % diagnosticCadence == 0) {
-                            let diagnostics = runtime.diagnostics(for: state)
-                            let neighborImage = renderer.renderToImage(mass: diagnostics.neighborSum)
-                            let growthImage = renderer.renderToSignedImage(field: diagnostics.growthField)
-                            let kernelImage = renderer.renderToImage(mass: diagnostics.kernel)
-
-                            let neighborData = diagnostics.neighborSum.asArray(Float.self)
-                            let growthData = diagnostics.growthField.asArray(Float.self)
-                            let kernelData = diagnostics.kernel.asArray(Float.self)
-
-                            diagnosticImages = DiagnosticImageSet(
-                                field: nil,
-                                neighborSum: neighborImage,
-                                growthField: growthImage,
-                                kernel: kernelImage
-                            )
-                            diagnosticTelemetry = DiagnosticTelemetry(
-                                growthMean: mean(growthData),
-                                neighborMean: mean(neighborData),
-                                kernelPeak: kernelData.max() ?? 0,
-                                kernelCount: diagnostics.kernelCount
-                            )
-                        }
-
-                        updateDisplayFps(step: state.step)
-
-                        await self?.applyFrame(
-                            frames,
-                            projections: projections,
-                            runtimeLabel: runtimeLabel,
-                            step: state.step,
-                            displayFps: displayFps,
-                            sample: sample,
-                            diagnostics: diagnosticImages,
-                            telemetry: diagnosticTelemetry
-                        )
-
-                        let elapsed = ContinuousClock.now - frameStart
-                        let remaining = targetFrameInterval - elapsed
-                        if remaining > .zero { try? await Task.sleep(for: remaining) }
+                while !Task.isCancelled {
+                    let paused = await self?.pausedValue() ?? false
+                    if paused {
+                        try? await Task.sleep(for: .milliseconds(100))
+                        continue
                     }
-                } catch {
-                    await self?.applyFailure("Replay load failed: \(error.localizedDescription)")
-                }
-                return
-            }
 
-            let nbK = params.r.count
+                    let frameStart = ContinuousClock.now
+                    state = runtime.step(state)
 
-            let config = BatchedConfig(
-                sx: gridSize,
-                sy: gridSize,
-                channels: 1,
-                nbK: nbK,
-                dt: 0.2,
-                dd: 5,
-                sigma: 0.65,
-                n: 2,
-                thetaA: 2.0,
-                border: "torus",
-                implementation: ImplementationSettings(
-                    mode: "flowlenia_2022_paper_equations",
-                    border: "torus",
-                    gradientBoundary: "periodic",
-                    alphaMode: "mass",
-                    kernelProfile: "flowlenia_2022_paper_equations",
-                    flowClip: "none"
-                ),
-                chemChannel: nil,
-                chemIncludeInMass: true
-            )
+                    let matterMap = runtime.matterMap(for: state).contiguous()
+                    eval(matterMap)
+                    let matterData = matterMap.asArray(Float.self)
+                    let sample = metricComputer.compute(
+                        data: matterData,
+                        width: runtimeConfig.sx,
+                        height: runtimeConfig.sy
+                    )
+                    let frames = liveProjectionFrames(
+                        matterData: matterData,
+                        runtime: runtime,
+                        state: state
+                    )
 
-            let c0 = Array(repeating: 0, count: nbK)
-            let c1 = [Array(0..<nbK)]
+                    var diagnosticImages: DiagnosticImageSet?
+                    var diagnosticTelemetry: DiagnosticTelemetry?
+                    let diagnosticsEnabled = await self?.diagnosticsEnabledValue() ?? false
+                    if diagnosticsEnabled && (state.step == 1 || state.step % diagnosticCadence == 0) {
+                        let diagnostics = runtime.diagnostics(for: state)
+                        let neighborImage = renderer.renderToImage(mass: diagnostics.neighborSum)
+                        let growthImage = renderer.renderToSignedImage(field: diagnostics.growthField)
+                        let kernelImage = renderer.renderToImage(mass: diagnostics.kernel)
 
-            let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
-            let engine = FlowLeniaBatched(config: config, kernels: kernels)
+                        let neighborData = diagnostics.neighborSum.asArray(Float.self)
+                        let growthData = diagnostics.growthField.asArray(Float.self)
+                        let kernelData = diagnostics.kernel.asArray(Float.self)
 
-            var rng = SeededRandomNumberGenerator(seed: UInt64(seed + 1000))
-            var data = [Float](repeating: 0, count: gridSize * gridSize)
-            let cx = gridSize / 2
-            let radius = 20
-
-            for y in 0..<gridSize {
-                for x in 0..<gridSize {
-                    let dx = x - cx
-                    let dy = y - cx
-                    if dx * dx + dy * dy < radius * radius {
-                        data[y * gridSize + x] = Float.random(in: 0.5...1.0, using: &rng)
+                        diagnosticImages = DiagnosticImageSet(
+                            field: nil,
+                            neighborSum: neighborImage,
+                            growthField: growthImage,
+                            kernel: kernelImage
+                        )
+                        diagnosticTelemetry = DiagnosticTelemetry(
+                            growthMean: mean(growthData),
+                            neighborMean: mean(neighborData),
+                            kernelPeak: kernelData.max() ?? 0,
+                            kernelCount: diagnostics.kernelCount
+                        )
                     }
+
+                    updateDisplayFps(step: state.step)
+
+                    await self?.applyFrame(
+                        frames,
+                        projections: projections,
+                        runtimeLabel: runtimeLabel,
+                        step: state.step,
+                        displayFps: displayFps,
+                        sample: sample,
+                        diagnostics: diagnosticImages,
+                        telemetry: diagnosticTelemetry
+                    )
+
+                    let elapsed = ContinuousClock.now - frameStart
+                    let remaining = targetFrameInterval - elapsed
+                    if remaining > .zero { try? await Task.sleep(for: remaining) }
                 }
-            }
-
-            var state = MLXArray(data).reshaped([1, gridSize, gridSize, 1])
-            MLX.eval(state)
-            let projections = liveProjectionOptions(channelCount: 1)
-            let runtimeLabel = "Synthetic preview"
-            var step = 0
-
-            while !Task.isCancelled {
-                let paused = await self?.pausedValue() ?? false
-                if paused {
-                    try? await Task.sleep(for: .milliseconds(100))
-                    continue
-                }
-
-                let frameStart = ContinuousClock.now
-
-                state = engine.step(state)
-                MLX.eval(state)
-
-                step += 1
-
-                let frame = state[0, 0..., 0..., 0].contiguous()
-                let sharedField = LeniaMetalFieldSurface(field: frame, width: gridSize, height: gridSize)
-                let frameData = frame.asArray(Float.self)
-                let sample = metricComputer.compute(data: frameData, width: gridSize, height: gridSize)
-                let frames: [LiveFieldProjection: LeniaFieldFrame] = [
-                    .matter: LeniaFieldFrame(
-                        step: step,
-                        width: gridSize,
-                        height: gridSize,
-                        sharedField: sharedField
-                    )
-                ]
-
-                var diagnosticImages: DiagnosticImageSet?
-                var diagnosticTelemetry: DiagnosticTelemetry?
-                let diagnosticsEnabled = await self?.diagnosticsEnabledValue() ?? false
-                if diagnosticsEnabled && (step == 1 || step % diagnosticCadence == 0) {
-                    let diagnostics = computeLeniaDiagnostics(
-                        state: state,
-                        params: params,
-                        config: config,
-                        kernels: kernels
-                    )
-                    let neighborImage = renderer.renderToImage(mass: diagnostics.neighborSum)
-                    let growthImage = renderer.renderToSignedImage(field: diagnostics.growthField)
-                    let kernelImage = renderer.renderToImage(mass: diagnostics.kernel)
-
-                    let neighborData = diagnostics.neighborSum.asArray(Float.self)
-                    let growthData = diagnostics.growthField.asArray(Float.self)
-                    let kernelData = diagnostics.kernel.asArray(Float.self)
-
-                    diagnosticImages = DiagnosticImageSet(
-                        field: nil,
-                        neighborSum: neighborImage,
-                        growthField: growthImage,
-                        kernel: kernelImage
-                    )
-                    diagnosticTelemetry = DiagnosticTelemetry(
-                        growthMean: mean(growthData),
-                        neighborMean: mean(neighborData),
-                        kernelPeak: kernelData.max() ?? 0,
-                        kernelCount: diagnostics.kernelCount
-                    )
-                }
-
-                updateDisplayFps(step: step)
-
-                await self?.applyFrame(
-                    frames,
-                    projections: projections,
-                    runtimeLabel: runtimeLabel,
-                    step: step,
-                    displayFps: displayFps,
-                    sample: sample,
-                    diagnostics: diagnosticImages,
-                    telemetry: diagnosticTelemetry
-                )
-
-                let elapsed = ContinuousClock.now - frameStart
-                let remaining = targetFrameInterval - elapsed
-                if remaining > .zero { try? await Task.sleep(for: remaining) }
+            } catch {
+                await self?.applyFailure("Runtime load failed: \(error.localizedDescription)")
             }
         }
     }
