@@ -33,7 +33,7 @@ enum LabRuntimeHandle: Sendable {
     var modeLabel: String {
         switch self {
         case .sandbox:
-            return "Sandbox contract"
+            return "Fast Metal sandbox"
         case .replay:
             return "Canonical replay"
         case .frameSequence:
@@ -208,14 +208,147 @@ enum LabRuntimeHandle: Sendable {
     }
 }
 
+func makeFastSandboxRuntime(
+    from runtimeConfig: LeniaRuntimeConfig,
+    backend: FlowSandboxBackend
+) -> FlowSandboxRuntime? {
+    guard backend == .metalFull else {
+        return nil
+    }
+    guard labCanUseFastSandbox(runtimeConfig) else {
+        return nil
+    }
+    guard let gridPreset = LabGridPreset(rawValue: runtimeConfig.sx) else {
+        return nil
+    }
+    guard let initialStamp = labInitialStamp(from: runtimeConfig) else {
+        return nil
+    }
+    return FlowSandboxRuntime(
+        params: runtimeConfig.params,
+        gridPreset: gridPreset,
+        initialStamp: initialStamp,
+        backend: backend
+    )
+}
+
+private func labCanUseFastSandbox(_ runtimeConfig: LeniaRuntimeConfig) -> Bool {
+    guard runtimeConfig.sx == runtimeConfig.sy else { return false }
+    guard LabGridPreset(rawValue: runtimeConfig.sx) != nil else { return false }
+    guard runtimeConfig.channels == 1 else { return false }
+    guard runtimeConfig.nbK == runtimeConfig.params.r.count,
+          runtimeConfig.params.h.count == runtimeConfig.nbK else { return false }
+    guard runtimeConfig.c0 == Array(repeating: 0, count: runtimeConfig.nbK),
+          runtimeConfig.c1.count == 1,
+          runtimeConfig.c1[0] == Array(0..<runtimeConfig.nbK) else { return false }
+    guard !runtimeConfig.parameterEmbedding.enabled else { return false }
+    guard runtimeConfig.chemotaxis == nil,
+          runtimeConfig.obstacleField == nil,
+          runtimeConfig.food?.enabled != true,
+          runtimeConfig.walls?.enabled != true,
+          runtimeConfig.environment == nil,
+          runtimeConfig.beamMutation == nil,
+          runtimeConfig.interventions.isEmpty else { return false }
+    guard labApproximately(runtimeConfig.dt, 0.2),
+          runtimeConfig.dd == 5,
+          labApproximately(runtimeConfig.sigma, 0.65),
+          runtimeConfig.n == 2,
+          labApproximately(runtimeConfig.thetaA, 2.0),
+          runtimeConfig.border == "torus" else { return false }
+    guard runtimeConfig.implementation.mode == "flowlenia_2022_paper_equations",
+          runtimeConfig.implementation.border == "torus",
+          runtimeConfig.implementation.gradientBoundary == "periodic",
+          runtimeConfig.implementation.alphaMode == "mass",
+          runtimeConfig.implementation.kernelProfile == "flowlenia_2022_paper_equations",
+          runtimeConfig.implementation.flowClip == "none" else { return false }
+    return true
+}
+
+private func labInitialStamp(from runtimeConfig: LeniaRuntimeConfig) -> CreatureStamp? {
+    if let statePatch = runtimeConfig.statePatch {
+        guard statePatch.channels == 1,
+              statePatch.center == [runtimeConfig.sx / 2, runtimeConfig.sy / 2] else {
+            return nil
+        }
+        return labStamp(
+            name: "Initial state",
+            width: statePatch.width,
+            height: statePatch.height,
+            mass: statePatch.decodedValues(),
+            params: runtimeConfig.params
+        )
+    }
+
+    guard runtimeConfig.patches.count == 1,
+          let patch = runtimeConfig.patches.first,
+          patch.center == [runtimeConfig.sx / 2, runtimeConfig.sy / 2],
+          patch.size > 0,
+          patch.size <= runtimeConfig.sx,
+          patch.size <= runtimeConfig.sy else {
+        return nil
+    }
+
+    var rng = SeededRandomNumberGenerator(seed: UInt64(runtimeConfig.initSeed))
+    let valueRange = runtimeConfig.aUniform.low...runtimeConfig.aUniform.high
+    let mass = (0..<(patch.size * patch.size)).map { _ in
+        Float.random(in: valueRange, using: &rng)
+    }
+    return labStamp(
+        name: "Initial patch",
+        width: patch.size,
+        height: patch.size,
+        mass: mass,
+        params: runtimeConfig.params
+    )
+}
+
+private func labStamp(
+    name: String,
+    width: Int,
+    height: Int,
+    mass: [Float],
+    params: ResolvedParams
+) -> CreatureStamp? {
+    guard width > 0,
+          height > 0,
+          mass.count == width * height,
+          !params.h.isEmpty else {
+        return nil
+    }
+    var parameterValues = [Float](
+        repeating: 0,
+        count: mass.count * params.h.count
+    )
+    for index in mass.indices where mass[index] > 0.001 {
+        let base = index * params.h.count
+        for parameter in params.h.indices {
+            parameterValues[base + parameter] = params.h[parameter]
+        }
+    }
+    return CreatureStamp(
+        name: name,
+        width: width,
+        height: height,
+        mass: mass,
+        params: parameterValues,
+        parameterCount: params.h.count
+    )
+}
+
+private func labApproximately(_ lhs: Float, _ rhs: Float, tolerance: Float = 0.0001) -> Bool {
+    abs(lhs - rhs) <= tolerance
+}
+
 actor CanonicalLabRuntime {
     private let runtime: FlowLeniaInteractiveSimulator
     private let baseWallMask: [Float]
+    private let hasBaseWallMask: Bool
     private let runtimeConfig: LeniaRuntimeConfig
 
     private var state: FlowLeniaInteractiveState
     private var initialState: FlowLeniaInteractiveState
     private var wallOverlay: [Float]
+    private var hasWallOverlay = false
     private var simulationTask: Task<Void, Never>?
     private var isPaused = true
     private var targetFrameDuration: Duration = .milliseconds(16)
@@ -243,6 +376,7 @@ actor CanonicalLabRuntime {
         self.initialState = runtimeState.initialState
         self.state = runtimeState.initialState
         self.baseWallMask = runtimeState.wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
         self.cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
@@ -259,6 +393,7 @@ actor CanonicalLabRuntime {
         self.initialState = runtimeState.initialState
         self.state = runtimeState.initialState
         self.baseWallMask = runtimeState.wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
         self.cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
@@ -275,6 +410,7 @@ actor CanonicalLabRuntime {
         self.initialState = runtimeState.initialState
         self.state = runtimeState.initialState
         self.baseWallMask = runtimeState.wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
         self.cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
@@ -320,12 +456,6 @@ actor CanonicalLabRuntime {
     }
 
     func start() {
-        if simulationTask == nil {
-            let runtime = self
-            simulationTask = Task {
-                await runtime.runLoop()
-            }
-        }
         isPaused = false
     }
 
@@ -334,7 +464,7 @@ actor CanonicalLabRuntime {
     }
 
     func resume() {
-        start()
+        isPaused = false
     }
 
     func stop() {
@@ -346,6 +476,7 @@ actor CanonicalLabRuntime {
     func reset() {
         state = initialState
         wallOverlay = Array(repeating: 1, count: wallOverlay.count)
+        hasWallOverlay = false
         lastStepDurationMs = 0
         cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
@@ -425,12 +556,9 @@ actor CanonicalLabRuntime {
         if autoFoodEnabled {
             injectAutoFoodPatchIfNeeded()
         }
-        applyWallOverlay()
-        cachedMetrics = canonicalLabMetrics(
-            mass: canonicalMatterData(runtime: runtime, state: state),
-            food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
-            walls: effectiveWalls()
-        )
+        if hasWallOverlay {
+            applyWallOverlay()
+        }
     }
 
     func applyStroke(_ stroke: SandboxStroke) {
@@ -494,8 +622,11 @@ actor CanonicalLabRuntime {
         }
 
         wallOverlay = walls
+        hasWallOverlay = canonicalHasClosedCells(wallOverlay)
         materializeState(mass: mass, params: params, food: food)
-        applyWallOverlay()
+        if hasWallOverlay {
+            applyWallOverlay()
+        }
         cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
@@ -548,7 +679,9 @@ actor CanonicalLabRuntime {
         }
 
         materializeState(mass: mass, params: params, food: food)
-        applyWallOverlay()
+        if hasWallOverlay {
+            applyWallOverlay()
+        }
         cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
@@ -560,6 +693,7 @@ actor CanonicalLabRuntime {
         refreshMetrics: Bool,
         projection: LabFieldProjection
     ) -> FlowSandboxSnapshot {
+        advanceIfRunning()
         let displayField = displayField(for: projection)
         if refreshMetrics {
             cachedMetrics = canonicalLabMetrics(
@@ -587,6 +721,14 @@ actor CanonicalLabRuntime {
             lastStepDurationMs: lastStepDurationMs,
             realizedStepRateHz: lastStepDurationMs > 0 ? 1_000.0 / lastStepDurationMs : 0
         )
+    }
+
+    private func advanceIfRunning() {
+        guard !isPaused else { return }
+        let startedAt = ContinuousClock.now
+        step()
+        let elapsed = ContinuousClock.now - startedAt
+        lastStepDurationMs = canonicalDurationMs(elapsed)
     }
 
     private func runLoop() async {
@@ -678,25 +820,37 @@ actor CanonicalLabRuntime {
     }
 
     private func displayField(for projection: LabFieldProjection) -> MLXArray {
-        let walls = effectiveWalls()
-        let wallField = MLXArray(walls).reshaped([runtimeConfig.sx, runtimeConfig.sy])
         switch projection {
         case .matter:
             let matter = runtime.matterMap(for: state)
-            let food = state.food ?? MLX.zeros([runtimeConfig.sx, runtimeConfig.sy])
-            let display = MLX.clip(
-                matter + food * MLXArray(0.55),
-                min: MLXArray(0),
-                max: MLXArray(1)
-            )
-            let field = (display * wallField).contiguous()
+            let display: MLXArray
+            if let food = state.food {
+                display = MLX.clip(
+                    matter + food * MLXArray(0.55),
+                    min: MLXArray(0),
+                    max: MLXArray(1)
+                )
+            } else {
+                display = MLX.clip(matter, min: MLXArray(0), max: MLXArray(1))
+            }
+            let field = displayFieldByApplyingWallMaskIfNeeded(display)
             eval(field)
             return field
         case .channel(let channel):
-            let field = (runtime.channelMap(for: state, channel: channel) * wallField).contiguous()
+            let field = displayFieldByApplyingWallMaskIfNeeded(
+                runtime.channelMap(for: state, channel: channel)
+            )
             eval(field)
             return field
         }
+    }
+
+    private func displayFieldByApplyingWallMaskIfNeeded(_ field: MLXArray) -> MLXArray {
+        guard hasBaseWallMask || hasWallOverlay else {
+            return field.contiguous()
+        }
+        let wallField = MLXArray(effectiveWalls()).reshaped([runtimeConfig.sx, runtimeConfig.sy])
+        return (field * wallField).contiguous()
     }
 
     private func effectiveWalls() -> [Float] {
@@ -794,6 +948,10 @@ private func canonicalFoodData(
     let field = food.contiguous()
     eval(field)
     return field.asArray(Float.self)
+}
+
+private func canonicalHasClosedCells(_ walls: [Float]) -> Bool {
+    walls.contains { $0 < 0.5 }
 }
 
 private func canonicalLabMetrics(

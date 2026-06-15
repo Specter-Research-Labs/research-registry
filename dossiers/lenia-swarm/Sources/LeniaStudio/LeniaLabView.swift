@@ -6,8 +6,32 @@ import LeniaCore
 import LeniaVisuals
 
 @MainActor
+final class LeniaLabFrameStore {
+    private weak var stageView: LeniaLabStageNSView?
+    private var latestFrame: LeniaFieldFrame?
+
+    func attach(_ stageView: LeniaLabStageNSView) {
+        guard self.stageView !== stageView else { return }
+        self.stageView = stageView
+        if let latestFrame {
+            stageView.updateFrame(latestFrame)
+        }
+    }
+
+    func clear() {
+        latestFrame = nil
+        stageView?.updateFrame(nil)
+    }
+
+    func present(_ snapshot: FlowSandboxSnapshot) {
+        let frame = LeniaFieldFrame(snapshot: snapshot)
+        latestFrame = frame
+        stageView?.updateFrame(frame)
+    }
+}
+
+@MainActor
 final class LeniaLabModel: ObservableObject {
-    @Published var snapshot: FlowSandboxSnapshot?
     @Published var isRunning = false
     @Published var activeWorldEntryID: String?
     @Published var activeBackend: FlowSandboxBackend = .metalFull
@@ -25,10 +49,19 @@ final class LeniaLabModel: ObservableObject {
     @Published var healthWarnings: [String] = []
     @Published var activityHistory: [Double] = []
     @Published var externalReplayTitle: String?
+    @Published var hasSnapshot = false
+    @Published var fieldWidth: Int?
+    @Published var latestStep = 0
+    @Published var latestMetrics: FlowSandboxMetrics?
 
+    let frames: LeniaLabFrameStore
     private var runtime: LabRuntimeHandle?
     private var snapshotTask: Task<Void, Never>?
     private var targetSpeedCap = 60
+
+    init(frameStore: LeniaLabFrameStore = LeniaLabFrameStore()) {
+        self.frames = frameStore
+    }
 
     func rebuildWorld(
         sourceEntryID: String,
@@ -47,7 +80,7 @@ final class LeniaLabModel: ObservableObject {
 
         let currentRunning = shouldRun
         isRunning = currentRunning
-        snapshot = nil
+        clearFrameState()
         externalReplayTitle = nil
         worldContract = nil
         snapshotFps = 0
@@ -65,12 +98,21 @@ final class LeniaLabModel: ObservableObject {
                 await previousRuntime.stop()
             }
             do {
-                let runtime: LabRuntimeHandle = try .replay(
-                    CanonicalLabRuntime(
-                        baseConfigData: baseConfigData,
-                        backend: backend
-                    )
+                let runtimeConfig = try loadRuntimeConfig(
+                    from: baseConfigData,
+                    overrides: ["backend": backend.rawValue]
                 )
+                let runtime: LabRuntimeHandle
+                if let fastRuntime = makeFastSandboxRuntime(from: runtimeConfig, backend: backend) {
+                    runtime = .sandbox(fastRuntime)
+                } else {
+                    runtime = try .replay(
+                        CanonicalLabRuntime(
+                            baseConfigData: baseConfigData,
+                            backend: backend
+                        )
+                    )
+                }
                 await runtime.setSpeedCap(hz: speedCap)
                 await runtime.setAutoFoodSpawn(
                     enabled: false,
@@ -95,7 +137,7 @@ final class LeniaLabModel: ObservableObject {
                 self.startSnapshotLoop()
             } catch {
                 self.runtime = nil
-                self.snapshot = nil
+                self.clearFrameState()
                 self.isRunning = false
                 self.worldContract = nil
                 self.activityEstimate = 0
@@ -129,7 +171,7 @@ final class LeniaLabModel: ObservableObject {
 
         let currentRunning = shouldRun
         isRunning = currentRunning
-        snapshot = nil
+        clearFrameState()
         externalReplayTitle = nil
         worldContract = nil
         snapshotFps = 0
@@ -147,11 +189,16 @@ final class LeniaLabModel: ObservableObject {
                 await previousRuntime.stop()
             }
             do {
-                let runtime: LabRuntimeHandle = try .replay(
-                    CanonicalLabRuntime(
-                        runtimeConfig: runtimeConfig
+                let runtime: LabRuntimeHandle
+                if let fastRuntime = makeFastSandboxRuntime(from: runtimeConfig, backend: backend) {
+                    runtime = .sandbox(fastRuntime)
+                } else {
+                    runtime = try .replay(
+                        CanonicalLabRuntime(
+                            runtimeConfig: runtimeConfig
+                        )
                     )
-                )
+                }
                 await runtime.setSpeedCap(hz: speedCap)
                 await runtime.setAutoFoodSpawn(
                     enabled: false,
@@ -176,7 +223,7 @@ final class LeniaLabModel: ObservableObject {
                 self.startSnapshotLoop()
             } catch {
                 self.runtime = nil
-                self.snapshot = nil
+                self.clearFrameState()
                 self.isRunning = false
                 self.worldContract = nil
                 self.activityEstimate = 0
@@ -201,7 +248,7 @@ final class LeniaLabModel: ObservableObject {
 
         isRunning = false
         activeWorldEntryID = nil
-        snapshot = nil
+        clearFrameState()
         worldContract = nil
         activityEstimate = 0
         runtimeStatusMessage = nil
@@ -233,7 +280,7 @@ final class LeniaLabModel: ObservableObject {
                 let snapshot = await runtime.snapshot(refreshMetrics: true, projection: .matter)
 
                 self.runtime = .frameSequence(runtime)
-                self.snapshot = snapshot
+                self.applyFrameSnapshot(snapshot)
                 self.worldContract = worldContract
                 self.externalReplayTitle = sequence.title
                 self.runtimeModeLabel = "TT export replay"
@@ -244,7 +291,7 @@ final class LeniaLabModel: ObservableObject {
                 self.startSnapshotLoop()
             } catch {
                 self.runtime = nil
-                self.snapshot = nil
+                self.clearFrameState()
                 self.worldContract = nil
                 self.externalReplayTitle = manifestURL.lastPathComponent
                 self.runtimeModeLabel = "TT export replay failed"
@@ -310,7 +357,7 @@ final class LeniaLabModel: ObservableObject {
         Task {
             let snapshot = await runtime.snapshot(refreshMetrics: false, projection: projection)
             await MainActor.run {
-                self.snapshot = snapshot
+                self.applyFrameSnapshot(snapshot)
             }
         }
     }
@@ -343,26 +390,43 @@ final class LeniaLabModel: ObservableObject {
         }
     }
 
+    private func clearFrameState() {
+        frames.clear()
+        hasSnapshot = false
+        fieldWidth = nil
+        latestStep = 0
+        latestMetrics = nil
+    }
+
+    private func applyFrameSnapshot(_ snapshot: FlowSandboxSnapshot) {
+        frames.present(snapshot)
+        hasSnapshot = true
+        fieldWidth = snapshot.width
+        latestStep = snapshot.step
+        latestMetrics = snapshot.metrics
+    }
+
     private func startSnapshotLoop() {
         snapshotTask?.cancel()
         guard let runtime else { return }
-        let runningDelay: Duration = activeBackend == .metalFull ? .milliseconds(8) : .milliseconds(16)
         let pausedDelay: Duration = .milliseconds(120)
         snapshotTask = Task {
             var lastMetricsRefresh = ContinuousClock.now - .milliseconds(250)
             var fpsTimestamps = [Date]()
             var previousMetrics: FlowSandboxMetrics?
             var latestActivity = 0.0
+            var latestRuntimeTelemetry = FlowSandboxRuntimeTelemetry(lastStepDurationMs: 0, realizedStepRateHz: 0)
             fpsTimestamps.reserveCapacity(24)
             while !Task.isCancelled {
+                let frameStartedAt = ContinuousClock.now
                 let refreshMetrics = ContinuousClock.now - lastMetricsRefresh >= .milliseconds(250)
                 let projection = await MainActor.run { self.activeProjection }
                 let snapshot = await runtime.snapshot(
                     refreshMetrics: refreshMetrics,
                     projection: projection
                 )
-                let runtimeTelemetry = await runtime.telemetry()
                 if refreshMetrics {
+                    latestRuntimeTelemetry = await runtime.telemetry()
                     lastMetricsRefresh = ContinuousClock.now
                     latestActivity = labActivityEstimate(
                         previous: previousMetrics,
@@ -381,36 +445,56 @@ final class LeniaLabModel: ObservableObject {
                     guard span > 0 else { return 0 }
                     return Double(fpsTimestamps.count - 1) / span
                 }()
-                let assessment = await MainActor.run {
+                let assessment = refreshMetrics ? await MainActor.run {
                     labHealthAssessment(
                         metrics: snapshot.metrics,
                         isRunning: self.isRunning,
                         activity: latestActivity,
-                        stepDurationMs: runtimeTelemetry.lastStepDurationMs,
-                        stepRateHz: runtimeTelemetry.realizedStepRateHz,
+                        stepDurationMs: latestRuntimeTelemetry.lastStepDurationMs,
+                        stepRateHz: latestRuntimeTelemetry.realizedStepRateHz,
                         snapshotFps: snapshotFps,
                         speedCap: self.targetSpeedCap,
                         history: self.activityHistory
                     )
-                }
+                } : nil
                 await MainActor.run {
-                    self.snapshot = snapshot
-                    self.snapshotFps = snapshotFps
-                    self.activityEstimate = latestActivity
-                    self.stepDurationMs = runtimeTelemetry.lastStepDurationMs
-                    self.realizedStepRateHz = runtimeTelemetry.realizedStepRateHz
+                    self.frames.present(snapshot)
+                    if !self.hasSnapshot {
+                        self.hasSnapshot = true
+                    }
+                    if self.fieldWidth != snapshot.width {
+                        self.fieldWidth = snapshot.width
+                    }
+                    if refreshMetrics {
+                        self.snapshotFps = snapshotFps
+                        self.latestStep = snapshot.step
+                        self.latestMetrics = snapshot.metrics
+                        self.activityEstimate = latestActivity
+                        self.stepDurationMs = latestRuntimeTelemetry.lastStepDurationMs
+                        self.realizedStepRateHz = latestRuntimeTelemetry.realizedStepRateHz
+                    }
                     if refreshMetrics {
                         self.activityHistory.append(latestActivity)
                         if self.activityHistory.count > 48 {
                             self.activityHistory.removeFirst(self.activityHistory.count - 48)
                         }
                     }
-                    self.healthState = assessment.state
-                    self.healthSummary = assessment.summary
-                    self.healthWarnings = assessment.warnings
+                    if refreshMetrics, let assessment {
+                        self.healthState = assessment.state
+                        self.healthSummary = assessment.summary
+                        self.healthWarnings = assessment.warnings
+                    }
                 }
-                let delay = await MainActor.run { self.isRunning ? runningDelay : pausedDelay }
-                try? await Task.sleep(for: delay)
+                let targetDelay = await MainActor.run {
+                    guard self.isRunning else { return pausedDelay }
+                    let frameCap = max(1, min(60, self.targetSpeedCap))
+                    return .milliseconds(max(1, Int((1_000.0 / Double(frameCap)).rounded())))
+                }
+                let elapsed = ContinuousClock.now - frameStartedAt
+                let remaining = targetDelay - elapsed
+                if remaining > .zero {
+                    try? await Task.sleep(for: remaining)
+                }
             }
         }
     }
@@ -440,7 +524,8 @@ actor LeniaLabStampCache {
 
 struct LeniaLabView: View {
     @EnvironmentObject private var appState: AppState
-    @StateObject private var model = LeniaLabModel()
+    @StateObject private var model: LeniaLabModel
+    @State private var frameStore: LeniaLabFrameStore
     @StateObject private var track1Catalog = Track1TaxonomyCatalogStore()
     @AppStorage("track1ConfigRoot") private var track1ConfigRoot = ""
     @State private var gridPreset: LabGridPreset = .compact128
@@ -469,6 +554,12 @@ struct LeniaLabView: View {
     private let stampCache = LeniaLabStampCache()
     private static let backendOrder: [FlowSandboxBackend] = [.metalFull, .mlx]
     private static let missionPresets = buildLabMissionPresets()
+
+    init() {
+        let frameStore = LeniaLabFrameStore()
+        _frameStore = State(initialValue: frameStore)
+        _model = StateObject(wrappedValue: LeniaLabModel(frameStore: frameStore))
+    }
 
     private var stampEntries: [StudioCompareEntry] {
         let starter = orbiumStarterEntry()
@@ -506,8 +597,19 @@ struct LeniaLabView: View {
 
     private var activeWorldEntry: StudioCompareEntry? {
         guard let activeWorldEntryID = model.activeWorldEntryID else { return nil }
-        return (Self.missionPresets.map(\.entry) + stampEntries + track1Catalog.catalog.configs.map { $0.studioEntry() })
-            .first(where: { $0.id == activeWorldEntryID })
+        if let preset = Self.missionPresets.first(where: { $0.entry.id == activeWorldEntryID }) {
+            return preset.entry
+        }
+        if let selectedStampID,
+           selectedStampID == activeWorldEntryID,
+           let selected = stampEntries.first(where: { $0.id == selectedStampID }) {
+            return selected
+        }
+        if activeWorldEntryID.hasPrefix("track1:") {
+            let path = String(activeWorldEntryID.dropFirst("track1:".count))
+            return track1Catalog.catalog.config(path: path)?.studioEntry()
+        }
+        return stampEntries.first(where: { $0.id == activeWorldEntryID })
     }
 
     private var selectedTrack1Family: Track1TaxonomyFamily? {
@@ -805,16 +907,16 @@ struct LeniaLabView: View {
                         LabTacticalReadout(label: "State", value: model.isRunning ? "Running" : "Armed", accent: model.isRunning ? StudioPalette.moss : StudioPalette.ember)
                         LabTacticalReadout(label: "Mode", value: model.runtimeModeLabel, accent: StudioPalette.ink)
                         LabTacticalReadout(label: "Compute", value: labBackendLabel(model.activeBackend), accent: StudioPalette.ocean)
-                        let resolvedGrid = model.worldContract?.gridSize ?? model.snapshot?.width ?? gridPreset.rawValue
+                        let resolvedGrid = model.worldContract?.gridSize ?? model.fieldWidth ?? gridPreset.rawValue
                         LabTacticalReadout(label: "Grid", value: "\(resolvedGrid)x\(resolvedGrid)", accent: StudioPalette.ocean)
                         if let contract = model.worldContract {
                             LabTacticalReadout(label: "Lanes", value: "\(contract.channels)m/\(contract.parameterFieldMode.displayName)", accent: StudioPalette.ocean)
                             LabTacticalReadout(label: "Kernels", value: "\(contract.kernelCount)", accent: StudioPalette.ember)
                             LabTacticalReadout(label: "Radius", value: formatCompact(contract.radius), accent: StudioPalette.moss)
                         }
-                        LabTacticalReadout(label: "Step", value: "\(model.snapshot?.step ?? 0)", accent: StudioPalette.ember)
+                        LabTacticalReadout(label: "Step", value: "\(model.latestStep)", accent: StudioPalette.ember)
                         LabTacticalReadout(label: "Activity", value: String(format: "%.4f", model.activityEstimate), accent: activityAccent(for: model.activityEstimate))
-                        if let metrics = model.snapshot?.metrics {
+                        if let metrics = model.latestMetrics {
                             LabTacticalReadout(label: "Mass", value: formatCompact(metrics.massMean), accent: StudioPalette.moss)
                             LabTacticalReadout(label: "Food", value: formatCompact(metrics.foodMean), accent: StudioPalette.ocean)
                         }
@@ -827,7 +929,7 @@ struct LeniaLabView: View {
                     }
                 }
 
-                if let runtimeStatusMessage = model.runtimeStatusMessage, model.snapshot == nil {
+                if let runtimeStatusMessage = model.runtimeStatusMessage, !model.hasSnapshot {
                     ContentUnavailableView(
                         "World failed to load",
                         systemImage: "exclamationmark.triangle",
@@ -835,42 +937,26 @@ struct LeniaLabView: View {
                     )
                     .frame(minHeight: 500)
                 } else {
-                    ZStack(alignment: .topLeading) {
-                        LeniaLabStageView(
-                            frame: model.snapshot.map(LeniaFieldFrame.init),
-                            renderMode: renderMode,
-                            zoom: stageZoom,
-                            offset: stageOffset,
-                            onTransformChange: updateStageTransform,
-                            onPrimaryPoint: { handleStagePoint($0, tool: primaryTool) },
-                            onSecondaryPoint: { handleStagePoint($0, tool: secondaryTool) },
-                            onHoverPointChange: { hoveredGridPoint = $0 },
-                            onBrushRadiusDelta: adjustBrushRadius
-                        )
-
-                        LabTacticalStageOverlay(
-                            gridSize: model.snapshot?.width ?? gridPreset.rawValue,
-                            zoom: stageZoom,
-                            projectionLabel: model.activeProjection.label,
-                            healthLabel: model.healthState.label,
-                            healthAccent: model.healthState.accent
-                        )
-                        .allowsHitTesting(false)
-
-                        GeometryReader { proxy in
-                            LabStageHoverOverlay(
-                                point: hoveredGridPoint,
-                                tool: primaryTool,
-                                brushRadius: Int(brushRadius.rounded()),
-                                selectedStamp: selectedStampEntry,
-                                selectedStampPreview: selectedStampPreview,
-                                transform: LeniaLabStageTransform(zoom: stageZoom, offset: stageOffset),
-                                viewSize: proxy.size,
-                                gridSize: model.snapshot?.width ?? gridPreset.rawValue
-                            )
-                        }
-                        .allowsHitTesting(false)
-                    }
+                    LabStageFrameSurface(
+                        frameStore: frameStore,
+                        renderMode: renderMode,
+                        zoom: stageZoom,
+                        offset: stageOffset,
+                        gridSize: model.fieldWidth ?? gridPreset.rawValue,
+                        projectionLabel: model.activeProjection.label,
+                        healthLabel: model.healthState.label,
+                        healthAccent: model.healthState.accent,
+                        hoveredGridPoint: hoveredGridPoint,
+                        primaryTool: primaryTool,
+                        brushRadius: Int(brushRadius.rounded()),
+                        selectedStampEntry: selectedStampEntry,
+                        selectedStampPreview: selectedStampPreview,
+                        onTransformChange: updateStageTransform,
+                        onPrimaryPoint: { handleStagePoint($0, tool: primaryTool) },
+                        onSecondaryPoint: { handleStagePoint($0, tool: secondaryTool) },
+                        onHoverPointChange: { hoveredGridPoint = $0 },
+                        onBrushRadiusDelta: adjustBrushRadius
+                    )
                     .frame(minHeight: 420)
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                     .overlay(
@@ -950,7 +1036,7 @@ struct LeniaLabView: View {
                         .truncationMode(.middle)
                 }
 
-                if diagnosticsEnabled, let metrics = model.snapshot?.metrics {
+                if diagnosticsEnabled, let metrics = model.latestMetrics {
                     HStack(spacing: 6) {
                         LabTacticalReadout(label: "Occ", value: formatCompact(metrics.occupancy), accent: StudioPalette.ember)
                         LabTacticalReadout(label: "Wall", value: formatCompact(metrics.wallFraction), accent: StudioPalette.ink)
@@ -1384,7 +1470,7 @@ struct LeniaLabView: View {
                     }
                 }
 
-                if let metrics = model.snapshot?.metrics {
+                if let metrics = model.latestMetrics {
                     Divider()
                     VStack(alignment: .leading, spacing: 8) {
                         StudioKeyValueRow(label: "Mass mean", value: formatCompact(metrics.massMean), style: .readable)
@@ -2390,8 +2476,69 @@ private struct LabTelemetrySparkline: View {
     }
 }
 
+private struct LabStageFrameSurface: View {
+    let frameStore: LeniaLabFrameStore
+    let renderMode: LeniaRenderMode
+    let zoom: CGFloat
+    let offset: CGSize
+    let gridSize: Int
+    let projectionLabel: String
+    let healthLabel: String
+    let healthAccent: Color
+    let hoveredGridPoint: SIMD2<Int>?
+    let primaryTool: SandboxTool
+    let brushRadius: Int
+    let selectedStampEntry: StudioCompareEntry
+    let selectedStampPreview: CreatureStamp?
+    let onTransformChange: (LeniaLabStageTransform) -> Void
+    let onPrimaryPoint: (SIMD2<Int>) -> Void
+    let onSecondaryPoint: (SIMD2<Int>) -> Void
+    let onHoverPointChange: (SIMD2<Int>?) -> Void
+    let onBrushRadiusDelta: ((Int) -> Void)?
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            LeniaLabStageView(
+                frameStore: frameStore,
+                renderMode: renderMode,
+                zoom: zoom,
+                offset: offset,
+                onTransformChange: onTransformChange,
+                onPrimaryPoint: onPrimaryPoint,
+                onSecondaryPoint: onSecondaryPoint,
+                onHoverPointChange: onHoverPointChange,
+                onBrushRadiusDelta: onBrushRadiusDelta
+            )
+
+            LabTacticalStageOverlay(
+                gridSize: gridSize,
+                zoom: zoom,
+                projectionLabel: projectionLabel,
+                healthLabel: healthLabel,
+                healthAccent: healthAccent
+            )
+            .allowsHitTesting(false)
+
+            GeometryReader { proxy in
+                LabStageHoverOverlay(
+                    point: hoveredGridPoint,
+                    tool: primaryTool,
+                    brushRadius: brushRadius,
+                    selectedStamp: selectedStampEntry,
+                    selectedStampPreview: selectedStampPreview,
+                    transform: LeniaLabStageTransform(zoom: zoom, offset: offset),
+                    viewSize: proxy.size,
+                    gridSize: gridSize
+                )
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
 struct LeniaLabStageView: NSViewRepresentable {
     let frame: LeniaFieldFrame?
+    let frameStore: LeniaLabFrameStore?
     let renderMode: LeniaRenderMode
     let zoom: CGFloat
     let offset: CGSize
@@ -2401,8 +2548,59 @@ struct LeniaLabStageView: NSViewRepresentable {
     let onHoverPointChange: (SIMD2<Int>?) -> Void
     let onBrushRadiusDelta: ((Int) -> Void)?
 
+    init(
+        frame: LeniaFieldFrame?,
+        renderMode: LeniaRenderMode,
+        zoom: CGFloat,
+        offset: CGSize,
+        onTransformChange: @escaping (LeniaLabStageTransform) -> Void,
+        onPrimaryPoint: @escaping (SIMD2<Int>) -> Void,
+        onSecondaryPoint: @escaping (SIMD2<Int>) -> Void,
+        onHoverPointChange: @escaping (SIMD2<Int>?) -> Void,
+        onBrushRadiusDelta: ((Int) -> Void)?
+    ) {
+        self.frame = frame
+        self.frameStore = nil
+        self.renderMode = renderMode
+        self.zoom = zoom
+        self.offset = offset
+        self.onTransformChange = onTransformChange
+        self.onPrimaryPoint = onPrimaryPoint
+        self.onSecondaryPoint = onSecondaryPoint
+        self.onHoverPointChange = onHoverPointChange
+        self.onBrushRadiusDelta = onBrushRadiusDelta
+    }
+
+    init(
+        frameStore: LeniaLabFrameStore,
+        renderMode: LeniaRenderMode,
+        zoom: CGFloat,
+        offset: CGSize,
+        onTransformChange: @escaping (LeniaLabStageTransform) -> Void,
+        onPrimaryPoint: @escaping (SIMD2<Int>) -> Void,
+        onSecondaryPoint: @escaping (SIMD2<Int>) -> Void,
+        onHoverPointChange: @escaping (SIMD2<Int>?) -> Void,
+        onBrushRadiusDelta: ((Int) -> Void)?
+    ) {
+        self.frame = nil
+        self.frameStore = frameStore
+        self.renderMode = renderMode
+        self.zoom = zoom
+        self.offset = offset
+        self.onTransformChange = onTransformChange
+        self.onPrimaryPoint = onPrimaryPoint
+        self.onSecondaryPoint = onSecondaryPoint
+        self.onHoverPointChange = onHoverPointChange
+        self.onBrushRadiusDelta = onBrushRadiusDelta
+    }
+
     func makeNSView(context: Context) -> LeniaLabStageNSView {
         let view = LeniaLabStageNSView()
+        if let frameStore {
+            frameStore.attach(view)
+        } else {
+            view.updateFrame(frame)
+        }
         view.onTransformChange = onTransformChange
         view.onPrimaryPoint = onPrimaryPoint
         view.onSecondaryPoint = onSecondaryPoint
@@ -2412,13 +2610,17 @@ struct LeniaLabStageView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: LeniaLabStageNSView, context: Context) {
+        if let frameStore {
+            frameStore.attach(nsView)
+        } else {
+            nsView.updateFrame(frame)
+        }
         nsView.onTransformChange = onTransformChange
         nsView.onPrimaryPoint = onPrimaryPoint
         nsView.onSecondaryPoint = onSecondaryPoint
         nsView.onHoverPointChange = onHoverPointChange
         nsView.onBrushRadiusDelta = onBrushRadiusDelta
         nsView.update(
-            frame: frame,
             renderMode: renderMode,
             transform: LeniaLabStageTransform(zoom: zoom, offset: offset)
         )
@@ -2488,18 +2690,28 @@ final class LeniaLabStageNSView: MTKView {
         needsDisplay = true
     }
 
-    func update(frame: LeniaFieldFrame?, renderMode: LeniaRenderMode, transform: LeniaLabStageTransform) {
+    func updateFrame(_ frame: LeniaFieldFrame?) {
         gridSize = frame?.width ?? 0
-        self.renderMode = renderMode
-        self.transform = transform
-        renderer.viewSize = bounds.size
-        renderer.transform = transform
-        renderer.renderMode = renderMode
         renderer.update(frame: frame)
         if gridSize == 0 {
             onHoverPointChange?(nil)
         }
         needsDisplay = true
+    }
+
+    func update(renderMode: LeniaRenderMode, transform: LeniaLabStageTransform) {
+        let viewSize = bounds.size
+        let shouldRedraw = self.renderMode.rawValue != renderMode.rawValue
+            || self.transform != transform
+            || renderer.viewSize != viewSize
+        self.renderMode = renderMode
+        self.transform = transform
+        renderer.viewSize = viewSize
+        renderer.transform = transform
+        renderer.renderMode = renderMode
+        if shouldRedraw {
+            needsDisplay = true
+        }
     }
 
     override func mouseDown(with event: NSEvent) {
