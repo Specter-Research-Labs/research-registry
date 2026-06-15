@@ -26,14 +26,14 @@ enum LabFieldProjection: Hashable, Identifiable, Sendable {
 }
 
 enum LabRuntimeHandle: Sendable {
-    case sandbox(FlowSandboxRuntime)
+    case engine(LeniaInteractiveEngine)
     case replay(CanonicalLabRuntime)
     case frameSequence(TTFrameSequenceRuntime)
 
     var modeLabel: String {
         switch self {
-        case .sandbox:
-            return "Fast Metal sandbox"
+        case .engine(let engine):
+            return engine.descriptor.executionLabel
         case .replay:
             return "Canonical replay"
         case .frameSequence:
@@ -43,8 +43,8 @@ enum LabRuntimeHandle: Sendable {
 
     func start() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.start()
+        case .engine(let engine):
+            await engine.start()
         case .replay(let runtime):
             await runtime.start()
         case .frameSequence(let runtime):
@@ -54,8 +54,8 @@ enum LabRuntimeHandle: Sendable {
 
     func pause() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.pause()
+        case .engine(let engine):
+            await engine.pause()
         case .replay(let runtime):
             await runtime.pause()
         case .frameSequence(let runtime):
@@ -65,8 +65,8 @@ enum LabRuntimeHandle: Sendable {
 
     func resume() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.resume()
+        case .engine(let engine):
+            await engine.resume()
         case .replay(let runtime):
             await runtime.resume()
         case .frameSequence(let runtime):
@@ -76,8 +76,8 @@ enum LabRuntimeHandle: Sendable {
 
     func stop() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.stop()
+        case .engine(let engine):
+            await engine.stop()
         case .replay(let runtime):
             await runtime.stop()
         case .frameSequence(let runtime):
@@ -87,8 +87,8 @@ enum LabRuntimeHandle: Sendable {
 
     func reset() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.reset()
+        case .engine(let engine):
+            await engine.reset()
         case .replay(let runtime):
             await runtime.reset()
         case .frameSequence(let runtime):
@@ -98,8 +98,8 @@ enum LabRuntimeHandle: Sendable {
 
     func setSpeedCap(hz: Int) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.setSpeedCap(hz: hz)
+        case .engine(let engine):
+            await engine.setSpeedCap(hz: hz)
         case .replay(let runtime):
             await runtime.setSpeedCap(hz: hz)
         case .frameSequence(let runtime):
@@ -114,8 +114,8 @@ enum LabRuntimeHandle: Sendable {
         value: Float
     ) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.setAutoFoodSpawn(
+        case .engine(let engine):
+            await engine.setAutoFoodSpawn(
                 enabled: enabled,
                 probability: probability,
                 patchSize: patchSize,
@@ -140,8 +140,8 @@ enum LabRuntimeHandle: Sendable {
 
     func worldContract() async -> FlowSandboxWorldContract {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.worldContract()
+        case .engine(let engine):
+            await engine.worldContract()
         case .replay(let runtime):
             await runtime.worldContract()
         case .frameSequence(let runtime):
@@ -154,8 +154,8 @@ enum LabRuntimeHandle: Sendable {
         projection: LabFieldProjection
     ) async -> FlowSandboxSnapshot {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.snapshot(refreshMetrics: refreshMetrics)
+        case .engine(let engine):
+            await engine.displaySnapshot(refreshMetrics: refreshMetrics)
         case .replay(let runtime):
             await runtime.snapshot(refreshMetrics: refreshMetrics, projection: projection)
         case .frameSequence(let runtime):
@@ -165,7 +165,7 @@ enum LabRuntimeHandle: Sendable {
 
     func availableProjections() async -> [LabFieldProjection] {
         switch self {
-        case .sandbox:
+        case .engine:
             return [.matter]
         case .replay(let runtime):
             return await runtime.availableProjections()
@@ -176,8 +176,8 @@ enum LabRuntimeHandle: Sendable {
 
     func applyStroke(_ stroke: SandboxStroke) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.applyStroke(stroke)
+        case .engine(let engine):
+            await engine.applyStroke(stroke)
         case .replay(let runtime):
             await runtime.applyStroke(stroke)
         case .frameSequence(let runtime):
@@ -187,8 +187,8 @@ enum LabRuntimeHandle: Sendable {
 
     func applyCreatureStamp(_ stamp: CreatureStamp, center: SIMD2<Int>) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.applyCreatureStamp(stamp, center: center)
+        case .engine(let engine):
+            await engine.applyCreatureStamp(stamp, center: center)
         case .replay(let runtime):
             await runtime.applyCreatureStamp(stamp, center: center)
         case .frameSequence(let runtime):
@@ -198,145 +198,14 @@ enum LabRuntimeHandle: Sendable {
 
     func telemetry() async -> FlowSandboxRuntimeTelemetry {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.telemetry()
+        case .engine(let engine):
+            await engine.telemetry()
         case .replay(let runtime):
             await runtime.telemetry()
         case .frameSequence(let runtime):
             await runtime.telemetry()
         }
     }
-}
-
-func makeFastSandboxRuntime(
-    from runtimeConfig: LeniaRuntimeConfig,
-    backend: FlowSandboxBackend
-) -> FlowSandboxRuntime? {
-    guard backend == .metalFull else {
-        return nil
-    }
-    guard labCanUseFastSandbox(runtimeConfig) else {
-        return nil
-    }
-    guard let gridPreset = LabGridPreset(rawValue: runtimeConfig.sx) else {
-        return nil
-    }
-    guard let initialStamp = labInitialStamp(from: runtimeConfig) else {
-        return nil
-    }
-    return FlowSandboxRuntime(
-        params: runtimeConfig.params,
-        gridPreset: gridPreset,
-        initialStamp: initialStamp,
-        backend: backend
-    )
-}
-
-private func labCanUseFastSandbox(_ runtimeConfig: LeniaRuntimeConfig) -> Bool {
-    guard runtimeConfig.sx == runtimeConfig.sy else { return false }
-    guard LabGridPreset(rawValue: runtimeConfig.sx) != nil else { return false }
-    guard runtimeConfig.channels == 1 else { return false }
-    guard runtimeConfig.nbK == runtimeConfig.params.r.count,
-          runtimeConfig.params.h.count == runtimeConfig.nbK else { return false }
-    guard runtimeConfig.c0 == Array(repeating: 0, count: runtimeConfig.nbK),
-          runtimeConfig.c1.count == 1,
-          runtimeConfig.c1[0] == Array(0..<runtimeConfig.nbK) else { return false }
-    guard !runtimeConfig.parameterEmbedding.enabled else { return false }
-    guard runtimeConfig.chemotaxis == nil,
-          runtimeConfig.obstacleField == nil,
-          runtimeConfig.food?.enabled != true,
-          runtimeConfig.walls?.enabled != true,
-          runtimeConfig.environment == nil,
-          runtimeConfig.beamMutation == nil,
-          runtimeConfig.interventions.isEmpty else { return false }
-    guard labApproximately(runtimeConfig.dt, 0.2),
-          runtimeConfig.dd == 5,
-          labApproximately(runtimeConfig.sigma, 0.65),
-          runtimeConfig.n == 2,
-          labApproximately(runtimeConfig.thetaA, 2.0),
-          runtimeConfig.border == "torus" else { return false }
-    guard runtimeConfig.implementation.mode == "flowlenia_2022_paper_equations",
-          runtimeConfig.implementation.border == "torus",
-          runtimeConfig.implementation.gradientBoundary == "periodic",
-          runtimeConfig.implementation.alphaMode == "mass",
-          runtimeConfig.implementation.kernelProfile == "flowlenia_2022_paper_equations",
-          runtimeConfig.implementation.flowClip == "none" else { return false }
-    return true
-}
-
-private func labInitialStamp(from runtimeConfig: LeniaRuntimeConfig) -> CreatureStamp? {
-    if let statePatch = runtimeConfig.statePatch {
-        guard statePatch.channels == 1,
-              statePatch.center == [runtimeConfig.sx / 2, runtimeConfig.sy / 2] else {
-            return nil
-        }
-        return labStamp(
-            name: "Initial state",
-            width: statePatch.width,
-            height: statePatch.height,
-            mass: statePatch.decodedValues(),
-            params: runtimeConfig.params
-        )
-    }
-
-    guard runtimeConfig.patches.count == 1,
-          let patch = runtimeConfig.patches.first,
-          patch.center == [runtimeConfig.sx / 2, runtimeConfig.sy / 2],
-          patch.size > 0,
-          patch.size <= runtimeConfig.sx,
-          patch.size <= runtimeConfig.sy else {
-        return nil
-    }
-
-    var rng = SeededRandomNumberGenerator(seed: UInt64(runtimeConfig.initSeed))
-    let valueRange = runtimeConfig.aUniform.low...runtimeConfig.aUniform.high
-    let mass = (0..<(patch.size * patch.size)).map { _ in
-        Float.random(in: valueRange, using: &rng)
-    }
-    return labStamp(
-        name: "Initial patch",
-        width: patch.size,
-        height: patch.size,
-        mass: mass,
-        params: runtimeConfig.params
-    )
-}
-
-private func labStamp(
-    name: String,
-    width: Int,
-    height: Int,
-    mass: [Float],
-    params: ResolvedParams
-) -> CreatureStamp? {
-    guard width > 0,
-          height > 0,
-          mass.count == width * height,
-          !params.h.isEmpty else {
-        return nil
-    }
-    var parameterValues = [Float](
-        repeating: 0,
-        count: mass.count * params.h.count
-    )
-    for index in mass.indices where mass[index] > 0.001 {
-        let base = index * params.h.count
-        for parameter in params.h.indices {
-            parameterValues[base + parameter] = params.h[parameter]
-        }
-    }
-    return CreatureStamp(
-        name: name,
-        width: width,
-        height: height,
-        mass: mass,
-        params: parameterValues,
-        parameterCount: params.h.count
-    )
-}
-
-private func labApproximately(_ lhs: Float, _ rhs: Float, tolerance: Float = 0.0001) -> Bool {
-    abs(lhs - rhs) <= tolerance
 }
 
 actor CanonicalLabRuntime {

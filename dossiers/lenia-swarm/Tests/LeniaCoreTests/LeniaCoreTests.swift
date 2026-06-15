@@ -6371,6 +6371,35 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertFalse(materialized.mass.contains(where: { $0.isNaN }))
     }
 
+    func testLeniaInteractiveEngineBuildsFromSupportedRuntimeConfig() async throws {
+        let packageRoot = packageRootURL()
+        let baseURL = packageRoot.appendingPathComponent("configs/base/paper_base_1c_128.json")
+        let runtimeConfig = try loadRuntimeConfig(
+            from: Data(contentsOf: baseURL),
+            overrides: ["backend": FlowSandboxBackend.metalFull.rawValue]
+        )
+
+        let engine = try XCTUnwrap(
+            makeLeniaInteractiveEngine(from: runtimeConfig, backend: .metalFull)
+        )
+        XCTAssertEqual(engine.descriptor.backend, .metalFull)
+        XCTAssertEqual(engine.descriptor.gridPreset, .compact128)
+        XCTAssertEqual(engine.descriptor.executionLabel, "Metal engine")
+
+        let contract = await engine.worldContract()
+        XCTAssertEqual(contract.backend, .metalFull)
+        XCTAssertEqual(contract.gridSize, 128)
+        XCTAssertEqual(contract.channels, 1)
+
+        await engine.step()
+        let snapshot = await engine.displaySnapshot(refreshMetrics: true)
+        XCTAssertNotNil(snapshot.sharedField)
+        XCTAssertNil(snapshot.bytes)
+        XCTAssertEqual(snapshot.width, 128)
+        XCTAssertEqual(snapshot.height, 128)
+        XCTAssertGreaterThanOrEqual(snapshot.metrics.occupancy, 0.0)
+    }
+
     func testFlowLeniaComputeBackendParsesConfigAliases() throws {
         XCTAssertEqual(try FlowLeniaComputeBackend(configValue: "mlx"), .mlx)
         XCTAssertEqual(try FlowLeniaComputeBackend(configValue: "mlx-swift"), .mlx)

@@ -103,8 +103,8 @@ final class LeniaLabModel: ObservableObject {
                     overrides: ["backend": backend.rawValue]
                 )
                 let runtime: LabRuntimeHandle
-                if let fastRuntime = makeFastSandboxRuntime(from: runtimeConfig, backend: backend) {
-                    runtime = .sandbox(fastRuntime)
+                if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
+                    runtime = .engine(engine)
                 } else {
                     runtime = try .replay(
                         CanonicalLabRuntime(
@@ -190,8 +190,8 @@ final class LeniaLabModel: ObservableObject {
             }
             do {
                 let runtime: LabRuntimeHandle
-                if let fastRuntime = makeFastSandboxRuntime(from: runtimeConfig, backend: backend) {
-                    runtime = .sandbox(fastRuntime)
+                if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
+                    runtime = .engine(engine)
                 } else {
                     runtime = try .replay(
                         CanonicalLabRuntime(
