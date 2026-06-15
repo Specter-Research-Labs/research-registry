@@ -5,14 +5,31 @@ import UniformTypeIdentifiers
 import LeniaCore
 import LeniaVisuals
 
+struct LeniaLabFrameUpdate: Sendable {
+    let snapshot: FlowSandboxSnapshot
+    let snapshotFps: Double
+    let runtimeTelemetry: FlowSandboxRuntimeTelemetry
+    let activity: Double
+    let refreshMetrics: Bool
+}
+
 @MainActor
 final class LeniaLabFrameStore {
     private weak var stageView: LeniaLabStageNSView?
     private var latestFrame: LeniaFieldFrame?
+    private var runtime: LabRuntimeHandle?
+    private var frameTask: Task<Void, Never>?
+    private var activeProjection: LabFieldProjection = .matter
+    private var targetSpeedCap = 60
+    private var isRunning = false
+    private var generation = 0
+    private var deliveredInitialUpdate = false
+    private var onUpdate: (@MainActor (LeniaLabFrameUpdate) -> Void)?
 
     func attach(_ stageView: LeniaLabStageNSView) {
         guard self.stageView !== stageView else { return }
         self.stageView = stageView
+        stageView.setFramePacing(active: isRunning)
         if let latestFrame {
             stageView.updateFrame(latestFrame)
         }
@@ -20,6 +37,7 @@ final class LeniaLabFrameStore {
 
     func clear() {
         latestFrame = nil
+        deliveredInitialUpdate = false
         stageView?.updateFrame(nil)
     }
 
@@ -27,6 +45,133 @@ final class LeniaLabFrameStore {
         let frame = LeniaFieldFrame(snapshot: snapshot)
         latestFrame = frame
         stageView?.updateFrame(frame)
+    }
+
+    func run(
+        runtime: LabRuntimeHandle,
+        speedCap: Int,
+        projection: LabFieldProjection,
+        isRunning: Bool,
+        onUpdate: @escaping @MainActor (LeniaLabFrameUpdate) -> Void
+    ) {
+        stop()
+        self.runtime = runtime
+        self.targetSpeedCap = speedCap
+        self.activeProjection = projection
+        self.isRunning = isRunning
+        self.onUpdate = onUpdate
+        stageView?.setFramePacing(active: isRunning)
+        deliveredInitialUpdate = false
+        generation += 1
+        let runGeneration = generation
+        frameTask = Task { [weak self] in
+            await self?.frameLoop(generation: runGeneration)
+        }
+    }
+
+    func stop() {
+        generation += 1
+        frameTask?.cancel()
+        frameTask = nil
+        runtime = nil
+        onUpdate = nil
+        isRunning = false
+        stageView?.setFramePacing(active: false)
+    }
+
+    func setRunning(_ running: Bool) {
+        isRunning = running
+        stageView?.setFramePacing(active: running)
+    }
+
+    func setSpeedCap(_ hz: Int) {
+        targetSpeedCap = hz
+    }
+
+    func setProjection(_ projection: LabFieldProjection) {
+        activeProjection = projection
+        deliveredInitialUpdate = false
+    }
+
+    private func frameLoop(generation runGeneration: Int) async {
+        let telemetryInterval: Duration = .milliseconds(500)
+        var lastMetricsRefresh = ContinuousClock.now - telemetryInterval
+        var fpsTimestamps = [Date]()
+        var previousMetrics: FlowSandboxMetrics?
+        var latestActivity = 0.0
+        var latestRuntimeTelemetry = FlowSandboxRuntimeTelemetry(lastStepDurationMs: 0, realizedStepRateHz: 0)
+        fpsTimestamps.reserveCapacity(24)
+
+        while !Task.isCancelled {
+            let frameStartedAt = ContinuousClock.now
+            guard let loopState = await MainActor.run(body: { self.frameLoopState(generation: runGeneration) }) else {
+                return
+            }
+            let refreshMetrics = ContinuousClock.now - lastMetricsRefresh >= telemetryInterval
+            let snapshot = await loopState.runtime.snapshot(
+                refreshMetrics: refreshMetrics,
+                projection: loopState.projection
+            )
+            if refreshMetrics {
+                latestRuntimeTelemetry = await loopState.runtime.telemetry()
+                lastMetricsRefresh = ContinuousClock.now
+                latestActivity = labActivityEstimate(
+                    previous: previousMetrics,
+                    current: snapshot.metrics
+                )
+                previousMetrics = snapshot.metrics
+            }
+
+            let now = Date()
+            fpsTimestamps.append(now)
+            if fpsTimestamps.count > 24 {
+                fpsTimestamps.removeFirst()
+            }
+            let snapshotFps: Double = {
+                guard fpsTimestamps.count >= 2 else { return 0 }
+                let span = fpsTimestamps.last!.timeIntervalSince(fpsTimestamps.first!)
+                guard span > 0 else { return 0 }
+                return Double(fpsTimestamps.count - 1) / span
+            }()
+            let update = LeniaLabFrameUpdate(
+                snapshot: snapshot,
+                snapshotFps: snapshotFps,
+                runtimeTelemetry: latestRuntimeTelemetry,
+                activity: latestActivity,
+                refreshMetrics: refreshMetrics
+            )
+
+            await MainActor.run {
+                guard self.generation == runGeneration else { return }
+                self.present(snapshot)
+                if refreshMetrics || !self.deliveredInitialUpdate {
+                    self.deliveredInitialUpdate = true
+                    self.onUpdate?(update)
+                }
+            }
+
+            let elapsed = ContinuousClock.now - frameStartedAt
+            let remaining = loopState.targetDelay - elapsed
+            if remaining > .zero {
+                try? await Task.sleep(for: remaining)
+            }
+        }
+    }
+
+    private func frameLoopState(
+        generation runGeneration: Int
+    ) -> (
+        runtime: LabRuntimeHandle,
+        projection: LabFieldProjection,
+        targetDelay: Duration
+    )? {
+        guard generation == runGeneration, let runtime else { return nil }
+        guard isRunning else {
+            return (runtime, activeProjection, .milliseconds(120))
+        }
+        let frameCap = max(1, min(60, targetSpeedCap))
+        let delay = Duration.milliseconds(max(1, Int((1_000.0 / Double(frameCap)).rounded())))
+        return (runtime, activeProjection, delay)
     }
 }
 
@@ -56,7 +201,6 @@ final class LeniaLabModel: ObservableObject {
 
     let frames: LeniaLabFrameStore
     private var runtime: LabRuntimeHandle?
-    private var snapshotTask: Task<Void, Never>?
     private var targetSpeedCap = 60
 
     init(frameStore: LeniaLabFrameStore = LeniaLabFrameStore()) {
@@ -75,8 +219,7 @@ final class LeniaLabModel: ObservableObject {
         targetSpeedCap = speedCap
         let previousRuntime = runtime
         runtime = nil
-        snapshotTask?.cancel()
-        snapshotTask = nil
+        frames.stop()
 
         let currentRunning = shouldRun
         isRunning = currentRunning
@@ -134,7 +277,7 @@ final class LeniaLabModel: ObservableObject {
                 self.activeProjection = activeProjection
                 self.runtimeModeLabel = runtime.modeLabel
                 self.activityEstimate = 0
-                self.startSnapshotLoop()
+                self.startFrameLoop()
             } catch {
                 self.runtime = nil
                 self.clearFrameState()
@@ -166,8 +309,7 @@ final class LeniaLabModel: ObservableObject {
         targetSpeedCap = speedCap
         let previousRuntime = runtime
         runtime = nil
-        snapshotTask?.cancel()
-        snapshotTask = nil
+        frames.stop()
 
         let currentRunning = shouldRun
         isRunning = currentRunning
@@ -220,7 +362,7 @@ final class LeniaLabModel: ObservableObject {
                 self.activeProjection = activeProjection
                 self.runtimeModeLabel = runtime.modeLabel
                 self.activityEstimate = 0
-                self.startSnapshotLoop()
+                self.startFrameLoop()
             } catch {
                 self.runtime = nil
                 self.clearFrameState()
@@ -243,8 +385,7 @@ final class LeniaLabModel: ObservableObject {
     func loadFrameSequence(manifestURL: URL) {
         let previousRuntime = runtime
         runtime = nil
-        snapshotTask?.cancel()
-        snapshotTask = nil
+        frames.stop()
 
         isRunning = false
         activeWorldEntryID = nil
@@ -288,7 +429,7 @@ final class LeniaLabModel: ObservableObject {
                 self.healthState = .stable
                 self.healthSummary = "TT export loaded. Press Launch to play the sampled quietbox trajectory."
                 self.healthWarnings = []
-                self.startSnapshotLoop()
+                self.startFrameLoop()
             } catch {
                 self.runtime = nil
                 self.clearFrameState()
@@ -305,6 +446,7 @@ final class LeniaLabModel: ObservableObject {
 
     func setRunning(_ running: Bool) {
         isRunning = running
+        frames.setRunning(running)
         guard let runtime else { return }
         Task {
             if running {
@@ -333,6 +475,7 @@ final class LeniaLabModel: ObservableObject {
 
     func setSpeedCap(_ hz: Int) {
         targetSpeedCap = hz
+        frames.setSpeedCap(hz)
         guard let runtime else { return }
         Task {
             await runtime.setSpeedCap(hz: hz)
@@ -353,6 +496,7 @@ final class LeniaLabModel: ObservableObject {
 
     func setProjection(_ projection: LabFieldProjection) {
         activeProjection = projection
+        frames.setProjection(projection)
         guard let runtime else { return }
         Task {
             let snapshot = await runtime.snapshot(refreshMetrics: false, projection: projection)
@@ -381,8 +525,7 @@ final class LeniaLabModel: ObservableObject {
     func shutdown() {
         let currentRuntime = runtime
         runtime = nil
-        snapshotTask?.cancel()
-        snapshotTask = nil
+        frames.stop()
         if let currentRuntime {
             Task {
                 await currentRuntime.stop()
@@ -406,97 +549,48 @@ final class LeniaLabModel: ObservableObject {
         latestMetrics = snapshot.metrics
     }
 
-    private func startSnapshotLoop() {
-        snapshotTask?.cancel()
+    private func startFrameLoop() {
         guard let runtime else { return }
-        let pausedDelay: Duration = .milliseconds(120)
-        snapshotTask = Task {
-            var lastMetricsRefresh = ContinuousClock.now - .milliseconds(250)
-            var fpsTimestamps = [Date]()
-            var previousMetrics: FlowSandboxMetrics?
-            var latestActivity = 0.0
-            var latestRuntimeTelemetry = FlowSandboxRuntimeTelemetry(lastStepDurationMs: 0, realizedStepRateHz: 0)
-            fpsTimestamps.reserveCapacity(24)
-            while !Task.isCancelled {
-                let frameStartedAt = ContinuousClock.now
-                let refreshMetrics = ContinuousClock.now - lastMetricsRefresh >= .milliseconds(250)
-                let projection = await MainActor.run { self.activeProjection }
-                let snapshot = await runtime.snapshot(
-                    refreshMetrics: refreshMetrics,
-                    projection: projection
-                )
-                if refreshMetrics {
-                    latestRuntimeTelemetry = await runtime.telemetry()
-                    lastMetricsRefresh = ContinuousClock.now
-                    latestActivity = labActivityEstimate(
-                        previous: previousMetrics,
-                        current: snapshot.metrics
-                    )
-                    previousMetrics = snapshot.metrics
-                }
-                let now = Date()
-                fpsTimestamps.append(now)
-                if fpsTimestamps.count > 24 {
-                    fpsTimestamps.removeFirst()
-                }
-                let snapshotFps: Double = {
-                    guard fpsTimestamps.count >= 2 else { return 0 }
-                    let span = fpsTimestamps.last!.timeIntervalSince(fpsTimestamps.first!)
-                    guard span > 0 else { return 0 }
-                    return Double(fpsTimestamps.count - 1) / span
-                }()
-                let assessment = refreshMetrics ? await MainActor.run {
-                    labHealthAssessment(
-                        metrics: snapshot.metrics,
-                        isRunning: self.isRunning,
-                        activity: latestActivity,
-                        stepDurationMs: latestRuntimeTelemetry.lastStepDurationMs,
-                        stepRateHz: latestRuntimeTelemetry.realizedStepRateHz,
-                        snapshotFps: snapshotFps,
-                        speedCap: self.targetSpeedCap,
-                        history: self.activityHistory
-                    )
-                } : nil
-                await MainActor.run {
-                    self.frames.present(snapshot)
-                    if !self.hasSnapshot {
-                        self.hasSnapshot = true
-                    }
-                    if self.fieldWidth != snapshot.width {
-                        self.fieldWidth = snapshot.width
-                    }
-                    if refreshMetrics {
-                        self.snapshotFps = snapshotFps
-                        self.latestStep = snapshot.step
-                        self.latestMetrics = snapshot.metrics
-                        self.activityEstimate = latestActivity
-                        self.stepDurationMs = latestRuntimeTelemetry.lastStepDurationMs
-                        self.realizedStepRateHz = latestRuntimeTelemetry.realizedStepRateHz
-                    }
-                    if refreshMetrics {
-                        self.activityHistory.append(latestActivity)
-                        if self.activityHistory.count > 48 {
-                            self.activityHistory.removeFirst(self.activityHistory.count - 48)
-                        }
-                    }
-                    if refreshMetrics, let assessment {
-                        self.healthState = assessment.state
-                        self.healthSummary = assessment.summary
-                        self.healthWarnings = assessment.warnings
-                    }
-                }
-                let targetDelay = await MainActor.run {
-                    guard self.isRunning else { return pausedDelay }
-                    let frameCap = max(1, min(60, self.targetSpeedCap))
-                    return .milliseconds(max(1, Int((1_000.0 / Double(frameCap)).rounded())))
-                }
-                let elapsed = ContinuousClock.now - frameStartedAt
-                let remaining = targetDelay - elapsed
-                if remaining > .zero {
-                    try? await Task.sleep(for: remaining)
-                }
-            }
+        frames.run(
+            runtime: runtime,
+            speedCap: targetSpeedCap,
+            projection: activeProjection,
+            isRunning: isRunning
+        ) { [weak self] update in
+            self?.consumeFrameUpdate(update)
         }
+    }
+
+    private func consumeFrameUpdate(_ update: LeniaLabFrameUpdate) {
+        hasSnapshot = true
+        if fieldWidth != update.snapshot.width {
+            fieldWidth = update.snapshot.width
+        }
+        guard update.refreshMetrics else { return }
+
+        let assessment = labHealthAssessment(
+            metrics: update.snapshot.metrics,
+            isRunning: isRunning,
+            activity: update.activity,
+            stepDurationMs: update.runtimeTelemetry.lastStepDurationMs,
+            stepRateHz: update.runtimeTelemetry.realizedStepRateHz,
+            snapshotFps: update.snapshotFps,
+            speedCap: targetSpeedCap,
+            history: activityHistory
+        )
+        snapshotFps = update.snapshotFps
+        latestStep = update.snapshot.step
+        latestMetrics = update.snapshot.metrics
+        activityEstimate = update.activity
+        stepDurationMs = update.runtimeTelemetry.lastStepDurationMs
+        realizedStepRateHz = update.runtimeTelemetry.realizedStepRateHz
+        activityHistory.append(update.activity)
+        if activityHistory.count > 48 {
+            activityHistory.removeFirst(activityHistory.count - 48)
+        }
+        healthState = assessment.state
+        healthSummary = assessment.summary
+        healthWarnings = assessment.warnings
     }
 }
 
@@ -2631,6 +2725,7 @@ final class LeniaLabStageNSView: MTKView {
     private let renderer: LeniaMetalFieldRenderer
     private var trackingAreaHandle: NSTrackingArea?
     private var renderMode: LeniaRenderMode = .smoothMagma
+    private var continuousDrawing = false
     var transform = LeniaLabStageTransform()
     var gridSize = 0
     var onTransformChange: ((LeniaLabStageTransform) -> Void)?
@@ -2687,7 +2782,7 @@ final class LeniaLabStageNSView: MTKView {
         let scale = window?.backingScaleFactor ?? 2.0
         drawableSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
         renderer.viewSize = bounds.size
-        needsDisplay = true
+        requestDraw()
     }
 
     func updateFrame(_ frame: LeniaFieldFrame?) {
@@ -2696,7 +2791,7 @@ final class LeniaLabStageNSView: MTKView {
         if gridSize == 0 {
             onHoverPointChange?(nil)
         }
-        needsDisplay = true
+        requestDraw()
     }
 
     func update(renderMode: LeniaRenderMode, transform: LeniaLabStageTransform) {
@@ -2710,8 +2805,16 @@ final class LeniaLabStageNSView: MTKView {
         renderer.transform = transform
         renderer.renderMode = renderMode
         if shouldRedraw {
-            needsDisplay = true
+            requestDraw()
         }
+    }
+
+    func setFramePacing(active: Bool) {
+        guard continuousDrawing != active else { return }
+        continuousDrawing = active
+        enableSetNeedsDisplay = !active
+        isPaused = !active
+        requestDraw()
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -2815,7 +2918,13 @@ final class LeniaLabStageNSView: MTKView {
         transform = next
         renderer.transform = next
         onTransformChange?(next)
-        needsDisplay = true
+        requestDraw()
+    }
+
+    private func requestDraw() {
+        if !continuousDrawing {
+            needsDisplay = true
+        }
     }
 }
 

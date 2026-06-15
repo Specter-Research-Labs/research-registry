@@ -136,6 +136,7 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
 
     private var texture: MTLTexture?
     private var textureBuffer: MTLBuffer?
+    private var textureBufferIdentity: ObjectIdentifier?
     private var textureSize: CGSize = .zero
     private var texturePixelFormat: MTLPixelFormat = .r8Unorm
 
@@ -190,6 +191,7 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         guard let frame else {
             texture = nil
             textureBuffer = nil
+            textureBufferIdentity = nil
             textureSize = .zero
             return
         }
@@ -198,27 +200,35 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         channelCount = 1
         if let sharedField = frame.sharedField,
            let buffer = sharedField.metalBuffer(on: device, noCopy: true) ?? sharedField.metalBuffer(on: device, noCopy: false) {
-            let descriptor = MTLTextureDescriptor.texture2DDescriptor(
-                pixelFormat: .r32Float,
-                width: frame.width,
-                height: frame.height,
-                mipmapped: false
-            )
-            descriptor.usage = .shaderRead
-            texture = buffer.makeTexture(
-                descriptor: descriptor,
-                offset: 0,
-                bytesPerRow: frame.width * MemoryLayout<Float>.stride
-            )
-            textureBuffer = buffer
-            textureSize = size
-            texturePixelFormat = .r32Float
+            let bufferIdentity = ObjectIdentifier(buffer as AnyObject)
+            if texture == nil
+                || textureSize != size
+                || texturePixelFormat != .r32Float
+                || textureBufferIdentity != bufferIdentity {
+                let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+                    pixelFormat: .r32Float,
+                    width: frame.width,
+                    height: frame.height,
+                    mipmapped: false
+                )
+                descriptor.usage = .shaderRead
+                texture = buffer.makeTexture(
+                    descriptor: descriptor,
+                    offset: 0,
+                    bytesPerRow: frame.width * MemoryLayout<Float>.stride
+                )
+                textureBuffer = buffer
+                textureBufferIdentity = bufferIdentity
+                textureSize = size
+                texturePixelFormat = .r32Float
+            }
             return
         }
 
         guard let bytes = frame.bytes else {
             texture = nil
             textureBuffer = nil
+            textureBufferIdentity = nil
             textureSize = .zero
             return
         }
@@ -237,6 +247,7 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
             texturePixelFormat = .r8Unorm
         }
         textureBuffer = nil
+        textureBufferIdentity = nil
 
         bytes.withUnsafeBytes { bytes in
             guard let baseAddress = bytes.baseAddress else { return }
