@@ -7,6 +7,15 @@ dependencies = [
     "duckdb>=1.2.1",
     "numpy>=2.1.0",
     "ripser>=0.6.10",
+    "gudhi>=3.9.0",
+    "scipy>=1.13.0",
+    "pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+inverse = [
+    "torch>=2.2",
+    "FrEIA>=0.2",
 ]
 
 [dependency-groups]
@@ -27,6 +36,7 @@ lenia-swarm-agda = "lenia_swarm_analysis.agda._cli:main"
 lenia-swarm-imgep = "lenia_swarm_analysis.imgep._cli:main"
 lenia-swarm-transform = "lenia_swarm_analysis.transform._cli:main"
 lenia-swarm-morphospace = "lenia_swarm_analysis.morphospace_cli:main"
+lenia-swarm-waddington = "lenia_swarm_analysis.waddington._cli:main"
 lenia-swarm-attractor-packet = "lenia_swarm_analysis.attractor_packet:main"
 lenia-swarm-arrangement-packet = "lenia_swarm_analysis.arrangement_packet:main"
 lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibration_packet:main"

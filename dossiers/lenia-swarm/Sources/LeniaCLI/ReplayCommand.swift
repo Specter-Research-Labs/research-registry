@@ -24,6 +24,15 @@ struct ReplayCommand: AsyncParsableCommand {
     @Flag(name: .long, help: "Validate the input and resolved replay configs without running")
     var validateOnly: Bool = false
 
+    @Flag(name: .long, help: "Capture a per-step morphology development trace per specimen")
+    var developmentTrace: Bool = false
+
+    @Option(name: .long, help: "Steps between captured development-trace samples")
+    var traceInterval: Int = 25
+
+    @Option(name: .long, help: "If > 0, also capture a centered NxN Float16 field per trace sample")
+    var developmentFieldResolution: Int = 0
+
     @OptionGroup
     var logOptions: LogOptions
 
@@ -65,6 +74,8 @@ struct ReplayCommand: AsyncParsableCommand {
             outputURL: outputURL,
             runID: resolvedRunId,
             exportEnabled: exportEnabled,
+            developmentTraceInterval: developmentTrace ? max(1, traceInterval) : nil,
+            developmentFieldResolution: developmentTrace ? max(0, developmentFieldResolution) : 0,
             logger: logger
         )
 

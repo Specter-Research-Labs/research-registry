@@ -67,6 +67,10 @@ struct ReplaySpecimenManifest: Codable {
     let activityPath: String?
     let exportIndexPath: String?
     let replayedAt: Date
+    let developmentTracePath: String?
+    let capturedSteps: [Int]?
+    let sampleCount: Int?
+    let recordEvery: Int?
 }
 
 struct ReplayBatchSummary: Codable {
@@ -85,6 +89,13 @@ struct ReplayExecutionOutcome {
     let resultData: SimulationResultData
     let replayCreature: SavedCreature
     let activityRecord: ActivitySummaryRecord?
+    let developmentTrace: [MorphospaceDevelopmentSample]?
+}
+
+/// Reference collector so the @escaping FrameCapture stateHandler can accumulate per-step samples
+/// during the synchronous rollout without mutable-capture friction.
+final class DevelopmentTraceCollector {
+    var samples: [MorphospaceDevelopmentSample] = []
 }
 
 private func replaySourceCreatureID(
@@ -158,7 +169,9 @@ private func replayExportProjection(
 
 func executeReplayResolvedInput(
     _ resolvedInput: ReplayResolvedInput,
-    runID: String
+    runID: String,
+    developmentTraceInterval: Int? = nil,
+    developmentFieldResolution: Int = 0
 ) throws -> ReplayExecutionOutcome {
     switch resolvedInput.executionPlan {
     case let .flow(baseConfig, searchConfig):
@@ -195,11 +208,40 @@ func executeReplayResolvedInput(
         ])
         let runtimeConfig = try loadRuntimeConfig(from: researchEncodedJSON(replayBaseConfig))
         let engine = SearchEngine(runtimeConfig: runtimeConfig)
+        let developmentCollector = developmentTraceInterval != nil ? DevelopmentTraceCollector() : nil
+        var developmentCapture: FrameCapture?
+        if let interval = developmentTraceInterval, let collector = developmentCollector {
+            let useTorus = runtimeConfig.border == "torus"
+            let borderMode = runtimeConfig.border
+            let massChannel = replaySearchConfig.massChannel
+            let occupancyThreshold = replaySearchConfig.occupancyThreshold
+            developmentCapture = FrameCapture(
+                stride: max(1, interval),
+                includeWarmup: true,
+                sampleIndex: 0,
+                handler: { _, _, _, _ in },
+                stateHandler: { step, width, height, channels, values in
+                    collector.samples.append(morphospaceDevelopmentSample(
+                        step: step,
+                        channels: channels,
+                        width: width,
+                        height: height,
+                        values: values,
+                        massChannel: massChannel,
+                        occupancyThreshold: occupancyThreshold,
+                        useTorus: useTorus,
+                        borderMode: borderMode,
+                        fieldResolution: developmentFieldResolution
+                    ))
+                }
+            )
+        }
         let batchResult = try unwrapReplayValue(
             engine.runBatch(
                 seeds: [replaySearchConfig.seedStart],
                 initSeedOffset: replaySearchConfig.initSeedOffset ?? 0,
-                searchConfig: replaySearchConfig.toSearchConfig()
+                searchConfig: replaySearchConfig.toSearchConfig(),
+                frameCapture: developmentCapture
             ).first,
             message: "Replay batch produced no result for \(resolvedInput.sourceCreature.name)."
         )
@@ -228,7 +270,8 @@ func executeReplayResolvedInput(
             searchConfig: replaySearchConfig,
             resultData: resultData,
             replayCreature: replayCreature,
-            activityRecord: activityRecord
+            activityRecord: activityRecord,
+            developmentTrace: developmentCollector?.samples
         )
     case let .qd24(payload):
         let configHash = try researchConfigHash([
@@ -245,7 +288,8 @@ func executeReplayResolvedInput(
             searchConfig: nil,
             resultData: normalizedPersistedResultData(outcome.resultData),
             replayCreature: normalizedPersistedCreature(outcome.creature),
-            activityRecord: nil
+            activityRecord: nil,
+            developmentTrace: nil
         )
     case let .sensorimotor24(payload):
         let configHash = try researchConfigHash([
@@ -262,7 +306,8 @@ func executeReplayResolvedInput(
             searchConfig: nil,
             resultData: normalizedPersistedResultData(outcome.resultData),
             replayCreature: normalizedPersistedCreature(outcome.creature),
-            activityRecord: nil
+            activityRecord: nil,
+            developmentTrace: nil
         )
     }
 }
@@ -273,6 +318,8 @@ func materializeReplayBatch(
     outputURL: URL,
     runID: String,
     exportEnabled: Bool,
+    developmentTraceInterval: Int? = nil,
+    developmentFieldResolution: Int = 0,
     logger: Logger
 ) throws -> ReplayBatchSummary {
     guard !inputs.isEmpty else {
@@ -305,7 +352,12 @@ func materializeReplayBatch(
         let campaignId = replayCampaignID(index: index, creature: resolvedInput.sourceCreature)
         let campaignDir = campaignsDir.appendingPathComponent(campaignId, isDirectory: true)
         try FileManager.default.createDirectory(at: campaignDir, withIntermediateDirectories: true)
-        let execution = try executeReplayResolvedInput(resolvedInput, runID: runID)
+        let execution = try executeReplayResolvedInput(
+            resolvedInput,
+            runID: runID,
+            developmentTraceInterval: developmentTraceInterval,
+            developmentFieldResolution: developmentFieldResolution
+        )
         let configHash = execution.configHash
         let replayCreature = execution.replayCreature
         let resultData = execution.resultData
@@ -369,6 +421,23 @@ func materializeReplayBatch(
         let archiveArtifacts = persistedArtifacts.archive
         exportCount += archiveArtifacts.exportCount
 
+        var developmentTracePath: String?
+        var capturedSteps: [Int]?
+        var developmentSampleCount: Int?
+        if let trace = execution.developmentTrace, !trace.isEmpty {
+            let traceURL = campaignDir.appendingPathComponent("development-trace.jsonl")
+            let sampleEncoder = JSONEncoder()
+            var traceData = Data()
+            for sample in trace {
+                traceData.append(try sampleEncoder.encode(sample))
+                traceData.append(0x0A)
+            }
+            try traceData.write(to: traceURL)
+            developmentTracePath = traceURL.path
+            capturedSteps = trace.map { $0.step }
+            developmentSampleCount = trace.count
+        }
+
         let manifest = ReplaySpecimenManifest(
             inputKind: resolvedInput.inputKind.rawValue,
             inputPath: resolvedInput.inputPath.path,
@@ -386,7 +455,11 @@ func materializeReplayBatch(
             libraryPath: archiveArtifacts.libraryURL.path,
             activityPath: executionArtifacts.activityURL?.path,
             exportIndexPath: archiveArtifacts.exportIndexURL?.path,
-            replayedAt: replayedAt
+            replayedAt: replayedAt,
+            developmentTracePath: developmentTracePath,
+            capturedSteps: capturedSteps,
+            sampleCount: developmentSampleCount,
+            recordEvery: developmentTracePath != nil ? developmentTraceInterval : nil
         )
         try replayEncoder().encode(manifest).write(to: campaignDir.appendingPathComponent("replay-manifest.json"))
         manifests.append(manifest)
