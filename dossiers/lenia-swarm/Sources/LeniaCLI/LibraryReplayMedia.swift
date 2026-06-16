@@ -147,11 +147,13 @@ private func captureLibraryReplayFrames(
     runtimeConfig: LeniaRuntimeConfig,
     seed: Int,
     searchConfig: SearchConfig,
-    frameBudget: Int
+    frameBudget: Int,
+    captureFlow: Bool = false
 ) throws -> [CapturedStateFrame] {
     let stride = max(1, max(searchConfig.steps - searchConfig.warmupSteps, 1) / max(frameBudget, 1))
     var capturedFrames: [Data] = []
     var capturedStateFrames: [CapturedStateFrame] = []
+    var flowByStep: [Int: (flow: [Float], growth: [Float])] = [:]
     capturedFrames.reserveCapacity(frameBudget + 8)
     capturedStateFrames.reserveCapacity(frameBudget + 8)
     let capture = FrameCapture(
@@ -169,7 +171,10 @@ private func captureLibraryReplayFrames(
                 channels: channels,
                 values: values
             ))
-        }
+        },
+        flowHandler: captureFlow ? { step, _, _, flow, growth in
+            flowByStep[step] = (flow, growth)
+        } : nil
     )
     let engine = SearchEngine(runtimeConfig: runtimeConfig)
     _ = engine.runBatch(
@@ -182,7 +187,13 @@ private func captureLibraryReplayFrames(
         throw ValidationError("Failed to capture library replay frames for seed \(seed).")
     }
     if !capturedStateFrames.isEmpty {
-        return Array(capturedStateFrames.prefix(frameBudget))
+        return Array(capturedStateFrames.prefix(frameBudget)).map { frame in
+            guard let fields = flowByStep[frame.step] else { return frame }
+            var attached = frame
+            attached.flow = fields.flow
+            attached.growth = fields.growth
+            return attached
+        }
     }
     return Array(capturedFrames.prefix(frameBudget).enumerated().map { index, data in
         CapturedStateFrame(
@@ -227,39 +238,48 @@ func renderLibraryReplayMediaBundle(
         steps: replayConfig.run.steps,
         frameBudget: frameBudget
     )
+    let captureFlow = renderMode == .flowHue || renderMode == .flux
     let frames = try captureLibraryReplayFrames(
         runtimeConfig: runtimeConfig,
         seed: creature.initialCondition.seed,
         searchConfig: searchConfig,
-        frameBudget: frameBudget
+        frameBudget: frameBudget,
+        captureFlow: captureFlow
     )
 
     let matterScale = robustMatterScale(frames)
     let frameWriter = FrameWriter(outputDir: framesURL)
-    let colorWriter = ChannelAwareColorFrameWriter(outputDir: colorFramesURL)
+    let colorWriter = ChannelAwareColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
     let channelWriter = ChannelDiagnosticFrameWriter(outputDir: channelFramesURL)
     let maskWriter = FrameWriter(outputDir: maskFramesURL)
+    // Color frames crop to the creature so it fills the frame; raw frames stay
+    // full-world for analysis.
+    let grayscaleFrames = frames.map { $0.matterBytes(scale: matterScale) }
+    let box = autoFrameBox(grayscaleFrames: grayscaleFrames, width: runtimeConfig.sx, height: runtimeConfig.sy)
     for (index, frame) in frames.enumerated() {
         frameWriter.write(
             step: index,
             width: runtimeConfig.sx,
             height: runtimeConfig.sy,
-            data: frame.matterBytes(scale: matterScale)
+            data: grayscaleFrames[index]
         )
-        let indexedFrame = CapturedStateFrame(
+        let fullFrame = CapturedStateFrame(
             step: index,
             width: frame.width,
             height: frame.height,
             channels: frame.channels,
-            values: frame.values
+            values: frame.values,
+            flow: frame.flow,
+            growth: frame.growth
         )
-        colorWriter.write(frame: indexedFrame, scale: matterScale)
-        channelWriter.write(frame: indexedFrame, scale: matterScale)
+        let framed = box.map { cropCapturedFrame(fullFrame, box: $0) } ?? fullFrame
+        colorWriter.write(frame: framed, scale: matterScale)
+        channelWriter.write(frame: fullFrame, scale: matterScale)
         maskWriter.write(
             step: index,
             width: runtimeConfig.sx,
             height: runtimeConfig.sy,
-            data: indexedFrame.supportMaskBytes(scale: matterScale)
+            data: fullFrame.supportMaskBytes(scale: matterScale)
         )
     }
     if let error = frameWriter.error {

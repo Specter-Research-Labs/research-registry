@@ -57,7 +57,7 @@ struct MediaCommand: AsyncParsableCommand {
     @Option(name: .long, help: "MP4 frames per second")
     var fps: Int = 6
 
-    @Option(name: .long, help: "Render mode for mass-only videos: body, truth, magma, viridis, inferno, or plasma")
+    @Option(name: .long, help: "Render mode for mass-only videos: body, truth, magma, viridis, inferno, plasma, turbo, or flux")
     var renderMode: String = "body"
 
     @Option(name: .long, help: "ffmpeg executable")
@@ -695,10 +695,17 @@ private func renderQD2024MediaElite(
     let frameWriter = FrameWriter(outputDir: framesURL)
     let colorFrameWriter = ColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
     let size = run.base.worldSize
+    // Color frames crop to the creature so it fills the frame; raw frames keep
+    // the full world for analysis.
+    let box = autoFrameBox(grayscaleFrames: frames, width: size, height: size)
     for (index, frame) in frames.enumerated() {
         let step = frameSteps[index]
         frameWriter.write(step: step, width: size, height: size, data: frame)
-        colorFrameWriter.write(step: step, width: size, height: size, grayscale: frame)
+        if let box {
+            colorFrameWriter.write(step: step, width: box.side, height: box.side, grayscale: cropGrayscale(frame, width: size, box: box))
+        } else {
+            colorFrameWriter.write(step: step, width: size, height: size, grayscale: frame)
+        }
     }
     if let error = frameWriter.error {
         throw error

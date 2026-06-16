@@ -118,7 +118,15 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
 
     private struct Uniforms {
         var renderMode: UInt32
+        var channelCount: UInt32
+        var gridSize: SIMD2<Float>
+        var lightStrength: Float
+        var rimStrength: Float
     }
+
+    public var lightStrength: Float = 0.85
+    public var rimStrength: Float = 0.35
+    private var channelCount: UInt32 = 1
 
     private let device: MTLDevice
     private let commandQueue: MTLCommandQueue
@@ -187,6 +195,7 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         }
 
         let size = CGSize(width: frame.width, height: frame.height)
+        channelCount = 1
         if let sharedField = frame.sharedField,
            let buffer = sharedField.metalBuffer(on: device, noCopy: true) ?? sharedField.metalBuffer(on: device, noCopy: false) {
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(
@@ -250,6 +259,35 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         let pixelHeight = max(1, Int(outputSize.height.rounded()))
 
         update(frame: frame)
+        return renderCurrentTexture(renderMode: renderMode, pixelWidth: pixelWidth, pixelHeight: pixelHeight)
+    }
+
+    public func renderMultiChannelImage(
+        rgbaValues: [Float],
+        channels: Int,
+        width: Int,
+        height: Int,
+        renderMode: LeniaRenderMode,
+        outputSize: CGSize
+    ) -> CGImage? {
+        guard width > 0, height > 0 else { return nil }
+        precondition(channels >= 1 && channels <= 4, "Lenia renderer supports 1...4 channels, got \(channels)")
+        precondition(
+            rgbaValues.count == width * height * 4,
+            "Multi-channel field must be packed RGBA: expected \(width * height * 4), got \(rgbaValues.count)"
+        )
+        let pixelWidth = max(1, Int(outputSize.width.rounded()))
+        let pixelHeight = max(1, Int(outputSize.height.rounded()))
+
+        updateMultiChannel(rgbaValues: rgbaValues, width: width, height: height, channels: channels)
+        return renderCurrentTexture(renderMode: renderMode, pixelWidth: pixelWidth, pixelHeight: pixelHeight)
+    }
+
+    private func renderCurrentTexture(
+        renderMode: LeniaRenderMode,
+        pixelWidth: Int,
+        pixelHeight: Int
+    ) -> CGImage? {
         self.renderMode = renderMode
         self.transform = .init()
         self.viewSize = CGSize(width: pixelWidth, height: pixelHeight)
@@ -287,6 +325,35 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         commandBuffer.waitUntilCompleted()
         guard commandBuffer.status == .completed else { return nil }
         return Self.makeImage(texture: outputTexture, width: pixelWidth, height: pixelHeight)
+    }
+
+    private func updateMultiChannel(rgbaValues: [Float], width: Int, height: Int, channels: Int) {
+        let size = CGSize(width: width, height: height)
+        if texture == nil || textureSize != size || texturePixelFormat != .rgba32Float {
+            let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+                pixelFormat: .rgba32Float,
+                width: width,
+                height: height,
+                mipmapped: false
+            )
+            descriptor.usage = .shaderRead
+            descriptor.storageMode = .shared
+            texture = device.makeTexture(descriptor: descriptor)
+            textureSize = size
+            texturePixelFormat = .rgba32Float
+        }
+        textureBuffer = nil
+        channelCount = UInt32(channels)
+
+        rgbaValues.withUnsafeBytes { bytes in
+            guard let baseAddress = bytes.baseAddress else { return }
+            texture?.replace(
+                region: MTLRegionMake2D(0, 0, width, height),
+                mipmapLevel: 0,
+                withBytes: baseAddress,
+                bytesPerRow: width * MemoryLayout<Float>.stride * 4
+            )
+        }
     }
 
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -337,7 +404,13 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
             memcpy(vertexBuffer.contents(), baseAddress, bytes.count)
         }
 
-        var uniforms = Uniforms(renderMode: renderMode.shaderIndex)
+        var uniforms = Uniforms(
+            renderMode: renderMode.shaderIndex,
+            channelCount: channelCount,
+            gridSize: SIMD2<Float>(Float(textureSize.width), Float(textureSize.height)),
+            lightStrength: lightStrength,
+            rimStrength: rimStrength
+        )
         encoder.setRenderPipelineState(pipelineState)
         encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
         encoder.setFragmentTexture(texture, index: 0)
@@ -434,6 +507,10 @@ private extension LeniaRenderMode {
         case .viridis: return 3
         case .inferno: return 4
         case .plasma: return 5
+        case .turbo: return 6
+        case .tol: return 8
+        case .flux: return 7
+        case .flowHue: return 9
         }
     }
 }

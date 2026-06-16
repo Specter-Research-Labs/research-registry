@@ -7,6 +7,10 @@ public enum LeniaRenderMode: String, CaseIterable, Identifiable, Sendable {
     case viridis = "Viridis"
     case inferno = "Inferno"
     case plasma = "Plasma"
+    case turbo = "Turbo"
+    case tol = "Tol Rainbow"
+    case flux = "Flux"
+    case flowHue = "Flow"
 
     public var id: String { rawValue }
 }
