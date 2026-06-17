@@ -238,7 +238,7 @@ func renderLibraryReplayMediaBundle(
         steps: replayConfig.run.steps,
         frameBudget: frameBudget
     )
-    let captureFlow = renderMode == .flowHue || renderMode == .flux
+    let captureFlow = renderMode == .flowHue || renderMode == .flowLIC || renderMode == .flux
     let frames = try captureLibraryReplayFrames(
         runtimeConfig: runtimeConfig,
         seed: creature.initialCondition.seed,

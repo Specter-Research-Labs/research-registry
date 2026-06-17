@@ -267,14 +267,39 @@ float4 sampleFieldBicubic(
     return result;
 }
 
-float sampleMass(
-    texture2d<float> tex,
-    sampler samp,
-    float2 uv,
-    float2 gridSize,
-    uint channelCount
-) {
-    return maskedMass(sampleFieldBicubic(tex, samp, uv, gridSize), channelCount);
+// Hashed white noise over the grid, the seed texture LIC smears along flow.
+float flowHash(float2 g) {
+    g = floor(g);
+    return fract(sin(dot(g, float2(127.1, 311.7))) * 43758.5453123);
+}
+
+float2 sampleFlowVec(texture2d<float> tex, sampler samp, float2 uv) {
+    float4 s = tex.sample(samp, uv);
+    return float2(s.b, s.a);
+}
+
+// Line integral convolution: average the noise along the streamline through
+// this cell (forward and backward), so the result is smooth along the flow and
+// noisy across it, reading as flowing lines.
+float licValue(texture2d<float> tex, sampler samp, float2 uv, float2 gridSize) {
+    const int steps = 14;
+    const float noiseScale = 1.6;
+    float2 texel = 1.0 / gridSize;
+    float acc = flowHash(uv * gridSize * noiseScale);
+    float wsum = 1.0;
+    for (int dir = -1; dir <= 1; dir += 2) {
+        float2 p = uv;
+        for (int i = 0; i < steps; i++) {
+            float2 flow = sampleFlowVec(tex, samp, p);
+            float len = length(flow);
+            if (len < 1e-4) break;
+            p += float(dir) * (flow / len) * texel;
+            float w = 1.0 - float(i) / float(steps);
+            acc += w * flowHash(p * gridSize * noiseScale);
+            wsum += w;
+        }
+    }
+    return acc / wsum;
 }
 
 fragment half4 labStageFragment(
@@ -297,7 +322,16 @@ fragment half4 labStageFragment(
     }
 
     float3 baseColor;
-    if (channelCount > 1) {
+    if (uniforms.renderMode == 11) {
+        // Tol depth: channel-weighted depth -> Paul Tol rainbow, revealing which
+        // channels dominate where (internal structure). Single channel falls back
+        // to a plain tol ramp.
+        float depthNum = channels.g + 2.0 * channels.b + 3.0 * channels.a;
+        float depth = (channelCount > 1 && mass > 1e-5)
+            ? clamp((depthNum / mass) / float(channelCount - 1), 0.0, 1.0)
+            : toneMass(mass);
+        baseColor = tol(depth);
+    } else if (channelCount > 1) {
         // Composite channels as additive pigments, then tone by total mass so
         // brightness tracks density while hue tracks channel composition.
         float3 pigment = channels.r * channelPigment(0);
@@ -328,6 +362,21 @@ fragment half4 labStageFragment(
                 baseColor = mix(substrate, wheel, clamp(speedVis * 2.2, 0.0, 1.0));
                 break;
             }
+            case 10: {
+                // Flow lines: LIC streaks following the velocity field, tinted
+                // by flow direction. Streaks read as the actual currents.
+                float2 flow = float2(channels.b, channels.a);
+                float speedVis = pow(clamp(length(flow), 0.0, 1.0), 0.55);
+                float angle = atan2(flow.y, flow.x);
+                float lic = licValue(fieldTexture, fieldSampler, uv, gridSize);
+                float streak = smoothstep(0.32, 0.68, lic);
+                float chroma = 0.20 * speedVis;
+                float lightness = 0.30 + 0.62 * streak;
+                float3 wheel = oklabToLinearSrgb(float3(lightness, chroma * cos(angle), chroma * sin(angle)));
+                float3 substrate = bodyColorLinear(mass) * 0.30;
+                baseColor = mix(substrate, wheel, clamp(speedVis * 2.0, 0.0, 1.0));
+                break;
+            }
             case 8: baseColor = tol(toneMass(mass)); break;
             case 7: {
                 // Flux: tint the body by rate of change. channels.g carries the
@@ -347,12 +396,13 @@ fragment half4 labStageFragment(
     }
 
     // Treat total mass as a height field. The gradient gives a surface normal,
-    // which turns the flat heatmap into a lit, translucent body.
+    // which turns the flat heatmap into a lit, translucent body. Cheap bilinear
+    // neighbor taps suffice for the gradient; the field is band-limited.
     float2 texel = 1.0 / gridSize;
-    float mx0 = sampleMass(fieldTexture, fieldSampler, uv - float2(texel.x, 0.0), gridSize, channelCount);
-    float mx1 = sampleMass(fieldTexture, fieldSampler, uv + float2(texel.x, 0.0), gridSize, channelCount);
-    float my0 = sampleMass(fieldTexture, fieldSampler, uv - float2(0.0, texel.y), gridSize, channelCount);
-    float my1 = sampleMass(fieldTexture, fieldSampler, uv + float2(0.0, texel.y), gridSize, channelCount);
+    float mx0 = maskedMass(fieldTexture.sample(fieldSampler, uv - float2(texel.x, 0.0)), channelCount);
+    float mx1 = maskedMass(fieldTexture.sample(fieldSampler, uv + float2(texel.x, 0.0)), channelCount);
+    float my0 = maskedMass(fieldTexture.sample(fieldSampler, uv - float2(0.0, texel.y)), channelCount);
+    float my1 = maskedMass(fieldTexture.sample(fieldSampler, uv + float2(0.0, texel.y)), channelCount);
 
     const float normalStrength = 6.0;
     float3 normal = normalize(float3(-(mx1 - mx0) * normalStrength,

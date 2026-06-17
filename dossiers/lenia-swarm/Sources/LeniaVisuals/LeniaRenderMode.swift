@@ -11,6 +11,8 @@ public enum LeniaRenderMode: String, CaseIterable, Identifiable, Sendable {
     case tol = "Tol Rainbow"
     case flux = "Flux"
     case flowHue = "Flow"
+    case flowLIC = "Flow Lines"
+    case tolDepth = "Tol Depth"
 
     public var id: String { rawValue }
 }

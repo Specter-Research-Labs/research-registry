@@ -234,15 +234,6 @@ struct CapturedStateFrame {
         return Data(bytes)
     }
 
-    func occupancyMaskBytes(threshold: Float = 0.05) -> Data {
-        let totals = matterTotals()
-        var bytes = [UInt8](repeating: 0, count: width * height)
-        for cell in 0..<(width * height) {
-            bytes[cell] = totals[cell] >= threshold ? 255 : 0
-        }
-        return Data(bytes)
-    }
-
     func supportMaskBytes(scale: Float? = nil) -> Data {
         let totals = matterTotals()
         let supportThreshold = max(0.005, 0.015 * max(scale ?? robustPositiveScale(totals), 1e-6))
@@ -278,7 +269,7 @@ final class ChannelAwareColorFrameWriter {
         do {
             let rgba: [Float]
             let channels: Int
-            if renderMode == .flowHue || renderMode == .flux {
+            if renderMode == .flowHue || renderMode == .flowLIC || renderMode == .flux {
                 rgba = normalizedFlowFloats(frame: frame, scale: scale)
                 channels = 1
             } else {
@@ -492,8 +483,12 @@ func parseLeniaRenderMode(_ rawValue: String) throws -> LeniaRenderMode {
         return .flux
     case "flow", "flowhue", "flow-hue":
         return .flowHue
+    case "flowlic", "flow-lines", "lic":
+        return .flowLIC
+    case "toldepth", "tol-depth", "depth":
+        return .tolDepth
     default:
-        throw ValidationError("Invalid render mode '\(rawValue)'. Expected body, truth, magma, viridis, inferno, plasma, turbo, tol, flux, or flowhue.")
+        throw ValidationError("Invalid render mode '\(rawValue)'. Expected body, truth, magma, viridis, inferno, plasma, turbo, tol, flux, flowhue, flowlic, or toldepth.")
     }
 }
 

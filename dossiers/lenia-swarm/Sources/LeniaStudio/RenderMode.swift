@@ -23,9 +23,9 @@ extension View {
             self.colorEffect(leniaShaderLibrary.plasmaLenia())
         case .turbo:
             self.colorEffect(leniaShaderLibrary.turboLenia())
-        case .tol:
+        case .tol, .tolDepth:
             self.colorEffect(leniaShaderLibrary.tolLenia())
-        case .flux, .flowHue:
+        case .flux, .flowHue, .flowLIC:
             // Flux/flow need per-frame fields the per-pixel color effect cannot
             // see. Aux diagnostic images fall back to the body look.
             self.colorEffect(leniaShaderLibrary.bodyLenia())
