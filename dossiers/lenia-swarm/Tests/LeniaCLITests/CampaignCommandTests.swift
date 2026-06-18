@@ -137,8 +137,13 @@ final class CampaignCommandTests: XCTestCase {
         let root = try makeTempDirectory(prefix: "lenia-campaign-ecology")
         defer { try? FileManager.default.removeItem(at: root) }
 
-        let discoveryOutputURL = try await runTinyDiscoveryCampaign(at: root)
         let ecologyConfigDirectory = try makeTinyEcologyConfigDirectory(at: root.appendingPathComponent("ecology-config", isDirectory: true))
+        // Seed from the same base config the ecology runtime uses so the exported
+        // creature's kernel routes match the runtime kernel routes; embedding is strict.
+        let discoveryOutputURL = try await runTinyDiscoveryCampaign(
+            at: root,
+            baseConfigURL: ecologyConfigDirectory.appendingPathComponent("vanilla-base.json")
+        )
         let ecologyConfigURL = root.appendingPathComponent("seeded-ecology.json")
         try writeJSON(
             [
@@ -334,7 +339,10 @@ final class CampaignCommandTests: XCTestCase {
     }
 }
 
-private func runTinyDiscoveryCampaign(at root: URL) async throws -> URL {
+private func runTinyDiscoveryCampaign(
+    at root: URL,
+    baseConfigURL: URL = dossierConfigsRoot().appendingPathComponent("base/paper_base_1c_128.json")
+) async throws -> URL {
     let searchConfigURL = root.appendingPathComponent("search-discovery.json")
     try writeJSON(
         [
@@ -363,7 +371,7 @@ private func runTinyDiscoveryCampaign(at root: URL) async throws -> URL {
             "variants": [
                 [
                     "id": "seed-source",
-                    "config": dossierConfigsRoot().appendingPathComponent("base/paper_base_1c_128.json").path,
+                    "config": baseConfigURL.path,
                     "search": searchConfigURL.path,
                     "count": 1,
                 ],
