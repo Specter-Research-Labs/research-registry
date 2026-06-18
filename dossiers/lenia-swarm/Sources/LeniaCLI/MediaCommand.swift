@@ -901,7 +901,8 @@ private func renderEcologyMediaBundle(
             captureEverySteps: captureStride,
             activityConfig: nil,
             foodSpawn: payload.variant.foodSpawn,
-            dissipation: payload.variant.dissipation
+            dissipation: payload.variant.dissipation,
+            captureParameters: renderMode == .species
         )
     )
 
@@ -911,9 +912,19 @@ private func renderEcologyMediaBundle(
 
     let frameWriter = FrameWriter(outputDir: framesURL)
     let colorWriter = ColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
-    for frame in rollout.recordedFrames {
+    let speciesRenderer = renderMode == .species ? try makeLeniaMetalFieldRenderer() : nil
+    for (index, frame) in rollout.recordedFrames.enumerated() {
         frameWriter.write(step: frame.step, width: frame.width, height: frame.height, data: frame.bytes)
-        if let foodBytes = frame.foodBytes {
+        if renderMode == .species, let speciesRenderer, let seeds = rollout.parameterSeeds, index < seeds.count {
+            try writeEcologySpeciesFrame(
+                mass: frame.bytes,
+                seed: seeds[index],
+                width: frame.width,
+                height: frame.height,
+                url: colorFramesURL.appendingPathComponent(String(format: "frame_%06d.png", frame.step)),
+                renderer: speciesRenderer
+            )
+        } else if let foodBytes = frame.foodBytes {
             let name = String(format: "frame_%06d.png", frame.step)
             let url = colorFramesURL.appendingPathComponent(name)
             try writePNGColorFrame(

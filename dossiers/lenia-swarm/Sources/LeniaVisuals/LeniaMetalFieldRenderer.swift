@@ -513,6 +513,7 @@ private extension LeniaRenderMode {
         case .flowHue: return 9
         case .flowLIC: return 10
         case .tolDepth: return 11
+        case .species: return 12
         }
     }
 }

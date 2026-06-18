@@ -331,6 +331,15 @@ fragment half4 labStageFragment(
             ? clamp((depthNum / mass) / float(channelCount - 1), 0.0, 1.0)
             : toneMass(mass);
         baseColor = tol(depth);
+    } else if (uniforms.renderMode == 12) {
+        // Species: hue = angle of the standardized local-parameter projection
+        // (channels.b/.a), so distinct co-advected rules read as distinct
+        // colors. Reveals speciation and mixing in multi-species worlds.
+        float2 sp = float2(channels.b, channels.a);
+        float angle = atan2(sp.y, sp.x);
+        float radius = clamp(length(sp) * 0.5, 0.0, 1.0);
+        float chroma = 0.10 + 0.10 * radius;
+        baseColor = oklabToLinearSrgb(float3(0.72, chroma * cos(angle), chroma * sin(angle)));
     } else if (channelCount > 1) {
         // Composite channels as additive pigments, then tone by total mass so
         // brightness tracks density while hue tracks channel composition.

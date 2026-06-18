@@ -487,9 +487,44 @@ func parseLeniaRenderMode(_ rawValue: String) throws -> LeniaRenderMode {
         return .flowLIC
     case "toldepth", "tol-depth", "depth":
         return .tolDepth
+    case "species", "param", "parameters":
+        return .species
     default:
-        throw ValidationError("Invalid render mode '\(rawValue)'. Expected body, truth, magma, viridis, inferno, plasma, turbo, tol, flux, flowhue, flowlic, or toldepth.")
+        throw ValidationError("Invalid render mode '\(rawValue)'. Expected body, truth, magma, viridis, inferno, plasma, turbo, tol, flux, flowhue, flowlic, toldepth, or species.")
     }
+}
+
+// Render one species-map frame: mass in .r drives lighting/presence, the 2D
+// parameter projection rides in .b/.a, and the kernel colors by its angle.
+func writeEcologySpeciesFrame(
+    mass: Data,
+    seed: [Float],
+    width: Int,
+    height: Int,
+    url: URL,
+    renderer: LeniaMetalFieldRenderer
+) throws {
+    let cellCount = width * height
+    precondition(mass.count == cellCount, "Species frame mass must be \(cellCount) bytes, got \(mass.count)")
+    precondition(seed.count == cellCount * 2, "Species frame seed must be \(cellCount * 2) floats, got \(seed.count)")
+    let massBytes = [UInt8](mass)
+    var rgba = [Float](repeating: 0, count: cellCount * 4)
+    for cell in 0..<cellCount {
+        rgba[cell * 4 + 0] = Float(massBytes[cell]) / 255.0
+        rgba[cell * 4 + 2] = seed[cell * 2 + 0]
+        rgba[cell * 4 + 3] = seed[cell * 2 + 1]
+    }
+    guard let image = renderer.renderMultiChannelImage(
+        rgbaValues: rgba,
+        channels: 1,
+        width: width,
+        height: height,
+        renderMode: .species,
+        outputSize: colorOutputSize(width: width, height: height, superSample: colorFrameSuperSample)
+    ) else {
+        throw FrameExportError.renderFailed
+    }
+    try writePNGImage(image: image, url: url)
 }
 
 func writePNGFrame(data: Data, width: Int, height: Int, url: URL) throws {

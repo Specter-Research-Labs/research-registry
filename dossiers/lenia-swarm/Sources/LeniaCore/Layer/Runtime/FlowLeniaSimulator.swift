@@ -12,6 +12,10 @@ public struct LeniaRolloutResult: Sendable {
     public let activitySnapshots: [ActivitySnapshot]
     public let activitySummary: ActivitySummary?
     public let recordedFrames: [LeniaTrajectoryFrame]
+    // Per captured frame, a normalized 2D projection of the local parameter
+    // vector (row-major, 2 components per cell). Populated only when
+    // captureParameters is set. Transient (not persisted); drives the species map.
+    public let parameterSeeds: [[Float]]?
 
     public init(
         finalMassMap: [Float],
@@ -22,7 +26,8 @@ public struct LeniaRolloutResult: Sendable {
         finalCenterY: Float,
         activitySnapshots: [ActivitySnapshot],
         activitySummary: ActivitySummary?,
-        recordedFrames: [LeniaTrajectoryFrame]
+        recordedFrames: [LeniaTrajectoryFrame],
+        parameterSeeds: [[Float]]? = nil
     ) {
         self.finalMassMap = finalMassMap
         self.width = width
@@ -33,6 +38,7 @@ public struct LeniaRolloutResult: Sendable {
         self.activitySnapshots = activitySnapshots
         self.activitySummary = activitySummary
         self.recordedFrames = recordedFrames
+        self.parameterSeeds = parameterSeeds
     }
 }
 
@@ -95,6 +101,7 @@ public struct FlowLeniaRolloutConfig: Sendable {
     public let foodSpawn: FlowLeniaFoodSpawnConfig?
     public let dissipation: FlowLeniaDissipationConfig?
     public let logger: Logger?
+    public let captureParameters: Bool
 
     public init(
         steps: Int,
@@ -103,7 +110,8 @@ public struct FlowLeniaRolloutConfig: Sendable {
         activityConfig: ActivityConfig?,
         foodSpawn: FlowLeniaFoodSpawnConfig?,
         dissipation: FlowLeniaDissipationConfig?,
-        logger: Logger? = nil
+        logger: Logger? = nil,
+        captureParameters: Bool = false
     ) {
         self.steps = steps
         self.recordEverySteps = recordEverySteps
@@ -112,6 +120,7 @@ public struct FlowLeniaRolloutConfig: Sendable {
         self.foodSpawn = foodSpawn
         self.dissipation = dissipation
         self.logger = logger
+        self.captureParameters = captureParameters
     }
 }
 
@@ -297,6 +306,8 @@ public final class FlowLeniaSimulator {
         }
 
         var recordedFrames: [LeniaTrajectoryFrame] = []
+        var parameterSeeds: [[Float]] = []
+        var parameterProjection: MLXArray?
         var summarizer = ActivitySummarizer()
         let progressInterval = max(config.recordEverySteps * 100, 10_000)
         var pendingMetalSteps = 0
@@ -425,6 +436,21 @@ public final class FlowLeniaSimulator {
                     bytes: bytes,
                     foodBytes: foodBytes
                 ))
+                if config.captureParameters {
+                    let paramField: MLXArray
+                    if let runner = persistentMetalRunner {
+                        paramField = runner.materializeParams()
+                    } else if let params = PBatch {
+                        paramField = params
+                    } else {
+                        fatalError("captureParameters requires embedded parameter fields.")
+                    }
+                    parameterSeeds.append(projectParameterSeed(
+                        paramField,
+                        cellCount: runtimeConfig.sx * runtimeConfig.sy,
+                        projection: &parameterProjection
+                    ))
+                }
             }
 
             if shouldRecord, let params = PBatch, let activityConfig = config.activityConfig {
@@ -496,8 +522,36 @@ public final class FlowLeniaSimulator {
             finalCenterY: finalCenter.y,
             activitySnapshots: [],
             activitySummary: activitySummary,
-            recordedFrames: recordedFrames
+            recordedFrames: recordedFrames,
+            parameterSeeds: config.captureParameters ? parameterSeeds : nil
         )
+    }
+
+    // Project the per-cell parameter vector onto a fixed 2D basis and
+    // standardize, so distinct local rules (species) land at distinct angles.
+    // The species map colors by this angle. Returns row-major [cellCount * 2].
+    private func projectParameterSeed(
+        _ paramField: MLXArray,
+        cellCount: Int,
+        projection: inout MLXArray?
+    ) -> [Float] {
+        let parameterCount = paramField.shape[3]
+        if projection == nil {
+            var basis = [Float](repeating: 0, count: parameterCount * 2)
+            for i in 0..<parameterCount {
+                basis[i * 2 + 0] = sin(Float(i) * 12.9898 + 0.5)
+                basis[i * 2 + 1] = cos(Float(i) * 78.233 + 1.3)
+            }
+            projection = MLXArray(basis).reshaped([parameterCount, 2])
+        }
+        let flat = paramField[0].reshaped([cellCount, parameterCount])
+        var seed = MLX.matmul(flat, projection!)
+        let mean = seed.mean(axes: [0])
+        let centered = seed - mean
+        let std = MLX.sqrt((centered * centered).mean(axes: [0])) + MLXArray(Float(1e-5))
+        seed = centered / std
+        eval(seed)
+        return seed.asArray(Float.self)
     }
 
     private static func validateMetalBackendCompatibility(
