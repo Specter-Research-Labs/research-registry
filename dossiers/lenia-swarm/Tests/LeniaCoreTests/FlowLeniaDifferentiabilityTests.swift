@@ -180,7 +180,6 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
 
         for (index, grad) in grads.enumerated() {
             let norm = gradNorm(grad)
-            print("grad[\(labels[index])] norm = \(norm)")
             XCTAssertTrue(allFinite(grad), "gradient for \(labels[index]) has non-finite entries")
             XCTAssertGreaterThan(norm, 0.0, "gradient for \(labels[index]) is identically zero")
         }
@@ -231,7 +230,6 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
         XCTAssertTrue(value[0].item(Float.self).isFinite)
         for (index, grad) in grads.enumerated() {
             let norm = gradNorm(grad)
-            print("grad[\(labels[index])] norm = \(norm)")
             XCTAssertTrue(allFinite(grad), "gradient for \(labels[index]) has non-finite entries")
             XCTAssertGreaterThan(norm, 0.0, "gradient for \(labels[index]) is identically zero")
         }
@@ -339,7 +337,6 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
             return (analytic, numeric)
         }
 
-        print("init directional derivative: analytic = \(result.analytic), numeric = \(result.numeric)")
         XCTAssertNotEqual(result.numeric, 0.0, accuracy: 1e-6, "finite-difference signal must be resolvable")
         let relativeError = abs(result.analytic - result.numeric) / max(abs(result.numeric), 1e-6)
         XCTAssertLessThan(relativeError, 0.05, "analytic gradient must match finite difference within 5%")

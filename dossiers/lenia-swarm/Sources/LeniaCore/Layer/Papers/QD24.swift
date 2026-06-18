@@ -3022,7 +3022,7 @@ private func leniaBreeder2024ExtractSeries(
              let noise = MLXArray((0..<(batchIndices.count * config.features)).map { _ in
                  leniaBreeder2024Gaussian(std: 1.0, rng: &rng)
              }).reshaped([batchIndices.count, config.features])
-             let objective = valueAndGrad { (arrays: [MLXArray]) -> [MLXArray] in
+             let objective = valueAndGrad({ (arrays: [MLXArray]) -> [MLXArray] in
                  let model = LeniaBreeder2024VAEModel(arrays: arrays)
                  let forward = leniaBreeder2024VAEForward(inputs: batchArray, model: model, epsilon: noise)
                  let diff = forward.reconstruction - batchArray
@@ -3033,7 +3033,7 @@ private func leniaBreeder2024ExtractSeries(
                      )
                  )
                  return [reconstructionLoss + MLXArray(1e-3) * kl]
-             }
+             }, argumentNumbers: Array(model.arrays.indices))
              let (loss, gradients) = objective(model.arrays)
              let forward = leniaBreeder2024VAEForward(inputs: batchArray, model: model, epsilon: noise)
              let diff = forward.reconstruction - batchArray
