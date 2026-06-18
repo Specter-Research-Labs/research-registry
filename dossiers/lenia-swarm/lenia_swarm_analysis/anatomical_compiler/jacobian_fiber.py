@@ -23,12 +23,12 @@ from typing import Any
 
 import numpy as np
 
-from lenia_swarm_analysis.anatomical_compiler.cinn_inverse import (
+from lenia_swarm_analysis.anatomical_compiler._codec import (
     PHENOTYPE_FIELDS,
     GenotypeCodec,
     Standardizer,
-    _clamp_params,
-    _load,
+    clamp_params,
+    load_dataset,
 )
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import ForwardSimulator
 
@@ -40,7 +40,7 @@ def _shape_std(
     simulator: ForwardSimulator,
     cond_std: Standardizer,
 ) -> np.ndarray | None:
-    params, _ = _clamp_params(codec.unflatten(genotype_vec), ranges)
+    params, _ = clamp_params(codec.unflatten(genotype_vec), ranges)
     phenotype = simulator.evaluate(params, init_seed=0)
     if not phenotype.get("is_stable"):
         return None
@@ -97,7 +97,7 @@ def run(
     steps: int,
     seed: int,
 ) -> dict[str, Any]:
-    codec, genotype, phenotype = _load(dataset_path)
+    codec, genotype, phenotype = load_dataset(dataset_path)
     rng = np.random.default_rng(seed)
     index = rng.permutation(genotype.shape[0])[:genotypes]
     cond_std = Standardizer.fit(phenotype)

@@ -27,11 +27,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from lenia_swarm_analysis.anatomical_compiler.cinn_inverse import (
+from lenia_swarm_analysis.anatomical_compiler._codec import (
     PHENOTYPE_FIELDS,
     Standardizer,
-    _clamp_params,
-    _load,
+    clamp_params,
+    load_dataset,
 )
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import ForwardSimulator
 
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
 
     torch.manual_seed(args.seed)
     root = Path.cwd()
-    codec, genotype, phenotype = _load((root / args.dataset).resolve())
+    codec, genotype, phenotype = load_dataset((root / args.dataset).resolve())
     rng = np.random.default_rng(args.seed)
     order = rng.permutation(genotype.shape[0])
     target_index = order[: args.targets]
@@ -208,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
             device=device, steps=args.refine_steps, learning_rate=args.refine_lr,
         )
         refined_genotype = geno_std.inverse(refined_std[None, :])[0]
-        params, _ = _clamp_params(codec.unflatten(refined_genotype), ranges)
+        params, _ = clamp_params(codec.unflatten(refined_genotype), ranges)
         achieved = simulator.evaluate(params, init_seed=0)
         if not achieved.get("is_stable"):
             results.append({"refinedError": None, "stable": False})

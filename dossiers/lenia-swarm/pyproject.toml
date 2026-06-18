@@ -17,6 +17,9 @@ inverse = [
     "torch>=2.2",
     "FrEIA>=0.2",
 ]
+mlx = [
+    "mlx>=0.31",
+]
 
 [dependency-groups]
 dev = [

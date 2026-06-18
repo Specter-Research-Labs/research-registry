@@ -22,12 +22,12 @@ from typing import Any
 
 import numpy as np
 
-from lenia_swarm_analysis.anatomical_compiler.cinn_inverse import (
+from lenia_swarm_analysis.anatomical_compiler._codec import (
     PHENOTYPE_FIELDS,
     GenotypeCodec,
     Standardizer,
-    _clamp_params,
-    _load,
+    clamp_params,
+    load_dataset,
 )
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import ForwardSimulator
 
@@ -52,7 +52,7 @@ def _cost(
     cond_std: Standardizer,
     target_std: np.ndarray,
 ) -> float:
-    params, _ = _clamp_params(codec.unflatten(genotype_vec), ranges)
+    params, _ = clamp_params(codec.unflatten(genotype_vec), ranges)
     phenotype = simulator.evaluate(params)
     if not phenotype.get("is_stable"):
         return UNSTABLE_COST
@@ -98,7 +98,7 @@ def refine_one(
         if costs[order[0]] < best_cost:
             best_cost = float(costs[order[0]])
             best_vec = samples[order[0]].copy()
-    refined_params, _ = _clamp_params(codec.unflatten(best_vec), ranges)
+    refined_params, _ = clamp_params(codec.unflatten(best_vec), ranges)
     return {
         "startCost": start_cost,
         "refinedCost": best_cost,
@@ -124,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path.cwd()
-    codec, genotype, phenotype = _load((root / args.dataset).resolve())
+    codec, genotype, phenotype = load_dataset((root / args.dataset).resolve())
     rng = np.random.default_rng(args.seed)
     order = rng.permutation(genotype.shape[0])
     target_index = order[: args.targets]

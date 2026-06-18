@@ -40,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("family-fidelity", help="audit replay fidelity + TDA robustness")
     sub.add_parser("family-representatives", help="one canonical Flow-Lenia creature per family")
     sub.add_parser("panels", help="3D + top-down landscape panels per rule")
+    sub.add_parser("bifurcation", help="genotype-space (m,s) bifurcation slice + cusp/bistability")
     args = parser.parse_args(argv)
 
     if args.command == "build-inputs":
@@ -107,6 +108,9 @@ def main(argv: list[str] | None = None) -> int:
         build()
     elif args.command == "panels":
         from .panels import build
+        build()
+    elif args.command == "bifurcation":
+        from .bifurcation import build
         build()
     return 0
 

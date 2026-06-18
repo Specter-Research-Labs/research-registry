@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -33,129 +32,14 @@ import torch.nn as nn
 from FrEIA.framework import SequenceINN
 from FrEIA.modules import AllInOneBlock
 
-from lenia_swarm_analysis.anatomical_compiler.forward_sim import ForwardSimulator
-
-# Only the init-robust shape descriptors. Motion metrics (speed, displacement,
-# center_velocity, path_length and their ratios) have ~60% coefficient of variation
-# across initial conditions for a fixed genotype, because a stable blob's drift
-# direction is set by the initial condition, not the genotype; conditioning on them
-# would be conditioning on initial-condition noise. The compiler targets morphology.
-PHENOTYPE_FIELDS: tuple[str, ...] = (
-    "mass_mean",
-    "mass_std",
-    "occupancy_mean",
-    "variance_mean",
-    "energy_mean",
-    "gyration",
-    "complexity_mean",
+from lenia_swarm_analysis.anatomical_compiler._codec import (
+    PHENOTYPE_FIELDS,
+    GenotypeCodec,
+    Standardizer,
+    clamp_params,
+    load_dataset,
 )
-
-
-@dataclass
-class GenotypeCodec:
-    """Bijection between a genotype params dict and a flat vector, in the same
-    layout as the fiber analysis (R, then per kernel m, s, h, r, a, b, w)."""
-
-    kernel_count: int
-    bump_lengths: tuple[int, int, int]
-
-    @classmethod
-    def from_params(cls, params: dict[str, Any]) -> GenotypeCodec:
-        return cls(
-            kernel_count=len(params["m"]),
-            bump_lengths=(len(params["a"][0]), len(params["b"][0]), len(params["w"][0])),
-        )
-
-    def flatten(self, params: dict[str, Any]) -> list[float]:
-        out: list[float] = [float(params["R"])]
-        for index in range(self.kernel_count):
-            out.extend(
-                (
-                    float(params["m"][index]),
-                    float(params["s"][index]),
-                    float(params["h"][index]),
-                    float(params["r"][index]),
-                )
-            )
-            out.extend(float(v) for v in params["a"][index])
-            out.extend(float(v) for v in params["b"][index])
-            out.extend(float(v) for v in params["w"][index])
-        return out
-
-    def unflatten(self, vector: np.ndarray) -> dict[str, Any]:
-        la, lb, lw = self.bump_lengths
-        cursor = 1
-        params: dict[str, Any] = {
-            "R": float(vector[0]),
-            "m": [],
-            "s": [],
-            "h": [],
-            "r": [],
-            "a": [],
-            "b": [],
-            "w": [],
-        }
-        for _ in range(self.kernel_count):
-            params["m"].append(float(vector[cursor]))
-            params["s"].append(float(vector[cursor + 1]))
-            params["h"].append(float(vector[cursor + 2]))
-            params["r"].append(float(vector[cursor + 3]))
-            cursor += 4
-            params["a"].append([float(v) for v in vector[cursor : cursor + la]])
-            cursor += la
-            params["b"].append([float(v) for v in vector[cursor : cursor + lb]])
-            cursor += lb
-            params["w"].append([float(v) for v in vector[cursor : cursor + lw]])
-            cursor += lw
-        return params
-
-    @property
-    def dim(self) -> int:
-        return 1 + self.kernel_count * (4 + sum(self.bump_lengths))
-
-
-@dataclass
-class Standardizer:
-    mean: np.ndarray
-    std: np.ndarray
-
-    @classmethod
-    def fit(cls, matrix: np.ndarray) -> Standardizer:
-        std = matrix.std(axis=0)
-        std[std < 1e-8] = 1.0
-        return cls(mean=matrix.mean(axis=0), std=std)
-
-    def forward(self, matrix: np.ndarray) -> np.ndarray:
-        return (matrix - self.mean) / self.std
-
-    def inverse(self, matrix: np.ndarray) -> np.ndarray:
-        return matrix * self.std + self.mean
-
-
-def _load(dataset_path: Path) -> tuple[GenotypeCodec, np.ndarray, np.ndarray]:
-    genotype_rows: list[list[float]] = []
-    phenotype_rows: list[list[float]] = []
-    codec: GenotypeCodec | None = None
-    with dataset_path.open("r", encoding="utf-8") as handle:
-        for line in handle:
-            if not line.strip():
-                continue
-            record = json.loads(line)
-            if not record["phenotype"].get("is_stable"):
-                continue
-            if any(record["phenotype"].get(f) is None for f in PHENOTYPE_FIELDS):
-                continue
-            if codec is None:
-                codec = GenotypeCodec.from_params(record["params"])
-            genotype_rows.append(codec.flatten(record["params"]))
-            phenotype_rows.append([float(record["phenotype"][f]) for f in PHENOTYPE_FIELDS])
-    if codec is None:
-        raise SystemExit("No usable stable rows in dataset")
-    return (
-        codec,
-        np.asarray(genotype_rows, dtype=np.float64),
-        np.asarray(phenotype_rows, dtype=np.float64),
-    )
+from lenia_swarm_analysis.anatomical_compiler.forward_sim import ForwardSimulator
 
 
 def _build_cinn(genotype_dim: int, cond_dim: int, *, blocks: int, hidden: int) -> SequenceINN:
@@ -273,27 +157,37 @@ def sample(
     return geno_std.inverse(standardized)
 
 
-def _clamp_params(
-    params: dict[str, Any], ranges: dict[str, list[float]]
-) -> tuple[dict[str, Any], int]:
-    clamped = 0
+def save_checkpoint(
+    path: Path, inn: SequenceINN, geno_std: Standardizer, cond_std: Standardizer,
+    *, genotype_dim: int, cond_dim: int, blocks: int, hidden: int,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(
+        {
+            "state_dict": {k: v.cpu() for k, v in inn.state_dict().items()},
+            "geno_mean": geno_std.mean, "geno_std": geno_std.std,
+            "cond_mean": cond_std.mean, "cond_std": cond_std.std,
+            "genotype_dim": genotype_dim, "cond_dim": cond_dim,
+            "blocks": blocks, "hidden": hidden,
+            "phenotype_fields": list(PHENOTYPE_FIELDS),
+        },
+        path,
+    )
 
-    def clamp_scalar(value: float, key: str) -> float:
-        nonlocal clamped
-        low, high = ranges[key]
-        bounded = min(max(value, low), high)
-        if bounded != value:
-            clamped += 1
-        return bounded
 
-    out: dict[str, Any] = {"R": clamp_scalar(params["R"], "R")}
-    for scalar_key in ("m", "s", "h", "r"):
-        out[scalar_key] = [clamp_scalar(v, scalar_key) for v in params[scalar_key]]
-    for vector_key in ("a", "b", "w"):
-        out[vector_key] = [
-            [clamp_scalar(v, vector_key) for v in kernel] for kernel in params[vector_key]
-        ]
-    return out, clamped
+def load_checkpoint(
+    path: Path, device: torch.device
+) -> tuple[SequenceINN, Standardizer, Standardizer]:
+    bundle = torch.load(path, map_location=device, weights_only=False)
+    inn = _build_cinn(
+        bundle["genotype_dim"], bundle["cond_dim"],
+        blocks=bundle["blocks"], hidden=bundle["hidden"],
+    )
+    inn.load_state_dict(bundle["state_dict"])
+    inn.to(device)
+    geno_std = Standardizer(mean=bundle["geno_mean"], std=bundle["geno_std"])
+    cond_std = Standardizer(mean=bundle["cond_mean"], std=bundle["cond_std"])
+    return inn, geno_std, cond_std
 
 
 def _resim_validate(
@@ -323,7 +217,7 @@ def _resim_validate(
         stable = 0
         clamp_total = 0
         for row in genotypes:
-            params, clamped = _clamp_params(codec.unflatten(row), ranges)
+            params, clamped = clamp_params(codec.unflatten(row), ranges)
             clamp_total += clamped
             phenotype = simulator.evaluate(params)
             if not phenotype.get("is_stable"):
@@ -348,7 +242,7 @@ def _resim_validate(
 
         empirical_errors: list[float] = []
         for neighbor_index in neighbor:
-            params, _ = _clamp_params(codec.unflatten(train_genotype[neighbor_index]), ranges)
+            params, _ = clamp_params(codec.unflatten(train_genotype[neighbor_index]), ranges)
             phenotype = simulator.evaluate(params)
             values = np.array(
                 [float(phenotype[f]) if phenotype.get(f) is not None else np.nan
@@ -400,6 +294,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--search", default="configs/search/search_crossmap_motion.json")
     parser.add_argument("--steps", type=int, default=1200)
     parser.add_argument("--output", default="outputs/anatomical-compiler/stage2_cinn.json")
+    parser.add_argument("--checkpoint", default="outputs/anatomical-compiler/cinn.pt")
     parser.add_argument("--blocks", type=int, default=8)
     parser.add_argument("--hidden", type=int, default=128)
     parser.add_argument("--epochs", type=int, default=400)
@@ -418,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
     torch.manual_seed(args.seed)
     root = Path.cwd()
     dataset_path = (root / args.dataset).resolve()
-    codec, genotype, phenotype = _load(dataset_path)
+    codec, genotype, phenotype = load_dataset(dataset_path)
 
     rng = np.random.default_rng(args.seed)
     order = rng.permutation(genotype.shape[0])
@@ -479,6 +374,14 @@ def main(argv: list[str] | None = None) -> int:
     output_path = (root / args.output).resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+
+    checkpoint_path = (root / args.checkpoint).resolve()
+    save_checkpoint(
+        checkpoint_path, inn, geno_std, cond_std,
+        genotype_dim=codec.dim, cond_dim=len(PHENOTYPE_FIELDS),
+        blocks=args.blocks, hidden=args.hidden,
+    )
+    print(f"saved checkpoint {checkpoint_path}")
 
     print(f"genotype_dim={codec.dim} condition_dim={len(PHENOTYPE_FIELDS)} "
           f"train={train_geno.shape[0]} test={test_geno.shape[0]}")
