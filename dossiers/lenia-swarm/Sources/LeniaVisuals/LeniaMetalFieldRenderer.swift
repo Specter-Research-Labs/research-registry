@@ -497,23 +497,3 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         )
     }
 }
-
-private extension LeniaRenderMode {
-    var shaderIndex: UInt32 {
-        switch self {
-        case .truth: return 0
-        case .body: return 1
-        case .smoothMagma: return 2
-        case .viridis: return 3
-        case .inferno: return 4
-        case .plasma: return 5
-        case .turbo: return 6
-        case .tol: return 8
-        case .flux: return 7
-        case .flowHue: return 9
-        case .flowLIC: return 10
-        case .tolDepth: return 11
-        case .species: return 12
-        }
-    }
-}

@@ -223,13 +223,10 @@ struct CapturedStateFrame {
 
     func matterBytes(scale explicitScale: Float? = nil) -> Data {
         let totals = matterTotals()
-        let scale = max(explicitScale ?? robustPositiveScale(totals), 1e-6)
-        let denominator = log1p(scale)
+        let denominator = logToneDenominator(totals, explicitScale: explicitScale)
         var bytes = [UInt8](repeating: 0, count: width * height)
         for cell in 0..<(width * height) {
-            let value = max(0, totals[cell])
-            let normalized = max(0, min(1, log1p(value) / denominator))
-            bytes[cell] = UInt8(normalized * 255)
+            bytes[cell] = UInt8(logToneMapped(totals[cell], denominator: denominator) * 255)
         }
         return Data(bytes)
     }
@@ -360,8 +357,7 @@ func normalizedFlowFloats(frame: CapturedStateFrame, scale explicitScale: Float?
     }
     let cellCount = frame.width * frame.height
     let totals = frame.matterTotals()
-    let massScale = max(explicitScale ?? robustPositiveScale(totals), 1e-6)
-    let massDenominator = log1p(massScale)
+    let massDenominator = logToneDenominator(totals, explicitScale: explicitScale)
 
     var magnitudes = [Float](repeating: 0, count: cellCount)
     for cell in 0..<cellCount {
@@ -374,7 +370,7 @@ func normalizedFlowFloats(frame: CapturedStateFrame, scale explicitScale: Float?
 
     var rgba = [Float](repeating: 0, count: cellCount * 4)
     for cell in 0..<cellCount {
-        rgba[cell * 4 + 0] = max(0, min(1, log1p(max(0, totals[cell])) / massDenominator))
+        rgba[cell * 4 + 0] = logToneMapped(totals[cell], denominator: massDenominator)
         rgba[cell * 4 + 1] = max(-1, min(1, growth[cell] / growthScale))
         rgba[cell * 4 + 2] = max(-1, min(1, flow[cell * 2 + 1] / flowScale))
         rgba[cell * 4 + 3] = max(-1, min(1, flow[cell * 2 + 0] / flowScale))
@@ -388,16 +384,13 @@ func normalizedFlowFloats(frame: CapturedStateFrame, scale explicitScale: Float?
 func normalizedChannelFloats(frame: CapturedStateFrame, scale explicitScale: Float? = nil) -> [Float] {
     precondition(frame.channels >= 1 && frame.channels <= 4, "Channel export supports 1...4 channels, got \(frame.channels)")
     let cellCount = frame.width * frame.height
-    let scale = max(explicitScale ?? robustPositiveScale(frame.matterTotals()), 1e-6)
-    let logDenominator = log1p(scale)
+    let denominator = logToneDenominator(frame.matterTotals(), explicitScale: explicitScale)
     var rgba = [Float](repeating: 0, count: cellCount * 4)
     for cell in 0..<cellCount {
         let base = cell * frame.channels
         let out = cell * 4
         for channel in 0..<frame.channels {
-            let value = frame.values[base + channel]
-            let positive = value.isFinite ? max(0, value) : 0
-            rgba[out + channel] = max(0, min(1, log1p(positive) / logDenominator))
+            rgba[out + channel] = logToneMapped(frame.values[base + channel], denominator: denominator)
         }
     }
     return rgba
@@ -405,42 +398,37 @@ func normalizedChannelFloats(frame: CapturedStateFrame, scale explicitScale: Flo
 
 func channelDiagnosticRGBA(frame: CapturedStateFrame, scale explicitScale: Float? = nil) -> Data {
     let cellCount = frame.width * frame.height
-    let scale = max(explicitScale ?? robustPositiveScale(frame.matterTotals()), 1e-6)
-    let logDenominator = log1p(scale)
+    let denominator = logToneDenominator(frame.matterTotals(), explicitScale: explicitScale)
     var rgba = [UInt8](repeating: 0, count: cellCount * 4)
     for cell in 0..<cellCount {
         let base = cell * frame.channels
-        let red: Float
-        let green: Float
+        func channel(_ offset: Int) -> Float { logToneMapped(frame.values[base + offset], denominator: denominator) }
+        // 1ch -> gray, 2ch -> first to R/G and second to B, 3+ -> straight RGB.
+        let red = channel(0)
+        let green = frame.channels >= 3 ? channel(1) : red
         let blue: Float
-        if frame.channels == 1 {
-            let value = normalizedChannelValue(frame.values[base], logDenominator: logDenominator)
-            red = value
-            green = value
-            blue = value
-        } else if frame.channels == 2 {
-            let first = normalizedChannelValue(frame.values[base], logDenominator: logDenominator)
-            let second = normalizedChannelValue(frame.values[base + 1], logDenominator: logDenominator)
-            red = first
-            green = first
-            blue = second
-        } else {
-            red = normalizedChannelValue(frame.values[base], logDenominator: logDenominator)
-            green = normalizedChannelValue(frame.values[base + 1], logDenominator: logDenominator)
-            blue = normalizedChannelValue(frame.values[base + 2], logDenominator: logDenominator)
-        }
+        if frame.channels == 1 { blue = red }
+        else if frame.channels == 2 { blue = channel(1) }
+        else { blue = channel(2) }
         let out = cell * 4
-        rgba[out + 0] = UInt8(max(0, min(1, red)) * 255)
-        rgba[out + 1] = UInt8(max(0, min(1, green)) * 255)
-        rgba[out + 2] = UInt8(max(0, min(1, blue)) * 255)
+        rgba[out + 0] = UInt8(red * 255)
+        rgba[out + 1] = UInt8(green * 255)
+        rgba[out + 2] = UInt8(blue * 255)
         rgba[out + 3] = 255
     }
     return Data(rgba)
 }
 
-private func normalizedChannelValue(_ value: Float, logDenominator: Float) -> Float {
+// Shared robust log tone-map: a creature's mass spans orders of magnitude, so
+// every color path maps it through log1p, normalized by a robust per-frame
+// scale. These two helpers are the single definition of that mapping.
+private func logToneDenominator(_ totals: [Float], explicitScale: Float?) -> Float {
+    log1p(max(explicitScale ?? robustPositiveScale(totals), 1e-6))
+}
+
+private func logToneMapped(_ value: Float, denominator: Float) -> Float {
     guard value.isFinite else { return 0 }
-    return max(0, min(1, log1p(max(0, value)) / logDenominator))
+    return max(0, min(1, log1p(max(0, value)) / denominator))
 }
 
 func robustMatterScale(_ frames: [CapturedStateFrame]) -> Float {
