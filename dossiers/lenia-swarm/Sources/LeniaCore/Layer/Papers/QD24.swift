@@ -2051,7 +2051,7 @@ public final class LeniaBreeder2024Runner {
      isoSigma: Float,
      rng: inout SeededRandomNumberGenerator
  ) -> [Float] {
-     base.map { $0 + leniaBreeder2024Gaussian(std: isoSigma, rng: &rng) }
+     base.map { $0 + gaussianSample(std: isoSigma, rng: &rng) }
  }
  
  private func leniaBreeder2024IsolineVariation(
@@ -2061,20 +2061,12 @@ public final class LeniaBreeder2024Runner {
      lineSigma: Float,
      rng: inout SeededRandomNumberGenerator
  ) -> [Float] {
-     let lineNoise = leniaBreeder2024Gaussian(std: lineSigma, rng: &rng)
+     let lineNoise = gaussianSample(std: lineSigma, rng: &rng)
      return zip(x1, x2).map { lhs, rhs in
-         lhs + leniaBreeder2024Gaussian(std: isoSigma, rng: &rng) + lineNoise * (rhs - lhs)
+         lhs + gaussianSample(std: isoSigma, rng: &rng) + lineNoise * (rhs - lhs)
      }
  }
  
-private func leniaBreeder2024Gaussian(
-    std: Float,
-    rng: inout SeededRandomNumberGenerator
-) -> Float {
-     let u1 = max(Float.random(in: 0..<1, using: &rng), 1e-7)
-     let u2 = Float.random(in: 0..<1, using: &rng)
-    return std * sqrt(-2 * log(u1)) * cos(2 * .pi * u2)
-}
 
 private func leniaBreeder2024ArenaModeLabel(_ mode: LeniaBreeder2024ArenaMode) -> String {
     switch mode {
@@ -2921,7 +2913,7 @@ private func leniaBreeder2024ExtractSeries(
      var rng = SeededRandomNumberGenerator(seed: UInt64(bitPattern: Int64(seed)) ^ 0x515151)
      func weight(_ rows: Int, _ cols: Int, scale: Float) -> MLXArray {
          let values = (0..<(rows * cols)).map { _ in
-             leniaBreeder2024Gaussian(std: scale, rng: &rng)
+             gaussianSample(std: scale, rng: &rng)
          }
          return MLXArray(values).reshaped([rows, cols])
      }
@@ -2986,7 +2978,7 @@ private func leniaBreeder2024ExtractSeries(
              let batch = batchIndices.flatMap { dataset[$0] }
              let batchArray = MLXArray(batch).reshaped([batchIndices.count, inputSize])
              let noise = MLXArray((0..<(batchIndices.count * config.features)).map { _ in
-                 leniaBreeder2024Gaussian(std: 1.0, rng: &rng)
+                 gaussianSample(std: 1.0, rng: &rng)
              }).reshaped([batchIndices.count, config.features])
              let objective = valueAndGrad({ (arrays: [MLXArray]) -> [MLXArray] in
                  let model = LeniaBreeder2024VAEModel(arrays: arrays)

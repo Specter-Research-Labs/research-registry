@@ -370,11 +370,11 @@ private func aiScientist2025MutatedState(
         experiment.mutationProbabilityRange[0],
         min(
             experiment.mutationProbabilityRange[1],
-            base.mutationProbability + aiScientist2025Gaussian(std: max(probWidth * experiment.parameterMutation.std, 1e-6), rng: &rng)
+            base.mutationProbability + gaussianSample(std: max(probWidth * experiment.parameterMutation.std, 1e-6), rng: &rng)
         )
     )
     let sizeWidth = Float(experiment.beamPatchSizeRange[1] - experiment.beamPatchSizeRange[0])
-    let rawSize = Float(base.beamPatchSize) + aiScientist2025Gaussian(std: max(sizeWidth * experiment.parameterMutation.std, 1), rng: &rng)
+    let rawSize = Float(base.beamPatchSize) + gaussianSample(std: max(sizeWidth * experiment.parameterMutation.std, 1), rng: &rng)
     let patchSize = max(
         experiment.beamPatchSizeRange[0],
         min(experiment.beamPatchSizeRange[1], Int(rawSize.rounded()))
@@ -573,11 +573,6 @@ private func aiScientist2025Maxima(_ goals: [[Float]]) -> [Float] {
     return maxima
 }
 
-private func aiScientist2025Gaussian(std: Float, rng: inout SeededRandomNumberGenerator) -> Float {
-    let u1 = max(Float.random(in: 0..<1, using: &rng), 1e-6)
-    let u2 = Float.random(in: 0..<1, using: &rng)
-    return sqrt(-2 * log(u1)) * cos(2 * Float.pi * u2) * std
-}
 
 private func aiScientist2025MultiScaleEntropy(
     massMap: [Float],

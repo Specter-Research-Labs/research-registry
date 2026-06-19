@@ -1055,12 +1055,6 @@ import MLXFFT
      return sqrt(dc * dc + dx * dx + dy * dy)
  }
  
- private func sensorimotorGaussian(std: Float, rng: inout SeededRandomNumberGenerator) -> Float {
-     let u1 = Float.random(in: 0.0001...0.9999, using: &rng)
-     let u2 = Float.random(in: 0.0...1.0, using: &rng)
-     return sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2) * std
- }
- 
  private func sensorimotorUniform(range: [Float], rng: inout SeededRandomNumberGenerator) -> Float {
      Float.random(in: range[0]...range[1], using: &rng)
  }
@@ -1228,7 +1222,7 @@ import MLXFFT
      if let rate = perturbations.initNoiseRate, let std = perturbations.initNoiseStd, std > 0 {
          var noise = [Float](repeating: 0, count: patch.size)
          for index in 0..<noise.count where Float.random(in: 0...1, using: &rng) <= rate {
-             noise[index] = sensorimotorGaussian(std: std, rng: &rng)
+             noise[index] = gaussianSample(std: std, rng: &rng)
          }
          patch = MLX.clip(
              patch + MLXArray(noise).reshaped(patch.shape),
@@ -1322,7 +1316,7 @@ import MLXFFT
      if let rate = perturbations.updateNoiseRate, let std = perturbations.updateNoiseStd, rate > 0, std > 0 {
          var noiseValues = [Float](repeating: 0, count: previous.size)
          for index in 0..<noiseValues.count where Float.random(in: 0...1, using: &rng) < rate {
-             noiseValues[index] = sensorimotorGaussian(std: std, rng: &rng)
+             noiseValues[index] = gaussianSample(std: std, rng: &rng)
          }
          update = update + MLXArray(noiseValues).reshaped(previous.shape)
      }
@@ -1486,14 +1480,14 @@ import MLXFFT
  
      for _ in 0..<64 {
          var candidate = source
-         candidate.T = source.T + MLXArray(sensorimotorGaussian(std: training.mutation.TStd, rng: &rng))
-         candidate.R = source.R + MLXArray(sensorimotorGaussian(std: training.mutation.RStd, rng: &rng))
+         candidate.T = source.T + MLXArray(gaussianSample(std: training.mutation.TStd, rng: &rng))
+         candidate.R = source.R + MLXArray(gaussianSample(std: training.mutation.RStd, rng: &rng))
  
          func mutateVector(_ sourceVector: MLXArray, std: Float) -> MLXArray {
              let values = sourceVector.asArray(Float.self)
              var mutated = values
              for index in mutated.indices where activeMask[min(index, activeMask.count - 1)] {
-                 mutated[index] += sensorimotorGaussian(std: std, rng: &rng)
+                 mutated[index] += gaussianSample(std: std, rng: &rng)
              }
              return MLXArray(mutated).reshaped(sourceVector.shape)
          }
@@ -1505,7 +1499,7 @@ import MLXFFT
              var mutated = flat
              for row in 0..<rows where activeMask[row] {
                  for col in 0..<cols {
-                     mutated[row * cols + col] += sensorimotorGaussian(std: std, rng: &rng)
+                     mutated[row * cols + col] += gaussianSample(std: std, rng: &rng)
                  }
              }
              return MLXArray(mutated).reshaped(shape)
@@ -1693,7 +1687,7 @@ import MLXFFT
      var closeCount = 0
      var veryCloseCount = Int.max
      while closeCount < training.goalSampling.minCloseNeighbors || veryCloseCount > training.goalSampling.maxVeryCloseNeighbors {
-         let collapse = training.goalSampling.collapseGoalMean + sensorimotorGaussian(std: training.goalSampling.collapseGoalJitterStd, rng: &rng)
+         let collapse = training.goalSampling.collapseGoalMean + gaussianSample(std: training.goalSampling.collapseGoalJitterStd, rng: &rng)
          if Float.random(in: 0...1, using: &rng) < training.goalSampling.bestGoalProbability,
              let best = validReached
                  .filter({ $0.collapse <= training.sourceSelection.collapseMax && $0.centroidX > -8 && $0.centroidY > -8 })

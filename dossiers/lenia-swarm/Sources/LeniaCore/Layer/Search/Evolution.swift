@@ -937,13 +937,6 @@ public func fitnessShaping(_ fitness: [Float], mode: String) -> [Float] {
     }
 }
 
-private func sampleStandardNormal(rng: inout SeededRandomNumberGenerator) -> Float {
-    let u1 = max(Float.random(in: 0..<1, using: &rng), 1e-7)
-    let u2 = Float.random(in: 0..<1, using: &rng)
-    let radius = sqrt(-2.0 * log(u1))
-    let angle = 2.0 * Float.pi * u2
-    return radius * cos(angle)
-}
 
 func sampleOpenESNoise(
     population: Int,
@@ -962,7 +955,7 @@ func sampleOpenESNoise(
     )
     for i in 0..<half {
         for j in 0..<dimensions {
-            plus[i][j] = sampleStandardNormal(rng: &rng)
+            plus[i][j] = gaussianSample(rng: &rng)
         }
     }
 
@@ -3837,7 +3830,7 @@ public final class EvolutionEngine {
                 return theta
             }
             return (0..<totalDim).map { dimension in
-                theta[dimension] + sigma * sampleStandardNormal(rng: &rng)
+                theta[dimension] + sigma * gaussianSample(rng: &rng)
             }
         }
     }
@@ -3905,7 +3898,7 @@ public final class EvolutionEngine {
                 return anchor
             }
             return anchor.map { value in
-                value + sigma * sampleStandardNormal(rng: &rng)
+                value + sigma * gaussianSample(rng: &rng)
             }
         }
     }
@@ -3925,8 +3918,8 @@ public final class EvolutionEngine {
             let first = parents[Int.random(in: 0..<parents.count, using: &rng)]
             let second = parents[Int.random(in: 0..<parents.count, using: &rng)]
             return (0..<dimensions).map { dimension in
-                let isotropic = sigma * sampleStandardNormal(rng: &rng)
-                let directional = lineSigma * sampleStandardNormal(rng: &rng) * (second[dimension] - first[dimension])
+                let isotropic = sigma * gaussianSample(rng: &rng)
+                let directional = lineSigma * gaussianSample(rng: &rng) * (second[dimension] - first[dimension])
                 return first[dimension] + isotropic + directional
             }
         }
