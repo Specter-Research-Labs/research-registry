@@ -3295,25 +3295,15 @@ public final class EvolutionEngine {
         translatedShapeOverlap: Float,
         measurement: CandidateMeasurement
     ) -> Float {
-        let overlapTerm = 0.2 + 0.8 * unitInterval(translatedShapeOverlap)
-        let growthTerm = bodyLocomotionGrowthTerm(measurement.occupiedGrowth ?? 1.0)
-        let connectedTerm = 0.25 + 0.75 * unitInterval(measurement.largestComponentFraction ?? 0.0)
-        let solidityTerm = 0.35 + 0.65 * unitInterval(measurement.largestComponentSolidity ?? 0.0)
-        let anisotropyTerm = 0.35 + 0.65 * (1.0 - unitInterval(measurement.largestComponentAnisotropy ?? 1.0))
-        let filamentTerm = 0.35 + 0.65 * (1.0 - unitInterval(measurement.largestComponentFilamentarity ?? 1.0))
-        let morphologyTerm = (connectedTerm + solidityTerm + anisotropyTerm + filamentTerm) / 4.0
-        return max(displacement, 0.0) * overlapTerm * growthTerm * morphologyTerm
-    }
-
-    private func bodyLocomotionGrowthTerm(_ value: Float) -> Float {
-        guard value.isFinite, value > 0 else { return 0.0 }
-        let deviation = abs(log(value))
-        return 1.0 / (1.0 + 2.0 * deviation)
-    }
-
-    private func unitInterval(_ value: Float) -> Float {
-        guard value.isFinite else { return 0.0 }
-        return max(0.0, min(1.0, value))
+        LeniaCore.bodyLocomotionScore(
+            displacement: displacement,
+            translatedShapeOverlap: translatedShapeOverlap,
+            occupiedGrowth: measurement.occupiedGrowth ?? 1.0,
+            largestComponentFraction: measurement.largestComponentFraction ?? 0.0,
+            largestComponentSolidity: measurement.largestComponentSolidity ?? 0.0,
+            largestComponentAnisotropy: measurement.largestComponentAnisotropy ?? 1.0,
+            largestComponentFilamentarity: measurement.largestComponentFilamentarity ?? 1.0
+        )
     }
 
     private func organismnessViolation(measurement: CandidateMeasurement) -> Float {
