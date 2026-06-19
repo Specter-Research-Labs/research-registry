@@ -1157,13 +1157,13 @@ public final class EvolutionEngine {
         case metalFull
     }
 
-    private struct CenterSnapshot {
+    struct CenterSnapshot {
         let alive: Bool
         let x: Float
         let y: Float
     }
 
-    private struct CandidateMeasurement {
+    struct CandidateMeasurement {
         let initial: CenterSnapshot
         let mid: CenterSnapshot?
         let target: CenterSnapshot?
@@ -2919,7 +2919,7 @@ public final class EvolutionEngine {
         )
     }
 
-    private func fitnessValue(from measurement: CandidateMeasurement) -> Float {
+    func fitnessValue(from measurement: CandidateMeasurement) -> Float {
         switch esConfig.fitness.objective {
         case "directed_motion", "obstacle_navigation":
             guard measurement.initial.alive, let target = measurement.target, target.alive else {

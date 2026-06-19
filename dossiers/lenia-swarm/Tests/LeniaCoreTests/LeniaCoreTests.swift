@@ -7664,7 +7664,7 @@ private func makeSandboxMetalParityParams() -> ResolvedParams {
     )
 }
 
-private func makeRuntimeConfigForSearchEngine(
+func makeRuntimeConfigForSearchEngine(
     sx: Int = 64,
     sy: Int = 64,
     channels: Int,
