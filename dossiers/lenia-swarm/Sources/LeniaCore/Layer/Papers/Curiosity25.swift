@@ -1,9 +1,6 @@
-import CoreGraphics
 import Foundation
-import ImageIO
 import Logging
 import MLX
-import UniformTypeIdentifiers
 
 public struct AIScientist2025ExplorerConfig: Codable, Sendable {
     public let paper: String
@@ -636,7 +633,7 @@ private func aiScientist2025MP4Size(frames: [LeniaTrajectoryFrame], framerate: I
 
     for (index, frame) in frames.enumerated() {
         let pngURL = tempDirectory.appendingPathComponent(String(format: "frame_%05d.png", index))
-        try aiScientist2025WriteGrayscalePNG(bytes: frame.bytes, width: frame.width, height: frame.height, url: pngURL)
+        try writeGrayscalePNG(bytes: frame.bytes, width: frame.width, height: frame.height, to: pngURL)
     }
 
     let outputURL = tempDirectory.appendingPathComponent("out.mp4")
@@ -659,34 +656,4 @@ private func aiScientist2025MP4Size(frames: [LeniaTrajectoryFrame], framerate: I
     }
     let attributes = try FileManager.default.attributesOfItem(atPath: outputURL.path)
     return attributes[.size] as? Int ?? 0
-}
-
-private func aiScientist2025WriteGrayscalePNG(bytes: Data, width: Int, height: Int, url: URL) throws {
-    guard let provider = CGDataProvider(data: bytes as CFData) else {
-        throw ConfigError.invalidConfig("Failed to create image provider for ai-scientist-2025 MP4 frames.")
-    }
-    let colorSpace = CGColorSpaceCreateDeviceGray()
-    let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
-    guard let image = CGImage(
-        width: width,
-        height: height,
-        bitsPerComponent: 8,
-        bitsPerPixel: 8,
-        bytesPerRow: width,
-        space: colorSpace,
-        bitmapInfo: bitmapInfo,
-        provider: provider,
-        decode: nil,
-        shouldInterpolate: false,
-        intent: .defaultIntent
-    ) else {
-        throw ConfigError.invalidConfig("Failed to create CGImage for ai-scientist-2025 MP4 frames.")
-    }
-    guard let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
-        throw ConfigError.invalidConfig("Failed to create PNG destination for ai-scientist-2025 MP4 frames.")
-    }
-    CGImageDestinationAddImage(destination, image, nil)
-    if !CGImageDestinationFinalize(destination) {
-        throw ConfigError.invalidConfig("Failed to encode PNG frame for ai-scientist-2025 MP4 metrics.")
-    }
 }
