@@ -789,40 +789,6 @@ private struct LeniaBreeder2024ArenaBatchStepResult {
      }
  }
  
- private struct LeniaBreeder2024AutoencoderAdam {
-     private var firstMoments: [MLXArray]
-     private var secondMoments: [MLXArray]
-     private let learningRate: Float
-     private let beta1: Float
-     private let beta2: Float
-     private let epsilon: Float
-     private var step: Int = 0
- 
-     init(paramShapes: [[Int]], learningRate: Float, beta1: Float = 0.9, beta2: Float = 0.999, epsilon: Float = 1e-8) {
-         self.firstMoments = paramShapes.map { MLX.zeros($0) }
-         self.secondMoments = paramShapes.map { MLX.zeros($0) }
-         self.learningRate = learningRate
-         self.beta1 = beta1
-         self.beta2 = beta2
-         self.epsilon = epsilon
-     }
- 
-     mutating func apply(model: inout LeniaBreeder2024VAEModel, gradients: [MLXArray]) {
-         var params = model.arrays
-         step += 1
-         let t = Float(step)
-         let count = min(params.count, gradients.count, firstMoments.count, secondMoments.count)
-         for index in 0..<count {
-             firstMoments[index] = MLXArray(beta1) * firstMoments[index] + MLXArray(1 - beta1) * gradients[index]
-             secondMoments[index] = MLXArray(beta2) * secondMoments[index] + MLXArray(1 - beta2) * (gradients[index] * gradients[index])
-             let mHat = firstMoments[index] / MLXArray(1 - pow(beta1, t))
-             let vHat = secondMoments[index] / MLXArray(1 - pow(beta2, t))
-             params[index] = params[index] - MLXArray(learningRate) * mHat / (MLX.sqrt(vHat) + MLXArray(epsilon))
-         }
-         model = LeniaBreeder2024VAEModel(arrays: params)
-     }
- }
- 
  struct LeniaBreeder2024Evaluation {
      let fitness: Float
      let descriptor: [Float]
@@ -2997,7 +2963,7 @@ private func leniaBreeder2024ExtractSeries(
      rng: inout SeededRandomNumberGenerator
  ) -> LeniaBreeder2024AURORATrainingStats? {
      guard !dataset.isEmpty else { return nil }
-     var optimizer = LeniaBreeder2024AutoencoderAdam(
+     var optimizer = MLXAdam(
          paramShapes: model.arrays.map(\.shape),
          learningRate: config.learningRate
      )
@@ -3047,7 +3013,7 @@ private func leniaBreeder2024ExtractSeries(
              let lossValue = loss[0].item(Float.self)
              let reconstructionValue = reconstructionLoss.item(Float.self)
              let klValue = klLoss.item(Float.self)
-             optimizer.apply(model: &model, gradients: gradients)
+             model = LeniaBreeder2024VAEModel(arrays: optimizer.step(params: model.arrays, gradients: gradients))
              MLX.eval(model.arrays)
              updates += 1
              reconstructionLossTotal += reconstructionValue

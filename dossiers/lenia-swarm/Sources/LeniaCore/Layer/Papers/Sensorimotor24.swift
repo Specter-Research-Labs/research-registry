@@ -540,79 +540,6 @@ import MLXFFT
      }
  }
  
- private struct SensorimotorAdamGroup {
-     var m: [MLXArray]
-     var v: [MLXArray]
-     var learningRate: Float
- 
-     init(paramShapes: [[Int]], learningRate: Float) {
-         self.m = paramShapes.map { MLX.zeros($0) }
-         self.v = paramShapes.map { MLX.zeros($0) }
-         self.learningRate = learningRate
-     }
- }
- 
- private struct SensorimotorAdam {
-     private var ruleGroup: SensorimotorAdamGroup
-     private var initGroup: SensorimotorAdamGroup
-     private let beta1: Float
-     private let beta2: Float
-     private let eps: Float
-     private var step: Int = 0
- 
-     init(state: SensorimotorLearnableState, ruleLr: Float, initLr: Float, betas: [Float], eps: Float) {
-         let ruleShapes = state.arrays[0..<9].map(\.shape)
-         self.ruleGroup = SensorimotorAdamGroup(paramShapes: ruleShapes, learningRate: ruleLr)
-         self.initGroup = SensorimotorAdamGroup(paramShapes: [state.initialization.shape], learningRate: initLr)
-         self.beta1 = betas[0]
-         self.beta2 = betas[1]
-         self.eps = eps
-     }
- 
-     mutating func apply(state: inout SensorimotorLearnableState, gradients: [MLXArray]) {
-         step += 1
-         let t = Float(step)
-         let oneMinusBeta1 = 1 - beta1
-         let oneMinusBeta2 = 1 - beta2
-         let bias1 = 1 - Foundation.pow(beta1, t)
-         let bias2 = 1 - Foundation.pow(beta2, t)
-         let arrays = state.arrays
-         let ruleArrays = Array(arrays[0..<9])
- 
-         func gradientOrZero(_ index: Int) -> MLXArray {
-             if index < gradients.count {
-                 return gradients[index]
-             }
-             // MLX can leave disconnected entries out of array-list gradients, so preserve zero-update semantics.
-             return MLX.zeros(arrays[index].shape)
-         }
- 
-         var updatedRuleArrays: [MLXArray] = []
-         updatedRuleArrays.reserveCapacity(ruleArrays.count)
-         for index in 0..<ruleArrays.count {
-             let grad = gradientOrZero(index)
-             ruleGroup.m[index] = MLXArray(beta1) * ruleGroup.m[index] + MLXArray(oneMinusBeta1) * grad
-             ruleGroup.v[index] = MLXArray(beta2) * ruleGroup.v[index] + MLXArray(oneMinusBeta2) * (grad * grad)
-             let mHat = ruleGroup.m[index] / MLXArray(bias1)
-             let vHat = ruleGroup.v[index] / MLXArray(bias2)
-             let denom = MLX.sqrt(vHat) + MLXArray(eps)
-             updatedRuleArrays.append(ruleArrays[index] - MLXArray(ruleGroup.learningRate) * mHat / denom)
-         }
- 
-         let initGrad = gradientOrZero(9)
-         initGroup.m[0] = MLXArray(beta1) * initGroup.m[0] + MLXArray(oneMinusBeta1) * initGrad
-         initGroup.v[0] = MLXArray(beta2) * initGroup.v[0] + MLXArray(oneMinusBeta2) * (initGrad * initGrad)
-         let initMHat = initGroup.m[0] / MLXArray(bias1)
-         let initVHat = initGroup.v[0] / MLXArray(bias2)
-         let initDenom = MLX.sqrt(initVHat) + MLXArray(eps)
-         let updatedInit = state.initialization - MLXArray(initGroup.learningRate) * initMHat / initDenom
- 
-         var updatedArrays = updatedRuleArrays
-         updatedArrays.append(updatedInit)
-         state = SensorimotorLearnableState(arrays: updatedArrays)
-     }
- }
- 
  private struct SensorimotorPerturbations {
      var obstacleSpeed: Float?
      var updateMaskRate: Float?
@@ -1625,11 +1552,12 @@ import MLXFFT
  ) -> SensorimotorGradientResult {
      var state = initialState
      state = sensorimotorClamp(state, rules: rules)
-     var optimizer = SensorimotorAdam(
-         state: state,
-         ruleLr: training.optimization.ruleLr,
-         initLr: training.optimization.initializationLr,
-         betas: training.optimization.betas,
+     var optimizer = MLXAdam(
+         paramShapes: state.arrays.map(\.shape),
+         learningRates: Array(repeating: training.optimization.ruleLr, count: state.arrays.count - 1)
+             + [training.optimization.initializationLr],
+         beta1: training.optimization.betas[0],
+         beta2: training.optimization.betas[1],
          eps: training.optimization.eps
      )
      let gradientSteps = mutated ? training.optimization.stepsMutated : training.optimization.stepsUnmutated
@@ -1659,7 +1587,7 @@ import MLXFFT
              return [sensorimotorGoalLoss(finalState: trace.finalState, goal: goal, training: training, rules: rules)]
          }
          let (value, gradients) = objectiveForObstacle(state.arrays)
-         optimizer.apply(state: &state, gradients: gradients)
+         state = SensorimotorLearnableState(arrays: optimizer.step(params: state.arrays, gradients: gradients))
          state = sensorimotorClamp(state, rules: rules)
          MLX.eval(state.arrays + value)
          lastLoss = value[0].item(Float.self)
