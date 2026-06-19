@@ -846,7 +846,7 @@ import MLXFFT
                          evaluation: 1
                      )
                  )
-                 try sensorimotorWriteHistoryEntry(entry, to: historyHandle, encoder: encoder)
+                 try appendJSONLine(entry, to: historyHandle, encoder: encoder)
                  history.append(SensorimotorHistoryRecord(entry: entry, state: state))
  
                  if history.count == training.historyInitializationTrials,
@@ -922,7 +922,7 @@ import MLXFFT
                      evaluation: training.evaluationAfterStep.rollouts
                  )
              )
-             try sensorimotorWriteHistoryEntry(entry, to: historyHandle, encoder: encoder)
+             try appendJSONLine(entry, to: historyHandle, encoder: encoder)
              history.append(SensorimotorHistoryRecord(entry: entry, state: optimized.state))
          }
  
@@ -2110,16 +2110,6 @@ import MLXFFT
      return (0..<rows).map { row in
          Array(flat[(row * cols)..<((row + 1) * cols)])
      }
- }
- 
- private func sensorimotorWriteHistoryEntry(
-     _ entry: SensorimotorHistoryEntry,
-     to handle: FileHandle,
-     encoder: JSONEncoder
- ) throws {
-     let data = try encoder.encode(entry)
-     handle.write(data)
-     handle.write("\n".data(using: .utf8)!)
  }
  
  private func sensorimotorScaledObstacleCount(radius: Int) -> Int {

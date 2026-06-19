@@ -5269,15 +5269,6 @@ private func positiveModulo(_ value: Int, _ divisor: Int) -> Int {
      UInt8(max(0, min(255, Int(max(0, min(1, value)) * 255.0 + 0.5))))
  }
  
- private func appendJSONLine<T: Encodable>(_ value: T, to url: URL) throws {
-     let data = try JSONEncoder().encode(value)
-     let handle = try FileHandle(forWritingTo: url)
-     defer { try? handle.close() }
-     try handle.seekToEnd()
-     handle.write(data)
-     handle.write(Data([0x0A]))
- }
- 
 private func appendMetricsCSV(_ entry: LeniaBreeder2024HistoryEntry, to url: URL) throws {
     let row = "\(entry.generation),\(entry.qdScore),\(entry.coverage),\(entry.maxFitness),\(entry.nElites),\(entry.variance),\(entry.elapsedSeconds)\n"
     let handle = try FileHandle(forWritingTo: url)

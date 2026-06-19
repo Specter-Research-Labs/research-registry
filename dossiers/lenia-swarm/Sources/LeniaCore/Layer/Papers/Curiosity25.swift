@@ -322,8 +322,7 @@ public final class AIScientist2025Runner {
                 state: state
             )
             records.append(record)
-            archiveHandle.write(try lineEncoder.encode(record))
-            archiveHandle.write(Data([0x0A]))
+            try appendJSONLine(record, to: archiveHandle, encoder: lineEncoder)
         }
 
         let goals = records.map(\.achievedGoal)

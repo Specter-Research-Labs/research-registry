@@ -1,14 +1,7 @@
 import Foundation
 
 func writeFlowLeniaEcologyFrames(_ frames: [FlowLeniaEcology2025FrameMetrics], to url: URL) throws {
-    FileManager.default.createFile(atPath: url.path, contents: nil)
-    let handle = try FileHandle(forWritingTo: url)
-    defer { try? handle.close() }
-    let lineEncoder = JSONEncoder()
-    for frame in frames {
-        handle.write(try lineEncoder.encode(frame))
-        handle.write(Data([0x0A]))
-    }
+    try writeJSONLines(frames, to: url)
 }
 
 private func writeFlowLeniaEcologyTrajectoryFrames(_ frames: [LeniaTrajectoryFrame], to url: URL) throws {
@@ -117,16 +110,10 @@ public func writeFlowLeniaEcology2025RunArtifacts(
 public func writeFlowLeniaEcology2025RunIndex(records: [FlowLeniaEcology2025RunRecord], to url: URL) throws {
     guard !records.isEmpty else { return }
     try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-    FileManager.default.createFile(atPath: url.path, contents: nil)
-    let handle = try FileHandle(forWritingTo: url)
-    defer { try? handle.close() }
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]
     encoder.dateEncodingStrategy = .deferredToDate
-    for record in records {
-        handle.write(try encoder.encode(record))
-        handle.write(Data([0x0A]))
-    }
+    try writeJSONLines(records, to: url, encoder: encoder)
 }
 
 func flowLeniaEcology2025TrialID(_ summary: FlowLeniaEcology2025RunSummary) -> String {
