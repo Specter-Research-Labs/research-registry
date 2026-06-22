@@ -378,9 +378,7 @@ struct SearchRuntimeOperators {
                         let deltaIndex = ((batchIndex * size + localX) * size + localY) * parameterCount + kernel
                         switch intervention.type {
                         case "jitter_params":
-                            let u1 = Float.random(in: 0.0001...0.9999, using: &rng)
-                            let u2 = Float.random(in: 0.0...1.0, using: &rng)
-                            deltas[deltaIndex] = sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2) * (intervention.std ?? 0)
+                            deltas[deltaIndex] = gaussianSample(std: intervention.std ?? 0, rng: &rng)
                         case "shift_params":
                             deltas[deltaIndex] = intervention.delta?[kernel] ?? 0
                         default:
@@ -491,9 +489,7 @@ struct SearchRuntimeOperators {
             for localX in 0..<config.patchSize {
                 for localY in 0..<config.patchSize {
                     for kernel in 0..<parameterCount {
-                        let u1 = Float.random(in: 0.0001...0.9999, using: &rng)
-                        let u2 = Float.random(in: 0.0...1.0, using: &rng)
-                        let noise = sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2) * config.std
+                        let noise = gaussianSample(std: config.std, rng: &rng)
                         let deltaIndex =
                             ((batchIndex * config.patchSize + localX) * config.patchSize + localY) * parameterCount + kernel
                         deltas[deltaIndex] = noise

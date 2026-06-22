@@ -1124,10 +1124,7 @@ func flowLeniaBuildFoodField(
 }
 
 func flowLeniaGaussian(mean: Float, std: Float, rng: inout SeededRandomNumberGenerator) -> Float {
-    let u1 = max(Float.random(in: 0..<1, using: &rng), 1e-6)
-    let u2 = Float.random(in: 0..<1, using: &rng)
-    let z = sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2)
-    return mean + std * z
+    mean + gaussianSample(std: std, rng: &rng)
 }
 
 public struct FlowLeniaBenchmarkResult: Sendable {

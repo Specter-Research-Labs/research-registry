@@ -168,11 +168,7 @@ public func applyJitter(
     for (key, values) in params {
         var newValues: [Float] = []
         for val in values {
-            // Box-Muller for Gaussian noise
-            let u1 = Float.random(in: 0.0001...0.9999, using: &rng)
-            let u2 = Float.random(in: 0.0...1.0, using: &rng)
-            let noise = sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2) * std
-            newValues.append(val + noise)
+            newValues.append(val + gaussianSample(std: std, rng: &rng))
         }
         jittered[key] = newValues
     }
