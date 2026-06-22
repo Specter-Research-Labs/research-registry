@@ -128,7 +128,7 @@ private func pad2d(_ A: MLXArray, pad: Int) -> MLXArray {
     return MLX.concatenated([zerosCol, paddedY, zerosCol], axis: 2)
 }
 
-private func fftshift2(_ x: MLXArray) -> MLXArray {
+func fftshift2(_ x: MLXArray) -> MLXArray {
     let shiftX = x.shape[0] / 2
     let shiftY = x.shape[1] / 2
     var result = MLX.roll(x, shift: shiftX, axis: 0)

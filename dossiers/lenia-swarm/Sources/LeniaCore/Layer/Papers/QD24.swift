@@ -1998,11 +1998,6 @@ public final class LeniaBreeder2024Runner {
      return MLXFFT.fft2(shifted, axes: [0, 1])
  }
  
- private func fftshift2(_ array: MLXArray) -> MLXArray {
-     var shifted = MLX.roll(array, shift: array.shape[0] / 2, axis: 0)
-     shifted = MLX.roll(shifted, shift: array.shape[1] / 2, axis: 1)
-     return shifted
- }
 
  private func leniaBreeder2024KernelCore(fractional: MLXArray, core: String) -> MLXArray {
      switch core {
