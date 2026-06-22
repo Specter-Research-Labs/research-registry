@@ -2,6 +2,10 @@ import Foundation
 import Logging
 import MLX
 
+// Curiosity-driven universe exploration: IMGEP goal sampling that maximizes
+// coverage of an observation space. The `AIScientist2025` type prefix follows
+// the paper's framing. Paper: "Exploring Flow-Lenia Universes with a
+// Curiosity-driven AI Scientist" (2025). CLI: discover curiosity-2025.
 public struct AIScientist2025ExplorerConfig: Codable, Sendable {
     public let paper: String
     public let gridSize: Int

@@ -4,6 +4,9 @@ import MLX
 import MLXFFT
 import simd
 
+// Classical Lenia parameter-space atlas: a mu/sigma sweep classified into phases
+// (order / chaos / transition) via Voronoi-polygon probes. Paper: Hudcova et al.,
+// "Visualizing the Structure of Lenia Parameter Space" (2026). CLI: discover atlas-2026.
 public struct Atlas2026KernelConfig: Codable, Sendable {
     public let paper: String
     public let arraySize: Int

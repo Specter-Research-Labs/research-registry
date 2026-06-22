@@ -4,6 +4,10 @@ import Logging
 import MLX
  import MLXFFT
  
+// Quality-diversity repertoire discovery over Flow-Lenia: MAP-Elites plus the
+// AURORA learned-descriptor variant. The `LeniaBreeder2024` type prefix is the
+// paper's own system name. Paper: "Toward Artificial Open-Ended Evolution within
+// Lenia using Quality-Diversity" (2024). CLI: discover qd-2024.
  public struct LeniaBreeder2024BaseConfig: Codable, Sendable {
      public let paper: String
      public let patternID: String

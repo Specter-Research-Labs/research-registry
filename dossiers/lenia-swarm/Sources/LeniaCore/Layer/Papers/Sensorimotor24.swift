@@ -3,6 +3,10 @@ import Logging
 import MLX
 import MLXFFT
  
+// Sensorimotor-agency discovery over asymptotic Lenia: IMGEP diversity search
+// with gradient descent and a curriculum, then a robustness/generalization
+// battery. Paper: "Discovering Sensorimotor Agency in Cellular Automata using
+// Diversity Search" (Hamon et al. 2024). CLI: discover sensorimotor-2024.
  public struct SensorimotorRuleSpaceConfig: Codable, Sendable {
      public struct Grid: Codable, Sendable {
          public let sx: Int
