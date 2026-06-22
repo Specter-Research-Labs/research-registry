@@ -855,6 +855,29 @@ private func flowLeniaBuildExplicitState(
     return MLXArray(field).reshaped([sx, sy, channels])
 }
 
+struct FlowLeniaPatchRect {
+    let x0: Int
+    let x1: Int
+    let y0: Int
+    let y1: Int
+}
+
+/// Centered square patch rect with shared out-of-bounds validation, so the
+/// patch-based initial-field builders share one geometry + bounds check.
+func flowLeniaCenteredPatchRect(center: [Int], size: Int, sx: Int, sy: Int, label: String) -> FlowLeniaPatchRect {
+    let cx = center[0]
+    let cy = center[1]
+    let half = size / 2
+    let x0 = cx - half
+    let x1 = cx + (size - half)
+    let y0 = cy - half
+    let y1 = cy + (size - half)
+    if x0 < 0 || y0 < 0 || x1 > sx || y1 > sy {
+        fatalError("\(label) out of bounds: center=(\(cx),\(cy)) size=\(size) grid=\(sx)x\(sy)")
+    }
+    return FlowLeniaPatchRect(x0: x0, x1: x1, y0: y0, y1: y1)
+}
+
 private func flowLeniaBuildInitialParams(
     sx: Int,
     sy: Int,
@@ -868,25 +891,14 @@ private func flowLeniaBuildInitialParams(
     var params = [Float](repeating: 0.0, count: sx * sy * nbK)
 
     for patch in patches {
-        let size = patch.size
-        let cx = patch.center[0]
-        let cy = patch.center[1]
-        let half = size / 2
-        let x0 = cx - half
-        let x1 = cx + (size - half)
-        let y0 = cy - half
-        let y1 = cy + (size - half)
-
-        if x0 < 0 || y0 < 0 || x1 > sx || y1 > sy {
-            fatalError("Patch out of bounds: center=(\(cx),\(cy)) size=\(size) grid=\(sx)x\(sy)")
-        }
+        let rect = flowLeniaCenteredPatchRect(center: patch.center, size: patch.size, sx: sx, sy: sy, label: "Patch")
 
         let patchParams = constantPerPatch
             ? (0..<nbK).map { _ in Float.random(in: pUniform.low...pUniform.high, using: &rng) }
             : []
 
-        for x in x0..<x1 {
-            for y in y0..<y1 {
+        for x in rect.x0..<rect.x1 {
+            for y in rect.y0..<rect.y1 {
                 for kernel in 0..<nbK {
                     let index = x * sy * nbK + y * nbK + kernel
                     params[index] = constantPerPatch
@@ -917,21 +929,10 @@ private func flowLeniaBuildCrossMapInitialParams(
     var params = [Float](repeating: 0.0, count: sx * sy * nbK)
 
     for patch in patches {
-        let size = patch.size
-        let cx = patch.center[0]
-        let cy = patch.center[1]
-        let half = size / 2
-        let x0 = cx - half
-        let x1 = cx + (size - half)
-        let y0 = cy - half
-        let y1 = cy + (size - half)
+        let rect = flowLeniaCenteredPatchRect(center: patch.center, size: patch.size, sx: sx, sy: sy, label: "Patch")
 
-        if x0 < 0 || y0 < 0 || x1 > sx || y1 > sy {
-            fatalError("Patch out of bounds: center=(\(cx),\(cy)) size=\(size) grid=\(sx)x\(sy)")
-        }
-
-        for x in x0..<x1 {
-            for y in y0..<y1 {
+        for x in rect.x0..<rect.x1 {
+            for y in rect.y0..<rect.y1 {
                 let cellIndex = flowLeniaCrossMapCellIndex(x: x, y: y, sx: sx, sy: sy, depth: environment.depth)
                 let patchParams = cellParams[cellIndex]
                 for kernel in 0..<nbK {
@@ -964,21 +965,9 @@ private func flowLeniaBuildInitialFoodField(
             fatalError("food.mode=\"patches\" requires non-empty food.patches.")
         }
         for patch in patches {
-            let size = patch.size
-            let cx = patch.center[0]
-            let cy = patch.center[1]
-            let half = size / 2
-            let x0 = cx - half
-            let x1 = cx + (size - half)
-            let y0 = cy - half
-            let y1 = cy + (size - half)
-
-            if x0 < 0 || y0 < 0 || x1 > sx || y1 > sy {
-                fatalError("Food patch out of bounds: center=(\(cx),\(cy)) size=\(size) grid=\(sx)x\(sy)")
-            }
-
-            for x in x0..<x1 {
-                for y in y0..<y1 {
+            let rect = flowLeniaCenteredPatchRect(center: patch.center, size: patch.size, sx: sx, sy: sy, label: "Food patch")
+            for x in rect.x0..<rect.x1 {
+                for y in rect.y0..<rect.y1 {
                     field[x * sy + y] = Float.random(in: config.uniform.low...config.uniform.high, using: &rng)
                 }
             }
