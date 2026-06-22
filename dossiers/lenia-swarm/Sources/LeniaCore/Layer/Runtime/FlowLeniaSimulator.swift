@@ -841,6 +841,10 @@ private func flowLeniaBuildExplicitState(
     let y0 = cy - halfHeight
     let y1 = cy + (statePatch.height - halfHeight)
 
+    if x0 < 0 || y0 < 0 || x1 > sx || y1 > sy {
+        fatalError("state_patch out of bounds: center=(\(cx),\(cy)) size=\(statePatch.width)x\(statePatch.height) grid=\(sx)x\(sy)")
+    }
+
     var patchIndex = 0
     for x in x0..<x1 {
         for y in y0..<y1 {
