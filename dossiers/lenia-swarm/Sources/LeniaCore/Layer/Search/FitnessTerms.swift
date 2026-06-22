@@ -1,5 +1,17 @@
 import Foundation
 
+/// Unwrap a measurement metric that a configured fitness term depends on. A nil
+/// means the term was requested in config but its metric was never computed —
+/// a configuration error, not a runtime condition. Centralizes the contract
+/// that was previously copy-pasted as a `guard … else { fatalError }` at every
+/// penalty/reward site.
+func requireMetric(_ value: Float?, requestedBy term: String) -> Float {
+    guard let value else {
+        fatalError("\(term) requested but its metric was not computed.")
+    }
+    return value
+}
+
 /// Clamp to [0, 1]; non-finite collapses to 0.
 func unitInterval(_ value: Float) -> Float {
     guard value.isFinite else { return 0.0 }

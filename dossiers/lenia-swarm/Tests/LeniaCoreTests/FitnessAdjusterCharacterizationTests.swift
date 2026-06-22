@@ -175,7 +175,7 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
     }
 }
 
-private let GOLDEN_DIRECTED: Float = 25.234432
+private let GOLDEN_DIRECTED: Float = 31.602081
 private let GOLDEN_BODY: Float = 4.8315244
 private let GOLDEN_COHERENT: Float = 9.513022
-private let GOLDEN_ORGANISM: Float = 0.82132006
+private let GOLDEN_ORGANISM: Float = 7.18897

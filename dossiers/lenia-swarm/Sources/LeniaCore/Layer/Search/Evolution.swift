@@ -3001,28 +3001,18 @@ public final class EvolutionEngine {
             return failureFitness
         }
         if let penalty = esConfig.fitness.gyrationPenalty {
-            guard let gyration = measurement.gyration else {
-                fatalError("gyration_penalty requested but gyration was not computed.")
-            }
-            value -= penalty * gyration
+            value -= penalty * requireMetric(measurement.gyration, requestedBy: "gyration_penalty")
         }
         if let penalty = esConfig.fitness.componentCountPenalty {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("component_count_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * max(componentCount - 1.0, 0.0)
+            value -= penalty * max(requireMetric(measurement.componentCount, requestedBy: "component_count_penalty") - 1.0, 0.0)
         }
         if let target = esConfig.fitness.componentCountTarget,
            let penalty = esConfig.fitness.componentCountTargetPenalty {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("component_count_target_penalty requested but component metrics were not computed.")
-            }
+            let componentCount = requireMetric(measurement.componentCount, requestedBy: "component_count_target_penalty")
             value -= penalty * componentCountTargetMismatch(componentCount, target: target)
         }
         if let penalty = esConfig.fitness.componentCountLimitPenalty {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("component_count_limit_penalty requested but component metrics were not computed.")
-            }
+            let componentCount = requireMetric(measurement.componentCount, requestedBy: "component_count_limit_penalty")
             if let minimum = esConfig.fitness.minimumComponentCount {
                 value -= penalty * max(minimum - componentCount, 0)
             }
@@ -3031,244 +3021,130 @@ public final class EvolutionEngine {
             }
         }
         if let reward = esConfig.fitness.largestComponentFractionReward {
-            guard let largestComponentFraction = measurement.largestComponentFraction else {
-                fatalError("largest_component_fraction_reward requested but component metrics were not computed.")
-            }
-            value += reward * largestComponentFraction
+            value += reward * requireMetric(measurement.largestComponentFraction, requestedBy: "largest_component_fraction_reward")
         }
         if let minimum = esConfig.fitness.minimumLargestComponentFraction,
            let penalty = esConfig.fitness.largestComponentFractionPenalty {
-            guard let largestComponentFraction = measurement.largestComponentFraction else {
-                fatalError("largest_component_fraction_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * max(minimum - largestComponentFraction, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.largestComponentFraction, requestedBy: "largest_component_fraction_penalty"), 0)
         }
         if let maximum = esConfig.fitness.maximumLargestComponentFraction,
            let penalty = esConfig.fitness.largestComponentFractionLimitPenalty {
-            guard let largestComponentFraction = measurement.largestComponentFraction else {
-                fatalError("largest_component_fraction_limit_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * max(largestComponentFraction - maximum, 0)
+            value -= penalty * max(requireMetric(measurement.largestComponentFraction, requestedBy: "largest_component_fraction_limit_penalty") - maximum, 0)
         }
         if let penalty = esConfig.fitness.largestComponentAnisotropyPenalty {
-            guard let largestComponentAnisotropy = measurement.largestComponentAnisotropy else {
-                fatalError("largest_component_anisotropy_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * largestComponentAnisotropy
+            value -= penalty * requireMetric(measurement.largestComponentAnisotropy, requestedBy: "largest_component_anisotropy_penalty")
         }
         if let reward = esConfig.fitness.componentMassEvennessReward {
-            guard let componentMassEvenness = measurement.componentMassEvenness else {
-                fatalError("component_mass_evenness_reward requested but component metrics were not computed.")
-            }
-            value += reward * componentMassEvenness
+            value += reward * requireMetric(measurement.componentMassEvenness, requestedBy: "component_mass_evenness_reward")
         }
         if let minimum = esConfig.fitness.minimumComponentMassEvenness,
            let penalty = esConfig.fitness.componentMassEvennessPenalty {
-            guard let componentMassEvenness = measurement.componentMassEvenness else {
-                fatalError("component_mass_evenness_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * max(minimum - componentMassEvenness, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.componentMassEvenness, requestedBy: "component_mass_evenness_penalty"), 0)
         }
         if let reward = esConfig.fitness.largestComponentSolidityReward {
-            guard let largestComponentSolidity = measurement.largestComponentSolidity else {
-                fatalError("largest_component_solidity_reward requested but component metrics were not computed.")
-            }
-            value += reward * largestComponentSolidity
+            value += reward * requireMetric(measurement.largestComponentSolidity, requestedBy: "largest_component_solidity_reward")
         }
         if let reward = esConfig.fitness.largestComponentMeanThicknessReward {
-            guard let largestComponentMeanThickness = measurement.largestComponentMeanThickness else {
-                fatalError("largest_component_mean_thickness_reward requested but component metrics were not computed.")
-            }
-            value += reward * largestComponentMeanThickness
+            value += reward * requireMetric(measurement.largestComponentMeanThickness, requestedBy: "largest_component_mean_thickness_reward")
         }
         if let penalty = esConfig.fitness.largestComponentFilamentarityPenalty {
-            guard let largestComponentFilamentarity = measurement.largestComponentFilamentarity else {
-                fatalError("largest_component_filamentarity_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * largestComponentFilamentarity
+            value -= penalty * requireMetric(measurement.largestComponentFilamentarity, requestedBy: "largest_component_filamentarity_penalty")
         }
         if let reward = esConfig.fitness.momentDensityReward {
-            guard let momentDensity = measurement.momentDensity else {
-                fatalError("moment_density_reward requested but moment metrics were not computed.")
-            }
-            value += reward * momentDensity
+            value += reward * requireMetric(measurement.momentDensity, requestedBy: "moment_density_reward")
         }
         if let minimum = esConfig.fitness.minimumMomentDensity,
            let penalty = esConfig.fitness.momentDensityPenalty {
-            guard let momentDensity = measurement.momentDensity else {
-                fatalError("moment_density_penalty requested but moment metrics were not computed.")
-            }
-            value -= penalty * max(minimum - momentDensity, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.momentDensity, requestedBy: "moment_density_penalty"), 0)
         }
         if let penalty = esConfig.fitness.momentAnisotropyPenalty {
-            guard let momentAnisotropy = measurement.momentAnisotropy else {
-                fatalError("moment_anisotropy_penalty requested but moment metrics were not computed.")
-            }
-            value -= penalty * momentAnisotropy
+            value -= penalty * requireMetric(measurement.momentAnisotropy, requestedBy: "moment_anisotropy_penalty")
         }
         if let maximum = esConfig.fitness.maximumMomentAnisotropy,
            let penalty = esConfig.fitness.momentAnisotropyLimitPenalty {
-            guard let momentAnisotropy = measurement.momentAnisotropy else {
-                fatalError("moment_anisotropy_limit_penalty requested but moment metrics were not computed.")
-            }
-            value -= penalty * max(momentAnisotropy - maximum, 0)
+            value -= penalty * max(requireMetric(measurement.momentAnisotropy, requestedBy: "moment_anisotropy_limit_penalty") - maximum, 0)
         }
         if let penalty = esConfig.fitness.internalStripePenalty {
-            guard let internalStripe = measurement.internalStripe else {
-                fatalError("internal_stripe_penalty requested but stripe metrics were not computed.")
-            }
-            value -= penalty * internalStripe
+            value -= penalty * requireMetric(measurement.internalStripe, requestedBy: "internal_stripe_penalty")
         }
         if let penalty = esConfig.fitness.orientedRidgePenalty {
-            guard let orientedRidge = measurement.orientedRidge else {
-                fatalError("oriented_ridge_penalty requested but ridge metrics were not computed.")
-            }
-            value -= penalty * orientedRidge
+            value -= penalty * requireMetric(measurement.orientedRidge, requestedBy: "oriented_ridge_penalty")
         }
         if let penalty = esConfig.fitness.largestComponentInternalStripePenalty {
-            guard let largestComponentInternalStripe = measurement.largestComponentInternalStripe else {
-                fatalError("largest_component_internal_stripe_penalty requested but largest-component stripe metrics were not computed.")
-            }
-            value -= penalty * largestComponentInternalStripe
+            value -= penalty * requireMetric(measurement.largestComponentInternalStripe, requestedBy: "largest_component_internal_stripe_penalty")
         }
         if let penalty = esConfig.fitness.largestComponentOrientedRidgePenalty {
-            guard let largestComponentOrientedRidge = measurement.largestComponentOrientedRidge else {
-                fatalError("largest_component_oriented_ridge_penalty requested but largest-component ridge metrics were not computed.")
-            }
-            value -= penalty * largestComponentOrientedRidge
+            value -= penalty * requireMetric(measurement.largestComponentOrientedRidge, requestedBy: "largest_component_oriented_ridge_penalty")
         }
         if let reward = esConfig.fitness.templateSimilarityReward {
-            guard let templateSimilarity = measurement.templateSimilarity else {
-                fatalError("template_similarity_reward requested but template similarity was not computed.")
-            }
-            value += reward * templateSimilarity
+            value += reward * requireMetric(measurement.templateSimilarity, requestedBy: "template_similarity_reward")
         }
         if let reward = esConfig.fitness.templateSequenceReward {
-            guard let templateSequenceSimilarity = measurement.templateSequenceSimilarity else {
-                fatalError("template_sequence_reward requested but template sequence similarity was not computed.")
-            }
-            value += reward * templateSequenceSimilarity
+            value += reward * requireMetric(measurement.templateSequenceSimilarity, requestedBy: "template_sequence_reward")
         }
         if let penalty = esConfig.fitness.templateSequenceMassPenalty {
-            guard let templateSequenceMassMismatch = measurement.templateSequenceMassMismatch else {
-                fatalError("template_sequence_mass_penalty requested but template sequence mass mismatch was not computed.")
-            }
-            value -= penalty * templateSequenceMassMismatch
+            value -= penalty * requireMetric(measurement.templateSequenceMassMismatch, requestedBy: "template_sequence_mass_penalty")
         }
         if let penalty = esConfig.fitness.templateSequenceSupportPenalty {
-            guard let templateSequenceSupportMismatch = measurement.templateSequenceSupportMismatch else {
-                fatalError("template_sequence_support_penalty requested but template sequence support mismatch was not computed.")
-            }
-            value -= penalty * templateSequenceSupportMismatch
+            value -= penalty * requireMetric(measurement.templateSequenceSupportMismatch, requestedBy: "template_sequence_support_penalty")
         }
         if let penalty = esConfig.fitness.templateSequenceChangePenalty {
-            guard let templateSequenceChangeMismatch = measurement.templateSequenceChangeMismatch else {
-                fatalError("template_sequence_change_penalty requested but template sequence change mismatch was not computed.")
-            }
-            value -= penalty * templateSequenceChangeMismatch
+            value -= penalty * requireMetric(measurement.templateSequenceChangeMismatch, requestedBy: "template_sequence_change_penalty")
         }
         if let reward = esConfig.fitness.templateSequenceDeltaReward {
-            guard let templateSequenceDeltaSimilarity = measurement.templateSequenceDeltaSimilarity else {
-                fatalError("template_sequence_delta_reward requested but template sequence delta similarity was not computed.")
-            }
-            value += reward * templateSequenceDeltaSimilarity
+            value += reward * requireMetric(measurement.templateSequenceDeltaSimilarity, requestedBy: "template_sequence_delta_reward")
         }
         if let reward = esConfig.fitness.templateSequenceSignedDeltaReward {
-            guard let templateSequenceSignedDeltaSimilarity = measurement.templateSequenceSignedDeltaSimilarity else {
-                fatalError("template_sequence_signed_delta_reward requested but template sequence signed-delta similarity was not computed.")
-            }
-            value += reward * templateSequenceSignedDeltaSimilarity
+            value += reward * requireMetric(measurement.templateSequenceSignedDeltaSimilarity, requestedBy: "template_sequence_signed_delta_reward")
         }
         if let reward = esConfig.fitness.orientationPhaseMotionReward {
-            guard let orientationPhaseMotion = measurement.orientationPhaseMotion else {
-                fatalError("orientation_phase_motion_reward requested but orientation phase motion was not computed.")
-            }
-            value += reward * orientationPhaseMotion
+            value += reward * requireMetric(measurement.orientationPhaseMotion, requestedBy: "orientation_phase_motion_reward")
         }
         if let minimum = esConfig.fitness.minimumOrientationPhaseMotion,
            let penalty = esConfig.fitness.orientationPhaseMotionPenalty {
-            guard let orientationPhaseMotion = measurement.orientationPhaseMotion else {
-                fatalError("orientation_phase_motion_penalty requested but orientation phase motion was not computed.")
-            }
-            value -= penalty * max(minimum - orientationPhaseMotion, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.orientationPhaseMotion, requestedBy: "orientation_phase_motion_penalty"), 0)
         }
         if let reward = esConfig.fitness.angularPhaseMotionReward {
-            guard let angularPhaseMotion = measurement.angularPhaseMotion else {
-                fatalError("angular_phase_motion_reward requested but angular phase motion was not computed.")
-            }
-            value += reward * angularPhaseMotion
+            value += reward * requireMetric(measurement.angularPhaseMotion, requestedBy: "angular_phase_motion_reward")
         }
         if let minimum = esConfig.fitness.minimumAngularPhaseMotion,
            let penalty = esConfig.fitness.angularPhaseMotionPenalty {
-            guard let angularPhaseMotion = measurement.angularPhaseMotion else {
-                fatalError("angular_phase_motion_penalty requested but angular phase motion was not computed.")
-            }
-            value -= penalty * max(minimum - angularPhaseMotion, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.angularPhaseMotion, requestedBy: "angular_phase_motion_penalty"), 0)
         }
         if let reward = esConfig.fitness.sectorTransportReward {
-            guard let sectorTransport = measurement.sectorTransport else {
-                fatalError("sector_transport_reward requested but sector transport was not computed.")
-            }
-            value += reward * sectorTransport
+            value += reward * requireMetric(measurement.sectorTransport, requestedBy: "sector_transport_reward")
         }
         if let minimum = esConfig.fitness.minimumSectorTransport,
            let penalty = esConfig.fitness.sectorTransportPenalty {
-            guard let sectorTransport = measurement.sectorTransport else {
-                fatalError("sector_transport_penalty requested but sector transport was not computed.")
-            }
-            value -= penalty * max(minimum - sectorTransport, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.sectorTransport, requestedBy: "sector_transport_penalty"), 0)
         }
         if let minimum = esConfig.fitness.minimumTrajectoryPathLength,
            let penalty = esConfig.fitness.trajectoryPathLengthPenalty {
-            guard let trajectoryPathLength = measurement.trajectoryPathLength else {
-                fatalError("trajectory_path_length_penalty requested but trajectory path length was not computed.")
-            }
-            value -= penalty * max(minimum - trajectoryPathLength, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.trajectoryPathLength, requestedBy: "trajectory_path_length_penalty"), 0)
         }
         if let reward = esConfig.fitness.trajectoryPathLengthReward {
-            guard let trajectoryPathLength = measurement.trajectoryPathLength else {
-                fatalError("trajectory_path_length_reward requested but trajectory path length was not computed.")
-            }
-            value += reward * trajectoryPathLength
+            value += reward * requireMetric(measurement.trajectoryPathLength, requestedBy: "trajectory_path_length_reward")
         }
         if let minimum = esConfig.fitness.minimumTrajectoryDisplacement,
            let penalty = esConfig.fitness.trajectoryDisplacementPenalty {
-            guard let trajectoryDisplacement = measurement.trajectoryDisplacement else {
-                fatalError("trajectory_displacement_penalty requested but trajectory displacement was not computed.")
-            }
-            value -= penalty * max(minimum - trajectoryDisplacement, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.trajectoryDisplacement, requestedBy: "trajectory_displacement_penalty"), 0)
         }
         if let reward = esConfig.fitness.trajectoryDisplacementReward {
-            guard let trajectoryDisplacement = measurement.trajectoryDisplacement else {
-                fatalError("trajectory_displacement_reward requested but trajectory displacement was not computed.")
-            }
-            value += reward * trajectoryDisplacement
+            value += reward * requireMetric(measurement.trajectoryDisplacement, requestedBy: "trajectory_displacement_reward")
         }
         if let minimum = esConfig.fitness.minimumMovementEfficiency,
            let penalty = esConfig.fitness.movementEfficiencyPenalty {
-            guard let movementEfficiency = measurement.movementEfficiency else {
-                fatalError("movement_efficiency_penalty requested but movement efficiency was not computed.")
-            }
-            value -= penalty * max(minimum - movementEfficiency, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.movementEfficiency, requestedBy: "movement_efficiency_penalty"), 0)
         }
         if let reward = esConfig.fitness.movementEfficiencyReward {
-            guard let movementEfficiency = measurement.movementEfficiency else {
-                fatalError("movement_efficiency_reward requested but movement efficiency was not computed.")
-            }
-            value += reward * movementEfficiency
+            value += reward * requireMetric(measurement.movementEfficiency, requestedBy: "movement_efficiency_reward")
         }
         if let minimum = esConfig.fitness.minimumCenterVelocity,
            let penalty = esConfig.fitness.centerVelocityPenalty {
-            guard let centerVelocity = measurement.centerVelocity else {
-                fatalError("center_velocity_penalty requested but center velocity was not computed.")
-            }
-            value -= penalty * max(minimum - centerVelocity, 0)
+            value -= penalty * max(minimum - requireMetric(measurement.centerVelocity, requestedBy: "center_velocity_penalty"), 0)
         }
         if let reward = esConfig.fitness.centerVelocityReward {
-            guard let centerVelocity = measurement.centerVelocity else {
-                fatalError("center_velocity_reward requested but center velocity was not computed.")
-            }
-            value += reward * centerVelocity
+            value += reward * requireMetric(measurement.centerVelocity, requestedBy: "center_velocity_reward")
         }
         return applyOrganismnessPenalty(value, measurement: measurement)
     }
@@ -3276,16 +3152,10 @@ public final class EvolutionEngine {
     private func bodyLocomotionAdjustedFitness(base: Float, measurement: CandidateMeasurement) -> Float {
         var value = base
         if let penalty = esConfig.fitness.gyrationPenalty {
-            guard let gyration = measurement.gyration else {
-                fatalError("gyration_penalty requested but gyration was not computed.")
-            }
-            value -= penalty * gyration
+            value -= penalty * requireMetric(measurement.gyration, requestedBy: "gyration_penalty")
         }
         if let penalty = esConfig.fitness.componentCountPenalty {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("component_count_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * max(componentCount - 1.0, 0.0)
+            value -= penalty * max(requireMetric(measurement.componentCount, requestedBy: "component_count_penalty") - 1.0, 0.0)
         }
         return applyOrganismnessPenalty(value, measurement: measurement)
     }
@@ -3309,58 +3179,31 @@ public final class EvolutionEngine {
     private func organismnessViolation(measurement: CandidateMeasurement) -> Float {
         var violation: Float = 0.0
         if let minimum = esConfig.fitness.translatedShapeOverlapMin {
-            guard let metric = measurement.translatedShapeOverlap else {
-                fatalError("translated_shape_overlap_min requested but translated overlap was not computed.")
-            }
-            violation += max(minimum - metric, 0.0)
+            violation += max(minimum - requireMetric(measurement.translatedShapeOverlap, requestedBy: "translated_shape_overlap_min"), 0.0)
         }
         if let maximum = esConfig.fitness.componentCountMax {
-            guard let metric = measurement.componentCount else {
-                fatalError("component_count_max requested but component metrics were not computed.")
-            }
-            violation += max(metric - maximum, 0.0)
+            violation += max(requireMetric(measurement.componentCount, requestedBy: "component_count_max") - maximum, 0.0)
         }
         if let minimum = esConfig.fitness.largestComponentFractionMin {
-            guard let metric = measurement.largestComponentFraction else {
-                fatalError("largest_component_fraction_min requested but component metrics were not computed.")
-            }
-            violation += max(minimum - metric, 0.0)
+            violation += max(minimum - requireMetric(measurement.largestComponentFraction, requestedBy: "largest_component_fraction_min"), 0.0)
         }
         if let minimum = esConfig.fitness.largestComponentSolidityMin {
-            guard let metric = measurement.largestComponentSolidity else {
-                fatalError("largest_component_solidity_min requested but component metrics were not computed.")
-            }
-            violation += max(minimum - metric, 0.0)
+            violation += max(minimum - requireMetric(measurement.largestComponentSolidity, requestedBy: "largest_component_solidity_min"), 0.0)
         }
         if let minimum = esConfig.fitness.largestComponentMeanThicknessMin {
-            guard let metric = measurement.largestComponentMeanThickness else {
-                fatalError("largest_component_mean_thickness_min requested but component metrics were not computed.")
-            }
-            violation += max(minimum - metric, 0.0)
+            violation += max(minimum - requireMetric(measurement.largestComponentMeanThickness, requestedBy: "largest_component_mean_thickness_min"), 0.0)
         }
         if let maximum = esConfig.fitness.largestComponentFilamentarityMax {
-            guard let metric = measurement.largestComponentFilamentarity else {
-                fatalError("largest_component_filamentarity_max requested but component metrics were not computed.")
-            }
-            violation += max(metric - maximum, 0.0)
+            violation += max(requireMetric(measurement.largestComponentFilamentarity, requestedBy: "largest_component_filamentarity_max") - maximum, 0.0)
         }
         if let minimum = esConfig.fitness.occupiedFractionMin {
-            guard let metric = measurement.occupiedFraction else {
-                fatalError("occupied_fraction_min requested but moment metrics were not computed.")
-            }
-            violation += max(minimum - metric, 0.0)
+            violation += max(minimum - requireMetric(measurement.occupiedFraction, requestedBy: "occupied_fraction_min"), 0.0)
         }
         if let maximum = esConfig.fitness.occupiedFractionMax {
-            guard let metric = measurement.occupiedFraction else {
-                fatalError("occupied_fraction_max requested but moment metrics were not computed.")
-            }
-            violation += max(metric - maximum, 0.0)
+            violation += max(requireMetric(measurement.occupiedFraction, requestedBy: "occupied_fraction_max") - maximum, 0.0)
         }
         if let maximum = esConfig.fitness.occupiedGrowthMax {
-            guard let metric = measurement.occupiedGrowth else {
-                fatalError("occupied_growth_max requested but mid/target occupancy was not computed.")
-            }
-            violation += max(metric - maximum, 0.0)
+            violation += max(requireMetric(measurement.occupiedGrowth, requestedBy: "occupied_growth_max") - maximum, 0.0)
         }
         return violation
     }
@@ -3386,128 +3229,68 @@ public final class EvolutionEngine {
         }
 
         if let penalty = esConfig.fitness.gyrationPenalty {
-            guard let gyration = measurement.gyration else {
-                fatalError("gyration_penalty requested but gyration was not computed.")
-            }
-            value -= penalty * gyration
+            value -= penalty * requireMetric(measurement.gyration, requestedBy: "gyration_penalty")
         }
         if let penalty = esConfig.fitness.componentCountPenalty {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("component_count_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * max(componentCount - 1.0, 0.0)
+            value -= penalty * max(requireMetric(measurement.componentCount, requestedBy: "component_count_penalty") - 1.0, 0.0)
         }
         if let reward = esConfig.fitness.largestComponentFractionReward {
-            guard let largestComponentFraction = measurement.largestComponentFraction else {
-                fatalError("largest_component_fraction_reward requested but component metrics were not computed.")
-            }
-            value += rewardGate * reward * largestComponentFraction
+            value += rewardGate * reward * requireMetric(measurement.largestComponentFraction, requestedBy: "largest_component_fraction_reward")
         }
         if let penalty = esConfig.fitness.largestComponentAnisotropyPenalty {
-            guard let largestComponentAnisotropy = measurement.largestComponentAnisotropy else {
-                fatalError("largest_component_anisotropy_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * largestComponentAnisotropy
+            value -= penalty * requireMetric(measurement.largestComponentAnisotropy, requestedBy: "largest_component_anisotropy_penalty")
         }
         if let reward = esConfig.fitness.largestComponentSolidityReward {
-            guard let largestComponentSolidity = measurement.largestComponentSolidity else {
-                fatalError("largest_component_solidity_reward requested but component metrics were not computed.")
-            }
-            value += rewardGate * reward * largestComponentSolidity
+            value += rewardGate * reward * requireMetric(measurement.largestComponentSolidity, requestedBy: "largest_component_solidity_reward")
         }
         if let reward = esConfig.fitness.largestComponentMeanThicknessReward {
-            guard let largestComponentMeanThickness = measurement.largestComponentMeanThickness else {
-                fatalError("largest_component_mean_thickness_reward requested but component metrics were not computed.")
-            }
-            value += rewardGate * reward * largestComponentMeanThickness
+            value += rewardGate * reward * requireMetric(measurement.largestComponentMeanThickness, requestedBy: "largest_component_mean_thickness_reward")
         }
         if let penalty = esConfig.fitness.largestComponentFilamentarityPenalty {
-            guard let largestComponentFilamentarity = measurement.largestComponentFilamentarity else {
-                fatalError("largest_component_filamentarity_penalty requested but component metrics were not computed.")
-            }
-            value -= penalty * largestComponentFilamentarity
+            value -= penalty * requireMetric(measurement.largestComponentFilamentarity, requestedBy: "largest_component_filamentarity_penalty")
         }
         if let reward = esConfig.fitness.momentDensityReward {
-            guard let momentDensity = measurement.momentDensity else {
-                fatalError("moment_density_reward requested but moment metrics were not computed.")
-            }
-            value += rewardGate * reward * momentDensity
+            value += rewardGate * reward * requireMetric(measurement.momentDensity, requestedBy: "moment_density_reward")
         }
         if let penalty = esConfig.fitness.momentAnisotropyPenalty {
-            guard let momentAnisotropy = measurement.momentAnisotropy else {
-                fatalError("moment_anisotropy_penalty requested but moment metrics were not computed.")
-            }
-            value -= penalty * momentAnisotropy
+            value -= penalty * requireMetric(measurement.momentAnisotropy, requestedBy: "moment_anisotropy_penalty")
         }
         return applyOrganismnessPenalty(value, measurement: measurement)
     }
 
     private func failsMorphologyGuard(_ measurement: CandidateMeasurement) -> Bool {
         if let minimum = esConfig.fitness.minimumComponentCount {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("minimum_component_count guard requested but component metrics were not computed.")
-            }
-            if componentCount < minimum { return true }
+            if requireMetric(measurement.componentCount, requestedBy: "minimum_component_count") < minimum { return true }
         }
         if let maximum = esConfig.fitness.maximumComponentCount {
-            guard let componentCount = measurement.componentCount else {
-                fatalError("maximum_component_count guard requested but component metrics were not computed.")
-            }
-            if componentCount > maximum { return true }
+            if requireMetric(measurement.componentCount, requestedBy: "maximum_component_count") > maximum { return true }
         }
         if let minimum = esConfig.fitness.minimumLargestComponentFraction {
-            guard let largestComponentFraction = measurement.largestComponentFraction else {
-                fatalError("minimum_largest_component_fraction guard requested but component metrics were not computed.")
-            }
-            if largestComponentFraction < minimum { return true }
+            if requireMetric(measurement.largestComponentFraction, requestedBy: "minimum_largest_component_fraction") < minimum { return true }
         }
         if let maximum = esConfig.fitness.maximumLargestComponentFraction {
-            guard let largestComponentFraction = measurement.largestComponentFraction else {
-                fatalError("maximum_largest_component_fraction guard requested but component metrics were not computed.")
-            }
-            if largestComponentFraction > maximum { return true }
+            if requireMetric(measurement.largestComponentFraction, requestedBy: "maximum_largest_component_fraction") > maximum { return true }
         }
         if let maximum = esConfig.fitness.maximumLargestComponentAnisotropy {
-            guard let largestComponentAnisotropy = measurement.largestComponentAnisotropy else {
-                fatalError("maximum_largest_component_anisotropy guard requested but component metrics were not computed.")
-            }
-            if largestComponentAnisotropy > maximum { return true }
+            if requireMetric(measurement.largestComponentAnisotropy, requestedBy: "maximum_largest_component_anisotropy") > maximum { return true }
         }
         if let minimum = esConfig.fitness.minimumComponentMassEvenness {
-            guard let componentMassEvenness = measurement.componentMassEvenness else {
-                fatalError("minimum_component_mass_evenness guard requested but component metrics were not computed.")
-            }
-            if componentMassEvenness < minimum { return true }
+            if requireMetric(measurement.componentMassEvenness, requestedBy: "minimum_component_mass_evenness") < minimum { return true }
         }
         if let minimum = esConfig.fitness.minimumMomentMass {
-            guard let momentMass = measurement.momentMass else {
-                fatalError("minimum_moment_mass guard requested but moment metrics were not computed.")
-            }
-            if momentMass < minimum { return true }
+            if requireMetric(measurement.momentMass, requestedBy: "minimum_moment_mass") < minimum { return true }
         }
         if let maximum = esConfig.fitness.maximumMomentMass {
-            guard let momentMass = measurement.momentMass else {
-                fatalError("maximum_moment_mass guard requested but moment metrics were not computed.")
-            }
-            if momentMass > maximum { return true }
+            if requireMetric(measurement.momentMass, requestedBy: "maximum_moment_mass") > maximum { return true }
         }
         if let minimum = esConfig.fitness.minimumMomentDensity {
-            guard let momentDensity = measurement.momentDensity else {
-                fatalError("minimum_moment_density guard requested but moment metrics were not computed.")
-            }
-            if momentDensity < minimum { return true }
+            if requireMetric(measurement.momentDensity, requestedBy: "minimum_moment_density") < minimum { return true }
         }
         if let maximum = esConfig.fitness.maximumMomentDensity {
-            guard let momentDensity = measurement.momentDensity else {
-                fatalError("maximum_moment_density guard requested but moment metrics were not computed.")
-            }
-            if momentDensity > maximum { return true }
+            if requireMetric(measurement.momentDensity, requestedBy: "maximum_moment_density") > maximum { return true }
         }
         if let maximum = esConfig.fitness.maximumMomentAnisotropy {
-            guard let momentAnisotropy = measurement.momentAnisotropy else {
-                fatalError("maximum_moment_anisotropy guard requested but moment metrics were not computed.")
-            }
-            if momentAnisotropy > maximum { return true }
+            if requireMetric(measurement.momentAnisotropy, requestedBy: "maximum_moment_anisotropy") > maximum { return true }
         }
         return false
     }
