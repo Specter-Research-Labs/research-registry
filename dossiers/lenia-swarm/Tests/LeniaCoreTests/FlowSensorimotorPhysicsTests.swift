@@ -172,4 +172,91 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         XCTAssertGreaterThan(belowDy, 0.0, "flow below a positive obstacle must point down (outward)")
         XCTAssertLessThan(aboveDy, 0.0, "flow above a positive obstacle must point up (outward)")
     }
+
+    private func blob(value: Float, centerRow: Int, centerCol: Int, half: Int) -> MLXArray {
+        var values = [Float](repeating: 0.0, count: sx * sy)
+        for row in (centerRow - half)..<(centerRow + half) {
+            for col in (centerCol - half)..<(centerCol + half) {
+                values[row * sy + col] = value
+            }
+        }
+        return MLXArray(values).reshaped([1, sx, sy, 1])
+    }
+
+    func testEmbeddingTracksCentroidDisplacement() {
+        let cfg = config()
+        let centered = blob(value: 0.5, centerRow: sx / 2, centerCol: sy / 2, half: 4)
+        let shifted = blob(value: 0.5, centerRow: sx / 2, centerCol: 3 * sy / 4, half: 4)
+
+        let centeredEmbedding = flowSensorimotorEmbedding(centered, config: cfg)
+        let shiftedEmbedding = flowSensorimotorEmbedding(shifted, config: cfg)
+
+        XCTAssertEqual(centeredEmbedding.x, 0.0, accuracy: 0.02)
+        XCTAssertEqual(centeredEmbedding.y, 0.0, accuracy: 0.02)
+        XCTAssertEqual(shiftedEmbedding.x, 0.25, accuracy: 0.02, "blob at 3/4 width sits a quarter-grid right of center")
+        XCTAssertGreaterThan(centeredEmbedding.compactness, 0.0)
+    }
+
+    func testViabilityDistinguishesCoherentDispersedFragmented() {
+        let cfg = config()
+        let thresholds = FlowSensorimotorViabilityThresholds(
+            componentMassThreshold: 0.01, maxGyration: 12.0,
+            minLargestComponentFraction: 0.6, maxComponentCount: 1
+        )
+
+        let coherent = blob(value: 0.5, centerRow: sx / 2, centerCol: sy / 2, half: 4)
+        let dispersed = MLXArray([Float](repeating: 0.02, count: sx * sy)).reshaped([1, sx, sy, 1])
+        let twoBodies = blob(value: 0.5, centerRow: sx / 2, centerCol: sy / 4, half: 4)
+            + blob(value: 0.5, centerRow: sx / 2, centerCol: 3 * sy / 4, half: 4)
+
+        XCTAssertTrue(flowSensorimotorViability(coherent, config: cfg, thresholds: thresholds).alive)
+
+        let dispersedViability = flowSensorimotorViability(dispersed, config: cfg, thresholds: thresholds)
+        XCTAssertFalse(dispersedViability.alive, "a field spread across the grid disperses past the gyration bound")
+        XCTAssertGreaterThan(dispersedViability.gyration, thresholds.maxGyration)
+
+        let fragmentedViability = flowSensorimotorViability(twoBodies, config: cfg, thresholds: thresholds)
+        XCTAssertFalse(fragmentedViability.alive, "two separated bodies fail the single-component requirement")
+        XCTAssertGreaterThan(fragmentedViability.componentCount, 1.0)
+    }
+
+    func testGoalLossRewardsMatchingGoalAndIsDifferentiable() {
+        let cfg = config()
+        let p = ruleParams()
+        let maps = channelMaps()
+        let pos = flowSensorimotorPosGrid(sx: sx, sy: sy)
+        let initial = centeredBlob()
+
+        let final = flowSensorimotorRollout(
+            initial: initial, a: p.a, w: p.w, b: p.b, r: p.r, m: p.m, s: p.s, h: p.h,
+            c0Idxs: maps.c0Idxs, c1Mask: maps.c1Mask, posGrid: pos,
+            wallPotential: nil, steps: 8, config: cfg
+        )
+        let reached = flowSensorimotorEmbedding(final, config: cfg)
+        let matchingGoal = FlowSensorimotorGoal(compactness: reached.compactness, x: reached.x, y: reached.y)
+        let farGoal = FlowSensorimotorGoal(compactness: reached.compactness, x: reached.x + 0.4, y: reached.y)
+
+        let matchingLoss = flowSensorimotorGoalLoss(finalState: final, goal: matchingGoal, config: cfg).item(Float.self)
+        let farLoss = flowSensorimotorGoalLoss(finalState: final, goal: farGoal, config: cfg).item(Float.self)
+        XCTAssertLessThan(matchingLoss, farLoss, "a goal at the reached behavior must score better than a distant one")
+
+        let inputs = [p.a, p.w, p.b, p.r, p.m, p.s, p.h, initial]
+        let objective: ([MLXArray]) -> [MLXArray] = { arrays in
+            let rolled = flowSensorimotorRollout(
+                initial: arrays[7], a: arrays[0], w: arrays[1], b: arrays[2], r: arrays[3],
+                m: arrays[4], s: arrays[5], h: arrays[6],
+                c0Idxs: maps.c0Idxs, c1Mask: maps.c1Mask, posGrid: pos,
+                wallPotential: nil, steps: 8, config: cfg
+            )
+            return [flowSensorimotorGoalLoss(finalState: rolled, goal: farGoal, config: cfg)]
+        }
+        let valueAndGradFn = valueAndGrad(objective, argumentNumbers: Array(inputs.indices))
+        let (value, grads) = valueAndGradFn(inputs)
+        MLX.eval(grads + value)
+
+        XCTAssertTrue(value[0].item(Float.self).isFinite)
+        let initGrad = grads[7].flattened().asArray(Float.self)
+        XCTAssertTrue(initGrad.allSatisfy { $0.isFinite })
+        XCTAssertGreaterThan(initGrad.reduce(Float(0)) { $0 + abs($1) }, 0.0, "goal loss must produce a gradient on the initial state")
+    }
 }

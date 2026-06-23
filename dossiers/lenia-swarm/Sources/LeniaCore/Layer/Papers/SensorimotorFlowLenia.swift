@@ -181,3 +181,122 @@ func flowSensorimotorGyration(
     let sq = dr * dr + dc * dc
     return MLX.sqrt((massMap * sq).sum() / total)
 }
+
+// MARK: - Behavior embedding, viability, goal loss
+
+// 3D behavior descriptor, the Flow-Lenia analogue of the paper's
+// [collapse, centroidX, centroidY]. Compactness (normalized gyration) replaces
+// the asymptotic collapse proxy; x/y are the centroid displacement from grid
+// center, normalized by grid size. The search keeps compactness small (a
+// coherent body) and explores x/y (where the body travels).
+struct FlowSensorimotorEmbedding {
+    let compactness: Float
+    let x: Float
+    let y: Float
+
+    var vector: [Float] { [compactness, x, y] }
+}
+
+func flowSensorimotorEmbedding(
+    _ state: MLXArray,
+    config: FlowSensorimotorStepConfig
+) -> FlowSensorimotorEmbedding {
+    let gyration = flowSensorimotorGyration(state, config: config).item(Float.self)
+    let centroid = flowSensorimotorCentroid(state, config: config)
+    let row = centroid.row.item(Float.self)
+    let col = centroid.col.item(Float.self)
+    let scale = Float(min(config.sx, config.sy))
+    return FlowSensorimotorEmbedding(
+        compactness: gyration / scale,
+        x: (col - Float(config.sy) / 2) / Float(config.sy),
+        y: (row - Float(config.sx) / 2) / Float(config.sx)
+    )
+}
+
+// Mass-conserving viability. Because Flow-Lenia conserves mass, a body cannot
+// die by mass decay; it fails by dispersing (gyration blows up) or fragmenting
+// (the largest connected component stops dominating). These replace the
+// asymptotic runner's mass-floor death test.
+struct FlowSensorimotorViabilityThresholds {
+    let componentMassThreshold: Float
+    let maxGyration: Float
+    let minLargestComponentFraction: Float
+    let maxComponentCount: Int
+}
+
+struct FlowSensorimotorViability {
+    let mass: Float
+    let gyration: Float
+    let componentCount: Float
+    let largestComponentFraction: Float
+    let alive: Bool
+}
+
+func flowSensorimotorViability(
+    _ state: MLXArray,
+    config: FlowSensorimotorStepConfig,
+    thresholds: FlowSensorimotorViabilityThresholds
+) -> FlowSensorimotorViability {
+    let massMap = flowSensorimotorMassMap(state, config: config)
+    let mass = massMap.sum().item(Float.self)
+    let gyration = flowSensorimotorGyration(state, config: config).item(Float.self)
+    let materialized = materializeMassBatch(massMap)
+    let components = computeComponentMetricsBatch(
+        materialized: materialized,
+        threshold: thresholds.componentMassThreshold,
+        useTorus: config.useTorus
+    )
+    let count = components.count[0]
+    let largestFraction = components.largestFraction[0]
+    let alive = mass > 0
+        && gyration <= thresholds.maxGyration
+        && largestFraction >= thresholds.minLargestComponentFraction
+        && count <= Float(thresholds.maxComponentCount)
+    return FlowSensorimotorViability(
+        mass: mass,
+        gyration: gyration,
+        componentCount: count,
+        largestComponentFraction: largestFraction,
+        alive: alive
+    )
+}
+
+// Differentiable goal loss for the gradient inner loop. The target is a Gaussian
+// body of the same conserved mass, placed at the goal centroid with a width set
+// by the goal compactness; the loss is the squared error between the final body
+// mass map and that target. A dense spatial target conditions the gradient
+// better than an embedding-space distance and pulls mass toward both the goal
+// location and the goal size.
+struct FlowSensorimotorGoal {
+    let compactness: Float
+    let x: Float
+    let y: Float
+
+    var vector: [Float] { [compactness, x, y] }
+}
+
+func flowSensorimotorGoalLoss(
+    finalState: MLXArray,
+    goal: FlowSensorimotorGoal,
+    config: FlowSensorimotorStepConfig
+) -> MLXArray {
+    let massMap = flowSensorimotorMassMap(finalState, config: config)[0]
+    let totalMass = massMap.sum()
+
+    let scale = Float(min(config.sx, config.sy))
+    let targetRow = Float(config.sx) / 2 + goal.y * Float(config.sx)
+    let targetCol = Float(config.sy) / 2 + goal.x * Float(config.sy)
+    // gyration of an isotropic 2D Gaussian is sqrt(2)*sigma, so invert that to set
+    // the target width from the goal compactness (compactness = gyration/scale).
+    let sigma = max(goal.compactness * scale / Float(2.0).squareRoot(), 1.0)
+
+    let rows = MLXArray((0..<config.sx).map { Float($0) }).reshaped([config.sx, 1])
+    let cols = MLXArray((0..<config.sy).map { Float($0) }).reshaped([1, config.sy])
+    let dr = rows - MLXArray(targetRow)
+    let dc = cols - MLXArray(targetCol)
+    let bell = MLX.exp(-(dr * dr + dc * dc) / MLXArray(2.0 * sigma * sigma))
+    let target = bell / (bell.sum() + MLXArray(Float(1e-8))) * totalMass
+
+    let diff = massMap - target
+    return (diff * diff).sum()
+}
