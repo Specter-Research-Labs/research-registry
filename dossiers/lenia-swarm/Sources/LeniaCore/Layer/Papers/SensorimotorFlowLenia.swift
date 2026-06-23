@@ -308,7 +308,7 @@ func flowSensorimotorGoalLoss(
 // ~90 flat fields; here the obstacle is a wall potential rather than a channel
 // (so channels == learnable channels == 1) and viability is dispersal-based,
 // which keeps the surface small.
-struct FlowSensorimotorConfig: Codable, Sendable {
+public struct FlowSensorimotorConfig: Codable, Sendable {
     struct Grid: Codable, Sendable {
         let sx: Int
         let sy: Int
@@ -322,7 +322,7 @@ struct FlowSensorimotorConfig: Codable, Sendable {
         let dt: Float
         let n: Int
         let thetaA: Float
-        let R: Float
+        let kernelRadius: Float
         let kernelProfile: String
         let gradientBoundary: String
         let alphaMode: String
@@ -409,6 +409,11 @@ struct FlowSensorimotorConfig: Codable, Sendable {
         let maxLoss: Float
     }
 
+    struct Evaluation: Codable, Sendable {
+        let obstacleRollouts: Int
+        let movingMinDisplacement: Float
+    }
+
     let paper: String
     let grid: Grid
     let physics: Physics
@@ -416,17 +421,18 @@ struct FlowSensorimotorConfig: Codable, Sendable {
     let initialization: Initialization
     let obstacles: Obstacles
     let viability: Viability
-    let outerSteps: Int
-    let historyInitializationTrials: Int
-    let rolloutSteps: Int
+    public let outerSteps: Int
+    public let historyInitializationTrials: Int
+    public let rolloutSteps: Int
     let evaluationRollouts: Int
     let goalSampling: GoalSampling
     let optimization: Optimization
     let mutation: Mutation
     let restart: Restart
+    let evaluation: Evaluation
 }
 
-func loadFlowSensorimotorConfig(configFile: URL) throws -> FlowSensorimotorConfig {
+public func loadFlowSensorimotorConfig(configFile: URL) throws -> FlowSensorimotorConfig {
     let data = try Data(contentsOf: configFile)
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -438,7 +444,7 @@ extension FlowSensorimotorConfig {
         FlowSensorimotorStepConfig(
             sx: grid.sx, sy: grid.sy, nbK: physics.nbK, channels: 1, learnableChannels: 1,
             dd: physics.dd, sigma: physics.sigma, dt: physics.dt, n: physics.n,
-            thetaA: physics.thetaA, R: physics.R,
+            thetaA: physics.thetaA, R: physics.kernelRadius,
             kernelProfile: physics.kernelProfile, gradientBoundary: physics.gradientBoundary,
             alphaMode: physics.alphaMode, flowClip: physics.flowClip,
             growthProfile: physics.growthProfile, useTorus: physics.useTorus
@@ -624,7 +630,7 @@ func flowSensorimotorGoalDistance(_ a: [Float], _ b: [Float]) -> Float {
 // IMGEP diversity search on Flow-Lenia. Holds the rollout constants (position
 // grid, channel maps, derived step config) so the goal-sampling, mutation, and
 // gradient methods share them. Artifact writing lives in the run() extension.
-final class FlowSensorimotorRunner {
+public final class FlowSensorimotorRunner {
     let config: FlowSensorimotorConfig
     let logger: Logger
     let stepConfig: FlowSensorimotorStepConfig
@@ -632,7 +638,7 @@ final class FlowSensorimotorRunner {
     let c0Idxs: MLXArray
     let c1Mask: MLXArray
 
-    init(config: FlowSensorimotorConfig, logger: Logger) {
+    public init(config: FlowSensorimotorConfig, logger: Logger) {
         self.config = config
         self.logger = logger
         self.stepConfig = config.stepConfig
@@ -862,5 +868,202 @@ final class FlowSensorimotorRunner {
             restartCount += 1
         }
         return ([], restartCount)
+    }
+}
+
+// MARK: - Evaluation battery
+
+// Mass-conserving agency: a Flow-Lenia body shows agency if it stays coherent
+// (viable) while travelling, and keeps doing so when obstacles are present.
+// Displacement is the centroid travel from the seed location, in cells.
+public struct FlowSensorimotorAgency: Codable, Sendable {
+    public let nominalViable: Bool
+    public let nominalDisplacement: Float
+    public let nominalGyration: Float
+    public let nominalLargestComponentFraction: Float
+    public let obstacleRobustness: Float
+    public let obstacleMeanDisplacement: Float
+    public let moving: Bool
+}
+
+extension FlowSensorimotorRunner {
+    private func centroidCells(_ state: MLXArray) -> (row: Float, col: Float) {
+        let centroid = flowSensorimotorCentroid(state, config: stepConfig)
+        return (centroid.row.item(Float.self), centroid.col.item(Float.self))
+    }
+
+    private func displacement(from origin: (row: Float, col: Float), to state: MLXArray) -> Float {
+        let end = centroidCells(state)
+        let dr = end.row - origin.row
+        let dc = end.col - origin.col
+        return (dr * dr + dc * dc).squareRoot()
+    }
+
+    func evaluate(state: FlowSensorimotorState, rng: inout SeededRandomNumberGenerator) -> FlowSensorimotorAgency {
+        let initial = flowSensorimotorInitialState(initialization: state.initialization, config: config)
+        let origin = centroidCells(initial)
+
+        let nominalFinal = rollout(state: state, wallPotential: nil)
+        let nominalViability = flowSensorimotorViability(nominalFinal, config: stepConfig, thresholds: config.viabilityThresholds)
+        let nominalDisplacement = displacement(from: origin, to: nominalFinal)
+
+        var viableCount = 0
+        var displacementSum: Float = 0
+        for _ in 0..<config.evaluation.obstacleRollouts {
+            let obstacle = flowSensorimotorObstaclePotential(config: config, rng: &rng)
+            let final = rollout(state: state, wallPotential: obstacle)
+            if flowSensorimotorViability(final, config: stepConfig, thresholds: config.viabilityThresholds).alive {
+                viableCount += 1
+            }
+            displacementSum += displacement(from: origin, to: final)
+        }
+        let rollouts = max(config.evaluation.obstacleRollouts, 1)
+        return FlowSensorimotorAgency(
+            nominalViable: nominalViability.alive,
+            nominalDisplacement: nominalDisplacement,
+            nominalGyration: nominalViability.gyration,
+            nominalLargestComponentFraction: nominalViability.largestComponentFraction,
+            obstacleRobustness: Float(viableCount) / Float(rollouts),
+            obstacleMeanDisplacement: displacementSum / Float(rollouts),
+            moving: nominalDisplacement >= config.evaluation.movingMinDisplacement
+        )
+    }
+}
+
+// MARK: - Serializable payloads and run()
+
+struct FlowSensorimotorCandidate: Codable, Sendable {
+    let a: [[Float]]
+    let w: [[Float]]
+    let b: [[Float]]
+    let r: [Float]
+    let m: [Float]
+    let s: [Float]
+    let h: [Float]
+    let initialization: [[Float]]
+}
+
+struct FlowSensorimotorHistoryEntry: Codable, Sendable {
+    let step: Int
+    let goal: [Float]?
+    let reached: [Float]
+    let alive: Bool
+    let mutated: Bool
+    let trainingLoss: Float?
+    let candidate: FlowSensorimotorCandidate
+}
+
+struct FlowSensorimotorBestResult: Codable, Sendable {
+    let reached: [Float]
+    let candidate: FlowSensorimotorCandidate
+    let agency: FlowSensorimotorAgency
+}
+
+public struct FlowSensorimotorRunSummary: Codable, Sendable {
+    public let restartCount: Int
+    public let historyCount: Int
+    public let bestStep: Int
+    public let bestReached: [Float]
+    public let agency: FlowSensorimotorAgency
+}
+
+func flowSensorimotorCandidate(_ state: FlowSensorimotorState, config: FlowSensorimotorConfig) -> FlowSensorimotorCandidate {
+    func nested(_ x: MLXArray, rows: Int, cols: Int) -> [[Float]] {
+        let flat = x.asArray(Float.self)
+        return (0..<rows).map { row in Array(flat[(row * cols)..<((row + 1) * cols)]) }
+    }
+    let nbK = config.physics.nbK
+    let bumps = config.physics.bumpsPerKernel
+    let size = config.initialization.size
+    return FlowSensorimotorCandidate(
+        a: nested(state.a, rows: nbK, cols: bumps),
+        w: nested(state.w, rows: nbK, cols: bumps),
+        b: nested(state.b, rows: nbK, cols: bumps),
+        r: state.r.asArray(Float.self),
+        m: state.m.asArray(Float.self),
+        s: state.s.asArray(Float.self),
+        h: state.h.asArray(Float.self),
+        initialization: nested(state.initialization, rows: size, cols: size)
+    )
+}
+
+extension FlowSensorimotorRunner {
+    // Most mobile viable body: the one whose reached behavior travelled furthest
+    // from the fixed seed location. Falls back to the first record if nothing
+    // stayed viable.
+    func bestIndex(records: [FlowSensorimotorRecord]) -> Int {
+        let sx = config.grid.sx
+        let sy = config.grid.sy
+        let startX = (Float(config.initialization.origin[1] + config.initialization.size / 2) - Float(sy) / 2) / Float(sy)
+        let startY = (Float(config.initialization.origin[0] + config.initialization.size / 2) - Float(sx) / 2) / Float(sx)
+        var bestIndex = 0
+        var bestTravel: Float = -1
+        for (index, record) in records.enumerated() where record.alive {
+            let dx = record.reached.x - startX
+            let dy = record.reached.y - startY
+            let travel = dx * dx + dy * dy
+            if travel > bestTravel {
+                bestTravel = travel
+                bestIndex = index
+            }
+        }
+        return bestIndex
+    }
+
+    public func run(seed: UInt64, outputDirectory: URL, runId: String) throws -> FlowSensorimotorRunSummary {
+        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        try encoder.encode(config).write(to: outputDirectory.appendingPathComponent("config.json"))
+
+        let (records, restartCount) = search(seed: seed)
+        guard !records.isEmpty else {
+            throw NSError(domain: "FlowSensorimotor", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "All flow sensorimotor restart attempts failed before producing a valid history."
+            ])
+        }
+
+        let historyURL = outputDirectory.appendingPathComponent("history.jsonl")
+        FileManager.default.createFile(atPath: historyURL.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: historyURL)
+        let lineEncoder = JSONEncoder()
+        lineEncoder.outputFormatting = [.sortedKeys]
+        for record in records {
+            let entry = FlowSensorimotorHistoryEntry(
+                step: record.step,
+                goal: record.goal?.vector,
+                reached: record.reached.vector,
+                alive: record.alive,
+                mutated: record.mutated,
+                trainingLoss: record.trainingLoss,
+                candidate: flowSensorimotorCandidate(record.state, config: config)
+            )
+            handle.write(try lineEncoder.encode(entry))
+            handle.write(Data([0x0a]))
+        }
+        try handle.close()
+
+        let best = bestIndex(records: records)
+        let bestRecord = records[best]
+        logger.info("Evaluating best candidate from outer step \(bestRecord.step)")
+        var evalRng = SeededRandomNumberGenerator(seed: seed &+ 0x9E3779B9)
+        let agency = evaluate(state: bestRecord.state, rng: &evalRng)
+
+        let bestResult = FlowSensorimotorBestResult(
+            reached: bestRecord.reached.vector,
+            candidate: flowSensorimotorCandidate(bestRecord.state, config: config),
+            agency: agency
+        )
+        try encoder.encode(bestResult).write(to: outputDirectory.appendingPathComponent("best.json"))
+
+        let summary = FlowSensorimotorRunSummary(
+            restartCount: restartCount,
+            historyCount: records.count,
+            bestStep: bestRecord.step,
+            bestReached: bestRecord.reached.vector,
+            agency: agency
+        )
+        try encoder.encode(summary).write(to: outputDirectory.appendingPathComponent("summary.json"))
+        return summary
     }
 }

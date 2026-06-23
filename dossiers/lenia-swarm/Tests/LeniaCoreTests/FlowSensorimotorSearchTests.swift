@@ -26,7 +26,7 @@ final class FlowSensorimotorSearchTests: XCTestCase {
             paper: "flow-lenia-sensorimotor-test",
             grid: .init(sx: 48, sy: 48),
             physics: .init(
-                nbK: 3, bumpsPerKernel: 1, dd: 3, sigma: 0.65, dt: 0.1, n: 2, thetaA: 1.0, R: 13.0,
+                nbK: 3, bumpsPerKernel: 1, dd: 3, sigma: 0.65, dt: 0.1, n: 2, thetaA: 1.0, kernelRadius: 13.0,
                 kernelProfile: "flowlenia_2022_colab", gradientBoundary: "zero_pad",
                 alphaMode: "mass", flowClip: "none", growthProfile: "gaussian", useTorus: false
             ),
@@ -53,7 +53,8 @@ final class FlowSensorimotorSearchTests: XCTestCase {
             ),
             optimization: .init(stepsUnmutated: 2, stepsMutated: 1, ruleLr: 0.0008, initializationLr: 0.008, betas: [0.9, 0.999], eps: 1e-8),
             mutation: .init(mutateEveryNSteps: 3, ruleStd: 0.01, initStd: 0.02, viabilityTrials: 2),
-            restart: .init(maxAttempts: 2, minAliveRandomInitializations: 0, maxLoss: 1e9)
+            restart: .init(maxAttempts: 2, minAliveRandomInitializations: 0, maxLoss: 1e9),
+            evaluation: .init(obstacleRollouts: 2, movingMinDisplacement: 1.0)
         )
     }
 
@@ -72,5 +73,35 @@ final class FlowSensorimotorSearchTests: XCTestCase {
         }
         let exploration = result.records.filter { $0.goal != nil }
         XCTAssertEqual(exploration.count, 2, "history beyond the initialization trials is goal-directed")
+    }
+
+    func testRunWritesReproducibleArtifacts() throws {
+        let runner = FlowSensorimotorRunner(config: smallConfig(), logger: Logger(label: "test"))
+        let outputDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("flow-sensorimotor-\(UInt64(7))-test", isDirectory: true)
+        try? FileManager.default.removeItem(at: outputDirectory)
+        defer { try? FileManager.default.removeItem(at: outputDirectory) }
+
+        let summary = try runner.run(seed: 7, outputDirectory: outputDirectory, runId: "test-run")
+        XCTAssertEqual(summary.historyCount, 6)
+        XCTAssertTrue(summary.agency.obstacleRobustness >= 0 && summary.agency.obstacleRobustness <= 1)
+
+        let decoder = JSONDecoder()
+        let configData = try Data(contentsOf: outputDirectory.appendingPathComponent("config.json"))
+        XCTAssertNoThrow(try decoder.decode(FlowSensorimotorConfig.self, from: configData))
+
+        let bestData = try Data(contentsOf: outputDirectory.appendingPathComponent("best.json"))
+        let best = try decoder.decode(FlowSensorimotorBestResult.self, from: bestData)
+        XCTAssertEqual(best.candidate.r.count, 3, "candidate carries the per-kernel rule parameters")
+
+        let summaryData = try Data(contentsOf: outputDirectory.appendingPathComponent("summary.json"))
+        XCTAssertNoThrow(try decoder.decode(FlowSensorimotorRunSummary.self, from: summaryData))
+
+        let historyText = try String(contentsOf: outputDirectory.appendingPathComponent("history.jsonl"), encoding: .utf8)
+        let lines = historyText.split(separator: "\n")
+        XCTAssertEqual(lines.count, 6, "one history line per outer step")
+        for line in lines {
+            XCTAssertNoThrow(try decoder.decode(FlowSensorimotorHistoryEntry.self, from: Data(line.utf8)))
+        }
     }
 }
