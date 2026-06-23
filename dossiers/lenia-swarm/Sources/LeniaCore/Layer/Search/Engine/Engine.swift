@@ -79,6 +79,12 @@ public final class SearchEngine: @unchecked Sendable {
     private var persistentMetalRunnerCache: [Int: FlowLeniaMetalFullStateRunner] = [:]
     private(set) var lastBatchProfile: SearchBatchProfile?
 
+    /// An explicit per-sample genotype batch (one rule per batch slot). When set, runBatch
+    /// uses these rules instead of generating random ones, which is how a fixed corpus of
+    /// creatures is re-evaluated together (the functional-assay path). Count must equal the
+    /// batch size; metal-full backend, no parameter embedding.
+    public var explicitParamsBatch: [ResolvedParams]?
+
     public init(runtimeConfig: LeniaRuntimeConfig) {
         self.runtimeConfig = runtimeConfig
         self.batchedConfig = batchedConfigFromRuntime(runtimeConfig)
@@ -592,7 +598,23 @@ public final class SearchEngine: @unchecked Sendable {
         let runtimeOperators = makeRuntimeOperators()
         let randomParamsBySample: [ResolvedParams]?
         let activeMetalKernels: CompiledKernels?
-        if !useParamEmbedding,
+        if let corpus = explicitParamsBatch {
+            precondition(
+                corpus.count == batchSize,
+                "explicitParamsBatch count (\(corpus.count)) must equal batch size (\(batchSize))"
+            )
+            precondition(
+                !useParamEmbedding && runtimeConfig.backend == .metalFull,
+                "explicitParamsBatch requires metal-full backend without parameter embedding"
+            )
+            randomParamsBySample = corpus
+            activeMetalKernels = compilePopulationKernels(
+                paramsBatch: corpus,
+                config: batchedConfig,
+                c0: runtimeConfig.c0,
+                c1: runtimeConfig.c1
+            )
+        } else if !useParamEmbedding,
            runtimeConfig.backend == .metalFull,
            let ranges = runtimeConfig.randomParamRanges {
             randomParamsBySample = seeds.map {
