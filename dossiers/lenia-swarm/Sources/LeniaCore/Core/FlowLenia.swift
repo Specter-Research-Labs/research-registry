@@ -515,13 +515,48 @@ func computeFlow(
     sigma: Float,
     wallPotential: MLXArray? = nil
 ) -> MLXArray {
+    return computeFlowAndGrowth(
+        A,
+        fK: fK, m: m, s: s, h: h, c0Idxs: c0Idxs, c1Mask: c1Mask,
+        thetaA: thetaA, n: n,
+        gradientBoundary: gradientBoundary, alphaMode: alphaMode, flowClip: flowClip,
+        growthProfile: growthProfile,
+        chemChannel: chemChannel, chemIncludeInMass: chemIncludeInMass,
+        dd: dd, sigma: sigma, wallPotential: wallPotential
+    ).flow
+}
+
+// Same math as the step's flow stage, but also returns the per-channel growth
+// field (the reaction term, before wall potential). Visualization reads both;
+// computeFlow delegates here so there is a single source of the flow math.
+func computeFlowAndGrowth(
+    _ A: MLXArray,
+    fK: MLXArray,
+    m: MLXArray,
+    s: MLXArray,
+    h: MLXArray,
+    c0Idxs: MLXArray,
+    c1Mask: MLXArray,
+    thetaA: Float,
+    n: Int,
+    gradientBoundary: String,
+    alphaMode: String,
+    flowClip: String,
+    growthProfile: String = "gaussian",
+    chemChannel: Int?,
+    chemIncludeInMass: Bool,
+    dd: Int,
+    sigma: Float,
+    wallPotential: MLXArray? = nil
+) -> (flow: MLXArray, growth: MLXArray) {
     let fA = MLXFFT.fft2(A, axes: [1, 2])
     let fAK = fA.take(c0Idxs, axis: 3)
     let fAKfK = fAK * fK
     let UK = MLXFFT.ifft2(fAKfK, axes: [1, 2]).realPart()
 
     let G = growth(UK, m: m, s: s, h: h, profile: growthProfile)
-    var U = MLX.matmul(G, c1Mask.T)
+    let growthField = MLX.matmul(G, c1Mask.T)
+    var U = growthField
     if let wp = wallPotential {
         U = U + wp
     }
@@ -553,7 +588,56 @@ func computeFlow(
     if flowClip == "always" {
         F = clipFlow(F, dd: dd, sigma: sigma)
     }
-    return F
+    return (F, growthField)
+}
+
+public struct FlowGrowthVizFields {
+    public let width: Int
+    public let height: Int
+    // Row-major per cell. flow has 2 components ordered [dy, dx] (matching the
+    // step's flow axis); growth is a signed scalar.
+    public let flow: [Float]
+    public let growth: [Float]
+}
+
+// Reduce the per-channel flow/growth to a single representative field per cell,
+// mass-weighted so the vectors track where the substance actually is. Returns
+// CPU arrays ready to upload as textures.
+public func flowGrowthVizFields(
+    state A: MLXArray,
+    sampleIndex: Int,
+    kernels: CompiledKernels,
+    config: BatchedConfig,
+    wallPotential: MLXArray?
+) -> FlowGrowthVizFields {
+    let (F, growthField) = computeFlowAndGrowth(
+        A,
+        fK: kernels.fK, m: kernels.m, s: kernels.s, h: kernels.h,
+        c0Idxs: kernels.c0Idxs, c1Mask: kernels.c1Mask,
+        thetaA: config.thetaA, n: config.n,
+        gradientBoundary: config.implementation.gradientBoundary,
+        alphaMode: config.implementation.alphaMode,
+        flowClip: config.implementation.flowClip,
+        growthProfile: config.implementation.growthProfile,
+        chemChannel: config.chemChannel, chemIncludeInMass: config.chemIncludeInMass,
+        dd: config.dd, sigma: config.sigma, wallPotential: wallPotential
+    )
+
+    let sampleA = A[sampleIndex]                              // [h, w, c]
+    let massPerCell = sampleA.sum(axis: -1)                   // [h, w]
+    let denom = massPerCell + MLXArray(Float(1e-5))
+    let weight = sampleA.expandedDimensions(axis: 2)          // [h, w, 1, c]
+    // F axis 3 is [dy, dx]; reduce over channels weighted by mass.
+    let flowWeighted = (F[sampleIndex] * weight).sum(axis: -1) / denom.expandedDimensions(axis: -1)
+    let growthWeighted = (growthField[sampleIndex] * sampleA).sum(axis: -1) / denom
+
+    eval(flowWeighted, growthWeighted)
+    return FlowGrowthVizFields(
+        width: config.sx,
+        height: config.sy,
+        flow: flowWeighted.asArray(Float.self),
+        growth: growthWeighted.asArray(Float.self)
+    )
 }
 
 private func reintegrationBatched(

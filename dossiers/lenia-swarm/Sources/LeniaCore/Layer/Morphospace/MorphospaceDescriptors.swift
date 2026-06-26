@@ -626,13 +626,13 @@ private func morphospaceCenteredSample(
     return centered
 }
 
-private func morphospaceQuantizedFingerprint(
+private func morphospaceBoxResample(
     sample: [Float],
     width: Int,
     height: Int,
-    outputWidth: Int = 32,
-    outputHeight: Int = 32
-) -> [UInt8] {
+    outputWidth: Int,
+    outputHeight: Int
+) -> [Float] {
     var reduced = [Float](repeating: 0, count: outputWidth * outputHeight)
     for outY in 0..<outputHeight {
         let y0 = outY * height / outputHeight
@@ -652,7 +652,23 @@ private func morphospaceQuantizedFingerprint(
             reduced[outY * outputWidth + outX] = count > 0 ? sum / Float(count) : 0
         }
     }
+    return reduced
+}
 
+private func morphospaceQuantizedFingerprint(
+    sample: [Float],
+    width: Int,
+    height: Int,
+    outputWidth: Int = 32,
+    outputHeight: Int = 32
+) -> [UInt8] {
+    let reduced = morphospaceBoxResample(
+        sample: sample,
+        width: width,
+        height: height,
+        outputWidth: outputWidth,
+        outputHeight: outputHeight
+    )
     let total = reduced.reduce(0, +)
     guard total > 1e-8 else {
         return [UInt8](repeating: 0, count: outputWidth * outputHeight)
@@ -662,6 +678,52 @@ private func morphospaceQuantizedFingerprint(
         let normalized = max(0, min(1, value / total))
         return UInt8((normalized * 255).rounded())
     }
+}
+
+/// High-fidelity sibling of the UInt8 fingerprint for off-line analysis (cubical persistent
+/// homology, Zernike moments). Same torus-aware COM centering and box-resample, but emits Float at
+/// the requested resolution normalized to peak = 1, so it keeps full dynamic range instead of the
+/// 8-bit mass-fraction quantization that collapses the stored fingerprint to a handful of levels.
+/// Returns nil for an empty field. Only invoked on opt-in development-trace capture, never on the
+/// search/replay hot path.
+public func morphospaceCenteredFloatField(
+    sample: [Float],
+    width: Int,
+    height: Int,
+    useTorus: Bool,
+    outputResolution: Int
+) -> [Float]? {
+    guard outputResolution > 0 else { return nil }
+    var totalMass: Float = 0
+    var momentX: Float = 0
+    var momentY: Float = 0
+    for y in 0..<height {
+        let rowOffset = y * width
+        for x in 0..<width {
+            let value = sample[rowOffset + x]
+            totalMass += value
+            momentX += value * (Float(x) + 0.5)
+            momentY += value * (Float(y) + 0.5)
+        }
+    }
+    guard totalMass > 1e-8 else { return nil }
+    let centered = morphospaceCenteredSample(
+        sample: sample,
+        width: width,
+        height: height,
+        centerX: momentX / totalMass,
+        centerY: momentY / totalMass,
+        useTorus: useTorus
+    )
+    let reduced = morphospaceBoxResample(
+        sample: centered,
+        width: width,
+        height: height,
+        outputWidth: outputResolution,
+        outputHeight: outputResolution
+    )
+    guard let peak = reduced.max(), peak > 1e-8 else { return nil }
+    return reduced.map { $0 / peak }
 }
 
 private func morphospaceAngularSymmetryDescriptor(

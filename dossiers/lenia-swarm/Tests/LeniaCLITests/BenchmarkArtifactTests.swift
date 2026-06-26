@@ -3,9 +3,27 @@ import XCTest
 @testable import LeniaCLIKit
 
 final class BenchmarkArtifactTests: XCTestCase {
+    private var savedArtifactRoot: String?
+    private var savedLocalArtifactRoot: String?
+
+    override func setUp() {
+        super.setUp()
+        savedArtifactRoot = ProcessInfo.processInfo.environment["SPECTER_ARTIFACT_ROOT"]
+        savedLocalArtifactRoot = ProcessInfo.processInfo.environment["SPCTR_LOCAL_ARTIFACT_ROOT"]
+    }
+
     override func tearDown() {
-        unsetenv("SPECTER_ARTIFACT_ROOT")
+        restoreEnv("SPECTER_ARTIFACT_ROOT", savedArtifactRoot)
+        restoreEnv("SPCTR_LOCAL_ARTIFACT_ROOT", savedLocalArtifactRoot)
         super.tearDown()
+    }
+
+    private func restoreEnv(_ name: String, _ value: String?) {
+        if let value {
+            setenv(name, value, 1)
+        } else {
+            unsetenv(name)
+        }
     }
 
     func testWriteBenchmarkArtifactResolvesCanonicalOutputAndRoundTrips() throws {
@@ -13,6 +31,10 @@ final class BenchmarkArtifactTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
+        // SPCTR_LOCAL_ARTIFACT_ROOT outranks SPECTER_ARTIFACT_ROOT in path resolution,
+        // so clear it to keep the test hermetic against a dev shell that sets it;
+        // otherwise the artifact escapes the temporary root and the prefix check fails.
+        unsetenv("SPCTR_LOCAL_ARTIFACT_ROOT")
         setenv("SPECTER_ARTIFACT_ROOT", root.path, 1)
 
         let artifact = BenchmarkArtifactFile(

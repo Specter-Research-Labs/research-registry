@@ -55,19 +55,24 @@ public struct FrameCapture {
     public let sampleIndex: Int
     public let handler: (_ step: Int, _ width: Int, _ height: Int, _ data: Data) -> Void
     public let stateHandler: ((_ step: Int, _ width: Int, _ height: Int, _ channels: Int, _ values: [Float]) -> Void)?
+    // When set, the engine recomputes the velocity and growth fields from the
+    // captured state and forwards them. Off by default so search is unaffected.
+    public let flowHandler: ((_ step: Int, _ width: Int, _ height: Int, _ flow: [Float], _ growth: [Float]) -> Void)?
 
     public init(
         stride: Int,
         includeWarmup: Bool = false,
         sampleIndex: Int = 0,
         handler: @escaping (_ step: Int, _ width: Int, _ height: Int, _ data: Data) -> Void,
-        stateHandler: ((_ step: Int, _ width: Int, _ height: Int, _ channels: Int, _ values: [Float]) -> Void)? = nil
+        stateHandler: ((_ step: Int, _ width: Int, _ height: Int, _ channels: Int, _ values: [Float]) -> Void)? = nil,
+        flowHandler: ((_ step: Int, _ width: Int, _ height: Int, _ flow: [Float], _ growth: [Float]) -> Void)? = nil
     ) {
         self.stride = stride
         self.includeWarmup = includeWarmup
         self.sampleIndex = sampleIndex
         self.handler = handler
         self.stateHandler = stateHandler
+        self.flowHandler = flowHandler
     }
 }
 

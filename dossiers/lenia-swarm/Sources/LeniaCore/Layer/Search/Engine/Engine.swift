@@ -443,23 +443,46 @@ public final class SearchEngine: @unchecked Sendable {
                 let sampleMap = massMap[capture.sampleIndex, 0..., 0...]
                 let data = frameDataFromMassMap(sampleMap)
                 capture.handler(step, runtimeConfig.sx, runtimeConfig.sy, data)
-                if let stateHandler = capture.stateHandler {
+                if capture.stateHandler != nil || capture.flowHandler != nil {
                     let massState: MLXArray
                     if let runner = persistentMetalRunner {
                         massState = runner.materializeMass()
                     } else {
                         massState = ABatch
                     }
-                    let sampleState = massState[capture.sampleIndex, 0..., 0..., 0...]
-                    let flatState = sampleState.flattened()
-                    eval(flatState)
-                    stateHandler(
-                        step,
-                        runtimeConfig.sx,
-                        runtimeConfig.sy,
-                        runtimeConfig.channels,
-                        flatState.asArray(Float.self)
-                    )
+                    if let stateHandler = capture.stateHandler {
+                        let sampleState = massState[capture.sampleIndex, 0..., 0..., 0...]
+                        let flatState = sampleState.flattened()
+                        eval(flatState)
+                        stateHandler(
+                            step,
+                            runtimeConfig.sx,
+                            runtimeConfig.sy,
+                            runtimeConfig.channels,
+                            flatState.asArray(Float.self)
+                        )
+                    }
+                    if let flowHandler = capture.flowHandler {
+                        let vizKernels: CompiledKernels?
+                        if let metalFullKernels {
+                            vizKernels = metalFullKernels
+                        } else if case let .mlx(batched, _)? = stepper {
+                            vizKernels = batched.kernels
+                        } else {
+                            vizKernels = nil
+                        }
+                        guard let vizKernels else {
+                            fatalError("Flow capture requested but no compiled kernels are available for this backend.")
+                        }
+                        let fields = flowGrowthVizFields(
+                            state: massState,
+                            sampleIndex: capture.sampleIndex,
+                            kernels: vizKernels,
+                            config: batchedConfigFromRuntime(runtimeConfig),
+                            wallPotential: environmentPotential
+                        )
+                        flowHandler(step, runtimeConfig.sx, runtimeConfig.sy, fields.flow, fields.growth)
+                    }
                 }
             }
 
