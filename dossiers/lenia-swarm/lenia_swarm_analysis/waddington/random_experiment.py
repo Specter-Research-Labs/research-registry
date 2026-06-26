@@ -51,6 +51,19 @@ def _resample(value, lo: float, hi: float, rng: random.Random):
     return rng.uniform(lo, hi)
 
 
+def _sync_randomized_manifest(entry: dict, creature_id: str, genotype: dict) -> None:
+    manifest = entry.get("specimen_manifest")
+    if not isinstance(manifest, dict):
+        return
+    manifest["creatureID"] = creature_id
+    manifest["specimenID"] = creature_id
+    snapshots = manifest.get("snapshots")
+    if not isinstance(snapshots, dict):
+        snapshots = {}
+        manifest["snapshots"] = snapshots
+    snapshots["genotype"] = genotype
+
+
 def build_config_random_inputs(config: RuleConfig, target: int) -> int:
     shards = sorted(RUN_ROOT.glob(config.shard_glob))
     if not shards:
@@ -84,8 +97,10 @@ def build_config_random_inputs(config: RuleConfig, target: int) -> int:
             genotype = entry["creature"]["genotype"]
             for key, (lo, hi) in PARAM_RANGES.items():
                 genotype[key] = _resample(genotype[key], lo, hi, rng)
-            entry["creature"]["id"] = str(__import__("uuid").UUID(int=rng.getrandbits(128)))
+            creature_id = str(__import__("uuid").UUID(int=rng.getrandbits(128)))
+            entry["creature"]["id"] = creature_id
             entry["creature"]["name"] = f"random-{config.label}-{i}"
+            _sync_randomized_manifest(entry, creature_id, genotype)
             out.write(json.dumps(entry) + "\n")
     return len(templates)
 

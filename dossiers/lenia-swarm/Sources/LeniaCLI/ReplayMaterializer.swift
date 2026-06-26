@@ -98,6 +98,10 @@ final class DevelopmentTraceCollector {
     var samples: [MorphospaceDevelopmentSample] = []
 }
 
+func developmentTraceStride(interval: Int, steps: Int) -> Int {
+    min(max(1, interval), max(1, steps))
+}
+
 private func replaySourceCreatureID(
     manifest: SpecimenManifest?,
     fallback: UUID
@@ -215,8 +219,9 @@ func executeReplayResolvedInput(
             let borderMode = runtimeConfig.border
             let massChannel = replaySearchConfig.massChannel
             let occupancyThreshold = replaySearchConfig.occupancyThreshold
+            let traceStride = developmentTraceStride(interval: interval, steps: replaySearchConfig.steps)
             developmentCapture = FrameCapture(
-                stride: max(1, interval),
+                stride: traceStride,
                 includeWarmup: true,
                 sampleIndex: 0,
                 handler: { _, _, _, _ in },

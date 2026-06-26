@@ -479,7 +479,7 @@ public final class SearchEngine: @unchecked Sendable {
                             sampleIndex: capture.sampleIndex,
                             kernels: vizKernels,
                             config: batchedConfigFromRuntime(runtimeConfig),
-                            wallPotential: nil
+                            wallPotential: environmentPotential
                         )
                         flowHandler(step, runtimeConfig.sx, runtimeConfig.sy, fields.flow, fields.growth)
                     }
