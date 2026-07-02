@@ -164,10 +164,12 @@ struct DiscoverCommands: AsyncParsableCommand {
         abstract: "Mode-specific search and discovery workflows",
         subcommands: [
             LocalCommand.self,
+            EvaluateCommand.self,
             EvolveCommand.self,
             FlowMapElitesCommand.self,
             MutateCommand.self,
             Sensorimotor24Command.self,
+            SensorimotorFlowLeniaCommand.self,
             Atlas26Command.self,
             RD23Command.self,
             QD24Command.self,

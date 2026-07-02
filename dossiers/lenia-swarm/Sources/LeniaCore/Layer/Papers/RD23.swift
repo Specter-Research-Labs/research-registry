@@ -3,6 +3,9 @@ import Logging
 import MLX
 import MLXFFT
 
+// Reaction-diffusion interpretation of Lenia: validation and kernel-emulation
+// tools comparing the asymptotic update against the original dynamics. Paper:
+// "Implementation of Lenia as a Reaction-Diffusion System" (2023). CLI: discover rd-2023.
 public struct ReactionDiffusionLenia2023AsymptoticConfig: Codable, Sendable {
     public let paper: String
     public let kernelFunction: String

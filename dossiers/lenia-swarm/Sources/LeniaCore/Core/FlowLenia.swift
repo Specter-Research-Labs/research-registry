@@ -128,7 +128,7 @@ private func pad2d(_ A: MLXArray, pad: Int) -> MLXArray {
     return MLX.concatenated([zerosCol, paddedY, zerosCol], axis: 2)
 }
 
-private func fftshift2(_ x: MLXArray) -> MLXArray {
+func fftshift2(_ x: MLXArray) -> MLXArray {
     let shiftX = x.shape[0] / 2
     let shiftY = x.shape[1] / 2
     var result = MLX.roll(x, shift: shiftX, axis: 0)
@@ -513,7 +513,8 @@ func computeFlow(
     chemIncludeInMass: Bool,
     dd: Int,
     sigma: Float,
-    wallPotential: MLXArray? = nil
+    wallPotential: MLXArray? = nil,
+    gatherBeforeFFT: Bool = false
 ) -> MLXArray {
     return computeFlowAndGrowth(
         A,
@@ -522,7 +523,8 @@ func computeFlow(
         gradientBoundary: gradientBoundary, alphaMode: alphaMode, flowClip: flowClip,
         growthProfile: growthProfile,
         chemChannel: chemChannel, chemIncludeInMass: chemIncludeInMass,
-        dd: dd, sigma: sigma, wallPotential: wallPotential
+        dd: dd, sigma: sigma, wallPotential: wallPotential,
+        gatherBeforeFFT: gatherBeforeFFT
     ).flow
 }
 
@@ -547,10 +549,20 @@ func computeFlowAndGrowth(
     chemIncludeInMass: Bool,
     dd: Int,
     sigma: Float,
-    wallPotential: MLXArray? = nil
+    wallPotential: MLXArray? = nil,
+    gatherBeforeFFT: Bool = false
 ) -> (flow: MLXArray, growth: MLXArray) {
-    let fA = MLXFFT.fft2(A, axes: [1, 2])
-    let fAK = fA.take(c0Idxs, axis: 3)
+    // Gathering source channels before the FFT makes the `take` VJP a real-valued
+    // scatter (GPU-supported) rather than a complex one, so gradients can run on
+    // the GPU. The result is identical because the channel gather commutes with
+    // the spatial FFT. Off by default because it FFTs nbK channels instead of the
+    // (usually fewer) input channels on the forward-only hot path.
+    let fAK: MLXArray
+    if gatherBeforeFFT {
+        fAK = MLXFFT.fft2(A.take(c0Idxs, axis: 3), axes: [1, 2])
+    } else {
+        fAK = MLXFFT.fft2(A, axes: [1, 2]).take(c0Idxs, axis: 3)
+    }
     let fAKfK = fAK * fK
     let UK = MLXFFT.ifft2(fAKfK, axes: [1, 2]).realPart()
 
@@ -733,7 +745,8 @@ public func leniaStepBatched(
     chemIncludeInMass: Bool,
     sx: Int,
     sy: Int,
-    wallPotential: MLXArray? = nil
+    wallPotential: MLXArray? = nil,
+    gatherBeforeFFT: Bool = false
 ) -> MLXArray {
     let F = computeFlow(
         A,
@@ -753,7 +766,8 @@ public func leniaStepBatched(
         chemIncludeInMass: chemIncludeInMass,
         dd: dd,
         sigma: sigma,
-        wallPotential: wallPotential
+        wallPotential: wallPotential,
+        gatherBeforeFFT: gatherBeforeFFT
     )
     return reintegrationBatched(A, F: F, posGrid: posGrid,
                                 dt: dt, dd: dd, sigma: sigma, useTorus: useTorus, sx: sx, sy: sy)

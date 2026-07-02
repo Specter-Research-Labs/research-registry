@@ -1,0 +1,96 @@
+{
+  "paper": "hamon-2024-sensorimotor-agency-on-flow-lenia",
+  "grid": {
+    "sx": 128,
+    "sy": 128
+  },
+  "physics": {
+    "nb_k": 10,
+    "bumps_per_kernel": 3,
+    "dd": 5,
+    "sigma": 0.65,
+    "dt": 0.2,
+    "n": 2,
+    "theta_a": 1.5,
+    "kernel_radius": 13.0,
+    "kernel_profile": "flowlenia_2022_colab",
+    "gradient_boundary": "zero_pad",
+    "alpha_mode": "mass",
+    "flow_clip": "none",
+    "growth_profile": "gaussian",
+    "use_torus": false
+  },
+  "rule_space": {
+    "a": { "low": 0.0, "high": 1.0 },
+    "w": { "low": 0.01, "high": 0.5 },
+    "b": { "low": 0.0, "high": 1.0 },
+    "r": { "low": 0.2, "high": 1.0 },
+    "m": { "low": 0.05, "high": 0.4 },
+    "s": { "low": 0.005, "high": 0.15 },
+    "h": { "low": 0.1, "high": 1.0 }
+  },
+  "initialization": {
+    "size": 24,
+    "origin": [52, 52],
+    "value_range": [0.0, 1.0]
+  },
+  "obstacles": {
+    "count": 4,
+    "radius": 8,
+    "potential_height": 10.0,
+    "left_half_clear": false,
+    "clear_initialization_radius": 30
+  },
+  "viability": {
+    "component_mass_threshold": 0.05,
+    "max_gyration": 28.0,
+    "min_largest_component_fraction": 0.6,
+    "max_component_count": 3
+  },
+  "outer_steps": 200,
+  "history_initialization_trials": 50,
+  "rollout_steps": 50,
+  "evaluation_rollouts": 3,
+  "goal_sampling": {
+    "warmup_steps": 8,
+    "warmup_start": [0.0, 0.0],
+    "warmup_delta": [0.03, 0.0],
+    "compactness_goal_mean": 0.08,
+    "compactness_jitter_std": 0.005,
+    "best_goal_probability": 0.2,
+    "random_far_probability": 0.6,
+    "best_goal_x_offset": [-0.05, 0.05],
+    "best_goal_y_offset": [-0.05, 0.05],
+    "far_x_range": [-0.4, 0.4],
+    "far_y_range": [-0.4, 0.4],
+    "broad_x_range": [-0.4, 0.4],
+    "broad_y_range": [-0.4, 0.4],
+    "close_distance": 0.1,
+    "very_close_distance": 0.06,
+    "min_close_neighbors": 1,
+    "max_very_close_neighbors": 2
+  },
+  "optimization": {
+    "steps_unmutated": 40,
+    "steps_mutated": 10,
+    "rule_lr": 0.001,
+    "initialization_lr": 0.02,
+    "betas": [0.9, 0.999],
+    "eps": 1e-8
+  },
+  "mutation": {
+    "mutate_every_n_steps": 3,
+    "rule_std": 0.02,
+    "init_std": 0.05,
+    "viability_trials": 8
+  },
+  "restart": {
+    "max_attempts": 5,
+    "min_alive_random_initializations": 5,
+    "max_loss": 1000000.0
+  },
+  "evaluation": {
+    "obstacle_rollouts": 10,
+    "moving_min_displacement": 5.0
+  }
+}

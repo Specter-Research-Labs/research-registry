@@ -2,6 +2,10 @@ import Foundation
 import Logging
 import MLX
 
+// Multi-species intrinsic-evolution ecology over Flow-Lenia: a variant sweep
+// (food / dissipation) tracked with evolutionary-activity and diversity metrics.
+// Paper: "Flow-Lenia: Emergent Evolutionary Dynamics in Mass Conservative
+// Continuous Cellular Automata" (2025). CLI: discover ecology-2025.
 public struct FlowLeniaEcology2025SimulationConfig: Codable, Sendable {
     public let paper: String
     public let gridSize: Int

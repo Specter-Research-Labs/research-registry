@@ -65,27 +65,36 @@ def _coordinate_grids(config: LeniaConfig) -> tuple[mx.array, mx.array]:
     return x, y
 
 
+def centroid_and_gyration(
+    field: mx.array, config: LeniaConfig, grid_x: mx.array, grid_y: mx.array,
+) -> tuple[mx.array, mx.array, mx.array, mx.array]:
+    """For a [B, sx, sy] summed-mass field: total mass, mass-weighted centroid (cell
+    units, + 0.5), and radius of gyration with torus min-distance. The single source of
+    the centroid/gyration math shared by the descriptor and coherence surfaces."""
+    mass = field.sum(axis=(1, 2))
+    safe = mx.maximum(mass, 1e-6)
+    center_x = (field * grid_x[None]).sum(axis=(1, 2)) / safe + 0.5
+    center_y = (field * grid_y[None]).sum(axis=(1, 2)) / safe + 0.5
+    dx = mx.abs(grid_x[None] - center_x[:, None, None])
+    dy = mx.abs(grid_y[None] - center_y[:, None, None])
+    dx = mx.minimum(dx, float(config.sx) - dx)
+    dy = mx.minimum(dy, float(config.sy) - dy)
+    gyration = (field * (dx * dx + dy * dy)).sum(axis=(1, 2)) / safe
+    return mass, center_x, center_y, gyration
+
+
 def frame_stats(
     a: mx.array, config: LeniaConfig, occupancy_threshold: float,
     grid_x: mx.array, grid_y: mx.array,
 ) -> FrameStats:
     field = a.sum(axis=-1)                              # [B, sx, sy], single-channel mass
     cell_count = float(config.sx * config.sy)
-    mass = field.sum(axis=(1, 2))
+    mass, _, _, gyration = centroid_and_gyration(field, config, grid_x, grid_y)
     sum_sq = (field * field).sum(axis=(1, 2))
     mean_cell = mass / cell_count
     variance = mx.maximum(sum_sq / cell_count - mean_cell * mean_cell, 0.0)
     energy = sum_sq
     occupancy = (field > occupancy_threshold).astype(mx.float32).mean(axis=(1, 2))
-
-    safe_mass = mx.maximum(mass, 1e-6)
-    center_x = (field * grid_x[None]).sum(axis=(1, 2)) / safe_mass + 0.5
-    center_y = (field * grid_y[None]).sum(axis=(1, 2)) / safe_mass + 0.5
-    dx = mx.abs(grid_x[None] - center_x[:, None, None])
-    dy = mx.abs(grid_y[None] - center_y[:, None, None])
-    dx = mx.minimum(dx, float(config.sx) - dx)
-    dy = mx.minimum(dy, float(config.sy) - dy)
-    gyration = (field * (dx * dx + dy * dy)).sum(axis=(1, 2)) / safe_mass
     return FrameStats(mass=mass, variance=variance, energy=energy,
                       occupancy=occupancy, gyration=gyration)
 

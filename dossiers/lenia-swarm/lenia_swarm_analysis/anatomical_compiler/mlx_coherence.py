@@ -25,7 +25,10 @@ import mlx.core as mx
 import numpy as np
 from scipy import ndimage
 
-from lenia_swarm_analysis.anatomical_compiler.mlx_descriptors import _coordinate_grids
+from lenia_swarm_analysis.anatomical_compiler.mlx_descriptors import (
+    _coordinate_grids,
+    centroid_and_gyration,
+)
 from lenia_swarm_analysis.anatomical_compiler.mlx_lenia import (
     GenotypeBatch,
     LeniaConfig,
@@ -60,16 +63,8 @@ def _frame_sample(
     grid_x: mx.array, grid_y: mx.array,
 ) -> FrameSample:
     field = a.sum(axis=-1)
-    mass = field.sum(axis=(1, 2))
     occupancy = (field > occupancy_threshold).astype(mx.float32).mean(axis=(1, 2))
-    safe = mx.maximum(mass, 1e-6)
-    cx = (field * grid_x[None]).sum(axis=(1, 2)) / safe + 0.5
-    cy = (field * grid_y[None]).sum(axis=(1, 2)) / safe + 0.5
-    dx = mx.abs(grid_x[None] - cx[:, None, None])
-    dy = mx.abs(grid_y[None] - cy[:, None, None])
-    dx = mx.minimum(dx, float(config.sx) - dx)
-    dy = mx.minimum(dy, float(config.sy) - dy)
-    gyr = (field * (dx * dx + dy * dy)).sum(axis=(1, 2)) / safe
+    mass, cx, cy, gyr = centroid_and_gyration(field, config, grid_x, grid_y)
     mx.eval(mass, gyr, occupancy, cx, cy)
     return FrameSample(
         mass=np.asarray(mass), gyration=np.asarray(gyr), occupancy=np.asarray(occupancy),

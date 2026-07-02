@@ -3,6 +3,10 @@ import Logging
 import MLX
 import MLXFFT
  
+// Sensorimotor-agency discovery over asymptotic Lenia: IMGEP diversity search
+// with gradient descent and a curriculum, then a robustness/generalization
+// battery. Paper: "Discovering Sensorimotor Agency in Cellular Automata using
+// Diversity Search" (Hamon et al. 2024). CLI: discover sensorimotor-2024.
  public struct SensorimotorRuleSpaceConfig: Codable, Sendable {
      public struct Grid: Codable, Sendable {
          public let sx: Int
@@ -540,79 +544,6 @@ import MLXFFT
      }
  }
  
- private struct SensorimotorAdamGroup {
-     var m: [MLXArray]
-     var v: [MLXArray]
-     var learningRate: Float
- 
-     init(paramShapes: [[Int]], learningRate: Float) {
-         self.m = paramShapes.map { MLX.zeros($0) }
-         self.v = paramShapes.map { MLX.zeros($0) }
-         self.learningRate = learningRate
-     }
- }
- 
- private struct SensorimotorAdam {
-     private var ruleGroup: SensorimotorAdamGroup
-     private var initGroup: SensorimotorAdamGroup
-     private let beta1: Float
-     private let beta2: Float
-     private let eps: Float
-     private var step: Int = 0
- 
-     init(state: SensorimotorLearnableState, ruleLr: Float, initLr: Float, betas: [Float], eps: Float) {
-         let ruleShapes = state.arrays[0..<9].map(\.shape)
-         self.ruleGroup = SensorimotorAdamGroup(paramShapes: ruleShapes, learningRate: ruleLr)
-         self.initGroup = SensorimotorAdamGroup(paramShapes: [state.initialization.shape], learningRate: initLr)
-         self.beta1 = betas[0]
-         self.beta2 = betas[1]
-         self.eps = eps
-     }
- 
-     mutating func apply(state: inout SensorimotorLearnableState, gradients: [MLXArray]) {
-         step += 1
-         let t = Float(step)
-         let oneMinusBeta1 = 1 - beta1
-         let oneMinusBeta2 = 1 - beta2
-         let bias1 = 1 - Foundation.pow(beta1, t)
-         let bias2 = 1 - Foundation.pow(beta2, t)
-         let arrays = state.arrays
-         let ruleArrays = Array(arrays[0..<9])
- 
-         func gradientOrZero(_ index: Int) -> MLXArray {
-             if index < gradients.count {
-                 return gradients[index]
-             }
-             // MLX can leave disconnected entries out of array-list gradients, so preserve zero-update semantics.
-             return MLX.zeros(arrays[index].shape)
-         }
- 
-         var updatedRuleArrays: [MLXArray] = []
-         updatedRuleArrays.reserveCapacity(ruleArrays.count)
-         for index in 0..<ruleArrays.count {
-             let grad = gradientOrZero(index)
-             ruleGroup.m[index] = MLXArray(beta1) * ruleGroup.m[index] + MLXArray(oneMinusBeta1) * grad
-             ruleGroup.v[index] = MLXArray(beta2) * ruleGroup.v[index] + MLXArray(oneMinusBeta2) * (grad * grad)
-             let mHat = ruleGroup.m[index] / MLXArray(bias1)
-             let vHat = ruleGroup.v[index] / MLXArray(bias2)
-             let denom = MLX.sqrt(vHat) + MLXArray(eps)
-             updatedRuleArrays.append(ruleArrays[index] - MLXArray(ruleGroup.learningRate) * mHat / denom)
-         }
- 
-         let initGrad = gradientOrZero(9)
-         initGroup.m[0] = MLXArray(beta1) * initGroup.m[0] + MLXArray(oneMinusBeta1) * initGrad
-         initGroup.v[0] = MLXArray(beta2) * initGroup.v[0] + MLXArray(oneMinusBeta2) * (initGrad * initGrad)
-         let initMHat = initGroup.m[0] / MLXArray(bias1)
-         let initVHat = initGroup.v[0] / MLXArray(bias2)
-         let initDenom = MLX.sqrt(initVHat) + MLXArray(eps)
-         let updatedInit = state.initialization - MLXArray(initGroup.learningRate) * initMHat / initDenom
- 
-         var updatedArrays = updatedRuleArrays
-         updatedArrays.append(updatedInit)
-         state = SensorimotorLearnableState(arrays: updatedArrays)
-     }
- }
- 
  private struct SensorimotorPerturbations {
      var obstacleSpeed: Float?
      var updateMaskRate: Float?
@@ -846,7 +777,7 @@ import MLXFFT
                          evaluation: 1
                      )
                  )
-                 try sensorimotorWriteHistoryEntry(entry, to: historyHandle, encoder: encoder)
+                 try appendJSONLine(entry, to: historyHandle, encoder: encoder)
                  history.append(SensorimotorHistoryRecord(entry: entry, state: state))
  
                  if history.count == training.historyInitializationTrials,
@@ -922,7 +853,7 @@ import MLXFFT
                      evaluation: training.evaluationAfterStep.rollouts
                  )
              )
-             try sensorimotorWriteHistoryEntry(entry, to: historyHandle, encoder: encoder)
+             try appendJSONLine(entry, to: historyHandle, encoder: encoder)
              history.append(SensorimotorHistoryRecord(entry: entry, state: optimized.state))
          }
  
@@ -1128,12 +1059,6 @@ import MLXFFT
      return sqrt(dc * dc + dx * dx + dy * dy)
  }
  
- private func sensorimotorGaussian(std: Float, rng: inout SeededRandomNumberGenerator) -> Float {
-     let u1 = Float.random(in: 0.0001...0.9999, using: &rng)
-     let u2 = Float.random(in: 0.0...1.0, using: &rng)
-     return sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2) * std
- }
- 
  private func sensorimotorUniform(range: [Float], rng: inout SeededRandomNumberGenerator) -> Float {
      Float.random(in: range[0]...range[1], using: &rng)
  }
@@ -1301,7 +1226,7 @@ import MLXFFT
      if let rate = perturbations.initNoiseRate, let std = perturbations.initNoiseStd, std > 0 {
          var noise = [Float](repeating: 0, count: patch.size)
          for index in 0..<noise.count where Float.random(in: 0...1, using: &rng) <= rate {
-             noise[index] = sensorimotorGaussian(std: std, rng: &rng)
+             noise[index] = gaussianSample(std: std, rng: &rng)
          }
          patch = MLX.clip(
              patch + MLXArray(noise).reshaped(patch.shape),
@@ -1395,7 +1320,7 @@ import MLXFFT
      if let rate = perturbations.updateNoiseRate, let std = perturbations.updateNoiseStd, rate > 0, std > 0 {
          var noiseValues = [Float](repeating: 0, count: previous.size)
          for index in 0..<noiseValues.count where Float.random(in: 0...1, using: &rng) < rate {
-             noiseValues[index] = sensorimotorGaussian(std: std, rng: &rng)
+             noiseValues[index] = gaussianSample(std: std, rng: &rng)
          }
          update = update + MLXArray(noiseValues).reshaped(previous.shape)
      }
@@ -1559,14 +1484,14 @@ import MLXFFT
  
      for _ in 0..<64 {
          var candidate = source
-         candidate.T = source.T + MLXArray(sensorimotorGaussian(std: training.mutation.TStd, rng: &rng))
-         candidate.R = source.R + MLXArray(sensorimotorGaussian(std: training.mutation.RStd, rng: &rng))
+         candidate.T = source.T + MLXArray(gaussianSample(std: training.mutation.TStd, rng: &rng))
+         candidate.R = source.R + MLXArray(gaussianSample(std: training.mutation.RStd, rng: &rng))
  
          func mutateVector(_ sourceVector: MLXArray, std: Float) -> MLXArray {
              let values = sourceVector.asArray(Float.self)
              var mutated = values
              for index in mutated.indices where activeMask[min(index, activeMask.count - 1)] {
-                 mutated[index] += sensorimotorGaussian(std: std, rng: &rng)
+                 mutated[index] += gaussianSample(std: std, rng: &rng)
              }
              return MLXArray(mutated).reshaped(sourceVector.shape)
          }
@@ -1578,7 +1503,7 @@ import MLXFFT
              var mutated = flat
              for row in 0..<rows where activeMask[row] {
                  for col in 0..<cols {
-                     mutated[row * cols + col] += sensorimotorGaussian(std: std, rng: &rng)
+                     mutated[row * cols + col] += gaussianSample(std: std, rng: &rng)
                  }
              }
              return MLXArray(mutated).reshaped(shape)
@@ -1625,11 +1550,12 @@ import MLXFFT
  ) -> SensorimotorGradientResult {
      var state = initialState
      state = sensorimotorClamp(state, rules: rules)
-     var optimizer = SensorimotorAdam(
-         state: state,
-         ruleLr: training.optimization.ruleLr,
-         initLr: training.optimization.initializationLr,
-         betas: training.optimization.betas,
+     var optimizer = MLXAdam(
+         paramShapes: state.arrays.map(\.shape),
+         learningRates: Array(repeating: training.optimization.ruleLr, count: state.arrays.count - 1)
+             + [training.optimization.initializationLr],
+         beta1: training.optimization.betas[0],
+         beta2: training.optimization.betas[1],
          eps: training.optimization.eps
      )
      let gradientSteps = mutated ? training.optimization.stepsMutated : training.optimization.stepsUnmutated
@@ -1659,7 +1585,7 @@ import MLXFFT
              return [sensorimotorGoalLoss(finalState: trace.finalState, goal: goal, training: training, rules: rules)]
          }
          let (value, gradients) = objectiveForObstacle(state.arrays)
-         optimizer.apply(state: &state, gradients: gradients)
+         state = SensorimotorLearnableState(arrays: optimizer.step(params: state.arrays, gradients: gradients))
          state = sensorimotorClamp(state, rules: rules)
          MLX.eval(state.arrays + value)
          lastLoss = value[0].item(Float.self)
@@ -1765,7 +1691,7 @@ import MLXFFT
      var closeCount = 0
      var veryCloseCount = Int.max
      while closeCount < training.goalSampling.minCloseNeighbors || veryCloseCount > training.goalSampling.maxVeryCloseNeighbors {
-         let collapse = training.goalSampling.collapseGoalMean + sensorimotorGaussian(std: training.goalSampling.collapseGoalJitterStd, rng: &rng)
+         let collapse = training.goalSampling.collapseGoalMean + gaussianSample(std: training.goalSampling.collapseGoalJitterStd, rng: &rng)
          if Float.random(in: 0...1, using: &rng) < training.goalSampling.bestGoalProbability,
              let best = validReached
                  .filter({ $0.collapse <= training.sourceSelection.collapseMax && $0.centroidX > -8 && $0.centroidY > -8 })
@@ -2110,16 +2036,6 @@ import MLXFFT
      return (0..<rows).map { row in
          Array(flat[(row * cols)..<((row + 1) * cols)])
      }
- }
- 
- private func sensorimotorWriteHistoryEntry(
-     _ entry: SensorimotorHistoryEntry,
-     to handle: FileHandle,
-     encoder: JSONEncoder
- ) throws {
-     let data = try encoder.encode(entry)
-     handle.write(data)
-     handle.write("\n".data(using: .utf8)!)
  }
  
  private func sensorimotorScaledObstacleCount(radius: Int) -> Int {

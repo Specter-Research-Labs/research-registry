@@ -51,6 +51,8 @@ final class CLISurfaceTests: XCTestCase {
                 "ecology-2025",
                 "curiosity-2025",
                 "map-elites",
+                "sensorimotor-flowlenia",
+                "evaluate",
             ])
         )
     }

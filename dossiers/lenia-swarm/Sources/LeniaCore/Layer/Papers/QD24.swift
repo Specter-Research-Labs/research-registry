@@ -4,6 +4,10 @@ import Logging
 import MLX
  import MLXFFT
  
+// Quality-diversity repertoire discovery over Flow-Lenia: MAP-Elites plus the
+// AURORA learned-descriptor variant. The `LeniaBreeder2024` type prefix is the
+// paper's own system name. Paper: "Toward Artificial Open-Ended Evolution within
+// Lenia using Quality-Diversity" (2024). CLI: discover qd-2024.
  public struct LeniaBreeder2024BaseConfig: Codable, Sendable {
      public let paper: String
      public let patternID: String
@@ -786,40 +790,6 @@ private struct LeniaBreeder2024ArenaBatchStepResult {
          self.decoderB1 = arrays[7]
          self.decoderWOut = arrays[8]
          self.decoderBOut = arrays[9]
-     }
- }
- 
- private struct LeniaBreeder2024AutoencoderAdam {
-     private var firstMoments: [MLXArray]
-     private var secondMoments: [MLXArray]
-     private let learningRate: Float
-     private let beta1: Float
-     private let beta2: Float
-     private let epsilon: Float
-     private var step: Int = 0
- 
-     init(paramShapes: [[Int]], learningRate: Float, beta1: Float = 0.9, beta2: Float = 0.999, epsilon: Float = 1e-8) {
-         self.firstMoments = paramShapes.map { MLX.zeros($0) }
-         self.secondMoments = paramShapes.map { MLX.zeros($0) }
-         self.learningRate = learningRate
-         self.beta1 = beta1
-         self.beta2 = beta2
-         self.epsilon = epsilon
-     }
- 
-     mutating func apply(model: inout LeniaBreeder2024VAEModel, gradients: [MLXArray]) {
-         var params = model.arrays
-         step += 1
-         let t = Float(step)
-         let count = min(params.count, gradients.count, firstMoments.count, secondMoments.count)
-         for index in 0..<count {
-             firstMoments[index] = MLXArray(beta1) * firstMoments[index] + MLXArray(1 - beta1) * gradients[index]
-             secondMoments[index] = MLXArray(beta2) * secondMoments[index] + MLXArray(1 - beta2) * (gradients[index] * gradients[index])
-             let mHat = firstMoments[index] / MLXArray(1 - pow(beta1, t))
-             let vHat = secondMoments[index] / MLXArray(1 - pow(beta2, t))
-             params[index] = params[index] - MLXArray(learningRate) * mHat / (MLX.sqrt(vHat) + MLXArray(epsilon))
-         }
-         model = LeniaBreeder2024VAEModel(arrays: params)
      }
  }
  
@@ -2032,11 +2002,6 @@ public final class LeniaBreeder2024Runner {
      return MLXFFT.fft2(shifted, axes: [0, 1])
  }
  
- private func fftshift2(_ array: MLXArray) -> MLXArray {
-     var shifted = MLX.roll(array, shift: array.shape[0] / 2, axis: 0)
-     shifted = MLX.roll(shifted, shift: array.shape[1] / 2, axis: 1)
-     return shifted
- }
 
  private func leniaBreeder2024KernelCore(fractional: MLXArray, core: String) -> MLXArray {
      switch core {
@@ -2085,7 +2050,7 @@ public final class LeniaBreeder2024Runner {
      isoSigma: Float,
      rng: inout SeededRandomNumberGenerator
  ) -> [Float] {
-     base.map { $0 + leniaBreeder2024Gaussian(std: isoSigma, rng: &rng) }
+     base.map { $0 + gaussianSample(std: isoSigma, rng: &rng) }
  }
  
  private func leniaBreeder2024IsolineVariation(
@@ -2095,20 +2060,12 @@ public final class LeniaBreeder2024Runner {
      lineSigma: Float,
      rng: inout SeededRandomNumberGenerator
  ) -> [Float] {
-     let lineNoise = leniaBreeder2024Gaussian(std: lineSigma, rng: &rng)
+     let lineNoise = gaussianSample(std: lineSigma, rng: &rng)
      return zip(x1, x2).map { lhs, rhs in
-         lhs + leniaBreeder2024Gaussian(std: isoSigma, rng: &rng) + lineNoise * (rhs - lhs)
+         lhs + gaussianSample(std: isoSigma, rng: &rng) + lineNoise * (rhs - lhs)
      }
  }
  
-private func leniaBreeder2024Gaussian(
-    std: Float,
-    rng: inout SeededRandomNumberGenerator
-) -> Float {
-     let u1 = max(Float.random(in: 0..<1, using: &rng), 1e-7)
-     let u2 = Float.random(in: 0..<1, using: &rng)
-    return std * sqrt(-2 * log(u1)) * cos(2 * .pi * u2)
-}
 
 private func leniaBreeder2024ArenaModeLabel(_ mode: LeniaBreeder2024ArenaMode) -> String {
     switch mode {
@@ -2955,7 +2912,7 @@ private func leniaBreeder2024ExtractSeries(
      var rng = SeededRandomNumberGenerator(seed: UInt64(bitPattern: Int64(seed)) ^ 0x515151)
      func weight(_ rows: Int, _ cols: Int, scale: Float) -> MLXArray {
          let values = (0..<(rows * cols)).map { _ in
-             leniaBreeder2024Gaussian(std: scale, rng: &rng)
+             gaussianSample(std: scale, rng: &rng)
          }
          return MLXArray(values).reshaped([rows, cols])
      }
@@ -2997,7 +2954,7 @@ private func leniaBreeder2024ExtractSeries(
      rng: inout SeededRandomNumberGenerator
  ) -> LeniaBreeder2024AURORATrainingStats? {
      guard !dataset.isEmpty else { return nil }
-     var optimizer = LeniaBreeder2024AutoencoderAdam(
+     var optimizer = MLXAdam(
          paramShapes: model.arrays.map(\.shape),
          learningRate: config.learningRate
      )
@@ -3020,7 +2977,7 @@ private func leniaBreeder2024ExtractSeries(
              let batch = batchIndices.flatMap { dataset[$0] }
              let batchArray = MLXArray(batch).reshaped([batchIndices.count, inputSize])
              let noise = MLXArray((0..<(batchIndices.count * config.features)).map { _ in
-                 leniaBreeder2024Gaussian(std: 1.0, rng: &rng)
+                 gaussianSample(std: 1.0, rng: &rng)
              }).reshaped([batchIndices.count, config.features])
              let objective = valueAndGrad({ (arrays: [MLXArray]) -> [MLXArray] in
                  let model = LeniaBreeder2024VAEModel(arrays: arrays)
@@ -3047,7 +3004,7 @@ private func leniaBreeder2024ExtractSeries(
              let lossValue = loss[0].item(Float.self)
              let reconstructionValue = reconstructionLoss.item(Float.self)
              let klValue = klLoss.item(Float.self)
-             optimizer.apply(model: &model, gradients: gradients)
+             model = LeniaBreeder2024VAEModel(arrays: optimizer.step(params: model.arrays, gradients: gradients))
              MLX.eval(model.arrays)
              updates += 1
              reconstructionLossTotal += reconstructionValue
@@ -5267,15 +5224,6 @@ private func positiveModulo(_ value: Int, _ divisor: Int) -> Int {
  
  private func leniaBreeder2024ReplayByte(_ value: Float) -> UInt8 {
      UInt8(max(0, min(255, Int(max(0, min(1, value)) * 255.0 + 0.5))))
- }
- 
- private func appendJSONLine<T: Encodable>(_ value: T, to url: URL) throws {
-     let data = try JSONEncoder().encode(value)
-     let handle = try FileHandle(forWritingTo: url)
-     defer { try? handle.close() }
-     try handle.seekToEnd()
-     handle.write(data)
-     handle.write(Data([0x0A]))
  }
  
 private func appendMetricsCSV(_ entry: LeniaBreeder2024HistoryEntry, to url: URL) throws {

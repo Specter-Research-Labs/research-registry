@@ -118,7 +118,8 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
                 useTorus: false,
                 chemChannel: nil,
                 chemIncludeInMass: true,
-                sx: sx, sy: sy
+                sx: sx, sy: sy,
+                gatherBeforeFFT: true
             )
         }
         return state
@@ -168,11 +169,8 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
         }
 
         let objective = valueAndGrad(differentiate, argumentNumbers: Array(inputs.indices))
-        let (value, grads): ([MLXArray], [MLXArray]) = Device.withDefaultDevice(Device(.cpu)) {
-            let (v, g) = objective(inputs)
-            MLX.eval(g + v)
-            return (v, g)
-        }
+        let (value, grads) = objective(inputs)
+        MLX.eval(grads + value)
 
         let lossValue = value[0].item(Float.self)
         XCTAssertTrue(lossValue.isFinite, "loss must be finite, got \(lossValue)")
@@ -221,11 +219,8 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
         }
 
         let objective = valueAndGrad(differentiate, argumentNumbers: Array(inputs.indices))
-        let (value, grads): ([MLXArray], [MLXArray]) = Device.withDefaultDevice(Device(.cpu)) {
-            let (v, g) = objective(inputs)
-            MLX.eval(g + v)
-            return (v, g)
-        }
+        let (value, grads) = objective(inputs)
+        MLX.eval(grads + value)
 
         XCTAssertTrue(value[0].item(Float.self).isFinite)
         for (index, grad) in grads.enumerated() {
@@ -323,19 +318,17 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
             return MLX.sqrt((diff * diff).sum())
         }
 
-        let result: (analytic: Float, numeric: Float) = Device.withDefaultDevice(Device(.cpu)) {
-            let gradFn = valueAndGrad({ (arrays: [MLXArray]) -> [MLXArray] in [loss(arrays[0])] },
-                                      argumentNumbers: [0])
-            let (_, grads) = gradFn([init0])
-            let gInit = grads[0]
-            // Directional derivative along the current init: d/dt loss(init * (1 + t)) at t = 0.
-            let analytic = (gInit * init0).sum().item(Float.self)
-            let eps: Float = 1e-2
-            let lossPlus = loss(init0 * MLXArray(1.0 + eps)).item(Float.self)
-            let lossMinus = loss(init0 * MLXArray(1.0 - eps)).item(Float.self)
-            let numeric = (lossPlus - lossMinus) / (2 * eps)
-            return (analytic, numeric)
-        }
+        let gradFn = valueAndGrad({ (arrays: [MLXArray]) -> [MLXArray] in [loss(arrays[0])] },
+                                  argumentNumbers: [0])
+        let (_, grads) = gradFn([init0])
+        let gInit = grads[0]
+        // Directional derivative along the current init: d/dt loss(init * (1 + t)) at t = 0.
+        let analytic = (gInit * init0).sum().item(Float.self)
+        let eps: Float = 1e-2
+        let lossPlus = loss(init0 * MLXArray(1.0 + eps)).item(Float.self)
+        let lossMinus = loss(init0 * MLXArray(1.0 - eps)).item(Float.self)
+        let numeric = (lossPlus - lossMinus) / (2 * eps)
+        let result = (analytic: analytic, numeric: numeric)
 
         XCTAssertNotEqual(result.numeric, 0.0, accuracy: 1e-6, "finite-difference signal must be resolvable")
         let relativeError = abs(result.analytic - result.numeric) / max(abs(result.numeric), 1e-6)

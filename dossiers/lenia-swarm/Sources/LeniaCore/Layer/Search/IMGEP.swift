@@ -272,7 +272,7 @@ private func mutateScalar(
     config: IMGEPMutationConfig,
     rng: inout SeededRandomNumberGenerator
 ) -> Float {
-    let noise = gaussianNoise(std: config.std, rng: &rng)
+    let noise = gaussianSample(std: config.std, rng: &rng)
     var out = value + noise
     if config.clip, range.count == 2 {
         out = max(range[0], min(range[1], out))
@@ -304,8 +304,3 @@ private func mutateMatrix(
     }
 }
 
-private func gaussianNoise(std: Float, rng: inout SeededRandomNumberGenerator) -> Float {
-    let u1 = Float.random(in: 0.0001...0.9999, using: &rng)
-    let u2 = Float.random(in: 0.0...1.0, using: &rng)
-    return sqrt(-2.0 * log(u1)) * cos(2.0 * Float.pi * u2) * std
-}

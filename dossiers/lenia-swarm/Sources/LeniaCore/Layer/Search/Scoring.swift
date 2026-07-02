@@ -412,20 +412,15 @@ public func bodyLocomotion(for metrics: SimulationMetrics) -> Float {
           let overlap = metrics.translatedShapeOverlap, overlap.isFinite else {
         return 0
     }
-    let growth = metrics.occupiedGrowth ?? 1
-    let growthTerm = bodyLocomotionGrowthTerm(growth)
-    let connectedTerm = 0.25 + 0.75 * max(0, min(1, metrics.largestComponentFraction ?? 0))
-    let solidityTerm = 0.35 + 0.65 * max(0, min(1, metrics.largestComponentSolidity ?? 0))
-    let anisotropyTerm = 0.35 + 0.65 * (1 - max(0, min(1, metrics.largestComponentAnisotropy ?? 1)))
-    let filamentTerm = 0.35 + 0.65 * (1 - max(0, min(1, metrics.largestComponentFilamentarity ?? 1)))
-    let morphologyTerm = (connectedTerm + solidityTerm + anisotropyTerm + filamentTerm) / 4
-    return max(displacement, 0) * (0.2 + 0.8 * max(0, min(1, overlap))) * growthTerm * morphologyTerm
-}
-
-private func bodyLocomotionGrowthTerm(_ value: Float) -> Float {
-    guard value.isFinite, value > 0 else { return 0 }
-    let logDeviation = abs(log(value))
-    return 1 / (1 + 2 * logDeviation)
+    return bodyLocomotionScore(
+        displacement: displacement,
+        translatedShapeOverlap: overlap,
+        occupiedGrowth: metrics.occupiedGrowth ?? 1,
+        largestComponentFraction: metrics.largestComponentFraction ?? 0,
+        largestComponentSolidity: metrics.largestComponentSolidity ?? 0,
+        largestComponentAnisotropy: metrics.largestComponentAnisotropy ?? 1,
+        largestComponentFilamentarity: metrics.largestComponentFilamentarity ?? 1
+    )
 }
 
 private func foodConsumedFraction(for metrics: SimulationMetrics) -> Float {
