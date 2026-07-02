@@ -11,7 +11,6 @@ actor ThumbnailRenderer {
     private var cache: [UUID: CGImage] = [:]
     private var pending: Set<UUID> = []
     private let maxCacheSize = 500
-    private let warmupSteps = 80
     private let thumbnailFieldSize = 64
     private let thumbnailImageSize = 128
     private let metalRenderer: LeniaMetalFieldRenderer
@@ -58,7 +57,9 @@ actor ThumbnailRenderer {
             name: creature.sourceNode,
             params: creature.params,
             seed: creature.seed,
-            gridSize: thumbnailFieldSize
+            gridSize: thumbnailFieldSize,
+            cropThreshold: 0.01,
+            padding: 4
         )
         guard !Task.isCancelled else { return nil }
 
@@ -69,7 +70,7 @@ actor ThumbnailRenderer {
             height: thumbnailFieldSize
         )
         let frame = LeniaFieldFrame(
-            step: warmupSteps,
+            step: 0,
             width: thumbnailFieldSize,
             height: thumbnailFieldSize,
             sharedField: surface

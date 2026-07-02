@@ -26,14 +26,14 @@ enum LabFieldProjection: Hashable, Identifiable, Sendable {
 }
 
 enum LabRuntimeHandle: Sendable {
-    case sandbox(FlowSandboxRuntime)
+    case engine(LeniaInteractiveEngine)
     case replay(CanonicalLabRuntime)
     case frameSequence(TTFrameSequenceRuntime)
 
     var modeLabel: String {
         switch self {
-        case .sandbox:
-            return "Sandbox contract"
+        case .engine(let engine):
+            return engine.descriptor.executionLabel
         case .replay:
             return "Canonical replay"
         case .frameSequence:
@@ -43,8 +43,8 @@ enum LabRuntimeHandle: Sendable {
 
     func start() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.start()
+        case .engine(let engine):
+            await engine.start()
         case .replay(let runtime):
             await runtime.start()
         case .frameSequence(let runtime):
@@ -54,8 +54,8 @@ enum LabRuntimeHandle: Sendable {
 
     func pause() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.pause()
+        case .engine(let engine):
+            await engine.pause()
         case .replay(let runtime):
             await runtime.pause()
         case .frameSequence(let runtime):
@@ -65,8 +65,8 @@ enum LabRuntimeHandle: Sendable {
 
     func resume() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.resume()
+        case .engine(let engine):
+            await engine.resume()
         case .replay(let runtime):
             await runtime.resume()
         case .frameSequence(let runtime):
@@ -76,8 +76,8 @@ enum LabRuntimeHandle: Sendable {
 
     func stop() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.stop()
+        case .engine(let engine):
+            await engine.stop()
         case .replay(let runtime):
             await runtime.stop()
         case .frameSequence(let runtime):
@@ -87,8 +87,8 @@ enum LabRuntimeHandle: Sendable {
 
     func reset() async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.reset()
+        case .engine(let engine):
+            await engine.reset()
         case .replay(let runtime):
             await runtime.reset()
         case .frameSequence(let runtime):
@@ -98,8 +98,8 @@ enum LabRuntimeHandle: Sendable {
 
     func setSpeedCap(hz: Int) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.setSpeedCap(hz: hz)
+        case .engine(let engine):
+            await engine.setSpeedCap(hz: hz)
         case .replay(let runtime):
             await runtime.setSpeedCap(hz: hz)
         case .frameSequence(let runtime):
@@ -114,8 +114,8 @@ enum LabRuntimeHandle: Sendable {
         value: Float
     ) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.setAutoFoodSpawn(
+        case .engine(let engine):
+            await engine.setAutoFoodSpawn(
                 enabled: enabled,
                 probability: probability,
                 patchSize: patchSize,
@@ -140,8 +140,8 @@ enum LabRuntimeHandle: Sendable {
 
     func worldContract() async -> FlowSandboxWorldContract {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.worldContract()
+        case .engine(let engine):
+            await engine.worldContract()
         case .replay(let runtime):
             await runtime.worldContract()
         case .frameSequence(let runtime):
@@ -154,8 +154,8 @@ enum LabRuntimeHandle: Sendable {
         projection: LabFieldProjection
     ) async -> FlowSandboxSnapshot {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.snapshot(refreshMetrics: refreshMetrics)
+        case .engine(let engine):
+            await engine.displaySnapshot(refreshMetrics: refreshMetrics)
         case .replay(let runtime):
             await runtime.snapshot(refreshMetrics: refreshMetrics, projection: projection)
         case .frameSequence(let runtime):
@@ -165,7 +165,7 @@ enum LabRuntimeHandle: Sendable {
 
     func availableProjections() async -> [LabFieldProjection] {
         switch self {
-        case .sandbox:
+        case .engine:
             return [.matter]
         case .replay(let runtime):
             return await runtime.availableProjections()
@@ -176,8 +176,8 @@ enum LabRuntimeHandle: Sendable {
 
     func applyStroke(_ stroke: SandboxStroke) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.applyStroke(stroke)
+        case .engine(let engine):
+            await engine.applyStroke(stroke)
         case .replay(let runtime):
             await runtime.applyStroke(stroke)
         case .frameSequence(let runtime):
@@ -187,8 +187,8 @@ enum LabRuntimeHandle: Sendable {
 
     func applyCreatureStamp(_ stamp: CreatureStamp, center: SIMD2<Int>) async {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.applyCreatureStamp(stamp, center: center)
+        case .engine(let engine):
+            await engine.applyCreatureStamp(stamp, center: center)
         case .replay(let runtime):
             await runtime.applyCreatureStamp(stamp, center: center)
         case .frameSequence(let runtime):
@@ -198,8 +198,8 @@ enum LabRuntimeHandle: Sendable {
 
     func telemetry() async -> FlowSandboxRuntimeTelemetry {
         switch self {
-        case .sandbox(let runtime):
-            await runtime.telemetry()
+        case .engine(let engine):
+            await engine.telemetry()
         case .replay(let runtime):
             await runtime.telemetry()
         case .frameSequence(let runtime):
@@ -211,11 +211,13 @@ enum LabRuntimeHandle: Sendable {
 actor CanonicalLabRuntime {
     private let runtime: FlowLeniaInteractiveSimulator
     private let baseWallMask: [Float]
+    private let hasBaseWallMask: Bool
     private let runtimeConfig: LeniaRuntimeConfig
 
     private var state: FlowLeniaInteractiveState
     private var initialState: FlowLeniaInteractiveState
     private var wallOverlay: [Float]
+    private var hasWallOverlay = false
     private var simulationTask: Task<Void, Never>?
     private var isPaused = true
     private var targetFrameDuration: Duration = .milliseconds(16)
@@ -243,6 +245,7 @@ actor CanonicalLabRuntime {
         self.initialState = runtimeState.initialState
         self.state = runtimeState.initialState
         self.baseWallMask = runtimeState.wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
         self.cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
@@ -259,6 +262,7 @@ actor CanonicalLabRuntime {
         self.initialState = runtimeState.initialState
         self.state = runtimeState.initialState
         self.baseWallMask = runtimeState.wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
         self.cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
@@ -275,6 +279,7 @@ actor CanonicalLabRuntime {
         self.initialState = runtimeState.initialState
         self.state = runtimeState.initialState
         self.baseWallMask = runtimeState.wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
         self.cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
@@ -320,12 +325,6 @@ actor CanonicalLabRuntime {
     }
 
     func start() {
-        if simulationTask == nil {
-            let runtime = self
-            simulationTask = Task {
-                await runtime.runLoop()
-            }
-        }
         isPaused = false
     }
 
@@ -334,7 +333,7 @@ actor CanonicalLabRuntime {
     }
 
     func resume() {
-        start()
+        isPaused = false
     }
 
     func stop() {
@@ -346,6 +345,7 @@ actor CanonicalLabRuntime {
     func reset() {
         state = initialState
         wallOverlay = Array(repeating: 1, count: wallOverlay.count)
+        hasWallOverlay = false
         lastStepDurationMs = 0
         cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
@@ -425,12 +425,9 @@ actor CanonicalLabRuntime {
         if autoFoodEnabled {
             injectAutoFoodPatchIfNeeded()
         }
-        applyWallOverlay()
-        cachedMetrics = canonicalLabMetrics(
-            mass: canonicalMatterData(runtime: runtime, state: state),
-            food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
-            walls: effectiveWalls()
-        )
+        if hasWallOverlay {
+            applyWallOverlay()
+        }
     }
 
     func applyStroke(_ stroke: SandboxStroke) {
@@ -494,8 +491,11 @@ actor CanonicalLabRuntime {
         }
 
         wallOverlay = walls
+        hasWallOverlay = canonicalHasClosedCells(wallOverlay)
         materializeState(mass: mass, params: params, food: food)
-        applyWallOverlay()
+        if hasWallOverlay {
+            applyWallOverlay()
+        }
         cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
@@ -548,7 +548,9 @@ actor CanonicalLabRuntime {
         }
 
         materializeState(mass: mass, params: params, food: food)
-        applyWallOverlay()
+        if hasWallOverlay {
+            applyWallOverlay()
+        }
         cachedMetrics = canonicalLabMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
@@ -560,6 +562,7 @@ actor CanonicalLabRuntime {
         refreshMetrics: Bool,
         projection: LabFieldProjection
     ) -> FlowSandboxSnapshot {
+        advanceIfRunning()
         let displayField = displayField(for: projection)
         if refreshMetrics {
             cachedMetrics = canonicalLabMetrics(
@@ -587,6 +590,14 @@ actor CanonicalLabRuntime {
             lastStepDurationMs: lastStepDurationMs,
             realizedStepRateHz: lastStepDurationMs > 0 ? 1_000.0 / lastStepDurationMs : 0
         )
+    }
+
+    private func advanceIfRunning() {
+        guard !isPaused else { return }
+        let startedAt = ContinuousClock.now
+        step()
+        let elapsed = ContinuousClock.now - startedAt
+        lastStepDurationMs = canonicalDurationMs(elapsed)
     }
 
     private func runLoop() async {
@@ -678,25 +689,37 @@ actor CanonicalLabRuntime {
     }
 
     private func displayField(for projection: LabFieldProjection) -> MLXArray {
-        let walls = effectiveWalls()
-        let wallField = MLXArray(walls).reshaped([runtimeConfig.sx, runtimeConfig.sy])
         switch projection {
         case .matter:
             let matter = runtime.matterMap(for: state)
-            let food = state.food ?? MLX.zeros([runtimeConfig.sx, runtimeConfig.sy])
-            let display = MLX.clip(
-                matter + food * MLXArray(0.55),
-                min: MLXArray(0),
-                max: MLXArray(1)
-            )
-            let field = (display * wallField).contiguous()
+            let display: MLXArray
+            if let food = state.food {
+                display = MLX.clip(
+                    matter + food * MLXArray(0.55),
+                    min: MLXArray(0),
+                    max: MLXArray(1)
+                )
+            } else {
+                display = MLX.clip(matter, min: MLXArray(0), max: MLXArray(1))
+            }
+            let field = displayFieldByApplyingWallMaskIfNeeded(display)
             eval(field)
             return field
         case .channel(let channel):
-            let field = (runtime.channelMap(for: state, channel: channel) * wallField).contiguous()
+            let field = displayFieldByApplyingWallMaskIfNeeded(
+                runtime.channelMap(for: state, channel: channel)
+            )
             eval(field)
             return field
         }
+    }
+
+    private func displayFieldByApplyingWallMaskIfNeeded(_ field: MLXArray) -> MLXArray {
+        guard hasBaseWallMask || hasWallOverlay else {
+            return field.contiguous()
+        }
+        let wallField = MLXArray(effectiveWalls()).reshaped([runtimeConfig.sx, runtimeConfig.sy])
+        return (field * wallField).contiguous()
     }
 
     private func effectiveWalls() -> [Float] {
@@ -794,6 +817,10 @@ private func canonicalFoodData(
     let field = food.contiguous()
     eval(field)
     return field.asArray(Float.self)
+}
+
+private func canonicalHasClosedCells(_ walls: [Float]) -> Bool {
+    walls.contains { $0 < 0.5 }
 }
 
 private func canonicalLabMetrics(

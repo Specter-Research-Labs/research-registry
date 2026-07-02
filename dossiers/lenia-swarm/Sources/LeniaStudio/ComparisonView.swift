@@ -62,6 +62,7 @@ struct ComparisonView: View {
             for entry in entries {
                 liveModel(for: entry)?.start(
                     creature: entry.creature,
+                    savedCreature: entry.savedCreature,
                     replaySource: entry.replayReference
                 )
             }
@@ -113,6 +114,7 @@ struct ComparisonView: View {
         for entry in entries {
             liveModel(for: entry)?.restart(
                 creature: entry.creature,
+                savedCreature: entry.savedCreature,
                 replaySource: entry.replayReference
             )
         }
