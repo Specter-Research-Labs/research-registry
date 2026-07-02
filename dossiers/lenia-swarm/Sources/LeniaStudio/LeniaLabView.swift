@@ -169,7 +169,7 @@ final class LeniaLabFrameStore {
         guard isRunning else {
             return (runtime, activeProjection, .milliseconds(120))
         }
-        let frameCap = max(1, min(60, targetSpeedCap))
+        let frameCap = max(1, min(120, targetSpeedCap))
         let delay = Duration.milliseconds(max(1, Int((1_000.0 / Double(frameCap)).rounded())))
         return (runtime, activeProjection, delay)
     }

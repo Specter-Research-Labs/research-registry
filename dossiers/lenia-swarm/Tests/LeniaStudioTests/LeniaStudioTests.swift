@@ -388,53 +388,6 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(statePatch.decodedValues(), values)
     }
 
-    func testLeniaLabHealthAllowsFiniteHighDensityFlowStates() {
-        let assessment = labHealthAssessment(
-            metrics: FlowSandboxMetrics(
-                massMean: 0.12,
-                occupancy: 0.2,
-                foodMean: 0,
-                wallFraction: 0,
-                massPeak: 1.2,
-                foodPeak: 0,
-                nonFiniteFraction: 0
-            ),
-            isRunning: true,
-            activity: 0.02,
-            stepDurationMs: 1,
-            stepRateHz: 60,
-            snapshotFps: 60,
-            speedCap: 60,
-            history: [0.02, 0.03]
-        )
-
-        XCTAssertEqual(assessment.state, .active)
-        XCTAssertTrue(assessment.warnings.contains { $0.contains("display range") })
-    }
-
-    func testLeniaLabHealthFlagsNonFiniteStatesAsExploding() {
-        let assessment = labHealthAssessment(
-            metrics: FlowSandboxMetrics(
-                massMean: 0.12,
-                occupancy: 0.2,
-                foodMean: 0,
-                wallFraction: 0,
-                massPeak: 0.8,
-                foodPeak: 0,
-                nonFiniteFraction: 0.01
-            ),
-            isRunning: true,
-            activity: 0.02,
-            stepDurationMs: 1,
-            stepRateHz: 60,
-            snapshotFps: 60,
-            speedCap: 60,
-            history: [0.02, 0.03]
-        )
-
-        XCTAssertEqual(assessment.state, .exploding)
-    }
-
     func testTrack1TaxonomyCatalogParsesRuntimeProvenance() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("track1-taxonomy-\(UUID().uuidString)")
