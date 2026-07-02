@@ -44,8 +44,11 @@ struct EvaluateCommand: AsyncParsableCommand {
         let logger = logging.logger
         logger.info("Output: \(runDir.path)")
 
-        let sourceBaseConfigData = try Data(contentsOf: URL(fileURLWithPath: config))
-        let searchConfigData = try Data(contentsOf: URL(fileURLWithPath: search))
+        let configPath = try resolvePath(config, dossier: dossierName)
+        let searchPath = try resolvePath(search, dossier: dossierName)
+        let corpusPath = try resolvePath(corpus, dossier: dossierName)
+        let sourceBaseConfigData = try Data(contentsOf: URL(fileURLWithPath: configPath))
+        let searchConfigData = try Data(contentsOf: URL(fileURLWithPath: searchPath))
         let parsedSearch = try JSONDecoder().decode(ParsedSearchConfig.self, from: searchConfigData)
         let baseOverrides = parsedSearch.overridesAsDict()
         let effectiveBaseData = try baseConfigDataByApplyingOverrides(sourceBaseConfigData, overrides: baseOverrides)
@@ -53,7 +56,7 @@ struct EvaluateCommand: AsyncParsableCommand {
         let backend = try resolveMetalFirstSearchBackend(requestValue: "metal-full", baseConfig: effectiveBaseConfig)
         let baseConfigData = try baseConfigDataBySettingBackend(sourceBaseConfigData, backend: backend)
 
-        let corpusText = try String(contentsOf: URL(fileURLWithPath: corpus), encoding: .utf8)
+        let corpusText = try String(contentsOf: URL(fileURLWithPath: corpusPath), encoding: .utf8)
         let decoder = JSONDecoder()
         var rules: [ResolvedParams] = []
         var rowSeeds: [Int] = []

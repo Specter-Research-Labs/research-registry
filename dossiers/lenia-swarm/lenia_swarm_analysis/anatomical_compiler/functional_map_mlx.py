@@ -21,7 +21,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from lenia_swarm_analysis.anatomical_compiler.functional_map import _build_corpus
-from lenia_swarm_analysis.anatomical_compiler.mlx_assays import _ablate, _terminal_descriptors
+from lenia_swarm_analysis.anatomical_compiler.mlx_assays import _terminal_descriptors
 from lenia_swarm_analysis.anatomical_compiler.mlx_coherence import _component_metrics
 from lenia_swarm_analysis.anatomical_compiler.mlx_descriptors import _coordinate_grids
 from lenia_swarm_analysis.anatomical_compiler.mlx_lenia import (
@@ -65,8 +65,36 @@ def _complexity(bodies: np.ndarray) -> np.ndarray:
     return (gx + gy).sum(axis=(1, 2)) / (f.sum(axis=(1, 2)) + 1e-9)
 
 
+def _body_centers(bodies: np.ndarray) -> np.ndarray:
+    """Per-body center of mass (in cell units over the sx, sy axes) of the summed field.
+    Motile creatures translate away from the seed patch, so the recovery lesion must target
+    the settled body, not the fixed seed center, or it misses the organism entirely and drift
+    reads falsely low."""
+    f = bodies.sum(-1)
+    total = f.sum(axis=(1, 2)) + 1e-9
+    ax = np.arange(f.shape[1], dtype=np.float32)
+    ay = np.arange(f.shape[2], dtype=np.float32)
+    cx = (f.sum(axis=2) * ax).sum(axis=1) / total
+    cy = (f.sum(axis=1) * ay).sum(axis=1) / total
+    return np.stack([cx, cy], axis=1)
+
+
+def _ablate_bodies(field: mx.array, centers: np.ndarray, size: int) -> mx.array:
+    """Zero a square lesion at each body's own center of mass (see _body_centers)."""
+    out = np.asarray(field).copy()
+    half = size // 2
+    sx, sy = out.shape[1], out.shape[2]
+    for i in range(out.shape[0]):
+        cx = int(round(float(centers[i, 0])))
+        cy = int(round(float(centers[i, 1])))
+        x0 = min(max(cx - half, 0), max(sx - size, 0))
+        y0 = min(max(cy - half, 0), max(sy - size, 0))
+        out[i, x0:x0 + size, y0:y0 + size, :] = 0.0
+    return mx.array(out)
+
+
 def _recovery(bodies: np.ndarray, corpus: list[dict[str, Any]], config: LeniaConfig, *,
-              center: tuple[int, int], ablate_size: int, occupancy_threshold: float,
+              ablate_size: int, occupancy_threshold: float,
               steps: int, chunk: int) -> np.ndarray:
     """Re-seed each body clean and lesioned, run forward, and return the relative terminal
     drift over the robust descriptors (low = the form regenerated)."""
@@ -76,9 +104,11 @@ def _recovery(bodies: np.ndarray, corpus: list[dict[str, Any]], config: LeniaCon
     for c0 in range(0, len(corpus), chunk):
         params = corpus[c0:c0 + chunk]
         geno = GenotypeBatch.from_param_dicts(params)
-        body = mx.array(bodies[c0:c0 + len(params)])
+        chunk_bodies = bodies[c0:c0 + len(params)]
+        body = mx.array(chunk_bodies)
+        centers = _body_centers(chunk_bodies)
         base_end = rollout(body, geno, config, steps)
-        abl_end = rollout(_ablate(body, center, ablate_size), geno, config, steps)
+        abl_end = rollout(_ablate_bodies(body, centers, ablate_size), geno, config, steps)
         base[c0:c0 + len(params)] = _terminal_descriptors(
             base_end, config, occupancy_threshold, grid_x, grid_y)
         abl[c0:c0 + len(params)] = _terminal_descriptors(
@@ -146,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
                           n_seeds=args.n_seeds, steps=args.body_steps, chunk=args.chunk)
     complexity = _complexity(bodies)
     print("running ablation recovery ...")
-    drift = _recovery(bodies, corpus, config, center=center, ablate_size=args.ablate_size,
+    drift = _recovery(bodies, corpus, config, ablate_size=args.ablate_size,
                       occupancy_threshold=occ, steps=args.recovery_steps, chunk=args.chunk)
 
     out_dir = (root / args.output).resolve()
