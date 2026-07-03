@@ -26,8 +26,17 @@ from lenia_swarm_analysis.anatomical_compiler._codec import (
     PHENOTYPE_FIELDS,
     GenotypeCodec,
     Standardizer,
+    clamp_params,
     load_dataset,
 )
+from lenia_swarm_analysis.anatomical_compiler.form_compiler import (
+    TOPO_WEIGHT,
+    compile_form,
+    grow_body,
+    load_mask_target,
+    select_warm_start,
+)
+from lenia_swarm_analysis.anatomical_compiler.form_topology import feature_counts
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import (
     DEFAULT_BINARY,
     ForwardSimulator,
@@ -39,11 +48,16 @@ from lenia_swarm_analysis.anatomical_compiler.mlx_es_inverse import (
     _robust_descriptors,
     search,
 )
-from lenia_swarm_analysis.anatomical_compiler.mlx_lenia import LeniaConfig
+from lenia_swarm_analysis.anatomical_compiler.mlx_lenia import (
+    GenotypeBatch,
+    LeniaConfig,
+    rollout,
+)
 from lenia_swarm_analysis.anatomical_compiler.mlx_validate import (
     _load_frames,
     _run_with_frames,
 )
+from lenia_swarm_analysis.anatomical_compiler.swift_form_seed import seed_and_run
 
 # black -> orange -> pale, matching the dossier accent; density 0 is background.
 _CMAP_X = (0.0, 0.5, 1.0)
@@ -180,6 +194,111 @@ def _gather_proposals(
     return np.vstack(parts)
 
 
+def _compile_form_target(
+    args: argparse.Namespace, *, root: Path, config: LeniaConfig,
+    base_config: dict[str, Any], binary: Path,
+    search_config: dict[str, Any], ranges: dict[str, list[float]],
+    center: tuple[int, int], size: int,
+) -> int:
+    """Compile a rule that holds an explicit form (a mask) under the topology-aware
+    fixed-point objective, then verify and render on the MLX map."""
+    occ = float(search_config["occupancy_threshold"])
+    codec, genotype, phenotype_full = load_dataset((root / args.dataset).resolve())
+    rng = np.random.default_rng(args.seed)
+
+    if not 0 <= args.form_anchor_index < len(genotype):
+        raise SystemExit(f"--form-anchor-index must be in [0, {len(genotype) - 1}]")
+    anchor_rule = codec.unflatten(genotype[args.form_anchor_index])
+    print(f"growing liveness/mass anchor from dataset genotype {args.form_anchor_index} ...")
+    anchor = grow_body(
+        anchor_rule, config, center=center, size=size, occupancy_threshold=occ
+    )
+    anchor_mass = float(anchor.field.sum())
+    target = load_mask_target(
+        Path(args.target_form).resolve(), config, occupancy_threshold=occ,
+        liveness=anchor.liveness, total_mass=anchor_mass,
+    )
+    target_field = np.asarray(target.field[0].sum(axis=-1))
+    t_h0, t_h1 = feature_counts(target_field)
+    print(f"target form: occ={target.occupancy:.3f} lcf={target.lcf:.2f} "
+          f"H0={t_h0} H1={t_h1}  liveness anchor {target.liveness:.4f}  "
+          f"seed mass {anchor_mass:.1f}")
+
+    start_vec, s_drift, s_live, s_topo = select_warm_start(
+        target, genotype, phenotype_full, codec, ranges, config,
+        k=args.proposals, steps=args.steps, occupancy_threshold=occ,
+    )
+    print(f"warm start (best of {args.proposals}): drift {s_drift:.3f} "
+          f"topo {s_topo:.3f} liveness {s_live:.4f}")
+    result = compile_form(
+        target, start_vec, genotype.std(axis=0),
+        codec=codec, ranges=ranges, config=config, rng=rng,
+        iterations=args.iterations, population=args.population, elites=args.elites,
+        steps=args.steps, occupancy_threshold=occ,
+    )
+    found_params, _ = clamp_params(codec.unflatten(result.best_vector), ranges)
+
+    geno = GenotypeBatch.from_param_dicts([found_params])
+    terminal = np.asarray(
+        rollout(target.field, geno, config, args.steps)[0].sum(axis=-1)
+    )
+    f_h0, f_h1 = feature_counts(terminal)
+
+    out_dir = (root / "outputs/anatomical-compiler/compiled" / args.name).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    _colorize(terminal).save(out_dir / "creature.png")
+    _colorize(target_field).save(out_dir / "target.png")
+
+    # Verify and render the form-compiled creature on the Swift oracle by re-seeding the
+    # target body under the found rule (init.state_patch), the form analog of the descriptor
+    # path's Swift re-simulation.
+    swift = seed_and_run(
+        binary, base_config, search_config, found_params, target_field,
+        center=center, seed=0, steps=args.steps, stride=max(1, args.steps // 6),
+        dossier_root=root, timeout=600.0, occupancy_threshold=occ,
+    )
+    _colorize(swift.terminalField).save(out_dir / "creature_swift.png")
+
+    report = {
+        "targetForm": Path(args.target_form).name,
+        "warmStart": "nearest form-holder",
+        "drift": result.best_drift,
+        "objective": result.best_objective,
+        "liveness": result.best_liveness,
+        "targetLiveness": target.liveness,
+        "topoDistance": result.best_topo,
+        "topoWeight": TOPO_WEIGHT,
+        "foundGenotype": found_params,
+        "targetFeatures": {"H0": t_h0, "H1": t_h1},
+        "foundFeatures": {"H0": f_h0, "H1": f_h1},
+        "anchorIndex": args.form_anchor_index,
+        "startObjective": result.start_objective,
+        "history": result.history,
+        "swift": {
+            "seededMass": swift.seededMass,
+            "massConservation": swift.massConservation,
+            "occupancy": swift.swiftOccupancy,
+            "gyration": swift.swiftGyration,
+            "terminalLcf": swift.terminalLcf,
+            "formDrift": swift.formDrift,
+            "topoDistance": swift.topoDistance,
+            "isStable": swift.isStable,
+            "held": swift.held,
+        },
+    }
+    (out_dir / "result.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    print(f"\nobjective {result.start_objective:.3f} -> {result.best_objective:.3f}  "
+          f"drift {result.best_drift:.3f}  "
+          f"topoDist {result.best_topo:.3f}  liveness {result.best_liveness:.4f}")
+    print(f"target H0={t_h0} H1={t_h1}  found H0={f_h0} H1={f_h1}")
+    print(f"swift re-seed: mass conservation {swift.massConservation:.4f}  "
+          f"terminal lcf {swift.terminalLcf:.3f}  stable={swift.isStable}  held={swift.held}")
+    print(f"wrote {out_dir}/creature.png, target.png, creature_swift.png, result.json")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", default="configs/base/paper_base_3k_1c_128.json")
@@ -191,10 +310,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="use dataset creature N as the target form")
     parser.add_argument("--target", type=str, default=None,
                         help='explicit target, e.g. \'{"occupancy_mean":0.15,"gyration":2000}\'')
+    parser.add_argument("--target-form", type=str, default=None,
+                        help="PNG/.npy mask; compile a rule that holds this arrangement "
+                        "(routed to the topology-aware fixed-point search)")
     parser.add_argument("--name", type=str, default="compiled")
     parser.add_argument("--proposal", choices=("nearest", "cinn", "qd", "all"),
                         default="all")
     parser.add_argument("--checkpoint", default="outputs/anatomical-compiler/cinn.pt")
+    parser.add_argument("--form-anchor-index", type=int, default=0,
+                        help="stable dataset row used to calibrate target mass and liveness")
     parser.add_argument("--qd-archive",
                         default="outputs/anatomical-compiler/qd_archive/archive.json")
     parser.add_argument("--proposals", type=int, default=64,
@@ -215,6 +339,18 @@ def main(argv: list[str] | None = None) -> int:
     center = (int(patch["center"][0]), int(patch["center"][1]))
     size = int(patch["size"])
     binary = root / DEFAULT_BINARY
+
+    specified = [args.target_index is not None, args.target is not None,
+                 args.target_form is not None]
+    if sum(specified) != 1:
+        raise SystemExit(
+            "provide exactly one of --target-index, --target, --target-form"
+        )
+    if args.target_form is not None:
+        return _compile_form_target(
+            args, root=root, config=config, base_config=base_config, binary=binary,
+            search_config=search_config, ranges=ranges, center=center, size=size,
+        )
 
     codec, genotype, phenotype_robust = load_dataset((root / args.dataset).resolve())
     rng = np.random.default_rng(args.seed)
