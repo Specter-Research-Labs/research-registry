@@ -744,10 +744,6 @@ private func logit(_ x: Float) -> Float {
     log(x / (1.0 - x))
 }
 
-private func sigmoidArray(_ x: [Float]) -> [Float] {
-    x.map { sigmoid($0) }
-}
-
 public func paramsToVector(_ params: ResolvedParams, space: ParamSpace) -> [Float] {
     var vec = [Float](repeating: 0.0, count: space.totalDim)
 
@@ -1024,26 +1020,6 @@ public func centerOfMass(_ A: MLXArray, excludedChannels: Set<Int> = []) -> (Flo
 
     // Normalize to [-0.5, 0.5]
     return (cx / Float(sx) - 0.5, cy / Float(sy) - 0.5)
-}
-
-private func computeGyrationScalar(_ A: MLXArray, excludedChannels: Set<Int>) -> Float {
-    let massMap = evolutionMassMap(A, excludedChannels: excludedChannels)
-    let sx = A.shape[0]
-    let sy = A.shape[1]
-    let coordsX = MLXArray(Array(0..<sx).map { Float($0) }).reshaped([sx, 1])
-    let coordsY = MLXArray(Array(0..<sy).map { Float($0) }).reshaped([1, sy])
-    let totalMassArr = massMap.sum()
-    let sumXArr = (massMap * coordsX).sum()
-    let sumYArr = (massMap * coordsY).sum()
-    eval(totalMassArr, sumXArr, sumYArr)
-    let totalMass = totalMassArr.item(Float.self)
-    if totalMass <= 0 { return 1.0 }
-    let cxArr = sumXArr / totalMassArr
-    let cyArr = sumYArr / totalMassArr
-    let distSq = (coordsX - cxArr) * (coordsX - cxArr) + (coordsY - cyArr) * (coordsY - cyArr)
-    let gyrationArr = (massMap * distSq).sum() / totalMassArr
-    eval(gyrationArr)
-    return gyrationArr.item(Float.self) / Float(sx * sy)
 }
 
 private func applyExternalField(
@@ -2184,15 +2160,6 @@ public final class EvolutionEngine {
             alive: metrics.alive[index] > 0.0,
             x: metrics.x[index],
             y: metrics.y[index]
-        )
-    }
-
-    private func centerSnapshotForSingleBatch(_ ABatch: MLXArray) -> CenterSnapshot {
-        let metrics = materializeCenterOfMassBatch([centerOfMassBatchDevice(ABatch)])[0]
-        return CenterSnapshot(
-            alive: metrics.alive[0] > 0.0,
-            x: metrics.x[0],
-            y: metrics.y[0]
         )
     }
 

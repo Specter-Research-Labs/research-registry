@@ -243,11 +243,11 @@ private final class LogFileWriter: @unchecked Sendable {
 
 private struct DynamicMetadataLogHandler: LogHandler {
     private var handler: LogHandler
-    private let metadataProvider: @Sendable () -> Logger.Metadata
+    private let dynamicMetadataProvider: @Sendable () -> Logger.Metadata
 
     init(handler: LogHandler, metadataProvider: @escaping @Sendable () -> Logger.Metadata) {
         self.handler = handler
-        self.metadataProvider = metadataProvider
+        self.dynamicMetadataProvider = metadataProvider
     }
 
     var metadata: Logger.Metadata {
@@ -265,28 +265,14 @@ private struct DynamicMetadataLogHandler: LogHandler {
         set { handler[metadataKey: key] = newValue }
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
-        var combined = metadataProvider()
-        if let metadata = metadata {
+    func log(event: LogEvent) {
+        var event = event
+        var combined = dynamicMetadataProvider()
+        if let metadata = event.metadata {
             combined.merge(metadata, uniquingKeysWith: { _, new in new })
         }
-        handler.log(
-            level: level,
-            message: message,
-            metadata: combined,
-            source: source,
-            file: file,
-            function: function,
-            line: line
-        )
+        event.metadata = combined
+        handler.log(event: event)
     }
 }
 
@@ -308,28 +294,23 @@ private struct JSONLLogHandler: LogHandler {
         set { metadata[key] = newValue }
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    func log(event: LogEvent) {
         var record: [String: Any] = [
             "ts": writer.timestamp(),
-            "level": level.rawValue,
-            "msg": message.description,
+            "level": event.level.rawValue,
+            "msg": event.message.description,
             "label": label,
-            "source": source,
-            "file": (file as NSString).lastPathComponent,
-            "function": function,
-            "line": Int(line)
+            "source": event.source,
+            "file": (event.file as NSString).lastPathComponent,
+            "function": event.function,
+            "line": Int(event.line)
         ]
+        if let error = event.error {
+            record["error"] = String(describing: error)
+        }
 
         var merged = self.metadata
-        if let metadata = metadata {
+        if let metadata = event.metadata {
             merged.merge(metadata, uniquingKeysWith: { _, new in new })
         }
 

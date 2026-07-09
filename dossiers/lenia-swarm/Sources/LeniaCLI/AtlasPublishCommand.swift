@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import LeniaArchive
 import LeniaCore
 import SQLite3
 
@@ -362,7 +363,7 @@ struct AtlasPublishCommand: ParsableCommand {
 
     private func resolveConfigPath(row: AtlasSourceRow, preferred: String?, fallbackName: String) throws -> URL {
         let fm = FileManager.default
-        if let resolved = resolveRunPath(outputRoot: row.outputRoot, runDir: row.runDir, path: preferred) {
+        if let resolved = resolveRunArtifactPath(outputRoot: row.outputRoot, runDir: row.runDir, path: preferred) {
             let url = URL(fileURLWithPath: resolved)
             var isDirectory: ObjCBool = false
             if fm.fileExists(atPath: url.path, isDirectory: &isDirectory), !isDirectory.boolValue {
@@ -370,7 +371,7 @@ struct AtlasPublishCommand: ParsableCommand {
             }
         }
 
-        guard let runRoot = resolveRunPath(outputRoot: row.outputRoot, runDir: row.runDir, path: nil) else {
+        guard let runRoot = resolveRunArtifactPath(outputRoot: row.outputRoot, runDir: row.runDir, path: nil) else {
             throw ValidationError("Could not resolve run root for creature \(row.id).")
         }
         let url = URL(fileURLWithPath: runRoot, isDirectory: true).appendingPathComponent(fallbackName)
@@ -426,29 +427,6 @@ struct AtlasPublishCommand: ParsableCommand {
             speed: max(metrics.centerVelocity, sqrt(metrics.velocityX * metrics.velocityX + metrics.velocityY * metrics.velocityY)),
             headingRad: metrics.headingRad
         )
-    }
-
-    private func resolveRunPath(outputRoot: String?, runDir: String?, path: String?) -> String? {
-        if let path, path.hasPrefix("/") || path.hasPrefix("~") {
-            return (path as NSString).expandingTildeInPath
-        }
-
-        if let path, let runPath = resolveRunPath(outputRoot: outputRoot, runDir: runDir, path: nil) {
-            return URL(fileURLWithPath: runPath, isDirectory: true)
-                .appendingPathComponent(path)
-                .path
-        }
-
-        guard let runDir else { return nil }
-        if runDir.hasPrefix("/") || runDir.hasPrefix("~") {
-            return (runDir as NSString).expandingTildeInPath
-        }
-
-        guard let outputRoot else { return nil }
-        let root = (outputRoot as NSString).expandingTildeInPath
-        return URL(fileURLWithPath: root, isDirectory: true)
-            .appendingPathComponent(runDir)
-            .path
     }
 
     private func writeSQLiteCatalog(catalog: AtlasCatalog, url: URL) throws {

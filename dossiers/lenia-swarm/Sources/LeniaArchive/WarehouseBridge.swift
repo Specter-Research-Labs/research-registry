@@ -65,7 +65,31 @@ public func resolvedWarehousePath(explicitPath: String?, compendiumPath: String)
     explicitPath ?? defaultWarehousePath(compendiumPath: compendiumPath)
 }
 
-private func runWarehouseCLI(arguments: [String]) throws -> Data {
+private final class WarehouseProcessOutput: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stdout = Data()
+    private var stderr = Data()
+
+    func storeStdout(_ data: Data) {
+        lock.lock()
+        stdout = data
+        lock.unlock()
+    }
+
+    func storeStderr(_ data: Data) {
+        lock.lock()
+        stderr = data
+        lock.unlock()
+    }
+
+    func snapshot() -> (stdout: Data, stderr: Data) {
+        lock.lock()
+        defer { lock.unlock() }
+        return (stdout, stderr)
+    }
+}
+
+func runWarehouseCLI(arguments: [String]) throws -> Data {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     process.arguments = arguments
@@ -77,10 +101,25 @@ private func runWarehouseCLI(arguments: [String]) throws -> Data {
     process.standardError = stderrPipe
 
     try process.run()
-    process.waitUntilExit()
+    let output = WarehouseProcessOutput()
+    let readers = DispatchGroup()
+    readers.enter()
+    DispatchQueue.global(qos: .utility).async {
+        defer { readers.leave() }
+        output.storeStdout(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
+    }
+    readers.enter()
+    DispatchQueue.global(qos: .utility).async {
+        defer { readers.leave() }
+        output.storeStderr(stderrPipe.fileHandleForReading.readDataToEndOfFile())
+    }
 
-    let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-    let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    readers.wait()
+
+    let captured = output.snapshot()
+    let stdoutData = captured.stdout
+    let stderrData = captured.stderr
     let stdout = String(decoding: stdoutData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     let stderr = String(decoding: stderrData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
 

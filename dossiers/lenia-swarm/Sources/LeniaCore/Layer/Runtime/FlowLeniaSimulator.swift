@@ -303,6 +303,7 @@ public final class FlowLeniaSimulator {
         let progressInterval = max(config.recordEverySteps * 100, 10_000)
         var pendingMetalSteps = 0
         var pendingMetalStartStep = 1
+        var finalObservedMassMap: MLXArray?
 
         for step in 1...config.steps {
             if persistentMetalRunner != nil {
@@ -362,7 +363,8 @@ public final class FlowLeniaSimulator {
 
             let shouldRecord = step % config.recordEverySteps == 0 || step == config.steps
             let shouldCapture = config.captureEverySteps.map { step % $0 == 0 || step == config.steps } ?? false
-            if !shouldRecord && !shouldCapture {
+            let shouldMeasureActivity = shouldRecord && config.activityConfig != nil
+            if !shouldCapture && !shouldMeasureActivity {
                 continue
             }
 
@@ -401,7 +403,7 @@ public final class FlowLeniaSimulator {
                     )
                     pendingMetalSteps = 0
                 }
-                if shouldRecord, config.activityConfig != nil {
+                if shouldMeasureActivity {
                     PBatch = runner.materializeParams()
                 }
             }
@@ -414,6 +416,9 @@ public final class FlowLeniaSimulator {
             } else {
                 massMap = runtimeOperators.matterMapFromBatch(ABatch)
                 capturedFood = shouldCapture ? foodBatch : nil
+            }
+            if step == config.steps {
+                finalObservedMassMap = massMap
             }
 
             if shouldCapture {
@@ -444,7 +449,7 @@ public final class FlowLeniaSimulator {
                 }
             }
 
-            if shouldRecord, let params = PBatch, let activityConfig = config.activityConfig {
+            if shouldMeasureActivity, let params = PBatch, let activityConfig = config.activityConfig {
                 let activity = computeActivitySnapshots(
                     massMap: massMap,
                     paramMap: params,
@@ -493,7 +498,9 @@ public final class FlowLeniaSimulator {
                 )
             }
         }
-        let finalMassMap = if let runner = persistentMetalRunner {
+        let finalMassMap = if let finalObservedMassMap {
+            finalObservedMassMap
+        } else if let runner = persistentMetalRunner {
             runner.materializeMassMap(channelWeights: runtimeOperators.metalMatterWeights())
         } else {
             runtimeOperators.matterMapFromBatch(ABatch)

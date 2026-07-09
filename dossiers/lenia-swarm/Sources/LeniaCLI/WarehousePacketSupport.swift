@@ -31,10 +31,6 @@ func packetDictionaryValue(_ packet: [String: AnyCodable], key: String) -> [Stri
     packet[key]?.value as? [String: Any]
 }
 
-func packetStringValue(_ dictionary: [String: Any]?, key: String) -> String? {
-    dictionary?[key] as? String
-}
-
 func packetIntValue(_ dictionary: [String: Any]?, key: String) -> Int? {
     dictionary?[key] as? Int
 }

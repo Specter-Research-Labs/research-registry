@@ -100,8 +100,8 @@ enum LabRuntimeHandle: Sendable {
         switch self {
         case .engine(let engine):
             await engine.setSpeedCap(hz: hz)
-        case .replay(let runtime):
-            await runtime.setSpeedCap(hz: hz)
+        case .replay:
+            break
         case .frameSequence(let runtime):
             await runtime.setSpeedCap(hz: hz)
         }
@@ -218,23 +218,13 @@ actor CanonicalLabRuntime {
     private var initialState: FlowLeniaInteractiveState
     private var wallOverlay: [Float]
     private var hasWallOverlay = false
-    private var simulationTask: Task<Void, Never>?
     private var isPaused = true
-    private var targetFrameDuration: Duration = .milliseconds(16)
     private var autoFoodEnabled = false
     private var autoFoodProbability: Float = 0.03
     private var autoFoodPatchSize = 12
     private var autoFoodValue: Float = 0.35
     private var lastStepDurationMs = 0.0
-    private var cachedMetrics = FlowSandboxMetrics(
-        massMean: 0,
-        occupancy: 0,
-        foodMean: 0,
-        wallFraction: 0,
-        massPeak: 0,
-        foodPeak: 0,
-        nonFiniteFraction: 0
-    )
+    private var cachedMetrics = FlowSandboxMetrics.zero
 
     init(replayReference: StudioReplayReference, backend: FlowSandboxBackend) throws {
         let data = try Data(contentsOf: URL(fileURLWithPath: replayReference.baseConfigPath))
@@ -247,7 +237,7 @@ actor CanonicalLabRuntime {
         self.baseWallMask = runtimeState.wallMask
         self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
-        self.cachedMetrics = canonicalLabMetrics(
+        self.cachedMetrics = FlowSandboxMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
             food: canonicalFoodData(state: runtimeState.initialState, size: runtimeState.runtimeConfig.sx * runtimeState.runtimeConfig.sy),
             walls: runtimeState.wallMask
@@ -264,7 +254,7 @@ actor CanonicalLabRuntime {
         self.baseWallMask = runtimeState.wallMask
         self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
-        self.cachedMetrics = canonicalLabMetrics(
+        self.cachedMetrics = FlowSandboxMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
             food: canonicalFoodData(state: runtimeState.initialState, size: runtimeState.runtimeConfig.sx * runtimeState.runtimeConfig.sy),
             walls: runtimeState.wallMask
@@ -281,7 +271,7 @@ actor CanonicalLabRuntime {
         self.baseWallMask = runtimeState.wallMask
         self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
         self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
-        self.cachedMetrics = canonicalLabMetrics(
+        self.cachedMetrics = FlowSandboxMetrics(
             mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
             food: canonicalFoodData(state: runtimeState.initialState, size: runtimeState.runtimeConfig.sx * runtimeState.runtimeConfig.sy),
             walls: runtimeState.wallMask
@@ -320,10 +310,6 @@ actor CanonicalLabRuntime {
         return (runtime, runtimeConfig, initialState, wallMask)
     }
 
-    deinit {
-        simulationTask?.cancel()
-    }
-
     func start() {
         isPaused = false
     }
@@ -337,8 +323,6 @@ actor CanonicalLabRuntime {
     }
 
     func stop() {
-        simulationTask?.cancel()
-        simulationTask = nil
         isPaused = true
     }
 
@@ -347,16 +331,11 @@ actor CanonicalLabRuntime {
         wallOverlay = Array(repeating: 1, count: wallOverlay.count)
         hasWallOverlay = false
         lastStepDurationMs = 0
-        cachedMetrics = canonicalLabMetrics(
+        cachedMetrics = FlowSandboxMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
             walls: effectiveWalls()
         )
-    }
-
-    func setSpeedCap(hz: Int) {
-        let clamped = max(1, min(240, hz))
-        targetFrameDuration = .milliseconds(max(1, Int((1000.0 / Double(clamped)).rounded())))
     }
 
     func setAutoFoodSpawn(
@@ -496,7 +475,7 @@ actor CanonicalLabRuntime {
         if hasWallOverlay {
             applyWallOverlay()
         }
-        cachedMetrics = canonicalLabMetrics(
+        cachedMetrics = FlowSandboxMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
             walls: effectiveWalls()
@@ -551,7 +530,7 @@ actor CanonicalLabRuntime {
         if hasWallOverlay {
             applyWallOverlay()
         }
-        cachedMetrics = canonicalLabMetrics(
+        cachedMetrics = FlowSandboxMetrics(
             mass: canonicalMatterData(runtime: runtime, state: state),
             food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
             walls: effectiveWalls()
@@ -565,7 +544,7 @@ actor CanonicalLabRuntime {
         advanceIfRunning()
         let displayField = displayField(for: projection)
         if refreshMetrics {
-            cachedMetrics = canonicalLabMetrics(
+            cachedMetrics = FlowSandboxMetrics(
                 mass: canonicalMatterData(runtime: runtime, state: state),
                 food: canonicalFoodData(state: state, size: runtimeConfig.sx * runtimeConfig.sy),
                 walls: effectiveWalls()
@@ -598,24 +577,6 @@ actor CanonicalLabRuntime {
         step()
         let elapsed = ContinuousClock.now - startedAt
         lastStepDurationMs = canonicalDurationMs(elapsed)
-    }
-
-    private func runLoop() async {
-        while !Task.isCancelled {
-            if isPaused {
-                try? await Task.sleep(for: .milliseconds(25))
-                continue
-            }
-
-            let startedAt = ContinuousClock.now
-            step()
-            let elapsed = ContinuousClock.now - startedAt
-            lastStepDurationMs = canonicalDurationMs(elapsed)
-            let remaining = targetFrameDuration - elapsed
-            if remaining > .zero {
-                try? await Task.sleep(for: remaining)
-            }
-        }
     }
 
     private func materializeState(
@@ -821,28 +782,6 @@ private func canonicalFoodData(
 
 private func canonicalHasClosedCells(_ walls: [Float]) -> Bool {
     walls.contains { $0 < 0.5 }
-}
-
-private func canonicalLabMetrics(
-    mass: [Float],
-    food: [Float],
-    walls: [Float]
-) -> FlowSandboxMetrics {
-    let count = Float(max(1, mass.count))
-    let finiteMass = mass.filter(\.isFinite)
-    let finiteFood = food.filter(\.isFinite)
-    let nonFiniteCount = mass.count - finiteMass.count + food.count - finiteFood.count
-    let occupied = Float(finiteMass.filter { $0 > 0.05 }.count)
-    let wallCount = Float(walls.filter { $0 < 0.5 }.count)
-    return FlowSandboxMetrics(
-        massMean: finiteMass.reduce(0, +) / count,
-        occupancy: occupied / count,
-        foodMean: finiteFood.reduce(0, +) / count,
-        wallFraction: wallCount / count,
-        massPeak: finiteMass.max() ?? 0,
-        foodPeak: finiteFood.max() ?? 0,
-        nonFiniteFraction: Float(nonFiniteCount) / max(1.0, Float(mass.count + food.count))
-    )
 }
 
 private func canonicalDurationMs(_ duration: Duration) -> Double {

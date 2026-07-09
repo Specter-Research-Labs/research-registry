@@ -948,17 +948,6 @@ struct SearchZeroStatePatch {
     let size: Int
 }
 
-private func signedAngleDelta(_ lhs: Float, _ rhs: Float) -> Float {
-    var delta = lhs - rhs
-    while delta > Float.pi {
-        delta -= 2 * Float.pi
-    }
-    while delta < -Float.pi {
-        delta += 2 * Float.pi
-    }
-    return delta
-}
-
 public func benchmarkSearchEngineBackend(
     gridSize: Int,
     batchSize: Int,

@@ -434,17 +434,17 @@ struct EcologyCommand: ParsableCommand {
             CblasRowMajor,
             CblasTrans,
             CblasNoTrans,
-            Int32(d),
-            Int32(d),
-            Int32(n),
+            d,
+            d,
+            n,
             1.0,
             X,
-            Int32(d),
+            d,
             X,
-            Int32(d),
+            d,
             0.0,
             &cov,
-            Int32(d)
+            d
         )
         var invNm1 = Float(1.0 / Double(max(n - 1, 1)))
         vDSP_vsmul(cov, 1, &invNm1, &cov, 1, vDSP_Length(d * d))
@@ -460,16 +460,16 @@ struct EcologyCommand: ParsableCommand {
         var w = [Float](repeating: 0, count: d)
         var jobz: Int8 = 86 // 'V'
         var uplo: Int8 = 85 // 'U'
-        var n32 = Int32(d)
-        var lda = n32
-        var lwork = Int32(-1)
+        var dimension = d
+        var lda = dimension
+        var lwork = -1
         var workQuery: Float = 0
-        var info: Int32 = 0
-        ssyev_(&jobz, &uplo, &n32, &a, &lda, &w, &workQuery, &lwork, &info)
+        var info = 0
+        ssyev_(&jobz, &uplo, &dimension, &a, &lda, &w, &workQuery, &lwork, &info)
         if info != 0 { throw PCAError.lapackFailed(info) }
-        lwork = Int32(workQuery)
-        var work = [Float](repeating: 0, count: Int(lwork))
-        ssyev_(&jobz, &uplo, &n32, &a, &lda, &w, &work, &lwork, &info)
+        lwork = Int(workQuery)
+        var work = [Float](repeating: 0, count: lwork)
+        ssyev_(&jobz, &uplo, &dimension, &a, &lda, &w, &work, &lwork, &info)
         if info != 0 { throw PCAError.lapackFailed(info) }
 
         // Eigenvalues ascending; take top-2 eigenvectors from the end.
@@ -487,12 +487,12 @@ struct EcologyCommand: ParsableCommand {
             CblasRowMajor,
             CblasNoTrans,
             CblasNoTrans,
-            Int32(n),
+            n,
             2,
-            Int32(d),
+            d,
             1.0,
             X,
-            Int32(d),
+            d,
             V,
             2,
             0.0,
@@ -588,7 +588,7 @@ private struct PCA2Row: Codable {
 private enum PCAError: Error, CustomStringConvertible {
     case empty
     case inconsistentLength
-    case lapackFailed(Int32)
+    case lapackFailed(Int)
 
     var description: String {
         switch self {

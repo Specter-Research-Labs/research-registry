@@ -464,12 +464,12 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(image?.height, 64)
     }
 
-    func testTTFrameSequenceLoadsRawFrames() throws {
+    func testTTFrameSequenceLoadsRawFrames() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("tt-frame-sequence-\(UUID().uuidString)")
         let frames = root.appendingPathComponent("frames")
         try FileManager.default.createDirectory(at: frames, withIntermediateDirectories: true)
-        try Data([0, 64, 128, 255]).write(to: frames.appendingPathComponent("frame_000000.r8"))
+        try Data([0, 13, 128, 255]).write(to: frames.appendingPathComponent("frame_000000.r8"))
 
         let manifest = """
         {
@@ -509,12 +509,47 @@ final class LeniaStudioTests: XCTestCase {
 
         let sequence = try TTFrameSequence.load(manifestURL: manifestURL)
         let frame = try sequence.frame(at: 0)
+        let metrics = try sequence.sample(at: 0).metrics
+        let runtimeSnapshot = await TTFrameSequenceRuntime(sequence: sequence).snapshot(
+            refreshMetrics: true,
+            projection: .matter
+        )
 
         XCTAssertEqual(sequence.frameCount, 1)
         XCTAssertEqual(frame.step, 0)
         XCTAssertEqual(frame.width, 2)
         XCTAssertEqual(frame.height, 2)
-        XCTAssertEqual(frame.bytes, Data([0, 64, 128, 255]))
+        XCTAssertEqual(frame.bytes, Data([0, 13, 128, 255]))
+        XCTAssertEqual(metrics.massMean, Float(396) / Float(4 * 255), accuracy: 1e-6)
+        XCTAssertEqual(metrics.occupancy, 0.75, accuracy: 1e-6)
+        XCTAssertEqual(metrics.massPeak, 1, accuracy: 1e-6)
+        XCTAssertEqual(runtimeSnapshot.metrics.massMean, metrics.massMean, accuracy: 1e-6)
+        XCTAssertEqual(runtimeSnapshot.metrics.occupancy, metrics.occupancy, accuracy: 1e-6)
+    }
+
+    func testCanonicalLabRuntimeAdvancesOnlyWhileRunning() async throws {
+        let draft = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 32)
+        let runtime = try CanonicalLabRuntime(
+            runtimeConfig: draft.runtimeConfig(overridingBackend: .mlx)
+        )
+
+        let initial = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        let stillPaused = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        XCTAssertEqual(stillPaused.step, initial.step)
+
+        await runtime.start()
+        let firstRunning = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        let secondRunning = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        XCTAssertEqual(firstRunning.step, initial.step + 1)
+        XCTAssertEqual(secondRunning.step, firstRunning.step + 1)
+
+        await runtime.pause()
+        let paused = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        XCTAssertEqual(paused.step, secondRunning.step)
+
+        await runtime.resume()
+        let resumed = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        XCTAssertEqual(resumed.step, paused.step + 1)
     }
 
     func testTTFrameSequenceRejectsWrongSizedFrameAtLoad() throws {

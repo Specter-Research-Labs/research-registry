@@ -6295,6 +6295,22 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertGreaterThan(refreshed.metrics.foodMean, stale.metrics.foodMean)
     }
 
+    func testFlowSandboxMetricsReduceFieldsInOneCanonicalPass() {
+        let metrics = FlowSandboxMetrics(
+            mass: [0.1, .nan, .infinity, -0.25],
+            food: [.nan, 0.5, .infinity, -0.1],
+            walls: [1, 0, .nan, 0.4]
+        )
+
+        XCTAssertEqual(metrics.massMean, -0.0375, accuracy: 1e-6)
+        XCTAssertEqual(metrics.occupancy, 0.25, accuracy: 1e-6)
+        XCTAssertEqual(metrics.foodMean, 0.1, accuracy: 1e-6)
+        XCTAssertEqual(metrics.wallFraction, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(metrics.massPeak, 0.1, accuracy: 1e-6)
+        XCTAssertEqual(metrics.foodPeak, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(metrics.nonFiniteFraction, 0.5, accuracy: 1e-6)
+    }
+
     func testFlowSandboxMetalFullRuntimeEditsStayLocal() async {
         let (_, _, _, params) = makeTestSetup()
         let runtime = FlowSandboxRuntime(
@@ -6411,9 +6427,17 @@ final class LeniaCoreTests: XCTestCase {
         let params = makeSandboxMetalParityParams()
         let c0 = Array(repeating: 0, count: params.r.count)
         let c1 = [Array(0..<params.r.count)]
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 1,
+        let observedRolloutConfig = FlowLeniaRolloutConfig(
+            steps: 8,
             recordEverySteps: 1,
+            captureEverySteps: 1,
+            activityConfig: nil,
+            foodSpawn: nil,
+            dissipation: nil
+        )
+        let batchedRolloutConfig = FlowLeniaRolloutConfig(
+            steps: 8,
+            recordEverySteps: 8,
             captureEverySteps: nil,
             activityConfig: nil,
             foodSpawn: nil,
@@ -6471,7 +6495,7 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: observedRolloutConfig
         )
 
         for backend in [FlowLeniaComputeBackend.metalFull] {
@@ -6479,12 +6503,20 @@ final class LeniaCoreTests: XCTestCase {
                 initialState: initialState,
                 initialParams: initialParams,
                 initialFood: nil,
-                config: rolloutConfig
+                config: observedRolloutConfig
             )
             XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 1e-3, "backend=\(backend.rawValue)")
             XCTAssertEqual(actual.width, expected.width)
             XCTAssertEqual(actual.height, expected.height)
             XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 1e-3)
+
+            let batchedResult = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: backend)).rollout(
+                initialState: initialState,
+                initialParams: initialParams,
+                initialFood: nil,
+                config: batchedRolloutConfig
+            )
+            XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, batchedResult.finalMassMap), 1e-6)
         }
     }
 
@@ -6492,14 +6524,16 @@ final class LeniaCoreTests: XCTestCase {
         let params = makeSandboxMetalParityParams()
         let c0 = Array(repeating: 0, count: params.r.count)
         let c1 = [Array(0..<params.r.count)]
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 8,
-            recordEverySteps: 8,
-            captureEverySteps: nil,
-            activityConfig: nil,
-            foodSpawn: nil,
-            dissipation: nil
-        )
+        func rolloutConfig(captureEverySteps: Int?) -> FlowLeniaRolloutConfig {
+            FlowLeniaRolloutConfig(
+                steps: 8,
+                recordEverySteps: 8,
+                captureEverySteps: captureEverySteps,
+                activityConfig: nil,
+                foodSpawn: nil,
+                dissipation: nil
+            )
+        }
         let initialBatch = flowSandboxSeedState(seed: 43, gridSize: 32)
         let initialState = initialBatch[0, 0..., 0..., 0].expandedDimensions(axis: -1)
         let initialParams = flowSandboxParameterField(
@@ -6559,16 +6593,23 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
         )
         let actual = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
+        )
+        let observed = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
+            initialState: initialState,
+            initialParams: initialParams,
+            initialFood: nil,
+            config: rolloutConfig(captureEverySteps: 1)
         )
 
         XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 2e-3)
+        XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, observed.finalMassMap), 1e-6)
         XCTAssertEqual(actual.width, expected.width)
         XCTAssertEqual(actual.height, expected.height)
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 1e-3)
@@ -6986,19 +7027,21 @@ final class LeniaCoreTests: XCTestCase {
     }
 
     func testFlowLeniaSimulatorMetalFullSupportsFoodSpawnOnPersistentRunner() {
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 8,
-            recordEverySteps: 8,
-            captureEverySteps: nil,
-            activityConfig: nil,
-            foodSpawn: FlowLeniaFoodSpawnConfig(
-                probability: 1.0,
-                patchSize: 4,
-                seed: 17,
-                value: 0.85
-            ),
-            dissipation: nil
-        )
+        func rolloutConfig(captureEverySteps: Int?) -> FlowLeniaRolloutConfig {
+            FlowLeniaRolloutConfig(
+                steps: 8,
+                recordEverySteps: 8,
+                captureEverySteps: captureEverySteps,
+                activityConfig: nil,
+                foodSpawn: FlowLeniaFoodSpawnConfig(
+                    probability: 1.0,
+                    patchSize: 4,
+                    seed: 17,
+                    value: 0.85
+                ),
+                dissipation: nil
+            )
+        }
         let food = FoodConfig(
             enabled: true,
             channel_index: 1,
@@ -7074,36 +7117,45 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: initialFoodField,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
         )
         let actual = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
             initialState: initialState,
             initialParams: initialParams,
             initialFood: initialFoodField,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
+        )
+        let observed = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
+            initialState: initialState,
+            initialParams: initialParams,
+            initialFood: initialFoodField,
+            config: rolloutConfig(captureEverySteps: 1)
         )
 
         XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 0.2)
+        XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, observed.finalMassMap), 1e-6)
         XCTAssertEqual(actual.width, expected.width)
         XCTAssertEqual(actual.height, expected.height)
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 0.15)
     }
 
     func testFlowLeniaSimulatorMetalFullSupportsDissipationOnPersistentRunner() {
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 8,
-            recordEverySteps: 8,
-            captureEverySteps: nil,
-            activityConfig: nil,
-            foodSpawn: nil,
-            dissipation: FlowLeniaDissipationConfig(
-                probability: 1.0,
-                patchSize: 4,
-                insertionZoneOrigin: [18, 18],
-                insertionZoneSize: 8,
-                seed: 23
+        func rolloutConfig(captureEverySteps: Int?) -> FlowLeniaRolloutConfig {
+            FlowLeniaRolloutConfig(
+                steps: 8,
+                recordEverySteps: 8,
+                captureEverySteps: captureEverySteps,
+                activityConfig: nil,
+                foodSpawn: nil,
+                dissipation: FlowLeniaDissipationConfig(
+                    probability: 1.0,
+                    patchSize: 4,
+                    insertionZoneOrigin: [18, 18],
+                    insertionZoneSize: 8,
+                    seed: 23
+                )
             )
-        )
+        }
 
         func runtimeConfig(backend: FlowLeniaComputeBackend) -> LeniaRuntimeConfig {
             makeRuntimeConfigForSearchEngine(
@@ -7131,16 +7183,23 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
         )
         let actual = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
+        )
+        let observed = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
+            initialState: initialState,
+            initialParams: initialParams,
+            initialFood: nil,
+            config: rolloutConfig(captureEverySteps: 1)
         )
 
         XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 0.2)
+        XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, observed.finalMassMap), 1e-6)
         XCTAssertEqual(actual.width, expected.width)
         XCTAssertEqual(actual.height, expected.height)
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 0.15)

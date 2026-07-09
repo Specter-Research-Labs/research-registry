@@ -156,7 +156,7 @@ private func qd2024RequestedCells(libraryURL: URL, explicit: [Int]?) throws -> [
         return explicit
     }
     let decoder = JSONDecoder()
-    let lines = try String(contentsOf: libraryURL)
+    let lines = try String(contentsOf: libraryURL, encoding: .utf8)
         .split(whereSeparator: \.isNewline)
         .map(String.init)
         .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }

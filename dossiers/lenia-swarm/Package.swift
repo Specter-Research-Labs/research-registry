@@ -16,7 +16,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-distributed-actors.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
         .package(url: "https://github.com/ml-explore/mlx-swift", from: "0.21.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.12.0"),
     ],
     targets: [
         .target(
@@ -60,6 +60,12 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
             ],
             path: "Sources/LeniaCLI",
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xcc", "-DACCELERATE_NEW_LAPACK",
+                    "-Xcc", "-DACCELERATE_LAPACK_ILP64",
+                ]),
+            ],
             linkerSettings: [
                 .linkedLibrary("sqlite3"),
             ]

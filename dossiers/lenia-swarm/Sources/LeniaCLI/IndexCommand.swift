@@ -562,7 +562,7 @@ final class SQLiteIndexer {
                 continue
             }
             guard let runRecord = try runArtifactRecord(runID: gap.runID, cache: &runCache),
-                  let resolvedRunDir = resolveCompendiumArtifactPath(
+                  let resolvedRunDir = resolveRunArtifactPath(
                     outputRoot: runRecord.outputRoot,
                     runDir: runRecord.runDir,
                     path: nil
@@ -875,19 +875,19 @@ final class SQLiteIndexer {
             return nil
         }
         let exportedAt = formatter.date(from: exportedAtText) ?? Date()
-        let resolvedExportDir = resolveCompendiumArtifactPath(
+        let resolvedExportDir = resolveRunArtifactPath(
             outputRoot: runRecord.outputRoot,
             runDir: runRecord.runDir,
             path: exportDir
         ) ?? exportDir
         let resolvedBaseConfigPath = columnText(stmt, index: 7).flatMap {
-            resolveCompendiumArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: $0) ?? $0
+            resolveRunArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: $0) ?? $0
         }
         let resolvedSearchConfigPath = columnText(stmt, index: 8).flatMap {
-            resolveCompendiumArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: $0) ?? $0
+            resolveRunArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: $0) ?? $0
         }
         let resolvedPayloadPath = columnText(stmt, index: 9).flatMap {
-            resolveCompendiumArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: $0) ?? $0
+            resolveRunArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: $0) ?? $0
         }
         return CreatureExportRecord(
             creatureId: UUID(uuidString: creatureID) ?? deterministicResearchUUID(creatureID),
@@ -1035,7 +1035,7 @@ final class SQLiteIndexer {
         cache: inout [String: CanonicalRunArtifactRecord]
     ) throws -> ReplayResolvedInput {
         guard let runRecord = try runArtifactRecord(runID: gap.runID, cache: &cache),
-              let runDir = resolveCompendiumArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: nil) else {
+              let runDir = resolveRunArtifactPath(outputRoot: runRecord.outputRoot, runDir: runRecord.runDir, path: nil) else {
             throw ValidationError("qd-2024 backfill could not resolve source run directory for \(gap.runID).")
         }
         let configDirectoryOverride = URL(
@@ -1321,7 +1321,7 @@ final class SQLiteIndexer {
             return nil
         }
         let relativePath = gap.campaignID.map { "campaigns/\($0)/library/index.jsonl" } ?? "library/index.jsonl"
-        guard let resolved = resolveCompendiumArtifactPath(
+        guard let resolved = resolveRunArtifactPath(
             outputRoot: runRecord.outputRoot,
             runDir: runRecord.runDir,
             path: relativePath
