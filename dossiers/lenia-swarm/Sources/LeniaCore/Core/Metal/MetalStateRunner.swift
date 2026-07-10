@@ -41,6 +41,7 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private var staticChannelFields: [FlowLeniaMetalChannelFieldBuffer] = []
     private var foodState: FlowLeniaMetalFoodStateBuffer?
     private var hasState = false
+    private(set) var massObservationSynchronizationCount = 0
 
     var supportsMassSummary: Bool {
         summaryReducer != nil
@@ -91,8 +92,7 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             config: config,
             parameterCount: self.parameterCount,
             batchCount: batchCount,
-            device: device,
-            commandQueue: commandQueue
+            device: device
         )
         let wallLibrary = FlowLeniaMetalFullPipeline.makeLibrary(
             device: device,
@@ -568,16 +568,56 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     }
 
     func materializeMassMap(channelWeights: [Float]? = nil) -> MLXArray {
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal mass-map command buffer.")
+        }
+        commandBuffer.label = "flow-metal.state.mass-map"
+        encodeMassMap(on: commandBuffer, channelWeights: channelWeights)
+
+        FlowLeniaMetalFullPipeline.commitAndWait(commandBuffer, label: "flow-metal.state.mass-map")
+        massObservationSynchronizationCount += 1
+        return readMassMap()
+    }
+
+    func observeMass(
+        occupancyThreshold: Float,
+        includeGyration: Bool,
+        channelWeights: [Float]? = nil,
+        materializeMap: Bool
+    ) -> (summary: FlowLeniaMetalMassSummary, massMap: MLXArray?) {
+        guard let summaryReducer else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner mass summary reducer is unavailable.")
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            preconditionFailure("Failed to create Flow Metal mass-observation command buffer.")
+        }
+        commandBuffer.label = "flow-metal.state.mass-observation"
+        summaryReducer.encodeSummary(
+            on: commandBuffer,
+            massBuffer: currentMassBuffer,
+            occupancyThreshold: occupancyThreshold,
+            includeGyration: includeGyration,
+            channelWeights: channelWeights
+        )
+        if materializeMap {
+            encodeMassMap(on: commandBuffer, channelWeights: channelWeights)
+        }
+
+        FlowLeniaMetalFullPipeline.commitAndWait(commandBuffer, label: "flow-metal.state.mass-observation")
+        massObservationSynchronizationCount += 1
+        return (
+            summaryReducer.readSummary(includeGyration: includeGyration),
+            materializeMap ? readMassMap() : nil
+        )
+    }
+
+    private func encodeMassMap(on commandBuffer: MTLCommandBuffer, channelWeights: [Float]?) {
         let weights = channelWeights ?? Array(repeating: 1.0, count: channelCount)
         guard weights.count == channelCount else {
             preconditionFailure("FlowLeniaMetalFullStateRunner mass-map weights must match the configured channel count.")
         }
         FlowLeniaMetalFullPipeline.writeFloats(weights, to: massMapWeightsBuffer)
 
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
-            preconditionFailure("Failed to create Flow Metal mass-map command buffer.")
-        }
-        commandBuffer.label = "flow-metal.state.mass-map"
         guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
             preconditionFailure("Failed to create Flow Metal mass-map encoder.")
         }
@@ -597,8 +637,9 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         let byteCount = batchCount * config.sx * config.sy * MemoryLayout<Float>.stride
         blit.copy(from: massMapBuffer, sourceOffset: 0, to: massMapTransferBuffer, destinationOffset: 0, size: byteCount)
         blit.endEncoding()
+    }
 
-        FlowLeniaMetalFullPipeline.commitAndWait(commandBuffer, label: "flow-metal.state.mass-map")
+    private func readMassMap() -> MLXArray {
         let values = FlowLeniaMetalFullPipeline.readFloats(from: massMapTransferBuffer, count: batchCount * config.sx * config.sy)
         return MLXArray(values).reshaped([batchCount, config.sx, config.sy])
     }
@@ -642,15 +683,12 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         includeGyration: Bool,
         channelWeights: [Float]? = nil
     ) -> FlowLeniaMetalMassSummary {
-        guard let summaryReducer else {
-            preconditionFailure("FlowLeniaMetalFullStateRunner mass summary reducer is unavailable.")
-        }
-        return summaryReducer.summarize(
-            massBuffer: currentMassBuffer,
+        observeMass(
             occupancyThreshold: occupancyThreshold,
             includeGyration: includeGyration,
-            channelWeights: channelWeights
-        )
+            channelWeights: channelWeights,
+            materializeMap: false
+        ).summary
     }
 
     func profileCurrentStep() -> FlowSandboxMetalStageTimings {

@@ -464,6 +464,117 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(image?.height, 64)
     }
 
+    func testLiveProjectionFramesReadsOnlyTheSelectedChannelAndSwitchesOnNextFrame() throws {
+        var readChannels: [Int] = []
+        let readChannel: (Int) -> [Float] = { channel in
+            readChannels.append(channel)
+            return channel == 2 ? [1, 0.5, 0.25, 0] : [0, 0.25, 0.5, 1]
+        }
+
+        let initialFrames = liveProjectionFrames(
+            matterData: [0, 0.25, 0.5, 1],
+            selectedProjection: .channel(2),
+            step: 7,
+            width: 2,
+            height: 2,
+            channelCount: 4,
+            channelData: readChannel
+        )
+        let switchedFrames = liveProjectionFrames(
+            matterData: [0, 0.25, 0.5, 1],
+            selectedProjection: .channel(0),
+            step: 8,
+            width: 2,
+            height: 2,
+            channelCount: 4,
+            channelData: readChannel
+        )
+
+        XCTAssertEqual(Set(initialFrames.keys), [.matter, .channel(2)])
+        XCTAssertEqual(Set(switchedFrames.keys), [.matter, .channel(0)])
+        XCTAssertEqual(readChannels, [2, 0])
+        XCTAssertEqual(try XCTUnwrap(initialFrames[.matter]).bytes, Data([0, 63, 127, 255]))
+        XCTAssertEqual(try XCTUnwrap(initialFrames[.channel(2)]).bytes, Data([255, 127, 63, 0]))
+        XCTAssertEqual(try XCTUnwrap(switchedFrames[.channel(0)]).step, 8)
+    }
+
+    func testLiveProjectionFramesNeedsNoChannelReadForMatterOrInvalidSelection() {
+        var readChannels: [Int] = []
+        let readChannel: (Int) -> [Float] = { channel in
+            readChannels.append(channel)
+            return [1]
+        }
+
+        let matterFrames = liveProjectionFrames(
+            matterData: [0.5],
+            selectedProjection: .matter,
+            step: 1,
+            width: 1,
+            height: 1,
+            channelCount: 3,
+            channelData: readChannel
+        )
+        let fallbackFrames = liveProjectionFrames(
+            matterData: [0.5],
+            selectedProjection: .channel(3),
+            step: 2,
+            width: 1,
+            height: 1,
+            channelCount: 3,
+            channelData: readChannel
+        )
+
+        XCTAssertEqual(Set(matterFrames.keys), [.matter])
+        XCTAssertEqual(Set(fallbackFrames.keys), [.matter])
+        XCTAssertTrue(readChannels.isEmpty)
+        XCTAssertEqual(liveProjectionOptions(channelCount: 3), [.matter, .channel(0), .channel(1), .channel(2)])
+    }
+
+    func testLiveProjectionRefreshFramesReadsOnlyAChangedSelection() throws {
+        var readChannels: [Int] = []
+        let readChannel: (Int) -> [Float] = { channel in
+            readChannels.append(channel)
+            return [Float(channel) / 2]
+        }
+
+        let unchangedFrames = liveProjectionRefreshFrames(
+            matterData: [0.5],
+            selectedProjection: .channel(1),
+            renderedProjection: .channel(1),
+            step: 9,
+            width: 1,
+            height: 1,
+            channelCount: 3,
+            channelData: readChannel
+        )
+        let changedFrames = try XCTUnwrap(liveProjectionRefreshFrames(
+            matterData: [0.5],
+            selectedProjection: .channel(2),
+            renderedProjection: .channel(1),
+            step: 9,
+            width: 1,
+            height: 1,
+            channelCount: 3,
+            channelData: readChannel
+        ))
+        let matterFrames = try XCTUnwrap(liveProjectionRefreshFrames(
+            matterData: [0.5],
+            selectedProjection: .matter,
+            renderedProjection: .channel(2),
+            step: 9,
+            width: 1,
+            height: 1,
+            channelCount: 3,
+            channelData: readChannel
+        ))
+
+        XCTAssertNil(unchangedFrames)
+        XCTAssertEqual(Set(changedFrames.keys), [.matter, .channel(2)])
+        XCTAssertEqual(try XCTUnwrap(changedFrames[.channel(2)]).bytes, Data([255]))
+        XCTAssertEqual(Set(matterFrames.keys), [.matter])
+        XCTAssertEqual(readChannels, [2])
+    }
+
     func testTTFrameSequenceLoadsRawFrames() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("tt-frame-sequence-\(UUID().uuidString)")

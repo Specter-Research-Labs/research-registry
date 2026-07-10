@@ -5595,7 +5595,17 @@ final class LeniaCoreTests: XCTestCase {
 
         let runner = FlowLeniaMetalFullStateRunner(config: config, kernels: kernels, batchCount: batchCount)
         runner.setState(mass: mass, params: paramMap)
-        let summary = runner.summarizeMass(occupancyThreshold: 0.05, includeGyration: true, channelWeights: weights)
+        let synchronizationCount = runner.massObservationSynchronizationCount
+        let observation = runner.observeMass(
+            occupancyThreshold: 0.05,
+            includeGyration: true,
+            channelWeights: weights,
+            materializeMap: true
+        )
+        let summary = observation.summary
+        let observedMassMap = observation.massMap!.asArray(Float.self)
+
+        XCTAssertEqual(runner.massObservationSynchronizationCount - synchronizationCount, 1)
 
         var expectedTotal = [Float](repeating: 0, count: batchCount)
         var expectedSumSquares = [Float](repeating: 0, count: batchCount)
@@ -5610,6 +5620,8 @@ final class LeniaCoreTests: XCTestCase {
                     let v0 = massValues[base]
                     let v2 = massValues[base + 2]
                     let reduced = v0 + v2
+                    let mapIndex = (batch * config.sx + x) * config.sy + y
+                    XCTAssertEqual(observedMassMap[mapIndex], reduced, accuracy: 1e-6)
                     expectedTotal[batch] += reduced
                     expectedSumSquares[batch] += reduced * reduced
                     expectedEnergy[batch] += v0 * v0 + v2 * v2
@@ -6116,14 +6128,89 @@ final class LeniaCoreTests: XCTestCase {
             steps: 6,
             params: makeSandboxMetalParityParams(),
             backend: .metalFull,
-            warmupRuns: 1
+            warmupRuns: 1,
+            observationStride: 1
         )
         XCTAssertGreaterThan(result.duration, 0.0)
         XCTAssertGreaterThan(result.seedsPerSecond, 0.0)
         XCTAssertGreaterThan(result.simStepsPerSecond, 0.0)
         XCTAssertGreaterThan(result.profile.totalMs, 0.0)
         XCTAssertGreaterThanOrEqual(result.profile.rolloutMs, 0.0)
+        XCTAssertGreaterThan(result.profile.combinedObservationMs, 0.0)
+        XCTAssertEqual(result.profile.massObservationSynchronizations, 5)
         XCTAssertGreaterThan(result.stageTimings?.totalMs ?? 0.0, 0.0)
+    }
+
+    func testSearchFinalObservedMassMapMatchesFreshTerminalMaterialization() throws {
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 48,
+            sy: 48,
+            channels: 1,
+            backend: .metalFull,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: true, mix: "avg", mix_seed: nil),
+            pUniform: UniformRange(low: 0.0, high: 1.0),
+            chemotaxis: nil
+        )
+        let searchConfig = SearchConfig(
+            steps: 4,
+            recordInterval: 1,
+            warmupSteps: 0,
+            occupancyThreshold: 0.05,
+            massChannel: 0,
+            scoreWeights: [:],
+            filters: [:],
+            complexity: nil,
+            activity: nil,
+            stability: nil,
+            kSurvival: nil,
+            moments: nil
+        )
+        let engine = SearchEngine(runtimeConfig: runtimeConfig)
+        let seeds = [17, 19]
+
+        let freshResults = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 23,
+            searchConfig: searchConfig
+        )
+        let freshProfile = try XCTUnwrap(engine.lastBatchProfile)
+        let observedResults = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 23,
+            searchConfig: searchConfig,
+            frameCapture: FrameCapture(stride: 1) { _, _, _, _ in }
+        )
+        let observedProfile = try XCTUnwrap(engine.lastBatchProfile)
+
+        XCTAssertEqual(observedProfile.massObservationSynchronizations + 1, freshProfile.massObservationSynchronizations)
+        XCTAssertEqual(observedResults.count, freshResults.count)
+        for (observed, fresh) in zip(observedResults, freshResults) {
+            let observedTerminal = observed.descriptorBundle.terminal
+            let freshTerminal = fresh.descriptorBundle.terminal
+
+            XCTAssertEqual(observed.seed, fresh.seed)
+            XCTAssertEqual(observed.initSeed, fresh.initSeed)
+            XCTAssertEqual(observedTerminal.fingerprintU8, freshTerminal.fingerprintU8)
+            XCTAssertEqual(observedTerminal.fingerprintHash12, freshTerminal.fingerprintHash12)
+            XCTAssertEqual(observedTerminal.finalMass, freshTerminal.finalMass, accuracy: 1e-6)
+            XCTAssertEqual(observedTerminal.finalOccupancy, freshTerminal.finalOccupancy, accuracy: 1e-6)
+            XCTAssertEqual(observedTerminal.finalGyration, freshTerminal.finalGyration, accuracy: 1e-6)
+            XCTAssertEqual(
+                try XCTUnwrap(observed.metrics.momentMass),
+                try XCTUnwrap(fresh.metrics.momentMass),
+                accuracy: 1e-6
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(observed.metrics.componentCount),
+                try XCTUnwrap(fresh.metrics.componentCount),
+                accuracy: 1e-6
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(observed.metrics.largestComponentFraction),
+                try XCTUnwrap(fresh.metrics.largestComponentFraction),
+                accuracy: 1e-6
+            )
+        }
     }
 
     func testEvolutionBenchmarkReportsPositiveThroughput() {

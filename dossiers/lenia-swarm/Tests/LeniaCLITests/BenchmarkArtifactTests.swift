@@ -38,7 +38,7 @@ final class BenchmarkArtifactTests: XCTestCase {
         setenv("SPECTER_ARTIFACT_ROOT", root.path, 1)
 
         let artifact = BenchmarkArtifactFile(
-            schemaVersion: 1,
+            schemaVersion: 2,
             generatedAt: benchmarkTimestampString(),
             host: "test-host",
             osVersion: "test-os",
@@ -49,6 +49,7 @@ final class BenchmarkArtifactTests: XCTestCase {
             steps: 10,
             warmupRuns: 1,
             repeatRuns: 3,
+            observationStride: 2,
             backends: [
                 BenchmarkBackendArtifact(
                     backend: "Metal Full",
@@ -72,7 +73,9 @@ final class BenchmarkArtifactTests: XCTestCase {
                         runnerSetupMs: 6,
                         rolloutMs: 7,
                         summaryReductionMs: 8,
+                        combinedObservationMs: 8.5,
                         materializationMs: 9,
+                        massObservationSynchronizations: 11,
                         postprocessMs: 10,
                         totalMs: 55
                     ),
@@ -103,9 +106,13 @@ final class BenchmarkArtifactTests: XCTestCase {
 
         let decoded = try JSONDecoder().decode(BenchmarkArtifactFile.self, from: Data(contentsOf: url))
         XCTAssertEqual(decoded.mode, "search")
+        XCTAssertEqual(decoded.schemaVersion, 2)
+        XCTAssertEqual(decoded.observationStride, 2)
         XCTAssertEqual(decoded.backends.count, 1)
         XCTAssertEqual(decoded.backends[0].backend, "Metal Full")
         let searchProfile = try XCTUnwrap(decoded.backends[0].searchProfileMedian)
         XCTAssertEqual(searchProfile.runnerSetupMs, 6, accuracy: 1e-6)
+        XCTAssertEqual(searchProfile.combinedObservationMs, 8.5, accuracy: 1e-6)
+        XCTAssertEqual(searchProfile.massObservationSynchronizations, 11)
     }
 }

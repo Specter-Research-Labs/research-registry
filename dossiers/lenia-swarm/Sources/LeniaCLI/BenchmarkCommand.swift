@@ -2,6 +2,8 @@ import ArgumentParser
 import Foundation
 import LeniaCore
 
+private let benchmarkArtifactSchemaVersion = 2
+
 struct BenchmarkCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "benchmark",
@@ -56,6 +58,9 @@ struct BenchmarkCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Timed samples per backend for search/evolution benchmark reporting")
     var repeatRuns: Int = 5
 
+    @Option(name: .long, help: "Frame-observation stride for search benchmarks; zero disables observation")
+    var searchObservationStride: Int = 0
+
     @Option(name: .long, help: "Backend filter for backend benchmarks: metal-full|all|mlx")
     var backend: String = "metal-full"
 
@@ -71,6 +76,12 @@ struct BenchmarkCommand: AsyncParsableCommand {
         }
         guard repeatRuns > 0 else {
             throw ValidationError("--repeat-runs must be > 0")
+        }
+        guard searchObservationStride >= 0 else {
+            throw ValidationError("--search-observation-stride must be >= 0")
+        }
+        guard search || searchObservationStride == 0 else {
+            throw ValidationError("--search-observation-stride requires --search")
         }
         guard metalWarmupSteps >= 0 else {
             throw ValidationError("--metal-warmup-steps must be >= 0")
@@ -114,6 +125,9 @@ struct BenchmarkCommand: AsyncParsableCommand {
         if search || evolution {
             print("Warmup runs: \(warmupRuns)")
             print("Repeat runs: \(repeatRuns)")
+        }
+        if search, searchObservationStride > 0 {
+            print("Search observation stride: \(searchObservationStride)")
         }
 
         let ranges = KernelParamRanges(
@@ -159,7 +173,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             if let output {
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -170,6 +184,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: nil,
                         repeatRuns: nil,
+                        observationStride: nil,
                         backends: results.map(benchmarkBackendArtifact)
                     ),
                     runID: artifactRunID,
@@ -227,7 +242,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             if let output {
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -238,6 +253,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: nil,
                         repeatRuns: nil,
+                        observationStride: nil,
                         backends: results.map(benchmarkBackendArtifact)
                     ),
                     runID: artifactRunID,
@@ -259,7 +275,8 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         params: params,
                         backend: backend,
-                        warmupRuns: warmupRuns
+                        warmupRuns: warmupRuns,
+                        observationStride: searchObservationStride > 0 ? searchObservationStride : nil
                     )
                 } throughput: { $0.seedsPerSecond } duration: { $0.duration }
             }
@@ -286,10 +303,12 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 print(
                     "      search profile median: rollout \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.rolloutMs }))) ms, " +
                         "summary \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.summaryReductionMs }))) ms, " +
+                        "combined-observation \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.combinedObservationMs }))) ms, " +
                         "materialization \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.materializationMs }))) ms, " +
                         "postprocess \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.postprocessMs }))) ms, " +
                         "total \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.totalMs }))) ms"
                 )
+                print("      mass-observation synchronizations: \(run.map { $0.profile.massObservationSynchronizations }.sorted()[run.count / 2])")
                 let stageSamples = run.compactMap(\.stageTimings)
                 if !stageSamples.isEmpty {
                     print(
@@ -319,7 +338,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 }
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -330,6 +349,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: warmupRuns,
                         repeatRuns: repeatRuns,
+                        observationStride: searchObservationStride > 0 ? searchObservationStride : nil,
                         backends: backends
                     ),
                     runID: artifactRunID,
@@ -408,7 +428,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 }
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -419,6 +439,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: warmupRuns,
                         repeatRuns: repeatRuns,
+                        observationStride: nil,
                         backends: backends
                     ),
                     runID: artifactRunID,
@@ -465,7 +486,9 @@ struct BenchmarkSearchProfileArtifact: Codable {
     let runnerSetupMs: Double
     let rolloutMs: Double
     let summaryReductionMs: Double
+    let combinedObservationMs: Double
     let materializationMs: Double
+    let massObservationSynchronizations: Int
     let postprocessMs: Double
     let totalMs: Double
 }
@@ -513,6 +536,7 @@ struct BenchmarkArtifactFile: Codable {
     let steps: Int
     let warmupRuns: Int?
     let repeatRuns: Int?
+    let observationStride: Int?
     let backends: [BenchmarkBackendArtifact]
 }
 
@@ -738,7 +762,9 @@ private func benchmarkSearchProfileArtifact(_ profile: SearchBatchProfile) -> Be
         runnerSetupMs: profile.runnerSetupMs,
         rolloutMs: profile.rolloutMs,
         summaryReductionMs: profile.summaryReductionMs,
+        combinedObservationMs: profile.combinedObservationMs,
         materializationMs: profile.materializationMs,
+        massObservationSynchronizations: profile.massObservationSynchronizations,
         postprocessMs: profile.postprocessMs,
         totalMs: profile.totalMs
     )
@@ -836,7 +862,9 @@ private func searchProfileMedianArtifact(
         runnerSetupMs: stats.derivedMedian(samples.map { $0.profile.runnerSetupMs }),
         rolloutMs: stats.derivedMedian(samples.map { $0.profile.rolloutMs }),
         summaryReductionMs: stats.derivedMedian(samples.map { $0.profile.summaryReductionMs }),
+        combinedObservationMs: stats.derivedMedian(samples.map { $0.profile.combinedObservationMs }),
         materializationMs: stats.derivedMedian(samples.map { $0.profile.materializationMs }),
+        massObservationSynchronizations: samples.map { $0.profile.massObservationSynchronizations }.sorted()[samples.count / 2],
         postprocessMs: stats.derivedMedian(samples.map { $0.profile.postprocessMs }),
         totalMs: stats.derivedMedian(samples.map { $0.profile.totalMs })
     )

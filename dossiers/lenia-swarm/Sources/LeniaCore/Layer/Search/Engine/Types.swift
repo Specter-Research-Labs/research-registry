@@ -119,7 +119,9 @@ public struct SearchBatchProfile: Sendable {
     public let runnerSetupMs: Double
     public let rolloutMs: Double
     public let summaryReductionMs: Double
+    public let combinedObservationMs: Double
     public let materializationMs: Double
+    public let massObservationSynchronizations: Int
     public let postprocessMs: Double
     public let totalMs: Double
 
@@ -132,7 +134,9 @@ public struct SearchBatchProfile: Sendable {
         runnerSetupMs: Double,
         rolloutMs: Double,
         summaryReductionMs: Double,
+        combinedObservationMs: Double,
         materializationMs: Double,
+        massObservationSynchronizations: Int,
         postprocessMs: Double,
         totalMs: Double
     ) {
@@ -144,7 +148,9 @@ public struct SearchBatchProfile: Sendable {
         self.runnerSetupMs = runnerSetupMs
         self.rolloutMs = rolloutMs
         self.summaryReductionMs = summaryReductionMs
+        self.combinedObservationMs = combinedObservationMs
         self.materializationMs = materializationMs
+        self.massObservationSynchronizations = massObservationSynchronizations
         self.postprocessMs = postprocessMs
         self.totalMs = totalMs
     }

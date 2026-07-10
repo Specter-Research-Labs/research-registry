@@ -609,6 +609,8 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
             var displayFps: Double = 0
             var metricComputer = MetricComputer()
             let targetFrameInterval: Duration = .milliseconds(33)
+            var latestMatterData: [Float]?
+            var renderedProjection: LiveFieldProjection = .matter
 
             func updateDisplayFps(step: Int) {
                 let now = Date()
@@ -654,6 +656,25 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                 while !Task.isCancelled {
                     let paused = await self?.pausedValue() ?? false
                     if paused {
+                        let selectedProjection = await self?.currentProjectionValue() ?? .matter
+                        if let latestMatterData,
+                           let frames = liveProjectionRefreshFrames(
+                               matterData: latestMatterData,
+                               selectedProjection: selectedProjection,
+                               renderedProjection: renderedProjection,
+                               step: state.step,
+                               width: runtimeConfig.sx,
+                               height: runtimeConfig.sy,
+                               channelCount: runtimeConfig.channels,
+                               channelData: { channel in
+                                   let channelMap = runtime.channelMap(for: state, channel: channel)
+                                   eval(channelMap)
+                                   return channelMap.asArray(Float.self)
+                               }
+                           ) {
+                            await self?.applyProjectionFrames(frames)
+                            renderedProjection = selectedProjection
+                        }
                         try? await Task.sleep(for: .milliseconds(100))
                         continue
                     }
@@ -669,11 +690,21 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                         width: runtimeConfig.sx,
                         height: runtimeConfig.sy
                     )
+                    let selectedProjection = await self?.currentProjectionValue() ?? .matter
                     let frames = liveProjectionFrames(
                         matterData: matterData,
-                        runtime: runtime,
-                        state: state
-                    )
+                        selectedProjection: selectedProjection,
+                        step: state.step,
+                        width: runtimeConfig.sx,
+                        height: runtimeConfig.sy,
+                        channelCount: runtimeConfig.channels
+                    ) { channel in
+                        let channelMap = runtime.channelMap(for: state, channel: channel)
+                        eval(channelMap)
+                        return channelMap.asArray(Float.self)
+                    }
+                    latestMatterData = matterData
+                    renderedProjection = selectedProjection
 
                     var diagnosticImages: DiagnosticImageSet?
                     var diagnosticTelemetry: DiagnosticTelemetry?
@@ -733,6 +764,10 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         diagnosticsEnabled
     }
 
+    private func currentProjectionValue() -> LiveFieldProjection {
+        currentProjection
+    }
+
     private func applyFrame(
         _ frames: [LiveFieldProjection: LeniaFieldFrame],
         projections: [LiveFieldProjection],
@@ -743,10 +778,9 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         diagnostics: DiagnosticImageSet?,
         telemetry: DiagnosticTelemetry?
     ) {
-        projectionFrames = frames
+        applyProjectionFrames(frames)
         availableProjections = projections
         self.runtimeLabel = runtimeLabel
-        displayFrame = frames[currentProjection] ?? frames[.matter]
         stepCount = step
         self.displayFps = displayFps
         latestSample = sample
@@ -760,6 +794,11 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         }
     }
 
+    private func applyProjectionFrames(_ frames: [LiveFieldProjection: LeniaFieldFrame]) {
+        projectionFrames = frames
+        displayFrame = frames[currentProjection] ?? frames[.matter]
+    }
+
     private func applyFailure(_ message: String) {
         displayFrame = nil
         projectionFrames = [:]
@@ -769,44 +808,69 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
     }
 }
 
-private func liveProjectionOptions(channelCount: Int) -> [LiveFieldProjection] {
+func liveProjectionOptions(channelCount: Int) -> [LiveFieldProjection] {
     guard channelCount > 1 else {
         return [.matter]
     }
     return [.matter] + (0..<channelCount).map(LiveFieldProjection.channel)
 }
 
-private func liveProjectionFrames(
+func liveProjectionFrames(
     matterData: [Float],
-    runtime: FlowLeniaInteractiveSimulator,
-    state: FlowLeniaInteractiveState
+    selectedProjection: LiveFieldProjection,
+    step: Int,
+    width: Int,
+    height: Int,
+    channelCount: Int,
+    channelData: (Int) -> [Float]
 ) -> [LiveFieldProjection: LeniaFieldFrame] {
     var frames: [LiveFieldProjection: LeniaFieldFrame] = [
         .matter: LeniaFieldFrame(
-            step: state.step,
-            width: runtime.runtimeConfig.sx,
-            height: runtime.runtimeConfig.sy,
+            step: step,
+            width: width,
+            height: height,
             bytes: liveFieldBytes(from: matterData)
         )
     ]
 
-    guard runtime.runtimeConfig.channels > 1 else {
+    guard case .channel(let channel) = selectedProjection,
+          channel >= 0,
+          channel < channelCount else {
         return frames
     }
 
-    for channel in 0..<runtime.runtimeConfig.channels {
-        let channelMap = runtime.channelMap(for: state, channel: channel)
-        eval(channelMap)
-        let channelData = channelMap.asArray(Float.self)
-        frames[.channel(channel)] = LeniaFieldFrame(
-            step: state.step,
-            width: runtime.runtimeConfig.sx,
-            height: runtime.runtimeConfig.sy,
-            bytes: liveFieldBytes(from: channelData)
-        )
-    }
+    frames[selectedProjection] = LeniaFieldFrame(
+        step: step,
+        width: width,
+        height: height,
+        bytes: liveFieldBytes(from: channelData(channel))
+    )
 
     return frames
+}
+
+func liveProjectionRefreshFrames(
+    matterData: [Float],
+    selectedProjection: LiveFieldProjection,
+    renderedProjection: LiveFieldProjection,
+    step: Int,
+    width: Int,
+    height: Int,
+    channelCount: Int,
+    channelData: (Int) -> [Float]
+) -> [LiveFieldProjection: LeniaFieldFrame]? {
+    guard selectedProjection != renderedProjection else {
+        return nil
+    }
+    return liveProjectionFrames(
+        matterData: matterData,
+        selectedProjection: selectedProjection,
+        step: step,
+        width: width,
+        height: height,
+        channelCount: channelCount,
+        channelData: channelData
+    )
 }
 
 private func liveFieldBytes(from values: [Float]) -> Data {

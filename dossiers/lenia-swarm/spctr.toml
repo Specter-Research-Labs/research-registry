@@ -43,12 +43,14 @@ project = "lenia-swarm"
 default_surface = "lenia-compendium"
 
 [spctr.exec.check]
-description = "Fast public CLI surface test lane"
+description = "Full Swift test and release-build lane"
 commands = [
     ["swift", "package", "resolve"],
-    ["swift", "test", "--filter", "CLISurfaceTests"],
+    ["swift", "test"],
+    ["swift", "build", "-c", "release", "--product", "LeniaCLI"],
+    ["swift", "build", "-c", "release", "--product", "LeniaStudio"],
 ]
-timeout_sec = 900
+timeout_sec = 2400
 network = "bootstrap"
 requires = ["swift"]
 
@@ -73,18 +75,88 @@ requires = ["swift", "xcodebuild", "cmake"]
 [spctr.exec.build]
 description = "Release LeniaCLI build via Xcode"
 command = ["bash", "-lc", '''set -euo pipefail
-swift package resolve
-/usr/bin/xcrun xcodebuild build \
-  -scheme LeniaCLI \
-  -destination 'platform=OS X' \
-  -configuration Release \
-  -derivedDataPath artifacts/build/DerivedData \
-  -quiet
+if [[ ${SPECTER_RUNTIME_ROOT+x} == x ]]; then
+  if [[ -z "$SPECTER_RUNTIME_ROOT" ]]; then
+    echo "SPECTER_RUNTIME_ROOT is set but empty" >&2
+    exit 1
+  fi
+  runtime_dir="${SPECTER_RUNTIME_ROOT%/}/lenia-swarm/xcode-build"
+else
+  runtime_dir="$PWD/tmp/xcode-build"
+fi
+
+for required_path in Package.swift Package.resolved Sources; do
+  if [[ ! -e "$required_path" ]]; then
+    echo "missing required Xcode staging input: $required_path" >&2
+    exit 1
+  fi
+done
+
+mkdir -p "$runtime_dir"
+exec 9>"$runtime_dir/build.lock"
+if ! /usr/bin/lockf -s -t 600 9; then
+  echo "timed out waiting for Lenia Xcode build lock: $runtime_dir/build.lock" >&2
+  exit 75
+fi
+
+stage_dir="$runtime_dir/source"
+mkdir -p "$stage_dir"
+rsync -a --delete --delete-excluded \
+  --include='/Package.swift' \
+  --include='/Package.resolved' \
+  --include='/Sources/***' \
+  --exclude='*' \
+  ./ "$stage_dir/"
+mkdir -p \
+  "$stage_dir/Tests/LeniaCoreTests" \
+  "$stage_dir/Tests/LeniaCLITests" \
+  "$stage_dir/Tests/LeniaStudioTests"
+
+derived_data="$runtime_dir/DerivedData"
+(
+  cd "$stage_dir"
+  /usr/bin/xcrun xcodebuild build \
+    -scheme LeniaCLI \
+    -destination 'platform=macOS,arch=arm64' \
+    -configuration Release \
+    -derivedDataPath "$derived_data" \
+    -quiet
+)
+
+product_dir="$derived_data/Build/Products/Release"
+output_dir="$PWD/artifacts/build/release"
+mkdir -p "$output_dir"
+rsync -a --delete --delete-excluded \
+  --include='/LeniaCLI' \
+  --include='/*.metallib' \
+  --include='/*.bundle/***' \
+  --exclude='*' \
+  "$product_dir/" "$output_dir/"
+
+for runtime_path in \
+  LeniaCLI \
+  mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib \
+  LeniaSwarm_LeniaVisuals.bundle/Contents/Resources/LeniaShaders.metallib; do
+  if [[ ! -e "$output_dir/$runtime_path" ]]; then
+    echo "missing staged LeniaCLI runtime artifact: $runtime_path" >&2
+    exit 1
+  fi
+done
+"$output_dir/LeniaCLI" --help >/dev/null
+
+archive="$PWD/artifacts/build/LeniaCLI-macos-arm64.tar.gz"
+tar -czf "$archive" -C "$output_dir" .
+verify_dir="$runtime_dir/archive-check"
+rm -rf "$verify_dir"
+mkdir -p "$verify_dir"
+tar -xzf "$archive" -C "$verify_dir"
+"$verify_dir/LeniaCLI" --help >/dev/null
+rm -rf "$verify_dir"
 ''']
-expected_outputs = ["lenia-cli-release"]
+expected_outputs = ["lenia-cli-release-archive"]
 timeout_sec = 2400
 network = "bootstrap"
-requires = ["swift", "xcodebuild"]
+requires = ["swift", "xcodebuild", "rsync", "tar", "lockf"]
 
 [spctr.exec.publish]
 description = "Canonical source bundle publish proof path"
@@ -100,12 +172,12 @@ requires = ["tar"]
 platforms = ["macos"]
 requires = ["swift"]
 network = "bootstrap"
-cache_paths = [".build", ".swiftpm", ".venv", ".ruff_cache", ".pytest_cache", "artifacts/build/DerivedData"]
+cache_paths = [".build", ".swiftpm", ".venv", ".ruff_cache", ".pytest_cache", "tmp/xcode-build/DerivedData"]
 
 [spctr.ci]
 runner = "macos-latest"
 pull_request = ["check"]
-push_main = []
+push_main = ["check"]
 nightly = []
 
 [spctr.evidence]
@@ -124,9 +196,9 @@ kind = "jsonl"
 required = true
 
 [[spctr.expected_outputs]]
-name = "lenia-cli-release"
-path = "artifacts/build/DerivedData/Build/Products/Release/LeniaCLI"
-kind = "macos_binary"
+name = "lenia-cli-release-archive"
+path = "artifacts/build/LeniaCLI-macos-arm64.tar.gz"
+kind = "macos_release_archive"
 required = true
 surface = "swift"
 
