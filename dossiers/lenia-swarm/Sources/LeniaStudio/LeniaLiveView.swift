@@ -113,6 +113,7 @@ struct LeniaLiveView: View {
                         renderMode: renderMode,
                         zoom: zoom,
                         offset: stageOffset,
+                        scrollPolicy: .transformCanvas,
                         onTransformChange: { transform in
                             zoom = transform.zoom
                             stageOffset = transform.offset
@@ -302,27 +303,140 @@ struct LeniaLiveView: View {
     }
 
     private var controlBar: some View {
-        HStack(spacing: 12) {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                playbackControls
+                projectionPicker(compact: false)
+                displayModePicker(compact: false)
+                optionToggles(compact: false)
+                Spacer(minLength: 8)
+                statusReadout
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    playbackControls
+                    Spacer(minLength: 8)
+                    optionToggles(compact: true)
+                }
+
+                HStack(spacing: 8) {
+                    projectionPicker(compact: true)
+                    displayModePicker(compact: true)
+                }
+
+                statusReadout
+            }
+        }
+        .controlSize(.small)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    private var playbackControls: some View {
+        HStack(spacing: 6) {
+            Button {
+                simulationModel.stepBackward()
+            } label: {
+                Image(systemName: "backward.frame.fill")
+                    .frame(width: 14)
+            }
+            .buttonStyle(.bordered)
+            .disabled(!simulationModel.canStepBackward)
+            .help("Previous frame")
+
             Button(action: { simulationModel.togglePause() }) {
-                Label(
-                    simulationModel.isPaused ? "Play" : "Pause",
-                    systemImage: simulationModel.isPaused ? "play.fill" : "pause.fill"
-                )
+                Image(systemName: simulationModel.isPaused ? "play.fill" : "pause.fill")
+                    .frame(width: 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(simulationModel.frameCount < 2)
+            .help(simulationModel.isPaused ? "Play" : "Pause")
+            .accessibilityLabel(simulationModel.isPaused ? "Play" : "Pause")
+
+            Button {
+                simulationModel.stepForward()
+            } label: {
+                Image(systemName: "forward.frame.fill")
+                    .frame(width: 14)
             }
             .buttonStyle(.bordered)
+            .disabled(!simulationModel.canStepForward)
+            .help("Next frame")
 
-            Button(action: {
-                simulationModel.restart(
-                    creature: creature,
-                    savedCreature: savedCreature,
-                    replaySource: replaySource
-                )
-            }) {
-                Label("Reset", systemImage: "arrow.counterclockwise")
+            Button {
+                simulationModel.resetPlayback()
+            } label: {
+                Image(systemName: "arrow.counterclockwise")
+                    .frame(width: 14)
             }
             .buttonStyle(.bordered)
+            .disabled(simulationModel.frameCount == 0 || simulationModel.currentFrameIndex == 0)
+            .help("Return to first frame")
 
-            if simulationModel.availableProjections.count > 1 {
+            Slider(
+                value: Binding(
+                    get: { simulationModel.playbackProgress },
+                    set: { value in simulationModel.seek(toProgress: value) }
+                ),
+                in: 0...1
+            )
+            .frame(minWidth: 110, idealWidth: 190, maxWidth: 260)
+            .disabled(simulationModel.frameCount < 2)
+            .accessibilityLabel("Observation timeline")
+
+            Text(simulationModel.frameCount > 0
+                ? "\(simulationModel.currentFrameIndex + 1)/\(simulationModel.frameCount)"
+                : "--/--")
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.mutedInk)
+                .monospacedDigit()
+                .frame(minWidth: 54, alignment: .trailing)
+
+            Menu {
+                ForEach([0.25, 0.5, 1, 2, 4], id: \.self) { rate in
+                    Button {
+                        simulationModel.setPlaybackRate(rate)
+                    } label: {
+                        if simulationModel.playbackRate == rate {
+                            Label(formatPlaybackRate(rate), systemImage: "checkmark")
+                        } else {
+                            Text(formatPlaybackRate(rate))
+                        }
+                    }
+                }
+            } label: {
+                Text(formatPlaybackRate(simulationModel.playbackRate))
+                    .monospacedDigit()
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("Playback rate")
+
+            Toggle(isOn: Binding(
+                get: { simulationModel.isLooping },
+                set: { looping in simulationModel.setLooping(looping) }
+            )) {
+                Image(systemName: "repeat")
+            }
+            .toggleStyle(.button)
+            .help("Loop observation")
+        }
+    }
+
+    @ViewBuilder
+    private func projectionPicker(compact: Bool) -> some View {
+        if simulationModel.availableProjections.count > 1 {
+            if compact {
+                Picker("Field", selection: $fieldProjection) {
+                    ForEach(simulationModel.availableProjections) { projection in
+                        Text(projection.label).tag(projection)
+                    }
+                }
+                .pickerStyle(.menu)
+                .fixedSize()
+            } else {
                 Picker("Projection", selection: $fieldProjection) {
                     ForEach(simulationModel.availableProjections) { projection in
                         Text(projection.label).tag(projection)
@@ -331,51 +445,78 @@ struct LeniaLiveView: View {
                 .pickerStyle(.segmented)
                 .frame(width: min(CGFloat(simulationModel.availableProjections.count) * 110, 420))
             }
+        }
+    }
 
+    @ViewBuilder
+    private func displayModePicker(compact: Bool) -> some View {
+        if compact {
             Picker("View", selection: $displayMode) {
                 ForEach(LiveDisplayMode.allCases) { mode in
                     Text(mode.rawValue).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: .infinity)
+        } else {
+            Picker("View", selection: $displayMode) {
+                ForEach(LiveDisplayMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(width: 220)
+        }
+    }
 
+    private func optionToggles(compact: Bool) -> some View {
+        HStack(spacing: 6) {
             Toggle(isOn: $useFluidVisuals) {
-                Label("Fluid", systemImage: "drop.fill")
+                if compact {
+                    Image(systemName: "drop.fill")
+                } else {
+                    Label("Fluid", systemImage: "drop.fill")
+                }
             }
             .toggleStyle(.button)
+            .help("Fluid interpolation")
+            .accessibilityLabel("Fluid interpolation")
 
             if displayMode == .render {
                 Toggle(isOn: $showCharts) {
-                    Label("Charts", systemImage: "chart.xyaxis.line")
+                    if compact {
+                        Image(systemName: "chart.xyaxis.line")
+                    } else {
+                        Label("Charts", systemImage: "chart.xyaxis.line")
+                    }
                 }
                 .toggleStyle(.button)
+                .help("Metric charts")
+                .accessibilityLabel("Metric charts")
             }
+        }
+    }
 
-            Spacer()
-
+    private var statusReadout: some View {
+        HStack(spacing: 8) {
             if simulationModel.runtimeLabel != "Synthetic preview" {
                 Text(simulationModel.runtimeLabel)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             if displayMode == .render, zoom > 1.01 {
                 Text(String(format: "%.1fx", zoom))
                     .monospacedDigit()
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             Text(simulationModel.stats)
                 .monospacedDigit()
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
-        .controlSize(.small)
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(.bar)
+        .font(StudioType.dataSmall)
+        .foregroundStyle(StudioPalette.mutedInk)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
     }
 
     private func handleKey(_ press: KeyPress) -> KeyPress.Result {
@@ -384,7 +525,16 @@ struct LeniaLiveView: View {
             simulationModel.togglePause()
             return .handled
         case "r":
-            simulationModel.restart(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
+            simulationModel.resetPlayback()
+            return .handled
+        case "[":
+            simulationModel.stepBackward()
+            return .handled
+        case "]":
+            simulationModel.stepForward()
+            return .handled
+        case "l":
+            simulationModel.setLooping(!simulationModel.isLooping)
             return .handled
         case "d":
             displayMode = displayMode == .render ? .diagnostics : .render
@@ -435,6 +585,12 @@ struct DiagnosticTelemetry: Sendable {
     let neighborMean: Float
     let kernelPeak: Float
     let kernelCount: Int
+}
+
+private struct LiveDiagnosticsRecipe: @unchecked Sendable {
+    let runtimeConfig: LeniaRuntimeConfig
+    let totalSteps: Int
+    let stepStride: Int
 }
 
 struct MetricSample: Sendable {
@@ -516,34 +672,153 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
     @Published var diagnosticTelemetry: DiagnosticTelemetry?
     @Published var latestSample: MetricSample?
     @Published var stats = "Initializing..."
-    @Published var isPaused = false
+    @Published var isPaused = true
     @Published var metricHistory = MetricHistory()
     @Published var stepCount = 0
     @Published var displayFps = 0.0
     @Published var availableProjections: [LabFieldProjection] = [.matter]
     @Published var runtimeLabel = "Synthetic preview"
+    @Published var currentFrameIndex = 0
+    @Published var frameCount = 0
+    @Published var playbackRate = 1.0
+    @Published var isLooping = true
+    @Published var captureProgress = 0.0
 
-    private var task: Task<Void, Never>?
+    private var captureTask: Task<Void, Never>?
+    private var diagnosticsTask: Task<Void, Never>?
+    private var playbackTask: Task<Void, Never>?
     private let gridSize = 128
-    private let diagnosticCadence = 4
-    private var diagnosticsEnabled = false
     private var currentProjection: LabFieldProjection = .matter
+    private var projectionClips: [LabFieldProjection: StudioObservationClip] = [:]
+    private var samples: [MetricSample] = []
+    private var diagnosticFrames: [Int: DiagnosticImageSet] = [:]
+    private var diagnosticTelemetryFrames: [Int: DiagnosticTelemetry] = [:]
+    private var playback: StudioObservationPlayback?
+    private var diagnosticsRecipe: LiveDiagnosticsRecipe?
+    private var diagnosticsEnabled = false
+    private var diagnosticsCaptureComplete = false
+    private var sessionGeneration = 0
+    private var lastSyncedFrameIndex = -1
+
+    var playbackProgress: Double {
+        playback?.progress ?? 0
+    }
+
+    var canStepBackward: Bool {
+        playback?.canStepBackward == true
+    }
+
+    var canStepForward: Bool {
+        playback?.canStepForward == true
+    }
+
+    var isDiagnosticsCaptureActive: Bool {
+        diagnosticsTask != nil
+    }
+
+    var isDiagnosticsCaptureComplete: Bool {
+        diagnosticsCaptureComplete
+    }
 
     func togglePause() {
-        isPaused.toggle()
+        guard let playback else { return }
+        do {
+            try playback.togglePlayback()
+            syncPlaybackState()
+        } catch {
+            stats = error.localizedDescription
+        }
+    }
+
+    func setPaused(_ paused: Bool) {
+        guard let playback else { return }
+        if paused {
+            playback.pause()
+        } else {
+            try? playback.play()
+        }
+        syncPlaybackState()
     }
 
     func setDiagnosticsEnabled(_ enabled: Bool) {
+        guard diagnosticsEnabled != enabled else { return }
         diagnosticsEnabled = enabled
+        if enabled {
+            startDiagnosticsCaptureIfNeeded()
+        } else {
+            diagnosticsTask?.cancel()
+        }
     }
 
     func setFieldProjection(_ projection: LabFieldProjection) {
         currentProjection = projection
+        syncPlaybackFrame()
+    }
+
+    func seek(toProgress progress: Double) {
+        do {
+            try playback?.seek(toProgress: progress)
+            syncPlaybackState()
+        } catch {
+            stats = error.localizedDescription
+        }
+    }
+
+    func stepBackward() {
+        do {
+            try playback?.stepBackward()
+            syncPlaybackState()
+        } catch {
+            stats = error.localizedDescription
+        }
+    }
+
+    func stepForward() {
+        do {
+            try playback?.stepForward()
+            syncPlaybackState()
+        } catch {
+            stats = error.localizedDescription
+        }
+    }
+
+    func resetPlayback() {
+        do {
+            playback?.pause()
+            try playback?.seek(to: 0)
+            syncPlaybackState()
+        } catch {
+            stats = error.localizedDescription
+        }
+    }
+
+    func setPlaybackRate(_ rate: Double) {
+        do {
+            try playback?.setPlaybackRate(rate)
+            playbackRate = rate
+            syncPlaybackState()
+        } catch {
+            stats = error.localizedDescription
+        }
+    }
+
+    func setLooping(_ looping: Bool) {
+        playback?.setLooping(looping)
+        isLooping = looping
+        syncPlaybackState()
     }
 
     func stop() {
-        task?.cancel()
-        task = nil
+        sessionGeneration &+= 1
+        captureTask?.cancel()
+        captureTask = nil
+        diagnosticsTask?.cancel()
+        diagnosticsTask = nil
+        playbackTask?.cancel()
+        playbackTask = nil
+        playback = nil
+        diagnosticsRecipe = nil
+        diagnosticsCaptureComplete = false
     }
 
     func restart(
@@ -557,11 +832,22 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         diagnosticTelemetry = nil
         latestSample = nil
         stats = "Initializing..."
+        isPaused = true
         metricHistory = MetricHistory()
         stepCount = 0
         displayFps = 0
         availableProjections = [.matter]
         runtimeLabel = replaySource == nil ? "Synthetic preview" : "Loading replay"
+        currentFrameIndex = 0
+        frameCount = 0
+        playbackRate = 1
+        isLooping = true
+        captureProgress = 0
+        lastSyncedFrameIndex = -1
+        projectionClips = [:]
+        samples = []
+        diagnosticFrames = [:]
+        diagnosticTelemetryFrames = [:]
         start(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
     }
 
@@ -571,37 +857,15 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         replaySource: StudioReplayReference? = nil
     ) {
         stop()
+        let generation = sessionGeneration
 
         let gridSize = self.gridSize
-        let diagnosticCadence = self.diagnosticCadence
-
-        task = Task.detached(priority: .userInitiated) { [weak self] in
-            let renderer = LeniaRenderer()
-            let fpsBufferSize = 30
-            var fpsTimestamps = [Date]()
-            fpsTimestamps.reserveCapacity(fpsBufferSize)
-            var displayFps: Double = 0
+        captureTask = Task.detached(priority: .userInitiated) { [weak self] in
             var metricComputer = MetricComputer()
-            let targetFrameInterval: Duration = .milliseconds(33)
-            var latestMatterData: [Float]?
-            var renderedProjection: LabFieldProjection = .matter
-
-            func updateDisplayFps(step: Int) {
-                let now = Date()
-                fpsTimestamps.append(now)
-                if fpsTimestamps.count > fpsBufferSize {
-                    fpsTimestamps.removeFirst()
-                }
-
-                if step % 10 == 0, fpsTimestamps.count >= 2 {
-                    let span = fpsTimestamps.last!.timeIntervalSince(fpsTimestamps.first!)
-                    if span > 0 {
-                        displayFps = Double(fpsTimestamps.count - 1) / span
-                    }
-                }
-            }
 
             do {
+                try await Task.sleep(for: .milliseconds(75))
+                try Task.checkCancellation()
                 let runtimeConfig: LeniaRuntimeConfig
                 let runtimeLabelPrefix: String
                 if let replaySource {
@@ -622,164 +886,278 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                     runtimeLabelPrefix = savedCreature == nil ? "Synthetic preview" : "Saved runtime"
                 }
 
+                try Task.checkCancellation()
                 let runtime = FlowLeniaInteractiveSimulator(runtimeConfig: runtimeConfig)
+                try Task.checkCancellation()
                 var state = runtime.makeInitialState()
-                let runtimeLabel = "\(runtimeLabelPrefix) · \(runtimeConfig.channels)c · \(runtimeConfig.nbK)k"
+                try Task.checkCancellation()
                 let projections = LabFieldProjection.options(channelCount: runtimeConfig.channels)
+                let totalSteps = min(480, max(240, runtimeConfig.steps / 4))
+                let targetFrameCount = 60
+                let stepStride = max(1, Int(ceil(Double(totalSteps) / Double(targetFrameCount - 1))))
+                let excludedMassChannels = flowExcludedMassChannels(
+                    channels: runtimeConfig.channels,
+                    chemotaxis: runtimeConfig.chemotaxis,
+                    food: runtimeConfig.food
+                )
+                var framesByProjection = Dictionary(
+                    uniqueKeysWithValues: projections.map { ($0, [LeniaFieldFrame]()) }
+                )
+                var capturedSamples: [MetricSample] = []
+                var frameIndex = 0
 
-                while !Task.isCancelled {
-                    let paused = await self?.pausedValue() ?? false
-                    if paused {
-                        let selectedProjection = await self?.currentProjectionValue() ?? .matter
-                        if let latestMatterData,
-                           selectedProjection != renderedProjection {
-                            let frame = liveProjectionFrame(
-                                matterData: latestMatterData,
-                                selectedProjection: selectedProjection,
-                                step: state.step,
-                                width: runtimeConfig.sx,
-                                height: runtimeConfig.sy,
-                                channelCount: runtimeConfig.channels,
-                                channelData: { channel in
-                                    let channelMap = runtime.channelMap(for: state, channel: channel)
-                                    eval(channelMap)
-                                    return channelMap.asArray(Float.self)
-                                }
-                            )
-                            await self?.applyDisplayFrame(frame, projection: selectedProjection)
-                            renderedProjection = selectedProjection
-                        }
-                        try? await Task.sleep(for: .milliseconds(100))
-                        continue
-                    }
-
-                    let frameStart = ContinuousClock.now
-                    state = runtime.step(state)
-
-                    let matterMap = runtime.matterMap(for: state).contiguous()
-                    eval(matterMap)
-                    let matterData = matterMap.asArray(Float.self)
+                while state.step <= totalSteps, !Task.isCancelled {
+                    let mass = state.mass.contiguous()
+                    eval(mass)
+                    let projectionSnapshot = liveProjectionFrames(
+                        massData: mass.asArray(Float.self),
+                        width: runtimeConfig.sx,
+                        height: runtimeConfig.sy,
+                        channels: runtimeConfig.channels,
+                        excludedMassChannels: excludedMassChannels,
+                        step: state.step
+                    )
                     let sample = metricComputer.compute(
-                        data: matterData,
+                        data: projectionSnapshot.matterData,
                         width: runtimeConfig.sx,
                         height: runtimeConfig.sy
                     )
-                    let selectedProjection = await self?.currentProjectionValue() ?? .matter
-                    let frame = liveProjectionFrame(
-                        matterData: matterData,
-                        selectedProjection: selectedProjection,
-                        step: state.step,
-                        width: runtimeConfig.sx,
-                        height: runtimeConfig.sy,
-                        channelCount: runtimeConfig.channels
-                    ) { channel in
-                        let channelMap = runtime.channelMap(for: state, channel: channel)
-                        eval(channelMap)
-                        return channelMap.asArray(Float.self)
+                    let frames = projectionSnapshot.frames
+                    for projection in projections {
+                        if let frame = frames[projection] {
+                            framesByProjection[projection, default: []].append(frame)
+                        }
                     }
-                    latestMatterData = matterData
-                    renderedProjection = selectedProjection
+                    capturedSamples.append(sample)
 
-                    var diagnosticImages: DiagnosticImageSet?
-                    var diagnosticTelemetry: DiagnosticTelemetry?
-                    let diagnosticsEnabled = await self?.diagnosticsEnabledValue() ?? false
-                    if diagnosticsEnabled && (state.step == 1 || state.step % diagnosticCadence == 0) {
-                        let diagnostics = runtime.diagnostics(for: state)
-                        let neighborImage = renderer.renderToImage(mass: diagnostics.neighborSum)
-                        let growthImage = renderer.renderToSignedImage(field: diagnostics.growthField)
-                        let kernelImage = renderer.renderToImage(mass: diagnostics.kernel)
-
-                        let neighborData = diagnostics.neighborSum.asArray(Float.self)
-                        let growthData = diagnostics.growthField.asArray(Float.self)
-                        let kernelData = diagnostics.kernel.asArray(Float.self)
-
-                        diagnosticImages = DiagnosticImageSet(
-                            field: nil,
-                            neighborSum: neighborImage,
-                            growthField: growthImage,
-                            kernel: kernelImage
-                        )
-                        diagnosticTelemetry = DiagnosticTelemetry(
-                            growthMean: mean(growthData),
-                            neighborMean: mean(neighborData),
-                            kernelPeak: kernelData.max() ?? 0,
-                            kernelCount: diagnostics.kernelCount
+                    frameIndex += 1
+                    if frameIndex == 1 || frameIndex % 10 == 0 {
+                        await self?.applyCaptureProgress(
+                            frame: frames[.matter],
+                            progress: min(1, Double(state.step) / Double(totalSteps)),
+                            generation: generation
                         )
                     }
-
-                    updateDisplayFps(step: state.step)
-
-                    await self?.applyFrame(
-                        frame,
-                        projection: selectedProjection,
-                        projections: projections,
-                        runtimeLabel: runtimeLabel,
-                        step: state.step,
-                        displayFps: displayFps,
-                        sample: sample,
-                        diagnostics: diagnosticImages,
-                        telemetry: diagnosticTelemetry
-                    )
-
-                    let elapsed = ContinuousClock.now - frameStart
-                    let remaining = targetFrameInterval - elapsed
-                    if remaining > .zero { try? await Task.sleep(for: remaining) }
+                    guard state.step < totalSteps else { break }
+                    state = runtime.step(state, count: min(stepStride, totalSteps - state.step))
                 }
+
+                try Task.checkCancellation()
+                let clips = try Dictionary(uniqueKeysWithValues: framesByProjection.map { projection, frames in
+                    (projection, try StudioObservationClip(frames: frames, nominalFramesPerSecond: 20))
+                })
+                let runtimeLabel = "\(runtimeLabelPrefix) · \(runtime.effectiveBackend.displayName) · \(runtimeConfig.channels)c/\(runtimeConfig.nbK)k"
+                await self?.installCapture(
+                    clips: clips,
+                    samples: capturedSamples,
+                    runtimeLabel: runtimeLabel,
+                    diagnosticsRecipe: LiveDiagnosticsRecipe(
+                        runtimeConfig: runtimeConfig,
+                        totalSteps: totalSteps,
+                        stepStride: stepStride
+                    ),
+                    generation: generation
+                )
             } catch {
-                await self?.applyFailure("Runtime load failed: \(error.localizedDescription)")
+                await self?.applyFailure(
+                    "Runtime load failed: \(error.localizedDescription)",
+                    generation: generation
+                )
             }
         }
     }
 
-    private func pausedValue() -> Bool {
-        isPaused
-    }
-
-    private func diagnosticsEnabledValue() -> Bool {
-        diagnosticsEnabled
-    }
-
-    private func currentProjectionValue() -> LabFieldProjection {
-        currentProjection
-    }
-
-    private func applyFrame(
-        _ frame: LeniaFieldFrame,
-        projection: LabFieldProjection,
-        projections: [LabFieldProjection],
-        runtimeLabel: String,
-        step: Int,
-        displayFps: Double,
-        sample: MetricSample,
-        diagnostics: DiagnosticImageSet?,
-        telemetry: DiagnosticTelemetry?
+    private func applyCaptureProgress(
+        frame: LeniaFieldFrame?,
+        progress: Double,
+        generation: Int
     ) {
-        applyDisplayFrame(frame, projection: projection)
-        availableProjections = projections
-        self.runtimeLabel = runtimeLabel
-        stepCount = step
-        self.displayFps = displayFps
-        latestSample = sample
-        stats = String(format: "Step %d | %.1f FPS", step, displayFps)
-        metricHistory.append(sample)
-        if let diagnostics {
-            diagnosticImages = diagnostics
-        }
-        if let telemetry {
-            diagnosticTelemetry = telemetry
+        guard generation == sessionGeneration else { return }
+        displayFrame = frame ?? displayFrame
+        captureProgress = progress
+        stats = "Preparing trajectory · \(Int((progress * 100).rounded()))%"
+    }
+
+    private func installCapture(
+        clips: [LabFieldProjection: StudioObservationClip],
+        samples: [MetricSample],
+        runtimeLabel: String,
+        diagnosticsRecipe: LiveDiagnosticsRecipe,
+        generation: Int
+    ) {
+        guard generation == sessionGeneration, let matterClip = clips[.matter] else { return }
+        do {
+            let playback = try StudioObservationPlayback(source: matterClip, isLooping: true)
+            try playback.play()
+            self.playback = playback
+            projectionClips = clips
+            self.samples = samples
+            self.diagnosticsRecipe = diagnosticsRecipe
+            diagnosticsCaptureComplete = false
+            availableProjections = clips.keys.sorted { $0.id < $1.id }
+            self.runtimeLabel = runtimeLabel
+            captureProgress = 1
+            frameCount = matterClip.frameCount
+            syncPlaybackState()
+            startPlaybackClock(generation: generation)
+            startDiagnosticsCaptureIfNeeded()
+            captureTask = nil
+        } catch {
+            applyFailure(error.localizedDescription, generation: generation)
         }
     }
 
-    private func applyDisplayFrame(_ frame: LeniaFieldFrame, projection: LabFieldProjection) {
-        guard projection == currentProjection else { return }
-        displayFrame = frame
+    private func startDiagnosticsCaptureIfNeeded() {
+        guard diagnosticsEnabled,
+              !diagnosticsCaptureComplete,
+              diagnosticsTask == nil,
+              let recipe = diagnosticsRecipe else {
+            return
+        }
+        let generation = sessionGeneration
+        diagnosticsTask = Task.detached(priority: .utility) { [weak self] in
+            let renderer = LeniaRenderer()
+            let runtime = FlowLeniaInteractiveSimulator(runtimeConfig: recipe.runtimeConfig)
+            var state = runtime.makeInitialState()
+            var frameIndex = 0
+
+            while state.step <= recipe.totalSteps, !Task.isCancelled {
+                if frameIndex % 12 == 0 {
+                    let diagnostics = runtime.diagnostics(for: state)
+                    let neighborImage = renderer.renderToImage(mass: diagnostics.neighborSum)
+                    let growthImage = renderer.renderToSignedImage(field: diagnostics.growthField)
+                    let kernelImage = renderer.renderToImage(mass: diagnostics.kernel)
+                    let neighborData = diagnostics.neighborSum.asArray(Float.self)
+                    let growthData = diagnostics.growthField.asArray(Float.self)
+                    let kernelData = diagnostics.kernel.asArray(Float.self)
+                    await self?.applyDiagnosticCapture(
+                        frameIndex: frameIndex,
+                        images: DiagnosticImageSet(
+                            field: nil,
+                            neighborSum: neighborImage,
+                            growthField: growthImage,
+                            kernel: kernelImage
+                        ),
+                        telemetry: DiagnosticTelemetry(
+                            growthMean: mean(growthData),
+                            neighborMean: mean(neighborData),
+                            kernelPeak: kernelData.max() ?? 0,
+                            kernelCount: diagnostics.kernelCount
+                        ),
+                        generation: generation
+                    )
+                }
+                frameIndex += 1
+                guard state.step < recipe.totalSteps else { break }
+                state = runtime.step(
+                    state,
+                    count: min(recipe.stepStride, recipe.totalSteps - state.step)
+                )
+            }
+
+            await self?.finishDiagnosticsCapture(
+                generation: generation,
+                completed: !Task.isCancelled
+            )
+        }
     }
 
-    private func applyFailure(_ message: String) {
+    private func applyDiagnosticCapture(
+        frameIndex: Int,
+        images: DiagnosticImageSet,
+        telemetry: DiagnosticTelemetry,
+        generation: Int
+    ) {
+        guard generation == sessionGeneration, diagnosticsEnabled else { return }
+        diagnosticFrames[frameIndex] = images
+        diagnosticTelemetryFrames[frameIndex] = telemetry
+        syncPlaybackDiagnostics()
+    }
+
+    private func finishDiagnosticsCapture(generation: Int, completed: Bool) {
+        guard generation == sessionGeneration else { return }
+        diagnosticsTask = nil
+        diagnosticsCaptureComplete = completed
+        if diagnosticsEnabled, !completed {
+            startDiagnosticsCaptureIfNeeded()
+        }
+    }
+
+    private func startPlaybackClock(generation: Int) {
+        playbackTask?.cancel()
+        playbackTask = Task { [weak self] in
+            var previous = ContinuousClock.now
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(16))
+                guard let self, self.sessionGeneration == generation, let playback = self.playback else { return }
+                let now = ContinuousClock.now
+                let elapsed = now - previous
+                previous = now
+                do {
+                    try playback.advance(by: elapsed)
+                    self.syncPlaybackState()
+                } catch {
+                    self.stats = error.localizedDescription
+                    playback.pause()
+                    self.syncPlaybackState()
+                }
+            }
+        }
+    }
+
+    private func syncPlaybackState() {
+        guard let playback else { return }
+        let frameChanged = playback.currentFrameIndex != lastSyncedFrameIndex
+        if currentFrameIndex != playback.currentFrameIndex { currentFrameIndex = playback.currentFrameIndex }
+        if frameCount != playback.frameCount { frameCount = playback.frameCount }
+        if playbackRate != playback.playbackRate { playbackRate = playback.playbackRate }
+        if isLooping != playback.isLooping { isLooping = playback.isLooping }
+        if isPaused == playback.isPlaying { isPaused = !playback.isPlaying }
+        let nextDisplayFps = playback.nominalFramesPerSecond * playback.playbackRate
+        if displayFps != nextDisplayFps { displayFps = nextDisplayFps }
+        if stepCount != playback.currentStep { stepCount = playback.currentStep }
+        stats = "Frame \(playback.currentFrameIndex + 1)/\(playback.frameCount) · Step \(playback.currentStep) · \(formatPlaybackRate(playback.playbackRate))"
+        guard frameChanged else { return }
+        lastSyncedFrameIndex = playback.currentFrameIndex
+        syncPlaybackFrame()
+        if samples.indices.contains(currentFrameIndex) {
+            latestSample = samples[currentFrameIndex]
+            var history = MetricHistory()
+            let lowerBound = max(0, currentFrameIndex - MetricHistory.capacity + 1)
+            for sample in samples[lowerBound...currentFrameIndex] {
+                history.append(sample)
+            }
+            metricHistory = history
+        }
+        syncPlaybackDiagnostics()
+    }
+
+    private func syncPlaybackDiagnostics() {
+        let diagnosticIndex = diagnosticFrames.keys
+            .filter { $0 <= currentFrameIndex }
+            .max()
+            ?? diagnosticFrames.keys.min()
+        if let diagnosticIndex {
+            diagnosticImages = diagnosticFrames[diagnosticIndex]
+            diagnosticTelemetry = diagnosticTelemetryFrames[diagnosticIndex]
+        }
+    }
+
+    private func syncPlaybackFrame() {
+        guard let playback else { return }
+        let clip = projectionClips[currentProjection] ?? projectionClips[.matter]
+        displayFrame = try? clip?.frame(at: playback.currentFrameIndex)
+    }
+
+    private func applyFailure(_ message: String, generation: Int) {
+        guard generation == sessionGeneration else { return }
         displayFrame = nil
+        projectionClips = [:]
         availableProjections = [.matter]
         runtimeLabel = "Replay failed"
         stats = message
+        isPaused = true
+        playback = nil
     }
 }
 
@@ -810,12 +1188,70 @@ func liveProjectionFrame(
     )
 }
 
-private func liveFieldBytes(from values: [Float]) -> Data {
-    var bytes = [UInt8](repeating: 0, count: values.count)
-    for (index, value) in values.enumerated() {
-        bytes[index] = UInt8(max(0, min(255, Int(max(0, min(1, value)) * 255.0))))
+private func formatPlaybackRate(_ rate: Double) -> String {
+    rate == rate.rounded()
+        ? "\(Int(rate))×"
+        : String(format: "%.2g×", rate)
+}
+
+func liveProjectionFrames(
+    massData: [Float],
+    width: Int,
+    height: Int,
+    channels: Int,
+    excludedMassChannels: Set<Int>,
+    step: Int
+) -> (matterData: [Float], frames: [LabFieldProjection: LeniaFieldFrame]) {
+    let cellCount = width * height
+    precondition(channels > 0 && massData.count == cellCount * channels)
+
+    var matterData = [Float](repeating: 0, count: cellCount)
+    var matterBytes = [UInt8](repeating: 0, count: cellCount)
+    var channelBytes = channels > 1
+        ? Array(repeating: [UInt8](repeating: 0, count: cellCount), count: channels)
+        : []
+
+    for cell in 0..<cellCount {
+        let base = cell * channels
+        var matter: Float = 0
+        for channel in 0..<channels {
+            let value = massData[base + channel]
+            if channels > 1 {
+                channelBytes[channel][cell] = liveFieldByte(value)
+            }
+            if !excludedMassChannels.contains(channel) {
+                matter += value
+            }
+        }
+        matterData[cell] = matter
+        matterBytes[cell] = liveFieldByte(matter)
     }
-    return Data(bytes)
+
+    var frames: [LabFieldProjection: LeniaFieldFrame] = [
+        .matter: LeniaFieldFrame(
+            step: step,
+            width: width,
+            height: height,
+            bytes: Data(matterBytes)
+        )
+    ]
+    for channel in channelBytes.indices {
+        frames[.channel(channel)] = LeniaFieldFrame(
+            step: step,
+            width: width,
+            height: height,
+            bytes: Data(channelBytes[channel])
+        )
+    }
+    return (matterData, frames)
+}
+
+private func liveFieldByte(_ value: Float) -> UInt8 {
+    UInt8(max(0, min(255, Int(max(0, min(1, value)) * 255))))
+}
+
+private func liveFieldBytes(from values: [Float]) -> Data {
+    Data(values.map(liveFieldByte))
 }
 
 private struct DiagnosticFramePanel: View {
@@ -838,14 +1274,8 @@ private struct DiagnosticFramePanel: View {
             }
 
             ZStack {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [StudioPalette.stageTop, StudioPalette.stageBottom],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous)
+                    .fill(StudioPalette.stageBottom)
 
                 if let fieldFrame {
                     LeniaLabStageView(
@@ -870,7 +1300,11 @@ private struct DiagnosticFramePanel: View {
                 }
             }
             .frame(minHeight: 220)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous)
+                    .stroke(.white.opacity(0.10), lineWidth: StudioLayout.hairline)
+            }
         }
     }
 
@@ -897,7 +1331,7 @@ private struct EquationCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(.headline, design: .serif, weight: .semibold))
+                .font(StudioType.panelTitle)
                 .foregroundStyle(StudioPalette.ink)
 
             Text(equation)
@@ -913,8 +1347,8 @@ private struct EquationCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(StudioPalette.surfaceSoft)
+            RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous)
+                .fill(StudioPalette.surfaceSoft.opacity(0.66))
         )
     }
 }

@@ -452,13 +452,17 @@ public final class AppState: ObservableObject {
         }
     }
 
-    public func addCompareEntry(_ entry: StudioCompareEntry) {
-        guard !compareTray.contains(where: { $0.id == entry.id }) else { return }
+    @discardableResult
+    public func addCompareEntry(_ entry: StudioCompareEntry) -> Bool {
+        guard !compareTray.contains(where: { $0.id == entry.id }) else { return true }
+        guard compareTray.count < maxCompare else { return false }
         compareTray.append(entry)
-        if compareTray.count > maxCompare {
-            compareTray.removeFirst(compareTray.count - maxCompare)
-        }
+        return true
     }
+
+    public var compareTrayCapacity: Int { maxCompare }
+
+    public var compareTrayIsFull: Bool { compareTray.count >= maxCompare }
 
     public func removeCompareEntry(id: String) {
         compareTray.removeAll { $0.id == id }

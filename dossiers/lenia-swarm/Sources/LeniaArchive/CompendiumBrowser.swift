@@ -14,29 +14,104 @@ public struct CompendiumBrowseQuery: Equatable, Sendable {
     public var catalogFilter: CompendiumCatalogFilter
     public var minScore: Float?
     public var limit: Int
+    public var cursor: CompendiumBrowseCursor?
 
     public init(
         search: String = "",
         stableOnly: Bool = false,
         catalogFilter: CompendiumCatalogFilter = .active,
         minScore: Float? = nil,
-        limit: Int = 200
+        limit: Int = 200,
+        cursor: CompendiumBrowseCursor? = nil
     ) {
         self.search = search
         self.stableOnly = stableOnly
         self.catalogFilter = catalogFilter
         self.minScore = minScore
         self.limit = limit
+        self.cursor = cursor
     }
 }
 
+public struct CompendiumBrowseCursor: Equatable, Sendable {
+    public let score: Double?
+    public let recordedAt: String
+    public let databaseID: String
+
+    public init(score: Double?, recordedAt: String, databaseID: String) {
+        self.score = score
+        self.recordedAt = recordedAt
+        self.databaseID = databaseID
+    }
+}
+
+public struct CompendiumBrowseIssue: Equatable, Sendable {
+    public let databaseID: String?
+    public let reason: String
+
+    public init(databaseID: String?, reason: String) {
+        self.databaseID = databaseID
+        self.reason = reason
+    }
+}
+
+public final class CompendiumBrowseCancellation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var handle: OpaquePointer?
+    private var cancelled = false
+
+    public init() {}
+
+    public func cancel() {
+        lock.lock()
+        cancelled = true
+        if let handle {
+            sqlite3_interrupt(handle)
+        }
+        lock.unlock()
+    }
+
+    fileprivate var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return cancelled
+    }
+
+    fileprivate func attach(_ handle: OpaquePointer) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !cancelled else {
+            throw CompendiumBrowseError.cancelled
+        }
+        self.handle = handle
+    }
+
+    fileprivate func detach(_ handle: OpaquePointer) {
+        lock.lock()
+        if self.handle == handle {
+            self.handle = nil
+        }
+        lock.unlock()
+    }
+}
+
+private let compendiumBrowseProgressHandler: @convention(c) (UnsafeMutableRawPointer?) -> Int32 = { context in
+    guard let context else { return 1 }
+    let cancellation = Unmanaged<CompendiumBrowseCancellation>
+        .fromOpaque(context)
+        .takeUnretainedValue()
+    return cancellation.isCancelled ? 1 : 0
+}
+
 private struct CompendiumBrowseRow: Sendable {
+    let databaseID: String
     let id: UUID
     let name: String
     let ownerID: String
     let runID: String
     let campaignID: String?
     let recordedAt: String
+    let databaseScore: Double?
     let score: Float?
     let isStable: Bool
     let scoreWeightsJSON: String?
@@ -93,34 +168,48 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
     public let specimenRecordID: String
     public let specimenSourceKind: String
 
-    private let storage: CreatureStorage
+    private let databaseID: String
+    private let databaseScore: Double?
+    private let projection: ResolvedSpecimenProjection
+    private let taxonomyValue: SpecimenTaxonomyRecord?
 
     public var runtimeCapabilities: [String] {
-        storage.runtimeCapabilities
+        projection.runtimeCapabilities
     }
 
     public var specimenManifest: SpecimenManifest? {
-        storage.specimenManifest
+        projection.manifest
     }
 
     public var traitLabels: [String] {
-        storage.traitLabels
+        projection.traitLabels
     }
 
     public var taxonomy: SpecimenTaxonomyRecord? {
-        storage.taxonomy
+        taxonomyValue
     }
 
     public var previewSeed: Int {
-        storage.previewSeed
+        projection.creature.initialCondition.seed
     }
 
     public var previewParams: ResolvedParams {
-        storage.previewParams
+        let creature = projection.creature
+        return ResolvedParams(
+            r: creature.genotype.r,
+            b: creature.genotype.b,
+            w: creature.genotype.w,
+            a: creature.genotype.a,
+            m: creature.genotype.m,
+            s: creature.genotype.s,
+            h: creature.genotype.h,
+            R: creature.genotype.R,
+            seed: creature.initialCondition.seed
+        )
     }
 
     public var creature: SavedCreature {
-        storage.creature
+        projection.creature
     }
 
     public init(
@@ -170,28 +259,26 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         self.qualityFlags = qualityFlags
         self.specimenRecordID = specimenRecordID
         self.specimenSourceKind = specimenSourceKind
-        self.storage = .eager(
+        self.databaseID = id.uuidString
+        self.databaseScore = score.map(Double.init)
+        self.projection = ResolvedSpecimenProjection(
+            manifest: specimenManifest,
             creature: creature,
-            previewSeed: creature.initialCondition.seed,
-            previewParams: ResolvedParams(
-                r: creature.genotype.r,
-                b: creature.genotype.b,
-                w: creature.genotype.w,
-                a: creature.genotype.a,
-                m: creature.genotype.m,
-                s: creature.genotype.s,
-                h: creature.genotype.h,
-                R: creature.genotype.R,
-                seed: creature.initialCondition.seed
-            ),
+            runtimeFamily: runtimeFamily,
             runtimeCapabilities: runtimeCapabilities,
-            specimenManifest: specimenManifest,
+            sourceMode: sourceMode,
+            sourceAlgorithm: sourceAlgorithm,
+            researchMetadata: specimenManifest?.researchMetadata,
             traitLabels: traitLabels,
-            taxonomy: taxonomy
         )
+        self.taxonomyValue = taxonomy ?? specimenManifest?.taxonomy
     }
 
-    fileprivate init(row: CompendiumBrowseRow) {
+    fileprivate init(
+        row: CompendiumBrowseRow,
+        projection: ResolvedSpecimenProjection,
+        qualityFlags: [String]
+    ) {
         self.id = row.id
         self.name = row.name
         self.ownerId = row.ownerID
@@ -211,10 +298,21 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
         self.sourceMode = row.sourceMode
         self.sourceAlgorithm = row.sourceAlgorithm
         self.catalogStatus = row.catalogStatus
-        self.qualityFlags = decodeStringList(row.qualityFlagsJSON)
+        self.qualityFlags = qualityFlags
         self.specimenRecordID = row.specimenRecordID
         self.specimenSourceKind = row.specimenSourceKind
-        self.storage = .deferred(DeferredCreatureStorage(row: row))
+        self.databaseID = row.databaseID
+        self.databaseScore = row.databaseScore
+        self.projection = projection
+        self.taxonomyValue = row.taxonomyRecord ?? projection.manifest?.taxonomy
+    }
+
+    fileprivate var browseCursor: CompendiumBrowseCursor {
+        CompendiumBrowseCursor(
+            score: databaseScore,
+            recordedAt: recordedAt,
+            databaseID: databaseID
+        )
     }
 
     public var displayRun: String {
@@ -238,199 +336,6 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-    }
-}
-
-private enum CreatureStorage: Sendable {
-    case eager(
-        creature: SavedCreature,
-        previewSeed: Int,
-        previewParams: ResolvedParams,
-        runtimeCapabilities: [String],
-        specimenManifest: SpecimenManifest?,
-        traitLabels: [String],
-        taxonomy: SpecimenTaxonomyRecord?
-    )
-    case deferred(DeferredCreatureStorage)
-
-    var creature: SavedCreature {
-        switch self {
-        case .eager(let creature, _, _, _, _, _, _):
-            return creature
-        case .deferred(let storage):
-            return storage.creature
-        }
-    }
-
-    var runtimeCapabilities: [String] {
-        switch self {
-        case .eager(_, _, _, let runtimeCapabilities, _, _, _):
-            return runtimeCapabilities
-        case .deferred(let storage):
-            return storage.runtimeCapabilities
-        }
-    }
-
-    var specimenManifest: SpecimenManifest? {
-        switch self {
-        case .eager(_, _, _, _, let specimenManifest, _, _):
-            return specimenManifest
-        case .deferred(let storage):
-            return storage.specimenManifest
-        }
-    }
-
-    var traitLabels: [String] {
-        switch self {
-        case .eager(_, _, _, _, _, let traitLabels, _):
-            return traitLabels
-        case .deferred(let storage):
-            return storage.traitLabels
-        }
-    }
-
-    var taxonomy: SpecimenTaxonomyRecord? {
-        switch self {
-        case .eager(_, _, _, _, _, _, let taxonomy):
-            return taxonomy
-        case .deferred(let storage):
-            return storage.taxonomy
-        }
-    }
-
-    var previewSeed: Int {
-        switch self {
-        case .eager(_, let previewSeed, _, _, _, _, _):
-            return previewSeed
-        case .deferred(let storage):
-            return storage.previewSeed
-        }
-    }
-
-    var previewParams: ResolvedParams {
-        switch self {
-        case .eager(_, _, let previewParams, _, _, _, _):
-            return previewParams
-        case .deferred(let storage):
-            return storage.previewParams
-        }
-    }
-}
-
-private final class DeferredCreatureStorage: @unchecked Sendable {
-    private struct PreviewData {
-        let seed: Int
-        let params: ResolvedParams
-    }
-
-    private let row: CompendiumBrowseRow
-    private let decoder = JSONDecoder()
-    private let lock = NSLock()
-    private var cachedProjection: ResolvedSpecimenProjection?
-    private var cachedPreviewData: PreviewData?
-
-    init(row: CompendiumBrowseRow) {
-        self.row = row
-    }
-
-    var creature: SavedCreature {
-        projection.creature
-    }
-
-    var previewSeed: Int {
-        previewData.seed
-    }
-
-    var previewParams: ResolvedParams {
-        previewData.params
-    }
-
-    var specimenManifest: SpecimenManifest? {
-        projection.manifest
-    }
-
-    var runtimeCapabilities: [String] {
-        projection.runtimeCapabilities
-    }
-
-    var traitLabels: [String] {
-        projection.traitLabels
-    }
-
-    var taxonomy: SpecimenTaxonomyRecord? {
-        row.taxonomyRecord ?? projection.manifest?.taxonomy
-    }
-
-    private var projection: ResolvedSpecimenProjection {
-        lock.lock()
-        if let cachedProjection {
-            lock.unlock()
-            return cachedProjection
-        }
-        lock.unlock()
-
-        let projection = resolveSpecimenProjection(
-            id: row.id,
-            name: row.name,
-            ownerId: row.ownerID,
-            manifest: decodeOptional(SpecimenManifest.self, from: row.specimenManifestJSON),
-            fallbackGenotype: try! decoder.decode(KernelParams.self, from: Data((row.genotypeJSON ?? "{}").utf8)),
-            fallbackInitialCondition: try! decoder.decode(InitConfig.self, from: Data((row.initialConditionJSON ?? "{}").utf8)),
-            fallbackMetrics: try! decoder.decode(SimulationMetrics.self, from: Data((row.metricsJSON ?? "{}").utf8)),
-            sweep: decodeOptional([String: Double].self, from: row.sweepJSON),
-            score: row.score,
-            scoreWeights: decodeOptional([String: Float].self, from: row.scoreWeightsJSON),
-            fallbackRuntimeFamily: row.runtimeFamily,
-            fallbackRuntimeCapabilities: decodeOptional([String].self, from: row.runtimeCapabilitiesJSON),
-            fallbackSourceMode: row.sourceMode,
-            fallbackSourceAlgorithm: row.sourceAlgorithm,
-            fallbackTraitLabels: decodeOptional([String].self, from: row.traitLabelsJSON)
-        )
-
-        lock.lock()
-        cachedProjection = projection
-        lock.unlock()
-        return projection
-    }
-
-    private var previewData: PreviewData {
-        lock.lock()
-        if let cachedPreviewData {
-            lock.unlock()
-            return cachedPreviewData
-        }
-        lock.unlock()
-
-        let creature = creature
-        let preview = PreviewData(
-            seed: creature.initialCondition.seed,
-            params: ResolvedParams(
-                r: creature.genotype.r,
-                b: creature.genotype.b,
-                w: creature.genotype.w,
-                a: creature.genotype.a,
-                m: creature.genotype.m,
-                s: creature.genotype.s,
-                h: creature.genotype.h,
-                R: creature.genotype.R,
-                seed: creature.initialCondition.seed
-            )
-        )
-
-        lock.lock()
-        cachedPreviewData = preview
-        lock.unlock()
-        return preview
-    }
-
-    private func decodeOptional<T: Decodable>(
-        _ type: T.Type,
-        from value: String?
-    ) -> T? {
-        guard let value, !value.isEmpty else {
-            return nil
-        }
-        return try? decoder.decode(type, from: Data(value.utf8))
     }
 }
 
@@ -462,11 +367,24 @@ public struct CompendiumBrowseResult: Sendable {
     public let entries: [CompendiumBrowseEntry]
     public let status: String
     public let error: String?
+    public let issues: [CompendiumBrowseIssue]
+    public let skippedRowCount: Int
+    public let nextCursor: CompendiumBrowseCursor?
 
-    public init(entries: [CompendiumBrowseEntry], status: String, error: String?) {
+    public init(
+        entries: [CompendiumBrowseEntry],
+        status: String,
+        error: String?,
+        issues: [CompendiumBrowseIssue] = [],
+        skippedRowCount: Int = 0,
+        nextCursor: CompendiumBrowseCursor? = nil
+    ) {
         self.entries = entries
         self.status = status
         self.error = error
+        self.issues = issues
+        self.skippedRowCount = skippedRowCount
+        self.nextCursor = nextCursor
     }
 }
 
@@ -474,21 +392,26 @@ public enum CompendiumBrowseError: LocalizedError {
     case openFailed(String)
     case queryFailed(String)
     case invalidDatabase(String)
+    case cancelled
 
     public var errorDescription: String? {
         switch self {
         case .openFailed(let message), .queryFailed(let message), .invalidDatabase(let message):
             return message
+        case .cancelled:
+            return "Compendium browse cancelled."
         }
     }
 }
 
 public func browseCompendium(
     path: String,
-    query: CompendiumBrowseQuery
+    query: CompendiumBrowseQuery,
+    cancellation: CompendiumBrowseCancellation? = nil
 ) throws -> CompendiumBrowseResult {
+    try throwIfBrowseCancelled(cancellation)
     var db: OpaquePointer?
-    let openFlags = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX
+    let openFlags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
     if sqlite3_open_v2(path, &db, openFlags, nil) != SQLITE_OK {
         let message = db.flatMap { String(cString: sqlite3_errmsg($0)) } ?? "Failed to open compendium"
         sqlite3_close(db)
@@ -497,7 +420,25 @@ public func browseCompendium(
     guard let handle = db else {
         throw CompendiumBrowseError.invalidDatabase("Failed to open compendium database.")
     }
-    defer { sqlite3_close(handle) }
+    do {
+        try cancellation?.attach(handle)
+    } catch {
+        sqlite3_close(handle)
+        throw error
+    }
+    if let cancellation {
+        sqlite3_progress_handler(
+            handle,
+            1_000,
+            compendiumBrowseProgressHandler,
+            Unmanaged.passUnretained(cancellation).toOpaque()
+        )
+    }
+    defer {
+        sqlite3_progress_handler(handle, 0, nil, nil)
+        cancellation?.detach(handle)
+        sqlite3_close(handle)
+    }
 
     let creatureColumns = try tableColumns(handle: handle, tableName: "creatures")
     guard creatureColumns.contains("canonical_specimen_id") else {
@@ -510,58 +451,90 @@ public func browseCompendium(
             "Compendium is missing specimens. Rebuild the canonical compendium before browsing."
         )
     }
+    guard try tableExists(handle: handle, tableName: "exports") else {
+        throw CompendiumBrowseError.invalidDatabase(
+            "Compendium is missing exports. Rebuild the canonical compendium before browsing."
+        )
+    }
+    try throwIfBrowseCancelled(cancellation)
 
     let trimmedSearch = query.search.trimmingCharacters(in: .whitespacesAndNewlines)
+    let searchExpression = compendiumFTSQuery(trimmedSearch)
+    if searchExpression != nil,
+       try !tableExists(handle: handle, tableName: "creature_search") {
+        throw CompendiumBrowseError.invalidDatabase(
+            "Compendium search index is missing. Run the indexer once to migrate this database before searching."
+        )
+    }
     let limit = max(1, min(query.limit, 5_000))
+    let fetchLimit = min(5_001, limit + 32)
     let startedAt = Date()
 
-    let whereClauses: [String] = {
-        var clauses: [String] = []
-        if !trimmedSearch.isEmpty {
-            clauses.append("c.name LIKE ?")
+    var whereClauses: [String] = []
+    var binds: [SQLiteBindValue] = []
+    if let searchExpression {
+        whereClauses.append("creature_search MATCH ?")
+        binds.append(.text(searchExpression))
+    }
+    if query.stableOnly {
+        whereClauses.append("c.is_stable = 1")
+    }
+    if let minScore = query.minScore {
+        whereClauses.append("c.score >= ?")
+        binds.append(.double(Double(minScore)))
+    }
+    if creatureColumns.contains("catalog_status") {
+        switch query.catalogFilter {
+        case .active:
+            whereClauses.append("c.catalog_status IN ('active', 'protected')")
+        case .quarantine:
+            whereClauses.append("c.catalog_status = 'quarantine'")
+        case .all:
+            break
         }
-        if query.stableOnly {
-            clauses.append("c.is_stable = 1")
+    }
+    whereClauses.append("EXISTS (SELECT 1 FROM specimens sx WHERE sx.id = c.canonical_specimen_id)")
+    if let cursor = query.cursor {
+        if let score = cursor.score {
+            whereClauses.append("""
+                (
+                    c.score < ? OR c.score IS NULL OR
+                    (c.score = ? AND (
+                        c.recorded_at < ? OR
+                        (c.recorded_at = ? AND c.id > ?)
+                    ))
+                )
+                """)
+            binds.append(contentsOf: [
+                .double(score),
+                .double(score),
+                .text(cursor.recordedAt),
+                .text(cursor.recordedAt),
+                .text(cursor.databaseID),
+            ])
+        } else {
+            whereClauses.append("""
+                (
+                    c.score IS NULL AND (
+                        c.recorded_at < ? OR
+                        (c.recorded_at = ? AND c.id > ?)
+                    )
+                )
+                """)
+            binds.append(contentsOf: [
+                .text(cursor.recordedAt),
+                .text(cursor.recordedAt),
+                .text(cursor.databaseID),
+            ])
         }
-        if query.minScore != nil {
-            clauses.append("COALESCE(c.score, 0) >= ?")
-        }
-        if creatureColumns.contains("catalog_status") {
-            switch query.catalogFilter {
-            case .active:
-                clauses.append("c.catalog_status IN ('active', 'protected')")
-            case .quarantine:
-                clauses.append("c.catalog_status = 'quarantine'")
-            case .all:
-                break
-            }
-        }
-        clauses.append("c.genotype_json IS NOT NULL AND json_valid(c.genotype_json) = 1")
-        clauses.append("c.initial_condition_json IS NOT NULL AND json_valid(c.initial_condition_json) = 1")
-        clauses.append("c.metrics_json IS NOT NULL AND json_valid(c.metrics_json) = 1")
-        clauses.append("(c.score_weights_json IS NULL OR json_valid(c.score_weights_json) = 1)")
-        clauses.append("(c.sweep_json IS NULL OR json_valid(c.sweep_json) = 1)")
-        clauses.append("(c.trait_labels_json IS NULL OR json_valid(c.trait_labels_json) = 1)")
-        return clauses
-    }()
+    }
 
-    let indexHint = trimmedSearch.isEmpty ? " INDEXED BY creatures_score" : ""
+    let searchJoin = searchExpression == nil
+        ? ""
+        : "JOIN creature_search ON creature_search.rowid = c.rowid"
     let whereSQL = whereClauses.isEmpty ? "" : "WHERE \(whereClauses.joined(separator: " AND "))"
     let filteredCTE = """
-    WITH latest_exports AS (
-        SELECT creature_id, export_dir, base_config_path, search_config_path
-        FROM (
-            SELECT
-                creature_id,
-                export_dir,
-                base_config_path,
-                search_config_path,
-                ROW_NUMBER() OVER (PARTITION BY creature_id ORDER BY exported_at DESC) AS rn
-            FROM exports
-        )
-        WHERE rn = 1
-    ),
-    filtered AS (
+    WITH filtered AS (
         SELECT
             c.id,
             c.name,
@@ -586,9 +559,10 @@ public func browseCompendium(
             c.taxonomy_version,
             \(creatureColumns.contains("catalog_status") ? "c.catalog_status" : "'active'") AS catalog_status,
             \(creatureColumns.contains("quality_flags_json") ? "COALESCE(c.quality_flags_json, '[]')" : "'[]'") AS quality_flags_json
-        FROM creatures c\(indexHint)
+        FROM creatures c
+        \(searchJoin)
         \(whereSQL)
-        ORDER BY c.score DESC, c.recorded_at DESC
+        ORDER BY c.score DESC, c.recorded_at DESC, c.id ASC
         LIMIT ?
     )
     SELECT
@@ -631,8 +605,14 @@ public func browseCompendium(
     FROM filtered c
     LEFT JOIN runs r ON r.run_id = c.run_id
     JOIN specimens s ON s.id = c.canonical_specimen_id
-    LEFT JOIN latest_exports lx ON lx.creature_id = c.id
-    ORDER BY COALESCE(c.score, 0) DESC, c.recorded_at DESC
+    LEFT JOIN exports lx ON lx.rowid = (
+        SELECT e.rowid
+        FROM exports e
+        WHERE e.creature_id = c.id
+        ORDER BY e.exported_at DESC, e.id DESC
+        LIMIT 1
+    )
+    ORDER BY c.score DESC, c.recorded_at DESC, c.id ASC
     """
 
     var stmt: OpaquePointer?
@@ -645,44 +625,76 @@ public func browseCompendium(
     }
     defer { sqlite3_finalize(statement) }
 
-    var binds: [SQLiteBindValue] = []
-    if !trimmedSearch.isEmpty {
-        binds.append(.text("%\(trimmedSearch)%"))
-    }
-    if let minScore = query.minScore {
-        binds.append(.double(Double(minScore)))
-    }
-    binds.append(.int(Int32(limit)))
+    binds.append(.int(Int32(fetchLimit)))
 
     for (offset, value) in binds.enumerated() {
         try bindSQLiteValue(value, to: statement, index: Int32(offset + 1), handle: handle)
     }
 
     var entries: [CompendiumBrowseEntry] = []
-    var skipped = 0
+    var issues: [CompendiumBrowseIssue] = []
+    var skippedRowCount = 0
+    var rawRowCount = 0
+    var lastScannedCursor: CompendiumBrowseCursor?
 
-    while sqlite3_step(statement) == SQLITE_ROW {
+    while true {
+        let stepResult = sqlite3_step(statement)
+        if stepResult == SQLITE_DONE {
+            break
+        }
+        if stepResult == SQLITE_INTERRUPT || cancellation?.isCancelled == true {
+            throw CompendiumBrowseError.cancelled
+        }
+        guard stepResult == SQLITE_ROW else {
+            throw CompendiumBrowseError.queryFailed(String(cString: sqlite3_errmsg(handle)))
+        }
+        rawRowCount += 1
         guard let idText = sqlite3_column_text(statement, 0) else {
-            skipped += 1
+            recordBrowseIssue(
+                CompendiumBrowseIssue(databaseID: nil, reason: "Missing creatures.id."),
+                issues: &issues,
+                skippedRowCount: &skippedRowCount
+            )
             continue
         }
+        let idString = String(cString: idText)
+        lastScannedCursor = CompendiumBrowseCursor(
+            score: columnDouble(statement, index: 6),
+            recordedAt: columnText(statement, index: 5) ?? "",
+            databaseID: idString
+        )
         guard
             let specimenRecordID = columnText(statement, index: 34),
             let specimenSourceKind = columnText(statement, index: 35)
         else {
-            skipped += 1
+            recordBrowseIssue(
+                CompendiumBrowseIssue(
+                    databaseID: idString,
+                    reason: "Missing canonical specimen identity."
+                ),
+                issues: &issues,
+                skippedRowCount: &skippedRowCount
+            )
             continue
         }
 
-        let idString = String(cString: idText)
-        let id = UUID(uuidString: idString) ?? UUID()
+        guard let id = UUID(uuidString: idString) else {
+            recordBrowseIssue(
+                CompendiumBrowseIssue(databaseID: idString, reason: "creatures.id is not a UUID."),
+                issues: &issues,
+                skippedRowCount: &skippedRowCount
+            )
+            continue
+        }
         let row = CompendiumBrowseRow(
+            databaseID: idString,
             id: id,
             name: columnText(statement, index: 1) ?? "Unnamed",
             ownerID: columnText(statement, index: 2) ?? "unknown",
             runID: columnText(statement, index: 3) ?? "unknown",
             campaignID: columnText(statement, index: 4),
             recordedAt: columnText(statement, index: 5) ?? "",
+            databaseScore: columnDouble(statement, index: 6),
             score: columnFloat(statement, index: 6),
             isStable: sqlite3_column_int(statement, 7) != 0,
             scoreWeightsJSON: columnText(statement, index: 8),
@@ -715,17 +727,189 @@ public func browseCompendium(
             specimenSourceKind: specimenSourceKind
         )
 
-        entries.append(CompendiumBrowseEntry(row: row))
+        do {
+            let decoded = try decodeCompendiumBrowseRow(row)
+            entries.append(
+                CompendiumBrowseEntry(
+                    row: row,
+                    projection: decoded.projection,
+                    qualityFlags: decoded.qualityFlags
+                )
+            )
+        } catch {
+            recordBrowseIssue(
+                CompendiumBrowseIssue(databaseID: idString, reason: error.localizedDescription),
+                issues: &issues,
+                skippedRowCount: &skippedRowCount
+            )
+        }
     }
 
+    let hasUnreturnedEntries = entries.count > limit
+    if hasUnreturnedEntries {
+        entries.removeLast(entries.count - limit)
+    }
+    let nextCursor = hasUnreturnedEntries
+        ? entries.last?.browseCursor
+        : (rawRowCount == fetchLimit ? lastScannedCursor : nil)
     let status = "Loaded \(entries.count) creatures in \(formatBrowseDuration(Date().timeIntervalSince(startedAt)))"
     let warning: String?
-    if skipped > 0 {
-        warning = "Skipped \(skipped) malformed canonical row\(skipped == 1 ? "" : "s")."
+    if skippedRowCount > 0 {
+        let firstReason = issues.first.map { " First issue: \($0.reason)" } ?? ""
+        warning = "Quarantined \(skippedRowCount) malformed canonical row\(skippedRowCount == 1 ? "" : "s") from this result.\(firstReason)"
     } else {
         warning = nil
     }
-    return CompendiumBrowseResult(entries: entries, status: status, error: warning)
+    return CompendiumBrowseResult(
+        entries: entries,
+        status: status,
+        error: warning,
+        issues: issues,
+        skippedRowCount: skippedRowCount,
+        nextCursor: nextCursor
+    )
+}
+
+private struct DecodedCompendiumBrowseRow {
+    let projection: ResolvedSpecimenProjection
+    let qualityFlags: [String]
+}
+
+private struct CompendiumRowDecodeError: LocalizedError {
+    let field: String
+    let underlying: Error
+
+    var errorDescription: String? {
+        "Invalid \(field): \(underlying.localizedDescription)"
+    }
+}
+
+private func decodeCompendiumBrowseRow(_ row: CompendiumBrowseRow) throws -> DecodedCompendiumBrowseRow {
+    let decoder = JSONDecoder()
+    let genotype: KernelParams = try decodeRequiredJSON(
+        row.genotypeJSON,
+        field: "creatures.genotype_json",
+        decoder: decoder
+    )
+    let initialCondition: InitConfig = try decodeRequiredJSON(
+        row.initialConditionJSON,
+        field: "creatures.initial_condition_json",
+        decoder: decoder
+    )
+    let metrics: SimulationMetrics = try decodeRequiredJSON(
+        row.metricsJSON,
+        field: "creatures.metrics_json",
+        decoder: decoder
+    )
+    let manifest: SpecimenManifest? = try decodeOptionalJSON(
+        row.specimenManifestJSON,
+        field: "specimens.specimen_manifest_json",
+        decoder: decoder
+    )
+    let sweep: [String: Double]? = try decodeOptionalJSON(
+        row.sweepJSON,
+        field: "creatures.sweep_json",
+        decoder: decoder
+    )
+    let scoreWeights: [String: Float]? = try decodeOptionalJSON(
+        row.scoreWeightsJSON,
+        field: "creatures.score_weights_json",
+        decoder: decoder
+    )
+    let runtimeCapabilities: [String]? = try decodeOptionalJSON(
+        row.runtimeCapabilitiesJSON,
+        field: "specimens.runtime_capabilities_json",
+        decoder: decoder
+    )
+    let traitLabels: [String]? = try decodeOptionalJSON(
+        row.traitLabelsJSON,
+        field: "creatures.trait_labels_json",
+        decoder: decoder
+    )
+    let qualityFlags: [String] = try decodeOptionalJSON(
+        row.qualityFlagsJSON,
+        field: "creatures.quality_flags_json",
+        decoder: decoder
+    ) ?? []
+
+    return DecodedCompendiumBrowseRow(
+        projection: resolveSpecimenProjection(
+            id: row.id,
+            name: row.name,
+            ownerId: row.ownerID,
+            manifest: manifest,
+            fallbackGenotype: genotype,
+            fallbackInitialCondition: initialCondition,
+            fallbackMetrics: metrics,
+            sweep: sweep,
+            score: row.score,
+            scoreWeights: scoreWeights,
+            fallbackRuntimeFamily: row.runtimeFamily,
+            fallbackRuntimeCapabilities: runtimeCapabilities,
+            fallbackSourceMode: row.sourceMode,
+            fallbackSourceAlgorithm: row.sourceAlgorithm,
+            fallbackTraitLabels: traitLabels
+        ),
+        qualityFlags: qualityFlags
+    )
+}
+
+private func decodeRequiredJSON<T: Decodable>(
+    _ value: String?,
+    field: String,
+    decoder: JSONDecoder
+) throws -> T {
+    guard let value, !value.isEmpty else {
+        throw CompendiumRowDecodeError(
+            field: field,
+            underlying: CompendiumBrowseError.invalidDatabase("Required value is missing.")
+        )
+    }
+    do {
+        return try decoder.decode(T.self, from: Data(value.utf8))
+    } catch {
+        throw CompendiumRowDecodeError(field: field, underlying: error)
+    }
+}
+
+private func decodeOptionalJSON<T: Decodable>(
+    _ value: String?,
+    field: String,
+    decoder: JSONDecoder
+) throws -> T? {
+    guard let value, !value.isEmpty else { return nil }
+    do {
+        return try decoder.decode(T.self, from: Data(value.utf8))
+    } catch {
+        throw CompendiumRowDecodeError(field: field, underlying: error)
+    }
+}
+
+private func recordBrowseIssue(
+    _ issue: CompendiumBrowseIssue,
+    issues: inout [CompendiumBrowseIssue],
+    skippedRowCount: inout Int
+) {
+    skippedRowCount += 1
+    if issues.count < 8 {
+        issues.append(issue)
+    }
+}
+
+private func compendiumFTSQuery(_ value: String) -> String? {
+    let tokens = value
+        .split { !$0.isLetter && !$0.isNumber }
+        .prefix(8)
+        .map { String($0.prefix(64)) }
+        .filter { !$0.isEmpty }
+    guard !tokens.isEmpty else { return nil }
+    return tokens.map { "\"\($0)\"*" }.joined(separator: " AND ")
+}
+
+private func throwIfBrowseCancelled(_ cancellation: CompendiumBrowseCancellation?) throws {
+    if cancellation?.isCancelled == true {
+        throw CompendiumBrowseError.cancelled
+    }
 }
 
 private func columnText(_ statement: OpaquePointer, index: Int32) -> String? {
@@ -746,13 +930,6 @@ private func columnDouble(_ statement: OpaquePointer, index: Int32) -> Double? {
 private func columnInt(_ statement: OpaquePointer, index: Int32) -> Int? {
     guard sqlite3_column_type(statement, index) != SQLITE_NULL else { return nil }
     return Int(sqlite3_column_int(statement, index))
-}
-
-private func decodeStringList(_ value: String?) -> [String] {
-    guard let value, let data = value.data(using: .utf8) else {
-        return []
-    }
-    return (try? JSONDecoder().decode([String].self, from: data)) ?? []
 }
 
 private enum SQLiteBindValue {

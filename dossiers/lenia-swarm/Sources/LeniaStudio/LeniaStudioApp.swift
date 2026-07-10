@@ -23,6 +23,7 @@ struct LeniaStudioApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appState: AppState
     @StateObject private var node: LeniaNode
+    @StateObject private var commandCenter = StudioCommandCenter()
     private let startupIssue: StudioStartupIssue?
 
     init() {
@@ -68,6 +69,7 @@ struct LeniaStudioApp: App {
                 MainLayoutView()
                     .environmentObject(appState)
                     .environmentObject(node)
+                    .environmentObject(commandCenter)
                     .frame(minWidth: 760, minHeight: 520)
             }
         }
@@ -75,6 +77,7 @@ struct LeniaStudioApp: App {
         .windowStyle(.automatic)
         .commands {
             CommandGroup(replacing: .newItem) {}
+            StudioCommands(commandCenter: commandCenter)
         }
     }
 
@@ -99,44 +102,39 @@ private struct StudioStartupFailureView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(nsColor: .windowBackgroundColor),
-                    Color(nsColor: .controlBackgroundColor),
-                    Color(nsColor: .textBackgroundColor)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            StudioSceneBackground()
 
-            VStack(alignment: .leading, spacing: 18) {
-                Text(issue.title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-
-                Text("Studio startup stopped before the main workspace was created.")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(issue.message)
-                        .font(.body)
-                        .textSelection(.enabled)
-                    Text(issue.suggestion)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.title2)
+                        .foregroundStyle(StudioPalette.ember)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(issue.title)
+                            .font(.title2.weight(.semibold))
+                        Text("Startup interrupted")
+                            .font(StudioType.panelSubtitle)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    }
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(.quaternary, lineWidth: 1)
-                )
+
+                StudioSurface(title: "Diagnostic", style: .console) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(issue.message)
+                            .font(StudioType.body)
+                            .foregroundStyle(StudioPalette.ink)
+                            .textSelection(.enabled)
+                        Text(issue.suggestion)
+                            .font(StudioType.bodySmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    }
+                }
 
                 HStack {
-                    Button("Quit Lenia Studio") {
+                    Button {
                         NSApp.terminate(nil)
+                    } label: {
+                        Label("Quit Lenia Studio", systemImage: "power")
                     }
                     .keyboardShortcut(.defaultAction)
 
@@ -144,7 +142,7 @@ private struct StudioStartupFailureView: View {
                 }
             }
             .padding(28)
-            .frame(maxWidth: 720)
+            .frame(maxWidth: 640)
         }
         .frame(minWidth: 760, minHeight: 520)
     }

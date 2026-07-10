@@ -2,89 +2,98 @@ import SwiftUI
 import LeniaCore
 import LeniaVisuals
 
-enum StudioSurfaceSelection: Hashable {
-    case lab
-    case cluster
-    case compendium
-}
-
-func preferredStudioSurface(
-    currentSelection: StudioSurfaceSelection,
-    connectionState: ConnectionState
-) -> StudioSurfaceSelection {
-    switch connectionState {
-    case .connected(role: .host), .connected(role: .worker), .connecting, .error:
-        return .cluster
-    case .connected(role: .compendium):
-        return .compendium
-    case .disconnected:
-        return currentSelection
-    }
-}
-
 struct MainLayoutView: View {
-    @EnvironmentObject var appState: AppState
-    @State private var selection: StudioSurfaceSelection = .lab
+    @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var node: LeniaNode
+    @EnvironmentObject private var commandCenter: StudioCommandCenter
+    @State private var selection: StudioDestination
+    @State private var showConnect = false
+
+    init(environment: [String: String] = ProcessInfo.processInfo.environment) {
+        _selection = State(initialValue: studioInitialDestination(environment: environment))
+    }
 
     var body: some View {
         TabView(selection: $selection) {
-            NavigationStack {
-                LeniaLabView()
-            }
-            .tabItem {
-                Label("Lab", systemImage: "sparkles.rectangle.stack")
-            }
-            .tag(StudioSurfaceSelection.lab)
-
-            ClusterSurfaceView()
-                .tabItem {
-                    Label("Cluster", systemImage: "point.3.connected.trianglepath.dotted")
+            Tab(value: StudioDestination.lab) {
+                NavigationStack {
+                    LeniaLabView()
                 }
-                .tag(StudioSurfaceSelection.cluster)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } label: {
+                Label(StudioDestination.lab.title, systemImage: StudioDestination.lab.systemImage)
+                    .accessibilityHint(StudioDestination.lab.accessibilityHint)
+                    .help("Lab, Command 1")
+            }
 
-            NavigationStack {
-                CompendiumLayoutView()
+            Tab(value: StudioDestination.library) {
+                NavigationStack {
+                    CompendiumLayoutView()
+                        .navigationTitle("Library")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } label: {
+                Label(StudioDestination.library.title, systemImage: StudioDestination.library.systemImage)
+                    .accessibilityHint(StudioDestination.library.accessibilityHint)
+                    .help("Library, Command 2")
             }
-            .tabItem {
-                Label("Compendium", systemImage: "books.vertical")
+
+            Tab(value: StudioDestination.compare) {
+                StudioCompareDestination(onCompose: { selection = .lab })
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } label: {
+                Label(StudioDestination.compare.title, systemImage: StudioDestination.compare.systemImage)
+                    .accessibilityHint(StudioDestination.compare.accessibilityHint)
+                    .help("Compare, Command 3")
             }
-            .tag(StudioSurfaceSelection.compendium)
+            .badge(appState.compareTray.count)
+
+            Tab(value: StudioDestination.runs) {
+                StudioRunsDestination(destination: $selection, onConnect: { showConnect = true })
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } label: {
+                Label(StudioDestination.runs.title, systemImage: StudioDestination.runs.systemImage)
+                    .accessibilityHint(StudioDestination.runs.accessibilityHint)
+                    .help("Runs, Command 4")
+            }
         }
-        .onAppear {
-            selection = preferredStudioSurface(
-                currentSelection: selection,
-                connectionState: appState.connectionState
-            )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(StudioPalette.chrome)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                StudioClusterControl(
+                    connectionState: appState.connectionState,
+                    destination: $selection,
+                    onConnect: { showConnect = true },
+                    onStop: stopCluster
+                )
+                .controlSize(.small)
+            }
+        }
+        .sheet(isPresented: $showConnect) {
+            ConnectView(node: node)
         }
         .onChange(of: appState.connectionState) { _, newValue in
-            selection = preferredStudioSurface(
-                currentSelection: selection,
+            selection = studioDestinationAfterConnectionChange(
+                current: selection,
                 connectionState: newValue
             )
         }
-    }
-}
-
-struct ClusterSurfaceView: View {
-    @EnvironmentObject var appState: AppState
-
-    var body: some View {
-        Group {
-            switch appState.connectionState {
-            case .connected(let role):
-                switch role {
-                case .host:
-                    HostLayoutView()
-                case .worker:
-                    WorkerLayoutView()
-                case .compendium:
-                    CompendiumLayoutView()
-                }
-            case .connecting, .disconnected, .error:
-                DisconnectedView()
+        .onChange(of: commandCenter.latestEvent) { _, event in
+            guard let event else { return }
+            selection = studioDestination(current: selection, applying: event.command)
+            if event.command == .openClusterConnection {
+                showConnect = true
             }
         }
-        .navigationTitle("Cluster")
+    }
+
+    private func stopCluster() {
+        if case .connected(role: .compendium) = appState.connectionState {
+            appState.connectionState = .disconnected
+        } else {
+            node.stop()
+        }
     }
 }
 
@@ -119,6 +128,7 @@ struct HostLayoutView: View {
             }
         }
         .navigationSplitViewStyle(.balanced)
+        .background(StudioSceneBackground())
     }
 }
 
@@ -146,9 +156,9 @@ struct HostSidebarView: View {
 
             Section("Workers (\(appState.connectedWorkers.count))") {
                 if appState.connectedWorkers.isEmpty {
-                    Text("Waiting for workers...")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
+                    Label("Waiting for workers", systemImage: "desktopcomputer")
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .font(StudioType.bodySmall)
                 } else {
                     ForEach(appState.connectedWorkers, id: \.workerId) { worker in
                         let creatures = creaturesForWorker(worker.workerId)
@@ -178,18 +188,18 @@ struct HostSidebarView: View {
                                     } label: {
                                         HStack {
                                             Image(systemName: "star.fill")
-                                                .foregroundStyle(.yellow)
+                                                .foregroundStyle(StudioPalette.ember)
                                                 .font(.caption2)
                                             Text(creature.name)
                                                 .font(.caption2)
                                             Spacer()
                                             Text(String(format: "G:%.1f", creature.metrics.gyration))
-                                                .font(.caption2)
-                                                .foregroundStyle(.tertiary)
+                                                .font(StudioType.dataSmall)
+                                                .foregroundStyle(StudioPalette.mutedInk)
                                         }
                                         .padding(.leading, 8)
-                                        .background(selectedCreature?.id == creature.id ? Color.accentColor.opacity(0.2) : Color.clear)
-                                        .cornerRadius(4)
+                                        .background(selectedCreature?.id == creature.id ? StudioPalette.surfaceSoft : Color.clear)
+                                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu {
@@ -204,7 +214,7 @@ struct HostSidebarView: View {
                         } label: {
                             HStack {
                                 Circle()
-                                    .fill(worker.isAvailable ? Color.green : Color.orange)
+                                    .fill(worker.isAvailable ? StudioPalette.moss : StudioPalette.ember)
                                     .frame(width: 8, height: 8)
                                 Text(worker.workerId)
                                     .font(.caption)
@@ -213,6 +223,10 @@ struct HostSidebarView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel(
+                                "\(worker.workerId), \(worker.isAvailable ? "ready" : "busy"), \(creatures.count) creatures"
+                            )
                         }
                     }
                 }
@@ -224,11 +238,12 @@ struct HostSidebarView: View {
                 } label: {
                     Label("New Sweep", systemImage: "plus.circle")
                 }
+                .help("Create a parameter sweep")
 
                 if appState.activeCampaigns.isEmpty {
-                    Text("No active sweeps")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
+                    Label("No active sweeps", systemImage: "waveform.path.ecg")
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .font(StudioType.bodySmall)
                 } else {
                     ForEach(appState.activeCampaigns) { campaign in
                         Button {
@@ -249,11 +264,12 @@ struct HostSidebarView: View {
                 } label: {
                     Label("New Arena", systemImage: "plus.circle")
                 }
+                .help("Create an arena")
 
                 if appState.availableArenas.isEmpty {
-                    Text("No arenas created")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
+                    Label("No arenas", systemImage: "square.dashed")
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .font(StudioType.bodySmall)
                 } else {
                     ForEach(appState.availableArenas, id: \.id) { arena in
                         Button {
@@ -262,8 +278,8 @@ struct HostSidebarView: View {
                             selectedCampaignId = nil
                         } label: {
                             ArenaRow(arena: arena, state: appState.arenaStates[arena.id])
-                                .background(selectedArenaId == arena.id ? Color.accentColor.opacity(0.2) : Color.clear)
-                                .cornerRadius(4)
+                                .background(selectedArenaId == arena.id ? StudioPalette.surfaceSoft : Color.clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }
@@ -271,7 +287,10 @@ struct HostSidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("Controller")
+        .scrollContentBackground(.hidden)
+        .background(StudioPalette.chromeMuted)
+        .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 340)
+        .navigationTitle("Runs")
         .sheet(isPresented: $showConnect) {
             ConnectView(node: node)
         }
@@ -306,10 +325,10 @@ struct CampaignRow: View {
                     .controlSize(.small)
             } else if campaign.processedSeeds >= campaign.totalSeeds {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(StudioPalette.moss)
             } else {
                 Image(systemName: "clock.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(StudioPalette.ember)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(campaign.name)
@@ -340,13 +359,13 @@ struct CampaignJoinRow: View {
                     .controlSize(.small)
             } else if campaign.processedSeeds >= campaign.totalSeeds {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(StudioPalette.moss)
             } else if campaign.isRunning {
                 Image(systemName: "person.2.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(StudioPalette.ember)
             } else {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(StudioPalette.ocean)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(campaign.name)
@@ -363,11 +382,11 @@ struct CampaignJoinRow: View {
                 if campaign.isRunning {
                     Text("Running")
                         .font(.caption2)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(StudioPalette.ember)
                 } else {
                     Text("Done")
                         .font(.caption2)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(StudioPalette.moss)
                 }
             } else if campaign.processedSeeds < campaign.totalSeeds {
                 Button("Join") {
@@ -636,11 +655,11 @@ struct ArenaRow: View {
     }
 
     private var statusColor: Color {
-        guard let state = state else { return .gray }
+        guard let state = state else { return StudioPalette.mutedInk }
         switch state.status {
-        case .lobby: return .yellow
-        case .running: return .green
-        case .ended: return .gray
+        case .lobby: return StudioPalette.ember
+        case .running: return StudioPalette.moss
+        case .ended: return StudioPalette.mutedInk
         }
     }
 }
@@ -744,7 +763,7 @@ struct ArenaDetailView: View {
                     }
                 }
                 .buttonStyle(.bordered)
-                .foregroundStyle(.orange)
+                .foregroundStyle(StudioPalette.ember)
 
                 Button("Stop Arena") {
                     Task {
@@ -752,7 +771,7 @@ struct ArenaDetailView: View {
                     }
                 }
                 .buttonStyle(.bordered)
-                .foregroundStyle(.red)
+                .foregroundStyle(Color(nsColor: .systemRed))
             }
         }
         .focusable()
@@ -798,9 +817,9 @@ struct ArenaDetailView: View {
 
     private func statusColor(_ status: ArenaStatus) -> Color {
         switch status {
-        case .lobby: return .yellow
-        case .running: return .green
-        case .ended: return .gray
+        case .lobby: return StudioPalette.ember
+        case .running: return StudioPalette.moss
+        case .ended: return StudioPalette.mutedInk
         }
     }
 }
@@ -824,38 +843,6 @@ private struct StudioDetailScroll<Content: View>: View {
     }
 }
 
-// MARK: - Disconnected View
-
-struct DisconnectedView: View {
-    @EnvironmentObject var node: LeniaNode
-    @State private var showConnect = false
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "network.slash")
-                .font(.system(size: 64))
-                .foregroundStyle(.secondary)
-
-            Text("Not Connected")
-                .font(.title2)
-
-            Text("Lenia Lab and the Compendium stay available offline. Connect here when you want host or worker cluster flows.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 300)
-
-            Button("Connect") {
-                showConnect = true
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .sheet(isPresented: $showConnect) {
-            ConnectView(node: node)
-        }
-    }
-}
-
 // MARK: - Shared Components
 
 struct ConnectionStatusRow: View {
@@ -864,7 +851,7 @@ struct ConnectionStatusRow: View {
     @Binding var showConnect: Bool
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             Circle()
                 .fill(statusColor)
                 .frame(width: 8, height: 8)
@@ -895,14 +882,16 @@ struct ConnectionStatusRow: View {
                 .controlSize(.small)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(statusText)
     }
 
     private var statusColor: Color {
         switch appState.connectionState {
-        case .connected: return .green
-        case .connecting: return .yellow
-        case .error: return .red
-        case .disconnected: return .gray
+        case .connected: return StudioPalette.moss
+        case .connecting: return StudioPalette.ember
+        case .error: return Color(nsColor: .systemRed)
+        case .disconnected: return StudioPalette.mutedInk
         }
     }
 

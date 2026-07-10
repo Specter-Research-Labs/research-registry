@@ -1470,6 +1470,9 @@ final class SQLiteIndexer {
         if version < 15 {
             try migrate14to15()
         }
+        if version < 16 {
+            try migrate15to16()
+        }
 
         try createSchema()
         try repairCurrentSchema()
@@ -1820,17 +1823,28 @@ final class SQLiteIndexer {
         }
     }
 
+    private func migrate15to16() throws {
+        try db.withImmediateTransaction {
+            try ensureCompendiumBrowseIndexes(rebuildExisting: true)
+            try ensureCompendiumSearchIndex(rebuild: true)
+            try db.exec("UPDATE compendium_meta SET schema_version = 16")
+        }
+    }
+
     private func repairCurrentSchema() throws {
         guard try db.tableExists("compendium_meta") else {
             return
         }
+        let searchNeedsRepair = try compendiumSearchSchemaNeedsRepair()
         try db.withImmediateTransaction {
-            if try !currentSchemaNeedsRepair() {
+            if try !currentSchemaNeedsRepair(), !searchNeedsRepair {
                 return
             }
             try ensureCanonicalCreatureSnapshotColumns()
             try ensureSpecimenContractColumns()
             try ensureCreatureCatalogQCColumns()
+            try ensureCompendiumBrowseIndexes(rebuildExisting: false)
+            try ensureCompendiumSearchIndex(rebuild: searchNeedsRepair)
             try normalizeLegacyReplaySourceMode()
             try backfillSpecimenContracts()
             try db.exec("UPDATE compendium_meta SET schema_version = \(Self.schemaVersion)")
@@ -1842,7 +1856,117 @@ final class SQLiteIndexer {
             || specimenContractColumnsNeedRepair()
             || canonicalCreatureLinkNeedsRepair()
             || creatureCatalogQCColumnsNeedRepair()
+            || compendiumBrowseIndexesNeedRepair()
             || legacyReplaySourceModeNeedsRepair()
+    }
+
+    private func compendiumBrowseIndexesNeedRepair() throws -> Bool {
+        let names = [
+            "creatures_score",
+            "creatures_stable",
+            "creatures_catalog_status",
+            "exports_creature",
+        ]
+        for name in names {
+            if try db.scalarInt("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = '\(name)'") == 0 {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func compendiumSearchSchemaNeedsRepair() throws -> Bool {
+        guard try db.tableExists("creatures") else { return false }
+        let objects = [
+            ("table", "creature_search"),
+            ("trigger", "creatures_search_insert"),
+            ("trigger", "creatures_search_delete"),
+            ("trigger", "creatures_search_update"),
+        ]
+        for (type, name) in objects {
+            if try db.scalarInt("SELECT COUNT(*) FROM sqlite_master WHERE type = '\(type)' AND name = '\(name)'") == 0 {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func ensureCompendiumBrowseIndexes(rebuildExisting: Bool) throws {
+        if rebuildExisting {
+            try db.exec("DROP INDEX IF EXISTS creatures_score")
+            try db.exec("DROP INDEX IF EXISTS creatures_stable")
+            try db.exec("DROP INDEX IF EXISTS creatures_catalog_status")
+            try db.exec("DROP INDEX IF EXISTS exports_creature")
+        }
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_score ON creatures(score DESC, recorded_at DESC, id ASC)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_stable ON creatures(is_stable, score DESC, recorded_at DESC, id ASC)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status, score DESC, recorded_at DESC, id ASC)")
+        try db.exec("CREATE INDEX IF NOT EXISTS exports_creature ON exports(creature_id, exported_at DESC, id DESC)")
+    }
+
+    private func ensureCompendiumSearchIndex(rebuild: Bool) throws {
+        let existed = try db.tableExists("creature_search")
+        try db.exec("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS creature_search USING fts5(
+                id,
+                name,
+                owner_id,
+                run_id,
+                taxonomy_family_id,
+                taxonomy_genus_id,
+                taxonomy_species_id,
+                trait_labels_json,
+                content = 'creatures',
+                content_rowid = 'rowid',
+                tokenize = 'unicode61 remove_diacritics 2'
+            )
+        """)
+        try db.exec("""
+            CREATE TRIGGER IF NOT EXISTS creatures_search_insert AFTER INSERT ON creatures BEGIN
+                INSERT INTO creature_search(
+                    rowid, id, name, owner_id, run_id,
+                    taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id, trait_labels_json
+                ) VALUES (
+                    new.rowid, new.id, new.name, new.owner_id, new.run_id,
+                    new.taxonomy_family_id, new.taxonomy_genus_id, new.taxonomy_species_id, new.trait_labels_json
+                );
+            END
+        """)
+        try db.exec("""
+            CREATE TRIGGER IF NOT EXISTS creatures_search_delete AFTER DELETE ON creatures BEGIN
+                INSERT INTO creature_search(
+                    creature_search, rowid, id, name, owner_id, run_id,
+                    taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id, trait_labels_json
+                ) VALUES (
+                    'delete', old.rowid, old.id, old.name, old.owner_id, old.run_id,
+                    old.taxonomy_family_id, old.taxonomy_genus_id, old.taxonomy_species_id, old.trait_labels_json
+                );
+            END
+        """)
+        try db.exec("""
+            CREATE TRIGGER IF NOT EXISTS creatures_search_update AFTER UPDATE OF
+                id, name, owner_id, run_id,
+                taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id, trait_labels_json
+            ON creatures BEGIN
+                INSERT INTO creature_search(
+                    creature_search, rowid, id, name, owner_id, run_id,
+                    taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id, trait_labels_json
+                ) VALUES (
+                    'delete', old.rowid, old.id, old.name, old.owner_id, old.run_id,
+                    old.taxonomy_family_id, old.taxonomy_genus_id, old.taxonomy_species_id, old.trait_labels_json
+                );
+                INSERT INTO creature_search(
+                    rowid, id, name, owner_id, run_id,
+                    taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id, trait_labels_json
+                ) VALUES (
+                    new.rowid, new.id, new.name, new.owner_id, new.run_id,
+                    new.taxonomy_family_id, new.taxonomy_genus_id, new.taxonomy_species_id, new.trait_labels_json
+                );
+            END
+        """)
+        if rebuild || !existed {
+            try db.exec("INSERT INTO creature_search(creature_search) VALUES ('rebuild')")
+        }
     }
 
     private func creatureCatalogQCColumnsNeedRepair() throws -> Bool {
@@ -1876,7 +2000,7 @@ final class SQLiteIndexer {
                 created_at TEXT NOT NULL
             )
         """)
-        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
+        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status, score DESC, recorded_at DESC, id ASC)")
         try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
     }
 
@@ -2249,11 +2373,10 @@ final class SQLiteIndexer {
 
         try db.exec("CREATE INDEX IF NOT EXISTS campaigns_run_campaign ON campaigns(run_id, campaign_id)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_run_campaign ON creatures(run_id, campaign_id)")
-        try db.exec("CREATE INDEX IF NOT EXISTS creatures_score ON creatures(score DESC)")
-        try db.exec("CREATE INDEX IF NOT EXISTS creatures_stable ON creatures(is_stable)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_config_hash ON creatures(config_hash)")
         try db.exec("CREATE INDEX IF NOT EXISTS creatures_canonical_specimen ON creatures(canonical_specimen_id)")
-        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
+        try ensureCompendiumBrowseIndexes(rebuildExisting: false)
+        try ensureCompendiumSearchIndex(rebuild: false)
         try db.exec("""
             CREATE TABLE IF NOT EXISTS creature_qc_events (
                 id TEXT PRIMARY KEY,
@@ -2267,7 +2390,6 @@ final class SQLiteIndexer {
             )
         """)
         try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
-        try db.exec("CREATE INDEX IF NOT EXISTS exports_creature ON exports(creature_id)")
         try db.exec("CREATE INDEX IF NOT EXISTS exports_run_dir ON exports(run_id, export_dir)")
         try db.exec("CREATE INDEX IF NOT EXISTS results_score ON results(score DESC)")
     }

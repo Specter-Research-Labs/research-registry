@@ -37,11 +37,40 @@ private extension CompendiumCreature {
             runtimeCapabilities: runtimeCapabilities
         )
     }
+
+    var browserClassification: String? {
+        if let taxonomy {
+            let value = taxonomyValue(from: taxonomy)
+            if value != "--" {
+                return value
+            }
+        }
+        if !traitLabels.isEmpty {
+            return traitLabels.prefix(3).joined(separator: " · ")
+        }
+        let source = [sourceMode, sourceAlgorithm]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return source.isEmpty ? nil : source.joined(separator: " · ")
+    }
 }
 
 private enum CompendiumViewMode: String, CaseIterable {
     case list = "List"
     case grid = "Grid"
+    case morphospace = "Map"
+}
+
+func reconciledCompendiumSelection(
+    selectedIDs: Set<UUID>,
+    displayedIDs: [UUID]
+) -> Set<UUID> {
+    let available = Set(displayedIDs)
+    let retained = selectedIDs.intersection(available)
+    if !retained.isEmpty {
+        return retained
+    }
+    return displayedIDs.first.map { [$0] } ?? []
 }
 
 private struct CompendiumReplayContract: Sendable {
@@ -68,15 +97,19 @@ private final class CompendiumStore: ObservableObject {
     @Published var status: String = "No compendium loaded"
     @Published var error: String?
     @Published var warehousePath: String?
+    @Published var nextCursor: CompendiumBrowseCursor?
 
     private var loadTask: Task<Void, Never>?
+    private var browseCancellation: CompendiumBrowseCancellation?
     private var requestID = 0
 
     deinit {
+        browseCancellation?.cancel()
         loadTask?.cancel()
     }
 
-    func load(path: String, query: CompendiumQuery) {
+    func load(path: String, query: CompendiumQuery, appending: Bool = false) {
+        browseCancellation?.cancel()
         loadTask?.cancel()
         requestID += 1
         let activeRequestID = requestID
@@ -87,6 +120,7 @@ private final class CompendiumStore: ObservableObject {
             status = "Choose a compendium database"
             error = nil
             warehousePath = nil
+            nextCursor = nil
             return
         }
 
@@ -96,6 +130,7 @@ private final class CompendiumStore: ObservableObject {
             status = "Compendium not found"
             error = "Missing file: \(trimmed)"
             warehousePath = nil
+            nextCursor = nil
             return
         }
 
@@ -105,31 +140,53 @@ private final class CompendiumStore: ObservableObject {
             status = "Compendium is empty"
             error = "DB file exists but is zero bytes: \(trimmed)"
             warehousePath = nil
+            nextCursor = nil
             return
         }
 
         isLoading = true
-        status = creatures.isEmpty ? "Loading..." : "Refreshing..."
+        status = appending ? "Loading more..." : (creatures.isEmpty ? "Loading..." : "Refreshing...")
         error = nil
         let siblingWarehouse = defaultWarehousePath(compendiumPath: trimmed)
         warehousePath = FileManager.default.fileExists(atPath: siblingWarehouse) ? siblingWarehouse : nil
+        let cancellation = CompendiumBrowseCancellation()
+        browseCancellation = cancellation
 
         loadTask = Task.detached(priority: .userInitiated) {
             do {
-                let results = try browseCompendium(path: trimmed, query: query)
+                let results = try await withTaskCancellationHandler {
+                    try browseCompendium(
+                        path: trimmed,
+                        query: query,
+                        cancellation: cancellation
+                    )
+                } onCancel: {
+                    cancellation.cancel()
+                }
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     guard activeRequestID == self.requestID else { return }
-                    self.creatures = results.entries
+                    if appending {
+                        let known = Set(self.creatures.map(\.id))
+                        self.creatures.append(contentsOf: results.entries.filter { !known.contains($0.id) })
+                    } else {
+                        self.creatures = results.entries
+                    }
                     self.status = results.status
                     self.error = results.error
+                    self.nextCursor = results.nextCursor
                     self.isLoading = false
                 }
+            } catch CompendiumBrowseError.cancelled {
+                return
             } catch {
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     guard activeRequestID == self.requestID else { return }
-                    self.creatures = []
+                    if !appending {
+                        self.creatures = []
+                        self.nextCursor = nil
+                    }
                     self.status = "Failed to load compendium"
                     self.error = error.localizedDescription
                     self.isLoading = false
@@ -150,8 +207,10 @@ private final class CompendiumStore: ObservableObject {
 }
 
 struct CompendiumLayoutView: View {
+    @EnvironmentObject private var appState: AppState
     @StateObject private var store = CompendiumStore()
     @AppStorage("lastCompendiumPath") private var compendiumPath = ""
+    @AppStorage("studioFavoriteSpecimenIDs") private var favoriteSpecimenIDs = ""
     @State private var searchText = ""
     @State private var stableOnly = false
     @State private var catalogFilter: CompendiumCatalogFilter = .active
@@ -161,162 +220,132 @@ struct CompendiumLayoutView: View {
     @State private var showPicker = false
     @State private var viewMode: CompendiumViewMode = .list
     @State private var showComparison = false
+    @State private var showCreateSweep = false
+    @State private var favoritesOnly = false
+    @State private var showSourceControls = false
     @FocusState private var isSearchFocused: Bool
     @State private var refreshTask: Task<Void, Never>?
 
-    private var selectedCreature: CompendiumCreature? {
-        guard let first = selectedCreatureIds.first else { return nil }
-        return store.creatures.first(where: { $0.id == first })
+    private var favoriteIDs: Set<UUID> {
+        Set(favoriteSpecimenIDs.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
     }
 
-    private var selectedComparisonPair: (CompendiumCreature, CompendiumCreature)? {
-        guard selectedCreatureIds.count == 2 else { return nil }
-        let selected = store.creatures.filter { selectedCreatureIds.contains($0.id) }
-        guard selected.count == 2 else { return nil }
-        return (selected[0], selected[1])
+    private var unifiedEntries: [CompendiumCreature] {
+        studioUnifiedLibraryEntries(
+            local: appState.library,
+            remote: store.creatures,
+            replayReference: appState.replayReference(for:)
+        )
     }
 
-    private var comparisonPair: (CompendiumCreature, CompendiumCreature)? {
-        if let selectedComparisonPair {
-            return selectedComparisonPair
+    private var displayedEntries: [CompendiumCreature] {
+        unifiedEntries.filter { entry in
+            if favoritesOnly, !favoriteIDs.contains(entry.id) {
+                return false
+            }
+            guard entry.runId == "local-library" else { return true }
+            guard catalogFilter != .quarantine else { return false }
+            return studioLibraryEntryMatches(
+                entry,
+                search: searchText,
+                stableOnly: stableOnly,
+                minimumScore: Float(minScoreText),
+                favoritesOnly: favoritesOnly,
+                favoriteIDs: favoriteIDs
+            )
         }
-        guard store.creatures.count >= 2 else { return nil }
-        return (store.creatures[0], store.creatures[1])
+    }
+
+    private var connectedAsHost: Bool {
+        if case .connected(role: .host) = appState.connectionState {
+            return true
+        }
+        return false
+    }
+
+    private var selectedCreature: CompendiumCreature? {
+        displayedEntries.first(where: { selectedCreatureIds.contains($0.id) })
+    }
+
+    private var selectedComparisonEntries: [CompendiumCreature]? {
+        guard (2...4).contains(selectedCreatureIds.count) else { return nil }
+        let selected = displayedEntries.filter { selectedCreatureIds.contains($0.id) }
+        guard selected.count == selectedCreatureIds.count else { return nil }
+        return selected
+    }
+
+    private var comparisonEntries: [CompendiumCreature] {
+        if let selectedComparisonEntries {
+            return selectedComparisonEntries
+        }
+        return Array(displayedEntries.prefix(2))
     }
 
     private var comparisonButtonTitle: String {
-        selectedComparisonPair == nil ? "Compare Top 2 Results" : "Compare Selected"
+        selectedComparisonEntries == nil ? "Compare Top 2" : "Compare \(selectedComparisonEntries?.count ?? 2) Selected"
+    }
+
+    private var sourceDisplayName: String {
+        let trimmed = compendiumPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "No indexed source" }
+        return URL(fileURLWithPath: trimmed).lastPathComponent
+    }
+
+    private var isInitialLoading: Bool {
+        store.isLoading && unifiedEntries.isEmpty
     }
 
     var body: some View {
         NavigationSplitView {
-            VStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        TextField("DB path", text: $compendiumPath)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.caption)
-                        Button("Choose") { showPicker = true }
-                            .controlSize(.small)
-                        Button("Refresh") { refresh() }
-                            .controlSize(.small)
-                    }
+            VStack(spacing: 0) {
+                libraryControls
 
-                    HStack(spacing: 6) {
-                        TextField("Search", text: $searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .focused($isSearchFocused)
-                        Toggle("Stable", isOn: $stableOnly)
-                            .toggleStyle(.switch)
-                            .fixedSize()
-                    }
-                    .font(.caption)
-
-                    HStack(spacing: 6) {
-                        TextField("Min", text: $minScoreText)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                        Picker("", selection: $catalogFilter) {
-                            ForEach(CompendiumCatalogFilter.allCases, id: \.self) { filter in
-                                Text(filter.rawValue).tag(filter)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .fixedSize()
-                        Stepper("Limit \(limit)", value: $limit, in: 25...2000, step: 25)
-                            .fixedSize()
-
-                        Spacer()
-
-                        Picker("", selection: $viewMode) {
-                            ForEach(CompendiumViewMode.allCases, id: \.self) { mode in
-                                Text(mode.rawValue).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .fixedSize()
-                    }
-                    .font(.caption)
-
-                    if comparisonPair != nil {
-                        Button(comparisonButtonTitle) {
-                            showComparison = true
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
-                        .accessibilityLabel(comparisonButtonTitle)
-                    }
-                }
-                .padding([.top, .horizontal])
-
-                if store.isLoading {
+                if store.isLoading, !isInitialLoading {
                     ProgressView()
-                        .padding(.vertical, 4)
-                } else {
-                    VStack(spacing: 6) {
-                        Text(store.status)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if store.warehousePath != nil {
-                            Label("Warehouse sibling detected", systemImage: "circle.grid.2x2")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        if let error = store.error {
-                            Label(error, systemImage: "exclamationmark.triangle.fill")
-                                .font(.caption2)
-                                .foregroundStyle(store.creatures.isEmpty ? StudioPalette.ember : StudioPalette.mutedInk)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(store.creatures.isEmpty ? StudioPalette.ember.opacity(0.12) : StudioPalette.surfaceSoft)
-                                )
-                        }
-                    }
-                    .padding(.bottom, 4)
+                        .progressViewStyle(.linear)
                 }
 
-                switch viewMode {
-                case .list:
-                    List(store.creatures, selection: $selectedCreatureIds) { entry in
-                        CompendiumRow(entry: entry)
-                            .tag(entry.id)
-                            .contextMenu { compendiumContextMenu(for: entry) }
-                    }
-                case .grid:
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                            ForEach(store.creatures) { entry in
-                                CompendiumGridCell(entry: entry, isSelected: selectedCreatureIds.contains(entry.id))
-                                    .onTapGesture {
-                                        if NSEvent.modifierFlags.contains(.command) {
-                                            if selectedCreatureIds.contains(entry.id) {
-                                                selectedCreatureIds.remove(entry.id)
-                                            } else if selectedCreatureIds.count < 2 {
-                                                selectedCreatureIds.insert(entry.id)
-                                            }
-                                        } else {
-                                            selectedCreatureIds = [entry.id]
-                                        }
-                                    }
-                                    .contextMenu { compendiumContextMenu(for: entry) }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
+                if let error = store.error, !unifiedEntries.isEmpty {
+                    libraryErrorBanner(error)
                 }
+
+                Divider()
+
+                libraryContent
             }
+            .background(StudioPalette.surface)
+            .navigationSplitViewColumnWidth(
+                min: viewMode == .morphospace ? 500 : 360,
+                ideal: viewMode == .morphospace ? 700 : 440,
+                max: viewMode == .morphospace ? 900 : 620
+            )
         } detail: {
             if let entry = selectedCreature {
                 CompendiumDetailView(entry: entry)
+                    .frame(minWidth: 360)
             } else {
                 ContentUnavailableView(
-                    "Select an entry",
-                    systemImage: "sparkles",
-                    description: Text("Choose an entry from the compendium list")
+                    "Select a Specimen",
+                    systemImage: "circle.hexagongrid"
                 )
             }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .background {
+            HStack(spacing: 0) {
+                Button("Search") { isSearchFocused = true }
+                    .keyboardShortcut("f", modifiers: .command)
+                Button("Toggle View") {
+                    let modes = CompendiumViewMode.allCases
+                    let index = modes.firstIndex(of: viewMode) ?? 0
+                    viewMode = modes[(index + 1) % modes.count]
+                }
+                .keyboardShortcut("g", modifiers: .command)
+            }
+            .frame(width: 0, height: 0)
+            .clipped()
+            .opacity(0)
+            .accessibilityHidden(true)
         }
         .onAppear {
             if compendiumPath.isEmpty, let defaultPath = defaultCompendiumPath() {
@@ -324,28 +353,22 @@ struct CompendiumLayoutView: View {
             }
             refresh()
         }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Search") { isSearchFocused = true }
-                    .keyboardShortcut("f", modifiers: .command)
-                    .hidden()
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Toggle View") {
-                    viewMode = viewMode == .list ? .grid : .list
-                }
-                .keyboardShortcut("g", modifiers: .command)
-                .hidden()
-            }
-        }
         .onChange(of: compendiumPath) { _, _ in scheduleRefresh() }
         .onChange(of: searchText) { _, _ in scheduleRefresh() }
         .onChange(of: stableOnly) { _, _ in scheduleRefresh() }
         .onChange(of: catalogFilter) { _, _ in scheduleRefresh() }
         .onChange(of: minScoreText) { _, _ in scheduleRefresh() }
         .onChange(of: limit) { _, _ in scheduleRefresh() }
-        .onChange(of: store.creatures.map(\.id)) { _, _ in
-            syncSelectionToResults()
+        .onChange(of: displayedEntries.map(\.id), initial: true) { _, displayedIDs in
+            selectedCreatureIds = reconciledCompendiumSelection(
+                selectedIDs: selectedCreatureIds,
+                displayedIDs: displayedIDs
+            )
+        }
+        .onChange(of: selectedCreatureIds) { oldValue, newValue in
+            if newValue.count > appState.compareTrayCapacity {
+                selectedCreatureIds = oldValue
+            }
         }
         .fileImporter(isPresented: $showPicker, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first {
@@ -353,19 +376,269 @@ struct CompendiumLayoutView: View {
             }
         }
         .sheet(isPresented: $showComparison) {
-            if let pair = comparisonPair {
+            if comparisonEntries.count >= 2 {
                 NavigationStack {
-                    ComparisonView(entries: [
-                        pair.0.studioEntry,
-                        pair.1.studioEntry
-                    ])
+                    ComparisonView(entries: comparisonEntries.map(\.studioEntry))
                 }
                 .frame(minWidth: 920, minHeight: 680)
             }
         }
+        .sheet(isPresented: $showCreateSweep) {
+            CreateSweepSheet()
+        }
         .onDisappear {
             refreshTask?.cancel()
         }
+    }
+
+    private var libraryControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                TextField("Search specimens", text: $searchText)
+                    .textFieldStyle(.roundedBorder)
+                    .font(StudioType.body)
+                    .focused($isSearchFocused)
+                    .accessibilityLabel("Search specimens")
+
+                Picker("View", selection: $viewMode) {
+                    ForEach(CompendiumViewMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 170)
+            }
+
+            HStack(spacing: 8) {
+                Picker("Catalog", selection: $catalogFilter) {
+                    ForEach(CompendiumCatalogFilter.allCases, id: \.self) { filter in
+                        Text(filter.rawValue).tag(filter)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: 230)
+
+                Toggle(isOn: $stableOnly) {
+                    Label("Stable", systemImage: "checkmark.seal")
+                }
+                .toggleStyle(.button)
+                .controlSize(.small)
+
+                Toggle(isOn: $favoritesOnly) {
+                    Image(systemName: favoritesOnly ? "star.fill" : "star")
+                }
+                .toggleStyle(.button)
+                .controlSize(.small)
+                .accessibilityLabel("Favorites only")
+                .help("Show favorites only")
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 8) {
+                HStack(spacing: 5) {
+                    Text("MIN SCORE")
+                        .font(StudioType.label)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                    TextField("Any", text: $minScoreText)
+                        .textFieldStyle(.roundedBorder)
+                        .font(StudioType.dataSmall)
+                        .frame(width: 68)
+                }
+
+                Text("\(displayedEntries.count.formatted()) shown")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+
+                Spacer(minLength: 8)
+
+                if comparisonEntries.count >= 2 {
+                    Button {
+                        showComparison = true
+                    } label: {
+                        Label(comparisonButtonTitle, systemImage: "rectangle.split.2x1")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .accessibilityLabel(comparisonButtonTitle)
+                }
+            }
+
+            sourceDisclosure
+        }
+        .padding(12)
+        .background(StudioPalette.surface)
+    }
+
+    private var sourceDisclosure: some View {
+        DisclosureGroup(isExpanded: $showSourceControls) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    TextField("Compendium database path", text: $compendiumPath)
+                        .textFieldStyle(.roundedBorder)
+                        .font(StudioType.dataSmall)
+                    Button { showPicker = true } label: {
+                        Image(systemName: "folder")
+                    }
+                    .help("Choose compendium database")
+                    Button { refresh() } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .help("Refresh source")
+                }
+
+                HStack(spacing: 10) {
+                    Stepper("Page \(limit)", value: $limit, in: 25...2000, step: 25)
+                        .font(StudioType.dataSmall)
+                    Spacer()
+                    if store.warehousePath != nil {
+                        Label("Warehouse available", systemImage: "circle.grid.2x2")
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    }
+                }
+            }
+            .padding(.top, 8)
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "externaldrive")
+                    .foregroundStyle(StudioPalette.mutedInk)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(sourceDisplayName)
+                        .font(StudioType.labelStrong)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(1)
+                    Text("\(appState.library.count) local · \(store.creatures.count) indexed · \(store.status)")
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 6)
+                if store.isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 7)
+        .background(StudioPalette.surfaceSoft.opacity(0.55), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .tint(StudioPalette.mutedInk)
+    }
+
+    @ViewBuilder
+    private var libraryContent: some View {
+        if isInitialLoading {
+            VStack(spacing: 12) {
+                ProgressView()
+                    .controlSize(.regular)
+                Text("Loading specimens")
+                    .font(StudioType.bodySmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let error = store.error, unifiedEntries.isEmpty {
+            ContentUnavailableView {
+                Label("Source Unavailable", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(error)
+            } actions: {
+                Button("Retry") { refresh() }
+            }
+        } else if displayedEntries.isEmpty {
+            ContentUnavailableView(
+                "No Matching Specimens",
+                systemImage: "line.3.horizontal.decrease.circle"
+            )
+        } else {
+            VStack(spacing: 0) {
+                switch viewMode {
+                case .list:
+                    List(displayedEntries, selection: $selectedCreatureIds) { entry in
+                        CompendiumRow(entry: entry)
+                            .tag(entry.id)
+                            .contextMenu { compendiumContextMenu(for: entry) }
+                    }
+                    .listStyle(.inset)
+                case .grid:
+                    ScrollView {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 148, maximum: 190), spacing: 10)],
+                            spacing: 10
+                        ) {
+                            ForEach(displayedEntries) { entry in
+                                let isSelected = selectedCreatureIds.contains(entry.id)
+                                Button {
+                                    selectGridEntry(entry)
+                                } label: {
+                                    CompendiumGridCell(entry: entry, isSelected: isSelected)
+                                }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(entry.name)
+                                    .accessibilityValue(gridAccessibilityValue(entry))
+                                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                                    .accessibilityAction(named: "Open Specimen") {
+                                        selectedCreatureIds = [entry.id]
+                                    }
+                                    .contextMenu { compendiumContextMenu(for: entry) }
+                            }
+                        }
+                        .padding(12)
+                    }
+                case .morphospace:
+                    StudioMorphospaceView(
+                        entries: displayedEntries,
+                        selectedID: Binding(
+                            get: { selectedCreatureIds.first },
+                            set: { selectedCreatureIds = $0.map { [$0] } ?? [] }
+                        ),
+                        canLaunchSweep: connectedAsHost,
+                        onOpen: { selectedCreatureIds = [$0.id] },
+                        onLaunchSweep: { entry, _, _ in
+                            selectedCreatureIds = [entry.id]
+                            if case .connected(role: .host) = appState.connectionState {
+                                showCreateSweep = true
+                            }
+                        }
+                    )
+                }
+
+                if let cursor = store.nextCursor {
+                    Divider()
+                    Button {
+                        loadMore(after: cursor)
+                    } label: {
+                        Label(store.isLoading ? "Loading More" : "Load More", systemImage: "arrow.down.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
+                    .disabled(store.isLoading)
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+    }
+
+    private func libraryErrorBanner(_ error: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(StudioPalette.ember)
+            Text(error)
+                .font(StudioType.bodySmall)
+                .foregroundStyle(StudioPalette.ink)
+                .lineLimit(2)
+            Spacer(minLength: 8)
+            Button { refresh() } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .buttonStyle(.borderless)
+            .help("Retry source")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(StudioPalette.ember.opacity(0.08))
     }
 
     @ViewBuilder
@@ -376,6 +649,21 @@ struct CompendiumLayoutView: View {
             onPreview: { selectedCreatureIds = [entry.id] },
             revealPath: entry.resolvedRunPath
         )
+        Divider()
+        Button {
+            toggleFavorite(entry.id)
+        } label: {
+            Label(
+                favoriteIDs.contains(entry.id) ? "Remove Favorite" : "Favorite",
+                systemImage: favoriteIDs.contains(entry.id) ? "star.slash" : "star"
+            )
+        }
+        Button {
+            _ = appState.addCompareEntry(entry.studioEntry)
+        } label: {
+            Label("Add to Compare", systemImage: "rectangle.split.2x1")
+        }
+        .disabled(appState.compareTrayIsFull && !appState.compareTray.contains(where: { $0.id == entry.studioEntry.id }))
     }
 
     private func refresh() {
@@ -402,24 +690,49 @@ struct CompendiumLayoutView: View {
         }
     }
 
+    private func loadMore(after cursor: CompendiumBrowseCursor) {
+        let query = CompendiumQuery(
+            search: searchText,
+            stableOnly: stableOnly,
+            catalogFilter: catalogFilter,
+            minScore: Float(minScoreText),
+            limit: limit,
+            cursor: cursor
+        )
+        store.load(path: compendiumPath, query: query, appending: true)
+    }
+
+    private func toggleFavorite(_ id: UUID) {
+        var ids = favoriteIDs
+        if ids.contains(id) {
+            ids.remove(id)
+        } else {
+            ids.insert(id)
+        }
+        favoriteSpecimenIDs = ids.map(\.uuidString).sorted().joined(separator: ",")
+    }
+
     private func defaultCompendiumPath() -> String? {
         defaultStudioCompendiumPath(anchorFilePath: #filePath)
     }
 
-    private func syncSelectionToResults() {
-        let available = Set(store.creatures.map(\.id))
-        let retained = selectedCreatureIds.intersection(available)
-        if !retained.isEmpty {
-            if retained != selectedCreatureIds {
-                selectedCreatureIds = retained
+    private func selectGridEntry(_ entry: CompendiumCreature) {
+        if NSEvent.modifierFlags.contains(.command) {
+            if selectedCreatureIds.contains(entry.id) {
+                selectedCreatureIds.remove(entry.id)
+            } else if selectedCreatureIds.count < appState.compareTrayCapacity {
+                selectedCreatureIds.insert(entry.id)
             }
-            return
-        }
-        if let first = store.creatures.first?.id {
-            selectedCreatureIds = [first]
         } else {
-            selectedCreatureIds = []
+            selectedCreatureIds = [entry.id]
         }
+    }
+
+    private func gridAccessibilityValue(_ entry: CompendiumCreature) -> String {
+        let score = entry.score.map { String(format: "score %.4f", $0) } ?? "score unavailable"
+        let stability = entry.isStable ? "stable" : "not stable"
+        let classification = entry.browserClassification.map { ", \($0)" } ?? ""
+        return "\(score), \(stability)\(classification)"
     }
 
 }
@@ -429,26 +742,58 @@ private struct CompendiumGridCell: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 4) {
-            CreatureThumbnailView(creature: entry.liveCreature, size: 80)
-
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack(alignment: .topTrailing) {
+                CreatureThumbnailView(creature: entry.liveCreature, size: 112)
+                    .frame(maxWidth: .infinity)
+                if entry.isStable {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(StudioType.labelStrong)
+                        .foregroundStyle(StudioPalette.moss)
+                        .padding(6)
+                        .background(.thinMaterial, in: Circle())
+                        .padding(5)
+                }
+            }
             Text(entry.name)
-                .font(.caption2)
+                .font(StudioType.body)
+                .foregroundStyle(StudioPalette.ink)
+                .lineLimit(2)
+                .frame(height: 34, alignment: .topLeading)
+
+            Text(entry.browserClassification ?? entry.displayRun)
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.mutedInk)
                 .lineLimit(1)
 
-            if let score = entry.score {
-                Text(String(format: "%.3f", score))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("SCORE")
+                    .font(StudioType.label)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                Text(entry.score.map { String(format: "%.4f", $0) } ?? "--")
+                    .font(StudioType.data)
+                    .foregroundStyle(StudioPalette.ink)
+                    .monospacedDigit()
+                Spacer(minLength: 0)
+                if entry.catalogStatus != "active" {
+                    Circle()
+                        .fill(qcStatusColor(entry.catalogStatus))
+                        .frame(width: 6, height: 6)
+                        .help(entry.catalogStatus.capitalized)
+                }
             }
         }
-        .padding(6)
-        .background(isSelected ? Color.accentColor.opacity(0.2) : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+        .padding(9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isSelected ? StudioPalette.surfaceSoft : StudioPalette.surfaceRaised)
         )
+        .overlay {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(isSelected ? StudioPalette.ocean : StudioPalette.hairline, lineWidth: isSelected ? 1.5 : 1)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 }
 
@@ -456,88 +801,48 @@ private struct CompendiumRow: View {
     let entry: CompendiumCreature
 
     var body: some View {
-        HStack {
-            CompendiumRowBadge(entry: entry)
-
-            if entry.isStable {
-                Image(systemName: "star.fill")
-                    .foregroundStyle(.yellow)
-                    .font(.caption)
-            } else {
-                Image(systemName: "circle")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
+        HStack(spacing: 10) {
+            ZStack(alignment: .bottomTrailing) {
+                CreatureThumbnailView(creature: entry.liveCreature, size: 48)
+                Circle()
+                    .fill(entry.isStable ? StudioPalette.moss : StudioPalette.ocean)
+                    .frame(width: 8, height: 8)
+                    .overlay(Circle().stroke(StudioPalette.surface, lineWidth: 1.5))
+                    .padding(3)
             }
 
-            Image(systemName: "shippingbox.fill")
-                .foregroundStyle(Color.secondary)
-                .font(.caption)
-
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
                     Text(entry.name)
-                        .font(.subheadline)
+                        .font(StudioType.body)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(1)
                     if entry.catalogStatus != "active" {
                         Text(entry.catalogStatus.capitalized)
-                            .font(.caption2)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(qcStatusColor(entry.catalogStatus).opacity(0.14))
-                            )
+                            .font(StudioType.label)
                             .foregroundStyle(qcStatusColor(entry.catalogStatus))
                     }
                 }
-                Text(entry.displayRun)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
                 CompendiumTaxonomyLine(entry: entry)
+                Text(entry.displayRun)
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                    .lineLimit(1)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            if let score = entry.score {
-                Text(String(format: "%.4f", score))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("--")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("SCORE")
+                    .font(StudioType.label)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                Text(entry.score.map { String(format: "%.4f", $0) } ?? "--")
+                    .font(StudioType.data)
+                    .foregroundStyle(StudioPalette.ink)
+                    .monospacedDigit()
             }
         }
-        .padding(.vertical, 2)
-    }
-}
-
-private struct CompendiumRowBadge: View {
-    let entry: CompendiumCreature
-
-    private var initial: String {
-        let name = entry.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return String(name.first ?? "L").uppercased()
-    }
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [StudioPalette.stageTop, StudioPalette.stageBottom],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            Text(initial)
-                .font(.system(.caption, design: .monospaced, weight: .bold))
-                .foregroundStyle(.white.opacity(0.92))
-        }
-        .frame(width: 32, height: 32)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(entry.isStable ? StudioPalette.ocean.opacity(0.6) : StudioPalette.hairline, lineWidth: 1)
-        )
+        .padding(.vertical, 5)
     }
 }
 
@@ -555,28 +860,10 @@ private func qcStatusColor(_ status: String) -> Color {
 private struct CompendiumTaxonomyLine: View {
     let entry: CompendiumCreature
 
-    private var label: String? {
-        if let taxonomy = entry.taxonomy {
-            let value = taxonomyValue(from: taxonomy)
-            if value != "--" {
-                return value
-            }
-        }
-        if !entry.traitLabels.isEmpty {
-            return entry.traitLabels.prefix(3).joined(separator: " · ")
-        }
-        let source = [entry.sourceMode, entry.sourceAlgorithm]
-            .compactMap { value in
-                value?.trimmingCharacters(in: .whitespacesAndNewlines)
-            }
-            .filter { !$0.isEmpty }
-        return source.isEmpty ? nil : source.joined(separator: " · ")
-    }
-
     var body: some View {
-        if let label {
+        if let label = entry.browserClassification {
             Text(label)
-                .font(.caption2)
+                .font(StudioType.dataSmall)
                 .foregroundStyle(StudioPalette.mutedInk)
                 .lineLimit(1)
         }
@@ -611,14 +898,14 @@ private struct CompendiumDetailView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
                         Text(entry.name)
-                            .font(.title3)
-                            .fontWeight(.semibold)
+                            .font(StudioType.title)
+                            .foregroundStyle(StudioPalette.ink)
                         Spacer()
                         if let score = entry.score {
                             Text(String(format: "%.4f", score))
-                                .font(.title3)
+                                .font(StudioType.data)
                                 .monospacedDigit()
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(StudioPalette.ember)
                         }
                     }
 
@@ -638,7 +925,7 @@ private struct CompendiumDetailView: View {
                         ScoreBreakdownView(creature: creature)
                             .padding(.top, 4)
                     }
-                    .font(.caption)
+                    .font(StudioType.labelStrong)
 
                     DisclosureGroup("Genotype") {
                         VStack(alignment: .leading, spacing: 4) {
@@ -648,11 +935,11 @@ private struct CompendiumDetailView: View {
                             Text("s: \(creature.genotype.s.map { String(format: "%.3f", $0) }.joined(separator: ", "))")
                             Text("h: \(creature.genotype.h.map { String(format: "%.2f", $0) }.joined(separator: ", "))")
                         }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
                         .padding(.top, 4)
                     }
-                    .font(.caption)
+                    .font(StudioType.labelStrong)
 
                     DisclosureGroup("Origin") {
                         VStack(alignment: .leading, spacing: 4) {
@@ -664,7 +951,7 @@ private struct CompendiumDetailView: View {
                         }
                         .padding(.top, 4)
                     }
-                    .font(.caption)
+                    .font(StudioType.labelStrong)
 
                     DisclosureGroup("Specimen Contract") {
                         VStack(alignment: .leading, spacing: 4) {
@@ -696,16 +983,20 @@ private struct CompendiumDetailView: View {
                         }
                         .padding(.top, 4)
                     }
-                    .font(.caption)
+                    .font(StudioType.labelStrong)
 
                     replayContractSection
 
                     HStack(spacing: 8) {
-                        Button("Copy Config") {
+                        Button {
                             CreatureExport.copyConfigToClipboard(for: creature)
+                        } label: {
+                            Label("Copy Config", systemImage: "doc.on.doc")
                         }
-                        Button("Save Config...") {
+                        Button {
                             _ = CreatureExport.saveConfigToFile(for: creature)
+                        } label: {
+                            Label("Save Config", systemImage: "square.and.arrow.down")
                         }
                     }
                     .controlSize(.small)
@@ -729,8 +1020,8 @@ private struct CompendiumDetailView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text("Reading base config...")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(StudioType.bodySmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
                 }
             }
         } else if let replayContract {
@@ -759,11 +1050,11 @@ private struct CompendiumDetailView: View {
                     if !replayContract.connectivityRows.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Connectivity")
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundStyle(.secondary)
+                                .font(StudioType.labelStrong)
+                                .foregroundStyle(StudioPalette.mutedInk)
                             ForEach(replayContract.connectivityRows, id: \.self) { row in
                                 Text(row)
-                                    .font(.system(.caption, design: .monospaced))
+                                    .font(StudioType.dataSmall)
                                     .foregroundStyle(StudioPalette.ink)
                             }
                         }
@@ -783,8 +1074,8 @@ private struct CompendiumDetailView: View {
                 subtitle: "Canonical runtime metadata is unavailable for this specimen"
             ) {
                 Text(replayContractError)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(StudioType.bodySmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
             }
         }
     }
@@ -920,12 +1211,17 @@ private struct MetricCell: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(StudioType.label)
+                .foregroundStyle(StudioPalette.mutedInk)
             Text(value)
-                .font(.caption)
+                .font(StudioType.data)
+                .foregroundStyle(StudioPalette.ink)
                 .monospacedDigit()
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(StudioPalette.surfaceSoft.opacity(0.5), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }
 
@@ -936,11 +1232,12 @@ private struct MetadataRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(StudioPalette.mutedInk)
             Spacer()
             Text(value)
                 .multilineTextAlignment(.trailing)
+                .foregroundStyle(StudioPalette.ink)
         }
-        .font(.caption)
+        .font(StudioType.dataSmall)
     }
 }

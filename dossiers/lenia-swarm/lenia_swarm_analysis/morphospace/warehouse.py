@@ -261,12 +261,16 @@ def ingest_sqlite_rows(
     source = sqlite3.connect(sqlite_path)
     source.row_factory = sqlite3.Row
     try:
+        # FTS and other virtual tables expose binary shadow tables through
+        # sqlite_master. They are derived indexes, not canonical source rows.
         tables = [
             str(row["name"])
-            for row in source.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
-            )
+            for row in source.execute("PRAGMA table_list")
+            if str(row["schema"]) == "main"
+            and str(row["type"]) == "table"
+            and not str(row["name"]).startswith("sqlite_")
         ]
+        tables.sort()
         for table_name in tables:
             columns = list(source.execute(f"PRAGMA table_info({table_name})"))
             pk_columns = [str(column["name"]) for column in columns if int(column["pk"]) > 0]

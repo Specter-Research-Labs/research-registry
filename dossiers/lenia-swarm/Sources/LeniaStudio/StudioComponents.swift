@@ -3,137 +3,47 @@ import SwiftUI
 import LeniaCore
 
 enum StudioPalette {
-    private static func dynamicColor(
-        light: (CGFloat, CGFloat, CGFloat, CGFloat),
-        dark: (CGFloat, CGFloat, CGFloat, CGFloat)
-    ) -> Color {
-        Color(
-            nsColor: NSColor(name: nil) { appearance in
-                let match = appearance.bestMatch(from: [.darkAqua, .vibrantDark, .aqua, .vibrantLight])
-                let components = (match == .darkAqua || match == .vibrantDark) ? dark : light
-                return NSColor(
-                    deviceRed: components.0,
-                    green: components.1,
-                    blue: components.2,
-                    alpha: components.3
-                )
-            }
-        )
-    }
-
-    static let chrome = dynamicColor(
-        light: (0.93, 0.90, 0.86, 1.0),
-        dark: (0.10, 0.11, 0.13, 1.0)
-    )
-    static let chromeMuted = dynamicColor(
-        light: (0.84, 0.80, 0.75, 1.0),
-        dark: (0.16, 0.17, 0.20, 1.0)
-    )
-    static let surface = dynamicColor(
-        light: (0.97, 0.96, 0.94, 1.0),
-        dark: (0.14, 0.15, 0.18, 1.0)
-    )
-    static let surfaceRaised = dynamicColor(
-        light: (0.99, 0.985, 0.975, 1.0),
-        dark: (0.18, 0.19, 0.22, 1.0)
-    )
-    static let surfaceSoft = dynamicColor(
-        light: (0.95, 0.93, 0.90, 1.0),
-        dark: (0.16, 0.17, 0.20, 1.0)
-    )
-    static let consoleSurface = dynamicColor(
-        light: (0.96, 0.95, 0.93, 1.0),
-        dark: (0.11, 0.12, 0.15, 1.0)
-    )
-    static let consoleSurfaceRaised = dynamicColor(
-        light: (0.99, 0.98, 0.96, 1.0),
-        dark: (0.14, 0.15, 0.18, 1.0)
-    )
-    static let consoleControl = dynamicColor(
-        light: (0.92, 0.90, 0.86, 1.0),
-        dark: (0.17, 0.18, 0.21, 1.0)
-    )
-    static let ink = dynamicColor(
-        light: (0.15, 0.13, 0.11, 1.0),
-        dark: (0.92, 0.90, 0.87, 1.0)
-    )
-    static let mutedInk = dynamicColor(
-        light: (0.42, 0.38, 0.34, 1.0),
-        dark: (0.67, 0.64, 0.60, 1.0)
-    )
-    static let hairline = dynamicColor(
-        light: (0.76, 0.71, 0.65, 0.75),
-        dark: (0.33, 0.35, 0.39, 0.95)
-    )
-    static let panelShadow = dynamicColor(
-        light: (0.00, 0.00, 0.00, 0.08),
-        dark: (0.00, 0.00, 0.00, 0.32)
-    )
-    static let ember = Color(red: 0.83, green: 0.43, blue: 0.17)
-    static let moss = Color(red: 0.29, green: 0.50, blue: 0.34)
-    static let ocean = Color(red: 0.21, green: 0.46, blue: 0.62)
-    static let stageTop = Color(red: 0.11, green: 0.08, blue: 0.07)
-    static let stageBottom = Color(red: 0.04, green: 0.04, blue: 0.06)
-
-    static var sceneGradient: LinearGradient {
-        LinearGradient(
-            colors: [chrome.opacity(0.96), surface.opacity(0.99)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    static var surfaceGradient: LinearGradient {
-        LinearGradient(
-            colors: [surfaceRaised, surface],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    static var consoleSurfaceGradient: LinearGradient {
-        LinearGradient(
-            colors: [consoleSurfaceRaised.opacity(0.96), consoleSurface],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+    static let chrome = Color(nsColor: .windowBackgroundColor)
+    static let chromeMuted = Color(nsColor: .underPageBackgroundColor)
+    static let surface = Color(nsColor: .controlBackgroundColor)
+    static let surfaceRaised = Color(nsColor: .textBackgroundColor)
+    static let surfaceSoft = Color(nsColor: .unemphasizedSelectedContentBackgroundColor)
+    static let surfaceInset = Color(nsColor: .underPageBackgroundColor)
+    static let consoleSurface = Color(nsColor: .underPageBackgroundColor)
+    static let consoleSurfaceRaised = Color(nsColor: .controlBackgroundColor)
+    static let consoleControl = Color(nsColor: .textBackgroundColor).opacity(0.72)
+    static let ink = Color(nsColor: .labelColor)
+    static let mutedInk = Color(nsColor: .secondaryLabelColor)
+    static let hairline = Color(nsColor: .separatorColor)
+    static let hairlineStrong = Color(nsColor: .gridColor)
+    static let selection = Color.accentColor.opacity(0.13)
+    static let ember = Color(nsColor: .systemOrange)
+    static let moss = Color(nsColor: .systemGreen)
+    static let ocean = Color(nsColor: .systemTeal)
+    static let rose = Color(nsColor: .systemPink)
+    static let stageTop = Color(red: 0.060, green: 0.064, blue: 0.067)
+    static let stageBottom = Color(red: 0.016, green: 0.018, blue: 0.020)
 }
 
 enum StudioType {
-    static func interface(_ size: CGFloat, weight _: Font.Weight = .regular) -> Font {
-        .custom("DINAlternate-Bold", size: size)
-    }
+    static let panelTitle = Font.system(.subheadline, design: .default, weight: .semibold)
+    static let panelSubtitle = Font.caption
+    static let label = Font.system(.caption2, design: .default, weight: .semibold)
+    static let labelStrong = Font.system(.caption, design: .default, weight: .semibold)
+    static let data = Font.system(.callout, design: .monospaced, weight: .medium)
+    static let dataSmall = Font.system(.caption, design: .monospaced)
+    static let body = Font.body
+    static let bodySmall = Font.callout
+    static let title = Font.headline
+}
 
-    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom(berkeleyName(for: weight), size: size)
-    }
-
-    static let panelTitle = mono(11, weight: .semibold)
-    static let panelSubtitle = interface(12)
-    static let label = mono(9.5, weight: .medium)
-    static let labelStrong = mono(10, weight: .semibold)
-    static let data = mono(12, weight: .medium)
-    static let dataSmall = mono(10.5, weight: .regular)
-    static let body = interface(13)
-    static let bodySmall = interface(12)
-    static let title = interface(15, weight: .semibold)
-
-    private static func berkeleyName(for weight: Font.Weight) -> String {
-        switch weight {
-        case .black, .heavy, .bold:
-            "BerkeleyMono-Bold"
-        case .semibold:
-            "BerkeleyMono-SemiBold"
-        case .medium:
-            "BerkeleyMono-Medium"
-        case .light, .thin, .ultraLight:
-            "BerkeleyMono-Light"
-        default:
-            "BerkeleyMono-Regular"
-        }
-    }
-
+enum StudioLayout {
+    static let hairline: CGFloat = 1
+    static let controlRadius: CGFloat = 5
+    static let panelRadius: CGFloat = 7
+    static let compactGap: CGFloat = 6
+    static let sectionGap: CGFloat = 12
+    static let panelPadding: CGFloat = 12
 }
 
 enum StudioPanelStyle: Equatable {
@@ -143,36 +53,18 @@ enum StudioPanelStyle: Equatable {
     var cornerRadius: CGFloat {
         switch self {
         case .standard:
-            6
+            StudioLayout.panelRadius
         case .console:
-            4
-        }
-    }
-
-    var shadowRadius: CGFloat {
-        switch self {
-        case .standard:
-            4
-        case .console:
-            2
-        }
-    }
-
-    var shadowYOffset: CGFloat {
-        switch self {
-        case .standard:
-            1
-        case .console:
-            1
+            StudioLayout.controlRadius
         }
     }
 
     var padding: CGFloat {
         switch self {
         case .standard:
-            12
+            StudioLayout.panelPadding
         case .console:
-            8
+            10
         }
     }
 }
@@ -234,7 +126,7 @@ enum StudioKeyValueRowStyle: Equatable {
 
 struct StudioSceneBackground: View {
     var body: some View {
-        StudioPalette.sceneGradient
+        StudioPalette.chrome
             .ignoresSafeArea()
     }
 }
@@ -258,13 +150,12 @@ struct StudioSurface<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: style == .console ? 10 : 12) {
+        VStack(alignment: .leading, spacing: StudioLayout.sectionGap) {
             if title != nil || subtitle != nil {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     if let title {
-                        Text(style == .console ? title.uppercased() : title)
-                            .font(style == .console ? StudioType.panelTitle : StudioType.title)
-                            .tracking(style == .console ? 0.7 : 0)
+                        Text(title)
+                            .font(StudioType.panelTitle)
                             .foregroundStyle(StudioPalette.ink)
                     }
                     if let subtitle {
@@ -273,22 +164,25 @@ struct StudioSurface<Content: View>: View {
                             .foregroundStyle(StudioPalette.mutedInk)
                     }
                 }
-                Rectangle()
-                    .fill(StudioPalette.hairline)
-                    .frame(height: 1)
             }
             content
         }
         .padding(style.padding)
         .background(
             RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
-                .fill(style == .console ? StudioPalette.consoleSurfaceGradient : StudioPalette.surfaceGradient)
+                .fill(style == .console ? StudioPalette.consoleSurface : StudioPalette.surface)
         )
-        .overlay(
-            RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
-                .stroke(StudioPalette.hairline, lineWidth: 1)
+        .overlay {
+            if style == .console {
+                RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
+                    .stroke(StudioPalette.hairline.opacity(0.72), lineWidth: StudioLayout.hairline)
+            }
+        }
+        .shadow(
+            color: style == .standard ? Color.black.opacity(0.08) : .clear,
+            radius: 1,
+            y: 1
         )
-        .shadow(color: StudioPalette.panelShadow, radius: style.shadowRadius, y: style.shadowYOffset)
     }
 }
 
@@ -307,17 +201,19 @@ struct StudioMetricPill: View {
                 .font(style.valueFont)
                 .foregroundStyle(accent)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, style == .console ? 5 : 8)
+        .padding(.leading, 10)
+        .padding(.trailing, 9)
+        .padding(.vertical, style == .console ? 5 : 7)
+        .frame(minHeight: style == .console ? 34 : 40, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
-                .fill(style == .console ? StudioPalette.consoleControl : StudioPalette.surfaceSoft)
+                .fill(style == .console ? StudioPalette.consoleControl : StudioPalette.surfaceSoft.opacity(0.66))
         )
-        .overlay {
-            if style == .console {
-                RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous)
-                    .stroke(StudioPalette.hairline, lineWidth: 1)
-            }
+        .overlay(alignment: .leading) {
+            Capsule(style: .continuous)
+                .fill(accent.opacity(0.82))
+                .frame(width: 2, height: style == .console ? 18 : 22)
+                .padding(.leading, 4)
         }
     }
 }
@@ -367,6 +263,10 @@ struct CreatureThumbnailView: View {
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(.white.opacity(0.10), lineWidth: StudioLayout.hairline)
+        }
         .task(id: creature.id) {
             thumbnail = await ThumbnailRenderer.shared.render(creature: creature)
         }
@@ -439,13 +339,17 @@ struct StudioCreatureCard: View {
 
             HStack {
                 if let onAddToCompare {
-                    Button("Add To Compare", action: onAddToCompare)
+                    Button(action: onAddToCompare) {
+                        Label("Compare", systemImage: "plus.rectangle.on.rectangle")
+                    }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                         .tint(tone)
                 }
                 if showRemove, let onRemoveFromCompare {
-                    Button("Remove", action: onRemoveFromCompare)
+                    Button(role: .destructive, action: onRemoveFromCompare) {
+                        Label("Remove", systemImage: "xmark")
+                    }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                 }
@@ -460,15 +364,14 @@ struct StudioCreatureCard: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(StudioPalette.surfaceRaised)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(tone.opacity(0.25), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(StudioPalette.hairline.opacity(0.52), lineWidth: StudioLayout.hairline)
         )
-        .shadow(color: StudioPalette.panelShadow.opacity(0.72), radius: 14, y: 8)
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .onTapGesture {
             onSelect?()
         }
@@ -544,9 +447,37 @@ struct WorkerActivityFeedView: View {
         case .localDiscovery: return StudioPalette.ember
         case .clusterUpdate: return StudioPalette.ocean
         case .campaign: return StudioPalette.moss
-        case .arena: return .purple
+        case .arena: return StudioPalette.rose
         case .system: return .gray
         }
+    }
+}
+
+struct StudioEmptyState: View {
+    let symbol: String
+    let title: String
+    var detail: String? = nil
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 24, weight: .light))
+                .foregroundStyle(StudioPalette.mutedInk)
+                .frame(height: 28)
+            Text(title)
+                .font(StudioType.panelTitle)
+                .foregroundStyle(StudioPalette.ink)
+            if let detail {
+                Text(detail)
+                    .font(StudioType.bodySmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -558,12 +489,13 @@ struct StudioCompareTrayView: View {
     let onClear: () -> Void
 
     var body: some View {
-        StudioSurface(title: "Compare Tray", subtitle: "Dock discoveries here while you browse") {
+        StudioSurface(
+            title: "Compare Tray",
+            subtitle: entries.isEmpty ? nil : "\(entries.count) of 4 specimens"
+        ) {
             VStack(alignment: .leading, spacing: 14) {
                 if entries.isEmpty {
-                    Text("Add up to four creatures from the cockpit to build a comparison set.")
-                        .font(StudioType.bodySmall)
-                        .foregroundStyle(StudioPalette.mutedInk)
+                    StudioEmptyState(symbol: "rectangle.stack", title: "Tray empty")
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -589,15 +521,17 @@ struct StudioCompareTrayView: View {
                                     }
                                     .buttonStyle(.plain)
 
-                                    Button("Remove") { onRemove(entry) }
+                                    Button(role: .destructive) { onRemove(entry) } label: {
+                                        Label("Remove", systemImage: "xmark")
+                                    }
                                         .buttonStyle(.bordered)
                                         .controlSize(.mini)
                                 }
                                 .padding(10)
                                 .frame(width: 220, alignment: .leading)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .fill(StudioPalette.surfaceSoft)
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(StudioPalette.surfaceSoft.opacity(0.66))
                                 )
                             }
                         }
@@ -605,12 +539,16 @@ struct StudioCompareTrayView: View {
                 }
 
                 HStack {
-                    Button("Compare \(entries.count)") { onCompare() }
+                    Button(action: onCompare) {
+                        Label("Compare \(entries.count)", systemImage: "square.split.2x1")
+                    }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                         .disabled(entries.count < 2)
                         .keyboardShortcut("c", modifiers: [.command, .shift])
-                    Button("Clear Tray") { onClear() }
+                    Button(role: .destructive, action: onClear) {
+                        Label("Clear", systemImage: "trash")
+                    }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                         .disabled(entries.isEmpty)

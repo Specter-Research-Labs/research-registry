@@ -473,6 +473,234 @@ final class AtlasPublishTests: XCTestCase {
         XCTAssertNotEqual(entry.creature.initialCondition.seed, mutatedInitialCondition.seed)
         XCTAssertNotEqual(entry.creature.genotype.R, mutatedGenotype.R)
     }
+
+    func testBrowseCompendiumMigratesAndUsesFTSSearch() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory
+            .appendingPathComponent("lenia-compendium-search-\(UUID().uuidString)", isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let runDir = root.appendingPathComponent("run-001", isDirectory: true)
+        try makeAtlasRunLayout(at: runDir)
+        let creatures = [
+            makeAtlasCreature(
+                id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+                name: "Orbium Voyager",
+                seed: 11
+            ),
+            makeAtlasCreature(
+                id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+                name: "Hydra",
+                seed: 22
+            ),
+        ]
+        try writeAtlasJSONL(
+            creatures.map { makeAtlasLibraryEntry(creature: $0, runID: "run-001") },
+            to: runDir.appendingPathComponent("library/index.jsonl")
+        )
+
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+        var index = try IndexCommand.parseAsRoot([
+            "--run-dir", runDir.path,
+            "--db", dbPath,
+            "--rebuild",
+        ])
+        try index.run()
+
+        let db = try SQLiteDB(path: dbPath)
+        try db.exec("DROP TRIGGER creatures_search_insert")
+        try db.exec("DROP TRIGGER creatures_search_delete")
+        try db.exec("DROP TRIGGER creatures_search_update")
+        try db.exec("DROP TABLE creature_search")
+        try db.exec("DROP INDEX creatures_score")
+        try db.exec("DROP INDEX creatures_stable")
+        try db.exec("DROP INDEX creatures_catalog_status")
+        try db.exec("DROP INDEX exports_creature")
+        try db.exec("UPDATE compendium_meta SET schema_version = 15")
+
+        index = try IndexCommand.parseAsRoot([
+            "--run-dir", runDir.path,
+            "--db", dbPath,
+        ])
+        try index.run()
+
+        XCTAssertEqual(
+            try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1"),
+            compendiumSchemaVersion
+        )
+        XCTAssertTrue(try db.tableExists("creature_search"))
+        XCTAssertEqual(
+            try db.scalarInt("SELECT COUNT(*) FROM creature_search WHERE creature_search MATCH '\"orbi\"*'"),
+            1
+        )
+
+        let result = try browseCompendium(
+            path: dbPath,
+            query: CompendiumBrowseQuery(search: "orbi", limit: 10)
+        )
+        XCTAssertEqual(result.entries.map(\.name), ["Orbium Voyager"])
+        XCTAssertEqual(result.skippedRowCount, 0)
+    }
+
+    func testBrowseCompendiumQuarantinesSchemaInvalidJSON() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory
+            .appendingPathComponent("lenia-compendium-invalid-json-\(UUID().uuidString)", isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let runDir = root.appendingPathComponent("run-001", isDirectory: true)
+        try makeAtlasRunLayout(at: runDir)
+        let creature = makeAtlasCreature(
+            id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+            name: "Malformed fallback",
+            seed: 33
+        )
+        try writeAtlasJSONL(
+            [makeAtlasLibraryEntry(creature: creature, runID: "run-001")],
+            to: runDir.appendingPathComponent("library/index.jsonl")
+        )
+
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+        var index = try IndexCommand.parseAsRoot([
+            "--run-dir", runDir.path,
+            "--db", dbPath,
+            "--rebuild",
+        ])
+        try index.run()
+
+        let db = try SQLiteDB(path: dbPath)
+        try db.exec("UPDATE specimens SET specimen_manifest_json = NULL")
+        try db.exec("UPDATE creatures SET genotype_json = '{}'")
+
+        let result = try browseCompendium(
+            path: dbPath,
+            query: CompendiumBrowseQuery(limit: 10)
+        )
+        XCTAssertTrue(result.entries.isEmpty)
+        XCTAssertEqual(result.skippedRowCount, 1)
+        XCTAssertEqual(result.issues.first?.databaseID, creature.id.uuidString)
+        XCTAssertTrue(result.issues.first?.reason.contains("creatures.genotype_json") == true)
+        XCTAssertTrue(result.error?.contains("Quarantined 1 malformed canonical row") == true)
+    }
+
+    func testBrowseCompendiumKeysetPaginationIsStable() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory
+            .appendingPathComponent("lenia-compendium-pagination-\(UUID().uuidString)", isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let runDir = root.appendingPathComponent("run-001", isDirectory: true)
+        try makeAtlasRunLayout(at: runDir)
+        let creatures = [
+            makeAtlasCreature(
+                id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+                name: "First",
+                seed: 1
+            ),
+            makeAtlasCreature(
+                id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+                name: "Second",
+                seed: 2
+            ),
+            makeAtlasCreature(
+                id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+                name: "Third",
+                seed: 3
+            ),
+        ]
+        try writeAtlasJSONL(
+            creatures.map { makeAtlasLibraryEntry(creature: $0, runID: "run-001") },
+            to: runDir.appendingPathComponent("library/index.jsonl")
+        )
+
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+        var index = try IndexCommand.parseAsRoot([
+            "--run-dir", runDir.path,
+            "--db", dbPath,
+            "--rebuild",
+        ])
+        try index.run()
+
+        let firstPage = try browseCompendium(
+            path: dbPath,
+            query: CompendiumBrowseQuery(limit: 2)
+        )
+        let cursor = try XCTUnwrap(firstPage.nextCursor)
+        let secondPage = try browseCompendium(
+            path: dbPath,
+            query: CompendiumBrowseQuery(limit: 2, cursor: cursor)
+        )
+
+        XCTAssertEqual(firstPage.entries.map(\.name), ["First", "Second"])
+        XCTAssertEqual(secondPage.entries.map(\.name), ["Third"])
+        XCTAssertNil(secondPage.nextCursor)
+    }
+
+    func testBrowseCompendiumAdvancesPastFullyQuarantinedWindow() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory
+            .appendingPathComponent("lenia-compendium-quarantine-cursor-\(UUID().uuidString)", isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let runDir = root.appendingPathComponent("run-001", isDirectory: true)
+        try makeAtlasRunLayout(at: runDir)
+        let creatures = (1...34).map { index in
+            makeAtlasCreature(
+                id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012X", index))!,
+                name: index == 34 ? "Reachable" : "Malformed \(index)",
+                seed: index
+            )
+        }
+        try writeAtlasJSONL(
+            creatures.map { makeAtlasLibraryEntry(creature: $0, runID: "run-001") },
+            to: runDir.appendingPathComponent("library/index.jsonl")
+        )
+
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+        var index = try IndexCommand.parseAsRoot([
+            "--run-dir", runDir.path,
+            "--db", dbPath,
+            "--rebuild",
+        ])
+        try index.run()
+
+        let db = try SQLiteDB(path: dbPath)
+        try db.exec("UPDATE specimens SET specimen_manifest_json = NULL")
+        try db.exec("UPDATE creatures SET genotype_json = '{}' WHERE name != 'Reachable'")
+
+        let firstPage = try browseCompendium(
+            path: dbPath,
+            query: CompendiumBrowseQuery(limit: 1)
+        )
+        XCTAssertTrue(firstPage.entries.isEmpty)
+        XCTAssertEqual(firstPage.skippedRowCount, 33)
+        let cursor = try XCTUnwrap(firstPage.nextCursor)
+
+        let secondPage = try browseCompendium(
+            path: dbPath,
+            query: CompendiumBrowseQuery(limit: 1, cursor: cursor)
+        )
+        XCTAssertEqual(secondPage.entries.map(\.name), ["Reachable"])
+        XCTAssertNil(secondPage.nextCursor)
+    }
+
+    func testBrowseCompendiumHonorsPrecancelledRequest() throws {
+        let cancellation = CompendiumBrowseCancellation()
+        cancellation.cancel()
+
+        XCTAssertThrowsError(
+            try browseCompendium(
+                path: "/tmp/unused-compendium.sqlite",
+                query: CompendiumBrowseQuery(),
+                cancellation: cancellation
+            )
+        ) { error in
+            guard case CompendiumBrowseError.cancelled = error else {
+                XCTFail("Unexpected error: \(error)")
+                return
+            }
+        }
+    }
 }
 
 private let atlasFixedDate = Date(timeIntervalSince1970: 1_700_000_000)
