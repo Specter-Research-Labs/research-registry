@@ -60,6 +60,11 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         self.batchCount = batchCount
         self.channelCount = config.channels
         self.reintegrateParams = reintegrateParams
+        let resolvedMatterWeights = Self.resolvedMatterWeights(
+            weights: matterWeights,
+            channelCount: config.channels
+        )
+        self.currentMatterWeights = resolvedMatterWeights
         let kernelBatchCount = FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
         guard kernelBatchCount == 1 || kernelBatchCount == batchCount else {
             preconditionFailure("FlowLeniaMetalFullStateRunner requires either shared kernels or one kernel set per batch element.")
@@ -74,16 +79,12 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             device: device,
             commandQueue: commandQueue,
             wallPotential: wallPotential,
+            matterWeights: resolvedMatterWeights,
             parameterFieldMode: parameterFieldMode,
             reintegrateParams: reintegrateParams,
             parameterMix: parameterMix,
             mixSeed: mixSeed
         )
-        self.currentMatterWeights = Self.resolvedMatterWeights(
-            weights: matterWeights,
-            channelCount: config.channels
-        )
-        self.pipeline.updateMatterWeights(currentMatterWeights)
         self.summaryReducer = FlowLeniaMetalSummaryReducer(
             config: config,
             parameterCount: self.parameterCount,
@@ -275,11 +276,15 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     }
 
     func setMatterWeights(_ weights: [Float]?) {
-        currentMatterWeights = Self.resolvedMatterWeights(
+        let resolved = Self.resolvedMatterWeights(
             weights: weights,
             channelCount: channelCount
         )
-        pipeline.updateMatterWeights(currentMatterWeights)
+        guard resolved != currentMatterWeights else {
+            return
+        }
+        currentMatterWeights = resolved
+        pipeline.updateMatterWeights(resolved)
     }
 
     func setWallMask(_ wallMask: MLXArray?) {

@@ -5763,6 +5763,78 @@ final class LeniaCoreTests: XCTestCase {
         )
     }
 
+    func testFlowLeniaMetalFullStateRunnerKernelUpdatesPreserveMatterWeights() {
+        let params = makeSandboxMetalParityParams()
+        let config = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 3,
+            nbK: params.r.count,
+            dt: 0.2,
+            dd: 2,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "flowlenia_2022_paper_equations",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "flowlenia_2022_paper_equations",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let kernels = compileKernels(
+            params: params,
+            config: config,
+            c0: [0, 1],
+            c1: [[0], [1], []]
+        )
+        let matterWeights: [Float] = [1.0, 1.0, 0.0]
+        let cellCount = config.sx * config.sy
+        var massValues = [Float](repeating: 0.0, count: cellCount * config.channels)
+        for x in 0..<config.sx {
+            for y in 0..<config.sy {
+                let base = (x * config.sy + y) * config.channels
+                let dx = x - config.sx / 2
+                let dy = y - config.sy / 2
+                massValues[base] = dx * dx + dy * dy < 20 ? 0.8 : 0.0
+                massValues[base + 1] = (dx + 2) * (dx + 2) + (dy - 1) * (dy - 1) < 12 ? 0.5 : 0.0
+                massValues[base + 2] = Float((x * 3 + y * 5) % 11) / 10.0
+            }
+        }
+        let mass = MLXArray(massValues).reshaped([1, config.sx, config.sy, config.channels])
+        let paramsMap = MLXArray(
+            (0..<cellCount).flatMap { _ in params.h }
+        ).reshaped([1, config.sx, config.sy, params.h.count])
+
+        let expectedRunner = FlowLeniaMetalFullStateRunner(
+            config: config,
+            kernels: kernels,
+            batchCount: 1,
+            matterWeights: matterWeights
+        )
+        let updatedRunner = FlowLeniaMetalFullStateRunner(
+            config: config,
+            kernels: kernels,
+            batchCount: 1,
+            matterWeights: matterWeights
+        )
+        updatedRunner.updateKernels(kernels)
+        expectedRunner.setState(mass: mass, params: paramsMap)
+        updatedRunner.setState(mass: mass, params: paramsMap)
+        expectedRunner.step()
+        updatedRunner.step()
+
+        let expected = expectedRunner.materializeState()
+        let actual = updatedRunner.materializeState()
+        XCTAssertLessThan(maxAbsDiff(expected.mass, actual.mass), 1e-5)
+        XCTAssertLessThan(maxAbsDiff(expected.params, actual.params), 1e-5)
+    }
+
     func testFlowSandboxMetalFullStagesMatchReferenceMath() {
         let params = makeSandboxMetalParityParams()
         let config = flowSandboxConfig(gridSize: 32, nbK: params.r.count)
@@ -5802,6 +5874,66 @@ final class LeniaCoreTests: XCTestCase {
                 expected: expectedStep.1,
                 actual: staged.nextParams,
                 support: expectedStep.0,
+                threshold: 1e-5
+            ),
+            1e-4
+        )
+    }
+
+    func testFlowSandboxMetalFullMatchesReferenceOnRectangularSmallTorus() {
+        let params = makeSandboxMetalParityParams()
+        let squareConfig = flowSandboxConfig(gridSize: 32, nbK: params.r.count)
+        let config = BatchedConfig(
+            sx: 16,
+            sy: 24,
+            channels: squareConfig.channels,
+            nbK: squareConfig.nbK,
+            dt: squareConfig.dt,
+            dd: squareConfig.dd,
+            sigma: squareConfig.sigma,
+            n: squareConfig.n,
+            thetaA: squareConfig.thetaA,
+            border: squareConfig.border,
+            implementation: squareConfig.implementation,
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let c0 = Array(repeating: 0, count: params.r.count)
+        let c1 = [Array(0..<params.r.count)]
+        let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
+        let mass = makePatchState(sx: config.sx, sy: config.sy, channels: config.channels)
+            .expandedDimensions(axis: 0)
+        let embeddedParams = flowSandboxParameterField(
+            mass: mass,
+            parameterValues: params.h,
+            threshold: 0.01
+        )
+
+        let staged = FlowLeniaSandboxMetalEngine(config: config, kernels: kernels)
+            .stagedStep(mass, embeddedParams, captureStages: true)
+        let expectedStages = flowSandboxReferenceStages(
+            mass: mass,
+            params: embeddedParams,
+            kernels: kernels,
+            config: config
+        )
+        let expected = FlowLeniaParamsBatched(
+            config: config,
+            kernels: kernels,
+            mixMode: "avg",
+            mixSeed: nil
+        )
+            .step(mass, embeddedParams)
+        let actualStages = try! XCTUnwrap(staged.stages)
+
+        XCTAssertLessThan(maxAbsDiff(expectedStages.uk, actualStages.uk), 1e-4)
+        XCTAssertLessThan(maxAbsDiff(expectedStages.flow, actualStages.flow), 1e-4)
+        XCTAssertLessThan(maxAbsDiff(expected.0, staged.nextMass), 1e-4)
+        XCTAssertLessThan(
+            maxParamDiffOnMassSupport(
+                expected: expected.1,
+                actual: staged.nextParams,
+                support: expected.0,
                 threshold: 1e-5
             ),
             1e-4
