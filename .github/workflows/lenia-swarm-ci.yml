@@ -30,10 +30,10 @@ jobs:
         uses: ./.github/actions/setup-spctr
         with:
           project-root: 'dossiers/lenia-swarm'
-          use-python: 'false'
+          use-python: 'true'
           python-version: '3.11'
-          use-uv: 'false'
-          sync-python: 'false'
+          use-uv: 'true'
+          sync-python: 'true'
       - name: Verify declared runtime requirements
         run: |
           set -euo pipefail
@@ -74,10 +74,10 @@ jobs:
         uses: ./.github/actions/setup-spctr
         with:
           project-root: 'dossiers/lenia-swarm'
-          use-python: 'false'
+          use-python: 'true'
           python-version: '3.11'
-          use-uv: 'false'
-          sync-python: 'false'
+          use-uv: 'true'
+          sync-python: 'true'
       - name: Verify declared runtime requirements
         run: |
           set -euo pipefail

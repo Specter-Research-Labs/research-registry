@@ -52,7 +52,7 @@ commands = [
 ]
 timeout_sec = 2400
 network = "bootstrap"
-requires = ["swift"]
+requires = ["swift", "python", "uv"]
 
 [spctr.exec.smoke]
 description = "Determinism smoke with explicit MLX metallib bootstrap"
