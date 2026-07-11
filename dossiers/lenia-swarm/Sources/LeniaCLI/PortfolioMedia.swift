@@ -307,12 +307,13 @@ func renderPortfolioCandidateMediaBundle(
         steps: replayConfig.run.steps,
         frameBudget: frameBudget
     )
-    let frames = try capturePortfolioReplayFrames(
+    let frames = try captureReplayStateFrames(
         runtimeConfig: runtimeConfig,
         seed: bundle.candidate.seed,
         initSeedOffset: bundle.candidate.initSeed - bundle.candidate.seed,
         searchConfig: replaySearch,
-        frameBudget: frameBudget
+        frameBudget: frameBudget,
+        emptyCaptureMessage: "Failed to capture portfolio replay frames for seed \(bundle.candidate.seed)."
     )
 
     let matterScale = robustMatterScale(frames)
@@ -504,62 +505,4 @@ func portfolioReplaySearchConfig(
         kSurvival: nil,
         moments: nil
     )
-}
-
-private func capturePortfolioReplayFrames(
-    runtimeConfig: LeniaRuntimeConfig,
-    seed: Int,
-    initSeedOffset: Int,
-    searchConfig: SearchConfig,
-    frameBudget: Int
-) throws -> [CapturedStateFrame] {
-    let stride = portfolioReplayFrameStride(searchConfig: searchConfig, frameBudget: frameBudget)
-    var capturedFrames: [Data] = []
-    var capturedStateFrames: [CapturedStateFrame] = []
-    capturedFrames.reserveCapacity(frameBudget + 8)
-    capturedStateFrames.reserveCapacity(frameBudget + 8)
-    let capture = FrameCapture(
-        stride: stride,
-        includeWarmup: false,
-        sampleIndex: 0,
-        handler: { _, _, _, data in
-            capturedFrames.append(data)
-        },
-        stateHandler: { step, width, height, channels, values in
-            capturedStateFrames.append(CapturedStateFrame(
-                step: step,
-                width: width,
-                height: height,
-                channels: channels,
-                values: values
-            ))
-        }
-    )
-    let engine = SearchEngine(runtimeConfig: runtimeConfig)
-    _ = engine.runBatch(
-        seeds: [seed],
-        initSeedOffset: initSeedOffset,
-        searchConfig: searchConfig,
-        frameCapture: capture
-    )
-    guard !capturedStateFrames.isEmpty || !capturedFrames.isEmpty else {
-        throw ValidationError("Failed to capture portfolio replay frames for seed \(seed).")
-    }
-    if !capturedStateFrames.isEmpty {
-        return Array(capturedStateFrames.prefix(frameBudget))
-    }
-    return Array(capturedFrames.prefix(frameBudget).enumerated().map { index, data in
-        CapturedStateFrame(
-            step: index,
-            width: runtimeConfig.sx,
-            height: runtimeConfig.sy,
-            channels: 1,
-            values: data.map { Float($0) / 255.0 }
-        )
-    })
-}
-
-func portfolioReplayFrameStride(searchConfig: SearchConfig, frameBudget: Int) -> Int {
-    let postWarmupSteps = max(searchConfig.steps - searchConfig.warmupSteps, 1)
-    return max(1, postWarmupSteps / max(frameBudget, 1))
 }

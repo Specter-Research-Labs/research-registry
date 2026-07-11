@@ -23,39 +23,6 @@ private struct SearchBatchSetup {
     let interventionsByStep: [Int: [InterventionConfig]]
 }
 
-private struct SearchBatchTimingAccumulator {
-    var stateBuildMs = 0.0
-    var parameterBuildMs = 0.0
-    var foodBuildMs = 0.0
-    var wallBuildMs = 0.0
-    var chemFieldBuildMs = 0.0
-    var runnerSetupMs = 0.0
-    var rolloutMs = 0.0
-    var summaryReductionMs = 0.0
-    var combinedObservationMs = 0.0
-    var materializationMs = 0.0
-    var massObservationSynchronizations = 0
-    var postprocessMs = 0.0
-
-    func profile(totalMs: Double) -> SearchBatchProfile {
-        SearchBatchProfile(
-            stateBuildMs: stateBuildMs,
-            parameterBuildMs: parameterBuildMs,
-            foodBuildMs: foodBuildMs,
-            wallBuildMs: wallBuildMs,
-            chemFieldBuildMs: chemFieldBuildMs,
-            runnerSetupMs: runnerSetupMs,
-            rolloutMs: rolloutMs,
-            summaryReductionMs: summaryReductionMs,
-            combinedObservationMs: combinedObservationMs,
-            materializationMs: materializationMs,
-            massObservationSynchronizations: massObservationSynchronizations,
-            postprocessMs: postprocessMs,
-            totalMs: totalMs
-        )
-    }
-}
-
 public final class SearchEngine: @unchecked Sendable {
     private enum Stepper {
         case mlx(FlowLeniaBatched, FlowLeniaParamsBatched?)
@@ -210,7 +177,7 @@ public final class SearchEngine: @unchecked Sendable {
         runner.step(
             count: pendingMetalSteps,
             preStepParameterPatches: [:],
-            postStepParameterPatches: runtimeOperators.beamMutationPatchSchedule(
+            postStepParameterPatches: runtimeOperators.searchBeamMutationPatchSchedule(
                 startStep: pendingMetalStartStep,
                 count: pendingMetalSteps,
                 batchSize: batchSize,
@@ -266,10 +233,10 @@ public final class SearchEngine: @unchecked Sendable {
                 foodBatch: foodBatch
             )
         } else {
-            runtimeOperators.applyEnvironmentalFields(
+            runtimeOperators.applyPreStepFields(
                 massBatch: &massBatch,
-                chemField: chemField,
-                foodBatch: foodBatch
+                foodBatch: foodBatch,
+                chemField: chemField
             )
         }
 
@@ -283,7 +250,7 @@ public final class SearchEngine: @unchecked Sendable {
            let beamConfig = runtimeConfig.beamMutation,
            beamConfig.enabled,
            let paramsBatch = paramBatch {
-            paramBatch = runtimeOperators.applyBeamMutation(paramsBatch, config: beamConfig, step: step)
+            paramBatch = runtimeOperators.applySearchBeamMutation(paramsBatch, config: beamConfig, step: step)
         }
 
         runtimeOperators.applyPostStepOperators(
@@ -308,7 +275,7 @@ public final class SearchEngine: @unchecked Sendable {
             runtimeConfig: runtimeConfig,
             excludedMassChannels: runtimeOperators.excludedMassChannels()
         )
-        var timings = SearchBatchTimingAccumulator()
+        var timings = SearchBatchProfile()
         let preflight = SearchConfigPreflight(
             searchConfig: searchConfig,
             useParamEmbedding: useParamEmbedding
@@ -407,7 +374,6 @@ public final class SearchEngine: @unchecked Sendable {
             let needsRunnerState = shouldCaptureFrame
                 || shouldCaptureActivity
                 || shouldRecordSample
-                || shouldCaptureCoherentTransportReference
             if needsRunnerState, let runner = persistentMetalRunner, pendingMetalSteps > 0 {
                 flushPendingMetalSteps(
                     runner: runner,
@@ -422,7 +388,7 @@ public final class SearchEngine: @unchecked Sendable {
             var summarySample: FlowLeniaMetalMassSummary?
             var massMap: MLXArray?
             if let runner = persistentMetalRunner {
-                if shouldRecordSample, runner.supportsMassSummary {
+                if shouldRecordSample {
                     let observationStart = ContinuousClock.now
                     let observation = runner.observeMass(
                         occupancyThreshold: searchConfig.occupancyThreshold,
@@ -438,7 +404,7 @@ public final class SearchEngine: @unchecked Sendable {
                     } else {
                         timings.summaryReductionMs += elapsed
                     }
-                } else if needsMaterializedMassMap || shouldRecordSample {
+                } else if needsMaterializedMassMap {
                     let materializationStart = ContinuousClock.now
                     massMap = runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
                     timings.materializationMs += durationMs(materializationStart.duration(to: ContinuousClock.now))
@@ -599,7 +565,8 @@ public final class SearchEngine: @unchecked Sendable {
             foodFinalMass: terminalFoodMass
         )
         timings.postprocessMs = durationMs(postprocessStart.duration(to: ContinuousClock.now))
-        lastBatchProfile = timings.profile(totalMs: durationMs(totalStart.duration(to: ContinuousClock.now)))
+        timings.totalMs = durationMs(totalStart.duration(to: ContinuousClock.now))
+        lastBatchProfile = timings
         return results
     }
 
@@ -609,7 +576,7 @@ public final class SearchEngine: @unchecked Sendable {
         searchConfig: SearchConfig,
         frameCapture: FrameCapture?,
         preflight: SearchConfigPreflight,
-        timings: inout SearchBatchTimingAccumulator
+        timings: inout SearchBatchProfile
     ) -> SearchBatchSetup {
         let batchSize = seeds.count
         let initializationBuilder = makeInitializationBuilder()
@@ -925,7 +892,7 @@ extension SearchEngine {
             searchConfig: searchConfig,
             useParamEmbedding: useParamEmbedding
         )
-        var timings = SearchBatchTimingAccumulator()
+        var timings = SearchBatchProfile()
         let batchSetup = buildBatchSetup(
             seeds: seeds,
             initSeedOffset: initSeedOffset,

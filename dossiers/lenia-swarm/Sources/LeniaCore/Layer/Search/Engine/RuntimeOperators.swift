@@ -1,93 +1,9 @@
 import Foundation
 import MLX
 
-struct SearchRuntimeOperators {
-    let runtimeConfig: LeniaRuntimeConfig
+typealias SearchRuntimeOperators = FlowLeniaRuntimeOperators
 
-    func applyWallMaskIfNeeded(
-        massBatch: inout MLXArray,
-        paramBatch: inout MLXArray?,
-        foodBatch: inout MLXArray?,
-        wallMask: MLXArray?
-    ) {
-        guard let wallMask else {
-            return
-        }
-        massBatch = applyWallMask(massBatch, mask: wallMask)
-        if let params = paramBatch {
-            paramBatch = applyWallMask(params, mask: wallMask)
-        }
-        if let food = foodBatch {
-            foodBatch = applyWallMaskToField(food, mask: wallMask)
-        }
-    }
-
-    func applyChemotaxis(_ batch: MLXArray, field: MLXArray, channelIndex: Int) -> MLXArray {
-        overwriteFieldChannel(batch, field: field, channelIndex: channelIndex)
-    }
-
-    func applyFoodField(_ batch: MLXArray, field: MLXArray, channelIndex: Int) -> MLXArray {
-        overwriteFieldChannel(batch, field: field, channelIndex: channelIndex)
-    }
-
-    func applyWallMask(_ batch: MLXArray, mask: MLXArray) -> MLXArray {
-        batch * MLX.broadcast(mask, to: batch.shape)
-    }
-
-    func applyWallMaskToField(_ field: MLXArray, mask: MLXArray) -> MLXArray {
-        let mask2D = mask.squeezed(axis: 3)
-        return field * MLX.broadcast(mask2D, to: field.shape)
-    }
-
-    func applyFoodDynamics(
-        _ massBatch: MLXArray,
-        food: MLXArray,
-        config: FoodConfig
-    ) -> (mass: MLXArray, food: MLXArray) {
-        let decayRate = MLXArray(config.decay_rate)
-        let digestRate = MLXArray(config.digest_rate)
-        let eps = MLXArray(Float(1e-6))
-
-        let massMap = matterMapFromBatch(massBatch)
-        let decay = massMap * decayRate
-        let digestRaw = massMap * digestRate
-        let digestClipped = MLX.clip(digestRaw, min: MLXArray(0.0), max: massMap)
-        let delta = digestClipped * food
-
-        let newMass = MLX.maximum(massMap + delta - decay, MLXArray(0.0))
-        let scale = newMass / MLX.maximum(massMap, eps)
-        let scaleExpanded = scale.expandedDimensions(axis: -1)
-
-        let excluded = excludedMassChannels()
-        let channels = massBatch.shape[3]
-        var parts: [MLXArray] = []
-        for channel in 0..<channels {
-            let channelBatch = massBatch[0..., 0..., 0..., channel].expandedDimensions(axis: -1)
-            if excluded.contains(channel) {
-                parts.append(channelBatch)
-            } else {
-                parts.append(channelBatch * scaleExpanded)
-            }
-        }
-        let newMassBatch = MLX.concatenated(parts, axis: 3)
-        let newFood = MLX.maximum(food - delta, MLXArray(0.0))
-        return (newMassBatch, newFood)
-    }
-
-    func applyEnvironmentalFields(
-        massBatch: inout MLXArray,
-        chemField: MLXArray?,
-        foodBatch: MLXArray?
-    ) {
-        if let field = chemField, let chemConfig = runtimeConfig.chemotaxis {
-            massBatch = applyChemotaxis(massBatch, field: field, channelIndex: chemConfig.channel_index)
-        }
-
-        if let food = foodBatch, let foodConfig = runtimeConfig.food, foodConfig.enabled {
-            massBatch = applyFoodField(massBatch, field: food, channelIndex: foodConfig.channel_index)
-        }
-    }
-
+extension FlowLeniaRuntimeOperators {
     func applyPreStepOperators(
         step: Int,
         massBatch: inout MLXArray,
@@ -95,10 +11,10 @@ struct SearchRuntimeOperators {
         chemField: MLXArray?,
         foodBatch: MLXArray?
     ) {
-        applyEnvironmentalFields(
+        applyPreStepFields(
             massBatch: &massBatch,
-            chemField: chemField,
-            foodBatch: foodBatch
+            foodBatch: foodBatch,
+            chemField: chemField
         )
 
         guard runtimeConfig.interventions.contains(where: { $0.step == step }) else {
@@ -136,7 +52,7 @@ struct SearchRuntimeOperators {
             let updated = applyFoodDynamics(massBatch, food: food, config: foodConfig)
             massBatch = updated.mass
             foodBatch = updated.food
-            massBatch = applyFoodField(massBatch, field: updated.food, channelIndex: foodConfig.channel_index)
+            massBatch = applyExternalField(massBatch, field: updated.food, channelIndex: foodConfig.channel_index)
         }
 
         if let mask = wallMask {
@@ -148,7 +64,7 @@ struct SearchRuntimeOperators {
                 let maskedFood = applyWallMaskToField(food, mask: mask)
                 foodBatch = maskedFood
                 if let foodConfig = runtimeConfig.food, foodConfig.enabled {
-                    massBatch = applyFoodField(massBatch, field: maskedFood, channelIndex: foodConfig.channel_index)
+                    massBatch = applyExternalField(massBatch, field: maskedFood, channelIndex: foodConfig.channel_index)
                 }
             }
         }
@@ -221,12 +137,12 @@ struct SearchRuntimeOperators {
         }
     }
 
-    func applyBeamMutation(_ paramsBatch: MLXArray, config: BeamMutationConfig, step: Int) -> MLXArray {
+    func applySearchBeamMutation(_ paramsBatch: MLXArray, config: BeamMutationConfig, step: Int) -> MLXArray {
         let batchSize = paramsBatch.shape[0]
         let sx = paramsBatch.shape[1]
         let sy = paramsBatch.shape[2]
         let nbK = paramsBatch.shape[3]
-        let patch = buildBeamMutationPatch(
+        let patch = buildSearchBeamMutationPatch(
             config: config,
             step: step,
             batchSize: batchSize,
@@ -261,7 +177,7 @@ struct SearchRuntimeOperators {
         return MLXArray(paramData).reshaped([batchSize, sx, sy, nbK])
     }
 
-    func beamMutationPatchSchedule(
+    func searchBeamMutationPatchSchedule(
         startStep: Int,
         count: Int,
         batchSize: Int,
@@ -275,7 +191,7 @@ struct SearchRuntimeOperators {
         }
         var schedule: [Int: [FlowLeniaMetalParameterPatchBatch]] = [:]
         for localStep in 1...count {
-            let patch = buildBeamMutationPatch(
+            let patch = buildSearchBeamMutationPatch(
                 config: beamConfig,
                 step: startStep + localStep - 1,
                 batchSize: batchSize,
@@ -304,49 +220,6 @@ struct SearchRuntimeOperators {
             }
         }
         return energy
-    }
-
-    func excludedMassChannels() -> Set<Int> {
-        flowExcludedMassChannels(
-            channels: runtimeConfig.channels,
-            chemotaxis: runtimeConfig.chemotaxis,
-            food: runtimeConfig.food
-        )
-    }
-
-    func matterWeights() -> [Float]? {
-        flowMatterWeights(channels: runtimeConfig.channels, excludedChannels: excludedMassChannels())
-    }
-
-    func metalStaticChannelFields(chemField: MLXArray?) -> [FlowLeniaMetalChannelField] {
-        var fields: [FlowLeniaMetalChannelField] = []
-        if let field = chemField,
-           let chemConfig = runtimeConfig.chemotaxis,
-           chemConfig.enabled {
-            fields.append(FlowLeniaMetalChannelField(
-                channelIndex: chemConfig.channel_index,
-                field: field
-            ))
-        }
-        return fields
-    }
-
-    func metalFoodState(foodBatch: MLXArray?) -> FlowLeniaMetalFoodState? {
-        guard let field = foodBatch,
-              let foodConfig = runtimeConfig.food,
-              foodConfig.enabled else {
-            return nil
-        }
-        return FlowLeniaMetalFoodState(
-            channelIndex: foodConfig.channel_index,
-            field: field,
-            decayRate: foodConfig.decay_rate,
-            digestRate: foodConfig.digest_rate
-        )
-    }
-
-    private func matterMapFromBatch(_ batch: MLXArray) -> MLXArray {
-        flowMatterMap(batch, excludedChannels: excludedMassChannels())
     }
 
     private func buildInterventionPatch(
@@ -464,7 +337,7 @@ struct SearchRuntimeOperators {
         return (nextMass, nextParams)
     }
 
-    private func buildBeamMutationPatch(
+    private func buildSearchBeamMutationPatch(
         config: BeamMutationConfig,
         step: Int,
         batchSize: Int,

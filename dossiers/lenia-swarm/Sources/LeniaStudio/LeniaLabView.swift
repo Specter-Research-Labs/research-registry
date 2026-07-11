@@ -243,12 +243,7 @@ final class LeniaLabModel: ObservableObject {
                 if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
                     runtime = .engine(engine)
                 } else {
-                    runtime = try .replay(
-                        CanonicalLabRuntime(
-                            baseConfigData: baseConfigData,
-                            backend: backend
-                        )
-                    )
+                    runtime = .replay(CanonicalLabRuntime(runtimeConfig: runtimeConfig))
                 }
                 await runtime.setSpeedCap(hz: speedCap)
                 await runtime.setAutoFoodSpawn(
@@ -318,52 +313,34 @@ final class LeniaLabModel: ObservableObject {
             if let previousRuntime {
                 await previousRuntime.stop()
             }
-            do {
-                let runtime: LabRuntimeHandle
-                if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
-                    runtime = .engine(engine)
-                } else {
-                    runtime = try .replay(
-                        CanonicalLabRuntime(
-                            runtimeConfig: runtimeConfig
-                        )
-                    )
-                }
-                await runtime.setSpeedCap(hz: speedCap)
-                await runtime.setAutoFoodSpawn(
-                    enabled: false,
-                    probability: 0.03,
-                    patchSize: 12,
-                    value: 0.35
-                )
-                let worldContract = await runtime.worldContract()
-                if currentRunning {
-                    await runtime.start()
-                }
-                let projections = await runtime.availableProjections()
-                let activeProjection = projections.contains(self.activeProjection) ? self.activeProjection : .matter
-
-                self.runtime = runtime
-                self.isRunning = currentRunning
-                self.worldContract = worldContract
-                self.availableProjections = projections
-                self.activeProjection = activeProjection
-                self.runtimeModeLabel = runtime.modeLabel
-                self.activityEstimate = 0
-                self.startFrameLoop()
-            } catch {
-                self.runtime = nil
-                self.clearFrameState()
-                self.isRunning = false
-                self.worldContract = nil
-                self.activityEstimate = 0
-                self.stepDurationMs = 0
-                self.realizedStepRateHz = 0
-                self.availableProjections = [.matter]
-                self.activeProjection = .matter
-                self.runtimeModeLabel = "Replay failed"
-                self.runtimeStatusMessage = "Failed to load canonical replay world: \(error.localizedDescription)"
+            let runtime: LabRuntimeHandle
+            if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
+                runtime = .engine(engine)
+            } else {
+                runtime = .replay(CanonicalLabRuntime(runtimeConfig: runtimeConfig))
             }
+            await runtime.setSpeedCap(hz: speedCap)
+            await runtime.setAutoFoodSpawn(
+                enabled: false,
+                probability: 0.03,
+                patchSize: 12,
+                value: 0.35
+            )
+            let worldContract = await runtime.worldContract()
+            if currentRunning {
+                await runtime.start()
+            }
+            let projections = await runtime.availableProjections()
+            let activeProjection = projections.contains(self.activeProjection) ? self.activeProjection : .matter
+
+            self.runtime = runtime
+            self.isRunning = currentRunning
+            self.worldContract = worldContract
+            self.availableProjections = projections
+            self.activeProjection = activeProjection
+            self.runtimeModeLabel = runtime.modeLabel
+            self.activityEstimate = 0
+            self.startFrameLoop()
         }
     }
 

@@ -128,27 +128,25 @@ public struct FlowSandboxMetrics: Sendable {
         var wallCount = 0
         var nonFiniteCount = 0
 
-        for value in mass {
-            guard value.isFinite else {
+        for index in mass.indices {
+            let massValue = mass[index]
+            if massValue.isFinite {
+                massSum += massValue
+                massPeak = max(massPeak, massValue)
+                occupiedCount += massValue > 0.05 ? 1 : 0
+            } else {
                 nonFiniteCount += 1
-                continue
             }
-            massSum += value
-            massPeak = max(massPeak, value)
-            if value > 0.05 {
-                occupiedCount += 1
-            }
-        }
-        for value in food {
-            guard value.isFinite else {
+
+            let foodValue = food[index]
+            if foodValue.isFinite {
+                foodSum += foodValue
+                foodPeak = max(foodPeak, foodValue)
+            } else {
                 nonFiniteCount += 1
-                continue
             }
-            foodSum += value
-            foodPeak = max(foodPeak, value)
-        }
-        for value in walls where value < 0.5 {
-            wallCount += 1
+
+            wallCount += walls[index] < 0.5 ? 1 : 0
         }
 
         self.init(

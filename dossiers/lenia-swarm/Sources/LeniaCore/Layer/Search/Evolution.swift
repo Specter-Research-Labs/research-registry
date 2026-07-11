@@ -2640,7 +2640,8 @@ public final class EvolutionEngine {
         if let field = obstacleFieldBatch, let obstacleField = esConfig.obstacleField {
             ABatch = applyExternalFieldBatch(ABatch, field: field, channelIndex: obstacleField.channelIndex)
         }
-        runner.setMatterWeights(metalMatterWeights())
+        let matterWeights = metalMatterWeights()
+        runner.setMatterWeights(matterWeights)
         runner.setWallPotential(obstacleFieldBatch.map(buildObstaclePotential))
         runner.setStaticChannelFields(
             metalStaticChannelFields(
@@ -2651,66 +2652,58 @@ public final class EvolutionEngine {
         runner.setState(mass: ABatch, params: PBatch)
         fieldBuildMs = durationMs(fieldBuildStart.duration(to: ContinuousClock.now))
 
-        let initialMeasurementStart = ContinuousClock.now
-        if requirements.usesCenterOfMass {
-            if runner.supportsMassSummary {
-                let summary = runner.summarizeMass(
-                    occupancyThreshold: 0.0,
-                    includeGyration: false,
-                    channelWeights: metalMatterWeights()
-                )
-                initialSnapshots = (0..<pop).map { centerSnapshot(from: summary, index: $0) }
-            } else {
-                let massMap = runner.materializeMassMap(channelWeights: metalMatterWeights())
-                let centers = materializeCenterOfMassBatch([centerOfMassBatchDeviceFromMassMap(massMap)])[0]
-                initialSnapshots = (0..<pop).map { centerSnapshot(from: centers, index: $0) ?? deadSnapshot() }
+        let sequenceStepSet = Set(templateSequenceSteps())
+        var sequenceMassMaps: [MLXArray] = []
+        var sequenceSnapshots: [[CenterSnapshot]] = []
+        let needsFinalMassMap = esConfig.fitness.usesMorphologyMetrics
+            || (requirements.objective == "chemotaxis" && chemFieldBatch != nil)
+        let needsFinalGyration = esConfig.fitness.gyrationPenalty != nil
+        var observedFinalMassMap: MLXArray?
+        var observedFinalSummary: FlowLeniaMetalMassSummary?
+
+        func observeCurrentState(
+            centers: Bool,
+            massMap: Bool,
+            includeGyration: Bool
+        ) -> (centers: [CenterSnapshot]?, massMap: MLXArray?, summary: FlowLeniaMetalMassSummary?) {
+            guard centers || includeGyration else {
+                return (nil, massMap ? runner.materializeMassMap(channelWeights: matterWeights) : nil, nil)
             }
+            let observation = runner.observeMass(
+                occupancyThreshold: 0.0,
+                includeGyration: includeGyration,
+                channelWeights: matterWeights,
+                materializeMap: massMap
+            )
+            return (
+                centers ? (0..<pop).map { centerSnapshot(from: observation.summary, index: $0) } : nil,
+                observation.massMap,
+                observation.summary
+            )
+        }
+
+        let initialMeasurementStart = ContinuousClock.now
+        let capturesInitialSequence = sequenceStepSet.contains(0)
+        let capturesInitialTrajectory = esConfig.fitness.usesTrajectoryMetrics && capturesInitialSequence
+        let initialObservation = observeCurrentState(
+            centers: requirements.usesCenterOfMass || capturesInitialTrajectory,
+            massMap: capturesInitialSequence,
+            includeGyration: false
+        )
+        if requirements.usesCenterOfMass {
+            initialSnapshots = initialObservation.centers ?? deadSnapshots
+        }
+        if let massMap = initialObservation.massMap {
+            sequenceMassMaps.append(massMap)
+        }
+        if capturesInitialTrajectory, let centers = initialObservation.centers {
+            sequenceSnapshots.append(centers)
         }
         measurementMs += durationMs(initialMeasurementStart.duration(to: ContinuousClock.now))
 
         let rolloutStart = ContinuousClock.now
         var completedSteps = 0
 
-        func advanceRunner(to targetStep: Int) {
-            let delta = targetStep - completedSteps
-            if delta > 0 {
-                runner.step(count: delta)
-                completedSteps = targetStep
-            }
-        }
-
-        let sequenceStepSet = Set(templateSequenceSteps())
-        var sequenceMassMaps: [MLXArray] = []
-        var sequenceSnapshots: [[CenterSnapshot]] = []
-
-        func captureTemplateSequenceStep(_ step: Int) {
-            if sequenceStepSet.contains(step) {
-                sequenceMassMaps.append(runner.materializeMassMap(channelWeights: metalMatterWeights()))
-            }
-        }
-
-        func measureCenterSnapshots() -> [CenterSnapshot] {
-            if runner.supportsMassSummary {
-                let summary = runner.summarizeMass(
-                    occupancyThreshold: 0.0,
-                    includeGyration: false,
-                    channelWeights: metalMatterWeights()
-                )
-                return (0..<pop).map { centerSnapshot(from: summary, index: $0) }
-            }
-            let massMap = runner.materializeMassMap(channelWeights: metalMatterWeights())
-            let centers = materializeCenterOfMassBatch([centerOfMassBatchDeviceFromMassMap(massMap)])[0]
-            return (0..<pop).map { centerSnapshot(from: centers, index: $0) ?? deadSnapshot() }
-        }
-
-        func captureTrajectoryStep(_ step: Int) {
-            if esConfig.fitness.usesTrajectoryMetrics && sequenceStepSet.contains(step) {
-                sequenceSnapshots.append(measureCenterSnapshots())
-            }
-        }
-
-        captureTemplateSequenceStep(0)
-        captureTrajectoryStep(0)
         var measurementSteps = Set(sequenceStepSet)
         if requirements.usesMidCenter {
             measurementSteps.insert(requirements.midStep)
@@ -2722,52 +2715,71 @@ public final class EvolutionEngine {
 
         for step in measurementSteps.sorted() where step > 0 {
             let stepMeasurementStart = ContinuousClock.now
-            advanceRunner(to: step)
-            if requirements.usesMidCenter && step == requirements.midStep {
-                midSnapshots = measureCenterSnapshots()
+            let delta = step - completedSteps
+            if delta > 0 {
+                runner.step(count: delta)
+                completedSteps = step
             }
-            if requirements.usesCenterOfMass && step == requirements.targetStep {
-                targetSnapshots = measureCenterSnapshots()
+            let capturesSequence = sequenceStepSet.contains(step)
+            let capturesTrajectory = esConfig.fitness.usesTrajectoryMetrics && capturesSequence
+            let capturesMidCenter = requirements.usesMidCenter && step == requirements.midStep
+            let capturesTargetCenter = requirements.usesCenterOfMass && step == requirements.targetStep
+            let capturesMidMass = usesTranslatedShapeOverlap && step == requirements.midStep
+            let capturesTargetMass = usesTranslatedShapeOverlap && step == requirements.targetStep
+            let capturesFinalMetrics = step == esConfig.steps
+            let observation = observeCurrentState(
+                centers: capturesTrajectory || capturesMidCenter || capturesTargetCenter,
+                massMap: capturesSequence || capturesMidMass || capturesTargetMass
+                    || (capturesFinalMetrics && needsFinalMassMap),
+                includeGyration: capturesFinalMetrics && needsFinalGyration
+            )
+            if capturesMidCenter {
+                midSnapshots = observation.centers ?? deadSnapshots
             }
-            if usesTranslatedShapeOverlap && step == requirements.midStep {
-                midMassBatch = materializeMassBatch(runner.materializeMassMap(channelWeights: metalMatterWeights()))
+            if capturesTargetCenter {
+                targetSnapshots = observation.centers ?? deadSnapshots
             }
-            if usesTranslatedShapeOverlap && step == requirements.targetStep {
-                targetMassBatch = materializeMassBatch(runner.materializeMassMap(channelWeights: metalMatterWeights()))
+            if capturesMidMass, let massMap = observation.massMap {
+                midMassBatch = materializeMassBatch(massMap)
             }
-            captureTemplateSequenceStep(step)
-            captureTrajectoryStep(step)
+            if capturesTargetMass, let massMap = observation.massMap {
+                targetMassBatch = materializeMassBatch(massMap)
+            }
+            if capturesSequence, let massMap = observation.massMap {
+                sequenceMassMaps.append(massMap)
+            }
+            if capturesTrajectory, let centers = observation.centers {
+                sequenceSnapshots.append(centers)
+            }
+            if capturesFinalMetrics {
+                observedFinalMassMap = observation.massMap
+                observedFinalSummary = observation.summary
+            }
             measurementMs += durationMs(stepMeasurementStart.duration(to: ContinuousClock.now))
         }
 
         rolloutMs = durationMs(rolloutStart.duration(to: ContinuousClock.now))
 
         let finalMeasurementStart = ContinuousClock.now
-        var finalMassMapBatch: MLXArray? = nil
+        var finalMassMapBatch = observedFinalMassMap
         let gyrationValues: [Float]?
-        if runner.supportsMassSummary {
-            let summary = runner.summarizeMass(
-                occupancyThreshold: 0.0,
-                includeGyration: esConfig.fitness.gyrationPenalty != nil,
-                channelWeights: metalMatterWeights()
-            )
-            if let rawGyration = summary.rawGyration {
-                gyrationValues = zip(summary.totalMass, rawGyration).map { totalMass, gyration in
-                    totalMass > 0 ? gyration / Float(config.sx * config.sy) : 1.0
-                }
-            } else {
-                gyrationValues = nil
+        if needsFinalGyration {
+            guard let summary = observedFinalSummary,
+                  let rawGyration = summary.rawGyration else {
+                preconditionFailure("Final Metal evolution observation did not include gyration.")
+            }
+            gyrationValues = zip(summary.totalMass, rawGyration).map { totalMass, gyration in
+                totalMass > 0 ? gyration / Float(config.sx * config.sy) : 1.0
             }
         } else {
-            finalMassMapBatch = runner.materializeMassMap(channelWeights: metalMatterWeights())
-            gyrationValues = esConfig.fitness.gyrationPenalty == nil ? nil : computeGyrationBatchFromMassMap(finalMassMapBatch!)
+            gyrationValues = nil
+        }
+        if needsFinalMassMap, finalMassMapBatch == nil {
+            finalMassMapBatch = runner.materializeMassMap(channelWeights: matterWeights)
         }
         let morphologyValues: MorphologyMeasurementBatch?
-        if esConfig.fitness.usesMorphologyMetrics {
-            if finalMassMapBatch == nil {
-                finalMassMapBatch = runner.materializeMassMap(channelWeights: metalMatterWeights())
-            }
-            morphologyValues = morphologyMeasurements(fromMassMap: finalMassMapBatch!)
+        if esConfig.fitness.usesMorphologyMetrics, let finalMassMapBatch {
+            morphologyValues = morphologyMeasurements(fromMassMap: finalMassMapBatch)
         } else {
             morphologyValues = nil
         }
@@ -2778,12 +2790,9 @@ public final class EvolutionEngine {
         let trajectoryValues = trajectoryMetricValues(from: sequenceSnapshots, stepSpan: trajectoryMetricStepSpan())
         let chemotaxisScores: [Float]?
         if requirements.objective == "chemotaxis" {
-            if let field = chemFieldBatch {
-                if finalMassMapBatch == nil {
-                    finalMassMapBatch = runner.materializeMassMap(channelWeights: metalMatterWeights())
-                }
-                let numerator = (finalMassMapBatch! * field).sum(axes: [1, 2])
-                let denominator = finalMassMapBatch!.sum(axes: [1, 2])
+            if let field = chemFieldBatch, let finalMassMapBatch {
+                let numerator = (finalMassMapBatch * field).sum(axes: [1, 2])
+                let denominator = finalMassMapBatch.sum(axes: [1, 2])
                 eval(numerator, denominator)
                 let numeratorCPU: [Float] = numerator.asArray(Float.self)
                 let denominatorCPU: [Float] = denominator.asArray(Float.self)
@@ -4375,7 +4384,7 @@ public struct ESGenerationResult {
     }
 }
 
-public struct ESGenerationProfile: Sendable {
+public struct ESGenerationProfile: Codable, Sendable {
     public let candidateSetupMs: Double
     public let kernelCompileMs: Double
     public let stateBuildMs: Double

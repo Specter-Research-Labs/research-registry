@@ -468,49 +468,13 @@ struct BenchmarkSeriesArtifact: Codable {
     let median: Double
 }
 
-struct BenchmarkStageTimingsArtifact: Codable {
-    let prepareMs: Double
-    let fftMs: Double
-    let growthReduceMs: Double
-    let flowMs: Double
-    let reintegrateMs: Double
-    let totalMs: Double
-}
-
-struct BenchmarkSearchProfileArtifact: Codable {
-    let stateBuildMs: Double
-    let parameterBuildMs: Double
-    let foodBuildMs: Double
-    let wallBuildMs: Double
-    let chemFieldBuildMs: Double
-    let runnerSetupMs: Double
-    let rolloutMs: Double
-    let summaryReductionMs: Double
-    let combinedObservationMs: Double
-    let materializationMs: Double
-    let massObservationSynchronizations: Int
-    let postprocessMs: Double
-    let totalMs: Double
-}
-
-struct BenchmarkEvolutionProfileArtifact: Codable {
-    let candidateSetupMs: Double
-    let kernelCompileMs: Double
-    let stateBuildMs: Double
-    let fieldBuildMs: Double
-    let rolloutMs: Double
-    let fitnessMs: Double
-    let optimizerMs: Double
-    let totalMs: Double
-}
-
 struct BenchmarkSampleArtifact: Codable {
     let durationSeconds: Double
     let throughput: Double
     let simStepsPerSecond: Double?
-    let stageTimings: BenchmarkStageTimingsArtifact?
-    let searchProfile: BenchmarkSearchProfileArtifact?
-    let evolutionProfile: BenchmarkEvolutionProfileArtifact?
+    let stageTimings: FlowSandboxMetalStageTimings?
+    let searchProfile: SearchBatchProfile?
+    let evolutionProfile: ESGenerationProfile?
 }
 
 struct BenchmarkBackendArtifact: Codable {
@@ -518,9 +482,9 @@ struct BenchmarkBackendArtifact: Codable {
     let throughput: BenchmarkSeriesArtifact
     let durationSeconds: BenchmarkSeriesArtifact
     let simStepsPerSecond: BenchmarkSeriesArtifact?
-    let stageTimingsMedian: BenchmarkStageTimingsArtifact?
-    let searchProfileMedian: BenchmarkSearchProfileArtifact?
-    let evolutionProfileMedian: BenchmarkEvolutionProfileArtifact?
+    let stageTimingsMedian: FlowSandboxMetalStageTimings?
+    let searchProfileMedian: SearchBatchProfile?
+    let evolutionProfileMedian: ESGenerationProfile?
     let samples: [BenchmarkSampleArtifact]
 }
 
@@ -741,55 +705,13 @@ private func benchmarkSeriesArtifact(single value: Double) -> BenchmarkSeriesArt
     benchmarkSeriesArtifact(summarizeBenchmarkSeries([value]))
 }
 
-private func benchmarkStageTimingsArtifact(_ timings: FlowSandboxMetalStageTimings) -> BenchmarkStageTimingsArtifact {
-    BenchmarkStageTimingsArtifact(
-        prepareMs: timings.prepareMs,
-        fftMs: timings.fftMs,
-        growthReduceMs: timings.growthReduceMs,
-        flowMs: timings.flowMs,
-        reintegrateMs: timings.reintegrateMs,
-        totalMs: timings.totalMs
-    )
-}
-
-private func benchmarkSearchProfileArtifact(_ profile: SearchBatchProfile) -> BenchmarkSearchProfileArtifact {
-    BenchmarkSearchProfileArtifact(
-        stateBuildMs: profile.stateBuildMs,
-        parameterBuildMs: profile.parameterBuildMs,
-        foodBuildMs: profile.foodBuildMs,
-        wallBuildMs: profile.wallBuildMs,
-        chemFieldBuildMs: profile.chemFieldBuildMs,
-        runnerSetupMs: profile.runnerSetupMs,
-        rolloutMs: profile.rolloutMs,
-        summaryReductionMs: profile.summaryReductionMs,
-        combinedObservationMs: profile.combinedObservationMs,
-        materializationMs: profile.materializationMs,
-        massObservationSynchronizations: profile.massObservationSynchronizations,
-        postprocessMs: profile.postprocessMs,
-        totalMs: profile.totalMs
-    )
-}
-
-private func benchmarkEvolutionProfileArtifact(_ profile: ESGenerationProfile) -> BenchmarkEvolutionProfileArtifact {
-    BenchmarkEvolutionProfileArtifact(
-        candidateSetupMs: profile.candidateSetupMs,
-        kernelCompileMs: profile.kernelCompileMs,
-        stateBuildMs: profile.stateBuildMs,
-        fieldBuildMs: profile.fieldBuildMs,
-        rolloutMs: profile.rolloutMs,
-        fitnessMs: profile.fitnessMs,
-        optimizerMs: profile.optimizerMs,
-        totalMs: profile.totalMs
-    )
-}
-
 private func benchmarkBackendArtifact(_ result: FlowSandboxBenchmarkResult) -> BenchmarkBackendArtifact {
     BenchmarkBackendArtifact(
         backend: result.backend.displayName,
         throughput: benchmarkSeriesArtifact(single: result.stepsPerSecond),
         durationSeconds: benchmarkSeriesArtifact(single: result.duration),
         simStepsPerSecond: benchmarkSeriesArtifact(single: result.stepsPerSecond),
-        stageTimingsMedian: result.stageTimings.map(benchmarkStageTimingsArtifact),
+        stageTimingsMedian: result.stageTimings,
         searchProfileMedian: nil,
         evolutionProfileMedian: nil,
         samples: [
@@ -797,7 +719,7 @@ private func benchmarkBackendArtifact(_ result: FlowSandboxBenchmarkResult) -> B
                 durationSeconds: result.duration,
                 throughput: result.stepsPerSecond,
                 simStepsPerSecond: result.stepsPerSecond,
-                stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
+                stageTimings: result.stageTimings,
                 searchProfile: nil,
                 evolutionProfile: nil
             )
@@ -811,7 +733,7 @@ private func benchmarkBackendArtifact(_ result: FlowLeniaBenchmarkResult) -> Ben
         throughput: benchmarkSeriesArtifact(single: result.stepsPerSecond),
         durationSeconds: benchmarkSeriesArtifact(single: result.duration),
         simStepsPerSecond: benchmarkSeriesArtifact(single: result.stepsPerSecond),
-        stageTimingsMedian: result.stageTimings.map(benchmarkStageTimingsArtifact),
+        stageTimingsMedian: result.stageTimings,
         searchProfileMedian: nil,
         evolutionProfileMedian: nil,
         samples: [
@@ -819,7 +741,7 @@ private func benchmarkBackendArtifact(_ result: FlowLeniaBenchmarkResult) -> Ben
                 durationSeconds: result.duration,
                 throughput: result.stepsPerSecond,
                 simStepsPerSecond: result.stepsPerSecond,
-                stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
+                stageTimings: result.stageTimings,
                 searchProfile: nil,
                 evolutionProfile: nil
             )
@@ -832,8 +754,8 @@ private func benchmarkSearchSampleArtifact(_ result: SearchBenchmarkResult) -> B
         durationSeconds: result.duration,
         throughput: result.seedsPerSecond,
         simStepsPerSecond: result.simStepsPerSecond,
-        stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
-        searchProfile: benchmarkSearchProfileArtifact(result.profile),
+        stageTimings: result.stageTimings,
+        searchProfile: result.profile,
         evolutionProfile: nil
     )
 }
@@ -843,17 +765,17 @@ private func benchmarkEvolutionSampleArtifact(_ result: EvolutionBenchmarkResult
         durationSeconds: result.duration,
         throughput: result.candidatesPerSecond,
         simStepsPerSecond: result.simStepsPerSecond,
-        stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
+        stageTimings: result.stageTimings,
         searchProfile: nil,
-        evolutionProfile: benchmarkEvolutionProfileArtifact(result.profile)
+        evolutionProfile: result.profile
     )
 }
 
 private func searchProfileMedianArtifact(
     _ samples: [SearchBenchmarkResult],
     stats: RepeatedBenchmarkStats<SearchBenchmarkResult>
-) -> BenchmarkSearchProfileArtifact {
-    BenchmarkSearchProfileArtifact(
+) -> SearchBatchProfile {
+    SearchBatchProfile(
         stateBuildMs: stats.derivedMedian(samples.map { $0.profile.stateBuildMs }),
         parameterBuildMs: stats.derivedMedian(samples.map { $0.profile.parameterBuildMs }),
         foodBuildMs: stats.derivedMedian(samples.map { $0.profile.foodBuildMs }),
@@ -873,8 +795,8 @@ private func searchProfileMedianArtifact(
 private func evolutionProfileMedianArtifact(
     _ samples: [EvolutionBenchmarkResult],
     stats: RepeatedBenchmarkStats<EvolutionBenchmarkResult>
-) -> BenchmarkEvolutionProfileArtifact {
-    BenchmarkEvolutionProfileArtifact(
+) -> ESGenerationProfile {
+    ESGenerationProfile(
         candidateSetupMs: stats.derivedMedian(samples.map { $0.profile.candidateSetupMs }),
         kernelCompileMs: stats.derivedMedian(samples.map { $0.profile.kernelCompileMs }),
         stateBuildMs: stats.derivedMedian(samples.map { $0.profile.stateBuildMs }),
@@ -890,12 +812,12 @@ private func stageTimingsMedianArtifact<Result>(
     _ samples: [Result],
     stats: RepeatedBenchmarkStats<Result>,
     extract: (Result) -> FlowSandboxMetalStageTimings?
-) -> BenchmarkStageTimingsArtifact? {
+) -> FlowSandboxMetalStageTimings? {
     let stageSamples = samples.compactMap(extract)
     guard !stageSamples.isEmpty else {
         return nil
     }
-    return BenchmarkStageTimingsArtifact(
+    return FlowSandboxMetalStageTimings(
         prepareMs: stats.derivedMedian(stageSamples.map(\.prepareMs)),
         fftMs: stats.derivedMedian(stageSamples.map(\.fftMs)),
         growthReduceMs: stats.derivedMedian(stageSamples.map(\.growthReduceMs)),
@@ -909,8 +831,8 @@ private func benchmarkBackendArtifact<Result>(
     backend: FlowLeniaComputeBackend,
     stats: RepeatedBenchmarkStats<Result>,
     sampleArtifact: (Result) -> BenchmarkSampleArtifact,
-    profileMedian: ([Result], RepeatedBenchmarkStats<Result>) -> BenchmarkSearchProfileArtifact?,
-    stageMedian: ([Result], RepeatedBenchmarkStats<Result>) -> BenchmarkStageTimingsArtifact?
+    profileMedian: ([Result], RepeatedBenchmarkStats<Result>) -> SearchBatchProfile?,
+    stageMedian: ([Result], RepeatedBenchmarkStats<Result>) -> FlowSandboxMetalStageTimings?
 ) -> BenchmarkBackendArtifact {
     let samples = stats.sample.map(sampleArtifact)
     let simStepValues = samples.compactMap(\.simStepsPerSecond)
@@ -930,8 +852,8 @@ private func benchmarkBackendArtifact(
     backend: FlowLeniaComputeBackend,
     stats: RepeatedBenchmarkStats<EvolutionBenchmarkResult>,
     sampleArtifact: (EvolutionBenchmarkResult) -> BenchmarkSampleArtifact,
-    profileMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> BenchmarkEvolutionProfileArtifact?,
-    stageMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> BenchmarkStageTimingsArtifact?
+    profileMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> ESGenerationProfile?,
+    stageMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> FlowSandboxMetalStageTimings?
 ) -> BenchmarkBackendArtifact {
     let samples = stats.sample.map(sampleArtifact)
     let simStepValues = samples.compactMap(\.simStepsPerSecond)

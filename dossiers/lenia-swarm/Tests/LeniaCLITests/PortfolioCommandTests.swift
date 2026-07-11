@@ -329,7 +329,6 @@ final class PortfolioCommandTests: XCTestCase {
         let bundle = try XCTUnwrap(discoverPortfolioCandidateBundles(from: hostURL, top: 1).first)
         let replaySearch = portfolioReplaySearchConfig(bundle: bundle, steps: 100, frameBudget: 6)
         XCTAssertEqual(replaySearch.recordInterval, 16)
-        XCTAssertEqual(portfolioReplayFrameStride(searchConfig: replaySearch, frameBudget: 6), 16)
 
         let mediaURL = root.appendingPathComponent("media", isDirectory: true)
         let fakeFFmpeg = try writeFakeFFmpeg(to: root)

@@ -58,6 +58,48 @@ color = "ink"
     write(&root.join("addenda/design-tokens/web.toml"), "");
 }
 
+fn write_swift_ci_project(root: &Utf8Path, cache_paths: &str) {
+    write(
+        &root.join("dossiers/alpha/Package.swift"),
+        "// swift-tools-version: 6.0\n",
+    );
+    write(&root.join("dossiers/alpha/Package.resolved"), "{}\n");
+    write(
+        &root.join("dossiers/alpha/spctr.toml"),
+        &format!(
+            r#"version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Alpha"
+summary = "Alpha summary."
+status = "active"
+
+[site]
+visible = false
+featured = false
+
+[release]
+stage = "candidate"
+
+[spctr]
+project = "alpha"
+
+[spctr.exec.check]
+command = ["swift", "test"]
+
+[spctr.runtime]
+platforms = ["macos"]
+requires = ["swift"]
+cache_paths = {cache_paths}
+
+[spctr.ci]
+runner = "macos-latest"
+pull_request = ["check"]
+push_main = ["check"]
+"#
+        ),
+    );
+}
+
 #[test]
 fn github_workflow_plan_renders_manifest_exec_jobs() {
     let temp = TempDir::new().unwrap();
@@ -146,90 +188,32 @@ fn github_workflow_caches_only_declared_swiftpm_dependency_state() {
     let temp = TempDir::new().unwrap();
     let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
     minimal_design_tokens(root);
-    let manifest_path = root.join("dossiers/alpha/spctr.toml");
-    write(
-        &root.join("dossiers/alpha/Package.swift"),
-        "// swift-tools-version: 6.0\n",
-    );
-    write(&root.join("dossiers/alpha/Package.resolved"), "{}\n");
-    write(
-        &manifest_path,
-        r#"version = 1
-license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
-title = "Alpha"
-summary = "Alpha summary."
-status = "active"
-
-[site]
-visible = false
-featured = false
-
-[release]
-stage = "candidate"
-
-[spctr]
-project = "alpha"
-
-[spctr.exec.check]
-command = ["swift", "test"]
-
-[spctr.runtime]
-platforms = ["macos"]
-requires = ["swift"]
-cache_paths = [".build", ".swiftpm", "tmp/xcode-build/DerivedData"]
-
-[spctr.ci]
-runner = "macos-latest"
-pull_request = ["check"]
-push_main = ["check"]
-"#,
+    write_swift_ci_project(
+        root,
+        r#"[".build", ".swiftpm", "tmp/xcode-build/DerivedData"]"#,
     );
 
     let plan = github_plan(root, Some("alpha")).unwrap();
-    let cache = plan.swift_dependency_cache.as_ref().unwrap();
-    assert_eq!(
-        cache.paths,
-        vec![
-            "dossiers/alpha/.build/artifacts",
-            "dossiers/alpha/.build/checkouts",
-            "dossiers/alpha/.build/repositories",
-            "dossiers/alpha/.build/workspace-state.json",
-        ]
-    );
-    assert_eq!(
-        cache.key_inputs,
-        vec![
-            "dossiers/alpha/Package.swift",
-            "dossiers/alpha/Package.resolved",
-        ]
-    );
+    assert!(plan.cache_swiftpm_dependencies);
 
     let rendered = render_github_workflow(&plan);
-    assert!(rendered.contains("name: Fingerprint Swift toolchain"));
-    assert!(rendered.contains("swift --version"));
-    assert!(rendered.contains("xcodebuild -version"));
     assert!(rendered.contains("uses: actions/cache@v5.0.5"));
     assert!(rendered.contains("dossiers/alpha/.build/artifacts"));
     assert!(rendered.contains("dossiers/alpha/.build/checkouts"));
-    assert!(rendered.contains("dossiers/alpha/.build/workspace-state.json"));
+    assert!(rendered.contains("dossiers/alpha/.build/repositories"));
     assert!(!rendered.contains("dossiers/alpha/.build/plugins"));
+    assert!(!rendered.contains("dossiers/alpha/.build/workspace-state.json"));
     assert!(!rendered.contains("dossiers/alpha/.swiftpm"));
     assert!(!rendered.contains("dossiers/alpha/tmp/xcode-build/DerivedData"));
     assert!(rendered
         .contains("hashFiles('dossiers/alpha/Package.swift', 'dossiers/alpha/Package.resolved')"));
-    let cache_prefix = "spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.swiftpm_cache_key.outputs.toolchain }}-alpha-${{ hashFiles('dossiers/alpha/Package.swift', 'dossiers/alpha/Package.resolved') }}";
+    let cache_prefix = "spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-alpha-${{ hashFiles('dossiers/alpha/Package.swift', 'dossiers/alpha/Package.resolved') }}";
     assert!(rendered.contains(&format!("{cache_prefix}-pull_request")));
     assert!(rendered.contains(&format!("{cache_prefix}-push_main")));
     assert!(rendered.contains(&format!("{cache_prefix}-\n")));
 
-    let requirements = rendered
-        .find("Verify declared runtime requirements")
-        .unwrap();
-    let fingerprint = rendered.find("Fingerprint Swift toolchain").unwrap();
     let cache_step = rendered.find("Cache SwiftPM dependencies").unwrap();
     let check = rendered.find("Run exec check").unwrap();
-    assert!(requirements < fingerprint);
-    assert!(fingerprint < cache_step);
     assert!(cache_step < check);
 }
 
@@ -238,45 +222,10 @@ fn github_workflow_requires_declared_build_cache_for_swiftpm_caching() {
     let temp = TempDir::new().unwrap();
     let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
     minimal_design_tokens(root);
-    let manifest_path = root.join("dossiers/alpha/spctr.toml");
-    write(
-        &root.join("dossiers/alpha/Package.swift"),
-        "// swift-tools-version: 6.0\n",
-    );
-    write(
-        &manifest_path,
-        r#"version = 1
-license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
-title = "Alpha"
-summary = "Alpha summary."
-status = "active"
-
-[site]
-visible = false
-featured = false
-
-[release]
-stage = "candidate"
-
-[spctr]
-project = "alpha"
-
-[spctr.exec.check]
-command = ["swift", "test"]
-
-[spctr.runtime]
-platforms = ["macos"]
-requires = ["swift"]
-cache_paths = [".swiftpm"]
-
-[spctr.ci]
-runner = "macos-latest"
-pull_request = ["check"]
-"#,
-    );
+    write_swift_ci_project(root, r#"[".swiftpm"]"#);
 
     let plan = github_plan(root, Some("alpha")).unwrap();
-    assert!(plan.swift_dependency_cache.is_none());
+    assert!(!plan.cache_swiftpm_dependencies);
     assert!(!render_github_workflow(&plan).contains("Cache SwiftPM dependencies"));
 }
 

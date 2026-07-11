@@ -2,6 +2,7 @@ import ArgumentParser
 import CoreGraphics
 import Foundation
 import ImageIO
+import LeniaCore
 import Metal
 import UniformTypeIdentifiers
 import LeniaVisuals
@@ -240,6 +241,72 @@ struct CapturedStateFrame {
         }
         return Data(bytes)
     }
+}
+
+func captureReplayStateFrames(
+    runtimeConfig: LeniaRuntimeConfig,
+    seed: Int,
+    initSeedOffset: Int,
+    searchConfig: SearchConfig,
+    frameBudget: Int,
+    captureFlow: Bool = false,
+    emptyCaptureMessage: String
+) throws -> [CapturedStateFrame] {
+    var grayscaleFrames: [Data] = []
+    var stateFrames: [CapturedStateFrame] = []
+    var flowByStep: [Int: (flow: [Float], growth: [Float])] = [:]
+    grayscaleFrames.reserveCapacity(frameBudget + 8)
+    stateFrames.reserveCapacity(frameBudget + 8)
+
+    let capture = FrameCapture(
+        stride: searchConfig.recordInterval,
+        includeWarmup: false,
+        sampleIndex: 0,
+        handler: { _, _, _, data in
+            grayscaleFrames.append(data)
+        },
+        stateHandler: { step, width, height, channels, values in
+            stateFrames.append(CapturedStateFrame(
+                step: step,
+                width: width,
+                height: height,
+                channels: channels,
+                values: values
+            ))
+        },
+        flowHandler: captureFlow ? { step, _, _, flow, growth in
+            flowByStep[step] = (flow, growth)
+        } : nil
+    )
+    let engine = SearchEngine(runtimeConfig: runtimeConfig)
+    _ = engine.runBatch(
+        seeds: [seed],
+        initSeedOffset: initSeedOffset,
+        searchConfig: searchConfig,
+        frameCapture: capture
+    )
+
+    guard !stateFrames.isEmpty || !grayscaleFrames.isEmpty else {
+        throw ValidationError(emptyCaptureMessage)
+    }
+    if !stateFrames.isEmpty {
+        return Array(stateFrames.prefix(frameBudget)).map { frame in
+            guard let fields = flowByStep[frame.step] else { return frame }
+            var attached = frame
+            attached.flow = fields.flow
+            attached.growth = fields.growth
+            return attached
+        }
+    }
+    return Array(grayscaleFrames.prefix(frameBudget).enumerated().map { index, data in
+        CapturedStateFrame(
+            step: index,
+            width: runtimeConfig.sx,
+            height: runtimeConfig.sy,
+            channels: 1,
+            values: data.map { Float($0) / 255.0 }
+        )
+    })
 }
 
 final class ChannelAwareColorFrameWriter {

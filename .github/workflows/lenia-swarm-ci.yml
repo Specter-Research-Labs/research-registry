@@ -41,16 +41,6 @@ jobs:
             echo "missing required runtime: swift" >&2
             exit 1
           fi
-      - name: Fingerprint Swift toolchain
-        id: swiftpm_cache_key
-        run: |
-          set -euo pipefail
-          {
-            swift --version
-            if command -v xcodebuild >/dev/null; then
-              xcodebuild -version
-            fi
-          } | cksum | awk '{ print "toolchain=" $1 "-" $2 }' >> "$GITHUB_OUTPUT"
       - name: Cache SwiftPM dependencies
         uses: actions/cache@v5.0.5
         with:
@@ -58,10 +48,9 @@ jobs:
             dossiers/lenia-swarm/.build/artifacts
             dossiers/lenia-swarm/.build/checkouts
             dossiers/lenia-swarm/.build/repositories
-            dossiers/lenia-swarm/.build/workspace-state.json
-          key: spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.swiftpm_cache_key.outputs.toolchain }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-pull_request
+          key: spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-pull_request
           restore-keys: |
-            spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.swiftpm_cache_key.outputs.toolchain }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-
+            spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-
       - name: Run exec check
         run: ./ops/spctr/target/release/spctr exec run --project lenia-swarm check
   push_main:
@@ -85,16 +74,6 @@ jobs:
             echo "missing required runtime: swift" >&2
             exit 1
           fi
-      - name: Fingerprint Swift toolchain
-        id: swiftpm_cache_key
-        run: |
-          set -euo pipefail
-          {
-            swift --version
-            if command -v xcodebuild >/dev/null; then
-              xcodebuild -version
-            fi
-          } | cksum | awk '{ print "toolchain=" $1 "-" $2 }' >> "$GITHUB_OUTPUT"
       - name: Cache SwiftPM dependencies
         uses: actions/cache@v5.0.5
         with:
@@ -102,9 +81,8 @@ jobs:
             dossiers/lenia-swarm/.build/artifacts
             dossiers/lenia-swarm/.build/checkouts
             dossiers/lenia-swarm/.build/repositories
-            dossiers/lenia-swarm/.build/workspace-state.json
-          key: spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.swiftpm_cache_key.outputs.toolchain }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-push_main
+          key: spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-push_main
           restore-keys: |
-            spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.swiftpm_cache_key.outputs.toolchain }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-
+            spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-
       - name: Run exec check
         run: ./ops/spctr/target/release/spctr exec run --project lenia-swarm check

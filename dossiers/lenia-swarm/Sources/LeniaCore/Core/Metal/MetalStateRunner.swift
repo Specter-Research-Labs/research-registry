@@ -11,7 +11,7 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private let device: MTLDevice
     private let commandQueue: MTLCommandQueue
     private let pipeline: FlowLeniaMetalFullPipeline
-    private let summaryReducer: FlowLeniaMetalSummaryReducer?
+    private let summaryReducer: FlowLeniaMetalSummaryReducer
     private let scalarSummaryReducer: FlowLeniaMetalScalarSummaryReducer
     private let wallMaskPipeline: MTLComputePipelineState
     private let parameterPatchPipeline: MTLComputePipelineState
@@ -42,10 +42,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private var foodState: FlowLeniaMetalFoodStateBuffer?
     private var hasState = false
     private(set) var massObservationSynchronizationCount = 0
-
-    var supportsMassSummary: Bool {
-        summaryReducer != nil
-    }
 
     init(
         config: BatchedConfig,
@@ -585,9 +581,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         channelWeights: [Float]? = nil,
         materializeMap: Bool
     ) -> (summary: FlowLeniaMetalMassSummary, massMap: MLXArray?) {
-        guard let summaryReducer else {
-            preconditionFailure("FlowLeniaMetalFullStateRunner mass summary reducer is unavailable.")
-        }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
             preconditionFailure("Failed to create Flow Metal mass-observation command buffer.")
         }

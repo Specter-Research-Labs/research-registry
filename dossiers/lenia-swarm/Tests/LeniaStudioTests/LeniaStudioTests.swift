@@ -464,14 +464,14 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(image?.height, 64)
     }
 
-    func testLiveProjectionFramesReadsOnlyTheSelectedChannelAndSwitchesOnNextFrame() throws {
+    func testLiveProjectionFrameReadsOnlyTheSelectedChannel() {
         var readChannels: [Int] = []
         let readChannel: (Int) -> [Float] = { channel in
             readChannels.append(channel)
             return channel == 2 ? [1, 0.5, 0.25, 0] : [0, 0.25, 0.5, 1]
         }
 
-        let initialFrames = liveProjectionFrames(
+        let initialFrame = liveProjectionFrame(
             matterData: [0, 0.25, 0.5, 1],
             selectedProjection: .channel(2),
             step: 7,
@@ -480,7 +480,7 @@ final class LeniaStudioTests: XCTestCase {
             channelCount: 4,
             channelData: readChannel
         )
-        let switchedFrames = liveProjectionFrames(
+        let switchedFrame = liveProjectionFrame(
             matterData: [0, 0.25, 0.5, 1],
             selectedProjection: .channel(0),
             step: 8,
@@ -490,22 +490,20 @@ final class LeniaStudioTests: XCTestCase {
             channelData: readChannel
         )
 
-        XCTAssertEqual(Set(initialFrames.keys), [.matter, .channel(2)])
-        XCTAssertEqual(Set(switchedFrames.keys), [.matter, .channel(0)])
         XCTAssertEqual(readChannels, [2, 0])
-        XCTAssertEqual(try XCTUnwrap(initialFrames[.matter]).bytes, Data([0, 63, 127, 255]))
-        XCTAssertEqual(try XCTUnwrap(initialFrames[.channel(2)]).bytes, Data([255, 127, 63, 0]))
-        XCTAssertEqual(try XCTUnwrap(switchedFrames[.channel(0)]).step, 8)
+        XCTAssertEqual(initialFrame.bytes, Data([255, 127, 63, 0]))
+        XCTAssertEqual(switchedFrame.bytes, Data([0, 63, 127, 255]))
+        XCTAssertEqual(switchedFrame.step, 8)
     }
 
-    func testLiveProjectionFramesNeedsNoChannelReadForMatterOrInvalidSelection() {
+    func testLiveProjectionFrameNeedsNoChannelReadForMatterOrInvalidSelection() {
         var readChannels: [Int] = []
         let readChannel: (Int) -> [Float] = { channel in
             readChannels.append(channel)
             return [1]
         }
 
-        let matterFrames = liveProjectionFrames(
+        let matterFrame = liveProjectionFrame(
             matterData: [0.5],
             selectedProjection: .matter,
             step: 1,
@@ -514,7 +512,7 @@ final class LeniaStudioTests: XCTestCase {
             channelCount: 3,
             channelData: readChannel
         )
-        let fallbackFrames = liveProjectionFrames(
+        let fallbackFrame = liveProjectionFrame(
             matterData: [0.5],
             selectedProjection: .channel(3),
             step: 2,
@@ -524,123 +522,41 @@ final class LeniaStudioTests: XCTestCase {
             channelData: readChannel
         )
 
-        XCTAssertEqual(Set(matterFrames.keys), [.matter])
-        XCTAssertEqual(Set(fallbackFrames.keys), [.matter])
+        XCTAssertEqual(matterFrame.bytes, Data([127]))
+        XCTAssertEqual(fallbackFrame.bytes, Data([127]))
         XCTAssertTrue(readChannels.isEmpty)
-        XCTAssertEqual(liveProjectionOptions(channelCount: 3), [.matter, .channel(0), .channel(1), .channel(2)])
-    }
-
-    func testLiveProjectionRefreshFramesReadsOnlyAChangedSelection() throws {
-        var readChannels: [Int] = []
-        let readChannel: (Int) -> [Float] = { channel in
-            readChannels.append(channel)
-            return [Float(channel) / 2]
-        }
-
-        let unchangedFrames = liveProjectionRefreshFrames(
-            matterData: [0.5],
-            selectedProjection: .channel(1),
-            renderedProjection: .channel(1),
-            step: 9,
-            width: 1,
-            height: 1,
-            channelCount: 3,
-            channelData: readChannel
+        XCTAssertEqual(
+            LabFieldProjection.options(channelCount: 3),
+            [.matter, .channel(0), .channel(1), .channel(2)]
         )
-        let changedFrames = try XCTUnwrap(liveProjectionRefreshFrames(
-            matterData: [0.5],
-            selectedProjection: .channel(2),
-            renderedProjection: .channel(1),
-            step: 9,
-            width: 1,
-            height: 1,
-            channelCount: 3,
-            channelData: readChannel
-        ))
-        let matterFrames = try XCTUnwrap(liveProjectionRefreshFrames(
-            matterData: [0.5],
-            selectedProjection: .matter,
-            renderedProjection: .channel(2),
-            step: 9,
-            width: 1,
-            height: 1,
-            channelCount: 3,
-            channelData: readChannel
-        ))
-
-        XCTAssertNil(unchangedFrames)
-        XCTAssertEqual(Set(changedFrames.keys), [.matter, .channel(2)])
-        XCTAssertEqual(try XCTUnwrap(changedFrames[.channel(2)]).bytes, Data([255]))
-        XCTAssertEqual(Set(matterFrames.keys), [.matter])
-        XCTAssertEqual(readChannels, [2])
     }
 
     func testTTFrameSequenceLoadsRawFrames() async throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tt-frame-sequence-\(UUID().uuidString)")
-        let frames = root.appendingPathComponent("frames")
-        try FileManager.default.createDirectory(at: frames, withIntermediateDirectories: true)
-        try Data([0, 13, 128, 255]).write(to: frames.appendingPathComponent("frame_000000.r8"))
+        let fixture = try makeTTFrameSequenceFixture(frameBytes: [0, 13, 128, 255])
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
 
-        let manifest = """
-        {
-          "manifest_version": 1,
-          "kind": "lenia_tt_frame_sequence",
-          "backend": "tt",
-          "config_path": "configs/base/paper_base_2c_128.json",
-          "steps": 4,
-          "frame_every": 2,
-          "width": 2,
-          "height": 2,
-          "channels": 2,
-          "projection": "matter",
-          "batch_index": 0,
-          "dtype": "uint8",
-          "storage": "raw_r8",
-          "final_mass_path": "mass_final.npy",
-          "metadata": {
-            "dt": 0.1,
-            "dd": 5,
-            "sigma": 0.65,
-            "n": 2,
-            "theta_a": 1.0,
-            "border": "torus",
-            "kernel_profile": "gaussian",
-            "kernel_count": 3,
-            "radius": 12.0
-          },
-          "frames": [
-            {"step": 0, "path": "frames/frame_000000.r8"}
-          ]
-        }
-        """
-        let manifestURL = root.appendingPathComponent("manifest.json")
-        try manifest.write(to: manifestURL, atomically: true, encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let sequence = try TTFrameSequence.load(manifestURL: manifestURL)
-        let frame = try sequence.frame(at: 0)
-        let metrics = try sequence.sample(at: 0).metrics
+        let sequence = try TTFrameSequence.load(manifestURL: fixture.manifestURL)
+        let sample = sequence[0]
         let runtimeSnapshot = await TTFrameSequenceRuntime(sequence: sequence).snapshot(
             refreshMetrics: true,
             projection: .matter
         )
 
         XCTAssertEqual(sequence.frameCount, 1)
-        XCTAssertEqual(frame.step, 0)
-        XCTAssertEqual(frame.width, 2)
-        XCTAssertEqual(frame.height, 2)
-        XCTAssertEqual(frame.bytes, Data([0, 13, 128, 255]))
-        XCTAssertEqual(metrics.massMean, Float(396) / Float(4 * 255), accuracy: 1e-6)
-        XCTAssertEqual(metrics.occupancy, 0.75, accuracy: 1e-6)
-        XCTAssertEqual(metrics.massPeak, 1, accuracy: 1e-6)
-        XCTAssertEqual(runtimeSnapshot.metrics.massMean, metrics.massMean, accuracy: 1e-6)
-        XCTAssertEqual(runtimeSnapshot.metrics.occupancy, metrics.occupancy, accuracy: 1e-6)
+        XCTAssertEqual(sequence.width, 2)
+        XCTAssertEqual(sequence.height, 2)
+        XCTAssertEqual(sample.step, 0)
+        XCTAssertEqual(sample.bytes, Data([0, 13, 128, 255]))
+        XCTAssertEqual(sample.metrics.massMean, Float(396) / Float(4 * 255), accuracy: 1e-6)
+        XCTAssertEqual(sample.metrics.occupancy, 0.75, accuracy: 1e-6)
+        XCTAssertEqual(sample.metrics.massPeak, 1, accuracy: 1e-6)
+        XCTAssertEqual(runtimeSnapshot.metrics.massMean, sample.metrics.massMean, accuracy: 1e-6)
+        XCTAssertEqual(runtimeSnapshot.metrics.occupancy, sample.metrics.occupancy, accuracy: 1e-6)
     }
 
     func testCanonicalLabRuntimeAdvancesOnlyWhileRunning() async throws {
         let draft = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 32)
-        let runtime = try CanonicalLabRuntime(
+        let runtime = CanonicalLabRuntime(
             runtimeConfig: draft.runtimeConfig(overridingBackend: .mlx)
         )
 
@@ -664,43 +580,58 @@ final class LeniaStudioTests: XCTestCase {
     }
 
     func testTTFrameSequenceRejectsWrongSizedFrameAtLoad() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tt-frame-sequence-bad-\(UUID().uuidString)")
-        let frames = root.appendingPathComponent("frames")
-        try FileManager.default.createDirectory(at: frames, withIntermediateDirectories: true)
-        try Data([0, 64, 128]).write(to: frames.appendingPathComponent("frame_000000.r8"))
+        let fixture = try makeTTFrameSequenceFixture(frameBytes: [0, 64, 128])
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
 
-        let manifest = """
-        {
-          "manifest_version": 1,
-          "kind": "lenia_tt_frame_sequence",
-          "backend": "tt",
-          "config_path": "configs/base/paper_base_2c_128.json",
-          "steps": 4,
-          "frame_every": 2,
-          "width": 2,
-          "height": 2,
-          "channels": 2,
-          "projection": "matter",
-          "batch_index": 0,
-          "dtype": "uint8",
-          "storage": "raw_r8",
-          "final_mass_path": "mass_final.npy",
-          "frames": [
-            {"step": 0, "path": "frames/frame_000000.r8"}
-          ]
-        }
-        """
-        let manifestURL = root.appendingPathComponent("manifest.json")
-        try manifest.write(to: manifestURL, atomically: true, encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        XCTAssertThrowsError(try TTFrameSequence.load(manifestURL: manifestURL)) { error in
+        XCTAssertThrowsError(try TTFrameSequence.load(manifestURL: fixture.manifestURL)) { error in
             guard case TTFrameSequenceError.invalidFrameSize = error else {
                 return XCTFail("Expected invalidFrameSize, got \(error)")
             }
         }
     }
+}
+
+private func makeTTFrameSequenceFixture(frameBytes: [UInt8]) throws -> (root: URL, manifestURL: URL) {
+    let root = FileManager.default.temporaryDirectory
+        .appendingPathComponent("tt-frame-sequence-\(UUID().uuidString)")
+    let frames = root.appendingPathComponent("frames")
+    try FileManager.default.createDirectory(at: frames, withIntermediateDirectories: true)
+    try Data(frameBytes).write(to: frames.appendingPathComponent("frame_000000.r8"))
+
+    let manifest: [String: Any] = [
+        "manifest_version": 1,
+        "kind": "lenia_tt_frame_sequence",
+        "backend": "tt",
+        "config_path": "configs/base/paper_base_2c_128.json",
+        "steps": 4,
+        "frame_every": 2,
+        "width": 2,
+        "height": 2,
+        "channels": 2,
+        "projection": "matter",
+        "batch_index": 0,
+        "dtype": "uint8",
+        "storage": "raw_r8",
+        "final_mass_path": "mass_final.npy",
+        "metadata": [
+            "dt": 0.1,
+            "dd": 5,
+            "sigma": 0.65,
+            "n": 2,
+            "theta_a": 1.0,
+            "border": "torus",
+            "kernel_profile": "gaussian",
+            "kernel_count": 3,
+            "radius": 12.0,
+        ],
+        "frames": [
+            ["step": 0, "path": "frames/frame_000000.r8"],
+        ],
+    ]
+    let manifestURL = root.appendingPathComponent("manifest.json")
+    try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+        .write(to: manifestURL, options: .atomic)
+    return (root, manifestURL)
 }
 
 private enum StudioMLXTestSupport {

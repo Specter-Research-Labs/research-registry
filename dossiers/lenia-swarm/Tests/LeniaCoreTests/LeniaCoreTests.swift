@@ -1039,10 +1039,10 @@ final class LeniaCoreTests: XCTestCase {
     func testMassConservationAndNonNegativityOnTorus() {
         let (config, c0, c1, params) = makeTestSetup()
         let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
-        let sim = FlowLeniaSimple(config: config, c0: c0, c1: c1)
+        let sim = FlowLeniaBatched(config: config, kernels: kernels)
 
         let A0 = makePatchState(sx: config.sx, sy: config.sy, channels: config.channels)
-        let A1 = sim.step(A0, kernels: kernels)
+        let A1 = sim.stepUncompiled(A0.expandedDimensions(axis: 0)).squeezed(axis: 0)
 
         let total0 = sumArray(A0)
         let total1 = sumArray(A1)
@@ -1056,10 +1056,10 @@ final class LeniaCoreTests: XCTestCase {
     func testUniformStateIsFixedPoint() {
         let (config, c0, c1, params) = makeTestSetup()
         let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
-        let sim = FlowLeniaSimple(config: config, c0: c0, c1: c1)
+        let sim = FlowLeniaBatched(config: config, kernels: kernels)
 
         let A0 = makeUniformState(sx: config.sx, sy: config.sy, channels: config.channels, value: 0.5)
-        let A1 = sim.step(A0, kernels: kernels)
+        let A1 = sim.stepUncompiled(A0.expandedDimensions(axis: 0)).squeezed(axis: 0)
 
         let diff = maxAbsDiff(A0, A1)
         XCTAssertLessThan(diff, 1e-4)
@@ -5900,7 +5900,7 @@ final class LeniaCoreTests: XCTestCase {
         }
     }
 
-    func testEvolutionEngineMetalBackendsTrackMLXOverShortGeneration() {
+    func testEvolutionEngineMetalMatchesMLXWithOverlappingMeasurements() {
         let ranges: [String: (Float, Float)] = [
             "r": (0.3, 0.8),
             "b": (0.0, 1.0),
@@ -5922,7 +5922,12 @@ final class LeniaCoreTests: XCTestCase {
             fitness: FitnessConfig(
                 objective: "directed_motion",
                 targetStep: 6,
-                angleThreshold: 0.01
+                angleThreshold: 0.01,
+                gyrationPenalty: 0.0001,
+                componentCountPenalty: 0.0001,
+                templateSequenceSteps: [0, 3],
+                trajectoryDisplacementReward: 0.01,
+                morphologyThreshold: 0.03
             ),
             fitnessShaping: "centered_rank",
             initPatch: nil,

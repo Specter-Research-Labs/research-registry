@@ -45,10 +45,8 @@ default_surface = "lenia-compendium"
 [spctr.exec.check]
 description = "Full Swift test and release-build lane"
 commands = [
-    ["swift", "package", "resolve"],
     ["swift", "test"],
-    ["swift", "build", "-c", "release", "--product", "LeniaCLI"],
-    ["swift", "build", "-c", "release", "--product", "LeniaStudio"],
+    ["swift", "build", "-c", "release"],
 ]
 timeout_sec = 2400
 network = "bootstrap"
@@ -85,13 +83,6 @@ else
   runtime_dir="$PWD/tmp/xcode-build"
 fi
 
-for required_path in Package.swift Package.resolved Sources; do
-  if [[ ! -e "$required_path" ]]; then
-    echo "missing required Xcode staging input: $required_path" >&2
-    exit 1
-  fi
-done
-
 mkdir -p "$runtime_dir"
 exec 9>"$runtime_dir/build.lock"
 if ! /usr/bin/lockf -s -t 600 9; then
@@ -100,17 +91,11 @@ if ! /usr/bin/lockf -s -t 600 9; then
 fi
 
 stage_dir="$runtime_dir/source"
-mkdir -p "$stage_dir"
-rsync -a --delete --delete-excluded \
-  --include='/Package.swift' \
-  --include='/Package.resolved' \
-  --include='/Sources/***' \
-  --exclude='*' \
-  ./ "$stage_dir/"
-mkdir -p \
-  "$stage_dir/Tests/LeniaCoreTests" \
-  "$stage_dir/Tests/LeniaCLITests" \
-  "$stage_dir/Tests/LeniaStudioTests"
+mkdir -p "$stage_dir/Sources"
+rsync -a --delete Sources/ "$stage_dir/Sources/"
+rsync -a Package.swift Package.resolved "$stage_dir/"
+rm -rf "$stage_dir/Tests"
+mkdir -p "$stage_dir"/Tests/{LeniaCoreTests,LeniaCLITests,LeniaStudioTests}
 
 derived_data="$runtime_dir/DerivedData"
 (
@@ -123,33 +108,26 @@ derived_data="$runtime_dir/DerivedData"
     -quiet
 )
 
-product_dir="$derived_data/Build/Products/Release"
-output_dir="$PWD/artifacts/build/release"
-mkdir -p "$output_dir"
-rsync -a --delete --delete-excluded \
-  --include='/LeniaCLI' \
-  --include='/*.metallib' \
-  --include='/*.bundle/***' \
-  --exclude='*' \
-  "$product_dir/" "$output_dir/"
-
-for runtime_path in \
-  LeniaCLI \
-  mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib \
-  LeniaSwarm_LeniaVisuals.bundle/Contents/Resources/LeniaShaders.metallib; do
-  if [[ ! -e "$output_dir/$runtime_path" ]]; then
-    echo "missing staged LeniaCLI runtime artifact: $runtime_path" >&2
-    exit 1
-  fi
-done
-"$output_dir/LeniaCLI" --help >/dev/null
-
 archive="$PWD/artifacts/build/LeniaCLI-macos-arm64.tar.gz"
-tar -czf "$archive" -C "$output_dir" .
+mkdir -p "$(dirname "$archive")"
+(
+  cd "$derived_data/Build/Products/Release"
+  shopt -s nullglob
+  tar -czf "$archive" LeniaCLI *.metallib *.bundle
+)
 verify_dir="$runtime_dir/archive-check"
 rm -rf "$verify_dir"
 mkdir -p "$verify_dir"
 tar -xzf "$archive" -C "$verify_dir"
+for runtime_path in \
+  LeniaCLI \
+  mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib \
+  LeniaSwarm_LeniaVisuals.bundle/Contents/Resources/LeniaShaders.metallib; do
+  if [[ ! -e "$verify_dir/$runtime_path" ]]; then
+    echo "missing archived LeniaCLI runtime artifact: $runtime_path" >&2
+    exit 1
+  fi
+done
 "$verify_dir/LeniaCLI" --help >/dev/null
 rm -rf "$verify_dir"
 ''']

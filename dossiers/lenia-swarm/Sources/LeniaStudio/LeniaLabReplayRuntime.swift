@@ -1,10 +1,16 @@
-import Foundation
 import LeniaCore
 import MLX
 
 enum LabFieldProjection: Hashable, Identifiable, Sendable {
     case matter
     case channel(Int)
+
+    static func options(channelCount: Int) -> [Self] {
+        guard channelCount > 1 else {
+            return [.matter]
+        }
+        return [.matter] + (0..<channelCount).map(Self.channel)
+    }
 
     var id: String {
         switch self {
@@ -226,88 +232,24 @@ actor CanonicalLabRuntime {
     private var lastStepDurationMs = 0.0
     private var cachedMetrics = FlowSandboxMetrics.zero
 
-    init(replayReference: StudioReplayReference, backend: FlowSandboxBackend) throws {
-        let data = try Data(contentsOf: URL(fileURLWithPath: replayReference.baseConfigPath))
-        let runtimeState = try Self.buildRuntimeState(baseConfigData: data, backend: backend)
-
-        self.runtime = runtimeState.runtime
-        self.runtimeConfig = runtimeState.runtimeConfig
-        self.initialState = runtimeState.initialState
-        self.state = runtimeState.initialState
-        self.baseWallMask = runtimeState.wallMask
-        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
-        self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
-        self.cachedMetrics = FlowSandboxMetrics(
-            mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
-            food: canonicalFoodData(state: runtimeState.initialState, size: runtimeState.runtimeConfig.sx * runtimeState.runtimeConfig.sy),
-            walls: runtimeState.wallMask
-        )
-    }
-
-    init(baseConfigData: Data, backend: FlowSandboxBackend) throws {
-        let runtimeState = try Self.buildRuntimeState(baseConfigData: baseConfigData, backend: backend)
-
-        self.runtime = runtimeState.runtime
-        self.runtimeConfig = runtimeState.runtimeConfig
-        self.initialState = runtimeState.initialState
-        self.state = runtimeState.initialState
-        self.baseWallMask = runtimeState.wallMask
-        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
-        self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
-        self.cachedMetrics = FlowSandboxMetrics(
-            mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
-            food: canonicalFoodData(state: runtimeState.initialState, size: runtimeState.runtimeConfig.sx * runtimeState.runtimeConfig.sy),
-            walls: runtimeState.wallMask
-        )
-    }
-
-    init(runtimeConfig: LeniaRuntimeConfig) throws {
-        let runtimeState = Self.buildRuntimeState(runtimeConfig: runtimeConfig)
-
-        self.runtime = runtimeState.runtime
-        self.runtimeConfig = runtimeState.runtimeConfig
-        self.initialState = runtimeState.initialState
-        self.state = runtimeState.initialState
-        self.baseWallMask = runtimeState.wallMask
-        self.hasBaseWallMask = canonicalHasClosedCells(runtimeState.wallMask)
-        self.wallOverlay = Array(repeating: 1, count: runtimeState.wallMask.count)
-        self.cachedMetrics = FlowSandboxMetrics(
-            mass: canonicalMatterData(runtime: runtimeState.runtime, state: runtimeState.initialState),
-            food: canonicalFoodData(state: runtimeState.initialState, size: runtimeState.runtimeConfig.sx * runtimeState.runtimeConfig.sy),
-            walls: runtimeState.wallMask
-        )
-    }
-
-    private static func buildRuntimeState(
-        baseConfigData: Data,
-        backend: FlowSandboxBackend
-    ) throws -> (
-        runtime: FlowLeniaInteractiveSimulator,
-        runtimeConfig: LeniaRuntimeConfig,
-        initialState: FlowLeniaInteractiveState,
-        wallMask: [Float]
-    ) {
-        let runtimeConfig = try loadRuntimeConfig(from: baseConfigData, overrides: ["backend": backend.rawValue])
+    init(runtimeConfig: LeniaRuntimeConfig) {
         let runtime = FlowLeniaInteractiveSimulator(runtimeConfig: runtimeConfig)
         let initialState = runtime.makeInitialState()
         let wallMask = runtime.wallMaskMap()?.asArray(Float.self)
             ?? Array(repeating: 1, count: runtimeConfig.sx * runtimeConfig.sy)
-        return (runtime, runtimeConfig, initialState, wallMask)
-    }
 
-    private static func buildRuntimeState(
-        runtimeConfig: LeniaRuntimeConfig
-    ) -> (
-        runtime: FlowLeniaInteractiveSimulator,
-        runtimeConfig: LeniaRuntimeConfig,
-        initialState: FlowLeniaInteractiveState,
-        wallMask: [Float]
-    ) {
-        let runtime = FlowLeniaInteractiveSimulator(runtimeConfig: runtimeConfig)
-        let initialState = runtime.makeInitialState()
-        let wallMask = runtime.wallMaskMap()?.asArray(Float.self)
-            ?? Array(repeating: 1, count: runtimeConfig.sx * runtimeConfig.sy)
-        return (runtime, runtimeConfig, initialState, wallMask)
+        self.runtime = runtime
+        self.runtimeConfig = runtimeConfig
+        self.initialState = initialState
+        self.state = initialState
+        self.baseWallMask = wallMask
+        self.hasBaseWallMask = canonicalHasClosedCells(wallMask)
+        self.wallOverlay = Array(repeating: 1, count: wallMask.count)
+        self.cachedMetrics = FlowSandboxMetrics(
+            mass: canonicalMatterData(runtime: runtime, state: initialState),
+            food: canonicalFoodData(state: initialState, size: runtimeConfig.sx * runtimeConfig.sy),
+            walls: wallMask
+        )
     }
 
     func start() {
@@ -393,10 +335,7 @@ actor CanonicalLabRuntime {
     }
 
     func availableProjections() -> [LabFieldProjection] {
-        guard runtimeConfig.channels > 1 else {
-            return [.matter]
-        }
-        return [.matter] + (0..<runtimeConfig.channels).map(LabFieldProjection.channel)
+        LabFieldProjection.options(channelCount: runtimeConfig.channels)
     }
 
     func step() {

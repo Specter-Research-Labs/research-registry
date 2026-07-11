@@ -65,61 +65,35 @@ public func resolvedWarehousePath(explicitPath: String?, compendiumPath: String)
     explicitPath ?? defaultWarehousePath(compendiumPath: compendiumPath)
 }
 
-private final class WarehouseProcessOutput: @unchecked Sendable {
-    private let lock = NSLock()
-    private var stdout = Data()
-    private var stderr = Data()
-
-    func storeStdout(_ data: Data) {
-        lock.lock()
-        stdout = data
-        lock.unlock()
-    }
-
-    func storeStderr(_ data: Data) {
-        lock.lock()
-        stderr = data
-        lock.unlock()
-    }
-
-    func snapshot() -> (stdout: Data, stderr: Data) {
-        lock.lock()
-        defer { lock.unlock() }
-        return (stdout, stderr)
-    }
-}
-
 func runWarehouseCLI(arguments: [String]) throws -> Data {
+    let captureRoot = FileManager.default.temporaryDirectory
+        .appendingPathComponent("lenia-warehouse-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: captureRoot, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: captureRoot) }
+
+    let stdoutURL = captureRoot.appendingPathComponent("stdout")
+    let stderrURL = captureRoot.appendingPathComponent("stderr")
+    try Data().write(to: stdoutURL)
+    try Data().write(to: stderrURL)
+    let stdoutHandle = try FileHandle(forWritingTo: stdoutURL)
+    let stderrHandle = try FileHandle(forWritingTo: stderrURL)
+    defer {
+        try? stdoutHandle.close()
+        try? stderrHandle.close()
+    }
+
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     process.arguments = arguments
     process.currentDirectoryURL = dossierRootURL
-
-    let stdoutPipe = Pipe()
-    let stderrPipe = Pipe()
-    process.standardOutput = stdoutPipe
-    process.standardError = stderrPipe
+    process.standardOutput = stdoutHandle
+    process.standardError = stderrHandle
 
     try process.run()
-    let output = WarehouseProcessOutput()
-    let readers = DispatchGroup()
-    readers.enter()
-    DispatchQueue.global(qos: .utility).async {
-        defer { readers.leave() }
-        output.storeStdout(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
-    }
-    readers.enter()
-    DispatchQueue.global(qos: .utility).async {
-        defer { readers.leave() }
-        output.storeStderr(stderrPipe.fileHandleForReading.readDataToEndOfFile())
-    }
-
     process.waitUntilExit()
-    readers.wait()
 
-    let captured = output.snapshot()
-    let stdoutData = captured.stdout
-    let stderrData = captured.stderr
+    let stdoutData = try Data(contentsOf: stdoutURL)
+    let stderrData = try Data(contentsOf: stderrURL)
     let stdout = String(decoding: stdoutData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     let stderr = String(decoding: stderrData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
 
