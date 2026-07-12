@@ -7,6 +7,7 @@ final class SQLiteDB {
     init(path: String) throws {
         var handle: OpaquePointer?
         if sqlite3_open(path, &handle) != SQLITE_OK {
+            sqlite3_close(handle)
             throw SQLiteIndexError.openFailed(path)
         }
         guard let opened = handle else {

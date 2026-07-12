@@ -143,69 +143,6 @@ func libraryReplaySearchConfig(
     )
 }
 
-private func captureLibraryReplayFrames(
-    runtimeConfig: LeniaRuntimeConfig,
-    seed: Int,
-    searchConfig: SearchConfig,
-    frameBudget: Int,
-    captureFlow: Bool = false
-) throws -> [CapturedStateFrame] {
-    let stride = max(1, max(searchConfig.steps - searchConfig.warmupSteps, 1) / max(frameBudget, 1))
-    var capturedFrames: [Data] = []
-    var capturedStateFrames: [CapturedStateFrame] = []
-    var flowByStep: [Int: (flow: [Float], growth: [Float])] = [:]
-    capturedFrames.reserveCapacity(frameBudget + 8)
-    capturedStateFrames.reserveCapacity(frameBudget + 8)
-    let capture = FrameCapture(
-        stride: stride,
-        includeWarmup: false,
-        sampleIndex: 0,
-        handler: { _, _, _, data in
-            capturedFrames.append(data)
-        },
-        stateHandler: { step, width, height, channels, values in
-            capturedStateFrames.append(CapturedStateFrame(
-                step: step,
-                width: width,
-                height: height,
-                channels: channels,
-                values: values
-            ))
-        },
-        flowHandler: captureFlow ? { step, _, _, flow, growth in
-            flowByStep[step] = (flow, growth)
-        } : nil
-    )
-    let engine = SearchEngine(runtimeConfig: runtimeConfig)
-    _ = engine.runBatch(
-        seeds: [seed],
-        initSeedOffset: 0,
-        searchConfig: searchConfig,
-        frameCapture: capture
-    )
-    guard !capturedStateFrames.isEmpty || !capturedFrames.isEmpty else {
-        throw ValidationError("Failed to capture library replay frames for seed \(seed).")
-    }
-    if !capturedStateFrames.isEmpty {
-        return Array(capturedStateFrames.prefix(frameBudget)).map { frame in
-            guard let fields = flowByStep[frame.step] else { return frame }
-            var attached = frame
-            attached.flow = fields.flow
-            attached.growth = fields.growth
-            return attached
-        }
-    }
-    return Array(capturedFrames.prefix(frameBudget).enumerated().map { index, data in
-        CapturedStateFrame(
-            step: index,
-            width: runtimeConfig.sx,
-            height: runtimeConfig.sy,
-            channels: 1,
-            values: data.map { Float($0) / 255.0 }
-        )
-    })
-}
-
 func renderLibraryReplayMediaBundle(
     _ bundle: LibraryReplayBundle,
     outputRoot: URL,
@@ -239,12 +176,14 @@ func renderLibraryReplayMediaBundle(
         frameBudget: frameBudget
     )
     let captureFlow = renderMode == .flowHue || renderMode == .flowLIC || renderMode == .flux
-    let frames = try captureLibraryReplayFrames(
+    let frames = try captureReplayStateFrames(
         runtimeConfig: runtimeConfig,
         seed: creature.initialCondition.seed,
+        initSeedOffset: 0,
         searchConfig: searchConfig,
         frameBudget: frameBudget,
-        captureFlow: captureFlow
+        captureFlow: captureFlow,
+        emptyCaptureMessage: "Failed to capture library replay frames for seed \(creature.initialCondition.seed)."
     )
 
     let matterScale = robustMatterScale(frames)

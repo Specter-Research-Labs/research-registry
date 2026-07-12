@@ -186,16 +186,6 @@ public func clipParams(
     }
 }
 
-public struct PatchTransform {
-    public let center: [Int]
-    public let size: Int
-
-    public init(center: [Int], size: Int) {
-        self.center = center
-        self.size = size
-    }
-}
-
 public func transformPatches(
     patches: [[String: Any]],
     sx: Int,

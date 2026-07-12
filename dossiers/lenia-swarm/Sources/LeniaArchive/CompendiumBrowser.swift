@@ -225,11 +225,11 @@ public struct CompendiumBrowseEntry: Identifiable, Hashable, Sendable {
     }
 
     public var resolvedRunPath: String? {
-        resolveCompendiumArtifactPath(outputRoot: outputRoot, runDir: runDir, path: nil)
+        resolveRunArtifactPath(outputRoot: outputRoot, runDir: runDir, path: nil)
     }
 
     public var resolvedExportPath: String? {
-        resolveCompendiumArtifactPath(outputRoot: outputRoot, runDir: runDir, path: exportDir)
+        resolveRunArtifactPath(outputRoot: outputRoot, runDir: runDir, path: exportDir)
     }
 
     public static func == (lhs: CompendiumBrowseEntry, rhs: CompendiumBrowseEntry) -> Bool {

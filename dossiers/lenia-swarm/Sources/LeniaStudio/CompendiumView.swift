@@ -848,7 +848,7 @@ private func loadReplayContract(for entry: CompendiumCreature) throws -> Compend
 }
 
 private func resolvedReplayBaseConfigPath(for entry: CompendiumCreature) -> String? {
-    resolveCompendiumArtifactPath(
+    resolveRunArtifactPath(
         outputRoot: entry.outputRoot,
         runDir: entry.runDir,
         path: entry.baseConfigPath ?? entry.specimenManifest?.replay?.baseConfigPath
@@ -856,7 +856,7 @@ private func resolvedReplayBaseConfigPath(for entry: CompendiumCreature) -> Stri
 }
 
 private func resolvedReplaySearchConfigPath(for entry: CompendiumCreature) -> String? {
-    resolveCompendiumArtifactPath(
+    resolveRunArtifactPath(
         outputRoot: entry.outputRoot,
         runDir: entry.runDir,
         path: entry.searchConfigPath ?? entry.specimenManifest?.replay?.searchConfigPath

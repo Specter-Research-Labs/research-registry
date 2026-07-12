@@ -1,6 +1,5 @@
 import Foundation
 import LeniaCore
-import LeniaVisuals
 
 struct TTFrameSequenceManifest: Decodable, Sendable {
     struct Frame: Decodable, Sendable {
@@ -70,13 +69,18 @@ struct TTFrameSequenceManifest: Decodable, Sendable {
 }
 
 struct TTFrameSequence: Sendable {
+    struct Sample: Sendable {
+        let step: Int
+        let bytes: Data
+        let metrics: FlowSandboxMetrics
+    }
+
     let manifestURL: URL
     let manifest: TTFrameSequenceManifest
-    private let loadedFrames: [LeniaFieldFrame]
+    private let loadedSamples: [Sample]
 
-    var rootURL: URL { manifestURL.deletingLastPathComponent() }
     var title: String { manifestURL.deletingLastPathComponent().lastPathComponent }
-    var frameCount: Int { loadedFrames.count }
+    var frameCount: Int { loadedSamples.count }
     var width: Int { manifest.width }
     var height: Int { manifest.height }
 
@@ -95,7 +99,7 @@ struct TTFrameSequence: Sendable {
 
         let rootURL = manifestURL.deletingLastPathComponent()
         let expectedSize = manifest.width * manifest.height
-        let loadedFrames = try manifest.frames.map { frame in
+        let loadedSamples = try manifest.frames.map { frame in
             let data = try Data(contentsOf: rootURL.appendingPathComponent(frame.path))
             guard data.count == expectedSize else {
                 throw TTFrameSequenceError.invalidFrameSize(
@@ -104,21 +108,41 @@ struct TTFrameSequence: Sendable {
                     actual: data.count
                 )
             }
-            return LeniaFieldFrame(
+            return Sample(
                 step: frame.step,
-                width: manifest.width,
-                height: manifest.height,
-                bytes: data
+                bytes: data,
+                metrics: metrics(from: data)
             )
         }
-        return TTFrameSequence(manifestURL: manifestURL, manifest: manifest, loadedFrames: loadedFrames)
+        return TTFrameSequence(manifestURL: manifestURL, manifest: manifest, loadedSamples: loadedSamples)
     }
 
-    func frame(at index: Int) throws -> LeniaFieldFrame {
-        guard loadedFrames.indices.contains(index) else {
-            throw TTFrameSequenceError.frameIndexOutOfBounds(index)
+    subscript(index: Int) -> Sample {
+        precondition(loadedSamples.indices.contains(index), "TT frame index \(index) is outside the sequence.")
+        return loadedSamples[index]
+    }
+
+    private static func metrics(from bytes: Data) -> FlowSandboxMetrics {
+        var sum: Float = 0
+        var occupied = 0
+        var peak: UInt8 = 0
+        for byte in bytes {
+            sum += Float(byte) / 255.0
+            if byte >= 13 {
+                occupied += 1
+            }
+            peak = max(peak, byte)
         }
-        return loadedFrames[index]
+        let count = Float(max(1, bytes.count))
+        return FlowSandboxMetrics(
+            massMean: sum / count,
+            occupancy: Float(occupied) / count,
+            foodMean: 0,
+            wallFraction: 0,
+            massPeak: Float(peak) / 255.0,
+            foodPeak: 0,
+            nonFiniteFraction: 0
+        )
     }
 }
 
@@ -126,7 +150,6 @@ enum TTFrameSequenceError: LocalizedError {
     case unsupportedKind(String)
     case unsupportedStorage(dtype: String, storage: String)
     case emptySequence
-    case frameIndexOutOfBounds(Int)
     case invalidFrameSize(path: String, expected: Int, actual: Int)
 
     var errorDescription: String? {
@@ -137,8 +160,6 @@ enum TTFrameSequenceError: LocalizedError {
             return "Unsupported TT frame storage: \(dtype) / \(storage)"
         case .emptySequence:
             return "TT frame sequence is empty or has invalid dimensions."
-        case .frameIndexOutOfBounds(let index):
-            return "TT frame index \(index) is outside the sequence."
         case .invalidFrameSize(let path, let expected, let actual):
             return "TT frame \(path) has \(actual) bytes; expected \(expected)."
         }
@@ -224,28 +245,14 @@ actor TTFrameSequenceRuntime {
         )
     }
 
-    func snapshot(refreshMetrics: Bool, projection: LabFieldProjection) -> FlowSandboxSnapshot {
-        let fieldFrame: LeniaFieldFrame
-        do {
-            fieldFrame = try sequence.frame(at: frameIndex)
-        } catch {
-            assertionFailure("Validated TT frame sequence returned invalid frame index: \(error)")
-            let bytes = Data(repeating: 0, count: sequence.width * sequence.height)
-            return FlowSandboxSnapshot(
-                step: 0,
-                width: sequence.width,
-                height: sequence.height,
-                bytes: bytes,
-                metrics: metrics(from: bytes)
-            )
-        }
-        let bytes = fieldFrame.bytes ?? Data(repeating: 0, count: sequence.width * sequence.height)
+    func snapshot(refreshMetrics _: Bool, projection _: LabFieldProjection) -> FlowSandboxSnapshot {
+        let sample = sequence[frameIndex]
         return FlowSandboxSnapshot(
-            step: fieldFrame.step,
+            step: sample.step,
             width: sequence.width,
             height: sequence.height,
-            bytes: bytes,
-            metrics: metrics(from: bytes)
+            bytes: sample.bytes,
+            metrics: sample.metrics
         )
     }
 
@@ -284,40 +291,6 @@ actor TTFrameSequenceRuntime {
         }
     }
 
-    private func metrics(from bytes: Data) -> FlowSandboxMetrics {
-        guard !bytes.isEmpty else {
-            return FlowSandboxMetrics(
-                massMean: 0,
-                occupancy: 0,
-                foodMean: 0,
-                wallFraction: 0,
-                massPeak: 0,
-                foodPeak: 0,
-                nonFiniteFraction: 0
-            )
-        }
-
-        var sum: Float = 0
-        var occupied = 0
-        var peak: UInt8 = 0
-        for byte in bytes {
-            sum += Float(byte) / 255.0
-            if byte > 13 {
-                occupied += 1
-            }
-            peak = max(peak, byte)
-        }
-        let count = Float(bytes.count)
-        return FlowSandboxMetrics(
-            massMean: sum / count,
-            occupancy: Float(occupied) / count,
-            foodMean: 0,
-            wallFraction: 0,
-            massPeak: Float(peak) / 255.0,
-            foodPeak: 0,
-            nonFiniteFraction: 0
-        )
-    }
 }
 
 private func ttFrameDurationMs(_ duration: Duration) -> Double {

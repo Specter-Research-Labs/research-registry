@@ -559,7 +559,7 @@ struct CompendiumPublishCommand: ParsableCommand {
     }
 
     private func resolveRunDir(for row: CompendiumPublishRow) throws -> URL {
-        guard let runDir = resolveCompendiumArtifactPath(outputRoot: row.outputRoot, runDir: row.runDir, path: nil) else {
+        guard let runDir = resolveRunArtifactPath(outputRoot: row.outputRoot, runDir: row.runDir, path: nil) else {
             throw ValidationError("Run directory is missing for \(row.runId).")
         }
         return URL(fileURLWithPath: runDir, isDirectory: true)

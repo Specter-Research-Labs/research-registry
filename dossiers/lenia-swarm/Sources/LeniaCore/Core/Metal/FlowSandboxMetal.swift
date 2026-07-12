@@ -1,7 +1,7 @@
 import Foundation
 import MLX
 
-public struct FlowSandboxMetalStageTimings: Sendable {
+public struct FlowSandboxMetalStageTimings: Codable, Sendable {
     public let prepareMs: Double
     public let fftMs: Double
     public let growthReduceMs: Double

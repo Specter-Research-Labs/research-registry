@@ -276,7 +276,7 @@ public final class FlowLeniaSimulator {
                     mixSeed: runtimeConfig.parameterEmbedding.mix_seed
                 )
             }
-            runner.setMatterWeights(runtimeOperators.metalMatterWeights())
+            runner.setMatterWeights(runtimeOperators.matterWeights())
             runner.setWallMask(wallMask)
             runner.setStaticChannelFields(
                 runtimeOperators.metalStaticChannelFields(chemField: chemField)
@@ -303,6 +303,7 @@ public final class FlowLeniaSimulator {
         let progressInterval = max(config.recordEverySteps * 100, 10_000)
         var pendingMetalSteps = 0
         var pendingMetalStartStep = 1
+        var finalObservedMassMap: MLXArray?
 
         for step in 1...config.steps {
             if persistentMetalRunner != nil {
@@ -362,46 +363,20 @@ public final class FlowLeniaSimulator {
 
             let shouldRecord = step % config.recordEverySteps == 0 || step == config.steps
             let shouldCapture = config.captureEverySteps.map { step % $0 == 0 || step == config.steps } ?? false
-            if !shouldRecord && !shouldCapture {
+            let shouldMeasureActivity = shouldRecord && config.activityConfig != nil
+            if !shouldCapture && !shouldMeasureActivity {
                 continue
             }
 
             if let runner = persistentMetalRunner {
-                if pendingMetalSteps > 0 {
-                    runner.step(
-                        count: pendingMetalSteps,
-                        preStepParameterPatches: [:],
-                        postStepParameterPatches: runtimeOperators.beamMutationPatchSchedule(
-                            startStep: pendingMetalStartStep,
-                            count: pendingMetalSteps,
-                            batch: runner.batchCount,
-                            parameterCount: runner.parameterCount,
-                            config: runtimeConfig.beamMutation,
-                            sx: runtimeConfig.sx,
-                            sy: runtimeConfig.sy
-                        ),
-                        postStepScalarPatches: runtimeOperators.foodSpawnPatchSchedule(
-                            startStep: pendingMetalStartStep,
-                            count: pendingMetalSteps,
-                            batch: runner.batchCount,
-                            config: config.foodSpawn,
-                            sx: runtimeConfig.sx,
-                            sy: runtimeConfig.sy
-                        ),
-                        postStepDissipationPatches: runtimeOperators.dissipationPatchSchedule(
-                            startStep: pendingMetalStartStep,
-                            count: pendingMetalSteps,
-                            batch: runner.batchCount,
-                            massChannels: runtimeConfig.channels,
-                            parameterCount: runner.parameterCount,
-                            config: config.dissipation,
-                            sx: runtimeConfig.sx,
-                            sy: runtimeConfig.sy
-                        )
-                    )
-                    pendingMetalSteps = 0
-                }
-                if shouldRecord, config.activityConfig != nil {
+                flushPendingMetalSteps(
+                    runner: runner,
+                    pendingMetalSteps: &pendingMetalSteps,
+                    pendingMetalStartStep: pendingMetalStartStep,
+                    config: config,
+                    runtimeOperators: runtimeOperators
+                )
+                if shouldMeasureActivity {
                     PBatch = runner.materializeParams()
                 }
             }
@@ -409,11 +384,14 @@ public final class FlowLeniaSimulator {
             let massMap: MLXArray
             let capturedFood: MLXArray?
             if let runner = persistentMetalRunner {
-                massMap = runner.materializeMassMap(channelWeights: runtimeOperators.metalMatterWeights())
+                massMap = runner.materializeMassMap(channelWeights: runtimeOperators.matterWeights())
                 capturedFood = shouldCapture ? runner.materializeFood() : nil
             } else {
                 massMap = runtimeOperators.matterMapFromBatch(ABatch)
                 capturedFood = shouldCapture ? foodBatch : nil
+            }
+            if step == config.steps {
+                finalObservedMassMap = massMap
             }
 
             if shouldCapture {
@@ -444,7 +422,7 @@ public final class FlowLeniaSimulator {
                 }
             }
 
-            if shouldRecord, let params = PBatch, let activityConfig = config.activityConfig {
+            if shouldMeasureActivity, let params = PBatch, let activityConfig = config.activityConfig {
                 let activity = computeActivitySnapshots(
                     massMap: massMap,
                     paramMap: params,
@@ -459,42 +437,18 @@ public final class FlowLeniaSimulator {
         }
 
         if let runner = persistentMetalRunner {
-            if pendingMetalSteps > 0 {
-                runner.step(
-                    count: pendingMetalSteps,
-                    preStepParameterPatches: [:],
-                    postStepParameterPatches: runtimeOperators.beamMutationPatchSchedule(
-                        startStep: pendingMetalStartStep,
-                        count: pendingMetalSteps,
-                        batch: runner.batchCount,
-                        parameterCount: runner.parameterCount,
-                        config: runtimeConfig.beamMutation,
-                        sx: runtimeConfig.sx,
-                        sy: runtimeConfig.sy
-                    ),
-                    postStepScalarPatches: runtimeOperators.foodSpawnPatchSchedule(
-                        startStep: pendingMetalStartStep,
-                        count: pendingMetalSteps,
-                        batch: runner.batchCount,
-                        config: config.foodSpawn,
-                        sx: runtimeConfig.sx,
-                        sy: runtimeConfig.sy
-                    ),
-                    postStepDissipationPatches: runtimeOperators.dissipationPatchSchedule(
-                        startStep: pendingMetalStartStep,
-                        count: pendingMetalSteps,
-                        batch: runner.batchCount,
-                        massChannels: runtimeConfig.channels,
-                        parameterCount: runner.parameterCount,
-                        config: config.dissipation,
-                        sx: runtimeConfig.sx,
-                        sy: runtimeConfig.sy
-                    )
-                )
-            }
+            flushPendingMetalSteps(
+                runner: runner,
+                pendingMetalSteps: &pendingMetalSteps,
+                pendingMetalStartStep: pendingMetalStartStep,
+                config: config,
+                runtimeOperators: runtimeOperators
+            )
         }
-        let finalMassMap = if let runner = persistentMetalRunner {
-            runner.materializeMassMap(channelWeights: runtimeOperators.metalMatterWeights())
+        let finalMassMap = if let finalObservedMassMap {
+            finalObservedMassMap
+        } else if let runner = persistentMetalRunner {
+            runner.materializeMassMap(channelWeights: runtimeOperators.matterWeights())
         } else {
             runtimeOperators.matterMapFromBatch(ABatch)
         }
@@ -516,6 +470,51 @@ public final class FlowLeniaSimulator {
             recordedFrames: recordedFrames,
             parameterSeeds: config.captureParameters ? parameterSeeds : nil
         )
+    }
+
+    private func flushPendingMetalSteps(
+        runner: FlowLeniaMetalFullStateRunner,
+        pendingMetalSteps: inout Int,
+        pendingMetalStartStep: Int,
+        config: FlowLeniaRolloutConfig,
+        runtimeOperators: FlowLeniaRuntimeOperators
+    ) {
+        guard pendingMetalSteps > 0 else {
+            return
+        }
+
+        runner.step(
+            count: pendingMetalSteps,
+            preStepParameterPatches: [:],
+            postStepParameterPatches: runtimeOperators.beamMutationPatchSchedule(
+                startStep: pendingMetalStartStep,
+                count: pendingMetalSteps,
+                batch: runner.batchCount,
+                parameterCount: runner.parameterCount,
+                config: runtimeConfig.beamMutation,
+                sx: runtimeConfig.sx,
+                sy: runtimeConfig.sy
+            ),
+            postStepScalarPatches: runtimeOperators.foodSpawnPatchSchedule(
+                startStep: pendingMetalStartStep,
+                count: pendingMetalSteps,
+                batch: runner.batchCount,
+                config: config.foodSpawn,
+                sx: runtimeConfig.sx,
+                sy: runtimeConfig.sy
+            ),
+            postStepDissipationPatches: runtimeOperators.dissipationPatchSchedule(
+                startStep: pendingMetalStartStep,
+                count: pendingMetalSteps,
+                batch: runner.batchCount,
+                massChannels: runtimeConfig.channels,
+                parameterCount: runner.parameterCount,
+                config: config.dissipation,
+                sx: runtimeConfig.sx,
+                sy: runtimeConfig.sy
+            )
+        )
+        pendingMetalSteps = 0
     }
 
     // Project the per-cell parameter vector onto a fixed 2D basis and
@@ -1460,7 +1459,7 @@ struct FlowLeniaRuntimeOperators {
             return
         }
         let updated = applyFoodDynamics(massBatch, food: currentFood, config: foodConfig)
-        massBatch = updated.A
+        massBatch = updated.mass
         var nextFood = updated.food
         if let foodSpawn {
             nextFood = spawnFoodPatches(nextFood, config: foodSpawn, step: step)
@@ -1508,7 +1507,7 @@ struct FlowLeniaRuntimeOperators {
         _ A: MLXArray,
         food: MLXArray,
         config: FoodConfig
-    ) -> (A: MLXArray, food: MLXArray) {
+    ) -> (mass: MLXArray, food: MLXArray) {
         let massMap = matterMapFromBatch(A)
         let decayRate = MLXArray(config.decay_rate)
         let digestRate = MLXArray(config.digest_rate)
@@ -1838,7 +1837,7 @@ struct FlowLeniaRuntimeOperators {
         )
     }
 
-    func metalMatterWeights() -> [Float]? {
+    func matterWeights() -> [Float]? {
         flowMatterWeights(channels: runtimeConfig.channels, excludedChannels: excludedMassChannels())
     }
 

@@ -1039,10 +1039,10 @@ final class LeniaCoreTests: XCTestCase {
     func testMassConservationAndNonNegativityOnTorus() {
         let (config, c0, c1, params) = makeTestSetup()
         let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
-        let sim = FlowLeniaSimple(config: config, c0: c0, c1: c1)
+        let sim = FlowLeniaBatched(config: config, kernels: kernels)
 
         let A0 = makePatchState(sx: config.sx, sy: config.sy, channels: config.channels)
-        let A1 = sim.step(A0, kernels: kernels)
+        let A1 = sim.stepUncompiled(A0.expandedDimensions(axis: 0)).squeezed(axis: 0)
 
         let total0 = sumArray(A0)
         let total1 = sumArray(A1)
@@ -1056,10 +1056,10 @@ final class LeniaCoreTests: XCTestCase {
     func testUniformStateIsFixedPoint() {
         let (config, c0, c1, params) = makeTestSetup()
         let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
-        let sim = FlowLeniaSimple(config: config, c0: c0, c1: c1)
+        let sim = FlowLeniaBatched(config: config, kernels: kernels)
 
         let A0 = makeUniformState(sx: config.sx, sy: config.sy, channels: config.channels, value: 0.5)
-        let A1 = sim.step(A0, kernels: kernels)
+        let A1 = sim.stepUncompiled(A0.expandedDimensions(axis: 0)).squeezed(axis: 0)
 
         let diff = maxAbsDiff(A0, A1)
         XCTAssertLessThan(diff, 1e-4)
@@ -5595,7 +5595,17 @@ final class LeniaCoreTests: XCTestCase {
 
         let runner = FlowLeniaMetalFullStateRunner(config: config, kernels: kernels, batchCount: batchCount)
         runner.setState(mass: mass, params: paramMap)
-        let summary = runner.summarizeMass(occupancyThreshold: 0.05, includeGyration: true, channelWeights: weights)
+        let synchronizationCount = runner.massObservationSynchronizationCount
+        let observation = runner.observeMass(
+            occupancyThreshold: 0.05,
+            includeGyration: true,
+            channelWeights: weights,
+            materializeMap: true
+        )
+        let summary = observation.summary
+        let observedMassMap = observation.massMap!.asArray(Float.self)
+
+        XCTAssertEqual(runner.massObservationSynchronizationCount - synchronizationCount, 1)
 
         var expectedTotal = [Float](repeating: 0, count: batchCount)
         var expectedSumSquares = [Float](repeating: 0, count: batchCount)
@@ -5610,6 +5620,8 @@ final class LeniaCoreTests: XCTestCase {
                     let v0 = massValues[base]
                     let v2 = massValues[base + 2]
                     let reduced = v0 + v2
+                    let mapIndex = (batch * config.sx + x) * config.sy + y
+                    XCTAssertEqual(observedMassMap[mapIndex], reduced, accuracy: 1e-6)
                     expectedTotal[batch] += reduced
                     expectedSumSquares[batch] += reduced * reduced
                     expectedEnergy[batch] += v0 * v0 + v2 * v2
@@ -5751,6 +5763,78 @@ final class LeniaCoreTests: XCTestCase {
         )
     }
 
+    func testFlowLeniaMetalFullStateRunnerKernelUpdatesPreserveMatterWeights() {
+        let params = makeSandboxMetalParityParams()
+        let config = BatchedConfig(
+            sx: 16,
+            sy: 16,
+            channels: 3,
+            nbK: params.r.count,
+            dt: 0.2,
+            dd: 2,
+            sigma: 0.65,
+            n: 2,
+            thetaA: 2.0,
+            border: "torus",
+            implementation: ImplementationSettings(
+                mode: "flowlenia_2022_paper_equations",
+                border: "torus",
+                gradientBoundary: "periodic",
+                alphaMode: "mass",
+                kernelProfile: "flowlenia_2022_paper_equations",
+                flowClip: "none"
+            ),
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let kernels = compileKernels(
+            params: params,
+            config: config,
+            c0: [0, 1],
+            c1: [[0], [1], []]
+        )
+        let matterWeights: [Float] = [1.0, 1.0, 0.0]
+        let cellCount = config.sx * config.sy
+        var massValues = [Float](repeating: 0.0, count: cellCount * config.channels)
+        for x in 0..<config.sx {
+            for y in 0..<config.sy {
+                let base = (x * config.sy + y) * config.channels
+                let dx = x - config.sx / 2
+                let dy = y - config.sy / 2
+                massValues[base] = dx * dx + dy * dy < 20 ? 0.8 : 0.0
+                massValues[base + 1] = (dx + 2) * (dx + 2) + (dy - 1) * (dy - 1) < 12 ? 0.5 : 0.0
+                massValues[base + 2] = Float((x * 3 + y * 5) % 11) / 10.0
+            }
+        }
+        let mass = MLXArray(massValues).reshaped([1, config.sx, config.sy, config.channels])
+        let paramsMap = MLXArray(
+            (0..<cellCount).flatMap { _ in params.h }
+        ).reshaped([1, config.sx, config.sy, params.h.count])
+
+        let expectedRunner = FlowLeniaMetalFullStateRunner(
+            config: config,
+            kernels: kernels,
+            batchCount: 1,
+            matterWeights: matterWeights
+        )
+        let updatedRunner = FlowLeniaMetalFullStateRunner(
+            config: config,
+            kernels: kernels,
+            batchCount: 1,
+            matterWeights: matterWeights
+        )
+        updatedRunner.updateKernels(kernels)
+        expectedRunner.setState(mass: mass, params: paramsMap)
+        updatedRunner.setState(mass: mass, params: paramsMap)
+        expectedRunner.step()
+        updatedRunner.step()
+
+        let expected = expectedRunner.materializeState()
+        let actual = updatedRunner.materializeState()
+        XCTAssertLessThan(maxAbsDiff(expected.mass, actual.mass), 1e-5)
+        XCTAssertLessThan(maxAbsDiff(expected.params, actual.params), 1e-5)
+    }
+
     func testFlowSandboxMetalFullStagesMatchReferenceMath() {
         let params = makeSandboxMetalParityParams()
         let config = flowSandboxConfig(gridSize: 32, nbK: params.r.count)
@@ -5790,6 +5874,66 @@ final class LeniaCoreTests: XCTestCase {
                 expected: expectedStep.1,
                 actual: staged.nextParams,
                 support: expectedStep.0,
+                threshold: 1e-5
+            ),
+            1e-4
+        )
+    }
+
+    func testFlowSandboxMetalFullMatchesReferenceOnRectangularSmallTorus() {
+        let params = makeSandboxMetalParityParams()
+        let squareConfig = flowSandboxConfig(gridSize: 32, nbK: params.r.count)
+        let config = BatchedConfig(
+            sx: 16,
+            sy: 24,
+            channels: squareConfig.channels,
+            nbK: squareConfig.nbK,
+            dt: squareConfig.dt,
+            dd: squareConfig.dd,
+            sigma: squareConfig.sigma,
+            n: squareConfig.n,
+            thetaA: squareConfig.thetaA,
+            border: squareConfig.border,
+            implementation: squareConfig.implementation,
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let c0 = Array(repeating: 0, count: params.r.count)
+        let c1 = [Array(0..<params.r.count)]
+        let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
+        let mass = makePatchState(sx: config.sx, sy: config.sy, channels: config.channels)
+            .expandedDimensions(axis: 0)
+        let embeddedParams = flowSandboxParameterField(
+            mass: mass,
+            parameterValues: params.h,
+            threshold: 0.01
+        )
+
+        let staged = FlowLeniaSandboxMetalEngine(config: config, kernels: kernels)
+            .stagedStep(mass, embeddedParams, captureStages: true)
+        let expectedStages = flowSandboxReferenceStages(
+            mass: mass,
+            params: embeddedParams,
+            kernels: kernels,
+            config: config
+        )
+        let expected = FlowLeniaParamsBatched(
+            config: config,
+            kernels: kernels,
+            mixMode: "avg",
+            mixSeed: nil
+        )
+            .step(mass, embeddedParams)
+        let actualStages = try! XCTUnwrap(staged.stages)
+
+        XCTAssertLessThan(maxAbsDiff(expectedStages.uk, actualStages.uk), 1e-4)
+        XCTAssertLessThan(maxAbsDiff(expectedStages.flow, actualStages.flow), 1e-4)
+        XCTAssertLessThan(maxAbsDiff(expected.0, staged.nextMass), 1e-4)
+        XCTAssertLessThan(
+            maxParamDiffOnMassSupport(
+                expected: expected.1,
+                actual: staged.nextParams,
+                support: expected.0,
                 threshold: 1e-5
             ),
             1e-4
@@ -5888,7 +6032,7 @@ final class LeniaCoreTests: XCTestCase {
         }
     }
 
-    func testEvolutionEngineMetalBackendsTrackMLXOverShortGeneration() {
+    func testEvolutionEngineMetalMatchesMLXWithOverlappingMeasurements() {
         let ranges: [String: (Float, Float)] = [
             "r": (0.3, 0.8),
             "b": (0.0, 1.0),
@@ -5910,7 +6054,12 @@ final class LeniaCoreTests: XCTestCase {
             fitness: FitnessConfig(
                 objective: "directed_motion",
                 targetStep: 6,
-                angleThreshold: 0.01
+                angleThreshold: 0.01,
+                gyrationPenalty: 0.0001,
+                componentCountPenalty: 0.0001,
+                templateSequenceSteps: [0, 3],
+                trajectoryDisplacementReward: 0.01,
+                morphologyThreshold: 0.03
             ),
             fitnessShaping: "centered_rank",
             initPatch: nil,
@@ -6116,14 +6265,89 @@ final class LeniaCoreTests: XCTestCase {
             steps: 6,
             params: makeSandboxMetalParityParams(),
             backend: .metalFull,
-            warmupRuns: 1
+            warmupRuns: 1,
+            observationStride: 1
         )
         XCTAssertGreaterThan(result.duration, 0.0)
         XCTAssertGreaterThan(result.seedsPerSecond, 0.0)
         XCTAssertGreaterThan(result.simStepsPerSecond, 0.0)
         XCTAssertGreaterThan(result.profile.totalMs, 0.0)
         XCTAssertGreaterThanOrEqual(result.profile.rolloutMs, 0.0)
+        XCTAssertGreaterThan(result.profile.combinedObservationMs, 0.0)
+        XCTAssertEqual(result.profile.massObservationSynchronizations, 5)
         XCTAssertGreaterThan(result.stageTimings?.totalMs ?? 0.0, 0.0)
+    }
+
+    func testSearchFinalObservedMassMapMatchesFreshTerminalMaterialization() throws {
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 48,
+            sy: 48,
+            channels: 1,
+            backend: .metalFull,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: true, mix: "avg", mix_seed: nil),
+            pUniform: UniformRange(low: 0.0, high: 1.0),
+            chemotaxis: nil
+        )
+        let searchConfig = SearchConfig(
+            steps: 4,
+            recordInterval: 1,
+            warmupSteps: 0,
+            occupancyThreshold: 0.05,
+            massChannel: 0,
+            scoreWeights: [:],
+            filters: [:],
+            complexity: nil,
+            activity: nil,
+            stability: nil,
+            kSurvival: nil,
+            moments: nil
+        )
+        let engine = SearchEngine(runtimeConfig: runtimeConfig)
+        let seeds = [17, 19]
+
+        let freshResults = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 23,
+            searchConfig: searchConfig
+        )
+        let freshProfile = try XCTUnwrap(engine.lastBatchProfile)
+        let observedResults = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 23,
+            searchConfig: searchConfig,
+            frameCapture: FrameCapture(stride: 1) { _, _, _, _ in }
+        )
+        let observedProfile = try XCTUnwrap(engine.lastBatchProfile)
+
+        XCTAssertEqual(observedProfile.massObservationSynchronizations + 1, freshProfile.massObservationSynchronizations)
+        XCTAssertEqual(observedResults.count, freshResults.count)
+        for (observed, fresh) in zip(observedResults, freshResults) {
+            let observedTerminal = observed.descriptorBundle.terminal
+            let freshTerminal = fresh.descriptorBundle.terminal
+
+            XCTAssertEqual(observed.seed, fresh.seed)
+            XCTAssertEqual(observed.initSeed, fresh.initSeed)
+            XCTAssertEqual(observedTerminal.fingerprintU8, freshTerminal.fingerprintU8)
+            XCTAssertEqual(observedTerminal.fingerprintHash12, freshTerminal.fingerprintHash12)
+            XCTAssertEqual(observedTerminal.finalMass, freshTerminal.finalMass, accuracy: 1e-6)
+            XCTAssertEqual(observedTerminal.finalOccupancy, freshTerminal.finalOccupancy, accuracy: 1e-6)
+            XCTAssertEqual(observedTerminal.finalGyration, freshTerminal.finalGyration, accuracy: 1e-6)
+            XCTAssertEqual(
+                try XCTUnwrap(observed.metrics.momentMass),
+                try XCTUnwrap(fresh.metrics.momentMass),
+                accuracy: 1e-6
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(observed.metrics.componentCount),
+                try XCTUnwrap(fresh.metrics.componentCount),
+                accuracy: 1e-6
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(observed.metrics.largestComponentFraction),
+                try XCTUnwrap(fresh.metrics.largestComponentFraction),
+                accuracy: 1e-6
+            )
+        }
     }
 
     func testEvolutionBenchmarkReportsPositiveThroughput() {
@@ -6295,6 +6519,22 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertGreaterThan(refreshed.metrics.foodMean, stale.metrics.foodMean)
     }
 
+    func testFlowSandboxMetricsReduceFieldsInOneCanonicalPass() {
+        let metrics = FlowSandboxMetrics(
+            mass: [0.1, .nan, .infinity, -0.25],
+            food: [.nan, 0.5, .infinity, -0.1],
+            walls: [1, 0, .nan, 0.4]
+        )
+
+        XCTAssertEqual(metrics.massMean, -0.0375, accuracy: 1e-6)
+        XCTAssertEqual(metrics.occupancy, 0.25, accuracy: 1e-6)
+        XCTAssertEqual(metrics.foodMean, 0.1, accuracy: 1e-6)
+        XCTAssertEqual(metrics.wallFraction, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(metrics.massPeak, 0.1, accuracy: 1e-6)
+        XCTAssertEqual(metrics.foodPeak, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(metrics.nonFiniteFraction, 0.5, accuracy: 1e-6)
+    }
+
     func testFlowSandboxMetalFullRuntimeEditsStayLocal() async {
         let (_, _, _, params) = makeTestSetup()
         let runtime = FlowSandboxRuntime(
@@ -6411,9 +6651,17 @@ final class LeniaCoreTests: XCTestCase {
         let params = makeSandboxMetalParityParams()
         let c0 = Array(repeating: 0, count: params.r.count)
         let c1 = [Array(0..<params.r.count)]
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 1,
+        let observedRolloutConfig = FlowLeniaRolloutConfig(
+            steps: 8,
             recordEverySteps: 1,
+            captureEverySteps: 1,
+            activityConfig: nil,
+            foodSpawn: nil,
+            dissipation: nil
+        )
+        let batchedRolloutConfig = FlowLeniaRolloutConfig(
+            steps: 8,
+            recordEverySteps: 8,
             captureEverySteps: nil,
             activityConfig: nil,
             foodSpawn: nil,
@@ -6471,7 +6719,7 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: observedRolloutConfig
         )
 
         for backend in [FlowLeniaComputeBackend.metalFull] {
@@ -6479,12 +6727,20 @@ final class LeniaCoreTests: XCTestCase {
                 initialState: initialState,
                 initialParams: initialParams,
                 initialFood: nil,
-                config: rolloutConfig
+                config: observedRolloutConfig
             )
             XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 1e-3, "backend=\(backend.rawValue)")
             XCTAssertEqual(actual.width, expected.width)
             XCTAssertEqual(actual.height, expected.height)
             XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 1e-3)
+
+            let batchedResult = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: backend)).rollout(
+                initialState: initialState,
+                initialParams: initialParams,
+                initialFood: nil,
+                config: batchedRolloutConfig
+            )
+            XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, batchedResult.finalMassMap), 1e-6)
         }
     }
 
@@ -6492,14 +6748,16 @@ final class LeniaCoreTests: XCTestCase {
         let params = makeSandboxMetalParityParams()
         let c0 = Array(repeating: 0, count: params.r.count)
         let c1 = [Array(0..<params.r.count)]
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 8,
-            recordEverySteps: 8,
-            captureEverySteps: nil,
-            activityConfig: nil,
-            foodSpawn: nil,
-            dissipation: nil
-        )
+        func rolloutConfig(captureEverySteps: Int?) -> FlowLeniaRolloutConfig {
+            FlowLeniaRolloutConfig(
+                steps: 8,
+                recordEverySteps: 8,
+                captureEverySteps: captureEverySteps,
+                activityConfig: nil,
+                foodSpawn: nil,
+                dissipation: nil
+            )
+        }
         let initialBatch = flowSandboxSeedState(seed: 43, gridSize: 32)
         let initialState = initialBatch[0, 0..., 0..., 0].expandedDimensions(axis: -1)
         let initialParams = flowSandboxParameterField(
@@ -6559,16 +6817,23 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
         )
         let actual = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
+        )
+        let observed = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
+            initialState: initialState,
+            initialParams: initialParams,
+            initialFood: nil,
+            config: rolloutConfig(captureEverySteps: 1)
         )
 
         XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 2e-3)
+        XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, observed.finalMassMap), 1e-6)
         XCTAssertEqual(actual.width, expected.width)
         XCTAssertEqual(actual.height, expected.height)
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 1e-3)
@@ -6986,19 +7251,21 @@ final class LeniaCoreTests: XCTestCase {
     }
 
     func testFlowLeniaSimulatorMetalFullSupportsFoodSpawnOnPersistentRunner() {
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 8,
-            recordEverySteps: 8,
-            captureEverySteps: nil,
-            activityConfig: nil,
-            foodSpawn: FlowLeniaFoodSpawnConfig(
-                probability: 1.0,
-                patchSize: 4,
-                seed: 17,
-                value: 0.85
-            ),
-            dissipation: nil
-        )
+        func rolloutConfig(captureEverySteps: Int?) -> FlowLeniaRolloutConfig {
+            FlowLeniaRolloutConfig(
+                steps: 8,
+                recordEverySteps: 8,
+                captureEverySteps: captureEverySteps,
+                activityConfig: nil,
+                foodSpawn: FlowLeniaFoodSpawnConfig(
+                    probability: 1.0,
+                    patchSize: 4,
+                    seed: 17,
+                    value: 0.85
+                ),
+                dissipation: nil
+            )
+        }
         let food = FoodConfig(
             enabled: true,
             channel_index: 1,
@@ -7074,36 +7341,45 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: initialFoodField,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
         )
         let actual = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
             initialState: initialState,
             initialParams: initialParams,
             initialFood: initialFoodField,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
+        )
+        let observed = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
+            initialState: initialState,
+            initialParams: initialParams,
+            initialFood: initialFoodField,
+            config: rolloutConfig(captureEverySteps: 1)
         )
 
         XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 0.2)
+        XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, observed.finalMassMap), 1e-6)
         XCTAssertEqual(actual.width, expected.width)
         XCTAssertEqual(actual.height, expected.height)
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 0.15)
     }
 
     func testFlowLeniaSimulatorMetalFullSupportsDissipationOnPersistentRunner() {
-        let rolloutConfig = FlowLeniaRolloutConfig(
-            steps: 8,
-            recordEverySteps: 8,
-            captureEverySteps: nil,
-            activityConfig: nil,
-            foodSpawn: nil,
-            dissipation: FlowLeniaDissipationConfig(
-                probability: 1.0,
-                patchSize: 4,
-                insertionZoneOrigin: [18, 18],
-                insertionZoneSize: 8,
-                seed: 23
+        func rolloutConfig(captureEverySteps: Int?) -> FlowLeniaRolloutConfig {
+            FlowLeniaRolloutConfig(
+                steps: 8,
+                recordEverySteps: 8,
+                captureEverySteps: captureEverySteps,
+                activityConfig: nil,
+                foodSpawn: nil,
+                dissipation: FlowLeniaDissipationConfig(
+                    probability: 1.0,
+                    patchSize: 4,
+                    insertionZoneOrigin: [18, 18],
+                    insertionZoneSize: 8,
+                    seed: 23
+                )
             )
-        )
+        }
 
         func runtimeConfig(backend: FlowLeniaComputeBackend) -> LeniaRuntimeConfig {
             makeRuntimeConfigForSearchEngine(
@@ -7131,16 +7407,23 @@ final class LeniaCoreTests: XCTestCase {
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
         )
         let actual = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
             initialState: initialState,
             initialParams: initialParams,
             initialFood: nil,
-            config: rolloutConfig
+            config: rolloutConfig(captureEverySteps: nil)
+        )
+        let observed = FlowLeniaSimulator(runtimeConfig: runtimeConfig(backend: .metalFull)).rollout(
+            initialState: initialState,
+            initialParams: initialParams,
+            initialFood: nil,
+            config: rolloutConfig(captureEverySteps: 1)
         )
 
         XCTAssertLessThan(maxAbsDiff(expected.finalMassMap, actual.finalMassMap), 0.2)
+        XCTAssertLessThan(maxAbsDiff(actual.finalMassMap, observed.finalMassMap), 1e-6)
         XCTAssertEqual(actual.width, expected.width)
         XCTAssertEqual(actual.height, expected.height)
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 0.15)

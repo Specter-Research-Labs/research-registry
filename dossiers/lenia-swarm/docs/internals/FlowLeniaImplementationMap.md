@@ -156,8 +156,8 @@ Maps the remaining functions in `FlowLenia.swift` to the paper's equations and d
   - Paper mapping: Composition of Eq. (3) + Eq. (5) + Eq. (6–7).
   - Note: The additive Lenia update Eq. (4) is not used here because Flow Lenia replaces it with mass-conserving transport.
 
-- FlowLeniaBatched, FlowLeniaSimple, leniaStepSingle
-  - Meaning: Execution wrappers (batched vs. single) and compilation management; these mirror the paper's algorithm but add implementation constraints (FFT + loop compilation).
+- FlowLeniaBatched
+  - Meaning: Batched execution and compilation management; it mirrors the paper's algorithm but adds implementation constraints (FFT + loop compilation).
   - Paper mapping: No direct paper counterpart; they are runtime scaffolding.
 
 Parameter Embedding (Flow Lenia with Local Parameters)

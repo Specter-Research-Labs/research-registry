@@ -23,35 +23,6 @@ private struct SearchBatchSetup {
     let interventionsByStep: [Int: [InterventionConfig]]
 }
 
-private struct SearchBatchTimingAccumulator {
-    var stateBuildMs = 0.0
-    var parameterBuildMs = 0.0
-    var foodBuildMs = 0.0
-    var wallBuildMs = 0.0
-    var chemFieldBuildMs = 0.0
-    var runnerSetupMs = 0.0
-    var rolloutMs = 0.0
-    var summaryReductionMs = 0.0
-    var materializationMs = 0.0
-    var postprocessMs = 0.0
-
-    func profile(totalMs: Double) -> SearchBatchProfile {
-        SearchBatchProfile(
-            stateBuildMs: stateBuildMs,
-            parameterBuildMs: parameterBuildMs,
-            foodBuildMs: foodBuildMs,
-            wallBuildMs: wallBuildMs,
-            chemFieldBuildMs: chemFieldBuildMs,
-            runnerSetupMs: runnerSetupMs,
-            rolloutMs: rolloutMs,
-            summaryReductionMs: summaryReductionMs,
-            materializationMs: materializationMs,
-            postprocessMs: postprocessMs,
-            totalMs: totalMs
-        )
-    }
-}
-
 public final class SearchEngine: @unchecked Sendable {
     private enum Stepper {
         case mlx(FlowLeniaBatched, FlowLeniaParamsBatched?)
@@ -206,7 +177,7 @@ public final class SearchEngine: @unchecked Sendable {
         runner.step(
             count: pendingMetalSteps,
             preStepParameterPatches: [:],
-            postStepParameterPatches: runtimeOperators.beamMutationPatchSchedule(
+            postStepParameterPatches: runtimeOperators.searchBeamMutationPatchSchedule(
                 startStep: pendingMetalStartStep,
                 count: pendingMetalSteps,
                 batchSize: batchSize,
@@ -262,10 +233,10 @@ public final class SearchEngine: @unchecked Sendable {
                 foodBatch: foodBatch
             )
         } else {
-            runtimeOperators.applyEnvironmentalFields(
+            runtimeOperators.applyPreStepFields(
                 massBatch: &massBatch,
-                chemField: chemField,
-                foodBatch: foodBatch
+                foodBatch: foodBatch,
+                chemField: chemField
             )
         }
 
@@ -279,7 +250,7 @@ public final class SearchEngine: @unchecked Sendable {
            let beamConfig = runtimeConfig.beamMutation,
            beamConfig.enabled,
            let paramsBatch = paramBatch {
-            paramBatch = runtimeOperators.applyBeamMutation(paramsBatch, config: beamConfig, step: step)
+            paramBatch = runtimeOperators.applySearchBeamMutation(paramsBatch, config: beamConfig, step: step)
         }
 
         runtimeOperators.applyPostStepOperators(
@@ -304,7 +275,7 @@ public final class SearchEngine: @unchecked Sendable {
             runtimeConfig: runtimeConfig,
             excludedMassChannels: runtimeOperators.excludedMassChannels()
         )
-        var timings = SearchBatchTimingAccumulator()
+        var timings = SearchBatchProfile()
         let preflight = SearchConfigPreflight(
             searchConfig: searchConfig,
             useParamEmbedding: useParamEmbedding
@@ -328,6 +299,7 @@ public final class SearchEngine: @unchecked Sendable {
         let wallMask = batchSetup.wallMask
         let chemField = batchSetup.chemField
         let persistentMetalRunner = batchSetup.persistentMetalRunner
+        let massObservationSyncStart = persistentMetalRunner?.massObservationSynchronizationCount ?? 0
         let metalSummaryChannelWeights = summaryChannelWeights(searchConfig: searchConfig)
         let interventionsByStep = batchSetup.interventionsByStep
         let rolloutContext = SearchRolloutSampleContext(
@@ -344,6 +316,7 @@ public final class SearchEngine: @unchecked Sendable {
         var pendingMetalSteps = 0
         var pendingMetalStartStep = 1
         var capturedCoherentTransportReference = false
+        var finalObservedMassMap: MLXArray?
         let rolloutStart = ContinuousClock.now
         for step in 1...searchConfig.steps {
             if let runner = persistentMetalRunner {
@@ -401,7 +374,6 @@ public final class SearchEngine: @unchecked Sendable {
             let needsRunnerState = shouldCaptureFrame
                 || shouldCaptureActivity
                 || shouldRecordSample
-                || shouldCaptureCoherentTransportReference
             if needsRunnerState, let runner = persistentMetalRunner, pendingMetalSteps > 0 {
                 flushPendingMetalSteps(
                     runner: runner,
@@ -410,37 +382,44 @@ public final class SearchEngine: @unchecked Sendable {
                     batchSize: batchSize
                 )
             }
+            let needsMaterializedMassMap = shouldCaptureFrame
+                || shouldCaptureActivity
+                || shouldCaptureCoherentTransportReference
             var summarySample: FlowLeniaMetalMassSummary?
-            if shouldRecordSample,
-               let runner = persistentMetalRunner,
-               runner.supportsMassSummary {
-                let summaryStart = ContinuousClock.now
-                summarySample = runner.summarizeMass(
-                    occupancyThreshold: searchConfig.occupancyThreshold,
-                    includeGyration: true,
-                    channelWeights: metalSummaryChannelWeights
-                )
-                timings.summaryReductionMs += durationMs(summaryStart.duration(to: ContinuousClock.now))
+            var massMap: MLXArray?
+            if let runner = persistentMetalRunner {
+                if shouldRecordSample {
+                    let observationStart = ContinuousClock.now
+                    let observation = runner.observeMass(
+                        occupancyThreshold: searchConfig.occupancyThreshold,
+                        includeGyration: true,
+                        channelWeights: metalSummaryChannelWeights,
+                        materializeMap: needsMaterializedMassMap
+                    )
+                    summarySample = observation.summary
+                    massMap = observation.massMap
+                    let elapsed = durationMs(observationStart.duration(to: ContinuousClock.now))
+                    if needsMaterializedMassMap {
+                        timings.combinedObservationMs += elapsed
+                    } else {
+                        timings.summaryReductionMs += elapsed
+                    }
+                } else if needsMaterializedMassMap {
+                    let materializationStart = ContinuousClock.now
+                    massMap = runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
+                    timings.materializationMs += durationMs(materializationStart.duration(to: ContinuousClock.now))
+                }
+                if shouldCaptureActivity {
+                    let materializationStart = ContinuousClock.now
+                    PBatch = runner.materializeParams()
+                    timings.materializationMs += durationMs(materializationStart.duration(to: ContinuousClock.now))
+                }
+            } else if shouldCaptureFrame || shouldCaptureActivity || shouldRecordSample {
+                massMap = resultBuilder.massMapFromBatch(ABatch, searchConfig: searchConfig)
             }
-            let massMap: MLXArray? = (shouldCaptureFrame || shouldCaptureActivity || shouldRecordSample)
-                ? {
-                    if summarySample != nil {
-                        if !(shouldCaptureFrame || shouldCaptureActivity || shouldCaptureCoherentTransportReference) {
-                            return nil
-                        }
-                    }
-                    if let runner = persistentMetalRunner {
-                        let materializationStart = ContinuousClock.now
-                        let runnerMassMap = runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
-                        if shouldCaptureActivity {
-                            PBatch = runner.materializeParams()
-                        }
-                        timings.materializationMs += durationMs(materializationStart.duration(to: ContinuousClock.now))
-                        return runnerMassMap
-                    }
-                    return resultBuilder.massMapFromBatch(ABatch, searchConfig: searchConfig)
-                }()
-                : nil
+            if step == searchConfig.steps, persistentMetalRunner != nil {
+                finalObservedMassMap = massMap
+            }
 
             if shouldCaptureFrame {
                 guard let capture = captureConfig, let massMap else {
@@ -551,7 +530,8 @@ public final class SearchEngine: @unchecked Sendable {
                     terminalParamBatch = nil
                 }
             } else {
-                terminalMassMap = runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
+                terminalMassMap = finalObservedMassMap
+                    ?? runner.materializeMassMap(channelWeights: metalSummaryChannelWeights)
                 terminalStateBatch = nil
                 terminalParamBatch = nil
             }
@@ -562,6 +542,10 @@ public final class SearchEngine: @unchecked Sendable {
             terminalStateBatch = ABatch
             terminalParamBatch = PBatch
             terminalFoodMass = foodBatch.map(foodMassBySample)
+        }
+        if let runner = persistentMetalRunner {
+            timings.massObservationSynchronizations =
+                runner.massObservationSynchronizationCount - massObservationSyncStart
         }
 
         let results = resultBuilder.build(
@@ -581,7 +565,8 @@ public final class SearchEngine: @unchecked Sendable {
             foodFinalMass: terminalFoodMass
         )
         timings.postprocessMs = durationMs(postprocessStart.duration(to: ContinuousClock.now))
-        lastBatchProfile = timings.profile(totalMs: durationMs(totalStart.duration(to: ContinuousClock.now)))
+        timings.totalMs = durationMs(totalStart.duration(to: ContinuousClock.now))
+        lastBatchProfile = timings
         return results
     }
 
@@ -591,7 +576,7 @@ public final class SearchEngine: @unchecked Sendable {
         searchConfig: SearchConfig,
         frameCapture: FrameCapture?,
         preflight: SearchConfigPreflight,
-        timings: inout SearchBatchTimingAccumulator
+        timings: inout SearchBatchProfile
     ) -> SearchBatchSetup {
         let batchSize = seeds.count
         let initializationBuilder = makeInitializationBuilder()
@@ -907,7 +892,7 @@ extension SearchEngine {
             searchConfig: searchConfig,
             useParamEmbedding: useParamEmbedding
         )
-        var timings = SearchBatchTimingAccumulator()
+        var timings = SearchBatchProfile()
         let batchSetup = buildBatchSetup(
             seeds: seeds,
             initSeedOffset: initSeedOffset,
@@ -948,25 +933,18 @@ struct SearchZeroStatePatch {
     let size: Int
 }
 
-private func signedAngleDelta(_ lhs: Float, _ rhs: Float) -> Float {
-    var delta = lhs - rhs
-    while delta > Float.pi {
-        delta -= 2 * Float.pi
-    }
-    while delta < -Float.pi {
-        delta += 2 * Float.pi
-    }
-    return delta
-}
-
 public func benchmarkSearchEngineBackend(
     gridSize: Int,
     batchSize: Int,
     steps: Int,
     params: ResolvedParams,
     backend: FlowLeniaComputeBackend,
-    warmupRuns: Int = 1
+    warmupRuns: Int = 1,
+    observationStride: Int? = nil
 ) -> SearchBenchmarkResult {
+    if let observationStride {
+        precondition(observationStride > 0, "Search benchmark observation stride must be positive.")
+    }
     let runtimeConfig = flowLeniaBenchmarkRuntimeConfig(
         gridSize: gridSize,
         steps: steps,
@@ -991,11 +969,15 @@ public func benchmarkSearchEngineBackend(
         moments: nil
     )
     let seeds = Array(0..<batchSize)
+    let frameCapture = observationStride.map { stride in
+        FrameCapture(stride: stride) { _, _, _, _ in }
+    }
     for run in 0..<max(warmupRuns, 0) {
         _ = engine.runBatch(
             seeds: seeds,
             initSeedOffset: (run + 1) * 100_000,
-            searchConfig: searchConfig
+            searchConfig: searchConfig,
+            frameCapture: frameCapture
         )
     }
 
@@ -1011,7 +993,8 @@ public func benchmarkSearchEngineBackend(
     _ = engine.runBatch(
         seeds: seeds,
         initSeedOffset: measuredOffset,
-        searchConfig: searchConfig
+        searchConfig: searchConfig,
+        frameCapture: frameCapture
     )
     let duration = Date().timeIntervalSince(start)
     guard let profile = engine.lastBatchProfile else {

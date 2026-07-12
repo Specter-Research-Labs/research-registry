@@ -1,6 +1,6 @@
 import Foundation
 
-public func resolveCompendiumArtifactPath(
+public func resolveRunArtifactPath(
     outputRoot: String?,
     runDir: String?,
     path: String?
@@ -10,7 +10,7 @@ public func resolveCompendiumArtifactPath(
     }
 
     if let path,
-       let runPath = resolveCompendiumArtifactPath(outputRoot: outputRoot, runDir: runDir, path: nil) {
+       let runPath = resolveRunArtifactPath(outputRoot: outputRoot, runDir: runDir, path: nil) {
         return URL(fileURLWithPath: runPath, isDirectory: true)
             .appendingPathComponent(path)
             .path

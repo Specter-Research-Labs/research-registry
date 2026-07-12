@@ -314,20 +314,10 @@ final class FlowSandboxMetalRuntimeState {
         let mass = Self.readFloats(from: massBuffer, count: cellCount)
         let food = Self.readFloats(from: foodBuffer, count: cellCount)
         let walls = Self.readFloats(from: wallBuffer, count: cellCount)
-        let count = Float(max(1, cellCount))
-        let finiteMass = mass.filter(\.isFinite)
-        let finiteFood = food.filter(\.isFinite)
-        let nonFiniteCount = mass.count - finiteMass.count + food.count - finiteFood.count
-        let occupied = Float(finiteMass.filter { $0 > 0.05 }.count)
-        let wallCount = Float(walls.filter { $0 < 0.5 }.count)
         return FlowSandboxMetrics(
-            massMean: finiteMass.reduce(0, +) / count,
-            occupancy: occupied / count,
-            foodMean: finiteFood.reduce(0, +) / count,
-            wallFraction: wallCount / count,
-            massPeak: finiteMass.max() ?? 0,
-            foodPeak: finiteFood.max() ?? 0,
-            nonFiniteFraction: Float(nonFiniteCount) / max(1.0, Float(mass.count + food.count))
+            mass: mass,
+            food: food,
+            walls: walls
         )
     }
 

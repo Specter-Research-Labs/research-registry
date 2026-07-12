@@ -14,7 +14,7 @@ use std::process::{Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-const MAX_EXEC_ERROR_BYTES: usize = 16 * 1024;
+const MAX_EXEC_ERROR_BYTES_PER_STREAM: usize = 128 * 1024;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ExecOutputPlan {
@@ -536,10 +536,10 @@ fn command_diagnostics(stdout: &[u8], stderr: &[u8]) -> String {
 }
 
 fn truncate_diagnostics(text: &str) -> String {
-    if text.len() <= MAX_EXEC_ERROR_BYTES {
+    if text.len() <= MAX_EXEC_ERROR_BYTES_PER_STREAM {
         return text.to_owned();
     }
-    let mut start = text.len() - MAX_EXEC_ERROR_BYTES;
+    let mut start = text.len() - MAX_EXEC_ERROR_BYTES_PER_STREAM;
     while !text.is_char_boundary(start) {
         start += 1;
     }
@@ -959,7 +959,7 @@ fn repo_relative(repo_root: &Utf8Path, path: &Utf8Path, label: &str) -> Result<S
 
 #[cfg(test)]
 mod tests {
-    use super::{action_evidence_card_path, run_action, validate_action};
+    use super::{action_evidence_card_path, run_action, truncate_diagnostics, validate_action};
     use camino::Utf8Path;
     use serde_json::Value;
     use std::fs;
@@ -1286,5 +1286,16 @@ card_path = "artifacts/evidence/latest.json"
             .error
             .as_deref()
             .is_some_and(|error| error.contains("boom")));
+    }
+
+    #[test]
+    fn diagnostics_keep_moderate_test_logs_intact() {
+        let diagnostics = format!(
+            "{}\nassertion failed in LeniaCLITests\n{}",
+            "x".repeat(40 * 1024),
+            "y".repeat(40 * 1024)
+        );
+
+        assert_eq!(truncate_diagnostics(&diagnostics), diagnostics);
     }
 }

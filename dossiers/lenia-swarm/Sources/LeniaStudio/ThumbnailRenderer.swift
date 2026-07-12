@@ -26,10 +26,6 @@ actor ThumbnailRenderer {
         cache[creature.id]
     }
 
-    func hasThumbnail(for id: UUID) -> Bool {
-        cache[id] != nil
-    }
-
     func render(creature: LeniaCreature) async -> CGImage? {
         if let cached = cache[creature.id] { return cached }
         guard !pending.contains(creature.id) else { return nil }

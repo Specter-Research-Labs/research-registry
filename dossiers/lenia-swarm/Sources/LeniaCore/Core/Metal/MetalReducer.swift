@@ -12,12 +12,9 @@ struct FlowLeniaMetalMassSummary: Sendable {
 }
 
 final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
-    private let config: BatchedConfig
     private let batchCount: Int
     private let channelCount: Int
     private let partialGroupCount: Int
-    private let device: MTLDevice
-    private let commandQueue: MTLCommandQueue
     private let pass1PartialPipeline: MTLComputePipelineState
     private let pass1FinalizePipeline: MTLComputePipelineState
     private let pass2PartialPipeline: MTLComputePipelineState
@@ -43,15 +40,11 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
         config: BatchedConfig,
         parameterCount: Int,
         batchCount: Int,
-        device: MTLDevice,
-        commandQueue: MTLCommandQueue
+        device: MTLDevice
     ) {
-        self.config = config
         self.batchCount = batchCount
         self.channelCount = config.channels
         self.partialGroupCount = FlowLeniaMetalFullPipeline.summaryPartialGroupCount(sx: config.sx, sy: config.sy)
-        self.device = device
-        self.commandQueue = commandQueue
 
         let library = FlowLeniaMetalFullPipeline.makeLibrary(
             device: device,
@@ -182,12 +175,13 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
         )
     }
 
-    func summarize(
+    func encodeSummary(
+        on commandBuffer: MTLCommandBuffer,
         massBuffer: MTLBuffer,
         occupancyThreshold: Float,
         includeGyration: Bool,
         channelWeights: [Float]?
-    ) -> FlowLeniaMetalMassSummary {
+    ) {
         let resolvedWeights = channelWeights ?? Array(repeating: 1.0, count: channelCount)
         guard resolvedWeights.count == channelCount else {
             preconditionFailure("Flow Metal summary channel weights must match the configured channel count.")
@@ -195,19 +189,13 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
         FlowLeniaMetalFullPipeline.writeFloats([occupancyThreshold], to: occupancyThresholdBuffer)
         FlowLeniaMetalFullPipeline.writeFloats(resolvedWeights, to: channelWeightsBuffer)
 
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
-            preconditionFailure("Failed to create Flow Metal summary command buffer.")
-        }
-        commandBuffer.label = "flow-metal.summary"
-
         encodePass1(on: commandBuffer, massBuffer: massBuffer)
         if includeGyration {
             encodePass2(on: commandBuffer, massBuffer: massBuffer)
         }
+    }
 
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
-
+    func readSummary(includeGyration: Bool) -> FlowLeniaMetalMassSummary {
         let totalMass = FlowLeniaMetalFullPipeline.readFloats(from: totalMassBuffer, count: batchCount)
         let sumSquares = FlowLeniaMetalFullPipeline.readFloats(from: sumSquaresBuffer, count: batchCount)
         let energy = FlowLeniaMetalFullPipeline.readFloats(from: energyBuffer, count: batchCount)

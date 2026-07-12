@@ -110,18 +110,22 @@ public struct BatchSimulationResult: Sendable {
     }
 }
 
-public struct SearchBatchProfile: Sendable {
-    public let stateBuildMs: Double
-    public let parameterBuildMs: Double
-    public let foodBuildMs: Double
-    public let wallBuildMs: Double
-    public let chemFieldBuildMs: Double
-    public let runnerSetupMs: Double
-    public let rolloutMs: Double
-    public let summaryReductionMs: Double
-    public let materializationMs: Double
-    public let postprocessMs: Double
-    public let totalMs: Double
+public struct SearchBatchProfile: Codable, Sendable {
+    public internal(set) var stateBuildMs = 0.0
+    public internal(set) var parameterBuildMs = 0.0
+    public internal(set) var foodBuildMs = 0.0
+    public internal(set) var wallBuildMs = 0.0
+    public internal(set) var chemFieldBuildMs = 0.0
+    public internal(set) var runnerSetupMs = 0.0
+    public internal(set) var rolloutMs = 0.0
+    public internal(set) var summaryReductionMs = 0.0
+    public internal(set) var combinedObservationMs = 0.0
+    public internal(set) var materializationMs = 0.0
+    public internal(set) var massObservationSynchronizations = 0
+    public internal(set) var postprocessMs = 0.0
+    public internal(set) var totalMs = 0.0
+
+    init() {}
 
     public init(
         stateBuildMs: Double,
@@ -132,7 +136,9 @@ public struct SearchBatchProfile: Sendable {
         runnerSetupMs: Double,
         rolloutMs: Double,
         summaryReductionMs: Double,
+        combinedObservationMs: Double,
         materializationMs: Double,
+        massObservationSynchronizations: Int,
         postprocessMs: Double,
         totalMs: Double
     ) {
@@ -144,7 +150,9 @@ public struct SearchBatchProfile: Sendable {
         self.runnerSetupMs = runnerSetupMs
         self.rolloutMs = rolloutMs
         self.summaryReductionMs = summaryReductionMs
+        self.combinedObservationMs = combinedObservationMs
         self.materializationMs = materializationMs
+        self.massObservationSynchronizations = massObservationSynchronizations
         self.postprocessMs = postprocessMs
         self.totalMs = totalMs
     }

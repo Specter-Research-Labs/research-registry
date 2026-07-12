@@ -93,6 +93,7 @@ final class FlowLeniaMetalFullPipeline {
         device: MTLDevice,
         commandQueue: MTLCommandQueue,
         wallPotential: MLXArray? = nil,
+        matterWeights: [Float]? = nil,
         parameterFieldMode: FlowLeniaParameterFieldMode = .kernelGain,
         reintegrateParams: Bool = true,
         parameterMix: String = "avg",
@@ -265,6 +266,7 @@ final class FlowLeniaMetalFullPipeline {
         self.inverseFFTOutputShape = inversePlan.outputShape
 
         updateKernels(kernels)
+        updateMatterWeights(matterWeights)
         updateWallPotential(wallPotential)
     }
 
@@ -275,8 +277,8 @@ final class FlowLeniaMetalFullPipeline {
         guard Self.kernelBatchCount(for: kernels) == kernelBatchCount else {
             preconditionFailure("Flow Metal full pipeline requires a stable kernel batch count across kernel updates.")
         }
-        guard kernels.c1Mask.shape[0] == channelCount else {
-            preconditionFailure("Flow Metal full pipeline requires c1Mask to match the configured channel count.")
+        guard kernels.c1Mask.shape == [channelCount, kernelCount] else {
+            preconditionFailure("Flow Metal full pipeline requires c1Mask to match the configured channels and parameter count.")
         }
         guard kernels.c0Idxs.shape[0] == kernelCount else {
             preconditionFailure("Flow Metal full pipeline requires c0Idxs to match the parameter count.")
@@ -284,66 +286,59 @@ final class FlowLeniaMetalFullPipeline {
 
         let reducedY = (config.sy / 2) + 1
         let packedKernel = kernels.fK[0..., 0..., 0..<reducedY, 0...].contiguous()
+        guard packedKernel.shape == [kernelBatchCount, config.sx, reducedY, kernelCount] else {
+            preconditionFailure("Flow Metal full pipeline requires kernel spectra to match its batch, grid, and parameter dimensions.")
+        }
         guard let sourceKernelBuffer = packedKernel.asMTLBuffer(device: device, noCopy: true)
             ?? packedKernel.asMTLBuffer(device: device, noCopy: false) else {
             preconditionFailure("Flow Metal full pipeline could not materialize kernel spectra as an MTLBuffer.")
         }
-        Self.copyBuffer(
-            sourceKernelBuffer,
-            to: kernelBuffer,
-            length: sourceKernelBuffer.length,
-            commandQueue: commandQueue,
-            label: "flow-metal.kernel-spectrum.upload"
-        )
         let c0IdxValues = kernels.c0Idxs.asArray(Int32.self)
         _ = c0IdxValues.withUnsafeBytes { rawValues in
             memcpy(c0IdxTransferBuffer.contents(), rawValues.baseAddress, rawValues.count)
         }
-        Self.copyBuffer(
-            c0IdxTransferBuffer,
-            to: c0IdxBuffer,
-            length: c0IdxValues.count * MemoryLayout<Int32>.stride,
-            commandQueue: commandQueue,
-            label: "flow-metal.c0Idx.upload"
+        let mValues = Self.expandedKernelScalars(
+            from: kernels.m,
+            batchCount: batchCount,
+            parameterCount: kernelCount,
+            label: "m"
         )
-        Self.uploadFloats(
-            Self.expandedKernelScalars(
-                from: kernels.m,
-                batchCount: batchCount,
-                parameterCount: kernelCount,
-                label: "m"
-            ),
-            toPrivate: mBuffer,
-            stagingBuffer: mTransferBuffer,
-            commandQueue: commandQueue,
-            label: "flow-metal.m"
+        let sValues = Self.expandedKernelScalars(
+            from: kernels.s,
+            batchCount: batchCount,
+            parameterCount: kernelCount,
+            label: "s"
         )
-        Self.uploadFloats(
-            Self.expandedKernelScalars(
-                from: kernels.s,
-                batchCount: batchCount,
-                parameterCount: kernelCount,
-                label: "s"
-            ),
-            toPrivate: sBuffer,
-            stagingBuffer: sTransferBuffer,
-            commandQueue: commandQueue,
-            label: "flow-metal.s"
-        )
-        Self.uploadFloats(
-            Self.defaultMatterWeights(channelCount: channelCount),
-            toPrivate: matterWeightsBuffer,
-            stagingBuffer: matterWeightsTransferBuffer,
-            commandQueue: commandQueue,
-            label: "flow-metal.matterWeights"
-        )
-        Self.uploadFloats(
-            kernels.c1Mask.asArray(Float.self),
-            toPrivate: outputWeightsBuffer,
-            stagingBuffer: outputWeightsTransferBuffer,
-            commandQueue: commandQueue,
-            label: "flow-metal.outputWeights"
-        )
+        Self.writeFloats(mValues, to: mTransferBuffer)
+        Self.writeFloats(sValues, to: sTransferBuffer)
+        Self.writeFloats(kernels.c1Mask.asArray(Float.self), to: outputWeightsTransferBuffer)
+
+        let uploads: [(source: MTLBuffer, destination: MTLBuffer, length: Int)] = [
+            (sourceKernelBuffer, kernelBuffer, kernelBuffer.length),
+            (c0IdxTransferBuffer, c0IdxBuffer, c0IdxBuffer.length),
+            (mTransferBuffer, mBuffer, mBuffer.length),
+            (sTransferBuffer, sBuffer, sBuffer.length),
+            (outputWeightsTransferBuffer, outputWeightsBuffer, outputWeightsBuffer.length),
+        ]
+        guard let commandBuffer = commandQueue.makeCommandBuffer(),
+              let encoder = commandBuffer.makeBlitCommandEncoder() else {
+            preconditionFailure("Failed to create Flow Metal kernel upload command buffer.")
+        }
+        commandBuffer.label = "flow-metal.kernels.upload"
+        for upload in uploads {
+            guard upload.source.length >= upload.length else {
+                preconditionFailure("Flow Metal kernel upload source is smaller than its destination.")
+            }
+            encoder.copy(
+                from: upload.source,
+                sourceOffset: 0,
+                to: upload.destination,
+                destinationOffset: 0,
+                size: upload.length
+            )
+        }
+        encoder.endEncoding()
+        Self.commitAndWait(commandBuffer, label: "flow-metal.kernels.upload")
     }
 
     func updateMatterWeights(_ weights: [Float]?) {
@@ -762,7 +757,7 @@ final class FlowLeniaMetalFullPipeline {
         let maxHeight = max(1, spectrumGatherPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
         let threadHeight = min(8, maxHeight)
         let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
-        let threads = MTLSize(width: config.sx, height: (config.sy / 2) + 1, depth: batchCount * kernelCount)
+        let threads = MTLSize(width: (config.sy / 2) + 1, height: config.sx, depth: batchCount * kernelCount)
         encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
         encoder.endEncoding()
     }
@@ -781,7 +776,7 @@ final class FlowLeniaMetalFullPipeline {
         let maxHeight = max(1, pipeline.maxTotalThreadsPerThreadgroup / threadWidth)
         let threadHeight = min(8, maxHeight)
         let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
-        let threads = MTLSize(width: config.sx, height: config.sy, depth: batchCount)
+        let threads = MTLSize(width: config.sy, height: config.sx, depth: batchCount)
         encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
         encoder.endEncoding()
     }
@@ -1152,6 +1147,38 @@ final class FlowLeniaMetalFullPipeline {
         let reintegrateMassWrites = channelIndices.map { channel in
             "            nextMass[outputMassBase + \(channel)] = totalMass\(channel) * kAreaScale;"
         }.joined(separator: "\n")
+        let usesLocalTorusDistance = useTorus && maxAdvection >= 0
+            && Float(min(sx, sy)) * 0.5 > Float(dd) + maxAdvection
+        let reintegrateDistanceBody = if usesLocalTorusDistance {
+            """
+                                float dY = metal::fabs(float(dy) - clippedY);
+                                float dX = metal::fabs(float(dx) - clippedX);
+            """
+        } else if useTorus {
+            """
+                                float murY = float(srcY) + 0.5f + clippedY;
+                                float murX = float(srcX) + 0.5f + clippedX;
+                                float dY = metal::fabs(targetY - murY);
+                                float dX = metal::fabs(targetX - murX);
+                                dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
+                                dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
+                                dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
+                                dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
+            """
+        } else {
+            """
+                                float murY = metal::fmin(
+                                    metal::fmax(float(srcY) + 0.5f + clippedY, kSigma),
+                                    float(kSY) - kSigma
+                                );
+                                float murX = metal::fmin(
+                                    metal::fmax(float(srcX) + 0.5f + clippedX, kSigma),
+                                    float(kSX) - kSigma
+                                );
+                                float dY = metal::fabs(targetY - murY);
+                                float dX = metal::fabs(targetX - murX);
+            """
+        }
         let flowChannelBodies = channelIndices.map { channel in
             """
             {
@@ -1192,21 +1219,7 @@ final class FlowLeniaMetalFullPipeline {
                                 float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
                                 float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
 
-                                float murY = float(srcY) + 0.5f + clippedY;
-                                float murX = float(srcX) + 0.5f + clippedX;
-                                if (!kUseTorus) {
-                                    murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
-                                    murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
-                                }
-
-                                float dY = metal::fabs(targetY - murY);
-                                float dX = metal::fabs(targetX - murX);
-                                if (kUseTorus) {
-                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
-                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
-                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
-                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
-                                }
+            \(reintegrateDistanceBody)
 
                                 float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
                                 float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
@@ -1229,20 +1242,7 @@ final class FlowLeniaMetalFullPipeline {
                                 float flowX = flow[sourceFlowIndex + 1];
                                 float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
                                 float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
-                                float murY = float(srcY) + 0.5f + clippedY;
-                                float murX = float(srcX) + 0.5f + clippedX;
-                                if (!kUseTorus) {
-                                    murY = metal::fmin(metal::fmax(murY, kSigma), float(kSY) - kSigma);
-                                    murX = metal::fmin(metal::fmax(murX, kSigma), float(kSX) - kSigma);
-                                }
-                                float dY = metal::fabs(targetY - murY);
-                                float dX = metal::fabs(targetX - murX);
-                                if (kUseTorus) {
-                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
-                                    dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
-                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
-                                    dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
-                                }
+            \(reintegrateDistanceBody)
                                 float szY = metal::fmin(metal::fmax(0.5f - dY + kSigma, 0.0f), kClipMax);
                                 float szX = metal::fmin(metal::fmax(0.5f - dX + kSigma, 0.0f), kClipMax);
                                 candidateWeight += sourceMass * szY * szX;
@@ -1386,12 +1386,12 @@ final class FlowLeniaMetalFullPipeline {
             device float *matter [[buffer(2)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
-            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+            if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
                 return;
             }
             int batch = int(gid.z);
-            int x = int(gid.x);
-            int y = int(gid.y);
+            int x = int(gid.y);
+            int y = int(gid.x);
             float total = 0.0f;
             int massBase = massIndex(batch, x, y, 0);
         \(matterMapAccumulation)
@@ -1408,14 +1408,16 @@ final class FlowLeniaMetalFullPipeline {
             int z = int(gid.z);
             int batch = z / kKernelCount;
             int k = z - batch * kKernelCount;
-            if (int(gid.x) >= kSX || int(gid.y) >= kReducedY || batch >= kBatchCount) {
+            if (int(gid.y) >= kSX || int(gid.x) >= kReducedY || batch >= kBatchCount) {
                 return;
             }
+            int x = int(gid.y);
+            int y = int(gid.x);
             int sourceChannel = c0Idxs[k];
             int kernelBatch = kKernelBatchCount == 1 ? 0 : batch;
-            float2 source = channelSpectra[spectrumIndex(batch, int(gid.x), int(gid.y), sourceChannel)];
-            float2 kernelValue = kernelSpectrum[kernelSpectrumIndex(kernelBatch, int(gid.x), int(gid.y), k)];
-            gatheredSpectra[gatheredSpectrumIndex(batch, int(gid.x), int(gid.y), k)] = float2(
+            float2 source = channelSpectra[spectrumIndex(batch, x, y, sourceChannel)];
+            float2 kernelValue = kernelSpectrum[kernelSpectrumIndex(kernelBatch, x, y, k)];
+            gatheredSpectra[gatheredSpectrumIndex(batch, x, y, k)] = float2(
                 source.x * kernelValue.x - source.y * kernelValue.y,
                 source.x * kernelValue.y + source.y * kernelValue.x
             );
@@ -1430,12 +1432,12 @@ final class FlowLeniaMetalFullPipeline {
             device float *u [[buffer(5)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
-            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+            if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
                 return;
             }
             int batch = int(gid.z);
-            int x = int(gid.x);
-            int y = int(gid.y);
+            int x = int(gid.y);
+            int y = int(gid.x);
         \(growthChannelDeclarations)
             int paramBase = paramIndex(batch, x, y, 0);
             for (int k = 0; k < kKernelCount; ++k) {
@@ -1456,12 +1458,12 @@ final class FlowLeniaMetalFullPipeline {
             device const float *wallPotential [[buffer(1)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
-            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+            if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
                 return;
             }
             int batch = int(gid.z);
-            int x = int(gid.x);
-            int y = int(gid.y);
+            int x = int(gid.y);
+            int y = int(gid.x);
             float potential = wallPotential[scalarIndex(batch, x, y)];
             int outputBase = uIndex(batch, x, y, 0);
         \(wallPotentialWrites)
@@ -1474,12 +1476,12 @@ final class FlowLeniaMetalFullPipeline {
             device const float *mass [[buffer(3)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
-            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+            if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
                 return;
             }
             int batch = int(gid.z);
-            int x = int(gid.x);
-            int y = int(gid.y);
+            int x = int(gid.y);
+            int y = int(gid.x);
 
             float matterGrid[3][3];
             for (int ox = 0; ox < 3; ++ox) {
@@ -1506,12 +1508,12 @@ final class FlowLeniaMetalFullPipeline {
             constant ReintegrateUniforms &uniforms [[buffer(5)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
-            if (int(gid.x) >= kSX || int(gid.y) >= kSY || int(gid.z) >= kBatchCount) {
+            if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
                 return;
             }
             int batch = int(gid.z);
-            int x = int(gid.x);
-            int y = int(gid.y);
+            int x = int(gid.y);
+            int y = int(gid.x);
             float paramSum[kParamCount];
             if (kReintegrateParams) {
                 for (int k = 0; k < kParamCount; ++k) {

@@ -1,15 +1,6 @@
 import Foundation
 import LeniaCore
 
-struct LabWorldRequest {
-    let entry: StudioCompareEntry
-    let draft: LabWorldDraft?
-
-    func runtimeConfig(backend: FlowSandboxBackend) -> LeniaRuntimeConfig? {
-        draft?.runtimeConfig(overridingBackend: backend)
-    }
-}
-
 struct LabKernelRoute: Identifiable {
     let id: Int
     var source: Int

@@ -2,6 +2,8 @@ import ArgumentParser
 import Foundation
 import LeniaCore
 
+private let benchmarkArtifactSchemaVersion = 2
+
 struct BenchmarkCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "benchmark",
@@ -56,6 +58,9 @@ struct BenchmarkCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Timed samples per backend for search/evolution benchmark reporting")
     var repeatRuns: Int = 5
 
+    @Option(name: .long, help: "Frame-observation stride for search benchmarks; zero disables observation")
+    var searchObservationStride: Int = 0
+
     @Option(name: .long, help: "Backend filter for backend benchmarks: metal-full|all|mlx")
     var backend: String = "metal-full"
 
@@ -71,6 +76,12 @@ struct BenchmarkCommand: AsyncParsableCommand {
         }
         guard repeatRuns > 0 else {
             throw ValidationError("--repeat-runs must be > 0")
+        }
+        guard searchObservationStride >= 0 else {
+            throw ValidationError("--search-observation-stride must be >= 0")
+        }
+        guard search || searchObservationStride == 0 else {
+            throw ValidationError("--search-observation-stride requires --search")
         }
         guard metalWarmupSteps >= 0 else {
             throw ValidationError("--metal-warmup-steps must be >= 0")
@@ -114,6 +125,9 @@ struct BenchmarkCommand: AsyncParsableCommand {
         if search || evolution {
             print("Warmup runs: \(warmupRuns)")
             print("Repeat runs: \(repeatRuns)")
+        }
+        if search, searchObservationStride > 0 {
+            print("Search observation stride: \(searchObservationStride)")
         }
 
         let ranges = KernelParamRanges(
@@ -159,7 +173,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             if let output {
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -170,6 +184,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: nil,
                         repeatRuns: nil,
+                        observationStride: nil,
                         backends: results.map(benchmarkBackendArtifact)
                     ),
                     runID: artifactRunID,
@@ -227,7 +242,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             if let output {
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -238,6 +253,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: nil,
                         repeatRuns: nil,
+                        observationStride: nil,
                         backends: results.map(benchmarkBackendArtifact)
                     ),
                     runID: artifactRunID,
@@ -259,7 +275,8 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         params: params,
                         backend: backend,
-                        warmupRuns: warmupRuns
+                        warmupRuns: warmupRuns,
+                        observationStride: searchObservationStride > 0 ? searchObservationStride : nil
                     )
                 } throughput: { $0.seedsPerSecond } duration: { $0.duration }
             }
@@ -286,10 +303,12 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 print(
                     "      search profile median: rollout \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.rolloutMs }))) ms, " +
                         "summary \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.summaryReductionMs }))) ms, " +
+                        "combined-observation \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.combinedObservationMs }))) ms, " +
                         "materialization \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.materializationMs }))) ms, " +
                         "postprocess \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.postprocessMs }))) ms, " +
                         "total \(String(format: "%.2f", stat.derivedMedian(run.map { $0.profile.totalMs }))) ms"
                 )
+                print("      mass-observation synchronizations: \(run.map { $0.profile.massObservationSynchronizations }.sorted()[run.count / 2])")
                 let stageSamples = run.compactMap(\.stageTimings)
                 if !stageSamples.isEmpty {
                     print(
@@ -319,7 +338,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 }
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -330,6 +349,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: warmupRuns,
                         repeatRuns: repeatRuns,
+                        observationStride: searchObservationStride > 0 ? searchObservationStride : nil,
                         backends: backends
                     ),
                     runID: artifactRunID,
@@ -408,7 +428,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                 }
                 let artifactURL = try writeBenchmarkArtifact(
                     BenchmarkArtifactFile(
-                        schemaVersion: 1,
+                        schemaVersion: benchmarkArtifactSchemaVersion,
                         generatedAt: benchmarkTimestampString(),
                         host: ProcessInfo.processInfo.hostName,
                         osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
@@ -419,6 +439,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
                         steps: steps,
                         warmupRuns: warmupRuns,
                         repeatRuns: repeatRuns,
+                        observationStride: nil,
                         backends: backends
                     ),
                     runID: artifactRunID,
@@ -447,47 +468,13 @@ struct BenchmarkSeriesArtifact: Codable {
     let median: Double
 }
 
-struct BenchmarkStageTimingsArtifact: Codable {
-    let prepareMs: Double
-    let fftMs: Double
-    let growthReduceMs: Double
-    let flowMs: Double
-    let reintegrateMs: Double
-    let totalMs: Double
-}
-
-struct BenchmarkSearchProfileArtifact: Codable {
-    let stateBuildMs: Double
-    let parameterBuildMs: Double
-    let foodBuildMs: Double
-    let wallBuildMs: Double
-    let chemFieldBuildMs: Double
-    let runnerSetupMs: Double
-    let rolloutMs: Double
-    let summaryReductionMs: Double
-    let materializationMs: Double
-    let postprocessMs: Double
-    let totalMs: Double
-}
-
-struct BenchmarkEvolutionProfileArtifact: Codable {
-    let candidateSetupMs: Double
-    let kernelCompileMs: Double
-    let stateBuildMs: Double
-    let fieldBuildMs: Double
-    let rolloutMs: Double
-    let fitnessMs: Double
-    let optimizerMs: Double
-    let totalMs: Double
-}
-
 struct BenchmarkSampleArtifact: Codable {
     let durationSeconds: Double
     let throughput: Double
     let simStepsPerSecond: Double?
-    let stageTimings: BenchmarkStageTimingsArtifact?
-    let searchProfile: BenchmarkSearchProfileArtifact?
-    let evolutionProfile: BenchmarkEvolutionProfileArtifact?
+    let stageTimings: FlowSandboxMetalStageTimings?
+    let searchProfile: SearchBatchProfile?
+    let evolutionProfile: ESGenerationProfile?
 }
 
 struct BenchmarkBackendArtifact: Codable {
@@ -495,9 +482,9 @@ struct BenchmarkBackendArtifact: Codable {
     let throughput: BenchmarkSeriesArtifact
     let durationSeconds: BenchmarkSeriesArtifact
     let simStepsPerSecond: BenchmarkSeriesArtifact?
-    let stageTimingsMedian: BenchmarkStageTimingsArtifact?
-    let searchProfileMedian: BenchmarkSearchProfileArtifact?
-    let evolutionProfileMedian: BenchmarkEvolutionProfileArtifact?
+    let stageTimingsMedian: FlowSandboxMetalStageTimings?
+    let searchProfileMedian: SearchBatchProfile?
+    let evolutionProfileMedian: ESGenerationProfile?
     let samples: [BenchmarkSampleArtifact]
 }
 
@@ -513,6 +500,7 @@ struct BenchmarkArtifactFile: Codable {
     let steps: Int
     let warmupRuns: Int?
     let repeatRuns: Int?
+    let observationStride: Int?
     let backends: [BenchmarkBackendArtifact]
 }
 
@@ -717,53 +705,13 @@ private func benchmarkSeriesArtifact(single value: Double) -> BenchmarkSeriesArt
     benchmarkSeriesArtifact(summarizeBenchmarkSeries([value]))
 }
 
-private func benchmarkStageTimingsArtifact(_ timings: FlowSandboxMetalStageTimings) -> BenchmarkStageTimingsArtifact {
-    BenchmarkStageTimingsArtifact(
-        prepareMs: timings.prepareMs,
-        fftMs: timings.fftMs,
-        growthReduceMs: timings.growthReduceMs,
-        flowMs: timings.flowMs,
-        reintegrateMs: timings.reintegrateMs,
-        totalMs: timings.totalMs
-    )
-}
-
-private func benchmarkSearchProfileArtifact(_ profile: SearchBatchProfile) -> BenchmarkSearchProfileArtifact {
-    BenchmarkSearchProfileArtifact(
-        stateBuildMs: profile.stateBuildMs,
-        parameterBuildMs: profile.parameterBuildMs,
-        foodBuildMs: profile.foodBuildMs,
-        wallBuildMs: profile.wallBuildMs,
-        chemFieldBuildMs: profile.chemFieldBuildMs,
-        runnerSetupMs: profile.runnerSetupMs,
-        rolloutMs: profile.rolloutMs,
-        summaryReductionMs: profile.summaryReductionMs,
-        materializationMs: profile.materializationMs,
-        postprocessMs: profile.postprocessMs,
-        totalMs: profile.totalMs
-    )
-}
-
-private func benchmarkEvolutionProfileArtifact(_ profile: ESGenerationProfile) -> BenchmarkEvolutionProfileArtifact {
-    BenchmarkEvolutionProfileArtifact(
-        candidateSetupMs: profile.candidateSetupMs,
-        kernelCompileMs: profile.kernelCompileMs,
-        stateBuildMs: profile.stateBuildMs,
-        fieldBuildMs: profile.fieldBuildMs,
-        rolloutMs: profile.rolloutMs,
-        fitnessMs: profile.fitnessMs,
-        optimizerMs: profile.optimizerMs,
-        totalMs: profile.totalMs
-    )
-}
-
 private func benchmarkBackendArtifact(_ result: FlowSandboxBenchmarkResult) -> BenchmarkBackendArtifact {
     BenchmarkBackendArtifact(
         backend: result.backend.displayName,
         throughput: benchmarkSeriesArtifact(single: result.stepsPerSecond),
         durationSeconds: benchmarkSeriesArtifact(single: result.duration),
         simStepsPerSecond: benchmarkSeriesArtifact(single: result.stepsPerSecond),
-        stageTimingsMedian: result.stageTimings.map(benchmarkStageTimingsArtifact),
+        stageTimingsMedian: result.stageTimings,
         searchProfileMedian: nil,
         evolutionProfileMedian: nil,
         samples: [
@@ -771,7 +719,7 @@ private func benchmarkBackendArtifact(_ result: FlowSandboxBenchmarkResult) -> B
                 durationSeconds: result.duration,
                 throughput: result.stepsPerSecond,
                 simStepsPerSecond: result.stepsPerSecond,
-                stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
+                stageTimings: result.stageTimings,
                 searchProfile: nil,
                 evolutionProfile: nil
             )
@@ -785,7 +733,7 @@ private func benchmarkBackendArtifact(_ result: FlowLeniaBenchmarkResult) -> Ben
         throughput: benchmarkSeriesArtifact(single: result.stepsPerSecond),
         durationSeconds: benchmarkSeriesArtifact(single: result.duration),
         simStepsPerSecond: benchmarkSeriesArtifact(single: result.stepsPerSecond),
-        stageTimingsMedian: result.stageTimings.map(benchmarkStageTimingsArtifact),
+        stageTimingsMedian: result.stageTimings,
         searchProfileMedian: nil,
         evolutionProfileMedian: nil,
         samples: [
@@ -793,7 +741,7 @@ private func benchmarkBackendArtifact(_ result: FlowLeniaBenchmarkResult) -> Ben
                 durationSeconds: result.duration,
                 throughput: result.stepsPerSecond,
                 simStepsPerSecond: result.stepsPerSecond,
-                stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
+                stageTimings: result.stageTimings,
                 searchProfile: nil,
                 evolutionProfile: nil
             )
@@ -806,8 +754,8 @@ private func benchmarkSearchSampleArtifact(_ result: SearchBenchmarkResult) -> B
         durationSeconds: result.duration,
         throughput: result.seedsPerSecond,
         simStepsPerSecond: result.simStepsPerSecond,
-        stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
-        searchProfile: benchmarkSearchProfileArtifact(result.profile),
+        stageTimings: result.stageTimings,
+        searchProfile: result.profile,
         evolutionProfile: nil
     )
 }
@@ -817,17 +765,17 @@ private func benchmarkEvolutionSampleArtifact(_ result: EvolutionBenchmarkResult
         durationSeconds: result.duration,
         throughput: result.candidatesPerSecond,
         simStepsPerSecond: result.simStepsPerSecond,
-        stageTimings: result.stageTimings.map(benchmarkStageTimingsArtifact),
+        stageTimings: result.stageTimings,
         searchProfile: nil,
-        evolutionProfile: benchmarkEvolutionProfileArtifact(result.profile)
+        evolutionProfile: result.profile
     )
 }
 
 private func searchProfileMedianArtifact(
     _ samples: [SearchBenchmarkResult],
     stats: RepeatedBenchmarkStats<SearchBenchmarkResult>
-) -> BenchmarkSearchProfileArtifact {
-    BenchmarkSearchProfileArtifact(
+) -> SearchBatchProfile {
+    SearchBatchProfile(
         stateBuildMs: stats.derivedMedian(samples.map { $0.profile.stateBuildMs }),
         parameterBuildMs: stats.derivedMedian(samples.map { $0.profile.parameterBuildMs }),
         foodBuildMs: stats.derivedMedian(samples.map { $0.profile.foodBuildMs }),
@@ -836,7 +784,9 @@ private func searchProfileMedianArtifact(
         runnerSetupMs: stats.derivedMedian(samples.map { $0.profile.runnerSetupMs }),
         rolloutMs: stats.derivedMedian(samples.map { $0.profile.rolloutMs }),
         summaryReductionMs: stats.derivedMedian(samples.map { $0.profile.summaryReductionMs }),
+        combinedObservationMs: stats.derivedMedian(samples.map { $0.profile.combinedObservationMs }),
         materializationMs: stats.derivedMedian(samples.map { $0.profile.materializationMs }),
+        massObservationSynchronizations: samples.map { $0.profile.massObservationSynchronizations }.sorted()[samples.count / 2],
         postprocessMs: stats.derivedMedian(samples.map { $0.profile.postprocessMs }),
         totalMs: stats.derivedMedian(samples.map { $0.profile.totalMs })
     )
@@ -845,8 +795,8 @@ private func searchProfileMedianArtifact(
 private func evolutionProfileMedianArtifact(
     _ samples: [EvolutionBenchmarkResult],
     stats: RepeatedBenchmarkStats<EvolutionBenchmarkResult>
-) -> BenchmarkEvolutionProfileArtifact {
-    BenchmarkEvolutionProfileArtifact(
+) -> ESGenerationProfile {
+    ESGenerationProfile(
         candidateSetupMs: stats.derivedMedian(samples.map { $0.profile.candidateSetupMs }),
         kernelCompileMs: stats.derivedMedian(samples.map { $0.profile.kernelCompileMs }),
         stateBuildMs: stats.derivedMedian(samples.map { $0.profile.stateBuildMs }),
@@ -862,12 +812,12 @@ private func stageTimingsMedianArtifact<Result>(
     _ samples: [Result],
     stats: RepeatedBenchmarkStats<Result>,
     extract: (Result) -> FlowSandboxMetalStageTimings?
-) -> BenchmarkStageTimingsArtifact? {
+) -> FlowSandboxMetalStageTimings? {
     let stageSamples = samples.compactMap(extract)
     guard !stageSamples.isEmpty else {
         return nil
     }
-    return BenchmarkStageTimingsArtifact(
+    return FlowSandboxMetalStageTimings(
         prepareMs: stats.derivedMedian(stageSamples.map(\.prepareMs)),
         fftMs: stats.derivedMedian(stageSamples.map(\.fftMs)),
         growthReduceMs: stats.derivedMedian(stageSamples.map(\.growthReduceMs)),
@@ -881,8 +831,8 @@ private func benchmarkBackendArtifact<Result>(
     backend: FlowLeniaComputeBackend,
     stats: RepeatedBenchmarkStats<Result>,
     sampleArtifact: (Result) -> BenchmarkSampleArtifact,
-    profileMedian: ([Result], RepeatedBenchmarkStats<Result>) -> BenchmarkSearchProfileArtifact?,
-    stageMedian: ([Result], RepeatedBenchmarkStats<Result>) -> BenchmarkStageTimingsArtifact?
+    profileMedian: ([Result], RepeatedBenchmarkStats<Result>) -> SearchBatchProfile?,
+    stageMedian: ([Result], RepeatedBenchmarkStats<Result>) -> FlowSandboxMetalStageTimings?
 ) -> BenchmarkBackendArtifact {
     let samples = stats.sample.map(sampleArtifact)
     let simStepValues = samples.compactMap(\.simStepsPerSecond)
@@ -902,8 +852,8 @@ private func benchmarkBackendArtifact(
     backend: FlowLeniaComputeBackend,
     stats: RepeatedBenchmarkStats<EvolutionBenchmarkResult>,
     sampleArtifact: (EvolutionBenchmarkResult) -> BenchmarkSampleArtifact,
-    profileMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> BenchmarkEvolutionProfileArtifact?,
-    stageMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> BenchmarkStageTimingsArtifact?
+    profileMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> ESGenerationProfile?,
+    stageMedian: ([EvolutionBenchmarkResult], RepeatedBenchmarkStats<EvolutionBenchmarkResult>) -> FlowSandboxMetalStageTimings?
 ) -> BenchmarkBackendArtifact {
     let samples = stats.sample.map(sampleArtifact)
     let simStepValues = samples.compactMap(\.simStepsPerSecond)

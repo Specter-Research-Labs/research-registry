@@ -78,6 +78,16 @@ public struct CreatureStamp: Identifiable, Hashable, Sendable {
 }
 
 public struct FlowSandboxMetrics: Sendable {
+    public static let zero = FlowSandboxMetrics(
+        massMean: 0,
+        occupancy: 0,
+        foodMean: 0,
+        wallFraction: 0,
+        massPeak: 0,
+        foodPeak: 0,
+        nonFiniteFraction: 0
+    )
+
     public let massMean: Float
     public let occupancy: Float
     public let foodMean: Float
@@ -102,6 +112,52 @@ public struct FlowSandboxMetrics: Sendable {
         self.massPeak = massPeak
         self.foodPeak = foodPeak
         self.nonFiniteFraction = nonFiniteFraction
+    }
+
+    public init(mass: [Float], food: [Float], walls: [Float]) {
+        precondition(
+            mass.count == food.count && mass.count == walls.count,
+            "Sandbox metric fields must have identical cell counts."
+        )
+        let cellCount = Float(max(1, mass.count))
+        var massSum: Float = 0
+        var foodSum: Float = 0
+        var massPeak = -Float.infinity
+        var foodPeak = -Float.infinity
+        var occupiedCount = 0
+        var wallCount = 0
+        var nonFiniteCount = 0
+
+        for index in mass.indices {
+            let massValue = mass[index]
+            if massValue.isFinite {
+                massSum += massValue
+                massPeak = max(massPeak, massValue)
+                occupiedCount += massValue > 0.05 ? 1 : 0
+            } else {
+                nonFiniteCount += 1
+            }
+
+            let foodValue = food[index]
+            if foodValue.isFinite {
+                foodSum += foodValue
+                foodPeak = max(foodPeak, foodValue)
+            } else {
+                nonFiniteCount += 1
+            }
+
+            wallCount += walls[index] < 0.5 ? 1 : 0
+        }
+
+        self.init(
+            massMean: massSum / cellCount,
+            occupancy: Float(occupiedCount) / cellCount,
+            foodMean: foodSum / cellCount,
+            wallFraction: Float(wallCount) / cellCount,
+            massPeak: massPeak.isFinite ? massPeak : 0,
+            foodPeak: foodPeak.isFinite ? foodPeak : 0,
+            nonFiniteFraction: Float(nonFiniteCount) / max(1.0, Float(mass.count + food.count))
+        )
     }
 }
 
@@ -440,17 +496,7 @@ public actor FlowSandboxRuntime {
     private var autoFoodPatchSize = 12
     private var autoFoodValue: Float = 0.35
     private var lastStepDurationMs = 0.0
-    private var cachedMetrics = FlowSandboxMetrics(
-        massMean: 0,
-        occupancy: 0,
-        foodMean: 0,
-        wallFraction: 0,
-        massPeak: 0,
-        foodPeak: 0,
-        nonFiniteFraction: 0
-    )
-    private var metricsDirty = true
-
+    private var cachedMetrics = FlowSandboxMetrics.zero
     public init(
         params: ResolvedParams,
         gridPreset: LabGridPreset = .standard256,
@@ -493,7 +539,6 @@ public actor FlowSandboxRuntime {
         if let metalState {
             metalState.reset(initialStamp: initialStamp)
             cachedMetrics = metalState.materializeMetrics()
-            metricsDirty = false
             return
         }
 
@@ -535,12 +580,11 @@ public actor FlowSandboxRuntime {
         let initialMass = state[0, 0..., 0..., 0].asArray(Float.self)
         let initialFood = foodState[0, 0..., 0...].asArray(Float.self)
         let initialWalls = wallMask[0, 0..., 0..., 0].asArray(Float.self)
-        cachedMetrics = computeMetrics(
+        cachedMetrics = FlowSandboxMetrics(
             mass: initialMass,
             food: initialFood,
             walls: initialWalls
         )
-        metricsDirty = false
     }
 
     deinit {
@@ -643,7 +687,6 @@ public actor FlowSandboxRuntime {
                 autoFoodValue: autoFoodValue
             )
             stepCount += 1
-            metricsDirty = true
             return
         }
         state = sandboxApplyWallMask(state, mask: wallMask)
@@ -656,14 +699,12 @@ public actor FlowSandboxRuntime {
         paramState = sandboxApplyWallMask(stepped.1, mask: wallMask)
         updateFoodField()
         stepCount += 1
-        metricsDirty = true
     }
 
     public func applyStroke(_ stroke: SandboxStroke) {
         guard !stroke.points.isEmpty else { return }
         if let metalState {
             metalState.applyStroke(stroke, stepCount: stepCount)
-            metricsDirty = true
             return
         }
         let strokeMask = sandboxStrokeMask(
@@ -711,7 +752,6 @@ public actor FlowSandboxRuntime {
             )
         }
         eval(state, paramState, foodState, wallMask)
-        metricsDirty = true
     }
 
     public func applyFoodRect(_ rect: SandboxRect, value: Float) {
@@ -727,7 +767,6 @@ public actor FlowSandboxRuntime {
                 SandboxRect(x: x0, y: y0, width: x1 - x0, height: y1 - y0),
                 value: clampedValue
             )
-            metricsDirty = true
             return
         }
 
@@ -743,7 +782,6 @@ public actor FlowSandboxRuntime {
         }
         foodState = MLXArray(food).reshaped([1, config.sx, config.sy])
         eval(state, paramState, foodState, wallMask)
-        metricsDirty = true
     }
 
     public func applyCreatureStamp(_ stamp: CreatureStamp, center: SIMD2<Int>) {
@@ -752,7 +790,6 @@ public actor FlowSandboxRuntime {
         }
         if let metalState {
             metalState.applyCreatureStamp(stamp, center: center)
-            metricsDirty = true
             return
         }
         let patch = sandboxStampPatch(
@@ -766,14 +803,12 @@ public actor FlowSandboxRuntime {
         let supportMask = MLX.broadcast(openSupport, to: [1, config.sx, config.sy, parameterCount])
         paramState = paramState * (MLXArray(1.0) - supportMask) + patch.params * supportMask
         eval(state, paramState)
-        metricsDirty = true
     }
 
     public func snapshot(includeBytes: Bool = false, refreshMetrics: Bool = false) -> FlowSandboxSnapshot {
         if let metalState {
             if refreshMetrics {
                 cachedMetrics = metalState.materializeMetrics()
-                metricsDirty = false
             }
             return FlowSandboxSnapshot(
                 step: stepCount,
@@ -791,12 +826,11 @@ public actor FlowSandboxRuntime {
         )
         let displaySnapshot = includeBytes || refreshMetrics ? materializeDisplaySnapshot() : nil
         if refreshMetrics, let displaySnapshot {
-            cachedMetrics = computeMetrics(
+            cachedMetrics = FlowSandboxMetrics(
                 mass: displaySnapshot.mass,
                 food: displaySnapshot.food,
                 walls: displaySnapshot.walls
             )
-            metricsDirty = false
         }
         return FlowSandboxSnapshot(
             step: stepCount,
@@ -855,7 +889,6 @@ public actor FlowSandboxRuntime {
         if let metalState {
             metalState.reset(initialStamp: initialStamp)
             stepCount = 0
-            metricsDirty = true
             return
         }
         let size = config.sx
@@ -865,7 +898,6 @@ public actor FlowSandboxRuntime {
         wallMask = MLX.ones([1, size, size, 1])
         stepCount = 0
         lastStepDurationMs = 0
-        metricsDirty = true
 
         if let initialStamp {
             applyCreatureStamp(initialStamp, center: SIMD2<Int>(size / 2, size / 2))
@@ -895,22 +927,6 @@ public actor FlowSandboxRuntime {
         foodState = MLXArray(food).reshaped([1, config.sx, config.sy])
         wallMask = MLXArray(walls).reshaped([1, config.sx, config.sy, 1])
         eval(state, paramState, foodState, wallMask)
-        metricsDirty = true
-    }
-
-    private func refreshCachedMetrics() {
-        if let metalState {
-            cachedMetrics = metalState.materializeMetrics()
-            metricsDirty = false
-            return
-        }
-        let displaySnapshot = materializeDisplaySnapshot()
-        cachedMetrics = computeMetrics(
-            mass: displaySnapshot.mass,
-            food: displaySnapshot.food,
-            walls: displaySnapshot.walls
-        )
-        metricsDirty = false
     }
 
     private func materializeDisplaySnapshot() -> (mass: [Float], food: [Float], walls: [Float]) {
@@ -1151,24 +1167,6 @@ private func rasterizedCells(around point: SIMD2<Int>, radius: Int) -> [GridCell
         }
     }
     return cells
-}
-
-private func computeMetrics(mass: [Float], food: [Float], walls: [Float]) -> FlowSandboxMetrics {
-    let count = Float(max(1, mass.count))
-    let finiteMass = mass.filter(\.isFinite)
-    let finiteFood = food.filter(\.isFinite)
-    let nonFiniteCount = mass.count - finiteMass.count + food.count - finiteFood.count
-    let occupied = Float(finiteMass.filter { $0 > 0.05 }.count)
-    let wallCount = Float(walls.filter { $0 < 0.5 }.count)
-    return FlowSandboxMetrics(
-        massMean: finiteMass.reduce(0, +) / count,
-        occupancy: occupied / count,
-        foodMean: finiteFood.reduce(0, +) / count,
-        wallFraction: wallCount / count,
-        massPeak: finiteMass.max() ?? 0,
-        foodPeak: finiteFood.max() ?? 0,
-        nonFiniteFraction: Float(nonFiniteCount) / max(1.0, Float(mass.count + food.count))
-    )
 }
 
 private func frameBytes(mass: [Float], food: [Float], walls: [Float]) -> Data {

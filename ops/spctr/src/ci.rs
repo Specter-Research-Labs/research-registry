@@ -42,6 +42,7 @@ pub struct GithubWorkflowPlan {
     pub path_filters: Vec<String>,
     pub python_version: Option<String>,
     pub has_pyproject: bool,
+    pub cache_swiftpm_dependencies: bool,
     pub includes_pull_request: bool,
     pub includes_push_main: bool,
     pub includes_nightly: bool,
@@ -102,6 +103,12 @@ pub fn github_plan(repo_root: &Utf8Path, project: Option<&str>) -> Result<Github
         .to_owned();
     let python_version = detect_python_version(&manifest.root)?;
     let has_pyproject = manifest.root.join("pyproject.toml").is_file();
+    let cache_swiftpm_dependencies = manifest.root.join("Package.swift").is_file()
+        && manifest
+            .spctr
+            .as_ref()
+            .and_then(|spctr| spctr.runtime.as_ref())
+            .is_some_and(|runtime| runtime.cache_paths.iter().any(|path| path == ".build"));
     let workflow_path = format!(".github/workflows/{}-ci.yml", plan.slug);
     let path_filters = vec![format!("{project_root}/**")];
     let jobs = plan
@@ -127,6 +134,7 @@ pub fn github_plan(repo_root: &Utf8Path, project: Option<&str>) -> Result<Github
         path_filters,
         python_version,
         has_pyproject,
+        cache_swiftpm_dependencies,
         includes_pull_request: jobs.iter().any(|job| job.id == "pull_request"),
         includes_push_main: jobs.iter().any(|job| job.id == "push_main"),
         includes_nightly: jobs.iter().any(|job| job.id == "nightly"),
@@ -197,6 +205,7 @@ pub fn render_github_workflow(plan: &GithubWorkflowPlan) -> String {
         writeln!(&mut yaml, "      - uses: actions/checkout@v6.0.2").unwrap();
         render_setup_action(&mut yaml, plan, job);
         render_runtime_requirements(&mut yaml, job);
+        render_swift_dependency_cache(&mut yaml, plan, job);
         for action in &job.actions {
             writeln!(&mut yaml, "      - name: Run exec {}", action.action).unwrap();
             writeln!(
@@ -635,6 +644,48 @@ fn render_runtime_requirements(yaml: &mut String, job: &GithubWorkflowJobPlan) {
     }
 }
 
+fn render_swift_dependency_cache(
+    yaml: &mut String,
+    plan: &GithubWorkflowPlan,
+    job: &GithubWorkflowJobPlan,
+) {
+    if !plan.cache_swiftpm_dependencies || !job_requires_swift(job) {
+        return;
+    }
+
+    let project_path = |path: &str| Utf8Path::new(&plan.project_root).join(path).to_string();
+    writeln!(yaml, "      - name: Cache SwiftPM dependencies").unwrap();
+    writeln!(yaml, "        uses: actions/cache@v5.0.5").unwrap();
+    writeln!(yaml, "        with:").unwrap();
+    writeln!(yaml, "          path: |").unwrap();
+    for path in [
+        ".build/artifacts",
+        ".build/checkouts",
+        ".build/repositories",
+    ] {
+        writeln!(yaml, "            {}", project_path(path)).unwrap();
+    }
+    let key_inputs = ["Package.swift", "Package.resolved"]
+        .into_iter()
+        .map(project_path)
+        .map(|path| yaml_quote(&path))
+        .collect::<Vec<_>>()
+        .join(", ");
+    writeln!(
+        yaml,
+        "          key: spctr-swiftpm-deps-v1-${{{{ runner.os }}}}-${{{{ runner.arch }}}}-{}-${{{{ hashFiles({key_inputs}) }}}}-{}",
+        plan.slug, job.id
+    )
+    .unwrap();
+    writeln!(yaml, "          restore-keys: |").unwrap();
+    writeln!(
+        yaml,
+        "            spctr-swiftpm-deps-v1-${{{{ runner.os }}}}-${{{{ runner.arch }}}}-{}-${{{{ hashFiles({key_inputs}) }}}}-",
+        plan.slug
+    )
+    .unwrap();
+}
+
 fn job_requires_python(job: &GithubWorkflowJobPlan) -> bool {
     job.requires
         .iter()
@@ -643,6 +694,12 @@ fn job_requires_python(job: &GithubWorkflowJobPlan) -> bool {
 
 fn job_requires_uv(job: &GithubWorkflowJobPlan) -> bool {
     job.requires.iter().any(|requirement| requirement == "uv")
+}
+
+fn job_requires_swift(job: &GithubWorkflowJobPlan) -> bool {
+    job.requires
+        .iter()
+        .any(|requirement| requirement == "swift")
 }
 
 fn rust_toolchain_targets(job: &GithubWorkflowJobPlan) -> Vec<&str> {

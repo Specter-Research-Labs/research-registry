@@ -90,18 +90,6 @@ struct ClusterSurfaceView: View {
 
 // MARK: - Host Layout (Controller Admin)
 
-enum HostSelection: Hashable {
-    case arena(UUID)
-    case creature(UUID)
-}
-
-enum HostDetailSelection: Hashable {
-    case dashboard
-    case arena(UUID)
-    case creature(SavedCreature)
-    case campaign(UUID)
-}
-
 struct HostLayoutView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var node: LeniaNode
