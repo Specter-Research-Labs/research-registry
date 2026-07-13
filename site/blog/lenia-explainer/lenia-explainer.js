@@ -339,7 +339,7 @@
     // ---------------------------------------------------------------
 
     function initCreatureWall(el) {
-        makeHeader(el, "Orbium", "single-channel single-Gaussian Lenia, running on WebGPU");
+        makeHeader(el, "Orbium", "single-channel, single-Gaussian Lenia");
 
         const wrap = makeCanvasWrap("dark");
         const canvas = document.createElement("canvas");
@@ -353,25 +353,48 @@
         body.append(wrap);
         el.appendChild(body);
 
-        if (typeof LeniaGPU === "undefined" || !navigator.gpu) {
-            caption.textContent = "WebGPU required";
-            return;
+        function startWebGPU() {
+            if (typeof LeniaGPU === "undefined" || !navigator.gpu) return false;
+            LeniaGPU.load("orbium", canvas).then((engine) => {
+                if (!engine) throw new Error("WebGPU did not return an engine");
+                caption.textContent = "WebGPU · basic Lenia";
+                engine.render();
+                const tick = () => {
+                    if (!reducedMotion) engine.step();
+                    engine.render();
+                    requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            }).catch(() => startCPUFallback());
+            return true;
         }
 
-        LeniaGPU.load("orbium", canvas).then((engine) => {
-            if (!engine) {
-                caption.textContent = "init failed";
-                return;
-            }
-            caption.textContent = "";
-            engine.render();
-            const tick = () => {
-                if (!reducedMotion) engine.step();
-                engine.render();
+        function startCPUFallback() {
+            const cpuCanvas = initCanvas(96, 96);
+            wrap.replaceChild(cpuCanvas.canvas, canvas);
+            const engine = makeCPUEngine({
+                sx: 96, sy: 96, R: 13, r: 1,
+                b: [1], w: [0.15], a: [0.5],
+                mu: 0.15, sigma: 0.015, h: 1, dt: 0.1,
+                seed: 17, patchR: 0.14,
+            });
+            const pixels = cpuCanvas.ctx.createImageData(96, 96);
+            const lookup = buildSpectrumLookup();
+            caption.textContent = "CPU fallback";
+            let lastStep = 0;
+            const tick = (now) => {
+                if (!reducedMotion && now - lastStep >= 45) {
+                    engine.step(false);
+                    lastStep = now;
+                }
+                renderStateToImageData(engine.getState(), 96, 96, pixels, lookup);
+                putPixels(cpuCanvas, pixels);
                 requestAnimationFrame(tick);
             };
             requestAnimationFrame(tick);
-        });
+        }
+
+        if (!startWebGPU()) startCPUFallback();
     }
 
     // ---------------------------------------------------------------
@@ -453,7 +476,10 @@
                     return;
                 }
                 engine = e;
+                caption.textContent = `WebGPU · ${e.dynamics} Lenia`;
                 runLoop();
+            }).catch(() => {
+                caption.textContent = "WebGPU init failed";
             });
         }
 

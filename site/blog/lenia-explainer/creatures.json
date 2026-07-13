@@ -21,6 +21,7 @@
       }
     },
     "runConfig": {
+      "dynamics": "basic",
       "grid": { "sx": 128, "sy": 128 },
       "channels": 1,
       "connectivity": [[0], [[0]]],

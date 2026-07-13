@@ -44,6 +44,43 @@ fn read_state(x: i32, y: i32, ch: u32) -> f32 {
   return state_in[state_idx(u32(wx), u32(wy), ch)];
 }
 
+// Classical (non-Flow) Lenia: convolve each kernel with its source channel,
+// apply its growth curve, then take an Euler step. The Orbium example uses
+// this entry point; Flow Lenia uses the three stages below.
+@compute @workgroup_size(8, 8)
+fn compute_basic(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let x = gid.x;
+  let y = gid.y;
+  if x >= config.sx || y >= config.sy { return; }
+
+  let midX = i32(config.sx) / 2;
+  let midY = i32(config.sy) / 2;
+  let kRadius = config.kernelRadius;
+
+  for (var ch = 0u; ch < config.channels; ch++) {
+    var growth: f32 = 0.0;
+    for (var k = 0u; k < config.nbK; k++) {
+      if c1_mask[ch * config.nbK + k] == 0.0 { continue; }
+      let c0 = c0_map[k];
+      var U_k: f32 = 0.0;
+      for (var ky = -kRadius; ky <= kRadius; ky++) {
+        for (var kx = -kRadius; kx <= kRadius; kx++) {
+          let w = kernels[kernel_idx(u32(kx + midX), u32(ky + midY), k)];
+          if abs(w) < 1e-10 { continue; }
+          U_k += read_state(i32(x) + kx, i32(y) + ky, c0) * w;
+        }
+      }
+      let m_k = growth_params[k * 4u + 0u];
+      let s_k = growth_params[k * 4u + 1u];
+      let h_k = growth_params[k * 4u + 2u];
+      let diff = (U_k - m_k) / s_k;
+      growth += (2.0 * exp(-(diff * diff) / 2.0) - 1.0) * h_k;
+    }
+    let index = state_idx(x, y, ch);
+    state_out[index] = clamp(state_in[index] + config.dt * growth, 0.0, 1.0);
+  }
+}
+
 @compute @workgroup_size(8, 8)
 fn compute_growth(@builtin(global_invocation_id) gid: vec3<u32>) {
   let x = gid.x;
@@ -109,7 +146,9 @@ fn compute_flow(@builtin(global_invocation_id) gid: vec3<u32>) {
     flow_field[flow_base + 0u] = (1.0 - alpha) * nabla_U.x - alpha * nabla_A.x;
     flow_field[flow_base + 1u] = (1.0 - alpha) * nabla_U.y - alpha * nabla_A.y;
 
-    state_out[(y * config.sx + x) * config.channels + ch] = 0.0;
+    // `state_out` still holds the growth field here. Reintegrate overwrites it
+    // after every invocation has sampled that field; clearing it here races
+    // neighboring Sobel reads and collapses the velocity field.
   }
 }
 

@@ -39,6 +39,7 @@ var LeniaGPU = (() => {
             sigma: runConfig.flow.sigma,
             n: runConfig.flow.n,
             thetaA: runConfig.flow.theta_a,
+            dynamics: runConfig.dynamics ?? "flow",
             border: (runConfig.reintegration?.border ?? "torus"),
             R: genotype.R,
             c0,
@@ -212,6 +213,7 @@ var LeniaGPU = (() => {
 
     async function fetchShader(basePath, name) {
         const resp = await fetch(basePath + name);
+        if (!resp.ok) throw new Error(`could not load ${name}: HTTP ${resp.status}`);
         return await resp.text();
     }
 
@@ -295,6 +297,11 @@ var LeniaGPU = (() => {
         const reintegratePipeline = device.createComputePipeline({
             layout: device.createPipelineLayout({ bindGroupLayouts: [stepBindGroupLayout] }),
             compute: { module: stepModule, entryPoint: "reintegrate" },
+        });
+
+        const basicPipeline = device.createComputePipeline({
+            layout: device.createPipelineLayout({ bindGroupLayouts: [stepBindGroupLayout] }),
+            compute: { module: stepModule, entryPoint: "compute_basic" },
         });
 
         const flowBindGroup = device.createBindGroup({
@@ -385,10 +392,22 @@ var LeniaGPU = (() => {
             config,
 
             step() {
+                const encoder = device.createCommandEncoder();
+
+                if (config.dynamics === "basic") {
+                    const basicPass = encoder.beginComputePass();
+                    basicPass.setPipeline(basicPipeline);
+                    basicPass.setBindGroup(0, flowBindGroup);
+                    basicPass.dispatchWorkgroups(workgroupsX, workgroupsY);
+                    basicPass.end();
+
+                    encoder.copyBufferToBuffer(stateBufferB, 0, stateBufferA, 0, stateSize * 4);
+                    device.queue.submit([encoder.finish()]);
+                    return;
+                }
+
                 const zeros = new Float32Array(stateSize);
                 write(stateBufferB, zeros);
-
-                const encoder = device.createCommandEncoder();
 
                 const growthPass = encoder.beginComputePass();
                 growthPass.setPipeline(growthPipeline);
@@ -465,6 +484,7 @@ var LeniaGPU = (() => {
         const shaderBasePath = basePath + "shaders/";
 
         const resp = await fetch(basePath + "creatures.json");
+        if (!resp.ok) throw new Error(`could not load creature catalog: HTTP ${resp.status}`);
         const catalog = await resp.json();
         const creature = catalog[creatureName];
         if (!creature) return null;
@@ -476,6 +496,7 @@ var LeniaGPU = (() => {
         canvas.width = sx;
         canvas.height = sy;
         const gpuCtx = canvas.getContext("webgpu");
+        if (!gpuCtx) throw new Error("WebGPU canvas context is unavailable");
         gpuCtx.configure({ device, format: navigator.gpu.getPreferredCanvasFormat(), alphaMode: "opaque" });
 
         const engine = await createEngine(device, genotype, phenotype, runConfig, shaderBasePath);
@@ -496,6 +517,7 @@ var LeniaGPU = (() => {
         });
 
         return {
+            dynamics: engine.config.dynamics,
             step() {
                 engine.step();
             },
