@@ -139,7 +139,7 @@ project = "alpha"
 [spctr.exec.check]
 command = ["python3", "-c", "print('check')"]
 timeout_sec = 61
-requires = ["python", "uv"]
+requires = ["python", "uv", "lean"]
 
 [spctr.exec.smoke]
 command = ["python3", "-c", "print('smoke')"]
@@ -175,12 +175,14 @@ nightly = ["smoke"]
     assert!(rendered.contains("python-version: '3.12'"));
     assert!(rendered.contains("use-uv: 'true'"));
     assert!(rendered.contains("sync-python: 'true'"));
+    assert!(rendered.contains("use-lean: 'true'"));
     assert!(rendered.contains("Verify declared runtime requirements"));
     assert!(rendered.contains("./ops/spctr/target/release/spctr exec run --project alpha check"));
     assert!(rendered.contains("./ops/spctr/target/release/spctr exec run --project alpha smoke"));
     assert!(!rendered.contains("./ops/spctr/target/release/spctr release gate alpha"));
     assert!(rendered.contains("# schedule:"));
     assert!(rendered.contains("missing required runtime: ffmpeg"));
+    assert!(!rendered.contains("missing required runtime: lean"));
 }
 
 #[test]

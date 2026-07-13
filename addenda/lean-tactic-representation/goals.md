@@ -10,8 +10,14 @@
   1. Translated into Lean meta-programs
   2. Used to enable LLMs to automatically generate proof scripts through interactive sessions with the theorem prover
 
-Current executable target:
+Current executable slice:
 
-- preserve one proof step as a typed action record
-- make branching, continuation shape, coupling, and dependencies explicit
-- avoid claiming a compositional calculus before we have evidence for it
+- execute strict `exact` / `apply` / `constructor` program trees in Lean
+- preserve each step as a typed action record with stable obligation paths
+- make branching, continuation shape, coupling, residual builders, and dependencies explicit
+- kernel-check the reassembled proof with captured replay provenance
+
+Next evidence target:
+
+- reproduce one shared-metavariable coupled branch in the real Lean bridge
+- avoid claiming a general compositional calculus until the coupling and composition laws survive
