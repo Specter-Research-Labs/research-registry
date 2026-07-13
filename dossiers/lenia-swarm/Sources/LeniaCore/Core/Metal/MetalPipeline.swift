@@ -50,7 +50,6 @@ final class FlowLeniaMetalFullPipeline {
     private let parameterFieldMode: FlowLeniaParameterFieldMode
     private let parameterMixMode: ParameterMixMode
     private let mixSeed: UInt32
-    private let matterMapPipeline: MTLComputePipelineState
     private let spectrumGatherPipeline: MTLComputePipelineState
     private let growthReducePipeline: MTLComputePipelineState
     private let wallPotentialPipeline: MTLComputePipelineState
@@ -141,7 +140,6 @@ final class FlowLeniaMetalFullPipeline {
                 parameterMixMode: self.parameterMixMode
             )
         )
-        self.matterMapPipeline = Self.makePipeline(device: device, library: library, name: "flowMetalMatterMap")
         self.spectrumGatherPipeline = Self.makePipeline(device: device, library: library, name: "flowMetalGatherKernelSpectra")
         self.growthReducePipeline = Self.makePipeline(device: device, library: library, name: "flowMetalGrowthReduce")
         self.wallPotentialPipeline = Self.makePipeline(device: device, library: library, name: "flowMetalAddWallPotential")
@@ -387,8 +385,7 @@ final class FlowLeniaMetalFullPipeline {
         mixStep: Int = 0
     ) {
         encodeFFT(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeMatterMap(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeGrowthReduce(on: commandBuffer, paramsBuffer: paramsBuffer)
+        encodeGrowthReduce(on: commandBuffer, preparedMassBuffer: preparedMassBuffer, paramsBuffer: paramsBuffer)
         encodeWallPotential(on: commandBuffer)
         encodeFlow(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
         encodeReintegrate(
@@ -457,8 +454,7 @@ final class FlowLeniaMetalFullPipeline {
         Self.commitAndWait(inverseCommandBuffer, label: "flow-metal.segment.inverse-fft")
 
         let computeCommandBuffer = makeCommandBuffer(label: "flow-metal.segment.compute")
-        encodeMatterMap(on: computeCommandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeGrowthReduce(on: computeCommandBuffer, paramsBuffer: paramsBuffer)
+        encodeGrowthReduce(on: computeCommandBuffer, preparedMassBuffer: preparedMassBuffer, paramsBuffer: paramsBuffer)
         encodeWallPotential(on: computeCommandBuffer)
         encodeFlow(on: computeCommandBuffer, preparedMassBuffer: preparedMassBuffer)
         encodeReintegrate(
@@ -497,8 +493,7 @@ final class FlowLeniaMetalFullPipeline {
 
         let growthReduceStart = ContinuousClock.now
         let growthCommandBuffer = makeCommandBuffer(label: "flow-metal.profile.growth")
-        encodeMatterMap(on: growthCommandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeGrowthReduce(on: growthCommandBuffer, paramsBuffer: paramsBuffer)
+        encodeGrowthReduce(on: growthCommandBuffer, preparedMassBuffer: preparedMassBuffer, paramsBuffer: paramsBuffer)
         encodeWallPotential(on: growthCommandBuffer)
         Self.commitAndWait(growthCommandBuffer, label: "flow-metal.profile.growth")
         let growthReduceMs = flowSandboxDurationMs(growthReduceStart.duration(to: ContinuousClock.now))
@@ -556,8 +551,7 @@ final class FlowLeniaMetalFullPipeline {
 
         let growthReduceStart = ContinuousClock.now
         let growthCommandBuffer = makeCommandBuffer(label: "flow-metal.profile.segment.growth")
-        encodeMatterMap(on: growthCommandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeGrowthReduce(on: growthCommandBuffer, paramsBuffer: paramsBuffer)
+        encodeGrowthReduce(on: growthCommandBuffer, preparedMassBuffer: preparedMassBuffer, paramsBuffer: paramsBuffer)
         encodeWallPotential(on: growthCommandBuffer)
         Self.commitAndWait(growthCommandBuffer, label: "flow-metal.profile.segment.growth")
         let growthReduceMs = flowSandboxDurationMs(growthReduceStart.duration(to: ContinuousClock.now))
@@ -682,15 +676,11 @@ final class FlowLeniaMetalFullPipeline {
         )
     }
 
-    private func encodeMatterMap(on commandBuffer: MTLCommandBuffer, preparedMassBuffer: MTLBuffer) {
-        encode(matterMapPipeline, on: commandBuffer) { encoder in
-            encoder.setBuffer(preparedMassBuffer, offset: 0, index: 0)
-            encoder.setBuffer(matterWeightsBuffer, offset: 0, index: 1)
-            encoder.setBuffer(matterBuffer, offset: 0, index: 2)
-        }
-    }
-
-    private func encodeGrowthReduce(on commandBuffer: MTLCommandBuffer, paramsBuffer: MTLBuffer) {
+    private func encodeGrowthReduce(
+        on commandBuffer: MTLCommandBuffer,
+        preparedMassBuffer: MTLBuffer,
+        paramsBuffer: MTLBuffer
+    ) {
         encode(growthReducePipeline, on: commandBuffer) { encoder in
             encoder.setBuffer(ukBuffer, offset: 0, index: 0)
             encoder.setBuffer(paramsBuffer, offset: 0, index: 1)
@@ -698,6 +688,9 @@ final class FlowLeniaMetalFullPipeline {
             encoder.setBuffer(sBuffer, offset: 0, index: 3)
             encoder.setBuffer(outputWeightsBuffer, offset: 0, index: 4)
             encoder.setBuffer(uBuffer, offset: 0, index: 5)
+            encoder.setBuffer(preparedMassBuffer, offset: 0, index: 6)
+            encoder.setBuffer(matterWeightsBuffer, offset: 0, index: 7)
+            encoder.setBuffer(matterBuffer, offset: 0, index: 8)
         }
     }
 
@@ -1380,24 +1373,6 @@ final class FlowLeniaMetalFullPipeline {
             return max(float(splitmix32(value) & 0x00ffffffu) / 16777216.0f, 1.0e-7f);
         }
 
-        kernel void flowMetalMatterMap(
-            device const float *mass [[buffer(0)]],
-            device const float *matterWeights [[buffer(1)]],
-            device float *matter [[buffer(2)]],
-            uint3 gid [[thread_position_in_grid]]
-        ) {
-            if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
-                return;
-            }
-            int batch = int(gid.z);
-            int x = int(gid.y);
-            int y = int(gid.x);
-            float total = 0.0f;
-            int massBase = massIndex(batch, x, y, 0);
-        \(matterMapAccumulation)
-            matter[scalarIndex(batch, x, y)] = total;
-        }
-
         kernel void flowMetalGatherKernelSpectra(
             device const float2 *channelSpectra [[buffer(0)]],
             device const float2 *kernelSpectrum [[buffer(1)]],
@@ -1430,6 +1405,9 @@ final class FlowLeniaMetalFullPipeline {
             device const float *s [[buffer(3)]],
             device const float *outputWeights [[buffer(4)]],
             device float *u [[buffer(5)]],
+            device const float *mass [[buffer(6)]],
+            device const float *matterWeights [[buffer(7)]],
+            device float *matter [[buffer(8)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
             if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
@@ -1451,6 +1429,10 @@ final class FlowLeniaMetalFullPipeline {
             }
             int outputBase = uIndex(batch, x, y, 0);
         \(growthChannelWrites)
+            float total = 0.0f;
+            int massBase = massIndex(batch, x, y, 0);
+        \(matterMapAccumulation)
+            matter[scalarIndex(batch, x, y)] = total;
         }
 
         kernel void flowMetalAddWallPotential(
