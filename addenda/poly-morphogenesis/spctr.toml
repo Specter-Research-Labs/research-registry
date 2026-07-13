@@ -26,11 +26,39 @@ project = "poly-morphogenesis"
 [spctr.exec.check]
 description = "Run the Julia parity and CLI test suite in the pinned root flake shell"
 command = ["bash", "-lc", '''set -euo pipefail
-nix develop ../../../#poly-morphogenesis -c julia --project=. -e 'using Pkg; Pkg.test()'
+export JULIA_NUM_THREADS=1
+nix develop ../..#poly-morphogenesis -c julia --startup-file=no --project=. -e 'using Pkg; Pkg.test()'
 ''']
 timeout_sec = 3600
 network = "bootstrap"
 requires = ["nix"]
+
+[spctr.exec.smoke]
+description = "Run a tiny deterministic post-lesion recovery"
+command = ["bash", "-lc", '''set -euo pipefail
+mkdir -p artifacts/smoke
+export POLY_MORPHOGENESIS_REVISION="$(jj log -r 'latest(ancestors(@) & bookmarks())' --no-graph -T 'commit_id')"
+export JULIA_NUM_THREADS=1
+nix develop ../..#poly-morphogenesis -c julia --startup-file=no --project=. -e '
+using PolyMorphogenesis
+main([
+    "demo", "grid-patch-recovery",
+    "--rows", "2", "--cols", "3",
+    "--patch-top", "1", "--patch-left", "2",
+    "--patch-rows", "1", "--patch-cols", "1",
+    "--seed", "7",
+    "--exponent-min", "0", "--exponent-max", "0",
+    "--max-iterations", "1",
+    "--settle-time", "0.1", "--steady-stop", "false",
+    "--include-delayed-capacity", "false", "--include-feedback", "false",
+    "--evidence-scope", "smoke_contract",
+])
+' > artifacts/smoke/grid-patch-recovery.json
+''']
+expected_outputs = ["grid-patch-recovery-smoke"]
+timeout_sec = 1800
+network = "bootstrap"
+requires = ["jj", "nix"]
 
 [spctr.runtime]
 platforms = ["linux", "macos"]
@@ -40,3 +68,9 @@ cache_paths = ["Manifest.toml"]
 
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"
+
+[[spctr.expected_outputs]]
+name = "grid-patch-recovery-smoke"
+path = "artifacts/smoke/grid-patch-recovery.json"
+kind = "json"
+required = true

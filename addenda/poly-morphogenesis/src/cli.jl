@@ -2,6 +2,7 @@ module CLI
 
 using JSON3
 
+using ..RD: RDParameters
 using ..Controller: closed_loop_demo,
     rd_pattern_demo,
     wave_count_demo
@@ -10,6 +11,14 @@ using ..GridLesions: grid_patch_isolation_demo,
     grid_patch_metric_sensitivity_demo,
     grid_patch_threshold_sensitivity_demo,
     grid_patch_sweep_demo
+using ..GraphRecovery: GraphRecoveryConfig, grid_patch_recovery_demo
+using ..RecoveryCohort: RecoveryCohortSpec,
+    RecoveryPlacement,
+    RecoveryProtocol,
+    RecoveryRegime,
+    run_recovery_cohort,
+    write_recovery_cohort_artifacts,
+    write_recovery_cohort_protocol_manifest
 using ..Wiring: FragmentFamilyResult,
     InterventionKResult,
     PairedTrialSummary,
@@ -49,6 +58,8 @@ Subcommands:
   cut-sweep       Evaluate candidate cutsets at fixed diffusion.
   fragment-family Isolate a contiguous fragment with two cuts.
   grid-patch      Isolate a rectangular patch in a 2D grid by severing its boundary edges.
+  grid-patch-recovery Settle a 2D grid, sever a patch, and compare shared and componentwise recovery.
+  grid-patch-recovery-cohort Run a deterministic rectangular-lesion cohort and write evidence artifacts.
   grid-patch-sensitivity Compare alternative 2D severity metrics on one rectangular-patch regime.
   grid-patch-threshold-sensitivity Compare 2D severity rankings across active-mask thresholds.
   grid-patch-sweep Scan 2D rectangular patch lesions across patch sizes and diffusion parameters.
@@ -84,6 +95,18 @@ Usage:
     "grid-patch" => """
 Usage:
   main(["demo", "grid-patch", [--rows N], [--cols N], [--patch-rows N], [--patch-cols N], [--seed S], [--d-a D], [--d-i D], [--validate yes|no]])
+""",
+    "grid-patch-recovery" => """
+Usage:
+  main(["demo", "grid-patch-recovery", [--rows N], [--cols N], [--patch-top N], [--patch-left N], [--patch-rows N], [--patch-cols N], [--seed S], [--d-a D], [--d-i D], [--exponent-min K], [--exponent-max K], [--step-factor F], [--max-iterations N], [--active-fraction F], [--meaningful-improvement F], [--max-count-selection-regret F], [--settle-time T], [--steady-tol T], [--steady-stop yes|no], [--include-delayed-capacity yes|no], [--include-feedback yes|no], [--evidence-scope LABEL]])
+""",
+    "grid-patch-recovery-cohort" => """
+Usage:
+  main(["demo", "grid-patch-recovery-cohort", [--cohort-id ID], [--output-dir DIR], [--seeds S1,S2,...], [--regime-id ID], [--rows N], [--cols N], [--patch-rows N], [--patch-cols N], [--patch-top N], [--patch-left N], [--d-a D], [--d-i D], [--exponent-min K], [--exponent-max K], [--step-factor F], [--max-iterations N], [--active-fraction F], [--meaningful-improvement F], [--max-count-selection-regret F], [--settle-time T], [--steady-tol T], [--steady-stop yes|no], [--include-delayed-capacity yes|no], [--include-feedback yes|no], [--evidence-scope LABEL]])
+
+By default the cohort enumerates every valid rectangular placement and runs the
+capacity-only protocol (delayed capacity and feedback disabled). Provide both
+--patch-top and --patch-left to restrict a smoke run to one placement.
 """,
     "grid-patch-sensitivity" => """
 Usage:
@@ -269,7 +292,6 @@ function _jsonable(value)
     data = Dict{Symbol,Any}()
     for name in fieldnames(typeof(value))
         field = getfield(value, name)
-        field === nothing && continue
         data[name] = _jsonable(field)
     end
     return data
@@ -338,6 +360,64 @@ function _jsonable(value::InterventionKResult)
         :trials => _jsonable(value[:trials]),
         :derived => _jsonable(value[:derived]),
         :notes => _jsonable(value[:notes]),
+    )
+end
+
+function _cohort_placements(options::Dict{Symbol,Any})
+    top = options[:patch_top]
+    left = options[:patch_left]
+    if isnothing(top) && isnothing(left)
+        return nothing
+    end
+    isnothing(top) && error("--patch-top is required when --patch-left is provided")
+    isnothing(left) && error("--patch-left is required when --patch-top is provided")
+    return [RecoveryPlacement(top, left)]
+end
+
+function _run_grid_patch_recovery_cohort(options::Dict{Symbol,Any})
+    recovery = GraphRecoveryConfig(
+        exponent_min=options[:exponent_min],
+        exponent_max=options[:exponent_max],
+        step_factor=options[:step_factor],
+        active_fraction=options[:active_fraction],
+        meaningful_improvement=options[:meaningful_improvement],
+        max_count_selection_regret=options[:max_count_selection_regret],
+        max_iterations=options[:max_iterations],
+        steady_stop=options[:steady_stop],
+        include_delayed_capacity=options[:include_delayed_capacity],
+        include_feedback=options[:include_feedback],
+    )
+    regime = RecoveryRegime(
+        regime_id=options[:regime_id],
+        rows=options[:rows],
+        cols=options[:cols],
+        patch_rows=options[:patch_rows],
+        patch_cols=options[:patch_cols],
+        baseline=RDParameters(D_a=options[:D_a], D_i=options[:D_i]),
+    )
+    protocol = RecoveryProtocol(
+        settle_time=options[:settle_time],
+        steady_tol=options[:steady_tol],
+        recovery=recovery,
+        evidence_scope=options[:evidence_scope],
+    )
+    spec = RecoveryCohortSpec(
+        cohort_id=options[:cohort_id],
+        regime=regime,
+        protocol=protocol,
+        seeds=options[:seeds],
+        placements=_cohort_placements(options),
+    )
+
+    # Freeze the protocol before computing any outcomes.
+    protocol_manifest = write_recovery_cohort_protocol_manifest(spec, options[:output_dir])
+    result = run_recovery_cohort(spec)
+    outcome_artifacts = write_recovery_cohort_artifacts(result, options[:output_dir])
+    return (
+        schema_version=1,
+        cohort_id=result.cohort_id,
+        protocol_manifest=protocol_manifest,
+        outcome_artifacts=outcome_artifacts,
     )
 end
 
@@ -457,6 +537,121 @@ const _DEMO_COMMANDS = Dict{String,CommandSpec}(
             D_i=options[:D_i],
             validate=options[:validate],
         ),
+    ),
+    "grid-patch-recovery" => CommandSpec(
+        _DEMO_SUBCOMMAND_HELP["grid-patch-recovery"],
+        [
+            _int_flag(:rows, "--rows", 4),
+            _int_flag(:cols, "--cols", 6),
+            _int_flag(:patch_top, "--patch-top", 2),
+            _int_flag(:patch_left, "--patch-left", 1),
+            _int_flag(:patch_rows, "--patch-rows", 2),
+            _int_flag(:patch_cols, "--patch-cols", 2),
+            _int_flag(:seed, "--seed", 33),
+            _float_flag(:D_a, "--d-a", 1.0),
+            _float_flag(:D_i, "--d-i", 30.0),
+            _int_flag(:exponent_min, "--exponent-min", -11),
+            _int_flag(:exponent_max, "--exponent-max", 11),
+            _float_flag(:step_factor, "--step-factor", 1.21),
+            _int_flag(:max_iterations, "--max-iterations", 8),
+            _float_flag(:active_fraction, "--active-fraction", 0.5),
+            _float_flag(:meaningful_improvement, "--meaningful-improvement", 0.20),
+            _float_flag(
+                :max_count_selection_regret,
+                "--max-count-selection-regret",
+                0.10,
+            ),
+            _float_flag(:settle_time, "--settle-time", 300.0),
+            _float_flag(:steady_tol, "--steady-tol", 1.0e-6),
+            _bool_flag(:steady_stop, "--steady-stop", true),
+            _bool_flag(:include_delayed_capacity, "--include-delayed-capacity", true),
+            _bool_flag(:include_feedback, "--include-feedback", true),
+            _string_flag(
+                :evidence_scope,
+                "--evidence-scope",
+                "exploratory_single_regime",
+            ),
+        ],
+        options -> grid_patch_recovery_demo(
+            rows=options[:rows],
+            cols=options[:cols],
+            patch_top=options[:patch_top],
+            patch_left=options[:patch_left],
+            patch_rows=options[:patch_rows],
+            patch_cols=options[:patch_cols],
+            seed=options[:seed],
+            D_a=options[:D_a],
+            D_i=options[:D_i],
+            exponent_min=options[:exponent_min],
+            exponent_max=options[:exponent_max],
+            step_factor=options[:step_factor],
+            max_iterations=options[:max_iterations],
+            active_fraction=options[:active_fraction],
+            meaningful_improvement=options[:meaningful_improvement],
+            max_count_selection_regret=options[:max_count_selection_regret],
+            settle_time=options[:settle_time],
+            steady_tol=options[:steady_tol],
+            steady_stop=options[:steady_stop],
+            include_delayed_capacity=options[:include_delayed_capacity],
+            include_feedback=options[:include_feedback],
+            evidence_scope=options[:evidence_scope],
+        ),
+    ),
+    "grid-patch-recovery-cohort" => CommandSpec(
+        _DEMO_SUBCOMMAND_HELP["grid-patch-recovery-cohort"],
+        [
+            _string_flag(:cohort_id, "--cohort-id", "grid-patch-recovery-cohort"),
+            _string_flag(
+                :output_dir,
+                "--output-dir",
+                options -> joinpath(pwd(), "artifacts", options[:cohort_id]),
+            ),
+            _int_list_flag(:seeds, "--seeds", collect(100:111)),
+            _int_flag(:rows, "--rows", 4),
+            _int_flag(:cols, "--cols", 6),
+            _int_flag(:patch_rows, "--patch-rows", 2),
+            _int_flag(:patch_cols, "--patch-cols", 2),
+            _int_flag(:patch_top, "--patch-top", nothing),
+            _int_flag(:patch_left, "--patch-left", nothing),
+            _float_flag(:D_a, "--d-a", 1.0),
+            _float_flag(:D_i, "--d-i", 30.0),
+            _string_flag(
+                :regime_id,
+                "--regime-id",
+                options -> string(
+                    "grid",
+                    options[:rows],
+                    "x",
+                    options[:cols],
+                    "-patch",
+                    options[:patch_rows],
+                    "x",
+                    options[:patch_cols],
+                    "-da",
+                    options[:D_a],
+                    "-di",
+                    options[:D_i],
+                ),
+            ),
+            _int_flag(:exponent_min, "--exponent-min", -11),
+            _int_flag(:exponent_max, "--exponent-max", 11),
+            _float_flag(:step_factor, "--step-factor", 1.21),
+            _int_flag(:max_iterations, "--max-iterations", 8),
+            _float_flag(:active_fraction, "--active-fraction", 0.5),
+            _float_flag(:meaningful_improvement, "--meaningful-improvement", 0.20),
+            _float_flag(
+                :max_count_selection_regret,
+                "--max-count-selection-regret",
+                0.10,
+            ),
+            _float_flag(:settle_time, "--settle-time", 300.0),
+            _float_flag(:steady_tol, "--steady-tol", 1.0e-6),
+            _bool_flag(:steady_stop, "--steady-stop", true),
+            _bool_flag(:include_delayed_capacity, "--include-delayed-capacity", false),
+            _bool_flag(:include_feedback, "--include-feedback", false),
+            _string_flag(:evidence_scope, "--evidence-scope", "capacity_cohort"),
+        ],
+        _run_grid_patch_recovery_cohort,
     ),
     "grid-patch-sensitivity" => CommandSpec(
         _DEMO_SUBCOMMAND_HELP["grid-patch-sensitivity"],
