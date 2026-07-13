@@ -750,7 +750,7 @@ final class FlowLeniaMetalFullPipeline {
         let maxHeight = max(1, spectrumGatherPipeline.maxTotalThreadsPerThreadgroup / threadWidth)
         let threadHeight = min(8, maxHeight)
         let threadsPerGroup = MTLSize(width: threadWidth, height: threadHeight, depth: 1)
-        let threads = MTLSize(width: (config.sy / 2) + 1, height: config.sx, depth: batchCount * kernelCount)
+        let threads = MTLSize(width: ((config.sy / 2) + 1) * kernelCount, height: config.sx, depth: batchCount)
         encoder.dispatchThreads(threads, threadsPerThreadgroup: threadsPerGroup)
         encoder.endEncoding()
     }
@@ -1380,14 +1380,14 @@ final class FlowLeniaMetalFullPipeline {
             device float2 *gatheredSpectra [[buffer(3)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
-            int z = int(gid.z);
-            int batch = z / kKernelCount;
-            int k = z - batch * kKernelCount;
-            if (int(gid.y) >= kSX || int(gid.x) >= kReducedY || batch >= kBatchCount) {
+            int packedY = int(gid.x);
+            int batch = int(gid.z);
+            if (int(gid.y) >= kSX || packedY >= kReducedY * kKernelCount || batch >= kBatchCount) {
                 return;
             }
             int x = int(gid.y);
-            int y = int(gid.x);
+            int y = packedY / kKernelCount;
+            int k = packedY - y * kKernelCount;
             int sourceChannel = c0Idxs[k];
             int kernelBatch = kKernelBatchCount == 1 ? 0 : batch;
             float2 source = channelSpectra[spectrumIndex(batch, x, y, sourceChannel)];
