@@ -2627,29 +2627,25 @@ public final class EvolutionEngine {
         kernelCompileMs = durationMs(kernelCompileStart.duration(to: ContinuousClock.now))
 
         let stateBuildStart = ContinuousClock.now
-        var ABatch = buildStateBatch(candidates)
+        let ABatch = buildStateBatch(candidates)
         let PBatch = buildConstantParameterFieldBatch(paramsBatch.map(\.h))
         stateBuildMs = durationMs(stateBuildStart.duration(to: ContinuousClock.now))
 
         let fieldBuildStart = ContinuousClock.now
         let chemFieldBatch = buildChemotaxisFieldBatch(startIndex: evaluationStart, count: pop)
         let obstacleFieldBatch = buildObstacleFieldBatch(startIndex: evaluationStart, count: pop)
-        if let field = chemFieldBatch, let chemotaxis = runtimeConfig.chemotaxis {
-            ABatch = applyExternalFieldBatch(ABatch, field: field, channelIndex: chemotaxis.channel_index)
-        }
-        if let field = obstacleFieldBatch, let obstacleField = esConfig.obstacleField {
-            ABatch = applyExternalFieldBatch(ABatch, field: field, channelIndex: obstacleField.channelIndex)
-        }
         let matterWeights = metalMatterWeights()
-        runner.setMatterWeights(matterWeights)
         runner.setWallPotential(obstacleFieldBatch.map(buildObstaclePotential))
-        runner.setStaticChannelFields(
-            metalStaticChannelFields(
+        runner.reset(
+            mass: ABatch,
+            params: PBatch,
+            wallMask: nil,
+            staticChannelFields: metalStaticChannelFields(
                 chemFieldBatch: chemFieldBatch,
                 obstacleFieldBatch: obstacleFieldBatch
-            )
+            ),
+            food: nil
         )
-        runner.setState(mass: ABatch, params: PBatch)
         fieldBuildMs = durationMs(fieldBuildStart.duration(to: ContinuousClock.now))
 
         let sequenceStepSet = Set(templateSequenceSteps())

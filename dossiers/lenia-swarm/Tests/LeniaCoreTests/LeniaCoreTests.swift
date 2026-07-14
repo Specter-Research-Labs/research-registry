@@ -5353,8 +5353,13 @@ final class LeniaCoreTests: XCTestCase {
             batchCount: 2,
             wallPotential: wallPotential
         )
-        runner.setWallMask(wallMask)
-        runner.setState(mass: expectedMass, params: expectedParams)
+        runner.reset(
+            mass: expectedMass,
+            params: expectedParams,
+            wallMask: wallMask,
+            staticChannelFields: [],
+            food: nil
+        )
         let mlxEngine = FlowLeniaParamsBatched(
             config: config,
             kernels: kernels,
@@ -5466,12 +5471,18 @@ final class LeniaCoreTests: XCTestCase {
 
         let runner = FlowLeniaMetalFullStateRunner(config: config, kernels: kernels, batchCount: batchCount)
         XCTAssertNil(runner.summarizeFoodMass())
-        runner.setFoodState(FlowLeniaMetalFoodState(
-            channelIndex: 0,
-            field: MLXArray(foodValues).reshaped([batchCount, config.sx, config.sy]),
-            decayRate: 0.0,
-            digestRate: 0.0
-        ))
+        runner.reset(
+            mass: MLX.zeros([batchCount, config.sx, config.sy, config.channels]),
+            params: MLX.zeros([batchCount, config.sx, config.sy, runner.parameterCount]),
+            wallMask: nil,
+            staticChannelFields: [],
+            food: FlowLeniaMetalFoodState(
+                channelIndex: 0,
+                field: MLXArray(foodValues).reshaped([batchCount, config.sx, config.sy]),
+                decayRate: 0.0,
+                digestRate: 0.0
+            )
+        )
 
         let summary = runner.summarizeFoodMass()
         let materialized = runner.materializeFood()!
@@ -5486,30 +5497,161 @@ final class LeniaCoreTests: XCTestCase {
         }
     }
 
+    func testFlowLeniaMetalFullStateRunnerResetReplacesConfigurationAndState() throws {
+        let params = makeSandboxMetalParityParams()
+        let config = flowMetalTestConfig(gridSize: 8, nbK: params.r.count)
+        let kernels = compileKernels(
+            params: params,
+            config: config,
+            c0: [0, 1],
+            c1: [[0], [1], []]
+        )
+        let cellCount = config.sx * config.sy
+        let cells = 0..<cellCount
+        let massValues = cells.flatMap { cell in
+            (0..<config.channels).map { Float(cell + $0 + 1) / 101.0 }
+        }
+        let paramValues = cells.flatMap { cell in
+            params.h.indices.map { Float(cell + $0 + 2) / 97.0 }
+        }
+        let wallValues = cells.map { cell in
+            cell / config.sy == 0 || cell % config.sy == 0 ? Float(0) : Float(1)
+        }
+        let staticValues = cells.map { cell in
+            Float(cell / config.sy + 2 * (cell % config.sy) + 1) / 31.0
+        }
+        let foodValues = cells.map { cell in
+            Float(2 * (cell / config.sy) + cell % config.sy + 3) / 37.0
+        }
+
+        func assertConfiguredState(
+            _ runner: FlowLeniaMetalFullStateRunner,
+            mass: MLXArray,
+            params: MLXArray,
+            wallMask: MLXArray,
+            staticField: MLXArray,
+            foodField: MLXArray,
+            file: StaticString = #filePath,
+            line: UInt = #line
+        ) throws {
+            let actual = runner.materializeState()
+            let actualFood = try XCTUnwrap(runner.materializeFood(), file: file, line: line)
+            let expectedMass = overwriteFieldChannel(
+                overwriteFieldChannel(mass, field: staticField, channelIndex: 1),
+                field: foodField,
+                channelIndex: 2
+            ) * wallMask
+            let expectedParams = params * wallMask
+            let expectedFood = foodField * wallMask.squeezed(axis: 3)
+            XCTAssertLessThan(maxAbsDiff(expectedMass, actual.mass), 1e-6, file: file, line: line)
+            XCTAssertLessThan(maxAbsDiff(expectedParams, actual.params), 1e-6, file: file, line: line)
+            XCTAssertLessThan(maxAbsDiff(expectedFood, actualFood), 1e-6, file: file, line: line)
+        }
+
+        let mass = MLXArray(massValues).reshaped([1, config.sx, config.sy, config.channels])
+        let paramMap = MLXArray(paramValues).reshaped([1, config.sx, config.sy, params.h.count])
+        let wallMask = MLXArray(wallValues).reshaped([1, config.sx, config.sy, 1])
+        let staticField = MLXArray(staticValues).reshaped([1, config.sx, config.sy, 1])
+        let foodField = MLXArray(foodValues).reshaped([1, config.sx, config.sy])
+        let runner = FlowLeniaMetalFullStateRunner(
+            config: config,
+            kernels: kernels,
+            batchCount: 1,
+            parameterMix: "stoch",
+            mixSeed: 37
+        )
+        runner.reset(
+            mass: mass,
+            params: paramMap,
+            wallMask: wallMask,
+            staticChannelFields: [FlowLeniaMetalChannelField(
+                channelIndex: 1,
+                field: staticField
+            )],
+            food: FlowLeniaMetalFoodState(
+                channelIndex: 2,
+                field: foodField.squeezed(axis: 0),
+                decayRate: 0,
+                digestRate: 0
+            )
+        )
+        try assertConfiguredState(
+            runner,
+            mass: mass,
+            params: paramMap,
+            wallMask: wallMask,
+            staticField: staticField,
+            foodField: foodField
+        )
+
+        runner.step()
+        let replacementMass = MLXArray(massValues.reversed())
+            .reshaped([1, config.sx, config.sy, config.channels])
+        let replacementParams = MLXArray(paramValues.reversed())
+            .reshaped([1, config.sx, config.sy, params.h.count])
+        let replacementWallMask = MLXArray(wallValues.reversed())
+            .reshaped([1, config.sx, config.sy, 1])
+        let replacementStaticField = MLXArray(staticValues.reversed())
+            .reshaped([1, config.sx, config.sy, 1])
+        let replacementFoodField = MLXArray(foodValues.reversed())
+            .reshaped([1, config.sx, config.sy])
+        runner.reset(
+            mass: replacementMass,
+            params: replacementParams,
+            wallMask: replacementWallMask,
+            staticChannelFields: [FlowLeniaMetalChannelField(
+                channelIndex: 1,
+                field: replacementStaticField
+            )],
+            food: FlowLeniaMetalFoodState(
+                channelIndex: 2,
+                field: replacementFoodField,
+                decayRate: 0,
+                digestRate: 0
+            )
+        )
+        try assertConfiguredState(
+            runner,
+            mass: replacementMass,
+            params: replacementParams,
+            wallMask: replacementWallMask,
+            staticField: replacementStaticField,
+            foodField: replacementFoodField
+        )
+
+        runner.step()
+        runner.reset(
+            mass: mass,
+            params: paramMap,
+            wallMask: nil,
+            staticChannelFields: [],
+            food: nil
+        )
+
+        let freshRunner = FlowLeniaMetalFullStateRunner(
+            config: config,
+            kernels: kernels,
+            batchCount: 1,
+            parameterMix: "stoch",
+            mixSeed: 37
+        )
+        freshRunner.setState(mass: mass, params: paramMap)
+        XCTAssertNil(runner.materializeFood())
+        let resetState = runner.materializeState()
+        XCTAssertLessThan(maxAbsDiff(mass, resetState.mass), 1e-6)
+        XCTAssertLessThan(maxAbsDiff(paramMap, resetState.params), 1e-6)
+
+        runner.step()
+        freshRunner.step()
+        let resetStep = runner.materializeState()
+        let freshStep = freshRunner.materializeState()
+        XCTAssertLessThan(maxAbsDiff(freshStep.mass, resetStep.mass), 1e-5)
+        XCTAssertLessThan(maxAbsDiff(freshStep.params, resetStep.params), 1e-5)
+    }
+
     func testFlowLeniaMetalFullStateRunnerMaterializesWeightedMassMap() {
         let params = makeSandboxMetalParityParams()
-        let config = BatchedConfig(
-            sx: 8,
-            sy: 8,
-            channels: 3,
-            nbK: params.r.count,
-            dt: 0.2,
-            dd: 2,
-            sigma: 0.65,
-            n: 2,
-            thetaA: 2.0,
-            border: "torus",
-            implementation: ImplementationSettings(
-                mode: "flowlenia_2022_paper_equations",
-                border: "torus",
-                gradientBoundary: "periodic",
-                alphaMode: "mass",
-                kernelProfile: "flowlenia_2022_paper_equations",
-                flowClip: "none"
-            ),
-            chemChannel: nil,
-            chemIncludeInMass: true
-        )
+        let config = flowMetalTestConfig(gridSize: 8, nbK: params.r.count)
         let c0 = [0, 1]
         let c1 = [[0], [1], []]
         let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
@@ -5549,28 +5691,7 @@ final class LeniaCoreTests: XCTestCase {
 
     func testFlowLeniaMetalFullStateRunnerSummarySupportsWeightedChannels() {
         let params = makeSandboxMetalParityParams()
-        let config = BatchedConfig(
-            sx: 8,
-            sy: 8,
-            channels: 3,
-            nbK: params.r.count,
-            dt: 0.2,
-            dd: 2,
-            sigma: 0.65,
-            n: 2,
-            thetaA: 2.0,
-            border: "torus",
-            implementation: ImplementationSettings(
-                mode: "flowlenia_2022_paper_equations",
-                border: "torus",
-                gradientBoundary: "periodic",
-                alphaMode: "mass",
-                kernelProfile: "flowlenia_2022_paper_equations",
-                flowClip: "none"
-            ),
-            chemChannel: nil,
-            chemIncludeInMass: true
-        )
+        let config = flowMetalTestConfig(gridSize: 8, nbK: params.r.count)
         let c0 = [0, 1]
         let c1 = [[0], [1], []]
         let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
@@ -5765,28 +5886,7 @@ final class LeniaCoreTests: XCTestCase {
 
     func testFlowLeniaMetalFullStateRunnerKernelUpdatesPreserveMatterWeights() {
         let params = makeSandboxMetalParityParams()
-        let config = BatchedConfig(
-            sx: 16,
-            sy: 16,
-            channels: 3,
-            nbK: params.r.count,
-            dt: 0.2,
-            dd: 2,
-            sigma: 0.65,
-            n: 2,
-            thetaA: 2.0,
-            border: "torus",
-            implementation: ImplementationSettings(
-                mode: "flowlenia_2022_paper_equations",
-                border: "torus",
-                gradientBoundary: "periodic",
-                alphaMode: "mass",
-                kernelProfile: "flowlenia_2022_paper_equations",
-                flowClip: "none"
-            ),
-            chemChannel: nil,
-            chemIncludeInMass: true
-        )
+        let config = flowMetalTestConfig(gridSize: 16, nbK: params.r.count)
         let kernels = compileKernels(
             params: params,
             config: config,
@@ -7973,6 +8073,31 @@ private func makeSandboxMetalParityParams() -> ResolvedParams {
         h: [0.42, 0.83],
         R: 7.0,
         seed: 0
+    )
+}
+
+private func flowMetalTestConfig(gridSize: Int, nbK: Int) -> BatchedConfig {
+    BatchedConfig(
+        sx: gridSize,
+        sy: gridSize,
+        channels: 3,
+        nbK: nbK,
+        dt: 0.2,
+        dd: 2,
+        sigma: 0.65,
+        n: 2,
+        thetaA: 2.0,
+        border: "torus",
+        implementation: ImplementationSettings(
+            mode: "flowlenia_2022_paper_equations",
+            border: "torus",
+            gradientBoundary: "periodic",
+            alphaMode: "mass",
+            kernelProfile: "flowlenia_2022_paper_equations",
+            flowClip: "none"
+        ),
+        chemChannel: nil,
+        chemIncludeInMass: true
     )
 }
 

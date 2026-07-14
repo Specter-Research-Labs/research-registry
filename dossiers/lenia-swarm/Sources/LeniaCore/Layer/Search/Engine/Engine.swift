@@ -689,10 +689,13 @@ public final class SearchEngine: @unchecked Sendable {
         if let kernels = activeMetalKernels {
             let runnerSetupStart = ContinuousClock.now
             let runner = reusableMetalFullRunner(batchSize: batchSize, kernels: kernels)
-            runner.setWallMask(wallMask)
-            runner.setStaticChannelFields(runtimeOperators.metalStaticChannelFields(chemField: chemField))
-            runner.setFoodState(runtimeOperators.metalFoodState(foodBatch: foodBatch))
-            runner.setState(mass: massBatch, params: paramBatch!)
+            runner.reset(
+                mass: massBatch,
+                params: paramBatch!,
+                wallMask: wallMask,
+                staticChannelFields: runtimeOperators.metalStaticChannelFields(chemField: chemField),
+                food: runtimeOperators.metalFoodState(foodBatch: foodBatch)
+            )
             persistentMetalRunner = runner
             timings.runnerSetupMs = durationMs(runnerSetupStart.duration(to: ContinuousClock.now))
         } else {

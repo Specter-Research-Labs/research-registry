@@ -354,19 +354,18 @@ final class FlowLeniaMetalFullPipeline {
     }
 
     func updateWallPotential(_ wallPotential: MLXArray?) {
-        wallPotentialEnabled = wallPotential != nil
-        let values: [Float]
-        if let wallPotential {
-            values = Self.expandedScalarField(
-                from: wallPotential,
-                batchCount: batchCount,
-                sx: config.sx,
-                sy: config.sy,
-                label: "wallPotential"
-            )
-        } else {
-            values = [Float](repeating: 0.0, count: batchCount * config.sx * config.sy)
+        guard let wallPotential else {
+            wallPotentialEnabled = false
+            return
         }
+        wallPotentialEnabled = true
+        let values = Self.expandedScalarField(
+            from: wallPotential,
+            batchCount: batchCount,
+            sx: config.sx,
+            sy: config.sy,
+            label: "wallPotential"
+        )
         Self.uploadFloats(
             values,
             toPrivate: wallPotentialBuffer,

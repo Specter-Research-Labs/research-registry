@@ -277,14 +277,13 @@ public final class FlowLeniaSimulator {
                 )
             }
             runner.setMatterWeights(runtimeOperators.matterWeights())
-            runner.setWallMask(wallMask)
-            runner.setStaticChannelFields(
-                runtimeOperators.metalStaticChannelFields(chemField: chemField)
+            runner.reset(
+                mass: ABatch,
+                params: params,
+                wallMask: wallMask,
+                staticChannelFields: runtimeOperators.metalStaticChannelFields(chemField: chemField),
+                food: runtimeOperators.metalFoodState(foodBatch: foodBatch)
             )
-            runner.setFoodState(
-                runtimeOperators.metalFoodState(foodBatch: foodBatch)
-            )
-            runner.setState(mass: ABatch, params: params)
             persistentMetalRunner = runner
         } else {
             runtimeOperators.applyWallMaskIfNeeded(

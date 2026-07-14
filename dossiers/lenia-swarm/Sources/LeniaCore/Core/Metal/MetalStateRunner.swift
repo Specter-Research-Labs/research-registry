@@ -42,7 +42,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private var currentMixStep = 0
     private var staticChannelFields: [FlowLeniaMetalChannelFieldBuffer] = []
     private var foodState: FlowLeniaMetalFoodStateBuffer?
-    private var hasState = false
     private(set) var massObservationSynchronizationCount = 0
 
     init(
@@ -218,6 +217,46 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     }
 
     func setState(mass: MLXArray, params: MLXArray) {
+        uploadState(mass: mass, params: params, configurationUploads: [])
+    }
+
+    func reset(
+        mass: MLXArray,
+        params: MLXArray,
+        wallMask: MLXArray?,
+        staticChannelFields: [FlowLeniaMetalChannelField],
+        food: FlowLeniaMetalFoodState?
+    ) {
+        if wallMask == nil, staticChannelFields.isEmpty, food == nil {
+            wallMaskEnabled = false
+            self.staticChannelFields = []
+            foodState = nil
+            uploadState(mass: mass, params: params, configurationUploads: [])
+            return
+        }
+        let wallMaskUpload = prepareWallMask(wallMask)
+        let preparedFields = prepareStaticChannelFields(staticChannelFields)
+        let preparedFood = prepareFoodState(food)
+
+        wallMaskEnabled = wallMask != nil
+        self.staticChannelFields = preparedFields.fields
+        foodState = preparedFood.state
+
+        var uploads = preparedFields.uploads
+        if let wallMaskUpload {
+            uploads.append(wallMaskUpload)
+        }
+        if let foodUpload = preparedFood.upload {
+            uploads.append(foodUpload)
+        }
+        uploadState(mass: mass, params: params, configurationUploads: uploads)
+    }
+
+    private func uploadState(
+        mass: MLXArray,
+        params: MLXArray,
+        configurationUploads: [BufferCopy]
+    ) {
         guard mass.shape.count == 4, mass.shape[0] == batchCount, mass.shape[1] == config.sx, mass.shape[2] == config.sy, mass.shape[3] == channelCount else {
             preconditionFailure("FlowLeniaMetalFullStateRunner expects mass with shape [batch, sx, sy, channels].")
         }
@@ -229,14 +268,15 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         let paramValues = params.contiguous().asArray(Float.self)
         FlowLeniaMetalFullPipeline.writeFloats(massValues, to: massTransferBuffer)
         FlowLeniaMetalFullPipeline.writeFloats(paramValues, to: paramsTransferBuffer)
+        let stateUploads: [BufferCopy] = [
+            (massTransferBuffer, currentMassBuffer, massValues.count * MemoryLayout<Float>.stride),
+            (paramsTransferBuffer, currentParamsBuffer, paramValues.count * MemoryLayout<Float>.stride),
+        ]
+        let uploads = configurationUploads.isEmpty
+            ? stateUploads
+            : stateUploads + configurationUploads
         submitAndWait(label: "flow-metal.state.upload") { commandBuffer in
-            encodeCopies(
-                [
-                    (massTransferBuffer, currentMassBuffer, massValues.count * MemoryLayout<Float>.stride),
-                    (paramsTransferBuffer, currentParamsBuffer, paramValues.count * MemoryLayout<Float>.stride),
-                ],
-                on: commandBuffer
-            )
+            encodeCopies(uploads, on: commandBuffer)
             for field in staticChannelFields {
                 encodeChannelFieldOverwrite(
                     on: commandBuffer,
@@ -258,7 +298,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
                 }
             }
         }
-        hasState = true
         currentMixStep = 0
     }
 
@@ -280,132 +319,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         }
         currentMatterWeights = resolved
         pipeline.updateMatterWeights(resolved)
-    }
-
-    func setWallMask(_ wallMask: MLXArray?) {
-        guard let wallMask else {
-            wallMaskEnabled = false
-            return
-        }
-        let values = Self.expandScalarField(
-            wallMask,
-            batchCount: batchCount,
-            sx: config.sx,
-            sy: config.sy,
-            label: "wallMask"
-        )
-        let byteCount = values.count * MemoryLayout<Float>.stride
-        FlowLeniaMetalFullPipeline.writeFloats(values, to: wallMaskTransferBuffer)
-        wallMaskEnabled = true
-        submitAndWait(label: "flow-metal.state.wallMask") { commandBuffer in
-            encodeCopies([(wallMaskTransferBuffer, wallMaskBuffer, byteCount)], on: commandBuffer)
-            if hasState {
-                encodeWallMask(
-                    on: commandBuffer,
-                    massBuffer: currentMassBuffer,
-                    paramsBuffer: currentParamsBuffer
-                )
-                if foodState != nil {
-                    encodeFoodMask(on: commandBuffer)
-                }
-            }
-        }
-    }
-
-    func setStaticChannelFields(_ fields: [FlowLeniaMetalChannelField]) {
-        var fieldBuffers: [FlowLeniaMetalChannelFieldBuffer] = []
-        var uploads: [BufferCopy] = []
-        fieldBuffers.reserveCapacity(fields.count)
-        uploads.reserveCapacity(fields.count)
-        for field in fields {
-            guard field.channelIndex >= 0, field.channelIndex < channelCount else {
-                preconditionFailure("FlowLeniaMetalFullStateRunner static channel fields must target an in-range channel.")
-            }
-            let values = Self.expandScalarField(
-                field.field,
-                batchCount: batchCount,
-                sx: config.sx,
-                sy: config.sy,
-                label: "channelField"
-            )
-            let byteCount = values.count * MemoryLayout<Float>.stride
-            let transferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
-                device: device,
-                length: byteCount,
-                label: "flow-metal.state.channelField-transfer.\(field.channelIndex)"
-            )
-            let privateBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
-                device: device,
-                length: byteCount,
-                label: "flow-metal.state.channelField.\(field.channelIndex)"
-            )
-            FlowLeniaMetalFullPipeline.writeFloats(values, to: transferBuffer)
-            fieldBuffers.append(FlowLeniaMetalChannelFieldBuffer(
-                channelIndex: field.channelIndex,
-                buffer: privateBuffer
-            ))
-            uploads.append((transferBuffer, privateBuffer, byteCount))
-        }
-        staticChannelFields = fieldBuffers
-        if !uploads.isEmpty {
-            submitAndWait(label: "flow-metal.state.channelFields.upload") { commandBuffer in
-                encodeCopies(uploads, on: commandBuffer)
-            }
-        }
-    }
-
-    func setFoodState(_ food: FlowLeniaMetalFoodState?) {
-        guard let food else {
-            foodState = nil
-            return
-        }
-        guard food.channelIndex >= 0, food.channelIndex < channelCount else {
-            preconditionFailure("FlowLeniaMetalFullStateRunner food state must target an in-range channel.")
-        }
-        let values = Self.expandPlanarField(
-            food.field,
-            batchCount: batchCount,
-            sx: config.sx,
-            sy: config.sy,
-            label: "food"
-        )
-        let byteCount = values.count * MemoryLayout<Float>.stride
-        let transferBuffer: MTLBuffer
-        let privateBuffer: MTLBuffer
-        if let existing = foodState,
-           existing.buffer.length == byteCount,
-           existing.transferBuffer.length == byteCount {
-            transferBuffer = existing.transferBuffer
-            privateBuffer = existing.buffer
-        } else {
-            transferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
-                device: device,
-                length: byteCount,
-                label: "flow-metal.state.food-transfer"
-            )
-            privateBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
-                device: device,
-                length: byteCount,
-                label: "flow-metal.state.food"
-            )
-        }
-        FlowLeniaMetalFullPipeline.writeFloats(values, to: transferBuffer)
-        foodState = FlowLeniaMetalFoodStateBuffer(
-            channelIndex: food.channelIndex,
-            decayRate: food.decayRate,
-            digestRate: food.digestRate,
-            buffer: privateBuffer,
-            transferBuffer: transferBuffer
-        )
-        submitAndWait(label: "flow-metal.state.food") { commandBuffer in
-            encodeCopies([(transferBuffer, privateBuffer, byteCount)], on: commandBuffer)
-            if wallMaskEnabled {
-                encodeFoodMask(on: commandBuffer)
-            }
-            if hasState {
-                encodeFoodFieldOverwrite(on: commandBuffer, massBuffer: currentMassBuffer)
-            }
-        }
     }
 
     func applyParameterPatch(
@@ -1198,6 +1111,108 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             )
         }
         encoder.endEncoding()
+    }
+
+    private func prepareWallMask(_ wallMask: MLXArray?) -> BufferCopy? {
+        guard let wallMask else {
+            return nil
+        }
+        let values = Self.expandScalarField(
+            wallMask,
+            batchCount: batchCount,
+            sx: config.sx,
+            sy: config.sy,
+            label: "wallMask"
+        )
+        let byteCount = values.count * MemoryLayout<Float>.stride
+        FlowLeniaMetalFullPipeline.writeFloats(values, to: wallMaskTransferBuffer)
+        return (wallMaskTransferBuffer, wallMaskBuffer, byteCount)
+    }
+
+    private func prepareStaticChannelFields(
+        _ fields: [FlowLeniaMetalChannelField]
+    ) -> (fields: [FlowLeniaMetalChannelFieldBuffer], uploads: [BufferCopy]) {
+        var fieldBuffers: [FlowLeniaMetalChannelFieldBuffer] = []
+        var uploads: [BufferCopy] = []
+        fieldBuffers.reserveCapacity(fields.count)
+        uploads.reserveCapacity(fields.count)
+        for field in fields {
+            guard field.channelIndex >= 0, field.channelIndex < channelCount else {
+                preconditionFailure("FlowLeniaMetalFullStateRunner static channel fields must target an in-range channel.")
+            }
+            let values = Self.expandScalarField(
+                field.field,
+                batchCount: batchCount,
+                sx: config.sx,
+                sy: config.sy,
+                label: "channelField"
+            )
+            let byteCount = values.count * MemoryLayout<Float>.stride
+            let transferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.channelField-transfer.\(field.channelIndex)"
+            )
+            let privateBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.channelField.\(field.channelIndex)"
+            )
+            FlowLeniaMetalFullPipeline.writeFloats(values, to: transferBuffer)
+            fieldBuffers.append(FlowLeniaMetalChannelFieldBuffer(
+                channelIndex: field.channelIndex,
+                buffer: privateBuffer
+            ))
+            uploads.append((transferBuffer, privateBuffer, byteCount))
+        }
+        return (fieldBuffers, uploads)
+    }
+
+    private func prepareFoodState(
+        _ food: FlowLeniaMetalFoodState?
+    ) -> (state: FlowLeniaMetalFoodStateBuffer?, upload: BufferCopy?) {
+        guard let food else {
+            return (nil, nil)
+        }
+        guard food.channelIndex >= 0, food.channelIndex < channelCount else {
+            preconditionFailure("FlowLeniaMetalFullStateRunner food state must target an in-range channel.")
+        }
+        let values = Self.expandPlanarField(
+            food.field,
+            batchCount: batchCount,
+            sx: config.sx,
+            sy: config.sy,
+            label: "food"
+        )
+        let byteCount = values.count * MemoryLayout<Float>.stride
+        let transferBuffer: MTLBuffer
+        let privateBuffer: MTLBuffer
+        if let existing = foodState,
+           existing.buffer.length == byteCount,
+           existing.transferBuffer.length == byteCount {
+            transferBuffer = existing.transferBuffer
+            privateBuffer = existing.buffer
+        } else {
+            transferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.food-transfer"
+            )
+            privateBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+                device: device,
+                length: byteCount,
+                label: "flow-metal.state.food"
+            )
+        }
+        FlowLeniaMetalFullPipeline.writeFloats(values, to: transferBuffer)
+        let state = FlowLeniaMetalFoodStateBuffer(
+            channelIndex: food.channelIndex,
+            decayRate: food.decayRate,
+            digestRate: food.digestRate,
+            buffer: privateBuffer,
+            transferBuffer: transferBuffer
+        )
+        return (state, (transferBuffer, privateBuffer, byteCount))
     }
 
     private func readFloats(
