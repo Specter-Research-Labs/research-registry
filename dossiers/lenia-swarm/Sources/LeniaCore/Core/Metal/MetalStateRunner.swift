@@ -88,9 +88,9 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         )
         self.summaryReducer = FlowLeniaMetalSummaryReducer(
             config: config,
-            parameterCount: self.parameterCount,
             batchCount: batchCount,
-            device: device
+            device: device,
+            library: self.pipeline.library
         )
         let wallLibrary = FlowLeniaMetalFullPipeline.makeLibrary(
             device: device,

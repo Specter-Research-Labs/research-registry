@@ -44,6 +44,7 @@ final class FlowLeniaMetalFullPipeline {
     let channelCount: Int
     let device: MTLDevice
     let commandQueue: MTLCommandQueue
+    let library: MTLLibrary
 
     let kernelCount: Int
     private let kernelBatchCount: Int
@@ -116,7 +117,7 @@ final class FlowLeniaMetalFullPipeline {
             preconditionFailure("Flow Metal full pipeline requires either one shared kernel set or one kernel set per batch element.")
         }
 
-        let library = Self.makeLibrary(
+        self.library = Self.makeLibrary(
             device: device,
             source: Self.kernelSource(
                 kernelCount: self.kernelCount,
@@ -140,11 +141,11 @@ final class FlowLeniaMetalFullPipeline {
                 parameterMixMode: self.parameterMixMode
             )
         )
-        self.spectrumGatherPipeline = Self.makePipeline(device: device, library: library, name: "flowMetalGatherKernelSpectra")
-        self.growthReducePipeline = Self.makePipeline(device: device, library: library, name: "flowMetalGrowthReduce")
-        self.wallPotentialPipeline = Self.makePipeline(device: device, library: library, name: "flowMetalAddWallPotential")
-        self.flowPipeline = Self.makePipeline(device: device, library: library, name: "flowMetalFlowFromScalarField")
-        self.reintegratePipeline = Self.makePipeline(device: device, library: library, name: "flowMetalReintegrateAverage")
+        self.spectrumGatherPipeline = Self.makePipeline(device: device, library: self.library, name: "flowMetalGatherKernelSpectra")
+        self.growthReducePipeline = Self.makePipeline(device: device, library: self.library, name: "flowMetalGrowthReduce")
+        self.wallPotentialPipeline = Self.makePipeline(device: device, library: self.library, name: "flowMetalAddWallPotential")
+        self.flowPipeline = Self.makePipeline(device: device, library: self.library, name: "flowMetalFlowFromScalarField")
+        self.reintegratePipeline = Self.makePipeline(device: device, library: self.library, name: "flowMetalReintegrateAverage")
 
         let cellCount = batchCount * config.sx * config.sy
         let reducedY = (config.sy / 2) + 1
