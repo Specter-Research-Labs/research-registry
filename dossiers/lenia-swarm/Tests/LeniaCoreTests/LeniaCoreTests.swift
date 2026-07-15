@@ -7529,6 +7529,77 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 0.15)
     }
 
+    func testSearchExplicitParamsAreCallScopedAcrossKernelBatchShapes() {
+        let runtimeConfig = makeRuntimeConfigForSearchEngine(
+            sx: 32,
+            sy: 32,
+            channels: 1,
+            backend: .metalFull,
+            parameterEmbedding: ParameterEmbeddingConfig(enabled: false, mix: "avg", mix_seed: nil),
+            pUniform: nil,
+            chemotaxis: nil,
+            profile: .experimental,
+            patches: [PatchConfig(center: [16, 16], size: 8)]
+        )
+        let searchConfig = SearchConfig(
+            steps: 2,
+            recordInterval: 1,
+            warmupSteps: 0,
+            occupancyThreshold: 0.05,
+            massChannel: 0,
+            scoreWeights: [:],
+            filters: [:],
+            complexity: nil,
+            activity: nil,
+            stability: nil,
+            kSurvival: nil,
+            moments: nil
+        )
+        let engine = SearchEngine(runtimeConfig: runtimeConfig)
+        let seeds = [31, 37]
+        let alternateParams = ResolvedParams(
+            r: [0.7],
+            b: [[0.9, 0.1, 0.0]],
+            w: [[0.15, 0.2, 0.15]],
+            a: [[0.4, 0.4, 0.4]],
+            m: [0.2],
+            s: [0.06],
+            h: [0.3],
+            R: 5.0,
+            seed: 1
+        )
+        let explicitParams = [runtimeConfig.params, alternateParams]
+
+        let sharedBefore = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 0,
+            searchConfig: searchConfig
+        )
+        let explicit = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 0,
+            searchConfig: searchConfig,
+            explicitParamsBatch: explicitParams
+        )
+        let sharedAfter = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 0,
+            searchConfig: searchConfig
+        )
+
+        XCTAssertEqual(explicit.count, seeds.count)
+        XCTAssertEqual(explicit.map(\.params.h), explicitParams.map(\.h))
+        XCTAssertEqual(sharedAfter.count, sharedBefore.count)
+        XCTAssertEqual(sharedAfter.map(\.params.h), sharedBefore.map(\.params.h))
+        for (actual, expected) in zip(sharedAfter, sharedBefore) {
+            XCTAssertEqual(actual.seed, expected.seed)
+            XCTAssertEqual(actual.initSeed, expected.initSeed)
+            XCTAssertEqual(actual.descriptorBundle.terminal.fingerprintU8, expected.descriptorBundle.terminal.fingerprintU8)
+            XCTAssertEqual(actual.metrics.massMean, expected.metrics.massMean, accuracy: 1e-6)
+            XCTAssertEqual(actual.metrics.energyMean, expected.metrics.energyMean, accuracy: 1e-6)
+        }
+    }
+
     func testSearchEngineMetalFullSupportsEnvironmentPotential() {
         let searchConfig = SearchConfig(
             steps: 1,

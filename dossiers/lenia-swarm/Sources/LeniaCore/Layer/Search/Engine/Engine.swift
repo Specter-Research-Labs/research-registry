@@ -23,7 +23,12 @@ private struct SearchBatchSetup {
     let interventionsByStep: [Int: [InterventionConfig]]
 }
 
-public final class SearchEngine: @unchecked Sendable {
+public final class SearchEngine {
+    private struct MetalRunnerCacheKey: Hashable {
+        let batchSize: Int
+        let kernelBatchCount: Int
+    }
+
     private enum Stepper {
         case mlx(FlowLeniaBatched, FlowLeniaParamsBatched?)
 
@@ -47,14 +52,8 @@ public final class SearchEngine: @unchecked Sendable {
     private let environmentPotential: MLXArray?
     private let metalFullKernels: CompiledKernels?
     private let staticParamTemplate: MLXArray?
-    private var persistentMetalRunnerCache: [Int: FlowLeniaMetalFullStateRunner] = [:]
+    private var persistentMetalRunnerCache: [MetalRunnerCacheKey: FlowLeniaMetalFullStateRunner] = [:]
     private(set) var lastBatchProfile: SearchBatchProfile?
-
-    /// An explicit per-sample genotype batch (one rule per batch slot). When set, runBatch
-    /// uses these rules instead of generating random ones, which is how a fixed corpus of
-    /// creatures is re-evaluated together (the functional-assay path). Count must equal the
-    /// batch size; metal-full backend, no parameter embedding.
-    public var explicitParamsBatch: [ResolvedParams]?
 
     public init(runtimeConfig: LeniaRuntimeConfig) {
         self.runtimeConfig = runtimeConfig
@@ -145,7 +144,11 @@ public final class SearchEngine: @unchecked Sendable {
         kernels: CompiledKernels
     ) -> FlowLeniaMetalFullStateRunner {
         let runtimeOperators = makeRuntimeOperators()
-        if let runner = persistentMetalRunnerCache[batchSize] {
+        let cacheKey = MetalRunnerCacheKey(
+            batchSize: batchSize,
+            kernelBatchCount: FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
+        )
+        if let runner = persistentMetalRunnerCache[cacheKey] {
             runner.setMatterWeights(runtimeOperators.matterWeights())
             runner.updateKernels(kernels)
             return runner
@@ -160,7 +163,7 @@ public final class SearchEngine: @unchecked Sendable {
             parameterMix: runtimeConfig.parameterEmbedding.mix,
             mixSeed: runtimeConfig.parameterEmbedding.mix_seed
         )
-        persistentMetalRunnerCache[batchSize] = runner
+        persistentMetalRunnerCache[cacheKey] = runner
         return runner
     }
 
@@ -261,11 +264,13 @@ public final class SearchEngine: @unchecked Sendable {
         )
     }
 
+    /// `explicitParamsBatch` supplies one rule per seed for Metal evaluation without parameter embedding.
     public func runBatch(
         seeds: [Int],
         initSeedOffset: Int,
         searchConfig: SearchConfig,
-        frameCapture: FrameCapture? = nil
+        frameCapture: FrameCapture? = nil,
+        explicitParamsBatch: [ResolvedParams]? = nil
     ) -> [BatchSimulationResult] {
         let totalStart = ContinuousClock.now
         lastBatchProfile = nil
@@ -286,6 +291,7 @@ public final class SearchEngine: @unchecked Sendable {
             searchConfig: searchConfig,
             frameCapture: frameCapture,
             preflight: preflight,
+            explicitParamsBatch: explicitParamsBatch,
             timings: &timings
         )
         let initialConditionFamily = batchSetup.initialConditionFamily
@@ -576,6 +582,7 @@ public final class SearchEngine: @unchecked Sendable {
         searchConfig: SearchConfig,
         frameCapture: FrameCapture?,
         preflight: SearchConfigPreflight,
+        explicitParamsBatch: [ResolvedParams]?,
         timings: inout SearchBatchProfile
     ) -> SearchBatchSetup {
         let batchSize = seeds.count
@@ -902,6 +909,7 @@ extension SearchEngine {
             searchConfig: searchConfig,
             frameCapture: nil,
             preflight: preflight,
+            explicitParamsBatch: nil,
             timings: &timings
         )
         guard let runner = batchSetup.persistentMetalRunner else {

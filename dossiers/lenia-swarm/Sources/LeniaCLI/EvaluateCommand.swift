@@ -79,6 +79,10 @@ struct EvaluateCommand: AsyncParsableCommand {
         let handle = try FileHandle(forWritingTo: resultsURL)
         defer { try? handle.close() }
 
+        var overrides = baseOverrides
+        overrides["run.steps"] = parsedSearch.steps
+        let runtimeConfig = try loadRuntimeConfig(from: baseConfigData, overrides: overrides)
+        let engine = SearchEngine(runtimeConfig: runtimeConfig)
         let batchSize = max(1, parsedSearch.batchSize)
         let start = Date()
         var idx = 0
@@ -87,12 +91,12 @@ struct EvaluateCommand: AsyncParsableCommand {
             let chunk = Array(rules[idx..<end])
             let seeds = Array(rowSeeds[idx..<end])
 
-            var overrides = baseOverrides
-            overrides["run.steps"] = parsedSearch.steps
-            let runtimeConfig = try loadRuntimeConfig(from: baseConfigData, overrides: overrides)
-            let engine = SearchEngine(runtimeConfig: runtimeConfig)
-            engine.explicitParamsBatch = chunk
-            let batchResults = engine.runBatch(seeds: seeds, initSeedOffset: 0, searchConfig: simSearch)
+            let batchResults = engine.runBatch(
+                seeds: seeds,
+                initSeedOffset: 0,
+                searchConfig: simSearch,
+                explicitParamsBatch: chunk
+            )
             let data = batchResults.map {
                 materializeSearchResultData(
                     $0, backend: runtimeConfig.backend.rawValue,
