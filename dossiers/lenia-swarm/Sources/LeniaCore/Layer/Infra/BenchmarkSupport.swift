@@ -244,14 +244,12 @@ private func estimatedFlowLeniaMetalVisibleWorkingSetBytes(
     let matterBytes = cellCount * floatBytes
     let uBytes = cellCount * channels * floatBytes
     let flowBytes = cellCount * channels * 2 * floatBytes
-    let wallPotentialBytes = cellCount * floatBytes
     let kernelScalarBytes = batchSize * kernels * floatBytes
     let transferBytes =
         kernels * intBytes
         + 2 * kernelScalarBytes
         + channels * floatBytes
         + channels * kernels * floatBytes
-        + wallPotentialBytes
 
     return stateBytes
         + kernelBytes
@@ -261,7 +259,6 @@ private func estimatedFlowLeniaMetalVisibleWorkingSetBytes(
         + matterBytes
         + uBytes
         + flowBytes
-        + wallPotentialBytes
         + transferBytes
 }
 

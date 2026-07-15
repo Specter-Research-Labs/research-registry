@@ -29,11 +29,10 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private var currentParamsBuffer: MTLBuffer
     private var nextMassBuffer: MTLBuffer
     private var nextParamsBuffer: MTLBuffer
-    private let wallMaskBuffer: MTLBuffer
+    private var wallMaskBuffers: FlowLeniaMetalFullPipeline.UploadBuffers?
     private let massMapBuffer: MTLBuffer
     private let massTransferBuffer: MTLBuffer
     private let paramsTransferBuffer: MTLBuffer
-    private let wallMaskTransferBuffer: MTLBuffer
     private let massMapTransferBuffer: MTLBuffer
     private let massMapWeightsBuffer: MTLBuffer
     private var currentMatterWeights: [Float]
@@ -179,11 +178,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             length: paramBytes,
             label: "flow-metal.state.nextParams"
         )
-        self.wallMaskBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
-            device: device,
-            length: massBytes,
-            label: "flow-metal.state.wallMask"
-        )
         self.massMapBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
             device: device,
             length: scalarBytes,
@@ -198,11 +192,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             device: device,
             length: paramBytes,
             label: "flow-metal.state.params-transfer"
-        )
-        self.wallMaskTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
-            device: device,
-            length: massBytes,
-            label: "flow-metal.state.wallMask-transfer"
         )
         self.massMapTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
             device: device,
@@ -1139,8 +1128,14 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             label: "wallMask"
         )
         let byteCount = values.count * MemoryLayout<Float>.stride
-        FlowLeniaMetalFullPipeline.writeFloats(values, to: wallMaskTransferBuffer)
-        return (wallMaskTransferBuffer, wallMaskBuffer, byteCount)
+        let buffers = wallMaskBuffers ?? FlowLeniaMetalFullPipeline.makeUploadBuffers(
+            device: device,
+            length: byteCount,
+            label: "flow-metal.state.wallMask"
+        )
+        wallMaskBuffers = buffers
+        FlowLeniaMetalFullPipeline.writeFloats(values, to: buffers.transferBuffer)
+        return (buffers.transferBuffer, buffers.privateBuffer, byteCount)
     }
 
     private func prepareStaticChannelFields(
@@ -1249,6 +1244,9 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
         massBuffer: MTLBuffer,
         paramsBuffer: MTLBuffer
     ) {
+        guard let wallMaskBuffer = wallMaskBuffers?.privateBuffer else {
+            preconditionFailure("Flow Metal wall mask is enabled without an allocated buffer.")
+        }
         guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
             preconditionFailure("Failed to create Flow Metal wall mask encoder.")
         }
@@ -1268,6 +1266,9 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private func encodeFoodMask(on commandBuffer: MTLCommandBuffer) {
         guard let foodState else {
             return
+        }
+        guard let wallMaskBuffer = wallMaskBuffers?.privateBuffer else {
+            preconditionFailure("Flow Metal wall mask is enabled without an allocated buffer.")
         }
         guard let encoder = commandBuffer.makeComputeCommandEncoder() else {
             preconditionFailure("Failed to create Flow Metal food mask encoder.")

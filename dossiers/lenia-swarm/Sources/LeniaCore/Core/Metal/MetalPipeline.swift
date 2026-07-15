@@ -5,6 +5,11 @@ import MetalPerformanceShadersGraph
 import MLX
 
 final class FlowLeniaMetalFullPipeline {
+    struct UploadBuffers {
+        let privateBuffer: MTLBuffer
+        let transferBuffer: MTLBuffer
+    }
+
     enum ParameterMixMode: Int {
         case average = 0
         case stochastic = 1
@@ -76,14 +81,13 @@ final class FlowLeniaMetalFullPipeline {
     private let matterBuffer: MTLBuffer
     private let uBuffer: MTLBuffer
     private let flowBuffer: MTLBuffer
-    private let wallPotentialBuffer: MTLBuffer
+    private var wallPotentialBuffers: UploadBuffers?
 
     private let c0IdxTransferBuffer: MTLBuffer
     private let mTransferBuffer: MTLBuffer
     private let sTransferBuffer: MTLBuffer
     private let matterWeightsTransferBuffer: MTLBuffer
     private let outputWeightsTransferBuffer: MTLBuffer
-    private let wallPotentialTransferBuffer: MTLBuffer
     private var wallPotentialEnabled = false
 
     init(
@@ -205,11 +209,6 @@ final class FlowLeniaMetalFullPipeline {
         self.matterBuffer = Self.makePrivateBuffer(device: device, length: scalarBytes, label: "flow-metal.matter")
         self.uBuffer = Self.makePrivateBuffer(device: device, length: channelScalarBytes, label: "flow-metal.u")
         self.flowBuffer = Self.makePrivateBuffer(device: device, length: flowBytes, label: "flow-metal.flow")
-        self.wallPotentialBuffer = Self.makePrivateBuffer(
-            device: device,
-            length: scalarBytes,
-            label: "flow-metal.wallPotential"
-        )
 
         self.c0IdxTransferBuffer = Self.makeSharedBuffer(
             device: device,
@@ -236,12 +235,6 @@ final class FlowLeniaMetalFullPipeline {
             length: outputWeightsBytes,
             label: "flow-metal.outputWeights-transfer"
         )
-        self.wallPotentialTransferBuffer = Self.makeSharedBuffer(
-            device: device,
-            length: scalarBytes,
-            label: "flow-metal.wallPotential-transfer"
-        )
-
         let forwardPlan = try! Self.buildForwardFFTExecutable(
             device: device,
             batchCount: batchCount,
@@ -359,7 +352,6 @@ final class FlowLeniaMetalFullPipeline {
             wallPotentialEnabled = false
             return
         }
-        wallPotentialEnabled = true
         let values = Self.expandedScalarField(
             from: wallPotential,
             batchCount: batchCount,
@@ -367,13 +359,20 @@ final class FlowLeniaMetalFullPipeline {
             sy: config.sy,
             label: "wallPotential"
         )
+        let buffers = wallPotentialBuffers ?? Self.makeUploadBuffers(
+            device: device,
+            length: values.count * MemoryLayout<Float>.stride,
+            label: "flow-metal.wallPotential"
+        )
+        wallPotentialBuffers = buffers
         Self.uploadFloats(
             values,
-            toPrivate: wallPotentialBuffer,
-            stagingBuffer: wallPotentialTransferBuffer,
+            toPrivate: buffers.privateBuffer,
+            stagingBuffer: buffers.transferBuffer,
             commandQueue: commandQueue,
             label: "flow-metal.wallPotential"
         )
+        wallPotentialEnabled = true
     }
 
     func encodeStep(
@@ -707,6 +706,9 @@ final class FlowLeniaMetalFullPipeline {
         guard wallPotentialEnabled else {
             return
         }
+        guard let wallPotentialBuffer = wallPotentialBuffers?.privateBuffer else {
+            preconditionFailure("Flow Metal wall potential is enabled without an allocated buffer.")
+        }
         encode(wallPotentialPipeline, on: commandBuffer) { encoder in
             encoder.setBuffer(uBuffer, offset: 0, index: 0)
             encoder.setBuffer(wallPotentialBuffer, offset: 0, index: 1)
@@ -804,6 +806,13 @@ final class FlowLeniaMetalFullPipeline {
         }
         buffer.label = label
         return buffer
+    }
+
+    static func makeUploadBuffers(device: MTLDevice, length: Int, label: String) -> UploadBuffers {
+        UploadBuffers(
+            privateBuffer: makePrivateBuffer(device: device, length: length, label: label),
+            transferBuffer: makeSharedBuffer(device: device, length: length, label: "\(label)-transfer")
+        )
     }
 
     static func writeFloats(_ values: [Float], to buffer: MTLBuffer) {

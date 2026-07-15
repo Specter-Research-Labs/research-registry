@@ -5350,9 +5350,11 @@ final class LeniaCoreTests: XCTestCase {
         let runner = FlowLeniaMetalFullStateRunner(
             config: config,
             kernels: kernels,
-            batchCount: 2,
-            wallPotential: wallPotential
+            batchCount: 2
         )
+        runner.setWallPotential(wallPotential)
+        runner.setWallPotential(nil)
+        runner.setWallPotential(wallPotential)
         runner.reset(
             mass: expectedMass,
             params: expectedParams,
