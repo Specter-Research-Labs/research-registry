@@ -2,7 +2,7 @@ import Foundation
 import Metal
 import MLX
 
-final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
+final class FlowLeniaMetalFullStateRunner {
     private typealias BufferCopy = (source: MTLBuffer, destination: MTLBuffer, length: Int)
 
     let config: BatchedConfig
@@ -31,8 +31,16 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
     private var nextParamsBuffer: MTLBuffer
     private var wallMaskBuffers: FlowLeniaMetalFullPipeline.UploadBuffers?
     private let massMapBuffer: MTLBuffer
-    private let massTransferBuffer: MTLBuffer
-    private let paramsTransferBuffer: MTLBuffer
+    private lazy var massTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+        device: device,
+        length: batchCount * config.sx * config.sy * channelCount * MemoryLayout<Float>.stride,
+        label: "flow-metal.state.mass-transfer"
+    )
+    private lazy var paramsTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+        device: device,
+        length: batchCount * config.sx * config.sy * parameterCount * MemoryLayout<Float>.stride,
+        label: "flow-metal.state.params-transfer"
+    )
     private let massMapTransferBuffer: MTLBuffer
     private let massMapWeightsBuffer: MTLBuffer
     private var currentMatterWeights: [Float]
@@ -182,16 +190,6 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             device: device,
             length: scalarBytes,
             label: "flow-metal.state.mass-map"
-        )
-        self.massTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
-            device: device,
-            length: massBytes,
-            label: "flow-metal.state.mass-transfer"
-        )
-        self.paramsTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
-            device: device,
-            length: paramBytes,
-            label: "flow-metal.state.params-transfer"
         )
         self.massMapTransferBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
             device: device,

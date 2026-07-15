@@ -5354,6 +5354,24 @@ final class LeniaCoreTests: XCTestCase {
         )
         runner.setWallPotential(wallPotential)
         runner.setWallPotential(nil)
+        runner.reset(
+            mass: expectedMass,
+            params: expectedParams,
+            wallMask: wallMask,
+            staticChannelFields: [],
+            food: nil
+        )
+        let disabledExpected = FlowLeniaParamsBatched(
+            config: config,
+            kernels: kernels,
+            mixMode: "avg",
+            mixSeed: nil
+        ).step(expectedMass, expectedParams)
+        runner.step()
+        let disabledActual = runner.materializeState()
+        XCTAssertLessThan(maxAbsDiff(disabledExpected.0 * wallMask, disabledActual.mass), 1e-3)
+        XCTAssertLessThan(maxAbsDiff(disabledExpected.1 * wallMask, disabledActual.params), 1e-3)
+
         runner.setWallPotential(wallPotential)
         runner.reset(
             mass: expectedMass,
@@ -7590,6 +7608,19 @@ final class LeniaCoreTests: XCTestCase {
             searchConfig: searchConfig,
             explicitParamsBatch: explicitParams
         )
+        let updatedExplicitParams = [alternateParams, runtimeConfig.params]
+        let updatedExplicit = engine.runBatch(
+            seeds: seeds,
+            initSeedOffset: 0,
+            searchConfig: searchConfig,
+            explicitParamsBatch: updatedExplicitParams
+        )
+        let freshUpdatedExplicit = SearchEngine(runtimeConfig: runtimeConfig).runBatch(
+            seeds: seeds,
+            initSeedOffset: 0,
+            searchConfig: searchConfig,
+            explicitParamsBatch: updatedExplicitParams
+        )
         let sharedAfter = engine.runBatch(
             seeds: seeds,
             initSeedOffset: 0,
@@ -7598,6 +7629,12 @@ final class LeniaCoreTests: XCTestCase {
 
         XCTAssertEqual(explicit.count, seeds.count)
         XCTAssertEqual(explicit.map(\.params.h), explicitParams.map(\.h))
+        XCTAssertEqual(updatedExplicit.map(\.params.h), updatedExplicitParams.map(\.h))
+        for (actual, expected) in zip(updatedExplicit, freshUpdatedExplicit) {
+            XCTAssertEqual(actual.descriptorBundle.terminal.fingerprintU8, expected.descriptorBundle.terminal.fingerprintU8)
+            XCTAssertEqual(actual.metrics.massMean, expected.metrics.massMean, accuracy: 1e-6)
+            XCTAssertEqual(actual.metrics.energyMean, expected.metrics.energyMean, accuracy: 1e-6)
+        }
         XCTAssertEqual(sharedAfter.count, sharedBefore.count)
         XCTAssertEqual(sharedAfter.map(\.params.h), sharedBefore.map(\.params.h))
         for (actual, expected) in zip(sharedAfter, sharedBefore) {
