@@ -5647,6 +5647,13 @@ final class LeniaCoreTests: XCTestCase {
         let freshStep = freshRunner.materializeState()
         XCTAssertLessThan(maxAbsDiff(freshStep.mass, resetStep.mass), 1e-5)
         XCTAssertLessThan(maxAbsDiff(freshStep.params, resetStep.params), 1e-5)
+
+        let convertedMass = mass.transposed(0, 2, 1, 3).asType(Float16.self)
+        let convertedParams = paramMap.transposed(0, 2, 1, 3).asType(Float16.self)
+        runner.setState(mass: convertedMass, params: convertedParams)
+        let convertedState = runner.materializeState()
+        XCTAssertLessThan(maxAbsDiff(convertedMass.asType(Float.self), convertedState.mass), 1e-6)
+        XCTAssertLessThan(maxAbsDiff(convertedParams.asType(Float.self), convertedState.params), 1e-6)
     }
 
     func testFlowLeniaMetalFullStateRunnerMaterializesWeightedMassMap() {

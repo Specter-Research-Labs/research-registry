@@ -264,37 +264,51 @@ final class FlowLeniaMetalFullStateRunner: @unchecked Sendable {
             preconditionFailure("FlowLeniaMetalFullStateRunner expects params with shape [batch, sx, sy, parameterCount].")
         }
 
-        let massValues = mass.contiguous().asArray(Float.self)
-        let paramValues = params.contiguous().asArray(Float.self)
-        FlowLeniaMetalFullPipeline.writeFloats(massValues, to: massTransferBuffer)
-        FlowLeniaMetalFullPipeline.writeFloats(paramValues, to: paramsTransferBuffer)
-        let stateUploads: [BufferCopy] = [
-            (massTransferBuffer, currentMassBuffer, massValues.count * MemoryLayout<Float>.stride),
-            (paramsTransferBuffer, currentParamsBuffer, paramValues.count * MemoryLayout<Float>.stride),
-        ]
+        let contiguousMass = mass.asType(Float.self).contiguous()
+        let contiguousParams = params.asType(Float.self).contiguous()
+        eval(contiguousMass, contiguousParams)
+        let stateUploads: [BufferCopy]
+        if let massSourceBuffer = contiguousMass.asMTLBuffer(device: device, noCopy: true),
+           let paramsSourceBuffer = contiguousParams.asMTLBuffer(device: device, noCopy: true) {
+            stateUploads = [
+                (massSourceBuffer, currentMassBuffer, contiguousMass.nbytes),
+                (paramsSourceBuffer, currentParamsBuffer, contiguousParams.nbytes),
+            ]
+        } else {
+            let massValues = contiguousMass.asArray(Float.self)
+            let paramValues = contiguousParams.asArray(Float.self)
+            FlowLeniaMetalFullPipeline.writeFloats(massValues, to: massTransferBuffer)
+            FlowLeniaMetalFullPipeline.writeFloats(paramValues, to: paramsTransferBuffer)
+            stateUploads = [
+                (massTransferBuffer, currentMassBuffer, contiguousMass.nbytes),
+                (paramsTransferBuffer, currentParamsBuffer, contiguousParams.nbytes),
+            ]
+        }
         let uploads = configurationUploads.isEmpty
             ? stateUploads
             : stateUploads + configurationUploads
-        submitAndWait(label: "flow-metal.state.upload") { commandBuffer in
-            encodeCopies(uploads, on: commandBuffer)
-            for field in staticChannelFields {
-                encodeChannelFieldOverwrite(
-                    on: commandBuffer,
-                    massBuffer: currentMassBuffer,
-                    field: field
-                )
-            }
-            if foodState != nil {
-                encodeFoodFieldOverwrite(on: commandBuffer, massBuffer: currentMassBuffer)
-            }
-            if wallMaskEnabled {
-                encodeWallMask(
-                    on: commandBuffer,
-                    massBuffer: currentMassBuffer,
-                    paramsBuffer: currentParamsBuffer
-                )
+        withExtendedLifetime((contiguousMass, contiguousParams)) {
+            submitAndWait(label: "flow-metal.state.upload") { commandBuffer in
+                encodeCopies(uploads, on: commandBuffer)
+                for field in staticChannelFields {
+                    encodeChannelFieldOverwrite(
+                        on: commandBuffer,
+                        massBuffer: currentMassBuffer,
+                        field: field
+                    )
+                }
                 if foodState != nil {
-                    encodeFoodMask(on: commandBuffer)
+                    encodeFoodFieldOverwrite(on: commandBuffer, massBuffer: currentMassBuffer)
+                }
+                if wallMaskEnabled {
+                    encodeWallMask(
+                        on: commandBuffer,
+                        massBuffer: currentMassBuffer,
+                        paramsBuffer: currentParamsBuffer
+                    )
+                    if foodState != nil {
+                        encodeFoodMask(on: commandBuffer)
+                    }
                 }
             }
         }
