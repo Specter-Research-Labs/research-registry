@@ -227,6 +227,7 @@ private func estimatedFlowLeniaMetalVisibleWorkingSetBytes(
     kernels: Int,
     batchSize: Int
 ) -> Int {
+    // Explicit MTLBuffers retained by the no-wall sweep after its final mass readback.
     let sx = gridSize
     let sy = gridSize
     let cellCount = batchSize * sx * sy
@@ -236,24 +237,35 @@ private func estimatedFlowLeniaMetalVisibleWorkingSetBytes(
     let intBytes = MemoryLayout<Int32>.stride
     let parameterCount = kernels
 
-    let stateBytes = 2 * cellCount * (channels + parameterCount) * floatBytes
+    let massBytes = cellCount * channels * floatBytes
+    let paramBytes = cellCount * parameterCount * floatBytes
+    let scalarBytes = cellCount * floatBytes
+    let stateBytes = 2 * (massBytes + paramBytes)
+    let stateReadbackBytes = massBytes
+    let massMapBytes = 2 * scalarBytes + channels * floatBytes
     let kernelBytes = sx * reducedY * kernels * complexFloatBytes
     let channelSpectrumBytes = batchSize * sx * reducedY * channels * complexFloatBytes
     let gatheredSpectrumBytes = batchSize * sx * reducedY * kernels * complexFloatBytes
     let ukBytes = cellCount * kernels * floatBytes
-    let matterBytes = cellCount * floatBytes
+    let matterBytes = scalarBytes
     let uBytes = cellCount * channels * floatBytes
     let flowBytes = cellCount * channels * 2 * floatBytes
-    let wallPotentialBytes = cellCount * floatBytes
     let kernelScalarBytes = batchSize * kernels * floatBytes
-    let transferBytes =
-        kernels * intBytes
-        + 2 * kernelScalarBytes
-        + channels * floatBytes
-        + channels * kernels * floatBytes
-        + wallPotentialBytes
+    let pipelineParameterBytes =
+        2 * kernels * intBytes
+        + 4 * kernelScalarBytes
+        + 2 * channels * floatBytes
+        + 2 * channels * kernels * floatBytes
+    let vectorBytes = batchSize * floatBytes
+    let partialVectorBytes = batchSize
+        * FlowLeniaMetalFullPipeline.summaryPartialGroupCount(sx: sx, sy: sy)
+        * floatBytes
+    let reducerBytes = (1 + channels) * floatBytes
+        + 8 * (vectorBytes + partialVectorBytes)
 
     return stateBytes
+        + stateReadbackBytes
+        + massMapBytes
         + kernelBytes
         + channelSpectrumBytes
         + gatheredSpectrumBytes
@@ -261,8 +273,8 @@ private func estimatedFlowLeniaMetalVisibleWorkingSetBytes(
         + matterBytes
         + uBytes
         + flowBytes
-        + wallPotentialBytes
-        + transferBytes
+        + pipelineParameterBytes
+        + reducerBytes
 }
 
 private func roundRobinConnectivity(channels: Int, kernels: Int) -> (c0: [Int], c1: [[Int]]) {

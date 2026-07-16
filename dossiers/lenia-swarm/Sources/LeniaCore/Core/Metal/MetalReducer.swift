@@ -38,38 +38,14 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
 
     init(
         config: BatchedConfig,
-        parameterCount: Int,
         batchCount: Int,
-        device: MTLDevice
+        device: MTLDevice,
+        library: MTLLibrary
     ) {
         self.batchCount = batchCount
         self.channelCount = config.channels
         self.partialGroupCount = FlowLeniaMetalFullPipeline.summaryPartialGroupCount(sx: config.sx, sy: config.sy)
 
-        let library = FlowLeniaMetalFullPipeline.makeLibrary(
-            device: device,
-            source: FlowLeniaMetalFullPipeline.kernelSource(
-                kernelCount: parameterCount,
-                parameterCount: parameterCount,
-                batchCount: batchCount,
-                channelCount: config.channels,
-                kernelBatchCount: 1,
-                summaryPartialGroupCount: self.partialGroupCount,
-                sx: config.sx,
-                sy: config.sy,
-                dt: config.dt,
-                dd: config.dd,
-                sigma: config.sigma,
-                thetaA: config.thetaA,
-                n: config.n,
-                useTorus: config.border == "torus",
-                alphaMode: config.implementation.alphaMode,
-                flowClip: config.implementation.flowClip,
-                parameterFieldMode: .kernelGain,
-                reintegrateParams: true,
-                parameterMixMode: .average
-            )
-        )
         self.pass1PartialPipeline = FlowLeniaMetalFullPipeline.makePipeline(
             device: device,
             library: library,
