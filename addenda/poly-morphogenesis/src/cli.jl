@@ -19,6 +19,13 @@ using ..RecoveryCohort: RecoveryCohortSpec,
     run_recovery_cohort,
     write_recovery_cohort_artifacts,
     write_recovery_cohort_protocol_manifest
+using ..RecoveryAdaptive: AdaptiveExponentProtocol,
+    AdaptiveSettlingProtocol
+using ..RecoveryDevelopment: RecoveryDevelopmentProtocol,
+    RecoveryDevelopmentSpec,
+    run_recovery_development,
+    write_recovery_development_artifacts,
+    write_recovery_development_protocol
 using ..Wiring: FragmentFamilyResult,
     InterventionKResult,
     PairedTrialSummary,
@@ -60,6 +67,7 @@ Subcommands:
   grid-patch      Isolate a rectangular patch in a 2D grid by severing its boundary edges.
   grid-patch-recovery Settle a 2D grid, sever a patch, and compare shared and componentwise recovery.
   grid-patch-recovery-cohort Run a deterministic rectangular-lesion cohort and write evidence artifacts.
+  grid-patch-recovery-development Run the guarded Protocol V2 adaptive/readout development cohort.
   grid-patch-sensitivity Compare alternative 2D severity metrics on one rectangular-patch regime.
   grid-patch-threshold-sensitivity Compare 2D severity rankings across active-mask thresholds.
   grid-patch-sweep Scan 2D rectangular patch lesions across patch sizes and diffusion parameters.
@@ -107,6 +115,14 @@ Usage:
 By default the cohort enumerates every valid rectangular placement and runs the
 capacity-only protocol (delayed capacity and feedback disabled). Provide both
 --patch-top and --patch-left to restrict a smoke run to one placement.
+""",
+    "grid-patch-recovery-development" => """
+Usage:
+  main(["demo", "grid-patch-recovery-development", [--development-id ID], [--output-dir DIR], [--seeds S1,S2,...], [--regime-id ID], [--rows N], [--cols N], [--patch-rows N], [--patch-cols N], [--patch-top N], [--patch-left N], [--d-a D], [--d-i D], [--settle-chunk-time T], [--settle-max-time T], [--steady-tol T], [--exponent-min K], [--exponent-max K], [--exponent-hard-min K], [--exponent-hard-max K], [--exponent-expansion-step N], [--exponent-plateau-relative-tol T], [--exponent-plateau-patience N], [--step-factor F], [--active-fraction F], [--max-count-selection-regret F], [--alias-resolutions R1,R2,...]])
+
+This command is development-only. It rejects reserved Holdout A/B seeds and
+paths, has no delayed-capacity or feedback-controller mode, and refuses to
+recompute a run after any outcome artifact exists.
 """,
     "grid-patch-sensitivity" => """
 Usage:
@@ -421,6 +437,77 @@ function _run_grid_patch_recovery_cohort(options::Dict{Symbol,Any})
     )
 end
 
+const _DEVELOPMENT_OUTCOME_FILENAMES = (
+    "response-surfaces.jsonl",
+    "observability-cases.jsonl",
+    "observability-summary.json",
+    "development-manifest.json",
+)
+
+function _require_absent_development_outcomes(output_dir::String)
+    existing = [
+        name for name in _DEVELOPMENT_OUTCOME_FILENAMES
+        if ispath(joinpath(output_dir, name))
+    ]
+    isempty(existing) || error(
+        "refusing to recompute a frozen development run; outcome artifacts already exist: " *
+        join(existing, ", ") * ". Use a new --development-id and output directory.",
+    )
+    return nothing
+end
+
+function _run_grid_patch_recovery_development(options::Dict{Symbol,Any})
+    protocol = RecoveryDevelopmentProtocol(
+        steady_tol=options[:steady_tol],
+        settling=AdaptiveSettlingProtocol(
+            chunk_time=options[:settle_chunk_time],
+            max_time=options[:settle_max_time],
+        ),
+        exponents=AdaptiveExponentProtocol(
+            initial_min=options[:exponent_min],
+            initial_max=options[:exponent_max],
+            hard_min=options[:exponent_hard_min],
+            hard_max=options[:exponent_hard_max],
+            expansion_step=options[:exponent_expansion_step],
+            plateau_relative_tolerance=options[:exponent_plateau_relative_tol],
+            plateau_patience=options[:exponent_plateau_patience],
+        ),
+        step_factor=options[:step_factor],
+        active_fraction=options[:active_fraction],
+        max_selection_regret=options[:max_count_selection_regret],
+        alias_resolutions=options[:alias_resolutions],
+    )
+    regime = RecoveryRegime(
+        regime_id=options[:regime_id],
+        rows=options[:rows],
+        cols=options[:cols],
+        patch_rows=options[:patch_rows],
+        patch_cols=options[:patch_cols],
+        baseline=RDParameters(D_a=options[:D_a], D_i=options[:D_i]),
+    )
+    spec = RecoveryDevelopmentSpec(
+        development_id=options[:development_id],
+        regime=regime,
+        protocol=protocol,
+        seeds=options[:seeds],
+        placements=_cohort_placements(options),
+    )
+
+    # Refuse partial or completed outcome directories before freezing any new file.
+    _require_absent_development_outcomes(options[:output_dir])
+    protocol_manifest = write_recovery_development_protocol(spec, options[:output_dir])
+    result = run_recovery_development(spec)
+    artifacts = write_recovery_development_artifacts(result, options[:output_dir])
+    return (
+        schema_version=1,
+        protocol_version=2,
+        development_id=result.development_id,
+        protocol_manifest=protocol_manifest,
+        outcome_artifacts=artifacts,
+        summary=result.summary,
+    )
+end
+
 const _DIAGRAMS_COMMAND = CommandSpec(
     _DIAGRAMS_HELP,
     [
@@ -652,6 +739,88 @@ const _DEMO_COMMANDS = Dict{String,CommandSpec}(
             _string_flag(:evidence_scope, "--evidence-scope", "capacity_cohort"),
         ],
         _run_grid_patch_recovery_cohort,
+    ),
+    "grid-patch-recovery-development" => CommandSpec(
+        _DEMO_SUBCOMMAND_HELP["grid-patch-recovery-development"],
+        [
+            _string_flag(
+                :development_id,
+                "--development-id",
+                "protocol-v2-development",
+            ),
+            _string_flag(
+                :output_dir,
+                "--output-dir",
+                options -> joinpath(
+                    pwd(),
+                    "artifacts",
+                    "development",
+                    options[:development_id],
+                ),
+            ),
+            _int_list_flag(:seeds, "--seeds", collect(0:5)),
+            _int_flag(:rows, "--rows", 4),
+            _int_flag(:cols, "--cols", 6),
+            _int_flag(:patch_rows, "--patch-rows", 2),
+            _int_flag(:patch_cols, "--patch-cols", 2),
+            _int_flag(:patch_top, "--patch-top", nothing),
+            _int_flag(:patch_left, "--patch-left", nothing),
+            _float_flag(:D_a, "--d-a", 1.0),
+            _float_flag(:D_i, "--d-i", 30.0),
+            _string_flag(
+                :regime_id,
+                "--regime-id",
+                options -> string(
+                    "grid",
+                    options[:rows],
+                    "x",
+                    options[:cols],
+                    "-patch",
+                    options[:patch_rows],
+                    "x",
+                    options[:patch_cols],
+                    "-da",
+                    options[:D_a],
+                    "-di",
+                    options[:D_i],
+                ),
+            ),
+            _float_flag(:settle_chunk_time, "--settle-chunk-time", 300.0),
+            _float_flag(:settle_max_time, "--settle-max-time", 1200.0),
+            _float_flag(:steady_tol, "--steady-tol", 1.0e-6),
+            _int_flag(:exponent_min, "--exponent-min", -11),
+            _int_flag(:exponent_max, "--exponent-max", 11),
+            _int_flag(:exponent_hard_min, "--exponent-hard-min", -15),
+            _int_flag(:exponent_hard_max, "--exponent-hard-max", 15),
+            _int_flag(
+                :exponent_expansion_step,
+                "--exponent-expansion-step",
+                2,
+            ),
+            _float_flag(
+                :exponent_plateau_relative_tol,
+                "--exponent-plateau-relative-tol",
+                1.0e-3,
+            ),
+            _int_flag(
+                :exponent_plateau_patience,
+                "--exponent-plateau-patience",
+                2,
+            ),
+            _float_flag(:step_factor, "--step-factor", 1.21),
+            _float_flag(:active_fraction, "--active-fraction", 0.5),
+            _float_flag(
+                :max_count_selection_regret,
+                "--max-count-selection-regret",
+                0.10,
+            ),
+            _float_list_flag(
+                :alias_resolutions,
+                "--alias-resolutions",
+                [1.0e-4, 1.0e-3, 1.0e-2],
+            ),
+        ],
+        _run_grid_patch_recovery_development,
     ),
     "grid-patch-sensitivity" => CommandSpec(
         _DEMO_SUBCOMMAND_HELP["grid-patch-sensitivity"],

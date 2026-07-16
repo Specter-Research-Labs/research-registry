@@ -60,6 +60,58 @@ timeout_sec = 1800
 network = "bootstrap"
 requires = ["jj", "nix"]
 
+[spctr.exec.development]
+description = "Run the guarded development protocol on a tiny deterministic case"
+command = ["bash", "-lc", '''set -euo pipefail
+root="artifacts/development/spctr-smoke-v2"
+export POLY_MORPHOGENESIS_REVISION="$(jj log -r 'latest(ancestors(@) & bookmarks())' --no-graph -T 'commit_id')"
+export JULIA_NUM_THREADS=1
+if [ ! -f "$root/development-manifest.json" ]; then
+  nix develop ../..#poly-morphogenesis -c julia --startup-file=no --project=. -e '
+using PolyMorphogenesis
+main([
+    "demo", "grid-patch-recovery-development",
+    "--development-id", "spctr-smoke-v2",
+    "--output-dir", "artifacts/development/spctr-smoke-v2",
+    "--seeds", "7",
+    "--regime-id", "tiny-development-grid",
+    "--rows", "1", "--cols", "2",
+    "--patch-rows", "1", "--patch-cols", "1",
+    "--patch-top", "1", "--patch-left", "1",
+    "--settle-chunk-time", "0.01", "--settle-max-time", "0.02",
+    "--steady-tol", "1000000.0",
+    "--exponent-min", "0", "--exponent-max", "0",
+    "--exponent-hard-min", "-1", "--exponent-hard-max", "1",
+    "--exponent-expansion-step", "1",
+    "--exponent-plateau-relative-tol", "0.0",
+    "--exponent-plateau-patience", "2",
+    "--alias-resolutions", "0.001",
+])
+'
+fi
+nix develop ../..#poly-morphogenesis -c julia --startup-file=no --project=. -e '
+using JSON3, SHA
+root = "artifacts/development/spctr-smoke-v2"
+manifest = JSON3.read(read(joinpath(root, "development-manifest.json"), String))
+String(manifest.code_revision) == ENV["POLY_MORPHOGENESIS_REVISION"] ||
+    error("stale development artifact revision")
+for (name, metadata) in pairs(manifest.files)
+    bytes2hex(sha256(read(joinpath(root, String(name))))) == String(metadata.sha256) ||
+        error("development artifact digest mismatch: $(name)")
+end
+'
+''']
+expected_outputs = [
+  "recovery-development-protocol",
+  "recovery-development-surfaces",
+  "recovery-development-cases",
+  "recovery-development-summary",
+  "recovery-development-manifest",
+]
+timeout_sec = 1800
+network = "bootstrap"
+requires = ["jj", "nix"]
+
 [spctr.runtime]
 platforms = ["linux", "macos"]
 requires = ["nix"]
@@ -72,5 +124,35 @@ card_path = "artifacts/evidence/latest.json"
 [[spctr.expected_outputs]]
 name = "grid-patch-recovery-smoke"
 path = "artifacts/smoke/grid-patch-recovery.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "recovery-development-protocol"
+path = "artifacts/development/spctr-smoke-v2/development-protocol.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "recovery-development-surfaces"
+path = "artifacts/development/spctr-smoke-v2/response-surfaces.jsonl"
+kind = "jsonl"
+required = true
+
+[[spctr.expected_outputs]]
+name = "recovery-development-cases"
+path = "artifacts/development/spctr-smoke-v2/observability-cases.jsonl"
+kind = "jsonl"
+required = true
+
+[[spctr.expected_outputs]]
+name = "recovery-development-summary"
+path = "artifacts/development/spctr-smoke-v2/observability-summary.json"
+kind = "json"
+required = true
+
+[[spctr.expected_outputs]]
+name = "recovery-development-manifest"
+path = "artifacts/development/spctr-smoke-v2/development-manifest.json"
 kind = "json"
 required = true
