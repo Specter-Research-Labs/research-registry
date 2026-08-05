@@ -2,6 +2,28 @@ import Foundation
 import LeniaCore
 import SwiftUI
 
+enum OrganismCatalogCollection: String, Equatable, Sendable {
+    case flowNative
+    case classicalReference
+
+    var title: String {
+        switch self {
+        case .flowNative: "Flow life"
+        case .classicalReference: "Classical reference"
+        }
+    }
+}
+
+enum OrganismCatalogTier: String, Equatable, Sendable {
+    case primary
+    case experimental
+    case reference
+
+    var title: String {
+        rawValue.capitalized
+    }
+}
+
 struct Track1TaxonomyConfig: Identifiable, Hashable, Sendable {
     let path: String
     let family: String
@@ -15,6 +37,8 @@ struct Track1TaxonomyConfig: Identifiable, Hashable, Sendable {
     let kernelCount: Int
     let gridSize: Int
     let runSteps: Int
+    let provenanceBundleKind: String?
+    let isBundled: Bool
 
     var id: String { path }
 
@@ -32,13 +56,35 @@ struct Track1TaxonomyConfig: Identifiable, Hashable, Sendable {
 
     var isLabLoadable: Bool {
         switch implementationMode {
-        case "flowlenia_2022_paper_equations", "flowlenia_2022_colab":
+        case "flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_additive_v1":
             true
         case "custom":
             ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_bucketed_v1"].contains(kernelProfile)
         default:
             false
         }
+    }
+
+    var requiredLabBackend: FlowSandboxBackend? {
+        switch catalogCollection {
+        case .flowNative:
+            .metalFull
+        case .classicalReference:
+            .mlx
+        }
+    }
+
+    var catalogCollection: OrganismCatalogCollection {
+        implementationMode == "qd24_additive_v1" ? .classicalReference : .flowNative
+    }
+
+    var catalogTier: OrganismCatalogTier {
+        guard catalogCollection == .flowNative else { return .reference }
+        return provenanceBundleKind == "strict_replay_bundle_v1" ? .primary : .experimental
+    }
+
+    var catalogHierarchy: String {
+        "\(compactLineage) / \(patternID)"
     }
 
     var variantLabel: String {
@@ -75,6 +121,13 @@ struct Track1TaxonomyConfig: Identifiable, Hashable, Sendable {
             params: resolvedParams,
             sourceNode: "track1"
         )
+        let labels = [family, genus, patternID, catalogTier.title]
+        let runtimeFamily = catalogCollection == .flowNative
+            ? "flow-lenia-native"
+            : "classical-lenia-additive"
+        let sourceMode = catalogCollection == .flowNative
+            ? "flow-organism"
+            : "classical-reference"
         return StudioCompareEntry(
             id: "track1:\(path)",
             creature: creature,
@@ -82,12 +135,12 @@ struct Track1TaxonomyConfig: Identifiable, Hashable, Sendable {
             subtitle: "\(family) · \(patternID)",
             replayReference: StudioReplayReference(
                 baseConfigPath: path,
-                runtimeFamily: "flow-lenia-track1"
+                runtimeFamily: runtimeFamily
             ),
             taxonomy: taxonomyRecord,
-            traitLabels: [family, genus, patternID],
-            runtimeFamily: "flow-lenia-track1",
-            sourceMode: "track1-ruleset",
+            traitLabels: labels,
+            runtimeFamily: runtimeFamily,
+            sourceMode: sourceMode,
             sourceAlgorithm: implementationMode,
             runtimeCapabilities: ["runtime-config", backend, kernelProfile]
         )
@@ -114,6 +167,12 @@ struct Track1TaxonomyFamily: Identifiable, Sendable {
     }
 }
 
+struct FlowOrganismFamily: Identifiable, Sendable {
+    let id: String
+    let name: String
+    let configs: [Track1TaxonomyConfig]
+}
+
 struct Track1TaxonomyCatalog: Sendable {
     let rootPath: String
     let configs: [Track1TaxonomyConfig]
@@ -133,9 +192,43 @@ struct Track1TaxonomyCatalog: Sendable {
         configs.filter(\.isLabLoadable).count
     }
 
+    var featuredFlowConfigs: [Track1TaxonomyConfig] {
+        configs.filter { $0.isBundled && $0.catalogCollection == .flowNative }
+    }
+
+    var primaryFlowConfigs: [Track1TaxonomyConfig] {
+        featuredFlowConfigs.filter { $0.catalogTier == .primary }
+    }
+
+    var experimentalFlowConfigs: [Track1TaxonomyConfig] {
+        featuredFlowConfigs.filter { $0.catalogTier == .experimental }
+    }
+
+    var classicalReferenceConfigs: [Track1TaxonomyConfig] {
+        configs.filter { $0.isBundled && $0.catalogCollection == .classicalReference }
+    }
+
     func config(path: String) -> Track1TaxonomyConfig? {
         configs.first { $0.path == path }
     }
+}
+
+func flowOrganismFamilies(from configs: [Track1TaxonomyConfig]) -> [FlowOrganismFamily] {
+    Dictionary(grouping: configs.filter { $0.catalogCollection == .flowNative }) {
+        $0.family
+    }
+    .map { family, familyConfigs in
+        FlowOrganismFamily(
+            id: family,
+            name: family,
+            configs: familyConfigs.sorted { lhs, rhs in
+                let leftKey = "\(lhs.genus)/\(lhs.patternID)/\(lhs.displayName)"
+                let rightKey = "\(rhs.genus)/\(rhs.patternID)/\(rhs.displayName)"
+                return leftKey.localizedStandardCompare(rightKey) == .orderedAscending
+            }
+        )
+    }
+    .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
 }
 
 @MainActor
@@ -147,6 +240,16 @@ final class Track1TaxonomyCatalogStore: ObservableObject {
 
     private var loadTask: Task<Void, Never>?
     private var requestID = 0
+
+    init() {
+        guard let featured = try? bundledFeaturedOrganisms() else { return }
+        catalog = Track1TaxonomyCatalog(
+            rootPath: featured.first.map { URL(fileURLWithPath: $0.path).deletingLastPathComponent().path } ?? "",
+            configs: featured,
+            families: track1Families(from: featured)
+        )
+        status = "\(featured.count) featured lifeforms"
+    }
 
     deinit {
         loadTask?.cancel()
@@ -178,7 +281,8 @@ final class Track1TaxonomyCatalogStore: ObservableObject {
 
         loadTask = Task.detached(priority: .userInitiated) {
             do {
-                let nextCatalog = try loadTrack1TaxonomyCatalog(rootPath: trimmed)
+                let scannedCatalog = try loadTrack1TaxonomyCatalog(rootPath: trimmed)
+                let nextCatalog = try catalogIncludingBundledOrganisms(scannedCatalog)
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     guard activeRequestID == self.requestID else { return }
@@ -201,6 +305,19 @@ final class Track1TaxonomyCatalogStore: ObservableObject {
     }
 }
 
+private func catalogIncludingBundledOrganisms(
+    _ catalog: Track1TaxonomyCatalog
+) throws -> Track1TaxonomyCatalog {
+    let featured = try bundledFeaturedOrganisms()
+    var paths = Set(featured.map(\.path))
+    let configs = featured + catalog.configs.filter { paths.insert($0.path).inserted }
+    return Track1TaxonomyCatalog(
+        rootPath: catalog.rootPath,
+        configs: configs,
+        families: track1Families(from: configs)
+    )
+}
+
 func defaultTrack1ConfigRoot(fileManager: FileManager = .default) -> String? {
     let home = fileManager.homeDirectoryForCurrentUser.path
     let candidates = [
@@ -208,7 +325,31 @@ func defaultTrack1ConfigRoot(fileManager: FileManager = .default) -> String? {
         "\(home)/dev/specter-labs/research-registry-lenia-fiber-tda/dossiers/lenia-swarm/artifacts/configs",
         "\(home)/Library/Application Support/lenia-swarm/artifacts/configs",
     ]
-    return candidates.first { fileManager.fileExists(atPath: $0) }
+    if let existing = candidates.first(where: { fileManager.fileExists(atPath: $0) }) {
+        return existing
+    }
+    return bundledOrganismRoot(fileManager: fileManager)
+}
+
+func bundledFeaturedOrganisms() throws -> [Track1TaxonomyConfig] {
+    guard let resourceRoot = Bundle.module.resourceURL else { return [] }
+    let urls = try FileManager.default.contentsOfDirectory(
+        at: resourceRoot,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+    )
+    return try urls
+        .filter { $0.pathExtension == "json" }
+        .compactMap { try track1TaxonomyConfig(url: $0, isBundled: true) }
+        .sorted { $0.catalogHierarchy.localizedStandardCompare($1.catalogHierarchy) == .orderedAscending }
+}
+
+private func bundledOrganismRoot(fileManager: FileManager) -> String? {
+    guard let root = Bundle.module.resourceURL,
+          fileManager.fileExists(atPath: root.path) else {
+        return nil
+    }
+    return root.path
 }
 
 func loadTrack1TaxonomyCatalog(rootPath: String) throws -> Track1TaxonomyCatalog {
@@ -244,7 +385,11 @@ func loadTrack1TaxonomyCatalog(rootPath: String) throws -> Track1TaxonomyCatalog
     )
 }
 
-func track1TaxonomyConfig(url: URL, decoder: JSONDecoder = JSONDecoder()) throws -> Track1TaxonomyConfig? {
+func track1TaxonomyConfig(
+    url: URL,
+    decoder: JSONDecoder = JSONDecoder(),
+    isBundled: Bool = false
+) throws -> Track1TaxonomyConfig? {
     let data = try Data(contentsOf: url)
     let raw = try decoder.decode(Track1RawRuntimeConfig.self, from: data)
     guard let provenance = raw.provenance else { return nil }
@@ -265,7 +410,9 @@ func track1TaxonomyConfig(url: URL, decoder: JSONDecoder = JSONDecoder()) throws
         channels: raw.channels ?? 1,
         kernelCount: raw.params?.r?.count ?? max(1, raw.connectivity?.flatMap { $0 }.reduce(0, +) ?? 1),
         gridSize: raw.grid?.sx ?? raw.grid?.sy ?? 0,
-        runSteps: raw.run?.steps ?? 0
+        runSteps: raw.run?.steps ?? 0,
+        provenanceBundleKind: provenance.bundleKind,
+        isBundled: isBundled
     )
 }
 
@@ -308,7 +455,7 @@ func fallbackTrack1Entry(path: String) -> StudioCompareEntry {
     )
 }
 
-private func track1Families(from configs: [Track1TaxonomyConfig]) -> [Track1TaxonomyFamily] {
+func track1Families(from configs: [Track1TaxonomyConfig]) -> [Track1TaxonomyFamily] {
     Dictionary(grouping: configs, by: \.family)
         .map { family, familyConfigs in
             let genera = Dictionary(grouping: familyConfigs, by: \.genus)
@@ -391,11 +538,13 @@ private struct Track1RawProvenance: Decodable {
     let family: String?
     let species: String?
     let patternID: String?
+    let bundleKind: String?
 
     enum CodingKeys: String, CodingKey {
         case family
         case species
         case patternID = "pattern_id"
+        case bundleKind = "bundle_kind"
     }
 }
 

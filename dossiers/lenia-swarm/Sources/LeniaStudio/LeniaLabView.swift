@@ -11,6 +11,7 @@ struct LeniaLabFrameUpdate: Sendable {
     let runtimeTelemetry: FlowSandboxRuntimeTelemetry
     let activity: Double
     let refreshMetrics: Bool
+    let replayPosition: LabReplayPosition?
 }
 
 @MainActor
@@ -20,11 +21,16 @@ final class LeniaLabFrameStore {
     private var runtime: LabRuntimeHandle?
     private var frameTask: Task<Void, Never>?
     private var activeProjection: LabFieldProjection = .matter
-    private var targetSpeedCap = 60
+    private var targetSpeedCap = 0
     private var isRunning = false
+    private var refreshPending = false
     private var generation = 0
-    private var deliveredInitialUpdate = false
     private var onUpdate: (@MainActor (LeniaLabFrameUpdate) -> Void)?
+    private let beforeSnapshot: (@Sendable () async -> Void)?
+
+    init(beforeSnapshot: (@Sendable () async -> Void)? = nil) {
+        self.beforeSnapshot = beforeSnapshot
+    }
 
     func attach(_ stageView: LeniaLabStageNSView) {
         guard self.stageView !== stageView else { return }
@@ -37,7 +43,6 @@ final class LeniaLabFrameStore {
 
     func clear() {
         latestFrame = nil
-        deliveredInitialUpdate = false
         stageView?.updateFrame(nil)
     }
 
@@ -59,14 +64,11 @@ final class LeniaLabFrameStore {
         self.targetSpeedCap = speedCap
         self.activeProjection = projection
         self.isRunning = isRunning
+        refreshPending = false
         self.onUpdate = onUpdate
         stageView?.setFramePacing(active: isRunning)
-        deliveredInitialUpdate = false
         generation += 1
-        let runGeneration = generation
-        frameTask = Task { [weak self] in
-            await self?.frameLoop(generation: runGeneration)
-        }
+        startFrameTaskIfNeeded()
     }
 
     func stop() {
@@ -76,12 +78,14 @@ final class LeniaLabFrameStore {
         runtime = nil
         onUpdate = nil
         isRunning = false
+        refreshPending = false
         stageView?.setFramePacing(active: false)
     }
 
     func setRunning(_ running: Bool) {
         isRunning = running
         stageView?.setFramePacing(active: running)
+        startFrameTaskIfNeeded()
     }
 
     func setSpeedCap(_ hz: Int) {
@@ -90,7 +94,23 @@ final class LeniaLabFrameStore {
 
     func setProjection(_ projection: LabFieldProjection) {
         activeProjection = projection
-        deliveredInitialUpdate = false
+        requestRefresh()
+    }
+
+    func requestRefresh() {
+        if frameTask != nil {
+            refreshPending = true
+            return
+        }
+        startFrameTaskIfNeeded()
+    }
+
+    private func startFrameTaskIfNeeded() {
+        guard frameTask == nil, runtime != nil else { return }
+        let runGeneration = generation
+        frameTask = Task { [weak self] in
+            await self?.frameLoop(generation: runGeneration)
+        }
     }
 
     private func frameLoop(generation runGeneration: Int) async {
@@ -107,11 +127,15 @@ final class LeniaLabFrameStore {
             guard let loopState = await MainActor.run(body: { self.frameLoopState(generation: runGeneration) }) else {
                 return
             }
+            await beforeSnapshot?()
+            guard generation == runGeneration, !Task.isCancelled else { return }
             let refreshMetrics = ContinuousClock.now - lastMetricsRefresh >= telemetryInterval
-            let snapshot = await loopState.runtime.snapshot(
+            let runtimeFrame = await loopState.runtime.frameSnapshot(
                 refreshMetrics: refreshMetrics,
                 projection: loopState.projection
             )
+            let snapshot = runtimeFrame.snapshot
+            let replayPosition = runtimeFrame.replayPosition
             if refreshMetrics {
                 latestRuntimeTelemetry = await loopState.runtime.telemetry()
                 lastMetricsRefresh = ContinuousClock.now
@@ -138,16 +162,27 @@ final class LeniaLabFrameStore {
                 snapshotFps: snapshotFps,
                 runtimeTelemetry: latestRuntimeTelemetry,
                 activity: latestActivity,
-                refreshMetrics: refreshMetrics
+                refreshMetrics: refreshMetrics,
+                replayPosition: replayPosition
             )
 
             await MainActor.run {
                 guard self.generation == runGeneration else { return }
-                self.present(snapshot)
-                if refreshMetrics || !self.deliveredInitialUpdate {
-                    self.deliveredInitialUpdate = true
-                    self.onUpdate?(update)
+                if replayPosition?.isRunning == false, self.isRunning {
+                    self.isRunning = false
+                    self.stageView?.setFramePacing(active: false)
                 }
+                self.present(snapshot)
+                self.onUpdate?(update)
+            }
+
+            if isRunning {
+                refreshPending = false
+            } else if refreshPending {
+                refreshPending = false
+                continue
+            } else {
+                break
             }
 
             let elapsed = ContinuousClock.now - frameStartedAt
@@ -155,6 +190,9 @@ final class LeniaLabFrameStore {
             if remaining > .zero {
                 try? await Task.sleep(for: remaining)
             }
+        }
+        if generation == runGeneration {
+            frameTask = nil
         }
     }
 
@@ -166,12 +204,47 @@ final class LeniaLabFrameStore {
         targetDelay: Duration
     )? {
         guard generation == runGeneration, let runtime else { return nil }
-        guard isRunning else {
-            return (runtime, activeProjection, .milliseconds(120))
-        }
-        let frameCap = max(1, min(120, targetSpeedCap))
+        let frameCap = targetSpeedCap > 0 ? max(1, min(60, targetSpeedCap)) : 60
         let delay = Duration.milliseconds(max(1, Int((1_000.0 / Double(frameCap)).rounded())))
         return (runtime, activeProjection, delay)
+    }
+}
+
+private struct LabPendingStrokeBatch {
+    let runtime: LabRuntimeHandle
+    let generation: Int
+    let tool: SandboxTool
+    let radius: Int
+    let strength: Float
+    var points: [SIMD2<Int>]
+
+    func canCoalesce(
+        generation: Int,
+        tool: SandboxTool,
+        radius: Int,
+        strength: Float
+    ) -> Bool {
+        self.generation == generation
+            && self.tool == tool
+            && self.radius == radius
+            && self.strength == strength
+    }
+}
+
+func labInterpolatedStrokePoints(
+    from start: SIMD2<Int>,
+    to end: SIMD2<Int>
+) -> [SIMD2<Int>] {
+    let deltaX = end.x - start.x
+    let deltaY = end.y - start.y
+    let stepCount = max(abs(deltaX), abs(deltaY))
+    guard stepCount > 0 else { return [start] }
+    return (0...stepCount).map { step in
+        let progress = Double(step) / Double(stepCount)
+        return SIMD2<Int>(
+            Int((Double(start.x) + Double(deltaX) * progress).rounded()),
+            Int((Double(start.y) + Double(deltaY) * progress).rounded())
+        )
     }
 }
 
@@ -195,13 +268,44 @@ final class LeniaLabModel: ObservableObject {
     @Published var fieldWidth: Int?
     @Published var latestStep = 0
     @Published var latestMetrics: FlowSandboxMetrics?
+    @Published var checkpointCount = 0
+    @Published var canUndo = false
+    @Published var canRedo = false
+    @Published var experimentStatusMessage: String?
+    @Published var replayFrameIndex = 0
+    @Published var replayFrameCount = 0
+    @Published var replayIsLooping = true
+    @Published private(set) var autoFoodEnabled = false
 
     let frames: LeniaLabFrameStore
+    let history: StudioExperimentHistory
     private var runtime: LabRuntimeHandle?
-    private var targetSpeedCap = 60
+    private var targetSpeedCap = 0
+    private var sessionGeneration = 0
+    private var runtimeLoadTask: Task<Void, Never>?
+    private var runStateTask: Task<Void, Never>?
+    private var runStateRequest = 0
+    private var runtimeMutationTail: Task<Void, Never>?
+    private var runtimeMutationEpoch = 0
+    private var runtimeMutationRequest = 0
+    private var strokeFlushTask: Task<Void, Never>?
+    private var pendingStrokeBatches: [LabPendingStrokeBatch] = []
+    private let beforeExperimentSnapshot: (@Sendable () async -> Void)?
+    private let beforeRuntimeMutation: (@Sendable (String) async -> Void)?
+    private let beforeRunStateTransition: (@Sendable (Bool) async -> Void)?
 
-    init(frameStore: LeniaLabFrameStore = LeniaLabFrameStore()) {
+    init(
+        frameStore: LeniaLabFrameStore = LeniaLabFrameStore(),
+        history: StudioExperimentHistory = StudioExperimentHistory(),
+        beforeExperimentSnapshot: (@Sendable () async -> Void)? = nil,
+        beforeRuntimeMutation: (@Sendable (String) async -> Void)? = nil,
+        beforeRunStateTransition: (@Sendable (Bool) async -> Void)? = nil
+    ) {
         self.frames = frameStore
+        self.history = history
+        self.beforeExperimentSnapshot = beforeExperimentSnapshot
+        self.beforeRuntimeMutation = beforeRuntimeMutation
+        self.beforeRunStateTransition = beforeRunStateTransition
     }
 
     func rebuildWorld(
@@ -211,75 +315,22 @@ final class LeniaLabModel: ObservableObject {
         speedCap: Int,
         shouldRun: Bool = false
     ) {
-        activeWorldEntryID = sourceEntryID
-        activeBackend = backend
-        targetSpeedCap = speedCap
-        let previousRuntime = runtime
-        runtime = nil
-        frames.stop()
-
-        let currentRunning = shouldRun
-        isRunning = currentRunning
-        clearFrameState()
-        externalReplayTitle = nil
-        worldContract = nil
-        snapshotFps = 0
-        activityEstimate = 0
-        runtimeStatusMessage = nil
-        stepDurationMs = 0
-        realizedStepRateHz = 0
-        activityHistory = []
-
-        Task {
-            if let previousRuntime {
-                await previousRuntime.stop()
+        startWorldLoad(
+            sourceEntryID: sourceEntryID,
+            backend: backend,
+            speedCap: speedCap,
+            shouldRun: shouldRun
+        ) {
+            try Task.checkCancellation()
+            let runtimeConfig = try loadRuntimeConfig(
+                from: baseConfigData,
+                overrides: ["backend": backend.rawValue]
+            )
+            if !labConfigRequiresCanonicalRuntime(runtimeConfig),
+               let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
+                return .engine(engine)
             }
-            do {
-                let runtimeConfig = try loadRuntimeConfig(
-                    from: baseConfigData,
-                    overrides: ["backend": backend.rawValue]
-                )
-                let runtime: LabRuntimeHandle
-                if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
-                    runtime = .engine(engine)
-                } else {
-                    runtime = .replay(CanonicalLabRuntime(runtimeConfig: runtimeConfig))
-                }
-                await runtime.setSpeedCap(hz: speedCap)
-                await runtime.setAutoFoodSpawn(
-                    enabled: false,
-                    probability: 0.03,
-                    patchSize: 12,
-                    value: 0.35
-                )
-                if currentRunning {
-                    await runtime.start()
-                }
-                let worldContract = await runtime.worldContract()
-                let projections = await runtime.availableProjections()
-                let activeProjection = projections.contains(self.activeProjection) ? self.activeProjection : .matter
-
-                self.runtime = runtime
-                self.isRunning = currentRunning
-                self.worldContract = worldContract
-                self.availableProjections = projections
-                self.activeProjection = activeProjection
-                self.runtimeModeLabel = runtime.modeLabel
-                self.activityEstimate = 0
-                self.startFrameLoop()
-            } catch {
-                self.runtime = nil
-                self.clearFrameState()
-                self.isRunning = false
-                self.worldContract = nil
-                self.activityEstimate = 0
-                self.stepDurationMs = 0
-                self.realizedStepRateHz = 0
-                self.availableProjections = [.matter]
-                self.activeProjection = .matter
-                self.runtimeModeLabel = "Replay failed"
-                self.runtimeStatusMessage = "Failed to load canonical replay world: \(error.localizedDescription)"
-            }
+            return .replay(CanonicalLabRuntime(runtimeConfig: runtimeConfig))
         }
     }
 
@@ -290,15 +341,175 @@ final class LeniaLabModel: ObservableObject {
         speedCap: Int,
         shouldRun: Bool = false
     ) {
-        activeWorldEntryID = sourceEntryID
-        activeBackend = backend
-        targetSpeedCap = speedCap
+        startWorldLoad(
+            sourceEntryID: sourceEntryID,
+            backend: backend,
+            speedCap: speedCap,
+            shouldRun: shouldRun
+        ) {
+            try Task.checkCancellation()
+            if !labConfigRequiresCanonicalRuntime(runtimeConfig),
+               let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
+                return .engine(engine)
+            }
+            return .replay(CanonicalLabRuntime(runtimeConfig: runtimeConfig))
+        }
+    }
+
+    private func startWorldLoad(
+        sourceEntryID: String,
+        backend: FlowSandboxBackend,
+        speedCap: Int,
+        shouldRun: Bool,
+        build: @escaping @Sendable () throws -> LabRuntimeHandle
+    ) {
+        let transition = beginRuntimeTransition(
+            sourceEntryID: sourceEntryID,
+            backend: backend,
+            speedCap: speedCap,
+            shouldRun: shouldRun,
+            modeLabel: "Loading world"
+        )
+        let generation = transition.generation
+        let previousRuntime = transition.previousRuntime
+
+        runtimeLoadTask = Task { [weak self] in
+            if let previousRuntime {
+                await previousRuntime.stop()
+            }
+            do {
+                try await Task.sleep(for: .milliseconds(75))
+            } catch {
+                return
+            }
+            guard let self,
+                  !Task.isCancelled,
+                  self.sessionGeneration == generation else {
+                return
+            }
+
+            let buildTask = Task.detached(priority: .userInitiated) {
+                try Task.checkCancellation()
+                let runtime = try build()
+                try Task.checkCancellation()
+                return runtime
+            }
+            let result = await withTaskCancellationHandler {
+                await buildTask.result
+            } onCancel: {
+                buildTask.cancel()
+            }
+
+            switch result {
+            case .success(let loadedRuntime):
+                await self.installLoadedRuntime(
+                    loadedRuntime,
+                    generation: generation,
+                    speedCap: speedCap
+                )
+            case .failure(let error):
+                guard !Task.isCancelled,
+                      self.sessionGeneration == generation else {
+                    return
+                }
+                self.applyRuntimeLoadFailure(
+                    modeLabel: "Replay failed",
+                    message: "Failed to load canonical replay world: \(error.localizedDescription)"
+                )
+                self.runtimeLoadTask = nil
+            }
+        }
+    }
+
+    private func installLoadedRuntime(
+        _ loadedRuntime: LabRuntimeHandle,
+        generation: Int,
+        speedCap: Int
+    ) async {
+        guard !Task.isCancelled, sessionGeneration == generation else {
+            await loadedRuntime.stop()
+            return
+        }
+
+        await loadedRuntime.setSpeedCap(hz: speedCap)
+        await loadedRuntime.setAutoFoodSpawn(
+            enabled: autoFoodEnabled,
+            probability: 0.03,
+            patchSize: 12,
+            value: 0.35
+        )
+        let contract = await loadedRuntime.worldContract()
+        let projections = await loadedRuntime.availableProjections()
+
+        guard !Task.isCancelled, sessionGeneration == generation else {
+            await loadedRuntime.stop()
+            return
+        }
+
+        runtime = loadedRuntime
+        worldContract = contract
+        availableProjections = projections
+        activeProjection = projections.contains(activeProjection) ? activeProjection : .matter
+        runtimeModeLabel = loadedRuntime.modeLabel
+        activityEstimate = 0
+
+        await loadedRuntime.pause()
+        guard !Task.isCancelled,
+              ownsRuntime(loadedRuntime, generation: generation) else {
+            await loadedRuntime.stop()
+            return
+        }
+        await publishInitialFrame(runtime: loadedRuntime, generation: generation)
+        guard !Task.isCancelled,
+              ownsRuntime(loadedRuntime, generation: generation) else {
+            await loadedRuntime.stop()
+            return
+        }
+        await initializeExperiment(runtime: loadedRuntime, generation: generation)
+        guard !Task.isCancelled,
+              ownsRuntime(loadedRuntime, generation: generation) else {
+            await loadedRuntime.stop()
+            return
+        }
+        if isRunning {
+            await loadedRuntime.start()
+        } else {
+            await loadedRuntime.pause()
+        }
+        guard !Task.isCancelled,
+              ownsRuntime(loadedRuntime, generation: generation) else {
+            await loadedRuntime.stop()
+            return
+        }
+        startFrameLoop()
+        runtimeLoadTask = nil
+    }
+
+    private func beginRuntimeTransition(
+        sourceEntryID: String?,
+        backend: FlowSandboxBackend,
+        speedCap: Int,
+        shouldRun: Bool,
+        modeLabel: String
+    ) -> (generation: Int, previousRuntime: LabRuntimeHandle?) {
+        sessionGeneration &+= 1
+        runtimeLoadTask?.cancel()
+        runtimeLoadTask = nil
+        runStateTask?.cancel()
+        runStateTask = nil
+        cancelRuntimeMutations()
+        strokeFlushTask?.cancel()
+        strokeFlushTask = nil
+        pendingStrokeBatches.removeAll(keepingCapacity: true)
+
         let previousRuntime = runtime
         runtime = nil
         frames.stop()
 
-        let currentRunning = shouldRun
-        isRunning = currentRunning
+        activeWorldEntryID = sourceEntryID
+        activeBackend = backend
+        targetSpeedCap = speedCap
+        isRunning = shouldRun
         clearFrameState()
         externalReplayTitle = nil
         worldContract = nil
@@ -307,120 +518,326 @@ final class LeniaLabModel: ObservableObject {
         runtimeStatusMessage = nil
         stepDurationMs = 0
         realizedStepRateHz = 0
+        availableProjections = [.matter]
+        activeProjection = .matter
+        runtimeModeLabel = modeLabel
         activityHistory = []
-
-        Task {
-            if let previousRuntime {
-                await previousRuntime.stop()
-            }
-            let runtime: LabRuntimeHandle
-            if let engine = makeLeniaInteractiveEngine(from: runtimeConfig, backend: backend) {
-                runtime = .engine(engine)
-            } else {
-                runtime = .replay(CanonicalLabRuntime(runtimeConfig: runtimeConfig))
-            }
-            await runtime.setSpeedCap(hz: speedCap)
-            await runtime.setAutoFoodSpawn(
-                enabled: false,
-                probability: 0.03,
-                patchSize: 12,
-                value: 0.35
-            )
-            let worldContract = await runtime.worldContract()
-            if currentRunning {
-                await runtime.start()
-            }
-            let projections = await runtime.availableProjections()
-            let activeProjection = projections.contains(self.activeProjection) ? self.activeProjection : .matter
-
-            self.runtime = runtime
-            self.isRunning = currentRunning
-            self.worldContract = worldContract
-            self.availableProjections = projections
-            self.activeProjection = activeProjection
-            self.runtimeModeLabel = runtime.modeLabel
-            self.activityEstimate = 0
-            self.startFrameLoop()
-        }
+        experimentStatusMessage = nil
+        replayFrameIndex = 0
+        replayFrameCount = 0
+        replayIsLooping = true
+        history.clear()
+        syncHistoryState()
+        return (sessionGeneration, previousRuntime)
     }
 
-    func loadFrameSequence(manifestURL: URL) {
-        let previousRuntime = runtime
+    private func applyRuntimeLoadFailure(modeLabel: String, message: String) {
         runtime = nil
-        frames.stop()
-
-        isRunning = false
-        activeWorldEntryID = nil
         clearFrameState()
+        isRunning = false
         worldContract = nil
         activityEstimate = 0
-        runtimeStatusMessage = nil
         stepDurationMs = 0
         realizedStepRateHz = 0
         availableProjections = [.matter]
         activeProjection = .matter
-        runtimeModeLabel = "TT export replay"
-        activityHistory = []
+        runtimeModeLabel = modeLabel
+        runtimeStatusMessage = message
+        history.clear()
+        syncHistoryState()
+    }
 
-        Task { @MainActor in
+    func loadFrameSequence(manifestURL: URL) {
+        autoFoodEnabled = false
+        let transition = beginRuntimeTransition(
+            sourceEntryID: nil,
+            backend: .metalFull,
+            speedCap: targetSpeedCap,
+            shouldRun: false,
+            modeLabel: "Loading TT export"
+        )
+        let generation = transition.generation
+        let previousRuntime = transition.previousRuntime
+
+        runtimeLoadTask = Task { [weak self] in
             if let previousRuntime {
                 await previousRuntime.stop()
             }
-            let securityScoped = manifestURL.startAccessingSecurityScopedResource()
-            defer {
-                if securityScoped {
-                    manifestURL.stopAccessingSecurityScopedResource()
-                }
+            guard let self,
+                  !Task.isCancelled,
+                  self.sessionGeneration == generation else {
+                return
             }
-            do {
-                let sequence = try TTFrameSequence.load(manifestURL: manifestURL)
-                let runtime = TTFrameSequenceRuntime(sequence: sequence)
-                await runtime.setSpeedCap(hz: targetSpeedCap)
-                let worldContract = await runtime.worldContract()
-                let snapshot = await runtime.snapshot(refreshMetrics: true, projection: .matter)
 
-                self.runtime = .frameSequence(runtime)
-                self.applyFrameSnapshot(snapshot)
-                self.worldContract = worldContract
+            let loadTask = Task.detached(priority: .userInitiated) {
+                try Task.checkCancellation()
+                let sequence = try TTFrameSequence.load(manifestURL: manifestURL)
+                try Task.checkCancellation()
+                return sequence
+            }
+            let result = await withTaskCancellationHandler {
+                await loadTask.result
+            } onCancel: {
+                loadTask.cancel()
+            }
+
+            switch result {
+            case .success(let sequence):
+                let frameRuntime = TTFrameSequenceRuntime(sequence: sequence)
+                let loadedRuntime = LabRuntimeHandle.frameSequence(frameRuntime)
+                await frameRuntime.setSpeedCap(hz: self.targetSpeedCap)
+                let contract = await frameRuntime.worldContract()
+
+                guard !Task.isCancelled,
+                      self.sessionGeneration == generation else {
+                    await loadedRuntime.stop()
+                    return
+                }
+
+                self.runtime = loadedRuntime
+                self.worldContract = contract
                 self.externalReplayTitle = sequence.title
-                self.runtimeModeLabel = "TT export replay"
+                self.runtimeModeLabel = loadedRuntime.modeLabel
                 self.runtimeStatusMessage = nil
+                self.history.clear()
+                self.syncHistoryState()
                 self.startFrameLoop()
-            } catch {
-                self.runtime = nil
-                self.clearFrameState()
-                self.worldContract = nil
+                self.runtimeLoadTask = nil
+            case .failure(let error):
+                guard !Task.isCancelled,
+                      self.sessionGeneration == generation else {
+                    return
+                }
+                self.applyRuntimeLoadFailure(
+                    modeLabel: "TT export replay failed",
+                    message: "Failed to load TT export: \(error.localizedDescription)"
+                )
                 self.externalReplayTitle = manifestURL.lastPathComponent
-                self.runtimeModeLabel = "TT export replay failed"
-                self.runtimeStatusMessage = "Failed to load TT export: \(error.localizedDescription)"
+                self.runtimeLoadTask = nil
             }
         }
     }
 
     func setRunning(_ running: Bool) {
         isRunning = running
-        frames.setRunning(running)
+        if !running {
+            frames.setRunning(false)
+        }
         guard let runtime else { return }
-        Task {
-            if running {
+        let generation = sessionGeneration
+        runStateRequest &+= 1
+        let request = runStateRequest
+        runStateTask?.cancel()
+        runStateTask = Task { [weak self] in
+            guard let self,
+                  !Task.isCancelled,
+                  self.sessionGeneration == generation,
+                  self.runStateRequest == request,
+                  self.ownsRuntime(runtime, generation: generation) else {
+                return
+            }
+            await self.beforeRunStateTransition?(running)
+            guard !Task.isCancelled,
+                  self.sessionGeneration == generation,
+                  self.runStateRequest == request,
+                  self.ownsRuntime(runtime, generation: generation) else {
+                return
+            }
+            if self.isRunning {
                 await runtime.resume()
             } else {
                 await runtime.pause()
             }
+            if self.ownsRuntime(runtime, generation: generation),
+               self.runStateRequest == request {
+                if self.isRunning {
+                    self.frames.setRunning(true)
+                } else {
+                    self.frames.requestRefresh()
+                }
+                self.runStateTask = nil
+            }
         }
+    }
+
+    func waitForRunStateTransition() async {
+        await runStateTask?.value
+    }
+
+    func waitForRuntimeMutations() async {
+        await runtimeMutationTail?.value
+    }
+
+    func runtimeStepSnapshot() async -> Int? {
+        guard let runtime else { return nil }
+        return await runtime.snapshot(
+            refreshMetrics: false,
+            projection: activeProjection
+        ).step
     }
 
     func reset() {
         guard let runtime else { return }
-        Task {
+        let generation = sessionGeneration
+        enqueueRuntimeMutation(named: "reset", runtime: runtime, generation: generation) { [weak self] in
+            await runtime.pause()
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
             await runtime.reset()
-            if isRunning {
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            let snapshot = await runtime.materializeStateSnapshot()
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            if let snapshot {
+                self.history.reset(initial: snapshot)
+                self.syncHistoryState()
+            }
+            if self.isRunning {
                 await runtime.resume()
+            } else {
+                await runtime.pause()
             }
-            await MainActor.run {
-                self.activityHistory = []
-            }
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            self.activityHistory = []
+            self.frames.requestRefresh()
         }
+    }
+
+    func step(_ count: Int = 1) {
+        guard let runtime, !isRunning else { return }
+        let generation = sessionGeneration
+        let resolvedCount = max(1, count)
+        enqueueRuntimeMutation(named: "step", runtime: runtime, generation: generation) { [weak self] in
+            await runtime.pause()
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
+            for _ in 0..<resolvedCount {
+                guard !Task.isCancelled else { return }
+                await runtime.step()
+                guard self.ownsRuntime(runtime, generation: generation) else { return }
+            }
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            let snapshot = await runtime.materializeStateSnapshot()
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            if let snapshot {
+                self.history.checkpoint(
+                    snapshot,
+                    label: resolvedCount == 1 ? "Step" : "Step ×\(resolvedCount)"
+                )
+                self.syncHistoryState()
+            }
+            self.frames.requestRefresh()
+        }
+    }
+
+    func stepReplayBackward() {
+        guard let runtime, externalReplayTitle != nil, !isRunning else { return }
+        let generation = sessionGeneration
+        enqueueRuntimeMutation(named: "replay-backward", runtime: runtime, generation: generation) { [weak self] in
+            await runtime.stepBackward()
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
+            self.frames.requestRefresh()
+        }
+    }
+
+    func seekReplay(toProgress progress: Double) {
+        guard let runtime, replayFrameCount > 0 else { return }
+        let clamped = min(1, max(0, progress.isFinite ? progress : 0))
+        let index = Int((clamped * Double(max(0, replayFrameCount - 1))).rounded())
+        setRunning(false)
+        let generation = sessionGeneration
+        enqueueRuntimeMutation(named: "replay-seek", runtime: runtime, generation: generation) { [weak self] in
+            await runtime.pause()
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
+            await runtime.seekReplay(to: index)
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            self.frames.requestRefresh()
+        }
+    }
+
+    func setReplayLooping(_ looping: Bool) {
+        guard let runtime, replayFrameCount > 0 else { return }
+        replayIsLooping = looping
+        let generation = sessionGeneration
+        enqueueRuntimeMutation(named: "replay-looping", runtime: runtime, generation: generation) { [weak self] in
+            await runtime.setReplayLooping(looping)
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
+            self.frames.requestRefresh()
+        }
+    }
+
+    func createCheckpoint(label: String? = nil) {
+        guard let runtime else { return }
+        let generation = sessionGeneration
+        Task { [weak self] in
+            let snapshot = await runtime.materializeStateSnapshot()
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
+            guard let snapshot else { return }
+            self.history.checkpoint(
+                snapshot,
+                label: label ?? "Checkpoint t\(snapshot.step)"
+            )
+            self.syncHistoryState()
+            self.experimentStatusMessage = "Checkpoint saved at t\(snapshot.step)"
+        }
+    }
+
+    func undo() {
+        guard let snapshot = history.undo() else { return }
+        syncHistoryState()
+        restoreExperimentState(snapshot)
+    }
+
+    func redo() {
+        guard let snapshot = history.redo() else { return }
+        syncHistoryState()
+        restoreExperimentState(snapshot)
+    }
+
+    func captureSpecimen(
+        name: String,
+        near point: SIMD2<Int>,
+        existingCreatures: [SavedCreature]
+    ) async throws -> StudioSpecimenCaptureResult? {
+        guard let runtime, let worldContract else {
+            throw LeniaLabExperimentError.runtimeUnavailable
+        }
+        let generation = sessionGeneration
+        let snapshot = await runtime.materializeStateSnapshot()
+        guard ownsRuntime(runtime, generation: generation) else { return nil }
+        guard let snapshot else {
+            throw LeniaLabExperimentError.stateUnavailable
+        }
+        let result = try await Task.detached(priority: .userInitiated) {
+            try StudioSpecimenCaptureStore.capture(
+                name: name,
+                ownerID: "studio",
+                snapshot: snapshot,
+                contract: worldContract,
+                near: point,
+                existingCreatures: existingCreatures
+            )
+        }.value
+        guard ownsRuntime(runtime, generation: generation) else { return nil }
+        history.record(
+            kind: .capture,
+            summary: "Captured context-free specimen \(result.creature.name)",
+            step: snapshot.step,
+            details: ["fingerprint": result.component.fingerprint]
+        )
+        experimentStatusMessage = "Saved context-free specimen \(result.creature.name)"
+        return result
+    }
+
+    func exportExperiment(title: String, sourceName: String, to destination: URL) throws {
+        guard let worldContract else {
+            throw LeniaLabExperimentError.runtimeUnavailable
+        }
+        try StudioExperimentBundleWriter.write(
+            title: title,
+            sourceName: sourceName,
+            contract: worldContract,
+            history: history,
+            to: destination
+        )
+        experimentStatusMessage = "Exported \(destination.lastPathComponent)"
     }
 
     func setSpeedCap(_ hz: Int) {
@@ -433,6 +850,7 @@ final class LeniaLabModel: ObservableObject {
     }
 
     func setAutoFood(enabled: Bool, probability: Float = 0.03, patchSize: Int = 12, value: Float = 0.35) {
+        autoFoodEnabled = enabled
         guard let runtime else { return }
         Task {
             await runtime.setAutoFoodSpawn(
@@ -447,32 +865,70 @@ final class LeniaLabModel: ObservableObject {
     func setProjection(_ projection: LabFieldProjection) {
         activeProjection = projection
         frames.setProjection(projection)
-        guard let runtime else { return }
-        Task {
-            let snapshot = await runtime.snapshot(refreshMetrics: false, projection: projection)
-            await MainActor.run {
-                self.applyFrameSnapshot(snapshot)
-            }
-        }
     }
 
     func applyStroke(tool: SandboxTool, points: [SIMD2<Int>], radius: Int, strength: Float) {
         guard let runtime, !points.isEmpty else { return }
-        let stroke = SandboxStroke(tool: tool, points: points, radius: radius, strength: strength)
-        Task {
-            await runtime.applyStroke(stroke)
+        let generation = sessionGeneration
+        if let lastIndex = pendingStrokeBatches.indices.last,
+           pendingStrokeBatches[lastIndex].canCoalesce(
+               generation: generation,
+               tool: tool,
+               radius: radius,
+               strength: strength
+           ) {
+            let previousPoint = pendingStrokeBatches[lastIndex].points.last
+            pendingStrokeBatches[lastIndex].points.append(
+                contentsOf: continuousStrokePoints(after: previousPoint, points: points)
+            )
+        } else {
+            pendingStrokeBatches.append(
+                LabPendingStrokeBatch(
+                    runtime: runtime,
+                    generation: generation,
+                    tool: tool,
+                    radius: radius,
+                    strength: strength,
+                    points: continuousStrokePoints(after: nil, points: points)
+                )
+            )
         }
+        startStrokeFlushIfNeeded(generation: generation)
     }
 
     func applyStamp(entry: StudioCompareEntry, at point: SIMD2<Int>, stampCache: LeniaLabStampCache) {
         guard let runtime else { return }
-        Task {
+        let generation = sessionGeneration
+        Task { [weak self] in
             let stamp = await stampCache.stamp(for: entry)
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
             await runtime.applyCreatureStamp(stamp, center: point)
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            let snapshot = await runtime.materializeStateSnapshot()
+            guard self.ownsRuntime(runtime, generation: generation) else { return }
+            if let snapshot {
+                self.history.record(
+                    kind: .stamp,
+                    summary: "Stamped \(entry.name)",
+                    step: snapshot.step
+                )
+                self.history.checkpoint(snapshot, label: "Stamp \(entry.name)")
+                self.syncHistoryState()
+            }
+            self.frames.requestRefresh()
         }
     }
 
     func shutdown() {
+        sessionGeneration &+= 1
+        runtimeLoadTask?.cancel()
+        runtimeLoadTask = nil
+        runStateTask?.cancel()
+        runStateTask = nil
+        cancelRuntimeMutations()
+        strokeFlushTask?.cancel()
+        strokeFlushTask = nil
+        pendingStrokeBatches.removeAll()
         let currentRuntime = runtime
         runtime = nil
         frames.stop()
@@ -483,20 +939,206 @@ final class LeniaLabModel: ObservableObject {
         }
     }
 
+    private func initializeExperiment(
+        runtime: LabRuntimeHandle,
+        generation: Int
+    ) async {
+        await beforeExperimentSnapshot?()
+        guard ownsRuntime(runtime, generation: generation) else { return }
+        let snapshot = await runtime.materializeStateSnapshot()
+        guard ownsRuntime(runtime, generation: generation) else { return }
+        guard let snapshot else {
+            history.clear()
+            syncHistoryState()
+            return
+        }
+        history.reset(initial: snapshot)
+        syncHistoryState()
+    }
+
+    private func publishInitialFrame(
+        runtime: LabRuntimeHandle,
+        generation: Int
+    ) async {
+        let runtimeFrame = await runtime.frameSnapshot(
+            refreshMetrics: true,
+            projection: activeProjection
+        )
+        guard ownsRuntime(runtime, generation: generation) else { return }
+        frames.present(runtimeFrame.snapshot)
+        consumeFrameUpdate(
+            LeniaLabFrameUpdate(
+                snapshot: runtimeFrame.snapshot,
+                snapshotFps: 0,
+                runtimeTelemetry: FlowSandboxRuntimeTelemetry(
+                    lastStepDurationMs: 0,
+                    realizedStepRateHz: 0
+                ),
+                activity: 0,
+                refreshMetrics: false,
+                replayPosition: runtimeFrame.replayPosition
+            )
+        )
+        latestMetrics = runtimeFrame.snapshot.metrics
+    }
+
+    private func restoreExperimentState(_ snapshot: FlowSandboxStateSnapshot) {
+        guard let runtime else { return }
+        let generation = sessionGeneration
+        isRunning = false
+        frames.setRunning(false)
+        runStateRequest &+= 1
+        runStateTask?.cancel()
+        runStateTask = nil
+        enqueueRuntimeMutation(named: "restore", runtime: runtime, generation: generation) { [weak self] in
+            await runtime.pause()
+            guard let self, self.ownsRuntime(runtime, generation: generation) else { return }
+            do {
+                let restored = try await runtime.restoreStateSnapshot(snapshot)
+                guard self.ownsRuntime(runtime, generation: generation) else { return }
+                guard restored else {
+                    self.experimentStatusMessage = "This replay cannot restore checkpoints"
+                    return
+                }
+                self.experimentStatusMessage = "Restored t\(snapshot.step)"
+                self.frames.requestRefresh()
+            } catch {
+                guard self.ownsRuntime(runtime, generation: generation) else { return }
+                self.experimentStatusMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func syncHistoryState() {
+        checkpointCount = history.checkpoints.count
+        canUndo = history.canUndo
+        canRedo = history.canRedo
+    }
+
+    private func startStrokeFlushIfNeeded(generation: Int) {
+        guard strokeFlushTask == nil else { return }
+        strokeFlushTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(8))
+            guard let self, !Task.isCancelled else { return }
+
+            var lastAppliedBatch: LabPendingStrokeBatch?
+
+            while !Task.isCancelled,
+                  self.sessionGeneration == generation,
+                  !self.pendingStrokeBatches.isEmpty {
+                let batch = self.pendingStrokeBatches.removeFirst()
+                let stroke = SandboxStroke(
+                    tool: batch.tool,
+                    points: batch.points,
+                    radius: batch.radius,
+                    strength: batch.strength
+                )
+                await batch.runtime.applyStroke(stroke)
+                guard self.ownsRuntime(batch.runtime, generation: generation) else { return }
+                lastAppliedBatch = batch
+                self.frames.requestRefresh()
+                await Task.yield()
+            }
+
+            if let batch = lastAppliedBatch {
+                let snapshot = await batch.runtime.materializeStateSnapshot()
+                guard self.ownsRuntime(batch.runtime, generation: generation) else { return }
+                if let snapshot {
+                    self.history.record(
+                        kind: .brush,
+                        summary: "\(batch.tool.rawValue.capitalized) stroke",
+                        step: snapshot.step
+                    )
+                    self.history.checkpoint(
+                        snapshot,
+                        label: "\(batch.tool.rawValue.capitalized) stroke"
+                    )
+                    self.syncHistoryState()
+                }
+            }
+
+            guard self.sessionGeneration == generation else { return }
+            self.strokeFlushTask = nil
+            if !self.pendingStrokeBatches.isEmpty {
+                self.startStrokeFlushIfNeeded(generation: generation)
+            }
+        }
+    }
+
+    private func continuousStrokePoints(
+        after previousPoint: SIMD2<Int>?,
+        points: [SIMD2<Int>]
+    ) -> [SIMD2<Int>] {
+        var result: [SIMD2<Int>] = []
+        var previous = previousPoint
+        for point in points {
+            if let previous {
+                result.append(contentsOf: labInterpolatedStrokePoints(from: previous, to: point).dropFirst())
+            } else {
+                result.append(point)
+            }
+            previous = point
+        }
+        return result
+    }
+
+    private func enqueueRuntimeMutation(
+        named name: String,
+        runtime candidate: LabRuntimeHandle,
+        generation: Int,
+        operation: @escaping @MainActor @Sendable () async -> Void
+    ) {
+        let predecessor = runtimeMutationTail
+        let epoch = runtimeMutationEpoch
+        runtimeMutationRequest &+= 1
+        let request = runtimeMutationRequest
+        let task = Task { [weak self] in
+            await predecessor?.value
+            guard let self,
+                  !Task.isCancelled,
+                  self.runtimeMutationEpoch == epoch,
+                  self.ownsRuntime(candidate, generation: generation) else {
+                return
+            }
+            defer {
+                self.completeRuntimeMutation(request: request, epoch: epoch)
+            }
+            await self.beforeRuntimeMutation?(name)
+            guard !Task.isCancelled,
+                  self.runtimeMutationEpoch == epoch,
+                  self.ownsRuntime(candidate, generation: generation) else {
+                return
+            }
+            await operation()
+        }
+        runtimeMutationTail = task
+    }
+
+    private func completeRuntimeMutation(request: Int, epoch: Int) {
+        guard runtimeMutationEpoch == epoch,
+              runtimeMutationRequest == request else {
+            return
+        }
+        runtimeMutationTail = nil
+    }
+
+    private func cancelRuntimeMutations() {
+        runtimeMutationEpoch &+= 1
+        runtimeMutationRequest &+= 1
+        runtimeMutationTail?.cancel()
+        runtimeMutationTail = nil
+    }
+
+    private func ownsRuntime(_ candidate: LabRuntimeHandle, generation: Int) -> Bool {
+        sessionGeneration == generation && runtime?.isIdentical(to: candidate) == true
+    }
+
     private func clearFrameState() {
         frames.clear()
         hasSnapshot = false
         fieldWidth = nil
         latestStep = 0
         latestMetrics = nil
-    }
-
-    private func applyFrameSnapshot(_ snapshot: FlowSandboxSnapshot) {
-        frames.present(snapshot)
-        hasSnapshot = true
-        fieldWidth = snapshot.width
-        latestStep = snapshot.step
-        latestMetrics = snapshot.metrics
     }
 
     private func startFrameLoop() {
@@ -516,10 +1158,22 @@ final class LeniaLabModel: ObservableObject {
         if fieldWidth != update.snapshot.width {
             fieldWidth = update.snapshot.width
         }
+        latestStep = update.snapshot.step
+        if let replayPosition = update.replayPosition {
+            replayFrameIndex = replayPosition.frameIndex
+            replayFrameCount = replayPosition.frameCount
+            replayIsLooping = replayPosition.isLooping
+            if isRunning, !replayPosition.isRunning {
+                isRunning = false
+                runStateRequest &+= 1
+                runStateTask?.cancel()
+                runStateTask = nil
+                frames.setRunning(false)
+            }
+        }
         guard update.refreshMetrics else { return }
 
         snapshotFps = update.snapshotFps
-        latestStep = update.snapshot.step
         latestMetrics = update.snapshot.metrics
         activityEstimate = update.activity
         stepDurationMs = update.runtimeTelemetry.lastStepDurationMs
@@ -527,6 +1181,24 @@ final class LeniaLabModel: ObservableObject {
         activityHistory.append(update.activity)
         if activityHistory.count > 48 {
             activityHistory.removeFirst(activityHistory.count - 48)
+        }
+    }
+}
+
+func labConfigRequiresCanonicalRuntime(_ runtimeConfig: LeniaRuntimeConfig) -> Bool {
+    runtimeConfig.statePatch != nil
+}
+
+private enum LeniaLabExperimentError: LocalizedError {
+    case runtimeUnavailable
+    case stateUnavailable
+
+    var errorDescription: String? {
+        switch self {
+        case .runtimeUnavailable:
+            return "No editable runtime is loaded."
+        case .stateUnavailable:
+            return "This replay does not expose an editable state."
         }
     }
 }
@@ -566,10 +1238,9 @@ struct LeniaLabView: View {
     @State private var secondaryTool: SandboxTool = .erase
     @State private var brushRadius = 3.0
     @State private var brushStrength = 0.35
-    @State private var speedCap = 60
+    @State private var speedCap = 30
     @State private var diagnosticsEnabled = false
-    @State private var autoFoodEnabled = false
-    @State private var worldSelection: LabWorldSelection = .preset("orbium-sandbox")
+    @State private var worldSelection: LabWorldSelection = .preset("flow-sail-0aa5d7b6")
     @State private var selectedStampID: String?
     @State private var selectedStampPreview: CreatureStamp?
     @State private var worldDraft: LabWorldDraft?
@@ -579,12 +1250,21 @@ struct LeniaLabView: View {
     @State private var hoveredGridPoint: SIMD2<Int>?
     @State private var showTTExportImporter = false
     @State private var showContractEditor = false
+    @State private var showPhysicsEditor = true
+    @State private var selectedPhysicsKernel = 0
     @State private var selectedTrack1FamilyID: String?
-    @State private var inspectorPanel: LabInspectorPanel = .bay
+    @State private var catalogScope: LabCatalogScope = .flowLife
+    @State private var catalogSearch = ""
+    @State private var inspectorPanel: LabInspectorPanel = .catalog
 
     private let stampCache = LeniaLabStampCache()
     private static let backendOrder: [FlowSandboxBackend] = [.metalFull, .mlx]
-    private static let missionPresets = buildLabMissionPresets()
+    private static let organismPresets = buildLabMissionPresets()
+    private static let missionPresets = organismPresets.filter {
+        $0.organismConfig?.catalogTier == .primary
+    }
+    private static let blankWorldPresets = buildBlankLabMissionPresets()
+    private static let allWorldPresets = buildAllLabWorldPresets()
 
     init() {
         let frameStore = LeniaLabFrameStore()
@@ -594,10 +1274,11 @@ struct LeniaLabView: View {
 
     private var stampEntries: [StudioCompareEntry] {
         let starter = orbiumStarterEntry()
+        let comparison = appState.compareTray
         let saved = appState.library.prefix(10).map(appState.studioEntry)
         let live = appState.recentCreatures.prefix(10).map(appState.studioEntry)
         var seen: Set<String> = []
-        return ([starter] + saved + live).filter { entry in
+        return ([starter] + comparison + saved + live).filter { entry in
             seen.insert(entry.id).inserted
         }
     }
@@ -613,7 +1294,7 @@ struct LeniaLabView: View {
     private var selectedWorldEntry: StudioCompareEntry {
         switch worldSelection {
         case .preset(let presetID):
-            return Self.missionPresets.first(where: { $0.id == presetID })?.entry ?? Self.missionPresets[0].entry
+            return Self.allWorldPresets.first(where: { $0.id == presetID })?.entry ?? Self.missionPresets[0].entry
         case .stamp(let entryID):
             return stampEntries.first(where: { $0.id == entryID }) ?? selectedStampEntry
         case .track1Config(let path):
@@ -623,12 +1304,12 @@ struct LeniaLabView: View {
 
     private var selectedWorldPreset: LabMissionPreset? {
         guard case .preset(let presetID) = worldSelection else { return nil }
-        return Self.missionPresets.first(where: { $0.id == presetID })
+        return Self.allWorldPresets.first(where: { $0.id == presetID })
     }
 
     private var activeWorldEntry: StudioCompareEntry? {
         guard let activeWorldEntryID = model.activeWorldEntryID else { return nil }
-        if let preset = Self.missionPresets.first(where: { $0.entry.id == activeWorldEntryID }) {
+        if let preset = Self.allWorldPresets.first(where: { $0.entry.id == activeWorldEntryID }) {
             return preset.entry
         }
         if let selectedStampID,
@@ -643,17 +1324,47 @@ struct LeniaLabView: View {
         return stampEntries.first(where: { $0.id == activeWorldEntryID })
     }
 
-    private var selectedTrack1Family: Track1TaxonomyFamily? {
-        let familyID = selectedTrack1FamilyID
-            ?? selectedTrack1Config?.family
-            ?? track1Catalog.catalog.families.first?.id
-        guard let familyID else { return nil }
-        return track1Catalog.catalog.families.first(where: { $0.id == familyID })
-    }
-
     private var selectedTrack1Config: Track1TaxonomyConfig? {
         guard case .track1Config(let path) = worldSelection else { return nil }
         return track1Catalog.catalog.config(path: path)
+    }
+
+    private var requiredWorldBackend: FlowSandboxBackend? {
+        selectedTrack1Config?.requiredLabBackend
+            ?? selectedWorldPreset?.organismConfig?.requiredLabBackend
+    }
+
+    private var flowOrganisms: [Track1TaxonomyConfig] {
+        track1Catalog.catalog.featuredFlowConfigs
+    }
+
+    private var matchingFlowOrganisms: [Track1TaxonomyConfig] {
+        flowOrganisms.filter { track1Config($0, matches: catalogSearch) }
+    }
+
+    private var matchingFlowFamilies: [FlowOrganismFamily] {
+        flowOrganismFamilies(from: matchingFlowOrganisms)
+    }
+
+    private var matchingClassicalReferences: [Track1TaxonomyConfig] {
+        track1Catalog.catalog.classicalReferenceConfigs.filter {
+            track1Config($0, matches: catalogSearch)
+        }
+    }
+
+    private var filteredTaxonomyFamilies: [Track1TaxonomyFamily] {
+        filteredTrack1Families(
+            track1Catalog.catalog.families,
+            search: catalogSearch
+        )
+    }
+
+    private var displayedTrack1Family: Track1TaxonomyFamily? {
+        if let selectedTrack1FamilyID,
+           let selected = filteredTaxonomyFamilies.first(where: { $0.id == selectedTrack1FamilyID }) {
+            return selected
+        }
+        return filteredTaxonomyFamilies.first
     }
 
     private var selectedStampSourceSummary: String {
@@ -693,35 +1404,44 @@ struct LeniaLabView: View {
         }
     }
 
+    private var isReadOnlyReplay: Bool {
+        !labStageAllowsEditing(externalReplayTitle: model.externalReplayTitle)
+    }
+
+    private var stageAccessibilityValue: String {
+        let grid = model.worldContract?.gridSize ?? model.fieldWidth ?? gridPreset.rawValue
+        let state = model.isRunning ? "playing" : "paused"
+        let mode = isReadOnlyReplay ? "read-only replay" : primaryGhostSummary
+        return "Step \(model.latestStep), \(grid) by \(grid) field, \(state), \(mode)"
+    }
+
     var body: some View {
         GeometryReader { proxy in
             Group {
-                if proxy.size.width < 1_080 {
+                if labWorkspaceLayout(for: proxy.size.width) == .stacked {
                     ScrollView {
-                        VStack(spacing: 10) {
+                        VStack(spacing: 14) {
                             stageSurface
                             controlSurface
                             inspectorSurface
                         }
-                        .padding(12)
+                        .padding(10)
                     }
                 } else {
-                    let inspectorWidth = min(420, max(340, proxy.size.width * 0.25))
+                    let inspectorWidth = min(420, max(360, proxy.size.width * 0.26))
                     ScrollView {
-                        HStack(alignment: .top, spacing: 12) {
-                            VStack(spacing: 10) {
+                        HStack(alignment: .top, spacing: 14) {
+                            VStack(spacing: 14) {
                                 stageSurface
                                 controlSurface
                             }
                             .frame(minWidth: 620, maxWidth: .infinity)
                             .layoutPriority(1)
 
-                            VStack(spacing: 10) {
-                                inspectorSurface
-                            }
-                            .frame(width: inspectorWidth)
+                            inspectorSurface
+                                .frame(width: inspectorWidth)
                         }
-                        .padding(12)
+                        .padding(10)
                         .frame(minWidth: proxy.size.width, alignment: .topLeading)
                     }
                 }
@@ -748,10 +1468,7 @@ struct LeniaLabView: View {
                 stageOffset = .zero
             }
         }
-        .task(
-            id: stampEntries.map(\.id).joined(separator: "|")
-                + ":\(worldSelection.taskKey)"
-        ) {
+        .task {
             if selectedStampID == nil {
                 selectedStampID = stampEntries.first?.id
             }
@@ -772,9 +1489,6 @@ struct LeniaLabView: View {
         .onChange(of: speedCap) { _, newValue in
             model.setSpeedCap(newValue)
         }
-        .onChange(of: autoFoodEnabled) { _, newValue in
-            model.setAutoFood(enabled: newValue)
-        }
         .onChange(of: model.activeProjection) { _, newValue in
             model.setProjection(newValue)
         }
@@ -782,6 +1496,9 @@ struct LeniaLabView: View {
             applyDraftChange { draft in
                 draft.setGridSize(newValue.rawValue)
             }
+        }
+        .onChange(of: worldDraft?.kernelCount) { _, count in
+            selectedPhysicsKernel = min(selectedPhysicsKernel, max(0, (count ?? 1) - 1))
         }
         .onChange(of: backend) { _, newValue in
             rebuildActiveWorld(backend: newValue)
@@ -800,206 +1517,443 @@ struct LeniaLabView: View {
     }
 
     private var stageSurface: some View {
-        StudioSurface(style: .console) {
+        VStack(spacing: 0) {
+            stageToolbar
+            stageCanvas
+            stageDatumStrip
+        }
+        .background(StudioPalette.consoleSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(StudioPalette.hairline.opacity(0.65), lineWidth: 1)
+        }
+    }
+
+    private var stageToolbar: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                stagePlaybackControls
+                stageObservationStatus
+                    .layoutPriority(1)
+                Spacer(minLength: 8)
+                stageDisplayControls
+            }
+
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Button {
-                        model.setRunning(!model.isRunning)
-                    } label: {
-                        Label(model.isRunning ? "Hold" : "Run", systemImage: model.isRunning ? "pause.fill" : "play.fill")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-
-                    Button {
-                        model.reset()
-                    } label: {
-                        Image(systemName: "arrow.counterclockwise")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help("Reset runtime")
-
-                    Button {
-                        rebuildActiveWorld()
-                    } label: {
-                        Image(systemName: "checkmark.seal")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .disabled(worldDraft == nil)
-                    .help("Apply contract")
-
-                    Button {
-                        selectedStampID = selectedStampEntry.id
-                        worldSelection = .stamp(selectedStampEntry.id)
-                    } label: {
-                        Image(systemName: "scope")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help("Build world from selected stamp")
-
-                    Text(stageStatusLine)
-                        .font(StudioType.dataSmall)
-                        .foregroundStyle(StudioPalette.mutedInk)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-
-                    Spacer(minLength: 8)
-
-                    if model.availableProjections.count > 1 {
-                        Picker("Field", selection: $model.activeProjection) {
-                            ForEach(model.availableProjections) { projection in
-                                Text(projection.label).tag(projection)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.segmented)
-                        .controlSize(.small)
-                        .frame(width: 238)
-                    }
-
-                    Menu {
-                        ForEach(Self.backendOrder) { option in
-                            Button {
-                                backend = option
-                            } label: {
-                                if backend == option {
-                                    Label(labBackendLabel(option), systemImage: "checkmark")
-                                } else {
-                                    Text(labBackendLabel(option))
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "cpu")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help("Compute backend: \(labBackendLabel(backend))")
-
-                    Menu {
-                        ForEach(LeniaRenderMode.allCases) { mode in
-                            Button {
-                                renderMode = mode
-                            } label: {
-                                if renderMode == mode {
-                                    Label(mode.rawValue, systemImage: "checkmark")
-                                } else {
-                                    Text(mode.rawValue)
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "paintpalette")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help("Color map")
-
-                    Button {
-                        adjustStageZoom(by: 0.85)
-                    } label: {
-                        Image(systemName: "minus.magnifyingglass")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Text("\(Int((stageZoom * 100).rounded()))%")
-                        .font(StudioType.dataSmall)
-                        .foregroundStyle(StudioPalette.mutedInk)
-                        .frame(width: 46)
-
-                    Button {
-                        adjustStageZoom(by: 1.15)
-                    } label: {
-                        Image(systemName: "plus.magnifyingglass")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Button("Focus") {
-                        updateStageTransform(LeniaLabStageTransform(zoom: 1.85, offset: .zero))
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Button("Fit") {
-                        updateStageTransform(.init())
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                HStack(spacing: 10) {
+                    stagePlaybackControls
+                    stageObservationStatus
+                        .layoutPriority(1)
                 }
 
-                if diagnosticsEnabled {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        LabTacticalReadout(label: "State", value: model.isRunning ? "Running" : "Armed", accent: model.isRunning ? StudioPalette.moss : StudioPalette.ember)
-                        LabTacticalReadout(label: "Mode", value: model.runtimeModeLabel, accent: StudioPalette.ink)
-                        LabTacticalReadout(label: "Compute", value: labBackendLabel(model.activeBackend), accent: StudioPalette.ocean)
-                        let resolvedGrid = model.worldContract?.gridSize ?? model.fieldWidth ?? gridPreset.rawValue
-                        LabTacticalReadout(label: "Grid", value: "\(resolvedGrid)x\(resolvedGrid)", accent: StudioPalette.ocean)
-                        if let contract = model.worldContract {
-                            LabTacticalReadout(label: "Lanes", value: "\(contract.channels)m/\(contract.parameterFieldMode.displayName)", accent: StudioPalette.ocean)
-                            LabTacticalReadout(label: "Kernels", value: "\(contract.kernelCount)", accent: StudioPalette.ember)
-                            LabTacticalReadout(label: "Radius", value: formatCompact(contract.radius), accent: StudioPalette.moss)
-                        }
-                        LabTacticalReadout(label: "Step", value: "\(model.latestStep)", accent: StudioPalette.ember)
-                        LabTacticalReadout(label: "Activity", value: String(format: "%.4f", model.activityEstimate), accent: activityAccent(for: model.activityEstimate))
-                        if let metrics = model.latestMetrics {
-                            LabTacticalReadout(label: "Mass", value: formatCompact(metrics.massMean), accent: StudioPalette.moss)
-                            LabTacticalReadout(label: "Food", value: formatCompact(metrics.foodMean), accent: StudioPalette.ocean)
-                        }
-                        LabTacticalReadout(label: "View", value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--", accent: StudioPalette.ink)
-                        LabTacticalReadout(label: "Ghost", value: primaryGhostCompactLabel, accent: hoverAccent(for: primaryTool))
-                        if let hoveredGridPoint {
-                            LabTacticalReadout(label: "Cursor", value: "\(hoveredGridPoint.x),\(hoveredGridPoint.y)", accent: StudioPalette.ink)
-                        }
-                    }
-                    }
+                ScrollView(.horizontal, showsIndicators: false) {
+                    stageDisplayControls
                 }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(StudioPalette.consoleSurfaceRaised.opacity(0.72))
+    }
 
-                if let runtimeStatusMessage = model.runtimeStatusMessage, !model.hasSnapshot {
-                    ContentUnavailableView(
-                        "World failed to load",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text(runtimeStatusMessage)
-                    )
-                    .frame(minHeight: 500)
-                } else {
-                    LabStageFrameSurface(
-                        frameStore: frameStore,
-                        renderMode: renderMode,
-                        zoom: stageZoom,
-                        offset: stageOffset,
-                        gridSize: model.fieldWidth ?? gridPreset.rawValue,
-                        hoveredGridPoint: hoveredGridPoint,
-                        primaryTool: primaryTool,
-                        brushRadius: Int(brushRadius.rounded()),
-                        selectedStampEntry: selectedStampEntry,
-                        selectedStampPreview: selectedStampPreview,
-                        onTransformChange: updateStageTransform,
-                        onPrimaryPoint: { handleStagePoint($0, tool: primaryTool) },
-                        onSecondaryPoint: { handleStagePoint($0, tool: secondaryTool) },
-                        onHoverPointChange: { hoveredGridPoint = $0 },
-                        onBrushRadiusDelta: adjustBrushRadius
-                    )
-                    .frame(minHeight: 420)
-                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .stroke(StudioPalette.hairline.opacity(0.85), lineWidth: 1)
-                    )
+    private var stagePlaybackControls: some View {
+        HStack(spacing: 6) {
+            if model.replayFrameCount > 0 {
+                Button {
+                    model.stepReplayBackward()
+                } label: {
+                    Image(systemName: "backward.frame.fill")
                 }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(model.isRunning || model.replayFrameIndex == 0)
+                .help("Previous replay frame")
+            }
+
+            Button {
+                model.setRunning(!model.isRunning)
+            } label: {
+                Label(
+                    model.isRunning ? "Hold" : "Run",
+                    systemImage: model.isRunning ? "pause.fill" : "play.fill"
+                )
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .disabled(!model.hasSnapshot)
+
+            Button {
+                model.reset()
+            } label: {
+                Image(systemName: "arrow.counterclockwise")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(!model.hasSnapshot)
+            .help("Reset runtime")
+
+            Button {
+                model.step()
+            } label: {
+                Image(systemName: "forward.frame")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(model.isRunning || !model.hasSnapshot)
+            .help("Advance one exact step")
+
+            if model.replayFrameCount == 0 {
+                Menu {
+                    Button("Step 10") { model.step(10) }
+                    Button("Step 100") { model.step(100) }
+                } label: {
+                    Image(systemName: "forward.end")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(model.isRunning || !model.hasSnapshot)
+                .help("Advance multiple exact steps")
+            }
+
+            Menu {
+                ForEach([15, 30, 60, 120, 0], id: \.self) { rate in
+                    Button {
+                        speedCap = rate
+                    } label: {
+                        let title = rate == 0 ? "Maximum" : "\(rate) steps/s"
+                        if speedCap == rate {
+                            Label(title, systemImage: "checkmark")
+                        } else {
+                            Text(title)
+                        }
+                    }
+                }
+            } label: {
+                Label(speedCap == 0 ? "Max" : "\(speedCap)/s", systemImage: "speedometer")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Observation rate")
+
+            if model.replayFrameCount > 0 {
+                Slider(
+                    value: Binding(
+                        get: {
+                            guard model.replayFrameCount > 1 else { return 0 }
+                            return Double(model.replayFrameIndex) / Double(model.replayFrameCount - 1)
+                        },
+                        set: { model.seekReplay(toProgress: $0) }
+                    ),
+                    in: 0...1
+                )
+                .frame(width: 130)
+                .accessibilityLabel("Replay timeline")
+
+                Text("\(model.replayFrameIndex + 1)/\(model.replayFrameCount)")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                    .monospacedDigit()
+                    .frame(minWidth: 48, alignment: .trailing)
+
+                Toggle(isOn: Binding(
+                    get: { model.replayIsLooping },
+                    set: { model.setReplayLooping($0) }
+                )) {
+                    Image(systemName: "repeat")
+                }
+                .toggleStyle(.button)
+                .controlSize(.small)
+                .help("Loop replay")
             }
         }
     }
 
+    private var stageObservationStatus: some View {
+        HStack(spacing: 7) {
+            if !model.hasSnapshot, model.runtimeStatusMessage == nil {
+                ProgressView()
+                    .controlSize(.small)
+                    .scaleEffect(0.72)
+            } else {
+                Circle()
+                    .fill(
+                        model.runtimeStatusMessage != nil
+                            ? StudioPalette.ember
+                            : (model.isRunning ? StudioPalette.moss : StudioPalette.ocean)
+                    )
+                    .frame(width: 6, height: 6)
+            }
+
+            Text(stageStatusLine)
+                .font(StudioType.dataSmall)
+                .foregroundStyle(model.runtimeStatusMessage == nil ? StudioPalette.mutedInk : StudioPalette.ember)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+    }
+
+    private var stageDisplayControls: some View {
+        HStack(spacing: 6) {
+            if model.availableProjections.count > 1 {
+                Picker("Field", selection: $model.activeProjection) {
+                    ForEach(model.availableProjections) { projection in
+                        Text(projection.label).tag(projection)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+                .frame(width: min(210, CGFloat(model.availableProjections.count) * 86))
+            }
+
+            Toggle(isOn: $diagnosticsEnabled) {
+                Image(systemName: "waveform.path.ecg")
+            }
+            .toggleStyle(.button)
+            .controlSize(.small)
+            .help("Show observation telemetry")
+
+            Menu {
+                ForEach(LeniaRenderMode.allCases) { mode in
+                    Button {
+                        renderMode = mode
+                    } label: {
+                        if renderMode == mode {
+                            Label(mode.rawValue, systemImage: "checkmark")
+                        } else {
+                            Text(mode.rawValue)
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "paintpalette")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Color map")
+
+            Divider()
+                .frame(height: 18)
+
+            Button {
+                adjustStageZoom(by: 0.85)
+            } label: {
+                Image(systemName: "minus.magnifyingglass")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Zoom out")
+
+            Text("\(Int((stageZoom * 100).rounded()))%")
+                .font(StudioType.dataSmall)
+                .foregroundStyle(StudioPalette.mutedInk)
+                .frame(width: 42)
+
+            Button {
+                adjustStageZoom(by: 1.15)
+            } label: {
+                Image(systemName: "plus.magnifyingglass")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Zoom in")
+
+            Button {
+                updateStageTransform(LeniaLabStageTransform(zoom: 1.85, offset: .zero))
+            } label: {
+                Image(systemName: "scope")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Focus specimen")
+
+            Button {
+                updateStageTransform(.init())
+            } label: {
+                Image(systemName: "arrow.down.right.and.arrow.up.left")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Fit field")
+        }
+    }
+
+    @ViewBuilder
+    private var stageCanvas: some View {
+        if let runtimeStatusMessage = model.runtimeStatusMessage, !model.hasSnapshot {
+            VStack(spacing: 10) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.title2)
+                    .foregroundStyle(StudioPalette.ember)
+                Text("World unavailable")
+                    .font(StudioType.title)
+                    .foregroundStyle(.white.opacity(0.94))
+                Text(runtimeStatusMessage)
+                    .font(StudioType.bodySmall)
+                    .foregroundStyle(.white.opacity(0.68))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 520)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, minHeight: 480)
+            .background(StudioPalette.stageBottom)
+        } else {
+            ZStack {
+                LabStageFrameSurface(
+                    frameStore: frameStore,
+                    renderMode: renderMode,
+                    zoom: stageZoom,
+                    offset: stageOffset,
+                    gridSize: model.fieldWidth ?? gridPreset.rawValue,
+                    hoveredGridPoint: hoveredGridPoint,
+                    primaryTool: primaryTool,
+                    secondaryTool: secondaryTool,
+                    brushRadius: Int(brushRadius.rounded()),
+                    selectedStampEntry: selectedStampEntry,
+                    selectedStampPreview: selectedStampPreview,
+                    isEditable: !isReadOnlyReplay,
+                    accessibilityValue: stageAccessibilityValue,
+                    onTransformChange: updateStageTransform,
+                    onPrimaryPoint: { handleStagePoint($0, tool: primaryTool) },
+                    onSecondaryPoint: { handleStagePoint($0, tool: secondaryTool) },
+                    onHoverPointChange: { hoveredGridPoint = $0 },
+                    onBrushRadiusDelta: adjustBrushRadius
+                )
+
+                if !model.hasSnapshot {
+                    VStack(spacing: 10) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Preparing observation")
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(StudioPalette.consoleSurface.opacity(0.9))
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 480)
+            .background(StudioPalette.stageBottom)
+        }
+    }
+
+    private var stageDatumStrip: some View {
+        let resolvedGrid = model.worldContract?.gridSize ?? model.fieldWidth ?? gridPreset.rawValue
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 18) {
+                LabObservationDatum(
+                    label: "Step",
+                    value: model.hasSnapshot ? "\(model.latestStep)" : "--",
+                    accent: StudioPalette.ember
+                )
+                LabObservationDatum(
+                    label: "Field",
+                    value: "\(resolvedGrid)x\(resolvedGrid)",
+                    accent: StudioPalette.ocean
+                )
+                LabObservationDatum(
+                    label: "Tool",
+                    value: isReadOnlyReplay ? "Read-only" : primaryGhostCompactLabel,
+                    accent: isReadOnlyReplay ? StudioPalette.mutedInk : hoverAccent(for: primaryTool)
+                )
+                if let hoveredGridPoint {
+                    LabObservationDatum(
+                        label: "Cell",
+                        value: "\(hoveredGridPoint.x),\(hoveredGridPoint.y)",
+                        accent: StudioPalette.ink
+                    )
+                }
+                if diagnosticsEnabled {
+                    LabObservationDatum(
+                        label: "Activity",
+                        value: String(format: "%.4f", model.activityEstimate),
+                        accent: activityAccent(for: model.activityEstimate)
+                    )
+                    if let metrics = model.latestMetrics {
+                        LabObservationDatum(
+                            label: "Mass",
+                            value: formatCompact(metrics.massMean),
+                            accent: StudioPalette.moss
+                        )
+                        LabObservationDatum(
+                            label: "Occupancy",
+                            value: formatCompact(metrics.occupancy),
+                            accent: StudioPalette.ember
+                        )
+                    }
+                    LabObservationDatum(
+                        label: "View",
+                        value: model.snapshotFps > 0 ? String(format: "%.0f fps", model.snapshotFps) : "--",
+                        accent: StudioPalette.ink
+                    )
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+        }
+        .background(StudioPalette.consoleSurfaceRaised.opacity(0.52))
+    }
+
     private var controlSurface: some View {
         StudioSurface(style: .console) {
-            VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
+                LabWorkbenchSection(title: "Organism", systemImage: "leaf") {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 8) {
+                            Text(worldDraft?.sourceSummary ?? stageStatusLine)
+                                .font(StudioType.dataSmall)
+                                .foregroundStyle(StudioPalette.mutedInk)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+
+                            Spacer(minLength: 8)
+                            worldActionControls
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(worldDraft?.sourceSummary ?? stageStatusLine)
+                                .font(StudioType.dataSmall)
+                                .foregroundStyle(StudioPalette.mutedInk)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                worldActionControls
+                            }
+                        }
+                    }
+
+                    HStack(spacing: 8) {
+                        Text("Flow life")
+                            .font(StudioType.labelStrong)
+                            .foregroundStyle(StudioPalette.ink)
+                        Spacer(minLength: 8)
+                        Button {
+                            catalogScope = .allConfigs
+                            inspectorPanel = .catalog
+                        } label: {
+                            Label("Browse catalog", systemImage: "list.bullet.indent")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Menu {
+                            ForEach(Self.blankWorldPresets) { preset in
+                                Button(preset.name) {
+                                    selectWorldPreset(preset)
+                                }
+                            }
+                        } label: {
+                            Label("Blank world", systemImage: "square.dashed")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(Self.missionPresets) { preset in
@@ -1007,81 +1961,98 @@ struct LeniaLabView: View {
                                     preset: preset,
                                     isSelected: worldSelection == .preset(preset.id),
                                     onSelect: {
-                                        worldSelection = .preset(preset.id)
+                                        selectWorldPreset(preset)
                                     }
                                 )
                             }
                         }
-                        .padding(.vertical, 2)
+                        .padding(.vertical, 1)
                     }
                 }
 
                 Divider()
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 10)], alignment: .leading, spacing: 10) {
-                    LabControlGroup(label: "Primary") {
-                        Picker("Primary", selection: $primaryTool) {
-                            ForEach(SandboxTool.allCases) { tool in
-                                Text(tool.rawValue).tag(tool)
+                LabWorkbenchSection(title: "Tools", systemImage: "paintbrush") {
+                    if isReadOnlyReplay {
+                        Label("Read-only replay", systemImage: "lock.fill")
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                    } else {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 210), spacing: 12)],
+                            alignment: .leading,
+                            spacing: 10
+                        ) {
+                            LabControlGroup(label: "Primary") {
+                                Picker("Primary", selection: $primaryTool) {
+                                    ForEach(SandboxTool.allCases) { tool in
+                                        Text(tool.rawValue).tag(tool)
+                                    }
+                                }
+                                .controlSize(.small)
+                            }
+
+                            LabControlGroup(label: "Secondary") {
+                                Picker("Secondary", selection: $secondaryTool) {
+                                    ForEach(SandboxTool.allCases) { tool in
+                                        Text(tool.rawValue).tag(tool)
+                                    }
+                                }
+                                .controlSize(.small)
+                            }
+
+                            LabSliderRow(label: "Brush radius", value: "\(Int(brushRadius))") {
+                                Slider(value: $brushRadius, in: labBrushRadiusRange, step: 1)
+                                    .controlSize(.small)
+                            }
+
+                            LabSliderRow(label: "Brush strength", value: String(format: "%.2f", brushStrength)) {
+                                Slider(value: $brushStrength, in: 0.05...1.0, step: 0.05)
+                                    .controlSize(.small)
                             }
                         }
-                        .controlSize(.small)
-                    }
 
-                    LabControlGroup(label: "Secondary") {
-                        Picker("Secondary", selection: $secondaryTool) {
-                            ForEach(SandboxTool.allCases) { tool in
-                                Text(tool.rawValue).tag(tool)
-                            }
+                        Text(primaryGhostSummary)
+                            .font(StudioType.dataSmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+
+                Divider()
+
+                LabWorkbenchSection(title: "Experiment", systemImage: "point.3.connected.trianglepath.dotted") {
+                    experimentControls
+                }
+
+                Divider()
+
+                DisclosureGroup(isExpanded: $showPhysicsEditor) {
+                    physicsEditorContent
+                } label: {
+                    HStack(spacing: 8) {
+                        Label("Physics", systemImage: "waveform.path.ecg")
+                            .font(StudioType.body)
+                            .foregroundStyle(StudioPalette.ink)
+                        Spacer()
+                        if let draft = worldDraft {
+                            Text("dt \(formatCompact(draft.timeStep))  R \(formatCompact(draft.globalRadius))")
+                                .font(StudioType.dataSmall)
+                                .foregroundStyle(StudioPalette.mutedInk)
                         }
-                        .controlSize(.small)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    LabSliderRow(label: "Brush Radius", value: "\(Int(brushRadius))") {
-                        Slider(value: $brushRadius, in: labBrushRadiusRange, step: 1)
-                            .controlSize(.small)
-                    }
-                    LabSliderRow(label: "Brush Strength", value: String(format: "%.2f", brushStrength)) {
-                        Slider(value: $brushStrength, in: 0.05...1.0, step: 0.05)
-                            .controlSize(.small)
-                    }
-                }
-
-                HStack(spacing: 8) {
-                    Toggle("Diagnostics", isOn: $diagnosticsEnabled)
-                        .toggleStyle(.button)
-                        .controlSize(.small)
-                    Toggle("Auto Food", isOn: $autoFoodEnabled)
-                        .toggleStyle(.button)
-                        .controlSize(.small)
-                    Spacer(minLength: 6)
-                    Text(primaryGhostSummary)
-                        .font(StudioType.dataSmall)
-                        .foregroundStyle(StudioPalette.mutedInk)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-
-                if diagnosticsEnabled, let metrics = model.latestMetrics {
-                    HStack(spacing: 6) {
-                        LabTacticalReadout(label: "Occ", value: formatCompact(metrics.occupancy), accent: StudioPalette.ember)
-                        LabTacticalReadout(label: "Wall", value: formatCompact(metrics.wallFraction), accent: StudioPalette.ink)
-                        LabTacticalReadout(label: "Peak", value: formatCompact(metrics.massPeak), accent: StudioPalette.moss)
-                        LabTacticalReadout(label: "NaN", value: formatCompact(metrics.nonFiniteFraction), accent: StudioPalette.ember)
                     }
                 }
 
                 DisclosureGroup(isExpanded: $showContractEditor) {
                     contractEditorContent
                 } label: {
-                    HStack {
-                        Text("Advanced")
+                    HStack(spacing: 8) {
+                        Label("World contract", systemImage: "slider.horizontal.3")
                             .font(StudioType.body)
                             .foregroundStyle(StudioPalette.ink)
                         Spacer()
-                        Text(worldDraft?.sourceSummary ?? "--")
+                        Text(worldDraft?.connectivitySummary ?? "--")
                             .font(StudioType.dataSmall)
                             .foregroundStyle(StudioPalette.mutedInk)
                             .lineLimit(1)
@@ -1092,9 +2063,135 @@ struct LeniaLabView: View {
         }
     }
 
+    private var worldActionControls: some View {
+        HStack(spacing: 6) {
+            Toggle(
+                "Auto food",
+                isOn: Binding(
+                    get: { model.autoFoodEnabled },
+                    set: { model.setAutoFood(enabled: $0) }
+                )
+            )
+                .toggleStyle(.button)
+                .controlSize(.small)
+                .disabled(model.externalReplayTitle != nil || !model.hasSnapshot)
+
+            Menu {
+                ForEach(Self.backendOrder) { option in
+                    Button {
+                        backend = option
+                    } label: {
+                        if backend == option {
+                            Label(labBackendLabel(option), systemImage: "checkmark")
+                        } else {
+                            Text(labBackendLabel(option))
+                        }
+                    }
+                    .disabled(
+                        requiredWorldBackend.map { $0 != option } ?? false
+                    )
+                }
+            } label: {
+                Label(labBackendLabel(backend), systemImage: "cpu")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Compute backend")
+
+            Button {
+                selectedStampID = selectedStampEntry.id
+                worldSelection = .stamp(selectedStampEntry.id)
+            } label: {
+                Image(systemName: "scope")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Build world from selected specimen")
+
+            Button {
+                rebuildActiveWorld()
+            } label: {
+                Label("Apply", systemImage: "checkmark")
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .disabled(worldDraft == nil)
+        }
+    }
+
+    private var experimentControls: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                Button {
+                    model.undo()
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(model.isRunning || !model.canUndo)
+                .help("Restore previous checkpoint")
+
+                Button {
+                    model.redo()
+                } label: {
+                    Image(systemName: "arrow.uturn.forward")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(model.isRunning || !model.canRedo)
+                .help("Restore next checkpoint")
+
+                Button {
+                    model.createCheckpoint()
+                } label: {
+                    Label("Checkpoint", systemImage: "bookmark")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(!model.hasSnapshot || model.externalReplayTitle != nil)
+
+                Text("\(model.checkpointCount)")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                    .frame(minWidth: 20)
+
+                Button {
+                    captureHoveredSpecimen()
+                } label: {
+                    Label("Capture", systemImage: "viewfinder.circle")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(
+                    hoveredGridPoint == nil
+                        || !model.hasSnapshot
+                        || model.externalReplayTitle != nil
+                )
+                .help("Capture mass and local parameter context without food or walls")
+
+                Button {
+                    exportExperiment()
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(model.checkpointCount == 0)
+
+                if let status = model.experimentStatusMessage {
+                    Text(status)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                }
+            }
+        }
+    }
+
     private var inspectorSurface: some View {
-        VStack(spacing: 10) {
-            StudioSurface(style: .console) {
+        VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 7) {
                 Picker("Inspector", selection: $inspectorPanel) {
                     ForEach(LabInspectorPanel.allCases) { panel in
                         Text(panel.title).tag(panel)
@@ -1103,7 +2200,21 @@ struct LeniaLabView: View {
                 .labelsHidden()
                 .pickerStyle(.segmented)
                 .controlSize(.small)
+
+                HStack(spacing: 7) {
+                    Image(systemName: inspectorPanel.systemImage)
+                        .foregroundStyle(StudioPalette.ocean)
+                    Text(inspectorContextSummary)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 8)
+                }
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 7)
+            .background(StudioPalette.consoleSurface)
 
             switch inspectorPanel {
             case .bay:
@@ -1115,6 +2226,97 @@ struct LeniaLabView: View {
             case .signals:
                 telemetrySurface
             }
+        }
+    }
+
+    private var inspectorContextSummary: String {
+        switch inspectorPanel {
+        case .bay:
+            return selectedStampEntry.name
+        case .catalog:
+            return "\(track1Catalog.catalog.families.count) families"
+        case .runtime:
+            return model.runtimeModeLabel
+        case .signals:
+            return model.latestMetrics == nil ? "Awaiting signal" : "t\(model.latestStep)"
+        }
+    }
+
+    @ViewBuilder
+    private var physicsEditorContent: some View {
+        if let draft = worldDraft {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Text("Kernel")
+                        .font(StudioType.labelStrong)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                    Picker("Kernel", selection: $selectedPhysicsKernel) {
+                        ForEach(0..<draft.kernelCount, id: \.self) { index in
+                            Text("k\(index)").tag(index)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .controlSize(.small)
+                    .frame(maxWidth: min(300, max(84, CGFloat(max(1, draft.kernelCount)) * 58)))
+
+                    Spacer()
+
+                    Button {
+                        rebuildActiveWorld()
+                    } label: {
+                        Label("Apply", systemImage: "checkmark")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 230), spacing: 12)],
+                    alignment: .leading,
+                    spacing: 10
+                ) {
+                    LabSliderRow(label: "Time step", value: formatCompact(draft.timeStep)) {
+                        Slider(value: timeStepPhysicsBinding, in: doubleRange(LabWorldDraft.timeStepRange))
+                            .controlSize(.small)
+                    }
+                    LabSliderRow(label: "World radius", value: formatCompact(draft.globalRadius)) {
+                        Slider(value: globalRadiusPhysicsBinding, in: doubleRange(LabWorldDraft.globalRadiusRange))
+                            .controlSize(.small)
+                    }
+                    LabSliderRow(label: "Kernel radius", value: formatCompact(draft.kernelRelativeRadius(at: selectedPhysicsKernel) ?? 0)) {
+                        Slider(value: kernelRadiusPhysicsBinding, in: doubleRange(LabWorldDraft.kernelRelativeRadiusRange))
+                            .controlSize(.small)
+                    }
+                    LabSliderRow(label: "Growth center", value: formatCompact(draft.kernelCenter(at: selectedPhysicsKernel) ?? 0)) {
+                        Slider(value: kernelCenterPhysicsBinding, in: doubleRange(LabWorldDraft.kernelCenterRange))
+                            .controlSize(.small)
+                    }
+                    LabSliderRow(label: "Growth width", value: formatCompact(draft.kernelSigma(at: selectedPhysicsKernel) ?? 0)) {
+                        Slider(value: kernelSigmaPhysicsBinding, in: doubleRange(LabWorldDraft.kernelSigmaRange))
+                            .controlSize(.small)
+                    }
+                    LabSliderRow(label: "Growth gain", value: formatCompact(draft.kernelGain(at: selectedPhysicsKernel) ?? 0)) {
+                        Slider(value: kernelGainPhysicsBinding, in: doubleRange(LabWorldDraft.kernelGainRange))
+                            .controlSize(.small)
+                    }
+                }
+            }
+            .padding(.top, 8)
+        } else if let worldDraftError {
+            Label(worldDraftError, systemImage: "exclamationmark.triangle")
+                .font(StudioType.bodySmall)
+                .foregroundStyle(StudioPalette.ember)
+                .padding(.top, 8)
+        } else {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Preparing physics")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+            }
+            .padding(.top, 8)
         }
     }
 
@@ -1136,12 +2338,13 @@ struct LeniaLabView: View {
                         .controlSize(.small)
                     }
 
-                    LabControlGroup(label: "Speed") {
-                        Picker("Speed", selection: $speedCap) {
+                    LabControlGroup(label: "Compute cap") {
+                        Picker("Compute cap", selection: $speedCap) {
+                            Text("15").tag(15)
                             Text("30").tag(30)
                             Text("60").tag(60)
-                            Text("90").tag(90)
                             Text("120").tag(120)
+                            Text("Max").tag(0)
                         }
                         .frame(width: 200)
                         .controlSize(.small)
@@ -1239,13 +2442,13 @@ struct LeniaLabView: View {
                 if let worldDraftError {
                     Text(worldDraftError)
                         .font(StudioType.body)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(StudioPalette.ember)
                 }
             }
         } else if let worldDraftError {
             Text(worldDraftError)
                 .font(StudioType.body)
-                .foregroundStyle(.red)
+                .foregroundStyle(StudioPalette.ember)
         } else {
             Text("No editable runtime contract is available for this world.")
                 .font(StudioType.body)
@@ -1255,14 +2458,14 @@ struct LeniaLabView: View {
 
     private var taxonomySurface: some View {
         StudioSurface(style: .console) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     if track1Catalog.isLoading {
                         ProgressView()
                             .controlSize(.small)
                             .scaleEffect(0.72)
                     }
-                    Text("\(track1Catalog.catalog.families.count) families · \(track1Catalog.catalog.labLoadableCount) loadable")
+                    Text("\(flowOrganisms.count) Flow · \(track1Catalog.catalog.classicalReferenceConfigs.count) classical")
                         .font(StudioType.dataSmall)
                         .foregroundStyle(StudioPalette.mutedInk)
                         .lineLimit(1)
@@ -1287,6 +2490,24 @@ struct LeniaLabView: View {
                     .help("Choose Track 1 config root")
                 }
 
+                Picker("Organisms", selection: $catalogScope) {
+                    ForEach(LabCatalogScope.allCases) { scope in
+                        Text(scope.title).tag(scope)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+
+                TextField(
+                    catalogScope == .flowLife
+                        ? "Search family, body plan, lineage, or specimen"
+                        : "Search family, genus, species, or code",
+                    text: $catalogSearch
+                )
+                    .textFieldStyle(.roundedBorder)
+                    .controlSize(.small)
+
                 if let error = track1Catalog.error {
                     Text(error)
                         .font(StudioType.bodySmall)
@@ -1301,28 +2522,66 @@ struct LeniaLabView: View {
                         .lineLimit(3)
                 }
 
-                if !track1Catalog.catalog.families.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
-                            ForEach(track1Catalog.catalog.families) { family in
-                                Track1FamilyChip(
-                                    family: family,
-                                    isSelected: selectedTrack1Family?.id == family.id,
-                                    onSelect: {
-                                        selectedTrack1FamilyID = family.id
-                                    }
+                if catalogScope == .flowLife, !flowOrganisms.isEmpty {
+                    if matchingFlowOrganisms.isEmpty {
+                        ContentUnavailableView.search(text: catalogSearch)
+                            .frame(maxWidth: .infinity, minHeight: 150)
+                    } else {
+                        ForEach(matchingFlowFamilies) { family in
+                            FlowOrganismFamilyPanel(
+                                family: family,
+                                selectedPath: selectedTrack1Config?.path,
+                                onObserve: loadTrack1Config
+                            )
+                        }
+                    }
+                } else if catalogScope == .classicalReference,
+                          !track1Catalog.catalog.classicalReferenceConfigs.isEmpty {
+                    if matchingClassicalReferences.isEmpty {
+                        ContentUnavailableView.search(text: catalogSearch)
+                            .frame(maxWidth: .infinity, minHeight: 150)
+                    } else {
+                        LazyVGrid(
+                            columns: [GridItem(.flexible())],
+                            alignment: .leading,
+                            spacing: 8
+                        ) {
+                            ForEach(matchingClassicalReferences) { config in
+                                Track1FeaturedOrganismCard(
+                                    config: config,
+                                    isSelected: selectedTrack1Config?.path == config.path,
+                                    onObserve: { loadTrack1Config(config) }
                                 )
                             }
                         }
-                        .padding(.vertical, 1)
                     }
+                } else if catalogScope == .allConfigs, !track1Catalog.catalog.families.isEmpty {
+                    if filteredTaxonomyFamilies.isEmpty {
+                        ContentUnavailableView.search(text: catalogSearch)
+                            .frame(maxWidth: .infinity, minHeight: 150)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                ForEach(filteredTaxonomyFamilies) { family in
+                                    Track1FamilyChip(
+                                        family: family,
+                                        isSelected: displayedTrack1Family?.id == family.id,
+                                        onSelect: {
+                                            selectedTrack1FamilyID = family.id
+                                        }
+                                    )
+                                }
+                            }
+                            .padding(.vertical, 1)
+                        }
 
-                    if let selectedTrack1Family {
-                        Track1TaxonomyFamilyPanel(
-                            family: selectedTrack1Family,
-                            selectedPath: selectedTrack1Config?.path,
-                            onLoad: loadTrack1Config
-                        )
+                        if let displayedTrack1Family {
+                            Track1TaxonomyFamilyPanel(
+                                family: displayedTrack1Family,
+                                selectedPath: selectedTrack1Config?.path,
+                                onLoad: loadTrack1Config
+                            )
+                        }
                     }
 
                     if let selectedTrack1Config {
@@ -1341,7 +2600,7 @@ struct LeniaLabView: View {
                         .font(StudioType.body)
                     }
                 } else if !track1Catalog.isLoading {
-                    Text("No Track 1 taxonomy loaded.")
+                    Text("No named organism catalog is available.")
                         .font(StudioType.body)
                         .foregroundStyle(StudioPalette.mutedInk)
                 }
@@ -1350,11 +2609,7 @@ struct LeniaLabView: View {
     }
 
     private var universeSurface: some View {
-        StudioSurface(
-            title: "Runtime Contract",
-            subtitle: "Physics, topology, and execution state",
-            style: .console
-        ) {
+        StudioSurface(style: .console) {
             if let contract = model.worldContract {
                 VStack(alignment: .leading, spacing: 14) {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], alignment: .leading, spacing: 8) {
@@ -1382,7 +2637,10 @@ struct LeniaLabView: View {
                             label: "Solver",
                             value: model.realizedStepRateHz > 0 ? String(format: "%.0f Hz · %.2f ms", model.realizedStepRateHz, model.stepDurationMs) : "--"
                         )
-                        LabCompactKeyValueRow(label: "Speed cap", value: "\(speedCap) Hz")
+                        LabCompactKeyValueRow(
+                            label: "Speed cap",
+                            value: speedCap == 0 ? "Max" : "\(speedCap) Hz"
+                        )
                     }
 
                     LabInfoSection(title: "World source") {
@@ -1452,7 +2710,10 @@ struct LeniaLabView: View {
                             LabPaletteStampCard(
                                 entry: entry,
                                 isSelected: selectedStampID == entry.id,
-                                onSelect: { selectedStampID = entry.id },
+                                onSelect: {
+                                    selectedStampID = entry.id
+                                    primaryTool = .creatureStamp
+                                },
                                 onSetWorld: {
                                     selectedStampID = entry.id
                                     worldSelection = .stamp(entry.id)
@@ -1466,7 +2727,7 @@ struct LeniaLabView: View {
     }
 
     private var telemetrySurface: some View {
-        StudioSurface(title: "Signal Telemetry", subtitle: "Cadence and field metrics", style: .console) {
+        StudioSurface(style: .console) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     StudioMetricPill(label: "Step", value: model.stepDurationMs > 0 ? String(format: "%.2f ms", model.stepDurationMs) : "--", accent: StudioPalette.ink, style: .console)
@@ -1506,6 +2767,9 @@ struct LeniaLabView: View {
             return "\(externalReplayTitle) · \(model.isRunning ? "playing" : "loaded")"
         }
         if let activeWorldEntry {
+            if !model.hasSnapshot {
+                return "\(activeWorldEntry.name) · loading"
+            }
             return "\(activeWorldEntry.name) · \(model.isRunning ? "running" : "ready")"
         }
         return "Building world"
@@ -1525,6 +2789,8 @@ struct LeniaLabView: View {
                 nextDraft = try makeLabWorldDraft(for: selectedWorldEntry, gridSize: gridPreset.rawValue)
             }
             worldDraft = nextDraft
+            stageZoom = labRecommendedStageZoom(for: nextDraft.runtimeConfigValue)
+            stageOffset = .zero
             if let matchingGrid = LabGridPreset.allCases.first(where: { $0.rawValue == nextDraft.gridSize }),
                matchingGrid != gridPreset {
                 gridPreset = matchingGrid
@@ -1545,26 +2811,39 @@ struct LeniaLabView: View {
         }
         selectedTrack1FamilyID = config.family
         worldSelection = .track1Config(config.path)
-        stageZoom = 1.35
-        stageOffset = .zero
+        let loadBackend = config.requiredLabBackend ?? backend
+        if backend != loadBackend {
+            backend = loadBackend
+        }
         worldDraftError = nil
         do {
+            let shouldRun = model.isRunning
             let nextDraft = try makeTrack1WorldDraft(config: config)
             worldDraft = nextDraft
+            stageZoom = labRecommendedStageZoom(for: nextDraft.runtimeConfigValue)
+            stageOffset = .zero
             if let matchingGrid = LabGridPreset.allCases.first(where: { $0.rawValue == nextDraft.gridSize }),
                matchingGrid != gridPreset {
                 gridPreset = matchingGrid
             }
             model.rebuildWorld(
                 sourceEntryID: config.studioEntry().id,
-                runtimeConfig: nextDraft.runtimeConfig(overridingBackend: backend),
-                backend: backend,
+                runtimeConfig: nextDraft.runtimeConfig(overridingBackend: loadBackend),
+                backend: loadBackend,
                 speedCap: speedCap,
-                shouldRun: false
+                shouldRun: shouldRun
             )
         } catch {
             worldDraft = nil
             worldDraftError = "Failed to load Track 1 config: \(labErrorDescription(error))"
+        }
+    }
+
+    private func selectWorldPreset(_ preset: LabMissionPreset) {
+        worldSelection = .preset(preset.id)
+        if let requiredBackend = preset.organismConfig?.requiredLabBackend,
+           backend != requiredBackend {
+            backend = requiredBackend
         }
     }
 
@@ -1582,6 +2861,45 @@ struct LeniaLabView: View {
         track1ConfigRoot = url.path
     }
 
+    private func captureHoveredSpecimen() {
+        guard let point = hoveredGridPoint else { return }
+        let name = "Capture t\(model.latestStep)"
+        Task {
+            do {
+                guard let result = try await model.captureSpecimen(
+                    name: name,
+                    near: point,
+                    existingCreatures: appState.library
+                ) else { return }
+                appState.addToLocalLibrary(result.creature)
+                selectedStampID = appState.studioEntry(for: result.creature).id
+            } catch {
+                model.experimentStatusMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func exportExperiment() {
+        let panel = NSSavePanel()
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        panel.nameFieldStringValue = "Lenia-t\(model.latestStep).leniaexperiment"
+        panel.prompt = "Export Experiment"
+        guard panel.runModal() == .OK, let selectedURL = panel.url else { return }
+        let destination = selectedURL.pathExtension.isEmpty
+            ? selectedURL.appendingPathExtension("leniaexperiment")
+            : selectedURL
+        do {
+            try model.exportExperiment(
+                title: "Lenia t\(model.latestStep)",
+                sourceName: selectedWorldEntry.name,
+                to: destination
+            )
+        } catch {
+            model.experimentStatusMessage = error.localizedDescription
+        }
+    }
+
     private func track1RootDisplay(_ path: String) -> String {
         let components = URL(fileURLWithPath: path).pathComponents
         guard components.count > 3 else { return path }
@@ -1590,14 +2908,15 @@ struct LeniaLabView: View {
 
     private func rebuildActiveWorld(backend overrideBackend: FlowSandboxBackend? = nil) {
         worldDraftError = nil
-        let targetBackend = overrideBackend ?? backend
+        let targetBackend = requiredWorldBackend ?? overrideBackend ?? backend
+        let shouldRun = model.isRunning
         if let worldDraft {
             model.rebuildWorld(
                 sourceEntryID: selectedWorldEntry.id,
                 runtimeConfig: worldDraft.runtimeConfig(overridingBackend: targetBackend),
                 backend: targetBackend,
                 speedCap: speedCap,
-                shouldRun: false
+                shouldRun: shouldRun
             )
             return
         }
@@ -1613,7 +2932,7 @@ struct LeniaLabView: View {
                 baseConfigData: data,
                 backend: targetBackend,
                 speedCap: speedCap,
-                shouldRun: false
+                shouldRun: shouldRun
             )
         } catch {
             worldDraftError = "Failed to load replay base: \(labErrorDescription(error))"
@@ -1625,6 +2944,78 @@ struct LeniaLabView: View {
         edit(&draft)
         worldDraft = draft
         worldDraftError = nil
+    }
+
+    private func doubleRange(_ range: ClosedRange<Float>) -> ClosedRange<Double> {
+        Double(range.lowerBound)...Double(range.upperBound)
+    }
+
+    private var timeStepPhysicsBinding: Binding<Double> {
+        Binding(
+            get: { Double(worldDraft?.timeStep ?? LabWorldDraft.timeStepRange.lowerBound) },
+            set: { value in
+                applyDraftChange { $0.setTimeStep(Float(value)) }
+            }
+        )
+    }
+
+    private var globalRadiusPhysicsBinding: Binding<Double> {
+        Binding(
+            get: { Double(worldDraft?.globalRadius ?? LabWorldDraft.globalRadiusRange.lowerBound) },
+            set: { value in
+                applyDraftChange { $0.setGlobalRadius(Float(value)) }
+            }
+        )
+    }
+
+    private var kernelRadiusPhysicsBinding: Binding<Double> {
+        Binding(
+            get: {
+                Double(worldDraft?.kernelRelativeRadius(at: selectedPhysicsKernel)
+                    ?? LabWorldDraft.kernelRelativeRadiusRange.lowerBound)
+            },
+            set: { value in
+                applyDraftChange {
+                    $0.setKernelRelativeRadius(Float(value), at: selectedPhysicsKernel)
+                }
+            }
+        )
+    }
+
+    private var kernelCenterPhysicsBinding: Binding<Double> {
+        Binding(
+            get: {
+                Double(worldDraft?.kernelCenter(at: selectedPhysicsKernel)
+                    ?? LabWorldDraft.kernelCenterRange.lowerBound)
+            },
+            set: { value in
+                applyDraftChange { $0.setKernelCenter(Float(value), at: selectedPhysicsKernel) }
+            }
+        )
+    }
+
+    private var kernelSigmaPhysicsBinding: Binding<Double> {
+        Binding(
+            get: {
+                Double(worldDraft?.kernelSigma(at: selectedPhysicsKernel)
+                    ?? LabWorldDraft.kernelSigmaRange.lowerBound)
+            },
+            set: { value in
+                applyDraftChange { $0.setKernelSigma(Float(value), at: selectedPhysicsKernel) }
+            }
+        )
+    }
+
+    private var kernelGainPhysicsBinding: Binding<Double> {
+        Binding(
+            get: {
+                Double(worldDraft?.kernelGain(at: selectedPhysicsKernel)
+                    ?? LabWorldDraft.kernelGainRange.lowerBound)
+            },
+            set: { value in
+                applyDraftChange { $0.setKernelGain(Float(value), at: selectedPhysicsKernel) }
+            }
+        )
     }
 
     private var channelCountBinding: Binding<Int> {
@@ -1716,6 +3107,7 @@ struct LeniaLabView: View {
     }
 
     private func handleStagePoint(_ point: SIMD2<Int>, tool: SandboxTool) {
+        guard !isReadOnlyReplay else { return }
         switch tool {
         case .creatureStamp:
             model.applyStamp(entry: selectedStampEntry, at: point, stampCache: stampCache)
@@ -1746,10 +3138,39 @@ struct LeniaLabView: View {
     }
 }
 
+enum LabWorkspaceLayout: Equatable {
+    case stacked
+    case split
+}
+
+func labWorkspaceLayout(for width: CGFloat) -> LabWorkspaceLayout {
+    width < 1_180 ? .stacked : .split
+}
+
 let labBrushRadiusRange: ClosedRange<Double> = 1...16
+
+func labStageAllowsEditing(externalReplayTitle: String?) -> Bool {
+    externalReplayTitle == nil
+}
 
 func labBrushRadiusStepping(from radius: Double, delta: Int) -> Double {
     min(labBrushRadiusRange.upperBound, max(labBrushRadiusRange.lowerBound, radius + Double(delta)))
+}
+
+private enum LabCatalogScope: String, CaseIterable, Identifiable {
+    case flowLife
+    case classicalReference
+    case allConfigs
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .flowLife: "Flow"
+        case .classicalReference: "Classical"
+        case .allConfigs: "All configs"
+        }
+    }
 }
 
 private enum LabInspectorPanel: String, CaseIterable, Identifiable {
@@ -1765,12 +3186,168 @@ private enum LabInspectorPanel: String, CaseIterable, Identifiable {
         case .bay:
             "Bay"
         case .catalog:
-            "Catalog"
+            "Organisms"
         case .runtime:
             "Runtime"
         case .signals:
             "Signals"
         }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .bay:
+            "shippingbox"
+        case .catalog:
+            "leaf"
+        case .runtime:
+            "cpu"
+        case .signals:
+            "waveform.path.ecg"
+        }
+    }
+}
+
+func track1Config(_ config: Track1TaxonomyConfig, matches search: String) -> Bool {
+    let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !query.isEmpty else { return true }
+    let normalizedQuery = track1SearchKey(query)
+    return [
+        config.family,
+        config.genus,
+        config.displayName,
+        config.patternID,
+        config.catalogCollection.title,
+        config.catalogTier.title,
+        config.catalogHierarchy,
+    ]
+        .contains {
+            $0.localizedCaseInsensitiveContains(query)
+                || (!normalizedQuery.isEmpty && track1SearchKey($0).contains(normalizedQuery))
+        }
+}
+
+private func track1SearchKey(_ value: String) -> String {
+    value.lowercased()
+        .components(separatedBy: CharacterSet.alphanumerics.inverted)
+        .joined()
+}
+
+func filteredTrack1Families(
+    _ families: [Track1TaxonomyFamily],
+    search: String
+) -> [Track1TaxonomyFamily] {
+    let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !query.isEmpty else { return families }
+    return families.compactMap { family in
+        if family.name.localizedCaseInsensitiveContains(query) {
+            return family
+        }
+        let genera = family.genera.compactMap { genus -> Track1TaxonomyGenus? in
+            if genus.name.localizedCaseInsensitiveContains(query) {
+                return genus
+            }
+            let configs = genus.configs.filter { track1Config($0, matches: query) }
+            guard !configs.isEmpty else { return nil }
+            return Track1TaxonomyGenus(id: genus.id, name: genus.name, configs: configs)
+        }
+        guard !genera.isEmpty else { return nil }
+        return Track1TaxonomyFamily(id: family.id, name: family.name, genera: genera)
+    }
+}
+
+private struct FlowOrganismFamilyPanel: View {
+    let family: FlowOrganismFamily
+    let selectedPath: String?
+    let onObserve: (Track1TaxonomyConfig) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(family.name)
+                    .font(StudioType.labelStrong)
+                    .foregroundStyle(StudioPalette.ink)
+                Spacer(minLength: 6)
+                Text("\(family.configs.count) specimens")
+                    .font(StudioType.dataSmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
+                if family.configs.allSatisfy({ $0.catalogTier == .experimental }) {
+                    Text("Experimental")
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.ember)
+                }
+            }
+
+            ForEach(family.configs) { config in
+                Track1FeaturedOrganismCard(
+                    config: config,
+                    isSelected: selectedPath == config.path,
+                    onObserve: { onObserve(config) }
+                )
+            }
+        }
+    }
+}
+
+private struct Track1FeaturedOrganismCard: View {
+    let config: Track1TaxonomyConfig
+    let isSelected: Bool
+    let onObserve: () -> Void
+
+    private var runtimeLabel: String {
+        switch config.catalogTier {
+        case .primary: "Metal Flow"
+        case .experimental: "Experimental"
+        case .reference: "Additive reference"
+        }
+    }
+
+    var body: some View {
+        Button(action: onObserve) {
+            HStack(spacing: 9) {
+                Track1OrganismThumbnailView(config: config, size: 62)
+                    .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(config.genus)
+                        .font(StudioType.labelStrong)
+                        .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(2)
+                    Text("\(config.family) / \(config.patternID)")
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
+                        .lineLimit(1)
+                    HStack(spacing: 5) {
+                        Text(config.displayName)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Text(runtimeLabel)
+                            .foregroundStyle(
+                                config.catalogTier == .primary
+                                    ? StudioPalette.moss
+                                    : StudioPalette.ember
+                            )
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                    .font(StudioType.dataSmall)
+                }
+                Spacer(minLength: 2)
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "play.circle")
+                    .foregroundStyle(isSelected ? StudioPalette.moss : StudioPalette.ocean)
+            }
+            .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+            .padding(7)
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleControl.opacity(0.46))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .stroke(isSelected ? StudioPalette.moss.opacity(0.72) : StudioPalette.hairline.opacity(0.62), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .help("Observe \(config.catalogHierarchy) on \(runtimeLabel)")
     }
 }
 
@@ -1782,31 +3359,22 @@ private func labErrorDescription(_ error: Error) -> String {
     return error.localizedDescription
 }
 
-private struct LabTacticalReadout: View {
+private struct LabObservationDatum: View {
     let label: String
     let value: String
     let accent: Color
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
             Text(label.uppercased())
                 .font(StudioType.label)
                 .foregroundStyle(StudioPalette.mutedInk)
             Text(value)
-                .font(StudioType.data)
+                .font(StudioType.dataSmall)
                 .foregroundStyle(accent)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(
-            Rectangle()
-                .fill(StudioPalette.consoleControl.opacity(0.92))
-        )
-        .overlay(
-            Rectangle()
-                .stroke(accent.opacity(0.35), lineWidth: 1)
-        )
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
@@ -1816,7 +3384,7 @@ private struct LabTacticalStageOverlay: View {
             let size = proxy.size
             ZStack {
                 Path { path in
-                    let columns = 8
+                    let columns = 4
                     for index in 1..<columns {
                         let x = size.width * CGFloat(index) / CGFloat(columns)
                         path.move(to: CGPoint(x: x, y: 0))
@@ -1828,7 +3396,7 @@ private struct LabTacticalStageOverlay: View {
                         path.addLine(to: CGPoint(x: size.width, y: y))
                     }
                 }
-                .stroke(StudioPalette.ocean.opacity(0.07), lineWidth: 1)
+                .stroke(StudioPalette.ocean.opacity(0.035), lineWidth: 1)
 
                 Path { path in
                     let length: CGFloat = 34
@@ -1849,7 +3417,7 @@ private struct LabTacticalStageOverlay: View {
                     path.addLine(to: CGPoint(x: size.width - inset, y: size.height - inset))
                     path.addLine(to: CGPoint(x: size.width - inset, y: size.height - inset - length))
                 }
-                .stroke(StudioPalette.ember.opacity(0.72), lineWidth: 1.25)
+                .stroke(StudioPalette.ink.opacity(0.18), lineWidth: 1)
 
                 Path { path in
                     let center = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -1862,7 +3430,7 @@ private struct LabTacticalStageOverlay: View {
                     path.move(to: CGPoint(x: center.x, y: center.y + 6))
                     path.addLine(to: CGPoint(x: center.x, y: center.y + 20))
                 }
-                .stroke(StudioPalette.ocean.opacity(0.34), lineWidth: 1)
+                .stroke(StudioPalette.ocean.opacity(0.16), lineWidth: 1)
             }
         }
     }
@@ -1880,22 +3448,21 @@ private struct LabSliderRow<Control: View>: View {
     }
 
     var body: some View {
-        Grid(horizontalSpacing: 12, verticalSpacing: 0) {
-            GridRow {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(label)
-                    .font(StudioType.body)
+                    .font(StudioType.bodySmall)
                     .foregroundStyle(StudioPalette.ink)
-                    .frame(width: 110, alignment: .leading)
-
-                control
-                    .frame(maxWidth: 260)
-
+                Spacer(minLength: 8)
                 Text(value)
-                    .font(StudioType.data)
+                    .font(StudioType.dataSmall)
                     .foregroundStyle(StudioPalette.mutedInk)
-                    .frame(width: 48, alignment: .trailing)
             }
+
+            control
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -1906,35 +3473,41 @@ private struct LabMissionPresetCard: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Circle()
-                    .fill(isSelected ? StudioPalette.ocean : StudioPalette.hairline)
-                    .frame(width: 6, height: 6)
+            HStack(alignment: .center, spacing: 9) {
+                if let config = preset.organismConfig {
+                    Track1OrganismThumbnailView(config: config, size: 52)
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(preset.name)
                         .font(StudioType.labelStrong)
                         .foregroundStyle(StudioPalette.ink)
+                        .lineLimit(2)
+                    Text(preset.subtitle)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
                         .lineLimit(1)
                 }
 
                 Spacer(minLength: 0)
-
-                Text("\(preset.channels)m/\(preset.parameterFields)p")
-                    .font(StudioType.dataSmall)
-                    .foregroundStyle(StudioPalette.ocean)
+                Circle()
+                    .fill(isSelected ? StudioPalette.moss : StudioPalette.hairline)
+                    .frame(width: 6, height: 6)
             }
-            .frame(width: 140, alignment: .leading)
+            .frame(width: 224, height: 62, alignment: .leading)
             .padding(.horizontal, 9)
-            .padding(.vertical, 7)
+            .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleSurface)
+                    .fill(isSelected ? StudioPalette.consoleSurfaceRaised : StudioPalette.consoleControl.opacity(0.34))
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .stroke(isSelected ? StudioPalette.ocean.opacity(0.7) : StudioPalette.hairline.opacity(0.65), lineWidth: 1)
-            )
+            .overlay {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .stroke(StudioPalette.ocean.opacity(0.68), lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(.plain)
         .help(preset.detail)
@@ -2180,6 +3753,28 @@ private struct LabInfoSection<Content: View>: View {
     }
 }
 
+private struct LabWorkbenchSection<Content: View>: View {
+    let title: String
+    let systemImage: String
+    let content: Content
+
+    init(title: String, systemImage: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.systemImage = systemImage
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: systemImage)
+                .font(StudioType.panelTitle)
+                .foregroundStyle(StudioPalette.ink)
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 private struct LabControlGroup<Content: View>: View {
     let label: String
     let content: Content
@@ -2343,9 +3938,12 @@ private struct LabStageFrameSurface: View {
     let gridSize: Int
     let hoveredGridPoint: SIMD2<Int>?
     let primaryTool: SandboxTool
+    let secondaryTool: SandboxTool
     let brushRadius: Int
     let selectedStampEntry: StudioCompareEntry
     let selectedStampPreview: CreatureStamp?
+    let isEditable: Bool
+    let accessibilityValue: String
     let onTransformChange: (LeniaLabStageTransform) -> Void
     let onPrimaryPoint: (SIMD2<Int>) -> Void
     let onSecondaryPoint: (SIMD2<Int>) -> Void
@@ -2353,37 +3951,74 @@ private struct LabStageFrameSurface: View {
     let onBrushRadiusDelta: ((Int) -> Void)?
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            LeniaLabStageView(
-                frameStore: frameStore,
-                renderMode: renderMode,
-                zoom: zoom,
-                offset: offset,
-                onTransformChange: onTransformChange,
-                onPrimaryPoint: onPrimaryPoint,
-                onSecondaryPoint: onSecondaryPoint,
-                onHoverPointChange: onHoverPointChange,
-                onBrushRadiusDelta: onBrushRadiusDelta
-            )
-
-            LabTacticalStageOverlay()
-            .allowsHitTesting(false)
-
-            GeometryReader { proxy in
-                LabStageHoverOverlay(
-                    point: hoveredGridPoint,
-                    tool: primaryTool,
-                    brushRadius: brushRadius,
-                    selectedStamp: selectedStampEntry,
-                    selectedStampPreview: selectedStampPreview,
-                    transform: LeniaLabStageTransform(zoom: zoom, offset: offset),
-                    viewSize: proxy.size,
-                    gridSize: gridSize
+        stageWithEditActions(
+            ZStack(alignment: .topLeading) {
+                LeniaLabStageView(
+                    frameStore: frameStore,
+                    renderMode: renderMode,
+                    zoom: zoom,
+                    offset: offset,
+                    scrollPolicy: .transformCanvas,
+                    onTransformChange: onTransformChange,
+                    onPrimaryPoint: isEditable ? onPrimaryPoint : { _ in },
+                    onSecondaryPoint: isEditable ? onSecondaryPoint : { _ in },
+                    onHoverPointChange: onHoverPointChange,
+                    onBrushRadiusDelta: isEditable ? onBrushRadiusDelta : nil
                 )
+
+                LabTacticalStageOverlay()
+                    .allowsHitTesting(false)
+
+                if isEditable {
+                    GeometryReader { proxy in
+                        LabStageHoverOverlay(
+                            point: hoveredGridPoint,
+                            tool: primaryTool,
+                            brushRadius: brushRadius,
+                            selectedStamp: selectedStampEntry,
+                            selectedStampPreview: selectedStampPreview,
+                            transform: LeniaLabStageTransform(zoom: zoom, offset: offset),
+                            viewSize: proxy.size,
+                            gridSize: gridSize
+                        )
+                    }
+                    .allowsHitTesting(false)
+                }
             }
-            .allowsHitTesting(false)
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Lenia simulation field")
+        .accessibilityValue(accessibilityValue)
+        .accessibilityAddTraits(.isImage)
+        .accessibilityAction(named: "Fit field") {
+            onTransformChange(.init())
         }
     }
+
+    @ViewBuilder
+    private func stageWithEditActions<Content: View>(_ content: Content) -> some View {
+        if isEditable {
+            content
+                .accessibilityAction(named: "Apply \(primaryTool.rawValue) at field center") {
+                    onPrimaryPoint(accessibilityTargetPoint)
+                }
+                .accessibilityAction(named: "Apply \(secondaryTool.rawValue) at field center") {
+                    onSecondaryPoint(accessibilityTargetPoint)
+                }
+        } else {
+            content
+        }
+    }
+
+    private var accessibilityTargetPoint: SIMD2<Int> {
+        hoveredGridPoint ?? SIMD2<Int>(max(0, gridSize / 2), max(0, gridSize / 2))
+    }
+
+}
+
+enum LeniaLabStageScrollPolicy: Equatable, Sendable {
+    case passThrough
+    case transformCanvas
 }
 
 struct LeniaLabStageView: NSViewRepresentable {
@@ -2392,6 +4027,7 @@ struct LeniaLabStageView: NSViewRepresentable {
     let renderMode: LeniaRenderMode
     let zoom: CGFloat
     let offset: CGSize
+    let scrollPolicy: LeniaLabStageScrollPolicy
     let onTransformChange: (LeniaLabStageTransform) -> Void
     let onPrimaryPoint: (SIMD2<Int>) -> Void
     let onSecondaryPoint: (SIMD2<Int>) -> Void
@@ -2403,6 +4039,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         renderMode: LeniaRenderMode,
         zoom: CGFloat,
         offset: CGSize,
+        scrollPolicy: LeniaLabStageScrollPolicy = .passThrough,
         onTransformChange: @escaping (LeniaLabStageTransform) -> Void,
         onPrimaryPoint: @escaping (SIMD2<Int>) -> Void,
         onSecondaryPoint: @escaping (SIMD2<Int>) -> Void,
@@ -2414,6 +4051,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         self.renderMode = renderMode
         self.zoom = zoom
         self.offset = offset
+        self.scrollPolicy = scrollPolicy
         self.onTransformChange = onTransformChange
         self.onPrimaryPoint = onPrimaryPoint
         self.onSecondaryPoint = onSecondaryPoint
@@ -2426,6 +4064,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         renderMode: LeniaRenderMode,
         zoom: CGFloat,
         offset: CGSize,
+        scrollPolicy: LeniaLabStageScrollPolicy = .passThrough,
         onTransformChange: @escaping (LeniaLabStageTransform) -> Void,
         onPrimaryPoint: @escaping (SIMD2<Int>) -> Void,
         onSecondaryPoint: @escaping (SIMD2<Int>) -> Void,
@@ -2437,6 +4076,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         self.renderMode = renderMode
         self.zoom = zoom
         self.offset = offset
+        self.scrollPolicy = scrollPolicy
         self.onTransformChange = onTransformChange
         self.onPrimaryPoint = onPrimaryPoint
         self.onSecondaryPoint = onSecondaryPoint
@@ -2456,6 +4096,7 @@ struct LeniaLabStageView: NSViewRepresentable {
         view.onSecondaryPoint = onSecondaryPoint
         view.onHoverPointChange = onHoverPointChange
         view.onBrushRadiusDelta = onBrushRadiusDelta
+        view.scrollPolicy = scrollPolicy
         return view
     }
 
@@ -2472,7 +4113,8 @@ struct LeniaLabStageView: NSViewRepresentable {
         nsView.onBrushRadiusDelta = onBrushRadiusDelta
         nsView.update(
             renderMode: renderMode,
-            transform: LeniaLabStageTransform(zoom: zoom, offset: offset)
+            transform: LeniaLabStageTransform(zoom: zoom, offset: offset),
+            scrollPolicy: scrollPolicy
         )
     }
 }
@@ -2489,6 +4131,7 @@ final class LeniaLabStageNSView: MTKView {
     var onSecondaryPoint: ((SIMD2<Int>) -> Void)?
     var onHoverPointChange: ((SIMD2<Int>?) -> Void)?
     var onBrushRadiusDelta: ((Int) -> Void)?
+    var scrollPolicy: LeniaLabStageScrollPolicy = .passThrough
 
     init() {
         guard let device = MTLCreateSystemDefaultDevice() else {
@@ -2550,13 +4193,18 @@ final class LeniaLabStageNSView: MTKView {
         requestDraw()
     }
 
-    func update(renderMode: LeniaRenderMode, transform: LeniaLabStageTransform) {
+    func update(
+        renderMode: LeniaRenderMode,
+        transform: LeniaLabStageTransform,
+        scrollPolicy: LeniaLabStageScrollPolicy
+    ) {
         let viewSize = bounds.size
         let shouldRedraw = self.renderMode.rawValue != renderMode.rawValue
             || self.transform != transform
             || renderer.viewSize != viewSize
         self.renderMode = renderMode
         self.transform = transform
+        self.scrollPolicy = scrollPolicy
         renderer.viewSize = viewSize
         renderer.transform = transform
         renderer.renderMode = renderMode
@@ -2606,6 +4254,10 @@ final class LeniaLabStageNSView: MTKView {
     }
 
     override func magnify(with event: NSEvent) {
+        guard scrollPolicy == .transformCanvas else {
+            super.magnify(with: event)
+            return
+        }
         let location = convert(event.locationInWindow, from: nil)
         let next = transform.zoomed(
             to: transform.zoom * (1 + event.magnification),
@@ -2617,6 +4269,11 @@ final class LeniaLabStageNSView: MTKView {
     }
 
     override func scrollWheel(with event: NSEvent) {
+        guard scrollPolicy == .transformCanvas else {
+            super.scrollWheel(with: event)
+            return
+        }
+
         if event.modifierFlags.contains(.option) {
             let location = convert(event.locationInWindow, from: nil)
             let factor = exp(-event.scrollingDeltaY * 0.01)
@@ -2834,7 +4491,7 @@ private func hoverAccent(for tool: SandboxTool) -> Color {
     case .food:
         StudioPalette.moss
     case .wall:
-        StudioPalette.ink
+        .white.opacity(0.92)
     case .erase:
         StudioPalette.ember
     case .mutation:
@@ -2862,7 +4519,7 @@ private func labBackendLabel(_ backend: FlowSandboxBackend) -> String {
     case .metalFull:
         return "Full Metal"
     case .mlx:
-        return "MLX"
+        return "MLX GPU"
     }
 }
 

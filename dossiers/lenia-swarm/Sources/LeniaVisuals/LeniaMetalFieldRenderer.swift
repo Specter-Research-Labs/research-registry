@@ -200,6 +200,33 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
         channelCount = 1
         if let sharedField = frame.sharedField,
            let buffer = sharedField.metalBuffer(on: device, noCopy: true) ?? sharedField.metalBuffer(on: device, noCopy: false) {
+            let bytesPerRow = frame.width * MemoryLayout<Float>.stride
+            let rowAlignment = device.minimumLinearTextureAlignment(for: .r32Float)
+            guard bytesPerRow.isMultiple(of: rowAlignment) else {
+                if texture == nil || textureSize != size || texturePixelFormat != .r32Float || textureBuffer != nil {
+                    let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+                        pixelFormat: .r32Float,
+                        width: frame.width,
+                        height: frame.height,
+                        mipmapped: false
+                    )
+                    descriptor.usage = .shaderRead
+                    descriptor.storageMode = .shared
+                    texture = device.makeTexture(descriptor: descriptor)
+                    textureSize = size
+                    texturePixelFormat = .r32Float
+                }
+                texture?.replace(
+                    region: MTLRegionMake2D(0, 0, frame.width, frame.height),
+                    mipmapLevel: 0,
+                    withBytes: buffer.contents(),
+                    bytesPerRow: bytesPerRow
+                )
+                textureBuffer = nil
+                textureBufferIdentity = nil
+                return
+            }
+
             let bufferIdentity = ObjectIdentifier(buffer as AnyObject)
             if texture == nil
                 || textureSize != size
@@ -215,7 +242,7 @@ public final class LeniaMetalFieldRenderer: NSObject, MTKViewDelegate {
                 texture = buffer.makeTexture(
                     descriptor: descriptor,
                     offset: 0,
-                    bytesPerRow: frame.width * MemoryLayout<Float>.stride
+                    bytesPerRow: bytesPerRow
                 )
                 textureBuffer = buffer
                 textureBufferIdentity = bufferIdentity

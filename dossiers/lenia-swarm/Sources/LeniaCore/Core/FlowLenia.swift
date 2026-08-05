@@ -806,14 +806,21 @@ public final class FlowLeniaBatched: @unchecked Sendable {
     // Compiled functions (split compilation like Python version)
     private let flowFn: ([MLXArray]) -> [MLXArray]
     private let reintFn: (MLXArray, MLXArray, MLXArray) -> MLXArray
+    private let recenterAdditive: Bool
     private var additiveLastShift: [(row: Int, col: Int)] = []
 
-    public init(config: BatchedConfig, kernels: CompiledKernels, wallPotential: MLXArray? = nil) {
+    public init(
+        config: BatchedConfig,
+        kernels: CompiledKernels,
+        wallPotential: MLXArray? = nil,
+        recenterAdditive: Bool = true
+    ) {
         validateFlowLeniaConfig(config)
         self.config = config
         self.kernels = kernels
         self.wallPotential = wallPotential
         self.useTorus = config.border == "torus"
+        self.recenterAdditive = recenterAdditive
 
         let coordsX = MLXArray(Array(0..<config.sx).map { Float($0) })
         let coordsY = MLXArray(Array(0..<config.sy).map { Float($0) })
@@ -946,11 +953,13 @@ public final class FlowLeniaBatched: @unchecked Sendable {
 
     public func step(_ ABatch: MLXArray) -> MLXArray {
         if config.implementation.mode == "qd24_additive_v1" {
-            let centered = applyAdditiveLastShift(ABatch)
+            let centered = recenterAdditive ? applyAdditiveLastShift(ABatch) : ABatch
             let flowInputs = [centered, kernels.fK, kernels.m, kernels.s,
                               kernels.h, kernels.c0Idxs, kernels.c1Mask]
             let next = flowFn(flowInputs)[0]
-            updateAdditiveLastShift(from: next)
+            if recenterAdditive {
+                updateAdditiveLastShift(from: next)
+            }
             return next
         }
 
@@ -965,7 +974,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
 
     public func stepUncompiled(_ ABatch: MLXArray) -> MLXArray {
         if config.implementation.mode == "qd24_additive_v1" {
-            let centered = applyAdditiveLastShift(ABatch)
+            let centered = recenterAdditive ? applyAdditiveLastShift(ABatch) : ABatch
             let next = additiveLeniaStepBatched(
                 centered,
                 fK: kernels.fK,
@@ -978,7 +987,9 @@ public final class FlowLeniaBatched: @unchecked Sendable {
                 growthProfile: config.implementation.growthProfile,
                 wallPotential: wallPotential
             )
-            updateAdditiveLastShift(from: next)
+            if recenterAdditive {
+                updateAdditiveLastShift(from: next)
+            }
             return next
         }
         return leniaStepBatched(

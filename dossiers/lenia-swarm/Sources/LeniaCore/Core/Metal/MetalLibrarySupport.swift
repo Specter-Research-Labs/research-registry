@@ -131,6 +131,13 @@ public enum LeniaMetalLibrarySupport {
                 continue
             }
             if fileManager.fileExists(atPath: targetURL.path) {
+                if matchingCopyMetadata(
+                    sourcePath: canonicalSource.path,
+                    targetPath: canonicalTarget.path,
+                    fileManager: fileManager
+                ) {
+                    continue
+                }
                 if fileManager.contentsEqual(atPath: canonicalSource.path, andPath: canonicalTarget.path) {
                     continue
                 }
@@ -138,6 +145,22 @@ public enum LeniaMetalLibrarySupport {
             }
             try fileManager.copyItem(at: sourceURL, to: targetURL)
         }
+    }
+
+    private static func matchingCopyMetadata(
+        sourcePath: String,
+        targetPath: String,
+        fileManager: FileManager
+    ) -> Bool {
+        guard let source = try? fileManager.attributesOfItem(atPath: sourcePath),
+              let target = try? fileManager.attributesOfItem(atPath: targetPath),
+              let sourceSize = source[.size] as? NSNumber,
+              let targetSize = target[.size] as? NSNumber,
+              let sourceModified = source[.modificationDate] as? Date,
+              let targetModified = target[.modificationDate] as? Date else {
+            return false
+        }
+        return sourceSize == targetSize && sourceModified == targetModified
     }
 
     private static func isWritableInstallTarget(_ targetURL: URL, fileManager: FileManager) -> Bool {

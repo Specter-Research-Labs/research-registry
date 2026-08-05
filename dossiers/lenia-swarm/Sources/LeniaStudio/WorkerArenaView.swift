@@ -102,6 +102,7 @@ struct ArenaFrameView: View {
             renderMode: renderMode,
             zoom: zoom,
             offset: offset,
+            scrollPolicy: .transformCanvas,
             onTransformChange: { transform in
                 zoom = transform.zoom
                 offset = transform.offset
