@@ -43,14 +43,18 @@ project = "lenia-swarm"
 default_surface = "lenia-compendium"
 
 [spctr.exec.check]
-description = "Full Swift test and release-build lane"
-commands = [
-    ["swift", "test"],
-    ["swift", "build", "-c", "release"],
-]
+description = "Python invariants and Swift tests"
+command = ["make", "check"]
+timeout_sec = 3600
+network = "bootstrap"
+requires = ["swift", "python", "uv", "make"]
+
+[spctr.exec.release-build]
+description = "Swift release build"
+command = ["swift", "build", "-c", "release"]
 timeout_sec = 2400
 network = "bootstrap"
-requires = ["swift", "python", "uv"]
+requires = ["swift"]
 
 [spctr.exec.smoke]
 description = "Determinism smoke with explicit MLX metallib bootstrap"
@@ -155,7 +159,7 @@ cache_paths = [".build", ".swiftpm", ".venv", ".ruff_cache", ".pytest_cache", "t
 [spctr.ci]
 runner = "macos-latest"
 pull_request = ["check"]
-push_main = ["check"]
+push_main = ["check", "release-build"]
 nightly = []
 
 [spctr.evidence]

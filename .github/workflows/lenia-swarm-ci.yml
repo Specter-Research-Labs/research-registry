@@ -23,7 +23,7 @@ jobs:
   pull_request:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
     runs-on: macos-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Setup spctr project
@@ -39,6 +39,10 @@ jobs:
           set -euo pipefail
           if ! command -v swift >/dev/null; then
             echo "missing required runtime: swift" >&2
+            exit 1
+          fi
+          if ! command -v make >/dev/null; then
+            echo "missing required runtime: make" >&2
             exit 1
           fi
       - name: Cache SwiftPM dependencies
@@ -56,7 +60,7 @@ jobs:
   push_main:
     if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
     runs-on: macos-latest
-    timeout-minutes: 40
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Setup spctr project
@@ -74,6 +78,10 @@ jobs:
             echo "missing required runtime: swift" >&2
             exit 1
           fi
+          if ! command -v make >/dev/null; then
+            echo "missing required runtime: make" >&2
+            exit 1
+          fi
       - name: Cache SwiftPM dependencies
         uses: actions/cache@v5.0.5
         with:
@@ -86,3 +94,5 @@ jobs:
             spctr-swiftpm-deps-v1-${{ runner.os }}-${{ runner.arch }}-lenia-swarm-${{ hashFiles('dossiers/lenia-swarm/Package.swift', 'dossiers/lenia-swarm/Package.resolved') }}-
       - name: Run exec check
         run: ./ops/spctr/target/release/spctr exec run --project lenia-swarm check
+      - name: Run exec release-build
+        run: ./ops/spctr/target/release/spctr exec run --project lenia-swarm release-build
