@@ -99,7 +99,7 @@ struct WorkerStatusRow: View {
     var body: some View {
         HStack {
             Circle()
-                .fill(worker.isAvailable ? Color.green : Color.orange)
+                .fill(worker.isAvailable ? StudioPalette.moss : StudioPalette.ember)
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 2) {

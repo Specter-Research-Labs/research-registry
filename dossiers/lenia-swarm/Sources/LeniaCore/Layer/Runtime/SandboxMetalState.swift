@@ -327,11 +327,24 @@ final class FlowSandboxMetalRuntimeState {
             step: step,
             width: config.sx,
             height: config.sy,
+            channels: 1,
+            parameterCount: parameterCount,
             mass: Self.readFloats(from: massBuffer, count: cellCount),
             params: Self.readFloats(from: paramsBuffer, count: cellCount * parameterCount),
             food: Self.readFloats(from: foodBuffer, count: cellCount),
             walls: Self.readFloats(from: wallBuffer, count: cellCount)
         )
+    }
+
+    func restore(_ snapshot: FlowSandboxStateSnapshot) {
+        Self.writeFloats(snapshot.mass, to: massBuffer)
+        Self.writeFloats(snapshot.params, to: paramsBuffer)
+        Self.writeFloats(snapshot.food, to: foodBuffer)
+        Self.writeFloats(snapshot.walls, to: wallBuffer)
+        Self.zero(buffer: effectiveMassBuffer)
+        Self.zero(buffer: nextMassBuffer)
+        Self.zero(buffer: nextParamsBuffer)
+        displayDirty = true
     }
 
     private func refreshDisplayIfNeeded() {
