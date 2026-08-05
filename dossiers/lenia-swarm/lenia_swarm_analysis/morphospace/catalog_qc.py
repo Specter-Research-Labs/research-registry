@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-
 POLICY_ID = "shape_behavior_qc_v1"
 
 
