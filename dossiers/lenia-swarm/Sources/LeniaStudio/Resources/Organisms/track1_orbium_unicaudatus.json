@@ -1,0 +1,110 @@
+{
+  "backend": "mlx",
+  "channels": 1,
+  "connectivity": [
+    [
+      1
+    ]
+  ],
+  "flow": {
+    "dt": 0.1,
+    "n": 2,
+    "theta_A": 2
+  },
+  "grid": {
+    "sx": 192,
+    "sy": 192
+  },
+  "implementation": {
+    "growth_profile": "gaussian",
+    "kernel_profile": "qd24_bump4_v1",
+    "mode": "qd24_additive_v1"
+  },
+  "init": {
+    "a_uniform": {
+      "high": 0,
+      "low": 0
+    },
+    "p_uniform": null,
+    "patches": [],
+    "seed": 0,
+    "state_patch": {
+      "center": [
+        96,
+        96
+      ],
+      "channels": 1,
+      "data": "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",
+      "encoding": "f32le",
+      "height": 20,
+      "width": 20
+    }
+  },
+  "interventions": [],
+  "parameter_embedding": {
+    "enabled": false,
+    "mix": "avg",
+    "mix_seed": null
+  },
+  "params": {
+    "R": 13,
+    "a": [
+      [
+        0.0
+      ]
+    ],
+    "b": [
+      [
+        1.0
+      ]
+    ],
+    "h": [
+      1.0
+    ],
+    "m": [
+      0.15
+    ],
+    "mode": "explicit",
+    "r": [
+      1.0
+    ],
+    "ranges": null,
+    "s": [
+      0.017
+    ],
+    "seed": 0,
+    "w": [
+      [
+        0.0
+      ]
+    ]
+  },
+  "profile": "experimental",
+  "provenance": {
+    "family": "Orbidae",
+    "native_R": 13,
+    "native_T": 10,
+    "native_growth_function": "gaus",
+    "native_growth_profile": "gaussian",
+    "native_kernel_core": "bump4",
+    "native_kernel_profile": "qd24_bump4_v1",
+    "native_patch_height": 20,
+    "native_patch_width": 20,
+    "native_world_scale": 1,
+    "native_world_size": 192,
+    "parity_note": "Uses native Chakazul cells directly; no control-screen state_patch_scale and no R scaling; world enlarges only when the native patch exceeds 192.",
+    "pattern_id": "O2(a)",
+    "runtime_probe": "qd24_additive_v1_native_parity",
+    "section2_family_lane": true,
+    "source": "https://chakazul.github.io/Lenia/JavaScript/Lenia-LifeForms.js",
+    "species": "Orbium unicaudatus"
+  },
+  "reintegration": {
+    "border": "torus",
+    "dd": 5,
+    "sigma": 0.65
+  },
+  "run": {
+    "steps": 1600
+  }
+}
