@@ -19,6 +19,30 @@ private func searchRolloutSignedAngleDelta(_ lhs: Float, _ rhs: Float) -> Float 
     return delta
 }
 
+private func searchRolloutCircularCenter(real: Float, imaginary: Float, period: Float) -> Float {
+    var phase = atan2f(imaginary, real)
+    if phase < 0 {
+        phase += 2 * Float.pi
+    }
+    return phase * period / (2 * Float.pi)
+}
+
+func searchRolloutTorusGeometry(
+    batchData: MassBatchCPU,
+    sampleIndex: Int,
+    xCount: Int,
+    yCount: Int
+) -> MorphospaceFieldGeometry? {
+    var sample = [Float](repeating: 0, count: xCount * yCount)
+    let offset = sampleIndex * batchData.sampleSize
+    for x in 0..<xCount {
+        for y in 0..<yCount {
+            sample[y * xCount + x] = batchData.flat[offset + x * yCount + y]
+        }
+    }
+    return morphospaceFieldGeometry(sample: sample, width: xCount, height: yCount, useTorus: true)
+}
+
 private func searchRolloutWindowStd(_ samples: [[Float]], batchSize: Int) -> [Float] {
     guard !samples.isEmpty else {
         return Array(repeating: 0, count: batchSize)
@@ -48,6 +72,10 @@ struct SearchRolloutSampleContext {
     let cellCountArr: MLXArray
     let gX: MLXArray
     let gY: MLXArray
+    let torusCosX: MLXArray?
+    let torusSinX: MLXArray?
+    let torusCosY: MLXArray?
+    let torusSinY: MLXArray?
     let usesTorusBorder: Bool
     let xPeriodArr: MLXArray?
     let yPeriodArr: MLXArray?
@@ -83,6 +111,32 @@ struct SearchRolloutSampleContext {
         cellCountFloat = Float(runtimeConfig.sx * runtimeConfig.sy)
         cellCountArr = MLXArray(cellCountFloat)
         usesTorusBorder = runtimeConfig.border == "torus"
+        if usesTorusBorder {
+            let twoPi = 2 * Float.pi
+            let anglesX = Array(0..<runtimeConfig.sx).map {
+                (Float($0) + 0.5) * twoPi / Float(runtimeConfig.sx)
+            }
+            let anglesY = Array(0..<runtimeConfig.sy).map {
+                (Float($0) + 0.5) * twoPi / Float(runtimeConfig.sy)
+            }
+            let (cosX, cosY) = meshgrid(
+                MLXArray(anglesX.map(cosf)),
+                MLXArray(anglesY.map(cosf))
+            )
+            let (sinX, sinY) = meshgrid(
+                MLXArray(anglesX.map(sinf)),
+                MLXArray(anglesY.map(sinf))
+            )
+            torusCosX = cosX.expandedDimensions(axis: 0)
+            torusSinX = sinX.expandedDimensions(axis: 0)
+            torusCosY = cosY.expandedDimensions(axis: 0)
+            torusSinY = sinY.expandedDimensions(axis: 0)
+        } else {
+            torusCosX = nil
+            torusSinX = nil
+            torusCosY = nil
+            torusSinY = nil
+        }
         xPeriod = Float(runtimeConfig.sx)
         yPeriod = Float(runtimeConfig.sy)
         xPeriodArr = usesTorusBorder ? MLXArray(xPeriod) : nil
@@ -345,36 +399,97 @@ struct SearchRolloutAccumulator {
             let occPerSample = occMask.mean(axes: [1, 2])
 
             let massSafe = MLX.maximum(currentMass, context.massFloor)
-            let comX = (massMap * context.gX).sum(axes: [1, 2]) / massSafe
-            let comY = (massMap * context.gY).sum(axes: [1, 2]) / massSafe
-
-            let cX = comX.expandedDimensions(axes: [1, 2])
-            let cY = comY.expandedDimensions(axes: [1, 2])
-            let dxRawG = MLX.abs(context.gX - cX)
-            let dyRawG = MLX.abs(context.gY - cY)
-            let dxG: MLXArray
-            let dyG: MLXArray
             if context.usesTorusBorder {
-                guard let xPeriodArr = context.xPeriodArr, let yPeriodArr = context.yPeriodArr else {
-                    fatalError("torus border requires period arrays.")
+                guard let cosX = context.torusCosX,
+                      let sinX = context.torusSinX,
+                      let cosY = context.torusCosY,
+                      let sinY = context.torusSinY,
+                      let xPeriodArr = context.xPeriodArr,
+                      let yPeriodArr = context.yPeriodArr else {
+                    fatalError("torus border requires circular-coordinate arrays.")
                 }
-                dxG = MLX.minimum(dxRawG, xPeriodArr - dxRawG)
-                dyG = MLX.minimum(dyRawG, yPeriodArr - dyRawG)
+                let realX = (massMap * cosX).sum(axes: [1, 2])
+                let imaginaryX = (massMap * sinX).sum(axes: [1, 2])
+                let realY = (massMap * cosY).sum(axes: [1, 2])
+                let imaginaryY = (massMap * sinY).sum(axes: [1, 2])
+                eval(
+                    currentMass,
+                    varPerSample,
+                    explicitEnergyPerSample,
+                    occPerSample,
+                    realX,
+                    imaginaryX,
+                    realY,
+                    imaginaryY
+                )
+                currentMassCPU = currentMass.asArray(Float.self)
+                varianceCPU = varPerSample.asArray(Float.self)
+                energyCPU = explicitEnergyPerSample.asArray(Float.self)
+                occupancyCPU = occPerSample.asArray(Float.self)
+                let realXCPU = realX.asArray(Float.self)
+                let imaginaryXCPU = imaginaryX.asArray(Float.self)
+                let realYCPU = realY.asArray(Float.self)
+                let imaginaryYCPU = imaginaryY.asArray(Float.self)
+                let degenerate = (0..<context.batchSize).contains { index in
+                    let threshold = max(currentMassCPU[index], 1) * 1e-6
+                    return hypotf(realXCPU[index], imaginaryXCPU[index]) <= threshold
+                        || hypotf(realYCPU[index], imaginaryYCPU[index]) <= threshold
+                }
+                if degenerate {
+                    let batchData = materializeMassBatch(massMap)
+                    let geometries = (0..<context.batchSize).map { index in
+                        searchRolloutTorusGeometry(
+                            batchData: batchData,
+                            sampleIndex: index,
+                            xCount: Int(context.xPeriod),
+                            yCount: Int(context.yPeriod)
+                        )
+                    }
+                    comXCPU = geometries.map { $0?.centerX ?? context.xPeriod * 0.5 }
+                    comYCPU = geometries.map { $0?.centerY ?? context.yPeriod * 0.5 }
+                    gyrationCPU = geometries.map { $0?.gyration ?? 0 }
+                } else {
+                    comXCPU = (0..<context.batchSize).map { index in
+                        searchRolloutCircularCenter(
+                            real: realXCPU[index],
+                            imaginary: imaginaryXCPU[index],
+                            period: context.xPeriod
+                        )
+                    }
+                    comYCPU = (0..<context.batchSize).map { index in
+                        searchRolloutCircularCenter(
+                            real: realYCPU[index],
+                            imaginary: imaginaryYCPU[index],
+                            period: context.yPeriod
+                        )
+                    }
+                    let cX = MLXArray(comXCPU).expandedDimensions(axes: [1, 2])
+                    let cY = MLXArray(comYCPU).expandedDimensions(axes: [1, 2])
+                    let dxRaw = MLX.abs(context.gX - cX)
+                    let dyRaw = MLX.abs(context.gY - cY)
+                    let dx = MLX.minimum(dxRaw, xPeriodArr - dxRaw)
+                    let dy = MLX.minimum(dyRaw, yPeriodArr - dyRaw)
+                    let gyration = (massMap * (dx * dx + dy * dy)).sum(axes: [1, 2]) / massSafe
+                    eval(gyration)
+                    gyrationCPU = gyration.asArray(Float.self)
+                }
             } else {
-                dxG = dxRawG
-                dyG = dyRawG
+                let comX = (massMap * context.gX).sum(axes: [1, 2]) / massSafe
+                let comY = (massMap * context.gY).sum(axes: [1, 2]) / massSafe
+                let cX = comX.expandedDimensions(axes: [1, 2])
+                let cY = comY.expandedDimensions(axes: [1, 2])
+                let dx = context.gX - cX
+                let dy = context.gY - cY
+                let gyration = (massMap * (dx * dx + dy * dy)).sum(axes: [1, 2]) / massSafe
+                eval(currentMass, varPerSample, explicitEnergyPerSample, occPerSample, comX, comY, gyration)
+                currentMassCPU = currentMass.asArray(Float.self)
+                varianceCPU = varPerSample.asArray(Float.self)
+                energyCPU = explicitEnergyPerSample.asArray(Float.self)
+                occupancyCPU = occPerSample.asArray(Float.self)
+                comXCPU = comX.asArray(Float.self)
+                comYCPU = comY.asArray(Float.self)
+                gyrationCPU = gyration.asArray(Float.self)
             }
-            let distSq = dxG * dxG + dyG * dyG
-            let gyrationPerSample = (massMap * distSq).sum(axes: [1, 2]) / massSafe
-
-            eval(currentMass, varPerSample, explicitEnergyPerSample, occPerSample, comX, comY, gyrationPerSample)
-            currentMassCPU = currentMass.asArray(Float.self)
-            varianceCPU = varPerSample.asArray(Float.self)
-            energyCPU = explicitEnergyPerSample.asArray(Float.self)
-            occupancyCPU = occPerSample.asArray(Float.self)
-            comXCPU = comX.asArray(Float.self)
-            comYCPU = comY.asArray(Float.self)
-            gyrationCPU = gyrationPerSample.asArray(Float.self)
         }
 
         if context.shouldCaptureCoherentTransportReference(step: step),

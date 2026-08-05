@@ -16,7 +16,7 @@ from .warehouse import (
     register_specimen_study,
     register_study,
     replace_feature_axes,
-    replace_feature_values,
+    replace_sparse_feature_values,
     stable_id,
     upsert_feature_space,
     upsert_morphospace_source,
@@ -224,6 +224,7 @@ def ingest_dryad_fish_body_shape(
         connection,
         feature_space_id=FEATURE_SPACE_ID,
         feature_space_kind="geometric_morphometrics",
+        storage_mode="sparse_values",
         label=FEATURE_SPACE_LABEL,
         version_label="v1",
         coordinate_policy="SlicerMorph GPA PC scores; normalized_value is corpus z-score",
@@ -317,7 +318,7 @@ def ingest_dryad_fish_body_shape(
                 "sourceRowIndex": row["source_row_index"],
             },
         )
-        replace_feature_values(
+        replace_sparse_feature_values(
             connection,
             observation_id=observation_id,
             feature_space_id=FEATURE_SPACE_ID,

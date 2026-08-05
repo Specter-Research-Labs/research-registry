@@ -4,7 +4,14 @@ import json
 from pathlib import Path
 
 import duckdb
+import pytest
 
+from lenia_swarm_analysis.morphospace.common_morphology import (
+    FEATURE_SPACE_ID as COMMON_FEATURE_SPACE_ID,
+)
+from lenia_swarm_analysis.morphospace.derive_lenia_features import (
+    FEATURE_SPACE_ID as TERMINAL_FEATURE_SPACE_ID,
+)
 from lenia_swarm_analysis.morphospace.high_fiber_null_validation import (
     build_high_fiber_null_validation_packet,
 )
@@ -60,21 +67,23 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
         )
         """
     )
-    common_axes = ["component_count", "bilateral_symmetry", "coverage", "compactness"]
+    common_axes = ["elongation", "bilateral_symmetry", "radial_symmetry", "compactness"]
     terminal_axes = ["fragmentation", "spread"]
     for index, axis in enumerate(common_axes):
         connection.execute(
-            "INSERT INTO feature_axes VALUES ('common_morphology_v1', ?, ?)",
-            [axis, index],
+            "INSERT INTO feature_axes VALUES (?, ?, ?)",
+            [COMMON_FEATURE_SPACE_ID, axis, index],
         )
     for index, axis in enumerate(terminal_axes):
         connection.execute(
-            "INSERT INTO feature_axes VALUES ('lenia_terminal_v1', ?, ?)",
-            [axis, index],
+            "INSERT INTO feature_axes VALUES (?, ?, ?)",
+            [TERMINAL_FEATURE_SPACE_ID, axis, index],
         )
 
     source_algorithm = "fixture-algorithm"
-    target_region = "component_count:mid|bilateral_symmetry:low|coverage:high|compactness:mid"
+    target_region = (
+        "elongation:mid|bilateral_symmetry:low|radial_symmetry:high|compactness:mid"
+    )
     source_packet = tmp_path / "source.json"
     source_packet.write_text(
         json.dumps({"rankedSharedHighFiberRegions": [{"region": target_region}]}),
@@ -85,9 +94,9 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
         specimen_id = f"specimen-{index}"
         in_target = index < 3
         common = {
-            "component_count": 0.0 if in_target else 0.8,
+            "elongation": 0.0 if in_target else 0.8,
             "bilateral_symmetry": -0.8 if in_target else 0.0,
-            "coverage": 0.8,
+            "radial_symmetry": 0.8 if in_target else 0.0,
             "compactness": 0.0,
         }
         terminal = (
@@ -99,14 +108,14 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
             connection,
             specimen_id=specimen_id,
             source_algorithm=source_algorithm,
-            feature_space_id="common_morphology_v1",
+            feature_space_id=COMMON_FEATURE_SPACE_ID,
             values=common,
         )
         _insert_feature(
             connection,
             specimen_id=specimen_id,
             source_algorithm=source_algorithm,
-            feature_space_id="lenia_terminal_v1",
+            feature_space_id=TERMINAL_FEATURE_SPACE_ID,
             values=terminal,
         )
 
@@ -131,3 +140,27 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
     assert len(family["exampleRanks"]["nearestTerminalCentroid"]) == 3
     assert len(family["exampleRanks"]["farthestTerminal"]) == 3
     assert family["exampleRanks"]["nearestTerminalCentroid"][0]["specimenId"] == "specimen-1"
+
+    source_packet.write_text(
+        json.dumps(
+            {
+                "rankedSharedHighFiberRegions": [
+                    {
+                        "region": (
+                            "component_count:mid|bilateral_symmetry:low|"
+                            "coverage:high|compactness:mid"
+                        )
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="do not match v3 axes"):
+        build_high_fiber_null_validation_packet(
+            connection,
+            source_packet_path=source_packet,
+            target_region_limit=1,
+            null_replicates=4,
+            family_algorithms={"fixture": source_algorithm},
+        )

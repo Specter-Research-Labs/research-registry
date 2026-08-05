@@ -9,6 +9,9 @@ from typing import Any
 import numpy as np
 from duckdb import DuckDBPyConnection
 
+from .common_morphology import FEATURE_SPACE_ID as COMMON_FEATURE_SPACE_ID
+from .derive_lenia_features import FEATURE_SPACE_ID as TERMINAL_FEATURE_SPACE_ID
+
 TRACK1_FAMILY_ALGORITHMS: dict[str, str] = {
     "2c10_r17_20": "fl-2c10-r17-20-initshift-harvest",
     "2c10_r7_10": "fl-2c10-r7-10-initshift-harvest",
@@ -17,9 +20,9 @@ TRACK1_FAMILY_ALGORITHMS: dict[str, str] = {
 }
 
 DEFAULT_COMMON_REGION_AXES: tuple[str, ...] = (
-    "component_count",
+    "elongation",
     "bilateral_symmetry",
-    "coverage",
+    "radial_symmetry",
     "compactness",
 )
 
@@ -114,8 +117,8 @@ def _load_family_joined(
     rows = connection.execute(
         f"""
         WITH
-        {_pivot_sql('common_morphology_v1', common_axes, 'c')},
-        {_pivot_sql('lenia_terminal_v1', terminal_axes, 't')}
+        {_pivot_sql(COMMON_FEATURE_SPACE_ID, common_axes, 'c')},
+        {_pivot_sql(TERMINAL_FEATURE_SPACE_ID, terminal_axes, 't')}
         SELECT c.specimen_id, {common_cols}, {terminal_cols}
         FROM c
         JOIN t USING (specimen_id, run_id, source_algorithm)
@@ -150,12 +153,24 @@ def _target_regions(packet: dict[str, Any], limit: int) -> list[str]:
     ranked = packet.get("rankedSharedHighFiberRegions")
     if isinstance(ranked, list):
         regions = [row.get("region") for row in ranked if isinstance(row, dict)]
-        return [str(region) for region in regions if isinstance(region, str)][:limit]
-    shared = packet.get("sharedRegionsAcrossAllFamilies")
-    if isinstance(shared, list):
+        selected = [str(region) for region in regions if isinstance(region, str)][:limit]
+    else:
+        shared = packet.get("sharedRegionsAcrossAllFamilies")
+        if not isinstance(shared, list):
+            raise ValueError(
+                "source packet does not expose ranked or shared high-fiber regions"
+            )
         regions = [row.get("region") for row in shared if isinstance(row, dict)]
-        return [str(region) for region in regions if isinstance(region, str)][:limit]
-    raise ValueError("source packet does not expose ranked or shared high-fiber regions")
+        selected = [str(region) for region in regions if isinstance(region, str)][:limit]
+    expected_axes = list(DEFAULT_COMMON_REGION_AXES)
+    for region in selected:
+        actual_axes = [part.split(":", 1)[0] for part in region.split("|")]
+        if actual_axes != expected_axes:
+            raise ValueError(
+                f"source packet region axes {actual_axes} do not match v3 axes "
+                f"{expected_axes}"
+            )
+    return selected
 
 
 def _region_indices(
@@ -357,8 +372,8 @@ def build_high_fiber_null_validation_packet(
 ) -> dict[str, Any]:
     source_packet = _read_json(source_packet_path)
     family_map = family_algorithms or TRACK1_FAMILY_ALGORITHMS
-    common_axes = _axis_ids(connection, "common_morphology_v1")
-    terminal_axes = _axis_ids(connection, "lenia_terminal_v1")
+    common_axes = _axis_ids(connection, COMMON_FEATURE_SPACE_ID)
+    terminal_axes = _axis_ids(connection, TERMINAL_FEATURE_SPACE_ID)
     missing_region_axes = [axis for axis in DEFAULT_COMMON_REGION_AXES if axis not in common_axes]
     if missing_region_axes:
         raise ValueError(f"missing common region axes: {', '.join(missing_region_axes)}")
@@ -401,7 +416,7 @@ def build_high_fiber_null_validation_packet(
             }
         )
     return {
-        "packetKind": "track1_high_fiber_null_validation_v1",
+        "packetKind": "track1_high_fiber_null_validation_v2",
         "sourcePacket": str(source_packet_path),
         "method": {
             "targetRegionLimit": target_region_limit,

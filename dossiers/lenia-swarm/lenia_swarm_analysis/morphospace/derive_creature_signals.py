@@ -53,7 +53,7 @@ def _trace_samples(
 ) -> list[dict[str, object]]:
     rows = connection.execute(
         """
-        SELECT step, center_x, center_y, terminal_descriptor_json
+        SELECT step, width, height, center_x, center_y, terminal_descriptor_json
         FROM development_samples
         WHERE specimen_id = ?
         ORDER BY step
@@ -61,13 +61,15 @@ def _trace_samples(
         [specimen_id],
     ).fetchall()
     samples: list[dict[str, object]] = []
-    for step, center_x, center_y, terminal_descriptor_json in rows:
+    for step, width, height, center_x, center_y, terminal_descriptor_json in rows:
         terminal = json.loads(terminal_descriptor_json) if terminal_descriptor_json else {}
         samples.append(
             {
                 "step": int(step),
                 "centerX": float(center_x),
                 "centerY": float(center_y),
+                "width": int(width),
+                "height": int(height),
                 "terminal": terminal,
             }
         )

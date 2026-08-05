@@ -18,7 +18,7 @@ from .warehouse import (
     register_specimen_study,
     register_study,
     replace_feature_axes,
-    replace_feature_values,
+    replace_sparse_feature_values,
     stable_id,
     upsert_feature_space,
     upsert_morphospace_source,
@@ -304,6 +304,7 @@ def ingest_embryomaker_snapshots(
         connection,
         feature_space_id=FEATURE_SPACE_ID,
         feature_space_kind="embryomaker_native_snapshot_descriptor",
+        storage_mode="sparse_values",
         label=FEATURE_SPACE_LABEL,
         version_label="v1",
         coordinate_policy=(
@@ -390,7 +391,7 @@ def ingest_embryomaker_snapshots(
                 "summary": asdict(record) | {"path": source_ref},
             },
         )
-        replace_feature_values(
+        replace_sparse_feature_values(
             connection,
             observation_id=observation_id,
             feature_space_id=FEATURE_SPACE_ID,

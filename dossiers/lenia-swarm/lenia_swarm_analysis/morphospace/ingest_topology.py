@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, cast
 
 from duckdb import DuckDBPyConnection
 
-from .warehouse import json_text, register_artifact, register_study, stable_id
+from .warehouse import json_text, register_study, stable_id, utc_now
 
 
 def _topology_entries(space: dict[str, Any]) -> list[tuple[str | None, str | None, dict[str, Any]]]:
@@ -75,30 +76,94 @@ def _insert_features(
             feature_index += 1
 
 
-def ingest_topology_packet(
+def _register_topology_packet_artifact(
     connection: DuckDBPyConnection,
     *,
-    topology_packet_path: Path,
+    study_id: str,
+    artifact_ref: str,
+    packet: dict[str, Any],
+) -> str:
+    encoded = json_text(packet).encode("utf-8")
+    content_sha256 = hashlib.sha256(encoded).hexdigest()
+    artifact_id = stable_id(
+        "artifact",
+        study_id,
+        "topology_packet",
+        artifact_ref,
+        content_sha256,
+    )
+    connection.execute(
+        """
+        DELETE FROM raw_json_objects
+        WHERE artifact_id IN (
+            SELECT artifact_id FROM artifacts
+            WHERE study_id = ? AND artifact_kind = 'topology_packet'
+              AND artifact_id != ?
+        )
+        """,
+        [study_id, artifact_id],
+    )
+    connection.execute(
+        """
+        DELETE FROM artifacts
+        WHERE study_id = ? AND artifact_kind = 'topology_packet'
+          AND artifact_id != ?
+        """,
+        [study_id, artifact_id],
+    )
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO artifacts (
+            artifact_id, study_id, artifact_kind, path, sha256, size_bytes,
+            created_at, metadata_json
+        )
+        VALUES (?, ?, 'topology_packet', ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
+            artifact_id,
+            study_id,
+            artifact_ref,
+            content_sha256,
+            len(encoded),
+            utc_now(),
+            json_text(
+                {
+                    "contentHashPolicy": "canonical-json-sha256-v1",
+                    "sourceArtifact": packet.get("sourceArtifact"),
+                }
+            ),
+        ],
+    )
+    return artifact_id
+
+
+def ingest_topology_packet_payload(
+    connection: DuckDBPyConnection,
+    *,
+    packet: dict[str, Any],
+    artifact_ref: str | None = None,
     study_id: str | None = None,
     parent_study_id: str | None = None,
     label: str | None = None,
 ) -> str:
-    packet = json.loads(topology_packet_path.read_text(encoding="utf-8"))
     if packet.get("packetKind") != "transformation_topology_packet_v1":
-        raise SystemExit(f"{topology_packet_path}: expected transformation_topology_packet_v1")
+        raise SystemExit("topology payload: expected transformation_topology_packet_v1")
     resolved_study_id = register_study(
         connection,
         study_kind="topology_run",
-        label=label or topology_packet_path.stem,
+        label=label or "topology-packet",
         study_id=study_id,
         parent_study_id=parent_study_id,
-        metadata_json={"sourceArtifact": str(topology_packet_path)},
+        metadata_json={"sourceArtifact": packet.get("sourceArtifact")},
     )
-    artifact_id = register_artifact(
+    resolved_artifact_ref = artifact_ref or (
+        f"duckdb://study/{resolved_study_id}/topology-packet"
+    )
+    artifact_id = _register_topology_packet_artifact(
         connection,
         study_id=resolved_study_id,
-        artifact_kind="topology_packet",
-        path=topology_packet_path,
+        artifact_ref=resolved_artifact_ref,
+        packet=packet,
     )
     from .warehouse import ingest_json_object_artifact
 
@@ -111,7 +176,8 @@ def ingest_topology_packet(
 
     spaces = packet.get("spaces")
     if not isinstance(spaces, dict):
-        raise SystemExit(f"{topology_packet_path}: missing spaces")
+        raise SystemExit("topology payload: missing spaces")
+    incoming_topology_run_ids: list[str] = []
     for space_kind, space in spaces.items():
         if not isinstance(space, dict):
             continue
@@ -123,6 +189,7 @@ def ingest_topology_packet(
                 group_key or "global",
                 group_value or "",
             )
+            incoming_topology_run_ids.append(topology_run_id)
             connection.execute(
                 """
                 INSERT OR REPLACE INTO topology_runs (
@@ -147,4 +214,61 @@ def ingest_topology_packet(
                 topology_summary=topology_summary,
             )
 
+    connection.execute(
+        "CREATE OR REPLACE TEMP TABLE incoming_topology_runs (topology_run_id TEXT PRIMARY KEY)"
+    )
+    if incoming_topology_run_ids:
+        connection.execute(
+            "INSERT INTO incoming_topology_runs SELECT unnest(?::VARCHAR[])",
+            [incoming_topology_run_ids],
+        )
+    connection.execute(
+        """
+        DELETE FROM topology_features
+        WHERE topology_run_id IN (
+            SELECT topology_runs.topology_run_id
+            FROM topology_runs
+            WHERE topology_runs.study_id = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM incoming_topology_runs AS incoming
+                  WHERE incoming.topology_run_id = topology_runs.topology_run_id
+              )
+        )
+        """,
+        [resolved_study_id],
+    )
+    connection.execute(
+        """
+        DELETE FROM topology_runs
+        WHERE study_id = ?
+          AND NOT EXISTS (
+              SELECT 1 FROM incoming_topology_runs AS incoming
+              WHERE incoming.topology_run_id = topology_runs.topology_run_id
+          )
+        """,
+        [resolved_study_id],
+    )
+
     return resolved_study_id
+
+
+def ingest_topology_packet(
+    connection: DuckDBPyConnection,
+    *,
+    topology_packet_path: Path,
+    study_id: str | None = None,
+    parent_study_id: str | None = None,
+    label: str | None = None,
+) -> str:
+    resolved_path = topology_packet_path.expanduser().resolve(strict=True)
+    packet = json.loads(resolved_path.read_text(encoding="utf-8"))
+    if not isinstance(packet, dict):
+        raise SystemExit(f"{resolved_path}: expected a JSON object")
+    return ingest_topology_packet_payload(
+        connection,
+        packet=packet,
+        artifact_ref=str(resolved_path),
+        study_id=study_id,
+        parent_study_id=parent_study_id,
+        label=label or resolved_path.stem,
+    )

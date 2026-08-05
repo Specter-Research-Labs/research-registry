@@ -7,12 +7,22 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from ripser import ripser
 
 from lenia_swarm_analysis._io import read_json, read_jsonl
 
 from .analysis import _diagram_summary, _resolve_rows_path
 from .compare import _representation_matrix
+from .core import (
+    distance_scale,
+    pairwise_distance_matrix,
+    peak_betti,
+    persistence_threshold_counts,
+    preflight_rips_request,
+    run_ripser_precomputed,
+    sample_plan_hash,
+    stable_sample_indices,
+    upper_triangle,
+)
 
 
 def _default_output_dir(manifest_path: Path) -> Path:
@@ -28,46 +38,51 @@ def _parse_sizes(raw: str) -> list[int]:
 
 
 def _persistence_threshold_counts(diagrams: list[list[dict[str, Any]]]) -> dict[str, int]:
-    if len(diagrams) <= 1:
-        return {}
-    thresholds = (0.02, 0.015, 0.01, 0.005)
-    persistences = [
-        float(entry["persistence"])
-        for entry in diagrams[1]
-        if entry.get("persistence") is not None
-    ]
-    return {
-        f">={threshold:.3f}": int(sum(value >= threshold for value in persistences))
-        for threshold in thresholds
-    }
+    return persistence_threshold_counts(
+        diagrams,
+        ratios=(0.005, 0.01, 0.015, 0.02),
+    )
 
 
 def _peak_betti_one(betti_curves: list[dict[str, Any]]) -> dict[str, Any] | None:
-    if len(betti_curves) <= 1:
-        return None
-    curve = betti_curves[1]
-    betti = curve["betti"]
-    if not isinstance(betti, list) or not betti:
-        return None
-    peak_index = max(range(len(betti)), key=betti.__getitem__)
-    return {
-        "count": int(betti[peak_index]),
-        "scale": float(curve["scale"][peak_index]),
-    }
+    return peak_betti(betti_curves)
 
 
 def _metrics_for_matrix(matrix: np.ndarray, *, maxdim: int) -> dict[str, Any]:
-    result = ripser(matrix, maxdim=maxdim, metric="euclidean")
-    diagram_summary = _diagram_summary(result["dgms"], pairwise_max=0.0)
+    ripser_budget = preflight_rips_request(int(matrix.shape[0]), maxdim=maxdim)
+    distances = pairwise_distance_matrix(matrix)
+    pairwise = upper_triangle(distances)
+    metric_scale, scale_kind = distance_scale(pairwise)
+    result, _ = run_ripser_precomputed(distances, maxdim=maxdim)
+    diagram_summary = _diagram_summary(
+        result["dgms"],
+        pairwise_max=metric_scale,
+        scale_kind=scale_kind,
+    )
     h1 = diagram_summary["summaries"][1] if len(diagram_summary["summaries"]) > 1 else None
     return {
         "pointCount": int(matrix.shape[0]),
         "dimension": int(matrix.shape[1]),
+        "budget": ripser_budget,
         "ripser": diagram_summary["summaries"],
+        "scaleReference": diagram_summary["scaleReference"],
         "h1ThresholdCounts": _persistence_threshold_counts(diagram_summary["diagrams"]),
+        "persistenceThresholdUnits": "fraction_of_declared_scale",
         "peakBetti1": _peak_betti_one(diagram_summary["bettiCurves"]),
         "topH1Persistence": h1["topPersistence"][0] if h1 and h1["topPersistence"] else None,
     }
+
+
+def _bounded_metrics_for_matrix(matrix: np.ndarray, *, maxdim: int) -> dict[str, Any]:
+    try:
+        preflight_rips_request(int(matrix.shape[0]), maxdim=maxdim)
+    except ValueError as exc:
+        return {
+            "status": "skipped",
+            "pointCount": int(matrix.shape[0]),
+            "reason": str(exc),
+        }
+    return _metrics_for_matrix(matrix, maxdim=maxdim)
 
 
 def run_robustness(
@@ -94,23 +109,37 @@ def run_robustness(
         if isinstance(key, str) and key:
             slices[key].append(index)
 
-    rng = np.random.default_rng(seed)
+    sample_keys = [str(row.get("specimenId") or index) for index, row in enumerate(rows)]
+    sample_plans = {
+        (size, replicate_index): stable_sample_indices(
+            sample_keys,
+            sample_size=size,
+            seed=seed,
+            replicate=replicate_index,
+        )
+        for size in sample_sizes
+        if size <= len(rows)
+        for replicate_index in range(replicates)
+    }
     representation_summary: dict[str, Any] = {}
     for representation in representations:
         matrix = _representation_matrix(rows, representation)
-        full_metrics = _metrics_for_matrix(matrix, maxdim=maxdim)
+        full_metrics = _bounded_metrics_for_matrix(matrix, maxdim=maxdim)
 
         subsamples: list[dict[str, Any]] = []
         for size in sample_sizes:
             if size > matrix.shape[0]:
                 continue
             for replicate_index in range(replicates):
-                indices = np.sort(rng.choice(matrix.shape[0], size=size, replace=False))
-                metrics = _metrics_for_matrix(matrix[indices], maxdim=maxdim)
+                indices = sample_plans[(size, replicate_index)]
+                metrics = _bounded_metrics_for_matrix(matrix[indices], maxdim=maxdim)
                 subsamples.append(
                     {
                         "sampleSize": size,
                         "replicate": replicate_index,
+                        "samplePlanHash": sample_plan_hash(
+                            [sample_keys[int(index)] for index in indices]
+                        ),
                         "metrics": metrics,
                     }
                 )
@@ -124,7 +153,7 @@ def run_robustness(
                 {
                     "sliceKey": key,
                     "pointCount": len(indices),
-                    "metrics": _metrics_for_matrix(slice_matrix, maxdim=maxdim),
+                    "metrics": _bounded_metrics_for_matrix(slice_matrix, maxdim=maxdim),
                 }
             )
 
@@ -145,6 +174,7 @@ def run_robustness(
         "sliceKey": slice_key,
         "minSliceSize": min_slice_size,
         "seed": seed,
+        "samplePlan": "sha256_key_rank_v1",
     }
 
     output_dir.mkdir(parents=True, exist_ok=True)

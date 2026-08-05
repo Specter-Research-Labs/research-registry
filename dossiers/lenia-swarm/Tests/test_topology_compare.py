@@ -4,7 +4,10 @@ import json
 import math
 from pathlib import Path
 
+import pytest
+
 from lenia_swarm_analysis.topology.compare import run_comparison
+from lenia_swarm_analysis.topology.core import max_dense_rips_points
 
 
 def _fingerprint(theta: float) -> list[int]:
@@ -99,8 +102,40 @@ def test_run_comparison_writes_representation_outputs(tmp_path: Path) -> None:
     assert summary["representations"]["fingerprint_only"]["dimension"] == 4
     assert summary["representations"]["fingerprint_plus_symmetry"]["dimension"] == 15
     assert summary["representations"]["lowdim_descriptor"]["dimension"] == 18
+    assert summary["representations"]["fingerprint_only"]["budget"][
+        "estimatedWorkingBytes"
+    ] > 0
     assert summary["representations"]["fingerprint_only"]["ripser"][1]["featureCount"] >= 1
     assert (output_dir / "summary.json").is_file()
     assert (output_dir / "diagrams.json").is_file()
     assert (output_dir / "betti_curves.json").is_file()
     assert (output_dir / "analysis-manifest.json").is_file()
+
+
+def test_comparison_preflights_before_genotype_or_pairwise_allocation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from lenia_swarm_analysis.topology import compare as module
+
+    unsafe_count = max_dense_rips_points(1) + 1
+    monkeypatch.setattr(module, "read_json", lambda path: {})
+    monkeypatch.setattr(module, "_resolve_rows_path", lambda path, manifest: path)
+    monkeypatch.setattr(
+        module,
+        "read_jsonl",
+        lambda path, **_kwargs: [{}] * unsafe_count,
+    )
+    monkeypatch.setattr(
+        module,
+        "_genotype_space",
+        lambda rows: pytest.fail("genotype allocation ran before Rips preflight"),
+    )
+
+    with pytest.raises(ValueError, match="estimated working memory"):
+        module.run_comparison(
+            tmp_path / "manifest.json",
+            tmp_path / "out",
+            maxdim=1,
+            neighbor_k=2,
+        )

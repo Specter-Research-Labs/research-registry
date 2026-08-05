@@ -6,6 +6,16 @@ from statistics import mean, median
 from typing import Any
 
 import numpy as np
+from scipy import ndimage
+
+_FOUR_CONNECTED_STRUCTURE = np.asarray(
+    (
+        (False, True, False),
+        (True, True, True),
+        (False, True, False),
+    ),
+    dtype=bool,
+)
 
 TERMINAL_AXIS_SPECS: tuple[dict[str, str], ...] = (
     {
@@ -297,7 +307,11 @@ def zscore(value: float, *, center: float, scale: float) -> float:
     return (value - center) / max(scale, 1.0e-9)
 
 
-def _component_cells(mask: np.ndarray) -> list[list[tuple[int, int]]]:
+def _component_cells(
+    mask: np.ndarray,
+    *,
+    use_torus: bool = False,
+) -> list[list[tuple[int, int]]]:
     height, width = mask.shape
     occupied_visited = np.zeros((height, width), dtype=bool)
     neighbors = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -315,6 +329,9 @@ def _component_cells(mask: np.ndarray) -> list[list[tuple[int, int]]]:
                 for dy, dx in neighbors:
                     ny = cy + dy
                     nx = cx + dx
+                    if use_torus:
+                        ny %= height
+                        nx %= width
                     if (
                         0 <= ny < height
                         and 0 <= nx < width
@@ -328,38 +345,31 @@ def _component_cells(mask: np.ndarray) -> list[list[tuple[int, int]]]:
 
 
 def _hole_count(mask: np.ndarray, *, min_size: int) -> int:
-    height, width = mask.shape
-    background_visited = np.zeros((height, width), dtype=bool)
-    neighbors = ((1, 0), (-1, 0), (0, 1), (0, -1))
-    hole_count = 0
+    if mask.size == 0:
+        return 0
     background = ~mask
-    for y in range(height):
-        for x in range(width):
-            if background_visited[y, x] or not bool(background[y, x]):
-                continue
-            frontier = [(y, x)]
-            background_visited[y, x] = True
-            touches_border = y == 0 or x == 0 or y == height - 1 or x == width - 1
-            size = 0
-            while frontier:
-                cy, cx = frontier.pop()
-                size += 1
-                for dy, dx in neighbors:
-                    ny = cy + dy
-                    nx = cx + dx
-                    if (
-                        0 <= ny < height
-                        and 0 <= nx < width
-                        and bool(background[ny, nx])
-                        and not background_visited[ny, nx]
-                    ):
-                        background_visited[ny, nx] = True
-                        if ny == 0 or nx == 0 or ny == height - 1 or nx == width - 1:
-                            touches_border = True
-                        frontier.append((ny, nx))
-            if not touches_border and size >= min_size:
-                hole_count += 1
-    return hole_count
+    labels, component_count = ndimage.label(
+        background,
+        structure=_FOUR_CONNECTED_STRUCTURE,
+    )
+    if component_count == 0:
+        return 0
+
+    border_labels = np.unique(
+        np.concatenate(
+            (
+                labels[0, :],
+                labels[-1, :],
+                labels[:, 0],
+                labels[:, -1],
+            )
+        )
+    )
+    component_sizes = np.bincount(labels.ravel(), minlength=component_count + 1)
+    enclosed = np.ones(component_count + 1, dtype=bool)
+    enclosed[0] = False
+    enclosed[border_labels] = False
+    return int(np.count_nonzero(enclosed & (component_sizes >= min_size)))
 
 
 def _shift_image(image: np.ndarray, *, shift_x: int, shift_y: int) -> np.ndarray:
@@ -412,19 +422,15 @@ def _radial_model(image: np.ndarray) -> np.ndarray:
 def _aligned_image(
     image: np.ndarray,
     *,
-    xs: np.ndarray,
-    ys: np.ndarray,
     weights: np.ndarray,
-    x_center: float,
-    y_center: float,
+    dx: np.ndarray,
+    dy: np.ndarray,
     major_vector: np.ndarray,
     minor_vector: np.ndarray,
 ) -> np.ndarray:
     height, width = image.shape
     center_x = (width - 1) / 2.0
     center_y = (height - 1) / 2.0
-    dx = xs.astype(np.float64) - x_center
-    dy = ys.astype(np.float64) - y_center
     u = dx * float(major_vector[0]) + dy * float(major_vector[1])
     v = dx * float(minor_vector[0]) + dy * float(minor_vector[1])
     aligned_x = np.rint(center_x + u).astype(np.int32)
@@ -440,7 +446,37 @@ def _aligned_image(
     return aligned
 
 
-def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
+def _canonical_circular_center(profile: np.ndarray) -> float:
+    period = int(profile.size)
+    if period == 0:
+        return 0.0
+    total = float(profile.sum())
+    threshold = max(abs(total), 1.0) * 1.0e-10
+    coordinates = np.arange(period, dtype=np.float64) + 0.5
+    for harmonic in range(1, max(1, period // 2) + 1):
+        angles = coordinates * (2.0 * np.pi * harmonic / period)
+        real = float(profile @ np.cos(angles))
+        imaginary = float(profile @ np.sin(angles))
+        if math.hypot(real, imaginary) <= threshold:
+            continue
+        phase = math.atan2(imaginary, real) % (2.0 * np.pi)
+        base = phase * period / (2.0 * np.pi * harmonic)
+        candidates = base + np.arange(harmonic, dtype=np.float64) * period / harmonic
+        center = period * 0.5
+        deltas = np.abs(candidates - center)
+        distances = np.minimum(deltas, period - deltas)
+        return float(candidates[int(np.argmin(distances))] % period)
+    return period * 0.5
+
+
+def fingerprint_metrics(
+    fingerprint: np.ndarray,
+    *,
+    border_mode: str = "wall",
+) -> dict[str, float]:
+    if border_mode not in {"wall", "torus"}:
+        raise ValueError(f"invalid border mode: {border_mode!r}")
+    use_torus = border_mode == "torus"
     mask = fingerprint > 0
     if not np.any(mask):
         return {
@@ -459,7 +495,7 @@ def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
     min_component_size = max(2, int(round(raw_area * 0.02)))
     filtered_mask = np.zeros_like(mask, dtype=bool)
     retained_components = 0
-    for component in _component_cells(mask):
+    for component in _component_cells(mask, use_torus=use_torus):
         if len(component) < min_component_size:
             continue
         retained_components += 1
@@ -467,15 +503,25 @@ def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
             filtered_mask[y, x] = True
     if not np.any(filtered_mask):
         filtered_mask = mask
-        retained_components = len(_component_cells(mask))
+        retained_components = len(_component_cells(mask, use_torus=use_torus))
 
     ys, xs = np.nonzero(filtered_mask)
     weights = fingerprint[ys, xs].astype(np.float64)
     total_weight = float(np.sum(weights))
-    x_center = float(np.sum(xs * weights) / total_weight)
-    y_center = float(np.sum(ys * weights) / total_weight)
-    dx = xs.astype(np.float64) - x_center
-    dy = ys.astype(np.float64) - y_center
+    if use_torus:
+        weighted_field = np.zeros_like(fingerprint, dtype=np.float64)
+        weighted_field[ys, xs] = weights
+        x_center = _canonical_circular_center(weighted_field.sum(axis=0))
+        y_center = _canonical_circular_center(weighted_field.sum(axis=1))
+        dx = xs.astype(np.float64) + 0.5 - x_center
+        dy = ys.astype(np.float64) + 0.5 - y_center
+        dx -= np.round(dx / fingerprint.shape[1]) * fingerprint.shape[1]
+        dy -= np.round(dy / fingerprint.shape[0]) * fingerprint.shape[0]
+    else:
+        x_center = float(np.sum(xs * weights) / total_weight)
+        y_center = float(np.sum(ys * weights) / total_weight)
+        dx = xs.astype(np.float64) - x_center
+        dy = ys.astype(np.float64) - y_center
     covariance = np.asarray(
         [
             [np.sum(weights * dx * dx), np.sum(weights * dx * dy)],
@@ -490,10 +536,16 @@ def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
     major_vector = eigenvectors[:, 1]
     minor_vector = eigenvectors[:, 0]
 
-    up = np.pad(filtered_mask[1:, :], ((0, 1), (0, 0)), constant_values=False)
-    down = np.pad(filtered_mask[:-1, :], ((1, 0), (0, 0)), constant_values=False)
-    left = np.pad(filtered_mask[:, 1:], ((0, 0), (0, 1)), constant_values=False)
-    right = np.pad(filtered_mask[:, :-1], ((0, 0), (1, 0)), constant_values=False)
+    if use_torus:
+        up = np.roll(filtered_mask, -1, axis=0)
+        down = np.roll(filtered_mask, 1, axis=0)
+        left = np.roll(filtered_mask, -1, axis=1)
+        right = np.roll(filtered_mask, 1, axis=1)
+    else:
+        up = np.pad(filtered_mask[1:, :], ((0, 1), (0, 0)), constant_values=False)
+        down = np.pad(filtered_mask[:-1, :], ((1, 0), (0, 0)), constant_values=False)
+        left = np.pad(filtered_mask[:, 1:], ((0, 0), (0, 1)), constant_values=False)
+        right = np.pad(filtered_mask[:, :-1], ((0, 0), (1, 0)), constant_values=False)
     boundary = filtered_mask & ~(up & down & left & right)
     perimeter = float(np.count_nonzero(boundary))
     area = float(np.count_nonzero(filtered_mask))
@@ -503,26 +555,42 @@ def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
     weighted[ys, xs] = weights
     image_center_x = (fingerprint.shape[1] - 1) / 2.0
     image_center_y = (fingerprint.shape[0] - 1) / 2.0
-    recentered = _shift_image(
-        weighted,
-        shift_x=int(round(image_center_x - x_center)),
-        shift_y=int(round(image_center_y - y_center)),
-    )
+    if use_torus:
+        recentered = np.roll(
+            weighted,
+            shift=(
+                int(round(fingerprint.shape[0] * 0.5 - y_center)),
+                int(round(fingerprint.shape[1] * 0.5 - x_center)),
+            ),
+            axis=(0, 1),
+        )
+    else:
+        recentered = _shift_image(
+            weighted,
+            shift_x=int(round(image_center_x - x_center)),
+            shift_y=int(round(image_center_y - y_center)),
+        )
     aligned = _aligned_image(
         weighted,
-        xs=xs,
-        ys=ys,
         weights=weights,
-        x_center=x_center,
-        y_center=y_center,
+        dx=dx,
+        dy=dy,
         major_vector=major_vector,
         minor_vector=minor_vector,
     )
     bilateral_symmetry = _similarity_score(aligned, np.flipud(aligned))
     rotational_symmetry = _similarity_score(recentered, np.rot90(recentered, 2))
     radial_symmetry = _similarity_score(recentered, _radial_model(recentered))
-    center_offset = math.hypot(x_center - image_center_x, y_center - image_center_y)
-    max_offset = math.hypot(image_center_x, image_center_y)
+    if use_torus:
+        offset_x = x_center - fingerprint.shape[1] * 0.5
+        offset_y = y_center - fingerprint.shape[0] * 0.5
+        offset_x -= round(offset_x / fingerprint.shape[1]) * fingerprint.shape[1]
+        offset_y -= round(offset_y / fingerprint.shape[0]) * fingerprint.shape[0]
+        center_offset = math.hypot(offset_x, offset_y)
+        max_offset = math.hypot(fingerprint.shape[1] * 0.5, fingerprint.shape[0] * 0.5)
+    else:
+        center_offset = math.hypot(x_center - image_center_x, y_center - image_center_y)
+        max_offset = math.hypot(image_center_x, image_center_y)
     center_offset /= max(max_offset, 1.0e-9)
     major_projection = dx * float(major_vector[0]) + dy * float(major_vector[1])
     minor_projection = dx * float(minor_vector[0]) + dy * float(minor_vector[1])
@@ -607,10 +675,14 @@ def extract_terminal_raw_axes_from_descriptors(
             raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
     else:
         raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
+    border_mode = terminal.get("borderMode")
+    if border_mode not in {"wall", "torus"}:
+        raise SystemExit(f"{specimen_id}: invalid terminal.borderMode")
     metrics = fingerprint_metrics(
         fingerprint.reshape(
             fingerprint_resolution, fingerprint_resolution
-        )
+        ),
+        border_mode=str(border_mode),
     )
     return {
         "spread": gyration,
@@ -651,6 +723,27 @@ def transform_axes(raw_axes: dict[str, float]) -> dict[str, float]:
     return {axis_id: axis_transform_value(axis_id, value) for axis_id, value in raw_axes.items()}
 
 
+def _trace_border_mode(sample: dict[str, Any]) -> str:
+    terminal = sample.get("terminal")
+    if not isinstance(terminal, dict):
+        raise SystemExit("trace sample is missing terminal descriptor")
+    border_mode = terminal.get("borderMode")
+    if border_mode not in {"wall", "torus"}:
+        raise SystemExit(f"trace sample has invalid terminal.borderMode: {border_mode!r}")
+    return str(border_mode)
+
+
+def _trace_period(sample: dict[str, Any], key: str) -> float:
+    value = require_float(sample.get(key), name=key, specimen_id="trace")
+    if value <= 0 or not float(value).is_integer():
+        raise SystemExit(f"trace sample has invalid {key}: {value!r}")
+    return value
+
+
+def _wrapped_delta(delta: float, period: float) -> float:
+    return delta - math.floor(delta / period + 0.5) * period
+
+
 def compute_center_velocity_trace(samples: list[dict[str, Any]]) -> list[float]:
     if not samples:
         return []
@@ -663,7 +756,26 @@ def compute_center_velocity_trace(samples: list[dict[str, Any]]) -> list[float]:
         step_prev = int(require_float(previous.get("step"), name="step", specimen_id="trace"))
         step_curr = int(require_float(current.get("step"), name="step", specimen_id="trace"))
         delta_step = max(step_curr - step_prev, 1)
-        displacement = math.hypot(cx - px, cy - py)
+        previous_border = _trace_border_mode(previous)
+        current_border = _trace_border_mode(current)
+        if previous_border != current_border:
+            raise SystemExit(
+                "developmental trace changes border mode between consecutive samples"
+            )
+        delta_x = cx - px
+        delta_y = cy - py
+        if current_border == "torus":
+            previous_width = _trace_period(previous, "width")
+            current_width = _trace_period(current, "width")
+            previous_height = _trace_period(previous, "height")
+            current_height = _trace_period(current, "height")
+            if previous_width != current_width or previous_height != current_height:
+                raise SystemExit(
+                    "developmental trace changes lattice dimensions between consecutive samples"
+                )
+            delta_x = _wrapped_delta(delta_x, current_width)
+            delta_y = _wrapped_delta(delta_y, current_height)
+        displacement = math.hypot(delta_x, delta_y)
         velocities.append(displacement / float(delta_step))
     return velocities
 

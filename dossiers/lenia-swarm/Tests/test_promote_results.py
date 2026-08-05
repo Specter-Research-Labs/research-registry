@@ -4,6 +4,12 @@ import json
 import sqlite3
 from pathlib import Path
 
+from lenia_swarm_analysis.morphospace.common_morphology import (
+    FEATURE_SPACE_ID as COMMON_FEATURE_SPACE_ID,
+)
+from lenia_swarm_analysis.morphospace.derive_lenia_features import (
+    FEATURE_SPACE_ID as TERMINAL_FEATURE_SPACE_ID,
+)
 from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
 from lenia_swarm_analysis.morphospace.warehouse import connect_database
@@ -152,7 +158,7 @@ def _result(seed: int) -> dict[str, object]:
     return {
         "backend": "metal-full",
         "descriptor_bundle": {
-            "descriptorVersion": 1,
+            "descriptorVersion": 2,
             "symmetryPolicy": "translation_kernel_permutation_v1",
             "genotype": {
                 "version": 1,
@@ -163,12 +169,15 @@ def _result(seed: int) -> dict[str, object]:
                 "canonicalizer": "test",
             },
             "terminal": {
-                "version": 1,
+                "version": 2,
+                "descriptorVersion": 2,
+                "borderMode": "torus",
+                "normalizationPolicy": "border_aware_com_center_peak_q32_u8_v2",
                 "finalMass": 12.0,
                 "finalOccupancy": 0.12,
                 "finalGyration": 5.0,
-                "fingerprintResolution": 4,
-                "fingerprintU8": [0, 1, 0, 0] * 4,
+                "fingerprintResolution": 32,
+                "fingerprintU8": [0, 1, 0, 0] * 256,
                 "fingerprintHash12": f"terminal{seed}",
                 "angularSymmetry": {"normalizedEntropy": 0.5},
             },
@@ -289,7 +298,6 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
             warehouse,
             compendium_path=compendium,
             run_id="test-run",
-            ingest_raw_rows=False,
         )
         assert warehouse.execute(
             "SELECT COUNT(*) FROM specimens WHERE run_id = 'test-run'"
@@ -315,15 +323,17 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
             """
             SELECT COUNT(DISTINCT observation_id)
             FROM comparison_feature_values_vw
-            WHERE run_id = 'test-run' AND feature_space_id = 'lenia_terminal_v1'
-            """
+            WHERE run_id = 'test-run' AND feature_space_id = ?
+            """,
+            [TERMINAL_FEATURE_SPACE_ID],
         ).fetchone()[0] == 2
         assert fast_warehouse.execute(
             """
             SELECT COUNT(DISTINCT observation_id)
             FROM comparison_feature_values_vw
-            WHERE run_id = 'test-run' AND feature_space_id = 'common_morphology_v1'
-            """
+            WHERE run_id = 'test-run' AND feature_space_id = ?
+            """,
+            [COMMON_FEATURE_SPACE_ID],
         ).fetchone()[0] == 2
     finally:
         fast_warehouse.close()

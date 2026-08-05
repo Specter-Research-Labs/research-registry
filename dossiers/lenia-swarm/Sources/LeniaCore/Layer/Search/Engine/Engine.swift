@@ -264,13 +264,15 @@ public final class SearchEngine {
         )
     }
 
-    /// `explicitParamsBatch` supplies one rule per seed for Metal evaluation without parameter embedding.
+    /// Explicit batches supply one rule and, optionally, one state patch per seed for fixed-corpus
+    /// Metal evaluation without parameter embedding.
     public func runBatch(
         seeds: [Int],
         initSeedOffset: Int,
         searchConfig: SearchConfig,
         frameCapture: FrameCapture? = nil,
-        explicitParamsBatch: [ResolvedParams]? = nil
+        explicitParamsBatch: [ResolvedParams]? = nil,
+        explicitInitialStateBatch: [InitStatePatchConfig?]? = nil
     ) -> [BatchSimulationResult] {
         let totalStart = ContinuousClock.now
         lastBatchProfile = nil
@@ -292,6 +294,7 @@ public final class SearchEngine {
             frameCapture: frameCapture,
             preflight: preflight,
             explicitParamsBatch: explicitParamsBatch,
+            explicitInitialStateBatch: explicitInitialStateBatch,
             timings: &timings
         )
         let initialConditionFamily = batchSetup.initialConditionFamily
@@ -583,6 +586,7 @@ public final class SearchEngine {
         frameCapture: FrameCapture?,
         preflight: SearchConfigPreflight,
         explicitParamsBatch: [ResolvedParams]?,
+        explicitInitialStateBatch: [InitStatePatchConfig?]?,
         timings: inout SearchBatchProfile
     ) -> SearchBatchSetup {
         let batchSize = seeds.count
@@ -622,24 +626,43 @@ public final class SearchEngine {
             randomParamsBySample = nil
             activeMetalKernels = metalFullKernels
         }
-        let initialConditionFamily = morphospaceInitialConditionFamily(
-            InitConfig(
-                seed: runtimeConfig.initSeed,
-                patches: runtimeConfig.patches,
-                a_uniform: runtimeConfig.aUniform,
-                p_uniform: runtimeConfig.pUniform,
-                state_patch: runtimeConfig.statePatch,
-                p_state_patch: runtimeConfig.paramPatch
+        let initialConditionFamily: String
+        if explicitInitialStateBatch != nil {
+            initialConditionFamily = "explicit_corpus_state_batch_v1"
+        } else {
+            initialConditionFamily = morphospaceInitialConditionFamily(
+                InitConfig(
+                    seed: runtimeConfig.initSeed,
+                    patches: runtimeConfig.patches,
+                    a_uniform: runtimeConfig.aUniform,
+                    p_uniform: runtimeConfig.pUniform,
+                    state_patch: runtimeConfig.statePatch,
+                    p_state_patch: runtimeConfig.paramPatch
+                )
             )
-        )
+        }
         let activityConfig = preflight.activityConfig
         let stabilityConfig = preflight.stabilityConfig
         let usesActivityMetrics = preflight.metricRequirements.usesActivity
         let captureConfig = SearchConfigPreflight.captureConfig(frameCapture, batchSize: batchSize)
 
         let stateBuildStart = ContinuousClock.now
-        let initialArrays = seeds.map { seed in
-            initializationBuilder.buildInitialState(seed: seed + initSeedOffset)
+        let initialArrays: [MLXArray]
+        if let stateBatch = explicitInitialStateBatch {
+            precondition(
+                stateBatch.count == batchSize,
+                "explicitInitialStateBatch count (\(stateBatch.count)) must equal batch size (\(batchSize))"
+            )
+            initialArrays = stateBatch.enumerated().map { index, statePatch in
+                if let statePatch {
+                    return initializationBuilder.buildInitialState(statePatch: statePatch)
+                }
+                return initializationBuilder.buildInitialState(seed: seeds[index] + initSeedOffset)
+            }
+        } else {
+            initialArrays = seeds.map { seed in
+                initializationBuilder.buildInitialState(seed: seed + initSeedOffset)
+            }
         }
         timings.stateBuildMs = durationMs(stateBuildStart.duration(to: ContinuousClock.now))
 
@@ -910,6 +933,7 @@ extension SearchEngine {
             frameCapture: nil,
             preflight: preflight,
             explicitParamsBatch: nil,
+            explicitInitialStateBatch: nil,
             timings: &timings
         )
         guard let runner = batchSetup.persistentMetalRunner else {

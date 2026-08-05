@@ -2,18 +2,23 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sqlite3
+import math
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Iterator, Sequence
 
 import duckdb
 from duckdb import DuckDBPyConnection
 
-from .schema import create_schema
+from .schema import SCHEMA_VERSION, SchemaVersionError, create_schema, read_schema_version
 
-TOOL_VERSION = "morphospace-warehouse-v1"
+TOOL_VERSION = "morphospace-warehouse-v10"
 APPLE_REFERENCE_EPOCH = datetime(2001, 1, 1, tzinfo=UTC)
+DESCRIPTOR_VERSION = "2"
+TERMINAL_VERSION = "2"
+NORMALIZATION_POLICY = "border_aware_com_center_peak_q32_u8_v2"
+CANONICAL_COMPENDIUM_STUDY_LABEL = "compendium"
 
 
 def utc_now() -> datetime:
@@ -26,6 +31,16 @@ def stable_id(*parts: object) -> str:
         digest.update(str(part).encode("utf-8"))
         digest.update(b"\x00")
     return digest.hexdigest()[:24]
+
+
+def canonical_compendium_study_id() -> str:
+    return stable_id(
+        "study",
+        "discovery",
+        CANONICAL_COMPENDIUM_STUDY_LABEL,
+        "",
+        "",
+    )
 
 
 def json_text(value: Any) -> str:
@@ -72,6 +87,18 @@ def normalize_optional_timestamp(value: Any) -> datetime | None:
 
 def connect_database(path: Path) -> DuckDBPyConnection:
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and path.stat().st_size > 0:
+        probe = duckdb.connect(str(path), read_only=True)
+        try:
+            version = read_schema_version(probe)
+        finally:
+            probe.close()
+        if version != SCHEMA_VERSION:
+            label = "unversioned" if version is None else f"v{version}"
+            raise SchemaVersionError(
+                f"warehouse schema {label} is not writable by schema v{SCHEMA_VERSION}; "
+                "rebuild the warehouse side by side"
+            )
     connection = duckdb.connect(str(path))
     # Full-study refreshes write multi-gigabyte derived tables; the default 16 MiB
     # autocheckpoint churns the WAL and dominates wall-clock time on real archives.
@@ -84,7 +111,31 @@ def connect_database(path: Path) -> DuckDBPyConnection:
 def connect_read_only_database(path: Path) -> DuckDBPyConnection:
     if not path.exists():
         raise FileNotFoundError(path)
-    return duckdb.connect(str(path), read_only=True)
+    connection = duckdb.connect(str(path), read_only=True)
+    try:
+        version = read_schema_version(connection)
+        if version != SCHEMA_VERSION:
+            label = "unversioned" if version is None else f"v{version}"
+            raise SchemaVersionError(
+                f"warehouse schema {label} is not readable by schema v{SCHEMA_VERSION}; "
+                "migrate the warehouse side by side"
+            )
+        return connection
+    except BaseException:
+        connection.close()
+        raise
+
+
+@contextmanager
+def warehouse_transaction(connection: DuckDBPyConnection) -> Iterator[None]:
+    connection.execute("BEGIN TRANSACTION")
+    try:
+        yield
+    except BaseException:
+        connection.execute("ROLLBACK")
+        raise
+    else:
+        connection.execute("COMMIT")
 
 
 def file_sha256(path: Path) -> str:
@@ -145,14 +196,23 @@ def register_artifact(
     path: Path,
     metadata_json: dict[str, Any] | None = None,
     hash_content: bool = True,
+    content_fingerprint: str | None = None,
+    size_bytes: int | None = None,
 ) -> str:
     stat = path.stat()
-    content_fingerprint = (
-        file_sha256(path)
-        if hash_content
-        else f"stat:{stat.st_size}:{stat.st_mtime_ns}"
+    if size_bytes is not None and size_bytes != stat.st_size:
+        raise ValueError(f"artifact size changed before registration: {path}")
+    resolved_size_bytes = stat.st_size if size_bytes is None else size_bytes
+    resolved_fingerprint = content_fingerprint or (
+        file_sha256(path) if hash_content else f"stat:{stat.st_size}:{stat.st_mtime_ns}"
     )
-    artifact_id = stable_id("artifact", artifact_kind, path.resolve(), content_fingerprint)
+    artifact_id = stable_id(
+        "artifact",
+        study_id,
+        artifact_kind,
+        path.resolve(),
+        resolved_fingerprint,
+    )
     connection.execute(
         """
         INSERT OR REPLACE INTO artifacts (
@@ -166,18 +226,80 @@ def register_artifact(
             study_id,
             artifact_kind,
             str(path),
-            content_fingerprint,
-            stat.st_size,
+            resolved_fingerprint,
+            resolved_size_bytes,
             utc_now(),
             json_text(
                 {
                     **(metadata_json or {}),
-                    "contentHashPolicy": "sha256" if hash_content else "stat-fingerprint",
+                    "contentHashPolicy": (
+                        "precomputed"
+                        if content_fingerprint is not None
+                        else "sha256"
+                        if hash_content
+                        else "stat-fingerprint"
+                    ),
                 }
             ),
         ],
     )
     return artifact_id
+
+
+def register_source_receipt(
+    connection: DuckDBPyConnection,
+    *,
+    study_id: str,
+    artifact_id: str,
+    source_kind: str,
+    source_tables: Sequence[str],
+    source_row_counts: dict[str, int],
+    source_schema_version: str | None = None,
+    metadata_json: dict[str, Any] | None = None,
+) -> str:
+    artifact = connection.execute(
+        "SELECT sha256, size_bytes FROM artifacts WHERE artifact_id = ?",
+        [artifact_id],
+    ).fetchone()
+    if artifact is None:
+        raise ValueError(f"unknown artifact_id: {artifact_id}")
+    content_sha256, size_bytes = str(artifact[0]), int(artifact[1])
+    receipt_payload = {
+        "studyId": study_id,
+        "artifactId": artifact_id,
+        "sourceKind": source_kind,
+        "sourceSchemaVersion": source_schema_version,
+        "sourceTables": sorted(source_tables),
+        "sourceRowCounts": dict(sorted(source_row_counts.items())),
+        "contentSha256": content_sha256,
+        "sizeBytes": size_bytes,
+    }
+    receipt_hash = row_sha256(receipt_payload)
+    receipt_id = stable_id("source-receipt", receipt_hash)
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO source_receipts (
+            receipt_id, study_id, artifact_id, source_kind, source_schema_version,
+            source_tables_json, source_row_counts_json, content_sha256, size_bytes,
+            recorded_at, metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
+            receipt_id,
+            study_id,
+            artifact_id,
+            source_kind,
+            source_schema_version,
+            json_text(sorted(source_tables)),
+            json_text(dict(sorted(source_row_counts.items()))),
+            content_sha256,
+            size_bytes,
+            utc_now(),
+            json_text({**(metadata_json or {}), "receiptHash": receipt_hash}),
+        ],
+    )
+    return receipt_id
 
 
 def register_ingest_run(
@@ -252,50 +374,6 @@ def ingest_jsonl_rows(
         )
 
 
-def ingest_sqlite_rows(
-    connection: DuckDBPyConnection,
-    *,
-    artifact_id: str,
-    sqlite_path: Path,
-) -> list[str]:
-    source = sqlite3.connect(sqlite_path)
-    source.row_factory = sqlite3.Row
-    try:
-        tables = [
-            str(row["name"])
-            for row in source.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
-            )
-        ]
-        for table_name in tables:
-            columns = list(source.execute(f"PRAGMA table_info({table_name})"))
-            pk_columns = [str(column["name"]) for column in columns if int(column["pk"]) > 0]
-            for row_index, row in enumerate(source.execute(f"SELECT * FROM {table_name}")):
-                payload = dict(row)
-                if pk_columns:
-                    primary_key = "|".join(str(payload.get(column, "")) for column in pk_columns)
-                else:
-                    primary_key = str(row_index)
-                connection.execute(
-                    """
-                    INSERT OR REPLACE INTO raw_sqlite_rows (
-                        artifact_id, table_name, primary_key, row_hash, payload_json
-                    )
-                    VALUES (?, ?, ?, ?, CAST(? AS JSON))
-                    """,
-                    [
-                        artifact_id,
-                        table_name,
-                        primary_key,
-                        row_sha256(payload),
-                        json_text(payload),
-                    ],
-                )
-        return tables
-    finally:
-        source.close()
-
-
 def _fetch_existing_specimen(
     connection: DuckDBPyConnection,
     specimen_id: str,
@@ -342,6 +420,32 @@ def upsert_specimen(
             merged[key] = None
     if existing is not None and existing.get("study_id") is not None:
         merged["study_id"] = existing["study_id"]
+    provenance = merged.get("provenance_json")
+    if isinstance(provenance, str) and provenance:
+        provenance = json.loads(provenance)
+    if isinstance(provenance, dict):
+        descriptor_bundle = provenance.get("descriptorBundle")
+        terminal = provenance.get("terminal")
+        if not isinstance(terminal, dict) and isinstance(descriptor_bundle, dict):
+            terminal = descriptor_bundle.get("terminal")
+        if isinstance(terminal, dict):
+            merged.setdefault(
+                "descriptor_version",
+                str(
+                    terminal.get("descriptorVersion")
+                    or (
+                        descriptor_bundle.get("descriptorVersion")
+                        if isinstance(descriptor_bundle, dict)
+                        else ""
+                    )
+                    or terminal.get("version")
+                    or ""
+                )
+                or None,
+            )
+            merged.setdefault("terminal_version", str(terminal.get("version") or "") or None)
+            merged.setdefault("normalization_policy", terminal.get("normalizationPolicy"))
+            merged.setdefault("fingerprint_resolution", terminal.get("fingerprintResolution"))
     merged["recorded_at"] = normalize_optional_timestamp(merged.get("recorded_at"))
     connection.execute(
         """
@@ -351,11 +455,13 @@ def upsert_specimen(
             regime_family, geometry_family, canonical_family, family_kind, score,
             filters_passed, search_is_stable_candidate, recorded_at, results_path,
             export_dir, activity_path, fingerprint_path, provenance_json,
-            runtime_family, runtime_capabilities_json, specimen_manifest_json
+            runtime_family, runtime_capabilities_json, specimen_manifest_json,
+            descriptor_version, terminal_version, normalization_policy,
+            fingerprint_resolution
         )
         VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            CAST(? AS JSON), ?, CAST(? AS JSON), CAST(? AS JSON)
+            CAST(? AS JSON), ?, CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?
         )
         """,
         [
@@ -385,8 +491,331 @@ def upsert_specimen(
             merged.get("runtime_family"),
             json_text(merged.get("runtime_capabilities_json") or []),
             json_text(merged.get("specimen_manifest_json") or {}),
+            merged.get("descriptor_version"),
+            merged.get("terminal_version"),
+            merged.get("normalization_policy"),
+            merged.get("fingerprint_resolution"),
         ],
     )
+
+
+def upsert_specimen_descriptor(
+    connection: DuckDBPyConnection,
+    *,
+    specimen_id: str,
+    terminal_descriptor: dict[str, Any],
+    trajectory_descriptor: dict[str, Any],
+    descriptor_version: str,
+    terminal_version: str,
+    normalization_policy: str,
+    fingerprint_resolution: int | None,
+) -> str:
+    payload = {
+        "descriptorVersion": descriptor_version,
+        "terminalVersion": terminal_version,
+        "normalizationPolicy": normalization_policy,
+        "fingerprintResolution": fingerprint_resolution,
+        "terminal": terminal_descriptor,
+        "trajectory": trajectory_descriptor,
+    }
+    content_sha256 = row_sha256(payload)
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO specimen_descriptors (
+            specimen_id, descriptor_version, terminal_version,
+            normalization_policy, fingerprint_resolution,
+            terminal_descriptor_json, trajectory_descriptor_json,
+            content_sha256, recorded_at
+        )
+        VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), ?, ?)
+        """,
+        [
+            specimen_id,
+            descriptor_version,
+            terminal_version,
+            normalization_policy,
+            fingerprint_resolution,
+            json_text(terminal_descriptor),
+            json_text(trajectory_descriptor),
+            content_sha256,
+            utc_now(),
+        ],
+    )
+    return content_sha256
+
+
+def register_feature_calibration(
+    connection: DuckDBPyConnection,
+    *,
+    feature_space_id: str,
+    calibration_version: str,
+    axis_order: Sequence[str],
+    reference_query: dict[str, Any],
+    axis_transforms: dict[str, Any],
+    metadata_json: dict[str, Any] | None = None,
+) -> str:
+    payload = {
+        "featureSpaceId": feature_space_id,
+        "calibrationVersion": calibration_version,
+        "axisOrder": list(axis_order),
+        "referenceQuery": reference_query,
+        "axisTransforms": axis_transforms,
+    }
+    content_sha256 = row_sha256(payload)
+    calibration_id = stable_id("feature-calibration", content_sha256)
+    connection.execute(
+        """
+        INSERT INTO feature_calibrations (
+            calibration_id, feature_space_id, calibration_version,
+            axis_order_json, reference_query_json, axis_transforms_json, content_sha256,
+            created_at, frozen, metadata_json
+        )
+        VALUES (?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), ?, ?, TRUE,
+                CAST(? AS JSON))
+        ON CONFLICT DO NOTHING
+        """,
+        [
+            calibration_id,
+            feature_space_id,
+            calibration_version,
+            json_text(list(axis_order)),
+            json_text(reference_query),
+            json_text(axis_transforms),
+            content_sha256,
+            utc_now(),
+            json_text(metadata_json or {}),
+        ],
+    )
+    return calibration_id
+
+
+def upsert_specimen_feature_vectors(
+    connection: DuckDBPyConnection,
+    *,
+    feature_space_id: str,
+    calibration_id: str,
+    vector_version: str,
+    axis_count: int,
+    rows: Sequence[tuple[str, str, str, Sequence[float], Sequence[float]]],
+) -> int:
+    if not rows:
+        return 0
+    contract_row = connection.execute(
+        """
+        SELECT spaces.storage_mode,
+               json_extract_string(spaces.metadata_json, '$.activeCalibrationId'),
+               calibrations.frozen,
+               calibrations.axis_order_json,
+               (SELECT list(axis_id ORDER BY axis_index)
+                FROM feature_axes
+                WHERE feature_space_id = spaces.feature_space_id)
+        FROM feature_spaces AS spaces
+        LEFT JOIN feature_calibrations AS calibrations
+          ON calibrations.feature_space_id = spaces.feature_space_id
+         AND calibrations.calibration_id = ?
+        WHERE spaces.feature_space_id = ?
+        """,
+        [calibration_id, feature_space_id],
+    ).fetchone()
+    if contract_row is None:
+        raise ValueError(f"unknown feature_space_id: {feature_space_id}")
+    calibration_axes = (
+        json.loads(contract_row[3])
+        if isinstance(contract_row[3], str)
+        else contract_row[3]
+    )
+    if (
+        str(contract_row[0]) != "dense_vectors"
+        or str(contract_row[1]) != calibration_id
+        or not bool(contract_row[2])
+        or calibration_axes != contract_row[4]
+        or len(calibration_axes or []) != axis_count
+    ):
+        raise ValueError(f"{feature_space_id}: dense-vector calibration contract is invalid")
+    keys = [(row[0], feature_space_id, calibration_id) for row in rows]
+    if len(set(keys)) != len(keys):
+        raise ValueError("feature-vector batch contains duplicate observation keys")
+    for observation_id, _, _, raw_vector, normalized_vector in rows:
+        if len(raw_vector) != axis_count or len(normalized_vector) != axis_count:
+            raise ValueError(
+                f"{observation_id}: expected {axis_count} coordinates in each vector"
+            )
+        if not all(math.isfinite(float(value)) for value in (*raw_vector, *normalized_vector)):
+            raise ValueError(f"{observation_id}: feature vectors must be finite")
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO specimen_feature_vectors (
+            observation_id, specimen_id, study_id, feature_space_id, calibration_id,
+            vector_version, axis_count, raw_vector, normalized_vector,
+            content_sha256, created_at
+        )
+        SELECT observation_id, specimen_id, study_id, ?, ?, ?, ?, raw_vector,
+               normalized_vector,
+               sha256(to_json(struct_pack(
+                   observationId := observation_id,
+                   specimenId := specimen_id,
+                   featureSpaceId := ?,
+                   calibrationId := ?,
+                   vectorVersion := ?,
+                   rawVector := raw_vector,
+                   normalizedVector := normalized_vector
+               ))),
+               current_timestamp
+        FROM (
+            SELECT unnest(?::VARCHAR[]) AS observation_id,
+                   unnest(?::VARCHAR[]) AS specimen_id,
+                   unnest(?::VARCHAR[]) AS study_id,
+                   unnest(?::DOUBLE[][]) AS raw_vector,
+                   unnest(?::DOUBLE[][]) AS normalized_vector
+        )
+        """,
+        [
+            feature_space_id,
+            calibration_id,
+            vector_version,
+            axis_count,
+            feature_space_id,
+            calibration_id,
+            vector_version,
+            [row[0] for row in rows],
+            [row[1] for row in rows],
+            [row[2] for row in rows],
+            [[float(value) for value in row[3]] for row in rows],
+            [[float(value) for value in row[4]] for row in rows],
+        ],
+    )
+    return len(rows)
+
+
+def validate_dense_feature_space(
+    connection: DuckDBPyConnection,
+    *,
+    feature_space_id: str,
+    calibration_id: str,
+    observation_kind: str,
+    axis_count: int,
+) -> int:
+    axis_row = connection.execute(
+        """
+        SELECT count(*), count(DISTINCT axis_index), min(axis_index), max(axis_index)
+        FROM feature_axes
+        WHERE feature_space_id = ?
+        """,
+        [feature_space_id],
+    ).fetchone()
+    if axis_row is None or tuple(axis_row) != (axis_count, axis_count, 0, axis_count - 1):
+        raise ValueError(f"{feature_space_id}: feature axes are not contiguous")
+    sparse_row = connection.execute(
+        "SELECT count(*) FROM sparse_feature_values WHERE feature_space_id = ?",
+        [feature_space_id],
+    ).fetchone()
+    if sparse_row is None or int(sparse_row[0]):
+        raise ValueError(f"{feature_space_id}: dense space contains physical scalar values")
+    coverage_row = connection.execute(
+        """
+        WITH expected AS (
+            SELECT observation_id, specimen_id, study_id
+            FROM observations
+            WHERE observation_kind = ?
+        ), vectors AS (
+            SELECT *
+            FROM specimen_feature_vectors
+            WHERE feature_space_id = ? AND calibration_id = ?
+        )
+        SELECT count(expected.observation_id), count(vectors.observation_id),
+               count(*) FILTER (
+                   WHERE expected.observation_id IS NULL
+                      OR vectors.observation_id IS NULL
+                      OR expected.specimen_id IS DISTINCT FROM vectors.specimen_id
+                      OR expected.study_id IS DISTINCT FROM vectors.study_id
+                      OR vectors.axis_count != ?
+                      OR len(vectors.raw_vector) != ?
+                      OR len(vectors.normalized_vector) != ?
+                      OR len(list_filter(
+                          vectors.raw_vector,
+                          value -> value IS NULL OR NOT isfinite(value)
+                      )) != 0
+                      OR len(list_filter(
+                          vectors.normalized_vector,
+                          value -> value IS NULL OR NOT isfinite(value)
+                      )) != 0
+               )
+        FROM expected
+        FULL OUTER JOIN vectors USING (observation_id)
+        """,
+        [
+            observation_kind,
+            feature_space_id,
+            calibration_id,
+            axis_count,
+            axis_count,
+            axis_count,
+        ],
+    ).fetchone()
+    if coverage_row is None:
+        raise ValueError(f"{feature_space_id}: dense-vector coverage query returned no row")
+    expected_count, vector_count, invalid_count = map(int, coverage_row)
+    if expected_count == 0 or expected_count != vector_count or invalid_count:
+        raise ValueError(
+            f"{feature_space_id}: dense-vector coverage is incomplete "
+            f"(observations={expected_count}, vectors={vector_count}, invalid={invalid_count})"
+        )
+    return vector_count
+
+
+def mark_derived_artifact_state(
+    connection: DuckDBPyConnection,
+    *,
+    artifact_kind: str,
+    status: str,
+    reason: str | None,
+    feature_space_id: str | None = None,
+    descriptor_version: str | None = None,
+    normalization_policy: str | None = None,
+    metadata_json: dict[str, Any] | None = None,
+) -> str:
+    if status not in {"valid", "invalid", "building"}:
+        raise ValueError(f"unsupported derived artifact status: {status}")
+    payload = {
+        "artifactKind": artifact_kind,
+        "featureSpaceId": feature_space_id,
+        "descriptorVersion": descriptor_version,
+        "normalizationPolicy": normalization_policy,
+        "status": status,
+        "reason": reason,
+        "metadata": metadata_json or {},
+    }
+    generation_hash = row_sha256(payload)
+    artifact_key = stable_id(
+        "derived-artifact",
+        artifact_kind,
+        feature_space_id or "",
+        descriptor_version or "",
+        normalization_policy or "",
+    )
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO derived_artifact_state (
+            artifact_key, artifact_kind, feature_space_id, descriptor_version,
+            normalization_policy, status, reason, generation_hash, updated_at,
+            metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+        """,
+        [
+            artifact_key,
+            artifact_kind,
+            feature_space_id,
+            descriptor_version,
+            normalization_policy,
+            status,
+            reason,
+            generation_hash,
+            utc_now(),
+            json_text(metadata_json or {}),
+        ],
+    )
+    return artifact_key
 
 
 def register_specimen_study(
@@ -441,23 +870,27 @@ def upsert_feature_space(
     *,
     feature_space_id: str,
     feature_space_kind: str,
+    storage_mode: str,
     label: str,
     version_label: str,
     coordinate_policy: str,
     metric_json: dict[str, Any] | None = None,
     metadata_json: dict[str, Any] | None = None,
 ) -> None:
+    if storage_mode not in {"sparse_values", "dense_vectors"}:
+        raise ValueError(f"unsupported feature-space storage mode: {storage_mode}")
     connection.execute(
         """
         INSERT OR REPLACE INTO feature_spaces (
-            feature_space_id, feature_space_kind, label, version_label,
+            feature_space_id, feature_space_kind, storage_mode, label, version_label,
             coordinate_policy, metric_json, metadata_json
         )
-        VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON))
+        VALUES (?, ?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON))
         """,
         [
             feature_space_id,
             feature_space_kind,
+            storage_mode,
             label,
             version_label,
             coordinate_policy,
@@ -535,22 +968,32 @@ def upsert_observation(
     )
 
 
-def replace_feature_values(
+def replace_sparse_feature_values(
     connection: DuckDBPyConnection,
     *,
     observation_id: str,
     feature_space_id: str,
     value_rows: list[dict[str, Any]],
 ) -> None:
+    storage_row = connection.execute(
+        "SELECT storage_mode FROM feature_spaces WHERE feature_space_id = ?",
+        [feature_space_id],
+    ).fetchone()
+    if storage_row is None:
+        raise ValueError(f"unknown feature_space_id: {feature_space_id}")
+    if str(storage_row[0]) != "sparse_values":
+        raise ValueError(
+            f"{feature_space_id}: physical scalar values require sparse_values storage"
+        )
     _replace_rows(
         connection,
         """
-        DELETE FROM feature_values
+        DELETE FROM sparse_feature_values
         WHERE observation_id = ? AND feature_space_id = ?
         """,
         [observation_id, feature_space_id],
         """
-        INSERT INTO feature_values (
+        INSERT INTO sparse_feature_values (
             observation_id, feature_space_id, axis_id, raw_value,
             normalized_value, metadata_json
         )

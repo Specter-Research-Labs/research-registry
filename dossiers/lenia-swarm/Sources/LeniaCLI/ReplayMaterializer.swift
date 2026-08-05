@@ -1,4 +1,5 @@
 import ArgumentParser
+import CryptoKit
 import Foundation
 import LeniaCore
 import Logging
@@ -24,6 +25,15 @@ extension ReplayExecutionPlan {
             return false
         }
     }
+
+    var sourceImplementationMode: String? {
+        switch self {
+        case let .flow(baseConfig, _):
+            return baseConfig.implementation.mode
+        case .qd24, .sensorimotor24:
+            return nil
+        }
+    }
 }
 
 struct ReplayResolvedInput {
@@ -39,6 +49,7 @@ struct ReplayResolvedInput {
     let sourceFiltersPassed: Bool?
     let sourceExportDir: String?
     let sourceReason: String?
+    let sourceContentSha256: CreatureExportSourceContentSHA256?
 
     var sourceResearchMetadata: [String: AnyCodable]? {
         projection.researchMetadata
@@ -57,6 +68,9 @@ struct ReplaySpecimenManifest: Codable {
     let sourceCreatureId: String
     let sourceExportDir: String?
     let sourceReason: String?
+    let sourceContentSha256: CreatureExportSourceContentSHA256?
+    let sourceImplementationMode: String?
+    let replayImplementationMode: String?
     let replayRunId: String
     let campaignId: String
     let configHash: String
@@ -71,6 +85,112 @@ struct ReplaySpecimenManifest: Codable {
     let capturedSteps: [Int]?
     let sampleCount: Int?
     let recordEvery: Int?
+}
+
+private struct ReplaySourceContentData {
+    let baseConfig: Data
+    let searchConfig: Data
+    let meta: Data
+}
+
+private func replaySHA256(_ data: Data) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+}
+
+private func replayValidatedSHA256(
+    _ expected: String,
+    data: Data,
+    label: String,
+    path: String
+) throws {
+    let isHexDigest = expected.utf8.count == 64 && expected.utf8.allSatisfy {
+        (48...57).contains($0) || (65...70).contains($0) || (97...102).contains($0)
+    }
+    guard isHexDigest else {
+        throw ValidationError("Malformed source-content SHA-256 for \(label): \(expected)")
+    }
+    let actual = replaySHA256(data)
+    guard actual == expected.lowercased() else {
+        throw ValidationError(
+            "Source-content SHA-256 mismatch for \(label) at \(path): expected \(expected), got \(actual)."
+        )
+    }
+}
+
+private func replayRequiredSourceData(at url: URL, label: String) throws -> Data {
+    guard FileManager.default.fileExists(atPath: url.path) else {
+        throw ValidationError("Missing source-content file for \(label): \(url.path)")
+    }
+    do {
+        return try Data(contentsOf: url)
+    } catch {
+        throw ValidationError("Could not read source-content file for \(label) at \(url.path): \(error.localizedDescription)")
+    }
+}
+
+private func replaySourceContentData(
+    for record: CreatureExportRecord,
+    metaURL: URL
+) throws -> ReplaySourceContentData? {
+    guard let expected = record.sourceContentSha256 else {
+        return nil
+    }
+    guard record.bundleKind == .strictReplayBundleV1,
+          let baseConfigPath = record.baseConfigPath,
+          let searchConfigPath = record.searchConfigPath else {
+        throw ValidationError("Source-content hashes require a strict replay bundle with base/search config paths: \(record.exportDir)")
+    }
+
+    let baseURL = URL(fileURLWithPath: baseConfigPath)
+    let searchURL = URL(fileURLWithPath: searchConfigPath)
+    let data = ReplaySourceContentData(
+        baseConfig: try replayRequiredSourceData(at: baseURL, label: "baseConfig"),
+        searchConfig: try replayRequiredSourceData(at: searchURL, label: "searchConfig"),
+        meta: try replayRequiredSourceData(at: metaURL, label: "meta")
+    )
+    try replayValidatedSHA256(expected.baseConfig, data: data.baseConfig, label: "baseConfig", path: baseURL.path)
+    try replayValidatedSHA256(expected.searchConfig, data: data.searchConfig, label: "searchConfig", path: searchURL.path)
+    try replayValidatedSHA256(expected.meta, data: data.meta, label: "meta", path: metaURL.path)
+    return data
+}
+
+func canonicalReplayBaseConfig(_ config: LeniaBaseConfig) throws -> LeniaBaseConfig {
+    guard config.implementation.mode == "paper" else {
+        return config
+    }
+    guard config.profile == .paper else {
+        throw ValidationError("Legacy implementation.mode=paper is only valid with profile=paper.")
+    }
+    let implementation = config.implementation
+    guard implementation.gradient_boundary == nil,
+          implementation.alpha_mode == nil,
+          implementation.kernel_profile == nil,
+          implementation.growth_profile == nil,
+          implementation.flow_clip == nil else {
+        throw ValidationError("Legacy implementation.mode=paper cannot carry implementation overrides.")
+    }
+
+    return LeniaBaseConfig(
+        backend: config.backend,
+        profile: config.profile,
+        grid: config.grid,
+        channels: config.channels,
+        connectivity: config.connectivity,
+        flow: config.flow,
+        implementation: ImplementationConfig(mode: "flowlenia_2022_paper_equations"),
+        reintegration: config.reintegration,
+        parameter_embedding: config.parameter_embedding,
+        chemotaxis: config.chemotaxis,
+        obstacle_field: config.obstacle_field,
+        food: config.food,
+        walls: config.walls,
+        environment: config.environment,
+        beam_mutation: config.beam_mutation,
+        params: config.params,
+        init: config.`init`,
+        run: config.run,
+        interventions: config.interventions
+    )
 }
 
 struct ReplayBatchSummary: Codable {
@@ -179,20 +299,21 @@ func executeReplayResolvedInput(
 ) throws -> ReplayExecutionOutcome {
     switch resolvedInput.executionPlan {
     case let .flow(baseConfig, searchConfig):
+        let canonicalBaseConfig = try canonicalReplayBaseConfig(baseConfig)
         let sourceCreature = replayCreatureWithExplicitInitPatch(
             resolvedInput.sourceCreature,
-            baseConfig: baseConfig,
+            baseConfig: canonicalBaseConfig,
             researchMetadata: resolvedInput.sourceResearchMetadata
         )
         let sourceReplayBaseConfig: LeniaBaseConfig
         let replaySearchConfig: ParsedSearchConfig
         switch resolvedInput.inputKind {
         case .exportIndex, .canonicalization:
-            sourceReplayBaseConfig = baseConfig
+            sourceReplayBaseConfig = canonicalBaseConfig
             replaySearchConfig = searchConfig
         case .libraryIndex:
             sourceReplayBaseConfig = try buildReplayBaseConfig(
-                baseConfig: baseConfig,
+                baseConfig: canonicalBaseConfig,
                 searchConfig: searchConfig,
                 creature: sourceCreature
             )
@@ -357,12 +478,14 @@ func materializeReplayBatch(
         let campaignId = replayCampaignID(index: index, creature: resolvedInput.sourceCreature)
         let campaignDir = campaignsDir.appendingPathComponent(campaignId, isDirectory: true)
         try FileManager.default.createDirectory(at: campaignDir, withIntermediateDirectories: true)
-        let execution = try executeReplayResolvedInput(
-            resolvedInput,
-            runID: runID,
-            developmentTraceInterval: developmentTraceInterval,
-            developmentFieldResolution: developmentFieldResolution
-        )
+        let execution = try autoreleasepool {
+            try executeReplayResolvedInput(
+                resolvedInput,
+                runID: runID,
+                developmentTraceInterval: developmentTraceInterval,
+                developmentFieldResolution: developmentFieldResolution
+            )
+        }
         let configHash = execution.configHash
         let replayCreature = execution.replayCreature
         let resultData = execution.resultData
@@ -451,6 +574,9 @@ func materializeReplayBatch(
             sourceCreatureId: resolvedInput.sourceCreature.id.uuidString,
             sourceExportDir: resolvedInput.sourceExportDir,
             sourceReason: resolvedInput.sourceReason,
+            sourceContentSha256: resolvedInput.sourceContentSha256,
+            sourceImplementationMode: resolvedInput.executionPlan.sourceImplementationMode,
+            replayImplementationMode: execution.baseConfig?.implementation.mode,
             replayRunId: runID,
             campaignId: campaignId,
             configHash: configHash,
@@ -483,8 +609,25 @@ func materializeReplayBatch(
     return summary
 }
 
-func loadReplayResolvedInputs(from inputURL: URL) throws -> [ReplayResolvedInput] {
-    let lines = try replayReadJSONLines(inputURL)
+func loadReplayResolvedInputs(
+    from inputURL: URL,
+    expectedInputSha256: String? = nil
+) throws -> [ReplayResolvedInput] {
+    let inputData: Data
+    do {
+        inputData = try Data(contentsOf: inputURL)
+    } catch {
+        throw ValidationError("Could not read replay input at \(inputURL.path): \(error.localizedDescription)")
+    }
+    if let expectedInputSha256 {
+        try replayValidatedSHA256(
+            expectedInputSha256,
+            data: inputData,
+            label: "input",
+            path: inputURL.path
+        )
+    }
+    let lines = try replayReadJSONLines(inputData, sourcePath: inputURL.path)
     guard let first = lines.first else {
         return []
     }
@@ -493,17 +636,27 @@ func loadReplayResolvedInputs(from inputURL: URL) throws -> [ReplayResolvedInput
 
     if let firstData = first.data(using: .utf8),
        (try? decoder.decode(CreatureExportRecord.self, from: firstData)) != nil {
-        return try lines.map { line in
+        let records = try lines.map { line in
             guard let data = line.data(using: .utf8) else {
                 throw ValidationError("Invalid UTF-8 line in \(inputURL.path)")
             }
-            let record = try decoder.decode(CreatureExportRecord.self, from: data)
-            return try replayResolvedInput(from: record)
+            return try decoder.decode(CreatureExportRecord.self, from: data)
         }
+        if expectedInputSha256 != nil {
+            for (index, record) in records.enumerated() where record.sourceContentSha256 == nil {
+                throw ValidationError(
+                    "Replay input line \(index + 1) is missing sourceContentSha256 required by --input-sha256."
+                )
+            }
+        }
+        return try records.map { try replayResolvedInput(from: $0) }
     }
 
     if let firstData = first.data(using: .utf8),
        (try? decodeResearchLibraryEntry(firstData, decoder: decoder)) != nil {
+        if expectedInputSha256 != nil {
+            throw ValidationError("--input-sha256 requires an export index with sourceContentSha256 on every record.")
+        }
         let runDir = inputURL.deletingLastPathComponent().deletingLastPathComponent()
         let baseURL = runDir.appendingPathComponent("config.json")
         let searchURL = runDir.appendingPathComponent("search.json")
@@ -535,7 +688,8 @@ func loadReplayResolvedInputs(from inputURL: URL) throws -> [ReplayResolvedInput
                 sourceScore: projection.creature.score,
                 sourceFiltersPassed: nil,
                 sourceExportDir: projection.manifest?.replay?.exportDir,
-                sourceReason: nil
+                sourceReason: nil,
+                sourceContentSha256: nil
             )
         }
     }
@@ -554,8 +708,15 @@ func replayResolvedInput(
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .deferredToDate
     let metaURL = URL(fileURLWithPath: record.exportDir, isDirectory: true).appendingPathComponent("meta.json")
+    let sourceContentData = try replaySourceContentData(for: record, metaURL: metaURL)
     let metadata: CreatureExportMetadata?
-    if FileManager.default.fileExists(atPath: metaURL.path) {
+    if let metaData = sourceContentData?.meta {
+        metadata = try decodeCreatureExportMetadata(
+            metaData,
+            decoder: decoder,
+            fallbackBundleKind: record.bundleKind
+        )
+    } else if FileManager.default.fileExists(atPath: metaURL.path) {
         metadata = try decodeCreatureExportMetadata(
             Data(contentsOf: metaURL),
             decoder: decoder,
@@ -581,13 +742,17 @@ func replayResolvedInput(
               let searchConfigPath = record.searchConfigPath else {
             throw ValidationError("Strict replay export bundle is missing base/search config paths: \(record.exportDir)")
         }
+        let baseConfigData = try sourceContentData?.baseConfig
+            ?? Data(contentsOf: URL(fileURLWithPath: baseConfigPath))
+        let searchConfigData = try sourceContentData?.searchConfig
+            ?? Data(contentsOf: URL(fileURLWithPath: searchConfigPath))
         let baseConfig = try decoder.decode(
             LeniaBaseConfig.self,
-            from: Data(contentsOf: URL(fileURLWithPath: baseConfigPath))
+            from: baseConfigData
         )
         let searchConfig = try decoder.decode(
             ParsedSearchConfig.self,
-            from: Data(contentsOf: URL(fileURLWithPath: searchConfigPath))
+            from: searchConfigData
         )
         executionPlan = .flow(baseConfig: baseConfig, searchConfig: searchConfig)
         sourceMode = projection.sourceMode ?? fallbackMode ?? metadata?.creature.ownerId
@@ -629,7 +794,8 @@ func replayResolvedInput(
         sourceScore: metadata?.score ?? record.score,
         sourceFiltersPassed: metadata?.filtersPassed ?? record.filtersPassed,
         sourceExportDir: projection.manifest?.replay?.exportDir ?? record.exportDir,
-        sourceReason: metadata?.reason ?? fallbackReason ?? record.reason
+        sourceReason: metadata?.reason ?? fallbackReason ?? record.reason,
+        sourceContentSha256: record.sourceContentSha256
     )
 }
 
@@ -836,11 +1002,18 @@ func replayEncoder() -> JSONEncoder {
     return encoder
 }
 
-func replayReadJSONLines(_ url: URL) throws -> [String] {
-    try String(contentsOf: url, encoding: .utf8)
+func replayReadJSONLines(_ data: Data, sourcePath: String) throws -> [String] {
+    guard let contents = String(data: data, encoding: .utf8) else {
+        throw ValidationError("Invalid UTF-8 in \(sourcePath)")
+    }
+    return contents
         .split(whereSeparator: \.isNewline)
         .map(String.init)
         .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+}
+
+func replayReadJSONLines(_ url: URL) throws -> [String] {
+    try replayReadJSONLines(Data(contentsOf: url), sourcePath: url.path)
 }
 
 func unwrapReplayValue<T>(_ value: T?, message: String) throws -> T {

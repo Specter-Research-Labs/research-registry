@@ -5435,26 +5435,32 @@ final class LeniaCoreTests: XCTestCase {
         let totalArr = massMap.sum(axes: [1, 2])
         let sumSqArr = (massMap * massMap).sum(axes: [1, 2])
         let occupancyArr = MLX.greater(massMap, MLXArray(Float(0.05))).asType(.float32).sum(axes: [1, 2])
-        let gridX = MLXArray(Array(0..<config.sx).map(Float.init)).reshaped([1, config.sx, 1])
-        let gridY = MLXArray(Array(0..<config.sy).map(Float.init)).reshaped([1, 1, config.sy])
-        let totalSafe = MLX.maximum(totalArr, MLXArray(Float(1e-6)))
-        let centerXArr = (massMap * gridX).sum(axes: [1, 2]) / totalSafe
-        let centerYArr = (massMap * gridY).sum(axes: [1, 2]) / totalSafe
-        let centerXGrid = centerXArr.expandedDimensions(axes: [1, 2])
-        let centerYGrid = centerYArr.expandedDimensions(axes: [1, 2])
-        let dxRaw = MLX.abs(gridX - centerXGrid)
-        let dyRaw = MLX.abs(gridY - centerYGrid)
-        let dx = MLX.minimum(dxRaw, MLXArray(Float(config.sx)) - dxRaw)
-        let dy = MLX.minimum(dyRaw, MLXArray(Float(config.sy)) - dyRaw)
-        let gyrationArr = (massMap * (dx * dx + dy * dy)).sum(axes: [1, 2]) / totalSafe
-        eval(totalArr, sumSqArr, occupancyArr, centerXArr, centerYArr, gyrationArr)
+        eval(totalArr, sumSqArr, occupancyArr, massMap)
 
         let totals = totalArr.asArray(Float.self)
         let sumSquares = sumSqArr.asArray(Float.self)
         let occupancy = occupancyArr.asArray(Float.self)
-        let centersX = centerXArr.asArray(Float.self)
-        let centersY = centerYArr.asArray(Float.self)
-        let gyration = gyrationArr.asArray(Float.self)
+        let massValues = massMap.asArray(Float.self)
+        var centersX = [Float](repeating: 0, count: totals.count)
+        var centersY = [Float](repeating: 0, count: totals.count)
+        var gyration = [Float](repeating: 0, count: totals.count)
+        for batch in 0..<totals.count {
+            var sample = [Float](repeating: 0, count: config.sx * config.sy)
+            for x in 0..<config.sx {
+                for y in 0..<config.sy {
+                    sample[y * config.sx + x] = massValues[(batch * config.sx + x) * config.sy + y]
+                }
+            }
+            let geometry = morphospaceFieldGeometry(
+                sample: sample,
+                width: config.sx,
+                height: config.sy,
+                useTorus: true
+            )!
+            centersX[batch] = geometry.centerX - 0.5
+            centersY[batch] = geometry.centerY - 0.5
+            gyration[batch] = geometry.gyration
+        }
 
         XCTAssertEqual(summary.totalMass.count, totals.count)
         XCTAssertEqual(summary.rawGyration?.count, gyration.count)
@@ -5759,8 +5765,6 @@ final class LeniaCoreTests: XCTestCase {
         var expectedSumSquares = [Float](repeating: 0, count: batchCount)
         var expectedEnergy = [Float](repeating: 0, count: batchCount)
         var expectedOccupancy = [Float](repeating: 0, count: batchCount)
-        var expectedWeightedX = [Float](repeating: 0, count: batchCount)
-        var expectedWeightedY = [Float](repeating: 0, count: batchCount)
         for batch in 0..<batchCount {
             for x in 0..<config.sx {
                 for y in 0..<config.sy {
@@ -5774,8 +5778,6 @@ final class LeniaCoreTests: XCTestCase {
                     expectedSumSquares[batch] += reduced * reduced
                     expectedEnergy[batch] += v0 * v0 + v2 * v2
                     expectedOccupancy[batch] += reduced > 0.05 ? 1.0 : 0.0
-                    expectedWeightedX[batch] += reduced * Float(x)
-                    expectedWeightedY[batch] += reduced * Float(y)
                 }
             }
         }
@@ -5783,27 +5785,28 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(summary.totalMass.count, batchCount)
         XCTAssertEqual(summary.energy.count, batchCount)
         for batch in 0..<batchCount {
-            let centerX = expectedWeightedX[batch] / expectedTotal[batch]
-            let centerY = expectedWeightedY[batch] / expectedTotal[batch]
-            var expectedGyration: Float = 0
+            var sample = [Float](repeating: 0, count: config.sx * config.sy)
             for x in 0..<config.sx {
                 for y in 0..<config.sy {
                     let base = (((batch * config.sx) + x) * config.sy + y) * config.channels
-                    let reduced = massValues[base] + massValues[base + 2]
-                    let dxRaw = abs(Float(x) - centerX)
-                    let dyRaw = abs(Float(y) - centerY)
-                    let dx = min(dxRaw, Float(config.sx) - dxRaw)
-                    let dy = min(dyRaw, Float(config.sy) - dyRaw)
-                    expectedGyration += reduced * (dx * dx + dy * dy)
+                    sample[y * config.sx + x] = massValues[base] + massValues[base + 2]
                 }
             }
+            let geometry = morphospaceFieldGeometry(
+                sample: sample,
+                width: config.sx,
+                height: config.sy,
+                useTorus: true
+            )!
+            let centerX = geometry.centerX - 0.5
+            let centerY = geometry.centerY - 0.5
             XCTAssertEqual(summary.totalMass[batch], expectedTotal[batch], accuracy: 1e-3)
             XCTAssertEqual(summary.sumSquares[batch], expectedSumSquares[batch], accuracy: 1e-3)
             XCTAssertEqual(summary.energy[batch], expectedEnergy[batch], accuracy: 1e-3)
             XCTAssertEqual(summary.occupancyCount[batch], expectedOccupancy[batch], accuracy: 1e-3)
             XCTAssertEqual(summary.centerXIndex[batch], centerX, accuracy: 1e-3)
             XCTAssertEqual(summary.centerYIndex[batch], centerY, accuracy: 1e-3)
-            XCTAssertEqual(summary.rawGyration?[batch] ?? 0.0, expectedGyration / expectedTotal[batch], accuracy: 1e-3)
+            XCTAssertEqual(summary.rawGyration?[batch] ?? 0.0, geometry.gyration, accuracy: 1e-3)
         }
     }
 

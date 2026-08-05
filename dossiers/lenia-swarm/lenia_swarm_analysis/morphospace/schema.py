@@ -2,27 +2,55 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyConnection
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 10
 
 
-def _table_columns(connection: DuckDBPyConnection, table_name: str) -> set[str]:
-    rows = connection.execute(f"PRAGMA table_info('{table_name}')").fetchall()
-    return {str(row[1]) for row in rows}
+class SchemaVersionError(RuntimeError):
+    pass
 
 
-def _ensure_column(
-    connection: DuckDBPyConnection,
-    *,
-    table_name: str,
-    column_name: str,
-    ddl: str,
-) -> None:
-    if column_name in _table_columns(connection, table_name):
-        return
-    connection.execute(f"ALTER TABLE {table_name} ADD COLUMN {ddl}")
+def read_schema_version(connection: DuckDBPyConnection) -> int | None:
+    table_row = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_schema = 'main' AND table_name = 'schema_meta'
+        """
+    ).fetchone()
+    if table_row is None or int(table_row[0]) == 0:
+        return None
+    rows = connection.execute("SELECT schema_version FROM schema_meta").fetchall()
+    if len(rows) != 1:
+        raise SchemaVersionError(
+            "schema_meta must contain exactly one row; rebuild the warehouse side by side"
+        )
+    return int(rows[0][0])
 
 
 def create_schema(connection: DuckDBPyConnection) -> None:
+    existing_version = read_schema_version(connection)
+    if existing_version is None:
+        table_names = {
+            str(row[0])
+            for row in connection.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'main'
+                """
+            ).fetchall()
+        }
+        if table_names:
+            raise SchemaVersionError(
+                "refusing to initialize an unversioned non-empty database; "
+                "rebuild the warehouse side by side"
+            )
+    elif existing_version != SCHEMA_VERSION:
+        raise SchemaVersionError(
+            f"warehouse schema v{existing_version} is not writable by schema v{SCHEMA_VERSION}; "
+            "rebuild the warehouse side by side"
+        )
+
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS schema_meta (
@@ -35,8 +63,6 @@ def create_schema(connection: DuckDBPyConnection) -> None:
         raise AssertionError("schema_meta count query returned no rows")
     if int(schema_count_row[0]) == 0:
         connection.execute("INSERT INTO schema_meta VALUES (?)", [SCHEMA_VERSION])
-    else:
-        connection.execute("UPDATE schema_meta SET schema_version = ?", [SCHEMA_VERSION])
 
     connection.execute(
         """
@@ -103,13 +129,18 @@ def create_schema(connection: DuckDBPyConnection) -> None:
     )
     connection.execute(
         """
-        CREATE TABLE IF NOT EXISTS raw_sqlite_rows (
+        CREATE TABLE IF NOT EXISTS source_receipts (
+            receipt_id TEXT PRIMARY KEY,
+            study_id TEXT NOT NULL,
             artifact_id TEXT NOT NULL,
-            table_name TEXT NOT NULL,
-            primary_key TEXT NOT NULL,
-            row_hash TEXT NOT NULL,
-            payload_json JSON NOT NULL,
-            PRIMARY KEY (artifact_id, table_name, primary_key)
+            source_kind TEXT NOT NULL,
+            source_schema_version TEXT,
+            source_tables_json JSON NOT NULL,
+            source_row_counts_json JSON NOT NULL,
+            content_sha256 TEXT NOT NULL,
+            size_bytes BIGINT NOT NULL,
+            recorded_at TIMESTAMP NOT NULL,
+            metadata_json JSON NOT NULL
         )
         """
     )
@@ -141,27 +172,28 @@ def create_schema(connection: DuckDBPyConnection) -> None:
             provenance_json JSON,
             runtime_family TEXT,
             runtime_capabilities_json JSON,
-            specimen_manifest_json JSON
+            specimen_manifest_json JSON,
+            descriptor_version TEXT,
+            terminal_version TEXT,
+            normalization_policy TEXT,
+            fingerprint_resolution INTEGER
         )
         """
     )
-    _ensure_column(
-        connection,
-        table_name="specimens",
-        column_name="runtime_family",
-        ddl="runtime_family TEXT",
-    )
-    _ensure_column(
-        connection,
-        table_name="specimens",
-        column_name="runtime_capabilities_json",
-        ddl="runtime_capabilities_json JSON",
-    )
-    _ensure_column(
-        connection,
-        table_name="specimens",
-        column_name="specimen_manifest_json",
-        ddl="specimen_manifest_json JSON",
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS specimen_descriptors (
+            specimen_id TEXT PRIMARY KEY,
+            descriptor_version TEXT NOT NULL,
+            terminal_version TEXT NOT NULL,
+            normalization_policy TEXT NOT NULL,
+            fingerprint_resolution INTEGER,
+            terminal_descriptor_json JSON NOT NULL,
+            trajectory_descriptor_json JSON NOT NULL,
+            content_sha256 TEXT NOT NULL,
+            recorded_at TIMESTAMP NOT NULL
+        )
+        """
     )
     connection.execute(
         """
@@ -493,6 +525,7 @@ def create_schema(connection: DuckDBPyConnection) -> None:
         CREATE TABLE IF NOT EXISTS feature_spaces (
             feature_space_id TEXT PRIMARY KEY,
             feature_space_kind TEXT NOT NULL,
+            storage_mode TEXT NOT NULL,
             label TEXT NOT NULL,
             version_label TEXT NOT NULL,
             coordinate_policy TEXT NOT NULL,
@@ -517,7 +550,7 @@ def create_schema(connection: DuckDBPyConnection) -> None:
     )
     connection.execute(
         """
-        CREATE TABLE IF NOT EXISTS feature_values (
+        CREATE TABLE IF NOT EXISTS sparse_feature_values (
             observation_id TEXT NOT NULL,
             feature_space_id TEXT NOT NULL,
             axis_id TEXT NOT NULL,
@@ -528,10 +561,123 @@ def create_schema(connection: DuckDBPyConnection) -> None:
         )
         """
     )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feature_calibrations (
+            calibration_id TEXT PRIMARY KEY,
+            feature_space_id TEXT NOT NULL,
+            calibration_version TEXT NOT NULL,
+            axis_order_json JSON NOT NULL,
+            reference_query_json JSON NOT NULL,
+            axis_transforms_json JSON NOT NULL,
+            content_sha256 TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            frozen BOOLEAN NOT NULL,
+            metadata_json JSON NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS specimen_feature_vectors (
+            observation_id TEXT NOT NULL,
+            specimen_id TEXT NOT NULL,
+            study_id TEXT NOT NULL,
+            feature_space_id TEXT NOT NULL,
+            calibration_id TEXT NOT NULL,
+            vector_version TEXT NOT NULL,
+            axis_count INTEGER NOT NULL,
+            raw_vector DOUBLE[] NOT NULL,
+            normalized_vector DOUBLE[] NOT NULL,
+            content_sha256 TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            PRIMARY KEY (observation_id, feature_space_id, calibration_id)
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS derived_artifact_state (
+            artifact_key TEXT PRIMARY KEY,
+            artifact_kind TEXT NOT NULL,
+            feature_space_id TEXT,
+            descriptor_version TEXT,
+            normalization_policy TEXT,
+            status TEXT NOT NULL,
+            reason TEXT,
+            generation_hash TEXT NOT NULL,
+            updated_at TIMESTAMP NOT NULL,
+            metadata_json JSON NOT NULL
+        )
+        """
+    )
     create_views(connection)
 
 
 def create_views(connection: DuckDBPyConnection) -> None:
+    connection.execute(
+        """
+        CREATE OR REPLACE VIEW active_specimen_feature_vectors_vw AS
+        SELECT vectors.*
+        FROM specimen_feature_vectors AS vectors
+        JOIN feature_spaces AS spaces USING (feature_space_id)
+        JOIN feature_calibrations AS calibrations
+          ON calibrations.calibration_id = vectors.calibration_id
+         AND calibrations.feature_space_id = vectors.feature_space_id
+        WHERE spaces.storage_mode = 'dense_vectors'
+          AND calibrations.frozen
+          AND vectors.calibration_id = json_extract_string(
+              spaces.metadata_json, '$.activeCalibrationId'
+          )
+          AND EXISTS (
+              SELECT 1
+              FROM derived_artifact_state AS state
+              WHERE state.artifact_kind = 'feature-space'
+                AND state.feature_space_id = vectors.feature_space_id
+                AND state.status = 'valid'
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM derived_artifact_state AS state
+              WHERE state.artifact_kind = 'feature-space'
+                AND state.feature_space_id = vectors.feature_space_id
+                AND state.status != 'valid'
+          )
+        """
+    )
+    connection.execute(
+        """
+        CREATE OR REPLACE VIEW feature_values AS
+        SELECT
+            sparse.observation_id,
+            sparse.feature_space_id,
+            sparse.axis_id,
+            sparse.raw_value,
+            sparse.normalized_value,
+            sparse.metadata_json
+        FROM sparse_feature_values AS sparse
+        JOIN feature_spaces AS sparse_spaces USING (feature_space_id)
+        WHERE sparse_spaces.storage_mode = 'sparse_values'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM active_specimen_feature_vectors_vw AS vectors
+            WHERE vectors.observation_id = sparse.observation_id
+              AND vectors.feature_space_id = sparse.feature_space_id
+        )
+        UNION ALL
+        SELECT
+            vectors.observation_id,
+            vectors.feature_space_id,
+            axes.axis_id,
+            vectors.raw_vector[axes.axis_index + 1] AS raw_value,
+            vectors.normalized_vector[axes.axis_index + 1] AS normalized_value,
+            '{}'::JSON AS metadata_json
+        FROM active_specimen_feature_vectors_vw AS vectors
+        JOIN feature_spaces AS spaces USING (feature_space_id)
+        JOIN feature_axes AS axes USING (feature_space_id)
+        WHERE spaces.storage_mode = 'dense_vectors'
+        """
+    )
     connection.execute(
         """
         CREATE OR REPLACE VIEW atlas_specimens_vw AS
@@ -954,19 +1100,7 @@ def create_views(connection: DuckDBPyConnection) -> None:
                     specimens.runtime_family,
                     json_extract_string(specimens.specimen_manifest_json, '$.runtimeFamily'),
                     '<unknown>'
-                ) AS resolved_runtime_family,
-                try_cast(
-                    json_extract(
-                        specimens.specimen_manifest_json,
-                        '$.snapshots.descriptorBundle.genotype.kernelCount'
-                    ) AS INTEGER
-                ) AS resolved_kernel_count,
-                try_cast(
-                    json_extract(
-                        specimens.specimen_manifest_json,
-                        '$.snapshots.descriptorBundle.terminal.massChannel'
-                    ) AS INTEGER
-                ) AS resolved_mass_channel
+                ) AS resolved_runtime_family
             FROM specimens
             WHERE coalesce(
                     specimens.runtime_family,
@@ -975,8 +1109,9 @@ def create_views(connection: DuckDBPyConnection) -> None:
         ), common_morphology_specimens AS (
             SELECT DISTINCT comparison_observations_vw.specimen_id
             FROM comparison_observations_vw
-            JOIN feature_values USING (observation_id)
-            WHERE feature_values.feature_space_id = 'common_morphology_v1'
+            JOIN active_specimen_feature_vectors_vw AS vectors USING (observation_id)
+            WHERE vectors.feature_space_id =
+                  'common_morphology_v3_balanced_distribution'
               AND comparison_observations_vw.source_id = 'lenia_swarm'
         )
         SELECT
@@ -993,8 +1128,6 @@ def create_views(connection: DuckDBPyConnection) -> None:
             lenia_specimens.config_hash,
             coalesce(lenia_specimens.source_mode, '<none>') AS source_mode,
             coalesce(lenia_specimens.source_algorithm, '<none>') AS source_algorithm,
-            lenia_specimens.resolved_kernel_count AS kernel_count,
-            lenia_specimens.resolved_mass_channel AS mass_channel,
             count(*) AS specimen_count,
             count(DISTINCT lenia_specimens.run_id) AS run_count,
             count(DISTINCT lenia_specimens.initial_condition_family)
@@ -1013,9 +1146,7 @@ def create_views(connection: DuckDBPyConnection) -> None:
             lenia_specimens.resolved_runtime_family,
             lenia_specimens.config_hash,
             coalesce(lenia_specimens.source_mode, '<none>'),
-            coalesce(lenia_specimens.source_algorithm, '<none>'),
-            lenia_specimens.resolved_kernel_count,
-            lenia_specimens.resolved_mass_channel
+            coalesce(lenia_specimens.source_algorithm, '<none>')
         """
     )
     connection.execute(

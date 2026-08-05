@@ -18,6 +18,10 @@ def _write_result(path: Path, *, final_mass: float, component_count: int) -> Non
     row = {
         "descriptor_bundle": {
             "terminal": {
+                "version": 2,
+                "descriptorVersion": 2,
+                "borderMode": "torus",
+                "normalizationPolicy": "border_aware_com_center_peak_q32_u8_v2",
                 "angularSymmetry": {"normalizedEntropy": 0.5},
                 "componentCount": component_count,
                 "finalGyration": 4.0,

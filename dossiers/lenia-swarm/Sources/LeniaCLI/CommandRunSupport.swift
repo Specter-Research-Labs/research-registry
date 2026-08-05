@@ -96,6 +96,7 @@ func promoteIfConfigured(
     dossier: String,
     defaultEnabled: Bool = false,
     runDir: String,
+    runID: String? = nil,
     includeResults: Bool = true,
     stats: Bool = false
 ) throws -> ArchivePromotionConfig {
@@ -107,6 +108,7 @@ func promoteIfConfigured(
     return try applyPromotionIfEnabled(
         config: resolvedPromotion,
         runDir: runDir,
+        runID: runID,
         includeResults: includeResults,
         stats: stats
     )

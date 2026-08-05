@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from ripser import ripser
+
+from lenia_swarm_analysis._io import read_jsonl as _read_jsonl
+from lenia_swarm_analysis.paths import resolve_input_path, route_output_path
+
+from .core import (
+    diagram_summary,
+    distance_scale,
+    max_dense_rips_points,
+    pairwise_distance_matrix,
+    preflight_rips_request,
+    run_ripser_precomputed,
+    upper_triangle,
+)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -16,23 +27,6 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise SystemExit(f"{path}: expected a JSON object")
     return data
-
-
-def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    with path.open("r", encoding="utf-8") as handle:
-        for line_no, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            try:
-                row = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                raise SystemExit(f"{path}:{line_no}: invalid JSON: {exc}") from exc
-            if not isinstance(row, dict):
-                raise SystemExit(f"{path}:{line_no}: expected a JSON object per row")
-            rows.append(row)
-    return rows
 
 
 def _default_output_dir(manifest_path: Path) -> Path:
@@ -117,27 +111,11 @@ def _extract_phenotype_matrix(rows: list[dict[str, Any]]) -> np.ndarray:
 
 
 def _pairwise_distance_matrix(matrix: np.ndarray) -> np.ndarray:
-    if matrix.ndim != 2:
-        raise SystemExit("Distance matrices require a 2D input matrix")
-    if matrix.shape[0] == 0:
-        return np.zeros((0, 0), dtype=np.float64)
-    features = np.asarray(matrix, dtype=np.float64, order="C")
-    squared_norms = np.sum(features * features, axis=1, dtype=np.float64)
-    distances = features @ features.T
-    distances *= -2.0
-    distances += squared_norms[:, None]
-    distances += squared_norms[None, :]
-    np.maximum(distances, 0.0, out=distances)
-    np.sqrt(distances, out=distances)
-    np.fill_diagonal(distances, 0.0)
-    return distances
+    return pairwise_distance_matrix(matrix)
 
 
 def _upper_triangle(distances: np.ndarray) -> np.ndarray:
-    if distances.shape[0] < 2:
-        return np.zeros((0,), dtype=np.float64)
-    tri = np.triu_indices(distances.shape[0], k=1)
-    return distances[tri]
+    return upper_triangle(distances)
 
 
 def _pearson_correlation(lhs: np.ndarray, rhs: np.ndarray) -> float | None:
@@ -169,73 +147,19 @@ def _nearest_neighbors(distances: np.ndarray, neighbor_k: int) -> np.ndarray:
     return neighbors
 
 
-def _betti_curve(diagram: np.ndarray, grid: np.ndarray) -> list[int]:
-    if diagram.size == 0:
-        return [0 for _ in grid]
-    births = diagram[:, 0]
-    deaths = diagram[:, 1]
-    curve: list[int] = []
-    for radius in grid:
-        alive = (births <= radius) & ((radius < deaths) | np.isinf(deaths))
-        curve.append(int(np.count_nonzero(alive)))
-    return curve
-
-
-def _diagram_summary(diagrams: list[np.ndarray], pairwise_max: float) -> dict[str, Any]:
-    finite_deaths = [
-        float(death)
-        for diagram in diagrams
-        for death in diagram[:, 1]
-        if math.isfinite(float(death))
-    ]
-    scale_max = max(finite_deaths, default=pairwise_max)
-    scale_max = max(scale_max, 1e-6)
-    grid = np.linspace(0.0, scale_max, num=64, dtype=np.float64)
-
-    summaries: list[dict[str, Any]] = []
-    json_diagrams: list[list[dict[str, Any]]] = []
-    betti_curves: list[dict[str, Any]] = []
-    for dimension, diagram in enumerate(diagrams):
-        entries: list[dict[str, Any]] = []
-        persistences: list[float] = []
-        essential_count = 0
-        for birth, death in diagram.tolist():
-            finite_death = None if math.isinf(death) else float(death)
-            persistence = None if finite_death is None else finite_death - float(birth)
-            if persistence is not None:
-                persistences.append(persistence)
-            else:
-                essential_count += 1
-            entries.append(
-                {
-                    "birth": float(birth),
-                    "death": finite_death,
-                    "persistence": persistence,
-                }
-            )
-        persistences.sort(reverse=True)
-        json_diagrams.append(entries)
-        betti_curves.append(
-            {
-                "dimension": dimension,
-                "scale": [float(value) for value in grid],
-                "betti": _betti_curve(diagram, grid),
-            }
-        )
-        summaries.append(
-            {
-                "dimension": dimension,
-                "featureCount": len(entries),
-                "essentialCount": essential_count,
-                "topPersistence": persistences[:8],
-            }
-        )
-    return {
-        "scaleMax": scale_max,
-        "summaries": summaries,
-        "diagrams": json_diagrams,
-        "bettiCurves": betti_curves,
-    }
+def _diagram_summary(
+    diagrams: list[np.ndarray],
+    pairwise_max: float,
+    *,
+    scale_kind: str = "pairwise_max",
+    censor_at: float | None = None,
+) -> dict[str, Any]:
+    return diagram_summary(
+        diagrams,
+        distance_scale=pairwise_max,
+        scale_kind=scale_kind,
+        censor_at=censor_at,
+    )
 
 
 def _fiber_locality_summary(
@@ -291,16 +215,25 @@ def run_analysis(
 ) -> dict[str, Any]:
     manifest = _read_json(manifest_path)
     rows_path = _resolve_rows_path(manifest_path, manifest)
-    rows = _read_jsonl(rows_path)
+    rows = _read_jsonl(rows_path, max_rows=max_dense_rips_points(maxdim))
     if len(rows) < 2:
         raise SystemExit("Topology analysis requires at least 2 specimens.")
+    ripser_budget = preflight_rips_request(len(rows), maxdim=maxdim)
 
     phenotype = _extract_phenotype_matrix(rows)
     phenotype_distances = _pairwise_distance_matrix(phenotype)
-    pairwise_max = float(np.max(phenotype_distances))
+    pairwise = _upper_triangle(phenotype_distances)
+    metric_scale, scale_kind = distance_scale(pairwise)
 
-    phenotype_result = ripser(phenotype, maxdim=maxdim, metric="euclidean")
-    phenotype_summary = _diagram_summary(phenotype_result["dgms"], pairwise_max)
+    phenotype_result, _ = run_ripser_precomputed(
+        phenotype_distances,
+        maxdim=maxdim,
+    )
+    phenotype_summary = _diagram_summary(
+        phenotype_result["dgms"],
+        metric_scale,
+        scale_kind=scale_kind,
+    )
 
     genotype_groups = _collect_genotype_groups(rows)
     if len(genotype_groups) == 1:
@@ -362,8 +295,10 @@ def run_analysis(
                 "pointCount": int(phenotype.shape[0]),
                 "dimension": int(phenotype.shape[1]),
                 "distanceMetric": "euclidean",
+                "budget": ripser_budget,
                 "ripser": phenotype_summary["summaries"],
                 "scaleMax": phenotype_summary["scaleMax"],
+                "scaleReference": phenotype_summary["scaleReference"],
             },
             "genotype": genotype_space,
         },
@@ -400,9 +335,7 @@ def run_analysis(
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Compute persistent topology summaries from lenia-swarm topology artifacts."
-        )
+        description=("Compute persistent topology summaries from lenia-swarm topology artifacts.")
     )
     parser.add_argument("--manifest", required=True, help="Path to topology manifest JSON")
     parser.add_argument(
@@ -430,11 +363,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
-    manifest_path = Path(args.manifest).expanduser().resolve()
+    manifest_path = resolve_input_path(args.manifest)
     if not manifest_path.is_file():
         raise SystemExit(f"Missing manifest: {manifest_path}")
     output_dir = (
-        Path(args.output).expanduser().resolve()
+        route_output_path(args.output)
         if args.output
         else _default_output_dir(manifest_path).resolve()
     )

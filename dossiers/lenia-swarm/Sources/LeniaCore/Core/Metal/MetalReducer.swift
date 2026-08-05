@@ -21,12 +21,16 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
     private let pass2FinalizePipeline: MTLComputePipelineState
     private let occupancyThresholdBuffer: MTLBuffer
     private let channelWeightsBuffer: MTLBuffer
+    private let circularXWeightsBuffer: MTLBuffer
+    private let circularYWeightsBuffer: MTLBuffer
     private let partialTotalMassBuffer: MTLBuffer
     private let partialSumSquaresBuffer: MTLBuffer
     private let partialEnergyBuffer: MTLBuffer
     private let partialWeightedXBuffer: MTLBuffer
     private let partialWeightedYBuffer: MTLBuffer
     private let partialOccupancyCountBuffer: MTLBuffer
+    private let partialCircularFirstBuffer: MTLBuffer
+    private let partialCircularSecondBuffer: MTLBuffer
     private let partialGyrationBuffer: MTLBuffer
     private let totalMassBuffer: MTLBuffer
     private let sumSquaresBuffer: MTLBuffer
@@ -34,6 +38,8 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
     private let weightedXBuffer: MTLBuffer
     private let weightedYBuffer: MTLBuffer
     private let occupancyCountBuffer: MTLBuffer
+    private let circularFirstBuffer: MTLBuffer
+    private let circularSecondBuffer: MTLBuffer
     private let gyrationBuffer: MTLBuffer
 
     init(
@@ -69,6 +75,8 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
 
         let vectorBytes = batchCount * MemoryLayout<Float>.stride
         let partialVectorBytes = batchCount * self.partialGroupCount * MemoryLayout<Float>.stride
+        let circularVectorBytes = 4 * vectorBytes
+        let partialCircularVectorBytes = 4 * partialVectorBytes
         self.occupancyThresholdBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
             device: device,
             length: MemoryLayout<Float>.stride,
@@ -79,6 +87,27 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
             length: max(1, config.channels) * MemoryLayout<Float>.stride,
             label: "flow-metal.summary.channel-weights"
         )
+        self.circularXWeightsBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: config.sx * 4 * MemoryLayout<Float>.stride,
+            label: "flow-metal.summary.circular-x-weights"
+        )
+        self.circularYWeightsBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: config.sy * 4 * MemoryLayout<Float>.stride,
+            label: "flow-metal.summary.circular-y-weights"
+        )
+        let twoPi = 2 * Float.pi
+        let circularXWeights = (0..<config.sx).flatMap { index -> [Float] in
+            let angle = (Float(index) + 0.5) * twoPi / Float(config.sx)
+            return [cosf(angle), sinf(angle), cosf(2 * angle), sinf(2 * angle)]
+        }
+        let circularYWeights = (0..<config.sy).flatMap { index -> [Float] in
+            let angle = (Float(index) + 0.5) * twoPi / Float(config.sy)
+            return [cosf(angle), sinf(angle), cosf(2 * angle), sinf(2 * angle)]
+        }
+        FlowLeniaMetalFullPipeline.writeFloats(circularXWeights, to: circularXWeightsBuffer)
+        FlowLeniaMetalFullPipeline.writeFloats(circularYWeights, to: circularYWeightsBuffer)
         self.partialTotalMassBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
             device: device,
             length: partialVectorBytes,
@@ -108,6 +137,16 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
             device: device,
             length: partialVectorBytes,
             label: "flow-metal.summary.partial-occupancy-count"
+        )
+        self.partialCircularFirstBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: partialCircularVectorBytes,
+            label: "flow-metal.summary.partial-circular-first"
+        )
+        self.partialCircularSecondBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
+            device: device,
+            length: partialCircularVectorBytes,
+            label: "flow-metal.summary.partial-circular-second"
         )
         self.partialGyrationBuffer = FlowLeniaMetalFullPipeline.makePrivateBuffer(
             device: device,
@@ -143,6 +182,16 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
             device: device,
             length: vectorBytes,
             label: "flow-metal.summary.occupancy-count"
+        )
+        self.circularFirstBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: circularVectorBytes,
+            label: "flow-metal.summary.circular-first"
+        )
+        self.circularSecondBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
+            device: device,
+            length: circularVectorBytes,
+            label: "flow-metal.summary.circular-second"
         )
         self.gyrationBuffer = FlowLeniaMetalFullPipeline.makeSharedBuffer(
             device: device,
@@ -213,6 +262,10 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
         encoder.setBuffer(partialWeightedYBuffer, offset: 0, index: 6)
         encoder.setBuffer(partialOccupancyCountBuffer, offset: 0, index: 7)
         encoder.setBuffer(channelWeightsBuffer, offset: 0, index: 8)
+        encoder.setBuffer(partialCircularFirstBuffer, offset: 0, index: 9)
+        encoder.setBuffer(partialCircularSecondBuffer, offset: 0, index: 10)
+        encoder.setBuffer(circularXWeightsBuffer, offset: 0, index: 11)
+        encoder.setBuffer(circularYWeightsBuffer, offset: 0, index: 12)
         encoder.dispatchThreadgroups(
             MTLSize(width: partialGroupCount, height: 1, depth: batchCount),
             threadsPerThreadgroup: MTLSize(width: FlowLeniaMetalFullPipeline.summaryThreadCount, height: 1, depth: 1)
@@ -235,6 +288,10 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
         finalizeEncoder.setBuffer(weightedXBuffer, offset: 0, index: 9)
         finalizeEncoder.setBuffer(weightedYBuffer, offset: 0, index: 10)
         finalizeEncoder.setBuffer(occupancyCountBuffer, offset: 0, index: 11)
+        finalizeEncoder.setBuffer(partialCircularFirstBuffer, offset: 0, index: 12)
+        finalizeEncoder.setBuffer(partialCircularSecondBuffer, offset: 0, index: 13)
+        finalizeEncoder.setBuffer(circularFirstBuffer, offset: 0, index: 14)
+        finalizeEncoder.setBuffer(circularSecondBuffer, offset: 0, index: 15)
         finalizeEncoder.dispatchThreadgroups(
             MTLSize(width: 1, height: 1, depth: batchCount),
             threadsPerThreadgroup: MTLSize(width: FlowLeniaMetalFullPipeline.summaryThreadCount, height: 1, depth: 1)

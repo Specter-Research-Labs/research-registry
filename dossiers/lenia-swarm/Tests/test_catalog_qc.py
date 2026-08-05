@@ -4,7 +4,6 @@ import json
 import sqlite3
 
 from lenia_swarm_analysis.morphospace.catalog_qc import apply_shape_behavior_qc
-from lenia_swarm_analysis.morphospace.ingest_compendium import _active_creature_filter
 
 
 def test_apply_shape_behavior_qc_marks_protected_and_quarantine(tmp_path):
@@ -104,7 +103,11 @@ def test_apply_shape_behavior_qc_marks_protected_and_quarantine(tmp_path):
     con = sqlite3.connect(compendium)
     assert con.execute("SELECT schema_version FROM compendium_meta").fetchone()[0] == 15
     assert con.execute("SELECT COUNT(*) FROM creature_qc_events").fetchone()[0] == 2
-    where_sql, params = _active_creature_filter(compendium, None)
-    assert where_sql == "catalog_status IN ('active', 'protected')"
-    assert params == ()
+    visible_ids = {
+        row[0]
+        for row in con.execute(
+            "SELECT id FROM creatures WHERE catalog_status IN ('active', 'protected')"
+        )
+    }
+    assert visible_ids == {"active-1", "protected-1"}
     con.close()

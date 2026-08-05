@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Any
 
 from duckdb import DuckDBPyConnection
@@ -10,9 +11,7 @@ from lenia_swarm_analysis.transformation_metrics import transform_axes
 from .warehouse import (
     json_text,
     register_context,
-    replace_anatomical_state_axes,
     stable_id,
-    upsert_anatomical_state,
 )
 
 ANATOMICAL_AXIS_IDS: tuple[str, ...] = (
@@ -42,77 +41,69 @@ _PARTIAL_CONTEXT_AXIS_MAP = {
     "gyration": "spread",
     "centerVelocity": "locomotion",
 }
+_BASELINE_BATCH_SIZE = 8192
+_CONTEXT_TRIAL_BATCH_SIZE = 4096
 
 
-def _state_rows_for_study(
+def _state_row_batch(
     connection: DuckDBPyConnection,
     *,
-    study_id: str | None,
+    study_id: str,
+    after_specimen_id: str | None,
 ) -> list[tuple[str, str, str | None, str | None, str | None, str | None, str | None]]:
-    if study_id is None:
-        query = """
-            SELECT specimen_id, study_id, recorded_at, family_kind, regime_family,
-                   geometry_family, canonical_family
-            FROM specimens
-            ORDER BY study_id, specimen_id
-        """
-        return [tuple(row) for row in connection.execute(query).fetchall()]
     query = """
-        SELECT specimens.specimen_id, study_specimens.study_id, specimens.recorded_at,
+        SELECT specimens.specimen_id, specimens.study_id, specimens.recorded_at,
                specimens.family_kind, specimens.regime_family, specimens.geometry_family,
                specimens.canonical_family
-        FROM study_specimens
-        JOIN specimens USING (specimen_id)
-        WHERE study_specimens.study_id = ?
+        FROM specimens
+        WHERE specimens.study_id = ?
+          AND EXISTS (
+              SELECT 1 FROM study_specimens
+              WHERE study_specimens.study_id = specimens.study_id
+                AND study_specimens.specimen_id = specimens.specimen_id
+          )
+          AND (? IS NULL OR specimens.specimen_id > ?)
         ORDER BY specimens.specimen_id
+        LIMIT ?
     """
-    return [tuple(row) for row in connection.execute(query, [study_id]).fetchall()]
-
-
-def _raw_specimen_axes(
-    connection: DuckDBPyConnection,
-    *,
-    specimen_id: str,
-) -> dict[str, float]:
-    return {
-        str(axis_id): float(value)
-        for axis_id, value in connection.execute(
-            """
-            SELECT axis_id, raw_value
-            FROM specimen_axes
-            WHERE specimen_id = ? AND raw_value IS NOT NULL
-            """,
-            [specimen_id],
+    return [
+        tuple(row)
+        for row in connection.execute(
+            query,
+            [study_id, after_specimen_id, after_specimen_id, _BASELINE_BATCH_SIZE],
         ).fetchall()
-    }
+    ]
 
 
-def _raw_context_trial_axes(
-    connection: DuckDBPyConnection,
-    *,
-    context_trial_id: str,
-) -> dict[str, float]:
-    rows = connection.execute(
-        """
-        SELECT provenance_json
-        FROM context_trials
-        WHERE context_trial_id = ?
-        """,
-        [context_trial_id],
-    ).fetchone()
-    if rows is None or not rows[0]:
-        return {}
-    provenance = json.loads(rows[0])
+def _json_object(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str) and value:
+        decoded = json.loads(value)
+        return decoded if isinstance(decoded, dict) else {}
+    return {}
+
+
+def _finite_numeric(value: Any, *, label: str) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    resolved = float(value)
+    if not math.isfinite(resolved):
+        raise ValueError(f"{label} must be finite")
+    return resolved
+
+
+def _raw_context_trial_axes(provenance: dict[str, Any]) -> dict[str, float]:
     raw_response = provenance.get("rawResponse")
     if not isinstance(raw_response, dict):
         return {}
     endpoint_axes = raw_response.get("endpointRawAxes")
     if isinstance(endpoint_axes, dict):
-        mapped_endpoint_axes = {
-            str(axis_id): float(value)
-            for axis_id, value in endpoint_axes.items()
-            if isinstance(value, (int, float))
-        }
+        mapped_endpoint_axes: dict[str, float] = {}
+        for axis_id, value in endpoint_axes.items():
+            resolved = _finite_numeric(value, label=f"endpointRawAxes.{axis_id}")
+            if resolved is not None:
+                mapped_endpoint_axes[str(axis_id)] = resolved
         if mapped_endpoint_axes:
             return mapped_endpoint_axes
     mean_metrics = raw_response.get("meanMetrics")
@@ -124,14 +115,14 @@ def _raw_context_trial_axes(
             return {}
     mapped: dict[str, float] = {}
     for metric_key, axis_id in _PARTIAL_CONTEXT_AXIS_MAP.items():
-        value = mean_metrics.get(metric_key)
-        if isinstance(value, (int, float)):
-            mapped[axis_id] = float(value)
+        value = _finite_numeric(mean_metrics.get(metric_key), label=f"meanMetrics.{metric_key}")
+        if value is not None:
+            mapped[axis_id] = value
     if "finalMass" in mean_metrics and "gyration" in mean_metrics:
-        mass = mean_metrics.get("finalMass")
-        gyration = mean_metrics.get("gyration")
-        if isinstance(mass, (int, float)) and isinstance(gyration, (int, float)) and gyration:
-            mapped["compactness"] = float(mass) / float(gyration)
+        mass = _finite_numeric(mean_metrics.get("finalMass"), label="meanMetrics.finalMass")
+        gyration = _finite_numeric(mean_metrics.get("gyration"), label="meanMetrics.gyration")
+        if mass is not None and gyration is not None and gyration:
+            mapped["compactness"] = mass / gyration
     return mapped
 
 
@@ -221,11 +212,81 @@ def _state_payload(
     }
 
 
+def _replace_state_batch(
+    connection: DuckDBPyConnection,
+    *,
+    state_ids: list[str],
+    state_insert_rows: list[tuple[Any, ...]],
+    state_axis_rows: list[tuple[Any, ...]],
+) -> int:
+    connection.execute(
+        "DELETE FROM anatomical_state_axes "
+        "WHERE state_id IN (SELECT unnest(?::VARCHAR[]))",
+        [state_ids],
+    )
+    inserted_state_ids = {str(row[0]) for row in state_insert_rows}
+    stale_state_ids = [
+        state_id for state_id in state_ids if state_id not in inserted_state_ids
+    ]
+    if stale_state_ids:
+        for table_name in (
+            "creature_signal_axes",
+            "creature_state_labels",
+            "fiber_group_members",
+        ):
+            connection.execute(
+                f"DELETE FROM {table_name} "
+                "WHERE state_id IN (SELECT unnest(?::VARCHAR[]))",
+                [stale_state_ids],
+            )
+        connection.execute(
+            "DELETE FROM anatomical_states "
+            "WHERE state_id IN (SELECT unnest(?::VARCHAR[]))",
+            [stale_state_ids],
+        )
+    if not state_insert_rows:
+        return 0
+    columns = list(zip(*state_insert_rows, strict=True))
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO anatomical_states (
+            state_id, specimen_id, study_id, context_id, source_kind, source_ref,
+            recorded_at, state_json
+        )
+        SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]),
+               unnest(?::VARCHAR[]), unnest(?::VARCHAR[]),
+               unnest(?::VARCHAR[]), unnest(?::VARCHAR[]),
+               unnest(?::TIMESTAMP[]), CAST(unnest(?::VARCHAR[]) AS JSON)
+        """,
+        [list(column) for column in columns],
+    )
+    columns = list(zip(*state_axis_rows, strict=True))
+    connection.execute(
+        """
+        INSERT INTO anatomical_state_axes (
+            state_id, axis_id, raw_value, transformed_value
+        )
+        SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]),
+               unnest(?::DOUBLE[]), unnest(?::DOUBLE[])
+        """,
+        [list(column) for column in columns],
+    )
+    return len(state_insert_rows)
+
+
 def _replace_baseline_states(
     connection: DuckDBPyConnection,
     *,
     study_id: str,
 ) -> int:
+    last_specimen_id: str | None = None
+    state_rows = _state_row_batch(
+        connection,
+        study_id=study_id,
+        after_specimen_id=last_specimen_id,
+    )
+    if not state_rows:
+        return 0
     baseline_context_id = register_context(
         connection,
         study_id=study_id,
@@ -233,114 +294,110 @@ def _replace_baseline_states(
         label="baseline",
         metadata_json={"environment": "baseline", "perturbation": "baseline"},
     )
-    state_rows = _state_rows_for_study(connection, study_id=study_id)
-    if not state_rows:
-        return 0
-
-    axes_by_specimen: dict[str, dict[str, float]] = {}
-    for specimen_id, axis_id, raw_value in connection.execute(
-        """
-        SELECT specimen_axes.specimen_id, specimen_axes.axis_id, specimen_axes.raw_value
-        FROM study_specimens
-        JOIN specimen_axes USING (specimen_id)
-        WHERE study_specimens.study_id = ?
-          AND specimen_axes.raw_value IS NOT NULL
-          AND specimen_axes.axis_id IN (SELECT unnest(?))
-        ORDER BY specimen_axes.specimen_id, specimen_axes.axis_id
-        """,
-        [study_id, list(ANATOMICAL_AXIS_IDS)],
-    ).fetchall():
-        axes_by_specimen.setdefault(str(specimen_id), {})[str(axis_id)] = float(raw_value)
-
-    state_insert_rows: list[tuple[Any, ...]] = []
-    state_axis_rows: list[tuple[Any, ...]] = []
-    state_ids: list[tuple[str]] = []
-    for (
-        specimen_id,
-        specimen_study_id,
-        recorded_at,
-        family_kind,
-        regime_family,
-        geometry_family,
-        canonical_family,
-    ) in state_rows:
-        raw_axes = axes_by_specimen.get(str(specimen_id), {})
-        axis_rows: list[tuple[str, float | None, float | None]] = [
-            (
-                axis_id,
-                float(raw_axes[axis_id]),
-                float(transform_axes({axis_id: float(raw_axes[axis_id])})[axis_id]),
+    updated = 0
+    while state_rows:
+        specimen_ids = [str(row[0]) for row in state_rows]
+        last_specimen_id = specimen_ids[-1]
+        axes_by_specimen: dict[str, dict[str, float]] = {}
+        for specimen_id, axis_id, raw_value in connection.execute(
+            """
+            SELECT specimen_id, axis_id, raw_value
+            FROM specimen_axes
+            WHERE specimen_id IN (SELECT unnest(?::VARCHAR[]))
+              AND raw_value IS NOT NULL
+              AND axis_id IN (SELECT unnest(?::VARCHAR[]))
+            ORDER BY specimen_id, axis_id
+            """,
+            [specimen_ids, list(ANATOMICAL_AXIS_IDS)],
+        ).fetchall():
+            axes_by_specimen.setdefault(str(specimen_id), {})[str(axis_id)] = float(
+                raw_value
             )
-            for axis_id in ANATOMICAL_AXIS_IDS
-            if axis_id in raw_axes
-        ]
-        if not axis_rows:
-            continue
-        state_id = stable_id("anatomical-state", specimen_study_id, specimen_id, "baseline")
-        state_ids.append((state_id,))
-        state_insert_rows.append(
-            (
-                state_id,
-                str(specimen_id),
-                str(specimen_study_id),
-                baseline_context_id,
-                "specimen_baseline",
-                str(specimen_id),
-                recorded_at,
-                json_text(_state_payload(
-                    raw_axes=raw_axes,
-                    study_id=str(specimen_study_id),
-                    specimen_id=str(specimen_id),
-                    context_id=baseline_context_id,
-                    source_kind="specimen_baseline",
-                    family_kind=str(family_kind) if family_kind is not None else None,
-                    regime_family=str(regime_family) if regime_family is not None else None,
-                    geometry_family=str(geometry_family) if geometry_family is not None else None,
-                    canonical_family=(
-                        str(canonical_family) if canonical_family is not None else None
+
+        state_insert_rows: list[tuple[Any, ...]] = []
+        state_axis_rows: list[tuple[Any, ...]] = []
+        state_ids: list[str] = []
+        for (
+            specimen_id,
+            specimen_study_id,
+            recorded_at,
+            family_kind,
+            regime_family,
+            geometry_family,
+            canonical_family,
+        ) in state_rows:
+            resolved_specimen_id = str(specimen_id)
+            resolved_study_id = str(specimen_study_id)
+            raw_axes = axes_by_specimen.get(resolved_specimen_id, {})
+            axis_rows: list[tuple[str, float | None, float | None]] = [
+                (
+                    axis_id,
+                    float(raw_axes[axis_id]),
+                    float(transform_axes({axis_id: float(raw_axes[axis_id])})[axis_id]),
+                )
+                for axis_id in ANATOMICAL_AXIS_IDS
+                if axis_id in raw_axes
+            ]
+            state_id = stable_id(
+                "anatomical-state",
+                resolved_study_id,
+                resolved_specimen_id,
+                "baseline",
+            )
+            state_ids.append(state_id)
+            if not axis_rows:
+                continue
+            state_insert_rows.append(
+                (
+                    state_id,
+                    resolved_specimen_id,
+                    resolved_study_id,
+                    baseline_context_id,
+                    "specimen_baseline",
+                    resolved_specimen_id,
+                    recorded_at,
+                    json_text(
+                        _state_payload(
+                            raw_axes=raw_axes,
+                            study_id=resolved_study_id,
+                            specimen_id=resolved_specimen_id,
+                            context_id=baseline_context_id,
+                            source_kind="specimen_baseline",
+                            family_kind=(
+                                str(family_kind) if family_kind is not None else None
+                            ),
+                            regime_family=(
+                                str(regime_family) if regime_family is not None else None
+                            ),
+                            geometry_family=(
+                                str(geometry_family) if geometry_family is not None else None
+                            ),
+                            canonical_family=(
+                                str(canonical_family)
+                                if canonical_family is not None
+                                else None
+                            ),
+                        )
                     ),
-                )),
+                )
             )
-        )
-        state_axis_rows.extend(
-            (state_id, axis_id, raw_value, transformed_value)
-            for axis_id, raw_value, transformed_value in axis_rows
-        )
+            state_axis_rows.extend(
+                (state_id, axis_id, raw_value, transformed_value)
+                for axis_id, raw_value, transformed_value in axis_rows
+            )
 
-    if not state_insert_rows:
-        return 0
-
-    connection.execute("CREATE OR REPLACE TEMP TABLE tmp_anatomical_state_ids (state_id TEXT)")
-    connection.executemany(
-        "INSERT INTO tmp_anatomical_state_ids (state_id) VALUES (?)",
-        state_ids,
-    )
-    connection.execute(
-        """
-        DELETE FROM anatomical_state_axes
-        WHERE state_id IN (SELECT state_id FROM tmp_anatomical_state_ids)
-        """
-    )
-    connection.executemany(
-        """
-        INSERT OR REPLACE INTO anatomical_states (
-            state_id, specimen_id, study_id, context_id, source_kind, source_ref,
-            recorded_at, state_json
+        updated += _replace_state_batch(
+            connection,
+            state_ids=state_ids,
+            state_insert_rows=state_insert_rows,
+            state_axis_rows=state_axis_rows,
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
-        """,
-        state_insert_rows,
-    )
-    connection.executemany(
-        """
-        INSERT INTO anatomical_state_axes (
-            state_id, axis_id, raw_value, transformed_value
+        state_rows = _state_row_batch(
+            connection,
+            study_id=study_id,
+            after_specimen_id=last_specimen_id,
         )
-        VALUES (?, ?, ?, ?)
-        """,
-        state_axis_rows,
-    )
-    return len(state_insert_rows)
+    return updated
 
 
 def _replace_context_trial_states(
@@ -348,71 +405,113 @@ def _replace_context_trial_states(
     *,
     study_id: str,
 ) -> int:
-    rows = connection.execute(
-        """
-        SELECT context_trial_id, specimen_id, context_id, context_trials.provenance_json,
-               specimens.family_kind, specimens.regime_family, specimens.geometry_family,
-               specimens.canonical_family
-        FROM context_trials
-        JOIN specimens USING (specimen_id)
-        WHERE context_trials.study_id = ?
-        ORDER BY context_trial_id
-        """,
-        [study_id],
-    ).fetchall()
     updated = 0
-    for (
-        context_trial_id,
-        specimen_id,
-        context_id,
-        provenance_json,
-        family_kind,
-        regime_family,
-        geometry_family,
-        canonical_family,
-    ) in rows:
-        raw_axes = _raw_context_trial_axes(connection, context_trial_id=str(context_trial_id))
-        if not raw_axes:
-            continue
-        state_id = stable_id("anatomical-state", study_id, context_trial_id, "context-trial")
-        upsert_anatomical_state(
-            connection,
-            state_id=state_id,
-            specimen_id=str(specimen_id),
-            study_id=study_id,
-            context_id=str(context_id) if context_id is not None else None,
-            source_kind="context_trial_endpoint",
-            source_ref=str(context_trial_id),
-            recorded_at=None,
-            state_json={
-                **_state_payload(
-                    raw_axes=raw_axes,
-                    study_id=study_id,
-                    specimen_id=str(specimen_id),
-                    context_id=str(context_id) if context_id is not None else None,
-                    source_kind="context_trial_endpoint",
-                    family_kind=str(family_kind) if family_kind is not None else None,
-                    regime_family=str(regime_family) if regime_family is not None else None,
-                    geometry_family=str(geometry_family) if geometry_family is not None else None,
-                    canonical_family=(
-                        str(canonical_family) if canonical_family is not None else None
-                    ),
-                ),
-                "provenance": json.loads(provenance_json) if provenance_json else {},
-            },
-        )
-        axis_rows: list[tuple[str, float | None, float | None]] = [
-            (
-                axis_id,
-                float(value),
-                float(
-                    transform_axes({axis_id: float(value)}).get(axis_id, float(value))
-                ),
+    last_context_trial_id: str | None = None
+    while True:
+        rows = connection.execute(
+            """
+            SELECT context_trials.context_trial_id, context_trials.specimen_id,
+                   context_trials.context_id, context_trials.provenance_json,
+                   specimens.family_kind, specimens.regime_family,
+                   specimens.geometry_family, specimens.canonical_family
+            FROM context_trials
+            JOIN specimens USING (specimen_id)
+            WHERE context_trials.study_id = ?
+              AND (? IS NULL OR context_trials.context_trial_id > ?)
+            ORDER BY context_trials.context_trial_id
+            LIMIT ?
+            """,
+            [
+                study_id,
+                last_context_trial_id,
+                last_context_trial_id,
+                _CONTEXT_TRIAL_BATCH_SIZE,
+            ],
+        ).fetchall()
+        if not rows:
+            break
+        last_context_trial_id = str(rows[-1][0])
+        state_ids: list[str] = []
+        state_insert_rows: list[tuple[Any, ...]] = []
+        state_axis_rows: list[tuple[Any, ...]] = []
+        for (
+            context_trial_id,
+            specimen_id,
+            context_id,
+            provenance_json,
+            family_kind,
+            regime_family,
+            geometry_family,
+            canonical_family,
+        ) in rows:
+            resolved_trial_id = str(context_trial_id)
+            resolved_specimen_id = str(specimen_id)
+            resolved_context_id = str(context_id) if context_id is not None else None
+            provenance = _json_object(provenance_json)
+            raw_axes = _raw_context_trial_axes(provenance)
+            state_id = stable_id(
+                "anatomical-state",
+                study_id,
+                resolved_trial_id,
+                "context-trial",
             )
-            for axis_id, value in sorted(raw_axes.items())
-        ]
-        replace_anatomical_state_axes(connection, state_id=state_id, axis_rows=axis_rows)
-        updated += 1
+            state_ids.append(state_id)
+            if not raw_axes:
+                continue
+            state_insert_rows.append(
+                (
+                    state_id,
+                    resolved_specimen_id,
+                    study_id,
+                    resolved_context_id,
+                    "context_trial_endpoint",
+                    resolved_trial_id,
+                    None,
+                    json_text(
+                        {
+                            **_state_payload(
+                                raw_axes=raw_axes,
+                                study_id=study_id,
+                                specimen_id=resolved_specimen_id,
+                                context_id=resolved_context_id,
+                                source_kind="context_trial_endpoint",
+                                family_kind=(
+                                    str(family_kind) if family_kind is not None else None
+                                ),
+                                regime_family=(
+                                    str(regime_family) if regime_family is not None else None
+                                ),
+                                geometry_family=(
+                                    str(geometry_family)
+                                    if geometry_family is not None
+                                    else None
+                                ),
+                                canonical_family=(
+                                    str(canonical_family)
+                                    if canonical_family is not None
+                                    else None
+                                ),
+                            ),
+                            "provenance": provenance,
+                        }
+                    ),
+                )
+            )
+            state_axis_rows.extend(
+                (
+                    state_id,
+                    axis_id,
+                    float(value),
+                    float(transform_axes({axis_id: float(value)}).get(axis_id, value)),
+                )
+                for axis_id, value in sorted(raw_axes.items())
+            )
+        updated += _replace_state_batch(
+            connection,
+            state_ids=state_ids,
+            state_insert_rows=state_insert_rows,
+            state_axis_rows=state_axis_rows,
+        )
     return updated
 
 
