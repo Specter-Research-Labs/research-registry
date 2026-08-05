@@ -237,6 +237,72 @@ def migrate_warehouse(
     }
 
 
+def consolidate_database(
+    *,
+    warehouse_path: Path,
+    compendium_path: Path,
+    destination_path: Path,
+) -> dict[str, object]:
+    from lenia_swarm_analysis.morphospace.consolidate import build_consolidated_database
+
+    return build_consolidated_database(
+        warehouse_path,
+        compendium_path,
+        destination_path,
+    ).as_dict()
+
+
+def verify_consolidated_database(
+    *,
+    warehouse_path: Path,
+    compendium_path: Path,
+    database_path: Path,
+) -> dict[str, object]:
+    from lenia_swarm_analysis.morphospace.consolidate import (
+        verify_consolidated_database as verify,
+    )
+
+    return verify(warehouse_path, compendium_path, database_path).as_dict()
+
+
+def verify_consolidated_candidate(*, database_path: Path) -> dict[str, object]:
+    from lenia_swarm_analysis.morphospace.consolidate import (
+        verify_consolidated_candidate as verify,
+    )
+
+    return verify(database_path).as_dict()
+
+
+def compact_consolidated_catalog(
+    *,
+    database_path: Path,
+    factor_specimen_manifests: bool,
+) -> dict[str, object]:
+    from dataclasses import asdict
+
+    import duckdb
+
+    from lenia_swarm_analysis.morphospace.compact_catalog import (
+        compact_catalog,
+        verify_compacted_catalog,
+    )
+
+    connection = duckdb.connect(str(database_path))
+    try:
+        result = compact_catalog(
+            connection,
+            factor_specimen_manifests=factor_specimen_manifests,
+        )
+        verification = verify_compacted_catalog(connection)
+        return {
+            "databasePath": str(database_path),
+            "compaction": asdict(result),
+            "verification": asdict(verification),
+        }
+    finally:
+        connection.close()
+
+
 def regenerate_derived(
     *,
     warehouse_path: Path,
@@ -757,6 +823,64 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Canonical warehouse lifecycle for lenia-swarm morphospace analysis",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    consolidate_parser = subparsers.add_parser(
+        "consolidate-database",
+        help="Copy v10 and import every SQLite compendium table beside it",
+    )
+    consolidate_parser.add_argument("--warehouse", required=True, type=Path)
+    consolidate_parser.add_argument("--compendium", required=True, type=Path)
+    consolidate_parser.add_argument("--destination", required=True, type=Path)
+    _add_json(consolidate_parser)
+    consolidate_parser.set_defaults(
+        handler=lambda args: consolidate_database(
+            warehouse_path=args.warehouse.resolve(),
+            compendium_path=args.compendium.resolve(),
+            destination_path=args.destination.resolve(),
+        )
+    )
+
+    verify_consolidated_parser = subparsers.add_parser(
+        "verify-consolidated-database",
+        help="Verify a consolidated database against its v10 and SQLite sources",
+    )
+    verify_consolidated_parser.add_argument("--warehouse", required=True, type=Path)
+    verify_consolidated_parser.add_argument("--compendium", required=True, type=Path)
+    verify_consolidated_parser.add_argument("--database", required=True, type=Path)
+    _add_json(verify_consolidated_parser)
+    verify_consolidated_parser.set_defaults(
+        handler=lambda args: verify_consolidated_database(
+            warehouse_path=args.warehouse.resolve(),
+            compendium_path=args.compendium.resolve(),
+            database_path=args.database.resolve(),
+        )
+    )
+
+    verify_candidate_parser = subparsers.add_parser(
+        "verify-consolidated-candidate",
+        help="Verify a consolidated database from its embedded receipt",
+    )
+    verify_candidate_parser.add_argument("--database", required=True, type=Path)
+    _add_json(verify_candidate_parser)
+    verify_candidate_parser.set_defaults(
+        handler=lambda args: verify_consolidated_candidate(
+            database_path=args.database.resolve(),
+        )
+    )
+
+    compact_catalog_parser = subparsers.add_parser(
+        "compact-catalog",
+        help="Compact and verify the embedded catalog schema",
+    )
+    compact_catalog_parser.add_argument("--database", required=True, type=Path)
+    compact_catalog_parser.add_argument("--factor-specimen-manifests", action="store_true")
+    _add_json(compact_catalog_parser)
+    compact_catalog_parser.set_defaults(
+        handler=lambda args: compact_consolidated_catalog(
+            database_path=args.database.resolve(),
+            factor_specimen_manifests=bool(args.factor_specimen_manifests),
+        )
+    )
 
     migrate_parser = subparsers.add_parser(
         "migrate-warehouse",

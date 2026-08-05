@@ -9,6 +9,8 @@ PYTHON_TYPECHECK_PATHS := \
 	lenia_swarm_analysis/morphospace/schema.py \
 	lenia_swarm_analysis/morphospace/warehouse.py \
 	lenia_swarm_analysis/morphospace/ingest_compendium.py \
+	lenia_swarm_analysis/morphospace/consolidate.py \
+	lenia_swarm_analysis/morphospace/compact_catalog.py \
 	lenia_swarm_analysis/morphospace/migrate_v9.py \
 	lenia_swarm_analysis/morphospace/regenerate_v9.py \
 	lenia_swarm_analysis/morphospace/derive_anatomy.py \
