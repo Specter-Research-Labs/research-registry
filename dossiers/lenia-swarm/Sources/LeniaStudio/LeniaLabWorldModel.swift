@@ -11,17 +11,6 @@ enum LabWorldSelection: Equatable {
     case preset(String)
     case stamp(String)
     case track1Config(String)
-
-    var taskKey: String {
-        switch self {
-        case .preset(let id):
-            "preset:\(id)"
-        case .stamp(let id):
-            "stamp:\(id)"
-        case .track1Config(let path):
-            "track1:\(path)"
-        }
-    }
 }
 
 struct LabMissionPreset: Identifiable {
@@ -30,6 +19,7 @@ struct LabMissionPreset: Identifiable {
     let subtitle: String
     let detail: String
     let entry: StudioCompareEntry
+    let organismConfig: Track1TaxonomyConfig?
     let defaultDraft: LabWorldDraft?
     let channels: Int
     let parameterFields: Int
@@ -38,6 +28,13 @@ struct LabMissionPreset: Identifiable {
 }
 
 struct LabWorldDraft {
+    static let timeStepRange: ClosedRange<Float> = 0.01...0.5
+    static let globalRadiusRange: ClosedRange<Float> = 2...25
+    static let kernelRelativeRadiusRange: ClosedRange<Float> = 0.2...1
+    static let kernelCenterRange: ClosedRange<Float> = 0.05...0.5
+    static let kernelSigmaRange: ClosedRange<Float> = 0.001...0.2
+    static let kernelGainRange: ClosedRange<Float> = 0...1
+
     let presetID: String
     let basisName: String
     let sourceConfigPath: String
@@ -62,6 +59,12 @@ struct LabWorldDraft {
     var channels: Int { runtimeConfigValue.channels }
     var channelCount: Int { channels }
     var kernelCount: Int { runtimeConfigValue.nbK }
+    var timeStep: Float { runtimeConfigValue.dt }
+    var globalRadius: Float { runtimeConfigValue.params.R }
+    var kernelRelativeRadii: [Float] { runtimeConfigValue.params.r }
+    var kernelCenters: [Float] { runtimeConfigValue.params.m }
+    var kernelSigmas: [Float] { runtimeConfigValue.params.s }
+    var kernelGains: [Float] { runtimeConfigValue.params.h }
     var parameterFieldMode: FlowLeniaParameterFieldMode {
         FlowLeniaParameterFieldMode.fromEmbeddingEnabled(runtimeConfigValue.parameterEmbedding.enabled)
     }
@@ -116,6 +119,97 @@ struct LabWorldDraft {
         labCopyRuntimeConfig(
             runtimeConfigValue,
             backend: labComputeBackend(for: backend)
+        )
+    }
+
+    func kernelRelativeRadius(at index: Int) -> Float? {
+        kernelRelativeRadii[safe: index]
+    }
+
+    func kernelCenter(at index: Int) -> Float? {
+        kernelCenters[safe: index]
+    }
+
+    func kernelSigma(at index: Int) -> Float? {
+        kernelSigmas[safe: index]
+    }
+
+    func kernelGain(at index: Int) -> Float? {
+        kernelGains[safe: index]
+    }
+
+    mutating func setTimeStep(_ timeStep: Float) {
+        guard let clamped = labClampedFinite(timeStep, to: Self.timeStepRange),
+              clamped != runtimeConfigValue.dt else {
+            return
+        }
+        runtimeConfigValue = labCopyRuntimeConfig(runtimeConfigValue, dt: clamped)
+    }
+
+    mutating func setGlobalRadius(_ radius: Float) {
+        guard let clamped = labClampedFinite(radius, to: Self.globalRadiusRange),
+              clamped != runtimeConfigValue.params.R else {
+            return
+        }
+        runtimeConfigValue = labCopyRuntimeConfig(
+            runtimeConfigValue,
+            params: labCopyResolvedParams(runtimeConfigValue.params, R: clamped)
+        )
+    }
+
+    mutating func setKernelRelativeRadius(_ radius: Float, at index: Int) {
+        guard let clamped = labClampedFinite(radius, to: Self.kernelRelativeRadiusRange),
+              runtimeConfigValue.params.r.indices.contains(index),
+              clamped != runtimeConfigValue.params.r[index] else {
+            return
+        }
+        var values = runtimeConfigValue.params.r
+        values[index] = clamped
+        runtimeConfigValue = labCopyRuntimeConfig(
+            runtimeConfigValue,
+            params: labCopyResolvedParams(runtimeConfigValue.params, r: values)
+        )
+    }
+
+    mutating func setKernelCenter(_ center: Float, at index: Int) {
+        guard let clamped = labClampedFinite(center, to: Self.kernelCenterRange),
+              runtimeConfigValue.params.m.indices.contains(index),
+              clamped != runtimeConfigValue.params.m[index] else {
+            return
+        }
+        var values = runtimeConfigValue.params.m
+        values[index] = clamped
+        runtimeConfigValue = labCopyRuntimeConfig(
+            runtimeConfigValue,
+            params: labCopyResolvedParams(runtimeConfigValue.params, m: values)
+        )
+    }
+
+    mutating func setKernelSigma(_ sigma: Float, at index: Int) {
+        guard let clamped = labClampedFinite(sigma, to: Self.kernelSigmaRange),
+              runtimeConfigValue.params.s.indices.contains(index),
+              clamped != runtimeConfigValue.params.s[index] else {
+            return
+        }
+        var values = runtimeConfigValue.params.s
+        values[index] = clamped
+        runtimeConfigValue = labCopyRuntimeConfig(
+            runtimeConfigValue,
+            params: labCopyResolvedParams(runtimeConfigValue.params, s: values)
+        )
+    }
+
+    mutating func setKernelGain(_ gain: Float, at index: Int) {
+        guard let clamped = labClampedFinite(gain, to: Self.kernelGainRange),
+              runtimeConfigValue.params.h.indices.contains(index),
+              clamped != runtimeConfigValue.params.h[index] else {
+            return
+        }
+        var values = runtimeConfigValue.params.h
+        values[index] = clamped
+        runtimeConfigValue = labCopyRuntimeConfig(
+            runtimeConfigValue,
+            params: labCopyResolvedParams(runtimeConfigValue.params, h: values)
         )
     }
 
@@ -307,38 +401,39 @@ struct LabWorldDraft {
 }
 
 func buildLabMissionPresets() -> [LabMissionPreset] {
-    let orbium = orbiumStarterEntry()
-    let orbiumDraft: LabWorldDraft
     do {
-        orbiumDraft = try makeLabWorldDraft(for: orbium, gridSize: LabGridPreset.compact128.rawValue)
+        return try bundledFeaturedOrganisms().map(featuredLabMissionPreset)
     } catch {
-        fatalError("Failed to synthesize Orbium lab draft: \(error.localizedDescription)")
+        fatalError("Failed to load featured organisms: \(error.localizedDescription)")
     }
+}
+
+func buildAllLabWorldPresets() -> [LabMissionPreset] {
+    buildLabMissionPresets() + buildBlankLabMissionPresets()
+}
+
+func labRecommendedStageZoom(for runtimeConfig: LeniaRuntimeConfig) -> CGFloat {
+    guard let patch = runtimeConfig.statePatch else { return 1.35 }
+    let extent = max(patch.width, patch.height)
+    guard extent > 0 else { return 1.35 }
+    let targetFill: CGFloat = 0.38
+    return min(6, max(1, targetFill * CGFloat(max(runtimeConfig.sx, runtimeConfig.sy)) / CGFloat(extent)))
+}
+
+func buildBlankLabMissionPresets() -> [LabMissionPreset] {
     return [
-        LabMissionPreset(
-            id: "orbium-sandbox",
-            name: "Orbium Seed",
-            subtitle: "Editable single-kernel sandbox",
-            detail: "Fastest lab contract. One matter lane, one kernel, and direct brush edits for quick local experiments.",
-            entry: orbium,
-            defaultDraft: orbiumDraft,
-            channels: orbiumDraft.channels,
-            parameterFields: orbiumDraft.parameterFieldCount,
-            kernelCount: orbiumDraft.kernelCount,
-            fixedGrid: nil
-        ),
         bundleLabMissionPreset(
             id: "paper-1c",
             resourceName: "paper_base_1c_128",
-            name: "Paper 1C",
-            subtitle: "Canonical single-channel base",
+            name: "Blank 1C",
+            subtitle: "Random single-channel world",
             detail: "One matter lane on the paper runtime. Use this when you want the simplest canonical world without parameter transport."
         ),
         bundleLabMissionPreset(
             id: "paper-2c",
             resourceName: "paper_base_2c_128",
-            name: "Paper 2C",
-            subtitle: "Coupled two-channel base",
+            name: "Blank 2C",
+            subtitle: "Random coupled world",
             detail: "Cross-coupled canonical paper world with multiple kernels. This is the cleanest default when you want visibly multi-channel dynamics."
         ),
         bundleLabMissionPreset(
@@ -356,6 +451,33 @@ func buildLabMissionPresets() -> [LabMissionPreset] {
             detail: "Experimental two-channel world with food dynamics and parameter embedding. Use this when you want the fullest canonical contract the lab can display today."
         ),
     ]
+}
+
+private func featuredLabMissionPreset(config: Track1TaxonomyConfig) throws -> LabMissionPreset {
+    let draft = try makeTrack1WorldDraft(config: config)
+    let resourceID = URL(fileURLWithPath: config.path).deletingPathExtension().lastPathComponent
+    let entry = labMissionEntry(
+        id: resourceID,
+        from: config.studioEntry(runtimeConfig: draft.runtimeConfigValue)
+    )
+    return LabMissionPreset(
+        id: resourceID,
+        name: config.displayName,
+        subtitle: "\(config.family) · \(config.genus)",
+        detail: "Exact \(config.patternID) state and rule from bundled provenance.",
+        entry: entry,
+        organismConfig: config,
+        defaultDraft: LabWorldDraft(
+            presetID: entry.id,
+            basisName: config.displayName,
+            sourceConfigPath: config.path,
+            runtimeConfig: draft.runtimeConfigValue
+        ),
+        channels: draft.channels,
+        parameterFields: draft.parameterFieldCount,
+        kernelCount: draft.kernelCount,
+        fixedGrid: draft.gridSize
+    )
 }
 
 func makeLabWorldDraft(for entry: StudioCompareEntry, gridSize: Int) throws -> LabWorldDraft {
@@ -771,18 +893,21 @@ private func bundleLabMissionPreset(
     do {
         let configData = try Data(contentsOf: resourceURL)
         let runtimeConfig = try loadRuntimeConfig(from: configData)
-        let entry = StudioCompareEntry.live(
-            creature: LeniaCreature(
-                seed: runtimeConfig.initSeed,
-                score: 0,
-                params: runtimeConfig.params,
-                sourceNode: "Preset"
-            ),
-            name: name,
-            subtitle: subtitle,
-            replayReference: StudioReplayReference(
-                baseConfigPath: resourceURL.path,
-                runtimeFamily: "lab-preset"
+        let entry = labMissionEntry(
+            id: id,
+            from: StudioCompareEntry.live(
+                creature: LeniaCreature(
+                    seed: runtimeConfig.initSeed,
+                    score: 0,
+                    params: runtimeConfig.params,
+                    sourceNode: "Preset"
+                ),
+                name: name,
+                subtitle: subtitle,
+                replayReference: StudioReplayReference(
+                    baseConfigPath: resourceURL.path,
+                    runtimeFamily: "lab-preset"
+                )
             )
         )
         let draft = LabWorldDraft(
@@ -797,6 +922,7 @@ private func bundleLabMissionPreset(
             subtitle: subtitle,
             detail: detail,
             entry: entry,
+            organismConfig: nil,
             defaultDraft: draft,
             channels: draft.channels,
             parameterFields: draft.parameterFieldCount,
@@ -806,6 +932,24 @@ private func bundleLabMissionPreset(
     } catch {
         fatalError("Failed to load bundled lab preset \(resourceName): \(error.localizedDescription)")
     }
+}
+
+private func labMissionEntry(id: String, from entry: StudioCompareEntry) -> StudioCompareEntry {
+    StudioCompareEntry(
+        id: "lab-preset:\(id)",
+        creature: entry.creature,
+        savedCreature: entry.savedCreature,
+        name: entry.name,
+        subtitle: entry.subtitle,
+        metrics: entry.metrics,
+        replayReference: entry.replayReference,
+        taxonomy: entry.taxonomy,
+        traitLabels: entry.traitLabels,
+        runtimeFamily: entry.runtimeFamily,
+        sourceMode: entry.sourceMode,
+        sourceAlgorithm: entry.sourceAlgorithm,
+        runtimeCapabilities: entry.runtimeCapabilities
+    )
 }
 
 func orbiumStarterEntry() -> StudioCompareEntry {
@@ -927,6 +1071,7 @@ private func labCopyRuntimeConfig(
     nbK: Int? = nil,
     c0: [Int]? = nil,
     c1: [[Int]]? = nil,
+    dt: Float? = nil,
     border: String? = nil,
     params: ResolvedParams? = nil,
     initSeed: Int? = nil,
@@ -952,7 +1097,7 @@ private func labCopyRuntimeConfig(
         profile: runtimeConfig.profile,
         c0: c0 ?? runtimeConfig.c0,
         c1: c1 ?? runtimeConfig.c1,
-        dt: runtimeConfig.dt,
+        dt: dt ?? runtimeConfig.dt,
         dd: runtimeConfig.dd,
         sigma: runtimeConfig.sigma,
         n: runtimeConfig.n,
@@ -964,9 +1109,11 @@ private func labCopyRuntimeConfig(
             gradientBoundary: resolvedBorder == "torus" ? "periodic" : "zero_pad",
             alphaMode: runtimeConfig.implementation.alphaMode,
             kernelProfile: runtimeConfig.implementation.kernelProfile,
+            growthProfile: runtimeConfig.implementation.growthProfile,
             flowClip: runtimeConfig.implementation.flowClip
         ),
         params: params ?? runtimeConfig.params,
+        randomParamRanges: runtimeConfig.randomParamRanges,
         initSeed: initSeed ?? runtimeConfig.initSeed,
         patches: patches ?? runtimeConfig.patches,
         aUniform: aUniform ?? runtimeConfig.aUniform,
@@ -983,4 +1130,36 @@ private func labCopyRuntimeConfig(
         beamMutation: runtimeConfig.beamMutation,
         interventions: runtimeConfig.interventions
     )
+}
+
+private func labCopyResolvedParams(
+    _ params: ResolvedParams,
+    r: [Float]? = nil,
+    m: [Float]? = nil,
+    s: [Float]? = nil,
+    h: [Float]? = nil,
+    R: Float? = nil
+) -> ResolvedParams {
+    ResolvedParams(
+        r: r ?? params.r,
+        b: params.b,
+        w: params.w,
+        a: params.a,
+        m: m ?? params.m,
+        s: s ?? params.s,
+        h: h ?? params.h,
+        R: R ?? params.R,
+        seed: params.seed
+    )
+}
+
+private func labClampedFinite(_ value: Float, to range: ClosedRange<Float>) -> Float? {
+    guard value.isFinite else { return nil }
+    return min(range.upperBound, max(range.lowerBound, value))
+}
+
+private extension Collection {
+    subscript(safe index: Index) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
 }

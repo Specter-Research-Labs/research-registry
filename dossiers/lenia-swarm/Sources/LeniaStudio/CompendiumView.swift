@@ -188,136 +188,162 @@ struct CompendiumLayoutView: View {
         selectedComparisonPair == nil ? "Compare Top 2 Results" : "Compare Selected"
     }
 
+    private var libraryName: String {
+        let trimmed = compendiumPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Choose a library" : URL(fileURLWithPath: trimmed).lastPathComponent
+    }
+
     var body: some View {
         NavigationSplitView {
-            VStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        TextField("DB path", text: $compendiumPath)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.caption)
-                        Button("Choose") { showPicker = true }
-                            .controlSize(.small)
-                        Button("Refresh") { refresh() }
-                            .controlSize(.small)
+            VStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        Label(libraryName, systemImage: "externaldrive")
+                            .font(.callout)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .help(compendiumPath)
+                        Spacer()
+                        if store.warehousePath != nil {
+                            Image(systemName: "circle.grid.2x2")
+                                .foregroundStyle(.secondary)
+                                .help("Warehouse sibling detected")
+                        }
                     }
 
-                    HStack(spacing: 6) {
-                        TextField("Search", text: $searchText)
+                    Picker("Catalog", selection: $catalogFilter) {
+                        ForEach(CompendiumCatalogFilter.allCases, id: \.self) { filter in
+                            Text(filter.rawValue).tag(filter)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+
+                    HStack(spacing: 10) {
+                        Toggle("Stable only", isOn: $stableOnly)
+                            .toggleStyle(.checkbox)
+
+                        TextField("Minimum score", text: $minScoreText)
                             .textFieldStyle(.roundedBorder)
-                            .focused($isSearchFocused)
-                        Toggle("Stable", isOn: $stableOnly)
-                            .toggleStyle(.switch)
-                            .fixedSize()
+                            .frame(width: 110)
+
+                        Spacer(minLength: 4)
+
+                        Picker("View", selection: $viewMode) {
+                            ForEach(CompendiumViewMode.allCases, id: \.self) { mode in
+                                Image(systemName: mode == .list ? "list.bullet" : "square.grid.2x2")
+                                    .tag(mode)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .fixedSize()
+                        .accessibilityLabel("Library view")
                     }
                     .font(.caption)
 
-                    HStack(spacing: 6) {
-                        TextField("Min", text: $minScoreText)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                        Picker("", selection: $catalogFilter) {
-                            ForEach(CompendiumCatalogFilter.allCases, id: \.self) { filter in
-                                Text(filter.rawValue).tag(filter)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .fixedSize()
+                    HStack {
                         Stepper("Limit \(limit)", value: $limit, in: 25...2000, step: 25)
                             .fixedSize()
-
                         Spacer()
-
-                        Picker("", selection: $viewMode) {
-                            ForEach(CompendiumViewMode.allCases, id: \.self) { mode in
-                                Text(mode.rawValue).tag(mode)
+                        if comparisonPair != nil {
+                            Button(comparisonButtonTitle) {
+                                showComparison = true
                             }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .accessibilityLabel(comparisonButtonTitle)
                         }
-                        .pickerStyle(.segmented)
-                        .fixedSize()
                     }
                     .font(.caption)
-
-                    if comparisonPair != nil {
-                        Button(comparisonButtonTitle) {
-                            showComparison = true
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
-                        .accessibilityLabel(comparisonButtonTitle)
-                    }
                 }
                 .padding([.top, .horizontal])
 
                 if store.isLoading {
-                    ProgressView()
-                        .padding(.vertical, 4)
-                } else {
-                    VStack(spacing: 6) {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
                         Text(store.status)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        if store.warehousePath != nil {
-                            Label("Warehouse sibling detected", systemImage: "circle.grid.2x2")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
+                    }
+                    .padding(.vertical, 4)
+                } else if !store.creatures.isEmpty {
+                    HStack(spacing: 6) {
+                        Text(store.status)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
                         if let error = store.error {
-                            Label(error, systemImage: "exclamationmark.triangle.fill")
-                                .font(.caption2)
-                                .foregroundStyle(store.creatures.isEmpty ? StudioPalette.ember : StudioPalette.mutedInk)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(store.creatures.isEmpty ? StudioPalette.ember.opacity(0.12) : StudioPalette.surfaceSoft)
-                                )
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(StudioPalette.ember)
+                                .help(error)
                         }
                     }
+                    .padding(.horizontal)
                     .padding(.bottom, 4)
                 }
 
-                switch viewMode {
-                case .list:
-                    List(store.creatures, selection: $selectedCreatureIds) { entry in
-                        CompendiumRow(entry: entry)
-                            .tag(entry.id)
-                            .contextMenu { compendiumContextMenu(for: entry) }
+                if store.creatures.isEmpty, !store.isLoading {
+                    ContentUnavailableView {
+                        Label("No creatures", systemImage: "books.vertical")
+                    } description: {
+                        Text(
+                            store.status == "Compendium not found"
+                                ? "Choose a compendium database to browse creatures."
+                                : (store.error ?? store.status)
+                        )
+                    } actions: {
+                        Button("Choose Library") { showPicker = true }
                     }
-                case .grid:
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                            ForEach(store.creatures) { entry in
-                                CompendiumGridCell(entry: entry, isSelected: selectedCreatureIds.contains(entry.id))
-                                    .onTapGesture {
-                                        if NSEvent.modifierFlags.contains(.command) {
-                                            if selectedCreatureIds.contains(entry.id) {
-                                                selectedCreatureIds.remove(entry.id)
-                                            } else if selectedCreatureIds.count < 2 {
-                                                selectedCreatureIds.insert(entry.id)
-                                            }
-                                        } else {
-                                            selectedCreatureIds = [entry.id]
-                                        }
-                                    }
-                                    .contextMenu { compendiumContextMenu(for: entry) }
-                            }
+                } else {
+                    switch viewMode {
+                    case .list:
+                        List(store.creatures, selection: $selectedCreatureIds) { entry in
+                            CompendiumRow(entry: entry)
+                                .tag(entry.id)
+                                .contextMenu { compendiumContextMenu(for: entry) }
                         }
-                        .padding(.horizontal)
+                    case .grid:
+                        ScrollView {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
+                                ForEach(store.creatures) { entry in
+                                    CompendiumGridCell(entry: entry, isSelected: selectedCreatureIds.contains(entry.id))
+                                        .onTapGesture {
+                                            if NSEvent.modifierFlags.contains(.command) {
+                                                if selectedCreatureIds.contains(entry.id) {
+                                                    selectedCreatureIds.remove(entry.id)
+                                                } else if selectedCreatureIds.count < 2 {
+                                                    selectedCreatureIds.insert(entry.id)
+                                                }
+                                            } else {
+                                                selectedCreatureIds = [entry.id]
+                                            }
+                                        }
+                                        .contextMenu { compendiumContextMenu(for: entry) }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
                 }
             }
+            .navigationSplitViewColumnWidth(min: 320, ideal: 390, max: 520)
         } detail: {
             if let entry = selectedCreature {
                 CompendiumDetailView(entry: entry)
             } else {
                 ContentUnavailableView(
-                    "Select an entry",
-                    systemImage: "sparkles",
-                    description: Text("Choose an entry from the compendium list")
+                    "Choose a creature",
+                    systemImage: "sparkles.rectangle.stack",
+                    description: Text("Select a creature to inspect its behavior, lineage, and replay contract.")
                 )
             }
         }
+        .navigationTitle("Library")
+        .navigationSplitViewStyle(.balanced)
+        .searchable(text: $searchText, placement: .sidebar, prompt: "Search creatures")
+        .searchFocused($isSearchFocused)
         .onAppear {
             if compendiumPath.isEmpty, let defaultPath = defaultCompendiumPath() {
                 compendiumPath = defaultPath
@@ -325,17 +351,40 @@ struct CompendiumLayoutView: View {
             refresh()
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Search") { isSearchFocused = true }
-                    .keyboardShortcut("f", modifiers: .command)
-                    .hidden()
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Toggle View") {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    isSearchFocused = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .accessibilityLabel("Search creatures")
+                .help("Search creatures")
+
+                Button {
                     viewMode = viewMode == .list ? .grid : .list
+                } label: {
+                    Image(systemName: viewMode == .list ? "square.grid.2x2" : "list.bullet")
                 }
                 .keyboardShortcut("g", modifiers: .command)
-                .hidden()
+                .accessibilityLabel(viewMode == .list ? "Show grid" : "Show list")
+                .help(viewMode == .list ? "Show grid" : "Show list")
+
+                Button {
+                    showPicker = true
+                } label: {
+                    Image(systemName: "folder")
+                }
+                .accessibilityLabel("Choose library")
+                .help("Choose library")
+
+                Button {
+                    refresh()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .accessibilityLabel("Refresh library")
+                .help("Refresh library")
             }
         }
         .onChange(of: compendiumPath) { _, _ in scheduleRefresh() }

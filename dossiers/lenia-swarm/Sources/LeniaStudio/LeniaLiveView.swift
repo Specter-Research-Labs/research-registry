@@ -127,7 +127,35 @@ struct LeniaLiveView: View {
             } else {
                 ZStack {
                     Color.black
-                    ProgressView().controlSize(.large)
+                    if let failure = simulationModel.failure {
+                        VStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.title)
+                                .foregroundStyle(StudioPalette.ember)
+                            Text(failure.title)
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                            Text(failure.message)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: 520)
+                                .textSelection(.enabled)
+                            if failure.canPreviewWithoutReplay {
+                                Button("Preview without replay") {
+                                    simulationModel.restart(
+                                        creature: creature,
+                                        savedCreature: savedCreature,
+                                        replaySource: nil
+                                    )
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
+                        }
+                        .padding(28)
+                    } else {
+                        ProgressView().controlSize(.large)
+                    }
                 }
             }
         }
@@ -358,6 +386,8 @@ struct LeniaLiveView: View {
                 Text(simulationModel.runtimeLabel)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(simulationModel.stats)
             }
 
             if displayMode == .render, zoom > 1.01 {
@@ -371,6 +401,10 @@ struct LeniaLiveView: View {
                 .monospacedDigit()
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: 220, alignment: .trailing)
+                .help(simulationModel.stats)
         }
         .controlSize(.small)
         .padding(.horizontal)
@@ -522,8 +556,10 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
     @Published var displayFps = 0.0
     @Published var availableProjections: [LabFieldProjection] = [.matter]
     @Published var runtimeLabel = "Synthetic preview"
+    @Published private(set) var failure: LiveSimulationFailure?
 
     private var task: Task<Void, Never>?
+    private var generation = LiveSimulationGeneration()
     private let gridSize = 128
     private let diagnosticCadence = 4
     private var diagnosticsEnabled = false
@@ -542,6 +578,7 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
     }
 
     func stop() {
+        generation.advance()
         task?.cancel()
         task = nil
     }
@@ -551,7 +588,6 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         savedCreature: SavedCreature? = nil,
         replaySource: StudioReplayReference? = nil
     ) {
-        stop()
         displayFrame = nil
         diagnosticImages = nil
         diagnosticTelemetry = nil
@@ -561,6 +597,7 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         stepCount = 0
         displayFps = 0
         availableProjections = [.matter]
+        failure = nil
         runtimeLabel = replaySource == nil ? "Synthetic preview" : "Loading replay"
         start(creature: creature, savedCreature: savedCreature, replaySource: replaySource)
     }
@@ -571,6 +608,7 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         replaySource: StudioReplayReference? = nil
     ) {
         stop()
+        let runGeneration = generation.value
 
         let gridSize = self.gridSize
         let diagnosticCadence = self.diagnosticCadence
@@ -646,7 +684,11 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                                     return channelMap.asArray(Float.self)
                                 }
                             )
-                            await self?.applyDisplayFrame(frame, projection: selectedProjection)
+                            await self?.applyDisplayFrame(
+                                frame,
+                                projection: selectedProjection,
+                                generation: runGeneration
+                            )
                             renderedProjection = selectedProjection
                         }
                         try? await Task.sleep(for: .milliseconds(100))
@@ -718,7 +760,8 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                         displayFps: displayFps,
                         sample: sample,
                         diagnostics: diagnosticImages,
-                        telemetry: diagnosticTelemetry
+                        telemetry: diagnosticTelemetry,
+                        generation: runGeneration
                     )
 
                     let elapsed = ContinuousClock.now - frameStart
@@ -726,7 +769,13 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
                     if remaining > .zero { try? await Task.sleep(for: remaining) }
                 }
             } catch {
-                await self?.applyFailure("Runtime load failed: \(error.localizedDescription)")
+                await self?.applyFailure(
+                    LiveSimulationFailure(
+                        message: "Runtime load failed: \(error.localizedDescription)",
+                        canPreviewWithoutReplay: replaySource != nil
+                    ),
+                    generation: runGeneration
+                )
             }
         }
     }
@@ -752,9 +801,11 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         displayFps: Double,
         sample: MetricSample,
         diagnostics: DiagnosticImageSet?,
-        telemetry: DiagnosticTelemetry?
+        telemetry: DiagnosticTelemetry?,
+        generation: UInt
     ) {
-        applyDisplayFrame(frame, projection: projection)
+        guard self.generation.matches(generation) else { return }
+        applyDisplayFrame(frame, projection: projection, generation: generation)
         availableProjections = projections
         self.runtimeLabel = runtimeLabel
         stepCount = step
@@ -770,16 +821,45 @@ class LiveSimulationModel: ObservableObject, @unchecked Sendable {
         }
     }
 
-    private func applyDisplayFrame(_ frame: LeniaFieldFrame, projection: LabFieldProjection) {
-        guard projection == currentProjection else { return }
+    private func applyDisplayFrame(
+        _ frame: LeniaFieldFrame,
+        projection: LabFieldProjection,
+        generation: UInt
+    ) {
+        guard self.generation.matches(generation), projection == currentProjection else { return }
         displayFrame = frame
     }
 
-    private func applyFailure(_ message: String) {
+    private func applyFailure(_ failure: LiveSimulationFailure, generation: UInt) {
+        guard self.generation.matches(generation) else { return }
         displayFrame = nil
         availableProjections = [.matter]
-        runtimeLabel = "Replay failed"
-        stats = message
+        runtimeLabel = failure.canPreviewWithoutReplay ? "Replay failed" : "Runtime failed"
+        stats = failure.message
+        self.failure = failure
+    }
+}
+
+struct LiveSimulationFailure: Equatable, Sendable {
+    let message: String
+    let canPreviewWithoutReplay: Bool
+
+    var title: String {
+        canPreviewWithoutReplay ? "Replay unavailable" : "Preview unavailable"
+    }
+}
+
+struct LiveSimulationGeneration: Equatable, Sendable {
+    private(set) var value: UInt = 0
+
+    @discardableResult
+    mutating func advance() -> UInt {
+        value &+= 1
+        return value
+    }
+
+    func matches(_ candidate: UInt) -> Bool {
+        candidate == value
     }
 }
 

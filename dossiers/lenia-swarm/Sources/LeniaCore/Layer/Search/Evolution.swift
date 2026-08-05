@@ -2147,7 +2147,11 @@ public final class EvolutionEngine {
     }
 
     private func objectiveUsesTranslatedShapeOverlap(_ objective: String) -> Bool {
-        objective == "coherent_transport" || objective == "body_locomotion"
+        objective == "coherent_transport" ||
+            objective == "body_locomotion" ||
+            (objective == "organismness" &&
+                (esConfig.fitness.translatedShapeOverlapMin != nil ||
+                    esConfig.fitness.occupiedGrowthMax != nil))
     }
 
     private func deadSnapshot() -> CenterSnapshot {

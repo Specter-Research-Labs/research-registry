@@ -124,6 +124,10 @@ public actor LeniaInteractiveEngine {
         await runtime.materializeStateSnapshot()
     }
 
+    public func restoreStateSnapshot(_ snapshot: FlowSandboxStateSnapshot) async throws {
+        try await runtime.restoreStateSnapshot(snapshot)
+    }
+
     public func telemetry() async -> FlowSandboxRuntimeTelemetry {
         await runtime.telemetry()
     }

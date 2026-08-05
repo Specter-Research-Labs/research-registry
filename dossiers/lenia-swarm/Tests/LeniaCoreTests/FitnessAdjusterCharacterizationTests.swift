@@ -136,7 +136,7 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
         )
     }
 
-    private func makeEngine(objective: String) -> EvolutionEngine {
+    private func makeEngine(objective: String, fitness: FitnessConfig? = nil) -> EvolutionEngine {
         let statePatch = InitStatePatchConfig(
             center: [16, 16], width: 4, height: 4, channels: 1,
             values: [Float](repeating: 0.0, count: 4 * 4)
@@ -150,7 +150,7 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
         let esConfig = ESConfig(
             outputDir: "/tmp/fitness-characterization",
             generations: 1, population: 2, sigma: 0.01, learningRate: 0.01,
-            seed: 123, steps: 2, fitness: batteryFitness(objective: objective),
+            seed: 123, steps: 2, fitness: fitness ?? batteryFitness(objective: objective),
             fitnessShaping: "raw", initPatch: nil, initialInitPatchValues: nil,
             paramRanges: nil, obstacleField: nil
         )
@@ -172,6 +172,29 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
         XCTAssertEqual(bodyLoco, GOLDEN_BODY, accuracy: 1e-4)
         XCTAssertEqual(coherent, GOLDEN_COHERENT, accuracy: 1e-4)
         XCTAssertEqual(organism, GOLDEN_ORGANISM, accuracy: 1e-4)
+    }
+
+    func testOrganismnessTemporalGuardsCaptureRequiredMeasurements() throws {
+        let fitness = FitnessConfig(
+            objective: "organismness",
+            targetStep: 2,
+            angleThreshold: 0.0,
+            translatedShapeOverlapMin: 0.0,
+            occupiedGrowthMax: 10.0,
+            organismnessPenalty: 1.0,
+            morphologyThreshold: 0.03
+        )
+        let engine = makeEngine(objective: "organismness", fitness: fitness)
+        let candidates = engine.sampleMAPElitesInitialCandidates(
+            count: 1,
+            sigma: 0.0,
+            includeParent: true
+        )
+
+        let evaluations = try engine.evaluateMAPElitesCandidates(candidates, descriptorNames: [])
+
+        XCTAssertEqual(evaluations.count, 1)
+        XCTAssertTrue(evaluations[0].fitness.isFinite)
     }
 }
 

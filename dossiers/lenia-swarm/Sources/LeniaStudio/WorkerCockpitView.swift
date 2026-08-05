@@ -339,7 +339,8 @@ struct WorkerHomeView: View {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top, spacing: 16) {
                     heroPreviewPane
-                        .frame(maxWidth: .infinity)
+                        .frame(minWidth: 520, maxWidth: .infinity)
+                        .layoutPriority(1)
                     heroSummaryPane
                         .frame(width: 340, alignment: .topLeading)
                 }
@@ -433,22 +434,13 @@ struct WorkerHomeView: View {
         if let heroEntry {
             CockpitLivePreview(entry: heroEntry)
         } else {
-            ContentUnavailableView(
-                "Waiting for a discovery",
-                systemImage: "sparkles",
-                description: Text("The first stable or high-scoring creature will anchor this cockpit.")
-            )
-            .frame(maxWidth: .infinity, minHeight: 320)
-            .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [StudioPalette.stageTop, StudioPalette.stageBottom],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
+            ContentUnavailableView("Waiting for a discovery", systemImage: "sparkles")
+                .foregroundStyle(Color.white.opacity(0.72))
+                .frame(maxWidth: .infinity, minHeight: 320)
+                .background(
+                    RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous)
+                        .fill(StudioPalette.stageBottom)
+                )
         }
     }
 
@@ -465,7 +457,7 @@ struct WorkerHomeView: View {
             if let heroEntry {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(heroEntry.name)
-                        .font(.system(.title2, design: .serif, weight: .semibold))
+                        .font(.title2.weight(.semibold))
                         .foregroundStyle(StudioPalette.ink)
                     Text(heroEntry.subtitle)
                         .font(.caption)
@@ -479,20 +471,24 @@ struct WorkerHomeView: View {
                 }
 
                 HStack {
-                    Button("Open Inspector") {
+                    Button {
                         selection = .creature(heroEntry)
+                    } label: {
+                        Label("Inspect", systemImage: "scope")
                     }
                     .buttonStyle(.borderedProminent)
 
-                    Button("Add To Compare") {
+                    Button {
                         appState.addCompareEntry(heroEntry)
+                    } label: {
+                        Label("Compare", systemImage: "plus.rectangle.on.rectangle")
                     }
                     .buttonStyle(.bordered)
                 }
             } else {
-                Text("Join a sweep or wait for local discoveries to start filling the cockpit.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Label("No featured specimen", systemImage: "scope")
+                    .font(StudioType.bodySmall)
+                    .foregroundStyle(StudioPalette.mutedInk)
             }
 
             Divider()
@@ -525,7 +521,7 @@ struct WorkerHomeView: View {
     }
 
     private var localDiscoveriesSurface: some View {
-        StudioSurface(title: "Local Discoveries", subtitle: "Your best and newest signals") {
+        StudioSurface(title: "Local Discoveries") {
             if localEntries.isEmpty {
                 Text("No local discoveries yet")
                     .font(.caption)
@@ -547,7 +543,7 @@ struct WorkerHomeView: View {
     }
 
     private var activityFeedSurface: some View {
-        StudioSurface(title: "Activity Feed", subtitle: "Recent motion across your worker and the cluster") {
+        StudioSurface(title: "Activity Feed") {
             WorkerActivityFeedView(items: Array(appState.activityFeed.prefix(8)))
         }
         .frame(maxWidth: .infinity)
@@ -566,11 +562,7 @@ private struct CockpitLivePreview: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                LinearGradient(
-                    colors: [StudioPalette.stageTop, StudioPalette.stageBottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                StudioPalette.stageBottom
 
                 if let frame = model.displayFrame {
                     LeniaLabStageView(
@@ -604,10 +596,10 @@ private struct CockpitLivePreview: View {
             .padding(.vertical, 10)
             .background(.thinMaterial)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(StudioPalette.hairline, lineWidth: 1)
+            RoundedRectangle(cornerRadius: StudioLayout.panelRadius, style: .continuous)
+                .stroke(StudioPalette.hairline.opacity(0.72), lineWidth: StudioLayout.hairline)
         )
         .onAppear {
             model.start(
@@ -692,17 +684,13 @@ struct ArenaJoinSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Arena Lobby")
-                .font(.system(.title2, design: .serif, weight: .semibold))
-
-            Text("Pick one of your collected creatures, optionally qualify it, and watch the lobby fill before the simulation starts.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.title2.weight(.semibold))
 
             if appState.library.isEmpty {
                 ContentUnavailableView(
                     "No Creatures",
                     systemImage: "tray",
-                    description: Text("You need at least one collected creature before joining an arena.")
+                    description: Text("The collection is empty.")
                 )
             } else {
                 ScrollView {

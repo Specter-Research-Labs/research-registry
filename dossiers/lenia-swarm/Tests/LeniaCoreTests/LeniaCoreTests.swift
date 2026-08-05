@@ -3402,6 +3402,11 @@ final class LeniaCoreTests: XCTestCase {
         )
         let kernels = compileKernels(params: params, config: config, c0: [0], c1: [[0]])
         let engine = FlowLeniaBatched(config: config, kernels: kernels)
+        let worldFrameEngine = FlowLeniaBatched(
+            config: config,
+            kernels: kernels,
+            recenterAdditive: false
+        )
         var values = [Float](repeating: 0, count: 16 * 16)
         values[10 * 16 + 8] = 1.0
         let state = MLXArray(values).reshaped([1, 16, 16, 1])
@@ -3413,6 +3418,11 @@ final class LeniaCoreTests: XCTestCase {
         expected[8 * 16 + 8] = 1.0
 
         XCTAssertEqual(recentered.asArray(Float.self), expected)
+
+        _ = worldFrameEngine.stepUncompiled(state)
+        let worldFramed = worldFrameEngine.stepUncompiled(state)
+        eval(worldFramed)
+        XCTAssertEqual(worldFramed.asArray(Float.self), values)
     }
 
     func testLeniaBreeder2024ReplayCapturesExactRequestedSteps() throws {
@@ -6644,6 +6654,37 @@ final class LeniaCoreTests: XCTestCase {
 
         let refreshed = await runtime.snapshot(refreshMetrics: true)
         XCTAssertGreaterThan(refreshed.metrics.foodMean, stale.metrics.foodMean)
+    }
+
+    func testFlowSandboxPauseRemainsResponsiveWhenFrameBudgetIsExceeded() async throws {
+        let (_, _, _, params) = makeTestSetup()
+        let runtime = FlowSandboxRuntime(
+            params: params,
+            gridPreset: .standard256,
+            backend: .mlx
+        )
+        await runtime.setSpeedCap(hz: 240)
+        await runtime.start()
+        try await Task.sleep(for: .milliseconds(120))
+
+        let pauseRequestedAt = ContinuousClock.now
+        await runtime.pause()
+        XCTAssertLessThan(
+            ContinuousClock.now - pauseRequestedAt,
+            .seconds(1),
+            "Pause must not be starved when a simulation step exceeds its frame budget"
+        )
+        let telemetry = await runtime.telemetry()
+        XCTAssertGreaterThan(
+            telemetry.lastStepDurationMs,
+            4,
+            "The regression fixture must exercise the over-budget pacing branch"
+        )
+        let paused = await runtime.snapshot()
+        try await Task.sleep(for: .milliseconds(80))
+        let stable = await runtime.snapshot()
+        XCTAssertEqual(stable.step, paused.step)
+        await runtime.stop()
     }
 
     func testFlowSandboxMetricsReduceFieldsInOneCanonicalPass() {

@@ -36,19 +36,19 @@ struct MainLayoutView: View {
             }
             .tag(StudioSurfaceSelection.lab)
 
+            NavigationStack {
+                CompendiumLayoutView()
+            }
+            .tabItem {
+                Label("Library", systemImage: "books.vertical")
+            }
+            .tag(StudioSurfaceSelection.compendium)
+
             ClusterSurfaceView()
                 .tabItem {
                     Label("Cluster", systemImage: "point.3.connected.trianglepath.dotted")
                 }
                 .tag(StudioSurfaceSelection.cluster)
-
-            NavigationStack {
-                CompendiumLayoutView()
-            }
-            .tabItem {
-                Label("Compendium", systemImage: "books.vertical")
-            }
-            .tag(StudioSurfaceSelection.compendium)
         }
         .onAppear {
             selection = preferredStudioSurface(
@@ -839,7 +839,7 @@ struct DisconnectedView: View {
             Text("Not Connected")
                 .font(.title2)
 
-            Text("Lenia Lab and the Compendium stay available offline. Connect here when you want host or worker cluster flows.")
+            Text("The Lab and Library stay available offline. Connect here when you want host or worker cluster flows.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
