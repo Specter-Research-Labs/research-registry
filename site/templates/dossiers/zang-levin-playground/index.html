@@ -9,6 +9,231 @@
         <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="stylesheet" href="../../style.css?v=20260518-sitecss" />
+        <style>
+            :root {
+                --zl-ink: #15171a;
+                --zl-muted: #616873;
+                --zl-faint: #9aa5b5;
+                --zl-rule: #d8dde6;
+                --zl-paper: #ffffff;
+                --zl-mono: "Berkeley Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+            }
+
+            .site-shell {
+                max-width: 1100px;
+            }
+
+            .zl-figure {
+                margin: 26px 0;
+                border: 1px solid var(--zl-rule);
+                background: var(--zl-paper);
+            }
+
+            .zl-fig-head {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 6px 18px;
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--zl-rule);
+                font-family: var(--zl-mono);
+                font-size: 10px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+
+            .zl-fig-head .zl-fig-name {
+                color: var(--zl-ink);
+            }
+
+            .zl-fig-head .zl-fig-meta {
+                color: var(--zl-muted);
+            }
+
+            .zl-stage {
+                padding: 14px;
+            }
+
+            .zl-stage svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+            .zl-panels {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+
+            @media (max-width: 720px) {
+                .zl-panels {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .zl-panel {
+                border: 1px solid var(--zl-rule);
+            }
+
+            .zl-panel-head {
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--zl-rule);
+                font-family: var(--zl-mono);
+                font-size: 10px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--zl-ink);
+            }
+
+            .zl-panel-head span {
+                color: var(--zl-muted);
+            }
+
+            .zl-panel svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+            .zl-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 20px;
+                padding: 10px 14px 0;
+                font-family: var(--zl-mono);
+                font-size: 10px;
+                letter-spacing: 0.06em;
+                color: var(--zl-muted);
+            }
+
+            .zl-legend .zl-key {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+            }
+
+            .zl-swatch {
+                display: inline-block;
+                width: 11px;
+                height: 11px;
+                border: 1px solid var(--zl-ink);
+            }
+
+            .zl-controls {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px;
+                border-top: 1px solid var(--zl-rule);
+                font-family: var(--zl-mono);
+            }
+
+            .zl-btn {
+                appearance: none;
+                border: 1px solid var(--zl-ink);
+                background: var(--zl-paper);
+                color: var(--zl-ink);
+                font-family: var(--zl-mono);
+                font-size: 10px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                padding: 6px 14px;
+                cursor: pointer;
+            }
+
+            .zl-btn:hover {
+                background: var(--zl-ink);
+                color: var(--zl-paper);
+            }
+
+            .zl-speed {
+                display: inline-flex;
+                border: 1px solid var(--zl-ink);
+            }
+
+            .zl-speed button {
+                appearance: none;
+                border: 0;
+                border-right: 1px solid var(--zl-ink);
+                background: var(--zl-paper);
+                color: var(--zl-ink);
+                font-family: var(--zl-mono);
+                font-size: 10px;
+                padding: 6px 10px;
+                cursor: pointer;
+            }
+
+            .zl-speed button:last-child {
+                border-right: 0;
+            }
+
+            .zl-speed button.is-on {
+                background: var(--zl-ink);
+                color: var(--zl-paper);
+            }
+
+            .zl-counter {
+                margin-left: auto;
+                font-size: 10px;
+                letter-spacing: 0.08em;
+                color: var(--zl-muted);
+            }
+
+            .zl-chips {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                border-top: 1px solid var(--zl-rule);
+            }
+
+            .zl-chip {
+                padding: 10px 14px;
+                border-right: 1px solid var(--zl-rule);
+            }
+
+            .zl-chip:last-child {
+                border-right: 0;
+            }
+
+            .zl-chip-k {
+                display: block;
+                font-family: var(--zl-mono);
+                font-size: 9.5px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--zl-muted);
+                margin-bottom: 4px;
+            }
+
+            .zl-chip-v {
+                display: block;
+                font-family: "IBM Plex Serif", Georgia, serif;
+                font-size: 15px;
+                color: var(--zl-ink);
+            }
+
+            .zl-chart-label {
+                font-family: var(--zl-mono);
+                font-size: 10px;
+                letter-spacing: 0.08em;
+                fill: #616873;
+            }
+
+            .zl-chart-label-sm {
+                font-family: var(--zl-mono);
+                font-size: 8.5px;
+                letter-spacing: 0.06em;
+                fill: #9aa5b5;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .zl-controls {
+                    display: none;
+                }
+            }
+        </style>
     </head>
     <body>
         <div class="site-shell">
@@ -57,6 +282,52 @@
                         the move operator while holding that decision rule
                         fixed.
                     </p>
+
+                    <figure class="zl-figure" id="zl-dip-fig">
+                        <div class="zl-fig-head">
+                            <span class="zl-fig-name">Figure A — Dip replay</span>
+                            <span class="zl-fig-meta">1D cell-view Bubble &middot; n=30 &middot; 3 movable frozen cells &middot; seed 447</span>
+                        </div>
+                        <div class="zl-legend">
+                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>active Bubble cell (height = value)</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:repeating-linear-gradient(45deg,#15171a 0 2px,#ffffff 2px 4px)"></span>frozen cell (damaged, never initiates)</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:rgba(43,179,163,0.18);border-color:#2bb3a3"></span>confirmed dip in error trace</span>
+                        </div>
+                        <div class="zl-stage">
+                            <svg id="zl-dip-svg" viewBox="0 0 780 410" role="img"
+                                aria-label="Animated replay of a cell-view bubble sort. Bars show cell values sorting over time while a trace of monotonicity errors below shows temporary rises that later recover.">
+                            </svg>
+                        </div>
+                        <div class="zl-controls">
+                            <button class="zl-btn" data-play type="button">Pause</button>
+                            <button class="zl-btn" data-replay type="button">Replay</button>
+                            <span class="zl-speed" role="group" aria-label="Playback speed">
+                                <button data-speed="1" class="is-on" type="button">1&times;</button>
+                                <button data-speed="2" type="button">2&times;</button>
+                                <button data-speed="4" type="button">4&times;</button>
+                            </span>
+                            <span class="zl-counter" data-counter></span>
+                        </div>
+                        <div class="zl-chips">
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Runs with &ge;1 dip</span>
+                                <span class="zl-chip-v">100% (50 trials)</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Mean dips per run</span>
+                                <span class="zl-chip-v">34.2</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Mean dip depth</span>
+                                <span class="zl-chip-v">0.9 errors</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Mean recovery</span>
+                                <span class="zl-chip-v">2.4 swaps</span>
+                            </div>
+                        </div>
+                    </figure>
+
                     <p>
                         Algotype clustering turns out not to require attraction,
                         type-aware communication, or explicit coordination.
@@ -79,6 +350,82 @@
                         produce spatial pattern without any explicit patterning
                         instruction.
                     </p>
+
+                    <figure class="zl-figure" id="zl-cluster-fig">
+                        <div class="zl-fig-head">
+                            <span class="zl-fig-name">Figure B — Paired clustering replay</span>
+                            <span class="zl-fig-meta">n=50 &middot; 25/25 algotype mix &middot; paired seed 1038</span>
+                        </div>
+                        <div class="zl-legend">
+                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Bubble — active from the start</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>type-2 algotype — active</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#f1dbd1;border-color:#d99c82"></span>type-2 — gated, waiting for sorted prefix</span>
+                        </div>
+                        <div class="zl-stage">
+                            <div class="zl-panels">
+                                <div class="zl-panel">
+                                    <div class="zl-panel-head">Bubble + Insertion <span>&middot; gate intact</span></div>
+                                    <svg id="zl-panel-ins" viewBox="0 0 380 210" role="img"
+                                        aria-label="Cell array of a Bubble and Insertion mixture sorting itself; Insertion cells are shown in the accent color while gated and turn white as their prefix sorts.">
+                                    </svg>
+                                </div>
+                                <div class="zl-panel">
+                                    <div class="zl-panel-head">Bubble + InsertionNoWait <span>&middot; gate ablated</span></div>
+                                    <svg id="zl-panel-nw" viewBox="0 0 380 210" role="img"
+                                        aria-label="The same initial array with the waiting gate removed; type-2 cells are active from the start and no segregation emerges.">
+                                    </svg>
+                                </div>
+                            </div>
+                            <svg id="zl-cluster-svg" viewBox="0 0 780 300" role="img"
+                                aria-label="Activity raster and clustering curve for both runs. In the gated run, Insertion activity concentrates late and clustering rises well above the random-mixing baseline; in the ablated run activity is spread evenly and clustering stays near baseline.">
+                            </svg>
+                        </div>
+                        <div class="zl-controls">
+                            <button class="zl-btn" data-play type="button">Pause</button>
+                            <button class="zl-btn" data-replay type="button">Replay</button>
+                            <span class="zl-speed" role="group" aria-label="Playback speed">
+                                <button data-speed="1" class="is-on" type="button">1&times;</button>
+                                <button data-speed="2" type="button">2&times;</button>
+                                <button data-speed="4" type="button">4&times;</button>
+                            </span>
+                            <span class="zl-counter" data-counter></span>
+                        </div>
+                        <div class="zl-chips">
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">&Delta;C, gate intact (exemplar)</span>
+                                <span class="zl-chip-v" data-chip="ins-dc">&mdash;</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">&Delta;C, gate ablated (exemplar)</span>
+                                <span class="zl-chip-v" data-chip="nw-dc">&mdash;</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Insertion mean move time</span>
+                                <span class="zl-chip-v" data-chip="ins-t">&mdash;</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Archived &Delta;C (20 trials)</span>
+                                <span class="zl-chip-v">0.166 vs 0.091</span>
+                            </div>
+                        </div>
+                    </figure>
+
+                    <figure class="zl-figure" id="zl-gate-fig">
+                        <div class="zl-fig-head">
+                            <span class="zl-fig-name">Figure C — The gate, not the algotype</span>
+                            <span class="zl-fig-meta">clustering increase &Delta;C &middot; 30 archived trials per pair</span>
+                        </div>
+                        <div class="zl-legend">
+                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>no waiting gate</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Insertion-style waiting gate (native or transplanted)</span>
+                        </div>
+                        <div class="zl-stage">
+                            <svg id="zl-gate-svg" viewBox="0 0 780 250" role="img"
+                                aria-label="Bar chart of clustering increase across six paired conditions. All three gated pairs sit high; all three gate-free pairs sit low.">
+                            </svg>
+                        </div>
+                    </figure>
+
                     <p>
                         Robustness depends on operator class and obstacle
                         semantics. Movable frozen cells can be displaced;
@@ -137,5 +484,780 @@
                 <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
             </main>
         </div>
+
+        <script>
+            (function () {
+                "use strict";
+
+                // ----------------------------------------------------------
+                // Faithful sequential port of the published cell-view model
+                // (dossiers/zang-levin-playground/modules/multithread/*).
+                // Sequential random scheduler = matched-substrate equivalent
+                // of the threaded substrate (Exp 26: schedules agree on
+                // outcomes). Frozen cells never initiate; actives may swap
+                // with them (movable semantics), as in compute_dip_stats.py.
+                // ----------------------------------------------------------
+
+                function mulberry32(seed) {
+                    let a = seed >>> 0;
+                    return function () {
+                        a |= 0;
+                        a = (a + 0x6d2b79f5) | 0;
+                        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+                        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+                    };
+                }
+
+                function shuffled(arr, rng) {
+                    for (let i = arr.length - 1; i > 0; i--) {
+                        const j = Math.floor(rng() * (i + 1));
+                        const tmp = arr[i];
+                        arr[i] = arr[j];
+                        arr[j] = tmp;
+                    }
+                    return arr;
+                }
+
+                function monotonicityErrors(order) {
+                    // compute_dip_stats.get_monotonicity: adjacent descents.
+                    let errors = 0;
+                    for (let i = 1; i < order.length; i++) {
+                        if (order[i][0] < order[i - 1][0]) errors++;
+                    }
+                    return errors;
+                }
+
+                function typeClustering(order) {
+                    // run_clustering_ablation.measure_type_clustering.
+                    let adjacent = 0;
+                    for (let i = 0; i < order.length - 1; i++) {
+                        if (order[i][1] === order[i + 1][1]) adjacent++;
+                    }
+                    return adjacent / (order.length - 1);
+                }
+
+                function prefixSortedOK(order) {
+                    // InsertionSortCell.is_enable_to_move without frozen cells:
+                    // values left of i must be non-decreasing.
+                    const ok = new Array(order.length);
+                    let prev = -1;
+                    let flag = true;
+                    ok[0] = true;
+                    for (let i = 1; i < order.length; i++) {
+                        if (order[i - 1][0] < prev) flag = false;
+                        prev = order[i - 1][0];
+                        ok[i] = flag;
+                    }
+                    return ok;
+                }
+
+                // --- dip detection: port of compute_dip_stats.find_dips ---
+                function findPeaksProminence1(arr) {
+                    const peaks = [];
+                    for (let i = 1; i < arr.length - 1; i++) {
+                        if (arr[i] > arr[i - 1] && arr[i] >= arr[i + 1]) {
+                            if (arr[i] === arr[i + 1]) continue; // plateau: skip
+                            let leftMin = arr[i];
+                            for (let j = i - 1; j >= 0; j--) {
+                                if (arr[j] > arr[i]) break;
+                                leftMin = Math.min(leftMin, arr[j]);
+                            }
+                            let rightMin = arr[i];
+                            for (let j = i + 1; j < arr.length; j++) {
+                                if (arr[j] > arr[i]) break;
+                                rightMin = Math.min(rightMin, arr[j]);
+                            }
+                            if (arr[i] - Math.max(leftMin, rightMin) >= 1) peaks.push(i);
+                        }
+                    }
+                    return peaks;
+                }
+
+                function findDips(arr) {
+                    if (arr.length < 3) return [];
+                    const dips = [];
+                    for (const peakIdx of findPeaksProminence1(arr)) {
+                        const peakVal = arr[peakIdx];
+                        let startIdx = peakIdx;
+                        while (startIdx > 0 && arr[startIdx - 1] < arr[startIdx]) startIdx--;
+                        const startVal = arr[startIdx];
+                        let endIdx = peakIdx;
+                        while (endIdx < arr.length && arr[endIdx] > startVal) endIdx++;
+                        if (endIdx < arr.length) {
+                            dips.push({
+                                startIdx: startIdx + 1, // +1: display arrays are
+                                peakIdx: peakIdx + 1,   // prepended with the
+                                endIdx: endIdx + 1,     // initial state
+                                startVal,
+                                peakVal,
+                                depth: peakVal - startVal,
+                            });
+                        }
+                    }
+                    return dips;
+                }
+
+                // --- 1D Bubble run with movable frozen cells ---------------
+                function runDipTrial(seed, n, nFrozen) {
+                    const rng = mulberry32(seed);
+                    const values = shuffled(
+                        Array.from({ length: n }, (_, i) => i),
+                        rng
+                    );
+                    const cells = values.map((v) => ({ value: v, frozen: false }));
+                    const frozenIdx = shuffled(
+                        Array.from({ length: n }, (_, i) => i),
+                        rng
+                    );
+                    for (let k = 0; k < nFrozen; k++) cells[frozenIdx[k]].frozen = true;
+
+                    const order = () => cells.map((c) => [c.value, c.frozen ? 1 : 0]);
+                    const activeSorted = () => {
+                        let prev = -1;
+                        for (const c of cells) {
+                            if (c.frozen) continue;
+                            if (c.value < prev) return false;
+                            prev = c.value;
+                        }
+                        return true;
+                    };
+
+                    const states = [{ order: order(), swap: null }];
+                    const errors = [monotonicityErrors(order())];
+                    const rawErrors = [];
+                    let attempts = 0;
+                    while (!activeSorted() && attempts < 400000) {
+                        attempts++;
+                        const i = Math.floor(rng() * n);
+                        const c = cells[i];
+                        if (c.frozen) continue;
+                        let target = -1;
+                        if (rng() < 0.5) {
+                            if (i + 1 < n && c.value > cells[i + 1].value) target = i + 1;
+                        } else {
+                            if (i - 1 >= 0 && c.value < cells[i - 1].value) target = i - 1;
+                        }
+                        if (target < 0) continue;
+                        const tmp = cells[i];
+                        cells[i] = cells[target];
+                        cells[target] = tmp;
+                        const e = monotonicityErrors(order());
+                        rawErrors.push(e);
+                        errors.push(e);
+                        states.push({
+                            order: order(),
+                            swap: [Math.min(i, target), Math.max(i, target)],
+                        });
+                    }
+                    return { states, errors, dips: findDips(rawErrors) };
+                }
+
+                // --- paired clustering runs --------------------------------
+                function runClusteringPair(seed, n) {
+                    const initRng = mulberry32(seed);
+                    const values = shuffled(
+                        Array.from({ length: n }, (_, i) => i),
+                        initRng
+                    );
+                    const typePos = shuffled(
+                        [
+                            ...Array(n / 2).fill(0),
+                            ...Array(n / 2).fill(1),
+                        ],
+                        initRng
+                    );
+
+                    function run(gated) {
+                        const rng = mulberry32(seed * 7919 + 13);
+                        const cells = values.map((v, i) => ({
+                            value: v,
+                            type: typePos[i],
+                        }));
+                        const order = () => cells.map((c) => [c.value, c.type]);
+                        const sorted = () => {
+                            for (let i = 1; i < n; i++) {
+                                if (cells[i].value < cells[i - 1].value) return false;
+                            }
+                            return true;
+                        };
+                        const states = [{ order: order(), swap: null }];
+                        const clust = [typeClustering(order())];
+                        const events = [];
+                        let attempts = 0;
+                        while (!sorted() && attempts < 400000) {
+                            attempts++;
+                            const i = Math.floor(rng() * n);
+                            const c = cells[i];
+                            let target = -1;
+                            if (c.type === 0) {
+                                // BubbleSortCell.move: random direction,
+                                // swap when inverted with that neighbor.
+                                if (rng() < 0.5) {
+                                    if (i + 1 < n && c.value > cells[i + 1].value) target = i + 1;
+                                } else {
+                                    if (i - 1 >= 0 && c.value < cells[i - 1].value) target = i - 1;
+                                }
+                            } else {
+                                // InsertionSortCell.move: sorted-prefix gate,
+                                // then swap left when smaller than left neighbor.
+                                // InsertionNoWaitCell drops the gate check.
+                                if (gated) {
+                                    let prev = -1;
+                                    let enabled = true;
+                                    for (let k = 0; k < i; k++) {
+                                        if (cells[k].value < prev) {
+                                            enabled = false;
+                                            break;
+                                        }
+                                        prev = cells[k].value;
+                                    }
+                                    if (!enabled) continue;
+                                }
+                                if (i - 1 >= 0 && c.value < cells[i - 1].value) target = i - 1;
+                            }
+                            if (target < 0) continue;
+                            events.push(c.type);
+                            const tmp = cells[i];
+                            cells[i] = cells[target];
+                            cells[target] = tmp;
+                            clust.push(typeClustering(order()));
+                            states.push({
+                                order: order(),
+                                swap: [Math.min(i, target), Math.max(i, target)],
+                            });
+                        }
+                        return { states, clust, events };
+                    }
+
+                    return { ins: run(true), nw: run(false) };
+                }
+
+                // ----------------------------------------------------------
+                // Rendering helpers
+                // ----------------------------------------------------------
+                const SVGNS = "http://www.w3.org/2000/svg";
+                const INK = "#15171a";
+                const TEAL = "#2bb3a3";
+                const TEAL_TINT = "rgba(43,179,163,0.13)";
+                const ROSE = "#d99c82"; // rust at ~60% over white: hairline accents
+                const ROSE_LIGHT = "#f1dbd1"; // rust at ~22% over white: gated bars
+
+                function el(tag, attrs, parent) {
+                    const node = document.createElementNS(SVGNS, tag);
+                    for (const key in attrs) node.setAttribute(key, attrs[key]);
+                    if (parent) parent.appendChild(node);
+                    return node;
+                }
+
+                function makePlayer(fig, steps, baseRate, render) {
+                    const playBtn = fig.querySelector("[data-play]");
+                    const replayBtn = fig.querySelector("[data-replay]");
+                    const speedBtns = Array.from(fig.querySelectorAll("[data-speed]"));
+                    let pos = 0;
+                    let speed = 1;
+                    let playing = false;
+                    let lastTs = null;
+
+                    function frame(ts) {
+                        if (!playing) return;
+                        if (lastTs === null) lastTs = ts;
+                        pos += ((ts - lastTs) / 1000) * baseRate * speed;
+                        lastTs = ts;
+                        if (pos >= steps - 1) {
+                            pos = steps - 1;
+                            playing = false;
+                            playBtn.textContent = "Play";
+                        }
+                        render(Math.floor(pos));
+                        if (playing) requestAnimationFrame(frame);
+                    }
+
+                    function play() {
+                        if (pos >= steps - 1) pos = 0;
+                        playing = true;
+                        lastTs = null;
+                        playBtn.textContent = "Pause";
+                        requestAnimationFrame(frame);
+                    }
+
+                    function pause() {
+                        playing = false;
+                        playBtn.textContent = "Play";
+                    }
+
+                    playBtn.addEventListener("click", () => (playing ? pause() : play()));
+                    replayBtn.addEventListener("click", () => {
+                        pos = 0;
+                        render(0);
+                        play();
+                    });
+                    speedBtns.forEach((btn) => {
+                        btn.addEventListener("click", () => {
+                            speed = Number(btn.dataset.speed);
+                            speedBtns.forEach((b) => b.classList.toggle("is-on", b === btn));
+                        });
+                    });
+
+                    return {
+                        play,
+                        pause,
+                        jumpToEnd() {
+                            pos = steps - 1;
+                            render(steps - 1);
+                        },
+                        element: fig,
+                    };
+                }
+
+                function autoplayWhenVisible(player) {
+                    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                        player.jumpToEnd();
+                        return;
+                    }
+                    const observer = new IntersectionObserver(
+                        (entries) => {
+                            entries.forEach((entry) => {
+                                if (entry.isIntersecting) player.play();
+                                else player.pause();
+                            });
+                        },
+                        { threshold: 0.35 }
+                    );
+                    observer.observe(player.element);
+                }
+
+                // ----------------------------------------------------------
+                // Figure A — delayed gratification dip replay
+                // ----------------------------------------------------------
+                (function buildDipFigure() {
+                    const fig = document.getElementById("zl-dip-fig");
+                    const svg = document.getElementById("zl-dip-svg");
+                    const counter = fig.querySelector("[data-counter]");
+                    const data = runDipTrial(447, 30, 3);
+                    const states = data.states;
+                    const errors = data.errors;
+                    const dips = data.dips;
+                    const n = 30;
+                    const nSwaps = states.length - 1;
+
+                    // geometry
+                    const barTop = 8;
+                    const barBase = 168;
+                    const barMaxH = 148;
+                    const slot = 780 / n;
+                    const traceTop = 218;
+                    const traceBottom = 388;
+                    const traceL = 36;
+                    const traceR = 772;
+                    const maxErr = Math.max(...errors);
+                    const yTick = maxErr <= 12 ? 3 : 5;
+                    const xPos = (k) => traceL + (k / nSwaps) * (traceR - traceL);
+                    const yPos = (e) => traceBottom - (e / (Math.ceil(maxErr / yTick) * yTick)) * (traceBottom - traceTop);
+
+                    // defs: hatch for frozen cells, clip for live trace
+                    const defs = el("defs", {}, svg);
+                    const hatch = el("pattern", {
+                        id: "zl-hatch",
+                        width: 5,
+                        height: 5,
+                        patternUnits: "userSpaceOnUse",
+                        patternTransform: "rotate(45)",
+                    }, defs);
+                    el("rect", { width: 5, height: 5, fill: "#ffffff" }, hatch);
+                    el("line", { x1: 0, y1: 0, x2: 0, y2: 5, stroke: INK, "stroke-width": 1.6 }, hatch);
+                    const clip = el("clipPath", { id: "zl-dip-clip" }, defs);
+                    const clipRect = el("rect", { x: 0, y: 0, width: 0, height: 410 }, clip);
+
+                    // --- cell array ---
+                    el("text", { x: 0, y: barTop + 6, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "CELL ARRAY";
+                    const bars = [];
+                    for (let i = 0; i < n; i++) {
+                        bars.push(el("rect", {
+                            x: i * slot + 2,
+                            y: barBase - 10,
+                            width: slot - 4,
+                            height: 10,
+                            fill: INK,
+                        }, svg));
+                    }
+                    el("line", { x1: 0, y1: barBase + 1, x2: 780, y2: barBase + 1, stroke: INK, "stroke-width": 1 }, svg);
+
+                    // --- error trace ---
+                    el("text", { x: 0, y: traceTop - 8, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "MONOTONICITY ERRORS";
+                    const yMax = Math.ceil(maxErr / yTick) * yTick;
+                    for (let v = 0; v <= yMax; v += yTick) {
+                        const y = yPos(v);
+                        el("line", { x1: traceL, y1: y, x2: traceR, y2: y, stroke: v === 0 ? INK : "#e4e8ef", "stroke-width": 1 }, svg);
+                        const label = el("text", { x: traceL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
+                        label.textContent = v;
+                    }
+
+                    // dip bands (revealed when confirmed)
+                    const dipRects = dips.map((d) => {
+                        const g = el("g", { visibility: "hidden" }, svg);
+                        el("rect", {
+                            x: xPos(d.startIdx),
+                            y: traceTop,
+                            width: Math.max(1.5, xPos(d.endIdx) - xPos(d.startIdx)),
+                            height: traceBottom - traceTop,
+                            fill: TEAL_TINT,
+                        }, g);
+                        el("circle", {
+                            cx: xPos(d.peakIdx),
+                            cy: yPos(d.peakVal),
+                            r: 2.2,
+                            fill: TEAL,
+                        }, g);
+                        return g;
+                    });
+
+                    // deepest dip annotation
+                    const deepest = dips.reduce((a, b) => (b.depth > a.depth ? b : a));
+                    const annotation = el("g", { visibility: "hidden" }, svg);
+                    const ax = Math.min(xPos(deepest.peakIdx) + 8, traceR - 210);
+                    const ay = Math.max(yPos(deepest.peakVal) - 26, traceTop + 12);
+                    el("line", {
+                        x1: xPos(deepest.peakIdx), y1: yPos(deepest.peakVal) - 4,
+                        x2: ax, y2: ay + 4,
+                        stroke: TEAL, "stroke-width": 0.8,
+                    }, annotation);
+                    el("text", { x: ax, y: ay, class: "zl-chart-label", fill: TEAL }, annotation)
+                        .textContent = "deepest dip: errors " + deepest.startVal + " \u2192 " + deepest.peakVal +
+                            ", recovered in " + (deepest.endIdx - deepest.peakIdx) + " swaps";
+
+                    // full trajectory, faint preview
+                    const pts = errors.map((e, k) => xPos(k).toFixed(1) + "," + yPos(e).toFixed(1)).join(" ");
+                    el("polyline", { points: pts, fill: "none", stroke: INK, "stroke-width": 1, opacity: 0.16 }, svg);
+                    // live trajectory, clipped
+                    const live = el("g", { "clip-path": "url(#zl-dip-clip)" }, svg);
+                    el("polyline", { points: pts, fill: "none", stroke: INK, "stroke-width": 1.6 }, live);
+                    const playhead = el("line", { x1: traceL, y1: traceTop, x2: traceL, y2: traceBottom, stroke: INK, "stroke-width": 1, opacity: 0.45 }, svg);
+                    const errDot = el("circle", { cx: traceL, cy: yPos(errors[0]), r: 3, fill: INK }, svg);
+
+                    // x axis labels
+                    el("text", { x: traceL, y: traceBottom + 14, class: "zl-chart-label-sm" }, svg).textContent = "0";
+                    const endLabel = el("text", { x: traceR, y: traceBottom + 14, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
+                    endLabel.textContent = nSwaps + " swaps";
+
+                    function render(k) {
+                        const state = states[k];
+                        for (let i = 0; i < n; i++) {
+                            const v = state.order[i][0];
+                            const frozen = state.order[i][1] === 1;
+                            const h = ((v + 1) / n) * barMaxH;
+                            const bar = bars[i];
+                            bar.setAttribute("y", barBase - h);
+                            bar.setAttribute("height", h);
+                            bar.setAttribute("fill", frozen ? "url(#zl-hatch)" : INK);
+                            bar.setAttribute("stroke", "none");
+                        }
+                        if (state.swap) {
+                            bars[state.swap[0]].setAttribute("stroke", TEAL);
+                            bars[state.swap[0]].setAttribute("stroke-width", "1.5");
+                            bars[state.swap[1]].setAttribute("stroke", TEAL);
+                            bars[state.swap[1]].setAttribute("stroke-width", "1.5");
+                        }
+
+                        clipRect.setAttribute("width", xPos(k));
+                        playhead.setAttribute("x1", xPos(k));
+                        playhead.setAttribute("x2", xPos(k));
+                        errDot.setAttribute("cx", xPos(k));
+                        errDot.setAttribute("cy", yPos(errors[k]));
+
+                        let confirmed = 0;
+                        dips.forEach((d, i) => {
+                            const done = k >= d.endIdx;
+                            dipRects[i].setAttribute("visibility", done ? "visible" : "hidden");
+                            if (done) confirmed++;
+                        });
+                        annotation.setAttribute(
+                            "visibility",
+                            k >= deepest.endIdx ? "visible" : "hidden"
+                        );
+                        counter.textContent =
+                            "swap " + k + "/" + nSwaps +
+                            " \u00b7 errors " + errors[k] +
+                            " \u00b7 dips confirmed " + confirmed + "/" + dips.length;
+                    }
+
+                    render(0);
+                    autoplayWhenVisible(makePlayer(fig, states.length, 14, render));
+                })();
+
+                // ----------------------------------------------------------
+                // Figure B — paired clustering replay
+                // ----------------------------------------------------------
+                (function buildClusterFigure() {
+                    const fig = document.getElementById("zl-cluster-fig");
+                    const counter = fig.querySelector("[data-counter]");
+                    const pair = runClusteringPair(1038, 50);
+                    const n = 50;
+                    const nSwaps = pair.ins.states.length - 1;
+
+                    // exemplar chips
+                    const dc = (clust) => Math.max(...clust) - 0.5;
+                    const insDC = dc(pair.ins.clust);
+                    const nwDC = dc(pair.nw.clust);
+                    const insEvents = pair.ins.events;
+                    const lateIdx = insEvents
+                        .map((t, k) => (t === 1 ? k : null))
+                        .filter((x) => x !== null);
+                    const meanMove =
+                        lateIdx.reduce((s, x) => s + x, 0) / lateIdx.length / (insEvents.length - 1);
+                    fig.querySelector('[data-chip="ins-dc"]').textContent = "+" + insDC.toFixed(2);
+                    fig.querySelector('[data-chip="nw-dc"]').textContent = "+" + nwDC.toFixed(2);
+                    fig.querySelector('[data-chip="ins-t"]').textContent =
+                        meanMove.toFixed(2) + " (0 = early, 1 = late)";
+
+                    // --- cell panels ---
+                    function buildPanel(svgId, gated) {
+                        const svg = document.getElementById(svgId);
+                        const slot = 380 / n;
+                        const base = 196;
+                        const maxH = 168;
+                        const bars = [];
+                        for (let i = 0; i < n; i++) {
+                            bars.push(el("rect", {
+                                x: i * slot + 0.8,
+                                y: base - 10,
+                                width: slot - 1.6,
+                                height: 10,
+                            }, svg));
+                        }
+                        el("line", { x1: 0, y1: base + 1, x2: 380, y2: base + 1, stroke: INK, "stroke-width": 1 }, svg);
+                        return { bars, base, maxH, slot, gated };
+                    }
+                    const panelIns = buildPanel("zl-panel-ins", true);
+                    const panelNw = buildPanel("zl-panel-nw", false);
+
+                    // gated flags per state for the Insertion panel
+                    const gatedFlags = pair.ins.states.map((state) => {
+                        const ok = prefixSortedOK(state.order);
+                        return state.order.map((c, i) => c[1] === 1 && !ok[i]);
+                    });
+
+                    function renderPanel(panel, state, gatedRow) {
+                        for (let i = 0; i < n; i++) {
+                            const v = state.order[i][0];
+                            const type = state.order[i][1];
+                            const h = ((v + 1) / n) * panel.maxH;
+                            const bar = panel.bars[i];
+                            bar.setAttribute("y", panel.base - h);
+                            bar.setAttribute("height", h);
+                            if (type === 0) {
+                                bar.setAttribute("fill", INK);
+                                bar.setAttribute("stroke", "none");
+                            } else if (panel.gated && gatedRow[i]) {
+                                bar.setAttribute("fill", ROSE_LIGHT);
+                                bar.setAttribute("stroke", "none");
+                            } else {
+                                bar.setAttribute("fill", "#ffffff");
+                                bar.setAttribute("stroke", INK);
+                                bar.setAttribute("stroke-width", "0.8");
+                            }
+                        }
+                        if (state.swap) {
+                            panel.bars[state.swap[0]].setAttribute("stroke", ROSE);
+                            panel.bars[state.swap[0]].setAttribute("stroke-width", "1.6");
+                            panel.bars[state.swap[1]].setAttribute("stroke", ROSE);
+                            panel.bars[state.swap[1]].setAttribute("stroke-width", "1.6");
+                        }
+                    }
+
+                    // --- shared chart: activity raster + clustering curve ---
+                    const svg = document.getElementById("zl-cluster-svg");
+                    const chartL = 84;
+                    const chartR = 772;
+                    const xPos = (k) => chartL + (k / nSwaps) * (chartR - chartL);
+
+                    const defs = el("defs", {}, svg);
+                    const clip = el("clipPath", { id: "zl-cl-clip" }, defs);
+                    const clipRect = el("rect", { x: 0, y: 0, width: 0, height: 300 }, clip);
+
+                    // raster lanes
+                    const lanes = [
+                        { label: "B + Insertion", events: pair.ins.events, y: 30 },
+                        { label: "B + NoWait", events: pair.nw.events, y: 62 },
+                    ];
+                    el("text", { x: 0, y: 16, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "SWAP ACTIVITY BY ALGOTYPE";
+                    const rasterLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
+                    lanes.forEach((lane) => {
+                        const label = el("text", { x: 0, y: lane.y + 9, class: "zl-chart-label-sm" }, svg);
+                        label.textContent = lane.label;
+                        el("line", { x1: chartL, y1: lane.y + 13, x2: chartR, y2: lane.y + 13, stroke: "#e4e8ef", "stroke-width": 1 }, svg);
+                        lane.events.forEach((type, j) => {
+                            el("rect", {
+                                x: xPos(j + 1) - 0.5,
+                                y: lane.y,
+                                width: 1.4,
+                                height: 12,
+                                fill: type === 0 ? INK : ROSE,
+                                opacity: type === 0 ? 0.55 : 0.9,
+                            }, rasterLive);
+                        });
+                    });
+
+                    // clustering curve
+                    const curveTop = 118;
+                    const curveBottom = 272;
+                    const yMin = 0.4;
+                    const yMax = 0.85;
+                    const yPos = (c) => curveBottom - ((c - yMin) / (yMax - yMin)) * (curveBottom - curveTop);
+                    el("text", { x: 0, y: curveTop - 8, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "CLUSTERING C(t)";
+                    [0.4, 0.5, 0.6, 0.7, 0.8].forEach((v) => {
+                        const y = yPos(v);
+                        el("line", { x1: chartL, y1: y, x2: chartR, y2: y, stroke: v === 0.5 ? "none" : "#e4e8ef", "stroke-width": 1 }, svg);
+                        const label = el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
+                        label.textContent = v.toFixed(1);
+                    });
+                    // random-mixing baseline
+                    el("line", { x1: chartL, y1: yPos(0.5), x2: chartR, y2: yPos(0.5), stroke: "#616873", "stroke-width": 1, "stroke-dasharray": "4 4" }, svg);
+                    el("text", { x: chartR, y: yPos(0.5) - 5, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
+                        .textContent = "random mixing \u03a3p\u00b2 = 0.5";
+
+                    const curveLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
+                    function curvePoints(clust) {
+                        return clust.map((c, k) => xPos(k).toFixed(1) + "," + yPos(c).toFixed(1)).join(" ");
+                    }
+                    // faint full previews
+                    el("polyline", { points: curvePoints(pair.ins.clust), fill: "none", stroke: ROSE, "stroke-width": 1, opacity: 0.14 }, svg);
+                    el("polyline", { points: curvePoints(pair.nw.clust), fill: "none", stroke: INK, "stroke-width": 1, opacity: 0.12 }, svg);
+                    el("polyline", { points: curvePoints(pair.ins.clust), fill: "none", stroke: ROSE, "stroke-width": 1.8 }, curveLive);
+                    el("polyline", { points: curvePoints(pair.nw.clust), fill: "none", stroke: INK, "stroke-width": 1.8 }, curveLive);
+
+                    // peak markers
+                    function peakMarker(clust, color, dcVal, dy) {
+                        const peak = Math.max(...clust);
+                        const k = clust.indexOf(peak);
+                        const g = el("g", { visibility: "hidden" }, svg);
+                        el("circle", { cx: xPos(k), cy: yPos(peak), r: 3.2, fill: color }, g);
+                        const label = el("text", {
+                            x: Math.min(xPos(k) + 8, chartR - 90),
+                            y: yPos(peak) + dy,
+                            class: "zl-chart-label",
+                            fill: color,
+                        }, g);
+                        label.textContent = "peak " + peak.toFixed(2) + " \u00b7 \u0394C +" + dcVal.toFixed(2);
+                        return { g, k };
+                    }
+                    const insPeak = peakMarker(pair.ins.clust, ROSE, insDC, -8);
+                    const nwPeak = peakMarker(pair.nw.clust, INK, nwDC, 14);
+
+                    const playhead = el("line", { x1: chartL, y1: 24, x2: chartL, y2: curveBottom, stroke: INK, "stroke-width": 1, opacity: 0.4 }, svg);
+                    el("text", { x: chartL, y: curveBottom + 14, class: "zl-chart-label-sm" }, svg).textContent = "0";
+                    const endLabel = el("text", { x: chartR, y: curveBottom + 14, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
+                    endLabel.textContent = nSwaps + " swaps";
+                    el("line", { x1: chartL + 8, y1: curveTop - 11, x2: chartL + 26, y2: curveTop - 11, stroke: ROSE, "stroke-width": 2 }, svg);
+                    el("text", { x: chartL + 32, y: curveTop - 8, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "gate intact";
+                    el("line", { x1: chartL + 108, y1: curveTop - 11, x2: chartL + 126, y2: curveTop - 11, stroke: INK, "stroke-width": 2 }, svg);
+                    el("text", { x: chartL + 132, y: curveTop - 8, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "gate ablated";
+
+                    function render(k) {
+                        renderPanel(panelIns, pair.ins.states[k], gatedFlags[k]);
+                        renderPanel(panelNw, pair.nw.states[k], null);
+                        clipRect.setAttribute("width", xPos(k));
+                        playhead.setAttribute("x1", xPos(k));
+                        playhead.setAttribute("x2", xPos(k));
+                        insPeak.g.setAttribute("visibility", k >= insPeak.k ? "visible" : "hidden");
+                        nwPeak.g.setAttribute("visibility", k >= nwPeak.k ? "visible" : "hidden");
+                        counter.textContent =
+                            "swap " + k + "/" + nSwaps +
+                            " \u00b7 C(t) " + pair.ins.clust[k].toFixed(2) +
+                            " vs " + pair.nw.clust[k].toFixed(2);
+                    }
+
+                    render(0);
+                    autoplayWhenVisible(makePlayer(fig, pair.ins.states.length, 40, render));
+                })();
+
+                // ----------------------------------------------------------
+                // Figure C — static aggregate: the gate, not the algotype
+                // ----------------------------------------------------------
+                (function buildGateFigure() {
+                    const svg = document.getElementById("zl-gate-svg");
+                    // Archived timing-transfer aggregate (exp27, seeds 40-42,
+                    // 10 trials each, 50 cells). s = temporal separation.
+                    const groups = [
+                        {
+                            label: "Bubble family",
+                            bars: [
+                                { name: "BubbleClone", dc: 0.155, s: 0.027, gate: false },
+                                { name: "DelayedBubble", dc: 0.176, s: 0.111, gate: true },
+                            ],
+                        },
+                        {
+                            label: "Gnome family",
+                            bars: [
+                                { name: "GnomeClone", dc: 0.126, s: 0.043, gate: false },
+                                { name: "DelayedGnome", dc: 0.167, s: 0.106, gate: true },
+                            ],
+                        },
+                        {
+                            label: "Native Insertion",
+                            bars: [
+                                { name: "InsertionNoWait", dc: 0.134, s: 0.033, gate: false },
+                                { name: "Insertion", dc: 0.170, s: 0.105, gate: true },
+                            ],
+                        },
+                    ];
+                    const chartL = 44;
+                    const chartR = 772;
+                    const chartTop = 26;
+                    const chartBottom = 196;
+                    const yMax = 0.2;
+                    const yPos = (v) => chartBottom - (v / yMax) * (chartBottom - chartTop);
+
+                    [0, 0.05, 0.1, 0.15, 0.2].forEach((v) => {
+                        const y = yPos(v);
+                        el("line", { x1: chartL, y1: y, x2: chartR, y2: y, stroke: v === 0 ? INK : "#e4e8ef", "stroke-width": 1 }, svg);
+                        const label = el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
+                        label.textContent = v.toFixed(2);
+                    });
+
+                    const groupW = (chartR - chartL) / groups.length;
+                    const barW = 62;
+                    groups.forEach((group, gi) => {
+                        const gx = chartL + gi * groupW;
+                        const innerW = group.bars.length * (barW + 18) - 18;
+                        const startX = gx + (groupW - innerW) / 2;
+                        group.bars.forEach((bar, bi) => {
+                            const x = startX + bi * (barW + 18);
+                            const y = yPos(bar.dc);
+                            const rect = el("rect", {
+                                x, y,
+                                width: barW,
+                                height: chartBottom - y,
+                                fill: bar.gate ? INK : "#ffffff",
+                            }, svg);
+                            if (!bar.gate) {
+                                rect.setAttribute("stroke", INK);
+                                rect.setAttribute("stroke-width", "1");
+                            }
+                            const val = el("text", { x: x + barW / 2, y: y - 16, class: "zl-chart-label", "text-anchor": "middle", fill: INK }, svg);
+                            val.textContent = "\u0394C " + bar.dc.toFixed(3);
+                            const sep = el("text", { x: x + barW / 2, y: y - 5, class: "zl-chart-label-sm", "text-anchor": "middle" }, svg);
+                            sep.textContent = "s = " + bar.s.toFixed(3);
+                            const name = el("text", {
+                                x: x + barW / 2, y: chartBottom + 14,
+                                class: "zl-chart-label-sm", "text-anchor": "middle",
+                            }, svg);
+                            name.textContent = bar.name;
+                        });
+                        const glabel = el("text", {
+                            x: gx + groupW / 2, y: chartBottom + 32,
+                            class: "zl-chart-label", "text-anchor": "middle",
+                        }, svg);
+                        glabel.textContent = group.label;
+                    });
+                })();
+            })();
+        </script>
     </body>
 </html>
