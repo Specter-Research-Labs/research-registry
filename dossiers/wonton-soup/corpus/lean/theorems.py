@@ -1,5 +1,6 @@
 # ruff: noqa: E402, E501
 import re
+import hashlib
 from dataclasses import dataclass
 
 from prover.history import ExplorationHistory
@@ -44,11 +45,20 @@ class Theorem:
         unused_heads = sorted(attempted_heads - used_heads)
         if unused_heads:
             control_tactic = unused_heads[0]
-            interventions.append(Intervention(
-                name="control_null",
-                blocked={control_tactic},
-                is_control=True,
-            ))
+            interventions.append(
+                Intervention(
+                    name="control_null",
+                    blocked={control_tactic},
+                    is_control=True,
+                )
+            )
+            interventions.append(
+                Intervention(
+                    name="random_nonpath_control",
+                    blocked={_deterministic_nonpath_control(self.name, unused_heads)},
+                    is_control=True,
+                )
+            )
 
         return interventions
 
@@ -61,6 +71,16 @@ def _tactic_head(tactic: str) -> str | None:
     if _TACTIC_HEAD_RE.fullmatch(head) is None:
         return None
     return head.rstrip("0123456789") or head
+
+
+def _deterministic_nonpath_control(theorem_name: str, unused_heads: list[str]) -> str:
+    if not unused_heads:
+        raise ValueError("unused_heads must be non-empty")
+    if len(unused_heads) == 1:
+        return unused_heads[0]
+    digest = hashlib.sha256(theorem_name.encode("utf-8")).digest()
+    index = 1 + (int.from_bytes(digest[:8], "big") % (len(unused_heads) - 1))
+    return unused_heads[index]
 
 
 CORPUS: list[Theorem] = [

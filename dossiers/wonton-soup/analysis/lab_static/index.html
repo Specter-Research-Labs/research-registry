@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-theme="academic-light" data-density="compact">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wonton Lab</title>
+    <script>
+      (() => {
+        const theme = window.localStorage.getItem("wonton-lab-theme") || "academic-light";
+        const density = window.localStorage.getItem("wonton-lab-density") || "compact";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.density = density;
+      })();
+    </script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand-stack">
+        <div class="brand-kicker">Local Workbench</div>
+        <div class="brand-row">
+          <div class="brand">Wonton Lab</div>
+          <div class="brand-subtitle">launch, observe, inspect, analyze</div>
+        </div>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <button class="nav-box" data-action="select-view" data-view="dashboard">Dashboard</button>
+        <button class="nav-box" data-action="select-view" data-view="runs">Runs</button>
+        <button class="nav-box" data-action="select-view" data-view="contrasts">Contrasts</button>
+        <button class="nav-box" data-action="select-view" data-view="analysis">Analysis</button>
+        <button class="nav-box" data-action="select-view" data-view="notebook">Notebook</button>
+      </nav>
+      <div class="header-controls">
+        <label class="header-control">
+          <span>Theme</span>
+          <select id="theme-select">
+            <option value="academic-light">Academic Light</option>
+            <option value="slate-dark">Slate Dark</option>
+            <option value="og-dark">OG Dark</option>
+          </select>
+        </label>
+        <label class="header-control">
+          <span>Density</span>
+          <select id="density-select">
+            <option value="compact">Compact</option>
+            <option value="balanced">Balanced</option>
+            <option value="ultra-dense">Ultra Dense</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <div id="status-strip" class="status-strip"></div>
+
+    <main class="shell">
+      <aside class="sidebar">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Launch</h2>
+            <div class="panel-subtitle">real CLI jobs, no second execution stack</div>
+          </div>
+          <div id="launchers"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Jobs</h2>
+            <div class="panel-subtitle">live process state and output tail</div>
+          </div>
+          <div id="jobs-panel"></div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <div id="workspace-root"></div>
+      </section>
+    </main>
+
+    <dialog id="file-dialog" class="file-dialog">
+      <form method="dialog" class="dialog-header">
+        <div>
+          <div class="dialog-title" id="file-dialog-title">Artifact</div>
+          <div class="dialog-subtitle" id="file-dialog-subtitle"></div>
+        </div>
+        <button class="secondary-button">Close</button>
+      </form>
+      <div class="dialog-body" id="file-dialog-body"></div>
+    </dialog>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

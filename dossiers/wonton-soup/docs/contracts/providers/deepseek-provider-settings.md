@@ -5,7 +5,8 @@ Runtime settings and reproducibility constraints for `DeepSeekTacticProvider`.
 ## Model and Loading Contract
 
 - Model ID: `l3lab/ntp-mathlib-context-deepseek-coder-1.3b`
-- Runtime: local MLX (`mlx_lm`)
+- Runtime: local MLX (`mlx_lm`) by default, or local Transformers with
+  `--deepseek-backend transformers`
 - Expected converted model location (default):
   - `$SPECTER_ARTIFACT_ROOT/wonton-soup/models/ntp-mathlib-deepseek-1.3b-mlx-bf16`
 - The MLX config must expose the rotary settings in the fields read by
@@ -17,6 +18,12 @@ Runtime settings and reproducibility constraints for `DeepSeekTacticProvider`.
 
 Implementation: `prover/providers/deepseek.py` (`_resolve_model_path`).
 
+The Transformers backend should point `--deepseek-model-path` at the local
+Hugging Face checkpoint directory. It loads `tokenizer.json` with
+`PreTrainedTokenizerFast` and explicit DeepSeek BOS/EOS tokens because the
+checkpoint metadata can otherwise select a slow Llama tokenizer that corrupts
+space tokens.
+
 ## Current Decoding Settings
 
 Current code path uses stochastic sampling:
@@ -27,6 +34,8 @@ Current code path uses stochastic sampling:
 - default `num_samples = 10`
 - MLX decoding uses `batch_generate(...)` over repeated prompt copies, not a
   Python-side serial loop
+- Transformers decoding uses `AutoModelForCausalLM.generate(...)` on MPS/CUDA/CPU
+  with the same sampling temperature/top-p defaults
 - prompt tokens are truncated to the 2048-token window by keeping both the prefix
   and suffix when the assembled prompt is too long
 - prompt encoding uses the raw `tokenizer.json` when available so ByteLevel
@@ -80,6 +89,8 @@ Expected cost drivers:
 
 Primary knobs affecting cost/variance:
 
+- `--deepseek-backend` (`mlx` or `transformers`)
+- `--deepseek-model-path`
 - `num_samples` (provider-level)
 - caller `n`
 - decoding params (`temp`, `top_p`, `max_new_tokens`)

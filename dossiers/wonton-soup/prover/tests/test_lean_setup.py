@@ -192,6 +192,52 @@ def test_save_results_writes_intervention_comparison_payloads(tmp_path: Path) ->
     }
 
 
+def test_save_results_marks_missing_ged_invalid(tmp_path: Path) -> None:
+    theorem = Theorem("t1", "theorem {name} : True := by trivial")
+    theorem_result = _minimal_theorem_result(theorem)
+    intervention_run = lean_mod.RunResult(
+        solved=True,
+        stats={},
+        graph=ProofGraph.for_search_trace(backend="lean"),
+        history=ExplorationHistory.create(theorem.name),
+        mcts_tree=MCTSTree.create(f"{theorem.name}:int-root", "True"),
+    )
+    theorem_result.interventions.append(
+        lean_mod.InterventionResult(
+            intervention=Intervention(name="block_intro", blocked={"intro"}),
+            wild_type=theorem_result.wild_type,
+            intervention_run=intervention_run,
+            ged=None,
+        )
+    )
+
+    lean_mod.save_results(
+        tmp_path,
+        [theorem_result],
+        crashed=[],
+        goal_sig_config=GoalSignatureConfig(scheme="text"),
+    )
+
+    comparison = json.loads(
+        (tmp_path / theorem.name / "block_intro_comparison.json").read_text(encoding="utf-8")
+    )
+    with gzip.open(tmp_path / "summary.json.gz", "rt") as handle:
+        summary = json.load(handle)
+
+    assert comparison["ged_search_graph"] == {
+        "value": None,
+        "normalized": None,
+        "valid": False,
+        "validity_notes": [],
+        "trace_source": "mcts",
+        "trace_completeness": "full",
+    }
+    assert summary["aggregates"]["ged_validity"]["ged_search_graph"] == {
+        "valid": 0,
+        "invalid": 1,
+    }
+
+
 def test_summarize_from_summary_prefers_saved_run_stats() -> None:
     summary = {
         "theorems": [{"wild_type": {"solved": False, "metrics": {"trajectory": {}}}}],

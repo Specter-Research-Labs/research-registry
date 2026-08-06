@@ -53,6 +53,7 @@ LEAN_PARSER_PREFIX_OPTION_NAMES = (
 
 LEAN_SHARED_OPTION_NAMES = LEAN_PARSER_PREFIX_OPTION_NAMES + (
     "mcts_mode",
+    "mcts_expansion_policy",
     "mcts_agents",
     "mcts_inflight",
     "mcts_block_fraction",
@@ -77,6 +78,7 @@ LEAN_SHARED_OPTION_NAMES = LEAN_PARSER_PREFIX_OPTION_NAMES + (
     "sampling",
     "deepseek_num_samples",
     "deepseek_model_path",
+    "deepseek_backend",
     "bfs_num_samples",
     "internlm_num_samples",
     "device",
@@ -90,6 +92,7 @@ LEAN_SHARED_OPTION_NAMES = LEAN_PARSER_PREFIX_OPTION_NAMES + (
     "resume",
     "analysis",
     "no_solution_artifacts",
+    "baseline_solved_only",
     "intervention_name",
     "extra_intervention",
 )
@@ -125,9 +128,11 @@ _DEFAULTS = {
     "tactic_ranker": "none",
     "tactic_ranker_alpha": 1.0,
     "mcts_mode": "centralized",
+    "mcts_expansion_policy": "all-successes",
     "workers": 1,
     "offset": 0,
     "goal_sig": "ast",
+    "deepseek_backend": "mlx",
 }
 
 _HELP = {
@@ -144,12 +149,16 @@ _HELP = {
     "theorem": "Theorem name",
     "lean_project": "Lean project path",
     "mcts_mode": "MCTS mode",
+    "mcts_expansion_policy": "MCTS expansion policy",
+    "deepseek_backend": "DeepSeek backend",
 }
 
 _CHOICES = {
     "mode": tuple(sorted(MODE_DEFAULTS)),
     "tactic_ranker": ("none", "family_prior"),
     "mcts_mode": ("centralized", "distributed"),
+    "mcts_expansion_policy": ("first-success", "all-successes"),
+    "deepseek_backend": ("mlx", "transformers"),
     "goal_sig": ("ast", "text"),
 }
 
@@ -197,6 +206,7 @@ _FLAG_OPTIONS = {
     "basin_blind",
     "analysis",
     "no_solution_artifacts",
+    "baseline_solved_only",
     "no_sync",
 }
 

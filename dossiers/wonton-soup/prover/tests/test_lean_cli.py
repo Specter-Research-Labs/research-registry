@@ -109,6 +109,9 @@ def test_run_from_args_multi_provider_uses_runtime_selection_for_top_run_config(
             str(project_path),
             "--providers",
             "reprover,deepseek",
+            "--deepseek-backend",
+            "transformers",
+            "--baseline-solved-only",
             "--run-id",
             "corpus-multi",
             "--resume",
@@ -145,6 +148,11 @@ def test_run_from_args_multi_provider_uses_runtime_selection_for_top_run_config(
         "error": None,
     }
     assert run_config["providers"] == ["reprover", "deepseek"]
+    assert run_config["mcts_expansion_policy"] == "all-successes"
+    assert run_config["mcts"]["expansion_policy"] == "all-successes"
+    assert run_config["skip_interventions_after_wild_failure"] is True
+    assert run_config["resolved"]["mcts_expansion_policy"] == "all-successes"
+    assert run_config["resolved"]["skip_interventions_after_wild_failure"] is True
     assert run_config["providers_meta"] == {
         "names": ["reprover", "deepseek"],
         "multi_provider": True,
@@ -152,3 +160,8 @@ def test_run_from_args_multi_provider_uses_runtime_selection_for_top_run_config(
     assert len(provider_calls) == 2
     assert provider_calls[0]["provider_name"] == "reprover"
     assert provider_calls[1]["provider_name"] == "deepseek"
+    assert provider_calls[0]["expansion_policy"] == "all-successes"
+    assert provider_calls[1]["expansion_policy"] == "all-successes"
+    assert provider_calls[0]["skip_interventions_after_wild_failure"] is True
+    assert provider_calls[1]["skip_interventions_after_wild_failure"] is True
+    assert provider_calls[1]["deepseek_backend"] == "transformers"

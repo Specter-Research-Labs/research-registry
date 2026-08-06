@@ -30,6 +30,7 @@ from orchestrator.lean_metadata import write_run_config as _write_run_config
 from orchestrator.lean_options import BUDGET_PRESETS
 from orchestrator.lean_progress import CorpusProgress
 from orchestrator.lean_progress import ProgressCallback as _ProgressCallback
+from prover.mcts import ExpansionPolicy, coerce_expansion_policy
 from run_capabilities import default_run_capabilities, normalize_run_capabilities
 from runtime_paths import (
     configured_remote_log_archives_root as configured_remote_logs_root,
@@ -195,7 +196,7 @@ class InterventionResult:
     intervention: Intervention
     wild_type: RunResult
     intervention_run: RunResult
-    ged: float
+    ged: float | None
     ged_normalized: float | None = None
     trajectory_comparison: TrajectoryComparison | None = None
 
@@ -853,6 +854,7 @@ async def run_corpus(
     use_sampling: bool = False,
     debug: bool = False,
     skip_interventions: bool = False,
+    skip_interventions_after_wild_failure: bool = False,
     block_easy: bool = False,
     corpus: str = "research",
     limit: int | None = None,
@@ -872,7 +874,9 @@ async def run_corpus(
     run_analysis: bool = False,
     trace_mcts: bool = False,
     collect_solution_artifacts: bool = True,
+    postprocess_metrics: bool = True,
     mcts_mode: str = "centralized",
+    expansion_policy: ExpansionPolicy | str = ExpansionPolicy.ALL_SUCCESSES,
     distributed_settings: dict[str, Any] | None = None,
     provider_label: str | None = None,
     mode: str | None = None,
@@ -889,6 +893,7 @@ async def run_corpus(
     tie_breaker_agent_factory: TieBreakerAgentFactory | None = None,
     deepseek_num_samples: int | None = None,
     deepseek_model_path: str | None = None,
+    deepseek_backend: str = "mlx",
     bfs_num_samples: int | None = None,
     internlm_num_samples: int | None = None,
     resume: bool = False,
@@ -908,6 +913,8 @@ async def run_corpus(
         raise ValueError("intervention_names require interventions to be enabled")
     if skip_interventions and extra_interventions:
         raise ValueError("extra_interventions require interventions to be enabled")
+    expansion_policy = coerce_expansion_policy(expansion_policy)
+    expansion_policy_value = expansion_policy.value
     logs_dir = resolve_logs_dir()
     if run_id:
         if not run_id.startswith("corpus-"):
@@ -960,6 +967,7 @@ async def run_corpus(
         block_easy,
         deepseek_num_samples=deepseek_num_samples,
         deepseek_model_path=deepseek_model_path,
+        deepseek_backend=deepseek_backend,
         bfs_num_samples=bfs_num_samples,
         internlm_num_samples=internlm_num_samples,
     )
@@ -1021,8 +1029,10 @@ async def run_corpus(
         selection_seed=selection_seed,
         search_seed=search_seed,
         skip_interventions=skip_interventions,
+        skip_interventions_after_wild_failure=skip_interventions_after_wild_failure,
         trace_mcts=trace_mcts,
         collect_solution_artifacts=collect_solution_artifacts,
+        postprocess_metrics=postprocess_metrics,
         run_analysis=run_analysis,
         device=device,
         num_workers=num_workers,
@@ -1040,6 +1050,7 @@ async def run_corpus(
         corpus_artifact_ref=corpus_artifact_ref,
         corpus_meta=corpus_meta,
         mcts_mode=mcts_mode,
+        expansion_policy=expansion_policy_value,
         distributed_snapshot=distributed_snapshot,
         selection_method=selection_method,
         selected_theorems=[t.name for t in theorem_corpus],
@@ -1167,6 +1178,7 @@ async def run_corpus(
                     seeds=seeds,
                     include_blind=basin_blind,
                     mcts_mode=mcts_mode,
+                    expansion_policy=expansion_policy,
                     distributed_settings=distributed_settings,
                     goal_cache=goal_cache,
                     goal_sig_config=goal_sig_config,
@@ -1241,9 +1253,11 @@ async def run_corpus(
                 budget_tiers,
                 counter,
                 skip_interventions,
+                skip_interventions_after_wild_failure,
                 goal_cache,
                 goal_sig_config,
                 mcts_mode,
+                expansion_policy,
                 distributed_settings,
                 progress,
                 log_dir,
@@ -1305,6 +1319,7 @@ async def run_corpus(
         budget_tiers=budget_tiers,
         skip_interventions=skip_interventions,
         run_analysis=run_analysis,
+        postprocess_metrics=postprocess_metrics,
     )
 
 

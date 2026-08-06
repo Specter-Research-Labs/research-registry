@@ -33,6 +33,10 @@ if [[ -d "/shared/specter-runtime" ]]; then
   export SPECTER_ARTIFACT_ROOT="${SPECTER_ARTIFACT_ROOT:-/shared/specter-runtime}"
 fi
 
+if [[ -z "${LEAN_PROJECT_PATH:-}" && -d "${ROOT_DIR}/lean_project" ]]; then
+  export LEAN_PROJECT_PATH="${ROOT_DIR}/lean_project"
+fi
+
 EXECUTE=0
 PHASE="all"
 
@@ -52,7 +56,10 @@ Key parameters:
   PROGRAM_ID=basin-width-experiment-v1
   CURATED_THEOREMS=experiments/basin_width_curated_v1.json
   CORPUS_ID=basin-width-curated-v1
+  SOURCE_REF=lean:solvable-1000-v1
   BASIN_SEEDS=20
+  THEOREM_LIMIT unset by default; set for local staged slices
+  THEOREM_OFFSET=0
   PROVIDERS=reprover (single provider for cleaner correlation)
 USAGE
 }
@@ -74,12 +81,17 @@ esac
 PROGRAM_ID="${PROGRAM_ID:-basin-width-experiment-v1}"
 CURATED_JSON="${ROOT_DIR}/experiments/basin_width_curated_v1.json"
 CORPUS_ID="${CORPUS_ID:-basin-width-curated-v1}"
+SOURCE_REF="${SOURCE_REF:-lean:solvable-1000-v1}"
 BASIN_SEEDS="${BASIN_SEEDS:-20}"
+BASIN_BLIND="${BASIN_BLIND:-0}"
+RESUME="${RESUME:-0}"
 LEAN_WORKERS="${LEAN_WORKERS:-8}"
 RESEARCH_BUDGET="${RESEARCH_BUDGET:-standard}"
 PROVIDER="${PROVIDER:-reprover}"
+THEOREM_LIMIT="${THEOREM_LIMIT:-}"
+THEOREM_OFFSET="${THEOREM_OFFSET:-0}"
 
-PROGRAM_RUN_ROOT="$(date +%Y-%m-%d)-${PROGRAM_ID}"
+PROGRAM_RUN_ROOT="${PROGRAM_RUN_ROOT:-$(date +%Y-%m-%d)-${PROGRAM_ID}}"
 
 quote_cmd() {
   local out=""
@@ -105,6 +117,13 @@ phase_header() {
   echo "== $1 =="
 }
 
+validate_limit_args() {
+  if [[ -z "${THEOREM_LIMIT}" && "${THEOREM_OFFSET}" != "0" ]]; then
+    echo "THEOREM_OFFSET requires THEOREM_LIMIT" >&2
+    exit 2
+  fi
+}
+
 build_corpus_from_curated() {
   phase_header "Build Corpus From Curated Theorems"
 
@@ -117,7 +136,8 @@ build_corpus_from_curated() {
   theorem_count="$(python3 -c "import json; print(len(json.load(open('${CURATED_JSON}'))['theorems']))")"
   echo "Curated theorems: ${theorem_count}"
 
-  local tmp_theorems="${ROOT_DIR}/experiments/.tmp_basin_width_theorems.txt"
+  local tmp_theorems="${ROOT_DIR}/tmp/basin_width_curated_theorems.txt"
+  mkdir -p "$(dirname "${tmp_theorems}")"
   python3 -c "
 import json
 with open('${CURATED_JSON}') as f:
@@ -128,39 +148,63 @@ with open('${tmp_theorems}', 'w') as f:
 
   run_cmd uv run python wonton.py corpus build-lean-subset \
     --corpus-id "${CORPUS_ID}" \
-    --source-ref "lean:solvable-1000-v1" \
+    --source-ref "${SOURCE_REF}" \
     --theorems-path "${tmp_theorems}"
 }
 
 run_basin_sweeps() {
   phase_header "Run Basin Sweeps (${BASIN_SEEDS} seeds)"
+  validate_limit_args
 
-  run_cmd uv run python wonton.py lean basin \
-    --seeds "${BASIN_SEEDS}" \
-    --blind \
-    --sampling \
-    -m research \
-    -c "lean:${CORPUS_ID}" \
-    -p "${PROVIDER}" \
-    -b "${RESEARCH_BUDGET}" \
-    --workers "${LEAN_WORKERS}" \
-    --plain \
-    --run-id "${PROGRAM_RUN_ROOT}/basin/provider=${PROVIDER}/seeds=${BASIN_SEEDS}" \
+  local cmd=(
+    uv run python wonton.py lean basin
+    --seeds "${BASIN_SEEDS}"
+    --sampling
+    -m research
+    -c "lean:${CORPUS_ID}"
+    -p "${PROVIDER}"
+    -b "${RESEARCH_BUDGET}"
+    --workers "${LEAN_WORKERS}"
+    --plain
+    --run-id "${PROGRAM_RUN_ROOT}/basin/provider=${PROVIDER}/seeds=${BASIN_SEEDS}"
     --no-sync
+  )
+  if [[ "${BASIN_BLIND}" == "1" ]]; then
+    cmd+=(--blind)
+  fi
+  if [[ "${RESUME}" == "1" ]]; then
+    cmd+=(--resume)
+  fi
+  if [[ -n "${THEOREM_LIMIT}" ]]; then
+    cmd+=(-n "${THEOREM_LIMIT}" --offset "${THEOREM_OFFSET}")
+  fi
+
+  run_cmd "${cmd[@]}"
 }
 
 run_lesion_interventions() {
   phase_header "Run Lesion Interventions"
+  validate_limit_args
 
-  run_cmd uv run python wonton.py lean run \
-    -m research \
-    -c "lean:${CORPUS_ID}" \
-    -p "${PROVIDER}" \
-    -b "${RESEARCH_BUDGET}" \
-    --workers "${LEAN_WORKERS}" \
-    --plain \
-    --run-id "${PROGRAM_RUN_ROOT}/lesions/provider=${PROVIDER}" \
+  local cmd=(
+    uv run python wonton.py lean run
+    -m research
+    -c "lean:${CORPUS_ID}"
+    -p "${PROVIDER}"
+    -b "${RESEARCH_BUDGET}"
+    --workers "${LEAN_WORKERS}"
+    --plain
+    --run-id "${PROGRAM_RUN_ROOT}/lesions/provider=${PROVIDER}"
     --no-sync
+  )
+  if [[ "${RESUME}" == "1" ]]; then
+    cmd+=(--resume)
+  fi
+  if [[ -n "${THEOREM_LIMIT}" ]]; then
+    cmd+=(-n "${THEOREM_LIMIT}" --offset "${THEOREM_OFFSET}")
+  fi
+
+  run_cmd "${cmd[@]}"
 }
 
 run_postprocess_and_reconcile() {
@@ -177,62 +221,21 @@ run_postprocess_and_reconcile() {
 analyze_correlation() {
   phase_header "Analyze Basin-Width vs Recovery Correlation"
 
-  run_cmd uv run python -c "
-import duckdb
-import numpy as np
-import os
-from pathlib import Path
-from scipy import stats
-from runtime_paths import resolve_artifacts_root
-
-db_path = Path(os.environ.get('LAKE_DB_PATH', resolve_artifacts_root() / 'lake' / 'lake.duckdb'))
-conn = duckdb.connect(str(db_path), read_only=True)
-
-# Join basin and intervention data
-results = conn.execute('''
-WITH basin_agg AS (
-  SELECT theorem, AVG(unique_structures) as basin_width
-  FROM basin_runs
-  GROUP BY theorem
-),
-lesion_agg AS (
-  SELECT theorem,
-    AVG(CASE WHEN solved THEN 1.0 ELSE 0.0 END) as recovery_rate,
-    COUNT(*) as n_interventions
-  FROM theorem_intervention
-  WHERE baseline_solved = TRUE
-    AND intervention <> 'control_null'
-    AND COALESCE(is_control, FALSE) = FALSE
-  GROUP BY theorem
-)
-SELECT b.basin_width, l.recovery_rate, l.n_interventions
-FROM basin_agg b
-JOIN lesion_agg l USING(theorem)
-WHERE l.n_interventions >= 3
-''').fetchall()
-
-if len(results) < 10:
-    print(f'Insufficient data: only {len(results)} theorems with both basin and lesion data')
-else:
-    basin_widths = np.array([r[0] for r in results])
-    recovery_rates = np.array([r[1] for r in results])
-
-    # Pearson correlation
-    r, p = stats.pearsonr(basin_widths, recovery_rates)
-    print(f'Basin-Width vs Recovery Correlation')
-    print(f'  n = {len(results)} theorems')
-    print(f'  Pearson r = {r:.3f}')
-    print(f'  p-value = {p:.4f}')
-    print(f'  Basin width range: {basin_widths.min():.1f} - {basin_widths.max():.1f}')
-    print(f'  Recovery rate range: {recovery_rates.min():.1%} - {recovery_rates.max():.1%}')
-"
+  run_cmd uv run python -m experiments.basin_width.analyze \
+    --program-root "${PROGRAM_RUN_ROOT}" \
+    --provider "${PROVIDER}"
 }
 
 echo "Program ID:        ${PROGRAM_ID}"
 echo "Curated theorems:  ${CURATED_JSON}"
 echo "Corpus ID:         ${CORPUS_ID}"
+echo "Source ref:        ${SOURCE_REF}"
 echo "Basin seeds:       ${BASIN_SEEDS}"
+echo "Basin blind:       ${BASIN_BLIND}"
 echo "Provider:          ${PROVIDER}"
+echo "Theorem limit:     ${THEOREM_LIMIT:-all}"
+echo "Theorem offset:    ${THEOREM_OFFSET}"
+echo "Resume:            ${RESUME}"
 echo "Dry run mode:      $([[ "${EXECUTE}" -eq 1 ]] && echo no || echo yes)"
 
 if [[ "${PHASE}" == "all" || "${PHASE}" == "corpus" ]]; then

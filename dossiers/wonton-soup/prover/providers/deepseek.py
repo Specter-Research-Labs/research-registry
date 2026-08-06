@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 from urllib.request import Request, urlopen
 
 from leantree.core.lean import LeanGoal
@@ -31,38 +32,13 @@ Put the next tactic inside [TAC]...[/TAC]
 DEFAULT_IMPORTS = "import Mathlib\nopen BigOperators Real Nat Topology"
 
 STOP_SEQUENCES = ["[/TAC]", "\n\n\n", "---"]
-
-
-def _bytes_to_unicode() -> dict[int, str]:
-    visible = (
-        list(range(ord("!"), ord("~") + 1))
-        + list(range(ord("¡"), ord("¬") + 1))
-        + list(range(ord("®"), ord("ÿ") + 1))
-    )
-    byte_values = visible[:]
-    codepoints = visible[:]
-    n = 0
-    for byte in range(256):
-        if byte in byte_values:
-            continue
-        byte_values.append(byte)
-        codepoints.append(256 + n)
-        n += 1
-    return dict(zip(byte_values, (chr(cp) for cp in codepoints), strict=True))
-
-
-_BYTELEVEL_BYTE_DECODER = {char: byte for byte, char in _bytes_to_unicode().items()}
-
-
-def _decode_bytelevel_artifacts(text: str) -> str:
-    raw = bytearray()
-    for char in text:
-        byte = _BYTELEVEL_BYTE_DECODER.get(char)
-        if byte is None:
-            raw.extend(char.encode("utf-8"))
-        else:
-            raw.append(byte)
-    return raw.decode("utf-8", errors="replace")
+DEEPSEEK_TOKENIZER_KWARGS = {
+    "bos_token": "<｜begin▁of▁sentence｜>",
+    "eos_token": "<｜end▁of▁sentence｜>",
+    "pad_token": "<｜end▁of▁sentence｜>",
+    "unk_token": "<unk>",
+}
+DeepSeekBackend = Literal["mlx", "transformers"]
 
 
 @dataclass
@@ -178,15 +154,25 @@ class DeepSeekTacticProvider(TacticProvider):
     def __init__(
         self,
         model_path: str | None = None,
+        backend: DeepSeekBackend = "mlx",
+        device: str | None = None,
         cache_size: int = 100,
         num_samples: int = 10,
         proof_before_steps: int = 8,
     ):
-        self._vllm_endpoints, self._model_path = _resolve_backend(model_path)
+        if backend not in ("mlx", "transformers"):
+            raise ValueError(f"Unknown DeepSeek backend: {backend}")
+        self._backend = backend
+        if backend == "mlx":
+            self._vllm_endpoints, self._model_path = _resolve_backend(model_path)
+            self._device = device
+        else:
+            self._vllm_endpoints = []
+            self._model_path = _resolve_model_path(model_path)
+            self._device = device or _default_transformers_device_name()
         self._vllm_next = 0
         self._model: Any = None
         self._tokenizer: Any = None
-        self._prompt_tokenizer: Any = None
         self._loaded = False
         self._cache: OrderedDict[str, list[tuple[str, float]]] = OrderedDict()
         self._cache_size = cache_size
@@ -201,14 +187,37 @@ class DeepSeekTacticProvider(TacticProvider):
         self._batch_task: asyncio.Task[None] | None = None
         self._batch_max_size = 8
 
-    def _ensure_loaded(self):
-        if not self._loaded:
+    def _ensure_loaded(self) -> None:
+        if self._loaded:
+            return
+        if self._backend == "mlx":
             from mlx_lm import load
 
             self._validate_mlx_model_config(self._model_path)
             self._model, self._tokenizer = load(self._model_path)
             self._prompt_tokenizer = self._load_prompt_tokenizer(self._model_path)
-            self._loaded = True
+        else:
+            import torch
+            from transformers import AutoModelForCausalLM, PreTrainedTokenizerFast
+
+            device = self._device or _default_transformers_device(torch)
+            dtype = torch.float16 if device in {"mps", "cuda"} else torch.float32
+            tokenizer_file = Path(self._model_path) / "tokenizer.json"
+            if not tokenizer_file.exists():
+                raise FileNotFoundError(f"DeepSeek tokenizer.json not found: {tokenizer_file}")
+            self._tokenizer = PreTrainedTokenizerFast(
+                tokenizer_file=str(tokenizer_file),
+                **DEEPSEEK_TOKENIZER_KWARGS,
+            )
+            model = AutoModelForCausalLM.from_pretrained(
+                self._model_path,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+            )
+            self._model = cast(Any, model).to(device)
+            self._model.eval()
+            self._device = device
+        self._loaded = True
 
     @staticmethod
     def _validate_mlx_model_config(model_path: str) -> None:
@@ -386,6 +395,11 @@ class DeepSeekTacticProvider(TacticProvider):
         return list(self._tokenizer.encode(prompt))
 
     def _generate_tactics(self, prompt: str, n: int) -> list[tuple[str, float]]:
+        if self._backend == "transformers":
+            return self._generate_tactics_transformers(prompt, n)
+        return self._generate_tactics_mlx(prompt, n)
+
+    def _generate_tactics_mlx(self, prompt: str, n: int) -> list[tuple[str, float]]:
         self._ensure_loaded()
         from mlx_lm import batch_generate
         from mlx_lm.sample_utils import make_sampler
@@ -412,6 +426,53 @@ class DeepSeekTacticProvider(TacticProvider):
             if tactic and tactic not in seen:
                 seen[tactic] = 1.0 - (len(seen) / num_to_generate)
         return sorted(seen.items(), key=lambda x: x[1], reverse=True)
+
+    def _generate_tactics_transformers(self, prompt: str, n: int) -> list[tuple[str, float]]:
+        self._ensure_loaded()
+        import torch
+
+        assert self._model is not None
+        assert self._tokenizer is not None
+
+        num_to_generate = max(1, min(n, self._num_samples))
+        encoded = self._tokenizer(
+            prompt,
+            return_tensors="pt",
+            max_length=self.MAX_INPUT_LENGTH,
+            truncation=True,
+        ).to(self._device)
+        with torch.no_grad():
+            outputs = self._model.generate(
+                **encoded,
+                max_new_tokens=self.MAX_NEW_TOKENS,
+                do_sample=True,
+                temperature=0.6,
+                top_p=0.9,
+                num_return_sequences=num_to_generate,
+                return_dict_in_generate=True,
+                output_scores=True,
+                pad_token_id=self._tokenizer.eos_token_id,
+            )
+        prompt_len = encoded["input_ids"].shape[-1]
+        decoded = self._tokenizer.batch_decode(
+            outputs.sequences[:, prompt_len:].detach().cpu(),
+            skip_special_tokens=False,
+        )
+        sequence_scores = getattr(outputs, "sequences_scores", None)
+        seen: dict[str, float] = {}
+
+        for idx, text in enumerate(decoded):
+            tactic = self._extract_tactic_from_generated(text)
+            if tactic is None:
+                continue
+            if sequence_scores is not None:
+                prob = _score_from_logit(float(sequence_scores[idx].item()))
+            else:
+                prob = 1.0 - (idx / max(len(decoded), 1))
+            prev = seen.get(tactic)
+            if prev is None or prob > prev:
+                seen[tactic] = prob
+        return sorted(seen.items(), key=lambda item: item[1], reverse=True)
 
     @staticmethod
     def _extract_theorem_context(adapter: Any) -> str | None:
@@ -441,6 +502,25 @@ class DeepSeekTacticProvider(TacticProvider):
     def describe(self) -> str:
         return (
             "DeepSeekTacticProvider("
-            f"ntp-mathlib-deepseek-1.3b,samples={self._num_samples},"
+            f"ntp-mathlib-deepseek-1.3b,backend={self._backend},"
+            f"samples={self._num_samples},"
             f"proof_before={self._proof_before_steps})"
         )
+
+
+def _default_transformers_device(torch_module: Any) -> str:
+    if torch_module.backends.mps.is_available():
+        return "mps"
+    if torch_module.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
+def _default_transformers_device_name() -> str:
+    import torch
+
+    return _default_transformers_device(torch)
+
+
+def _score_from_logit(score: float) -> float:
+    return 1.0 / (1.0 + math.exp(-score))

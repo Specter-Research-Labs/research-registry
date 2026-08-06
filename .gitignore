@@ -61,6 +61,9 @@ visual_gifs/
 **/paper/artifacts/*.pdf
 **/docs/paper/references/*.pdf
 
+# Local research notes.
+dossiers/wonton-soup/notes/
+
 # Generated local-only artifacts.
 **/artifacts/evidence/
 **/artifacts/publish/

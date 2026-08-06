@@ -23,6 +23,7 @@ from orchestrator.lean_options import (
     parse_provider_list,
     validate_providers,
 )
+from prover.mcts import coerce_expansion_policy
 from prover.providers.base import normalize_tactic
 
 
@@ -129,6 +130,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
     trace_mcts_value = cast(bool | None, args.trace_mcts)
     trace_mcts = trace_mcts_value if trace_mcts_value is not None else mode_defaults["trace_mcts"]
     mcts_mode = cast(str, args.mcts_mode)
+    expansion_policy = coerce_expansion_policy(cast(str, args.mcts_expansion_policy)).value
     distributed_settings: dict[str, Any] | None = None
     if mcts_mode == "distributed":
         if args.mcts_agents is None or args.mcts_inflight is None:
@@ -350,6 +352,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         model_path = Path(deepseek_model_path)
         if not model_path.exists():
             _error(f"DeepSeek model not found: {model_path}", parser_error)
+    deepseek_backend = cast(str, args.deepseek_backend)
 
     tactic_ranker = None
     tactic_ranker_name = cast(str, args.tactic_ranker)
@@ -384,6 +387,8 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
     num_workers = cast(int, args.workers)
     no_sync = bool(args.no_sync)
     collect_solution_artifacts = not bool(args.no_solution_artifacts)
+    baseline_solved_only = bool(args.baseline_solved_only)
+    postprocess_metrics = True
     common_run_kwargs: dict[str, Any] = {
         "project_path": project_path,
         "budget_tiers": budget_tiers,
@@ -392,6 +397,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         "use_sampling": use_sampling,
         "debug": debug,
         "skip_interventions": wild_only,
+        "skip_interventions_after_wild_failure": baseline_solved_only,
         "block_easy": not allow_easy,
         "corpus": corpus,
         "limit": limit,
@@ -411,7 +417,9 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         "run_analysis": run_analysis,
         "trace_mcts": trace_mcts,
         "collect_solution_artifacts": collect_solution_artifacts,
+        "postprocess_metrics": postprocess_metrics,
         "mcts_mode": mcts_mode,
+        "expansion_policy": expansion_policy,
         "distributed_settings": distributed_settings,
         "mode": mode,
         "mode_defaults": cast(dict[str, Any], mode_defaults),
@@ -419,6 +427,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         "tactic_ranker": tactic_ranker,
         "deepseek_num_samples": deepseek_num_samples,
         "deepseek_model_path": deepseek_model_path,
+        "deepseek_backend": deepseek_backend,
         "bfs_num_samples": bfs_num_samples,
         "internlm_num_samples": internlm_num_samples,
         "no_sync": no_sync,
@@ -489,7 +498,9 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         selection_seed=selection_seed,
         search_seed=search_seed,
         wild_only=wild_only,
+        skip_interventions_after_wild_failure=baseline_solved_only,
         trace_mcts=trace_mcts,
+        postprocess_metrics=postprocess_metrics,
         run_analysis=run_analysis,
         device=device,
         num_workers=num_workers,
@@ -507,6 +518,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         corpus_artifact_ref=corpus_artifact,
         corpus_meta=corpus_meta,
         mcts_mode=mcts_mode,
+        expansion_policy=expansion_policy,
         distributed_snapshot=distributed_snapshot,
         selection_method=selection_method,
         selected_theorems=[theorem.name for theorem in selection_theorems],

@@ -8,7 +8,7 @@ from prover.adapters.lean import TacticPreview
 from prover.goal_cache import GoalCache
 from prover.goal_signature import GoalSignatureConfig
 from prover.history import ExplorationHistory, TacticOutcome
-from prover.mcts import BackpropStrategy, MCTSTree, mcts_search
+from prover.mcts import BackpropStrategy, ExpansionPolicy, MCTSTree, mcts_search
 from prover.proof import ProofGraph
 
 
@@ -106,6 +106,73 @@ class FakeProvider:
             return [("fail", 0.9), ("split", 0.1)]
         if mvar_id in ("c1", "c2"):
             return [("solve", 1.0)]
+        return []
+
+    def describe(self) -> str:
+        return "fake"
+
+
+class SiblingAdapter:
+    def __init__(self) -> None:
+        self._goals: dict[str, FakeGoal] = {}
+
+    async def initialize(self, theorem_with_sorry: str) -> list[str]:
+        root = FakeGoal(mvar_id="root", type="P", type_expr=None, hypotheses=[])
+        self._goals = {"root": root}
+        return ["root"]
+
+    def get_goal(self, mvar_id: str) -> FakeGoal | None:
+        return self._goals.get(mvar_id)
+
+    async def preview_tactic(self, mvar_id: str, tactic: str) -> TacticPreview | None:
+        if mvar_id == "root" and tactic == "left_branch":
+            child = FakeGoal(mvar_id="left", type="L", type_expr=None, hypotheses=[])
+            return TacticPreview(
+                tactic=tactic,
+                parent_mvar_id=mvar_id,
+                child_mvar_ids=["left"],
+                child_goals=[child],
+                partial_term_before=None,
+                partial_term_after=None,
+                completed_proof_term=None,
+                goals_before=["P"],
+                goals_after=["L"],
+                checkpoint=None,
+                checkpoint_id=0,
+                branches=[],
+            )
+        if mvar_id == "root" and tactic == "right_branch":
+            child = FakeGoal(mvar_id="right", type="R", type_expr=None, hypotheses=[])
+            return TacticPreview(
+                tactic=tactic,
+                parent_mvar_id=mvar_id,
+                child_mvar_ids=["right"],
+                child_goals=[child],
+                partial_term_before=None,
+                partial_term_after=None,
+                completed_proof_term=None,
+                goals_before=["P"],
+                goals_after=["R"],
+                checkpoint=None,
+                checkpoint_id=0,
+                branches=[],
+            )
+        return None
+
+    def commit_tactic(self, preview: TacticPreview) -> None:
+        for goal in preview.child_goals:
+            if goal.mvar_id is None:
+                raise ValueError("Missing mvar_id")
+            self._goals[goal.mvar_id] = goal
+
+
+class SiblingProvider:
+    provider_id = "fake"
+    last_blocked: list[str] = []
+
+    async def suggest_tactics_with_probs_async(self, goal, mvar_id: str, adapter):
+        if mvar_id == "root":
+            return [("left_branch", 0.6), ("right_branch", 0.4)]
         return []
 
     def describe(self) -> str:
@@ -285,6 +352,87 @@ def test_distributed_single_agent_matches_centralized():
     assert centralized.serialize() == distributed.serialize()
     assert centralized.is_solved()
     assert distributed.is_solved()
+
+
+def test_centralized_and_distributed_preserve_successful_sibling_tactics():
+    goal_sig_config = GoalSignatureConfig(scheme="text")
+    config = DistributedMCTSConfig(
+        agents=1,
+        max_iterations=1,
+        max_inflight_expansions=1,
+        c=math.sqrt(2),
+        backprop_strategy=BackpropStrategy.UNIFORM,
+        virtual_loss=0,
+        adapter_mode="single",
+    )
+
+    centralized = asyncio.run(
+        mcts_search(
+            "theorem",
+            SiblingAdapter(),
+            SiblingProvider(),
+            max_iterations=1,
+            goal_sig_config=goal_sig_config,
+        )
+    )
+    distributed = asyncio.run(
+        distributed_mcts_search(
+            "theorem",
+            SiblingAdapter(),
+            SiblingProvider(),
+            ProofGraph(),
+            ExplorationHistory.create("theorem", None),
+            goal_sig_config=goal_sig_config,
+            config=config,
+        )
+    )
+
+    for tree in (centralized, distributed):
+        root = tree.nodes_by_mvar["root"]
+        assert set(root.children) == {"left_branch", "right_branch"}
+        assert [node.mvar_id for node in root.children["left_branch"]] == ["left"]
+        assert [node.mvar_id for node in root.children["right_branch"]] == ["right"]
+
+
+def test_centralized_and_distributed_first_success_reproduces_old_expansion_policy():
+    goal_sig_config = GoalSignatureConfig(scheme="text")
+    config = DistributedMCTSConfig(
+        agents=1,
+        max_iterations=1,
+        max_inflight_expansions=1,
+        c=math.sqrt(2),
+        backprop_strategy=BackpropStrategy.UNIFORM,
+        virtual_loss=0,
+        adapter_mode="single",
+        expansion_policy=ExpansionPolicy.FIRST_SUCCESS,
+    )
+
+    centralized = asyncio.run(
+        mcts_search(
+            "theorem",
+            SiblingAdapter(),
+            SiblingProvider(),
+            max_iterations=1,
+            goal_sig_config=goal_sig_config,
+            expansion_policy=ExpansionPolicy.FIRST_SUCCESS,
+        )
+    )
+    distributed = asyncio.run(
+        distributed_mcts_search(
+            "theorem",
+            SiblingAdapter(),
+            SiblingProvider(),
+            ProofGraph(),
+            ExplorationHistory.create("theorem", None),
+            goal_sig_config=goal_sig_config,
+            config=config,
+        )
+    )
+
+    for tree in (centralized, distributed):
+        root = tree.nodes_by_mvar["root"]
+        assert set(root.children) == {"left_branch"}
+        assert [node.mvar_id for node in root.children["left_branch"]] == ["left"]
 
 
 def test_distributed_tie_breaker_agent():

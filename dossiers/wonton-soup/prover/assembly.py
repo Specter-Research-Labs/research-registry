@@ -50,6 +50,25 @@ class AssemblyStep:
             "actionMetadata": deepcopy(self.action_metadata),
         }
 
+    @classmethod
+    def from_json(cls, data: dict) -> "AssemblyStep":
+        before = data.get("partialTermBefore")
+        after = data.get("partialTermAfter")
+        action_metadata = data.get("actionMetadata")
+        return cls(
+            tactic=str(data["tactic"]),
+            mvar_id=str(data["mvarId"]),
+            partial_term_before=PartialProofTerm.from_json(before)
+            if isinstance(before, dict)
+            else None,
+            partial_term_after=PartialProofTerm.from_json(after)
+            if isinstance(after, dict)
+            else None,
+            goals_closed=[str(goal) for goal in data.get("goalsClosed", [])],
+            goals_opened=[str(goal) for goal in data.get("goalsOpened", [])],
+            action_metadata=dict(action_metadata) if isinstance(action_metadata, dict) else {},
+        )
+
 
 @dataclass
 class ProofAssemblyTrace:
@@ -107,3 +126,17 @@ class ProofAssemblyTrace:
             "steps": [s.serialize() for s in self.steps],
             "finalTerm": self.final_term.serialize() if self.final_term else None,
         }
+
+    @classmethod
+    def from_json(cls, data: dict) -> "ProofAssemblyTrace":
+        final_term = data.get("finalTerm")
+        return cls(
+            theorem=str(data["theorem"]),
+            root_mvar_id=str(data["rootMvarId"]),
+            steps=[
+                AssemblyStep.from_json(step)
+                for step in data.get("steps", [])
+                if isinstance(step, dict)
+            ],
+            final_term=ExprDAG.from_json(final_term) if isinstance(final_term, dict) else None,
+        )
