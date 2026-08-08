@@ -243,6 +243,13 @@ enum SiteCommand {
         #[arg(long)]
         write: bool,
     },
+    #[command(about = "Browse and edit canonical site text in the rendered site")]
+    Edit {
+        #[arg(long, default_value_t = 4173)]
+        port: u16,
+        #[arg(long, help = "Save without creating Jujutsu checkpoints")]
+        no_checkpoint: bool,
+    },
     #[command(about = "Materialize canonical project catalog, artifact, and health feeds")]
     ProjectFeeds {
         #[arg(long)]
@@ -927,6 +934,13 @@ fn dispatch_site(command: SiteCommand) -> anyhow::Result<()> {
             let repo_root = crate::manifest::repo_root()?;
             site::build(&repo_root, write)
         }
+        SiteCommand::Edit {
+            port,
+            no_checkpoint,
+        } => {
+            let repo_root = crate::manifest::repo_root()?;
+            site::editor::run(&repo_root, port, !no_checkpoint)
+        }
         SiteCommand::ProjectFeeds { write } => {
             let repo_root = crate::manifest::repo_root()?;
             site::export_project_feeds(&repo_root, write)
@@ -1575,6 +1589,26 @@ mod dispatch_command_tests {
                 command: SiteCommand::ProjectFeeds { write },
             } => {
                 assert!(write);
+            }
+            other => panic!("unexpected command: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parse_site_edit() {
+        let cli =
+            Cli::try_parse_from(["spctr", "site", "edit", "--port", "4317", "--no-checkpoint"])
+                .unwrap();
+        match cli.command {
+            CommandGroup::Site {
+                command:
+                    SiteCommand::Edit {
+                        port,
+                        no_checkpoint,
+                    },
+            } => {
+                assert_eq!(port, 4317);
+                assert!(no_checkpoint);
             }
             other => panic!("unexpected command: {other:?}"),
         }

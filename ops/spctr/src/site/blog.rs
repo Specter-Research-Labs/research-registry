@@ -40,11 +40,16 @@ pub(crate) fn figure_source_patterns(slug: &str) -> Vec<String> {
 pub fn build_blog(repo_root: &Utf8Path, write: bool) -> Result<()> {
     let posts = discover::discover_all_blog_posts(repo_root)?;
     let has_published = posts.iter().any(is_published_post);
-    build_blog_for_posts(repo_root, &posts, write)?;
+    build_blog_for_posts_inner(repo_root, &posts, write, true)?;
     if !has_published {
         bail!("no published blog posts found (set 'release: published' in YAML front matter)");
     }
     Ok(())
+}
+
+pub(crate) fn build_blog_preview(repo_root: &Utf8Path, write: bool) -> Result<()> {
+    let posts = discover::discover_all_blog_posts(repo_root)?;
+    build_blog_for_posts_inner(repo_root, &posts, write, false)
 }
 
 struct ResearchNoteRecord {
@@ -151,6 +156,15 @@ pub(crate) fn build_blog_for_posts(
     posts: &[discover::BlogPostRecord],
     write: bool,
 ) -> Result<()> {
+    build_blog_for_posts_inner(repo_root, posts, write, true)
+}
+
+fn build_blog_for_posts_inner(
+    repo_root: &Utf8Path,
+    posts: &[discover::BlogPostRecord],
+    write: bool,
+    sync_assets: bool,
+) -> Result<()> {
     let site_root = repo_root.join("site");
 
     let template = site_root.join("blog/pandoc-template.html");
@@ -180,7 +194,7 @@ pub(crate) fn build_blog_for_posts(
         })
         .collect();
 
-    if write {
+    if write && sync_assets {
         sync_figures_for_slugs(repo_root, &published_slugs)?;
     }
 
