@@ -203,8 +203,13 @@ final class FlowLeniaMetalFullStateRunner {
         )
     }
 
-    func setState(mass: MLXArray, params: MLXArray) {
-        uploadState(mass: mass, params: params, configurationUploads: [])
+    func setState(mass: MLXArray, params: MLXArray, mixStep: Int = 0) {
+        uploadState(
+            mass: mass,
+            params: params,
+            configurationUploads: [],
+            mixStep: mixStep
+        )
     }
 
     func reset(
@@ -212,13 +217,19 @@ final class FlowLeniaMetalFullStateRunner {
         params: MLXArray,
         wallMask: MLXArray?,
         staticChannelFields: [FlowLeniaMetalChannelField],
-        food: FlowLeniaMetalFoodState?
+        food: FlowLeniaMetalFoodState?,
+        mixStep: Int = 0
     ) {
         if wallMask == nil, staticChannelFields.isEmpty, food == nil {
             wallMaskEnabled = false
             self.staticChannelFields = []
             foodState = nil
-            uploadState(mass: mass, params: params, configurationUploads: [])
+            uploadState(
+                mass: mass,
+                params: params,
+                configurationUploads: [],
+                mixStep: mixStep
+            )
             return
         }
         let wallMaskUpload = prepareWallMask(wallMask)
@@ -236,13 +247,19 @@ final class FlowLeniaMetalFullStateRunner {
         if let foodUpload = preparedFood.upload {
             uploads.append(foodUpload)
         }
-        uploadState(mass: mass, params: params, configurationUploads: uploads)
+        uploadState(
+            mass: mass,
+            params: params,
+            configurationUploads: uploads,
+            mixStep: mixStep
+        )
     }
 
     private func uploadState(
         mass: MLXArray,
         params: MLXArray,
-        configurationUploads: [BufferCopy]
+        configurationUploads: [BufferCopy],
+        mixStep: Int = 0
     ) {
         guard mass.shape.count == 4, mass.shape[0] == batchCount, mass.shape[1] == config.sx, mass.shape[2] == config.sy, mass.shape[3] == channelCount else {
             preconditionFailure("FlowLeniaMetalFullStateRunner expects mass with shape [batch, sx, sy, channels].")
@@ -299,7 +316,7 @@ final class FlowLeniaMetalFullStateRunner {
                 }
             }
         }
-        currentMixStep = 0
+        currentMixStep = max(0, mixStep)
     }
 
     func updateKernels(_ kernels: CompiledKernels) {

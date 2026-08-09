@@ -73,33 +73,6 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(entry.sourceAlgorithm, "novelty-search")
     }
 
-    func testPreferredStudioSurfaceFollowsProductRouting() {
-        XCTAssertEqual(
-            preferredStudioSurface(currentSelection: .lab, connectionState: .connected(role: .host)),
-            .cluster
-        )
-        XCTAssertEqual(
-            preferredStudioSurface(currentSelection: .lab, connectionState: .connected(role: .worker)),
-            .cluster
-        )
-        XCTAssertEqual(
-            preferredStudioSurface(currentSelection: .lab, connectionState: .connecting),
-            .cluster
-        )
-        XCTAssertEqual(
-            preferredStudioSurface(currentSelection: .cluster, connectionState: .error("boom")),
-            .cluster
-        )
-        XCTAssertEqual(
-            preferredStudioSurface(currentSelection: .lab, connectionState: .connected(role: .compendium)),
-            .compendium
-        )
-        XCTAssertEqual(
-            preferredStudioSurface(currentSelection: .compendium, connectionState: .disconnected),
-            .compendium
-        )
-    }
-
     func testLeniaLabStageTransformMapsPointsUnderZoomAndOffset() {
         let transform = LeniaLabStageTransform(
             zoom: 1.5,
@@ -155,10 +128,56 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(zoomed.zoom, 2.0, accuracy: 1e-6)
     }
 
+    @MainActor
+    func testLeniaLabStageScrollPolicyDefaultsToPassThrough() {
+        let preview = LeniaLabStageView(
+            frame: nil,
+            renderMode: .truth,
+            zoom: 1,
+            offset: .zero,
+            onTransformChange: { _ in },
+            onPrimaryPoint: { _ in },
+            onSecondaryPoint: { _ in },
+            onHoverPointChange: { _ in },
+            onBrushRadiusDelta: nil
+        )
+        let interactive = LeniaLabStageView(
+            frame: nil,
+            renderMode: .truth,
+            zoom: 1,
+            offset: .zero,
+            scrollPolicy: .transformCanvas,
+            onTransformChange: { _ in },
+            onPrimaryPoint: { _ in },
+            onSecondaryPoint: { _ in },
+            onHoverPointChange: { _ in },
+            onBrushRadiusDelta: nil
+        )
+
+        XCTAssertEqual(preview.scrollPolicy, .passThrough)
+        XCTAssertEqual(interactive.scrollPolicy, .transformCanvas)
+    }
+
     func testLeniaLabBrushRadiusSteppingClampsToRange() {
         XCTAssertEqual(labBrushRadiusStepping(from: 3, delta: 1), 4)
         XCTAssertEqual(labBrushRadiusStepping(from: 1, delta: -5), 1)
         XCTAssertEqual(labBrushRadiusStepping(from: 16, delta: 5), 16)
+    }
+
+    @MainActor
+    func testLabModelOwnsAutoFoodIntentAcrossRuntimeChanges() {
+        let model = LeniaLabModel()
+
+        XCTAssertFalse(model.autoFoodEnabled)
+        model.setAutoFood(enabled: true)
+        XCTAssertTrue(model.autoFoodEnabled)
+        model.setAutoFood(enabled: false)
+        XCTAssertFalse(model.autoFoodEnabled)
+    }
+
+    func testTTReplayStageIsReadOnly() {
+        XCTAssertTrue(labStageAllowsEditing(externalReplayTitle: nil))
+        XCTAssertFalse(labStageAllowsEditing(externalReplayTitle: "TT trajectory"))
     }
 
     func testLeniaLabFallbackWorldUsesExplicitWarmInitialState() throws {
@@ -425,18 +444,28 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(catalog.families.map(\.name), ["Orbidae"])
         XCTAssertEqual(catalog.genusCount, 1)
         XCTAssertEqual(catalog.speciesCount, 1)
-        XCTAssertEqual(catalog.labLoadableCount, 0)
+        XCTAssertEqual(catalog.labLoadableCount, 1)
         XCTAssertEqual(parsed.family, "Orbidae")
         XCTAssertEqual(parsed.genus, "Gyrorbium")
         XCTAssertEqual(parsed.displayName, "Gyrorbium")
         XCTAssertEqual(parsed.patternID, "OG2")
-        XCTAssertFalse(parsed.isLabLoadable)
+        XCTAssertTrue(parsed.isLabLoadable)
+        XCTAssertEqual(parsed.requiredLabBackend, .mlx)
         XCTAssertEqual(parsed.backend, "mlx")
         XCTAssertEqual(parsed.implementationMode, "qd24_additive_v1")
         XCTAssertEqual(parsed.kernelProfile, "qd24_bump4_v1")
         XCTAssertEqual(parsed.gridSize, 192)
         XCTAssertEqual(parsed.kernelCount, 1)
         XCTAssertEqual(parsed.runSteps, 1600)
+    }
+
+    func testBundledFeaturedOrganismsDecodeAsLoadableCatalogEntries() throws {
+        let organisms = try bundledFeaturedOrganisms()
+
+        XCTAssertEqual(organisms.count, 10)
+        XCTAssertEqual(Set(organisms.map(\.path)).count, organisms.count)
+        XCTAssertTrue(organisms.allSatisfy(\.isBundled))
+        XCTAssertTrue(organisms.allSatisfy(\.isLabLoadable))
     }
 
     func testLeniaMetalFieldRendererProducesOffscreenImage() {
@@ -496,6 +525,15 @@ final class LeniaStudioTests: XCTestCase {
         XCTAssertEqual(switchedFrame.step, 8)
     }
 
+    func testLiveSimulationGenerationRejectsStaleRuns() {
+        var generation = LiveSimulationGeneration()
+        let staleRun = generation.advance()
+        let currentRun = generation.advance()
+
+        XCTAssertFalse(generation.matches(staleRun))
+        XCTAssertTrue(generation.matches(currentRun))
+    }
+
     func testLiveProjectionFrameNeedsNoChannelReadForMatterOrInvalidSelection() {
         var readChannels: [Int] = []
         let readChannel: (Int) -> [Float] = { channel in
@@ -531,6 +569,36 @@ final class LeniaStudioTests: XCTestCase {
         )
     }
 
+    func testLeniaMetalFieldRendererSupportsUnalignedSharedFloatRows() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            XCTFail("Metal device unavailable")
+            return
+        }
+
+        let width = 22
+        let height = 8
+        let values = (0..<(width * height)).map { Float($0 % width) / Float(width) }
+        let buffer = try XCTUnwrap(device.makeBuffer(
+            bytes: values,
+            length: values.count * MemoryLayout<Float>.stride,
+            options: .storageModeShared
+        ))
+        let renderer = LeniaMetalFieldRenderer(device: device)
+        let image = renderer.renderImage(
+            frame: LeniaFieldFrame(
+                step: 0,
+                width: width,
+                height: height,
+                sharedField: LeniaMetalFieldSurface(buffer: buffer, width: width, height: height)
+            ),
+            renderMode: .smoothMagma,
+            outputSize: CGSize(width: 128, height: 48)
+        )
+
+        XCTAssertEqual(image?.width, 128)
+        XCTAssertEqual(image?.height, 48)
+    }
+
     func testTTFrameSequenceLoadsRawFrames() async throws {
         let fixture = try makeTTFrameSequenceFixture(frameBytes: [0, 13, 128, 255])
         defer { try? FileManager.default.removeItem(at: fixture.root) }
@@ -555,28 +623,110 @@ final class LeniaStudioTests: XCTestCase {
     }
 
     func testCanonicalLabRuntimeAdvancesOnlyWhileRunning() async throws {
-        let draft = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 32)
+        let draft = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 256)
         let runtime = CanonicalLabRuntime(
             runtimeConfig: draft.runtimeConfig(overridingBackend: .mlx)
         )
+        await runtime.setSpeedCap(hz: 240)
+
+        func snapshot(after step: Int) async throws -> FlowSandboxSnapshot {
+            let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+            var current = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+            while current.step <= step, ContinuousClock.now < deadline {
+                try await Task.sleep(for: .milliseconds(20))
+                current = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+            }
+            return current
+        }
 
         let initial = await runtime.snapshot(refreshMetrics: false, projection: .matter)
         let stillPaused = await runtime.snapshot(refreshMetrics: false, projection: .matter)
         XCTAssertEqual(stillPaused.step, initial.step)
 
-        await runtime.start()
-        let firstRunning = await runtime.snapshot(refreshMetrics: false, projection: .matter)
-        let secondRunning = await runtime.snapshot(refreshMetrics: false, projection: .matter)
-        XCTAssertEqual(firstRunning.step, initial.step + 1)
-        XCTAssertEqual(secondRunning.step, firstRunning.step + 1)
+        await runtime.resume()
+        let firstRunning = try await snapshot(after: initial.step)
+        let secondRunning = try await snapshot(after: firstRunning.step)
+        XCTAssertGreaterThan(firstRunning.step, initial.step)
+        XCTAssertGreaterThan(secondRunning.step, firstRunning.step)
 
+        let pauseRequestedAt = ContinuousClock.now
         await runtime.pause()
+        XCTAssertLessThan(
+            ContinuousClock.now - pauseRequestedAt,
+            .seconds(1),
+            "Pause must not be starved when a simulation step exceeds its frame budget"
+        )
+        let telemetry = await runtime.telemetry()
+        XCTAssertGreaterThan(
+            telemetry.lastStepDurationMs,
+            4,
+            "The regression fixture must exercise the over-budget pacing branch"
+        )
         let paused = await runtime.snapshot(refreshMetrics: false, projection: .matter)
-        XCTAssertEqual(paused.step, secondRunning.step)
+        try await Task.sleep(for: .milliseconds(80))
+        let stillPausedAfterDelay = await runtime.snapshot(refreshMetrics: false, projection: .matter)
+        XCTAssertEqual(stillPausedAfterDelay.step, paused.step)
 
         await runtime.resume()
-        let resumed = await runtime.snapshot(refreshMetrics: false, projection: .matter)
-        XCTAssertEqual(resumed.step, paused.step + 1)
+        let resumed = try await snapshot(after: paused.step)
+        XCTAssertGreaterThan(resumed.step, paused.step)
+        await runtime.stop()
+    }
+
+    func testCanonicalLabEditsUseRectangularWorldStride() async throws {
+        let base = try makeLabWorldDraft(for: orbiumStarterEntry(), gridSize: 32).runtimeConfigValue
+        let width = 24
+        let height = 16
+        let config = LeniaRuntimeConfig(
+            backend: .mlx,
+            sx: width,
+            sy: height,
+            channels: base.channels,
+            nbK: base.nbK,
+            profile: base.profile,
+            c0: base.c0,
+            c1: base.c1,
+            dt: base.dt,
+            dd: base.dd,
+            sigma: base.sigma,
+            n: base.n,
+            thetaA: base.thetaA,
+            border: base.border,
+            implementation: base.implementation,
+            params: base.params,
+            initSeed: base.initSeed,
+            patches: [PatchConfig(center: [width / 2, height / 2], size: 6)],
+            aUniform: UniformRange(low: 0.1, high: 0.9),
+            pUniform: nil,
+            steps: base.steps,
+            parameterEmbedding: base.parameterEmbedding,
+            chemotaxis: nil,
+            food: nil,
+            walls: nil,
+            interventions: []
+        )
+        let runtime = CanonicalLabRuntime(runtimeConfig: config)
+        let target = SIMD2<Int>(width - 1, height - 1)
+        let targetIndex = target.x * height + target.y
+        let stamp = CreatureStamp(
+            name: "Rectangular edge",
+            width: 1,
+            height: 1,
+            mass: [0.9],
+            params: [],
+            parameterCount: 0
+        )
+
+        await runtime.applyCreatureStamp(stamp, center: target)
+        let stamped = await runtime.materializeStateSnapshot()
+        XCTAssertGreaterThan(stamped.mass[targetIndex], 0.8)
+
+        await runtime.applyStroke(
+            SandboxStroke(tool: .wall, points: [target], radius: 0, strength: 1)
+        )
+        let walled = await runtime.materializeStateSnapshot()
+        XCTAssertEqual(walled.walls[targetIndex], 0)
+        XCTAssertEqual(walled.mass[targetIndex], 0)
     }
 
     func testTTFrameSequenceRejectsWrongSizedFrameAtLoad() throws {

@@ -78,6 +78,7 @@ struct TTFrameSequence: Sendable {
     let manifestURL: URL
     let manifest: TTFrameSequenceManifest
     private let loadedSamples: [Sample]
+    private let resourceAccess: TTFrameSequenceResourceAccess
 
     var title: String { manifestURL.deletingLastPathComponent().lastPathComponent }
     var frameCount: Int { loadedSamples.count }
@@ -85,6 +86,7 @@ struct TTFrameSequence: Sendable {
     var height: Int { manifest.height }
 
     static func load(manifestURL: URL) throws -> TTFrameSequence {
+        let resourceAccess = TTFrameSequenceResourceAccess(url: manifestURL)
         let data = try Data(contentsOf: manifestURL)
         let manifest = try JSONDecoder().decode(TTFrameSequenceManifest.self, from: data)
         guard manifest.kind == "lenia_tt_frame_sequence" else {
@@ -100,6 +102,7 @@ struct TTFrameSequence: Sendable {
         let rootURL = manifestURL.deletingLastPathComponent()
         let expectedSize = manifest.width * manifest.height
         let loadedSamples = try manifest.frames.map { frame in
+            try Task.checkCancellation()
             let data = try Data(contentsOf: rootURL.appendingPathComponent(frame.path))
             guard data.count == expectedSize else {
                 throw TTFrameSequenceError.invalidFrameSize(
@@ -114,7 +117,12 @@ struct TTFrameSequence: Sendable {
                 metrics: metrics(from: data)
             )
         }
-        return TTFrameSequence(manifestURL: manifestURL, manifest: manifest, loadedSamples: loadedSamples)
+        return TTFrameSequence(
+            manifestURL: manifestURL,
+            manifest: manifest,
+            loadedSamples: loadedSamples,
+            resourceAccess: resourceAccess
+        )
     }
 
     subscript(index: Int) -> Sample {
@@ -146,6 +154,22 @@ struct TTFrameSequence: Sendable {
     }
 }
 
+private final class TTFrameSequenceResourceAccess: @unchecked Sendable {
+    private let url: URL
+    private let isActive: Bool
+
+    init(url: URL) {
+        self.url = url
+        self.isActive = url.startAccessingSecurityScopedResource()
+    }
+
+    deinit {
+        if isActive {
+            url.stopAccessingSecurityScopedResource()
+        }
+    }
+}
+
 enum TTFrameSequenceError: LocalizedError {
     case unsupportedKind(String)
     case unsupportedStorage(dtype: String, storage: String)
@@ -166,10 +190,23 @@ enum TTFrameSequenceError: LocalizedError {
     }
 }
 
+struct LabReplayPosition: Equatable, Sendable {
+    let frameIndex: Int
+    let frameCount: Int
+    let isLooping: Bool
+    let isRunning: Bool
+
+    var progress: Double {
+        guard frameCount > 1 else { return 0 }
+        return Double(frameIndex) / Double(frameCount - 1)
+    }
+}
+
 actor TTFrameSequenceRuntime {
     private let sequence: TTFrameSequence
     private var frameIndex = 0
     private var isPaused = true
+    private var isLooping = true
     private var playbackTask: Task<Void, Never>?
     private var targetFrameDuration: Duration = .milliseconds(33)
     private var lastStepDurationMs = 0.0
@@ -183,13 +220,20 @@ actor TTFrameSequenceRuntime {
     }
 
     func start() {
-        if playbackTask == nil {
-            let runtime = self
-            playbackTask = Task {
-                await runtime.runLoop()
-            }
+        if !isLooping, frameIndex == sequence.frameCount - 1 {
+            frameIndex = 0
         }
         isPaused = false
+        guard playbackTask == nil else { return }
+        playbackTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                let delay = await self.playbackDelay()
+                try? await Task.sleep(for: delay)
+                guard !Task.isCancelled else { return }
+                await self.advanceIfPlaying()
+            }
+        }
     }
 
     func pause() {
@@ -201,9 +245,9 @@ actor TTFrameSequenceRuntime {
     }
 
     func stop() {
+        isPaused = true
         playbackTask?.cancel()
         playbackTask = nil
-        isPaused = true
     }
 
     func reset() {
@@ -212,8 +256,48 @@ actor TTFrameSequenceRuntime {
     }
 
     func setSpeedCap(hz: Int) {
-        let clamped = max(1, min(240, hz))
-        targetFrameDuration = .milliseconds(max(1, Int((1000.0 / Double(clamped)).rounded())))
+        let framesPerSecond = hz > 0 ? max(1, min(60, hz)) : 60
+        targetFrameDuration = .milliseconds(
+            max(1, Int((1_000.0 / Double(framesPerSecond)).rounded()))
+        )
+    }
+
+    func step() {
+        isPaused = true
+        advance(by: 1)
+    }
+
+    func stepBackward() {
+        isPaused = true
+        advance(by: -1)
+    }
+
+    func seek(to index: Int) {
+        isPaused = true
+        frameIndex = min(max(0, index), max(0, sequence.frameCount - 1))
+    }
+
+    func setLooping(_ looping: Bool) {
+        isLooping = looping
+    }
+
+    func playbackPosition() -> LabReplayPosition {
+        LabReplayPosition(
+            frameIndex: frameIndex,
+            frameCount: sequence.frameCount,
+            isLooping: isLooping,
+            isRunning: !isPaused
+        )
+    }
+
+    func frameSnapshot(
+        refreshMetrics: Bool,
+        projection: LabFieldProjection
+    ) -> LabRuntimeFrameSnapshot {
+        LabRuntimeFrameSnapshot(
+            snapshot: snapshot(refreshMetrics: refreshMetrics, projection: projection),
+            replayPosition: playbackPosition()
+        )
     }
 
     func setAutoFoodSpawn(enabled: Bool, probability: Float? = nil, patchSize: Int? = nil, value: Float? = nil) {
@@ -246,7 +330,9 @@ actor TTFrameSequenceRuntime {
     }
 
     func snapshot(refreshMetrics _: Bool, projection _: LabFieldProjection) -> FlowSandboxSnapshot {
+        let startedAt = ContinuousClock.now
         let sample = sequence[frameIndex]
+        lastStepDurationMs = ttFrameDurationMs(ContinuousClock.now - startedAt)
         return FlowSandboxSnapshot(
             step: sample.step,
             width: sequence.width,
@@ -273,24 +359,27 @@ actor TTFrameSequenceRuntime {
         )
     }
 
-    private func runLoop() async {
-        while !Task.isCancelled {
-            if isPaused {
-                try? await Task.sleep(for: .milliseconds(25))
-                continue
-            }
-
-            let startedAt = ContinuousClock.now
-            frameIndex = (frameIndex + 1) % max(sequence.frameCount, 1)
-            let elapsed = ContinuousClock.now - startedAt
-            let remaining = targetFrameDuration - elapsed
-            if remaining > .zero {
-                try? await Task.sleep(for: remaining)
-            }
-            lastStepDurationMs = ttFrameDurationMs(ContinuousClock.now - startedAt)
-        }
+    private func playbackDelay() -> Duration {
+        targetFrameDuration
     }
 
+    private func advanceIfPlaying() {
+        guard !isPaused else { return }
+        advance(by: 1)
+    }
+
+    private func advance(by delta: Int) {
+        guard sequence.frameCount > 0 else { return }
+        let next = frameIndex + delta
+        if isLooping {
+            frameIndex = ((next % sequence.frameCount) + sequence.frameCount) % sequence.frameCount
+            return
+        }
+        frameIndex = min(max(0, next), sequence.frameCount - 1)
+        if delta > 0, frameIndex == sequence.frameCount - 1 {
+            isPaused = true
+        }
+    }
 }
 
 private func ttFrameDurationMs(_ duration: Duration) -> Double {

@@ -329,10 +329,12 @@ public struct FlowSandboxSnapshot: Sendable {
     }
 }
 
-public struct FlowSandboxStateSnapshot: Sendable {
+public struct FlowSandboxStateSnapshot: Codable, Sendable {
     public let step: Int
     public let width: Int
     public let height: Int
+    public let channels: Int
+    public let parameterCount: Int
     public let mass: [Float]
     public let params: [Float]
     public let food: [Float]
@@ -342,6 +344,8 @@ public struct FlowSandboxStateSnapshot: Sendable {
         step: Int,
         width: Int,
         height: Int,
+        channels: Int = 1,
+        parameterCount: Int = 0,
         mass: [Float],
         params: [Float],
         food: [Float],
@@ -350,10 +354,29 @@ public struct FlowSandboxStateSnapshot: Sendable {
         self.step = step
         self.width = width
         self.height = height
+        self.channels = channels
+        self.parameterCount = parameterCount
         self.mass = mass
         self.params = params
         self.food = food
         self.walls = walls
+    }
+}
+
+public enum FlowSandboxStateRestoreError: LocalizedError, Equatable {
+    case invalidDimensions(expected: String, actual: String)
+    case invalidElementCount(field: String, expected: Int, actual: Int)
+    case invalidStep(Int)
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidDimensions(let expected, let actual):
+            return "State snapshot dimensions must be \(expected), got \(actual)."
+        case .invalidElementCount(let field, let expected, let actual):
+            return "State snapshot \(field) must contain \(expected) values, got \(actual)."
+        case .invalidStep(let step):
+            return "State snapshot step must be non-negative, got \(step)."
+        }
     }
 }
 
@@ -490,7 +513,7 @@ public actor FlowSandboxRuntime {
     private var simulationTask: Task<Void, Never>?
     private var isPaused = true
     private var stepCount = 0
-    private var targetFrameDuration: Duration = .milliseconds(16)
+    private var targetStepDuration: Duration? = .milliseconds(16)
     private var autoFoodEnabled = false
     private var autoFoodProbability: Float = 0.03
     private var autoFoodPatchSize = 12
@@ -655,8 +678,12 @@ public actor FlowSandboxRuntime {
     }
 
     public func setSpeedCap(hz: Int) {
+        guard hz > 0 else {
+            targetStepDuration = nil
+            return
+        }
         let clamped = max(1, min(240, hz))
-        targetFrameDuration = .milliseconds(max(1, Int((1000.0 / Double(clamped)).rounded())))
+        targetStepDuration = .milliseconds(max(1, Int((1000.0 / Double(clamped)).rounded())))
     }
 
     public func setAutoFoodSpawn(enabled: Bool, probability: Float? = nil, patchSize: Int? = nil, value: Float? = nil) {
@@ -855,10 +882,50 @@ public actor FlowSandboxRuntime {
             step: stepCount,
             width: config.sx,
             height: config.sy,
+            channels: 1,
+            parameterCount: parameterCount,
             mass: state[0, 0..., 0..., 0].asArray(Float.self),
             params: paramState[0, 0..., 0..., 0...].asArray(Float.self),
             food: foodState[0, 0..., 0...].asArray(Float.self),
             walls: wallMask[0, 0..., 0..., 0].asArray(Float.self)
+        )
+    }
+
+    public func restoreStateSnapshot(_ snapshot: FlowSandboxStateSnapshot) throws {
+        let cellCount = config.sx * config.sy
+        guard snapshot.step >= 0 else {
+            throw FlowSandboxStateRestoreError.invalidStep(snapshot.step)
+        }
+        guard snapshot.width == config.sx,
+              snapshot.height == config.sy,
+              snapshot.channels == 1,
+              snapshot.parameterCount == parameterCount else {
+            throw FlowSandboxStateRestoreError.invalidDimensions(
+                expected: "\(config.sx)x\(config.sy)x1 with \(parameterCount) parameter lanes",
+                actual: "\(snapshot.width)x\(snapshot.height)x\(snapshot.channels) with \(snapshot.parameterCount) parameter lanes"
+            )
+        }
+        try validateSnapshotField(snapshot.mass, name: "mass", expected: cellCount)
+        try validateSnapshotField(snapshot.params, name: "params", expected: cellCount * parameterCount)
+        try validateSnapshotField(snapshot.food, name: "food", expected: cellCount)
+        try validateSnapshotField(snapshot.walls, name: "walls", expected: cellCount)
+
+        if let metalState {
+            metalState.restore(snapshot)
+        } else {
+            materializeState(
+                mass: snapshot.mass,
+                params: snapshot.params,
+                food: snapshot.food,
+                walls: snapshot.walls
+            )
+        }
+        stepCount = snapshot.step
+        lastStepDurationMs = 0
+        cachedMetrics = FlowSandboxMetrics(
+            mass: snapshot.mass,
+            food: snapshot.food,
+            walls: snapshot.walls
         )
     }
 
@@ -878,9 +945,15 @@ public actor FlowSandboxRuntime {
             step()
             let elapsed = ContinuousClock.now - start
             lastStepDurationMs = flowSandboxDurationMs(elapsed)
-            let remaining = targetFrameDuration - elapsed
-            if remaining > .zero {
-                try? await Task.sleep(for: remaining)
+            if let targetStepDuration {
+                let remaining = targetStepDuration - elapsed
+                if remaining > .zero {
+                    try? await Task.sleep(for: remaining)
+                } else {
+                    await Task.yield()
+                }
+            } else {
+                await Task.yield()
             }
         }
     }
@@ -927,6 +1000,16 @@ public actor FlowSandboxRuntime {
         foodState = MLXArray(food).reshaped([1, config.sx, config.sy])
         wallMask = MLXArray(walls).reshaped([1, config.sx, config.sy, 1])
         eval(state, paramState, foodState, wallMask)
+    }
+
+    private func validateSnapshotField(_ values: [Float], name: String, expected: Int) throws {
+        guard values.count == expected else {
+            throw FlowSandboxStateRestoreError.invalidElementCount(
+                field: name,
+                expected: expected,
+                actual: values.count
+            )
+        }
     }
 
     private func materializeDisplaySnapshot() -> (mass: [Float], food: [Float], walls: [Float]) {

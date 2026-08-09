@@ -104,48 +104,46 @@ struct ConnectView: View {
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            VStack(spacing: 0) {
-                header
+        VStack(spacing: 0) {
+            header
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        StudioSurface(title: "Choose A Role", subtitle: "LeniaStudio can host the session, contribute worker compute, or inspect a saved compendium.") {
-                            rolePicker(compact: proxy.size.width < 900)
-                        }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    rolePicker
 
-                        StudioSurface(title: "Connection", subtitle: connectionSubtitle) {
-                            connectionContent
-                        }
+                    StudioSurface(title: "Connection", subtitle: connectionSubtitle) {
+                        connectionContent
+                    }
 
-                        if mode == .host {
-                            StudioSurface(title: "Sweep Preset", subtitle: "Preset bundles keep the controller path explicit while reducing setup friction.") {
-                                hostConfigContent
-                            }
-                        }
-
-                        if mode == .compendium {
-                            StudioSurface(title: "Compendium", subtitle: "Point the studio at an indexed SQLite database.") {
-                                compendiumContent
-                            }
-                        }
-
-                        StudioSurface(title: "Readiness", subtitle: validationMessage) {
-                            HStack(spacing: 12) {
-                                Image(systemName: validationSystemImage)
-                                    .foregroundStyle(validationColor)
-                                Text(validationMessage)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                            }
+                    if mode == .host {
+                        StudioSurface(title: "Sweep Configuration") {
+                            hostConfigContent
                         }
                     }
-                    .padding(20)
-                }
 
-                footer(compact: proxy.size.width < 820)
+                    if mode == .compendium {
+                        StudioSurface(title: "Compendium") {
+                            compendiumContent
+                        }
+                    }
+
+                    HStack(spacing: 10) {
+                        Image(systemName: validationSystemImage)
+                            .foregroundStyle(validationColor)
+                        Text(validationMessage)
+                            .font(StudioType.bodySmall)
+                            .foregroundStyle(StudioPalette.mutedInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 2)
+                }
+                .padding(20)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
             }
+
+            footer
         }
         .background(
             StudioSceneBackground()
@@ -200,74 +198,44 @@ struct ConnectView: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("LeniaStudio Session Setup")
-                    .font(.system(.title2, design: .serif, weight: .semibold))
-                Text("Guided entry for host, worker, and compendium workflows.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("Cluster Session")
+                    .font(.title2.weight(.semibold))
+                Text(mode.title)
+                    .font(StudioType.panelSubtitle)
+                    .foregroundStyle(StudioPalette.mutedInk)
             }
             Spacer()
-            Button("Cancel") { dismiss() }
-                .buttonStyle(.bordered)
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .frame(width: 24, height: 24)
+            }
+            .buttonStyle(.borderless)
+            .help("Close")
+            .accessibilityLabel("Close cluster session")
         }
         .padding(20)
-        .background(.thinMaterial)
+        .background(.bar)
     }
 
-    private func rolePicker(compact: Bool) -> some View {
-        Group {
-            if compact {
-                VStack(spacing: 14) {
-                    roleCards
-                }
-            } else {
-                HStack(spacing: 14) {
-                    roleCards
-                }
+    private var rolePicker: some View {
+        Picker("Session role", selection: $mode) {
+            ForEach(Mode.allCases) { option in
+                Label(option.rawValue, systemImage: option.systemImage)
+                    .tag(option)
             }
         }
-    }
-
-    private var roleCards: some View {
-        ForEach(Mode.allCases) { option in
-            Button {
-                mode = option
-            } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    Label(option.title, systemImage: option.systemImage)
-                        .font(.headline)
-                        .foregroundStyle(StudioPalette.ink)
-                    Text(option.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(mode == option ? StudioPalette.surfaceRaised : StudioPalette.surfaceSoft)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(mode == option ? StudioPalette.ember.opacity(0.6) : StudioPalette.hairline, lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .accessibilityLabel("Session role")
     }
 
     @ViewBuilder
     private var connectionContent: some View {
         switch mode {
         case .host:
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    labeledNumberField("Bind Port", value: $controllerPort, width: 110)
-                    Spacer()
-                }
-                Text("Workers will connect to this machine on port \(controllerPort). Pick an output root so every run captures provenance in one obvious place.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 12) {
+                labeledNumberField("Bind Port", value: $controllerPort, width: 110)
+                Spacer()
             }
         case .worker:
             VStack(alignment: .leading, spacing: 14) {
@@ -285,18 +253,14 @@ struct ConnectView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     Text("Recent endpoint: \(controllerIP):\(controllerPort)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(StudioType.dataSmall)
+                        .foregroundStyle(StudioPalette.mutedInk)
                 }
-
-                Text("Worker mode keeps the cluster workflow explicit: join a live controller, contribute search, inspect results, and opt into sweeps or arena play.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         case .compendium:
-            Text("Compendium mode is offline. No cluster connection is attempted.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Label("Offline", systemImage: "network.slash")
+                .font(StudioType.bodySmall)
+                .foregroundStyle(StudioPalette.mutedInk)
         }
     }
 
@@ -312,10 +276,6 @@ struct ConnectView: View {
 
             if let selectedPreset {
                 Text(selectedPreset.summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("Pick manual paths if you want full control over the base and search config pair.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -335,49 +295,24 @@ struct ConnectView: View {
     }
 
     private var compendiumContent: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            pathRow(label: "Compendium DB", path: $compendiumPath) { showCompendiumPicker = true }
-            Text("Choose a `compendium.sqlite` created by the indexer or the studio output pipeline.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
+        pathRow(label: "Compendium DB", path: $compendiumPath) { showCompendiumPicker = true }
     }
 
-    private func footer(compact: Bool) -> some View {
-        Group {
-            if compact {
-                VStack(alignment: .leading, spacing: 12) {
-                    Button("Cancel") { dismiss() }
-                        .buttonStyle(.bordered)
-                    Button(action: startNode) {
-                        Label(startButtonLabel, systemImage: mode.systemImage)
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(!isReady)
-                    .keyboardShortcut(.defaultAction)
-                }
-            } else {
-                HStack {
-                    Button("Cancel") { dismiss() }
-                        .buttonStyle(.bordered)
-                    Spacer()
-                    Button(action: startNode) {
-                        Label(startButtonLabel, systemImage: mode.systemImage)
-                            .font(.headline)
-                            .frame(minWidth: 220)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(!isReady)
-                    .keyboardShortcut(.defaultAction)
-                }
+    private var footer: some View {
+        HStack {
+            Spacer()
+            Button(action: startNode) {
+                Label(startButtonLabel, systemImage: mode.systemImage)
+                    .font(.headline)
+                    .frame(minWidth: 220)
             }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!isReady)
+            .keyboardShortcut(.defaultAction)
         }
         .padding(20)
-        .background(.thinMaterial)
+        .background(.bar)
     }
 
     private func labeledTextField(_ label: String, text: Binding<String>, width: CGFloat) -> some View {
@@ -410,8 +345,12 @@ struct ConnectView: View {
             HStack(spacing: 10) {
                 TextField("Path", text: path)
                     .textFieldStyle(.roundedBorder)
-                Button("Choose", action: onChoose)
+                Button(action: onChoose) {
+                    Image(systemName: "folder")
+                }
                     .buttonStyle(.bordered)
+                    .help("Choose \(label)")
+                    .accessibilityLabel("Choose \(label)")
             }
         }
     }
