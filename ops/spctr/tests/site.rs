@@ -846,7 +846,7 @@ local_source = "artifacts/site-data"
     );
     write(
         root,
-        "dossiers/alpha/artifacts/releases/alpha-python.evidence.json",
+        "dossiers/alpha/artifacts/evidence/alpha-python.evidence.json",
         r#"{
   "version": 1,
   "action": "package_surface",
@@ -1198,6 +1198,94 @@ Foo Section
     assert!(
         !sitemap.contains("GENERATED:FOO_TITLE"),
         "sitemap title should strip generated-region comments"
+    );
+}
+
+#[test]
+fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+    minimal_templates(root);
+    write(
+        root,
+        "dossiers/alpha/spctr.toml",
+        &dossier_manifest("Alpha", "active", true, true, Some(1), None),
+    );
+    write(
+        root,
+        "site/templates/dossiers/lenia-swarm/causal-emergence/page.html",
+        "\
+<html>
+<head>
+<!-- GENERATED:CAUSAL_EMERGENCE_PAGE_TITLE START -->
+<!-- GENERATED:CAUSAL_EMERGENCE_PAGE_TITLE END -->
+<!-- GENERATED:CAUSAL_EMERGENCE_PAGE_META START -->
+<!-- GENERATED:CAUSAL_EMERGENCE_PAGE_META END -->
+</head>
+<body>
+<!-- GENERATED:CAUSAL_EMERGENCE_PAGE_CONTENT START -->
+<!-- GENERATED:CAUSAL_EMERGENCE_PAGE_CONTENT END -->
+</body>
+</html>
+",
+    );
+    write(
+        root,
+        "site/dossiers/lenia-swarm/causal-emergence/catalog.json",
+        &serde_json::to_string_pretty(&serde_json::json!({
+            "schema_version": 1,
+            "reports": [{
+                "id": "organism-appears-first",
+                "title": "The organism appears first in possibility space",
+                "date": "2026-08-30",
+                "dek": "A synthesis of the developmental experiments.",
+                "question": "When does a seeded field begin to constrain its own futures?",
+                "answer": "The response repertoire narrowed before morphology settled.",
+                "next_question": "Which hidden variables preserve that developmental history?",
+                "category": "synthesis",
+                "status": "feature",
+                "evidence_class": "multi-cohort synthesis",
+                "featured": true,
+                "archive": false,
+                "supersedes": [],
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "release_id": "flce-organism-appears-first-aaaaaaaaaaaa"
+            }]
+        }))
+        .unwrap(),
+    );
+
+    spctr::site::build(root, true).unwrap();
+    spctr::site::build(root, true).unwrap();
+
+    let landing =
+        fs::read_to_string(root.join("site/dossiers/lenia-swarm/causal-emergence/index.html"))
+            .unwrap();
+    let library = fs::read_to_string(
+        root.join("site/dossiers/lenia-swarm/causal-emergence/library/index.html"),
+    )
+    .unwrap();
+    let archive = fs::read_to_string(
+        root.join("site/dossiers/lenia-swarm/causal-emergence/archive/index.html"),
+    )
+    .unwrap();
+    let sitemap = fs::read_to_string(root.join("site/sitemap/index.html")).unwrap();
+
+    assert!(landing.contains("Begin with the synthesis"));
+    assert!(landing.contains("<title>Causal Emergence in Flow Lenia | SPECTER Labs</title>"));
+    assert!(landing.contains(
+        "https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/flce-organism-appears-first-aaaaaaaaaaaa/"
+    ));
+    assert!(landing.contains("property=\"og:title\""));
+    assert!(library.contains("Report library"));
+    assert!(archive.contains("No reports are currently archived"));
+    assert!(sitemap.contains("Causal Emergence in Flow Lenia"));
+    assert!(sitemap.contains("Flow Lenia Causal Emergence Report Library"));
+    assert!(sitemap.contains("Flow Lenia Causal Emergence Archive"));
+    assert_eq!(
+        sitemap.matches("Causal Emergence in Flow Lenia").count(),
+        1,
+        "explicit sitemap routes should not duplicate discovered output pages"
     );
 }
 

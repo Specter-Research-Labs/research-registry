@@ -107,6 +107,15 @@ pub(crate) fn canonical_archive_surfaces() -> Vec<ArchiveSurfaceRecord> {
             "https://specterlab.org/dossiers/lenia-swarm/compendium/",
         ),
         surface(
+            "lenia-swarm",
+            "causal-emergence",
+            "Flow Lenia Causal Emergence Reports",
+            "Immutable releases of the Flow Lenia causal-emergence synthesis and experiment reports.",
+            "Causal-emergence reports",
+            "Current synthesis",
+            "https://releases.specterlab.org/lenia-swarm/causal-emergence/current/",
+        ),
+        surface(
             "wonton-soup",
             "site-dashboard",
             "Wonton Site Dashboard Releases",

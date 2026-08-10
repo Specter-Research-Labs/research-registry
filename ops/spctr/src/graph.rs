@@ -1527,6 +1527,10 @@ fn collect_release_evidence_paths(dir: &Utf8Path, out: &mut Vec<Utf8PathBuf>) ->
             .try_into()
             .context("non-UTF-8 release evidence path")?;
         if path.is_dir() {
+            if path.file_name() == Some("artifacts") {
+                collect_canonical_artifact_evidence(&path, out)?;
+                continue;
+            }
             if should_skip_release_evidence_dir(&path) {
                 continue;
             }
@@ -1543,13 +1547,41 @@ fn collect_release_evidence_paths(dir: &Utf8Path, out: &mut Vec<Utf8PathBuf>) ->
     Ok(())
 }
 
+fn collect_canonical_artifact_evidence(
+    artifacts_dir: &Utf8Path,
+    out: &mut Vec<Utf8PathBuf>,
+) -> Result<()> {
+    // Simulation artifacts can contain millions of frames, while durable cards
+    // beneath an artifacts root are canonically routed through artifacts/evidence.
+    let evidence_dir = artifacts_dir.join("evidence");
+    if evidence_dir.is_dir() {
+        collect_release_evidence_paths(&evidence_dir, out)?;
+    }
+    Ok(())
+}
+
 fn should_skip_release_evidence_dir(path: &Utf8Path) -> bool {
     matches!(
         path.file_name(),
         Some(
-            ".git" | ".jj" | ".build" | ".swiftpm" | ".direnv" | ".venv" | "node_modules"
-            | "target" | "DerivedData" | "compendium" | "exports" | "flow-universe-runs"
-            | "logs" | "outputs" | "tmp" | ".pytest_cache" | ".ruff_cache" | "__pycache__",
+            ".git"
+                | ".jj"
+                | ".build"
+                | ".swiftpm"
+                | ".direnv"
+                | ".venv"
+                | "node_modules"
+                | "target"
+                | "DerivedData"
+                | "compendium"
+                | "exports"
+                | "flow-universe-runs"
+                | "logs"
+                | "outputs"
+                | "tmp"
+                | ".pytest_cache"
+                | ".ruff_cache"
+                | "__pycache__",
         )
     )
 }

@@ -368,9 +368,13 @@ fn render_sitemap_tree(nodes: &[SitemapNode], indent: &str) -> String {
     lines.join("\n")
 }
 
-pub fn render_sitemap_sections(repo_root: &Utf8Path) -> anyhow::Result<String> {
+pub fn render_sitemap_sections(
+    repo_root: &Utf8Path,
+    additional_pages: &[discover::SitePageRecord],
+) -> anyhow::Result<String> {
     let page_path = "sitemap/index.html";
-    let groups = discover::discover_sitemap_pages(repo_root);
+    let mut groups = discover::discover_sitemap_pages(repo_root);
+    merge_sitemap_pages(&mut groups, additional_pages);
 
     const KNOWN_ORDER: &[&str] = &[
         "",
@@ -454,6 +458,41 @@ pub fn render_sitemap_sections(repo_root: &Utf8Path) -> anyhow::Result<String> {
 
     let indent = "    ";
     Ok(render_sitemap_tree(&nodes, indent))
+}
+
+fn merge_sitemap_pages(
+    groups: &mut Vec<discover::SitemapGroup>,
+    additional_pages: &[discover::SitePageRecord],
+) {
+    for page in additional_pages {
+        let section = page.href.split('/').next().unwrap_or_default();
+        if let Some(group) = groups.iter_mut().find(|group| group.section == section) {
+            if group
+                .index
+                .as_ref()
+                .is_some_and(|index| index.href == page.href)
+                || group.children.iter().any(|child| child.href == page.href)
+            {
+                continue;
+            }
+            group.children.push(discover::SitePageRecord {
+                title: page.title.clone(),
+                href: page.href.clone(),
+            });
+            group
+                .children
+                .sort_by(|left, right| left.href.cmp(&right.href));
+        } else {
+            groups.push(discover::SitemapGroup {
+                section: section.to_owned(),
+                index: None,
+                children: vec![discover::SitePageRecord {
+                    title: page.title.clone(),
+                    href: page.href.clone(),
+                }],
+            });
+        }
+    }
 }
 
 pub fn render_sitemap_registry(records: &[SiteRecord], blog_posts: &[BlogPostRecord]) -> String {

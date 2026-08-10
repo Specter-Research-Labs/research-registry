@@ -198,7 +198,7 @@ local_source = "artifacts/site-data"
 "#,
     );
     write(
-        &root.join("dossiers/alpha/artifacts/releases/alpha-python.evidence.json"),
+        &root.join("dossiers/alpha/artifacts/evidence/alpha-python.evidence.json"),
         r#"{
   "version": 1,
   "action": "package_surface",
@@ -216,6 +216,30 @@ local_source = "artifacts/site-data"
   "outputs": []
 }
 "#,
+    );
+    write(
+        &root.join("dossiers/alpha/releases/source-python.evidence.json"),
+        r#"{
+  "version": 1,
+  "action": "package_surface",
+  "generated_at": "2026-04-06T12:02:00Z",
+  "project": "alpha",
+  "title": "Alpha",
+  "series": "D-001",
+  "stage": "promoted",
+  "surface": "python",
+  "surface_kind": "package",
+  "language": "python",
+  "release_id": "alpha-source-001",
+  "manifest_path": "dossiers/alpha/spctr.toml",
+  "inputs": [],
+  "outputs": []
+}
+"#,
+    );
+    write(
+        &root.join("dossiers/alpha/artifacts/runs/ignored.evidence.json"),
+        "{ this ignored simulation output is deliberately invalid JSON\n",
     );
     write(
         &root.join("site/updates/entries/spctr-update-001.json"),
@@ -325,7 +349,11 @@ Graph-native article.
         .any(|node| node.id == "evidence_card:exec:dossier:alpha:check"));
     assert!(graph.nodes.iter().any(|node| {
         node.id
-            == "evidence_card:release:dossier:alpha:dossiers/alpha/artifacts/releases/alpha-python.evidence.json"
+            == "evidence_card:release:dossier:alpha:dossiers/alpha/artifacts/evidence/alpha-python.evidence.json"
+    }));
+    assert!(graph.nodes.iter().any(|node| {
+        node.id
+            == "evidence_card:release:dossier:alpha:dossiers/alpha/releases/source-python.evidence.json"
     }));
     assert!(graph
         .nodes
@@ -435,7 +463,13 @@ Graph-native article.
     }));
     assert!(graph.edges.iter().any(|edge| {
         edge.src
-            == "evidence_card:release:dossier:alpha:dossiers/alpha/artifacts/releases/alpha-python.evidence.json"
+            == "evidence_card:release:dossier:alpha:dossiers/alpha/artifacts/evidence/alpha-python.evidence.json"
+            && edge.kind == "evidence_for_surface"
+            && edge.dst == "release_surface:dossier:alpha:python"
+    }));
+    assert!(graph.edges.iter().any(|edge| {
+        edge.src
+            == "evidence_card:release:dossier:alpha:dossiers/alpha/releases/source-python.evidence.json"
             && edge.kind == "evidence_for_surface"
             && edge.dst == "release_surface:dossier:alpha:python"
     }));
