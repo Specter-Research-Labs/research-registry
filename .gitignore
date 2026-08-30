@@ -67,6 +67,7 @@ dossiers/wonton-soup/notes/
 # Generated local-only artifacts.
 **/artifacts/evidence/
 **/artifacts/publish/
+artifacts/publication/causal-emergence/
 dossiers/wonton-soup/artifacts/
 dossiers/lenia-swarm/artifacts/
 dossiers/wonton-soup/logs/
@@ -132,6 +133,9 @@ ops/dispatch/.zuliprc
 site/index.html
 site/dossiers/index.html
 site/dossiers/*/index.html
+site/dossiers/lenia-swarm/causal-emergence/index.html
+site/dossiers/lenia-swarm/causal-emergence/library/index.html
+site/dossiers/lenia-swarm/causal-emergence/archive/index.html
 site/addenda/index.html
 site/sitemap/index.html
 site/projects/catalog.json

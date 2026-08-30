@@ -3,6 +3,8 @@ pub mod artifacts;
 pub mod blog;
 pub mod cabinet;
 pub mod catalog;
+pub mod causal_emergence;
+pub mod causal_emergence_release;
 pub mod data;
 pub mod discover;
 pub mod health;
@@ -63,6 +65,11 @@ fn build_from_projection(
         project_feeds,
     } = projection;
     let record_slices = records::slice_records(&records);
+    let causal_emergence_catalog = causal_emergence::load_catalog(repo_root)?;
+    let causal_emergence_sitemap_pages = causal_emergence_catalog
+        .as_ref()
+        .map(|_| causal_emergence::sitemap_pages())
+        .unwrap_or_default();
 
     let mut pages: Vec<PageRegion> = vec![
         PageRegion {
@@ -118,7 +125,7 @@ fn build_from_projection(
             regions: vec![
                 (
                     "SITEMAP_SECTIONS",
-                    regions::render_sitemap_sections(repo_root)?,
+                    regions::render_sitemap_sections(repo_root, &causal_emergence_sitemap_pages)?,
                 ),
                 (
                     "SITEMAP_REGISTRY",
@@ -171,6 +178,49 @@ fn build_from_projection(
                         "DOSSIER_HUB_FOOTER",
                         regions::render_dossier_hub_footer(record),
                     ),
+                ],
+            });
+        }
+    }
+
+    if let Some(catalog) = causal_emergence_catalog.as_ref() {
+        let template_path = "site/templates/dossiers/lenia-swarm/causal-emergence/page.html";
+        for (output_path, title, description, canonical_path, content) in [
+            (
+                causal_emergence::LANDING_OUTPUT,
+                "Causal Emergence in Flow Lenia",
+                "A guided path through the experiments that follow when a developing Flow Lenia system becomes harder to redirect and more specific in its response.",
+                "/dossiers/lenia-swarm/causal-emergence/",
+                causal_emergence::render_landing(catalog),
+            ),
+            (
+                causal_emergence::LIBRARY_OUTPUT,
+                "Flow Lenia Causal Emergence Report Library",
+                "The complete public library of current Flow Lenia causal-emergence reports, ordered as the experimental questions developed.",
+                "/dossiers/lenia-swarm/causal-emergence/library/",
+                causal_emergence::render_library(catalog),
+            ),
+            (
+                causal_emergence::ARCHIVE_OUTPUT,
+                "Flow Lenia Causal Emergence Archive",
+                "Pilots and superseded Flow Lenia causal-emergence reports retained as part of the experimental record.",
+                "/dossiers/lenia-swarm/causal-emergence/archive/",
+                causal_emergence::render_archive(catalog),
+            ),
+        ] {
+            pages.push(PageRegion {
+                template_path: template_path.into(),
+                output_path: output_path.into(),
+                regions: vec![
+                    (
+                        "CAUSAL_EMERGENCE_PAGE_TITLE",
+                        causal_emergence::render_page_title(title),
+                    ),
+                    (
+                        "CAUSAL_EMERGENCE_PAGE_META",
+                        causal_emergence::render_page_meta(title, description, canonical_path),
+                    ),
+                    ("CAUSAL_EMERGENCE_PAGE_CONTENT", content),
                 ],
             });
         }

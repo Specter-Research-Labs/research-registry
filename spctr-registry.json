@@ -238,7 +238,7 @@
       }
     },
     "D-002": {
-      "next_counter": 38,
+      "next_counter": 39,
       "entries": {
         "README": "D-002.001",
         "concepts/analysis-lexicon": "D-002.002",
@@ -267,6 +267,7 @@
         "figures/poster/README": "D-002.037",
         "ops/corpus": "D-002.021",
         "ops/lake": "D-002.025",
+        "ops/local-workbench-ui-plan": "D-002.038",
         "ops/paper": "D-002.035",
         "ops/setup": "D-002.023",
         "ops/verification": "D-002.036"

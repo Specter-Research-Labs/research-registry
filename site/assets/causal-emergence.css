@@ -1,0 +1,443 @@
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("../fonts/BerkeleyMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Serif";
+  src: url("../fonts/IBMPlexSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.ce-page {
+  --ce-ink: #111722;
+  --ce-paper: #f5f1e7;
+  --ce-panel: #fffdf7;
+  --ce-blue: #2f56df;
+  --ce-lime: #d7ff2f;
+  --ce-coral: #f45137;
+  --ce-mint: #cceae1;
+  --ce-rule: rgba(17, 23, 34, 0.22);
+  --ce-shadow: 8px 8px 0 rgba(17, 23, 34, 0.11);
+  background-color: var(--ce-paper);
+  background-image:
+    linear-gradient(rgba(17, 23, 34, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 23, 34, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ce-ink);
+}
+
+.ce-shell {
+  background: transparent;
+  max-width: 1240px;
+}
+
+.ce-main {
+  display: grid;
+  gap: clamp(3.5rem, 5vw, 5rem);
+  padding-bottom: clamp(4rem, 9vw, 8rem);
+}
+
+.ce-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.ce-section-nav a,
+.ce-category-nav a {
+  border: 1px solid var(--ce-ink);
+  background: var(--ce-panel);
+  color: var(--ce-ink);
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.55rem 0.78rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.ce-section-nav a[aria-current="page"],
+.ce-section-nav a:hover,
+.ce-category-nav a:hover {
+  background: var(--ce-ink);
+  color: var(--ce-paper);
+}
+
+.ce-section-nav a:focus-visible,
+.ce-category-nav a:focus-visible,
+.ce-button:focus-visible,
+.ce-report-card h3 a:focus-visible {
+  outline: 3px solid var(--ce-coral);
+  outline-offset: 3px;
+}
+
+.ce-hero,
+.ce-page-header {
+  max-width: 1000px;
+}
+
+.ce-kicker,
+.ce-question-label {
+  color: var(--ce-blue);
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.ce-hero h1,
+.ce-page-header h1 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(2.6rem, 5.1vw, 4.35rem);
+  letter-spacing: -0.07em;
+  line-height: 0.96;
+  margin: 0.35em 0 0;
+  max-width: 1000px;
+  overflow-wrap: anywhere;
+}
+
+.ce-hero-dek,
+.ce-page-header p {
+  font-family: "IBM Plex Serif", serif;
+  font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+  line-height: 1.6;
+  margin-top: 1.6rem;
+  max-width: 76ch;
+}
+
+.ce-lead-report,
+.ce-library-invite {
+  background: var(--ce-ink);
+  border-top: 10px solid var(--ce-coral);
+  box-shadow: var(--ce-shadow);
+  color: var(--ce-paper);
+  padding: clamp(1.5rem, 4vw, 3.4rem);
+}
+
+.ce-lead-report .ce-kicker,
+.ce-library-invite .ce-kicker {
+  color: var(--ce-lime);
+}
+
+.ce-section-heading {
+  max-width: 800px;
+}
+
+.ce-section-heading h2,
+.ce-library-invite h2 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(1.8rem, 3.5vw, 3.3rem);
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+  margin: 0.25em 0 0;
+}
+
+.ce-section-heading h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ce-section-heading p,
+.ce-library-invite p {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.08rem;
+  line-height: 1.62;
+  margin-top: 1rem;
+  max-width: 72ch;
+}
+
+.ce-dek {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.ce-report-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.4rem 0 1rem;
+}
+
+.ce-report-meta time,
+.ce-chip,
+.ce-count {
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ce-chip {
+  border: 1px solid currentColor;
+  padding: 0.3rem 0.48rem;
+}
+
+.ce-chip-category {
+  color: var(--ce-blue);
+}
+
+.ce-chip-feature {
+  background: var(--ce-lime);
+  color: var(--ce-ink);
+}
+
+.ce-chip-library {
+  background: var(--ce-mint);
+  color: var(--ce-ink);
+}
+
+.ce-chip-archive {
+  background: rgba(17, 23, 34, 0.08);
+  color: var(--ce-ink);
+}
+
+.ce-lead-report .ce-chip-category {
+  color: #86a3ff;
+}
+
+.ce-lead-report .ce-report-meta time {
+  color: rgba(245, 241, 231, 0.68);
+}
+
+.ce-question-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.5rem;
+}
+
+.ce-question-cell {
+  border: 1px solid var(--ce-rule);
+  padding: 1.15rem;
+}
+
+.ce-question-cell + .ce-question-cell {
+  border-left: 0;
+}
+
+.ce-question-cell p {
+  font-family: "IBM Plex Serif", serif;
+  line-height: 1.55;
+  margin: 0.65rem 0 0;
+}
+
+.ce-answer-cell {
+  background: rgba(47, 86, 223, 0.08);
+}
+
+.ce-lead-report .ce-question-cell {
+  border-color: rgba(245, 241, 231, 0.22);
+}
+
+.ce-lead-report .ce-answer-cell {
+  background: rgba(215, 255, 47, 0.1);
+}
+
+.ce-lead-report .ce-question-label {
+  color: var(--ce-lime);
+}
+
+.ce-card-footer {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+  justify-content: space-between;
+  margin-top: 1.3rem;
+}
+
+.ce-report-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.ce-button {
+  border: 1px solid currentColor;
+  color: inherit;
+  display: inline-block;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.62rem 0.8rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.ce-button-primary {
+  background: var(--ce-blue);
+  border-color: var(--ce-blue);
+  color: white;
+}
+
+.ce-lead-report .ce-button-primary {
+  background: var(--ce-lime);
+  border-color: var(--ce-lime);
+  color: var(--ce-ink);
+}
+
+.ce-receipt {
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.7rem;
+  max-width: 100%;
+}
+
+.ce-receipt summary {
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.55rem 0;
+  text-transform: uppercase;
+}
+
+.ce-receipt dl {
+  border-top: 1px solid currentColor;
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.6rem;
+}
+
+.ce-receipt dl > div {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+}
+
+.ce-receipt dt {
+  opacity: 0.65;
+}
+
+.ce-receipt dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ce-report-section {
+  display: grid;
+  gap: 1.7rem;
+}
+
+.ce-section-heading-row {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  max-width: none;
+}
+
+.ce-card-grid {
+  display: grid;
+  gap: 1.25rem;
+  scroll-margin-top: 1rem;
+}
+
+.ce-report-card {
+  background: var(--ce-panel);
+  border: 1px solid var(--ce-ink);
+  box-shadow: 5px 5px 0 rgba(17, 23, 34, 0.1);
+  padding: clamp(1.2rem, 3vw, 2rem);
+}
+
+.ce-report-card h3 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(1.45rem, 2.5vw, 2.3rem);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+  margin: 0 0 0.75rem;
+}
+
+.ce-report-card h3 a {
+  color: inherit;
+  text-decoration-color: var(--ce-blue);
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.13em;
+}
+
+.ce-category-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: -3rem;
+}
+
+.ce-category-nav span {
+  color: var(--ce-blue);
+}
+
+.ce-library-invite {
+  align-items: end;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.ce-empty {
+  background: var(--ce-panel);
+  border: 1px solid var(--ce-ink);
+  padding: 2rem;
+}
+
+.ce-site-footer {
+  border-top: 2px solid var(--ce-ink);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.75rem;
+  gap: 1rem 2rem;
+  padding: 1.25rem 0 3rem;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .ce-main {
+    gap: 4rem;
+  }
+
+  .ce-hero h1,
+  .ce-page-header h1 {
+    font-size: clamp(2.35rem, 13vw, 4rem);
+  }
+
+  .ce-question-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ce-question-cell + .ce-question-cell {
+    border-left: 1px solid var(--ce-rule);
+    border-top: 0;
+  }
+
+  .ce-lead-report .ce-question-cell + .ce-question-cell {
+    border-left-color: rgba(245, 241, 231, 0.22);
+  }
+
+  .ce-library-invite {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ce-button,
+  .ce-section-nav a,
+  .ce-category-nav a {
+    transition: transform 120ms ease, background-color 120ms ease;
+  }
+
+  .ce-button:hover,
+  .ce-section-nav a:hover,
+  .ce-category-nav a:hover {
+    transform: translateY(-2px);
+  }
+}
