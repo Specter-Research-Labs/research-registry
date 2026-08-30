@@ -73,8 +73,8 @@ jobs:
 
       - name: Install minification tools
         run: |
-          command -v lightningcss || cargo install lightningcss --features cli --version 1.0.0-alpha.71
-          command -v minhtml || cargo install minhtml --version 0.18.1
+          command -v lightningcss || cargo install --locked lightningcss --features cli --version 1.0.0-alpha.71
+          command -v minhtml || cargo install --locked minhtml --version 0.18.1
 
       - name: Install typst
         uses: typst-community/setup-typst@v5.1.0
