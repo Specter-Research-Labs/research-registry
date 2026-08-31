@@ -1,16 +1,13 @@
 ---
 title: "Wonton Soup Follow-Up"
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
 
 # Wonton Soup Follow-Up
 
-The follow-up splits into smaller pieces: provider differences, blocked-tactic responses, distributed MCTS sweeps, and the cases where a failure becomes informative once we perturb the prover.
-
-Three figures anchor the result:
+The follow-up starts from a simple nuisance: a blocked tactic can make a prover fail, reroute, or change tactics without changing the proof family. Solve rate alone loses that distinction.
 
 ![Paired-panel intervention taxonomy](../../assets/blog/wonton-soup-follow-up/fig16-followup-taxonomy.png)
 
@@ -18,7 +15,7 @@ Three figures anchor the result:
 
 ![Basin multistability versus blind-relative gain](../../assets/blog/wonton-soup-follow-up/fig18-followup-basins.png)
 
-## What the lake shows
+## The Runs
 
 The lake DB holds **17,400 wild-type runs** and **19,700 intervention comparisons** with valid GED scores as of April 2026.
 
@@ -61,9 +58,9 @@ The paired intervention panel is not simply "damage search" versus "help search.
 
 ## Provider Differences
 
-The cross-provider notes mostly keep us honest. Early comparison runs looked like high structural convergence, but much of that came from trivial one-step proofs—the convergence was expected and uninformative.
+Early comparison runs looked highly convergent because many were trivial one-step proofs. That convergence says almost nothing.
 
-The divergent multi-step examples are the ones worth keeping. One provider leans on library lemmas where another performs explicit construction; tactic overlap can be low even when both systems reach the theorem. Provider-specific basin structure becomes visible when we score interventions below the solved/failed outcome.
+In multi-step examples, one provider leans on library lemmas while another constructs the result explicitly; tactic overlap can be low even when both reach the theorem. The difference appears once we score interventions below solved/failed.
 
 ## Sampling Broke One Failure Mode
 
@@ -100,10 +97,8 @@ Seed0 summary:
 
 The damage-block-f0.5 condition added eight interventions relative to baseline. The extra interventions concentrated in four theorems, and three of the extras solved, which looks like a search-path shift rather than a broad improvement.
 
-## Where The Signal Is
+## Reroutes
 
-Blocking tactics matters when the prover reroutes. Separate terminal outcome from tactic-role structure: which tactic families become necessary or brittle, where one provider reroutes while another collapses, and whether extra interventions produce solved routes or only churn.
-
-This is the competency-motif test: a blocked local channel matters when the system reroutes through a nontrivial alternate path.
+Separate terminal outcome from tactic-role structure: which tactic families are necessary or brittle, where one provider reroutes while another collapses, and whether extra interventions produce solved routes or only churn. A blocked channel is informative when the prover reaches the theorem through a different nontrivial path.
 
 For the broader framing on cognition across heterogeneous systems, see Robert Chis-Ciure and Michael Levin, "Cognition all the way down 2.0: neuroscience beyond neurons in the diverse intelligence era," *Synthese* 206, 257 (2025), [doi:10.1007/s11229-025-05319-6](https://doi.org/10.1007/s11229-025-05319-6).

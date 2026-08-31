@@ -15,21 +15,21 @@ toc: true
 
 ## What Game of Life would look like if physics were continuous
 
-Game of Life runs on a discrete grid with binary cells, a synchronous integer tick, and a tiny lookup table for the update. Lenia (Bert Chan, 2018) keeps the spirit and relaxes every axis. Cells hold real-valued concentrations in `[0, 1]` instead of alive/dead, time advances in fractional steps `dt` of about `0.1` to `0.2`, and the lookup table becomes two smooth functions: a kernel `K` that reads the neighborhood, and a growth function `G` that decides what each cell does with what it read.
+Game of Life is a discrete grid of dead-or-alive cells updated by a tiny lookup table, whereas Lenia (Bert Chan, 2018) turns every one of those knobs at once: cells hold concentrations in `[0, 1]`, time advances in fractional steps of roughly `0.1` to `0.2`, and two smooth functions replace the table. The kernel `K` reads a weighted neighborhood; the growth function `G` turns that reading into local growth or decay.
 
-Those two functions are all there is. There are no explicit rules for movement, no body plans, no replication code. Bert Chan's original menagerie includes orbium (a translating glider), geminium (which splits into copies of itself), and scutium (an armored walker), and every one of them falls out of the same two functions with different numbers in them. The [canonical demo at chakazul.github.io](https://chakazul.github.io/Lenia/JavaScript/Lenia.html) ships dozens more, organized into a tongue-in-cheek taxonomy (Orbiformes, Scutiformes, Anuliformes), and is worth opening in a side tab while reading the rest of this. Later work extends the alphabet: multi-channel Lenia runs several concentration fields that read and write into each other, Flow Lenia adds a velocity field so mass is actually conserved, and sensorimotor Lenia couples the field to an environment.
+There are no movement rules, body plans, or replication instructions hidden elsewhere. Orbium translates, geminium splits, and scutium walks because the same update takes different numbers; [Chan's canonical demo](https://chakazul.github.io/Lenia/JavaScript/Lenia.html) showcases dozens of further examples under its deliberately silly taxonomy (Orbiformes, Scutiformes, Anuliformes). Multi-channel Lenia adds interacting concentration fields, Flow Lenia adds a velocity field so mass moves rather than appearing and disappearing, and sensorimotor Lenia couples those fields to an environment.
 
-This primer has one through-line. Lenia is a substrate where lifelike structure is possible but rare: the kernel and growth function fix the physics, and the creatures worth keeping sit on a thin, curved manifold buried in a parameter space that is otherwise almost entirely dead. Everything below is about that manifold. How to read the two functions that define it, how to search for the things that live on it, and what it takes to turn a pile of survivors into a catalog you can do science with. The live simulation further down is worth playing with before the equations, since the whole point of Lenia is that these are objects you can watch rather than formulas you have to trust. And where the piece ends up, the part that matters to us, is a question about the shape of that manifold rather than about any single creature on it.
+Most parameter settings still die or saturate. Persistent creatures occupy a thin, curved manifold inside that mostly dead space, and the simulation is here because you should watch the object before reading a page of equations about it. Once there are enough survivors, the work becomes less about finding one creature and more about mapping the manifold they share.
 
 ### The kernel -- convolution as neighborhood sensing
 
-Each cell first asks "what is around me?". The answer is a single number, the potential `U(x, y)`, computed by convolving the state grid `A` with a kernel `K` whose weights depend only on distance from the center. The shape of `K` is the choice that does all the work: it is not a blob, it is a ring. Zero at the center, a peak at some characteristic radius, decay to zero past that. A cell does not care about its immediate neighbors, it cares about a thin shell of neighbors a few grid cells out, and that is what lets standing-wave patterns lock in as creatures instead of dissolving into diffusion.
+For every location, the engine convolves the state grid `A` with a radial kernel `K` and produces one potential value, `U(x, y)`. The kernel is a ring rather than a blob: it is zero at the center, peaks at a characteristic radius, then falls away again, so the update responds to a shell of nearby cells instead of the cell's immediate neighbors. That is what allows standing-wave patterns to lock into creatures instead of dissolving into diffusion.
 
 The ring is built as a mixture of Gaussians indexed by their position along the radius. For each Gaussian `g`, three parameters: an amplitude `b[g]`, a radial center `a[g]` saying where along the ring it peaks, and a width `w[g]` saying how sharp the peak is. A base radius `R` (in grid cells) and a per-kernel fraction `r` set the effective kernel size, so the actual reach in pixels is `R * r`. The kernel gets normalized so the weights sum to 1 and the potential `U` stays a weighted average that does not blow up with kernel size.
 
 $$U(x, y) = \sum_{(dx, dy)} K(dx, dy)\, A(x + dx,\, y + dy)$$
 
-With a single channel and a single Gaussian, that is about eight continuous numbers defining the entire physics. With the 15-kernel, 3-channel Aquarium creature it is over a hundred, plus a small connectivity table saying which channel each kernel reads from and which channels it writes to. A 128x128 grid convolved against one kernel of radius 7 costs about 3.7M multiply-adds per step if you do it directly. Fifteen kernels of that size would be roughly 55M, and the Aquarium runs them on a larger grid with wider kernels, so the real figure lands a few times higher again. None of those counts are what actually executes, though: the engine does the convolutions by FFT, which trades the direct cost for an N log N one and is the real reason the campaigns run on GPU.
+One channel and one Gaussian take roughly eight continuous parameters. Aquarium uses fifteen kernels across three channels, more than a hundred continuous values plus a small connectivity table. A direct 128x128 convolution with a radius-7 kernel costs about 3.7M multiply-adds per step; fifteen of them would cost roughly 55M before accounting for the larger grid and wider kernels Aquarium uses. The engine uses FFT convolution instead, turning that direct cost into an `N log N` one and making the large campaigns feasible on GPU.
 
 <div class="lenia-widget" data-widget="kernel" data-defaults='{"R":13,"r":0.5,"b":[1],"w":[0.2],"a":[0.5]}'>
 <noscript><p>Interactive kernel visualizer requires JavaScript.</p></noscript>
@@ -41,9 +41,9 @@ Once a cell has its potential `U`, the growth function `G(U)` turns that number 
 
 $$G(U) = \bigl(2\exp\!\bigl(-\tfrac{(U - \mu)^2}{2\sigma^2}\bigr) - 1\bigr) \cdot h$$
 
-When `U` lands near the preferred neighbor density `mu`, growth is positive and the cell fills in. When `U` is far from `mu`, growth is negative and the cell actively shrinks, with the decay rate saturating at `-h` once it gets far enough away. So three numbers per kernel decide the cell's personality: `mu` (the sweet spot for how crowded its shell should be), `sigma` (how picky it is about hitting that target), and `h` (how aggressively it grows or decays once it has decided).
+Near the preferred neighbor density `mu`, `G(U)` is positive and the cell fills in; far away, it is negative and the cell shrinks, bottoming out at `-h`. `mu` sets the preferred crowding, `sigma` sets how narrow that preference is, and `h` sets the rate of growth or decay.
 
-That setup is what makes Lenia worlds mostly empty. The bell curve carves out a narrow habitable zone in concentration space, and anything outside that zone is actively pulled toward zero, not just left alone. Configurations that survive are the ones that hold a particular local density at a particular distance everywhere along the creature's boundary at once, which is a much sharper constraint than it sounds.
+The bell curve leaves most of Lenia empty: outside a narrow concentration band, the update pulls values toward zero. A creature survives only by maintaining the right density at the right distance around its entire boundary.
 
 With multiple kernels and channels the bookkeeping is a connectivity matrix: each kernel reads from one channel and contributes to one or more output channels, and the per-cell update is the sum of contributions across kernels (with `dt` scaling and clamping to `[0, 1]`). The Aquarium creature, for instance, runs 15 kernels across 3 channels with cross-channel connections, so a single cell update has fifteen separate convolution reads and writes feeding into three output channels.
 
@@ -103,14 +103,14 @@ With multiple kernels and channels the bookkeeping is a connectivity matrix: eac
     Flow Lenia keeps A &#8594; U &#8594; &#916;A and replaces that one arrow with mass transport.
   </text>
 </svg>
-<figcaption>The whole basic update is four fields and three operations. K and G are the only things a creature is. Everything else on this page is either searching for good (K, G) or extending what the last arrow does.</figcaption>
+<figcaption>Basic Lenia is four fields and three operations. The later sections either search over K and G or replace the final write with mass transport.</figcaption>
 </figure>
 
 ### Flow Lenia -- mass-conserving transport (Plantec et al., 2023)
 
-Basic Lenia does not conserve mass. The update `state += dt * G(U)` creates and destroys mass freely, so a "moving" creature is really a wave where cells at the front grow and cells at the back shrink, not an object being transported. That looks fine on a screen and works for orbium-style gliders, but it is the wrong abstraction the moment you want creatures to eat, exchange material, or collide.
+Basic Lenia does not conserve mass. `state += dt * G(U)` creates mass at the front of a moving creature and removes it at the back, which is enough for an orbium glider but falls apart as soon as creatures need to eat, exchange material, or collide.
 
-Flow Lenia (Plantec et al., 2023) fixes this by separating *what should grow* from *where the mass actually goes*. The growth function still produces a desired rate, but instead of writing that rate straight into the state, we use it to build a velocity field, then transport mass along that field with an explicit redistribution step. One simulation step becomes two passes.
+Flow Lenia (Plantec et al., 2023) keeps the growth calculation but stops writing it directly into the state. It first turns it into a velocity field, then transports mass along that field, so each simulation step has two passes.
 
 The first pass runs the usual kernel convolutions and growth functions, but instead of updating the state, it computes per-cell velocities. The velocity is a blend of two gradients: `nabla_U`, pointing toward where growth wants to happen (mass attracts itself toward growth maxima), and `nabla_A`, pointing toward where mass already is (mass repels itself via pressure). A mass-dependent factor `alpha = clamp((M / thetaA)^n, 0, 1)` decides the mix:
 
@@ -172,11 +172,11 @@ The two-pass structure also costs roughly double per step compared to basic Leni
 <noscript><p>Live Lenia simulation requires JavaScript and WebGPU.</p></noscript>
 </div>
 
-## The search problem -- parameter space and fitness
+## Finding creatures without guessing forever
 
 A Lenia creature is two things bolted together: a genotype (the parameters of `K` and `G`) and a phenotype (the initial condition the simulation starts from). A single-channel single-kernel creature has about eight continuous genotype numbers, three-Gaussian kernels push that to a dozen, and the Aquarium-style multi-channel creatures land near 120 parameters plus a small integer connectivity table saying which channels read into which. The phenotype is much smaller: an integer PRNG seed, a few patch centers and radii, and the uniform range used to fill those patches. Grid size, `dt`, `dd`, `sigma`, `n`, `thetaA`, and border mode are run config and stay fixed across a campaign.
 
-The annoying fact about that space is that it is overwhelmingly boring. Most combinations decay to zero within fifty steps. The next-most-common outcome is saturation to 1, a uniform soup. Persistent structured creatures live on a vanishingly thin manifold, and you cannot find them by sampling uniformly. Our `flowlenia-ecology-2025` configs sweep `r` in `[0.2, 1.0]`, `b` in `[0.001, 1.0]`, `w` in `[0.01, 0.5]`, `a` in `[0, 1]`, `mu` in `[0.05, 0.5]`, `sigma` in `[0.001, 0.18]`, `h` in `[0.01, 1.0]`, and `R` in `[2, 25]`, and even within those tighter ranges the dead/alive ratio is brutal.
+Most of this space is dead. Random settings either decay to zero within fifty steps or saturate into uniform soup, while structured creatures sit on a thin manifold that uniform sampling almost never hits. Our `flowlenia-ecology-2025` sweep narrows `r` to `[0.2, 1.0]`, `b` to `[0.001, 1.0]`, `w` to `[0.01, 0.5]`, `a` to `[0, 1]`, `mu` to `[0.05, 0.5]`, `sigma` to `[0.001, 0.18]`, `h` to `[0.01, 1.0]`, and `R` to `[2, 25]`; the dead/alive ratio is still brutal.
 
 To say anything quantitative about what came out of a run, we measure each simulation with a fixed battery (the `SimulationMetrics` struct in the lenia-swarm code). Most of it is bookkeeping you never read directly, but it answers four questions:
 
@@ -191,7 +191,7 @@ The default evaluation is 200 steps with 100 warmup, recording every 50, occupan
 
 ### Three search strategies compared
 
-The naive baseline is uniform random sampling, which is fine for showing what a boring parameter space looks like, and useless for everything else. Evolution Strategies do better by following the fitness gradient from a seed point, but they converge to one peak and stop, and Lenia's landscape is multimodal enough that one peak is not what you want. MAP-Elites takes the opposite stance: instead of optimizing one number, it maintains a grid of behavioral niches and tries to fill all of them at the same time, so you end up with a catalog of different kinds of creatures rather than one champion of a single metric.
+Uniform random sampling establishes the problem and little else. Evolution Strategies climb from a seed toward one fitness peak, then stay there; Lenia has too many distinct kinds of creature for one peak to be an adequate answer. MAP-Elites keeps a grid of behavioral niches and fills them in parallel, producing a catalogue instead of one champion.
 
 <div class="lenia-widget" data-widget="search" data-steps="200" data-auto-play="true">
 <noscript><p>Interactive search comparison requires JavaScript.</p></noscript>
@@ -199,7 +199,7 @@ The naive baseline is uniform random sampling, which is fine for showing what a 
 
 ## MAP-Elites and Quality-Diversity
 
-Quality-Diversity flips the usual optimization question. Instead of asking "which parameter setting maximizes fitness?", it asks "what is the best creature we can find *for each kind of behavior*?". The archive is structured by behavioral descriptors (speed, mass, gyration, symmetry, the oscillation frequency of the mass over time, and so on), and competition is local within a niche, so a mediocre creature in an empty niche always gets kept. The QD-score is the total fitness summed over all niches, which rewards quality and diversity at the same time. A run that fills 40 of 64 niches with average fitness 0.7 scores higher than a run that fills 60 of 64 with average 0.3, even though it covers less ground. Coverage with nothing good in it is not the goal, and one brilliant creature in an empty archive is not either.
+Quality-Diversity keeps the best creature found for each kind of behavior, rather than reducing the whole search to one fitness winner. The archive is indexed by descriptors such as speed, mass, gyration, symmetry, and mass oscillation, and selection is local: a merely adequate creature can survive in an empty niche. QD-score adds fitness over occupied niches, so 40 niches averaging 0.7 beat 60 averaging 0.3; a full archive of junk and one brilliant creature in an empty archive are both failures.
 
 MAP-Elites (Mouret and Clune, 2015) is the canonical algorithm. The archive is an array of `K` cells, each storing the best `(genotype, fitness, descriptor)` it has seen, with `K` usually between 1024 and 16384. The four-step loop is select a random occupied cell, vary its genotype, evaluate the child in simulation, and place the child into the nearest niche if that niche is empty or if the child beats the incumbent. Coverage and per-cell fitness both go up monotonically, which is what makes the algorithm well-behaved to watch.
 
@@ -215,7 +215,7 @@ The naive way to partition descriptor space is a regular grid, but that costs `n
 
 ### The MAP-Elites loop
 
-The widget below replays a short run of exactly that loop on a 64-niche CVT archive. Coverage and per-niche fitness only ever climb, so the single thing worth watching is how fast the map fills and where it stalls.
+This widget replays that loop on a 64-niche CVT archive. Watch how quickly it fills and which niches stay empty.
 
 <div class="lenia-widget" data-widget="mapelites" data-trace-src="me-trace.json" data-centroids="64">
 <noscript><p>Interactive MAP-Elites step-through requires JavaScript.</p></noscript>
@@ -233,7 +233,7 @@ $$\text{child} = A + \mathcal{N}(0, \sigma_{\text{iso}} I) + \mathcal{N}(0, \sig
 <noscript><p>Interactive isoline visualizer requires JavaScript.</p></noscript>
 </div>
 
-## The research ladder
+## After solitary creatures
 
 Flow Lenia plus MAP-Elites gets us solitary creatures that move. Everything past that is about extending what a creature can do, what kind of world it lives in, and what we let the search figure out for itself.
 
@@ -243,7 +243,7 @@ Flow Lenia creatures move, but they do not respond to anything outside themselve
 
 ### Ecological search
 
-Each campaign so far has assumed a creature evaluated alone. Ecological search puts several species on the same grid and lets them share concentration fields, which means they can compete, eat each other, form symbioses, or partition niches. Fitness stops being "did this creature survive" and becomes a property of the ecosystem: stability, diversity, longevity. Our `flowlenia-ecology-2025` config runs 512x512 grids with 3 channels and 45 kernels (a `[[5,5,5],[5,5,5],[5,5,5]]` connectivity matrix), which is what makes the cross-species interactions rich enough to be worth measuring.
+Ecological search puts several species on the same grid and lets them share concentration fields, so they can compete, eat, form symbioses, or partition niches. Fitness becomes a property of the ecosystem: stability, diversity, and longevity. Our `flowlenia-ecology-2025` configuration runs 512x512 grids with three channels and 45 kernels (`[[5,5,5],[5,5,5],[5,5,5]]` connectivity).
 
 ### AURORA -- learned descriptors (Cully 2019)
 
@@ -251,7 +251,7 @@ MAP-Elites needs you to pick the descriptors up front, and the choice biases eve
 
 ### The atlas
 
-The atlas is where all of this ends up. Every creature we keep gets stored with its genotype, phenotype, full descriptor vector, the ecology it came from, the campaign that produced it, a replay you can scrub, and the anatomy panels (mass, components, moments) that summarize what it does. The format (`SavedCreature` with `ParamsPayload`, `InitConfig`, `SimulationMetrics`, score, weights, `configHash`) is meant to be both a scientific dataset and an interactive catalog, so the same record renders as a row in a SQLite query and as a card on a creature page.
+Every retained creature carries its genotype, phenotype, descriptor vector, ecology, campaign, replay, and anatomy panels (mass, components, moments). The `SavedCreature` record combines `ParamsPayload`, `InitConfig`, `SimulationMetrics`, score, weights, and `configHash`, so one record can appear in a SQLite query or on a creature page.
 
 ## Running it -- campaigns at scale
 
@@ -263,9 +263,9 @@ The two machines we run on are the M5 Max MacBook Pro (MLX Swift physics engine,
 
 ## What the atlas is for
 
-None of this is about any single creature. A catalog of a few thousand survivors is a means, not an end, and the end is the thing the catalog is a sample of: the manifold of viable creatures sitting inside that almost entirely dead parameter space we started with. MAP-Elites is how we sample it, the descriptors are the coordinates we sample it in, and the atlas is that sample written down in a form we can compute against.
+The catalogue samples the manifold of viable creatures inside the mostly dead parameter space. MAP-Elites supplies the sample, descriptors give it coordinates, and the atlas preserves it in a form we can compute against.
 
-The question that actually drives the work is what shape the manifold has. Once you have a few thousand creatures with their genotypes, descriptors, and behavior, you can stop treating them as a list and start treating them as points in a space, and then you can ask the things you would ask of any space. Does it come apart into separate pieces, one per body plan, or is it connected, with continuous paths that morph one creature into another? Are there holes, loops you cannot contract, families that surround a patch of dead parameters they can never cross? Those are topological questions, and they have topological answers, Betti numbers and persistence and the rest of the machinery, measurable on the atlas instead of asserted about it. The [morphospace report](../lenia-morphospace-report/) is where we work through them on the first 25,167 specimens.
+With a few thousand genotypes, descriptors, and behaviors, the creatures stop being a list. Does the manifold break into body-plan components, or can one creature morph continuously into another? Does it contain holes around parameter regions no stable creature crosses? Those questions have measurable answers in Betti numbers and persistence; the [morphospace report](../lenia-morphospace-report/) works through them on the first 25,167 specimens.
 
 <script src="lenia-gpu.js"></script>
 <script src="lenia-explainer.js"></script>
