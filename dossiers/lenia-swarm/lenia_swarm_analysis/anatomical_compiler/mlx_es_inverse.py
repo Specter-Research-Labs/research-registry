@@ -100,10 +100,30 @@ def search(
     target_std = standardizer.forward(target_robust[None, :])[0]
     mean = start_mean.copy()
     sigma = es.init_sigma_scale * genotype_scale
-    best_cost = float("inf")
+    start_robust = _robust_descriptors(
+        mean[None, :], codec, ranges, config, es, center, size
+    )[0]
+    best_cost = float(
+        np.linalg.norm(standardizer.forward(start_robust[None, :])[0] - target_std)
+    )
     best_vec = mean.copy()
+    best_robust = start_robust.copy()
     history: list[float] = []
-    for _ in range(es.iterations):
+    trace: list[dict[str, Any]] = []
+
+    def trace_point(iteration: int) -> dict[str, Any]:
+        params, _ = clamp_params(codec.unflatten(best_vec), ranges)
+        return {
+            "iteration": iteration,
+            "cost": best_cost,
+            "genotype": params,
+            "robust": {
+                field: float(best_robust[j]) for j, field in enumerate(ROBUST_FIELDS)
+            },
+        }
+
+    trace.append(trace_point(0))
+    for iteration in range(1, es.iterations + 1):
         samples = mean[None, :] + sigma[None, :] * rng.standard_normal(
             (es.population, mean.shape[0])
         )
@@ -116,9 +136,16 @@ def search(
         if costs[order[0]] < best_cost:
             best_cost = float(costs[order[0]])
             best_vec = samples[order[0]].copy()
+            best_robust = robust[order[0]].copy()
         history.append(best_cost)
+        trace.append(trace_point(iteration))
     best_params, _ = clamp_params(codec.unflatten(best_vec), ranges)
-    return {"bestCost": best_cost, "bestParams": best_params, "history": history}
+    return {
+        "bestCost": best_cost,
+        "bestParams": best_params,
+        "history": history,
+        "trace": trace,
+    }
 
 
 def main(argv: list[str] | None = None) -> int:

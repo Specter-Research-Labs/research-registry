@@ -212,6 +212,7 @@ def select_warm_start(
     target: FormTarget, genotype: np.ndarray, phenotype_full: np.ndarray,
     codec: GenotypeCodec, ranges: dict[str, list[float]], config: LeniaConfig,
     *, k: int, steps: int, occupancy_threshold: float,
+    exclude_indices: set[int] | None = None,
 ) -> tuple[np.ndarray, float, float, float]:
     """Pick the CEM warm start by which dataset rule actually holds the re-seeded form.
 
@@ -233,7 +234,12 @@ def select_warm_start(
     distances = np.linalg.norm(
         standardizer.forward(sub) - standardizer.forward(target_desc)[0], axis=1
     )
-    candidates = genotype[np.argsort(distances)[:k]]
+    ordered = np.argsort(distances)
+    if exclude_indices:
+        ordered = np.asarray([i for i in ordered if int(i) not in exclude_indices])
+    candidates = genotype[ordered[:k]]
+    if len(candidates) == 0:
+        raise ValueError("no warm-start candidates remain after exclusions")
     stride = max(1, steps // 8)
     drift, liveness, topo = _form_scores(
         candidates, target, codec, ranges, config, steps=steps, stride=stride,
@@ -253,6 +259,10 @@ class CompileResult:
     target_liveness: float
     start_objective: float
     history: list[float]
+    trace_vectors: list[np.ndarray]
+    trace_drifts: list[float]
+    trace_liveness: list[float]
+    trace_topology: list[float]
     elite_vectors: np.ndarray
     elite_objectives: np.ndarray
 
@@ -282,6 +292,10 @@ def compile_form(
     best_obj, best_vec = start_objective, mean.copy()
     best_drift, best_live, best_topo = float(s_drift[0]), float(s_live[0]), float(s_topo[0])
     history: list[float] = []
+    trace_vectors = [best_vec.copy()]
+    trace_drifts = [best_drift]
+    trace_liveness = [best_live]
+    trace_topology = [best_topo]
     elite_vecs = start_vector[None, :]
     elite_objs = s_obj
     for _ in range(iterations):
@@ -301,9 +315,15 @@ def compile_form(
             best_live = float(live[order[0]])
             best_topo = float(topo[order[0]])
         history.append(best_obj)
+        trace_vectors.append(best_vec.copy())
+        trace_drifts.append(best_drift)
+        trace_liveness.append(best_live)
+        trace_topology.append(best_topo)
     return CompileResult(
         best_vector=best_vec, best_objective=best_obj, best_drift=best_drift,
         best_liveness=best_live, best_topo=best_topo, target_liveness=target.liveness,
         start_objective=start_objective, history=history,
+        trace_vectors=trace_vectors, trace_drifts=trace_drifts,
+        trace_liveness=trace_liveness, trace_topology=trace_topology,
         elite_vectors=elite_vecs, elite_objectives=elite_objs,
     )

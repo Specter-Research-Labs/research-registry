@@ -19,6 +19,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import mlx.core as mx
 import numpy as np
 from PIL import Image
 
@@ -51,6 +52,7 @@ from lenia_swarm_analysis.anatomical_compiler.mlx_es_inverse import (
 from lenia_swarm_analysis.anatomical_compiler.mlx_lenia import (
     GenotypeBatch,
     LeniaConfig,
+    make_init,
     rollout,
 )
 from lenia_swarm_analysis.anatomical_compiler.mlx_validate import (
@@ -208,6 +210,8 @@ def _compile_form_target(
 
     if not 0 <= args.form_anchor_index < len(genotype):
         raise SystemExit(f"--form-anchor-index must be in [0, {len(genotype) - 1}]")
+    if args.holdout_index is not None and not 0 <= args.holdout_index < len(genotype):
+        raise SystemExit(f"--holdout-index must be in [0, {len(genotype) - 1}]")
     anchor_rule = codec.unflatten(genotype[args.form_anchor_index])
     print(f"growing liveness/mass anchor from dataset genotype {args.form_anchor_index} ...")
     anchor = grow_body(
@@ -227,6 +231,7 @@ def _compile_form_target(
     start_vec, s_drift, s_live, s_topo = select_warm_start(
         target, genotype, phenotype_full, codec, ranges, config,
         k=args.proposals, steps=args.steps, occupancy_threshold=occ,
+        exclude_indices={args.holdout_index} if args.holdout_index is not None else None,
     )
     print(f"warm start (best of {args.proposals}): drift {s_drift:.3f} "
           f"topo {s_topo:.3f} liveness {s_live:.4f}")
@@ -248,6 +253,39 @@ def _compile_form_target(
     out_dir.mkdir(parents=True, exist_ok=True)
     _colorize(terminal).save(out_dir / "creature.png")
     _colorize(target_field).save(out_dir / "target.png")
+
+    trace_params = [
+        clamp_params(codec.unflatten(vector), ranges)[0] for vector in result.trace_vectors
+    ]
+    trace_genotypes = GenotypeBatch.from_param_dicts(trace_params)
+    trace_seed = mx.broadcast_to(
+        target.field, (len(trace_params), config.sx, config.sy, config.channels)
+    )
+    trace_terminal = np.asarray(
+        rollout(trace_seed, trace_genotypes, config, args.steps).sum(axis=-1)
+    )
+    trace = []
+    trace_objectives = [result.start_objective, *result.history]
+    for iteration, (field, params, objective, drift, live, topo) in enumerate(zip(
+        trace_terminal,
+        trace_params,
+        trace_objectives,
+        result.trace_drifts,
+        result.trace_liveness,
+        result.trace_topology,
+        strict=True,
+    )):
+        filename = f"trace-{iteration:02d}.png"
+        _colorize(field).save(out_dir / filename)
+        trace.append({
+            "iteration": iteration,
+            "image": filename,
+            "objective": objective,
+            "drift": drift,
+            "liveness": live,
+            "topoDistance": topo,
+            "genotype": params,
+        })
 
     # Verify and render the form-compiled creature on the Swift oracle by re-seeding the
     # target body under the found rule (init.state_patch), the form analog of the descriptor
@@ -272,8 +310,10 @@ def _compile_form_target(
         "targetFeatures": {"H0": t_h0, "H1": t_h1},
         "foundFeatures": {"H0": f_h0, "H1": f_h1},
         "anchorIndex": args.form_anchor_index,
+        "holdoutIndex": args.holdout_index,
         "startObjective": result.start_objective,
         "history": result.history,
+        "trace": trace,
         "swift": {
             "seededMass": swift.seededMass,
             "massConservation": swift.massConservation,
@@ -319,6 +359,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checkpoint", default="outputs/anatomical-compiler/cinn.pt")
     parser.add_argument("--form-anchor-index", type=int, default=0,
                         help="stable dataset row used to calibrate target mass and liveness")
+    parser.add_argument("--holdout-index", type=int, default=None,
+                        help="dataset row to exclude from explicit-form warm-start retrieval")
     parser.add_argument("--qd-archive",
                         default="outputs/anatomical-compiler/qd_archive/archive.json")
     parser.add_argument("--proposals", type=int, default=64,
@@ -412,6 +454,19 @@ def main(argv: list[str] | None = None) -> int:
     if target_params is not None:
         _render(target_params, out_dir / "target.png")
 
+    trace_params = [point["genotype"] for point in outcome["trace"]]
+    trace_genotypes = GenotypeBatch.from_param_dicts(trace_params)
+    trace_initial = make_init(
+        config, seed=es.init_seed, center=center, size=size, batch=len(trace_params)
+    )
+    trace_terminal = np.asarray(
+        rollout(trace_initial, trace_genotypes, config, args.steps).sum(axis=-1)
+    )
+    for point, field in zip(outcome["trace"], trace_terminal, strict=True):
+        filename = f"trace-{point['iteration']:02d}.png"
+        _colorize(field).save(out_dir / filename)
+        point["image"] = filename
+
     report = {
         "target": {f: float(target_robust[j]) for j, f in enumerate(ROBUST_FIELDS)},
         "found": {f: float(found_robust[j]) for j, f in enumerate(ROBUST_FIELDS)},
@@ -422,6 +477,7 @@ def main(argv: list[str] | None = None) -> int:
         "mlxCost": outcome["bestCost"],
         "swiftCost": swift_cost,
         "proposal": args.proposal,
+        "trace": outcome["trace"],
     }
     (out_dir / "result.json").write_text(json.dumps(report, indent=2, sort_keys=True),
                                          encoding="utf-8")

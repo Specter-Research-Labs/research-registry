@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 280" role="img" aria-labelledby="title desc">
+<title id="title">Dimension of the inverse fiber</title><desc id="desc">A 25.5-dimensional genotype space decomposes into 5.9 measured phenotype dimensions and 19.6 remaining rule dimensions.</desc>
+<rect width="960" height="280" fill="#111521"/>
+
+<text x="72" y="42" fill="#d6ff3f" font-family="ui-monospace, monospace" font-size="15" font-weight="700">EFFECTIVE DIMENSION · MLE</text>
+<rect x="72" y="92" width="816" height="72" fill="#252b3b" stroke="#f4f0e7"/>
+<rect x="72" y="92" width="189.4" height="72" fill="#39b7a2"/>
+<rect x="261.4" y="92" width="626.6" height="72" fill="#f15b43"/>
+<text x="166.7" y="122" text-anchor="middle" fill="#07110f" font-family="ui-monospace, monospace" font-size="23" font-weight="800">5.9 D</text>
+<text x="166.7" y="146" text-anchor="middle" fill="#07110f" font-family="ui-monospace, monospace" font-size="12">MEASURED BODY</text>
+<text x="574.7" y="122" text-anchor="middle" fill="#170805" font-family="ui-monospace, monospace" font-size="23" font-weight="800">19.6 D</text>
+<text x="574.7" y="146" text-anchor="middle" fill="#170805" font-family="ui-monospace, monospace" font-size="11">RULE DIMENSIONS LEFT UNFIXED</text>
+<line x1="72" y1="190" x2="888" y2="190" stroke="#73798a"/>
+<text x="72" y="218" fill="#f4f0e7" font-family="ui-monospace, monospace" font-size="13">phenotype 5.9</text>
+<text x="888" y="218" text-anchor="end" fill="#f4f0e7" font-family="ui-monospace, monospace" font-size="13">genotype 25.5</text>
+<text x="480" y="254" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">Subtracting the estimates gives the global fiber. TwoNN gives 20.9 D.</text>
+
+</svg>
