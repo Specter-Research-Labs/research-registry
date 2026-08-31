@@ -161,54 +161,12 @@
   line-height: 1.55;
 }
 
-.ce-report-meta {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.4rem 0 1rem;
-}
-
-.ce-report-meta time,
-.ce-chip,
 .ce-count {
   font-family: "Berkeley Mono", monospace;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.ce-chip {
-  border: 1px solid currentColor;
-  padding: 0.3rem 0.48rem;
-}
-
-.ce-chip-category {
-  color: var(--ce-blue);
-}
-
-.ce-chip-feature {
-  background: var(--ce-lime);
-  color: var(--ce-ink);
-}
-
-.ce-chip-library {
-  background: var(--ce-mint);
-  color: var(--ce-ink);
-}
-
-.ce-chip-archive {
-  background: rgba(17, 23, 34, 0.08);
-  color: var(--ce-ink);
-}
-
-.ce-lead-report .ce-chip-category {
-  color: #86a3ff;
-}
-
-.ce-lead-report .ce-report-meta time {
-  color: rgba(245, 241, 231, 0.68);
 }
 
 .ce-question-grid {
@@ -264,25 +222,28 @@
 }
 
 .ce-button {
+  align-items: center;
   border: 1px solid currentColor;
   color: inherit;
-  display: inline-block;
+  display: inline-flex;
   font-family: "Berkeley Mono", monospace;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  padding: 0.62rem 0.8rem;
+  min-height: 2.9rem;
+  padding: 0.68rem 0.9rem;
   text-decoration: none;
   text-transform: uppercase;
 }
 
 .ce-button-primary {
-  background: var(--ce-blue);
-  border-color: var(--ce-blue);
-  color: white;
+  background: var(--ce-ink);
+  border-color: var(--ce-ink);
+  color: var(--ce-paper);
 }
 
-.ce-lead-report .ce-button-primary {
+.ce-lead-report .ce-button-primary,
+.ce-library-invite .ce-button-primary {
   background: var(--ce-lime);
   border-color: var(--ce-lime);
   color: var(--ce-ink);

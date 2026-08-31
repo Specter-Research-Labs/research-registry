@@ -263,16 +263,6 @@ fn category_label(category: &str) -> String {
     }
 }
 
-fn report_meta(report: &Report) -> Markup {
-    html! {
-        div class="ce-report-meta" {
-            span class="ce-chip ce-chip-category" { (category_label(&report.category)) }
-            span class=(format!("ce-chip ce-chip-{}", report.status)) { (&report.status) }
-            time datetime=(&report.date) { (&report.date) }
-        }
-    }
-}
-
 fn report_links(report: &Report) -> Markup {
     html! {
         div class="ce-report-links" {
@@ -287,6 +277,10 @@ fn report_receipt(report: &Report) -> Markup {
         details class="ce-receipt" {
             summary { "Evidence receipt" }
             dl {
+                div {
+                    dt { "Published" }
+                    dd { time datetime=(&report.date) { (&report.date) } }
+                }
                 div {
                     dt { "Evidence" }
                     dd { (&report.evidence_class) }
@@ -332,7 +326,6 @@ fn question_triptych(report: &Report) -> Markup {
 fn report_card(report: &Report) -> Markup {
     html! {
         article class="ce-report-card" id=(report.id) {
-            (report_meta(report))
             h3 { a href=(report_href(report)) { (&report.title) } }
             p class="ce-dek" { (&report.dek) }
             (question_triptych(report))
@@ -395,7 +388,6 @@ pub fn render_landing(catalog: &Catalog) -> String {
                 h2 id="ce-lead-title" { a href=(report_href(lead)) { (&lead.title) } }
                 p class="ce-dek" { (&lead.dek) }
             }
-            (report_meta(lead))
             (question_triptych(lead))
             div class="ce-card-footer" {
                 (report_links(lead))
@@ -551,7 +543,12 @@ mod tests {
         let archive = render_archive(&catalog);
         assert!(landing.contains("Begin with the synthesis"));
         assert!(landing.contains("organism-appears-first"));
+        assert!(!landing.contains("ce-chip"));
+        assert!(!landing.contains("ce-report-meta"));
+        assert!(landing.contains("Published"));
+        assert!(landing.contains("2026-08-30"));
         assert!(library.contains("This experiment found"));
+        assert!(!library.contains("ce-chip"));
         assert!(archive.contains("No reports are currently archived"));
     }
 
