@@ -278,7 +278,7 @@ fn report_receipt(report: &Report) -> Markup {
             summary { "Evidence receipt" }
             dl {
                 div {
-                    dt { "Published" }
+                    dt { "Report date" }
                     dd { time datetime=(&report.date) { (&report.date) } }
                 }
                 div {
@@ -545,7 +545,7 @@ mod tests {
         assert!(landing.contains("organism-appears-first"));
         assert!(!landing.contains("ce-chip"));
         assert!(!landing.contains("ce-report-meta"));
-        assert!(landing.contains("Published"));
+        assert!(landing.contains("Report date"));
         assert!(landing.contains("2026-08-30"));
         assert!(library.contains("This experiment found"));
         assert!(!library.contains("ce-chip"));
