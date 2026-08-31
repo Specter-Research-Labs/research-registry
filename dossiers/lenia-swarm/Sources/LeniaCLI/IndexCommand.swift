@@ -51,6 +51,9 @@ struct IndexCommand: ParsableCommand {
             includeResults: includeResults,
             repairOnly: repairOnly
         )
+        if warehouseRefresh.warehouse != nil || warehouseRefresh.warehouseTopology {
+            try indexer.checkpointForWarehouseRead()
+        }
         let warehouseResult = try refreshWarehouseProjection(
             compendiumPath: plan.resolvedDBPath,
             warehousePath: try warehouseRefresh.warehouse.map {
@@ -175,6 +178,10 @@ final class SQLiteIndexer {
         let perturbationTrials = try db.scalarInt("SELECT COUNT(*) FROM perturbation_trials")
         let transitionEdges = try db.scalarInt("SELECT COUNT(*) FROM transition_edges")
         return "runs=\(runs) creatures=\(creatures) specimens=\(specimens) exports=\(exports) results=\(results) ecology_runs=\(ecologyRuns) attractors=\(attractorNodes) trials=\(perturbationTrials) edges=\(transitionEdges)"
+    }
+
+    func checkpointForWarehouseRead() throws {
+        try db.checkpointWALForExternalRead()
     }
 
     func ensureCanonicalSpecimenCoverage() throws {
@@ -982,7 +989,8 @@ final class SQLiteIndexer {
             sourceScore: projection.creature.score,
             sourceFiltersPassed: nil,
             sourceExportDir: nil,
-            sourceReason: "canonicalization-backfill"
+            sourceReason: "canonicalization-backfill",
+            sourceContentSha256: nil
         )
     }
 
@@ -1086,7 +1094,8 @@ final class SQLiteIndexer {
             sourceScore: projection.creature.score,
             sourceFiltersPassed: nil,
             sourceExportDir: nil,
-            sourceReason: "canonicalization-backfill"
+            sourceReason: "canonicalization-backfill",
+            sourceContentSha256: nil
         )
     }
 
@@ -1126,7 +1135,8 @@ final class SQLiteIndexer {
             sourceScore: projection.creature.score,
             sourceFiltersPassed: selected.sourceFiltersPassed,
             sourceExportDir: sourceExportDir ?? selected.sourceExportDir,
-            sourceReason: researchMetadataString("source_reason", in: gap.researchMetadata) ?? selected.sourceReason
+            sourceReason: researchMetadataString("source_reason", in: gap.researchMetadata) ?? selected.sourceReason,
+            sourceContentSha256: selected.sourceContentSha256
         )
     }
 
@@ -4264,7 +4274,7 @@ private struct CanonicalFlowSweepVariant {
     let searchConfigURL: URL
 }
 
-private struct CanonicalizationPendingReplay {
+private struct CanonicalizationPendingReplay: @unchecked Sendable {
     let gap: CanonicalCreatureGap
     let resolvedInput: ReplayResolvedInput
     let backfillRunID: String

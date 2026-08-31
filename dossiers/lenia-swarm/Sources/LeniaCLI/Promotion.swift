@@ -64,6 +64,7 @@ struct ArchivePromotionConfig {
 func promoteRunArtifacts(
     runDir: String,
     compendiumPath: String,
+    runID: String? = nil,
     includeResults: Bool = true,
     stats: Bool = false,
     warehousePath: String? = nil,
@@ -77,7 +78,7 @@ func promoteRunArtifacts(
     )
     let indexer = try executeCompendiumIngest(
         plan: CompendiumIngestPlan(
-            runInputs: [try makeRunInput(runDir: runDir)],
+            runInputs: [try makeRunInput(runDir: runDir, explicitRunID: runID)],
             resolvedDBPath: compendiumPath
         ),
         rebuild: false,
@@ -89,6 +90,9 @@ func promoteRunArtifacts(
         print("Compendium: \(try indexer.stats())")
     }
     try postCompendiumIngest?(compendiumPath)
+    if warehousePath != nil || warehouseTopology {
+        try indexer.checkpointForWarehouseRead()
+    }
     if let warehouseResult = try refreshWarehouseProjection(
         compendiumPath: compendiumPath,
         warehousePath: warehousePath,
@@ -106,6 +110,7 @@ func promoteRunArtifacts(
 func applyPromotionIfEnabled(
     config: ArchivePromotionConfig,
     runDir: String,
+    runID: String? = nil,
     includeResults: Bool = true,
     stats: Bool = false,
     postCompendiumIngest: ((String) throws -> Void)? = nil
@@ -114,6 +119,7 @@ func applyPromotionIfEnabled(
         try promoteRunArtifacts(
             runDir: runDir,
             compendiumPath: compendiumPath,
+            runID: runID,
             includeResults: includeResults,
             stats: stats,
             warehousePath: config.warehousePath,

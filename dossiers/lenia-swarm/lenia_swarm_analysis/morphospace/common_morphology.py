@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import base64
 import csv
-import gc
+import heapq
 import itertools
 import json
 import math
 import re
-import tempfile
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from duckdb import DuckDBPyConnection
@@ -29,27 +28,35 @@ from .ingest_embryomaker import (
     load_embryomaker_node_points,
 )
 from .warehouse import (
+    DESCRIPTOR_VERSION,
+    NORMALIZATION_POLICY,
+    TERMINAL_VERSION,
     json_text,
+    mark_derived_artifact_state,
     normalize_optional_timestamp,
     register_context,
+    register_feature_calibration,
     replace_feature_axes,
     stable_id,
     upsert_feature_space,
     upsert_morphospace_source,
+    upsert_specimen_feature_vectors,
+    validate_dense_feature_space,
 )
 
 LENIA_SOURCE_ID = "lenia_swarm"
-FEATURE_SPACE_ID = "common_morphology_v1"
-FEATURE_SPACE_LABEL = "Common point-cloud morphology"
+FEATURE_SPACE_ID = "common_morphology_v3_balanced_distribution"
+FEATURE_SPACE_LABEL = "Common point-distribution morphology"
 OBSERVATION_KIND = "common_point_cloud_morphology"
 _EPSILON = 1.0e-6
 _MAX_SYMMETRY_POINTS = 512
 _RASTER_GRID_SIZE = 32
-_LENIA_FETCH_BATCH_SIZE = 512
-_WRITE_BATCH_SIZE = 1000
+_LENIA_FETCH_BATCH_SIZE = 8192
+_WRITE_BATCH_SIZE = 8192
+_MAX_CALIBRATION_ROWS_PER_SOURCE = 8192
 _LANDMARK_COLUMN_RE = re.compile(r"^LM\s+(\d+)_(X|Y|Z)$")
 
-AXIS_SPECS: tuple[dict[str, Any], ...] = (
+POINT_CLOUD_AXIS_SPECS: tuple[dict[str, Any], ...] = (
     {
         "id": "elongation",
         "label": "Principal elongation",
@@ -129,6 +136,15 @@ AXIS_SPECS: tuple[dict[str, Any], ...] = (
         "axisFamily": "rasterized_shape_anatomy",
     },
 )
+CROSS_SOURCE_AXIS_IDS = (
+    "elongation",
+    "anisotropy",
+    "compactness",
+    "polarity",
+    "bilateral_symmetry",
+    "radial_symmetry",
+)
+AXIS_SPECS = tuple(spec for spec in POINT_CLOUD_AXIS_SPECS if spec["id"] in CROSS_SOURCE_AXIS_IDS)
 AXIS_IDS = tuple(str(spec["id"]) for spec in AXIS_SPECS)
 
 
@@ -234,9 +250,9 @@ def _convex_hull(points: np.ndarray) -> list[tuple[float, float]]:
         left: tuple[float, float],
         right: tuple[float, float],
     ) -> float:
-        return (left[0] - origin[0]) * (right[1] - origin[1]) - (
-            left[1] - origin[1]
-        ) * (right[0] - origin[0])
+        return (left[0] - origin[0]) * (right[1] - origin[1]) - (left[1] - origin[1]) * (
+            right[0] - origin[0]
+        )
 
     lower: list[tuple[float, float]] = []
     for point in unique_points:
@@ -455,8 +471,7 @@ def _raster_shape_features(
 
     components = _component_cells(mask)
     component_masses = [
-        float(np.sum(raster[component[:, 0], component[:, 1]]))
-        for component in components
+        float(np.sum(raster[component[:, 0], component[:, 1]])) for component in components
     ]
     largest_index = int(np.argmax(component_masses))
     largest_component = components[largest_index]
@@ -574,10 +589,14 @@ def _fingerprint_array(terminal: dict[str, Any], *, specimen_id: str) -> np.ndar
             np.float64
         )
     elif isinstance(raw, list):
-        values = np.asarray(
-            [_finite_float(value, label=f"{specimen_id}.fingerprintU8") for value in raw],
-            dtype=np.float64,
-        )
+        try:
+            values = np.asarray(raw, dtype=np.float64)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{specimen_id}.fingerprintU8 must be numeric") from exc
+        if values.ndim != 1 or not np.isfinite(values).all():
+            raise ValueError(f"{specimen_id}.fingerprintU8 must be a finite flat array")
+        if np.any(values < 0.0) or np.any(values > 255.0) or np.any(values != np.floor(values)):
+            raise ValueError(f"{specimen_id}.fingerprintU8 must contain uint8 values")
     else:
         return None
     expected = resolution * resolution
@@ -605,55 +624,46 @@ def _fingerprint_point_cloud(
     return points, weights
 
 
-def _terminal_from_payloads(
-    *,
-    provenance_json: Any,
-    specimen_manifest_json: Any,
-) -> dict[str, Any] | None:
-    provenance = _json_dict(provenance_json)
-    terminal = provenance.get("terminal")
-    if isinstance(terminal, dict):
-        return terminal
-    bundle = provenance.get("descriptorBundle")
-    if isinstance(bundle, dict) and isinstance(bundle.get("terminal"), dict):
-        return bundle["terminal"]
-
-    manifest = _json_dict(specimen_manifest_json)
-    snapshots = manifest.get("snapshots")
-    if isinstance(snapshots, dict):
-        descriptor_bundle = snapshots.get("descriptorBundle")
-        if isinstance(descriptor_bundle, dict) and isinstance(
-            descriptor_bundle.get("terminal"),
-            dict,
-        ):
-            return descriptor_bundle["terminal"]
-    descriptor_bundle = manifest.get("descriptorBundle")
-    if isinstance(descriptor_bundle, dict) and isinstance(descriptor_bundle.get("terminal"), dict):
-        return descriptor_bundle["terminal"]
-    return None
-
-
 def _lenia_study_ids(connection: DuckDBPyConnection, study_id: str | None) -> list[str]:
     if study_id is not None:
         row = connection.execute(
             """
             SELECT COUNT(*)
-            FROM study_specimens
+            FROM specimens
+            JOIN studies ON studies.study_id = specimens.study_id
             JOIN specimen_axes USING (specimen_id)
-            WHERE study_specimens.study_id = ?
+            WHERE specimens.study_id = ?
               AND specimen_axes.axis_family = 'terminal'
+              AND specimens.descriptor_version = ?
+              AND specimens.terminal_version = ?
+              AND specimens.normalization_policy = ?
+              AND EXISTS (
+                  SELECT 1 FROM study_specimens
+                  WHERE study_specimens.study_id = specimens.study_id
+                    AND study_specimens.specimen_id = specimens.specimen_id
+              )
             """,
-            [study_id],
+            [study_id, DESCRIPTOR_VERSION, TERMINAL_VERSION, NORMALIZATION_POLICY],
         ).fetchone()
         return [study_id] if row is not None and int(row[0]) > 0 else []
     rows = connection.execute(
         """
-        SELECT DISTINCT study_specimens.study_id
-        FROM study_specimens
+        SELECT DISTINCT specimens.study_id
+        FROM specimens
+        JOIN studies ON studies.study_id = specimens.study_id
         JOIN specimen_axes USING (specimen_id)
         WHERE specimen_axes.axis_family = 'terminal'
-        ORDER BY study_specimens.study_id
-        """
+          AND specimens.descriptor_version = ?
+          AND specimens.terminal_version = ?
+          AND specimens.normalization_policy = ?
+          AND EXISTS (
+              SELECT 1 FROM study_specimens
+              WHERE study_specimens.study_id = specimens.study_id
+                AND study_specimens.specimen_id = specimens.specimen_id
+          )
+        ORDER BY specimens.study_id
+        """,
+        [DESCRIPTOR_VERSION, TERMINAL_VERSION, NORMALIZATION_POLICY],
     ).fetchall()
     return [str(row[0]) for row in rows]
 
@@ -663,8 +673,16 @@ def _iter_lenia_rows(
     *,
     study_id: str | None,
     missing_common_only: bool = False,
+    selected_specimen_ids: dict[str, list[str]] | None = None,
 ) -> Iterator[_CommonMorphologyRow]:
     for resolved_study_id in _lenia_study_ids(connection, study_id):
+        selected_ids = (
+            selected_specimen_ids.get(resolved_study_id)
+            if selected_specimen_ids is not None
+            else None
+        )
+        if selected_specimen_ids is not None and not selected_ids:
+            continue
         context_id = register_context(
             connection,
             study_id=resolved_study_id,
@@ -681,47 +699,65 @@ def _iter_lenia_rows(
                       FROM observations
                       WHERE observations.study_id = ?
                         AND observations.observation_kind = ?
-                        AND observations.specimen_id = study_specimens.specimen_id
+                        AND observations.specimen_id = specimens.specimen_id
                   )
             """
             params.extend([resolved_study_id, OBSERVATION_KIND])
-        specimen_ids = [
-            str(row[0])
-            for row in connection.execute(
-                f"""
-                SELECT DISTINCT study_specimens.specimen_id
-                FROM study_specimens
-                WHERE study_specimens.study_id = ?
-                  AND EXISTS (
-                      SELECT 1
-                      FROM specimen_axes
-                      WHERE specimen_axes.specimen_id = study_specimens.specimen_id
-                        AND specimen_axes.axis_family = 'terminal'
-                  )
-                  {missing_clause}
-                """,
-                params,
-            ).fetchall()
-        ]
-        for start in range(0, len(specimen_ids), _LENIA_FETCH_BATCH_SIZE):
-            batch_ids = specimen_ids[start : start + _LENIA_FETCH_BATCH_SIZE]
-            placeholders = ", ".join("?" for _ in batch_ids)
+        selection_clause = (
+            "AND specimens.specimen_id IN (SELECT unnest(?::VARCHAR[]))"
+            if selected_ids is not None
+            else ""
+        )
+        last_specimen_id: str | None = None
+        while True:
             specimen_rows = connection.execute(
                 f"""
-                SELECT
+                SELECT DISTINCT
                     specimens.specimen_id,
                     specimens.recorded_at,
                     specimens.results_path,
                     specimens.export_dir,
                     specimens.activity_path,
                     specimens.fingerprint_path,
-                    specimens.provenance_json,
-                    specimens.specimen_manifest_json
+                    specimen_descriptors.terminal_descriptor_json
                 FROM specimens
-                WHERE specimens.specimen_id IN ({placeholders})
+                JOIN specimen_descriptors USING (specimen_id)
+                WHERE specimens.study_id = ?
+                  AND specimens.descriptor_version = ?
+                  AND specimens.terminal_version = ?
+                  AND specimens.normalization_policy = ?
+                  AND (? IS NULL OR specimens.specimen_id > ?)
+                  {selection_clause}
+                  AND EXISTS (
+                      SELECT 1 FROM study_specimens
+                      WHERE study_specimens.study_id = specimens.study_id
+                        AND study_specimens.specimen_id = specimens.specimen_id
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM specimen_axes
+                      WHERE specimen_axes.specimen_id = specimens.specimen_id
+                        AND specimen_axes.axis_family = 'terminal'
+                  )
+                  {missing_clause}
+                ORDER BY specimens.specimen_id
+                LIMIT ?
                 """,
-                batch_ids,
+                [
+                    params[0],
+                    DESCRIPTOR_VERSION,
+                    TERMINAL_VERSION,
+                    NORMALIZATION_POLICY,
+                    last_specimen_id,
+                    last_specimen_id,
+                    *([selected_ids] if selected_ids is not None else []),
+                    *params[1:],
+                    _LENIA_FETCH_BATCH_SIZE,
+                ],
             ).fetchall()
+            if not specimen_rows:
+                break
+            last_specimen_id = str(specimen_rows[-1][0])
             for specimen_row in specimen_rows:
                 (
                     specimen_id,
@@ -730,15 +766,9 @@ def _iter_lenia_rows(
                     export_dir,
                     activity_path,
                     fingerprint_path,
-                    provenance_json,
-                    specimen_manifest_json,
+                    terminal_descriptor_json,
                 ) = specimen_row
-                terminal = _terminal_from_payloads(
-                    provenance_json=provenance_json,
-                    specimen_manifest_json=specimen_manifest_json,
-                )
-                if terminal is None:
-                    continue
+                terminal = _json_dict(terminal_descriptor_json)
                 point_cloud = _fingerprint_point_cloud(terminal, specimen_id=str(specimen_id))
                 if point_cloud is None:
                     continue
@@ -767,12 +797,79 @@ def _iter_lenia_rows(
                         "fingerprintResolution": terminal.get("fingerprintResolution"),
                     },
                 )
-def _collect_lenia_rows(
+
+
+def _iter_valid_lenia_calibration_candidates(
     connection: DuckDBPyConnection,
-    *,
-    study_id: str | None,
-) -> list[_CommonMorphologyRow]:
-    return list(_iter_lenia_rows(connection, study_id=study_id))
+) -> Iterator[tuple[str, str, str]]:
+    for resolved_study_id in _lenia_study_ids(connection, None):
+        last_specimen_id: str | None = None
+        while True:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT
+                    specimens.specimen_id,
+                    specimen_descriptors.terminal_descriptor_json
+                FROM specimens
+                JOIN specimen_descriptors USING (specimen_id)
+                WHERE specimens.study_id = ?
+                  AND specimens.descriptor_version = ?
+                  AND specimens.terminal_version = ?
+                  AND specimens.normalization_policy = ?
+                  AND (? IS NULL OR specimens.specimen_id > ?)
+                  AND EXISTS (
+                      SELECT 1 FROM study_specimens
+                      WHERE study_specimens.study_id = specimens.study_id
+                        AND study_specimens.specimen_id = specimens.specimen_id
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM specimen_axes
+                      WHERE specimen_axes.specimen_id = specimens.specimen_id
+                        AND specimen_axes.axis_family = 'terminal'
+                  )
+                ORDER BY specimens.specimen_id
+                LIMIT ?
+                """,
+                [
+                    resolved_study_id,
+                    DESCRIPTOR_VERSION,
+                    TERMINAL_VERSION,
+                    NORMALIZATION_POLICY,
+                    last_specimen_id,
+                    last_specimen_id,
+                    _LENIA_FETCH_BATCH_SIZE,
+                ],
+            ).fetchall()
+            if not rows:
+                break
+            last_specimen_id = str(rows[-1][0])
+            for specimen_id, terminal_descriptor_json in rows:
+                resolved_specimen_id = str(specimen_id)
+                terminal = _json_dict(terminal_descriptor_json)
+                if (
+                    _fingerprint_point_cloud(
+                        terminal,
+                        specimen_id=resolved_specimen_id,
+                    )
+                    is None
+                ):
+                    continue
+                yield (
+                    resolved_study_id,
+                    resolved_specimen_id,
+                    stable_id(
+                        LENIA_SOURCE_ID,
+                        "common-observation",
+                        resolved_study_id,
+                        resolved_specimen_id,
+                        FEATURE_SPACE_ID,
+                    ),
+                )
+
+
+def valid_lenia_common_specimen_count(connection: DuckDBPyConnection) -> int:
+    return sum(1 for _ in _iter_valid_lenia_calibration_candidates(connection))
 
 
 def _fish_studies(
@@ -914,8 +1011,7 @@ def _collect_fish_rows(
                     context_id=context_id,
                     observed_at=observed_at,
                     source_ref=(
-                        f"{landmark_row['output_path']}"
-                        f"#{landmark_row['source_row_index'] + 2}"
+                        f"{landmark_row['output_path']}#{landmark_row['source_row_index'] + 2}"
                     ),
                     values=point_cloud_shape_features(landmark_row["points"]),
                     payload_json={
@@ -928,6 +1024,7 @@ def _collect_fish_rows(
                 )
             )
     return rows
+
 
 def _embryomaker_study_ids(
     connection: DuckDBPyConnection,
@@ -1103,23 +1200,6 @@ def _existing_axis_stats(
     return stats if set(stats) == set(AXIS_IDS) else None
 
 
-def _selected_study_rows(
-    connection: DuckDBPyConnection,
-    *,
-    dryad_fish_root: Path | None,
-    study_id: str,
-) -> list[_CommonMorphologyRow]:
-    return [
-        *_collect_lenia_rows(connection, study_id=study_id),
-        *_collect_fish_rows(
-            connection,
-            study_id=study_id,
-            dataset_root=dryad_fish_root,
-        ),
-        *_collect_embryomaker_rows(connection, study_id=study_id),
-    ]
-
-
 def _iter_selected_study_rows(
     connection: DuckDBPyConnection,
     *,
@@ -1143,10 +1223,21 @@ def _source_counts_excluding_study(
     counts: dict[str, int] = {}
     rows = connection.execute(
         """
-        SELECT observations.source_id, COUNT(DISTINCT observations.observation_id)
-        FROM observations
-        JOIN feature_values USING (observation_id)
-        WHERE feature_values.feature_space_id = ?
+        SELECT observations.source_id, COUNT(*)
+        FROM specimen_feature_vectors
+        JOIN observations USING (observation_id)
+        JOIN feature_spaces
+          ON feature_spaces.feature_space_id = specimen_feature_vectors.feature_space_id
+        JOIN feature_calibrations
+          ON feature_calibrations.calibration_id = specimen_feature_vectors.calibration_id
+         AND feature_calibrations.feature_space_id =
+             specimen_feature_vectors.feature_space_id
+        WHERE specimen_feature_vectors.feature_space_id = ?
+          AND specimen_feature_vectors.calibration_id = json_extract_string(
+              feature_spaces.metadata_json,
+              '$.activeCalibrationId'
+          )
+          AND feature_calibrations.frozen
           AND observations.observation_kind = ?
           AND observations.study_id != ?
         GROUP BY observations.source_id
@@ -1193,6 +1284,7 @@ def _write_row_batches(
     *,
     batches: Iterable[list[_CommonMorphologyRow]],
     stats: dict[str, dict[str, float]],
+    calibration_id: str,
 ) -> tuple[int, int, dict[str, int]]:
     observation_count = 0
     feature_value_count = 0
@@ -1200,8 +1292,12 @@ def _write_row_batches(
     for batch in batches:
         observation_count += len(batch)
         _increment_source_counts(source_counts, batch)
-        feature_value_count += _write_rows(connection, rows=batch, stats=stats)
-        gc.collect()
+        feature_value_count += _write_rows(
+            connection,
+            rows=batch,
+            stats=stats,
+            calibration_id=calibration_id,
+        )
     return observation_count, feature_value_count, source_counts
 
 
@@ -1212,7 +1308,11 @@ def _clear_existing_rows(
 ) -> None:
     if study_id is None:
         connection.execute(
-            "DELETE FROM feature_values WHERE feature_space_id = ?",
+            "DELETE FROM specimen_feature_vectors WHERE feature_space_id = ?",
+            [FEATURE_SPACE_ID],
+        )
+        connection.execute(
+            "DELETE FROM sparse_feature_values WHERE feature_space_id = ?",
             [FEATURE_SPACE_ID],
         )
         connection.execute(
@@ -1222,7 +1322,14 @@ def _clear_existing_rows(
         return
     connection.execute(
         """
-        DELETE FROM feature_values
+        DELETE FROM specimen_feature_vectors
+        WHERE feature_space_id = ? AND study_id = ?
+        """,
+        [FEATURE_SPACE_ID, study_id],
+    )
+    connection.execute(
+        """
+        DELETE FROM sparse_feature_values
         WHERE feature_space_id = ?
           AND observation_id IN (
               SELECT observation_id
@@ -1243,108 +1350,95 @@ def _write_rows(
     *,
     rows: list[_CommonMorphologyRow],
     stats: dict[str, dict[str, float]],
+    calibration_id: str,
 ) -> int:
-    def json_timestamp(value: Any) -> str | None:
-        timestamp = normalize_optional_timestamp(value)
-        return timestamp.isoformat(sep=" ") if timestamp is not None else None
-
-    feature_value_count = 0
-    with tempfile.TemporaryDirectory(prefix="common-morphology-") as temp_dir:
-        temp_root = Path(temp_dir)
-        observations_path = temp_root / "observations.jsonl"
-        feature_values_path = temp_root / "feature_values.jsonl"
-        with observations_path.open("w", encoding="utf-8") as observations_handle:
-            for row in rows:
-                observations_handle.write(
-                    json.dumps(
-                        {
-                            "observation_id": row.observation_id,
-                            "specimen_id": row.specimen_id,
-                            "study_id": row.study_id,
-                            "source_id": row.source_id,
-                            "context_id": row.context_id,
-                            "observation_kind": OBSERVATION_KIND,
-                            "observed_at": json_timestamp(row.observed_at),
-                            "step": None,
-                            "source_ref": row.source_ref,
-                            "payload_json": json_text(row.payload_json),
-                        },
-                        sort_keys=True,
-                    )
-                    + "\n"
-                )
-        with feature_values_path.open("w", encoding="utf-8") as feature_values_handle:
-            for row in rows:
-                for axis_id in AXIS_IDS:
-                    raw_value = row.values[axis_id]
-                    feature_value_count += 1
-                    feature_values_handle.write(
-                        json.dumps(
-                            {
-                                "observation_id": row.observation_id,
-                                "feature_space_id": FEATURE_SPACE_ID,
-                                "axis_id": axis_id,
-                                "raw_value": raw_value,
-                                "normalized_value": zscore(
-                                    raw_value,
-                                    center=stats[axis_id]["center"],
-                                    scale=stats[axis_id]["scale"],
-                                ),
-                                "metadata_json": json_text({"normalization": "robust_zscore"}),
-                            },
-                            sort_keys=True,
-                        )
-                        + "\n"
-                    )
-
-        connection.execute(
-            """
-            INSERT OR REPLACE INTO observations (
-                observation_id, specimen_id, study_id, source_id, context_id,
-                observation_kind, observed_at, step, source_ref, payload_json
-            )
-            SELECT observation_id, specimen_id, study_id, source_id, context_id,
-                   observation_kind, observed_at, step, source_ref,
-                   CAST(payload_json AS JSON)
-            FROM read_json_auto(?)
-            """,
-            [str(observations_path)],
+    if not rows:
+        return 0
+    connection.execute(
+        """
+        INSERT OR REPLACE INTO observations (
+            observation_id, specimen_id, study_id, source_id, context_id,
+            observation_kind, observed_at, step, source_ref, payload_json
         )
-        connection.execute(
-            """
-            INSERT INTO feature_values (
-                observation_id, feature_space_id, axis_id, raw_value,
-                normalized_value, metadata_json
+        SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]),
+               unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]),
+               unnest(?::TIMESTAMP[]), unnest(?::INTEGER[]), unnest(?::VARCHAR[]),
+               CAST(unnest(?::VARCHAR[]) AS JSON)
+        """,
+        [
+            [row.observation_id for row in rows],
+            [row.specimen_id for row in rows],
+            [row.study_id for row in rows],
+            [row.source_id for row in rows],
+            [row.context_id for row in rows],
+            [OBSERVATION_KIND] * len(rows),
+            [normalize_optional_timestamp(row.observed_at) for row in rows],
+            [None] * len(rows),
+            [row.source_ref for row in rows],
+            [json_text(row.payload_json) for row in rows],
+        ],
+    )
+    upsert_specimen_feature_vectors(
+        connection,
+        feature_space_id=FEATURE_SPACE_ID,
+        calibration_id=calibration_id,
+        vector_version="v3",
+        axis_count=len(AXIS_IDS),
+        rows=[
+            (
+                row.observation_id,
+                row.specimen_id,
+                row.study_id,
+                [row.values[axis_id] for axis_id in AXIS_IDS],
+                [
+                    zscore(
+                        row.values[axis_id],
+                        center=stats[axis_id]["center"],
+                        scale=stats[axis_id]["scale"],
+                    )
+                    for axis_id in AXIS_IDS
+                ],
             )
-            SELECT observation_id, feature_space_id, axis_id, raw_value,
-                   normalized_value, CAST(metadata_json AS JSON)
-            FROM read_json_auto(?)
-            """,
-            [str(feature_values_path)],
-        )
-    return feature_value_count
+            for row in rows
+        ],
+    )
+    return len(rows) * len(AXIS_IDS)
 
 
 def _upsert_common_feature_space(
     connection: DuckDBPyConnection,
     *,
     source_counts: dict[str, int],
+    reference_counts: dict[str, int],
+    calibration_id: str | None,
 ) -> None:
     upsert_feature_space(
         connection,
         feature_space_id=FEATURE_SPACE_ID,
         feature_space_kind="cross_source_shape_descriptor",
+        storage_mode="dense_vectors",
         label=FEATURE_SPACE_LABEL,
-        version_label="v1",
+        version_label="v3",
         coordinate_policy=(
-            "raw_value is a scale-normalized point-cloud descriptor; normalized_value "
-            "is robust z-score across the derived common-morphology corpus"
+            "raw_value is a scale-normalized point-distribution descriptor; "
+            "normalized_value uses a frozen robust transform from an equal-count "
+            "reference per source. Raster topology axes are excluded because sparse "
+            "landmarks and dense fingerprints do not define equivalent occupancy."
         ),
         metric_json={"metric": "euclidean", "preferredValueColumn": "normalized_value"},
         metadata_json={
             "axisCount": len(AXIS_IDS),
             "sourceCounts": dict(sorted(source_counts.items())),
-            "normalization": "per-axis robust z-score across all derived observations",
+            "referenceCounts": dict(sorted(reference_counts.items())),
+            "normalization": "frozen per-axis robust z-score from balanced sources",
+            "leniaDescriptorVersion": DESCRIPTOR_VERSION,
+            "leniaNormalizationPolicy": NORMALIZATION_POLICY,
+            "excludedRepresentationDependentAxes": [
+                str(spec["id"])
+                for spec in POINT_CLOUD_AXIS_SPECS
+                if spec["id"] not in CROSS_SOURCE_AXIS_IDS
+            ],
+            "activeCalibrationId": calibration_id,
         },
     )
 
@@ -1356,29 +1450,88 @@ def derive_common_morphology(
     study_id: str | None = None,
 ) -> dict[str, Any]:
     stats = _existing_axis_stats(connection) if study_id is not None else None
-    streaming_batches: Iterable[list[_CommonMorphologyRow]] | None = None
-    rows: list[_CommonMorphologyRow] | None
-    if stats is None:
-        all_rows = [
-            *_collect_lenia_rows(connection, study_id=None),
-            *_collect_all_fish_rows(
-                connection,
-                study_id=study_id,
-                dataset_root=dryad_fish_root,
-            ),
-            *_collect_embryomaker_rows(connection, study_id=None),
-        ]
-        if not all_rows:
-            raise ValueError("no Lenia fingerprints or Dryad fish landmarks available")
-        rows = (
-            all_rows
-            if study_id is None
-            else [row for row in all_rows if row.study_id == study_id]
+    new_calibration = stats is None
+    calibration_id: str | None = None
+    reference_counts: dict[str, int] = {}
+    if new_calibration:
+        fish_rows = _collect_all_fish_rows(
+            connection,
+            study_id=study_id,
+            dataset_root=dryad_fish_root,
         )
+        embryo_rows = _collect_embryomaker_rows(connection, study_id=None)
         source_counts: dict[str, int] = {}
-        for row in all_rows:
-            source_counts[row.source_id] = source_counts.get(row.source_id, 0) + 1
-        stats = _axis_stats(all_rows)
+        candidates: dict[str, list[tuple[int, str, object]]] = {}
+
+        def offer_candidate(source_id: str, observation_id: str, payload: object) -> None:
+            source_counts[source_id] = source_counts.get(source_id, 0) + 1
+            score = int(stable_id("common-calibration", source_id, observation_id), 16)
+            entry = (-score, observation_id, payload)
+            source_candidates = candidates.setdefault(source_id, [])
+            if len(source_candidates) < _MAX_CALIBRATION_ROWS_PER_SOURCE:
+                heapq.heappush(source_candidates, entry)
+            elif entry[:2] > source_candidates[0][:2]:
+                heapq.heapreplace(source_candidates, entry)
+
+        for row in itertools.chain(fish_rows, embryo_rows):
+            offer_candidate(row.source_id, row.observation_id, row)
+        for (
+            candidate_study_id,
+            specimen_id,
+            observation_id,
+        ) in _iter_valid_lenia_calibration_candidates(connection):
+            offer_candidate(
+                LENIA_SOURCE_ID,
+                observation_id,
+                (candidate_study_id, specimen_id),
+            )
+        if not source_counts:
+            raise ValueError("no Lenia fingerprints or Dryad fish landmarks available")
+        per_source = min(min(source_counts.values()), _MAX_CALIBRATION_ROWS_PER_SOURCE)
+        reference_counts = {source_id: per_source for source_id in sorted(source_counts)}
+        reference_rows: list[_CommonMorphologyRow] = []
+        selected_lenia_specimens: dict[str, list[str]] = {}
+        for source_id in sorted(source_counts):
+            for _, _, payload in heapq.nlargest(per_source, candidates[source_id]):
+                if isinstance(payload, _CommonMorphologyRow):
+                    reference_rows.append(payload)
+                else:
+                    candidate_study_id, specimen_id = cast(tuple[str, str], payload)
+                    selected_lenia_specimens.setdefault(candidate_study_id, []).append(specimen_id)
+        reference_rows.extend(
+            _iter_lenia_rows(
+                connection,
+                study_id=None,
+                selected_specimen_ids=selected_lenia_specimens,
+            )
+        )
+        actual_reference_counts: dict[str, int] = {}
+        for row in reference_rows:
+            actual_reference_counts[row.source_id] = (
+                actual_reference_counts.get(row.source_id, 0) + 1
+            )
+        if any(
+            actual_reference_counts.get(source_id, 0) != expected_count
+            for source_id, expected_count in reference_counts.items()
+        ):
+            raise ValueError(
+                "balanced calibration candidates did not produce valid point clouds: "
+                f"expected={reference_counts}, actual={actual_reference_counts}"
+            )
+        stats = _axis_stats(reference_rows)
+        row_iterator = (
+            itertools.chain(
+                _iter_lenia_rows(connection, study_id=None),
+                fish_rows,
+                embryo_rows,
+            )
+            if study_id is None
+            else itertools.chain(
+                _iter_lenia_rows(connection, study_id=study_id),
+                (row for row in fish_rows if row.study_id == study_id),
+                (row for row in embryo_rows if row.study_id == study_id),
+            )
+        )
     else:
         assert study_id is not None
         row_iterator = _iter_selected_study_rows(
@@ -1386,27 +1539,21 @@ def derive_common_morphology(
             dryad_fish_root=dryad_fish_root,
             study_id=study_id,
         )
-        first_batch = list(itertools.islice(row_iterator, _WRITE_BATCH_SIZE))
-        rows = None
         source_counts = _source_counts_excluding_study(connection, study_id=study_id)
-        streaming_batches = itertools.chain([first_batch], _row_batches(row_iterator))
-    if rows is not None and not rows:
+    first_batch = list(itertools.islice(row_iterator, _WRITE_BATCH_SIZE))
+    if not first_batch:
         raise ValueError(
-            "no Lenia fingerprints or Dryad fish landmarks available "
-            f"for study_id={study_id}"
+            f"no Lenia fingerprints or Dryad fish landmarks available for study_id={study_id}"
         )
-    if rows is None and streaming_batches is not None and not first_batch:
-        raise ValueError(
-            "no Lenia fingerprints or Dryad fish landmarks available "
-            f"for study_id={study_id}"
-        )
+    streaming_batches = itertools.chain([first_batch], _row_batches(row_iterator))
+    assert stats is not None
 
     upsert_morphospace_source(
         connection,
         source_id=LENIA_SOURCE_ID,
         source_kind="synthetic_cellular_automaton",
         label="Lenia synthetic morphospace",
-        version_label="v1",
+        version_label="v2",
         metadata_json={"system": "lenia-swarm"},
     )
     upsert_morphospace_source(
@@ -1417,8 +1564,13 @@ def derive_common_morphology(
         version_label="legacy-output-dat",
         metadata_json={"featureSpaceId": FEATURE_SPACE_ID},
     )
-    if rows is not None:
-        _upsert_common_feature_space(connection, source_counts=source_counts)
+    if new_calibration:
+        _upsert_common_feature_space(
+            connection,
+            source_counts=source_counts,
+            reference_counts=reference_counts,
+            calibration_id=None,
+        )
     replace_feature_axes(
         connection,
         feature_space_id=FEATURE_SPACE_ID,
@@ -1426,7 +1578,7 @@ def derive_common_morphology(
             {
                 "axis_id": str(spec["id"]),
                 "axis_index": index,
-                "axis_family": str(spec.get("axisFamily", "common_point_cloud_morphology")),
+                "axis_family": str(spec.get("axisFamily", "common_point_distribution_morphology")),
                 "label": str(spec["label"]),
                 "units": "unitless",
                 "metadata_json": {
@@ -1442,27 +1594,125 @@ def derive_common_morphology(
         ],
     )
 
-    _clear_existing_rows(connection, study_id=study_id)
-    if rows is None:
-        assert streaming_batches is not None
-        observation_count, feature_value_count, replacement_counts = _write_row_batches(
+    if new_calibration:
+        calibration_id = register_feature_calibration(
             connection,
-            batches=streaming_batches,
-            stats=stats,
+            feature_space_id=FEATURE_SPACE_ID,
+            calibration_version="balanced-reference-v3",
+            axis_order=AXIS_IDS,
+            reference_query={
+                "selection": "equal-count-per-source-stable-hash",
+                "maximumRowsPerSource": _MAX_CALIBRATION_ROWS_PER_SOURCE,
+                "counts": dict(sorted(reference_counts.items())),
+            },
+            axis_transforms={
+                axis_id: {
+                    "transform": "robust-zscore",
+                    "center": stats[axis_id]["center"],
+                    "scale": stats[axis_id]["scale"],
+                }
+                for axis_id in AXIS_IDS
+            },
+            metadata_json={"axisOrder": list(AXIS_IDS), "frozen": True},
         )
+        _upsert_common_feature_space(
+            connection,
+            source_counts=source_counts,
+            reference_counts=reference_counts,
+            calibration_id=calibration_id,
+        )
+    else:
+        calibration_row = connection.execute(
+            """
+            SELECT feature_calibrations.calibration_id,
+                   feature_calibrations.reference_query_json
+            FROM feature_spaces
+            JOIN feature_calibrations
+              ON feature_calibrations.calibration_id = json_extract_string(
+                  feature_spaces.metadata_json,
+                  '$.activeCalibrationId'
+              )
+            WHERE feature_spaces.feature_space_id = ?
+              AND feature_calibrations.frozen
+            """,
+            [FEATURE_SPACE_ID],
+        ).fetchone()
+        if calibration_row is None:
+            raise ValueError(
+                f"{FEATURE_SPACE_ID}: incremental derivation requires a frozen calibration"
+            )
+        calibration_id = str(calibration_row[0])
+        reference_query = _json_dict(calibration_row[1])
+        raw_reference_counts = reference_query.get("counts")
+        if isinstance(raw_reference_counts, dict):
+            reference_counts = {
+                str(source_id): int(count) for source_id, count in raw_reference_counts.items()
+            }
+
+    assert calibration_id is not None
+    mark_derived_artifact_state(
+        connection,
+        artifact_kind="feature-space",
+        feature_space_id=FEATURE_SPACE_ID,
+        descriptor_version=DESCRIPTOR_VERSION,
+        normalization_policy=NORMALIZATION_POLICY,
+        status="invalid",
+        reason="common morphology vectors are being rebuilt",
+        metadata_json={"calibrationId": calibration_id, "lifecycle": "building"},
+    )
+    _clear_existing_rows(connection, study_id=study_id)
+    observation_count, feature_value_count, replacement_counts = _write_row_batches(
+        connection,
+        batches=streaming_batches,
+        stats=stats,
+        calibration_id=calibration_id,
+    )
+    if not new_calibration:
         for source_id, count in replacement_counts.items():
             source_counts[source_id] = source_counts.get(source_id, 0) + count
-        _upsert_common_feature_space(connection, source_counts=source_counts)
-    else:
-        observation_count = len(rows)
-        feature_value_count = _write_rows(connection, rows=rows, stats=stats)
+    _upsert_common_feature_space(
+        connection,
+        source_counts=source_counts,
+        reference_counts=reference_counts,
+        calibration_id=calibration_id,
+    )
 
+    vector_count_row = connection.execute(
+        """
+        SELECT count(*)
+        FROM specimen_feature_vectors
+        WHERE feature_space_id = ? AND calibration_id = ?
+          AND (? IS NULL OR study_id = ?)
+        """,
+        [FEATURE_SPACE_ID, calibration_id, study_id, study_id],
+    ).fetchone()
+    vector_count = int(vector_count_row[0]) if vector_count_row is not None else 0
+    validate_dense_feature_space(
+        connection,
+        feature_space_id=FEATURE_SPACE_ID,
+        calibration_id=calibration_id,
+        observation_kind=OBSERVATION_KIND,
+        axis_count=len(AXIS_IDS),
+    )
+    mark_derived_artifact_state(
+        connection,
+        artifact_kind="feature-space",
+        feature_space_id=FEATURE_SPACE_ID,
+        descriptor_version=DESCRIPTOR_VERSION,
+        normalization_policy=NORMALIZATION_POLICY,
+        status="valid",
+        reason=None,
+        metadata_json={"calibrationId": calibration_id, "lifecycle": "complete"},
+    )
     return {
         "featureSpaceId": FEATURE_SPACE_ID,
         "observationKind": OBSERVATION_KIND,
         "observationCount": observation_count,
         "axisCount": len(AXIS_IDS),
         "featureValueCount": feature_value_count,
+        "vectorCount": vector_count,
         "sourceCounts": dict(sorted(source_counts.items())),
         "axisStats": json.loads(json_text(stats)),
+        "calibrationId": calibration_id,
+        "referenceCounts": dict(sorted(reference_counts.items())),
     }

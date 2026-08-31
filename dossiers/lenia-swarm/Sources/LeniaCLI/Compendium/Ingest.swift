@@ -107,10 +107,13 @@ func collectRunInputs(outputRoots: [String]) throws -> [RunInput] {
         .sorted { $0.runDir.path < $1.runDir.path }
 }
 
-func makeRunInput(runDir: String) throws -> RunInput {
+func makeRunInput(runDir: String, explicitRunID: String? = nil) throws -> RunInput {
     let runURL = try existingDirectoryURL(path: runDir, label: "Run directory")
     let inferred = inferOutputRootAndHostId(from: runURL)
-    let runId = try canonicalRunId(for: runURL)
+    let runId = try explicitRunID ?? canonicalRunId(for: runURL)
+    guard !runId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw ValidationError("Explicit run ID must not be empty.")
+    }
     return RunInput(
         runDir: runURL,
         runId: runId,

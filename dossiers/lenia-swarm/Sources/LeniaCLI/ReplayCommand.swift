@@ -12,6 +12,9 @@ struct ReplayCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Path to exports/index.jsonl or library/index.jsonl")
     var input: String
 
+    @Option(name: .long, help: "Expected SHA-256 of the exact input JSONL bytes")
+    var inputSha256: String?
+
     @Option(name: .shortAndLong, help: "Replay batch output directory")
     var output: String?
 
@@ -57,7 +60,10 @@ struct ReplayCommand: AsyncParsableCommand {
         let logger = logging.logger
 
         let inputURL = URL(fileURLWithPath: resolvedInput)
-        let inputs = try loadReplayResolvedInputs(from: inputURL)
+        let inputs = try loadReplayResolvedInputs(
+            from: inputURL,
+            expectedInputSha256: inputSha256
+        )
         if validateOnly {
             guard !inputs.isEmpty else {
                 throw ValidationError("No replayable specimens found in \(resolvedInput).")
@@ -84,6 +90,7 @@ struct ReplayCommand: AsyncParsableCommand {
             defaultCompendiumPath: nil,
             dossier: dossierName,
             runDir: outputURL.path,
+            runID: resolvedRunId,
             includeResults: true
         )
     }

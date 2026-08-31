@@ -7,16 +7,41 @@ ANALYSIS_GROUPS = (
         name="morphospace",
         module="morphospace_cli",
         help="Warehouse, feature, and export bridge",
-        prog="lenia-swarm-morphospace",
+        prog="lenia-swarm-analysis morphospace",
         description="Canonical warehouse lifecycle for lenia-swarm morphospace analysis",
         package="lenia_swarm_analysis",
         commands=(),
     ),
     CommandGroup(
+        name="waddington",
+        module="waddington._cli",
+        help="Waddington landscape study tools",
+        prog="lenia-swarm-analysis waddington",
+        description="Waddington landscape study tools",
+        package="lenia_swarm_analysis.waddington",
+        commands=(),
+    ),
+    CommandGroup(
+        name="anatomical",
+        module="anatomical_compiler._cli",
+        help="Anatomical compiler and functional assay tools",
+        prog="lenia-swarm-analysis anatomical",
+        description="Anatomical compiler and functional assay tools",
+        package="lenia_swarm_analysis.anatomical_compiler",
+        commands=(
+            Subcommand("compile-form", "form_demo", "Compile a genotype toward a target form"),
+            Subcommand(
+                "functional-coupling",
+                "functional_coupling",
+                "Test held-out shape-to-function coupling",
+            ),
+        ),
+    ),
+    CommandGroup(
         name="topology",
         module="topology._cli",
         help="Persistent topology analysis tools",
-        prog="lenia-swarm-topology",
+        prog="lenia-swarm-analysis topology",
         description="Persistent topology analysis tools",
         package="lenia_swarm_analysis.topology",
         commands=(
@@ -29,7 +54,7 @@ ANALYSIS_GROUPS = (
         name="transform",
         module="transform._cli",
         help="Transformation analysis packet tools",
-        prog="lenia-swarm-transform",
+        prog="lenia-swarm-analysis transform",
         description="Transformation analysis packet tools",
         package="lenia_swarm_analysis.transform",
         commands=(
@@ -44,7 +69,7 @@ ANALYSIS_GROUPS = (
         name="generators",
         module="generators._cli",
         help="Topology generator analysis tools",
-        prog="lenia-swarm-generators",
+        prog="lenia-swarm-analysis generators",
         description="Topology generator analysis tools",
         package="lenia_swarm_analysis.generators",
         commands=(
@@ -62,7 +87,7 @@ ANALYSIS_GROUPS = (
         name="fiber",
         module="fiber._cli",
         help="Fiber candidate and continuation tools",
-        prog="lenia-swarm-fiber",
+        prog="lenia-swarm-analysis fiber",
         description="Fiber candidate and continuation tools",
         package="lenia_swarm_analysis.fiber",
         commands=(
@@ -85,7 +110,7 @@ ANALYSIS_GROUPS = (
         name="transport",
         module="transport._cli",
         help="Transport analysis tools",
-        prog="lenia-swarm-transport",
+        prog="lenia-swarm-analysis transport",
         description="Transport analysis tools",
         package="lenia_swarm_analysis.transport",
         commands=(
@@ -115,7 +140,7 @@ ANALYSIS_GROUPS = (
         name="hotspot",
         module="hotspot._cli",
         help="Hotspot analysis tools",
-        prog="lenia-swarm-hotspot",
+        prog="lenia-swarm-analysis hotspot",
         description="Hotspot analysis tools",
         package="lenia_swarm_analysis.hotspot",
         commands=(
@@ -133,7 +158,7 @@ ANALYSIS_GROUPS = (
         name="imgep",
         module="imgep._cli",
         help="IMGEP curiosity-driven exploration tools",
-        prog="lenia-swarm-imgep",
+        prog="lenia-swarm-analysis imgep",
         description="IMGEP curiosity-driven exploration tools",
         package="lenia_swarm_analysis.imgep",
         commands=(
@@ -147,7 +172,7 @@ ANALYSIS_GROUPS = (
         name="agda",
         module="agda._cli",
         help="Agda proof generation tools",
-        prog="lenia-swarm-agda",
+        prog="lenia-swarm-analysis agda",
         description="Agda proof generation tools",
         package="lenia_swarm_analysis.agda",
         commands=(

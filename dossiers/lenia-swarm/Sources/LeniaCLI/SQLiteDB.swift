@@ -55,6 +55,26 @@ final class SQLiteDB {
         }
     }
 
+    func checkpointWALForExternalRead() throws {
+        let stmt = try prepare("PRAGMA wal_checkpoint(TRUNCATE)")
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW else {
+            throw SQLiteIndexError.sqliteError(message: errorMessage())
+        }
+        let busy = sqlite3_column_int(stmt, 0)
+        let logFrames = sqlite3_column_int64(stmt, 1)
+        let checkpointedFrames = sqlite3_column_int64(stmt, 2)
+        guard busy == 0 else {
+            throw SQLiteIndexError.sqliteError(
+                message: "WAL checkpoint remained busy "
+                    + "(logFrames=\(logFrames), checkpointedFrames=\(checkpointedFrames))"
+            )
+        }
+        guard sqlite3_step(stmt) == SQLITE_DONE else {
+            throw SQLiteIndexError.sqliteError(message: errorMessage())
+        }
+    }
+
     func scalarInt(_ sql: String) throws -> Int {
         let stmt = try prepare(sql)
         defer { sqlite3_finalize(stmt) }

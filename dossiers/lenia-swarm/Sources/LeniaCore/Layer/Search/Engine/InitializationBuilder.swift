@@ -8,12 +8,7 @@ struct SearchInitializationBuilder {
 
     func buildInitialState(seed: Int) -> MLXArray {
         if let statePatch = runtimeConfig.statePatch {
-            return buildExplicitInitialState(
-                sx: runtimeConfig.sx,
-                sy: runtimeConfig.sy,
-                channels: runtimeConfig.channels,
-                statePatch: statePatch
-            )
+            return buildInitialState(statePatch: statePatch)
         }
 
         var rng = SeededRandomNumberGenerator(seed: UInt64(seed))
@@ -44,6 +39,15 @@ struct SearchInitializationBuilder {
 
         let flat = state.flatMap { $0 }
         return MLXArray(flat).reshaped([runtimeConfig.sx, runtimeConfig.sy, runtimeConfig.channels])
+    }
+
+    func buildInitialState(statePatch: InitStatePatchConfig) -> MLXArray {
+        buildExplicitInitialState(
+            sx: runtimeConfig.sx,
+            sy: runtimeConfig.sy,
+            channels: runtimeConfig.channels,
+            statePatch: statePatch
+        )
     }
 
     func buildInitialParameterState(seed: Int) -> MLXArray? {
@@ -109,6 +113,12 @@ struct SearchInitializationBuilder {
         statePatch: InitStatePatchConfig
     ) -> MLXArray {
         let values = statePatch.decodedValues()
+        precondition(statePatch.center.count == 2, "state patch center must have x/y coordinates")
+        precondition(statePatch.channels == channels, "state patch channels must match runtime channels")
+        precondition(
+            values.count == statePatch.width * statePatch.height * channels,
+            "state patch data length must match width*height*channels"
+        )
         var state = [[Float]](
             repeating: [Float](repeating: 0.0, count: sy * channels),
             count: sx
@@ -122,6 +132,10 @@ struct SearchInitializationBuilder {
         let x1 = cx + (statePatch.width - halfWidth)
         let y0 = cy - halfHeight
         let y1 = cy + (statePatch.height - halfHeight)
+        precondition(
+            x0 >= 0 && y0 >= 0 && x1 <= sx && y1 <= sy,
+            "state patch bounds must fit within the runtime grid"
+        )
 
         var patchIndex = 0
         for x in x0..<x1 {

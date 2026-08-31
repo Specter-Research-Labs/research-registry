@@ -89,21 +89,6 @@ public func morphospaceDevelopmentSample(
         useTorus: useTorus
     )
 
-    var totalMass: Float = 0
-    var momentX: Float = 0
-    var momentY: Float = 0
-    for y in 0..<height {
-        let rowOffset = y * width
-        for x in 0..<width {
-            let value = mass[rowOffset + x]
-            totalMass += value
-            momentX += value * (Float(x) + 0.5)
-            momentY += value * (Float(y) + 0.5)
-        }
-    }
-    let centerX = totalMass > 1e-8 ? momentX / totalMass : Float(width) * 0.5
-    let centerY = totalMass > 1e-8 ? momentY / totalMass : Float(height) * 0.5
-
     let terminal = MorphospaceTerminalDescriptor(
         massChannel: massChannel,
         borderMode: borderMode,
@@ -149,8 +134,8 @@ public func morphospaceDevelopmentSample(
         : nil
     return MorphospaceDevelopmentSample(
         step: step,
-        centerX: centerX,
-        centerY: centerY,
+        centerX: summary.centerX,
+        centerY: summary.centerY,
         width: width,
         height: height,
         terminal: terminal,

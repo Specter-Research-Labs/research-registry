@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from ripser import ripser
 
 from lenia_swarm_analysis._io import read_json, read_jsonl
+from lenia_swarm_analysis.paths import resolve_input_path, route_output_path
 
 from .analysis import (
     _collect_genotype_groups,
@@ -17,6 +17,15 @@ from .analysis import (
     _fiber_locality_summary,
     _pairwise_distance_matrix,
     _resolve_rows_path,
+)
+from .core import (
+    distance_scale,
+    max_dense_rips_points,
+    peak_betti,
+    persistence_threshold_counts,
+    preflight_rips_request,
+    run_ripser_precomputed,
+    upper_triangle,
 )
 
 REPRESENTATION_NAMES = (
@@ -173,32 +182,14 @@ def _representation_notes(name: str) -> str:
 
 
 def _h1_threshold_counts(diagrams: list[list[dict[str, Any]]]) -> dict[str, int]:
-    if len(diagrams) <= 1:
-        return {}
-    thresholds = (0.02, 0.015, 0.01, 0.005)
-    persistences = [
-        float(entry["persistence"])
-        for entry in diagrams[1]
-        if entry.get("persistence") is not None
-    ]
-    return {
-        f">={threshold:.3f}": int(sum(value >= threshold for value in persistences))
-        for threshold in thresholds
-    }
+    return persistence_threshold_counts(
+        diagrams,
+        ratios=(0.005, 0.01, 0.015, 0.02),
+    )
 
 
 def _peak_betti_one(betti_curves: list[dict[str, Any]]) -> dict[str, Any] | None:
-    if len(betti_curves) <= 1:
-        return None
-    curve = betti_curves[1]
-    betti = curve["betti"]
-    if not isinstance(betti, list) or not betti:
-        return None
-    peak_index = max(range(len(betti)), key=betti.__getitem__)
-    return {
-        "count": int(betti[peak_index]),
-        "scale": float(curve["scale"][peak_index]),
-    }
+    return peak_betti(betti_curves)
 
 
 def _genotype_space(rows: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -242,11 +233,13 @@ def run_comparison(
 ) -> dict[str, Any]:
     manifest = read_json(manifest_path)
     rows_path = _resolve_rows_path(manifest_path, manifest)
-    rows = read_jsonl(rows_path)
+    rows = read_jsonl(rows_path, max_rows=max_dense_rips_points(maxdim))
     if len(rows) < 2:
         raise SystemExit("Topology comparison requires at least 2 specimens.")
+    ripser_budget = preflight_rips_request(len(rows), maxdim=maxdim)
 
     genotype_space, genotype_groups = _genotype_space(rows)
+    genotype_distances = [_pairwise_distance_matrix(group["matrix"]) for group in genotype_groups]
     diagrams_out: dict[str, Any] = {}
     betti_out: dict[str, Any] = {}
     representation_summaries: dict[str, Any] = {}
@@ -254,15 +247,22 @@ def run_comparison(
     for name in representations:
         matrix = _representation_matrix(rows, name)
         phenotype_distances = _pairwise_distance_matrix(matrix)
-        pairwise_max = float(np.max(phenotype_distances))
-        ripser_result = ripser(matrix, maxdim=maxdim, metric="euclidean")
-        phenotype_summary = _diagram_summary(ripser_result["dgms"], pairwise_max)
+        pairwise = upper_triangle(phenotype_distances)
+        metric_scale, scale_kind = distance_scale(pairwise)
+        ripser_result, _ = run_ripser_precomputed(
+            phenotype_distances,
+            maxdim=maxdim,
+        )
+        phenotype_summary = _diagram_summary(
+            ripser_result["dgms"],
+            metric_scale,
+            scale_kind=scale_kind,
+        )
 
         if len(genotype_groups) == 1:
-            genotype_distances = _pairwise_distance_matrix(genotype_groups[0]["matrix"])
             fiber_locality: dict[str, Any] = {
                 "status": "homogeneous",
-                **_fiber_locality_summary(genotype_distances, phenotype_distances, neighbor_k),
+                **_fiber_locality_summary(genotype_distances[0], phenotype_distances, neighbor_k),
             }
         else:
             fiber_locality = {
@@ -274,12 +274,12 @@ def run_comparison(
                         "dimension": int(group["matrix"].shape[1]),
                         "distanceMetric": "euclidean",
                         "summary": _fiber_locality_summary(
-                            _pairwise_distance_matrix(group["matrix"]),
+                            genotype_distances[group_index],
                             phenotype_distances[np.ix_(group["indices"], group["indices"])],
                             neighbor_k,
                         ),
                     }
-                    for group in genotype_groups
+                    for group_index, group in enumerate(genotype_groups)
                 ],
             }
 
@@ -291,9 +291,12 @@ def run_comparison(
             "pointCount": int(matrix.shape[0]),
             "dimension": int(matrix.shape[1]),
             "distanceMetric": "euclidean",
+            "budget": ripser_budget,
             "scaleMax": phenotype_summary["scaleMax"],
+            "scaleReference": phenotype_summary["scaleReference"],
             "ripser": phenotype_summary["summaries"],
             "h1ThresholdCounts": _h1_threshold_counts(phenotype_summary["diagrams"]),
+            "persistenceThresholdUnits": "fraction_of_declared_scale",
             "peakBetti1": _peak_betti_one(phenotype_summary["bettiCurves"]),
             "fiberLocality": fiber_locality,
         }
@@ -373,11 +376,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
-    manifest_path = Path(args.manifest).expanduser().resolve()
+    manifest_path = resolve_input_path(args.manifest)
     if not manifest_path.is_file():
         raise SystemExit(f"Missing manifest: {manifest_path}")
     output_dir = (
-        Path(args.output).expanduser().resolve()
+        route_output_path(args.output)
         if args.output
         else _default_output_dir(manifest_path).resolve()
     )

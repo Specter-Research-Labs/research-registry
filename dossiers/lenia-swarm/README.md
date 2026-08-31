@@ -107,9 +107,10 @@ Useful individual targets:
 - `LeniaCLI tt run`: Tenstorrent backend trajectory execution with optional quietbox SSH/container orchestration and Studio frame export.
 - `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.
 - `lenia-swarm-analysis`: canonical Python analysis CLI for TDA, fibers,
-  transport, packet builders, named-family preset extraction, and warehouse
-  bridge operations. Existing `lenia-swarm-*` Python commands remain
-  compatibility aliases.
+  transport, packet builders, named-family preset extraction, warehouse
+  operations, Waddington studies, and anatomical assays. It is the only
+  installed Python executable; use its `morphospace`, `waddington`,
+  `anatomical`, `topology`, and other command groups.
 
 ### Tenstorrent Runs
 
@@ -174,6 +175,29 @@ the current compendium snapshot:
 spctr surface status lenia-compendium
 spctr surface sync lenia-compendium
 ```
+
+The Python warehouse writer accepts schema v10 only and never upgrades an older
+database in place. Build a compact replacement with `lenia-swarm-analysis
+morphospace migrate-warehouse --source <v8.duckdb> --destination <v10.duckdb>`, then run
+`morphospace regenerate-derived --warehouse <v10.duckdb>` once torus-aware v2
+descriptors are available. The migration rejects a live WAL, reads specimens in
+bounded keyset batches, keeps the source read-only, and omits legacy axes,
+anatomical states, feature coordinates, topology, and raw SQLite row mirrors.
+It also collapses compendium-derived aggregate and run memberships into the
+same canonical aggregate study used by future default refreshes; unrelated
+cohort memberships remain provenance only and do not duplicate observations.
+
+`regenerate-derived` is an exact rebuild of derived axes, status, anatomy, terminal
+features, common morphology, dense vectors, and calibrations. Derived calibrated
+spaces store vectors once; source-native sparse spaces retain physical long rows,
+and row-oriented consumers use a logical projection. Regeneration fails on zero exact
+v2 specimens and reports `readyForWarehouseCutover`, `readyForNativeV2Analysis`,
+`readyForFullCutover`, and the
+remaining invalidated analyses. A v1 descriptor is never relabeled as v2.
+Before replacing an active warehouse, migrate from a stable hardlink to the v8
+inode so the receipt's source path remains truthful after the active filename is
+swapped. Run-scoped discovery requires a separately bootstrapped warehouse and
+one global calibration before incremental refresh.
 
 ### Studio
 

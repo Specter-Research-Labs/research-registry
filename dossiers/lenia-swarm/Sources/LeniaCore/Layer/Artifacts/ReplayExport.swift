@@ -1,5 +1,17 @@
 import Foundation
 
+public struct CreatureExportSourceContentSHA256: Codable, Equatable {
+    public let baseConfig: String
+    public let searchConfig: String
+    public let meta: String
+
+    public init(baseConfig: String, searchConfig: String, meta: String) {
+        self.baseConfig = baseConfig
+        self.searchConfig = searchConfig
+        self.meta = meta
+    }
+}
+
 public struct CreatureExportRecord: Codable {
     public let creatureId: UUID
     public let name: String
@@ -18,6 +30,7 @@ public struct CreatureExportRecord: Codable {
     public let runtimeFamily: String
     public let runtimeCapabilities: [String]
     public let specimenManifest: SpecimenManifest
+    public let sourceContentSha256: CreatureExportSourceContentSHA256?
 
     enum CodingKeys: String, CodingKey {
         case creatureId
@@ -37,6 +50,7 @@ public struct CreatureExportRecord: Codable {
         case runtimeFamily
         case runtimeCapabilities
         case specimenManifest
+        case sourceContentSha256
     }
 
     public init(
@@ -56,7 +70,8 @@ public struct CreatureExportRecord: Codable {
         filtersPassed: Bool?,
         runtimeFamily: String? = nil,
         runtimeCapabilities: [String]? = nil,
-        specimenManifest: SpecimenManifest? = nil
+        specimenManifest: SpecimenManifest? = nil,
+        sourceContentSha256: CreatureExportSourceContentSHA256? = nil
     ) {
         self.creatureId = creatureId
         self.name = name
@@ -89,6 +104,7 @@ public struct CreatureExportRecord: Codable {
         self.runtimeFamily = runtimeFamily ?? resolvedManifest.runtimeFamily
         self.runtimeCapabilities = (runtimeCapabilities ?? resolvedManifest.runtimeCapabilities).sorted()
         self.specimenManifest = resolvedManifest
+        self.sourceContentSha256 = sourceContentSha256
     }
 
     public init(from decoder: Decoder) throws {
@@ -129,6 +145,10 @@ public struct CreatureExportRecord: Codable {
                 ?? backfilledManifest.runtimeCapabilities
         ).sorted()
         specimenManifest = backfilledManifest
+        sourceContentSha256 = try container.decodeIfPresent(
+            CreatureExportSourceContentSHA256.self,
+            forKey: .sourceContentSha256
+        )
     }
 }
 

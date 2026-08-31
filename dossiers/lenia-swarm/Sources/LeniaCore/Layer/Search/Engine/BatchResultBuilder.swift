@@ -56,7 +56,11 @@ struct SearchBatchResultBuilder {
             enabled: true,
             threshold: searchConfig.moments?.threshold ?? 0.01
         )
-        let momentsResult = computeMomentsBatch(materialized: postProcessingMass, config: descriptorMomentsConfig)
+        let momentsMass = morphospaceCenteredMassBatch(
+            postProcessingMass,
+            useTorus: runtimeConfig.border == "torus"
+        )
+        let momentsResult = computeMomentsBatch(materialized: momentsMass, config: descriptorMomentsConfig)
 
         let componentThreshold = searchConfig.componentThreshold ?? searchConfig.occupancyThreshold
         let componentMetricsResult = computeComponentMetricsBatch(

@@ -1604,6 +1604,32 @@ final class FlowLeniaMetalFullPipeline {
             }
         }
 
+        inline float flowMetalSummaryCircularCoordinate(
+            float2 first,
+            float2 second,
+            float cartesian,
+            float period,
+            float totalMass
+        ) {
+            float threshold = metal::max(totalMass, 1.0f) * 1.0e-6f;
+            constexpr float kTwoPi = 6.28318530717958647692f;
+            if (metal::length(first) > threshold) {
+                float phase = metal::atan2(first.y, first.x);
+                if (phase < 0.0f) phase += kTwoPi;
+                return phase * period / kTwoPi;
+            }
+            if (metal::length(second) <= threshold) return cartesian;
+            float phase = metal::atan2(second.y, second.x);
+            if (phase < 0.0f) phase += kTwoPi;
+            float candidateA = phase * period / (2.0f * kTwoPi);
+            float candidateB = candidateA + period * 0.5f;
+            float deltaA = metal::fabs(candidateA - cartesian);
+            float deltaB = metal::fabs(candidateB - cartesian);
+            float distanceA = metal::min(deltaA, period - deltaA);
+            float distanceB = metal::min(deltaB, period - deltaB);
+            return distanceA <= distanceB ? candidateA : candidateB;
+        }
+
         kernel void flowMetalMassSummaryPass1Partial(
             device const float *mass [[buffer(0)]],
             device const float *occupancyThresholdPtr [[buffer(1)]],
@@ -1614,6 +1640,10 @@ final class FlowLeniaMetalFullPipeline {
             device float *partialWeightedY [[buffer(6)]],
             device float *partialOccupancyCount [[buffer(7)]],
             device const float *channelWeights [[buffer(8)]],
+            device float4 *partialCircularFirst [[buffer(9)]],
+            device float4 *partialCircularSecond [[buffer(10)]],
+            device const float4 *circularXWeights [[buffer(11)]],
+            device const float4 *circularYWeights [[buffer(12)]],
             uint tid [[thread_index_in_threadgroup]],
             uint lane [[thread_index_in_simdgroup]],
             uint simdGroup [[simdgroup_index_in_threadgroup]],
@@ -1633,6 +1663,8 @@ final class FlowLeniaMetalFullPipeline {
             threadgroup float weightedXScratch[kSummaryThreads];
             threadgroup float weightedYScratch[kSummaryThreads];
             threadgroup float occupancyScratch[kSummaryThreads];
+            threadgroup float4 circularFirstScratch[kSummaryThreads];
+            threadgroup float4 circularSecondScratch[kSummaryThreads];
 
             float localTotal = 0.0f;
             float localSumSq = 0.0f;
@@ -1640,6 +1672,8 @@ final class FlowLeniaMetalFullPipeline {
             float localWeightedX = 0.0f;
             float localWeightedY = 0.0f;
             float localOccupancy = 0.0f;
+            float4 localCircularFirst = float4(0.0f);
+            float4 localCircularSecond = float4(0.0f);
             int spatialCount = kSX * kSY;
             uint chunkStart = partialGroup * kSummaryChunkSpan;
             uint chunkEnd = min(chunkStart + kSummaryChunkSpan, uint(spatialCount));
@@ -1658,6 +1692,14 @@ final class FlowLeniaMetalFullPipeline {
                 localWeightedX += value * float(x);
                 localWeightedY += value * float(y);
                 localOccupancy += value > occupancyThreshold ? 1.0f : 0.0f;
+                float4 xWeights = circularXWeights[x];
+                float4 yWeights = circularYWeights[y];
+                localCircularFirst += value * float4(
+                    xWeights.x, xWeights.y, yWeights.x, yWeights.y
+                );
+                localCircularSecond += value * float4(
+                    xWeights.z, xWeights.w, yWeights.z, yWeights.w
+                );
             }
 
             localTotal = simd_sum(localTotal);
@@ -1666,6 +1708,14 @@ final class FlowLeniaMetalFullPipeline {
             localWeightedX = simd_sum(localWeightedX);
             localWeightedY = simd_sum(localWeightedY);
             localOccupancy = simd_sum(localOccupancy);
+            localCircularFirst = float4(
+                simd_sum(localCircularFirst.x), simd_sum(localCircularFirst.y),
+                simd_sum(localCircularFirst.z), simd_sum(localCircularFirst.w)
+            );
+            localCircularSecond = float4(
+                simd_sum(localCircularSecond.x), simd_sum(localCircularSecond.y),
+                simd_sum(localCircularSecond.z), simd_sum(localCircularSecond.w)
+            );
             if (lane == 0u) {
                 totalScratch[simdGroup] = localTotal;
                 sumSqScratch[simdGroup] = localSumSq;
@@ -1673,6 +1723,8 @@ final class FlowLeniaMetalFullPipeline {
                 weightedXScratch[simdGroup] = localWeightedX;
                 weightedYScratch[simdGroup] = localWeightedY;
                 occupancyScratch[simdGroup] = localOccupancy;
+                circularFirstScratch[simdGroup] = localCircularFirst;
+                circularSecondScratch[simdGroup] = localCircularSecond;
             }
             threadgroup_barrier(mem_flags::mem_threadgroup);
 
@@ -1683,12 +1735,22 @@ final class FlowLeniaMetalFullPipeline {
             float reducedWeightedX = tid < simdGroupCount ? weightedXScratch[tid] : 0.0f;
             float reducedWeightedY = tid < simdGroupCount ? weightedYScratch[tid] : 0.0f;
             float reducedOccupancy = tid < simdGroupCount ? occupancyScratch[tid] : 0.0f;
+            float4 reducedCircularFirst = tid < simdGroupCount ? circularFirstScratch[tid] : float4(0.0f);
+            float4 reducedCircularSecond = tid < simdGroupCount ? circularSecondScratch[tid] : float4(0.0f);
             reducedTotal = simd_sum(reducedTotal);
             reducedSumSq = simd_sum(reducedSumSq);
             reducedEnergy = simd_sum(reducedEnergy);
             reducedWeightedX = simd_sum(reducedWeightedX);
             reducedWeightedY = simd_sum(reducedWeightedY);
             reducedOccupancy = simd_sum(reducedOccupancy);
+            reducedCircularFirst = float4(
+                simd_sum(reducedCircularFirst.x), simd_sum(reducedCircularFirst.y),
+                simd_sum(reducedCircularFirst.z), simd_sum(reducedCircularFirst.w)
+            );
+            reducedCircularSecond = float4(
+                simd_sum(reducedCircularSecond.x), simd_sum(reducedCircularSecond.y),
+                simd_sum(reducedCircularSecond.z), simd_sum(reducedCircularSecond.w)
+            );
 
             if (tid == 0u) {
                 int partialIndex = batch * int(kSummaryPartialGroups) + int(partialGroup);
@@ -1698,6 +1760,8 @@ final class FlowLeniaMetalFullPipeline {
                 partialWeightedX[partialIndex] = reducedWeightedX;
                 partialWeightedY[partialIndex] = reducedWeightedY;
                 partialOccupancyCount[partialIndex] = reducedOccupancy;
+                partialCircularFirst[partialIndex] = reducedCircularFirst;
+                partialCircularSecond[partialIndex] = reducedCircularSecond;
             }
         }
 
@@ -1714,6 +1778,10 @@ final class FlowLeniaMetalFullPipeline {
             device float *weightedX [[buffer(9)]],
             device float *weightedY [[buffer(10)]],
             device float *occupancyCount [[buffer(11)]],
+            device const float4 *partialCircularFirst [[buffer(12)]],
+            device const float4 *partialCircularSecond [[buffer(13)]],
+            device float4 *circularFirst [[buffer(14)]],
+            device float4 *circularSecond [[buffer(15)]],
             uint tid [[thread_index_in_threadgroup]],
             uint lane [[thread_index_in_simdgroup]],
             uint simdGroup [[simdgroup_index_in_threadgroup]],
@@ -1731,6 +1799,8 @@ final class FlowLeniaMetalFullPipeline {
             threadgroup float weightedXScratch[kSummaryThreads];
             threadgroup float weightedYScratch[kSummaryThreads];
             threadgroup float occupancyScratch[kSummaryThreads];
+            threadgroup float4 circularFirstScratch[kSummaryThreads];
+            threadgroup float4 circularSecondScratch[kSummaryThreads];
 
             float localTotal = 0.0f;
             float localSumSq = 0.0f;
@@ -1738,6 +1808,8 @@ final class FlowLeniaMetalFullPipeline {
             float localWeightedX = 0.0f;
             float localWeightedY = 0.0f;
             float localOccupancy = 0.0f;
+            float4 localCircularFirst = float4(0.0f);
+            float4 localCircularSecond = float4(0.0f);
             for (uint partialIndex = tid; partialIndex < kSummaryPartialGroups; partialIndex += kSummaryThreads) {
                 int index = batch * int(kSummaryPartialGroups) + int(partialIndex);
                 localTotal += partialTotalMass[index];
@@ -1746,6 +1818,8 @@ final class FlowLeniaMetalFullPipeline {
                 localWeightedX += partialWeightedX[index];
                 localWeightedY += partialWeightedY[index];
                 localOccupancy += partialOccupancyCount[index];
+                localCircularFirst += partialCircularFirst[index];
+                localCircularSecond += partialCircularSecond[index];
             }
 
             localTotal = simd_sum(localTotal);
@@ -1754,6 +1828,14 @@ final class FlowLeniaMetalFullPipeline {
             localWeightedX = simd_sum(localWeightedX);
             localWeightedY = simd_sum(localWeightedY);
             localOccupancy = simd_sum(localOccupancy);
+            localCircularFirst = float4(
+                simd_sum(localCircularFirst.x), simd_sum(localCircularFirst.y),
+                simd_sum(localCircularFirst.z), simd_sum(localCircularFirst.w)
+            );
+            localCircularSecond = float4(
+                simd_sum(localCircularSecond.x), simd_sum(localCircularSecond.y),
+                simd_sum(localCircularSecond.z), simd_sum(localCircularSecond.w)
+            );
             if (lane == 0u) {
                 totalScratch[simdGroup] = localTotal;
                 sumSqScratch[simdGroup] = localSumSq;
@@ -1761,6 +1843,8 @@ final class FlowLeniaMetalFullPipeline {
                 weightedXScratch[simdGroup] = localWeightedX;
                 weightedYScratch[simdGroup] = localWeightedY;
                 occupancyScratch[simdGroup] = localOccupancy;
+                circularFirstScratch[simdGroup] = localCircularFirst;
+                circularSecondScratch[simdGroup] = localCircularSecond;
             }
             threadgroup_barrier(mem_flags::mem_threadgroup);
 
@@ -1771,20 +1855,53 @@ final class FlowLeniaMetalFullPipeline {
             float reducedWeightedX = tid < simdGroupCount ? weightedXScratch[tid] : 0.0f;
             float reducedWeightedY = tid < simdGroupCount ? weightedYScratch[tid] : 0.0f;
             float reducedOccupancy = tid < simdGroupCount ? occupancyScratch[tid] : 0.0f;
+            float4 reducedCircularFirst = tid < simdGroupCount ? circularFirstScratch[tid] : float4(0.0f);
+            float4 reducedCircularSecond = tid < simdGroupCount ? circularSecondScratch[tid] : float4(0.0f);
             reducedTotal = simd_sum(reducedTotal);
             reducedSumSq = simd_sum(reducedSumSq);
             reducedEnergy = simd_sum(reducedEnergy);
             reducedWeightedX = simd_sum(reducedWeightedX);
             reducedWeightedY = simd_sum(reducedWeightedY);
             reducedOccupancy = simd_sum(reducedOccupancy);
+            reducedCircularFirst = float4(
+                simd_sum(reducedCircularFirst.x), simd_sum(reducedCircularFirst.y),
+                simd_sum(reducedCircularFirst.z), simd_sum(reducedCircularFirst.w)
+            );
+            reducedCircularSecond = float4(
+                simd_sum(reducedCircularSecond.x), simd_sum(reducedCircularSecond.y),
+                simd_sum(reducedCircularSecond.z), simd_sum(reducedCircularSecond.w)
+            );
 
             if (tid == 0u) {
+                float storedWeightedX = reducedWeightedX;
+                float storedWeightedY = reducedWeightedY;
+                \(useTorus ? """
+                float safeTotal = metal::max(reducedTotal, 1.0e-6f);
+                float centerX = flowMetalSummaryCircularCoordinate(
+                    reducedCircularFirst.xy,
+                    reducedCircularSecond.xy,
+                    reducedWeightedX / safeTotal + 0.5f,
+                    float(kSX),
+                    reducedTotal
+                );
+                float centerY = flowMetalSummaryCircularCoordinate(
+                    reducedCircularFirst.zw,
+                    reducedCircularSecond.zw,
+                    reducedWeightedY / safeTotal + 0.5f,
+                    float(kSY),
+                    reducedTotal
+                );
+                storedWeightedX = (centerX - 0.5f) * reducedTotal;
+                storedWeightedY = (centerY - 0.5f) * reducedTotal;
+                """ : "")
                 totalMass[batch] = reducedTotal;
                 sumSquares[batch] = reducedSumSq;
                 energy[batch] = reducedEnergy;
-                weightedX[batch] = reducedWeightedX;
-                weightedY[batch] = reducedWeightedY;
+                weightedX[batch] = storedWeightedX;
+                weightedY[batch] = storedWeightedY;
                 occupancyCount[batch] = reducedOccupancy;
+                circularFirst[batch] = reducedCircularFirst;
+                circularSecond[batch] = reducedCircularSecond;
             }
         }
 
@@ -1808,8 +1925,8 @@ final class FlowLeniaMetalFullPipeline {
             }
 
             float total = metal::max(totalMass[batch], 1.0e-6f);
-            float centerX = weightedX[batch] / total;
-            float centerY = weightedY[batch] / total;
+            float centerX = weightedX[batch] / total + 0.5f;
+            float centerY = weightedY[batch] / total + 0.5f;
             threadgroup float gyrationScratch[kSummaryThreads];
             float localGyration = 0.0f;
             int spatialCount = kSX * kSY;
@@ -1822,10 +1939,9 @@ final class FlowLeniaMetalFullPipeline {
                 for (int channel = 0; channel < kChannelCount; ++channel) {
                     value += mass[massIndex(batch, x, y, channel)] * channelWeights[channel];
                 }
-                float dx = metal::fabs(float(x) - centerX);
-                float dy = metal::fabs(float(y) - centerY);
-                dx = metal::fmin(dx, float(kSX) - dx);
-                dy = metal::fmin(dy, float(kSY) - dy);
+                float dx = metal::fabs(float(x) + 0.5f - centerX);
+                float dy = metal::fabs(float(y) + 0.5f - centerY);
+                \(useTorus ? "dx = metal::fmin(dx, float(kSX) - dx); dy = metal::fmin(dy, float(kSY) - dy);" : "")
                 localGyration += value * (dx * dx + dy * dy);
             }
 

@@ -11,6 +11,7 @@ import duckdb
 import numpy as np
 import pytest
 
+from lenia_swarm_analysis.morphospace import common_morphology as common_morphology_module
 from lenia_swarm_analysis.morphospace import feature_tda_profile as feature_tda_profile_module
 from lenia_swarm_analysis.morphospace.common_morphology import (
     AXIS_IDS as COMMON_MORPHOLOGY_AXIS_IDS,
@@ -29,6 +30,9 @@ from lenia_swarm_analysis.morphospace.derive_creature_signals import (
     derive_creature_signals,
 )
 from lenia_swarm_analysis.morphospace.derive_fibers import derive_fibers
+from lenia_swarm_analysis.morphospace.derive_lenia_features import (
+    FEATURE_SPACE_ID as LENIA_TERMINAL_FEATURE_SPACE_ID,
+)
 from lenia_swarm_analysis.morphospace.derive_status import derive_status
 from lenia_swarm_analysis.morphospace.derive_trajectories import derive_trajectories
 from lenia_swarm_analysis.morphospace.export_biological import (
@@ -44,7 +48,10 @@ from lenia_swarm_analysis.morphospace.export_legacy import (
     export_replay_packet,
     export_topology_packet,
 )
-from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
+from lenia_swarm_analysis.morphospace.ingest_compendium import (
+    append_native_v2_compendium_run,
+    ingest_compendium,
+)
 from lenia_swarm_analysis.morphospace.ingest_focal import ingest_focal_packet
 from lenia_swarm_analysis.morphospace.ingest_library import ingest_library_index
 from lenia_swarm_analysis.morphospace.ingest_replay import ingest_replay_batch
@@ -53,25 +60,31 @@ from lenia_swarm_analysis.morphospace.resolve_discovery_exports import (
 )
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
 from lenia_swarm_analysis.morphospace.run_universality import run_universality
+from lenia_swarm_analysis.morphospace.schema import SchemaVersionError
 from lenia_swarm_analysis.morphospace.warehouse import (
     connect_database,
+    connect_read_only_database,
     normalize_optional_timestamp,
+    register_artifact,
     register_context,
+    register_source_receipt,
     register_specimen_study,
     register_study,
     replace_feature_axes,
-    replace_feature_values,
+    replace_sparse_feature_values,
     upsert_feature_space,
     upsert_morphospace_source,
     upsert_observation,
     upsert_specimen,
 )
 from lenia_swarm_analysis.morphospace_cli import (
+    _using_warehouse,
     derive_common_morphology_packet,
     import_dryad_fish_dataset,
     import_embryomaker_snapshots_dataset,
     import_reference_bundle_dataset,
     refresh_compendium_warehouse,
+    regenerate_derived,
 )
 from lenia_swarm_analysis.morphospace_cli import (
     main as morphospace_main,
@@ -126,8 +139,8 @@ def _write_jsonl(path: Path, rows: Sequence[object]) -> None:
     path.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
 
 
-def _scalar_int(connection: Any, query: str) -> int:
-    row = connection.execute(query).fetchone()
+def _scalar_int(connection: Any, query: str, params: Sequence[Any] = ()) -> int:
+    row = connection.execute(query, list(params)).fetchone()
     if row is None:
         raise AssertionError(f"query returned no rows: {query}")
     return int(row[0])
@@ -140,7 +153,7 @@ def _common_morphology_axis_metadata(connection: Any) -> dict[str, Any]:
             """
             SELECT axis_id, metadata_json
             FROM feature_axes
-            WHERE feature_space_id = 'common_morphology_v1'
+            WHERE feature_space_id = 'common_morphology_v3_balanced_distribution'
             ORDER BY axis_id
             """
         ).fetchall()
@@ -156,6 +169,10 @@ def _terminal(
     entropy: float = 0.25,
 ) -> dict[str, object]:
     return {
+        "version": 2,
+        "descriptorVersion": 2,
+        "borderMode": "torus",
+        "normalizationPolicy": "border_aware_com_center_peak_q32_u8_v2",
         "finalMass": mass,
         "finalOccupancy": occupancy,
         "finalGyration": gyration,
@@ -176,6 +193,10 @@ def _result_row(
     return {
         "descriptor_bundle": {
             "terminal": {
+                "version": 2,
+                "descriptorVersion": 2,
+                "borderMode": "torus",
+                "normalizationPolicy": "border_aware_com_center_peak_q32_u8_v2",
                 "finalMass": mass,
                 "finalOccupancy": occupancy,
                 "finalGyration": gyration,
@@ -205,6 +226,8 @@ def _trace_rows(
                 "step": steps[index],
                 "centerX": base_center_x + 0.2 * index,
                 "centerY": base_center_y + 0.1 * index,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=mass,
                     occupancy=occupancy,
@@ -291,6 +314,8 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "step": 0,
                 "centerX": 1.0,
                 "centerY": 1.0,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=10.0,
                     occupancy=0.10,
@@ -302,6 +327,8 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "step": 25,
                 "centerX": 1.2,
                 "centerY": 1.0,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=10.0,
                     occupancy=0.18,
@@ -313,6 +340,8 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "step": 50,
                 "centerX": 1.6,
                 "centerY": 1.0,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=10.0,
                     occupancy=0.22,
@@ -329,6 +358,8 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "step": 0,
                 "centerX": 2.8,
                 "centerY": 2.0,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=12.0,
                     occupancy=0.08,
@@ -341,6 +372,8 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "step": 25,
                 "centerX": 3.0,
                 "centerY": 2.0,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=12.0,
                     occupancy=0.12,
@@ -353,6 +386,8 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "step": 50,
                 "centerX": 3.3,
                 "centerY": 2.1,
+                "width": 128,
+                "height": 128,
                 "terminal": _terminal(
                     mass=12.0,
                     occupancy=0.16,
@@ -883,6 +918,13 @@ def _make_compendium_fixture(
             gyration=4.2,
             fingerprint=FINGERPRINT_DIAMOND,
         )
+        fingerprint = np.asarray(terminal["fingerprintU8"], dtype=np.uint8).reshape(4, 4)
+        terminal["fingerprintResolution"] = 32
+        terminal["fingerprintU8"] = np.repeat(
+            np.repeat(fingerprint, 8, axis=0),
+            8,
+            axis=1,
+        ).ravel().tolist()
         trajectory = {"centerVelocity": 0.02, "pathTortuosity": 2.5}
         connection.execute(
             """
@@ -951,9 +993,118 @@ def _make_compendium_fixture(
     return path
 
 
+def _retarget_compendium_as_native_replay(
+    path: Path,
+    *,
+    run_id: str = "native-v2-run",
+    specimen_id: str = "native-v2-specimen",
+    creature_id: str = "native-v2-creature",
+    effective_backend: str = "metal-full",
+    effective_implementation: dict[str, Any] | None = None,
+) -> None:
+    connection = sqlite3.connect(path)
+    try:
+        result_id = f"{run_id}|campaign-replay|0"
+        implementation = effective_implementation or {
+            "alphaMode": "mass",
+            "border": "torus",
+            "flowClip": "none",
+            "gradientBoundary": "periodic",
+            "growthProfile": "gaussian",
+            "kernelProfile": "flowlenia_2022_paper_equations",
+            "mode": "flowlenia_2022_paper_equations",
+        }
+        connection.execute("ALTER TABLE specimens ADD COLUMN result_id TEXT")
+        connection.execute(
+            """
+            CREATE TABLE results (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                backend TEXT NOT NULL,
+                implementation_json TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            "INSERT INTO results VALUES (?, ?, ?, ?)",
+            [result_id, run_id, effective_backend, json.dumps(implementation)],
+        )
+        connection.execute(
+            """
+            UPDATE creatures
+            SET id = ?, canonical_specimen_id = ?, run_id = ?, campaign_id = 'campaign-replay',
+                source_mode = 'replay', source_algorithm = 'canonical-replay'
+            """,
+            [creature_id, specimen_id, run_id],
+        )
+        connection.execute(
+            "UPDATE exports SET creature_id = ?, run_id = ?, campaign_id = 'campaign-replay'",
+            [creature_id, run_id],
+        )
+        connection.execute(
+            """
+            UPDATE specimens
+            SET id = ?, creature_id = ?, run_id = ?, campaign_id = 'campaign-replay',
+                source_kind = 'result', source_mode = 'replay',
+                source_algorithm = 'canonical-replay', runtime_family = 'flow_lenia',
+                result_id = ?
+            """,
+            [specimen_id, creature_id, run_id, f"result:{result_id}"],
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
 def test_normalize_optional_timestamp_accepts_apple_reference_seconds() -> None:
     normalized = normalize_optional_timestamp(796169489.064308)
     assert normalized == datetime.fromisoformat("2026-03-25T22:11:29.064308")
+
+
+def test_artifact_and_receipt_identity_is_scoped_to_study(tmp_path: Path) -> None:
+    source_path = tmp_path / "source.json"
+    source_path.write_text('{"stable":true}', encoding="utf-8")
+    connection = connect_database(tmp_path / "lineage.duckdb")
+    try:
+        study_ids = [
+            register_study(
+                connection,
+                study_kind="discovery",
+                label=f"study-{index}",
+            )
+            for index in range(2)
+        ]
+        artifact_ids = [
+            register_artifact(
+                connection,
+                study_id=study_id,
+                artifact_kind="fixture",
+                path=source_path,
+            )
+            for study_id in study_ids
+        ]
+        receipt_ids = [
+            register_source_receipt(
+                connection,
+                study_id=study_id,
+                artifact_id=artifact_id,
+                source_kind="fixture",
+                source_tables=["items"],
+                source_row_counts={"items": 1},
+            )
+            for study_id, artifact_id in zip(study_ids, artifact_ids, strict=True)
+        ]
+
+        assert len(set(artifact_ids)) == 2
+        assert len(set(receipt_ids)) == 2
+        assert connection.execute(
+            "SELECT study_id FROM artifacts ORDER BY study_id"
+        ).fetchall() == [(study_id,) for study_id in sorted(study_ids)]
+        assert connection.execute(
+            "SELECT study_id FROM source_receipts ORDER BY study_id"
+        ).fetchall() == [(study_id,) for study_id in sorted(study_ids)]
+    finally:
+        connection.close()
 
 
 def test_morphospace_library_ingest_accepts_numeric_recorded_at(tmp_path: Path) -> None:
@@ -1233,6 +1384,34 @@ def test_morphospace_replay_ingest_and_atlas_export_roundtrip(tmp_path: Path) ->
         assert topology_packet["summary"]["specimenCount"] == 2
         assert "transformation_signature_space" in topology_packet["spaces"]
         assert _scalar_int(connection, "SELECT COUNT(*) FROM topology_features") > 0
+        artifact_before = connection.execute(
+            """
+            SELECT artifact_id, path
+            FROM artifacts
+            WHERE study_id = ? AND artifact_kind = 'topology_packet'
+            """,
+            [topology_study_id],
+        ).fetchone()
+        assert artifact_before is not None
+        assert str(artifact_before[1]).endswith("topology.json")
+        assert (
+            run_topology(
+                connection,
+                study_id=study_id,
+                source_packet_kind="atlas",
+                min_group_size=2,
+                max_homology_dim=1,
+            )
+            == topology_study_id
+        )
+        assert len(connection.execute(
+            """
+            SELECT artifact_id, path
+            FROM artifacts
+            WHERE study_id = ? AND artifact_kind = 'topology_packet'
+            """,
+            [topology_study_id],
+        ).fetchall()) == 1
         with pytest.raises(SystemExit, match="topology child studies"):
             export_topology_packet(connection, study_id=study_id)
     finally:
@@ -1423,16 +1602,39 @@ def test_morphospace_focal_ingest_and_family_export_roundtrip(tmp_path: Path) ->
         connection.close()
 
 
-def test_morphospace_compendium_ingest_preserves_raw_rows_and_metadata(
+def test_morphospace_compendium_ingest_records_compact_receipt_and_metadata(
     tmp_path: Path,
 ) -> None:
     compendium_path = _make_compendium_fixture(tmp_path)
+    source_connection = sqlite3.connect(compendium_path)
+    try:
+        source_connection.execute(
+            "CREATE TABLE compendium_meta (schema_version INTEGER NOT NULL)"
+        )
+        source_connection.execute("INSERT INTO compendium_meta VALUES (15)")
+        source_connection.commit()
+    finally:
+        source_connection.close()
     expected_export_dir = str(tmp_path / "exports" / "creature-1")
 
     connection = connect_database(tmp_path / "compendium.duckdb")
     try:
         study_id = ingest_compendium(connection, compendium_path=compendium_path)
-        assert _scalar_int(connection, "SELECT COUNT(*) FROM raw_sqlite_rows") == 3
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM source_receipts") == 1
+        assert connection.execute(
+            "SELECT source_schema_version FROM source_receipts"
+        ).fetchone() == ("15",)
+        assert (
+            _scalar_int(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM information_schema.tables
+                WHERE table_schema = 'main' AND table_name = 'raw_sqlite_rows'
+                """,
+            )
+            == 0
+        )
         specimen = connection.execute(
             """
             SELECT source_creature_id, search_is_stable_candidate, export_dir
@@ -1450,12 +1652,7 @@ def test_morphospace_compendium_ingest_preserves_raw_rows_and_metadata(
                    search_is_stable_candidate,
                    export_dir,
                    json_extract_string(specimen_manifest_json, '$.taxonomy.familyID'),
-                   CAST(
-                       json_extract(
-                           specimen_manifest_json,
-                           '$.snapshots.morphometrics.pathTortuosity'
-                       ) AS DOUBLE
-                   ),
+                   json_extract_string(specimen_manifest_json, '$.sourceReceiptId'),
                    runtime_family,
                    json_extract_string(runtime_capabilities_json, '$[0]'),
                    json_extract_string(specimen_manifest_json, '$.runtimeFamily')
@@ -1467,9 +1664,9 @@ def test_morphospace_compendium_ingest_preserves_raw_rows_and_metadata(
         assert creature_row[0] == "fam-drifter-soliton"
         assert creature_row[1] is False
         assert Path(creature_row[2]).resolve() == Path(expected_export_dir).resolve()
-        assert creature_row[3:] == (
-            "fam-drifter-soliton",
-            5.5,
+        assert creature_row[3] == "fam-drifter-soliton"
+        assert creature_row[4]
+        assert creature_row[5:] == (
             "flow_lenia",
             "archive",
             "flow_lenia",
@@ -1507,7 +1704,7 @@ def test_morphospace_compendium_ingest_preserves_raw_rows_and_metadata(
         connection.close()
 
 
-def test_morphospace_compendium_ingest_prefers_canonical_specimen_manifest(
+def test_morphospace_compendium_ingest_uses_normalized_columns_not_snapshot_manifest(
     tmp_path: Path,
 ) -> None:
     manifest_export_dir = tmp_path / "exports" / "canonical-specimen"
@@ -1551,35 +1748,616 @@ def test_morphospace_compendium_ingest_prefers_canonical_specimen_manifest(
                    recorded_at,
                    export_dir,
                    runtime_family,
-                   json_extract_string(runtime_capabilities_json, '$[0]'),
-                   json_extract_string(runtime_capabilities_json, '$[1]'),
-                   json_extract_string(runtime_capabilities_json, '$[2]')
+                   runtime_capabilities_json,
+                   specimen_manifest_json
             FROM specimens
             WHERE specimen_id = 'specimen-1'
             """
         ).fetchone()
         assert row is not None
         assert row[:6] == (
-            "canonical_specimen",
-            "qd-2024",
-            "aurora",
-            "cfg-manifest",
-            "initfam:manifest",
-            "fam-manifest",
+            "compendium_specimen",
+            "campaign",
+            "discovery",
+            "cfg-hash",
+            "initfam:v2:single_patch:abcd",
+            "fam-drifter-soliton",
         )
-        assert row[6] == datetime.fromisoformat("2026-03-25T10:45:00")
-        assert Path(row[7]).resolve() == manifest_export_dir.resolve()
-        assert row[8:] == (
-            "qd24_paper",
+        assert row[6] == datetime.fromisoformat("2026-03-25T10:15:00")
+        assert Path(row[7]).resolve() != manifest_export_dir.resolve()
+        assert row[8] == "flow_lenia"
+        assert json.loads(row[9]) == [
             "archive",
+            "intervention",
+            "media",
             "replay",
             "topology",
-        )
+            "warehouse_ingest",
+        ]
+        compact_manifest = json.loads(row[10])
+        assert compact_manifest["sourceKind"] == "compendium_specimen"
+        assert compact_manifest["taxonomy"]["familyID"] == "fam-drifter-soliton"
+        assert "snapshots" not in compact_manifest
     finally:
         connection.close()
 
 
-def test_connect_database_migrates_legacy_specimen_contract_columns(tmp_path: Path) -> None:
+def test_compendium_ingest_rolls_back_an_invalid_descriptor_contract(tmp_path: Path) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    source = sqlite3.connect(compendium_path)
+    try:
+        terminal_json = source.execute(
+            "SELECT terminal_descriptor_json FROM specimens"
+        ).fetchone()[0]
+        terminal = json.loads(terminal_json)
+        terminal["version"] = 1
+        terminal["descriptorVersion"] = 1
+        source.execute(
+            "UPDATE specimens SET terminal_descriptor_json = ?",
+            [json.dumps(terminal)],
+        )
+        source.commit()
+    finally:
+        source.close()
+
+    connection = connect_database(tmp_path / "invalid-descriptor.duckdb")
+    try:
+        with pytest.raises(ValueError, match="unsupported descriptor contract"):
+            ingest_compendium(connection, compendium_path=compendium_path)
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM artifacts") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM source_receipts") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM specimens") == 0
+    finally:
+        connection.close()
+
+
+def test_compendium_ingest_rejects_fractional_fingerprint_resolution(
+    tmp_path: Path,
+) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    source = sqlite3.connect(compendium_path)
+    try:
+        terminal = json.loads(
+            source.execute("SELECT terminal_descriptor_json FROM specimens").fetchone()[0]
+        )
+        terminal["fingerprintResolution"] = 8.5
+        source.execute(
+            "UPDATE specimens SET terminal_descriptor_json = ?",
+            [json.dumps(terminal)],
+        )
+        source.commit()
+    finally:
+        source.close()
+
+    connection = connect_database(tmp_path / "fractional-resolution.duckdb")
+    try:
+        with pytest.raises(ValueError, match="fingerprintResolution must be integral"):
+            ingest_compendium(connection, compendium_path=compendium_path)
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM specimens") == 0
+    finally:
+        connection.close()
+
+
+@pytest.mark.parametrize(
+    ("mutation", "run_id", "failure_kind"),
+    [
+        (
+            "UPDATE creatures SET canonical_specimen_id = NULL",
+            None,
+            "null",
+        ),
+        (
+            "UPDATE creatures SET canonical_specimen_id = 'missing-specimen'",
+            None,
+            "dangling",
+        ),
+        (
+            """
+            INSERT INTO creatures
+            SELECT 'creature-2', canonical_specimen_id, run_id, campaign_id,
+                   source_mode, source_algorithm, config_hash, score, is_stable,
+                   recorded_at, taxonomy_family_id, morphometrics_json,
+                   genotype_json, initial_condition_json, metrics_json
+            FROM creatures WHERE id = 'creature-1'
+            """,
+            None,
+            "duplicate",
+        ),
+        (
+            "UPDATE specimens SET run_id = NULL",
+            None,
+            "runMismatch",
+        ),
+        (
+            "UPDATE creatures SET run_id = NULL",
+            None,
+            "runMismatch",
+        ),
+        (
+            "UPDATE specimens SET run_id = 'run-2'",
+            None,
+            "runMismatch",
+        ),
+    ],
+)
+def test_compendium_ingest_rejects_invalid_canonical_creature_links(
+    tmp_path: Path,
+    mutation: str,
+    run_id: str | None,
+    failure_kind: str,
+) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    source = sqlite3.connect(compendium_path)
+    try:
+        source.execute(mutation)
+        source.commit()
+    finally:
+        source.close()
+
+    connection = connect_database(tmp_path / f"invalid-{failure_kind}.duckdb")
+    try:
+        with pytest.raises(
+            ValueError,
+            match=rf"invalid canonical creature links: .*'{failure_kind}': [1-9]",
+        ):
+            ingest_compendium(
+                connection,
+                compendium_path=compendium_path,
+                run_id=run_id,
+            )
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM studies") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM specimens") == 0
+    finally:
+        connection.close()
+
+
+def test_compendium_reingest_exactly_reconciles_study_membership(tmp_path: Path) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    connection = connect_database(tmp_path / "reconcile.duckdb")
+    try:
+        study_id = ingest_compendium(connection, compendium_path=compendium_path)
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM study_specimens") == 1
+        connection.execute(
+            "INSERT INTO specimen_axes VALUES "
+            "('specimen-1', 'development-probe', 'development', 1.0, 1.0)"
+        )
+        assert ingest_compendium(connection, compendium_path=compendium_path) == study_id
+        assert _scalar_int(
+            connection,
+            "SELECT count(*) FROM specimen_axes WHERE axis_id = 'development-probe'",
+        ) == 1
+        connection.execute(
+            """
+            INSERT INTO observations VALUES (
+                'stale-observation', 'specimen-1', ?, 'fixture-source', NULL,
+                'fixture', NULL, NULL, NULL, '{}'
+            )
+            """,
+            [study_id],
+        )
+        connection.execute(
+            "INSERT INTO sparse_feature_values VALUES "
+            "('stale-observation', 'fixture-space', 'fixture-axis', 1.0, 1.0, '{}')"
+        )
+        connection.execute(
+            """
+            INSERT INTO specimen_feature_vectors VALUES (
+                'stale-observation', 'specimen-1', ?, 'fixture-space',
+                'fixture-calibration', 'fixture-v1', 1, [1.0], [1.0],
+                'fixture-vector-hash', current_timestamp
+            )
+            """,
+            [study_id],
+        )
+        connection.execute(
+            """
+            INSERT INTO anatomical_states VALUES (
+                'stale-state', 'specimen-1', ?, NULL, 'specimen_baseline',
+                'specimen-1', NULL, '{}'
+            )
+            """,
+            [study_id],
+        )
+        connection.execute(
+            "INSERT INTO anatomical_state_axes VALUES "
+            "('stale-state', 'fixture-axis', 1.0, 1.0)"
+        )
+        connection.execute(
+            "INSERT INTO creature_state_labels VALUES "
+            "('stale-state', NULL, NULL, NULL, NULL, '{}')"
+        )
+        connection.execute(
+            "INSERT INTO creature_signal_axes VALUES "
+            "('stale-state', 'fixture-signal', 1.0, 1.0)"
+        )
+
+        source = sqlite3.connect(compendium_path)
+        try:
+            source.execute("DELETE FROM specimens")
+            source.execute("DELETE FROM creatures")
+            source.commit()
+        finally:
+            source.close()
+        assert ingest_compendium(connection, compendium_path=compendium_path) == study_id
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM study_specimens") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM specimens") == 1
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM specimen_feature_vectors") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM anatomical_states") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM anatomical_state_axes") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM creature_state_labels") == 0
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM creature_signal_axes") == 0
+    finally:
+        connection.close()
+
+
+@pytest.mark.parametrize("ingest_order", [("full", "scoped"), ("scoped", "full")])
+def test_compendium_ingest_rejects_mixed_partition_modes(
+    tmp_path: Path,
+    ingest_order: tuple[str, str],
+) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    connection = connect_database(tmp_path / "study-partition.duckdb")
+    try:
+        first_scope, second_scope = ingest_order
+        first_study_id = ingest_compendium(
+            connection,
+            compendium_path=compendium_path,
+            label="partition-fixture",
+            run_id="run-1" if first_scope == "scoped" else None,
+        )
+        with pytest.raises(ValueError, match="cannot mix .* compendium studies"):
+            ingest_compendium(
+                connection,
+                compendium_path=compendium_path,
+                label="partition-fixture",
+                run_id="run-1" if second_scope == "scoped" else None,
+            )
+        assert connection.execute(
+            "SELECT study_id, specimen_id FROM study_specimens ORDER BY study_id"
+        ).fetchall() == [(first_study_id, "specimen-1")]
+        assert connection.execute(
+            "SELECT study_id FROM specimens WHERE specimen_id = 'specimen-1'"
+        ).fetchone() == (first_study_id,)
+    finally:
+        connection.close()
+
+
+def test_native_v2_run_append_preserves_canonical_partition_and_is_idempotent(
+    tmp_path: Path,
+) -> None:
+    aggregate_path = _make_compendium_fixture(tmp_path / "aggregate")
+    replay_path = _make_compendium_fixture(tmp_path / "replay")
+    _retarget_compendium_as_native_replay(replay_path)
+    connection = connect_database(tmp_path / "append.duckdb")
+    try:
+        study_id = ingest_compendium(connection, compendium_path=aggregate_path)
+        assert append_native_v2_compendium_run(
+            connection,
+            compendium_path=replay_path,
+            run_id="native-v2-run",
+        ) == study_id
+        assert append_native_v2_compendium_run(
+            connection,
+            compendium_path=replay_path,
+            run_id="native-v2-run",
+        ) == study_id
+
+        assert connection.execute(
+            "SELECT study_id, run_id, label FROM studies"
+        ).fetchall() == [(study_id, None, "compendium")]
+        assert connection.execute(
+            "SELECT specimen_id FROM study_specimens ORDER BY specimen_id"
+        ).fetchall() == [("native-v2-specimen",), ("specimen-1",)]
+        assert connection.execute(
+            """
+            SELECT descriptor_version, terminal_version, normalization_policy,
+                   fingerprint_resolution
+            FROM specimen_descriptors
+            WHERE specimen_id = 'native-v2-specimen'
+            """
+        ).fetchone() == (
+            "2",
+            "2",
+            "border_aware_com_center_peak_q32_u8_v2",
+            32,
+        )
+        manifest_json, provenance_json = connection.execute(
+            """
+            SELECT specimen_manifest_json, provenance_json
+            FROM specimens
+            WHERE specimen_id = 'native-v2-specimen'
+            """
+        ).fetchone()
+        manifest = json.loads(manifest_json)
+        provenance = json.loads(provenance_json)
+        effective_replay = {
+            "backend": "metal-full",
+            "implementation": {
+                "alphaMode": "mass",
+                "border": "torus",
+                "flowClip": "none",
+                "gradientBoundary": "periodic",
+                "growthProfile": "gaussian",
+                "kernelProfile": "flowlenia_2022_paper_equations",
+                "mode": "flowlenia_2022_paper_equations",
+            },
+            "resultId": "native-v2-run|campaign-replay|0",
+        }
+        assert manifest["effectiveReplay"] == effective_replay
+        assert provenance["effectiveReplay"] == effective_replay
+        assert set(manifest["effectiveReplay"]) == {"backend", "implementation", "resultId"}
+        assert _scalar_int(
+            connection,
+            """
+            SELECT count(*) FROM source_receipts
+            WHERE json_extract(metadata_json, '$.nativeV2RunAppend') = true
+            """,
+        ) == 1
+        row_counts_json = connection.execute(
+            """
+            SELECT source_row_counts_json FROM source_receipts
+            WHERE json_extract(metadata_json, '$.nativeV2RunAppend') = true
+            """
+        ).fetchone()[0]
+        assert json.loads(row_counts_json)["results"] == 1
+    finally:
+        connection.close()
+
+
+def test_native_v2_run_append_rejects_missing_effective_replay_result(tmp_path: Path) -> None:
+    aggregate_path = _make_compendium_fixture(tmp_path / "aggregate")
+    replay_path = _make_compendium_fixture(tmp_path / "replay")
+    _retarget_compendium_as_native_replay(replay_path)
+    source = sqlite3.connect(replay_path)
+    try:
+        source.execute("DELETE FROM results")
+        source.commit()
+    finally:
+        source.close()
+
+    connection = connect_database(tmp_path / "missing-effective-replay.duckdb")
+    try:
+        ingest_compendium(connection, compendium_path=aggregate_path)
+        with pytest.raises(ValueError, match="outside the canonical Flow Lenia native-v2"):
+            append_native_v2_compendium_run(
+                connection,
+                compendium_path=replay_path,
+                run_id="native-v2-run",
+            )
+        assert _scalar_int(connection, "SELECT count(*) FROM specimens") == 1
+        assert _scalar_int(connection, "SELECT count(*) FROM source_receipts") == 1
+    finally:
+        connection.close()
+
+
+def test_native_v2_run_append_rejects_effective_replay_drift(tmp_path: Path) -> None:
+    aggregate_path = _make_compendium_fixture(tmp_path / "aggregate")
+    replay_path = _make_compendium_fixture(tmp_path / "replay")
+    _retarget_compendium_as_native_replay(replay_path)
+    connection = connect_database(tmp_path / "effective-replay-drift.duckdb")
+    try:
+        ingest_compendium(connection, compendium_path=aggregate_path)
+        append_native_v2_compendium_run(
+            connection,
+            compendium_path=replay_path,
+            run_id="native-v2-run",
+        )
+        source = sqlite3.connect(replay_path)
+        try:
+            source.execute("UPDATE results SET backend = 'mlx'")
+            source.commit()
+        finally:
+            source.close()
+
+        with pytest.raises(ValueError, match="overwrite non-identical warehouse specimens"):
+            append_native_v2_compendium_run(
+                connection,
+                compendium_path=replay_path,
+                run_id="native-v2-run",
+            )
+        assert connection.execute(
+            """
+            SELECT json_extract_string(specimen_manifest_json, '$.effectiveReplay.backend')
+            FROM specimens WHERE specimen_id = 'native-v2-specimen'
+            """
+        ).fetchone() == ("metal-full",)
+    finally:
+        connection.close()
+
+
+def test_native_v2_run_append_invalidates_generated_dense_spaces_until_regeneration(
+    tmp_path: Path,
+) -> None:
+    aggregate_path = _make_compendium_fixture(tmp_path / "aggregate")
+    replay_path = _make_compendium_fixture(tmp_path / "replay")
+    _retarget_compendium_as_native_replay(replay_path)
+    warehouse_path = tmp_path / "append-invalidation.duckdb"
+    refresh_compendium_warehouse(
+        warehouse_path=warehouse_path,
+        compendium_path=aggregate_path,
+    )
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert connection.execute(
+            """
+            SELECT feature_space_id, count(*)
+            FROM active_specimen_feature_vectors_vw
+            WHERE feature_space_id IN (?, ?)
+            GROUP BY feature_space_id
+            ORDER BY feature_space_id
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, LENIA_TERMINAL_FEATURE_SPACE_ID],
+        ).fetchall() == [
+            (COMMON_MORPHOLOGY_FEATURE_SPACE_ID, 1),
+            (LENIA_TERMINAL_FEATURE_SPACE_ID, 1),
+        ]
+
+        append_native_v2_compendium_run(
+            connection,
+            compendium_path=replay_path,
+            run_id="native-v2-run",
+        )
+
+        assert connection.execute(
+            """
+            SELECT feature_space_id, status, reason
+            FROM derived_artifact_state
+            WHERE artifact_kind = 'feature-space'
+              AND feature_space_id IN (?, ?)
+            ORDER BY feature_space_id
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, LENIA_TERMINAL_FEATURE_SPACE_ID],
+        ).fetchall() == [
+            (
+                COMMON_MORPHOLOGY_FEATURE_SPACE_ID,
+                "invalid",
+                "native-v2 replay append requires global regeneration",
+            ),
+            (
+                LENIA_TERMINAL_FEATURE_SPACE_ID,
+                "invalid",
+                "native-v2 replay append requires global regeneration",
+            ),
+        ]
+        assert _scalar_int(
+            connection,
+            "SELECT count(*) FROM active_specimen_feature_vectors_vw",
+        ) == 0
+        assert _scalar_int(
+            connection,
+            """
+            SELECT count(*) FROM feature_values
+            WHERE feature_space_id IN (?, ?)
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, LENIA_TERMINAL_FEATURE_SPACE_ID],
+        ) == 0
+    finally:
+        connection.close()
+
+    regenerated = regenerate_derived(warehouse_path=warehouse_path)
+    assert regenerated["readyForNativeV2Analysis"] is True
+    connection = connect_database(warehouse_path)
+    try:
+        assert connection.execute(
+            """
+            SELECT feature_space_id, count(*)
+            FROM active_specimen_feature_vectors_vw
+            WHERE feature_space_id IN (?, ?)
+            GROUP BY feature_space_id
+            ORDER BY feature_space_id
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, LENIA_TERMINAL_FEATURE_SPACE_ID],
+        ).fetchall() == [
+            (COMMON_MORPHOLOGY_FEATURE_SPACE_ID, 2),
+            (LENIA_TERMINAL_FEATURE_SPACE_ID, 2),
+        ]
+    finally:
+        connection.close()
+
+
+def test_native_v2_run_append_rejects_descriptor_collision(tmp_path: Path) -> None:
+    aggregate_path = _make_compendium_fixture(tmp_path / "aggregate")
+    replay_path = _make_compendium_fixture(tmp_path / "replay")
+    _retarget_compendium_as_native_replay(replay_path)
+    connection = connect_database(tmp_path / "collision.duckdb")
+    try:
+        ingest_compendium(connection, compendium_path=aggregate_path)
+        append_native_v2_compendium_run(
+            connection,
+            compendium_path=replay_path,
+            run_id="native-v2-run",
+        )
+
+        source = sqlite3.connect(replay_path)
+        try:
+            terminal = json.loads(
+                source.execute(
+                    "SELECT terminal_descriptor_json FROM specimens"
+                ).fetchone()[0]
+            )
+            terminal["finalMass"] = float(terminal["finalMass"]) + 1.0
+            source.execute(
+                "UPDATE specimens SET terminal_descriptor_json = ?",
+                [json.dumps(terminal)],
+            )
+            source.commit()
+        finally:
+            source.close()
+
+        with pytest.raises(ValueError, match="overwrite non-identical warehouse specimens"):
+            append_native_v2_compendium_run(
+                connection,
+                compendium_path=replay_path,
+                run_id="native-v2-run",
+            )
+        assert _scalar_int(connection, "SELECT count(*) FROM specimens") == 2
+        assert _scalar_int(connection, "SELECT count(*) FROM source_receipts") == 2
+    finally:
+        connection.close()
+
+
+def test_native_v2_run_append_rejects_non_replay_rows(tmp_path: Path) -> None:
+    aggregate_path = _make_compendium_fixture(tmp_path / "aggregate")
+    replay_path = _make_compendium_fixture(tmp_path / "replay")
+    _retarget_compendium_as_native_replay(replay_path)
+    source = sqlite3.connect(replay_path)
+    try:
+        source.execute("UPDATE creatures SET source_algorithm = 'wrong-replay'")
+        source.execute("UPDATE specimens SET source_algorithm = 'wrong-replay'")
+        source.commit()
+    finally:
+        source.close()
+
+    connection = connect_database(tmp_path / "reject.duckdb")
+    try:
+        ingest_compendium(connection, compendium_path=aggregate_path)
+        with pytest.raises(ValueError, match="outside the canonical Flow Lenia native-v2"):
+            append_native_v2_compendium_run(
+                connection,
+                compendium_path=replay_path,
+                run_id="native-v2-run",
+            )
+        assert _scalar_int(connection, "SELECT count(*) FROM specimens") == 1
+        assert _scalar_int(connection, "SELECT count(*) FROM source_receipts") == 1
+    finally:
+        connection.close()
+
+
+def test_refresh_compendium_rolls_back_ingest_and_derivations_together(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    warehouse_path = tmp_path / "atomic-refresh.duckdb"
+
+    def fail_status(*_: object, **__: object) -> int:
+        raise RuntimeError("status derivation failed")
+
+    monkeypatch.setattr(
+        "lenia_swarm_analysis.morphospace_cli.derive_status",
+        fail_status,
+    )
+    with pytest.raises(RuntimeError, match="status derivation failed"):
+        refresh_compendium_warehouse(
+            warehouse_path=warehouse_path,
+            compendium_path=compendium_path,
+        )
+
+    verification = duckdb.connect(str(warehouse_path), read_only=True)
+    try:
+        assert verification.execute("SELECT count(*) FROM studies").fetchone() == (0,)
+        assert verification.execute("SELECT count(*) FROM specimens").fetchone() == (0,)
+        assert verification.execute("SELECT count(*) FROM source_receipts").fetchone() == (0,)
+    finally:
+        verification.close()
+
+
+def test_connect_database_refuses_in_place_legacy_migration(tmp_path: Path) -> None:
     path = tmp_path / "legacy.duckdb"
     connection = duckdb.connect(str(path))
     try:
@@ -1635,24 +2413,48 @@ def test_connect_database_migrates_legacy_specimen_contract_columns(tmp_path: Pa
     finally:
         connection.close()
 
-    migrated = connect_database(path)
+    before = path.read_bytes()
+    with pytest.raises(RuntimeError, match="side by side"):
+        connect_database(path)
+    with pytest.raises(SchemaVersionError, match="schema v5"):
+        connect_read_only_database(path)
+    assert path.read_bytes() == before
+
+    unchanged = duckdb.connect(str(path), read_only=True)
     try:
-        columns = {
-            str(row[1]) for row in migrated.execute("PRAGMA table_info('specimens')").fetchall()
-        }
-        assert "runtime_family" in columns
-        assert "runtime_capabilities_json" in columns
-        assert "specimen_manifest_json" in columns
-        row = migrated.execute(
-            """
-            SELECT specimen_id, runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM specimens
-            WHERE specimen_id = 'specimen-legacy'
-            """
-        ).fetchone()
-        assert row == ("specimen-legacy", None, None, None)
+        assert unchanged.execute("SELECT schema_version FROM schema_meta").fetchone() == (5,)
+        assert unchanged.execute("SELECT COUNT(*) FROM specimens").fetchone() == (1,)
     finally:
-        migrated.close()
+        unchanged.close()
+
+
+def test_read_only_database_rejects_unversioned_warehouse(tmp_path: Path) -> None:
+    path = tmp_path / "unversioned.duckdb"
+    connection = duckdb.connect(str(path))
+    try:
+        connection.execute("CREATE TABLE payload (value INTEGER)")
+    finally:
+        connection.close()
+
+    with pytest.raises(SchemaVersionError, match="schema unversioned"):
+        connect_read_only_database(path)
+
+
+def test_writable_warehouse_callback_rolls_back_on_failure(tmp_path: Path) -> None:
+    path = tmp_path / "callback-rollback.duckdb"
+
+    def fail_after_write(connection: duckdb.DuckDBPyConnection) -> dict[str, Any]:
+        register_study(connection, study_kind="fixture", label="must-rollback")
+        raise RuntimeError("callback failed")
+
+    with pytest.raises(RuntimeError, match="callback failed"):
+        _using_warehouse(path, fail_after_write)
+
+    verification = duckdb.connect(str(path), read_only=True)
+    try:
+        assert verification.execute("SELECT count(*) FROM studies").fetchone() == (0,)
+    finally:
+        verification.close()
 
 
 def test_derive_creature_signals_requires_replay_samples(tmp_path: Path) -> None:
@@ -1668,7 +2470,14 @@ def test_derive_creature_signals_requires_replay_samples(tmp_path: Path) -> None
         connection.close()
 
 
-def test_morphospace_biological_derivations_and_export(tmp_path: Path) -> None:
+def test_morphospace_biological_derivations_and_export(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "lenia_swarm_analysis.morphospace.derive_anatomy._CONTEXT_TRIAL_BATCH_SIZE",
+        1,
+    )
     traces_path, _fixture = _make_replay_fixture(tmp_path / "replay")
     focal_packet_path, _atlas_packet_path = _make_focal_fixture(tmp_path / "focal")
 
@@ -1861,10 +2670,10 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
     )
     assert direct_payload["studyId"]
     assert direct_payload["statusUpdated"] == 1
-    assert direct_payload["comparisonFeatureSpaceId"] == "lenia_terminal_v1"
+    assert direct_payload["comparisonFeatureSpaceId"] == LENIA_TERMINAL_FEATURE_SPACE_ID
     assert direct_payload["comparisonObservationsUpdated"] == 1
     assert direct_payload["comparisonFeatureValuesUpdated"] == len(TERMINAL_AXIS_IDS)
-    assert direct_payload["commonFeatureSpaceId"] == "common_morphology_v1"
+    assert direct_payload["commonFeatureSpaceId"] == COMMON_MORPHOLOGY_FEATURE_SPACE_ID
     assert direct_payload["commonObservationsUpdated"] == 1
     assert direct_payload["topologyStudyId"] is None
 
@@ -1876,7 +2685,7 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
         assert _scalar_int(connection, "SELECT COUNT(*) FROM observations") == 2
         assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 2
         assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == (
-            len(TERMINAL_AXIS_IDS) + 12
+            len(TERMINAL_AXIS_IDS) + len(COMMON_MORPHOLOGY_AXIS_IDS)
         )
     finally:
         connection.close()
@@ -1898,9 +2707,9 @@ def test_morphospace_cli_refresh_compendium_outputs_json_summary(
     payload = json.loads(capsys.readouterr().out)
     assert payload["studyId"]
     assert payload["statusUpdated"] == 1
-    assert payload["comparisonFeatureSpaceId"] == "lenia_terminal_v1"
+    assert payload["comparisonFeatureSpaceId"] == LENIA_TERMINAL_FEATURE_SPACE_ID
     assert payload["comparisonFeatureValuesUpdated"] == len(TERMINAL_AXIS_IDS)
-    assert payload["commonFeatureSpaceId"] == "common_morphology_v1"
+    assert payload["commonFeatureSpaceId"] == COMMON_MORPHOLOGY_FEATURE_SPACE_ID
     assert payload["topologyStudyId"] is None
 
 
@@ -1954,7 +2763,7 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
         ]
     ) == 0
     lenia_payload = json.loads(capsys.readouterr().out)
-    assert lenia_payload["featureSpaceId"] == "lenia_terminal_v1"
+    assert lenia_payload["featureSpaceId"] == LENIA_TERMINAL_FEATURE_SPACE_ID
     assert lenia_payload["featureValueCount"] == len(TERMINAL_AXIS_IDS)
 
     assert morphospace_main(
@@ -1963,7 +2772,7 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
             "--warehouse",
             str(warehouse_path),
             "--feature-space-id",
-            "lenia_terminal_v1",
+            LENIA_TERMINAL_FEATURE_SPACE_ID,
             "--study-id",
             study_id,
             "--run-id",
@@ -2047,6 +2856,7 @@ def test_morphospace_cli_compares_feature_cohorts(
             connection,
             feature_space_id="fixture_space",
             feature_space_kind="fixture",
+            storage_mode="sparse_values",
             label="Fixture feature space",
             version_label="v1",
             coordinate_policy="unit test coordinates",
@@ -2116,7 +2926,7 @@ def test_morphospace_cli_compares_feature_cohorts(
                 context_id=context_id,
                 observation_kind="fixture_embedding",
             )
-            replace_feature_values(
+            replace_sparse_feature_values(
                 connection,
                 observation_id=observation_id,
                 feature_space_id="fixture_space",
@@ -2233,6 +3043,7 @@ def test_feature_tda_profile_bounds_thresholded_large_cohorts(
             connection,
             feature_space_id="tda_fixture_space",
             feature_space_kind="fixture",
+            storage_mode="sparse_values",
             label="TDA fixture space",
             version_label="v1",
             coordinate_policy="unit-test",
@@ -2288,7 +3099,7 @@ def test_feature_tda_profile_bounds_thresholded_large_cohorts(
                 context_id=context_id,
                 observation_kind="fixture_embedding",
             )
-            replace_feature_values(
+            replace_sparse_feature_values(
                 connection,
                 observation_id=observation_id,
                 feature_space_id="tda_fixture_space",
@@ -2370,7 +3181,136 @@ def test_common_morphology_point_cloud_features_distinguish_shapes() -> None:
     assert elongated_features["elongation"] > roundish_features["elongation"]
     assert elongated_features["anisotropy"] > roundish_features["anisotropy"]
     assert roundish_features["radial_symmetry"] > elongated_features["radial_symmetry"]
-    assert set(elongated_features) == set(COMMON_MORPHOLOGY_AXIS_IDS)
+    assert set(COMMON_MORPHOLOGY_AXIS_IDS) <= set(elongated_features)
+    assert {
+        "component_count",
+        "largest_component_fraction",
+        "largest_component_anisotropy",
+        "coverage",
+        "boundary_complexity",
+        "enclosure",
+    }.isdisjoint(COMMON_MORPHOLOGY_AXIS_IDS)
+
+
+def test_common_morphology_fingerprint_validation_is_vectorized_and_strict() -> None:
+    valid = common_morphology_module._fingerprint_array(
+        {"fingerprintResolution": 2, "fingerprintU8": [0, 1, 254, 255]},
+        specimen_id="valid",
+    )
+
+    assert valid is not None
+    assert valid.tolist() == [[0.0, 1.0], [254.0, 255.0]]
+    for specimen_id, values in (
+        ("non-finite", [0, 1, 2, float("nan")]),
+        ("fractional", [0, 1, 2, 3.5]),
+        ("out-of-range", [0, 1, 2, 256]),
+        ("nested", [[0, 1], [2, 3]]),
+    ):
+        with pytest.raises(ValueError, match="fingerprintU8"):
+            common_morphology_module._fingerprint_array(
+                {"fingerprintResolution": 2, "fingerprintU8": values},
+                specimen_id=specimen_id,
+            )
+
+
+def test_common_morphology_keyset_pages_survive_interleaved_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    compendium_path = _make_compendium_fixture(tmp_path)
+    source = sqlite3.connect(compendium_path)
+    try:
+        for index in range(2, 6):
+            source.execute(
+                """
+                INSERT INTO creatures
+                SELECT ?, ?, run_id, campaign_id, source_mode, source_algorithm,
+                       config_hash, score, is_stable, recorded_at, taxonomy_family_id,
+                       morphometrics_json, genotype_json, initial_condition_json,
+                       metrics_json
+                FROM creatures
+                WHERE id = 'creature-1'
+                """,
+                [f"creature-{index}", f"specimen-{index}"],
+            )
+            source.execute(
+                """
+                INSERT INTO specimens
+                SELECT ?, ?, run_id, campaign_id, source_kind, source_mode,
+                       source_algorithm, config_hash, initial_condition_family,
+                       recorded_at, activity_path, fingerprint_path,
+                       terminal_descriptor_json, trajectory_descriptor_json,
+                       runtime_family, runtime_capabilities_json, specimen_manifest_json
+                FROM specimens
+                WHERE id = 'specimen-1'
+                """,
+                [f"specimen-{index}", f"creature-{index}"],
+            )
+        source.commit()
+    finally:
+        source.close()
+
+    monkeypatch.setattr(common_morphology_module, "_LENIA_FETCH_BATCH_SIZE", 2)
+    monkeypatch.setattr(common_morphology_module, "_WRITE_BATCH_SIZE", 2)
+    write_batch_sizes: list[int] = []
+    original_write_rows = common_morphology_module._write_rows
+
+    def recording_write_rows(
+        connection: Any,
+        *,
+        rows: list[Any],
+        stats: dict[str, dict[str, float]],
+        calibration_id: str,
+    ) -> int:
+        write_batch_sizes.append(len(rows))
+        return original_write_rows(
+            connection,
+            rows=rows,
+            stats=stats,
+            calibration_id=calibration_id,
+        )
+
+    monkeypatch.setattr(common_morphology_module, "_write_rows", recording_write_rows)
+
+    warehouse_path = tmp_path / "warehouse.duckdb"
+    payload = refresh_compendium_warehouse(
+        warehouse_path=warehouse_path,
+        compendium_path=compendium_path,
+        label="paged-common-morphology",
+    )
+
+    assert payload["commonObservationsUpdated"] == 5
+    assert len(write_batch_sizes) > 1
+    assert write_batch_sizes[0] == 2
+    assert sum(write_batch_sizes) == 5
+
+    connection = connect_database(warehouse_path)
+    try:
+        assert _scalar_int(
+            connection,
+            """
+            SELECT COUNT(*) FROM observations
+            WHERE observation_kind = 'common_point_cloud_morphology'
+            """,
+        ) == 5
+        assert _scalar_int(
+            connection,
+            """
+            SELECT COUNT(*) FROM feature_values
+            WHERE feature_space_id = ?
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID],
+        ) == 5 * len(COMMON_MORPHOLOGY_AXIS_IDS)
+        assert _scalar_int(
+            connection,
+            """
+            SELECT COUNT(*) FROM specimen_feature_vectors
+            WHERE feature_space_id = ?
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID],
+        ) == 5
+    finally:
+        connection.close()
 
 
 def _write_dryad_fish_fixture(root: Path) -> None:
@@ -2842,6 +3782,18 @@ def test_scoped_common_morphology_uses_metadata_roots_for_other_fish_studies(
     connection = connect_database(warehouse_path)
     try:
         axis_metadata_before = _common_morphology_axis_metadata(connection)
+        connection.execute(
+            """
+            DELETE FROM specimen_feature_vectors
+            WHERE feature_space_id = ?
+              AND observation_id IN (
+                  SELECT observation_id
+                  FROM observations
+                  WHERE study_id = ?
+              )
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, fish_payload_a["studyId"]],
+        )
     finally:
         connection.close()
 
@@ -2902,6 +3854,10 @@ def test_morphospace_cli_derives_common_morphology_space(
         "dryad_fish_body_shape_20240112": 2,
         "lenia_swarm": 1,
     }
+    assert direct_payload["referenceCounts"] == {
+        "dryad_fish_body_shape_20240112": 1,
+        "lenia_swarm": 1,
+    }
 
     connection = connect_database(warehouse_path)
     try:
@@ -2911,18 +3867,43 @@ def test_morphospace_cli_derives_common_morphology_space(
                 """
                 SELECT axis_id, metadata_json
                 FROM feature_axes
-                WHERE feature_space_id = 'common_morphology_v1'
+                WHERE feature_space_id = 'common_morphology_v3_balanced_distribution'
                 ORDER BY axis_id
                 """
             ).fetchall()
         }
+        calibration = connection.execute(
+            """
+            SELECT calibration_id, frozen, reference_query_json
+            FROM feature_calibrations
+            WHERE feature_space_id = ? AND calibration_id = ?
+            """,
+            [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, direct_payload["calibrationId"]],
+        ).fetchone()
+        assert calibration is not None
+        assert calibration[0] == direct_payload["calibrationId"]
+        assert calibration[1] is True
+        assert json.loads(calibration[2])["counts"] == direct_payload["referenceCounts"]
+        assert (
+            _scalar_int(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM specimen_feature_vectors
+                WHERE feature_space_id = ? AND calibration_id = ?
+                """,
+                [COMMON_MORPHOLOGY_FEATURE_SPACE_ID, direct_payload["calibrationId"]],
+            )
+            == direct_payload["vectorCount"]
+            == 3
+        )
         assert (
             _scalar_int(
                 connection,
                 """
                 SELECT COUNT(*)
                 FROM feature_values
-                WHERE feature_space_id = 'common_morphology_v1'
+                WHERE feature_space_id = 'common_morphology_v3_balanced_distribution'
                 """,
             )
             == 3 * len(COMMON_MORPHOLOGY_AXIS_IDS)
@@ -2933,7 +3914,7 @@ def test_morphospace_cli_derives_common_morphology_space(
                 """
                 SELECT axis_id
                 FROM feature_axes
-                WHERE feature_space_id = 'common_morphology_v1'
+                WHERE feature_space_id = 'common_morphology_v3_balanced_distribution'
                 ORDER BY axis_index
                 """
             ).fetchall()
@@ -2958,7 +3939,7 @@ def test_morphospace_cli_derives_common_morphology_space(
                 """
                 SELECT axis_id, metadata_json
                 FROM feature_axes
-                WHERE feature_space_id = 'common_morphology_v1'
+                WHERE feature_space_id = 'common_morphology_v3_balanced_distribution'
                 ORDER BY axis_id
                 """
             ).fetchall()

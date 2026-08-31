@@ -32,6 +32,40 @@ private struct TestExportRecord: Codable {
 }
 
 final class CompendiumIndexingTests: XCTestCase {
+    func testPromotionPreservesExplicitRunIDWhenDirectoryNameDiffers() throws {
+        let root = try makeTempDirectory(prefix: "lenia-explicit-run-id")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let runDir = root.appendingPathComponent("output", isDirectory: true)
+        try makeRunLayout(at: runDir)
+        let explicitRunID = "native-v2-plan-shard-00000"
+        try writeJSONL([
+            TestLibraryEntry(
+                creature: makeCreature(
+                    id: UUID(uuidString: "99999999-9999-9999-9999-999999999999")!,
+                    name: "explicit-run-id",
+                    seed: 17
+                ),
+                campaign_id: nil,
+                run_id: explicitRunID,
+                recorded_at: fixedDate
+            ),
+        ], to: runDir.appendingPathComponent("library/index.jsonl"))
+
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+        try promoteRunArtifacts(
+            runDir: runDir.path,
+            compendiumPath: dbPath,
+            runID: explicitRunID,
+            includeResults: false
+        )
+
+        let db = try SQLiteDB(path: dbPath)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM runs WHERE run_id = '\(explicitRunID)'"), 1)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE run_id = '\(explicitRunID)'"), 1)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM runs WHERE run_id = 'output'"), 0)
+    }
+
     func testIndexPlanAcceptsMultipleRunDirs() throws {
         let root = try makeTempDirectory(prefix: "lenia-multi-run-ingest")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -468,6 +502,18 @@ final class CompendiumIndexingTests: XCTestCase {
         XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM creatures"), 1)
         XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM results"), 1)
         XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens"), 1)
+        for table in ["runs", "creatures", "results", "specimens"] {
+            XCTAssertEqual(
+                try db.scalarInt("SELECT COUNT(*) FROM \(table) WHERE run_id = 'test-replay-batch'"),
+                1,
+                "\(table) must preserve the explicit replay run ID"
+            )
+            XCTAssertEqual(
+                try db.scalarInt("SELECT COUNT(*) FROM \(table) WHERE run_id = 'replay-output'"),
+                0,
+                "\(table) must not infer replay identity from the output directory"
+            )
+        }
         XCTAssertEqual(
             try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE source_kind = 'result'"),
             1

@@ -9,7 +9,7 @@ public struct MorphospaceDescriptorBundle: Codable, Sendable {
     public let trajectory: MorphospaceTrajectoryDescriptor?
 
     public init(
-        descriptorVersion: Int = 1,
+        descriptorVersion: Int = 2,
         symmetryPolicy: String,
         genotype: MorphospaceGenotypeDescriptor,
         terminal: MorphospaceTerminalDescriptor,
@@ -91,10 +91,10 @@ public struct MorphospaceTerminalDescriptor: Codable, Sendable {
     public let isStable: Bool
 
     public init(
-        version: Int = 1,
+        version: Int = 2,
         massChannel: Int,
         borderMode: String,
-        normalizationPolicy: String = "com_center_torus_unwrap_l1_q32_u8_v1",
+        normalizationPolicy: String = "border_aware_com_center_peak_q32_u8_v2",
         symmetryPolicy: String,
         fingerprintResolution: Int = 32,
         fingerprintU8: Data,
@@ -434,7 +434,9 @@ func morphospaceFinalSampleSummary(
     fingerprintHash12: String,
     finalMass: Float,
     finalOccupancy: Float,
-    finalGyration: Float
+    finalGyration: Float,
+    centerX: Float,
+    centerY: Float
 ) {
     guard sampleIndex >= 0 && sampleIndex < batchData.batch else {
         fatalError("Morphospace final sample summary index \(sampleIndex) is out of range for batch size \(batchData.batch).")
@@ -445,25 +447,24 @@ func morphospaceFinalSampleSummary(
     let start = sampleIndex * batchData.sampleSize
     let sample = Array(batchData.flat[start..<(start + batchData.sampleSize)])
 
-    var totalMass: Float = 0
     var occupied = 0
-    var momentX: Float = 0
-    var momentY: Float = 0
     for y in 0..<height {
         let rowOffset = y * width
         for x in 0..<width {
             let value = sample[rowOffset + x]
-            totalMass += value
             if value > occupancyThreshold {
                 occupied += 1
             }
-            momentX += value * (Float(x) + 0.5)
-            momentY += value * (Float(y) + 0.5)
         }
     }
 
     let occupancy = Float(occupied) / Float(width * height)
-    guard totalMass > 1e-8 else {
+    guard let geometry = morphospaceFieldGeometry(
+        sample: sample,
+        width: width,
+        height: height,
+        useTorus: useTorus
+    ) else {
         let zeroFingerprint = Data(repeating: 0, count: 32 * 32)
         return (
             32,
@@ -476,49 +477,17 @@ func morphospaceFinalSampleSummary(
             morphospaceHash12(data: zeroFingerprint),
             0,
             occupancy,
-            0
+            0,
+            Float(width) * 0.5,
+            Float(height) * 0.5
         )
     }
 
-    let centerX = momentX / totalMass
-    let centerY = momentY / totalMass
-    let centered = morphospaceCenteredSample(
-        sample: sample,
-        width: width,
-        height: height,
-        centerX: centerX,
-        centerY: centerY,
-        useTorus: useTorus
-    )
     let quantized = morphospaceQuantizedFingerprint(
-        sample: centered,
+        sample: geometry.centered,
         width: width,
         height: height
     )
-
-    var gyrationAccumulator: Float = 0
-    let widthPeriod = Float(width)
-    let heightPeriod = Float(height)
-    for y in 0..<height {
-        let rowOffset = y * width
-        for x in 0..<width {
-            let value = sample[rowOffset + x]
-            if value == 0 {
-                continue
-            }
-            var dx = (Float(x) + 0.5) - centerX
-            var dy = (Float(y) + 0.5) - centerY
-            if useTorus {
-                let halfWidth = widthPeriod * 0.5
-                let halfHeight = heightPeriod * 0.5
-                if dx > halfWidth { dx -= widthPeriod }
-                if dx < -halfWidth { dx += widthPeriod }
-                if dy > halfHeight { dy -= heightPeriod }
-                if dy < -halfHeight { dy += heightPeriod }
-            }
-            gyrationAccumulator += value * (dx * dx + dy * dy)
-        }
-    }
 
     let fingerprintData = Data(quantized)
     return (
@@ -530,9 +499,11 @@ func morphospaceFinalSampleSummary(
             height: 32
         ),
         morphospaceHash12(data: fingerprintData),
-        totalMass,
+        geometry.mass,
         occupancy,
-        gyrationAccumulator / totalMass
+        geometry.gyration,
+        geometry.centerX,
+        geometry.centerY
     )
 }
 
@@ -589,6 +560,211 @@ private func morphospaceHash12(data: Data) -> String {
     SHA256.hash(data: data).prefix(6).map { String(format: "%02x", $0) }.joined()
 }
 
+struct MorphospaceFieldGeometry: Sendable {
+    let mass: Float
+    let centerX: Float
+    let centerY: Float
+    let gyration: Float
+    let centered: [Float]
+}
+
+private func morphospaceCircularCenterCandidates(profile: [Double]) -> [Float] {
+    guard !profile.isEmpty else { return [0] }
+    let period = Double(profile.count)
+    let total = profile.reduce(0, +)
+    let threshold = max(abs(total), 1) * 1e-10
+    for harmonic in 1...max(1, profile.count / 2) {
+        var real: Double = 0
+        var imaginary: Double = 0
+        for (index, value) in profile.enumerated() {
+            let angle = (Double(index) + 0.5) * 2 * Double.pi * Double(harmonic) / period
+            real += value * cos(angle)
+            imaginary += value * sin(angle)
+        }
+        guard hypot(real, imaginary) > threshold else {
+            continue
+        }
+        var phase = atan2(imaginary, real)
+        if phase < 0 {
+            phase += 2 * Double.pi
+        }
+        let spacing = period / Double(harmonic)
+        let base = phase * period / (2 * Double.pi * Double(harmonic))
+        return (0..<harmonic).map { branch in
+            Float((base + Double(branch) * spacing).truncatingRemainder(dividingBy: period))
+        }
+    }
+    return profile.indices.map { Float($0) + 0.5 }
+}
+
+private func morphospaceWrappedDelta(_ value: Float, period: Float) -> Float {
+    value - round(value / period) * period
+}
+
+private func morphospaceGyration(
+    sample: [Float],
+    width: Int,
+    height: Int,
+    mass: Float,
+    centerX: Float,
+    centerY: Float,
+    useTorus: Bool
+) -> Float {
+    var accumulator: Float = 0
+    for y in 0..<height {
+        let rowOffset = y * width
+        for x in 0..<width {
+            let value = sample[rowOffset + x]
+            guard value != 0 else { continue }
+            var dx = (Float(x) + 0.5) - centerX
+            var dy = (Float(y) + 0.5) - centerY
+            if useTorus {
+                dx = morphospaceWrappedDelta(dx, period: Float(width))
+                dy = morphospaceWrappedDelta(dy, period: Float(height))
+            }
+            accumulator += value * (dx * dx + dy * dy)
+        }
+    }
+    return accumulator / mass
+}
+
+func morphospaceFieldGeometry(
+    sample: [Float],
+    width: Int,
+    height: Int,
+    useTorus: Bool
+) -> MorphospaceFieldGeometry? {
+    guard width > 0, height > 0, sample.count == width * height else {
+        fatalError("Morphospace field geometry requires a complete positive-size field.")
+    }
+    var total: Double = 0
+    var momentX: Double = 0
+    var momentY: Double = 0
+    var profileX = [Double](repeating: 0, count: width)
+    var profileY = [Double](repeating: 0, count: height)
+    for y in 0..<height {
+        for x in 0..<width {
+            let value = Double(sample[y * width + x])
+            total += value
+            momentX += value * (Double(x) + 0.5)
+            momentY += value * (Double(y) + 0.5)
+            profileX[x] += value
+            profileY[y] += value
+        }
+    }
+    guard total > 1e-8 else { return nil }
+    let mass = Float(total)
+    if useTorus, let first = sample.first, sample.dropFirst().allSatisfy({ $0 == first }) {
+        let centerX = Float(width) * 0.5
+        let centerY = Float(height) * 0.5
+        return MorphospaceFieldGeometry(
+            mass: mass,
+            centerX: centerX,
+            centerY: centerY,
+            gyration: morphospaceGyration(
+                sample: sample,
+                width: width,
+                height: height,
+                mass: mass,
+                centerX: centerX,
+                centerY: centerY,
+                useTorus: true
+            ),
+            centered: sample
+        )
+    }
+    let centerCandidatesX: [Float]
+    let centerCandidatesY: [Float]
+    if useTorus {
+        centerCandidatesX = morphospaceCircularCenterCandidates(profile: profileX)
+        centerCandidatesY = morphospaceCircularCenterCandidates(profile: profileY)
+    } else {
+        centerCandidatesX = [Float(momentX / total)]
+        centerCandidatesY = [Float(momentY / total)]
+    }
+
+    var selected: MorphospaceFieldGeometry?
+    var selectedSignature: [UInt8]?
+    for centerY in centerCandidatesY {
+        for centerX in centerCandidatesX {
+            let centered = morphospaceCenteredSample(
+                sample: sample,
+                width: width,
+                height: height,
+                centerX: centerX,
+                centerY: centerY,
+                useTorus: useTorus
+            )
+            let gyration = morphospaceGyration(
+                sample: sample,
+                width: width,
+                height: height,
+                mass: mass,
+                centerX: centerX,
+                centerY: centerY,
+                useTorus: useTorus
+            )
+            let candidate = MorphospaceFieldGeometry(
+                mass: mass,
+                centerX: centerX,
+                centerY: centerY,
+                gyration: gyration,
+                centered: centered
+            )
+            guard centerCandidatesX.count > 1 || centerCandidatesY.count > 1 else {
+                return candidate
+            }
+            let signature = morphospaceQuantizedFingerprint(
+                sample: centered,
+                width: width,
+                height: height
+            )
+            if let currentSignature = selectedSignature {
+                if signature.lexicographicallyPrecedes(currentSignature) {
+                    selected = candidate
+                    selectedSignature = signature
+                } else if signature == currentSignature, let current = selected, gyration < current.gyration {
+                    selected = candidate
+                }
+            } else {
+                selected = candidate
+                selectedSignature = signature
+            }
+        }
+    }
+    guard let selected else {
+        fatalError("Morphospace field geometry produced no center candidates.")
+    }
+    return selected
+}
+
+func morphospaceCenteredMassBatch(_ batchData: MassBatchCPU, useTorus: Bool) -> MassBatchCPU {
+    guard useTorus else { return batchData }
+    var centered: [Float] = []
+    centered.reserveCapacity(batchData.flat.count)
+    for sampleIndex in 0..<batchData.batch {
+        let start = sampleIndex * batchData.sampleSize
+        let sample = Array(batchData.flat[start..<(start + batchData.sampleSize)])
+        if let geometry = morphospaceFieldGeometry(
+            sample: sample,
+            width: batchData.width,
+            height: batchData.height,
+            useTorus: true
+        ) {
+            centered.append(contentsOf: geometry.centered)
+        } else {
+            centered.append(contentsOf: sample)
+        }
+    }
+    return MassBatchCPU(
+        flat: centered,
+        batch: batchData.batch,
+        height: batchData.height,
+        width: batchData.width,
+        sampleSize: batchData.sampleSize
+    )
+}
+
 private func morphospaceCenteredSample(
     sample: [Float],
     width: Int,
@@ -599,28 +775,34 @@ private func morphospaceCenteredSample(
 ) -> [Float] {
     let desiredCenterX = Float(width) * 0.5
     let desiredCenterY = Float(height) * 0.5
-    let shiftX = Int(round(desiredCenterX - centerX))
-    let shiftY = Int(round(desiredCenterY - centerY))
+    let shiftX = desiredCenterX - centerX
+    let shiftY = desiredCenterY - centerY
+
+    func value(x: Int, y: Int) -> Float {
+        if useTorus {
+            let wrappedX = ((x % width) + width) % width
+            let wrappedY = ((y % height) + height) % height
+            return sample[wrappedY * width + wrappedX]
+        }
+        guard x >= 0, x < width, y >= 0, y < height else { return 0 }
+        return sample[y * width + x]
+    }
 
     var centered = [Float](repeating: 0, count: sample.count)
     for y in 0..<height {
         let centeredRowOffset = y * width
         for x in 0..<width {
-            let sourceX = x - shiftX
-            let sourceY = y - shiftY
-            let resolvedX: Int
-            let resolvedY: Int
-            if useTorus {
-                resolvedX = ((sourceX % width) + width) % width
-                resolvedY = ((sourceY % height) + height) % height
-            } else {
-                guard sourceX >= 0 && sourceX < width && sourceY >= 0 && sourceY < height else {
-                    continue
-                }
-                resolvedX = sourceX
-                resolvedY = sourceY
-            }
-            centered[centeredRowOffset + x] = sample[resolvedY * width + resolvedX]
+            let sourceX = Float(x) - shiftX
+            let sourceY = Float(y) - shiftY
+            let x0 = Int(floor(sourceX))
+            let y0 = Int(floor(sourceY))
+            let fractionX = sourceX - Float(x0)
+            let fractionY = sourceY - Float(y0)
+            let top = value(x: x0, y: y0) * (1 - fractionX)
+                + value(x: x0 + 1, y: y0) * fractionX
+            let bottom = value(x: x0, y: y0 + 1) * (1 - fractionX)
+                + value(x: x0 + 1, y: y0 + 1) * fractionX
+            centered[centeredRowOffset + x] = top * (1 - fractionY) + bottom * fractionY
         }
     }
     return centered
@@ -669,13 +851,12 @@ private func morphospaceQuantizedFingerprint(
         outputWidth: outputWidth,
         outputHeight: outputHeight
     )
-    let total = reduced.reduce(0, +)
-    guard total > 1e-8 else {
+    guard let peak = reduced.max(), peak > 1e-8 else {
         return [UInt8](repeating: 0, count: outputWidth * outputHeight)
     }
 
     return reduced.map { value in
-        let normalized = max(0, min(1, value / total))
+        let normalized = max(0, min(1, value / peak))
         return UInt8((normalized * 255).rounded())
     }
 }
@@ -694,29 +875,14 @@ public func morphospaceCenteredFloatField(
     outputResolution: Int
 ) -> [Float]? {
     guard outputResolution > 0 else { return nil }
-    var totalMass: Float = 0
-    var momentX: Float = 0
-    var momentY: Float = 0
-    for y in 0..<height {
-        let rowOffset = y * width
-        for x in 0..<width {
-            let value = sample[rowOffset + x]
-            totalMass += value
-            momentX += value * (Float(x) + 0.5)
-            momentY += value * (Float(y) + 0.5)
-        }
-    }
-    guard totalMass > 1e-8 else { return nil }
-    let centered = morphospaceCenteredSample(
+    guard let geometry = morphospaceFieldGeometry(
         sample: sample,
         width: width,
         height: height,
-        centerX: momentX / totalMass,
-        centerY: momentY / totalMass,
         useTorus: useTorus
-    )
+    ) else { return nil }
     let reduced = morphospaceBoxResample(
-        sample: centered,
+        sample: geometry.centered,
         width: width,
         height: height,
         outputWidth: outputResolution,

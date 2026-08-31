@@ -822,7 +822,7 @@ def _normal_mean_ci(values: list[float]) -> dict[str, float | None]:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="lenia-swarm-fiber survival-assay",
+        prog="lenia-swarm-analysis fiber survival-assay",
         description="Build, summarize, and compare fiber survival assay packets.",
     )
     sub = parser.add_subparsers(dest="command", required=True)

@@ -65,32 +65,44 @@ public func resolvedWarehousePath(explicitPath: String?, compendiumPath: String)
     explicitPath ?? defaultWarehousePath(compendiumPath: compendiumPath)
 }
 
-func runWarehouseCLI(arguments: [String]) throws -> Data {
-    let captureRoot = FileManager.default.temporaryDirectory
+func runFileBackedWarehouseCommand(
+    executableURL: URL,
+    arguments: [String],
+    currentDirectoryURL: URL?
+) throws -> Data {
+    let fileManager = FileManager.default
+    let captureDirectory = fileManager.temporaryDirectory
         .appendingPathComponent("lenia-warehouse-\(UUID().uuidString)", isDirectory: true)
-    try FileManager.default.createDirectory(at: captureRoot, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: captureRoot) }
+    try fileManager.createDirectory(at: captureDirectory, withIntermediateDirectories: true)
+    defer { try? fileManager.removeItem(at: captureDirectory) }
 
-    let stdoutURL = captureRoot.appendingPathComponent("stdout")
-    let stderrURL = captureRoot.appendingPathComponent("stderr")
-    try Data().write(to: stdoutURL)
-    try Data().write(to: stderrURL)
+    let stdoutURL = captureDirectory.appendingPathComponent("stdout.json")
+    let stderrURL = captureDirectory.appendingPathComponent("stderr.log")
+    guard fileManager.createFile(atPath: stdoutURL.path, contents: nil),
+          fileManager.createFile(atPath: stderrURL.path, contents: nil) else {
+        throw WarehouseBridgeError.invalidResponse("Unable to create warehouse process capture files.")
+    }
     let stdoutHandle = try FileHandle(forWritingTo: stdoutURL)
     let stderrHandle = try FileHandle(forWritingTo: stderrURL)
-    defer {
-        try? stdoutHandle.close()
-        try? stderrHandle.close()
-    }
 
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.executableURL = executableURL
     process.arguments = arguments
-    process.currentDirectoryURL = dossierRootURL
+    process.currentDirectoryURL = currentDirectoryURL
+
     process.standardOutput = stdoutHandle
     process.standardError = stderrHandle
 
-    try process.run()
-    process.waitUntilExit()
+    do {
+        try process.run()
+        process.waitUntilExit()
+        try stdoutHandle.close()
+        try stderrHandle.close()
+    } catch {
+        try? stdoutHandle.close()
+        try? stderrHandle.close()
+        throw error
+    }
 
     let stdoutData = try Data(contentsOf: stdoutURL)
     let stderrData = try Data(contentsOf: stderrURL)
@@ -98,15 +110,26 @@ func runWarehouseCLI(arguments: [String]) throws -> Data {
     let stderr = String(decoding: stderrData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
 
     guard process.terminationStatus == 0 else {
+        let output = [stdout, stderr]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
         throw WarehouseBridgeError.commandFailed(
-            command: arguments,
-            output: stderr.isEmpty ? stdout : stderr
+            command: [executableURL.path] + arguments,
+            output: output
         )
     }
     guard !stdoutData.isEmpty else {
         throw WarehouseBridgeError.invalidResponse(stdout)
     }
     return stdoutData
+}
+
+func runWarehouseCLI(arguments: [String]) throws -> Data {
+    try runFileBackedWarehouseCommand(
+        executableURL: URL(fileURLWithPath: "/usr/bin/env"),
+        arguments: arguments,
+        currentDirectoryURL: dossierRootURL
+    )
 }
 
 private func decodeWarehouseJSON<T: Decodable>(_ data: Data, as type: T.Type) throws -> T {
@@ -136,9 +159,8 @@ public func refreshWarehouseFromCompendium(
     var arguments = [
         "uv",
         "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
+        "lenia-swarm-analysis",
+        "morphospace",
         "refresh-compendium",
         "--warehouse",
         warehousePath,
@@ -166,9 +188,8 @@ public func runWarehouseTopology(
     let data = try runWarehouseCLI(arguments: [
         "uv",
         "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
+        "lenia-swarm-analysis",
+        "morphospace",
         "run-topology",
         "--warehouse",
         warehousePath,
@@ -193,9 +214,8 @@ public func exportWarehouseBiologicalPacket(
     var arguments = [
         "uv",
         "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
+        "lenia-swarm-analysis",
+        "morphospace",
         "export-biological",
         "--warehouse",
         warehousePath,
@@ -218,9 +238,8 @@ public func exportWarehouseCreatureDiscoveryPacket(
     var arguments = [
         "uv",
         "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
+        "lenia-swarm-analysis",
+        "morphospace",
         "export-creature-discovery",
         "--warehouse",
         warehousePath,

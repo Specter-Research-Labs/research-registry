@@ -36,7 +36,6 @@ from lenia_swarm_analysis.morphospace.finite_size_validation import (
 from lenia_swarm_analysis.morphospace.high_fiber_null_validation import (
     build_high_fiber_null_validation_packet,
 )
-from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.ingest_dryad_fish import (
     ingest_dryad_fish_body_shape,
 )
@@ -53,6 +52,7 @@ from lenia_swarm_analysis.morphospace.track1_raw_summary import (
 from lenia_swarm_analysis.morphospace.warehouse import (
     connect_database,
     connect_read_only_database,
+    warehouse_transaction,
 )
 
 ConnectionCallback = Callable[[Any], dict[str, Any]]
@@ -67,7 +67,10 @@ def _using_warehouse(
     connector = connect_read_only_database if read_only else connect_database
     connection = connector(warehouse_path)
     try:
-        return callback(connection)
+        if read_only:
+            return callback(connection)
+        with warehouse_transaction(connection):
+            return callback(connection)
     finally:
         connection.close()
 
@@ -146,36 +149,49 @@ def refresh_compendium_warehouse(
     min_group_size: int = 2,
     max_homology_dim: int = 1,
 ) -> dict[str, Any]:
+    from lenia_swarm_analysis.morphospace.ingest_compendium import (
+        _ingest_compendium,
+        _open_compendium_snapshot,
+        _source_identity,
+    )
+
     connection = connect_database(warehouse_path)
+    resolved_compendium_path = compendium_path.expanduser().resolve(strict=True)
+    source = _open_compendium_snapshot(resolved_compendium_path, run_id=run_id)
     try:
-        study_id = ingest_compendium(
-            connection,
-            compendium_path=compendium_path,
-            label=label,
-            run_id=run_id,
-            ingest_raw_rows=run_id is None,
-        )
-        axes_updated = (
-            0
-            if run_id is not None
-            else derive_axes(connection, study_id=study_id)
-        )
-        status_updated = derive_status(connection, study_id=study_id)
-        anatomy_updated = derive_anatomy(connection, study_id=study_id)
-        terminal_features = derive_lenia_terminal_features(connection, study_id=study_id)
-        common_features = derive_common_morphology(connection, study_id=study_id)
-        topology_study_id: str | None = None
-        if topology:
-            topology_study_id = run_topology(
+        with warehouse_transaction(connection):
+            study_id = _ingest_compendium(
                 connection,
-                study_id=study_id,
-                source_packet_kind=source_packet_kind,
-                min_group_size=min_group_size,
-                max_homology_dim=max_homology_dim,
+                compendium_path=resolved_compendium_path,
+                source=source,
+                label=label,
+                run_id=run_id,
             )
+            axes_updated = (
+                0
+                if run_id is not None
+                else derive_axes(connection, study_id=study_id)
+            )
+            status_updated = derive_status(connection, study_id=study_id)
+            anatomy_updated = derive_anatomy(connection, study_id=study_id)
+            terminal_features = derive_lenia_terminal_features(connection, study_id=study_id)
+            common_features = derive_common_morphology(connection, study_id=study_id)
+            topology_study_id: str | None = None
+            if topology:
+                topology_study_id = run_topology(
+                    connection,
+                    study_id=study_id,
+                    source_packet_kind=source_packet_kind,
+                    min_group_size=min_group_size,
+                    max_homology_dim=max_homology_dim,
+                )
+            if _source_identity(resolved_compendium_path) != source.source_identity:
+                raise ValueError(
+                    f"{resolved_compendium_path}: compendium changed during warehouse refresh"
+                )
         return {
             "warehousePath": str(warehouse_path),
-            "compendiumPath": str(compendium_path),
+            "compendiumPath": str(resolved_compendium_path),
             "studyId": study_id,
             "runId": run_id,
             "axesUpdated": axes_updated,
@@ -191,6 +207,87 @@ def refresh_compendium_warehouse(
             "commonObservationsUpdated": common_features["observationCount"],
             "commonFeatureValuesUpdated": common_features["featureValueCount"],
             "topologyStudyId": topology_study_id,
+        }
+    finally:
+        source.connection.close()
+        connection.close()
+
+
+def migrate_warehouse(
+    *,
+    source_path: Path,
+    destination_path: Path,
+) -> dict[str, Any]:
+    from lenia_swarm_analysis.morphospace.migrate_v9 import (
+        build_warehouse_side_by_side,
+    )
+
+    result = build_warehouse_side_by_side(source_path, destination_path)
+    return {
+        "sourcePath": str(result.source_path),
+        "destinationPath": str(result.destination_path),
+        "sourceSha256": result.source_sha256,
+        "receiptId": result.receipt_id,
+        "copiedRowCounts": result.copied_row_counts,
+        "descriptorCount": result.descriptor_count,
+        "invalidationCount": result.invalidation_count,
+        "membershipNormalization": result.membership_normalization,
+        "nonfiniteFeatureQuarantine": result.nonfinite_feature_quarantine,
+        "orphanContextOmission": result.orphan_context_omission,
+    }
+
+
+def regenerate_derived(
+    *,
+    warehouse_path: Path,
+    study_id: str | None = None,
+) -> dict[str, Any]:
+    from lenia_swarm_analysis.morphospace.regenerate_v9 import (
+        assert_required_external_sources_available,
+        build_readiness_report,
+        clear_full_regeneration_outputs,
+        eligible_specimen_count,
+    )
+    from lenia_swarm_analysis.morphospace.warehouse import warehouse_transaction
+
+    connection = connect_database(warehouse_path)
+    try:
+        with warehouse_transaction(connection):
+            eligible_count: int | None = None
+            if study_id is None:
+                eligible_count = eligible_specimen_count(connection)
+                if eligible_count <= 0:
+                    raise ValueError("regenerate-derived found zero exact torus-v2 specimens")
+                assert_required_external_sources_available(connection)
+                clear_full_regeneration_outputs(connection)
+            axes_updated = derive_axes(connection, study_id=study_id)
+            status_updated = derive_status(connection, study_id=study_id)
+            anatomy_updated = derive_anatomy(connection, study_id=study_id)
+            terminal = derive_lenia_terminal_features(connection, study_id=study_id)
+            common = derive_common_morphology(connection, study_id=study_id)
+            readiness = (
+                build_readiness_report(connection, eligible_count=eligible_count)
+                if eligible_count is not None
+                else None
+            )
+        return {
+            "warehousePath": str(warehouse_path),
+            "studyId": study_id,
+            "axesUpdated": axes_updated,
+            "statusUpdated": status_updated,
+            "anatomyUpdated": anatomy_updated,
+            "terminalFeatures": terminal,
+            "commonMorphology": common,
+            "readiness": readiness,
+            "readyForWarehouseCutover": (
+                readiness["readyForWarehouseCutover"] if readiness is not None else None
+            ),
+            "readyForNativeV2Analysis": (
+                readiness["readyForNativeV2Analysis"] if readiness is not None else None
+            ),
+            "readyForFullCutover": (
+                readiness["readyForFullCutover"] if readiness is not None else None
+            ),
         }
     finally:
         connection.close()
@@ -401,7 +498,6 @@ def export_feature_matrix_packet(
             value_column=value_column,
             source_id=source_id,
             study_id=study_id,
-            study_kind=study_kind,
             run_id=run_id,
             run_id_contains=run_id_contains,
             source_mode=source_mode,
@@ -437,7 +533,6 @@ def run_feature_tda_packet(
             value_column=value_column,
             source_id=source_id,
             study_id=study_id,
-            study_kind=study_kind,
             run_id=run_id,
             run_id_contains=run_id_contains,
             source_mode=source_mode,
@@ -478,7 +573,6 @@ def run_feature_tda_profile_packet(
             value_column=value_column,
             source_id=source_id,
             study_id=study_id,
-            study_kind=study_kind,
             run_id=run_id,
             run_id_contains=run_id_contains,
             source_mode=source_mode,
@@ -663,6 +757,34 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Canonical warehouse lifecycle for lenia-swarm morphospace analysis",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    migrate_parser = subparsers.add_parser(
+        "migrate-warehouse",
+        help="Build and publish a compact v10 warehouse beside a read-only v8 source",
+    )
+    migrate_parser.add_argument("--source", required=True, type=Path)
+    migrate_parser.add_argument("--destination", required=True, type=Path)
+    _add_json(migrate_parser)
+    migrate_parser.set_defaults(
+        handler=lambda args: migrate_warehouse(
+            source_path=args.source.resolve(),
+            destination_path=args.destination.resolve(),
+        )
+    )
+
+    regenerate_parser = subparsers.add_parser(
+        "regenerate-derived",
+        help="Regenerate derived layers for torus-aware v2 specimens",
+    )
+    regenerate_parser.add_argument("--warehouse", required=True, type=Path)
+    regenerate_parser.add_argument("--study-id")
+    _add_json(regenerate_parser)
+    regenerate_parser.set_defaults(
+        handler=lambda args: regenerate_derived(
+            warehouse_path=args.warehouse.resolve(),
+            study_id=args.study_id,
+        )
+    )
 
     refresh = subparsers.add_parser(
         "refresh-compendium",
