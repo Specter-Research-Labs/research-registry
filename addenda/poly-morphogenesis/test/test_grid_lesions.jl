@@ -26,6 +26,42 @@ end
     @test all(length(entry.nodes) == 4 for entry in placements)
 end
 
+@testset "graph morphology uses a fixed absolute threshold" begin
+    config = grid_graph_config(2, 3)
+    state = vcat([0.8, 0.7, 0.1, 0.9, 0.2, 0.8], fill(0.25, 6))
+    snapshot = PolyMorphogenesis.GridLesions.graph_morphology_snapshot(
+        state,
+        config;
+        threshold=0.5,
+    )
+
+    @test snapshot.active_mask == BitVector([true, true, false, true, false, true])
+    @test snapshot.active_cell_count == 4
+    @test snapshot.component_count == 2
+    @test snapshot.A == state[1:6]
+    @test snapshot.I == state[7:12]
+    @test PolyMorphogenesis.GridLesions.graph_active_domain_count(config, snapshot.active_mask) == 2
+end
+
+@testset "relative graph snapshots delegate without changing morphology" begin
+    config = grid_graph_config(1, 4)
+    state = vcat([10.0, 7.0, 4.0, 1.0], [1.0, 2.0, 3.0, 4.0])
+    relative = PolyMorphogenesis.GridLesions._graph_snapshot(state, config; active_fraction=0.5)
+    fixed = PolyMorphogenesis.GridLesions.graph_morphology_snapshot(state, config; threshold=5.0)
+
+    @test relative.component_count == fixed.component_count
+    @test relative.active_cell_count == fixed.active_cell_count
+    @test relative.active_mask == fixed.active_mask
+    @test relative.A == fixed.A
+    @test relative.I == fixed.I
+    @test_throws ErrorException PolyMorphogenesis.GridLesions.graph_active_domain_count(config, trues(3))
+    @test_throws ErrorException PolyMorphogenesis.GridLesions.graph_morphology_snapshot(
+        zeros(7),
+        config;
+        threshold=0.5,
+    )
+end
+
 @testset "patch-isolation demo produces severity and connectivity rankings" begin
     result = grid_patch_isolation_demo(
         rows=3,
