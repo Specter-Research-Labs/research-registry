@@ -8,7 +8,7 @@ toc: true
 
 # Why the same disturbance matters less later in development
 
-_16–29 August 2026 · Developmental perturbation study; later incorporated into the causal-emergence library released on 30 August._
+_16–29 August 2026 · Developmental perturbation study._
 
 We often describe an organism as becoming more stable as it develops, but size alone can create the same appearance. A fixed disturbance spread across a larger body may simply be more dilute. To distinguish growth from a deeper change in organization, we fixed the experiment before opening the outcomes and applied matched disturbances to younger and older members of 16 Flow Lenia families.
 

@@ -8,7 +8,7 @@ toc: true
 
 # When an inert control refused to stay inert
 
-_2 April 2026 · Experimental diagnosis. The resulting inference and seeding repair landed in the same release period._
+_2 April 2026 · Experimental diagnosis._
 
 We were trying to learn how a theorem prover’s search changes when one of its tactics is taken away. The control should have been uneventful: disable a tactic the prover never uses, rerun the theorem, and confirm that nothing changes. ReProver passed these control reruns consistently, whereas some DeepSeek theorems changed outcome even though the intervention was supposed to be inert.
 

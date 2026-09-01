@@ -8,7 +8,7 @@ toc: true
 
 # Taking away one move revealed which proofs had alternatives
 
-_21 May–10 June 2026 · Retrospective intervention analysis of completed Wonton runs; the paper and public research pages were updated during this period._
+_21 May–10 June 2026 · Retrospective intervention analysis of completed Wonton runs._
 
 Repeated proof searches had already shown that one theorem could have several valid proofs. The harder question was whether those alternatives were actually available when the familiar route was damaged. We tested that by taking a tactic used in a successful Lean proof, blocking it, and giving the prover the same budget to find another way through.
 

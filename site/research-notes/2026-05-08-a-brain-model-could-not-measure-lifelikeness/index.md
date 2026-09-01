@@ -8,7 +8,7 @@ toc: true
 
 # A brain model could not tell us whether a Lenia creature looked alive
 
-_4–8 May 2026 · Negative methodological result. We verified the video-to-model path, but no interpretable real-specimen comparison was completed._
+_4–8 May 2026 · Negative methodological result._
 
 Flow Lenia organisms were already described by sixteen measurements of their shape and motion. We wondered whether a model trained to predict human brain activity from video could add something those measurements missed. If videos of different synthetic organisms produced different responses in regions associated with biological motion and visual form, perhaps that response could become a new coordinate in the morphospace.
 

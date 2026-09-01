@@ -8,7 +8,7 @@ toc: true
 
 # What it took to move a theorem prover off the Mac
 
-_26–27 March 2026 · Infrastructure investigation. DeepSeek inference was brought up on one Tenstorrent QuietBox workstation; this note does not imply that the server processes are still running._
+_26–27 March 2026 · Infrastructure investigation._
 
 Wonton used a 1.3-billion-parameter DeepSeek model to propose the next step in Lean proofs. The model ran through MLX, which made good use of Apple silicon but tied that part of the experiment to a Mac. The destination was one Tenstorrent QuietBox workstation containing four N300 cards, with two Wormhole chips on each card. Moving the model there promised more parallel proof searches and a cleaner way to serve inference to several workers at once.
 

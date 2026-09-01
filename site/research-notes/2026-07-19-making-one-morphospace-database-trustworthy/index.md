@@ -8,7 +8,7 @@ toc: true
 
 # How to retire 281 GB without losing the experiment
 
-_19 July–1 August 2026 · Data-integrity investigation. The source archive was neither deleted nor rewritten._
+_19 July–1 August 2026 · Data-integrity investigation._
 
 Morphospace runs had accumulated into a 281 GB archive, and we wanted to replace it with one compact database containing the material still needed for analysis and replay. That required more than copying rows. The source archive could be retired only after the replacement had demonstrated that it preserved the necessary provenance and replay data.
 
