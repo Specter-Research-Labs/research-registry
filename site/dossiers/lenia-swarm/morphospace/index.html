@@ -8,14 +8,14 @@
     <title>The Geometry of a Synthetic Morphospace | SPECTER Labs</title>
     <meta
       name="description"
-      content="Flow Lenia, EmbryoMaker, and fish share persistent loop structure. A fish-near synthetic neighborhood shows a group-level difference in rule state, but no dense specimen witness yet."
+      content="A shared morphology map compares Flow Lenia with embryo and fish forms, then tests what shape leaves out when coherent organisms meet an obstacle."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SPECTER Labs" />
     <meta property="og:title" content="The Geometry of a Synthetic Morphospace" />
     <meta
       property="og:description"
-      content="Flow Lenia, EmbryoMaker, and fish share persistent loop structure. A fish-near synthetic neighborhood shows a group-level difference in rule state, but no dense specimen witness yet."
+      content="A shared morphology map compares Flow Lenia with embryo and fish forms, then tests what shape leaves out when coherent organisms meet an obstacle."
     />
     <meta
       property="og:url"
@@ -41,7 +41,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="/assets/report.css?v=20260901-editorial" />
+    <link rel="stylesheet" href="/assets/report.css?v=20260902-report-7" />
   </head>
   <body class="report-page report-theme-morphospace">
     <div class="site-shell report-shell">
@@ -70,46 +70,48 @@
       <main class="site-main report-main">
         <nav class="report-nav" aria-label="Synthetic morphospace pages">
           <a href="/dossiers/lenia-swarm/morphospace/" aria-current="page">Overview</a>
-          <a href="#result-map">Results</a>
-          <a href="/dossiers/lenia-swarm/fiber-theory/">Fiber theory</a>
+          <a href="#result-map">Map and loops</a>
+          <a href="#result-fish-near">Fish-near forms</a>
+          <a href="#result-response">Obstacle result</a>
           <a href="/dossiers/lenia-swarm/compendium/">Compendium</a>
         </nav>
 
         <header class="report-hero">
           <div class="report-kicker">Flow Lenia / synthetic morphospace</div>
-          <h1>How much of a body survives its description?</h1>
+          <h1>What does shape fail to tell us?</h1>
           <p class="report-hero-dek">
-            Flow Lenia lets us see a body, the rule that produced it, and how both
-            change under intervention. We put 25,167 synthetic specimens in the same
-            twelve-dimensional shape map as 859 EmbryoMaker snapshots and 232 fish
-            outlines. We then asked whether the same geometric structures appear
-            across all three systems, and whether a path that returns to the same
-            measured shape also returns to the same generating rule.
+            We placed 25,167 Flow Lenia specimens, 859 EmbryoMaker snapshots, and
+            232 fish outlines in one map built from the same twelve measurements.
+            Unlike the biological datasets, Lenia also gives us the rule that produced
+            each body. We can therefore ask where shape is an adequate description,
+            where different rules land near the same measured form, and whether
+            that missing information changes how a body responds to an obstacle.
           </p>
         </header>
 
         <section class="report-panel" aria-labelledby="report-lead-title">
           <div class="report-heading">
             <h2 id="report-lead-title">
-              A closed path in shape space can leave the rule changed
+              Shape is informative, but it is not a complete state
             </h2>
             <p class="report-dek">
-              The same twelve measurements find persistent loops in Flow Lenia,
-              EmbryoMaker, and fish outlines. Inside Lenia, one 256-specimen
-              neighborhood is unusually close to fish and shows a larger rule-state
-              mismatch than the wider corpus after movement around closed paths in the
-              map. The strict result remains narrow: the joint permutation is about
-              p = 0.094, and none of the five fish-near candidates passed both dense
-              controls.
+              All three datasets contain persistent gaps surrounded by observed forms.
+              In Lenia, those gaps let us trace closed paths through nearby bodies and
+              compare the rule states at the beginning and end. A small minority of
+              paths return to the same measured neighborhood without cleanly returning
+              to the same rule state. Five independently selected coherent movers also
+              respond differently to matched obstacle encounters. This gives us a
+              precise next test: measure how well morphology predicts response, then
+              ask whether the attached rule state explains the remaining differences.
             </p>
           </div>
 
           <div class="report-card-footer">
             <div class="report-actions">
               <a class="report-button report-button--primary" href="#result-map">
-                Follow the evidence
+                How the map works
               </a>
-              <a class="report-button" href="#result-fish-near">See the specimens</a>
+              <a class="report-button" href="#result-response">See the obstacle result</a>
             </div>
 
             <details class="report-receipt">
@@ -117,20 +119,26 @@
               <dl>
                 <div>
                   <dt>Analysis dates</dt>
-                  <dd>2026-05-19 and 2026-05-21</dd>
+                  <dd>2026-05-19, 2026-05-21, and 2026-09-02</dd>
                 </div>
                 <div>
                   <dt>Evidence</dt>
-                  <dd>Cross-cohort morphology and transport synthesis</dd>
+                  <dd>Cross-cohort morphology, transport, and coherent-organism perturbation</dd>
                 </div>
                 <div>
-                  <dt>Narrative source</dt>
-                  <dd>May 2026 analysis draft</dd>
+                  <dt>Morphology source</dt>
+                  <dd>May 2026 common-morphology and localized-loop analysis</dd>
                 </div>
                 <div>
-                  <dt>Source SHA-256</dt>
+                  <dt>Morphology source SHA-256</dt>
                   <dd>
                     <code>6ca1b7ce43382f0f0904e15e99d7623d9dff5f9050dfe7e4d79c7ae46855a5ec</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Obstacle outcomes SHA-256</dt>
+                  <dd>
+                    <code>a9e3af18abce9d13efb6f7f4308ffecb550fe8d693ae43c3529399c17785d7ac</code>
                   </dd>
                 </div>
               </dl>
@@ -140,12 +148,12 @@
 
         <section class="report-metrics" aria-labelledby="report-metrics-title">
           <div class="report-heading">
-            <h2 id="report-metrics-title">Three systems, measured the same way</h2>
+            <h2 id="report-metrics-title">One coordinate system, three kinds of body</h2>
             <p>
-              Every specimen is described by the same twelve normalized measurements.
-              This lets us compare the datasets directly, while also setting a clear
-              limit on what the map can know: two states can occupy the same coordinates
-              when they differ in a rule variable that the measurements omit.
+              Every specimen is reduced to the same twelve normalized measurements of
+              form and motion. Distances therefore mean the same thing across the three
+              datasets. But the reduction discards information. If two bodies differ
+              only in an unmeasured rule variable, the map places them together.
             </p>
           </div>
 
@@ -172,20 +180,20 @@
         <section class="report-result" id="result-map" aria-labelledby="result-map-title">
           <div class="report-result-copy">
             <div class="report-kicker">01 / From rules to measured forms</div>
-            <h2 id="result-map-title">Each point still has a rule behind it</h2>
+            <h2 id="result-map-title">The map records form and leaves the rule attached</h2>
             <p>
-              Each Flow Lenia specimen begins with a particular rule set. We run it,
-              measure the body that forms, and place that body in the twelve-dimensional
-              map. Different rules can land close together because the measurements
-              record shape and motion rather than every internal parameter. Keeping the
-              rule attached to each point lets us distinguish bodies that merely look
-              alike from bodies produced in the same way.
+              Each Flow Lenia specimen begins with a known rule set. We run the rule,
+              measure the resulting body, and place it in the twelve-dimensional map.
+              Different rules can land close together because the coordinates describe
+              the result, not every parameter that produced it. Since Lenia preserves
+              that provenance, we can compare nearby bodies both as forms and as
+              products of particular rules.
             </p>
             <div class="report-reading">
               <p>
-                Fish and embryo datasets give us shapes without their generating rules.
-                Lenia gives us both. It therefore shows where a morphology map merges
-                bodies that resemble one another but were produced differently.
+                Fish and embryo datasets provide forms without a complete generative
+                state. Lenia provides both. This makes the synthetic system useful for
+                measuring what a morphology-only comparison necessarily omits.
               </p>
             </div>
           </div>
@@ -219,21 +227,22 @@
         <section class="report-result" id="result-loops" aria-labelledby="result-loops-title">
           <div class="report-result-copy">
             <div class="report-kicker">02 / Persistent loops</div>
-            <h2 id="result-loops-title">Loop structure appears in all three datasets</h2>
+            <h2 id="result-loops-title">All three datasets leave structured gaps in form space</h2>
             <p>
-              A loop is a region of occupied shapes surrounding a region the system does
-              not visit. The longest loop in the broad Lenia sample remains open as we
-              widen each point's neighborhood by 2.78 normalized units. In exact dense
-              runs, the single-family Lenia control reaches 0.80, fish reaches 0.64, and
-              EmbryoMaker reaches 0.29. Interval counts cannot be compared across samples
-              of different sizes, but the same calculation finds nontrivial holes in all
-              three collections of shapes.
+              Here a loop means that observed forms surround a region the dataset does
+              not occupy. As we widen the distance that counts as “nearby,” small gaps
+              close quickly and larger ones persist. The strongest loop in the broad
+              Lenia sample persists across 2.78 normalized distance units in a
+              4,096-landmark approximation. In exact dense runs, the single-family
+              Lenia control reaches 0.80, fish reaches 0.64, and EmbryoMaker reaches
+              0.29. The number of detected loops depends on sample size, but the same
+              calculation finds durable gaps in all three datasets.
             </p>
             <div class="report-reading">
               <p>
-                A loop gives us a return path around a gap. We can follow it back to the
-                same measured neighborhood without retracing our steps, then check
-                whether the rule state returned too.
+                In Lenia, a loop is also an experimental route. We can move through
+                nearby forms around the gap, return to the starting neighborhood by a
+                different path, and ask whether the generating rule returned as well.
               </p>
             </div>
           </div>
@@ -271,22 +280,21 @@
         >
           <div class="report-result-copy">
             <div class="report-kicker">03 / A fish-near neighborhood</div>
-            <h2 id="result-fish-title">One Lenia neighborhood is unusually close to fish</h2>
+            <h2 id="result-fish-title">A region selected without fish data is unusually fish-near</h2>
             <p>
-              We chose a patch of 256 Lenia specimens from the synthetic cloud's own loop
-              geometry before comparing it with either external dataset. Within this
-              patch, the median distance to fish is 3.30 instead of 5.90 for the broad
-              Lenia sample, while the median distance to EmbryoMaker rises from 4.46 to
-              11.98. Every specimen in the patch flips the combined
-              fish-versus-EmbryoMaker score, and random patches do this about once in a
+              We selected a patch of 256 Lenia specimens using only the synthetic
+              cloud’s loop geometry. We then compared it with the external datasets.
+              Its median distance to fish is 3.30 rather than 5.90 for the broad Lenia
+              sample, while its median distance to EmbryoMaker rises from 4.46 to 11.98.
+              All 256 specimens reverse the broad sample’s fish-versus-EmbryoMaker
+              ordering. Random patches produce a shift this large about once in a
               thousand permutations.
             </p>
             <div class="report-reading">
               <p>
-                The patch was selected from Lenia's geometry rather than its resemblance
-                to fish. Its elongated, directional bodies entered the comparison
-                afterward, so the agreement between geometry and appearance comes from
-                two independent measurements.
+                No fish measurement was used to find the patch. Its fish proximity was
+                measured only after selection, so the result did not come from searching
+                the Lenia archive for fish-shaped specimens.
               </p>
             </div>
           </div>
@@ -307,35 +315,35 @@
         >
           <div class="report-result-copy">
             <div class="report-kicker">04 / Closing the loop</div>
-            <h2 id="result-transport-title">The shape returns more often than the rule</h2>
+            <h2 id="result-transport-title">Some closed paths in shape remain open in rule space</h2>
             <p>
-              We found 4,802 transport groups where a trajectory could be followed around
-              a closed path in the measured map. Of these, 109 show more rule-state
-              mismatch than their matched controls at all three scales under both closure
-              measures. The combined count is only marginal under permutation, at about
-              p = 0.094, although each measure separately has a stronger tail: about
-              p = 0.008 for state and p = 0.0002 for ratio. Dense reruns leave one joint
-              survivor among the five broad-corpus candidates and none among the five
-              candidates from the fish-near patch.
+              We found 4,802 groups in which nearby Lenia specimens trace a closed path
+              through the measured map. In 109 groups, the ending rule state differs
+              from the start more than in matched out-and-back controls at all three
+              tested scales and under both closure measures. The joint count is only
+              marginal under permutation (p ≈ 0.094), although the state-only and
+              ratio-only tails are stronger (p ≈ 0.008 and p ≈ 0.0002). Dense reruns
+              leave one joint survivor among five broad-corpus candidates and none
+              among five candidates from the fish-near patch.
             </p>
 
             <div class="report-boundary">
-              <strong>The result is a tail, not a general rule</strong>
+              <strong>The signal is rare and not yet stable at specimen level</strong>
               <p>
-                Some closed paths return to the same measured shape while leaving a
-                difference in rule state, and the fish-near neighborhood shows more of
-                this mismatch at the group level. We do not yet have a dependable
-                per-specimen witness inside the patch because none of its five dense
-                candidates passed both controls.
+                The cohort contains more rule-state residue than its controls, but the
+                strict joint test is weak and dense validation removes most candidates.
+                The result supports a narrow claim: morphology can hide rule-state
+                differences in this corpus. It does not establish a general transport
+                law or a dependable witness inside the fish-near patch.
               </p>
             </div>
 
             <div class="report-reading">
               <p>
-                The twelve measurements can place two states together even when their
-                rules differ. If that hidden difference later predicts a response to an
-                obstacle, then it matters outside the measurement procedure because it
-                changes what the body can do.
+                The obstacle assay establishes that coherent bodies have measurable,
+                multidimensional responses. It does not yet connect those responses to
+                transport residue. The next test is whether shape-near bodies respond
+                differently because their attached rule states differ.
               </p>
             </div>
           </div>
@@ -366,46 +374,114 @@
           </figure>
         </section>
 
+        <section
+          class="report-result"
+          id="result-response"
+          aria-labelledby="result-response-title"
+        >
+          <div class="report-result-copy">
+            <div class="report-kicker">05 / First perturbation result</div>
+            <h2 id="result-response-title">Five coherent movers meet matched obstacles differently</h2>
+            <p>
+              We searched later persistence and locomotion campaigns rather than
+              choosing specimens by appearance. Of 626 exact long replays, 184 remained
+              coherent through time and nine also moved at least half a body diameter.
+              Five qualified for a paired assay. For each trial, the obstacle was placed
+              from the unperturbed trajectory so that the body would encounter it.
+              All fifteen exposed branches made contact, producing modest deflections,
+              near-arrests, large turns, one near-reversal, and different changes in
+              connected-body coherence.
+            </p>
+            <div class="report-reading">
+              <p>
+                Across the fifteen contacts, median forward progress was 18% of the
+                matched sham and the median heading difference was 26°. Yet every branch
+                conserved its total matter within numerical drift. Contact usually
+                changed motion or organization rather than simply destroying the body,
+                which is why “swerve or die” is too crude an outcome measure.
+              </p>
+            </div>
+          </div>
+
+          <div class="report-metric-grid" aria-label="Coherent obstacle-response cohort">
+            <div class="report-metric"><strong>626</strong><span>later specimens replayed for 3,600 steps</span></div>
+            <div class="report-metric"><strong>184</strong><span>temporally consistent, coherent individuals</span></div>
+            <div class="report-metric"><strong>9</strong><span>also moved at least half a body diameter</span></div>
+            <div class="report-metric"><strong>5</strong><span>produced clean paired obstacle encounters</span></div>
+          </div>
+
+          <figure class="report-figure report-figure--data">
+            <div
+              class="report-figure-scroll"
+              tabindex="0"
+              aria-label="Scrollable obstacle response comparison"
+            >
+              <img
+                src="/assets/blog/lenia-morphospace-obstacle-response/fig-response-modes.svg"
+                alt="Five coherent movers compared by temporal individuality, progress relative to sham, heading change, and coherence change."
+              />
+            </div>
+            <figcaption>
+              <span>
+                The two bodies with the highest temporal-individuality scores bent and
+                continued. The other three turned more sharply or stalled. This ordering
+                is a hypothesis from five organisms, not a fitted relationship.
+              </span>
+              <a
+                class="report-figure-link"
+                href="/assets/blog/lenia-morphospace-obstacle-response/fig-response-modes.svg"
+              >Open full-size</a>
+            </figcaption>
+          </figure>
+        </section>
+
         <section class="report-synthesis" aria-labelledby="report-interpretation-title">
           <h2 id="report-interpretation-title">
-            Transport finds rule differences inside the same measured shape
+            The map captures resemblance; the rule may explain divergence
           </h2>
           <p>
-            The same measurements recover structure shared across all three datasets.
-            They also reveal where distinct rule states collapse onto one measured form.
-            The map is useful for finding broad geometric organization, but it may be too
-            coarse to predict how a particular specimen will respond.
+            The same calculation finds persistent gaps among synthetic bodies, a
+            developmental model, and fish outlines. It also identifies a Lenia region
+            that is fish-near despite being selected without fish data. Within Lenia,
+            however, nearby measured forms can still carry different rule states. The
+            map is useful both for the similarities it captures and for making its own
+            information loss measurable.
           </p>
           <p>
-            The fish-near patch is where this distinction can be tested. It combines a
-            lower distance to fish with an enriched difference in rule state, although
-            neither measure was used to select the other. Dense validation keeps the
-            claim precise: the enrichment belongs to the neighborhood, while a reliable
-            per-specimen witness still has to be found.
+            The obstacle result sharpens the behavioral question. Progress, turning,
+            lateral displacement, and coherence do not move together, even when matter
+            is conserved. In the ten side-placement trials, four bodies moved away from
+            the obstacle side and six moved toward it. There is no evidence here for a
+            generic avoidance reflex. The response more plausibly depends on how body
+            shape, internal flow, handedness, and obstacle placement interact.
           </p>
           <p>
-            If the obstacle test succeeds, one point on the map can contain several
-            future responses. The current shape locates the body. Its rule state would
-            help predict what the body does next.
+            One tentative pattern is worth pursuing. The two bodies with the highest
+            temporal-individuality scores retained about 30% of sham progress and turned
+            only 12–13°. Three bodies nearer the inclusion threshold retained 9–17% and
+            turned more sharply. If this pattern survives a larger, lineage-held-out
+            assay, temporal coherence may be measuring mechanical robustness as well as
+            persistence. If it does not, the rule state may explain the difference that
+            morphology and the current individuality score miss.
           </p>
         </section>
 
         <aside class="report-panel report-panel--next" aria-labelledby="report-next-title">
           <div>
             <div class="report-kicker">Next experiment</div>
-            <h2 id="report-next-title">Make the map predict an unseen response</h2>
+            <h2 id="report-next-title">Test whether shape predicts recovery</h2>
             <p>
-              Place an occluded obstacle in front of specimens from the existing
-              compendium and record whether they turn away or die on contact. Then test,
-              without changing the twelve measurements, whether the swervers occupy a
-              connected region of the current map. If visually similar neighbors split by
-              outcome, we can ask whether their remaining rule-state difference explains
-              it.
+              Expand the coherent-mover cohort, mirror each starting body, vary obstacle
+              size and strength, and remove the obstacle after contact. Then predict
+              progress, signed lateral displacement, turning, coherence loss, and
+              recovery time from the existing twelve measurements. Holding out entire
+              rule lineages will distinguish a morphology-response relation from a model
+              that merely recognizes families it has already seen.
             </p>
           </div>
           <div class="report-actions">
-            <a class="report-button report-button--primary" href="#result-map">
-              Review the evidence
+            <a class="report-button report-button--primary" href="/dossiers/lenia-swarm/morphospace/obstacle-response/">
+              Read the obstacle test
             </a>
             <a class="report-button" href="/dossiers/lenia-swarm/compendium/">
               Open the compendium
@@ -414,9 +490,10 @@
         </aside>
 
         <p class="report-provenance">
-          This page synthesizes the May 2026 analysis draft. Its checksum binds
-          that narrative source rather than the underlying raw experiments; no
-          experiment was rerun to produce this overview.
+          This page synthesizes the May 2026 morphology and transport analyses with the
+          coherent-organism obstacle assay completed on 2 September 2026. The new assay
+          contributes five organisms and fifteen exposed branches; its claims are
+          descriptive, and no morphology-response predictor has yet been fitted.
         </p>
       </main>
 

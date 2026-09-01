@@ -27,11 +27,11 @@ func bodyLocomotionGrowthTerm(_ value: Float) -> Float {
     return 1.0 / (1.0 + 2.0 * deviation)
 }
 
-/// Specter-internal body-locomotion screening heuristic (not paper-defined):
-/// reward coherent, mass-stable, morphologically-organism-like displacement.
-/// Single source of truth shared by the ES fitness path (CandidateMeasurement)
-/// and the post-hoc scoring path (SimulationMetrics) so the persisted score and
-/// any recomputation cannot drift.
+/// Specter-internal candidate-generation heuristic (not paper-defined): reward
+/// endpoint displacement with short-horizon morphology retention. This is not
+/// temporal individuality; exported candidates require an independent long
+/// replay before admission. The ES and post-hoc paths share this implementation
+/// so persisted scores and recomputation cannot drift.
 func bodyLocomotionScore(
     displacement: Float,
     translatedShapeOverlap: Float,

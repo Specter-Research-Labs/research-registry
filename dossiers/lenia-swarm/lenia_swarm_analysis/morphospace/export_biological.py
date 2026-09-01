@@ -75,7 +75,10 @@ def _state_rows(
                creature_states_vw.polarity_stability_score,
                creature_states_vw.enclosure_persistence_score,
                creature_states_vw.whole_body_motion_score,
-               creature_states_vw.deformation_without_dissolution_score
+               creature_states_vw.deformation_without_dissolution_score,
+               creature_states_vw.localization_score,
+               creature_states_vw.extent_stability_score,
+               creature_states_vw.temporal_individuality_score
         FROM creature_states_vw
         WHERE creature_states_vw.study_id = ?
         ORDER BY creature_states_vw.state_id
@@ -133,6 +136,9 @@ def _state_rows(
                     "enclosurePersistenceScore": row[23],
                     "wholeBodyMotionScore": row[24],
                     "deformationWithoutDissolutionScore": row[25],
+                    "localizationScore": row[26],
+                    "extentStabilityScore": row[27],
+                    "temporalIndividualityScore": row[28],
                 },
             }
         )

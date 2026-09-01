@@ -1716,7 +1716,8 @@ def test_morphospace_biological_derivations_and_export(tmp_path: Path) -> None:
         assert baseline_state_count == 2
         creature_state_row = connection.execute(
             """
-            SELECT coherence_class, organization_class, creature_bucket, coherence_mean
+            SELECT coherence_class, organization_class, creature_bucket, coherence_mean,
+                   localization_score, extent_stability_score, temporal_individuality_score
             FROM creature_states_vw
             WHERE study_id = ? AND context_kind = 'baseline'
             ORDER BY specimen_id
@@ -1729,6 +1730,9 @@ def test_morphospace_biological_derivations_and_export(tmp_path: Path) -> None:
         assert creature_state_row[1] is not None
         assert creature_state_row[2] is not None
         assert isinstance(creature_state_row[3], float)
+        assert 0.0 <= creature_state_row[4] <= 1.0
+        assert 0.0 <= creature_state_row[5] <= 1.0
+        assert 0.0 <= creature_state_row[6] <= 1.0
         context_trial_count_row = connection.execute(
             "SELECT COUNT(*) FROM context_trials WHERE study_id = ?",
             [focal_study_id],

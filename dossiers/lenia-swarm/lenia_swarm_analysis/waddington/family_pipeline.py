@@ -90,7 +90,7 @@ def _runnable_configs() -> list[tuple[str, Path]]:
             sp = (c.get("init") or {}).get("state_patch")
             full = sp and grid and max(sp.get("width", 0), sp.get("height", 0)) >= 0.8 * grid
             if full:
-                continue  # init fills the field -> global pattern, not a localized organism
+                continue  # init fills the field -> global pattern, not a localized individual
             is_patchfix = "patchfix" in n
             key = f.stem.replace("-patchfix", "").replace("-mlx", "")
             if key not in cands or (is_patchfix and not cands[key][0]):

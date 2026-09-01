@@ -952,6 +952,11 @@ public final class FlowLeniaBatched: @unchecked Sendable {
     }
 
     public func step(_ ABatch: MLXArray) -> MLXArray {
+        // The compiled closure captures the potential present at initialization.
+        // Dynamic assay potentials therefore use the equivalent uncompiled path.
+        if wallPotential != nil {
+            return stepUncompiled(ABatch)
+        }
         if config.implementation.mode == "qd24_additive_v1" {
             let centered = recenterAdditive ? applyAdditiveLastShift(ABatch) : ABatch
             let flowInputs = [centered, kernels.fK, kernels.m, kernels.s,
@@ -1439,7 +1444,7 @@ public final class FlowLeniaParamsBatched: @unchecked Sendable {
     public let config: BatchedConfig
     public let kernels: CompiledKernels
     public let posGrid: MLXArray
-    public let wallPotential: MLXArray?
+    public var wallPotential: MLXArray?
     private let mixMode: String
     private let mixSeed: Int?
     private let useTorus: Bool

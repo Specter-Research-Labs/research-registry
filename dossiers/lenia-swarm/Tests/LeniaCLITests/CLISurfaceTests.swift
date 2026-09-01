@@ -53,6 +53,7 @@ final class CLISurfaceTests: XCTestCase {
                 "map-elites",
                 "sensorimotor-flowlenia",
                 "evaluate",
+                "obstacle-response",
             ])
         )
     }

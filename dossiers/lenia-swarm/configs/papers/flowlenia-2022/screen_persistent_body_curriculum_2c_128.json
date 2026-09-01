@@ -1,5 +1,5 @@
 {
-  "output_dir": "artifacts/flow-map-elites/screen-organismness-curriculum-2c-128",
+  "output_dir": "artifacts/flow-map-elites/screen-persistent-body-curriculum-2c-128",
   "generations": 4,
   "population": 128,
   "sigma": 0.08,
@@ -7,9 +7,11 @@
   "seed": 202605061,
   "steps": 700,
   "fitness": {
-    "objective": "organismness",
+    "objective": "coherent_transport",
     "target_step": 700,
     "angle_threshold": 0.0,
+    "minimum_displacement": 0.0,
+    "translated_shape_overlap_min": 0.70,
     "component_count_penalty": 0.08,
     "component_count_max": 2.0,
     "largest_component_fraction_reward": 0.12,
@@ -18,7 +20,7 @@
     "moment_density_reward": 0.02,
     "occupied_fraction_min": 0.03,
     "occupied_fraction_max": 0.16,
-    "organismness_penalty": 0.30,
+    "constraint_penalty": 0.30,
     "morphology_threshold": 0.03
   },
   "include_parent": true,

@@ -4,7 +4,12 @@ import json
 
 from duckdb import DuckDBPyConnection
 
-from .creature_signals import creature_labels, derive_creature_signal_axes
+from .creature_signals import (
+    TEMPORAL_INDIVIDUALITY_COMPONENT_AXES,
+    TEMPORAL_INDIVIDUALITY_MIN_SCORE,
+    creature_labels,
+    derive_creature_signal_axes,
+)
 from .warehouse import replace_creature_signal_axes, upsert_creature_state_labels
 
 
@@ -134,6 +139,13 @@ def derive_creature_signals(connection: DuckDBPyConnection, *, study_id: str | N
                 "sourceStudyId": state_study_id,
                 "sampleCount": len(trace_samples),
                 "signalAxes": sorted(signal_axes),
+                "individualityClass": labels["individuality_class"],
+                "individualityDefinition": (
+                    "temporally consistent, spatially localized coherent individual"
+                ),
+                "individualityScoreDefinition": "minimum of normalized persistence axes",
+                "individualityScoreAxes": list(TEMPORAL_INDIVIDUALITY_COMPONENT_AXES),
+                "individualityMinimumScore": TEMPORAL_INDIVIDUALITY_MIN_SCORE,
             },
         )
         updated += 1

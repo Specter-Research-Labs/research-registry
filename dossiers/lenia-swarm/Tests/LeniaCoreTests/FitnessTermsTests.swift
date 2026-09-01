@@ -21,7 +21,7 @@ final class FitnessTermsTests: XCTestCase {
         XCTAssertEqual(bodyLocomotionGrowthTerm(-1), 0, accuracy: 1e-6)
     }
 
-    func testBodyLocomotionScorePerfectOrganismEqualsDisplacement() {
+    func testBodyLocomotionScorePerfectBodyEqualsDisplacement() {
         let score = bodyLocomotionScore(
             displacement: 2.0,
             translatedShapeOverlap: 1.0,

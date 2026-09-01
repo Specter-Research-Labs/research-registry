@@ -165,6 +165,7 @@ struct DiscoverCommands: AsyncParsableCommand {
         subcommands: [
             LocalCommand.self,
             EvaluateCommand.self,
+            ObstacleResponseCommand.self,
             EvolveCommand.self,
             FlowMapElitesCommand.self,
             MutateCommand.self,

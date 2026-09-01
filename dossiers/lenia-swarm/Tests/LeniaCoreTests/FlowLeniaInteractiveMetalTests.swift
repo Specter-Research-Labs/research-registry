@@ -133,6 +133,95 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
         XCTAssertGreaterThan(metal.mass.asArray(Float.self).reduce(0, +), 0)
         XCTAssertLessThan(maxAbsDifference(metal.mass, mlx.mass), 1e-3)
     }
+
+    func testDynamicHardCircularObstacleMasksBothBackendsAndCanBeCleared() throws {
+        for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
+            let simulator = FlowLeniaInteractiveSimulator(
+                runtimeConfig: interactiveRuntimeConfig(backend: backend)
+            )
+            simulator.setHardCircularObstacle(centerX: 8, centerY: 8, radius: 3)
+
+            let mask = try XCTUnwrap(simulator.wallMaskMap()).asArray(Float.self)
+            XCTAssertEqual(mask[8 * 32 + 8], 0, accuracy: 1e-6)
+            XCTAssertEqual(mask[0], 1, accuracy: 1e-6)
+
+            let initial = simulator.makeInitialState()
+            let stepped = simulator.step(initial)
+            let mass = stepped.mass.asArray(Float.self)
+            for x in 6...10 {
+                for y in 6...10 where hypot(Float(x - 8), Float(y - 8)) <= 3 {
+                    let cell = x * 32 + y
+                    XCTAssertEqual(mass[cell * 2], 0, accuracy: 1e-6)
+                    XCTAssertEqual(mass[cell * 2 + 1], 0, accuracy: 1e-6)
+                }
+            }
+
+            simulator.clearHardObstacle()
+            XCTAssertNil(simulator.wallMaskMap())
+        }
+    }
+
+    func testDynamicHardObstacleDoesNotContaminateShamContinuation() {
+        let config = interactiveRuntimeConfig(backend: .metalFull)
+        let simulator = FlowLeniaInteractiveSimulator(runtimeConfig: config)
+        let checkpoint = simulator.step(simulator.makeInitialState(), count: 3)
+
+        simulator.clearHardObstacle()
+        let firstSham = simulator.step(checkpoint, count: 2)
+        simulator.setHardCircularObstacle(centerX: 8, centerY: 8, radius: 3)
+        _ = simulator.step(checkpoint, count: 2)
+        simulator.clearHardObstacle()
+        let secondSham = simulator.step(checkpoint, count: 2)
+
+        XCTAssertLessThan(maxAbsDifference(firstSham.mass, secondSham.mass), 1e-6)
+    }
+
+    func testDynamicCircularWallPotentialPreservesBranchStateAndClearsAcrossBackends() throws {
+        for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
+            let simulator = FlowLeniaInteractiveSimulator(
+                runtimeConfig: interactiveRuntimeConfig(backend: backend, embedded: true)
+            )
+            let checkpoint = simulator.step(simulator.makeInitialState(), count: 3)
+            let checkpointMass = checkpoint.mass.asArray(Float.self).reduce(0, +)
+            let checkpointParams = try XCTUnwrap(checkpoint.params)
+
+            simulator.setCircularWallPotential(centerX: 16, centerY: 16, radius: 3, height: 30)
+            XCTAssertEqual(checkpoint.mass.asArray(Float.self).reduce(0, +), checkpointMass, accuracy: 1e-6)
+            XCTAssertLessThan(maxAbsDifference(try XCTUnwrap(checkpoint.params), checkpointParams), 1e-6)
+            let potentialStep = simulator.step(checkpoint)
+
+            simulator.clearCircularWallPotential()
+            let shamStep = simulator.step(checkpoint)
+            XCTAssertGreaterThan(maxAbsDifference(potentialStep.mass, shamStep.mass), 1e-6)
+            let potentialMass = potentialStep.mass.asArray(Float.self).reduce(0, +)
+            XCTAssertEqual(potentialMass, checkpointMass, accuracy: checkpointMass * 0.01)
+
+            let firstSham = simulator.step(checkpoint, count: 2)
+            simulator.setCircularWallPotential(centerX: 16, centerY: 16, radius: 3, height: 30)
+            _ = simulator.step(checkpoint, count: 2)
+            simulator.clearCircularWallPotential()
+            let secondSham = simulator.step(checkpoint, count: 2)
+
+            XCTAssertLessThan(maxAbsDifference(firstSham.mass, secondSham.mass), 1e-6)
+            XCTAssertLessThan(
+                maxAbsDifference(try XCTUnwrap(firstSham.params), try XCTUnwrap(secondSham.params)),
+                1e-6
+            )
+        }
+    }
+
+    func testDynamicCircularWallPotentialAffectsNonEmbeddedMLXPath() {
+        let simulator = FlowLeniaInteractiveSimulator(
+            runtimeConfig: interactiveRuntimeConfig(backend: .mlx)
+        )
+        let checkpoint = simulator.step(simulator.makeInitialState(), count: 3)
+        simulator.setCircularWallPotential(centerX: 16, centerY: 16, radius: 3, height: 30)
+        let potential = simulator.step(checkpoint)
+        simulator.clearCircularWallPotential()
+        let sham = simulator.step(checkpoint)
+
+        XCTAssertGreaterThan(maxAbsDifference(potential.mass, sham.mass), 1e-6)
+    }
 }
 
 private func interactiveRuntimeConfig(

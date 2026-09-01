@@ -87,7 +87,7 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
             occupiedFractionMin: 0.4,
             occupiedFractionMax: 0.3,
             occupiedGrowthMax: 1.1,
-            organismnessPenalty: 0.12,
+            constraintPenalty: 0.12,
             morphologyThreshold: 0.03
         )
     }
@@ -165,26 +165,24 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
         let directed = makeEngine(objective: "directed_motion").fitnessValue(from: fullMeasurement())
         let bodyLoco = makeEngine(objective: "body_locomotion").fitnessValue(from: fullMeasurement())
         let coherent = makeEngine(objective: "coherent_transport").fitnessValue(from: fullMeasurement())
-        let organism = makeEngine(objective: "organismness").fitnessValue(from: fullMeasurement())
 
         // Goldens captured from the pre-refactor implementation.
         XCTAssertEqual(directed, GOLDEN_DIRECTED, accuracy: 1e-4)
         XCTAssertEqual(bodyLoco, GOLDEN_BODY, accuracy: 1e-4)
         XCTAssertEqual(coherent, GOLDEN_COHERENT, accuracy: 1e-4)
-        XCTAssertEqual(organism, GOLDEN_ORGANISM, accuracy: 1e-4)
     }
 
-    func testOrganismnessTemporalGuardsCaptureRequiredMeasurements() throws {
+    func testCoherentTransportConstraintGuardsCaptureRequiredMeasurements() throws {
         let fitness = FitnessConfig(
-            objective: "organismness",
+            objective: "coherent_transport",
             targetStep: 2,
             angleThreshold: 0.0,
             translatedShapeOverlapMin: 0.0,
             occupiedGrowthMax: 10.0,
-            organismnessPenalty: 1.0,
+            constraintPenalty: 1.0,
             morphologyThreshold: 0.03
         )
-        let engine = makeEngine(objective: "organismness", fitness: fitness)
+        let engine = makeEngine(objective: "coherent_transport", fitness: fitness)
         let candidates = engine.sampleMAPElitesInitialCandidates(
             count: 1,
             sigma: 0.0,
@@ -201,4 +199,3 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
 private let GOLDEN_DIRECTED: Float = 31.602081
 private let GOLDEN_BODY: Float = 4.8315244
 private let GOLDEN_COHERENT: Float = 9.513022
-private let GOLDEN_ORGANISM: Float = 7.18897
