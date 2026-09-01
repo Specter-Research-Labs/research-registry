@@ -186,10 +186,7 @@ fn research_note_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
         });
     }
 
-    let mut excludes = vec![
-        "research-notes/index.html".to_owned(),
-        "research-notes/pandoc-template.html".to_owned(),
-    ];
+    let mut excludes = vec!["research-notes/pandoc-template.html".to_owned()];
     let mut remote_prunes = Vec::new();
     for slug in draft_slugs {
         let relative = format!("research-notes/{slug}/");
@@ -1139,7 +1136,7 @@ release: "draft"
     }
 
     #[test]
-    fn mixed_research_notes_exclude_only_drafts_and_staging_files() {
+    fn mixed_research_notes_exclude_only_drafts_and_template() {
         let root = tempdir().unwrap();
         let root = Utf8Path::from_path(root.path()).unwrap();
         write(
@@ -1170,7 +1167,6 @@ release: "published"
             plan.excludes,
             vec![
                 "research-notes/draft-note/".to_owned(),
-                "research-notes/index.html".to_owned(),
                 "research-notes/pandoc-template.html".to_owned(),
             ]
         );
