@@ -4,7 +4,7 @@
     "A": 15,
     "B": 13,
     "D": 6,
-    "N": 5
+    "N": 15
   },
   "series": {
     "A-001": {
@@ -146,6 +146,46 @@
     "N-004": {
       "slug": "from-structural-realism-to-platonic-space",
       "title": "Structural Realism Is The Guardrail"
+    },
+    "N-005": {
+      "slug": "2026-03-27-moving-a-theorem-prover-onto-new-hardware",
+      "title": "What it took to move a theorem prover off the Mac"
+    },
+    "N-006": {
+      "slug": "2026-04-02-wonton-controls-exposed-a-reproducibility-problem",
+      "title": "When an inert control refused to stay inert"
+    },
+    "N-007": {
+      "slug": "2026-05-08-a-brain-model-could-not-measure-lifelikeness",
+      "title": "A brain model could not tell us whether a Lenia creature looked alive"
+    },
+    "N-008": {
+      "slug": "2026-05-25-the-same-theorem-does-not-imply-the-same-proof",
+      "title": "One theorem, several proofs"
+    },
+    "N-009": {
+      "slug": "2026-05-27-a-map-of-body-shape-hid-the-organism-underneath",
+      "title": "A map of body shape hid most of the organism underneath"
+    },
+    "N-010": {
+      "slug": "2026-06-10-taking-away-one-move-revealed-proof-alternatives",
+      "title": "Taking away one move revealed which proofs had alternatives"
+    },
+    "N-011": {
+      "slug": "2026-06-15-from-developmental-landscapes-to-an-anatomical-compiler",
+      "title": "Building a map through development—and back again"
+    },
+    "N-012": {
+      "slug": "2026-07-19-making-one-morphospace-database-trustworthy",
+      "title": "How to retire 281 GB without losing the experiment"
+    },
+    "N-013": {
+      "slug": "2026-08-05-the-first-fission-screen-mostly-found-stripes-and-dust",
+      "title": "Before studying fission, we had to learn what was not fission"
+    },
+    "N-014": {
+      "slug": "2026-08-16-development-changes-what-the-same-perturbation-can-do",
+      "title": "Why the same disturbance matters less later in development"
     }
   },
   "docs": {
