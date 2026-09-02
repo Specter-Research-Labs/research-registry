@@ -1234,6 +1234,7 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
         "site/dossiers/lenia-swarm/causal-emergence/catalog.json",
         &serde_json::to_string_pretty(&serde_json::json!({
             "schema_version": 1,
+            "categories": [{"id": "synthesis", "label": "Synthesis"}],
             "reports": [{
                 "id": "organism-appears-first",
                 "title": "The organism appears first in possibility space",
@@ -1271,7 +1272,7 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
     .unwrap();
     let sitemap = fs::read_to_string(root.join("site/sitemap/index.html")).unwrap();
 
-    assert!(landing.contains("Begin with the synthesis"));
+    assert!(landing.contains("Current synthesis"));
     assert!(landing.contains("<title>Causal Emergence in Flow Lenia | SPECTER Labs</title>"));
     assert!(landing.contains(
         "https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/flce-organism-appears-first-aaaaaaaaaaaa/"

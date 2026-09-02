@@ -4,20 +4,19 @@ use std::fs;
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use maud::{html, DOCTYPE};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use super::causal_emergence::{self, Catalog, Report};
 
 const RELEASE_SCHEMA: &str = "specter_flow_lenia_report_release_v2";
 const BUNDLE_SCHEMA: &str = "specter_flow_lenia_report_library_bundle_v2";
+const EDITORIAL_REPLACEMENTS_PATH: &str =
+    "site/dossiers/lenia-swarm/causal-emergence/editorial-replacements.json";
 const REDACT_SOURCE_PREFIX: &str = "redact_internal_source_prefix_v1";
 const NEUTRALIZE_LOCAL_LINKS: &str = "neutralize_unpublished_relative_links_v1";
-const NORMALIZE_LEGACY_PROSE: &str = "normalize_legacy_editorial_phrase_v1";
+const NORMALIZE_PUBLIC_EDITORIAL: &str = "normalize_public_editorial_language_v1";
 const NORMALIZE_MOBILE_WRAP: &str = "normalize_public_mobile_wrapping_v1";
-const LEGACY_PROGRAM_PHRASE: &str =
-    "The old <code>stop_without_phi</code> gate was too narrow to end the research program.";
-const PUBLIC_PROGRAM_PHRASE: &str = "The old <code>stop_without_phi</code> gate ruled out restoration, but it did not explain the temporal structure we could still see.";
 const PUBLIC_MOBILE_STYLE: &str = r#"<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style>"#;
 
 #[derive(Debug, Serialize)]
@@ -73,6 +72,20 @@ struct PublicProjection {
     transformations: Vec<&'static str>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EditorialConfig {
+    schema_version: u32,
+    replacements: Vec<EditorialReplacement>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EditorialReplacement {
+    from: String,
+    to: String,
+}
+
 pub fn stage_library(
     repo_root: &Utf8Path,
     input_root: &Utf8Path,
@@ -88,6 +101,7 @@ pub fn stage_library(
 
     let catalog = causal_emergence::load_catalog(repo_root)?
         .ok_or_else(|| anyhow::anyhow!("causal-emergence catalog not found"))?;
+    let editorial_config = load_editorial_config(repo_root)?;
     let selected = selected_reports(&catalog, only_id)?;
     let lead = catalog
         .reports
@@ -112,7 +126,8 @@ pub fn stage_library(
             .with_context(|| format!("failed to create {report_release_dir}"))?;
 
         let report_bytes = fs::read(&source).with_context(|| format!("failed to read {source}"))?;
-        let public_report = project_public_report(report, &report_bytes)?;
+        let public_report =
+            project_public_report(report, &report_bytes, &editorial_config.replacements)?;
         let public_report_sha256 = sha256_bytes(&public_report.bytes);
         let report_path = report_release_dir.join("report.html");
         fs::write(&report_path, &public_report.bytes)
@@ -178,6 +193,35 @@ pub fn stage_library(
         lead_release_id: lead.release_id.clone(),
         report_count: manifest.reports.len(),
     })
+}
+
+fn load_editorial_config(repo_root: &Utf8Path) -> Result<EditorialConfig> {
+    let path = repo_root.join(EDITORIAL_REPLACEMENTS_PATH);
+    let text = fs::read_to_string(&path).with_context(|| format!("failed to read {path}"))?;
+    let config: EditorialConfig =
+        serde_json::from_str(&text).with_context(|| format!("failed to parse {path}"))?;
+    if config.schema_version != 1 {
+        bail!(
+            "editorial replacement schema_version must be 1, got {}",
+            config.schema_version
+        );
+    }
+    let mut seen = std::collections::HashSet::new();
+    for (index, replacement) in config.replacements.iter().enumerate() {
+        if replacement.from.is_empty() {
+            bail!("editorial replacements[{index}].from must not be empty");
+        }
+        if replacement.from == replacement.to {
+            bail!("editorial replacements[{index}] does not change the text");
+        }
+        if !seen.insert(replacement.from.as_str()) {
+            bail!(
+                "duplicate editorial replacement source: {}",
+                replacement.from
+            );
+        }
+    }
+    Ok(config)
 }
 
 fn selected_reports<'a>(catalog: &'a Catalog, only_id: Option<&str>) -> Result<Vec<&'a Report>> {
@@ -253,17 +297,17 @@ fn render_context(
     public_report_sha256: &str,
     transformations: &[&'static str],
 ) -> String {
-    let projection_changes = transformations
+    let publication_changes = transformations
         .iter()
         .filter_map(|transformation| match *transformation {
-            REDACT_SOURCE_PREFIX => {
-                Some("internal provenance prefixes replaced with public-safe labels")
-            }
+            REDACT_SOURCE_PREFIX => Some("internal file paths were shortened"),
             NEUTRALIZE_LOCAL_LINKS => {
-                Some("unpublished relative links converted to non-navigating evidence references")
+                Some("links to files that are not published here were disabled")
             }
-            NORMALIZE_LEGACY_PROSE => Some("one legacy editorial sentence clarified"),
-            NORMALIZE_MOBILE_WRAP => Some("narrow-screen wrapping added"),
+            NORMALIZE_PUBLIC_EDITORIAL => {
+                Some("release-management labels were removed from the reading copy")
+            }
+            NORMALIZE_MOBILE_WRAP => Some("small-screen wrapping was added"),
             _ => None,
         })
         .collect::<Vec<_>>()
@@ -298,41 +342,46 @@ fn render_context(
                         h1 { (&report.title) }
                         p class="dek" { (&report.dek) }
                         div class="chips" {
-                            span { (&report.status) }
                             span { (&report.evidence_class) }
                             time datetime=(&report.date) { (&report.date) }
                         }
                     }
                     section class="questions" aria-label="Report context" {
                         article {
-                            h2 { "We were asking" }
+                            h2 { "Question" }
                             p { (&report.question) }
                         }
                         article class="answer" {
-                            h2 { "This experiment found" }
+                            h2 { "Result" }
                             p { (&report.answer) }
                         }
                         article {
-                            h2 { "That sent us to" }
+                            h2 { "Next question" }
                             p { (&report.next_question) }
                         }
                     }
                     div class="actions" {
-                        a class="primary" href="report.html" { "Open report" }
-                        a href="release-receipt.json" { "Release receipt" }
+                        a class="primary" href="report.html" { "Read the full report" }
+                        a href="release-receipt.json" { "Publication details" }
                     }
                     footer {
                         @if transformations.is_empty() {
-                            p { "The context above is editorial; report.html preserves the exact source bytes identified by SHA-256 " code { (&report.sha256) } "." }
+                            details {
+                                summary { "About this publication" }
+                                p { "The full report matches its source file. Source checksum: " code { (&report.sha256) } "." }
+                            }
                         } @else {
-                            p {
-                                "The context above is editorial; report.html is a public reading copy of the sealed source "
-                                code { (&report.sha256) }
-                                ". The underlying numbers, figures, and evidence classification are unchanged; public-copy changes: "
-                                (projection_changes)
-                                ". The public copy is "
-                                code { (public_report_sha256) }
-                                "."
+                            details {
+                                summary { "About this publication" }
+                                p {
+                                    "The figures and results match the source file. For publication, "
+                                    (publication_changes)
+                                    ". Source checksum: "
+                                    code { (&report.sha256) }
+                                    ". Published report checksum: "
+                                    code { (public_report_sha256) }
+                                    "."
+                                }
                             }
                         }
                     }
@@ -343,18 +392,21 @@ fn render_context(
     .into_string()
 }
 
-fn project_public_report(report: &Report, source: &[u8]) -> Result<PublicProjection> {
+fn project_public_report(
+    report: &Report,
+    source: &[u8],
+    replacements: &[EditorialReplacement],
+) -> Result<PublicProjection> {
     let source =
         std::str::from_utf8(source).context("causal-emergence report is not valid UTF-8")?;
     let mut transformations = Vec::new();
     let mut projected = source.to_owned();
 
-    if report.id == "reservoir-temporal-precursor" {
-        if !projected.contains(LEGACY_PROGRAM_PHRASE) {
-            bail!("legacy editorial phrase is missing from reservoir-temporal-precursor");
-        }
-        projected = projected.replacen(LEGACY_PROGRAM_PHRASE, PUBLIC_PROGRAM_PHRASE, 1);
-        transformations.push(NORMALIZE_LEGACY_PROSE);
+    let (editorial_projection, editorial_changed) =
+        normalize_public_editorial(&projected, replacements);
+    projected = editorial_projection;
+    if editorial_changed {
+        transformations.push(NORMALIZE_PUBLIC_EDITORIAL);
     }
 
     if projected.contains(".codex/") || projected.contains("artifacts/replication-precursor/") {
@@ -403,6 +455,18 @@ fn project_public_report(report: &Report, source: &[u8]) -> Result<PublicProject
         bytes: projected.into_bytes(),
         transformations,
     })
+}
+
+fn normalize_public_editorial(
+    source: &str,
+    replacements: &[EditorialReplacement],
+) -> (String, bool) {
+    let mut projected = source.to_owned();
+    for replacement in replacements {
+        projected = projected.replace(&replacement.from, &replacement.to);
+    }
+    let changed = projected != source;
+    (projected, changed)
 }
 
 fn neutralize_relative_hrefs(source: &str) -> (String, bool) {
@@ -474,12 +538,56 @@ fn sha256_bytes(bytes: &[u8]) -> String {
 }
 
 const CONTEXT_CSS: &str = r"
-:root{--ink:#111722;--paper:#f4f0e5;--blue:#2853d8;--acid:#d9ff27;--coral:#f45237;--line:#b9b3a7}*{box-sizing:border-box}html{background:#e8e2d5}body{margin:0;color:var(--ink);background:linear-gradient(rgba(17,23,34,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(17,23,34,.055) 1px,transparent 1px),var(--paper);background-size:28px 28px;font:16px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}main{width:min(1120px,calc(100% - 2rem));min-height:100vh;margin:auto;padding:1.2rem 0 4rem}nav{display:flex;gap:1rem;padding:.5rem 0 1.2rem;border-bottom:2px solid var(--ink);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em}a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}header{padding:clamp(2.5rem,7vw,6rem) 0 2.3rem}.eyebrow{color:var(--blue);font-size:.75rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase}h1{max-width:980px;margin:.6rem 0 1.2rem;font:900 clamp(3rem,7vw,7rem)/.88 system-ui,sans-serif;letter-spacing:-.065em;overflow-wrap:anywhere}.dek{max-width:880px;font:400 clamp(1.15rem,2vw,1.55rem)/1.5 Georgia,serif}.chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:1.4rem}.chips>*{padding:.25rem .45rem;background:var(--paper);border:1.5px solid var(--ink);font-size:.68rem;font-weight:800;text-transform:uppercase}.questions{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ink);border:2px solid var(--ink);box-shadow:8px 8px 0 rgba(17,23,34,.15)}.questions article{min-height:230px;padding:1.2rem;background:var(--paper)}.questions .answer{background:var(--acid)}h2{margin:0 0 1rem;font:850 1rem/1.15 system-ui,sans-serif}.questions p{margin:0;font:400 1.08rem/1.55 Georgia,serif}.actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:1.6rem 0}.actions a{padding:.65rem .85rem;border:2px solid var(--ink);background:var(--paper);font-weight:850;text-transform:uppercase;text-decoration:none}.actions .primary{background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--coral)}footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.72rem;overflow-wrap:anywhere}footer code{font-size:inherit}@media(max-width:720px){.questions{grid-template-columns:1fr}.questions article{min-height:0}h1{font-size:clamp(2.7rem,15vw,4.6rem)}}
+:root{--ink:#111722;--paper:#f4f0e5;--blue:#2853d8;--acid:#d9ff27;--coral:#f45237;--line:#b9b3a7}*{box-sizing:border-box}html{background:#e8e2d5}body{margin:0;color:var(--ink);background:linear-gradient(rgba(17,23,34,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(17,23,34,.055) 1px,transparent 1px),var(--paper);background-size:28px 28px;font:16px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}main{width:min(1120px,calc(100% - 2rem));min-height:100vh;margin:auto;padding:1.2rem 0 4rem}nav{display:flex;flex-wrap:wrap;gap:1rem;padding:.5rem 0 1.2rem;border-bottom:2px solid var(--ink);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em}a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}header{padding:clamp(2.5rem,7vw,5rem) 0 2.3rem}.eyebrow{color:var(--blue);font-size:.75rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase}h1{max-width:980px;margin:.6rem 0 1.2rem;font:900 clamp(2.7rem,5vw,5rem)/.92 system-ui,sans-serif;letter-spacing:-.06em;overflow-wrap:anywhere}.dek{max-width:880px;font:400 clamp(1.15rem,2vw,1.55rem)/1.5 Georgia,serif}.chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:1.4rem}.chips>*{padding:.25rem .45rem;background:var(--paper);border:1.5px solid var(--ink);font-size:.68rem;font-weight:800;text-transform:uppercase}.questions{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ink);border:2px solid var(--ink);box-shadow:8px 8px 0 rgba(17,23,34,.15)}.questions article{padding:1.35rem;background:var(--paper)}.questions .answer{background:var(--acid)}h2{margin:0 0 1rem;font:850 1rem/1.15 system-ui,sans-serif}.questions p{margin:0;font:400 1.08rem/1.55 Georgia,serif}.actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:1.6rem 0}.actions a{align-items:center;display:inline-flex;justify-content:center;min-height:3rem;padding:.65rem .85rem;border:2px solid var(--ink);background:var(--paper);font-weight:850;line-height:1.2;text-align:center;text-transform:uppercase;text-decoration:none}.actions .primary{background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--coral)}footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.72rem;overflow-wrap:anywhere}footer summary{cursor:pointer;font-weight:800;text-transform:uppercase;letter-spacing:.06em}footer p{max-width:90ch}footer code{font-size:inherit}@media(max-width:720px){.questions{grid-template-columns:1fr}.questions article{min-height:0}h1{font-size:clamp(2.7rem,15vw,4.6rem)}}
 ";
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn write_editorial_config(root: &Utf8Path, replacements: &[(&str, &str)]) {
+        let path = root.join(EDITORIAL_REPLACEMENTS_PATH);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let replacements = replacements
+            .iter()
+            .map(|(from, to)| serde_json::json!({"from": from, "to": to}))
+            .collect::<Vec<_>>();
+        let config = serde_json::json!({
+            "schema_version": 1,
+            "replacements": replacements,
+        });
+        fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
+    }
+
+    #[test]
+    fn public_editorial_projection_removes_release_management_language() {
+        let source = "Flow Lenia mega synthesis · public edition. This source-bound standalone report leaves the sealed result available.";
+        let replacements = [
+            EditorialReplacement {
+                from: "Flow Lenia mega synthesis".into(),
+                to: "Flow Lenia synthesis".into(),
+            },
+            EditorialReplacement {
+                from: "public edition".into(),
+                to: "current synthesis".into(),
+            },
+            EditorialReplacement {
+                from: "source-bound".into(),
+                to: "documented".into(),
+            },
+            EditorialReplacement {
+                from: "sealed".into(),
+                to: "recorded".into(),
+            },
+        ];
+        let (projected, changed) = normalize_public_editorial(source, &replacements);
+        assert!(changed);
+        assert!(!projected.to_ascii_lowercase().contains("sealed"));
+        assert!(!projected.to_ascii_lowercase().contains("source-bound"));
+        assert!(!projected.to_ascii_lowercase().contains("mega synthesis"));
+        assert!(!projected.to_ascii_lowercase().contains("public edition"));
+        assert!(projected.contains("Flow Lenia synthesis"));
+    }
 
     #[test]
     fn context_escapes_prose_and_exposes_exact_report() {
@@ -510,6 +618,7 @@ mod tests {
     fn stage_library_preserves_exact_report_and_hides_input_path() {
         let temp = tempfile::tempdir().unwrap();
         let root = Utf8Path::from_path(temp.path()).unwrap();
+        write_editorial_config(root, &[]);
         let input = root.join("private-input");
         fs::create_dir_all(&input).unwrap();
         let report_bytes = b"<!doctype html><title>Exact report</title>\n";
@@ -520,11 +629,12 @@ mod tests {
         fs::create_dir_all(catalog_path.parent().unwrap()).unwrap();
         let catalog = serde_json::json!({
             "schema_version": 1,
+            "categories": [{"id": "development", "label": "Development"}],
             "reports": [{
                 "id": "exact-report",
                 "title": "The exact report",
                 "date": "2026-08-30",
-                "dek": "A sealed report with a public introduction.",
+                "dek": "A versioned report with a public introduction.",
                 "question": "What did the field do?",
                 "answer": "It changed its reachable futures.",
                 "next_question": "Which part of the state remembers that change?",
@@ -549,7 +659,7 @@ mod tests {
         let context = fs::read_to_string(release.join("index.html")).unwrap();
         let receipt = fs::read_to_string(release.join("release-receipt.json")).unwrap();
         let manifest = fs::read_to_string(output.join("manifest.json")).unwrap();
-        assert!(context.contains("This experiment found"));
+        assert!(context.contains("Result"));
         assert!(!context.contains("private-input"));
         assert!(!receipt.contains("private-input"));
         assert!(!manifest.contains("private-input"));
@@ -561,6 +671,7 @@ mod tests {
     fn stage_library_projects_private_references_without_touching_source() {
         let temp = tempfile::tempdir().unwrap();
         let root = Utf8Path::from_path(temp.path()).unwrap();
+        write_editorial_config(root, &[]);
         let input = root.join("private-input");
         fs::create_dir_all(&input).unwrap();
         let report_bytes = br##"<!doctype html><html><head><title>Projected</title></head><body>
@@ -579,17 +690,18 @@ mod tests {
         fs::create_dir_all(catalog_path.parent().unwrap()).unwrap();
         let catalog = serde_json::json!({
             "schema_version": 1,
+            "categories": [{"id": "development", "label": "Development"}],
             "reports": [{
                 "id": "projected-report",
                 "title": "The projected report",
                 "date": "2026-08-30",
-                "dek": "A sealed report with private source references.",
+                "dek": "A versioned report with private source references.",
                 "question": "What did the field do?",
                 "answer": "It changed its reachable futures.",
                 "next_question": "Which part remembers?",
                 "category": "development",
                 "status": "feature",
-                "evidence_class": "source-bound exploration",
+                "evidence_class": "documented exploration",
                 "featured": true,
                 "archive": false,
                 "supersedes": [],
@@ -619,16 +731,17 @@ mod tests {
         assert!(receipt.contains(NORMALIZE_MOBILE_WRAP));
         assert!(receipt.contains(&report_sha256));
         assert!(public.contains(PUBLIC_MOBILE_STYLE));
-        assert!(context.contains("public reading copy"));
-        assert!(context.contains("internal provenance prefixes replaced with public-safe labels"));
-        assert!(context.contains(
-            "unpublished relative links converted to non-navigating evidence references"
-        ));
-        assert!(context.contains("narrow-screen wrapping added"));
+        assert!(context.contains("About this publication"));
+        assert!(context.contains("internal file paths were shortened"));
+        assert!(context.contains("links to files that are not published here were disabled"));
+        assert!(context.contains("small-screen wrapping was added"));
     }
 
     #[test]
     fn stage_library_clarifies_the_single_legacy_program_phrase() {
+        let private_phrase =
+            "The old <code>stop_without_phi</code> gate was too narrow to end the research program.";
+        let public_phrase = "The old <code>stop_without_phi</code> gate ruled out restoration, but it did not explain the temporal structure we could still see.";
         let report = Report {
             id: "reservoir-temporal-precursor".into(),
             title: "A temporal precursor".into(),
@@ -647,16 +760,20 @@ mod tests {
             release_id: "reservoir-temporal-precursor-aaaaaaaaaaaa".into(),
         };
         let source = format!(
-            "<!doctype html><html><head></head><body><p>{LEGACY_PROGRAM_PHRASE}</p></body></html>"
+            "<!doctype html><html><head></head><body><p>{private_phrase}</p></body></html>"
         );
+        let replacements = [EditorialReplacement {
+            from: private_phrase.into(),
+            to: public_phrase.into(),
+        }];
 
-        let projection = project_public_report(&report, source.as_bytes()).unwrap();
+        let projection = project_public_report(&report, source.as_bytes(), &replacements).unwrap();
         let public = String::from_utf8(projection.bytes).unwrap();
-        assert!(!public.contains(LEGACY_PROGRAM_PHRASE));
-        assert!(public.contains(PUBLIC_PROGRAM_PHRASE));
+        assert!(!public.contains(private_phrase));
+        assert!(public.contains(public_phrase));
         assert_eq!(
             projection.transformations,
-            vec![NORMALIZE_LEGACY_PROSE, NORMALIZE_MOBILE_WRAP]
+            vec![NORMALIZE_PUBLIC_EDITORIAL, NORMALIZE_MOBILE_WRAP]
         );
 
         let context = render_context(
@@ -664,7 +781,7 @@ mod tests {
             &sha256_bytes(public.as_bytes()),
             &projection.transformations,
         );
-        assert!(context.contains("one legacy editorial sentence clarified"));
+        assert!(context.contains("release-management labels were removed"));
         assert!(!context.contains("scientific prose"));
     }
 }

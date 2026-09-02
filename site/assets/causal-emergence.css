@@ -52,14 +52,19 @@
 
 .ce-section-nav a,
 .ce-category-nav a {
+  align-items: center;
   border: 1px solid var(--ce-ink);
   background: var(--ce-panel);
   color: var(--ce-ink);
+  display: inline-flex;
   font-family: "Berkeley Mono", monospace;
   font-size: 0.72rem;
   font-weight: 700;
+  justify-content: center;
   letter-spacing: 0.08em;
+  line-height: 1.2;
   padding: 0.55rem 0.78rem;
+  text-align: center;
   text-decoration: none;
   text-transform: uppercase;
 }
@@ -229,9 +234,12 @@
   font-family: "Berkeley Mono", monospace;
   font-size: 0.8rem;
   font-weight: 700;
+  justify-content: center;
   letter-spacing: 0.08em;
+  line-height: 1.2;
   min-height: 2.9rem;
   padding: 0.68rem 0.9rem;
+  text-align: center;
   text-decoration: none;
   text-transform: uppercase;
 }
@@ -330,6 +338,12 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: -3rem;
+}
+
+.ce-category-nav a {
+  gap: 0.45rem;
+  min-height: 4.25rem;
+  padding-inline: 1.2rem;
 }
 
 .ce-category-nav span {

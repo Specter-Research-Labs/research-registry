@@ -296,7 +296,7 @@ enum SiteCommand {
     },
     #[command(about = "Stage the SHA-matched Flow Lenia causal-emergence report library")]
     StageLeniaCausalReports {
-        #[arg(long, help = "Local root containing the sealed report HTML files")]
+        #[arg(long, help = "Local root containing the versioned report HTML files")]
         input_root: camino::Utf8PathBuf,
         #[arg(
             long,
