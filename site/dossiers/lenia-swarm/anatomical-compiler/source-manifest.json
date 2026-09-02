@@ -1,8 +1,8 @@
 {
   "artifactProducingRevision": null,
   "artifactSourceRootLabel": "dossiers/lenia-swarm/outputs/anatomical-compiler",
-  "artifactWindow": "historical June 2026 corpus plus 2026-09-01 compiler reruns and the 2026-09-02 native Orbium correction",
-  "caseStudyNote": "The organic descriptor compilation and fixed-frame diagnostics were rerun locally on 2026-09-01. The Orbium video was corrected on 2026-09-02 using the native Chakazul O2(a) preset under qd24_additive_v1 parity semantics. The earlier Flow Lenia import remains only as a labeled cross-runtime control.",
+  "artifactWindow": "historical June 2026 corpus plus 2026-09-01 compiler reruns and the 2026-09-02 two-stage within-family Orbium inverse",
+  "caseStudyNote": "The organic descriptor compilation was rerun locally on 2026-09-01. The two-stage Orbium inverse was run on 2026-09-02 inside the qd24_additive_v1 family, with R, m, and s hidden from both search stages. The earlier cross-runtime Flow Lenia comparison was removed.",
   "generatedAssets": [
     {
       "bytes": 2321,
@@ -90,34 +90,69 @@
       "sha256": "5205a7bb96b0ad50202b119aaa2da84510d68a013ab6b49d98ec695122c5b5fe"
     },
     {
-      "bytes": 520320,
-      "path": "assets/orbium-body.mp4",
-      "sha256": "0d678f8d150e85b7d4adfc92588c8d30d450f3572cc102a5cf6826cb5bf50084"
+      "bytes": 255120,
+      "path": "assets/orbium-initial-600.png",
+      "sha256": "040ffb2271b6a55bbac3925f9e51774bbe03ee29c9dbe33130de7fadb36700ac"
     },
     {
-      "bytes": 6433,
-      "path": "assets/orbium-fixed-result.png",
-      "sha256": "73c277936260881d1dec48a5d6ccb55ba9e558409540739380af7b2ab7dabd0b"
+      "bytes": 1271,
+      "path": "assets/orbium-inverse-summary.json",
+      "sha256": "904916197598ed881537e72b0d2614e8ba3896a33b62e821d0d358d7a472ceb9"
     },
     {
-      "bytes": 2381,
-      "path": "assets/orbium-fixed-target.png",
-      "sha256": "827f02072d4c55f808eb2cd414e764f5f7630158c18fd4108c46ebcd36da8338"
+      "bytes": 6418,
+      "path": "assets/orbium-rule-recovery.svg",
+      "sha256": "a0125a9a26e7e89bff8d71a025f0c1bff268b7f8fe23f5c735f756504b687fec"
     },
     {
-      "bytes": 191220,
-      "path": "assets/orbium-flow-import-late.png",
-      "sha256": "2e49a8cf6370fd169e506ae53da7ab372a5e78525893b2af05ad4718e6e1ec05"
+      "bytes": 187493,
+      "path": "assets/orbium-still-100.png",
+      "sha256": "88843f7bf482404130b0a60ffa2c65bcfc62dd666e19de67ade2bed4aaeaa072"
     },
     {
-      "bytes": 132929,
-      "path": "assets/orbium-late.png",
-      "sha256": "6da05ba86cf093bbf608075cbc09c1200da690e22fd143b6419dcb26aca11c70"
+      "bytes": 189664,
+      "path": "assets/orbium-still-1200.png",
+      "sha256": "4c4cdf26049b32a0ab01195ec5715177fff8257dad0a501dd743e3f4d798d4fc"
     },
     {
-      "bytes": 134502,
-      "path": "assets/orbium-start.png",
-      "sha256": "f995959d6176be6ad5d64f12df02bd8f718d13e6482ab2b3248a2dd85f0af767"
+      "bytes": 186697,
+      "path": "assets/orbium-still-300.png",
+      "sha256": "b7b91bc0d08bd62f4853321e9993ff8dfbd28688589ee7b560fcac2104677260"
+    },
+    {
+      "bytes": 185894,
+      "path": "assets/orbium-still-600.png",
+      "sha256": "e7eab62cced8191515273071e7bb9871c990ab4ea5a36623afe66b3ae8cdb8f7"
+    },
+    {
+      "bytes": 812518,
+      "path": "assets/orbium-still-zoom.mp4",
+      "sha256": "37933bf5d5c5bb09c627f7be192a20b4f9ac522b863e6c15842bbbd3c9b85f78"
+    },
+    {
+      "bytes": 186009,
+      "path": "assets/orbium-target-100.png",
+      "sha256": "2befab83732f67c49d92832bc3a204d7a858ef18721d64aa81564518bae8b690"
+    },
+    {
+      "bytes": 186735,
+      "path": "assets/orbium-target-1200.png",
+      "sha256": "2d39c4a8ffcb94ed69ee022559b49bc735383fd3323434ed8b3b85d36caaa26e"
+    },
+    {
+      "bytes": 187779,
+      "path": "assets/orbium-target-300.png",
+      "sha256": "2aacf01203662f322acc0da71913afc7ca1bc7724cec23c6bd710c9b50e27cfc"
+    },
+    {
+      "bytes": 186927,
+      "path": "assets/orbium-target-600.png",
+      "sha256": "e0ca77a833258f14edce5a5c308342eab666f045209f5c340e45153e728c8524"
+    },
+    {
+      "bytes": 834738,
+      "path": "assets/orbium-target-zoom.mp4",
+      "sha256": "12c499769fe12ce6b8eda98ff8ddf758dd058f8a3704c6d6116a5011b58828fe"
     },
     {
       "bytes": 11834,
@@ -378,12 +413,6 @@
       "sha256": "c1193ac52130e294264b04482333c9c4b98944f2762f3d071130ce5d64126d47"
     },
     {
-      "bytes": 7603,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/orbium-unicaudatus-trial/result.json",
-      "sha256": "ee6c904c5db6fdf5f102a9cd3f3f879d4b4f5bc62301b8443281b69c3ac2d09c"
-    },
-    {
       "bytes": 1890,
       "kind": "2026-09-01 case-study rerun",
       "path": "media/organic-2876/target-base.json",
@@ -474,100 +503,160 @@
       "sha256": "2eb60b71e7951b21adf165fc1657042eca738aac6a7675036858bf9ffee72b97"
     },
     {
-      "bytes": 2381,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/orbium-unicaudatus-trial/target.png",
-      "sha256": "827f02072d4c55f808eb2cd414e764f5f7630158c18fd4108c46ebcd36da8338"
+      "bytes": 1284,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/experiment.json",
+      "sha256": "e7d17cd2fca635937aa716d03631ead5711b32aad916c0fd4376bd3cb4457818"
     },
     {
-      "bytes": 6433,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/orbium-unicaudatus-trial/creature_swift.png",
-      "sha256": "73c277936260881d1dec48a5d6ccb55ba9e558409540739380af7b2ab7dabd0b"
+      "bytes": 197817,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/still-es.json",
+      "sha256": "c8262451e333bf09be212017aab74d92e16631984ed7ce73c24a71ed86935235"
     },
     {
-      "bytes": 1480,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/orbium-body/index.json",
-      "sha256": "2ae4a547d0601b10100cc0675e14ead5cdb96bb4ef74b44f0a671be3e324b8a0"
+      "bytes": 141,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/still-run/best.json",
+      "sha256": "2e99f52c9591bc8cb14151ae1011bb4e6cd737e2f13a4f594397baf6bc0014dc"
     },
     {
-      "bytes": 291129,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/library-0-canonical-O2(a)-Orbium unicaudatus.mp4",
-      "sha256": "deb8d1619d17bc0e283511d39a7fed721a46c9e007d98fe0e25c242ca8712ab5"
+      "bytes": 12161,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/still-run/history.jsonl",
+      "sha256": "540933e4038335185b5f3dfb40f116edbf1e720363ab7625400e75861c8a33cc"
     },
     {
-      "bytes": 106838,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/frames_color/frame_000000.png",
-      "sha256": "52f7016d8c8f36385f15d90d595cd5c5d2aba9dd6172c884085f516f89f088fc"
+      "bytes": 591583,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/trajectory-es.json",
+      "sha256": "dbb42ebb131bbec6ec586c62110eecb32454d2771c67640f5bb8f59b796fac89"
     },
     {
-      "bytes": 191220,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/frames_color/frame_000119.png",
-      "sha256": "2e49a8cf6370fd169e506ae53da7ab372a5e78525893b2af05ad4718e6e1ec05"
+      "bytes": 143,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/trajectory-run/best.json",
+      "sha256": "97902a5fa38d9c4f5449e07b60a5d8ee486cc1092f9c5c5a55b906c7e3176d53"
     },
     {
-      "bytes": 4305,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/config.json",
-      "sha256": "8a7cfcb8a4e9a9f045449f414e759cb93c94830681f6c27af5f3274e3fd5de5c"
+      "bytes": 12205,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/trajectory-run/history.jsonl",
+      "sha256": "b3d53ac97bb5e77ab6fcd89c84cddc8b35acfade78115b4a23365c433c56730d"
     },
     {
-      "bytes": 778,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/search.json",
-      "sha256": "39b0a0b1b881be28473cc4a22206ffeb82acf07bd427ea4038b956cdf9651bc0"
+      "bytes": 255120,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-initial-600.png",
+      "sha256": "040ffb2271b6a55bbac3925f9e51774bbe03ee29c9dbe33130de7fadb36700ac"
     },
     {
-      "bytes": 4835,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/results.jsonl",
-      "sha256": "cc2f4bc9e1dfb369b6fda909cb7621a9d26b92d9ebf3675d66c37bcd0275841e"
+      "bytes": 1271,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-inverse-summary.json",
+      "sha256": "904916197598ed881537e72b0d2614e8ba3896a33b62e821d0d358d7a472ceb9"
     },
     {
-      "bytes": 447,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/summary.json",
-      "sha256": "0484652b5ca2e917f7972004bb7c24aed42af15b10e73967e387081f72e1aab4"
+      "bytes": 6418,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-rule-recovery.svg",
+      "sha256": "a0125a9a26e7e89bff8d71a025f0c1bff268b7f8fe23f5c735f756504b687fec"
     },
     {
-      "bytes": 520320,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/orbium-native.mp4",
-      "sha256": "0d678f8d150e85b7d4adfc92588c8d30d450f3572cc102a5cf6826cb5bf50084"
+      "bytes": 187493,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-still-100.png",
+      "sha256": "88843f7bf482404130b0a60ffa2c65bcfc62dd666e19de67ade2bed4aaeaa072"
     },
     {
-      "bytes": 134502,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/frame-start.png",
-      "sha256": "f995959d6176be6ad5d64f12df02bd8f718d13e6482ab2b3248a2dd85f0af767"
+      "bytes": 186697,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-still-300.png",
+      "sha256": "b7b91bc0d08bd62f4853321e9993ff8dfbd28688589ee7b560fcac2104677260"
     },
     {
-      "bytes": 132929,
-      "kind": "2026-09-02 native Orbium parity replay",
-      "path": "media/orbium-native-parity/frame-late.png",
-      "sha256": "6da05ba86cf093bbf608075cbc09c1200da690e22fd143b6419dcb26aca11c70"
+      "bytes": 185894,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-still-600.png",
+      "sha256": "e7eab62cced8191515273071e7bb9871c990ab4ea5a36623afe66b3ae8cdb8f7"
     },
     {
-      "bytes": 9837,
-      "kind": "Flow Lenia import control",
-      "path": "canonical-orbium-unicaudatus-3FF60A20/base.json",
-      "sha256": "9134edc12939f7f987f05a2df39940314224e24635c5f573a5b709fe59d0d4c6"
+      "bytes": 189664,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-still-1200.png",
+      "sha256": "4c4cdf26049b32a0ab01195ec5715177fff8257dad0a501dd743e3f4d798d4fc"
     },
     {
-      "bytes": 22292,
-      "kind": "Flow Lenia import control",
-      "path": "canonical-orbium-unicaudatus-3FF60A20/meta.json",
-      "sha256": "af5af4dd00e21ae01fab5807a7a2cb8cf356ebf38808defbc7dc3b3109b7cdde"
+      "bytes": 812518,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-still-zoom.mp4",
+      "sha256": "37933bf5d5c5bb09c627f7be192a20b4f9ac522b863e6c15842bbbd3c9b85f78"
     },
     {
-      "bytes": 882,
-      "kind": "Flow Lenia import control",
-      "path": "canonical-orbium-unicaudatus-3FF60A20/search.json",
-      "sha256": "9680a2075d796bb08cea45365df4e0964b675c111ea846b66f5a2ecc81214217"
+      "bytes": 186009,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-target-100.png",
+      "sha256": "2befab83732f67c49d92832bc3a204d7a858ef18721d64aa81564518bae8b690"
+    },
+    {
+      "bytes": 187779,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-target-300.png",
+      "sha256": "2aacf01203662f322acc0da71913afc7ca1bc7724cec23c6bd710c9b50e27cfc"
+    },
+    {
+      "bytes": 186927,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-target-600.png",
+      "sha256": "e0ca77a833258f14edce5a5c308342eab666f045209f5c340e45153e728c8524"
+    },
+    {
+      "bytes": 186735,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-target-1200.png",
+      "sha256": "2d39c4a8ffcb94ed69ee022559b49bc735383fd3323434ed8b3b85d36caaa26e"
+    },
+    {
+      "bytes": 834738,
+      "kind": "2026-09-02 within-family Orbium inverse",
+      "path": "orbium-system-id-v5/report-assets/orbium-target-zoom.mp4",
+      "sha256": "12c499769fe12ce6b8eda98ff8ddf758dd058f8a3704c6d6116a5011b58828fe"
+    },
+    {
+      "bytes": 197819,
+      "kind": "2026-09-02 narrow Orbium refinement",
+      "path": "orbium-system-id-v6-refine/refine-es.json",
+      "sha256": "7bcda98c842159355cf1403bea7cfe878debb96eabbd707f32b77a775128baf0"
+    },
+    {
+      "bytes": 143,
+      "kind": "2026-09-02 narrow Orbium refinement",
+      "path": "orbium-system-id-v6-refine/refine-run/best.json",
+      "sha256": "43c2f254196e552603857049132df7de1459d746e894894323fcdc263d44a426"
+    },
+    {
+      "bytes": 5165,
+      "kind": "2026-09-02 narrow Orbium refinement",
+      "path": "orbium-system-id-v6-refine/refine-run/history.jsonl",
+      "sha256": "e28679376dddcbf60628977378056184479d3b1a922bc71c1ebd281f1029c4bf"
+    },
+    {
+      "bytes": 591585,
+      "kind": "2026-09-02 narrow Orbium refinement",
+      "path": "orbium-system-id-v6-refine/trajectory-refine-es.json",
+      "sha256": "840f48b9aab5b4bee2631c6c1b01a896cb71bb632e1e0a7c35106562de279ab3"
+    },
+    {
+      "bytes": 140,
+      "kind": "2026-09-02 narrow Orbium refinement",
+      "path": "orbium-system-id-v6-refine/trajectory-refine-run/best.json",
+      "sha256": "93cfbf398087a085c3d420a6a8d4334c2ec3d367b240637fd7f415df82f7652a"
+    },
+    {
+      "bytes": 5192,
+      "kind": "2026-09-02 narrow Orbium refinement",
+      "path": "orbium-system-id-v6-refine/trajectory-refine-run/history.jsonl",
+      "sha256": "7b2bca59b1f57f3b266cb6db22c8d9f40705f412a977f6b03c86e165859b7968"
     }
   ]
 }

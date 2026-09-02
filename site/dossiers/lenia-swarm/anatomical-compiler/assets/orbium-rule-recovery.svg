@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 450" role="img" aria-labelledby="title desc">
+<title id="title">Orbium rule recovery</title>
+<desc id="desc">Initial, native, final-frame, and trajectory parameter values for growth center, growth width, and interaction scale.</desc>
+<rect width="960" height="450" fill="#111521"/>
+<text x="54" y="48" fill="#d6ff3f" font-family="ui-monospace,monospace" font-size="15" font-weight="800">RULE RECOVERY INSIDE THE ADDITIVE ORBIUM FAMILY</text>
+<circle cx="55" cy="78" r="6" fill="#f15b43"/>
+<text x="68" y="82" fill="#e9e7df" font-family="ui-monospace,monospace" font-size="10">initial</text>
+<circle cx="231" cy="78" r="6" fill="#d6ff3f"/>
+<text x="244" y="82" fill="#e9e7df" font-family="ui-monospace,monospace" font-size="10">native</text>
+<circle cx="407" cy="78" r="6" fill="#f2b84b"/>
+<text x="420" y="82" fill="#e9e7df" font-family="ui-monospace,monospace" font-size="10">broad pass</text>
+<circle cx="583" cy="78" r="6" fill="#39b7a2"/>
+<text x="596" y="82" fill="#e9e7df" font-family="ui-monospace,monospace" font-size="10">refined still</text>
+<circle cx="759" cy="78" r="6" fill="#7f8cff"/>
+<text x="772" y="82" fill="#e9e7df" font-family="ui-monospace,monospace" font-size="10">refined trajectory</text>
+<text x="54" y="130" fill="#f4f0e7" font-family="ui-monospace,monospace" font-size="14" font-weight="700">growth center m</text>
+<line x1="250" y1="125" x2="860" y2="125" stroke="#596071" stroke-width="2"/>
+<text x="250" y="173" fill="#9299aa" font-family="ui-monospace,monospace" font-size="10">0.1</text>
+<text x="860" y="173" text-anchor="end" fill="#9299aa" font-family="ui-monospace,monospace" font-size="10">0.2</text>
+<line x1="372.0" y1="98" x2="372.0" y2="152" stroke="#f15b43" stroke-opacity=".24"/>
+<circle cx="372.0" cy="97" r="7" fill="#f15b43" stroke="#111521"/>
+<text x="383.0" y="101" fill="#f15b43" font-family="ui-monospace,monospace" font-size="10">0.12</text>
+<line x1="555.0" y1="98" x2="555.0" y2="152" stroke="#d6ff3f" stroke-opacity=".24"/>
+<circle cx="555.0" cy="111" r="7" fill="#d6ff3f" stroke="#111521"/>
+<text x="566.0" y="115" fill="#d6ff3f" font-family="ui-monospace,monospace" font-size="10">0.15</text>
+<line x1="549.1" y1="98" x2="549.1" y2="152" stroke="#f2b84b" stroke-opacity=".24"/>
+<circle cx="549.1" cy="125" r="7" fill="#f2b84b" stroke="#111521"/>
+<text x="560.1" y="129" fill="#f2b84b" font-family="ui-monospace,monospace" font-size="10">0.149</text>
+<line x1="570.9" y1="98" x2="570.9" y2="152" stroke="#39b7a2" stroke-opacity=".24"/>
+<circle cx="570.9" cy="139" r="7" fill="#39b7a2" stroke="#111521"/>
+<text x="581.9" y="143" fill="#39b7a2" font-family="ui-monospace,monospace" font-size="10">0.1526</text>
+<line x1="515.6" y1="98" x2="515.6" y2="152" stroke="#7f8cff" stroke-opacity=".24"/>
+<circle cx="515.6" cy="153" r="7" fill="#7f8cff" stroke="#111521"/>
+<text x="526.6" y="157" fill="#7f8cff" font-family="ui-monospace,monospace" font-size="10">0.1435</text>
+<text x="54" y="235" fill="#f4f0e7" font-family="ui-monospace,monospace" font-size="14" font-weight="700">growth width s</text>
+<line x1="250" y1="230" x2="860" y2="230" stroke="#596071" stroke-width="2"/>
+<text x="250" y="278" fill="#9299aa" font-family="ui-monospace,monospace" font-size="10">0.01</text>
+<text x="860" y="278" text-anchor="end" fill="#9299aa" font-family="ui-monospace,monospace" font-size="10">0.03</text>
+<line x1="677.0" y1="203" x2="677.0" y2="257" stroke="#f15b43" stroke-opacity=".24"/>
+<circle cx="677.0" cy="202" r="7" fill="#f15b43" stroke="#111521"/>
+<text x="688.0" y="206" fill="#f15b43" font-family="ui-monospace,monospace" font-size="10">0.024</text>
+<line x1="463.5" y1="203" x2="463.5" y2="257" stroke="#d6ff3f" stroke-opacity=".24"/>
+<circle cx="463.5" cy="216" r="7" fill="#d6ff3f" stroke="#111521"/>
+<text x="474.5" y="220" fill="#d6ff3f" font-family="ui-monospace,monospace" font-size="10">0.017</text>
+<line x1="537.3" y1="203" x2="537.3" y2="257" stroke="#f2b84b" stroke-opacity=".24"/>
+<circle cx="537.3" cy="230" r="7" fill="#f2b84b" stroke="#111521"/>
+<text x="548.3" y="234" fill="#f2b84b" font-family="ui-monospace,monospace" font-size="10">0.01942</text>
+<line x1="493.2" y1="203" x2="493.2" y2="257" stroke="#39b7a2" stroke-opacity=".24"/>
+<circle cx="493.2" cy="244" r="7" fill="#39b7a2" stroke="#111521"/>
+<text x="504.2" y="248" fill="#39b7a2" font-family="ui-monospace,monospace" font-size="10">0.01798</text>
+<line x1="507.8" y1="203" x2="507.8" y2="257" stroke="#7f8cff" stroke-opacity=".24"/>
+<circle cx="507.8" cy="258" r="7" fill="#7f8cff" stroke="#111521"/>
+<text x="518.8" y="262" fill="#7f8cff" font-family="ui-monospace,monospace" font-size="10">0.01845</text>
+<text x="54" y="340" fill="#f4f0e7" font-family="ui-monospace,monospace" font-size="14" font-weight="700">interaction scale R</text>
+<line x1="250" y1="335" x2="860" y2="335" stroke="#596071" stroke-width="2"/>
+<text x="250" y="383" fill="#9299aa" font-family="ui-monospace,monospace" font-size="10">9</text>
+<text x="860" y="383" text-anchor="end" fill="#9299aa" font-family="ui-monospace,monospace" font-size="10">17</text>
+<line x1="326.2" y1="308" x2="326.2" y2="362" stroke="#f15b43" stroke-opacity=".24"/>
+<circle cx="326.2" cy="307" r="7" fill="#f15b43" stroke="#111521"/>
+<text x="337.2" y="311" fill="#f15b43" font-family="ui-monospace,monospace" font-size="10">10</text>
+<line x1="555.0" y1="308" x2="555.0" y2="362" stroke="#d6ff3f" stroke-opacity=".24"/>
+<circle cx="555.0" cy="321" r="7" fill="#d6ff3f" stroke="#111521"/>
+<text x="566.0" y="325" fill="#d6ff3f" font-family="ui-monospace,monospace" font-size="10">13</text>
+<line x1="560.8" y1="308" x2="560.8" y2="362" stroke="#f2b84b" stroke-opacity=".24"/>
+<circle cx="560.8" cy="335" r="7" fill="#f2b84b" stroke="#111521"/>
+<text x="571.8" y="339" fill="#f2b84b" font-family="ui-monospace,monospace" font-size="10">13.08</text>
+<line x1="550.5" y1="308" x2="550.5" y2="362" stroke="#39b7a2" stroke-opacity=".24"/>
+<circle cx="550.5" cy="349" r="7" fill="#39b7a2" stroke="#111521"/>
+<text x="561.5" y="353" fill="#39b7a2" font-family="ui-monospace,monospace" font-size="10">12.94</text>
+<line x1="540.0" y1="308" x2="540.0" y2="362" stroke="#7f8cff" stroke-opacity=".24"/>
+<circle cx="540.0" cy="363" r="7" fill="#7f8cff" stroke="#111521"/>
+<text x="551.0" y="367" fill="#7f8cff" font-family="ui-monospace,monospace" font-size="10">12.8</text>
+</svg>
