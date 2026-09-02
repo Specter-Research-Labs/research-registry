@@ -22,7 +22,7 @@
     "occupied_fraction_min": 0.08,
     "occupied_fraction_max": 0.28,
     "occupied_growth_max": 1.20,
-    "organismness_penalty": 0.35,
+    "constraint_penalty": 0.35,
     "morphology_threshold": 0.03
   },
   "include_parent": true,

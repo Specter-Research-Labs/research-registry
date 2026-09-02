@@ -1,0 +1,638 @@
+/* Invariant: report themes change semantic tokens, never component selectors. */
+.report-page {
+  --report-ink: #111722;
+  --report-paper: #f5f1e7;
+  --report-panel: #fffdf7;
+  --report-accent: #2f56df;
+  --report-accent-soft: #e9edfb;
+  --report-accent-bright: #d7ff2f;
+  --report-positive: #167a68;
+  --report-caution: #a86200;
+  --report-negative: #b43b45;
+  --report-neutral: #6e638e;
+  --report-rule: rgba(17, 23, 34, 0.22);
+  --report-shadow: 8px 8px 0 rgba(17, 23, 34, 0.11);
+  background-color: var(--report-paper);
+  background-image:
+    linear-gradient(rgba(17, 23, 34, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 23, 34, 0.028) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--report-ink);
+}
+
+.report-theme-morphospace {
+  --report-paper: #f2f0e8;
+  --report-panel: #fffef9;
+  --report-accent: #006b68;
+  --report-accent-soft: #d9efed;
+  --report-accent-bright: #bdf8dd;
+}
+
+.report-shell {
+  background: transparent;
+  max-width: 1240px;
+}
+
+.report-main {
+  display: grid;
+  gap: clamp(3.5rem, 5vw, 5rem);
+  padding-bottom: clamp(4rem, 9vw, 8rem);
+}
+
+.report-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.report-nav a,
+.report-button {
+  border: 1px solid var(--report-ink);
+  color: var(--report-ink);
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.report-nav a {
+  background: var(--report-panel);
+  padding: 0.6rem 0.82rem;
+}
+
+.report-nav a[aria-current="page"],
+.report-nav a:hover {
+  background: var(--report-ink);
+  color: var(--report-paper);
+}
+
+.report-nav a:focus-visible,
+.report-button:focus-visible,
+.report-heading a:focus-visible,
+.report-figure-link:focus-visible {
+  outline: 3px solid var(--report-accent);
+  outline-offset: 3px;
+}
+
+.report-hero,
+.report-heading {
+  max-width: 920px;
+}
+
+.report-kicker {
+  color: var(--report-accent);
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.report-hero h1 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(2.65rem, 5.1vw, 4.35rem);
+  letter-spacing: -0.07em;
+  line-height: 0.98;
+  margin: 0.35em 0 0;
+  max-width: 920px;
+  overflow-wrap: anywhere;
+}
+
+.report-hero-dek {
+  font-family: "IBM Plex Serif", serif;
+  font-size: clamp(1.22rem, 1.7vw, 1.5rem);
+  line-height: 1.58;
+  margin-top: 1.6rem;
+  max-width: 72ch;
+}
+
+.report-panel {
+  background: var(--report-ink);
+  border-top: 10px solid var(--report-accent);
+  box-shadow: var(--report-shadow);
+  color: var(--report-paper);
+  padding: clamp(1.5rem, 4vw, 3.4rem);
+}
+
+.report-panel .report-kicker {
+  color: var(--report-accent-bright);
+}
+
+.report-heading h2,
+.report-panel--next h2 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(1.9rem, 3.5vw, 3.3rem);
+  letter-spacing: -0.055em;
+  line-height: 1.04;
+  margin: 0.25em 0 0;
+}
+
+.report-heading h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.report-heading p,
+.report-panel--next p,
+.report-dek {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.15rem;
+  line-height: 1.62;
+  margin-top: 1rem;
+  max-width: 72ch;
+}
+
+.report-card-footer {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+  justify-content: space-between;
+  margin-top: 1.4rem;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.report-button {
+  align-items: center;
+  display: inline-flex;
+  min-height: 3rem;
+  padding: 0.7rem 0.95rem;
+}
+
+.report-button--primary {
+  background: var(--report-ink);
+  color: var(--report-paper);
+}
+
+.report-panel .report-button--primary {
+  background: var(--report-accent-bright);
+  border-color: var(--report-accent-bright);
+  color: var(--report-ink);
+}
+
+.report-panel .report-button:not(.report-button--primary) {
+  border-color: var(--report-paper);
+  color: var(--report-paper);
+}
+
+.report-receipt {
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+  max-width: 100%;
+}
+
+.report-card-footer .report-receipt {
+  margin-top: 0;
+}
+
+.report-receipt summary {
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.6rem 0;
+  text-transform: uppercase;
+}
+
+.report-receipt dl {
+  border-top: 1px solid currentColor;
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.7rem;
+}
+
+.report-receipt dl > div {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+}
+
+.report-receipt dt {
+  opacity: 0.72;
+}
+
+.report-receipt dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.report-receipt a {
+  color: inherit;
+}
+
+.report-metrics {
+  display: grid;
+  gap: 1.7rem;
+}
+
+.report-metric-grid {
+  border: 1px solid var(--report-ink);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.report-metric {
+  background: var(--report-panel);
+  color: var(--report-ink);
+  min-width: 0;
+  padding: clamp(1.1rem, 2vw, 1.7rem);
+}
+
+.report-metric + .report-metric {
+  border-left: 1px solid var(--report-ink);
+}
+
+.report-metric strong,
+.report-metric span {
+  display: block;
+}
+
+.report-metric strong {
+  color: var(--report-accent);
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(1.9rem, 3vw, 2.9rem);
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.report-metric span {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.06rem;
+  line-height: 1.48;
+  margin-top: 0.75rem;
+}
+
+.report-result {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  min-width: 0;
+  scroll-margin-top: 1rem;
+}
+
+.report-result-copy {
+  background: var(--report-panel);
+  border: 1px solid var(--report-ink);
+  box-shadow: 6px 6px 0 rgba(17, 23, 34, 0.1);
+  min-width: 0;
+  padding: clamp(1.4rem, 3vw, 2.5rem);
+}
+
+.report-result-copy > h2 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(2rem, 3.8vw, 3.45rem);
+  letter-spacing: -0.06em;
+  line-height: 1.02;
+  margin: 0.25em 0 0.55em;
+  max-width: 18ch;
+}
+
+.report-result-copy > p {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.17rem;
+  line-height: 1.62;
+  max-width: 78ch;
+}
+
+.report-reading {
+  border-left: 4px solid var(--report-accent);
+  margin-top: 1.6rem;
+  max-width: 78ch;
+  padding: 0.15rem 0 0.15rem 1.2rem;
+}
+
+.report-reading p {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.12rem;
+  line-height: 1.62;
+  margin: 0;
+}
+
+.report-reading p + p {
+  margin-top: 1rem;
+}
+
+.report-reading strong {
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+}
+
+.report-figure {
+  background: var(--report-panel);
+  border: 1px solid var(--report-ink);
+  box-shadow: 6px 6px 0 rgba(17, 23, 34, 0.1);
+  margin: 0 auto;
+  max-width: 980px;
+  min-width: 0;
+  padding: clamp(0.8rem, 2vw, 1.2rem);
+  width: 100%;
+}
+
+.report-figure-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--report-accent) var(--report-paper);
+  width: 100%;
+}
+
+.report-figure img {
+  border: 0;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.report-figure figcaption {
+  align-items: baseline;
+  border-top: 1px solid var(--report-rule);
+  color: var(--report-ink);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: "IBM Plex Serif", serif;
+  font-size: 0.95rem;
+  font-style: normal;
+  gap: 0.6rem 1rem;
+  justify-content: space-between;
+  line-height: 1.5;
+  margin-top: 0.9rem;
+  padding-top: 0.85rem;
+}
+
+.report-figure-link {
+  color: var(--report-accent);
+  flex: 0 0 auto;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.report-figure-hint,
+.report-scroll-hint {
+  color: var(--report-accent);
+  display: none;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  margin: 0 0 0.7rem;
+  text-transform: uppercase;
+}
+
+.report-figure--data svg,
+.report-figure--data img {
+  display: block;
+  height: auto;
+  min-width: 42rem;
+  width: 100%;
+}
+
+.report-legend {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.76rem;
+  gap: 0.55rem 1rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+}
+
+.report-legend-item {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.report-swatch {
+  background: var(--report-neutral);
+  border: 1px solid var(--report-ink);
+  display: inline-block;
+  height: 0.72rem;
+  width: 0.72rem;
+}
+
+.report-swatch--positive {
+  background: var(--report-positive);
+}
+
+.report-swatch--caution {
+  background: var(--report-caution);
+}
+
+.report-swatch--negative {
+  background: var(--report-negative);
+}
+
+.report-table-wrap {
+  border: 1px solid var(--report-ink);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.report-table {
+  border-collapse: collapse;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.82rem;
+  min-width: 42rem;
+  width: 100%;
+}
+
+.report-table th,
+.report-table td {
+  border-bottom: 1px solid var(--report-rule);
+  padding: 0.8rem 0.9rem;
+  text-align: right;
+  vertical-align: top;
+}
+
+.report-table th:first-child,
+.report-table td:first-child {
+  text-align: left;
+}
+
+.report-table thead th {
+  background: var(--report-accent-soft);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.report-table tbody tr:last-child th,
+.report-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.report-boundary {
+  background: var(--report-accent-soft);
+  border-left: 6px solid var(--report-accent);
+  margin: 1.5rem 0;
+  padding: 1.1rem 1.25rem;
+}
+
+.report-boundary strong {
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.report-boundary p {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  margin: 0.4rem 0 1rem;
+}
+
+.report-boundary p:last-child {
+  margin-bottom: 0;
+}
+
+.report-synthesis {
+  background: var(--report-panel);
+  border: 1px solid var(--report-ink);
+  box-shadow: 6px 6px 0 rgba(17, 23, 34, 0.1);
+  padding: clamp(1.4rem, 3vw, 2.5rem);
+}
+
+.report-synthesis h2 {
+  font-family: "Berkeley Mono", monospace;
+  font-size: clamp(2rem, 3.8vw, 3.45rem);
+  letter-spacing: -0.06em;
+  line-height: 1.02;
+  margin: 0.25em 0 0.65em;
+  max-width: 22ch;
+}
+
+.report-synthesis > p {
+  font-family: "IBM Plex Serif", serif;
+  font-size: 1.17rem;
+  line-height: 1.62;
+  margin: 0;
+  max-width: 78ch;
+}
+
+.report-synthesis > p + p {
+  margin-top: 1rem;
+}
+
+.report-embed {
+  background: var(--report-ink);
+  border: 1px solid var(--report-ink);
+  box-shadow: var(--report-shadow);
+  padding: clamp(0.45rem, 1.4vw, 1rem);
+}
+
+.report-embed iframe {
+  background: #fff;
+  border: 0;
+  display: block;
+  width: 100%;
+}
+
+.report-embed--specimen-grid iframe {
+  height: 1100px;
+}
+
+.report-panel--next {
+  align-items: end;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.report-provenance {
+  border-top: 1px solid var(--report-ink);
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.035em;
+  line-height: 1.6;
+  margin: -2rem 0 0;
+  padding-top: 1rem;
+}
+
+.report-footer {
+  border-top: 2px solid var(--report-ink);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: "Berkeley Mono", monospace;
+  font-size: 0.8rem;
+  gap: 1rem 2rem;
+  padding: 1.25rem 0 3rem;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .report-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-metric:nth-child(3) {
+    border-left: 0;
+  }
+
+  .report-metric:nth-child(n + 3) {
+    border-top: 1px solid var(--report-ink);
+  }
+
+  .report-embed--specimen-grid iframe {
+    height: 1160px;
+  }
+}
+
+@media (max-width: 760px) {
+  .report-main {
+    gap: 4rem;
+  }
+
+  .report-hero h1 {
+    font-size: clamp(2.45rem, 11.4vw, 3.6rem);
+  }
+
+  .report-panel--next {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .report-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-metric + .report-metric {
+    border-left: 0;
+    border-top: 1px solid var(--report-ink);
+  }
+
+  .report-figure-hint,
+  .report-scroll-hint {
+    display: block;
+  }
+
+  .report-figure--diagram img {
+    min-width: 860px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .report-button,
+  .report-nav a {
+    transition: transform 120ms ease, background-color 120ms ease;
+  }
+
+  .report-button:hover,
+  .report-nav a:hover {
+    transform: translateY(-2px);
+  }
+}

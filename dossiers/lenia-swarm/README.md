@@ -99,6 +99,7 @@ Useful individual targets:
 
 - `LeniaCLI discover local`: deterministic local runs and auto-indexing.
 - `LeniaCLI discover evolve|mutate|rd-2023|sensorimotor-2024|qd-2024|ecology-2025|curiosity-2025|atlas-2026`: paper-grounded discovery commands.
+- `LeniaCLI discover obstacle-response`: paired sham and heading-relative obstacle continuations for a fixed Flow Lenia corpus.
 - `LeniaCLI orchestrate controller|worker|campaign`: distributed sweep, worker, and campaign dispatch.
 - `LeniaCLI index ingest|sanity|backfill`: compendium ingest and repair.
 - `LeniaCLI analyze warehouse|topology|biological|discovery|ecology|taxonomy`: warehouse refresh and derived analysis.

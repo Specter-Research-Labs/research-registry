@@ -114,17 +114,98 @@ struct EvaluateCommand: AsyncParsableCommand {
     }
 }
 
-private struct CorpusRow: Decodable {
+struct CorpusRow: Decodable {
+    let specimenId: String?
+    let lifeId: String?
+    let family: String?
+    let mapId: String?
+    let ruleId: String?
     let params: CorpusParams
+    let initialCondition: InitConfig?
     let initSeed: Int?
 
     enum CodingKeys: String, CodingKey {
+        case specimenId = "specimen_id"
+        case lifeId = "life_id"
+        case family
+        case mapId = "map_id"
+        case ruleId = "rule_id"
         case params
+        case genotypeJSON = "genotype_json"
+        case initialConditionJSON = "initial_condition_json"
         case initSeed = "init_seed"
+        case replay
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        specimenId = try container.decodeIfPresent(String.self, forKey: .specimenId)
+        lifeId = try container.decodeIfPresent(String.self, forKey: .lifeId)
+        family = try container.decodeIfPresent(String.self, forKey: .family)
+        mapId = try container.decodeIfPresent(String.self, forKey: .mapId)
+        ruleId = try container.decodeIfPresent(String.self, forKey: .ruleId)
+        let replay = try container.decodeIfPresent(CorpusReplayPayload.self, forKey: .replay)
+        if let directParams = try container.decodeIfPresent(CorpusParams.self, forKey: .params) {
+            params = directParams
+        } else if let embeddedParams = try Self.decodeOptionalEmbedded(
+            CorpusParams.self,
+            key: .genotypeJSON,
+            container: container
+        ) {
+            params = embeddedParams
+        } else if let replay {
+            params = replay.genotype
+        } else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.params,
+                DecodingError.Context(
+                    codingPath: container.codingPath,
+                    debugDescription: "Expected params, genotype_json, or replay.genotype"
+                )
+            )
+        }
+        initialCondition = try Self.decodeOptionalEmbedded(
+            InitConfig.self,
+            key: .initialConditionJSON,
+            container: container
+        ) ?? replay?.initialCondition
+        let explicitSeed = try container.decodeIfPresent(Int.self, forKey: .initSeed)
+        if let explicitSeed, let initialCondition, explicitSeed != initialCondition.seed {
+            throw DecodingError.dataCorruptedError(
+                forKey: .initSeed,
+                in: container,
+                debugDescription: "init_seed does not match initial_condition_json.seed"
+            )
+        }
+        initSeed = explicitSeed ?? initialCondition?.seed
+    }
+
+    private static func decodeOptionalEmbedded<T: Decodable>(
+        _ type: T.Type,
+        key: CodingKeys,
+        container: KeyedDecodingContainer<CodingKeys>
+    ) throws -> T? {
+        if let value = try? container.decodeIfPresent(T.self, forKey: key) {
+            return value
+        }
+        guard let JSON = try container.decodeIfPresent(String.self, forKey: key) else {
+            return nil
+        }
+        return try JSONDecoder().decode(T.self, from: Data(JSON.utf8))
     }
 }
 
-private struct CorpusParams: Decodable {
+private struct CorpusReplayPayload: Decodable {
+    let genotype: CorpusParams
+    let initialCondition: InitConfig
+
+    enum CodingKeys: String, CodingKey {
+        case genotype
+        case initialCondition = "initial_condition"
+    }
+}
+
+struct CorpusParams: Decodable {
     let R: Float
     let r: [Float]
     let b: [[Float]]
@@ -136,5 +217,20 @@ private struct CorpusParams: Decodable {
 
     func resolved() -> ResolvedParams {
         ResolvedParams(r: r, b: b, w: w, a: a, m: m, s: s, h: h, R: R, seed: 0)
+    }
+
+    func explicitOverrides(seed: Int) -> [String: Any] {
+        [
+            "params.mode": "explicit",
+            "params.seed": seed,
+            "params.r": r.map(Double.init),
+            "params.b": b.map { $0.map(Double.init) },
+            "params.w": w.map { $0.map(Double.init) },
+            "params.a": a.map { $0.map(Double.init) },
+            "params.m": m.map(Double.init),
+            "params.s": s.map(Double.init),
+            "params.h": h.map(Double.init),
+            "params.R": Double(R),
+        ]
     }
 }

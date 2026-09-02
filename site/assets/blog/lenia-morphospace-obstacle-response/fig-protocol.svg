@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
+  <title id="title">Four continuations from one measured checkpoint</title>
+  <desc id="desc">A single moving body is checkpointed, then continued without an obstacle or with a circular wall potential ahead, to its left, or to its right.</desc>
+  <rect width="1120" height="560" fill="#fffef9"/>
+  <g fill="none" stroke="#111722" stroke-width="3">
+    <path d="M188 279H307"/>
+    <path d="M307 279C369 279 368 90 442 90"/>
+    <path d="M307 279C369 279 368 216 442 216"/>
+    <path d="M307 279C369 279 368 342 442 342"/>
+    <path d="M307 279C369 279 368 468 442 468"/>
+  </g>
+  <g fill="#111722">
+    <path d="m298 268 19 11-19 11z"/>
+    <path d="m433 79 19 11-19 11z"/>
+    <path d="m433 205 19 11-19 11z"/>
+    <path d="m433 331 19 11-19 11z"/>
+    <path d="m433 457 19 11-19 11z"/>
+  </g>
+  <g font-family="Berkeley Mono, ui-monospace, monospace" fill="#111722">
+    <text x="64" y="55" font-size="18" font-weight="700" letter-spacing="2">ONE CHECKPOINT</text>
+    <text x="476" y="55" font-size="18" font-weight="700" letter-spacing="2">FOUR MATCHED CONTINUATIONS</text>
+  </g>
+  <g transform="translate(125 279)">
+    <path d="M-53 5C-58-27-29-56 7-51 44-46 65-15 54 19 42 54 0 63-32 43-45 35-51 21-53 5Z" fill="#006b68"/>
+    <circle cx="-12" cy="-5" r="15" fill="#bdf8dd" fill-opacity=".65"/>
+    <path d="M65 0h55" stroke="#006b68" stroke-width="6"/>
+    <path d="m120 0-18-11v22z" fill="#006b68"/>
+  </g>
+  <g font-family="IBM Plex Serif, Georgia, serif" font-size="18" fill="#111722">
+    <text x="62" y="366">Heading measured over</text>
+    <text x="62" y="390">the previous 400 steps</text>
+  </g>
+  <g transform="translate(570 90)">
+    <path d="M-43 4C-47-22-24-45 6-41 36-37 53-12 44 16 34 44 0 51-26 35-36 28-41 17-43 4Z" fill="#006b68"/>
+    <path d="M55 0h52" stroke="#006b68" stroke-width="5"/>
+    <path d="m107 0-16-10v20z" fill="#006b68"/>
+    <text x="146" y="7" font-family="Berkeley Mono, ui-monospace, monospace" font-size="20" font-weight="700" fill="#111722">SHAM</text>
+  </g>
+  <g transform="translate(570 216)">
+    <path d="M-43 4C-47-22-24-45 6-41 36-37 53-12 44 16 34 44 0 51-26 35-36 28-41 17-43 4Z" fill="#006b68"/>
+    <path d="M55 0h52" stroke="#006b68" stroke-width="5"/>
+    <path d="m107 0-16-10v20z" fill="#006b68"/>
+    <circle cx="146" cy="0" r="28" fill="#a86200" fill-opacity=".82" stroke="#111722" stroke-width="3"/>
+    <text x="196" y="7" font-family="Berkeley Mono, ui-monospace, monospace" font-size="20" font-weight="700" fill="#111722">AHEAD</text>
+  </g>
+  <g transform="translate(570 342)">
+    <path d="M-43 4C-47-22-24-45 6-41 36-37 53-12 44 16 34 44 0 51-26 35-36 28-41 17-43 4Z" fill="#006b68"/>
+    <path d="M55 0h52" stroke="#006b68" stroke-width="5"/>
+    <path d="m107 0-16-10v20z" fill="#006b68"/>
+    <circle cx="143" cy="-31" r="28" fill="#a86200" fill-opacity=".82" stroke="#111722" stroke-width="3"/>
+    <text x="196" y="7" font-family="Berkeley Mono, ui-monospace, monospace" font-size="20" font-weight="700" fill="#111722">LEFT</text>
+  </g>
+  <g transform="translate(570 468)">
+    <path d="M-43 4C-47-22-24-45 6-41 36-37 53-12 44 16 34 44 0 51-26 35-36 28-41 17-43 4Z" fill="#006b68"/>
+    <path d="M55 0h52" stroke="#006b68" stroke-width="5"/>
+    <path d="m107 0-16-10v20z" fill="#006b68"/>
+    <circle cx="143" cy="31" r="28" fill="#a86200" fill-opacity=".82" stroke="#111722" stroke-width="3"/>
+    <text x="196" y="7" font-family="Berkeley Mono, ui-monospace, monospace" font-size="20" font-weight="700" fill="#111722">RIGHT</text>
+  </g>
+  <g font-family="IBM Plex Serif, Georgia, serif" font-size="18" fill="#111722">
+    <text x="862" y="190">Obstacle radius:</text>
+    <text x="862" y="214">half the body’s 95% mass radius</text>
+    <text x="862" y="316">Every branch begins from</text>
+    <text x="862" y="340">the same simulator state</text>
+    <text x="862" y="442">Response measured for</text>
+    <text x="862" y="466">3,600 continuation steps</text>
+  </g>
+</svg>

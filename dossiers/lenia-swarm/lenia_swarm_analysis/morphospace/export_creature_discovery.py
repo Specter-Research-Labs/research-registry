@@ -119,6 +119,9 @@ def export_creature_discovery(
                 "deformationWithoutDissolutionScore": payload[
                     "deformation_without_dissolution_score"
                 ],
+                "localizationScore": payload["localization_score"],
+                "extentStabilityScore": payload["extent_stability_score"],
+                "temporalIndividualityScore": payload["temporal_individuality_score"],
             },
             "replayable": payload["replayable"],
             "resolutionSource": payload["resolution_source"],

@@ -134,16 +134,10 @@ private func isEvolutionMetalBackendCompatible(runtimeConfig: LeniaRuntimeConfig
         "template_sequence",
         "coherent_transport",
         "body_locomotion",
-        "organismness",
     ]
     return supportedObjectives.contains(esConfig.fitness.objective)
 }
 
 func isFlowLeniaSimulatorMetalBackendCompatible(_ runtimeConfig: LeniaRuntimeConfig) -> Bool {
-    guard runtimeConfig.parameterEmbedding.enabled else { return false }
-    guard runtimeConfig.parameterEmbedding.mix == "avg" || runtimeConfig.parameterEmbedding.mix == "stoch" else { return false }
-    let validBoundaryPair = (runtimeConfig.border == "torus" && runtimeConfig.implementation.gradientBoundary == "periodic") ||
-        (runtimeConfig.border == "wall" && runtimeConfig.implementation.gradientBoundary == "zero_pad")
-    guard validBoundaryPair else { return false }
-    return runtimeConfig.environment == nil
+    FlowLeniaInteractiveSimulator.supportsResidentMetal(runtimeConfig)
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 430" role="img" aria-labelledby="title desc">
+  <title id="title">From later compendium discoveries to valid obstacle trials</title>
+  <desc id="desc">A four-stage funnel showing 626 exact replays, 184 persistent individuals, 9 coherent movers, and 5 specimens with valid paired obstacle trials.</desc>
+  <rect width="1040" height="430" fill="#fffef9"/>
+  <g font-family="Berkeley Mono, ui-monospace, monospace" fill="#111722"><text x="48" y="44" font-size="18" font-weight="700" letter-spacing="2">QUALIFICATION, NOT VISUAL SELECTION</text></g>
+  <g stroke="#111722" stroke-width="2"><rect x="48" y="82" width="236" height="238" fill="#d9efed"/><rect x="284" y="112" width="236" height="208" fill="#bdf8dd"/><rect x="520" y="172" width="236" height="148" fill="#37a28f"/><rect x="756" y="202" width="236" height="118" fill="#006b68"/></g>
+  <g font-family="Berkeley Mono, ui-monospace, monospace" fill="#111722"><text x="76" y="142" font-size="54" font-weight="700">626</text><text x="312" y="172" font-size="54" font-weight="700">184</text><text x="548" y="232" font-size="54" font-weight="700">9</text><text x="784" y="262" font-size="54" font-weight="700" fill="#fffef9">5</text></g>
+  <g font-family="IBM Plex Serif, Georgia, serif" fill="#111722" font-size="18"><text x="76" y="190">exact replays from</text><text x="76" y="216">later discovery runs</text><text x="312" y="220">temporally consistent,</text><text x="312" y="246">coherent individuals</text><text x="548" y="274">also moved at least</text><text x="548" y="300">half a body diameter</text><text x="784" y="300" fill="#fffef9">valid sham-derived</text><text x="784" y="326" fill="#fffef9">obstacle encounters</text></g>
+  <g font-family="Berkeley Mono, ui-monospace, monospace" fill="#111722" font-size="14"><text x="48" y="374">LONG REPLAY</text><text x="284" y="374">IDENTITY GATE</text><text x="520" y="374">MOTION GATE</text><text x="756" y="374">ASSAY GATE</text></g>
+</svg>

@@ -613,7 +613,9 @@ public final class FlowLeniaInteractiveSimulator {
     private let paramsEngine: FlowLeniaParamsBatched?
     private let metalRunner: FlowLeniaMetalFullStateRunner?
     private let metalStaticParams: MLXArray?
-    private let wallMask: MLXArray?
+    private let baseWallPotential: MLXArray?
+    private let baseWallMask: MLXArray?
+    private var wallMask: MLXArray?
     private let chemField: MLXArray?
     private let runtimeOperators: FlowLeniaRuntimeOperators
     private let metalResidencyID = UUID()
@@ -634,6 +636,7 @@ public final class FlowLeniaInteractiveSimulator {
             )
         }
         self.effectiveBackend = runtimeConfig.backend
+        self.baseWallPotential = environmentPotential
 
         switch effectiveBackend {
         case .mlx:
@@ -677,6 +680,7 @@ public final class FlowLeniaInteractiveSimulator {
                 )
         }
 
+        self.baseWallMask = context.preparedFields.wallMask
         self.wallMask = context.preparedFields.wallMask
         self.chemField = context.preparedFields.chemField
     }
@@ -924,6 +928,50 @@ public final class FlowLeniaInteractiveSimulator {
 
     public func wallMaskMap() -> MLXArray? {
         wallMask?[0, 0..., 0..., 0].contiguous()
+    }
+
+    public func setCircularWallPotential(centerX: Float, centerY: Float, radius: Float, height: Float) {
+        precondition(radius > 0, "Circular wall-potential radius must be positive.")
+        precondition(height > 0, "Circular wall-potential height must be positive.")
+        let potential = flowLeniaBuildCircularWallPotential(
+            sx: runtimeConfig.sx,
+            sy: runtimeConfig.sy,
+            centerX: centerX,
+            centerY: centerY,
+            radius: radius,
+            height: height,
+            periodic: runtimeConfig.border == "torus"
+        ).expandedDimensions(axes: [0, 3])
+        massEngine?.wallPotential = potential
+        paramsEngine?.wallPotential = potential
+        metalRunner?.setWallPotential(potential)
+        metalResidentStep = nil
+    }
+
+    public func clearCircularWallPotential() {
+        massEngine?.wallPotential = baseWallPotential
+        paramsEngine?.wallPotential = baseWallPotential
+        metalRunner?.setWallPotential(baseWallPotential)
+        metalResidentStep = nil
+    }
+
+    public func setHardCircularObstacle(centerX: Float, centerY: Float, radius: Float) {
+        precondition(radius > 0, "Hard obstacle radius must be positive.")
+        let obstacleMask = flowLeniaBuildCircularWallMask(
+            sx: runtimeConfig.sx,
+            sy: runtimeConfig.sy,
+            centerX: centerX,
+            centerY: centerY,
+            radius: radius,
+            periodic: runtimeConfig.border == "torus"
+        ).expandedDimensions(axes: [0, 3])
+        wallMask = baseWallMask.map { $0 * obstacleMask } ?? obstacleMask
+        metalResidentStep = nil
+    }
+
+    public func clearHardObstacle() {
+        wallMask = baseWallMask
+        metalResidentStep = nil
     }
 
     public func diagnostics(for state: FlowLeniaInteractiveState) -> LeniaDiagnosticsFrame {
@@ -1537,6 +1585,59 @@ private func flowLeniaBuildWallMask(sx: Int, sy: Int, config: WallsConfig) -> ML
         for x in x0..<x1 {
             for y in y0..<y1 {
                 values[x * sy + y] = 0
+            }
+        }
+    }
+    return MLXArray(values).reshaped([sx, sy])
+}
+
+private func flowLeniaBuildCircularWallMask(
+    sx: Int,
+    sy: Int,
+    centerX: Float,
+    centerY: Float,
+    radius: Float,
+    periodic: Bool
+) -> MLXArray {
+    let radiusSquared = radius * radius
+    var values = [Float](repeating: 1, count: sx * sy)
+    for x in 0..<sx {
+        for y in 0..<sy {
+            var dx = abs(Float(x) - centerX)
+            var dy = abs(Float(y) - centerY)
+            if periodic {
+                dx = min(dx, Float(sx) - dx)
+                dy = min(dy, Float(sy) - dy)
+            }
+            if dx * dx + dy * dy <= radiusSquared {
+                values[x * sy + y] = 0
+            }
+        }
+    }
+    return MLXArray(values).reshaped([sx, sy])
+}
+
+private func flowLeniaBuildCircularWallPotential(
+    sx: Int,
+    sy: Int,
+    centerX: Float,
+    centerY: Float,
+    radius: Float,
+    height: Float,
+    periodic: Bool
+) -> MLXArray {
+    let radiusSquared = radius * radius
+    var values = [Float](repeating: 0, count: sx * sy)
+    for x in 0..<sx {
+        for y in 0..<sy {
+            var dx = abs(Float(x) - centerX)
+            var dy = abs(Float(y) - centerY)
+            if periodic {
+                dx = min(dx, Float(sx) - dx)
+                dy = min(dy, Float(sy) - dy)
+            }
+            if dx * dx + dy * dy <= radiusSquared {
+                values[x * sy + y] = height
             }
         }
     }

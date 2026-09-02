@@ -170,7 +170,7 @@ def build_track1_candidate_manifest(
         "candidates": candidates,
         "nextUse": [
             "Render family-balanced candidates after the active Metal harvest finishes.",
-            "Validate compact-moving candidates at 192/256 before treating them as organism-like.",
+            "Measure temporal individuality at 192/256 before treating compact movers as coherent individuals.",
             (
                 "Use top-displacement candidates as transport controls; many are not "
                 "compact-connected."

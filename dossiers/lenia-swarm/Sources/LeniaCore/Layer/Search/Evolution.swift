@@ -86,7 +86,7 @@ public struct FitnessConfig: Codable {
     public let occupiedFractionMin: Float?
     public let occupiedFractionMax: Float?
     public let occupiedGrowthMax: Float?
-    public let organismnessPenalty: Float?
+    public let constraintPenalty: Float?
     public let morphologyThreshold: Float?
 
     enum CodingKeys: String, CodingKey {
@@ -171,7 +171,7 @@ public struct FitnessConfig: Codable {
         case occupiedFractionMin = "occupied_fraction_min"
         case occupiedFractionMax = "occupied_fraction_max"
         case occupiedGrowthMax = "occupied_growth_max"
-        case organismnessPenalty = "organismness_penalty"
+        case constraintPenalty = "constraint_penalty"
         case morphologyThreshold = "morphology_threshold"
     }
 
@@ -257,7 +257,7 @@ public struct FitnessConfig: Codable {
         occupiedFractionMin: Float? = nil,
         occupiedFractionMax: Float? = nil,
         occupiedGrowthMax: Float? = nil,
-        organismnessPenalty: Float? = nil,
+        constraintPenalty: Float? = nil,
         morphologyThreshold: Float? = nil
     ) {
         self.objective = objective
@@ -341,7 +341,7 @@ public struct FitnessConfig: Codable {
         self.occupiedFractionMin = occupiedFractionMin
         self.occupiedFractionMax = occupiedFractionMax
         self.occupiedGrowthMax = occupiedGrowthMax
-        self.organismnessPenalty = organismnessPenalty
+        self.constraintPenalty = constraintPenalty
         self.morphologyThreshold = morphologyThreshold
     }
 
@@ -1281,7 +1281,6 @@ public final class EvolutionEngine {
             "sector_transport_motion",
             "coherent_transport",
             "body_locomotion",
-            "organismness",
         ]
         if !supportedObjectives.contains(esConfig.fitness.objective) {
             fatalError("Unsupported evolution objective: \(esConfig.fitness.objective)")
@@ -2148,10 +2147,7 @@ public final class EvolutionEngine {
 
     private func objectiveUsesTranslatedShapeOverlap(_ objective: String) -> Bool {
         objective == "coherent_transport" ||
-            objective == "body_locomotion" ||
-            (objective == "organismness" &&
-                (esConfig.fitness.translatedShapeOverlapMin != nil ||
-                    esConfig.fitness.occupiedGrowthMax != nil))
+            objective == "body_locomotion"
     }
 
     private func deadSnapshot() -> CenterSnapshot {
@@ -2930,8 +2926,6 @@ public final class EvolutionEngine {
              "angular_phase_motion",
              "sector_transport_motion":
             return adjustedFitness(base: 0.0, measurement: measurement)
-        case "organismness":
-            return adjustedFitness(base: 0.0, measurement: measurement)
         case "coherent_transport":
             guard let mid = measurement.mid, mid.alive,
                   let target = measurement.target, target.alive else {
@@ -3122,7 +3116,7 @@ public final class EvolutionEngine {
         if let reward = esConfig.fitness.centerVelocityReward {
             value += reward * requireMetric(measurement.centerVelocity, requestedBy: "center_velocity_reward")
         }
-        return applyOrganismnessPenalty(value, measurement: measurement)
+        return applyConstraintPenalty(value, measurement: measurement)
     }
 
     private func bodyLocomotionAdjustedFitness(base: Float, measurement: CandidateMeasurement) -> Float {
@@ -3133,7 +3127,7 @@ public final class EvolutionEngine {
         if let penalty = esConfig.fitness.componentCountPenalty {
             value -= penalty * max(requireMetric(measurement.componentCount, requestedBy: "component_count_penalty") - 1.0, 0.0)
         }
-        return applyOrganismnessPenalty(value, measurement: measurement)
+        return applyConstraintPenalty(value, measurement: measurement)
     }
 
     private func bodyLocomotionScore(
@@ -3152,7 +3146,7 @@ public final class EvolutionEngine {
         )
     }
 
-    private func organismnessViolation(measurement: CandidateMeasurement) -> Float {
+    private func constraintViolation(measurement: CandidateMeasurement) -> Float {
         var violation: Float = 0.0
         if let minimum = esConfig.fitness.translatedShapeOverlapMin {
             violation += max(minimum - requireMetric(measurement.translatedShapeOverlap, requestedBy: "translated_shape_overlap_min"), 0.0)
@@ -3184,10 +3178,10 @@ public final class EvolutionEngine {
         return violation
     }
 
-    private func applyOrganismnessPenalty(_ value: Float, measurement: CandidateMeasurement) -> Float {
-        let violation = organismnessViolation(measurement: measurement)
+    private func applyConstraintPenalty(_ value: Float, measurement: CandidateMeasurement) -> Float {
+        let violation = constraintViolation(measurement: measurement)
         guard violation > 0 else { return value }
-        return value - (esConfig.fitness.organismnessPenalty ?? 1.0) * violation
+        return value - (esConfig.fitness.constraintPenalty ?? 1.0) * violation
     }
 
     private func coherentTransportAdjustedFitness(
@@ -3231,7 +3225,7 @@ public final class EvolutionEngine {
         if let penalty = esConfig.fitness.momentAnisotropyPenalty {
             value -= penalty * requireMetric(measurement.momentAnisotropy, requestedBy: "moment_anisotropy_penalty")
         }
-        return applyOrganismnessPenalty(value, measurement: measurement)
+        return applyConstraintPenalty(value, measurement: measurement)
     }
 
     private func failsMorphologyGuard(_ measurement: CandidateMeasurement) -> Bool {
@@ -3454,7 +3448,6 @@ public final class EvolutionEngine {
             "sector_transport_motion",
             "coherent_transport",
             "body_locomotion",
-            "organismness",
         ]
         if !supportedObjectives.contains(esConfig.fitness.objective) {
             fatalError("EvolutionEngine Metal backends do not support objective \(esConfig.fitness.objective).")

@@ -96,7 +96,7 @@ public enum SpecimenCaptureError: LocalizedError, Equatable {
         case .invalidSnapshot(let message):
             return message
         case .noMatterNearSelection:
-            return "No organism matter is present in this world."
+            return "No specimen matter is present in this world."
         }
     }
 }

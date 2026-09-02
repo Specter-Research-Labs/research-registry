@@ -750,7 +750,16 @@ def create_views(connection: DuckDBPyConnection) -> None:
             ) AS whole_body_motion_score,
             max(CASE WHEN creature_signal_axes.axis_id = 'deformation_without_dissolution_score'
                 THEN creature_signal_axes.raw_value END
-            ) AS deformation_without_dissolution_score
+            ) AS deformation_without_dissolution_score,
+            max(CASE WHEN creature_signal_axes.axis_id = 'localization_score'
+                THEN creature_signal_axes.raw_value END
+            ) AS localization_score,
+            max(CASE WHEN creature_signal_axes.axis_id = 'extent_stability_score'
+                THEN creature_signal_axes.raw_value END
+            ) AS extent_stability_score,
+            max(CASE WHEN creature_signal_axes.axis_id = 'temporal_individuality_score'
+                THEN creature_signal_axes.raw_value END
+            ) AS temporal_individuality_score
         FROM biological_states_vw
         LEFT JOIN creature_state_labels USING (state_id)
         LEFT JOIN creature_signal_axes USING (state_id)
@@ -1152,6 +1161,9 @@ def create_views(connection: DuckDBPyConnection) -> None:
             creature_states_vw.enclosure_persistence_score,
             creature_states_vw.whole_body_motion_score,
             creature_states_vw.deformation_without_dissolution_score,
+            creature_states_vw.localization_score,
+            creature_states_vw.extent_stability_score,
+            creature_states_vw.temporal_individuality_score,
             discovery_export_resolutions.original_export_dir,
             discovery_export_resolutions.resolved_export_dir,
             discovery_export_resolutions.replayable,
