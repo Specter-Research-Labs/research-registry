@@ -46,6 +46,9 @@ lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibrati
 lenia-swarm-local-results-library = "lenia_swarm_analysis.local_results_library:main"
 lenia-swarm-loop-variant-report = "lenia_swarm_analysis.loop_variant_report:main"
 lenia-swarm-chakazul-presets = "lenia_swarm_analysis.chakazul_presets:main"
+lenia-swarm-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.trajectory_inverse:main"
+lenia-swarm-refine-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.trajectory_inverse:refinement_main"
+lenia-swarm-render-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.render_trajectory_inverse:main"
 
 [build-system]
 requires = ["hatchling>=1.27.0"]

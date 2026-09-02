@@ -86,6 +86,8 @@
     .metric span { color: #c6cbd4; font-size: 11px; }
     .figure { margin: 0; border: 1px solid var(--ink); background: var(--night); box-shadow: var(--shadow); min-width: 0; }
     .figure > img { width: 100%; height: auto; }
+    .rule-recovery-scroll { overflow-x: auto; }
+    .rule-recovery-scroll img { display: block; width: 100%; height: auto; }
     .figure.light { background: #fff; }
     .figure.light .caption { color: var(--ink); border-color: var(--line); background: var(--panel); }
     .caption { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 16px 18px; color: #e9e7df; border-top: 1px solid #394051; }
@@ -122,6 +124,18 @@
     .case-metrics div { border: 1px solid var(--ink); background: var(--panel); padding: 16px; }
     .case-metrics strong { display: block; font: 800 23px/1 ui-monospace, monospace; margin-bottom: 8px; }
     .case-metrics span { display: block; color: var(--muted); font-size: 12px; }
+    .orbium-strip { display: grid; grid-template-columns: 105px repeat(4, minmax(150px, 1fr)); border: 1px solid var(--ink); background: var(--night); box-shadow: var(--shadow); margin-top: 22px; overflow-x: auto; }
+    .orbium-strip > * { min-width: 0; border-right: 1px solid #394051; }
+    .orbium-strip > *:nth-child(5n) { border-right: 0; }
+    .orbium-strip .strip-head { padding: 10px 8px; color: #aeb4c2; text-align: center; font: 800 9px/1.2 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .06em; }
+    .orbium-strip .strip-label { display: grid; place-items: center; color: var(--acid); padding: 12px; font: 800 10px/1.3 ui-monospace, monospace; text-transform: uppercase; text-align: center; border-top: 1px solid #394051; }
+    .orbium-strip figure { margin: 0; border-top: 1px solid #394051; }
+    .orbium-strip img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .orbium-strip figcaption { padding: 8px; color: #c6cbd4; font: 9px/1.3 ui-monospace, monospace; text-align: center; border-top: 1px solid #394051; }
+    .evidence-window { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--ink); margin-top: 22px; box-shadow: var(--shadow); }
+    .evidence-window article { padding: 22px; background: var(--panel); }
+    .evidence-window article + article { border-left: 1px solid var(--ink); background: #e8e9ff; }
+    .evidence-window p { margin: 0; }
     .case-step-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 28px; counter-reset: case-step; }
     .case-step { counter-increment: case-step; display: grid; grid-template-columns: minmax(180px, .78fr) 1fr; border: 1px solid var(--ink); background: var(--panel); min-width: 0; }
     .case-step img { width: 100%; height: 100%; min-height: 245px; object-fit: cover; background: var(--night); }
@@ -194,7 +208,7 @@
       section { margin-top: 70px; }
       .chapter-head { grid-template-columns: 1fr; gap: 10px; }
       .chapter-head > p { grid-column: auto; }
-      .question-grid, .metrics, .pipeline, .fact-strip, .boundary, .media-grid, .case-metrics, .case-step-grid { grid-template-columns: 1fr; }
+      .question-grid, .metrics, .pipeline, .fact-strip, .boundary, .media-grid, .case-metrics, .case-step-grid, .evidence-window { grid-template-columns: 1fr; }
       .question-grid article { border-right: 0; border-bottom: 1px solid #353b4c; }
       .question-grid article:last-child { border-bottom: 0; }
       .caption { grid-template-columns: 44px 1fr; }
@@ -208,6 +222,8 @@
       .triptych-labels span { padding: 8px 4px; font-size: 8px; }
       .raw-inset { grid-template-columns: 1fr; }
       .boundary article + article { border-left: 0; border-top: 1px solid var(--ink); }
+      .evidence-window article + article { border-left: 0; border-top: 1px solid var(--ink); }
+      .rule-recovery-scroll img { width: 760px; max-width: none; }
     }
     @media print {
       header { position: static; }
@@ -384,29 +400,66 @@
       </div>
 
       <div id="orbium-diagnostic" class="chapter-head" style="margin-top:76px">
-        <div class="chapter-no">03C / HARDER TARGETS</div>
-        <div><div class="eyebrow">Fixed frames and Orbium</div><h2>Neither fixed-frame request produced the intended body.</h2></div>
-        <p>We also asked the fixed-frame compiler to reproduce the leaf body and a rescaled frame from Orbium. Both Swift checks returned <code>held=false</code>. The leaf changes phase as it moves, while Orbium comes from a classical Lenia rule family that is absent from the broad three-kernel Flow Lenia corpus used to train this compiler.</p>
+        <div class="chapter-no">03C / ORBIUM INVERSE</div>
+        <div><div class="eyebrow">A clean phenotype-to-genotype test</div><h2>We rebuilt Orbium from one mature frame.</h2></div>
+        <p>This experiment stays inside Orbium's additive Lenia family. The compiler knows the update law, kernel shape, growth function, and initial cells. We hide the interaction scale and two growth parameters, then ask the compiler to recover them from the body at step 600.</p>
       </div>
-      <div class="failure-grid">
-        <figure><img src="assets/organic-fixed-target.png" alt="Leaf-like fixed-frame target."><figcaption>leaf frame · requested</figcaption></figure>
-        <figure><img src="assets/organic-fixed-result.png" alt="Thin body produced under the fixed-frame leaf search."><figcaption>leaf frame · not held · LCF 0.71</figcaption></figure>
-        <figure><img src="assets/orbium-fixed-target.png" alt="Rescaled Orbium fixed-frame target."><figcaption>rescaled Orbium frame · requested</figcaption></figure>
-        <figure><img src="assets/orbium-fixed-result.png" alt="Elongated body produced under the rescaled Orbium fixed-frame search."><figcaption>rescaled Orbium frame · not held · LCF 0.97</figcaption></figure>
-      </div>
-      <p class="reading"><strong>A single image does not specify how a changing body should behave, and the compiler cannot recover a rule family that its training corpus does not contain.</strong> The current objective treats phase change as shape error and searches only within the corpus parameterization. The next compiler should compare short trajectories and use priors that cover the requested family.</p>
 
-      <div class="media-grid" style="margin-top:22px">
+      <div class="pipeline">
+        <article class="stage"><h3>Constrain the family</h3><p>We use the native <code>qd24_additive_v1</code> update and Orbium's one-kernel geometry. We supply this family instead of asking the compiler to infer it.</p><span class="tag">known structure</span></article>
+        <article class="stage"><h3>Hide the rule</h3><p>The search starts from <code>R=10</code>, <code>m=0.12</code>, and <code>s=0.024</code>. That rule fragments the field instead of maintaining one body.</p><span class="tag small">wrong start</span></article>
+        <article class="stage"><h3>Search broadly</h3><p>A wide proposal cloud covers the declared parameter ranges. The first stage evaluates 2,688 complete 600-step rollouts.</p><span class="tag">28 × 96</span></article>
+        <article class="stage"><h3>Refine and replay</h3><p>A narrower second stage evaluates 1,152 more rollouts around the broad winner. We then run the result to step 1,200.</p><span class="tag">12 × 96 · held-out future</span></article>
+      </div>
+
+      <div class="attempt-grid" aria-label="Orbium search at step 600">
+        <figure class="attempt"><img src="assets/orbium-initial-600.png" alt="Orbium simulated at step 600 with the deliberately incorrect starting parameters."><figcaption><strong>Initial proposal</strong><span>The starting rule breaks the seed into a diffuse ring and small fragments.</span></figcaption></figure>
+        <figure class="attempt"><img src="assets/orbium-target-600.png" alt="Native Orbium target at step 600."><figcaption><strong>Observed body</strong><span>This single step-600 field is the image used by the final-frame search.</span></figcaption></figure>
+        <figure class="attempt"><img src="assets/orbium-still-600.png" alt="Compiled Orbium at step 600."><figcaption><strong>Compiled result</strong><span>The recovered parameters grow one localized body with the target's structure.</span></figcaption></figure>
+      </div>
+      <p class="attempt-reading"><strong>The compiler turns a visibly wrong rule into a close reconstruction.</strong> It does this by simulating each proposal and comparing the complete step-600 field with the target.</p>
+
+      <div class="media-grid">
         <figure class="media-figure">
-          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-start.png?v=native-20260902"><source src="assets/orbium-body.mp4?v=native-20260902" type="video/mp4"></video>
-          <figcaption><strong>Orbium under its native update rule</strong>This is the Chakazul O2(a) preset under the repository's additive native-parity runtime. It keeps one compact body across 1,500 steps; its measured mass changes by less than one percent and the specimen is nearly stationary.</figcaption>
+          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-target-600.png"><source src="assets/orbium-target-zoom.mp4" type="video/mp4"></video>
+          <figcaption><strong>Hidden native rule</strong>The target is Chakazul O2(a). The compiler sees only its step-600 body, together with the known family and initial cells.</figcaption>
         </figure>
         <figure class="media-figure">
-          <div class="visual-pair" style="gap:0"><img src="assets/orbium-late.png?v=native-20260902" alt="Orbium late in the native additive replay."><img src="assets/orbium-flow-import-late.png?v=flow-control-20260901" alt="A rescaled Orbium import dispersed by the Flow Lenia runtime."></div>
-          <figcaption><strong>Native replay and runtime mismatch</strong>Left: O2(a) remains coherent under classical additive Lenia. Right: a rescaled import disperses when it is run with Flow Lenia's mass-conserving transport. The right image diagnoses an incompatible runtime; it is not canonical Orbium behavior.</figcaption>
+          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-still-600.png"><source src="assets/orbium-still-zoom.mp4" type="video/mp4"></video>
+          <figcaption><strong>Compiled rule</strong>The reconstruction remains one coherent organism through step 1,200. It was scored only at step 600.</figcaption>
         </figure>
       </div>
-      <p class="schematic-note"><strong>Replay correction.</strong> The organic videos use the current Metal body renderer. The Orbium video was regenerated on September 2 from the native Chakazul preset with <code>qd24_additive_v1</code> parity semantics. The historical charts and cohort statistics above remain bound to their June artifacts.</p>
+
+      <div class="case-metrics" aria-label="Orbium hidden parameter recovery">
+        <div><strong>10 → 12.94</strong><span>interaction scale R · native 13</span></div>
+        <div><strong>0.12 → 0.1526</strong><span>growth center m · native 0.150</span></div>
+        <div><strong>0.024 → 0.0180</strong><span>growth width s · native 0.017</span></div>
+        <div><strong>3,840</strong><span>candidate rollouts · broad search plus local refinement</span></div>
+      </div>
+
+      <figure class="figure"><div class="rule-recovery-scroll"><img src="assets/orbium-rule-recovery.svg" alt="Initial, native, broad-search, refined still-frame, and refined trajectory parameter values for the Orbium inverse experiment."></div><figcaption class="caption"><span class="figure-no">09A</span><p>The narrow second stage improved the field match from 0.878 to 0.969 and brought all three hidden values close to the native rule.</p><span class="tag">broad search → local refinement</span></figcaption></figure>
+
+      <div class="orbium-strip" aria-label="Native and compiled Orbium at observed and held-out steps">
+        <div></div><div class="strip-head">step 100 · unseen</div><div class="strip-head">step 300 · unseen</div><div class="strip-head">step 600 · target</div><div class="strip-head">step 1,200 · unseen</div>
+        <div class="strip-label">native rule</div>
+        <figure><img src="assets/orbium-target-100.png" alt="Native Orbium at step 100."><figcaption>early history</figcaption></figure>
+        <figure><img src="assets/orbium-target-300.png" alt="Native Orbium at step 300."><figcaption>early history</figcaption></figure>
+        <figure><img src="assets/orbium-target-600.png" alt="Native Orbium target at step 600."><figcaption>observed phenotype</figcaption></figure>
+        <figure><img src="assets/orbium-target-1200.png" alt="Native Orbium at step 1200."><figcaption>held-out future</figcaption></figure>
+        <div class="strip-label">compiled rule</div>
+        <figure><img src="assets/orbium-still-100.png" alt="Compiled Orbium at step 100."><figcaption>not scored</figcaption></figure>
+        <figure><img src="assets/orbium-still-300.png" alt="Compiled Orbium at step 300."><figcaption>not scored</figcaption></figure>
+        <figure><img src="assets/orbium-still-600.png" alt="Compiled Orbium at step 600."><figcaption>search target</figcaption></figure>
+        <figure><img src="assets/orbium-still-1200.png" alt="Compiled Orbium at step 1200."><figcaption>not scored</figcaption></figure>
+      </div>
+
+      <p class="reading"><strong>For this target, one mature anatomy was enough to recover a viable nearby rule.</strong> A still image does not generally determine a dynamical system. In this test, however, the compiler already knew the update family, kernel geometry, growth function, initial cells, and elapsed time.</p>
+
+      <div class="evidence-window">
+        <article><h3>We repeated both stages with three frames</h3><p>A control search used steps 100, 300, and 600. It returned <code>R=12.80</code>, <code>m=0.1435</code>, and <code>s=0.0185</code>. Its replay also remained coherent through step 1,200.</p></article>
+        <article><h3>The single frame recovered closer values</h3><p>After equal broad and refinement budgets, the three-frame control remained farther from the hidden values than the search that used only step 600. We should not generalize from one organism, but Orbium's mature field strongly constrained the parameters inside this rule family.</p></article>
+      </div>
+      <p class="schematic-note"><strong>What changed.</strong> The previous section compared Orbium with an incompatible Flow Lenia runtime. That comparison has been removed. These replays use the target's additive implementation family. The compiler still receives that family as an input.</p>
     </section>
 
     <section id="function" class="shell">
@@ -449,11 +502,11 @@
       <div class="chapter-head">
         <div class="chapter-no">06 / CLAIM</div>
         <div><div class="eyebrow">Scope of the result</div><h2 id="boundary-title">The experiments support a limited form compiler.</h2></div>
-        <p>The evidence covers a 5,000-form fiber analysis, eight conditional samples, four historical refined targets, one historical explicit-form demonstration, and the new organic and Orbium diagnostics above. Cohort-level performance for arbitrary spatial targets has not been measured.</p>
+        <p>The evidence covers a 5,000-form fiber analysis, eight conditional samples, four historical refined targets, one historical explicit-form demonstration, the organic case, and one blinded within-family Orbium reconstruction. Cohort-level performance for arbitrary spatial targets has not been measured.</p>
       </div>
       <div class="boundary">
-        <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The global dimension estimate and local Jacobian probes both leave many rule dimensions unconstrained.</li><li>The conditional model produced eight stable candidates across two held-out targets.</li><li>Simulation-guided refinement lowered the cost for all four historical targets.</li><li>The organic case matched mass closely and occupancy and gyration more loosely while producing a different anatomy.</li><li>The fixed-frame leaf and Orbium requests both failed their Swift hold check.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
-        <article><h3>Questions still open</h3><ul><li>How often the descriptor compiler succeeds across a held-out target cohort.</li><li>How to compare full trajectories without treating normal phase changes as errors.</li><li>Whether an Orbium-specific prior can recover Orbium-like rules from its body.</li><li>Whether MLX and Swift remain equivalent over long trajectories.</li><li>Whether compiled rules transfer across physics regimes and genotype families.</li><li>How to include locomotion and other behaviors directly in the target.</li><li>Which exact source revision produced the historical artifacts.</li></ul></article>
+        <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The global dimension estimate and local Jacobian probes both leave many rule dimensions unconstrained.</li><li>The conditional model produced eight stable candidates across two held-out targets.</li><li>Simulation-guided refinement lowered the cost for all four historical targets.</li><li>The organic case matched bulk measurements while producing a different anatomy.</li><li>Inside the correct additive family, the Orbium search recovered a viable near-rule from one mature frame.</li><li>The Orbium reconstruction remained coherent for 600 steps beyond its search horizon.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
+        <article><h3>Questions still open</h3><ul><li>How often the descriptor compiler succeeds across a held-out target cohort.</li><li>How to select or infer the rule family before continuous parameter search.</li><li>When a short trajectory materially improves on a mature final frame.</li><li>Whether MLX and another implementation remain equivalent over long trajectories.</li><li>Whether compiled rules transfer across physics regimes and genotype families.</li><li>How to include locomotion and other behaviors directly in the target.</li><li>Which exact source revision produced the historical artifacts.</li></ul></article>
       </div>
     </section>
 
@@ -493,7 +546,6 @@
 <tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-bridge-genotype-phenotype.svg</code></td><td>3,035</td><td><code>363d5905c657c2e8…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/result.json</code></td><td>15,065</td><td><code>b5076bb598eb5baa…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>compiled/organic-2876-trial/result.json</code></td><td>7,625</td><td><code>c1193ac52130e294…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/orbium-unicaudatus-trial/result.json</code></td><td>7,603</td><td><code>ee6c904c5db6fdf5…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/target-base.json</code></td><td>1,890</td><td><code>96712d27919bb1b9…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/recovered-base.json</code></td><td>2,145</td><td><code>7e61c204d374891b…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/search.json</code></td><td>1,051</td><td><code>8b5d8113be1a7d28…</code></td></tr>
@@ -509,23 +561,33 @@
 <tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/trace-06.png</code></td><td>14,818</td><td><code>67ef9c151f42f916…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>compiled/organic-2876-trial/target.png</code></td><td>13,121</td><td><code>47aac3a2842dedcf…</code></td></tr>
 <tr><td>2026-09-01 case-study rerun</td><td><code>compiled/organic-2876-trial/creature_swift.png</code></td><td>11,834</td><td><code>2eb60b71e7951b21…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/orbium-unicaudatus-trial/target.png</code></td><td>2,381</td><td><code>827f02072d4c55f8…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/orbium-unicaudatus-trial/creature_swift.png</code></td><td>6,433</td><td><code>73c277936260881d…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/index.json</code></td><td>1,480</td><td><code>2ae4a547d0601b10…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/library-0-canonical-O2(a)-Orbium unicaudatus.mp4</code></td><td>291,129</td><td><code>deb8d1619d17bc0e…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/frames_color/frame_000000.png</code></td><td>106,838</td><td><code>52f7016d8c8f3638…</code></td></tr>
-<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/frames_color/frame_000119.png</code></td><td>191,220</td><td><code>2e49a8cf6370fd16…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/config.json</code></td><td>4,305</td><td><code>8a7cfcb8a4e9a9f0…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/search.json</code></td><td>778</td><td><code>39b0a0b1b881be28…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/results.jsonl</code></td><td>4,835</td><td><code>cc2f4bc9e1dfb369…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/summary.json</code></td><td>447</td><td><code>0484652b5ca2e917…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/orbium-native.mp4</code></td><td>520,320</td><td><code>0d678f8d150e85b7…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/frame-start.png</code></td><td>134,502</td><td><code>f995959d6176be6a…</code></td></tr>
-<tr><td>2026-09-02 native Orbium parity replay</td><td><code>media/orbium-native-parity/frame-late.png</code></td><td>132,929</td><td><code>6da05ba86cf093bb…</code></td></tr>
-<tr><td>Flow Lenia import control</td><td><code>canonical-orbium-unicaudatus-3FF60A20/base.json</code></td><td>9,837</td><td><code>9134edc12939f7f9…</code></td></tr>
-<tr><td>Flow Lenia import control</td><td><code>canonical-orbium-unicaudatus-3FF60A20/meta.json</code></td><td>22,292</td><td><code>af5af4dd00e21ae0…</code></td></tr>
-<tr><td>Flow Lenia import control</td><td><code>canonical-orbium-unicaudatus-3FF60A20/search.json</code></td><td>882</td><td><code>9680a2075d796bb0…</code></td></tr></tbody></table>
-          <p class="provenance-note"><strong>Two evidence windows.</strong> The frozen June artifact JSON files do not record their source revision, so <code>artifactProducingRevision</code> remains empty. The September organic and Orbium reruns are listed separately with exact configs, results, frames, and videos. The complete machine-readable ledger is <a href="source-manifest.json"><code>source-manifest.json</code></a>.</p>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/experiment.json</code></td><td>1,284</td><td><code>e7d17cd2fca63593…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/still-es.json</code></td><td>197,817</td><td><code>c8262451e333bf09…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/still-run/best.json</code></td><td>141</td><td><code>2e99f52c9591bc8c…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/still-run/history.jsonl</code></td><td>12,161</td><td><code>540933e403833518…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/trajectory-es.json</code></td><td>591,583</td><td><code>dbb42ebb131bbec6…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/trajectory-run/best.json</code></td><td>143</td><td><code>97902a5fa38d9c4f…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/trajectory-run/history.jsonl</code></td><td>12,205</td><td><code>b3d53ac97bb5e77a…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-initial-600.png</code></td><td>255,120</td><td><code>040ffb2271b6a55b…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-inverse-summary.json</code></td><td>1,271</td><td><code>904916197598ed88…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-rule-recovery.svg</code></td><td>6,418</td><td><code>a0125a9a26e7e89b…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-100.png</code></td><td>187,493</td><td><code>88843f7bf4824041…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-300.png</code></td><td>186,697</td><td><code>b7b91bc0d08bd62f…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-600.png</code></td><td>185,894</td><td><code>e7eab62cced81915…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-1200.png</code></td><td>189,664</td><td><code>4c4cdf26049b32a0…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-zoom.mp4</code></td><td>812,518</td><td><code>37933bf5d5c5bb09…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-100.png</code></td><td>186,009</td><td><code>2befab83732f67c4…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-300.png</code></td><td>187,779</td><td><code>2aacf01203662f32…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-600.png</code></td><td>186,927</td><td><code>e0ca77a833258f14…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-1200.png</code></td><td>186,735</td><td><code>2d39c4a8ffcb94ed…</code></td></tr>
+<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-zoom.mp4</code></td><td>834,738</td><td><code>12c499769fe12ce6…</code></td></tr>
+<tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/refine-es.json</code></td><td>197,819</td><td><code>7bcda98c84215935…</code></td></tr>
+<tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/refine-run/best.json</code></td><td>143</td><td><code>43c2f254196e5526…</code></td></tr>
+<tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/refine-run/history.jsonl</code></td><td>5,165</td><td><code>e28679376dddcbf6…</code></td></tr>
+<tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/trajectory-refine-es.json</code></td><td>591,585</td><td><code>840f48b9aab5b4be…</code></td></tr>
+<tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/trajectory-refine-run/best.json</code></td><td>140</td><td><code>93cfbf398087a085…</code></td></tr>
+<tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/trajectory-refine-run/history.jsonl</code></td><td>5,192</td><td><code>7b2bca59b1f57f3b…</code></td></tr></tbody></table>
+          <p class="provenance-note"><strong>Two evidence windows.</strong> The frozen June artifact JSON files do not record their source revision, so <code>artifactProducingRevision</code> remains empty. The September organic rerun and within-family Orbium inverse are listed separately with exact configs, results, frames, and videos. The complete machine-readable ledger is <a href="source-manifest.json"><code>source-manifest.json</code></a>.</p>
         </div>
       </details>
     </section>
