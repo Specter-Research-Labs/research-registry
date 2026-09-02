@@ -19,7 +19,15 @@ pub const ARCHIVE_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/arc
 #[serde(deny_unknown_fields)]
 pub struct Catalog {
     pub(crate) schema_version: u32,
+    pub(crate) categories: Vec<Category>,
     pub(crate) reports: Vec<Report>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct Category {
+    pub(crate) id: String,
+    pub(crate) label: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -67,6 +75,20 @@ pub(crate) fn validate_catalog(catalog: &Catalog) -> Result<()> {
         bail!("reports must contain at least one entry");
     }
 
+    let mut categories = HashSet::new();
+    for (index, category) in catalog.categories.iter().enumerate() {
+        if !is_safe_segment(&category.id) {
+            bail!("categories[{index}].id must be a lowercase public URL segment");
+        }
+        if category.label.trim().is_empty() {
+            bail!("categories[{index}].label must not be empty");
+        }
+        reject_prose_anti_patterns(&format!("categories[{index}]"), "label", &category.label)?;
+        if !categories.insert(category.id.as_str()) {
+            bail!("duplicate category id '{}'", category.id);
+        }
+    }
+
     let mut ids = HashSet::new();
     let mut release_ids = HashSet::new();
     for (index, report) in catalog.reports.iter().enumerate() {
@@ -96,6 +118,7 @@ pub(crate) fn validate_catalog(catalog: &Catalog) -> Result<()> {
             ("question", report.question.as_str()),
             ("answer", report.answer.as_str()),
             ("next_question", report.next_question.as_str()),
+            ("evidence_class", report.evidence_class.as_str()),
         ] {
             reject_prose_anti_patterns(&label, field.0, field.1)?;
         }
@@ -113,6 +136,9 @@ pub(crate) fn validate_catalog(catalog: &Catalog) -> Result<()> {
         }
         if !is_safe_segment(&report.category) {
             bail!("{label}.category must be a lowercase public URL segment");
+        }
+        if !categories.contains(report.category.as_str()) {
+            bail!("{label}.category has no display label");
         }
         if !is_safe_segment(&report.release_id) {
             bail!("{label}.release_id must be a lowercase public URL segment");
@@ -196,6 +222,13 @@ fn reject_prose_anti_patterns(label: &str, field: &str, value: &str) -> Result<(
         "productive failure",
         "research programme",
         "research program",
+        "sealed",
+        "mega report",
+        "public edition",
+        "public projection",
+        "exact predecessor",
+        "source-bound",
+        "superseded",
     ] {
         if lower.contains(phrase) {
             bail!("{label}.{field} contains rejected public prose phrase '{phrase}'");
@@ -254,20 +287,20 @@ pub fn render_page_meta(title: &str, description: &str, canonical_path: &str) ->
     .into_string()
 }
 
-fn category_label(category: &str) -> String {
-    let words = category.replace('-', " ");
-    let mut chars = words.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-        None => words,
-    }
+fn category_label<'a>(catalog: &'a Catalog, category: &str) -> &'a str {
+    catalog
+        .categories
+        .iter()
+        .find(|entry| entry.id == category)
+        .map(|entry| entry.label.as_str())
+        .expect("validated catalog contains every report category")
 }
 
 fn report_links(report: &Report) -> Markup {
     html! {
         div class="ce-report-links" {
-            a class="ce-button ce-button-primary" href=(report_href(report)) { "Read report" }
-            a class="ce-button" href=(exact_report_href(report)) { "Report HTML" }
+            a class="ce-button ce-button-primary" href=(report_href(report)) { "Read the introduction" }
+            a class="ce-button" href=(exact_report_href(report)) { "Read the full report" }
         }
     }
 }
@@ -275,29 +308,19 @@ fn report_links(report: &Report) -> Markup {
 fn report_receipt(report: &Report) -> Markup {
     html! {
         details class="ce-receipt" {
-            summary { "Evidence receipt" }
+            summary { "Methods and sources" }
             dl {
                 div {
                     dt { "Report date" }
                     dd { time datetime=(&report.date) { (&report.date) } }
                 }
                 div {
-                    dt { "Evidence" }
+                    dt { "Study type" }
                     dd { (&report.evidence_class) }
                 }
                 div {
-                    dt { "Release" }
-                    dd { code { (&report.release_id) } }
-                }
-                div {
-                    dt { "Sealed source SHA-256" }
+                    dt { "Source checksum" }
                     dd { code { (&report.sha256[..12]) "..." } }
-                }
-                @if !report.supersedes.is_empty() {
-                    div {
-                        dt { "Supersedes" }
-                        dd { (report.supersedes.join(", ")) }
-                    }
                 }
             }
         }
@@ -308,15 +331,15 @@ fn question_triptych(report: &Report) -> Markup {
     html! {
         div class="ce-question-grid" {
             div class="ce-question-cell" {
-                div class="ce-question-label" { "We were asking" }
+                div class="ce-question-label" { "Question" }
                 p { (&report.question) }
             }
             div class="ce-question-cell ce-answer-cell" {
-                div class="ce-question-label" { "This experiment found" }
+                div class="ce-question-label" { "Result" }
                 p { (&report.answer) }
             }
             div class="ce-question-cell" {
-                div class="ce-question-label" { "That sent us to" }
+                div class="ce-question-label" { "Next question" }
                 p { (&report.next_question) }
             }
         }
@@ -378,13 +401,13 @@ pub fn render_landing(catalog: &Catalog) -> String {
             div class="ce-kicker" { "Flow Lenia / causal emergence" }
             h1 { "When does a developing system begin to become itself?" }
             p class="ce-hero-dek" {
-                "Flow Lenia begins here as a seeded field that is still reorganizing; over hundreds of updates, some fields settle into persistent, organic-looking bodies, while others fragment or take another route through shape space. We disturbed that process at different moments and measured how the available futures changed, because the first signs of an organism may appear in what a state can still become before they are obvious in its shape."
+                "Flow Lenia begins as a seeded field that is still reorganizing. Over hundreds of updates, some fields become temporally consistent, coherent individuals, while others fragment or disperse. We disturbed that process at different moments and measured how the available futures changed. The first signs of an individual may appear in its responses before they become obvious in its shape."
             }
         }
 
         section class="ce-lead-report" aria-labelledby="ce-lead-title" {
             div class="ce-section-heading" {
-                div class="ce-kicker" { "Begin with the synthesis" }
+                div class="ce-kicker" { "Current synthesis" }
                 h2 id="ce-lead-title" { a href=(report_href(lead)) { (&lead.title) } }
                 p class="ce-dek" { (&lead.dek) }
             }
@@ -398,9 +421,9 @@ pub fn render_landing(catalog: &Catalog) -> String {
         @if !remaining.is_empty() {
             section class="ce-report-section" aria-labelledby="featured-experiments" {
                 div class="ce-section-heading" {
-                    div class="ce-kicker" { "Follow the experiments" }
-                    h2 id="featured-experiments" { "The experiments that opened the next questions" }
-                    p { "These are the strongest places to enter after the synthesis, kept in editorial order so that each answer leads naturally into the question that followed it." }
+                    div class="ce-kicker" { "Key experiments" }
+                    h2 id="featured-experiments" { "How the central claims were tested" }
+                    p { "These reports contain the clearest direct tests behind the synthesis. Each one states the intervention, the observed result, and the question that remains open." }
                 }
                 div class="ce-card-grid" {
                     @for report in remaining {
@@ -412,9 +435,9 @@ pub fn render_landing(catalog: &Catalog) -> String {
 
         aside class="ce-library-invite" {
             div {
-                div class="ce-kicker" { "The complete record" }
-                h2 { "Go deeper into the experimental record" }
-                p { "The library keeps every current report in the order in which its question belongs, while the archive retains pilots and superseded syntheses without asking a new reader to mistake them for the present account." }
+                div class="ce-kicker" { "All reports" }
+                h2 { "Read the evidence behind the synthesis" }
+                p { "The library groups current experiments by the question they address. The archive keeps earlier pilots, null results, and previous syntheses available for comparison." }
             }
             div class="ce-report-links" {
                 a class="ce-button ce-button-primary" href="/dossiers/lenia-swarm/causal-emergence/library/" { "Browse the library" }
@@ -437,21 +460,21 @@ pub fn render_library(catalog: &Catalog) -> String {
     html! {
         (page_nav("library"))
         header class="ce-page-header" {
-            div class="ce-kicker" { "Current reports / " (reports.len()) }
+            div class="ce-kicker" { (reports.len()) " current reports" }
             h1 { "Report library" }
-            p { "Each report begins with the question we could actually test, says what happened in that experiment, and leaves the next question visible; together they show how the work moved from early steering to commitment, hidden state, developmental history, and the changing possibilities of the body." }
+            p { "Each report states a testable question, the result, and what remains unresolved. Together they trace the work from early organization and intervention responses to developmental commitment, hidden composition, control, and memory." }
         }
         nav class="ce-category-nav" aria-label="Report categories" {
             @for (category, entries) in &groups {
-                a href=(format!("#{category}")) { (category_label(category)) " " span { (entries.len()) } }
+                a href=(format!("#{category}")) { (category_label(catalog, category)) " " span { (entries.len()) } }
             }
         }
         @for (category, entries) in &groups {
             section class="ce-report-section" aria-labelledby=(format!("{category}-heading")) {
                 div class="ce-section-heading ce-section-heading-row" {
                     div {
-                        div class="ce-kicker" { "Chapter" }
-                        h2 id=(format!("{category}-heading")) { (category_label(category)) }
+                        div class="ce-kicker" { "Topic" }
+                        h2 id=(format!("{category}-heading")) { (category_label(catalog, category)) }
                     }
                     div class="ce-count" { (entries.len()) " reports" }
                 }
@@ -480,7 +503,7 @@ pub fn render_archive(catalog: &Catalog) -> String {
         header class="ce-page-header" {
             div class="ce-kicker" { "Experimental record / " (reports.len()) }
             h1 { "Archive" }
-            p { "These pilots and earlier syntheses are no longer the shortest route into the work, although they still show which questions were tried, where an apparent pattern weakened, and why the next experiment took the shape it did." }
+            p { "These earlier pilots and syntheses show which questions were tested, where an apparent pattern weakened, and why later experiments changed direction." }
         }
         @if reports.is_empty() {
             p class="ce-empty" { "No reports are currently archived." }
@@ -489,8 +512,8 @@ pub fn render_archive(catalog: &Catalog) -> String {
             section class="ce-report-section" aria-labelledby=(format!("archive-{category}-heading")) {
                 div class="ce-section-heading ce-section-heading-row" {
                     div {
-                        div class="ce-kicker" { "Archive chapter" }
-                        h2 id=(format!("archive-{category}-heading")) { (category_label(category)) }
+                        div class="ce-kicker" { "Topic" }
+                        h2 id=(format!("archive-{category}-heading")) { (category_label(catalog, category)) }
                     }
                     div class="ce-count" { (entries.len()) " reports" }
                 }
@@ -512,6 +535,7 @@ mod tests {
     fn valid_catalog_json() -> String {
         serde_json::json!({
             "schema_version": 1,
+            "categories": [{"id": "synthesis", "label": "Synthesis"}],
             "reports": [{
                 "id": "organism-appears-first",
                 "title": "The organism appears first in possibility space",
@@ -541,13 +565,14 @@ mod tests {
         let landing = render_landing(&catalog);
         let library = render_library(&catalog);
         let archive = render_archive(&catalog);
-        assert!(landing.contains("Begin with the synthesis"));
+        assert!(landing.contains("Current synthesis"));
         assert!(landing.contains("organism-appears-first"));
         assert!(!landing.contains("ce-chip"));
         assert!(!landing.contains("ce-report-meta"));
         assert!(landing.contains("Report date"));
         assert!(landing.contains("2026-08-30"));
-        assert!(library.contains("This experiment found"));
+        assert!(library.contains("Next question"));
+        assert!(library.contains("Synthesis"));
         assert!(!library.contains("ce-chip"));
         assert!(archive.contains("No reports are currently archived"));
     }
