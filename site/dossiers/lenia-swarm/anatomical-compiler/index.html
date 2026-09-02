@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A visual, evidence-bound synthesis of the Flow Lenia anatomical compiler experiments.">
+  <title>Many Rules Can Build the Same Body | SPECTER Labs</title>
+  <style>
+    :root {
+      --paper: #f3efe5;
+      --paper-2: #e8e2d4;
+      --ink: #111521;
+      --muted: #62645f;
+      --line: #9c9a92;
+      --panel: #fbf8f0;
+      --night: #111521;
+      --night-2: #1a2030;
+      --acid: #d6ff3f;
+      --coral: #f15b43;
+      --blue: #5865dc;
+      --teal: #39b7a2;
+      --shadow: 8px 8px 0 rgba(17, 21, 33, .12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      background-color: var(--paper);
+      background-image: linear-gradient(rgba(17,21,33,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(17,21,33,.045) 1px, transparent 1px);
+      background-size: 32px 32px;
+      line-height: 1.58;
+    }
+    a { color: inherit; text-underline-offset: 3px; }
+    img { display: block; max-width: 100%; }
+    code, .mono, h1, h2, h3, .eyebrow, .tag, .status, .metric, summary, th, .chapter-no, .figure-no {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .shell { width: min(1220px, calc(100% - 40px)); margin: 0 auto; }
+    .wide-shell { width: min(1440px, calc(100% - 40px)); margin: 0 auto; }
+    header { position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--ink); background: rgba(243,239,229,.96); backdrop-filter: blur(10px); }
+    .masthead { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { font: 800 13px/1 ui-monospace, monospace; letter-spacing: .13em; text-transform: uppercase; text-decoration: none; }
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav a { border: 1px solid var(--ink); padding: 7px 9px; font: 700 10px/1 ui-monospace, monospace; text-transform: uppercase; text-decoration: none; background: var(--panel); }
+    .nav a:hover, .nav a:focus { background: var(--acid); }
+    main { padding: 62px 0 110px; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(310px, .82fr); gap: 46px; align-items: end; margin-bottom: 62px; }
+    .eyebrow { color: var(--blue); text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 800; }
+    h1 { font-size: clamp(48px, 7vw, 90px); line-height: .94; letter-spacing: -.067em; margin: 20px 0 24px; }
+    .dek { font-size: clamp(19px, 2vw, 25px); line-height: 1.43; max-width: 840px; margin: 0; }
+    .status { display: inline-flex; gap: 10px; align-items: center; margin-top: 26px; padding: 9px 11px; border: 1px solid var(--ink); background: var(--panel); text-transform: uppercase; letter-spacing: .06em; font-size: 10px; font-weight: 800; }
+    .status::before { content: ""; width: 9px; height: 9px; background: var(--coral); border: 1px solid var(--ink); }
+    .hero-diagram { position: relative; min-height: 470px; border: 1px solid var(--ink); background: var(--night); overflow: hidden; box-shadow: var(--shadow); }
+    .hero-diagram::before, .hero-diagram::after { content: ""; position: absolute; border: 1px solid rgba(214,255,63,.28); border-radius: 50%; }
+    .hero-diagram::before { width: 420px; height: 420px; right: -145px; top: -170px; }
+    .hero-diagram::after { width: 250px; height: 250px; left: -110px; bottom: -120px; }
+    .fiber-thread { position: absolute; left: 16%; right: 16%; height: 1px; background: linear-gradient(90deg, var(--coral), var(--acid)); transform-origin: right center; opacity: .88; }
+    .fiber-thread::before { content: ""; position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--coral); }
+    .fiber-thread::after { content: ""; position: absolute; right: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--acid); box-shadow: 0 0 24px rgba(214,255,63,.7); }
+    .t1 { top: 22%; transform: rotate(18deg); } .t2 { top: 35%; transform: rotate(9deg); } .t3 { top: 49%; transform: rotate(0deg); } .t4 { top: 64%; transform: rotate(-10deg); } .t5 { top: 78%; transform: rotate(-19deg); }
+    .hero-label { position: absolute; color: #dce0e9; font: 700 11px/1.35 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; }
+    .hero-label.rules { left: 22px; top: 22px; color: var(--coral); }
+    .hero-label.body { right: 22px; bottom: 22px; color: var(--acid); text-align: right; }
+    .hero-count { position: absolute; right: 22px; top: 55px; color: white; font: 800 76px/.9 ui-monospace, monospace; letter-spacing: -.08em; }
+    .hero-count small { display: block; margin-top: 12px; color: #aeb4c2; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-align: right; }
+    section { margin-top: 100px; scroll-margin-top: 96px; }
+    .chapter-head { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(280px, 420px); gap: 28px; align-items: end; margin-bottom: 34px; border-top: 2px solid var(--ink); padding-top: 20px; scroll-margin-top: 104px; }
+    .chapter-no { color: var(--coral); font-size: 14px; font-weight: 800; letter-spacing: .08em; }
+    h2 { font-size: clamp(38px, 5vw, 68px); line-height: .99; letter-spacing: -.06em; margin: 8px 0 0; }
+    .chapter-head > p { margin: 0; font-size: 18px; }
+    h3 { font-size: 22px; line-height: 1.16; margin: 0 0 12px; }
+    .synthesis { border-top: 10px solid var(--coral); background: var(--night); color: #f7f4ec; padding: clamp(28px, 5vw, 58px); box-shadow: var(--shadow); }
+    .synthesis .eyebrow { color: var(--acid); }
+    .synthesis h2 { max-width: 980px; margin: 12px 0 20px; }
+    .synthesis > p { max-width: 880px; font-size: 20px; }
+    .question-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #353b4c; margin-top: 32px; }
+    .question-grid article { padding: 22px; min-height: 195px; border-right: 1px solid #353b4c; }
+    .question-grid article:last-child { border-right: 0; }
+    .question-grid article:nth-child(2) { background: #252d27; }
+    .question-grid .tag { color: var(--acid); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 800; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+    .metric { border: 1px solid #353b4c; background: var(--night-2); padding: 18px; }
+    .metric strong { display: block; color: var(--acid); font-size: 31px; line-height: 1; margin-bottom: 9px; }
+    .metric span { color: #c6cbd4; font-size: 11px; }
+    .figure { margin: 0; border: 1px solid var(--ink); background: var(--night); box-shadow: var(--shadow); min-width: 0; }
+    .figure > img { width: 100%; height: auto; }
+    .figure.light { background: #fff; }
+    .figure.light .caption { color: var(--ink); border-color: var(--line); background: var(--panel); }
+    .caption { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 16px 18px; color: #e9e7df; border-top: 1px solid #394051; }
+    .figure-no { color: var(--acid); font-size: 11px; font-weight: 800; }
+    .caption p { margin: 0; }
+    .caption .tag { color: var(--acid); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    .figure.light .caption .tag, .figure.light .figure-no { color: var(--blue); }
+    .visual-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .visual-stack { display: grid; gap: 22px; }
+    .schematic-note { padding: 16px 18px; margin: 18px 0 0; background: #fff4d9; border-left: 5px solid var(--coral); }
+    .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; counter-reset: stage; }
+    .stage { counter-increment: stage; border: 1px solid var(--ink); background: var(--panel); padding: 22px; min-height: 270px; position: relative; }
+    .stage::before { content: "0" counter(stage); display: block; color: var(--blue); font: 800 12px/1 ui-monospace, monospace; margin-bottom: 35px; }
+    .stage p { margin: 0; }
+    .stage .tag { display: inline-block; margin-top: 16px; padding: 5px 7px; border: 1px solid var(--ink); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; background: white; }
+    .stage .tag.small { background: #fff0db; }
+    .sample-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin: 18px 0 8px; }
+    .sample-grid span { aspect-ratio: 1; display: grid; place-items: center; background: var(--teal); border: 1px solid var(--ink); font: 800 11px/1 ui-monospace, monospace; }
+    .sample-note { font-size: 14px; color: var(--muted); margin: 0; }
+    .attempt-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--ink); background: var(--night); }
+    .attempt { margin: 0; min-width: 0; }
+    .attempt + .attempt { border-left: 1px solid #394051; }
+    .attempt img { width: 100%; aspect-ratio: 1; object-fit: cover; image-rendering: auto; }
+    .attempt figcaption { color: #e9e7df; border-top: 1px solid #394051; padding: 13px; min-height: 94px; }
+    .attempt figcaption strong { display: block; color: var(--acid); font: 800 11px/1.2 ui-monospace, monospace; text-transform: uppercase; margin-bottom: 8px; }
+    .attempt figcaption span { font-size: 13px; }
+    .attempt-reading { border: 1px solid var(--ink); border-top: 0; background: var(--panel); padding: 18px; margin: 0; }
+    .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .media-figure { margin: 0; border: 1px solid var(--ink); background: var(--night); box-shadow: var(--shadow); min-width: 0; }
+    .media-figure video { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #000; }
+    .media-figure figcaption { color: #e9e7df; border-top: 1px solid #394051; padding: 16px 18px; }
+    .media-figure figcaption strong { display: block; color: var(--acid); font: 800 11px/1.2 ui-monospace, monospace; text-transform: uppercase; margin-bottom: 7px; }
+    .case-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0; }
+    .case-metrics div { border: 1px solid var(--ink); background: var(--panel); padding: 16px; }
+    .case-metrics strong { display: block; font: 800 23px/1 ui-monospace, monospace; margin-bottom: 8px; }
+    .case-metrics span { display: block; color: var(--muted); font-size: 12px; }
+    .case-step-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 28px; counter-reset: case-step; }
+    .case-step { counter-increment: case-step; display: grid; grid-template-columns: minmax(180px, .78fr) 1fr; border: 1px solid var(--ink); background: var(--panel); min-width: 0; }
+    .case-step img { width: 100%; height: 100%; min-height: 245px; object-fit: cover; background: var(--night); }
+    .case-step-copy { padding: 20px; }
+    .case-step-copy::before { content: "0" counter(case-step); display: block; color: var(--coral); font: 800 12px/1 ui-monospace, monospace; margin-bottom: 22px; }
+    .case-step-copy p { margin: 0; }
+    .compare-table { width: 100%; margin-top: 16px; font: 11px/1.35 ui-monospace, monospace; }
+    .compare-table td, .compare-table th { padding: 6px 4px; }
+    .trace-strip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--ink); background: var(--night); margin-top: 22px; }
+    .trace-strip figure { margin: 0; min-width: 0; }
+    .trace-strip figure + figure { border-left: 1px solid #394051; }
+    .trace-strip img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .trace-strip figcaption { padding: 9px; color: #e9e7df; border-top: 1px solid #394051; font: 10px/1.3 ui-monospace, monospace; }
+    .failure-grid { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--ink); background: var(--night); }
+    .failure-grid figure { margin: 0; min-width: 0; }
+    .failure-grid figure + figure { border-left: 1px solid #394051; }
+    .failure-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .failure-grid figcaption { min-height: 76px; padding: 10px; border-top: 1px solid #394051; color: #e9e7df; font-size: 12px; }
+    .triptych-labels { display: grid; grid-template-columns: repeat(3, 1fr); color: white; background: var(--night); border-top: 1px solid #394051; }
+    .triptych-labels span { padding: 10px; text-align: center; font: 700 10px/1.2 ui-monospace, monospace; text-transform: uppercase; }
+    .triptych-labels span + span { border-left: 1px solid #394051; }
+    .fact-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+    .fact-strip div { border-left: 5px solid var(--coral); background: var(--panel); padding: 17px; }
+    .fact-strip strong { display: block; font: 800 27px/1 ui-monospace, monospace; margin-bottom: 8px; }
+    .raw-inset { display: grid; grid-template-columns: 160px 1fr; gap: 20px; align-items: center; padding: 18px; border: 1px solid var(--ink); border-top: 0; background: var(--panel); }
+    .raw-inset img { width: 160px; image-rendering: pixelated; border: 1px solid var(--ink); }
+    .raw-inset p { margin: 0; }
+    .bars { border: 1px solid var(--ink); background: var(--panel); padding: 24px; }
+    .bar-row + .bar-row { margin-top: 22px; }
+    .bar-head { display: flex; justify-content: space-between; gap: 14px; font: 700 12px/1.2 ui-monospace, monospace; margin-bottom: 7px; }
+    .track { height: 22px; background: var(--paper-2); border: 1px solid var(--ink); }
+    .fill { height: 100%; min-width: 3px; background: var(--teal); border-right: 1px solid var(--ink); }
+    .fill.locomotion { background: var(--coral); }
+    .fill.tortuosity { background: var(--blue); }
+    .reading { margin: 18px 0 0; padding: 18px; background: #e8e9ff; border-left: 5px solid var(--blue); }
+    .boundary { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--ink); box-shadow: var(--shadow); }
+    .boundary article { padding: clamp(24px, 4vw, 40px); background: var(--panel); }
+    .boundary article + article { background: #ffe9e3; border-left: 1px solid var(--ink); }
+    .boundary h3 { font-size: 26px; }
+    .boundary ul { margin: 0; padding-left: 20px; }
+    .boundary li + li { margin-top: 11px; }
+    .receipt { border: 1px solid var(--ink); background: var(--panel); }
+    summary { cursor: pointer; padding: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+    .receipt-inner { padding: 0 20px 24px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border-top: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; }
+    th { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+    td code { font-size: 10px; }
+    .provenance-note { padding: 18px; margin: 18px 0 0; background: #fff4d9; border: 1px solid var(--ink); }
+    footer { border-top: 2px solid var(--ink); padding: 28px 0 52px; background: rgba(243,239,229,.95); }
+    footer .shell { display: flex; justify-content: space-between; gap: 28px; flex-wrap: wrap; font-size: 13px; }
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-diagram { min-height: 360px; }
+      .chapter-head { grid-template-columns: 84px 1fr; }
+      .chapter-head > p { grid-column: 2; }
+      .question-grid, .metrics, .pipeline, .case-metrics { grid-template-columns: 1fr 1fr; }
+      .visual-pair { grid-template-columns: 1fr; }
+      .case-step { grid-template-columns: 1fr; }
+      .sample-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .shell, .wide-shell { width: min(100% - 24px, 1220px); }
+      .masthead { align-items: flex-start; flex-direction: column; padding: 16px 0; }
+      .nav { display: none; }
+      main { padding-top: 40px; }
+      h1 { font-size: 48px; }
+      .hero-diagram { min-height: 300px; }
+      .hero-count { font-size: 56px; }
+      section { margin-top: 70px; }
+      .chapter-head { grid-template-columns: 1fr; gap: 10px; }
+      .chapter-head > p { grid-column: auto; }
+      .question-grid, .metrics, .pipeline, .fact-strip, .boundary, .media-grid, .case-metrics, .case-step-grid { grid-template-columns: 1fr; }
+      .question-grid article { border-right: 0; border-bottom: 1px solid #353b4c; }
+      .question-grid article:last-child { border-bottom: 0; }
+      .caption { grid-template-columns: 44px 1fr; }
+      .caption .tag { grid-column: 2; white-space: normal; }
+      .attempt-grid { grid-template-columns: 1fr; }
+      .attempt + .attempt { border-left: 0; border-top: 1px solid #394051; }
+      .attempt img { aspect-ratio: auto; }
+      .trace-strip, .failure-grid { grid-template-columns: 1fr 1fr; }
+      .trace-strip figure:nth-child(3), .failure-grid figure:nth-child(3) { border-left: 0; }
+      .trace-strip figure:nth-child(n+3), .failure-grid figure:nth-child(n+3) { border-top: 1px solid #394051; }
+      .triptych-labels span { padding: 8px 4px; font-size: 8px; }
+      .raw-inset { grid-template-columns: 1fr; }
+      .boundary article + article { border-left: 0; border-top: 1px solid var(--ink); }
+    }
+    @media print {
+      header { position: static; }
+      body { background: white; }
+      .figure, .synthesis { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell masthead">
+      <a class="brand" href="#top">SPECTER LABS / ANATOMICAL COMPILER</a>
+      <nav class="nav" aria-label="Report navigation">
+        <a href="#inverse">The inverse</a><a href="#compiler">The compiler</a><a href="#forms">Forms</a><a href="#function">Function</a><a href="#limits">Limits</a><a href="#evidence">Evidence</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="shell hero">
+      <div>
+        <div class="eyebrow">Flow Lenia / anatomical compiler / visual synthesis</div>
+        <h1>Many rules can build the same body.</h1>
+        <p class="dek">We began by asking whether we could recover a rule from the body it grows. The experiments showed that the measured body is compatible with many rules. The compiler therefore compares several candidates, runs each one, and checks the resulting form. Behavior and dynamics omitted from the target can still vary.</p>
+        <div class="status">Historical cohort + organic and Orbium reruns · rebuilt 2026-09-01</div>
+      </div>
+      <div class="hero-diagram" role="img" aria-label="Five distinct rule threads converge toward one measured body, illustrating a many-to-one inverse.">
+        <span class="hero-label rules">different rules</span><span class="hero-label body">one measured body</span>
+        <span class="hero-count">~19.6 D<small>rule dimensions remain<br>after measuring the body</small></span>
+        <i class="fiber-thread t1"></i><i class="fiber-thread t2"></i><i class="fiber-thread t3"></i><i class="fiber-thread t4"></i><i class="fiber-thread t5"></i>
+      </div>
+    </div>
+
+    <section class="shell synthesis" aria-labelledby="synthesis-title">
+      <div class="eyebrow">Summary</div>
+      <h2 id="synthesis-title">A measured body is compatible with many rules.</h2>
+      <p>Each Flow Lenia rule in this analysis has 40 parameters. We ran 5,000 distinct rules and described each stable result with 15 measurements covering body form, mass, energy, and movement. We then asked how much those measurements narrow down the rule that produced them.</p>
+      <p>Across the corpus, variation in the 40 rule parameters behaved as if it had about 25.5 independent directions. Variation in the 15 outcome measurements behaved as if it had about 5.9 independent directions. The 19.6-direction gap estimates how many ways a rule can change while its measured result stays in roughly the same part of body space. A second calculation estimated a similar gap of 20.9 directions.</p>
+      <p>We checked the same idea without subtracting dimension estimates. Rules that produced nearby measured bodies were, on average, 98.6% as far apart as randomly paired rules. Similar bodies therefore do little to identify the underlying rule. The compiler responds by generating several candidates, running each one, and selecting according to the body that actually grows.</p>
+      <div class="question-grid">
+        <article><div class="tag">Question</div><p>How tightly does a measured body constrain the rule that generated it?</p></article>
+        <article><div class="tag">Result</div><p>Rules producing nearby measured bodies had an average separation equal to 98.6% of the distance between randomly paired rules.</p></article>
+        <article><div class="tag">Engineering response</div><p>The compiler samples conditional proposals, refines them by running the simulation, and validates the selected rule in the forward simulator.</p></article>
+      </div>
+      <div class="metrics">
+        <div class="metric"><strong>5,000</strong><span>stable and distinct forms</span></div>
+        <div class="metric"><strong>19.6 D</strong><span>global rule dimensions left after measuring the body</span></div>
+        <div class="metric"><strong>37.7 / 40</strong><span>mean local rule dimensions left by the descriptors</span></div>
+        <div class="metric"><strong>0.986</strong><span>neighbor ratio (shuffled = 1.0)</span></div>
+      </div>
+    </section>
+
+    <section id="inverse" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">01 / THE INVERSE</div>
+        <div><div class="eyebrow">Relating rules to bodies</div><h2>One measured body corresponds to many rules.</h2></div>
+        <p>Phenotype space contains the measurements made on each body. For any location in that space, the corresponding fiber contains the rules that produce similar measurements.</p>
+      </div>
+      <div class="visual-pair">
+        <figure class="figure light">
+          <img src="assets/fiber-bundle.svg" alt="Schematic of a phenotype base space with genotype fibers above several phenotypes.">
+          <figcaption class="caption"><span class="figure-no">01A</span><p>This earlier diagram places phenotype space below the corresponding sets of rules. It explains the relation conceptually. The positions are not measured data.</p><span class="tag">reused schematic</span></figcaption>
+        </figure>
+        <figure class="figure light">
+          <img src="assets/sections.svg" alt="Two different sections through genotype fibers selecting different rules over the same phenotype positions.">
+          <figcaption class="caption"><span class="figure-no">01B</span><p>A section selects one rule for each phenotype. Another section can select different rules while reproducing the same measured bodies, which leaves their dynamics free to differ.</p><span class="tag">reused schematic</span></figcaption>
+        </figure>
+      </div>
+      <figure class="figure light" style="margin-top:22px">
+        <img src="assets/genotype-phenotype-bridge.svg" alt="A path through genotype space projects to a phenotype path until it enters a failure band where no stable phenotype is produced.">
+        <figcaption class="caption"><span class="figure-no">01C</span><p>The third diagram shows a gap in the viable-body region. A smooth change in rule parameters can cross that gap, so the compiler may need to find a route around it.</p><span class="tag">reused schematic</span></figcaption>
+      </figure>
+      <p class="schematic-note"><strong>Figures 01A–01C are conceptual diagrams.</strong> Figures 02–04 are generated from the frozen anatomical-compiler results.</p>
+      <div class="visual-stack" style="margin-top:22px">
+        <figure class="figure"><img src="assets/dimension-decomposition.svg" alt="A dimension bar decomposing the genotype into measured phenotype dimension and inverse-fiber dimension."><figcaption class="caption"><span class="figure-no">02</span><p>The genotype estimate is 25.5 dimensions. The body descriptors account for 5.9 dimensions, leaving an estimated 19.6 rule dimensions unconstrained.</p><span class="tag">5,000 forms</span></figcaption></figure>
+        <div class="visual-pair">
+          <figure class="figure"><img src="assets/inverse-locality.svg" alt="Observed inverse locality ratio with a narrow interval compared with the shuffled null."><figcaption class="caption"><span class="figure-no">03</span><p>Bodies that are close in phenotype space remain widely separated in genotype space. The zoomed axis shows the observed ratio and its interval beside the shuffled value.</p><span class="tag">cohort diagnostic</span></figcaption></figure>
+          <figure class="figure"><img src="assets/jacobian-spectrum.svg" alt="Heatmap of seven local Jacobian singular values across twelve genotypes."><figcaption class="caption"><span class="figure-no">04</span><p>Across 12 rules, about five singular values crossed the response threshold, while sensitivity was concentrated in fewer effective directions. The participation-rank estimate leaves a mean 37.7-dimensional local fiber in the 40-parameter rule.</p><span class="tag">12 local probes</span></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="compiler" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">02 / THE COMPILER</div>
+        <div><div class="eyebrow">From inference to simulation</div><h2>The compiler proposes several rules, refines them, and tests the result.</h2></div>
+        <p>The conditional model provides starting candidates. Simulation measures how each candidate grows, and the refinement search uses those measurements to find better candidates. A separate Swift implementation then checks the MLX search runtime over the first six steps.</p>
+      </div>
+      <div class="pipeline">
+        <article class="stage"><h3>Measure the ambiguity</h3><p>Across 5,000 forms, body similarity provided little information about which rules were nearby.</p><span class="tag">cohort diagnostic</span></article>
+        <article class="stage"><h3>Sample candidates</h3><p>The conditional invertible network was trained on 4,200 rules and tested on 400. The resimulation check covered 2 targets with 4 samples each.</p><span class="tag small">small validation</span></article>
+        <article class="stage"><h3>Refine by rollout</h3><p>Across four targets, simulation-guided search reduced mean standardized cost from 1.149 to 0.576, a 50% decrease.</p><span class="tag small">four targets</span></article>
+        <article class="stage"><h3>Check the implementation</h3><p>For one rule and one seed, the MLX and Swift paths remained above 0.999956 correlation through six steps.</p><span class="tag small">one rule / seed</span></article>
+      </div>
+      <div class="visual-pair">
+        <div class="visual-stack">
+          <div class="bars">
+            <div class="eyebrow">Small conditional proposal test</div>
+            <h3 style="margin-top:10px">All eight samples remained stable, while mean descriptor error was 2.79.</h3>
+            <div class="sample-grid" aria-label="Eight stable samples across two targets"><span>1A</span><span>1B</span><span>1C</span><span>1D</span><span>2A</span><span>2B</span><span>2C</span><span>2D</span></div>
+            <p class="sample-note">The two targets received four samples each, and mean sampled fiber spread was 0.80. The test is too small to estimate a cohort success rate.</p>
+          </div>
+          <figure class="figure"><img src="assets/refinement.svg" alt="Four dumbbells showing every target moving from a higher start cost to a lower refined cost."><figcaption class="caption"><span class="figure-no">05</span><p>Refinement lowered the recorded cost for all four targets. Their final costs still ranged from 0.129 to 0.947.</p><span class="tag">four targets</span></figcaption></figure>
+        </div>
+        <figure class="figure"><img src="assets/runtime-validation.svg" alt="Line chart of MLX versus Swift disagreement across steps two through six."><figcaption class="caption"><span class="figure-no">06</span><p>For one genotype and initialization seed, MLX and Swift remained closely aligned through step six. This check covers the beginning of one trajectory.</p><span class="tag">implementation check</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section id="forms" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">03 / COMPLETE WALKTHROUGH</div>
+        <div><div class="eyebrow">Phenotype to genotype</div><h2>We compiled a leaf-like life history into a candidate rule.</h2></div>
+        <p>Specimen 2876 was selected from the 5,000-form corpus because its developed body is compact, tapered, and easy to recognize. The target is the complete 1,200-step trajectory summarized by four measurements. It is not a request to reproduce one frozen frame.</p>
+      </div>
+
+      <div class="media-grid">
+        <figure class="media-figure">
+          <video controls loop muted playsinline preload="metadata" poster="assets/organic-target.png"><source src="assets/organic-target.mp4" type="video/mp4"></video>
+          <figcaption><strong>Observed phenotype</strong>The source rule grows from a generic patch into a tapered body with a bright central ridge. The video covers 1,200 simulation steps.</figcaption>
+        </figure>
+        <figure class="media-figure">
+          <video controls loop muted playsinline preload="metadata" poster="assets/organic-recovered.png"><source src="assets/organic-recovered.mp4" type="video/mp4"></video>
+          <figcaption><strong>Recovered rule</strong>The selected rule grows a segmented body with a different spatial arrangement. It is stable in the Swift replay and matches the requested bulk measurements unevenly.</figcaption>
+        </figure>
+      </div>
+      <p class="attempt-reading"><strong>The compiler did not reconstruct the leaf anatomy.</strong> It found a different organism whose mass, occupied area, and spread sit near the requested trajectory. This is a concrete example of the inverse fiber: the measured phenotype leaves enough freedom for another body plan.</p>
+
+      <div class="case-metrics" aria-label="Target and recovered phenotype measurements">
+        <div><strong>799.9 → 791.1</strong><span>mean mass · 1.1% relative error</span></div>
+        <div><strong>0.0141 → 0.0141</strong><span>mass variation over the recorded trajectory</span></div>
+        <div><strong>11.7% → 10.5%</strong><span>occupied area · 10.2% relative error</span></div>
+        <div><strong>1005.0 → 1152.8</strong><span>spatial spread · 14.7% relative error</span></div>
+      </div>
+
+      <div class="case-step-grid">
+        <article class="case-step">
+          <img src="assets/organic-target.png" alt="Leaf-like source organism midway through its development.">
+          <div class="case-step-copy"><h3>Observe the full trajectory</h3><p>The body changes as it develops. We therefore record a trajectory rather than treating one attractive frame as the whole phenotype.</p></div>
+        </article>
+        <article class="case-step">
+          <img src="assets/organic-target-late.png" alt="The same source organism near the end of the measured trajectory.">
+          <div class="case-step-copy"><h3>Measure what the objective can see</h3><p>Mass, mass variation, occupied area, and gyration define the request. Orientation, segmentation, topology, and locomotion are not part of this target.</p>
+            <table class="compare-table"><thead><tr><th>measurement</th><th>target</th><th>recovered</th></tr></thead><tbody><tr><td>mass</td><td>799.9</td><td>791.1</td></tr><tr><td>occupancy</td><td>11.7%</td><td>10.5%</td></tr><tr><td>gyration</td><td>1005.0</td><td>1152.8</td></tr></tbody></table>
+          </div>
+        </article>
+        <article class="case-step">
+          <img src="assets/organic-trace-00.png" alt="Body grown by the nearest retrieved rule before refinement.">
+          <div class="case-step-copy"><h3>Retrieve a starting rule</h3><p>The compiler finds nearby corpus entries under the four measured descriptors, simulates twelve candidates, and starts from the best proposal. The known target values are present in the corpus, so this is a retrieval-and-refinement case rather than a held-out generalization test.</p></div>
+        </article>
+        <article class="case-step">
+          <img src="assets/organic-trace-06.png" alt="Body grown by the best rule after six refinement generations.">
+          <div class="case-step-copy"><h3>Refine through simulation</h3><p>Six generations of 32 candidates reduced the MLX descriptor cost from 6.99 to 5.26, a 25% decrease. The final Swift standardized cost was 0.975.</p></div>
+        </article>
+      </div>
+
+      <figure class="figure" style="margin-top:22px"><img src="assets/organic-search-trace.svg" alt="Best descriptor cost over six search generations."><figcaption class="caption"><span class="figure-no">07A</span><p>The largest improvement occurred in the first generation. Later generations changed the rule only slightly under the MLX objective.</p><span class="tag">6 × 32 rollouts</span></figcaption></figure>
+      <div class="trace-strip" aria-label="Bodies produced by the best rule during refinement">
+        <figure><img src="assets/organic-trace-00.png" alt="Initial retrieved organism."><figcaption>retrieval · cost 6.99</figcaption></figure>
+        <figure><img src="assets/organic-trace-01.png" alt="Best organism after generation one."><figcaption>generation 1</figcaption></figure>
+        <figure><img src="assets/organic-trace-02.png" alt="Best organism after generation two."><figcaption>generation 2</figcaption></figure>
+        <figure><img src="assets/organic-trace-06.png" alt="Best organism after generation six."><figcaption>generation 6 · cost 5.26</figcaption></figure>
+      </div>
+
+      <figure class="figure" style="margin-top:22px"><img src="assets/organic-genotype.svg" alt="Radial kernel profiles, growth responses, and parameter values for the recovered three-kernel rule."><figcaption class="caption"><span class="figure-no">07B</span><p>The recovered genotype contains one shared radius and three kernel blocks. Each block specifies a radial profile and a growth response. The second kernel has zero growth height in the selected rule, so two kernels drive the final dynamics.</p><span class="tag">40 parameters</span></figcaption></figure>
+
+      <div class="chapter-head" style="margin-top:76px">
+        <div class="chapter-no">03B / WHAT THE TARGET OMITTED</div>
+        <div><div class="eyebrow">Similar measurements, different anatomy</div><h2>The recovered organism is not the same shape.</h2></div>
+        <p>The target and recovered trajectories have similar mass and occupied area, but their late bodies remain visibly different. The compiler was not asked to preserve segmentation or the exact field, so the score cannot reward those properties.</p>
+      </div>
+      <div class="visual-pair">
+        <figure class="figure"><img src="assets/organic-target-late.png" alt="Late target body with one tapered central form."><figcaption class="caption"><span class="figure-no">08A</span><p>The source trajectory retains one dominant tapered body with peripheral material.</p><span class="tag">target</span></figcaption></figure>
+        <figure class="figure"><img src="assets/organic-recovered-late.png" alt="Late recovered body split into repeated segments."><figcaption class="caption"><span class="figure-no">08B</span><p>The recovered rule distributes similar mass across a repeated segmented arrangement.</p><span class="tag">recovered</span></figcaption></figure>
+      </div>
+
+      <div id="orbium-diagnostic" class="chapter-head" style="margin-top:76px">
+        <div class="chapter-no">03C / HARDER TARGETS</div>
+        <div><div class="eyebrow">Fixed frames and Orbium</div><h2>Two biologically cleaner requests failed.</h2></div>
+        <p>We also asked the fixed-frame compiler to hold the leaf body and a canonical Orbium field. Both Swift checks returned <code>held=false</code>. A moving body changes phase, while Orbium also lies outside the broad three-kernel corpus family used for this compiler.</p>
+      </div>
+      <div class="failure-grid">
+        <figure><img src="assets/organic-fixed-target.png" alt="Leaf-like fixed-frame target."><figcaption>leaf frame · requested</figcaption></figure>
+        <figure><img src="assets/organic-fixed-result.png" alt="Thin body produced under the fixed-frame leaf search."><figcaption>leaf frame · not held · LCF 0.71</figcaption></figure>
+        <figure><img src="assets/orbium-fixed-target.png" alt="Canonical Orbium fixed-frame target."><figcaption>Orbium field · requested</figcaption></figure>
+        <figure><img src="assets/orbium-fixed-result.png" alt="Elongated body produced under the Orbium fixed-frame search."><figcaption>Orbium field · not held · LCF 0.97</figcaption></figure>
+      </div>
+      <p class="reading"><strong>The fixed-frame objective is too strict for a changing organism and too narrow for an unseen rule family.</strong> It treats phase change as shape error and searches only within the current corpus parameterization. These failures mark the next compiler work: trajectory-aware shape descriptors and family-specific priors.</p>
+
+      <div class="media-grid" style="margin-top:22px">
+        <figure class="media-figure">
+          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-start.png"><source src="assets/orbium-body.mp4" type="video/mp4"></video>
+          <figcaption><strong>Canonical Orbium replay</strong>The exact strict replay bundle begins with the recognizable imported body. Under this Flow Lenia replay it expands over 900 steps rather than settling into the requested fixed form.</figcaption>
+        </figure>
+        <figure class="media-figure">
+          <div class="visual-pair" style="gap:0"><img src="assets/orbium-start.png" alt="Canonical Orbium at the start of the replay."><img src="assets/orbium-late.png" alt="Canonical Orbium after expansion late in the replay."></div>
+          <figcaption><strong>Start and late replay</strong>The new body renderer makes the change easy to see. This is a replay diagnostic, not a successful Orbium compilation.</figcaption>
+        </figure>
+      </div>
+      <p class="schematic-note"><strong>Color update.</strong> The two organic videos and the Orbium replay were regenerated on September 1 with the current Metal body renderer. The historical charts and cohort statistics above remain bound to their June artifacts.</p>
+    </section>
+
+    <section id="function" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">04 / FUNCTION</div>
+        <div><div class="eyebrow">Predicting behavior from shape</div><h2>Shape explained activity and very little locomotion.</h2></div>
+        <p>We measured six behaviors in 8,174 creatures and used principal component analysis to build a functional morphospace. Its first two axes explained 87.2% of the behavioral variance. A regression from eight shape descriptors explained 72.5% of the activity axis and 3.8% of the locomotion axis.</p>
+      </div>
+      <figure class="figure"><img src="assets/functional-morphospace.png" alt="Scatterplot of 8,174 creatures in the first two functional principal axes, colored by speed."><figcaption class="caption"><span class="figure-no">10</span><p>Most creatures occupy a dense low-speed region, while the fastest creatures form a sparse tail. The plot describes the measured distribution.</p><span class="tag">8,174 creatures</span></figcaption></figure>
+      <div class="visual-pair" style="margin-top:22px">
+        <div>
+          <div class="bars" aria-label="Variance in functional axes explained by shape">
+            <div class="bar-row"><div class="bar-head"><span>Activity</span><span>R² 0.725</span></div><div class="track"><div class="fill" style="width:72.5%"></div></div></div>
+            <div class="bar-row"><div class="bar-head"><span>Locomotion</span><span>R² 0.038</span></div><div class="track"><div class="fill locomotion" style="width:3.8%"></div></div></div>
+            <div class="bar-row"><div class="bar-head"><span>Tortuosity</span><span>R² 0.110</span></div><div class="track"><div class="fill tortuosity" style="width:11%"></div></div></div>
+          </div>
+          <p class="reading"><strong>Occupancy and spread helped predict activity.</strong> The same shape measurements explained 3.8% of the locomotion axis. A form target therefore leaves most locomotion variation unspecified.</p>
+        </div>
+        <figure class="figure"><img src="assets/shape-predicts-function.png" alt="Observed versus predicted functional scores from the shape-to-function regression."><figcaption class="caption"><span class="figure-no">11</span><p>Activity predictions cluster near the diagonal. Locomotion predictions remain compressed near the bottom of the plot.</p><span class="tag">descriptive regression</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section id="limits" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">05 / LIMITS</div>
+        <div><div class="eyebrow">Development across initial conditions</div><h2>The fitted landscape poorly predicted the observed flow.</h2></div>
+        <p>We expected different initial conditions to converge toward the same body. Instead, the trajectories showed weak downhill alignment, and five of eight genotypes spread out over time. A compiler cannot assume that every selected rule will correct perturbations or converge from nearby starts.</p>
+      </div>
+      <div class="visual-pair">
+        <figure class="figure"><img src="assets/basin-map.svg" alt="Eight inferred basins in a two-dimensional descriptor space, sized by weight, with aggregate downhill alignment 0.124."><figcaption class="caption"><span class="figure-no">12</span><p>The analysis identified eight basins. Across 3,600 trajectory points, observed drift had an alignment of 0.124 with the fitted downhill direction.</p><span class="tag">descriptive</span></figcaption></figure>
+        <figure class="figure"><img src="assets/canalization.svg" alt="Slopegraph of early versus late phenotype spread for eight genotypes run from six initial conditions."><figcaption class="caption"><span class="figure-no">13</span><p>Across eight genotypes, 3 narrowed and 5 widened. Mean late/early spread was 1.39×.</p><span class="tag">8 × 6 rollouts</span></figcaption></figure>
+      </div>
+      <div class="visual-pair" style="margin-top:22px">
+        <figure class="figure"><img src="assets/complexity-drift.svg" alt="Scatterplot of complexity versus drift for 80 coherent and random creatures."><figcaption class="caption"><span class="figure-no">14</span><p>Across 80 creatures, complexity and drift had a correlation of r = 0.045. The coherent and random groups overlapped.</p><span class="tag">80 creatures</span></figcaption></figure>
+        <figure class="figure"><img src="assets/archive-map.svg" alt="Coverage map of the occupancy and gyration archive used for compiler warm starts."><figcaption class="caption"><span class="figure-no">15</span><p>The warm-start archive occupied 195 of 576 cells (33.9%). The empty regions show body measurements for which this corpus offers no direct proposal.</p><span class="tag">proposal coverage</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="shell" aria-labelledby="boundary-title">
+      <div class="chapter-head">
+        <div class="chapter-no">06 / CLAIM</div>
+        <div><div class="eyebrow">Scope of the result</div><h2 id="boundary-title">The experiments support a limited form compiler.</h2></div>
+        <p>The evidence covers a 5,000-form fiber analysis, eight conditional samples, four historical refined targets, one historical explicit-form demonstration, and the new organic and Orbium diagnostics above. Cohort-level performance for arbitrary spatial targets has not been measured.</p>
+      </div>
+      <div class="boundary">
+        <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The global dimension estimate and local Jacobian probes both leave many rule dimensions unconstrained.</li><li>The conditional model produced eight stable candidates across two held-out targets.</li><li>Simulation-guided refinement lowered the cost for all four historical targets.</li><li>The organic case matched mass closely and occupancy and gyration more loosely while producing a different anatomy.</li><li>The fixed-frame leaf and Orbium requests both failed their Swift hold check.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
+        <article><h3>Questions still open</h3><ul><li>How often the descriptor compiler succeeds across a held-out target cohort.</li><li>How to compare full trajectories without treating normal phase changes as errors.</li><li>Whether an Orbium-specific prior can recover Orbium-like rules from its body.</li><li>Whether MLX and Swift remain equivalent over long trajectories.</li><li>Whether compiled rules transfer across physics regimes and genotype families.</li><li>How to include locomotion and other behaviors directly in the target.</li><li>Which exact source revision produced the historical artifacts.</li></ul></article>
+      </div>
+    </section>
+
+    <section id="evidence" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">07 / RECEIPTS</div>
+        <div><div class="eyebrow">Files and digests</div><h2>Each chart points back to a specific file.</h2></div>
+        <p>The ledger records the source for every number, specimen, replay, and reused schematic. SHA-256 identifies the exact bytes. The June files do not contain the revision that produced those historical results; the September case-study entries include their exact configs and media.</p>
+      </div>
+      <details class="receipt">
+        <summary>Show source ledger</summary>
+        <div class="receipt-inner">
+          <table><thead><tr><th>Kind</th><th>Source</th><th>Bytes</th><th>SHA-256 prefix</th></tr></thead><tbody><tr><td>frozen artifact</td><td><code>stage1_fresh_fiber.json</code></td><td>1,424</td><td><code>1fcae1ea8b1613f7…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>stage1_jacobian_fiber.json</code></td><td>4,632</td><td><code>9e5e975176e31401…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>stage2_cinn.json</code></td><td>1,244</td><td><code>d5ecd3b9f31ca5b6…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>stage3_refine.json</code></td><td>551</td><td><code>be159631b5f0097f…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/demo1/result.json</code></td><td>1,930</td><td><code>cf085fb32904ed5f…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/demo1/target.png</code></td><td>18,649</td><td><code>de6ebc2862bb8589…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/demo1/creature.png</code></td><td>16,356</td><td><code>53dcf3f8d11f758a…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/demo1_cinn/result.json</code></td><td>1,889</td><td><code>a9f5988e1fa3c754…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/demo1_cinn/creature.png</code></td><td>15,957</td><td><code>58e787e1bf2451f2…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/form_demo/result.json</code></td><td>6,826</td><td><code>044567fdf4ea014c…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>compiled/form_demo/form_compile.png</code></td><td>66,658</td><td><code>b3b03d35b8af0ba2…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>mlx_validation.json</code></td><td>1,039</td><td><code>79316f3cb993eef9…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>qd_archive/archive.json</code></td><td>350,936</td><td><code>614a1919941427fd…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>qd_archive/coverage.png</code></td><td>2,321</td><td><code>a6ed57c87e362506…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>waddington_flow.json</code></td><td>2,141</td><td><code>6537452489f02b52…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>canalization.json</code></td><td>2,357</td><td><code>c5a5924d1ae5c946…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>functional-morphospace/functional_morphospace.json</code></td><td>1,685</td><td><code>e8f6e4b61b319865…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>functional-morphospace/shape_function_coupling.json</code></td><td>1,398</td><td><code>b9923f08f942351a…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>functional-morphospace/functional_morphospace.png</code></td><td>65,958</td><td><code>52f66e8726ea151a…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>functional-morphospace/shape_predicts_function.png</code></td><td>13,462</td><td><code>101f3f6ed749b081…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>3c15/functional_map_mlx/functional_map.json</code></td><td>9,209</td><td><code>e69a9cec67faaa34…</code></td></tr>
+<tr><td>frozen artifact</td><td><code>3c15/functional_map_mlx/bodies_montage.png</code></td><td>139,541</td><td><code>55b2a1b2466e1bab…</code></td></tr>
+<tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-fiber-bundle.svg</code></td><td>4,621</td><td><code>43000b7e7db2b7c0…</code></td></tr>
+<tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-sections.svg</code></td><td>4,182</td><td><code>569fec81d4c9dd71…</code></td></tr>
+<tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-bridge-genotype-phenotype.svg</code></td><td>3,035</td><td><code>363d5905c657c2e8…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/result.json</code></td><td>15,065</td><td><code>b5076bb598eb5baa…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/organic-2876-trial/result.json</code></td><td>7,625</td><td><code>c1193ac52130e294…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/orbium-unicaudatus-trial/result.json</code></td><td>7,603</td><td><code>ee6c904c5db6fdf5…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/target-base.json</code></td><td>1,890</td><td><code>96712d27919bb1b9…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/recovered-base.json</code></td><td>2,145</td><td><code>7e61c204d374891b…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/search.json</code></td><td>1,051</td><td><code>8b5d8113be1a7d28…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/target-body.mp4</code></td><td>561,891</td><td><code>e70259f567a5b091…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/recovered-body.mp4</code></td><td>957,390</td><td><code>9b42766440cf423b…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/target-run/anatomical-target-2876/frames_color/frame_000600.png</code></td><td>108,733</td><td><code>7396b4565167a62f…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/target-run/anatomical-target-2876/frames_color/frame_001190.png</code></td><td>122,830</td><td><code>676f2be888b9ae58…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/recovered-run/anatomical-recovered-2876/frames_color/frame_000600.png</code></td><td>174,617</td><td><code>b136b78fcb83bd47…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/organic-2876/recovered-run/anatomical-recovered-2876/frames_color/frame_001190.png</code></td><td>121,202</td><td><code>da36d4748bdf8ecb…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/trace-00.png</code></td><td>17,882</td><td><code>fa03595c4170e155…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/trace-01.png</code></td><td>15,293</td><td><code>1c4156380fc3ec66…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/trace-02.png</code></td><td>14,439</td><td><code>8a31ce5df13ad3bb…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/descriptor-organic-2876-final/trace-06.png</code></td><td>14,818</td><td><code>67ef9c151f42f916…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/organic-2876-trial/target.png</code></td><td>13,121</td><td><code>47aac3a2842dedcf…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/organic-2876-trial/creature_swift.png</code></td><td>11,834</td><td><code>2eb60b71e7951b21…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/orbium-unicaudatus-trial/target.png</code></td><td>2,381</td><td><code>827f02072d4c55f8…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>compiled/orbium-unicaudatus-trial/creature_swift.png</code></td><td>6,433</td><td><code>73c277936260881d…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/index.json</code></td><td>1,480</td><td><code>2ae4a547d0601b10…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/library-0-canonical-O2(a)-Orbium unicaudatus.mp4</code></td><td>291,129</td><td><code>deb8d1619d17bc0e…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/frames_color/frame_000000.png</code></td><td>106,838</td><td><code>52f7016d8c8f3638…</code></td></tr>
+<tr><td>2026-09-01 case-study rerun</td><td><code>media/orbium-body/library-0-canonical-O2(a)-Orbium unicaudatus/frames_color/frame_000119.png</code></td><td>191,220</td><td><code>2e49a8cf6370fd16…</code></td></tr>
+<tr><td>canonical Orbium replay input</td><td><code>canonical-orbium-unicaudatus-3FF60A20/base.json</code></td><td>9,837</td><td><code>9134edc12939f7f9…</code></td></tr>
+<tr><td>canonical Orbium replay input</td><td><code>canonical-orbium-unicaudatus-3FF60A20/meta.json</code></td><td>22,292</td><td><code>af5af4dd00e21ae0…</code></td></tr>
+<tr><td>canonical Orbium replay input</td><td><code>canonical-orbium-unicaudatus-3FF60A20/search.json</code></td><td>882</td><td><code>9680a2075d796bb0…</code></td></tr></tbody></table>
+          <p class="provenance-note"><strong>Two evidence windows.</strong> The frozen June artifact JSON files do not record their source revision, so <code>artifactProducingRevision</code> remains empty. The September organic and Orbium reruns are listed separately with exact configs, results, frames, and videos. The complete machine-readable ledger is <a href="source-manifest.json"><code>source-manifest.json</code></a>.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <footer><div class="shell"><span>Many Rules Can Build the Same Body · visual synthesis v3 · 2026-09-01</span><span>Historical cohort + September case reruns · exact local source ledger</span></div></footer>
+</body>
+</html>

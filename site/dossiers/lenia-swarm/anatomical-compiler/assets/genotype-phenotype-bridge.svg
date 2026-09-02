@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
+<style>
+text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
+.label { font-size: 13px; fill: rgba(11,14,20,0.68); }
+.label-bold { font-size: 13px; fill: #0b0e14; font-weight: 700; }
+.label-accent { font-size: 13px; fill: #ff6600; }
+.label-accent2 { font-size: 13px; fill: #b4573d; }
+.label-accent3 { font-size: 13px; fill: #3f8458; }
+.label-accent4 { font-size: 13px; fill: #9f6f00; }
+.label-accent5 { font-size: 13px; fill: #4f66bc; }
+.annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
+</style>
+<rect width="800" height="200" fill="#ffffff"/>
+    <!-- Genotype space (top) -->
+    <text x="20" y="20" class="label-bold">Genotype space (R axis)</text>
+
+    <!-- The interpolation line -->
+    <line x1="60" y1="60" x2="740" y2="60" stroke="#ff6600" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+
+    <!-- Success segments -->
+    <line x1="60"  y1="60" x2="230" y2="60" stroke="#3f8458" stroke-width="3"/>
+    <line x1="530" y1="60" x2="740" y2="60" stroke="#3f8458" stroke-width="3"/>
+
+    <!-- Failure band -->
+    <rect x="225" y="35" width="310" height="50" rx="4" fill="#b4573d" fill-opacity="0.06"/>
+    <line x1="230" y1="60" x2="530" y2="60" stroke="#b4573d" stroke-width="3" stroke-dasharray="6,4"/>
+    <text x="385" y="52" class="label-accent2" text-anchor="middle">failure band</text>
+    <text x="385" y="100" class="annotation" text-anchor="middle">creature disintegrates at intermediate parameters</text>
+
+    <!-- Endpoints -->
+    <circle cx="60"  cy="60" r="7" fill="#3f8458" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="740" cy="60" r="7" fill="#3f8458" stroke="#ffffff" stroke-width="2"/>
+
+    <!-- Parameter annotations -->
+    <text x="60"  y="45" class="label" text-anchor="middle">R=10.57, s=0.058</text>
+    <text x="740" y="45" class="label" text-anchor="middle">R=17.43, s=0.013</text>
+
+    <!-- Phenotype space (bottom) -->
+    <text x="20" y="145" class="label-bold">Phenotype space</text>
+    <line x1="40" y1="170" x2="760" y2="170" stroke="#b4573d" stroke-width="2"/>
+
+    <!-- Phenotype path (curved - not linear!) -->
+    <path d="M 60 170 C 100 165, 150 158, 200 155 C 215 153, 225 160, 230 170"
+          stroke="#3f8458" stroke-width="2" fill="none"/>
+    <!-- gap -->
+    <text x="385" y="175" class="label-accent2" text-anchor="middle">no phenotype</text>
+    <!-- resume -->
+    <path d="M 530 170 C 560 158, 620 150, 680 155 C 710 158, 730 165, 740 170"
+          stroke="#3f8458" stroke-width="2" fill="none"/>
+
+    <circle cx="60"  cy="170" r="5" fill="#b4573d"/>
+    <circle cx="740" cy="170" r="5" fill="#b4573d"/>
+    <text x="60"  y="192" class="label" text-anchor="middle">vel=0.007</text>
+    <text x="60"  y="202" class="label" text-anchor="middle">gyr=588</text>
+    <text x="740" y="192" class="label" text-anchor="middle">vel=0.001</text>
+    <text x="740" y="202" class="label" text-anchor="middle">gyr=458</text>
+  </svg>

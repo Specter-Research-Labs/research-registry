@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 380" width="700" height="380">
+<style>
+  text { font-family: "Berkeley Mono", ui-monospace, monospace; }
+</style>
+<rect width="700" height="380" fill="#ffffff" rx="0"/>
+
+<!-- fibers -->
+<defs>
+  <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#ff6600" stop-opacity="0"/>
+    <stop offset="50%" stop-color="#ff6600" stop-opacity="0.08"/>
+    <stop offset="100%" stop-color="#ff6600" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+<g opacity="0.8">
+  <rect x="80" y="30" width="36" height="220" rx="3" fill="url(#fg)"/>
+  <rect x="210" y="30" width="36" height="220" rx="3" fill="url(#fg)"/>
+  <rect x="340" y="30" width="36" height="220" rx="3" fill="url(#fg)"/>
+  <rect x="470" y="30" width="36" height="220" rx="3" fill="url(#fg)"/>
+</g>
+<g stroke="#ff6600" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="3,4">
+  <line x1="98" y1="38" x2="98" y2="242"/>
+  <line x1="228" y1="38" x2="228" y2="242"/>
+  <line x1="358" y1="38" x2="358" y2="242"/>
+  <line x1="488" y1="38" x2="488" y2="242"/>
+</g>
+
+<!-- genotype points -->
+<circle cx="98" cy="90" r="3.5" fill="#ff6600" opacity="0.2"/>
+<circle cx="98" cy="140" r="5" fill="#ff6600"/>
+<circle cx="98" cy="205" r="3.5" fill="#ff6600" opacity="0.2"/>
+<circle cx="228" cy="80" r="5" fill="#ff6600"/>
+<circle cx="228" cy="170" r="3.5" fill="#ff6600" opacity="0.2"/>
+<circle cx="358" cy="100" r="3.5" fill="#ff6600" opacity="0.2"/>
+<circle cx="358" cy="155" r="5" fill="#ff6600"/>
+<circle cx="358" cy="215" r="3.5" fill="#ff6600" opacity="0.2"/>
+<circle cx="488" cy="85" r="5" fill="#ff6600"/>
+<circle cx="488" cy="190" r="3.5" fill="#ff6600" opacity="0.2"/>
+
+<!-- R value labels -->
+<text x="112" y="144" fill="#ff6600" font-size="10">R=10.57</text>
+<text x="242" y="84" fill="#ff6600" font-size="10">R=18.60</text>
+<text x="372" y="159" fill="#ff6600" font-size="10">R=9.50</text>
+<text x="502" y="89" fill="#ff6600" font-size="10">R=17.43</text>
+
+<!-- projection -->
+<g stroke="rgba(11,14,20,0.3)" stroke-width="1">
+  <line x1="98" y1="250" x2="98" y2="278"/>
+  <line x1="228" y1="250" x2="228" y2="278"/>
+  <line x1="358" y1="250" x2="358" y2="278"/>
+  <line x1="488" y1="250" x2="488" y2="278"/>
+</g>
+<text x="290" y="268" fill="rgba(11,14,20,0.5)" font-size="10" font-style="italic" text-anchor="middle">&#x3C0;: simulate &#x2192; measure phenotype</text>
+
+<!-- base -->
+<line x1="55" y1="300" x2="530" y2="300" stroke="#b4573d" stroke-width="2"/>
+<circle cx="98" cy="300" r="4.5" fill="#b4573d"/>
+<circle cx="228" cy="300" r="4.5" fill="#b4573d"/>
+<circle cx="358" cy="300" r="4.5" fill="#b4573d"/>
+<circle cx="488" cy="300" r="4.5" fill="#b4573d"/>
+
+<!-- creature names -->
+<text x="98" y="320" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">serene-dancer</text>
+<text x="98" y="333" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel 0.0071</text>
+<text x="228" y="320" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">harmonic-cell</text>
+<text x="228" y="333" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel 0.0032</text>
+<text x="358" y="320" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">serene-entity</text>
+<text x="358" y="333" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel 0.0030</text>
+<text x="488" y="320" fill="rgba(11,14,20,0.68)" font-size="10" text-anchor="middle">mystic-spiral</text>
+<text x="488" y="333" fill="rgba(11,14,20,0.5)" font-size="9" text-anchor="middle">vel 0.0008</text>
+
+<!-- axis labels -->
+<text x="290" y="360" fill="#b4573d" font-size="11" font-weight="600" text-anchor="middle">B = Phenotype Space</text>
+<text x="30" y="140" fill="#ff6600" font-size="11" font-weight="600" text-anchor="middle" transform="rotate(-90,30,140)">E = Genotypes</text>
+
+<!-- fiber annotation -->
+<text x="565" y="78" fill="#ff6600" font-size="11" font-weight="600">fiber F_b</text>
+<text x="565" y="94" fill="rgba(11,14,20,0.5)" font-size="10">all (R, r, m, s, h)</text>
+<text x="565" y="108" fill="rgba(11,14,20,0.5)" font-size="10">producing this</text>
+<text x="565" y="122" fill="rgba(11,14,20,0.5)" font-size="10">phenotype</text>
+<line x1="525" y1="100" x2="557" y2="100" stroke="#ff6600" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+
+<!-- legend -->
+<circle cx="565" cy="155" r="5" fill="#ff6600"/>
+<text x="578" y="159" fill="rgba(11,14,20,0.5)" font-size="10">discovered</text>
+<circle cx="565" cy="175" r="3.5" fill="#ff6600" opacity="0.2"/>
+<text x="578" y="179" fill="rgba(11,14,20,0.5)" font-size="10">hypothetical</text>
+</svg>

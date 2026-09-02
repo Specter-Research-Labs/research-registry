@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 286" role="img" aria-labelledby="title desc">
+<title id="title">Inverse locality compared with a shuffled null</title><desc id="desc">Phenotype neighbors have a genotype-distance ratio of 0.986, close to the shuffled reference of 1.000. The interval is narrow because the corpus has 5,000 forms.</desc>
+<rect width="960" height="286" fill="#111521"/>
+
+<text x="92" y="40" fill="#d6ff3f" font-family="ui-monospace, monospace" font-size="15" font-weight="700">GENOTYPE DISTANCE AMONG PHENOTYPE NEIGHBORS / SHUFFLED NULL</text>
+<line x1="92.0" y1="92" x2="92.0" y2="200" stroke="#343a49"/><text x="92.0" y="224" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">0.96</text><line x1="265.3" y1="92" x2="265.3" y2="200" stroke="#343a49"/><text x="265.3" y="224" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">0.97</text><line x1="438.7" y1="92" x2="438.7" y2="200" stroke="#343a49"/><text x="438.7" y="224" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">0.98</text><line x1="612.0" y1="92" x2="612.0" y2="200" stroke="#343a49"/><text x="612.0" y="224" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">0.99</text><line x1="785.3" y1="92" x2="785.3" y2="200" stroke="#343a49"/><text x="785.3" y="224" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">1.00</text>
+<line x1="92" y1="146" x2="872" y2="146" stroke="#73798a" stroke-width="2"/>
+<line x1="535.2" y1="126" x2="560.0" y2="126" stroke="#f15b43" stroke-width="5"/>
+<line x1="535.2" y1="116" x2="535.2" y2="136" stroke="#f15b43"/>
+<line x1="560.0" y1="116" x2="560.0" y2="136" stroke="#f15b43"/>
+<circle cx="544.5" cy="126" r="10" fill="#f15b43" stroke="#f4f0e7"/>
+<text x="544.5" y="101" text-anchor="middle" fill="#f4f0e7" font-family="ui-monospace, monospace" font-size="13">observed 0.986</text>
+<circle cx="784.8" cy="174" r="10" fill="#d6ff3f" stroke="#f4f0e7"/>
+<text x="784.8" y="198" text-anchor="middle" fill="#f4f0e7" font-family="ui-monospace, monospace" font-size="13">shuffled 1.000</text>
+<text x="480" y="260" text-anchor="middle" fill="#aeb4c2" font-family="ui-monospace, monospace" font-size="12">The axis is zoomed. With 5,000 forms, the small separation has a narrow interval (z = -24.0).</text>
+
+</svg>
