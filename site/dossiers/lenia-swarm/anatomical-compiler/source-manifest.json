@@ -1,8 +1,8 @@
 {
   "artifactProducingRevision": null,
   "artifactSourceRootLabel": "dossiers/lenia-swarm/outputs/anatomical-compiler",
-  "artifactWindow": "historical June 2026 corpus plus 2026-09-01 organic/Orbium reruns",
-  "caseStudyNote": "The organic descriptor compilation, fixed-frame diagnostics, and all body-colored media were rerun locally on 2026-09-01. Orbium uses the canonical strict replay bundle listed in the source ledger.",
+  "artifactWindow": "historical June 2026 corpus plus 2026-09-01 compiler reruns and the 2026-09-02 native Orbium correction",
+  "caseStudyNote": "The organic descriptor compilation and fixed-frame diagnostics were rerun locally on 2026-09-01. The Orbium video was corrected on 2026-09-02 using the native Chakazul O2(a) preset under qd24_additive_v1 parity semantics. The earlier Flow Lenia import remains only as a labeled cross-runtime control.",
   "generatedAssets": [
     {
       "bytes": 2321,
@@ -90,9 +90,9 @@
       "sha256": "5205a7bb96b0ad50202b119aaa2da84510d68a013ab6b49d98ec695122c5b5fe"
     },
     {
-      "bytes": 291129,
+      "bytes": 520320,
       "path": "assets/orbium-body.mp4",
-      "sha256": "deb8d1619d17bc0e283511d39a7fed721a46c9e007d98fe0e25c242ca8712ab5"
+      "sha256": "0d678f8d150e85b7d4adfc92588c8d30d450f3572cc102a5cf6826cb5bf50084"
     },
     {
       "bytes": 6433,
@@ -106,13 +106,18 @@
     },
     {
       "bytes": 191220,
-      "path": "assets/orbium-late.png",
+      "path": "assets/orbium-flow-import-late.png",
       "sha256": "2e49a8cf6370fd169e506ae53da7ab372a5e78525893b2af05ad4718e6e1ec05"
     },
     {
-      "bytes": 106838,
+      "bytes": 132929,
+      "path": "assets/orbium-late.png",
+      "sha256": "6da05ba86cf093bbf608075cbc09c1200da690e22fd143b6419dcb26aca11c70"
+    },
+    {
+      "bytes": 134502,
       "path": "assets/orbium-start.png",
-      "sha256": "52f7016d8c8f36385f15d90d595cd5c5d2aba9dd6172c884085f516f89f088fc"
+      "sha256": "f995959d6176be6ad5d64f12df02bd8f718d13e6482ab2b3248a2dd85f0af767"
     },
     {
       "bytes": 11834,
@@ -205,7 +210,7 @@
       "sha256": "101f3f6ed749b0812095e89d324a3fb6d64b862f23b31b9690f79cfb1f5af6a5"
     }
   ],
-  "reportDate": "2026-09-01",
+  "reportDate": "2026-09-02",
   "reportId": "anatomical-compiler-synthesis-v3",
   "revisionNote": "The frozen artifact JSON files do not record the code revision that produced them. Repository history provides context, while the exact run binding remains unknown.",
   "schemaVersion": 2,
@@ -505,20 +510,62 @@
       "sha256": "2e49a8cf6370fd169e506ae53da7ab372a5e78525893b2af05ad4718e6e1ec05"
     },
     {
+      "bytes": 4305,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/config.json",
+      "sha256": "8a7cfcb8a4e9a9f045449f414e759cb93c94830681f6c27af5f3274e3fd5de5c"
+    },
+    {
+      "bytes": 778,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/search.json",
+      "sha256": "39b0a0b1b881be28473cc4a22206ffeb82acf07bd427ea4038b956cdf9651bc0"
+    },
+    {
+      "bytes": 4835,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/results.jsonl",
+      "sha256": "cc2f4bc9e1dfb369b6fda909cb7621a9d26b92d9ebf3675d66c37bcd0275841e"
+    },
+    {
+      "bytes": 447,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/summary.json",
+      "sha256": "0484652b5ca2e917f7972004bb7c24aed42af15b10e73967e387081f72e1aab4"
+    },
+    {
+      "bytes": 520320,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/orbium-native.mp4",
+      "sha256": "0d678f8d150e85b7d4adfc92588c8d30d450f3572cc102a5cf6826cb5bf50084"
+    },
+    {
+      "bytes": 134502,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/frame-start.png",
+      "sha256": "f995959d6176be6ad5d64f12df02bd8f718d13e6482ab2b3248a2dd85f0af767"
+    },
+    {
+      "bytes": 132929,
+      "kind": "2026-09-02 native Orbium parity replay",
+      "path": "media/orbium-native-parity/frame-late.png",
+      "sha256": "6da05ba86cf093bbf608075cbc09c1200da690e22fd143b6419dcb26aca11c70"
+    },
+    {
       "bytes": 9837,
-      "kind": "canonical Orbium replay input",
+      "kind": "Flow Lenia import control",
       "path": "canonical-orbium-unicaudatus-3FF60A20/base.json",
       "sha256": "9134edc12939f7f987f05a2df39940314224e24635c5f573a5b709fe59d0d4c6"
     },
     {
       "bytes": 22292,
-      "kind": "canonical Orbium replay input",
+      "kind": "Flow Lenia import control",
       "path": "canonical-orbium-unicaudatus-3FF60A20/meta.json",
       "sha256": "af5af4dd00e21ae01fab5807a7a2cb8cf356ebf38808defbc7dc3b3109b7cdde"
     },
     {
       "bytes": 882,
-      "kind": "canonical Orbium replay input",
+      "kind": "Flow Lenia import control",
       "path": "canonical-orbium-unicaudatus-3FF60A20/search.json",
       "sha256": "9680a2075d796bb08cea45365df4e0964b675c111ea846b66f5a2ecc81214217"
     }
