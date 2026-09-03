@@ -13,10 +13,12 @@ const RELEASE_SCHEMA: &str = "specter_flow_lenia_report_release_v2";
 const BUNDLE_SCHEMA: &str = "specter_flow_lenia_report_library_bundle_v2";
 const EDITORIAL_REPLACEMENTS_PATH: &str =
     "site/dossiers/lenia-swarm/causal-emergence/editorial-replacements.json";
+const REPORT_POLISH_PATH: &str = "site/dossiers/lenia-swarm/causal-emergence/report-polish.css";
 const REDACT_SOURCE_PREFIX: &str = "redact_internal_source_prefix_v1";
 const NEUTRALIZE_LOCAL_LINKS: &str = "neutralize_unpublished_relative_links_v1";
 const NORMALIZE_PUBLIC_EDITORIAL: &str = "normalize_public_editorial_language_v1";
 const NORMALIZE_MOBILE_WRAP: &str = "normalize_public_mobile_wrapping_v1";
+const APPLY_REPORT_POLISH: &str = "apply_shared_report_polish_v1";
 const PUBLIC_MOBILE_STYLE: &str = r#"<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style>"#;
 
 #[derive(Debug, Serialize)]
@@ -102,6 +104,7 @@ pub fn stage_library(
     let catalog = causal_emergence::load_catalog(repo_root)?
         .ok_or_else(|| anyhow::anyhow!("causal-emergence catalog not found"))?;
     let editorial_config = load_editorial_config(repo_root)?;
+    let report_polish = load_report_polish(repo_root)?;
     let selected = selected_reports(&catalog, only_id)?;
     let lead = catalog
         .reports
@@ -126,8 +129,12 @@ pub fn stage_library(
             .with_context(|| format!("failed to create {report_release_dir}"))?;
 
         let report_bytes = fs::read(&source).with_context(|| format!("failed to read {source}"))?;
-        let public_report =
-            project_public_report(report, &report_bytes, &editorial_config.replacements)?;
+        let public_report = project_public_report(
+            report,
+            &report_bytes,
+            &editorial_config.replacements,
+            &report_polish,
+        )?;
         let public_report_sha256 = sha256_bytes(&public_report.bytes);
         let report_path = report_release_dir.join("report.html");
         fs::write(&report_path, &public_report.bytes)
@@ -224,6 +231,18 @@ fn load_editorial_config(repo_root: &Utf8Path) -> Result<EditorialConfig> {
     Ok(config)
 }
 
+fn load_report_polish(repo_root: &Utf8Path) -> Result<String> {
+    let path = repo_root.join(REPORT_POLISH_PATH);
+    let css = fs::read_to_string(&path).with_context(|| format!("failed to read {path}"))?;
+    if css.trim().is_empty() {
+        bail!("causal-emergence report polish stylesheet is empty: {path}");
+    }
+    if css.contains("</style") {
+        bail!("causal-emergence report polish stylesheet contains a closing style tag: {path}");
+    }
+    Ok(css)
+}
+
 fn selected_reports<'a>(catalog: &'a Catalog, only_id: Option<&str>) -> Result<Vec<&'a Report>> {
     match only_id {
         None => Ok(catalog.reports.iter().collect()),
@@ -308,6 +327,7 @@ fn render_context(
                 Some("release-management labels were removed from the reading copy")
             }
             NORMALIZE_MOBILE_WRAP => Some("small-screen wrapping was added"),
+            APPLY_REPORT_POLISH => Some("shared report and chart styling was applied"),
             _ => None,
         })
         .collect::<Vec<_>>()
@@ -396,11 +416,25 @@ fn project_public_report(
     report: &Report,
     source: &[u8],
     replacements: &[EditorialReplacement],
+    report_polish: &str,
 ) -> Result<PublicProjection> {
     let source =
         std::str::from_utf8(source).context("causal-emergence report is not valid UTF-8")?;
     let mut transformations = Vec::new();
     let mut projected = source.to_owned();
+
+    if projected.contains("</head>") {
+        projected = ensure_report_root_class(&projected)?;
+        let head_end = projected
+            .find("</head>")
+            .context("projected public report has no closing head element")?;
+        let style = format!(
+            "<style data-specter-public-polish>\n{}\n</style>",
+            report_polish.trim()
+        );
+        projected.insert_str(head_end, &style);
+        transformations.push(APPLY_REPORT_POLISH);
+    }
 
     let (editorial_projection, editorial_changed) =
         normalize_public_editorial(&projected, replacements);
@@ -455,6 +489,27 @@ fn project_public_report(
         bytes: projected.into_bytes(),
         transformations,
     })
+}
+
+fn ensure_report_root_class(source: &str) -> Result<String> {
+    let html_start = source
+        .find("<html")
+        .context("projected public report has no html element")?;
+    let tag_end = source[html_start..]
+        .find('>')
+        .map(|offset| html_start + offset)
+        .context("projected public report has an unterminated html element")?;
+    let tag = &source[html_start..=tag_end];
+    if tag.contains("specter-report") {
+        return Ok(source.to_owned());
+    }
+    if tag.contains("class=") {
+        bail!("projected public report has an unsupported html class attribute");
+    }
+
+    let mut projected = source.to_owned();
+    projected.insert_str(tag_end, " class=\"specter-report\"");
+    Ok(projected)
 }
 
 fn normalize_public_editorial(
@@ -557,6 +612,11 @@ mod tests {
             "replacements": replacements,
         });
         fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
+        fs::write(
+            root.join(REPORT_POLISH_PATH),
+            "html.specter-report{color-scheme:light}\n",
+        )
+        .unwrap();
     }
 
     #[test]
@@ -719,6 +779,8 @@ mod tests {
         let context = fs::read_to_string(release.join("index.html")).unwrap();
 
         assert_eq!(fs::read(&source).unwrap(), report_bytes);
+        assert!(public.contains("<html class=\"specter-report\">"));
+        assert!(public.contains("data-specter-public-polish"));
         assert!(!public.contains(".codex/"));
         assert!(!public.contains("../analysis/results.json"));
         assert!(public.contains("data-evidence-ref=\"src-"));
@@ -728,6 +790,7 @@ mod tests {
         assert!(public.contains("evidence-source/visuals/campaign/frames/frame_000032.png"));
         assert!(receipt.contains(REDACT_SOURCE_PREFIX));
         assert!(receipt.contains(NEUTRALIZE_LOCAL_LINKS));
+        assert!(receipt.contains(APPLY_REPORT_POLISH));
         assert!(receipt.contains(NORMALIZE_MOBILE_WRAP));
         assert!(receipt.contains(&report_sha256));
         assert!(public.contains(PUBLIC_MOBILE_STYLE));
@@ -767,13 +830,23 @@ mod tests {
             to: public_phrase.into(),
         }];
 
-        let projection = project_public_report(&report, source.as_bytes(), &replacements).unwrap();
+        let projection = project_public_report(
+            &report,
+            source.as_bytes(),
+            &replacements,
+            "html.specter-report{color-scheme:light}",
+        )
+        .unwrap();
         let public = String::from_utf8(projection.bytes).unwrap();
         assert!(!public.contains(private_phrase));
         assert!(public.contains(public_phrase));
         assert_eq!(
             projection.transformations,
-            vec![NORMALIZE_PUBLIC_EDITORIAL, NORMALIZE_MOBILE_WRAP]
+            vec![
+                APPLY_REPORT_POLISH,
+                NORMALIZE_PUBLIC_EDITORIAL,
+                NORMALIZE_MOBILE_WRAP,
+            ]
         );
 
         let context = render_context(
