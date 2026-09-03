@@ -4,6 +4,7 @@ use std::fs;
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use maud::{html, DOCTYPE};
+use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -436,10 +437,13 @@ fn project_public_report(
         transformations.push(APPLY_REPORT_POLISH);
     }
 
+    let (title_projection, title_changed) = normalize_public_title(&projected, &report.title)?;
+    projected = title_projection;
+
     let (editorial_projection, editorial_changed) =
         normalize_public_editorial(&projected, replacements);
     projected = editorial_projection;
-    if editorial_changed {
+    if title_changed || editorial_changed {
         transformations.push(NORMALIZE_PUBLIC_EDITORIAL);
     }
 
@@ -510,6 +514,94 @@ fn ensure_report_root_class(source: &str) -> Result<String> {
     let mut projected = source.to_owned();
     projected.insert_str(tag_end, " class=\"specter-report\"");
     Ok(projected)
+}
+
+fn normalize_public_title(source: &str, public_title: &str) -> Result<(String, bool)> {
+    if !source.contains("</head>") {
+        return Ok((source.to_owned(), false));
+    }
+
+    let escaped_text = escape_html_text(public_title);
+    let (projected, document_title_changed) =
+        replace_element_contents(source, "title", &escaped_text, false)?;
+    let (projected, heading_changed) =
+        replace_element_contents(&projected, "h1", &escaped_text, true)?;
+    let (projected, social_title_changed) = replace_social_title(&projected, public_title);
+
+    Ok((
+        projected,
+        document_title_changed || heading_changed || social_title_changed,
+    ))
+}
+
+fn replace_element_contents(
+    source: &str,
+    tag_name: &str,
+    replacement: &str,
+    remove_aria_label: bool,
+) -> Result<(String, bool)> {
+    let opening_marker = format!("<{tag_name}");
+    let Some(opening_start) = source.find(&opening_marker) else {
+        return Ok((source.to_owned(), false));
+    };
+    let opening_end = source[opening_start..]
+        .find('>')
+        .map(|offset| opening_start + offset)
+        .with_context(|| format!("public report has an unterminated {tag_name} element"))?;
+    let closing_marker = format!("</{tag_name}>");
+    let closing_start = source[opening_end + 1..]
+        .find(&closing_marker)
+        .map(|offset| opening_end + 1 + offset)
+        .with_context(|| format!("public report has no closing {tag_name} element"))?;
+
+    let opening = &source[opening_start..=opening_end];
+    let opening = if remove_aria_label {
+        Regex::new(r#"\s+aria-label\s*=\s*("[^"]*"|'[^']*')"#)?
+            .replace(opening, "")
+            .to_string()
+    } else {
+        opening.to_owned()
+    };
+
+    let mut projected = String::with_capacity(source.len() + replacement.len());
+    projected.push_str(&source[..opening_start]);
+    projected.push_str(&opening);
+    projected.push_str(replacement);
+    projected.push_str(&source[closing_start..]);
+    let changed = projected != source;
+    Ok((projected, changed))
+}
+
+fn replace_social_title(source: &str, public_title: &str) -> (String, bool) {
+    const MARKER: &str = r#"<meta property="og:title" content="#;
+    let Some(value_start) = source.find(MARKER).map(|index| index + MARKER.len()) else {
+        return (source.to_owned(), false);
+    };
+    let Some(value_end) = source[value_start..]
+        .find('"')
+        .map(|offset| value_start + offset)
+    else {
+        return (source.to_owned(), false);
+    };
+
+    let escaped_attribute = escape_html_attribute(public_title);
+    let mut projected = String::with_capacity(source.len() + escaped_attribute.len());
+    projected.push_str(&source[..value_start]);
+    projected.push_str(&escaped_attribute);
+    projected.push_str(&source[value_end..]);
+    let changed = projected != source;
+    (projected, changed)
+}
+
+fn escape_html_text(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+fn escape_html_attribute(value: &str) -> String {
+    escape_html_text(value).replace('"', "&quot;")
 }
 
 fn normalize_public_editorial(
@@ -647,6 +739,42 @@ mod tests {
         assert!(!projected.to_ascii_lowercase().contains("mega synthesis"));
         assert!(!projected.to_ascii_lowercase().contains("public edition"));
         assert!(projected.contains("Flow Lenia synthesis"));
+    }
+
+    #[test]
+    fn public_title_projection_uses_the_catalog_title_for_each_report() {
+        let report = Report {
+            id: "example".into(),
+            title: "A Clear Result".into(),
+            date: "2026-08-30".into(),
+            dek: "A concrete summary.".into(),
+            question: "What happens?".into(),
+            answer: "The field changed.".into(),
+            next_question: "Why here?".into(),
+            category: "development".into(),
+            status: "feature".into(),
+            evidence_class: "direct".into(),
+            featured: true,
+            archive: false,
+            supersedes: Vec::new(),
+            sha256: "a".repeat(64),
+            release_id: "example-aaaaaaaaaaaa".into(),
+        };
+        let source = "<!doctype html><html><head><title>The Future Speaks</title></head><body><h1 aria-label=\"The Future Speaks\"><span>The Future</span> Speaks</h1></body></html>";
+        let projection = project_public_report(
+            &report,
+            source.as_bytes(),
+            &[],
+            "html.specter-report{color-scheme:light}",
+        )
+        .unwrap();
+        let public = String::from_utf8(projection.bytes).unwrap();
+        assert_eq!(public.matches("A Clear Result").count(), 2);
+        assert!(!public.contains("The Future Speaks"));
+        assert!(!public.contains("aria-label"));
+        assert!(projection
+            .transformations
+            .contains(&NORMALIZE_PUBLIC_EDITORIAL));
     }
 
     #[test]
