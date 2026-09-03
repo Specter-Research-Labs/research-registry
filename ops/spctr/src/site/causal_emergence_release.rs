@@ -18,6 +18,7 @@ const REPORT_POLISH_PATH: &str = "site/dossiers/lenia-swarm/causal-emergence/rep
 const REDACT_SOURCE_PREFIX: &str = "redact_internal_source_prefix_v1";
 const NEUTRALIZE_LOCAL_LINKS: &str = "neutralize_unpublished_relative_links_v1";
 const NORMALIZE_PUBLIC_EDITORIAL: &str = "normalize_public_editorial_language_v1";
+const EXPAND_INTERNAL_CHECKPOINTS: &str = "expand_internal_checkpoint_notation_v1";
 const NORMALIZE_MOBILE_WRAP: &str = "normalize_public_mobile_wrapping_v1";
 const APPLY_REPORT_POLISH: &str = "apply_shared_report_polish_v1";
 const PUBLIC_MOBILE_STYLE: &str = r#"<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style>"#;
@@ -327,6 +328,9 @@ fn render_context(
             NORMALIZE_PUBLIC_EDITORIAL => {
                 Some("release-management labels were removed from the reading copy")
             }
+            EXPAND_INTERNAL_CHECKPOINTS => {
+                Some("internal checkpoint labels were written out as developmental passages")
+            }
             NORMALIZE_MOBILE_WRAP => Some("small-screen wrapping was added"),
             APPLY_REPORT_POLISH => Some("shared report and chart styling was applied"),
             _ => None,
@@ -447,6 +451,13 @@ fn project_public_report(
         transformations.push(NORMALIZE_PUBLIC_EDITORIAL);
     }
 
+    let (checkpoint_projection, checkpoints_changed) =
+        expand_internal_checkpoint_notation(&projected)?;
+    projected = checkpoint_projection;
+    if checkpoints_changed {
+        transformations.push(EXPAND_INTERNAL_CHECKPOINTS);
+    }
+
     if projected.contains(".codex/") || projected.contains("artifacts/replication-precursor/") {
         projected = projected.replace(".codex/", "evidence-source/").replace(
             "artifacts/replication-precursor/",
@@ -493,6 +504,64 @@ fn project_public_report(
         bytes: projected.into_bytes(),
         transformations,
     })
+}
+
+fn expand_internal_checkpoint_notation(source: &str) -> Result<(String, bool)> {
+    let checkpoint = Regex::new(r"(?i)\bq([0-9]+)\b")?;
+    let mut projected = String::with_capacity(source.len());
+    let mut cursor = 0;
+    let mut raw_element: Option<&str> = None;
+
+    while cursor < source.len() {
+        if let Some(raw) = raw_element {
+            let closing = format!("</{raw}");
+            let Some(offset) = source[cursor..].to_ascii_lowercase().find(&closing) else {
+                projected.push_str(&source[cursor..]);
+                break;
+            };
+            let close_start = cursor + offset;
+            projected.push_str(&source[cursor..close_start]);
+            cursor = close_start;
+            raw_element = None;
+            continue;
+        }
+
+        let Some(offset) = source[cursor..].find('<') else {
+            projected.push_str(&checkpoint.replace_all(&source[cursor..], "passage $1"));
+            break;
+        };
+        let tag_start = cursor + offset;
+        projected.push_str(&checkpoint.replace_all(&source[cursor..tag_start], "passage $1"));
+        let tag_end = source[tag_start..]
+            .find('>')
+            .map(|end| tag_start + end + 1)
+            .context("projected public report contains an unterminated HTML tag")?;
+        let tag = &source[tag_start..tag_end];
+        projected.push_str(tag);
+        let lower = tag.to_ascii_lowercase();
+        if lower.starts_with("<style") && !lower.starts_with("</") {
+            raw_element = Some("style");
+        } else if lower.starts_with("<script") && !lower.starts_with("</") {
+            raw_element = Some("script");
+        }
+        cursor = tag_end;
+    }
+
+    for attribute in ["alt", "title", "aria-label"] {
+        let pattern = Regex::new(&format!(r#"(?i)({attribute}\s*=\s*\")([^\"]*)(\")"#))?;
+        projected = pattern
+            .replace_all(&projected, |captures: &regex_lite::Captures<'_>| {
+                format!(
+                    "{}{}{}",
+                    &captures[1],
+                    checkpoint.replace_all(&captures[2], "passage $1"),
+                    &captures[3]
+                )
+            })
+            .into_owned();
+    }
+
+    Ok((projected.clone(), projected != source))
 }
 
 fn ensure_report_root_class(source: &str) -> Result<String> {
@@ -801,6 +870,18 @@ mod tests {
         assert!(page.contains("A &lt;body&gt; responds"));
         assert!(page.contains("href=\"report.html\""));
         assert!(!page.contains(".codex"));
+    }
+
+    #[test]
+    fn public_projection_expands_checkpoint_shorthand_only_in_reading_copy() {
+        let source = r#"<!doctype html><html><head><style>.q48{color:red}</style><title>At q48</title></head><body><p>From Q8 to q48.</p><img src="data:image/png;base64,q48" alt="body at q48"></body></html>"#;
+        let (projected, changed) = expand_internal_checkpoint_notation(source).unwrap();
+        assert!(changed);
+        assert!(projected.contains("<title>At passage 48</title>"));
+        assert!(projected.contains("From passage 8 to passage 48."));
+        assert!(projected.contains("alt=\"body at passage 48\""));
+        assert!(projected.contains(".q48{color:red}"));
+        assert!(projected.contains("base64,q48"));
     }
 
     #[test]

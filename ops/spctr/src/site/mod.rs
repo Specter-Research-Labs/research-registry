@@ -21,6 +21,7 @@ pub mod tokens;
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use rayon::prelude::*;
+use regex_lite::Regex;
 use std::fs;
 
 use self::inject::replace_region;
@@ -50,8 +51,48 @@ pub(crate) fn build_with_blog_posts(
     repo_root: &Utf8Path,
     write: bool,
 ) -> Result<Vec<discover::BlogPostRecord>> {
+    validate_public_markdown(repo_root)?;
     let projection = load_site_projection(repo_root)?;
     build_from_projection(repo_root, projection, write)
+}
+
+fn validate_public_markdown(repo_root: &Utf8Path) -> Result<()> {
+    let checkpoint = Regex::new(r"(?i)\bq[0-9]+\b")?;
+    for relative_root in ["site/blog", "site/research-notes"] {
+        let root = repo_root.join(relative_root);
+        if root.is_dir() {
+            validate_public_markdown_dir(&root, &checkpoint)?;
+        }
+    }
+    Ok(())
+}
+
+fn validate_public_markdown_dir(root: &Utf8Path, checkpoint: &Regex) -> Result<()> {
+    for entry in fs::read_dir(root).with_context(|| format!("failed to read {root}"))? {
+        let entry = entry?;
+        let path = camino::Utf8PathBuf::from_path_buf(entry.path())
+            .map_err(|_| anyhow::anyhow!("public prose path is not valid UTF-8"))?;
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            validate_public_markdown_dir(&path, checkpoint)?;
+        } else if file_type.is_file() && path.extension() == Some("md") {
+            let text = fs::read_to_string(&path)
+                .with_context(|| format!("failed to read public prose {path}"))?;
+            if let Some((line_index, line)) = text
+                .lines()
+                .enumerate()
+                .find(|(_, line)| checkpoint.is_match(line))
+            {
+                bail!(
+                    "{}:{} uses internal checkpoint notation; write `passage N` in public prose: {}",
+                    path,
+                    line_index + 1,
+                    line.trim()
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 fn build_from_projection(
