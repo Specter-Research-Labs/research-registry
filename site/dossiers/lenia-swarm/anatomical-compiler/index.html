@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A visual review of three simulation-based approaches to inverse design in Flow Lenia.">
-  <title>A Body Description Does Not Identify Its Rule | SPECTER Labs</title>
+  <meta name="description" content="An experimental anatomical compiler for discovering the developmental rules that can grow, maintain, and repair a desired self-organizing body.">
+  <title>From a Desired Body to the Rules That Build It | SPECTER Labs</title>
   <style>
     :root {
       --paper: #f3efe5;
@@ -262,8 +262,8 @@
     <div class="shell hero">
       <div>
         <div class="eyebrow">Flow Lenia / inverse design / experimental report</div>
-        <h1>A body description does not identify its rule.</h1>
-        <p class="dek">We tested three inverse problems: matching a few measurements, finding a rule that maintains a supplied body, and recovering hidden parameters inside a known Lenia family. Each approach evaluates candidate rules by simulation. None of them yet discovers both a compact seed and the rule that grows an arbitrary requested anatomy.</p>
+        <h1>From a desired body to the rules that build it.</h1>
+        <p class="dek">Inspired by <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3899861/">Michael Levin's work on target morphology</a>, the anatomical compiler turns a biological question into an engineering goal: specify a desired self-organizing body, then discover a compact seed and local rules that reliably grow, maintain, and repair it. Flow Lenia gives us a tractable world in which to build the first versions. Here, one search improves a match to developmental measurements, another finds rules that maintain a supplied form, and a third recovers Orbium's hidden parameters from a mature field.</p>
         <div class="status">5,000-rule corpus + specimen 2876 and Orbium reruns · rebuilt 2026-09-02</div>
       </div>
       <div class="hero-diagram" role="img" aria-label="Five distinct rule threads converge toward one body description, illustrating a many-to-one inverse.">
@@ -275,14 +275,15 @@
 
     <section class="shell synthesis" aria-labelledby="synthesis-title">
       <div class="eyebrow">Summary</div>
-      <h2 id="synthesis-title">Fifteen measurements leave most rule variation unresolved.</h2>
+      <h2 id="synthesis-title">Body measurements define a broad family of candidate rules.</h2>
+      <p>The intended output is a developmental program. A successful compiled rule should grow the requested form from a compact start, maintain it while it acts, and recover the same organization after perturbation. Ultimately, the target should describe a basin of reliable developmental outcomes, so changed starts and moderate damage still converge on the requested anatomy. The report examines geometry, trajectories, function, and robustness separately because each one adds information about that program.</p>
       <p>Each Flow Lenia rule in this analysis has 40 parameters. We ran 5,000 distinct rules and described each stable result with 15 measurements covering body form, mass, energy, and movement. We then asked how much those measurements narrow down the rule that produced them.</p>
-      <p>Across the corpus, variation in the 40 rule parameters behaved as if it had about 25.5 independent directions. Variation in the 15 outcome measurements behaved as if it had about 5.9 independent directions. We use the 19.6-direction gap as a coarse estimate of how many rule variations the measurements fail to distinguish. A second calculation estimated a similar gap of 20.9 directions.</p>
-      <p>We checked the same idea without subtracting dimension estimates. Rules that produced nearby measured bodies were, on average, 98.6% as far apart as randomly paired rules. Similar bodies therefore do little to identify the underlying rule. This ambiguity motivates all three approaches: propose several rules, run them, and compare their outcomes with the requested target.</p>
+      <p>Across the corpus, variation in the 40 rule parameters behaved as if it had about 25.5 independent directions. Variation in the 15 outcome measurements behaved as if it had about 5.9 independent directions. Their 19.6-direction gap gives a coarse estimate of the rule variation available within a measured region of body space. A second calculation estimated a similar gap of 20.9 directions.</p>
+      <p>A neighbor analysis showed the same breadth. Rules that produced nearby measured bodies were, on average, 98.6% as far apart as randomly paired rules. The compiler can use this range of alternatives: propose several rules, run them, and choose according to the anatomy, stability, or behavior specified by the target.</p>
       <div class="question-grid">
-        <article><div class="tag">Question</div><p>How tightly does a measured body constrain the rule that generated it?</p></article>
-        <article><div class="tag">Result</div><p>Rules producing nearby measured bodies had an average separation equal to 98.6% of the distance between randomly paired rules.</p></article>
-        <article><div class="tag">Engineering response</div><p>All three approaches test candidate rules in the simulator. They differ in what the target specifies and which parts of the rule are allowed to change.</p></article>
+        <article><div class="tag">Ultimate goal</div><p>Compile a requested anatomy into a compact seed and a local rule that can grow, maintain, and repair it.</p></article>
+        <article><div class="tag">Present finding</div><p>Rules producing nearby measured bodies had an average separation equal to 98.6% of the distance between randomly paired rules.</p></article>
+        <article><div class="tag">Current strategy</div><p>Generate several candidates, run each one, and choose with criteria suited to the target. The three approaches differ in what the target specifies and which variables can change.</p></article>
       </div>
       <div class="metrics">
         <div class="metric"><strong>5,000</strong><span>stable and distinct forms</span></div>
@@ -555,9 +556,9 @@
 
     <section class="shell" aria-labelledby="boundary-title">
       <div class="chapter-head">
-        <div class="chapter-no">06 / CLAIM</div>
-        <div><div class="eyebrow">Scope of the result</div><h2 id="boundary-title">The experiments support three limited inverse-design procedures.</h2></div>
-        <p>The descriptor search, form-maintenance search, and within-family parameter recovery each have different success criteria. None has been evaluated as a general system that turns an arbitrary requested anatomy into both a developmental seed and a rule.</p>
+        <div class="chapter-no">06 / SYNTHESIS</div>
+        <div><div class="eyebrow">What works now</div><h2 id="boundary-title">Three working searches point toward the full compiler.</h2></div>
+        <p>The report establishes three complementary search modes. The full system will connect them: describe a target through geometry, function, and development; explore the many rules that can produce it; then search jointly for a compact seed and a rule whose development remains reliable after changed starts or damage.</p>
       </div>
       <div class="boundary">
         <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The conditional model produced eight stable rules across two held-out targets, but their mean descriptor error was 2.79.</li><li>Simulation-guided refinement lowered descriptor cost for all four historical targets.</li><li>The organic descriptor case matched bulk measurements while producing a different anatomy.</li><li>In one form-maintenance demonstration, a fitted rule kept a supplied field coherent and active.</li><li>Inside the known additive family, the Orbium search recovered three nearby parameter values from one mature field.</li><li>The Orbium reconstruction remained coherent for 600 steps beyond its search horizon.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
