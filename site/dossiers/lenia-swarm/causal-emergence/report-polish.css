@@ -1,0 +1,171 @@
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
