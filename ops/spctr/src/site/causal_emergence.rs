@@ -215,6 +215,9 @@ fn reject_internal_path(label: &str, field: &str, value: &str) -> Result<()> {
 }
 
 fn reject_prose_anti_patterns(label: &str, field: &str, value: &str) -> Result<()> {
+    if contains_internal_checkpoint_notation(value) {
+        bail!("{label}.{field} contains internal checkpoint notation; write 'passage N' instead");
+    }
     let lower = value.to_ascii_lowercase();
     for phrase in [
         "carried the claim",
@@ -235,6 +238,15 @@ fn reject_prose_anti_patterns(label: &str, field: &str, value: &str) -> Result<(
         }
     }
     Ok(())
+}
+
+fn contains_internal_checkpoint_notation(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    bytes.iter().enumerate().any(|(index, byte)| {
+        matches!(byte, b'q' | b'Q')
+            && bytes.get(index + 1).is_some_and(u8::is_ascii_digit)
+            && (index == 0 || !bytes[index - 1].is_ascii_alphanumeric())
+    })
 }
 
 #[must_use]
@@ -606,5 +618,16 @@ mod tests {
         let catalog: Catalog = serde_json::from_value(value).unwrap();
         let error = validate_catalog(&catalog).unwrap_err().to_string();
         assert!(error.contains("rejected public prose phrase"));
+    }
+
+    #[test]
+    fn internal_checkpoint_notation_is_rejected_in_public_prose() {
+        let mut value: serde_json::Value = serde_json::from_str(&valid_catalog_json()).unwrap();
+        value["reports"][0]["title"] =
+            serde_json::Value::String("The response disappears by q48".into());
+        let catalog: Catalog = serde_json::from_value(value).unwrap();
+        let error = validate_catalog(&catalog).unwrap_err().to_string();
+        assert!(error.contains("internal checkpoint notation"));
+        assert!(error.contains("passage N"));
     }
 }
