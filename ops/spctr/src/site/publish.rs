@@ -135,9 +135,12 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
 }
 
 fn site_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
-    let mut excludes = crate::site::data::rsync_excludes(repo_root)?;
+    let mut excludes = vec!["node_modules/".to_owned()];
+    excludes.extend(crate::site::data::rsync_excludes(repo_root)?);
     let research_notes = research_note_publish_plan(repo_root)?;
     excludes.extend(research_notes.excludes);
+    excludes.sort();
+    excludes.dedup();
     Ok(SitePublishPlan {
         excludes,
         remote_prunes: research_notes.remote_prunes,
@@ -1062,7 +1065,7 @@ pub(crate) fn shell_quote(value: &str) -> String {
 mod tests {
     use super::{
         join_remote_path, namespace_parts, research_note_publish_plan, rsync_source_arg,
-        should_minify_css, should_minify_html, should_prune_dir,
+        should_minify_css, should_minify_html, should_prune_dir, site_publish_plan,
     };
     use camino::Utf8Path;
     use std::path::Path;
@@ -1086,6 +1089,14 @@ mod tests {
         assert!(!should_minify_html(Path::new(
             "site/cabinet/index-template.html"
         )));
+    }
+
+    #[test]
+    fn site_publish_excludes_build_dependencies() {
+        let root = tempdir().unwrap();
+        let root = Utf8Path::from_path(root.path()).unwrap();
+        let plan = site_publish_plan(root).unwrap();
+        assert!(plan.excludes.contains(&"node_modules/".to_owned()));
     }
 
     #[test]
