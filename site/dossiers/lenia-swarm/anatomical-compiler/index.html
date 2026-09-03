@@ -263,7 +263,7 @@
       <div>
         <div class="eyebrow">Flow Lenia / inverse design / experimental report</div>
         <h1>From a desired body to the rules that build it.</h1>
-        <p class="dek">Inspired by <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3899861/">Michael Levin's work on target morphology</a>, the anatomical compiler turns a biological question into an engineering goal: specify a desired self-organizing body, then discover a compact seed and local rules that reliably grow, maintain, and repair it. Flow Lenia gives us a tractable world in which to build the first versions. Here, one search improves a match to developmental measurements, another finds rules that maintain a supplied form, and a third recovers Orbium's hidden parameters from a mature field.</p>
+        <p class="dek">Inspired by <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3899861/">Michael Levin's work on target morphology</a>, the anatomical compiler turns a biological question into an engineering goal: specify a desired self-organizing body, then discover a compact seed and local rules that reliably grow, maintain, and repair it. Flow Lenia provides a tractable world for building the first prototypes. We test three search modes here: matching developmental measurements, maintaining a supplied form, and recovering Orbium's hidden parameters from a mature field.</p>
         <div class="status">5,000-rule corpus + specimen 2876 and Orbium reruns · rebuilt 2026-09-02</div>
       </div>
       <div class="hero-diagram" role="img" aria-label="Five distinct rule threads converge toward one body description, illustrating a many-to-one inverse.">
@@ -276,13 +276,13 @@
     <section class="shell synthesis" aria-labelledby="synthesis-title">
       <div class="eyebrow">Summary</div>
       <h2 id="synthesis-title">Body measurements define a broad family of candidate rules.</h2>
-      <p>The intended output is a developmental program. A successful compiled rule should grow the requested form from a compact start, maintain it while it acts, and recover the same organization after perturbation. Ultimately, the target should describe a basin of reliable developmental outcomes, so changed starts and moderate damage still converge on the requested anatomy. The report examines geometry, trajectories, function, and robustness separately because each one adds information about that program.</p>
+      <p>The compiler's output is a developmental program: a compact seed and local rule that grow the requested form, maintain it while it acts, and restore its organization after perturbation. Ultimately, the target should describe a reliable developmental basin, so changed starts and moderate damage still converge on the requested anatomy. We therefore examine geometry, trajectories, function, and robustness as distinct parts of the specification.</p>
       <p>Each Flow Lenia rule in this analysis has 40 parameters. We ran 5,000 distinct rules and described each stable result with 15 measurements covering body form, mass, energy, and movement. We then asked how much those measurements narrow down the rule that produced them.</p>
-      <p>Across the corpus, variation in the 40 rule parameters behaved as if it had about 25.5 independent directions. Variation in the 15 outcome measurements behaved as if it had about 5.9 independent directions. Their 19.6-direction gap gives a coarse estimate of the rule variation available within a measured region of body space. A second calculation estimated a similar gap of 20.9 directions.</p>
-      <p>A neighbor analysis showed the same breadth. Rules that produced nearby measured bodies were, on average, 98.6% as far apart as randomly paired rules. The compiler can use this range of alternatives: propose several rules, run them, and choose according to the anatomy, stability, or behavior specified by the target.</p>
+      <p>Although each rule has 40 parameters, the sampled rules vary along about 25.5 independent directions. Their 15 measured outcomes vary along only about 5.9. The 19.6-direction gap is a coarse estimate of the rule variation available within a measured region of body space. A second calculation estimated a similar gap of 20.9 directions.</p>
+      <p>A neighbor analysis found the same breadth. Rules that produced nearby measured bodies were separated by 98.6% of the distance between randomly paired rules. The compiler can exploit these alternatives: propose several rules, run them, and choose according to the anatomy, stability, or behavior specified by the target.</p>
       <div class="question-grid">
         <article><div class="tag">Ultimate goal</div><p>Compile a requested anatomy into a compact seed and a local rule that can grow, maintain, and repair it.</p></article>
-        <article><div class="tag">Present finding</div><p>Rules producing nearby measured bodies had an average separation equal to 98.6% of the distance between randomly paired rules.</p></article>
+        <article><div class="tag">Present finding</div><p>Rules producing nearby measured bodies remain almost as far apart as random pairs.</p></article>
         <article><div class="tag">Current strategy</div><p>Generate several candidates, run each one, and choose with criteria suited to the target. The three approaches differ in what the target specifies and which variables can change.</p></article>
       </div>
       <div class="metrics">
@@ -321,7 +321,7 @@
           <figure class="figure"><img src="assets/jacobian-spectrum.svg" alt="Heatmap of seven local Jacobian singular values across twelve genotypes."><figcaption class="caption"><span class="figure-no">04</span><p>This local test perturbed 12 rules and followed seven descriptors. About five response directions crossed the threshold, but most sensitivity was concentrated in roughly 2.3 effective directions.</p><span class="tag">12 local probes</span></figcaption></figure>
         </div>
       </div>
-      <p class="schematic-note">The 19.6 and 37.7 dimension estimates answer different questions. The first compares the global intrinsic dimensions of the 5,000-rule corpus and its 15 measured outcomes. The second subtracts the effective rank of a seven-descriptor local response from the full 40-parameter rule. They both indicate substantial ambiguity, but their numerical values are not directly comparable.</p>
+      <p class="schematic-note">The 19.6 and 37.7 dimension estimates answer different questions. The first compares the global intrinsic dimensions of the 5,000-rule corpus and its 15 measured outcomes. The second subtracts the effective rank of a seven-descriptor local response from the full 40-parameter rule. Both indicate substantial ambiguity and should not be compared numerically.</p>
     </section>
 
     <section id="compiler" class="shell">
@@ -365,7 +365,7 @@
         <div class="visual-stack">
           <div class="bars">
             <div class="eyebrow">Small conditional proposal test</div>
-            <h3 style="margin-top:10px">The conditional model produced stable bodies with large descriptor errors.</h3>
+            <h3 style="margin-top:10px">The conditional model produced stable bodies but missed the target measurements.</h3>
             <div class="sample-grid" aria-label="Eight stable samples across two targets"><span>1A</span><span>1B</span><span>1C</span><span>1D</span><span>2A</span><span>2B</span><span>2C</span><span>2D</span></div>
             <p class="sample-note">All eight simulations remained stable. Their mean descriptor error was 2.79 standardized units, where zero is a perfect match, and an average of 3.6 parameters per sample had to be clamped back into range. This is a two-target mechanism check, not an accuracy estimate for the full target population.</p>
           </div>
@@ -392,7 +392,7 @@
           <figcaption><strong>Fitted rule</strong>The selected rule grows a segmented body with a different spatial arrangement. Its mass and mass variation are close to the target. Occupied area and spatial spread remain farther away.</figcaption>
         </figure>
       </div>
-      <p class="attempt-reading"><strong>The result matches the four numbers better than it matches the anatomy.</strong> The fitted organism has similar bulk measurements, but its segmented structure is visibly different. Those four measurements leave enough freedom for another body plan.</p>
+      <p class="attempt-reading"><strong>The fitted organism reproduces several bulk measurements, yet its anatomy is visibly different.</strong> The segmented structure shows how much body-plan variation remains when the target specifies only four measurements.</p>
 
       <div class="case-metrics" aria-label="Target and fitted phenotype measurements">
         <div><strong>799.9 → 791.1</strong><span>mean mass · 1.1% relative error</span></div>
@@ -408,7 +408,7 @@
         </article>
         <article class="case-step">
           <img src="assets/organic-target-late.png" alt="The same source organism near the end of the measured trajectory.">
-          <div class="case-step-copy"><h3>Measure what the objective can see</h3><p>Mass, mass variation, occupied area, and gyration, a measure of spatial spread, define the request. Orientation, segmentation, topology, and locomotion are absent from the target.</p>
+          <div class="case-step-copy"><h3>Define the scoring measurements</h3><p>Mass, mass variation, occupied area, and gyration, a measure of spatial spread, define the request. Orientation, segmentation, topology, and locomotion are absent from the target.</p>
             <table class="compare-table"><thead><tr><th>measurement</th><th>target</th><th>fitted</th></tr></thead><tbody><tr><td>mass</td><td>799.9</td><td>791.1</td></tr><tr><td>occupancy</td><td>11.7%</td><td>10.5%</td></tr><tr><td>gyration</td><td>1005.0</td><td>1152.8</td></tr></tbody></table>
           </div>
         </article>
@@ -434,7 +434,7 @@
 
       <div class="chapter-head" style="margin-top:76px">
         <div class="chapter-no">03A.1 / WHAT THE TARGET OMITTED</div>
-        <div><div class="eyebrow">Similar measurements, different anatomy</div><h2>The objective ignored the defining visual structure.</h2></div>
+        <div><div class="eyebrow">Similar measurements, different anatomy</div><h2>Four measurements preserved scale while anatomy changed.</h2></div>
         <p>The target and recovered trajectories have similar mass and occupied area, but their late bodies remain visibly different. Segmentation and pixelwise structure are absent from the objective, so they have no effect on the score.</p>
       </div>
       <div class="visual-pair">
@@ -445,7 +445,7 @@
       <div id="form-maintenance" class="chapter-head" style="margin-top:76px">
         <div class="chapter-no">03B / FORM MAINTENANCE</div>
         <div><div class="eyebrow">Approach two</div><h2>We searched for a rule that could maintain a supplied body.</h2></div>
-        <p>Here the target is a body taken from the dataset, and that complete field is also the initial condition. Candidate rules are judged by whether it remains coherent, active, and topologically similar during the recorded rollout. The starting field is supplied rather than discovered.</p>
+        <p>In this experiment, the target is a body taken from the dataset, and its complete field is also the initial condition. Candidate rules are judged by whether that field remains coherent, active, and topologically similar during the recorded rollout.</p>
       </div>
       <figure class="figure">
         <img src="assets/form-compile.png" alt="Target multichannel field, the target reseeded under the fitted rule, and a coherent body grown from noise under the same rule.">
@@ -453,12 +453,12 @@
         <figcaption class="caption"><span class="figure-no">09</span><p>The center panel tests the actual objective: whether the fitted rule maintains the supplied field. The right panel asks a separate question. Starting the same rule from generic noise produces a coherent body, but not the requested anatomy.</p><span class="tag">one form demo</span></figcaption>
       </figure>
       <div class="fact-strip"><div><strong>0.095 → 0.060</strong>best recorded form drift</div><div><strong>96%</strong>largest-component fraction in the target</div><div><strong>10</strong>recorded search iterations</div></div>
-      <p class="reading"><strong>The procedure maintains an anatomy that is already present.</strong> A stronger anatomical compiler would also search for a compact starting pattern and a rule that develops it into the requested body.</p>
+      <p class="reading"><strong>This experiment solves maintenance: the fitted rule holds an existing anatomy together.</strong> The full compiler must also discover a compact starting pattern and the rule that develops it into the requested body.</p>
 
       <div id="orbium-diagnostic" class="chapter-head" style="margin-top:76px">
         <div class="chapter-no">03C / ORBIUM INVERSE</div>
         <div><div class="eyebrow">Approach three</div><h2>We recovered three Orbium parameters from one mature field.</h2></div>
-        <p>To make the inverse problem tractable, we fixed Orbium's update law, kernel, growth function, and starting cells. We then withheld three numerical parameters: the interaction radius <code>R</code>, the growth center <code>m</code>, and growth width <code>s</code>. We searched for values whose simulation matched the reference body after 600 steps.</p>
+        <p>This experiment isolates within-family parameter recovery. We supplied Orbium's update law, kernel, growth function, and starting cells, then hid three numerical parameters: the interaction radius <code>R</code>, growth center <code>m</code>, and growth width <code>s</code>. The search evaluates values by comparing each simulated body with the reference at step 600.</p>
       </div>
 
       <div class="pipeline">
@@ -509,7 +509,7 @@
         <figure><img src="assets/orbium-still-1200.png" alt="Compiled Orbium at step 1200."><figcaption>not scored</figcaption></figure>
       </div>
 
-      <p class="reading"><strong>The fitted parameters also produced a coherent body at the unscored steps.</strong> The result is limited to parameter recovery because the update family, kernel geometry, growth function, starting cells, and elapsed time were supplied.</p>
+      <p class="reading"><strong>The fitted parameters also produced a coherent body at the unscored steps.</strong> This experiment isolates parameter recovery by supplying the update family, kernel geometry, growth function, starting cells, and elapsed time.</p>
 
       <div class="evidence-window">
         <article><h3>We repeated both stages with three frames</h3><p>A control search used steps 100, 300, and 600. It returned <code>R=12.80</code>, <code>m=0.1435</code>, and <code>s=0.0185</code>. Its replay also remained coherent through step 1,200.</p></article>
@@ -520,7 +520,7 @@
     <section id="function" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">04 / FUNCTION</div>
-        <div><div class="eyebrow">Predicting behavior from shape</div><h2>Shape explained activity and very little locomotion.</h2></div>
+        <div><div class="eyebrow">Predicting behavior from shape</div><h2>Shape predicted activity far better than locomotion.</h2></div>
         <p>We measured six behaviors in 8,174 creatures and reduced them to principal axes. The first axis is dominated by speed, path length, displacement, and center velocity, so we call it locomotion. The second is dominated by energy and temporal variance, so we call it activity. Together they account for 87.2% of the behavioral variation.</p>
       </div>
       <figure class="figure"><img src="assets/functional-morphospace.png" alt="Scatterplot of 8,174 creatures in the first two functional principal axes, colored by speed."><figcaption class="caption"><span class="figure-no">11</span><p>Most creatures occupy a dense low-speed region, while fast locomotion forms a sparse tail. Any model trained on this distribution will see many more slow examples than fast ones.</p><span class="tag">8,174 creatures</span></figcaption></figure>
@@ -557,12 +557,12 @@
     <section class="shell" aria-labelledby="boundary-title">
       <div class="chapter-head">
         <div class="chapter-no">06 / SYNTHESIS</div>
-        <div><div class="eyebrow">What works now</div><h2 id="boundary-title">Three working searches point toward the full compiler.</h2></div>
-        <p>The report establishes three complementary search modes. The full system will connect them: describe a target through geometry, function, and development; explore the many rules that can produce it; then search jointly for a compact seed and a rule whose development remains reliable after changed starts or damage.</p>
+        <div><div class="eyebrow">What works now</div><h2 id="boundary-title">Three working searches define the path to the full compiler.</h2></div>
+        <p>A full system will connect them: describe a target through geometry, function, and development; explore the many rules that can produce it; then search jointly for a compact seed and a rule whose development remains reliable after changed starts or damage.</p>
       </div>
       <div class="boundary">
-        <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The conditional model produced eight stable rules across two held-out targets, but their mean descriptor error was 2.79.</li><li>Simulation-guided refinement lowered descriptor cost for all four historical targets.</li><li>The organic descriptor case matched bulk measurements while producing a different anatomy.</li><li>In one form-maintenance demonstration, a fitted rule kept a supplied field coherent and active.</li><li>Inside the known additive family, the Orbium search recovered three nearby parameter values from one mature field.</li><li>The Orbium reconstruction remained coherent for 600 steps beyond its search horizon.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
-        <article><h3>Questions still open</h3><ul><li>How often descriptor matching succeeds across a held-out target cohort.</li><li>Whether form maintenance works across many supplied fields.</li><li>How to search jointly for a compact seed and its developmental rule.</li><li>How to select or infer the rule family before continuous parameter search.</li><li>When a short trajectory materially improves on a mature final frame.</li><li>Whether MLX and another implementation remain equivalent over long trajectories.</li><li>How to include locomotion and other behaviors directly in the target.</li></ul></article>
+        <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The conditional model produced eight stable rules across two held-out targets; their mean descriptor error remained 2.79.</li><li>Simulation-guided refinement lowered descriptor cost for all four historical targets.</li><li>The organic descriptor case matched bulk measurements while producing a different anatomy.</li><li>In one form-maintenance demonstration, a fitted rule kept a supplied field coherent and active.</li><li>Inside the known additive family, the Orbium search recovered three nearby parameter values from one mature field.</li><li>The Orbium reconstruction remained coherent for 600 steps beyond its search horizon.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
+        <article><h3>What the full compiler needs next</h3><ul><li>Measure descriptor-matching success across a held-out target cohort.</li><li>Test form maintenance across many supplied fields.</li><li>Search jointly for a compact seed and its developmental rule.</li><li>Select or infer the rule family before continuous parameter search.</li><li>Determine when a short trajectory adds useful information beyond a mature final frame.</li><li>Test whether MLX and another implementation remain equivalent over long trajectories.</li><li>Add locomotion and other behaviors directly to the target.</li></ul></article>
       </div>
     </section>
 
