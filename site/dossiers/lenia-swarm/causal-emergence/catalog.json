@@ -799,9 +799,9 @@
     },
     {
       "id": "developmental-causal-order-age-map",
-      "title": "The Same Intervention Stops Shaping the Body Between Passages 32 and 48",
+      "title": "Pulse Order Changes Body Shape Early in Development, but Not Later",
       "date": "2026-08-23",
-      "dek": "The same balanced sequence of opposing hidden-state pulses changed body geometry from passages 12 through 32. At passages 48 and 64, it still changed the underlying state but no longer shaped the body in the earlier direction.",
+      "dek": "The same balanced sequence of opposing hidden-state pulses changed body geometry when applied at passages 12 through 32. At passages 48 and 64, it still changed the underlying state but no longer produced a consistent change in body radius.",
       "question": "How long does the developing body retain the same response to an early hidden causal order?",
       "answer": "The intervention changed body shape through passage 32, but that effect was absent at passage 48. The change therefore occurred somewhere between those two measurements; a fresh cohort also reproduced the earlier response.",
       "next_question": "Does the change follow the receiving body's age or the age encoded in transplanted hidden composition?",
