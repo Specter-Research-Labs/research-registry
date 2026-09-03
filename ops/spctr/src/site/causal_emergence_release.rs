@@ -573,7 +573,7 @@ fn replace_element_contents(
 }
 
 fn replace_social_title(source: &str, public_title: &str) -> (String, bool) {
-    const MARKER: &str = r#"<meta property="og:title" content="#;
+    const MARKER: &str = "<meta property=\"og:title\" content=\"";
     let Some(value_start) = source.find(MARKER).map(|index| index + MARKER.len()) else {
         return (source.to_owned(), false);
     };
@@ -760,7 +760,7 @@ mod tests {
             sha256: "a".repeat(64),
             release_id: "example-aaaaaaaaaaaa".into(),
         };
-        let source = "<!doctype html><html><head><title>The Future Speaks</title></head><body><h1 aria-label=\"The Future Speaks\"><span>The Future</span> Speaks</h1></body></html>";
+        let source = "<!doctype html><html><head><meta property=\"og:title\" content=\"The Future Speaks\"><title>The Future Speaks</title></head><body><h1 aria-label=\"The Future Speaks\"><span>The Future</span> Speaks</h1></body></html>";
         let projection = project_public_report(
             &report,
             source.as_bytes(),
@@ -769,7 +769,8 @@ mod tests {
         )
         .unwrap();
         let public = String::from_utf8(projection.bytes).unwrap();
-        assert_eq!(public.matches("A Clear Result").count(), 2);
+        assert_eq!(public.matches("A Clear Result").count(), 3);
+        assert!(public.contains("content=\"A Clear Result\""));
         assert!(!public.contains("The Future Speaks"));
         assert!(!public.contains("aria-label"));
         assert!(projection
