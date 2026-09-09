@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "information-body-return",
+  "releaseId": "flce-information-body-return-4041e914cf91",
+  "title": "Morphologically Converged States Later Diverge Again",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "post-release convergence test",
+  "sourceReportSha256": "539e67fc51c743735966ebc42b090d0e30c56503bbb552a3e42f460c8c917ac2",
+  "publicReportSha256": "8b914b3ef1b7be518ca064f69f4285d9bdb55c58930e8426c92bc82bd1001322",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "c1bc1d81b69b03d807cad84e54ff0b02c9dcce6503d7717afe45a301813c71e5",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "27742524b1c1cbddb4781b2dfe6ae5c62c28596050afbdd824f51dea8f52603c"
+}

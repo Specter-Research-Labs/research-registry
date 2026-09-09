@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="en" class="specter-report" data-specter-surface="bg-panel"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invisible State Rewrites Redirect Development</title>
+<style>
+:root{--ink:#f4efe5;--cream:#ead8b5;--muted:#aaa79f;--dim:#73716d;--bg:#08090c;--panel:#111319;--line:#2a2e36;--orange:#ff8a4c;--cyan:#43c7d9;--violet:#b99cff;--yellow:#ffd06a;--green:#7fd6a6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 84% 0,#2d160d 0,transparent 40rem),radial-gradient(circle at 6% 64%,#06262c 0,transparent 48rem),var(--bg);color:var(--ink);font:17px/1.62 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}.wrap{width:min(1160px,calc(100% - 40px));margin:auto}nav{position:sticky;top:0;z-index:9;background:#08090cdd;backdrop-filter:blur(13px);border-bottom:1px solid var(--line)}nav .wrap{height:58px;display:flex;align-items:center;justify-content:space-between}nav b{font:700 11px ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase}nav a{color:var(--muted);text-decoration:none;font-size:13px;margin-left:18px}.hero{padding:116px 0 78px}.kicker,.eyebrow{color:var(--orange);font:700 12px/1.2 ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase}h1{font:500 clamp(64px,10vw,136px)/.84 Georgia,serif;letter-spacing:-.065em;margin:24px 0 36px;max-width:1130px}.lede{font:400 clamp(23px,3.2vw,40px)/1.27 Georgia,serif;color:var(--cream);max-width:1070px}.lede em{color:var(--orange);font-style:normal}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:78px}.stat{padding:27px;background:#101217;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat b{display:block;font:500 35px Georgia,serif;color:var(--orange)}.stat span{display:block;color:var(--muted);font-size:13px;margin-top:9px}section{padding:88px 0;border-top:1px solid var(--line)}h2{font:500 clamp(40px,5.6vw,74px)/1 Georgia,serif;letter-spacing:-.045em;margin:18px 0 29px;max-width:1100px}h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 15px}p{max-width:930px}.big{font:400 clamp(25px,3.3vw,42px)/1.31 Georgia,serif;color:var(--cream)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:linear-gradient(150deg,#15171d,#0e1014);border:1px solid var(--line);border-radius:15px;padding:28px;overflow:hidden}.card p{color:var(--muted)}.card.orange{border-top:3px solid var(--orange)}.card.cyan{border-top:3px solid var(--cyan)}.card.violet{border-top:3px solid var(--violet)}.metric{font:500 43px Georgia,serif;color:var(--cream)}.chart{margin-top:32px}.chart svg{width:100%;height:auto}.grid{stroke:#242832;stroke-width:1}.zero{stroke:#90959d;stroke-width:1;stroke-dasharray:7 7}.axis{fill:#a7a9ad;font:12px ui-monospace,monospace}.value{fill:#ded8cb;font:11px ui-monospace,monospace}.chart-title{fill:#ead8b5;font:600 14px ui-monospace,monospace;letter-spacing:.04em}.callout{padding:36px;border:1px solid var(--line);border-left:4px solid var(--green);background:#101318;margin-top:36px}.equation{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;padding:42px 20px;font:500 clamp(23px,3vw,37px) Georgia,serif}.operator{color:var(--yellow);padding:15px 22px;border:1px solid #604f28;border-radius:999px;background:#211b0f}.arrow{color:var(--dim)}.specimens{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:30px}.specimen{margin:0;background:#050608;border:1px solid #222730;border-radius:12px;overflow:hidden}.specimen img{display:block;width:100%;aspect-ratio:1;object-fit:cover;filter:contrast(1.13)}.specimen figcaption{padding:10px 12px;color:var(--muted);font:10px/1.4 ui-monospace,monospace}.specimen b,.specimen span{display:block}.specimen b{color:var(--ink);margin-bottom:3px}.proof{font:12px/1.7 ui-monospace,monospace;color:var(--dim);overflow-wrap:anywhere}footer{padding:48px 0 72px;border-top:1px solid var(--line)}@media(max-width:900px){nav a{display:none}.stats,.grid2,.grid3{grid-template-columns:1fr}.specimens{grid-template-columns:repeat(2,1fr)}.stat{border-right:0;border-bottom:1px solid var(--line)}section{padding:62px 0}.hero{padding-top:76px}}@media(max-width:480px){.wrap{width:min(100% - 24px,1160px)}h1{font-size:52px}.specimens{grid-template-columns:1fr}}
+</style><!-- specter-report-style:begin sha256=a28376706e9e68b08ed3d8e07cbe97c7b63be4817de94e0bf55c67a1184c09ce -->
+<style data-specter-shared>
+/*
+ * Specter Flow Lenia report skin.
+ *
+ * This is the only authored copy. _report-style/sync.py embeds it verbatim in
+ * every standalone report so the HTML files still work when shared alone.
+ */
+
+html.specter-report {
+  color-scheme: light;
+
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-dim: #81827c;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-blue-soft: #dfe6ff;
+  --specter-acid: #d8ff39;
+  --specter-acid-soft: #efffb2;
+  --specter-coral: #f05237;
+  --specter-coral-soft: #f9ded7;
+  --specter-green: #14795c;
+  --specter-green-soft: #d8efe6;
+  --specter-violet: #7652c8;
+  --specter-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --specter-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --specter-serif: Iowan Old Style, Baskerville, Georgia, "Times New Roman", serif;
+
+  /* Common aliases used across the report lineage. */
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --cream: var(--specter-ink);
+  --white: var(--specter-sheet);
+  --soft: #3e4248;
+  --muted: var(--specter-muted);
+  --dim: var(--specter-dim);
+  --faint: var(--specter-dim);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+
+  --blue: var(--specter-blue);
+  --blue2: var(--specter-blue);
+  --blue-soft: var(--specter-blue-soft);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --mint: var(--specter-green);
+  --green: var(--specter-green);
+  --green2: var(--specter-green);
+  --green-soft: var(--specter-green-soft);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --yellow: var(--specter-acid);
+  --yellow-soft: var(--specter-acid-soft);
+  --gold: var(--specter-coral);
+  --gold-soft: var(--specter-coral-soft);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --orange2: var(--specter-coral);
+  --orange-soft: var(--specter-coral-soft);
+  --red: var(--specter-coral);
+  --red2: var(--specter-coral);
+  --red-soft: var(--specter-coral-soft);
+  --rose: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+  --coral-soft: var(--specter-coral-soft);
+  --violet: var(--specter-violet);
+  --purple: var(--specter-violet);
+  --sans: var(--specter-sans);
+  --serif: var(--specter-serif);
+  --mono: var(--specter-mono);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-sheet);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-sheet"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report[data-specter-surface="bg-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report {
+  scroll-behavior: smooth;
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  margin: 0;
+  overflow-x: clip;
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+  font-family: var(--specter-sans);
+  text-rendering: optimizeLegibility;
+}
+
+html.specter-report body,
+html.specter-report p,
+html.specter-report li,
+html.specter-report td,
+html.specter-report th {
+  color: inherit;
+}
+
+html.specter-report a {
+  color: inherit;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+}
+
+html.specter-report a:hover { color: var(--specter-blue); }
+
+html.specter-report a:focus-visible,
+html.specter-report button:focus-visible,
+html.specter-report summary:focus-visible {
+  outline: 3px solid var(--specter-blue);
+  outline-offset: 4px;
+}
+
+html.specter-report h1,
+html.specter-report h2,
+html.specter-report h3,
+html.specter-report h4 {
+  color: inherit;
+  font-family: var(--specter-sans) !important;
+  font-weight: 850 !important;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+html.specter-report h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.06em;
+}
+
+/*
+ * Keep the poster voice without making a headline consume a whole monitor.
+ * Individual reports may choose smaller type; this caps only hero/masthead
+ * display titles that historically scaled directly with very wide viewports.
+ */
+html.specter-report .hero h1,
+html.specter-report .masthead h1,
+html.specter-report .hero-title,
+html.specter-report body > header h1,
+html.specter-report main > header h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(3.25rem, 6.4vw, 7rem) !important;
+  line-height: 0.9 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .hero {
+  min-height: auto !important;
+  padding-block: clamp(2.75rem, 5vw, 5.5rem) !important;
+}
+
+html.specter-report .section-head h2 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.35rem, 4.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .lede,
+html.specter-report .lead,
+html.specter-report .deck,
+html.specter-report .dek,
+html.specter-report .standfirst,
+html.specter-report .plain,
+html.specter-report blockquote {
+  font-family: var(--specter-serif);
+}
+
+/* Two poster-style reports use a bare div.lead on the normalized paper
+ * surface. Keep this deliberately narrow so paragraph leads in dark headers
+ * retain their authored white foreground. */
+html.specter-report div.lead {
+  color: var(--specter-ink) !important;
+}
+
+/* Four legacy verdict headers use a dark authored surface without declaring a
+ * foreground on the header itself. Restore their deliberately pale lede. */
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) .lede {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.lead) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.hero-facts) h1 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .eyebrow,
+html.specter-report .kicker,
+html.specter-report .label,
+html.specter-report .micro,
+html.specter-report .section-number,
+html.specter-report .section-no,
+html.specter-report .num {
+  color: var(--specter-blue) !important;
+  font-family: var(--specter-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.specter-report body > nav,
+html.specter-report .topbar,
+html.specter-report .top {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-acid) !important;
+  border-bottom-width: 4px !important;
+  box-shadow: none !important;
+}
+
+html.specter-report body > nav a,
+html.specter-report body > nav .brand,
+html.specter-report .topbar a,
+html.specter-report .topbar strong,
+html.specter-report .top a {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > nav .brand,
+html.specter-report .topbar .brand {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report section,
+html.specter-report header,
+html.specter-report footer {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report .sheet,
+html.specter-report .panel,
+html.specter-report .card,
+html.specter-report .mini,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .flow-box,
+html.specter-report .question-card,
+html.specter-report .metric,
+html.specter-report .finding,
+html.specter-report .stat,
+html.specter-report .data-viz,
+html.specter-report .hero-proof > div {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Normalized paper surfaces own their foreground. Some legacy descendants
+ * carried a hard-coded dark-theme heading or caption; make those inherit the
+ * surface they now visibly sit on. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Legacy .plain and .next blocks rely on their container foreground. The
+ * default is paper/ink; the dark exceptions below deliberately flip it. */
+html.specter-report .next {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report :is(.plain, .next) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Exact unclassed body-copy surface retained by the geometry-turn atlas. */
+html.specter-report .copy {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report .card,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .hero-card,
+html.specter-report .question-card {
+  box-shadow: var(--specter-shadow);
+}
+
+html.specter-report .hero-card,
+html.specter-report .hero-result,
+html.specter-report .highlight,
+html.specter-report .callout.acid {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same * { color: inherit !important; }
+
+html.specter-report .callout,
+html.specter-report .thesis,
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .north-star,
+html.specter-report .result-banner,
+html.specter-report .plain-result,
+html.specter-report .closed-note,
+html.specter-report .phi-lock,
+html.specter-report .route,
+html.specter-report .route-future,
+html.specter-report .hetero-note,
+html.specter-report .matrix-wrap,
+html.specter-report .formula,
+html.specter-report .equation {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Editorial cutouts used by the synthesis lineage. Their headings used to
+ * inherit the global ink color and disappear into the dark surface. */
+html.specter-report .definition,
+html.specter-report .ink-band,
+html.specter-report .closure-thesis {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .definition,
+html.specter-report .closure-thesis {
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .definition *,
+html.specter-report .ink-band *,
+html.specter-report .closure-thesis *,
+html.specter-report .next-title * {
+  color: inherit !important;
+}
+
+html.specter-report .definition .eyebrow,
+html.specter-report .closure-thesis .eyebrow {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report .callout *,
+html.specter-report .thesis *,
+html.specter-report .verdict *,
+html.specter-report .hero-aside *,
+html.specter-report .north-star *,
+html.specter-report .result-banner *,
+html.specter-report .plain-result *,
+html.specter-report .closed-note *,
+html.specter-report .phi-lock *,
+html.specter-report .route *,
+html.specter-report .route-future *,
+html.specter-report .hetero-note * {
+  color: inherit !important;
+}
+
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .result-banner {
+  border-top: 8px solid var(--specter-coral) !important;
+}
+
+html.specter-report .dark,
+html.specter-report .inverse,
+html.specter-report .ink {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+}
+
+html.specter-report .dark h1,
+html.specter-report .dark h2,
+html.specter-report .dark h3,
+html.specter-report .inverse h1,
+html.specter-report .inverse h2,
+html.specter-report .inverse h3,
+html.specter-report .ink h1,
+html.specter-report .ink h2,
+html.specter-report .ink h3 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .dark .lede,
+html.specter-report .dark .lead,
+html.specter-report .dark .deck,
+html.specter-report .dark .dek,
+html.specter-report .dark .standfirst,
+html.specter-report .inverse .lede,
+html.specter-report .inverse .lead,
+html.specter-report .inverse .deck,
+html.specter-report .inverse .dek,
+html.specter-report .inverse .standfirst,
+html.specter-report .ink .lede,
+html.specter-report .ink .lead,
+html.specter-report .ink .deck,
+html.specter-report .ink .dek,
+html.specter-report .ink .standfirst {
+  color: inherit !important;
+}
+
+/* Authored dark sub-surfaces that do not carry a .dark/.inverse marker. The
+ * shared paper skin must preserve their local foreground instead of feeding
+ * the global ink alias back into a near-black panel. */
+html.specter-report section#next.next,
+html.specter-report div.next:has(> h3),
+html.specter-report section#next .next > div,
+html.specter-report section#memory .memory > div,
+html.specter-report figure.future-card,
+html.specter-report .films > .film,
+html.specter-report .arrow > .mode,
+html.specter-report .frame-grid > .time-column,
+html.specter-report .fans > .fan,
+html.specter-report .frame-pair,
+html.specter-report .explain > article,
+html.specter-report .organisms > .organism-card,
+html.specter-report .chart-card,
+html.specter-report .sequence figure:has(> img) {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report div.next:has(> h3) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#next .next > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#memory .memory > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report figure.future-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .films > .film :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .arrow > .mode :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-grid > .time-column :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .fans > .fan :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-pair :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .explain > article :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .organisms > .organism-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .chart-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .sequence figure:has(> img) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report section#next.next :is(.eyebrow, .kicker, .label),
+html.specter-report div.next:has(> h3) :is(.eyebrow, .kicker, .label) {
+  color: var(--specter-acid) !important;
+}
+
+/* A light card nested in a dark chapter is still a light card. Keep this
+ * guard after the dark-surface compatibility rules so the card's own surface,
+ * not its ancestor, decides heading/caption/body contrast. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Final light/dark ownership repairs for legacy report structures that reused
+ * the same class names on opposite surfaces. Keep these selectors structural:
+ * the surrounding surface, not a generic class alias, decides the foreground. */
+html.specter-report section#next:has(> .intro) > .next,
+html.specter-report section#next:has(> .intro) > .next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .state-strip .frames > figure > figcaption,
+html.specter-report section#organism .frames > figure > figcaption,
+html.specter-report section:not(#memory):not(#map):has(+ section#meaning) > .wrap > .frames > figure > figcaption,
+html.specter-report .aperture-map figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report article.case .frames > figure:has(> img) > figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report section > article.case > .frames > figure:has(> img) > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#map .frames > figure > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing,
+html.specter-report section.next > .wrap.chapter {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section.next > .wrap.chapter :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report table {
+  border-collapse: collapse;
+  background: var(--specter-sheet);
+}
+
+html.specter-report th {
+  background: var(--specter-ink);
+  color: var(--specter-sheet) !important;
+  font-family: var(--specter-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.specter-report th,
+html.specter-report td {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report code,
+html.specter-report pre {
+  font-family: var(--specter-mono);
+}
+
+html.specter-report ::selection {
+  color: var(--specter-ink);
+  background: var(--specter-acid);
+}
+
+@media (max-width: 760px) {
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: relative;
+  }
+
+  html.specter-report h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 640px) {
+  html.specter-report .hero h1,
+  html.specter-report .masthead h1,
+  html.specter-report .hero-title,
+  html.specter-report body > header h1,
+  html.specter-report main > header h1 {
+    font-size: clamp(2.75rem, 11vw, 3.25rem) !important;
+    line-height: 0.92 !important;
+    overflow-wrap: anywhere !important;
+    text-wrap: wrap;
+  }
+
+  /* Long source receipts must wrap rather than disappear beyond the phone. */
+  html.specter-report footer {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  html.specter-report footer code,
+  html.specter-report footer .receipt,
+  html.specter-report footer .hash {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media print {
+  html.specter-report,
+  html.specter-report body {
+    background: white !important;
+  }
+
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: static !important;
+  }
+
+  html.specter-report .card,
+  html.specter-report .visual,
+  html.specter-report .case,
+  html.specter-report .hero-card,
+  html.specter-report .question-card {
+    box-shadow: none !important;
+  }
+}
+</style>
+<!-- specter-report-style:end -->
+<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><style data-specter-public-polish>
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
+
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
+  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
+  font-family: var(--editorial-display) !important;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
+html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
+html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
+html.anatomical-editorial .hero-specimens { margin: 0; }
+html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
+html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
+html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
+html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
+html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
+html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
+html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
+html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
+html.anatomical-editorial .synthesis .metric span { color:#414c45; }
+html.anatomical-editorial .opening-method { margin:1rem 0; }
+html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
+html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
+html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
+html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
+html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
+html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
+html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
+html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
+html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
+html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
+html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
+html.anatomical-editorial .caption { border:0; }
+html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
+html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
+html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
+html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
+html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
+html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
+html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
+html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
+html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
+html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
+html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
+html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
+html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
+html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
+html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
+html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
+@media(max-width:800px) {
+ html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
+ html:has(.editorial-synthesis) .hero-answer { transform:none; }
+ html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
+}
+html:has(.editorial-synthesis) .ink { border-block:0; }
+html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
+html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .section-no { border:0; }
+@media(max-width:700px) {
+ html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
+ html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
+ html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
+ html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
+ html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
+}
+html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
+
+html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
+html.anatomical-editorial .measurement-comparison,
+html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
+html.anatomical-editorial .measurement-comparison h3,
+html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
+.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
+.measurement-heading { font: 12px/1.5 monospace; }
+.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
+.measurement-track { position: relative; height: 18px; background: #fff8; }
+.measurement-track i { display: block; height: 100%; background: #18796f; }
+.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
+.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
+html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
+.experiment-method summary { cursor: pointer; font-weight: 700; }
+.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
+.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
+.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.orbium-frames figure { margin: 0; }
+.orbium-frames img { display: block; width: 100%; }
+.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
+#orbium-time-note { margin-top: 16px; }
+.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
+.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
+.comparison-story p { max-width: 72ch; line-height: 1.65; }
+.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
+.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 650px) {
+  .measurement-heading { display: none; }
+  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
+  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
+  .orbium-frames { gap: 10px; }
+}
+
+#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
+html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
+html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
+
+html:has(.editorial-synthesis) .evidence {
+  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
+}
+html:has(.editorial-synthesis) .evidence::before { content: none; }
+html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
+html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
+html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
+html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
+.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
+.figure-introduction { max-width: 760px; margin-bottom: 30px; }
+.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
+.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
+.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
+.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
+.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.response-plots > div, .transplant-panels > div { min-width: 0; }
+.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
+.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
+.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
+.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
+.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
+.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
+#response-reading { font-size: 19px; }
+html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
+html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
+html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
+html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
+html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #17282d; }
+html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
+html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
+html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
+html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
+@media (max-width: 700px) {
+  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
+  .response-controls { gap: 14px; }
+  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
+  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
+}
+
+#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
+
+/* These explicit light fills label dark inset panels inside otherwise light charts. */
+html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
+html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
+
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
+  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
+}
+html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
+html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
+html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+</style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/fresh-phase-operator/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a></nav>
+<nav><div class="wrap"><b>Before the organism · Fresh passage 40 intervention</b><div><a href="#finding">Finding</a><a href="#motion">Motion</a><a href="#images">Bodies</a><a href="#language">Language</a><a href="#next">Next</a></div></div></nav>
+<header class="wrap hero"><div class="kicker">Same visible organism · different hidden composition · different future</div><h1>Invisible State Rewrites Redirect Development</h1><p class="lede">At passage 40 we held every visible pixel fixed and rewired only the invisible allocation between Flow Lenia's two material channels. <em>The same young organism entered a different developmental future.</em></p></header>
+<div class="wrap stats"><div class="stat"><b>0</b><span>visible-field difference at the intervention instant</span></div><div class="stat"><b>0.239</b><span>mean visible future distance only 32 steps later<br>95% CI +0.232 to +0.246</span></div><div class="stat"><b>-0.262</b><span>mean radius shift at +128 steps<br>15/16 families compacted</span></div><div class="stat"><b>57,344</b><span>future frames · 64 fresh organisms · 16 families</span></div></div>
+<main>
+<section id="finding"><div class="wrap"><div class="eyebrow">01 / The direct result</div><h2>An invisible internal rewrite changes what the organism becomes.</h2><p class="big">The perturbation did not add mass, move mass, alter the visible body, or change global channel balance. It changed only <em>which hidden material occupied each visible location</em>.</p><div class="card equation"><span>same passage 40 body</span><span class="arrow">+</span><span class="operator">hidden allocation rewrite</span><span class="arrow">→</span><span>different development</span></div><div class="grid3"><div class="card orange"><h3>Immediate reorganization</h3><div class="metric">-0.086</div><p>Radius shift after only 32 transitions; 95% family interval -0.116 to -0.056.</p></div><div class="card cyan"><h3>Maximum compaction</h3><div class="metric">-0.262</div><p>At +128 steps, 15 of 16 families compacted relative to their untouched futures.</p></div><div class="card violet"><h3>Long memory</h3><div class="metric">0.327</div><p>Visible-field distance at +512 steps. The average radius recovers, but the future does not return to the untouched trajectory.</p></div></div></div></section>
+<section id="motion"><div class="wrap"><div class="eyebrow">02 / The developmental response</div><h2>The radius recovers, but the trajectories remain different.</h2><div class="card chart"><svg viewBox="0 0 980 500" role="img" aria-label="Developmental effect of hidden phase rewrites over 512 steps"><text x="78.0" y="478" text-anchor="middle" class="axis">+0</text><text x="525.0" y="478" text-anchor="middle" class="axis">+0</text><text x="166.8" y="478" text-anchor="middle" class="axis">+128</text><text x="613.8" y="478" text-anchor="middle" class="axis">+128</text><text x="255.5" y="478" text-anchor="middle" class="axis">+256</text><text x="702.5" y="478" text-anchor="middle" class="axis">+256</text><text x="344.2" y="478" text-anchor="middle" class="axis">+384</text><text x="791.2" y="478" text-anchor="middle" class="axis">+384</text><text x="433.0" y="478" text-anchor="middle" class="axis">+512</text><text x="880.0" y="478" text-anchor="middle" class="axis">+512</text><line x1="78" y1="405.1" x2="433" y2="405.1" class="grid"/><text x="66" y="409.1" text-anchor="end" class="axis">-0.3</text><line x1="78" y1="327.9" x2="433" y2="327.9" class="grid"/><text x="66" y="331.9" text-anchor="end" class="axis">-0.2</text><line x1="78" y1="250.7" x2="433" y2="250.7" class="grid"/><text x="66" y="254.7" text-anchor="end" class="axis">-0.1</text><line x1="78" y1="173.5" x2="433" y2="173.5" class="grid"/><text x="66" y="177.5" text-anchor="end" class="axis">+0.0</text><line x1="78" y1="96.3" x2="433" y2="96.3" class="grid"/><text x="66" y="100.3" text-anchor="end" class="axis">+0.1</text><line x1="525" y1="436.0" x2="880" y2="436.0" class="grid"/><text x="513" y="440.0" text-anchor="end" class="axis">0.0</text><line x1="525" y1="328.8" x2="880" y2="328.8" class="grid"/><text x="513" y="332.8" text-anchor="end" class="axis">0.1</text><line x1="525" y1="221.6" x2="880" y2="221.6" class="grid"/><text x="513" y="225.6" text-anchor="end" class="axis">0.2</text><line x1="525" y1="114.3" x2="880" y2="114.3" class="grid"/><text x="513" y="118.3" text-anchor="end" class="axis">0.3</text><text x="78" y="24" class="chart-title">mean radius shift</text><text x="525" y="24" class="chart-title">visible-field distance from intact</text><polyline points="80.8,186.2 83.5,201.7 86.3,204.5 89.1,217.0 91.9,231.3 94.6,236.0 97.4,240.6 100.2,240.0 103.0,263.5 105.7,270.8 108.5,275.3 111.3,278.2 114.1,290.7 116.8,304.9 119.6,285.3 122.4,319.3 125.1,316.6 127.9,332.1 130.7,331.6 133.5,344.4 136.2,336.3 139.0,360.3 141.8,361.4 144.6,355.5 147.3,366.0 150.1,380.3 152.9,383.3 155.7,365.3 158.4,368.5 161.2,373.9 164.0,367.0 166.8,376.1 169.5,373.7 172.3,376.2 175.1,356.5 177.8,377.9 180.6,356.0 183.4,365.9 186.2,375.6 188.9,375.2 191.7,374.0 194.5,384.7 197.3,382.6 200.0,384.2 202.8,386.3 205.6,383.4 208.4,383.6 211.1,368.3 213.9,370.6 216.7,374.3 219.4,368.9 222.2,362.3 225.0,369.8 227.8,364.8 230.5,358.7 233.3,348.3 236.1,349.6 238.9,343.4 241.6,337.3 244.4,333.9 247.2,317.9 250.0,321.3 252.7,309.2 255.5,319.6 258.3,307.9 261.0,303.6 263.8,307.7 266.6,293.5 269.4,301.2 272.1,300.1 274.9,291.0 277.7,287.8 280.5,287.5 283.2,274.4 286.0,272.2 288.8,267.5 291.6,270.5 294.3,265.2 297.1,256.6 299.9,256.6 302.6,252.2 305.4,250.3 308.2,241.8 311.0,238.3 313.7,236.2 316.5,237.7 319.3,229.3 322.1,226.3 324.8,227.2 327.6,221.7 330.4,217.6 333.2,220.3 335.9,219.8 338.7,222.5 341.5,220.2 344.2,224.5 347.0,228.5 349.8,228.9 352.6,228.8 355.3,227.4 358.1,228.6 360.9,224.6 363.7,220.9 366.4,215.8 369.2,214.9 372.0,210.4 374.8,210.0 377.5,206.5 380.3,205.6 383.1,201.7 385.9,195.6 388.6,190.2 391.4,185.2 394.2,177.0 396.9,175.1 399.7,171.4 402.5,168.4 405.3,166.5 408.0,164.4 410.8,163.2 413.6,160.3 416.4,158.8 419.1,157.9 421.9,160.3 424.7,160.0 427.5,159.5 430.2,160.1 433.0,160.0" fill="none" stroke="#ff8a4c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="527.8,324.7 530.5,253.0 533.3,226.2 536.1,209.8 538.9,199.1 541.6,191.2 544.4,184.3 547.2,179.4 550.0,173.3 552.7,169.1 555.5,166.5 558.3,164.8 561.1,162.9 563.8,161.2 566.6,159.9 569.4,157.9 572.1,157.4 574.9,156.2 577.7,155.2 580.5,155.8 583.2,154.3 586.0,155.2 588.8,152.8 591.6,154.2 594.3,152.9 597.1,151.1 599.9,150.9 602.7,149.7 605.4,149.5 608.2,147.6 611.0,146.9 613.8,146.2 616.5,143.9 619.3,142.0 622.1,142.4 624.8,140.6 627.6,140.2 630.4,138.3 633.2,136.8 635.9,135.2 638.7,133.7 641.5,132.6 644.3,132.4 647.0,130.4 649.8,128.8 652.6,127.9 655.4,127.2 658.1,126.1 660.9,124.6 663.7,123.9 666.4,123.0 669.2,121.7 672.0,120.5 674.8,119.2 677.5,118.2 680.3,117.0 683.1,115.7 685.9,114.8 688.6,113.6 691.4,112.3 694.2,111.8 697.0,110.5 699.7,109.0 702.5,108.1 705.3,107.5 708.0,106.5 710.8,105.8 713.6,105.7 716.4,105.1 719.1,104.3 721.9,103.3 724.7,102.7 727.5,101.7 730.2,100.7 733.0,100.2 735.8,99.4 738.6,98.8 741.3,98.3 744.1,97.9 746.9,97.3 749.6,97.0 752.4,96.7 755.2,96.5 758.0,96.0 760.7,95.3 763.5,95.0 766.3,94.4 769.1,94.0 771.8,93.4 774.6,92.2 777.4,91.6 780.2,90.7 782.9,90.2 785.7,90.0 788.5,89.8 791.2,89.3 794.0,89.1 796.8,88.7 799.6,88.5 802.3,88.6 805.1,88.4 807.9,88.6 810.7,88.6 813.4,88.8 816.2,88.9 819.0,88.9 821.8,88.6 824.5,88.4 827.3,88.2 830.1,88.0 832.9,87.8 835.6,87.6 838.4,87.7 841.2,87.4 843.9,87.0 846.7,87.0 849.5,86.5 852.3,86.4 855.0,86.1 857.8,85.8 860.6,85.7 863.4,85.7 866.1,85.7 868.9,85.6 871.7,85.4 874.5,85.4 877.2,85.3 880.0,85.3" fill="none" stroke="#43c7d9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="78" y1="173.5" x2="433" y2="173.5" class="zero"/><text x="490.0" y="498" text-anchor="middle" class="axis">steps after the invisible passage 40 rewrite</text></svg></div><p>The rewrite produces a coherent transient: slightly more mass, smaller radius, and broader occupation of the four spatial quadrants. The radius effect peaks around +128 steps and relaxes. Yet the full visible-field distance keeps growing—from 0.239 at +32 to 0.327 at +512.</p><div class="card chart"><svg viewBox="0 0 940 430" role="img" aria-label="Pooled hidden-rewrite effects at 128 future steps"><line x1="240.4" y1="34" x2="240.4" y2="378" class="grid"/><text x="240.4" y="412" text-anchor="middle" class="axis">-0.3</text><line x1="341.1" y1="34" x2="341.1" y2="378" class="grid"/><text x="341.1" y="412" text-anchor="middle" class="axis">-0.2</text><line x1="441.8" y1="34" x2="441.8" y2="378" class="grid"/><text x="441.8" y="412" text-anchor="middle" class="axis">-0.1</text><line x1="542.5" y1="34" x2="542.5" y2="378" class="zero"/><text x="542.5" y="412" text-anchor="middle" class="axis">+0.0</text><line x1="643.2" y1="34" x2="643.2" y2="378" class="grid"/><text x="643.2" y="412" text-anchor="middle" class="axis">+0.1</text><line x1="743.9" y1="34" x2="743.9" y2="378" class="grid"/><text x="743.9" y="412" text-anchor="middle" class="axis">+0.2</text><line x1="844.6" y1="34" x2="844.6" y2="378" class="grid"/><text x="844.6" y="412" text-anchor="middle" class="axis">+0.3</text><text x="175" y="72" text-anchor="end" class="axis">mass</text><line x1="617.7" y1="68" x2="852.4" y2="68" stroke="#6a707a" stroke-width="4" stroke-linecap="round"/><circle cx="733.1" cy="68" r="8" fill="#43c7d9"/><text x="747.1" y="72" class="value">+0.19σ</text><text x="175" y="123" text-anchor="end" class="axis">radius</text><line x1="236.0" y1="119" x2="405.8" y2="119" stroke="#6a707a" stroke-width="4" stroke-linecap="round"/><circle cx="323.3" cy="119" r="8" fill="#ff8a4c"/><text x="337.3" y="123" class="value">-0.22σ</text><text x="175" y="174" text-anchor="end" class="axis">occupied area</text><line x1="376.4" y1="170" x2="584.8" y2="170" stroke="#6a707a" stroke-width="4" stroke-linecap="round"/><circle cx="477.9" cy="170" r="8" fill="#ff8a4c"/><text x="491.9" y="174" class="value">-0.06σ</text><text x="175" y="225" text-anchor="end" class="axis">components</text><line x1="355.3" y1="221" x2="623.9" y2="221" stroke="#6a707a" stroke-width="4" stroke-linecap="round"/><circle cx="505.8" cy="221" r="8" fill="#ff8a4c"/><text x="519.8" y="225" class="value">-0.04σ</text><text x="175" y="276" text-anchor="end" class="axis">largest component</text><line x1="479.7" y1="272" x2="818.0" y2="272" stroke="#6a707a" stroke-width="4" stroke-linecap="round"/><circle cx="642.6" cy="272" r="8" fill="#43c7d9"/><text x="656.6" y="276" class="value">+0.10σ</text><text x="175" y="327" text-anchor="end" class="axis">spatial spread</text><line x1="660.7" y1="323" x2="772.8" y2="323" stroke="#6a707a" stroke-width="4" stroke-linecap="round"/><circle cx="715.6" cy="323" r="8" fill="#43c7d9"/><text x="729.6" y="327" class="value">+0.17σ</text><text x="542.5" y="429" text-anchor="middle" class="axis">effect relative to natural between-organism variation · 95% family intervals</text></svg></div></div></section>
+<section id="images"><div class="wrap"><div class="eyebrow">03 / Actual futures</div><h2>One visible beginning. Several real trajectories.</h2><div class="specimens"><figure class="specimen"><img src="data:image/png;base64,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" alt="passage 40 visible start"><figcaption><b>passage 40 visible start</b><span>all seven starts are pixel-identical</span></figcaption></figure><figure class="specimen"><img src="data:image/png;base64,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" alt="untouched"><figcaption><b>untouched</b><span>+128 steps</span></figcaption></figure><figure class="specimen"><img src="data:image/png;base64,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" alt="field06"><figcaption><b>field06</b><span>+128 steps</span></figcaption></figure><figure class="specimen"><img src="data:image/png;base64,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" alt="field06 × −1"><figcaption><b>field06 × −1</b><span>+128 steps</span></figcaption></figure><figure class="specimen"><img src="data:image/png;base64,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" alt="decoy03"><figcaption><b>decoy03</b><span>+128 steps</span></figcaption></figure></div><p class="proof">Representative source 25, chosen mechanically as the organism closest to the cohort-median field06 original-versus-negative divergence at +128. The passage 40 panel is rendered from the exact two-channel state patch by summing the channels. All seven intervention states have the identical summed field byte-for-byte. Aggregate effects use all 64 organisms; these images are illustration, not selection evidence.</p></div></section>
+<section id="language"><div class="wrap"><div class="eyebrow">04 / The surprise</div><h2>The effect repeats; the proposed hidden pattern is not unique.</h2><p class="big">The previously discovered field06 operator was not uniquely powerful in these fresh passage 40 organisms. A decoy hidden field produced nearly the same broad developmental reorganization.</p><div class="grid3"><div class="card orange"><h3>General causal plasticity</h3><div class="metric">0.270</div><p>Mean visible-field distance at +128 across all six hidden rewrites; every family moved away from intact.</p></div><div class="card cyan"><h3>Field06 family − decoy</h3><div class="metric">-0.025</div><p>Radius difference at +128; 95% CI -0.098 to +0.047. Broad morphology does not privilege field06.</p></div><div class="card violet"><h3>Signed specificity</h3><div class="metric">-0.010</div><p>Field06 sign contrast minus decoy sign contrast at +128; 95% CI -0.111 to +0.072.</p></div></div><div class="callout"><p class="big">The decoy produced a comparable response. The experiment establishes sensitivity to hidden composition, but does not show that the imported field has a unique developmental effect in these organisms.</p></div></div></section>
+<section id="causal"><div class="wrap"><div class="eyebrow">05 / Why this matters for causal emergence</div><h2>Visible morphology is an incomplete causal state.</h2><p class="big">Two states can be visually identical and globally composition-matched, yet have systematically different futures because their internal organization differs.</p><div class="grid2"><div class="card orange"><h3>What we now know</h3><p>Redistributing the hidden channels changes later development even when the starting image and overall channel balance stay fixed.</p></div><div class="card cyan"><h3>What becomes possible</h3><p>Instead of asking whether one imported Φ-derived field predicts one event, we can search for the organism-specific hidden direction along which its future repertoire opens, closes, branches, or commits.</p></div></div></div></section>
+<section id="next"><div class="wrap"><div class="eyebrow">06 / The next experiment</div><h2>Learn each organism's own developmental tangent—then push with it or against it.</h2><p class="big">Observe a short untouched prefix. Infer the hidden compositional direction the organism is naturally moving. At passage 40, apply equal invisible doses along that direction, against it, orthogonal to it, and through a phase-scrambled decoy.</p><div class="grid3"><div class="card orange"><h3>Along</h3><p>Does development accelerate, open more futures, or cross a morphological transition earlier?</p></div><div class="card violet"><h3>Against</h3><p>Does the organism stall, reverse, lose identity, or fall into a different basin?</p></div><div class="card cyan"><h3>Orthogonal</h3><p>Does arbitrary hidden motion merely perturb, while the native tangent carries specific developmental meaning?</p></div></div><div class="callout"><p class="big">That is the direct route back to the Levin question: detect an information-geometric direction in an early state, intervene on it before the organism changes shape, and see whether it controls the emergence of future organization.</p></div></div></section>
+</main><footer><div class="wrap proof">Fresh passage 40 phase-operator experiment · 64 independently selected organic Flow Lenia organisms · 16 families · 7 conditions · 448 futures · 57,344 frames · 20,000 family-bootstrap draws · starting visible field byte-identical · global channel balance preserved · equal non-intact relative energy 0.03312429 · maximum relative-energy residual 2.780e-08 · results SHA-256 41edcafe0c7fe630fc9b329434ef0cfd4d7088059c9c25fbe602ce35f89396e5 · completion SHA-256 8cc2c821fda19bf2ea02f431183777217422719a306cf17ec2298b6e2eacb686</div></footer>
+</body></html>

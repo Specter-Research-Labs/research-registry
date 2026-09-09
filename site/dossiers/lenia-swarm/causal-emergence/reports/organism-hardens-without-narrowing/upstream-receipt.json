@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "organism-hardens-without-narrowing",
+  "releaseId": "flce-organism-hardens-without-narrowing-0523893c4c4f",
+  "title": "Commitment Increases Rigidity Without Convergence",
+  "date": "2026-08-28",
+  "status": "feature",
+  "evidenceClass": "predeclared four-experiment series",
+  "sourceReportSha256": "1210689c59d0a95b3e85abfb6f94b78a75a50db840735c20af40115f45af2baa",
+  "publicReportSha256": "4d34a651d1f7cc5b723eab99d0d2107bfcb51a89050bd4b58597b7d440b4fb6a",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "6ce1e57d4a10c01f28c45f3c57108c19cf203820271c9be4677a675281f803fd",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

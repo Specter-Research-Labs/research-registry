@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-aperture-map",
+  "releaseId": "flce-developmental-aperture-map-5b1880d2b2fc",
+  "title": "Hidden-State Interventions Already Redirect the Body by Passage 24",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "age-mapped native-direction intervention",
+  "sourceReportSha256": "e8524acf19bae80a9212fab0d5531ec7a99f1de904bcdec094cb48434195ea59",
+  "publicReportSha256": "79ca2f3de1a90d111a99f8ae6ec4c2d41e2c4cc7aeaa4817f2a611fa101d0114",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "b104f1ca67672612658946e1210566ff87009b77284ab5965f6c8b1610f6f62c",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "3b574549df680e2256e67ac65095d5948e3a2a4e87c8cd738c0e2ea517b7e500"
+}

@@ -144,6 +144,9 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
             article class="dossier-card" id=(record.slug) {
                 div class="dossier-card-header" {
                     div class="dossier-card-tab" {
+                        svg class="addendum-symbol" aria-hidden="true" {
+                            use href=(format!("/assets/addenda-symbols.svg#{}", match lt.as_str() { "research" => "research", "competition" => "competition", "dataset" => "dataset", _ => "tooling" })) {}
+                        }
                         @if let Some(ref sid) = record.series {
                             span class="series-badge" { (sid) }
                         }

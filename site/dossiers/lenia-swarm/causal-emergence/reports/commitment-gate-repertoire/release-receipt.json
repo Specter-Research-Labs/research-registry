@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-gate-repertoire",
+  "releaseId": "flce-commitment-gate-repertoire-6eae1696c29e",
+  "title": "States Kept Responsive Reach More Diverse Futures",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "exhaustive action-pair intervention",
+  "sourceReportSha256": "3da84a52fe29393e74f6c652deee887784bd6fd83b5dfa30c36cc25476bed627",
+  "publicReportSha256": "92ab14a7ea9488518af8954725cb1543cb3aae247091c6a0dd34473144e28369",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "3ead1386392d91c6e9e44e7abf23eb938278507c61c5e64a7e350dc46c55b61a",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "8b35a7c71679b80de64ffff160fbe9aae30c08b0651af5bb228012a28bad2265"
+}

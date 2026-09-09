@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-causal-order",
+  "releaseId": "flce-developmental-causal-order-08656de0f8c1",
+  "title": "Intervention Order Outlasts the Final Pulse",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "zero-net causal-order intervention",
+  "sourceReportSha256": "10d9fd49e5bc112c50703b867d8a5799c4d35843a9cf783931d9672dd20ea7b1",
+  "publicReportSha256": "507844073b1d4c7701ec903f19fbd27b25d46611b3f7ddf409a7f18eb89bae2e",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "e46d7b132ec94f5892f9e2ccc85f2be6352b7d3437329875952da92b0e19a3ed",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "d4fc83290c308a2aff93825aa81b409ea3b18c80de1bb54ff03350eb1d87977f"
+}

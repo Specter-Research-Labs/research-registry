@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "synthesis-v5",
+  "releaseId": "flce-synthesis-v5-a9539ecc2dfd",
+  "title": "Rigidity, Control, Memory, and Identity Follow Different Timelines",
+  "date": "2026-08-29",
+  "status": "archive",
+  "evidenceClass": "multi-experiment synthesis",
+  "sourceReportSha256": "cf21d90440e6779463e4948b53dd4d1abb773f6094c639b8fbf25b14c23d8463",
+  "publicReportSha256": "d715e4adf287e62fe47a86450c715390479ff517e5e917d25204186d081add6c",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "d673d31a4fde4f2bac3bd686bae51f0d6c2489233f5bad8a684d42504d586eef",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

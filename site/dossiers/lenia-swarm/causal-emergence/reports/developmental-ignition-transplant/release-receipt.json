@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-ignition-transplant",
+  "releaseId": "flce-developmental-ignition-transplant-dc4501025c9c",
+  "title": "Hidden-State Transplants Redirect Later Body Size",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "hidden-state transplant intervention",
+  "sourceReportSha256": "17a89c46e03668cfa3023144573cd874f8506755dae2598b3f3e5edeccc04cad",
+  "publicReportSha256": "4578ea5a51665f796bab71ad2e5ce16d657a9c51ad35fa051788a62c1c36fffe",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "d05bfb40dd420a1fd99e277ae00686539e258648f4b13be07f21336e1a0d7d2c",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "5977fd0e099fb72e3ffa8e4161d952570825694829af3404ce51095319ec13e7"
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "synthesis-v1",
+  "releaseId": "flce-synthesis-v1-001894e5a095",
+  "title": "Flow Lenia Causal Emergence: Evidence and Open Tests",
+  "date": "2026-08-18",
+  "status": "archive",
+  "evidenceClass": "early synthesis",
+  "sourceReportSha256": "e4d62536b5b1024263d892b643154de4fa0eeb4e55edcd53d505f861263265f5",
+  "publicReportSha256": "14e9a046fdd8a650fd433278cb4bda885b7dacbfd239fcde3a2b4292a19772a3",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "8ab0997228ed1ab359ea0cee0a3e283a438d34fb2b6925a056f3e0f0c982cbed",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "dcd51bb95d871fbb25094f20511f55fb60c321375d25b13450c9abc04cfb3093"
+}

@@ -10,6 +10,11 @@ layer.
 Start by running the test suite. The key result is the single-cut wiring
 search near the end of this README.
 
+The [report draft](docs/report-draft.md) develops the later 2D patch-isolation
+experiment into a public narrative. Its [evidence audit](docs/report-audit.md)
+records protocol corrections and the reproduction checks still needed before
+publication; the original numerical sweep has not been rerun for that draft.
+
 ## Current Model
 
 The implementation follows the executable `bitsey/RD` path:

@@ -10,8 +10,8 @@ use sha2::{Digest, Sha256};
 
 use super::causal_emergence::{self, Catalog, Report};
 
-const RELEASE_SCHEMA: &str = "specter_flow_lenia_report_release_v2";
-const BUNDLE_SCHEMA: &str = "specter_flow_lenia_report_library_bundle_v2";
+const RELEASE_SCHEMA: &str = "specter_flow_lenia_report_release_v3";
+const BUNDLE_SCHEMA: &str = "specter_flow_lenia_report_library_bundle_v3";
 const EDITORIAL_REPLACEMENTS_PATH: &str =
     "site/dossiers/lenia-swarm/causal-emergence/editorial-replacements.json";
 const REPORT_POLISH_PATH: &str = "site/dossiers/lenia-swarm/causal-emergence/report-polish.css";
@@ -38,6 +38,8 @@ struct ReleaseReceipt<'a> {
     transformations: Vec<&'static str>,
     context_sha256: String,
     catalog_sha256: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    upstream_receipt_sha256: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -45,7 +47,7 @@ struct ReleaseReceipt<'a> {
 struct BundleEntry<'a> {
     id: &'a str,
     release_id: &'a str,
-    source_report_sha256: &'a str,
+    source_report_sha256: String,
     public_report_sha256: String,
     transformations: Vec<&'static str>,
     context_sha256: String,
@@ -114,31 +116,84 @@ pub fn stage_library(
         .ok_or_else(|| anyhow::anyhow!("causal-emergence catalog is empty"))?;
     let catalog_path = repo_root.join(causal_emergence::CATALOG_PATH);
     let catalog_sha256 = sha256_file(&catalog_path)?;
-    let candidates = discover_html_by_sha(input_root)?;
-    let selected_sources = selected
-        .iter()
-        .map(|report| unique_source(&candidates, report).map(|source| (*report, source.to_owned())))
-        .collect::<Result<Vec<_>>>()?;
+    // A previously projected library is a valid migration input only when its
+    // manifest authenticates every report. Keep that receipt chain with the new page.
+    let imported = input_root.join("manifest.json").is_file();
+    let selected_sources = if imported {
+        let manifest: serde_json::Value = serde_json::from_slice(&fs::read(input_root.join("manifest.json"))?)?;
+        selected.iter().map(|report| {
+            let entry = manifest["reports"].as_array().context("library manifest has no reports")?
+                .iter().find(|entry| entry["releaseId"] == report.release_id)
+                .with_context(|| format!("library manifest is missing {}", report.id))?;
+            let source = match manifest["schema"].as_str() {
+                Some("specter_flow_lenia_report_library_bundle_v2") => input_root.join("releases").join(&report.release_id).join("report.html"),
+                Some(BUNDLE_SCHEMA) => input_root.join("reports").join(&report.id).join("index.html"),
+                _ => bail!("unsupported input library manifest schema"),
+            };
+            if entry["publicReportSha256"].as_str() != Some(sha256_file(&source)?.as_str()) {
+                bail!("public report hash mismatch: {}", report.id);
+            }
+            let receipt = source.parent().unwrap().join("release-receipt.json");
+            if entry["receiptSha256"].as_str() != Some(sha256_file(&receipt)?.as_str()) {
+                bail!("upstream receipt hash mismatch: {}", report.id);
+            }
+            Ok((*report, source))
+        }).collect::<Result<Vec<_>>>()?
+    } else {
+        let candidates = discover_html_by_sha(input_root)?;
+        selected.iter().map(|report| unique_source(&candidates, report)
+            .map(|source| (*report, source.to_owned()))).collect::<Result<Vec<_>>>()?
+    };
 
-    let releases_root = output_root.join("releases");
+    let releases_root = output_root.join("reports");
     fs::create_dir_all(&releases_root)
         .with_context(|| format!("failed to create {releases_root}"))?;
 
     let mut manifest_entries = Vec::with_capacity(selected.len());
     for (report, source) in selected_sources {
-        let report_release_dir = releases_root.join(&report.release_id);
+        let report_release_dir = releases_root.join(&report.id);
         fs::create_dir_all(&report_release_dir)
             .with_context(|| format!("failed to create {report_release_dir}"))?;
 
         let report_bytes = fs::read(&source).with_context(|| format!("failed to read {source}"))?;
-        let public_report = project_public_report(
-            report,
-            &report_bytes,
-            &editorial_config.replacements,
-            &report_polish,
-        )?;
+        let mut public_report = if imported {
+            let upstream = source.parent().unwrap().join("release-receipt.json");
+            fs::copy(upstream, report_release_dir.join("upstream-receipt.json"))?;
+            let mut html = String::from_utf8(report_bytes)?;
+            if !html.contains("class=\"publication-header\"") { html = html.replace("<body>", &format!("<body>{}", include_str!("../../../../site/templates/publication-header.html"))); }
+            html = html.replace("</head>", "<link rel=\"stylesheet\" href=\"/assets/publication-layout.css?v=20260909-curated\"></head>");
+            html = html.replace("href=\"index.html\"", "href=\"about.html\"")
+                .replace("https://specterlab.org/", "/");
+            html = Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?.replace_all(&html, "").into_owned();
+            PublicProjection { bytes: html.into_bytes(), transformations: vec!["import_verified_public_projection_v1"] }
+        } else {
+            project_public_report(report, &report_bytes, &editorial_config.replacements, &report_polish)?
+        };
+        let mut linked = String::from_utf8(public_report.bytes)?;
+        for target in &catalog.reports {
+            let old = format!("https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/{}/", target.release_id);
+            let new = format!("/dossiers/lenia-swarm/causal-emergence/reports/{}/", target.id);
+            linked = linked.replace(&format!("{old}report.html"), &new).replace(&old, &format!("{new}about.html"));
+        }
+        linked = Regex::new(r#"<link[^>]+rel="canonical"[^>]*>"#)?.replace_all(&linked, "").into_owned();
+        linked = linked.replace("</head>", &format!(r#"<link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/{}/"></head>"#, report.id));
+        if report.id == "synthesis-v7" {
+            for (from, to) in [(">instrument</a>", ">How we measured</a>"), (">future</a>", ">Possible futures</a>"), (">closure</a>", ">Development</a>"), (">impedance</a>", ">The same push, later</a>"), (">control</a>", ">Steering</a>"), (">passport</a>", ">Recognizing a response</a>"), (">ledger</a>", ">Evidence</a>")] {
+                linked = linked.replace(from, to);
+            }
+        }
+        let (edited, changed) = normalize_public_editorial(&linked, &editorial_config.replacements);
+        linked = edited;
+        if changed { public_report.transformations.push(NORMALIZE_PUBLIC_EDITORIAL); }
+        linked = linked.replace("<span>Earlier report · retained in the archive</span>", "")
+            .replace("<span>Supporting experimental record</span>", "");
+        if report.archive {
+            linked = linked.replace("href=\"about.html\">About this report</a>", "href=\"about.html\">About this report</a><span>Supporting experimental record</span>");
+        }
+        public_report.bytes = linked.into_bytes();
+        public_report.transformations.push("move_reports_to_website_v1");
         let public_report_sha256 = sha256_bytes(&public_report.bytes);
-        let report_path = report_release_dir.join("report.html");
+        let report_path = report_release_dir.join("index.html");
         fs::write(&report_path, &public_report.bytes)
             .with_context(|| format!("failed to write {report_path}"))?;
 
@@ -148,10 +203,11 @@ pub fn stage_library(
             &public_report.transformations,
         );
         let context_sha256 = sha256_bytes(context.as_bytes());
-        let context_path = report_release_dir.join("index.html");
+        let context_path = report_release_dir.join("about.html");
         fs::write(&context_path, context)
             .with_context(|| format!("failed to write {context_path}"))?;
 
+        let input_sha256 = sha256_file(&source)?;
         let receipt = ReleaseReceipt {
             schema: RELEASE_SCHEMA,
             id: &report.id,
@@ -160,11 +216,12 @@ pub fn stage_library(
             date: &report.date,
             status: &report.status,
             evidence_class: &report.evidence_class,
-            source_report_sha256: &report.sha256,
+            source_report_sha256: if imported { &input_sha256 } else { &report.sha256 },
             public_report_sha256: public_report_sha256.clone(),
             transformations: public_report.transformations.clone(),
             context_sha256: context_sha256.clone(),
             catalog_sha256: &catalog_sha256,
+            upstream_receipt_sha256: if imported { Some(sha256_file(&report_release_dir.join("upstream-receipt.json"))?) } else { None },
         };
         let mut receipt_bytes = serde_json::to_vec_pretty(&receipt)?;
         receipt_bytes.push(b'\n');
@@ -176,7 +233,7 @@ pub fn stage_library(
         manifest_entries.push(BundleEntry {
             id: &report.id,
             release_id: &report.release_id,
-            source_report_sha256: &report.sha256,
+            source_report_sha256: input_sha256,
             public_report_sha256,
             transformations: public_report.transformations,
             context_sha256,
@@ -202,6 +259,34 @@ pub fn stage_library(
         lead_release_id: lead.release_id.clone(),
         report_count: manifest.reports.len(),
     })
+}
+
+pub fn validate_website_library(repo_root: &Utf8Path) -> Result<()> {
+    let root = repo_root.join("site/dossiers/lenia-swarm/causal-emergence/reports");
+    let catalog = causal_emergence::load_catalog(repo_root)?;
+    let Some(catalog) = catalog else { return Ok(()); };
+    let manifest: serde_json::Value = serde_json::from_slice(&fs::read(root.join("manifest.json"))
+        .context("website report library is missing; stage and install the report bundle first")?)?;
+    if manifest["schema"].as_str() != Some(BUNDLE_SCHEMA) { bail!("unsupported website report manifest schema"); }
+    let entries = manifest["reports"].as_array().context("website report manifest has no reports")?;
+    for report in &catalog.reports {
+        let entry = entries.iter().find(|entry| entry["id"] == report.id)
+            .with_context(|| format!("website report is missing from manifest: {}", report.id))?;
+        for (file, field) in [("index.html", "publicReportSha256"), ("about.html", "contextSha256"), ("release-receipt.json", "receiptSha256")] {
+            let path = root.join(&report.id).join(file);
+            if entry[field].as_str() != Some(sha256_file(&path)?.as_str()) {
+                bail!("website report integrity check failed: {path}");
+            }
+        }
+        let receipt: serde_json::Value = serde_json::from_slice(&fs::read(root.join(&report.id).join("release-receipt.json"))?)?;
+        if let Some(expected) = receipt["upstreamReceiptSha256"].as_str() {
+            if sha256_file(&root.join(&report.id).join("upstream-receipt.json"))? != expected {
+                bail!("upstream receipt integrity check failed: {}", report.id);
+            }
+        }
+
+    }
+    Ok(())
 }
 
 fn load_editorial_config(repo_root: &Utf8Path) -> Result<EditorialConfig> {
@@ -332,14 +417,16 @@ fn render_context(
                 Some("internal checkpoint labels were written out as developmental passages")
             }
             NORMALIZE_MOBILE_WRAP => Some("small-screen wrapping was added"),
+            "import_verified_public_projection_v1" => Some("the previously published projection was verified against its manifest and moved into the website"),
+            "move_reports_to_website_v1" => Some("report links now use website routes"),
             APPLY_REPORT_POLISH => Some("shared report and chart styling was applied"),
             _ => None,
         })
         .collect::<Vec<_>>()
         .join("; ");
     let release_url = format!(
-        "https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/{}/",
-        report.release_id
+        "https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/{}/",
+        report.id
     );
     html! {
         (DOCTYPE)
@@ -355,8 +442,10 @@ fn render_context(
                 meta property="og:url" content=(&release_url);
                 title { (&report.title) " | SPECTER Labs" }
                 style { (maud::PreEscaped(CONTEXT_CSS)) }
+                link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated";
             }
-            body {
+            body class="publication-context" {
+                (maud::PreEscaped(include_str!("../../../../site/templates/publication-header.html")))
                 main {
                     nav aria-label="Report navigation" {
                         a href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/" { "Causal emergence" }
@@ -386,7 +475,7 @@ fn render_context(
                         }
                     }
                     div class="actions" {
-                        a class="primary" href="report.html" { "Read the full report" }
+                        a class="primary" href="index.html" { "Read the full report" }
                         a href="release-receipt.json" { "Publication details" }
                     }
                     footer {
@@ -488,9 +577,14 @@ fn project_public_report(
         } else {
             ""
         };
-        projected.insert_str(body_end, &format!(r#"<nav class="publication-navigation" aria-label="Research publication"><a href="https://specterlab.org/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="index.html">About this report</a>{archive}</nav>"#));
+        projected.insert_str(body_end, &format!(r#"{}<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a>{archive}</nav>"#, include_str!("../../../../site/templates/publication-header.html")));
         transformations.push("add_publication_navigation_v1");
     }
+
+    if let Some(head_end) = projected.find("</head>") {
+        projected.insert_str(head_end, r#"<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="icon" href="/assets/logo-black.svg">"#);
+    }
+    projected = Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?.replace_all(&projected, "").into_owned();
 
     let needs_mobile_normalization = !transformations.is_empty()
         || matches!(
@@ -999,7 +1093,7 @@ mod tests {
         assert!(public.contains("content=\"A Clear Result\""));
         assert!(!public.contains("The Future Speaks"));
         assert!(!public.contains("<h1 aria-label"));
-        assert!(public.contains("href=\"index.html\">About this report</a>"));
+        assert!(public.contains("href=\"about.html\">About this report</a>"));
         assert!(projection
             .transformations
             .contains(&NORMALIZE_PUBLIC_EDITORIAL));
@@ -1026,7 +1120,7 @@ mod tests {
         };
         let page = render_context(&report, &report.sha256, &[]);
         assert!(page.contains("A &lt;body&gt; responds"));
-        assert!(page.contains("href=\"report.html\""));
+        assert!(page.contains("href=\"index.html\""));
         assert!(!page.contains(".codex"));
     }
 
@@ -1082,16 +1176,16 @@ mod tests {
         let result = stage_library(root, &input, &output, None).unwrap();
         assert_eq!(result.report_count, 1);
 
-        let release = output.join("releases/exact-report-aaaaaaaaaaaa");
-        assert_eq!(fs::read(release.join("report.html")).unwrap(), report_bytes);
-        let context = fs::read_to_string(release.join("index.html")).unwrap();
+        let release = output.join("reports/exact-report");
+        assert_eq!(fs::read(release.join("index.html")).unwrap(), report_bytes);
+        let context = fs::read_to_string(release.join("about.html")).unwrap();
         let receipt = fs::read_to_string(release.join("release-receipt.json")).unwrap();
         let manifest = fs::read_to_string(output.join("manifest.json")).unwrap();
         assert!(context.contains("Result"));
         assert!(!context.contains("private-input"));
         assert!(!receipt.contains("private-input"));
         assert!(!manifest.contains("private-input"));
-        assert!(receipt.contains("\"transformations\": []"));
+        assert!(receipt.contains("move_reports_to_website_v1"));
         assert!(receipt.contains(&format!("\"publicReportSha256\": \"{report_sha256}\"")));
     }
 
@@ -1141,10 +1235,10 @@ mod tests {
 
         let output = root.join("public-bundle");
         stage_library(root, &input, &output, None).unwrap();
-        let release = output.join("releases/projected-report-aaaaaaaaaaaa");
-        let public = fs::read_to_string(release.join("report.html")).unwrap();
+        let release = output.join("reports/projected-report");
+        let public = fs::read_to_string(release.join("index.html")).unwrap();
         let receipt = fs::read_to_string(release.join("release-receipt.json")).unwrap();
-        let context = fs::read_to_string(release.join("index.html")).unwrap();
+        let context = fs::read_to_string(release.join("about.html")).unwrap();
 
         assert_eq!(fs::read(&source).unwrap(), report_bytes);
         assert!(public.contains("<html class=\"specter-report\">"));
@@ -1166,6 +1260,22 @@ mod tests {
         assert!(context.contains("internal file paths were shortened"));
         assert!(context.contains("links to files that are not published here were disabled"));
         assert!(context.contains("small-screen wrapping was added"));
+        let legacy = root.join("legacy");
+        let legacy_report = legacy.join("releases/projected-report-aaaaaaaaaaaa");
+        fs::create_dir_all(&legacy_report).unwrap();
+        fs::copy(release.join("index.html"), legacy_report.join("report.html")).unwrap();
+        fs::copy(release.join("release-receipt.json"), legacy_report.join("release-receipt.json")).unwrap();
+        let mut legacy_manifest: serde_json::Value = serde_json::from_slice(&fs::read(output.join("manifest.json")).unwrap()).unwrap();
+        legacy_manifest["schema"] = serde_json::json!("specter_flow_lenia_report_library_bundle_v2");
+        fs::write(legacy.join("manifest.json"), serde_json::to_vec(&legacy_manifest).unwrap()).unwrap();
+        let migrated = root.join("migrated");
+        stage_library(root, &legacy, &migrated, None).unwrap();
+        assert!(migrated.join("reports/projected-report/upstream-receipt.json").is_file());
+        let migrated_receipt = fs::read_to_string(migrated.join("reports/projected-report/release-receipt.json")).unwrap();
+        assert!(migrated_receipt.contains(&sha256_bytes(public.as_bytes())));
+        fs::write(legacy_report.join("report.html"), "modified after publication").unwrap();
+        let error = stage_library(root, &legacy, &root.join("corrupt"), None).unwrap_err();
+        assert!(error.to_string().contains("public report hash mismatch"));
     }
 
     #[test]

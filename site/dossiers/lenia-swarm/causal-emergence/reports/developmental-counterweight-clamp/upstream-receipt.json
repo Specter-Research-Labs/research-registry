@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-counterweight-clamp",
+  "releaseId": "flce-developmental-counterweight-clamp-5cfaaa2307e9",
+  "title": "Brief Hidden-State Interventions Change the Body Later",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "clamped hidden-state intervention",
+  "sourceReportSha256": "29f5f68dff0cf09a45325c358fb893421650970f8e3c116edf2aabfd7e3d5d1a",
+  "publicReportSha256": "b0a1c707214cacb8fc8426bb5a257ec5400ec690249cc38109b17611fea4e327",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "262c8270691a2011eb2f04ace5df4f88617767306148e7458fac04fb61628ae2",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

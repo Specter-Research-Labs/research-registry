@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "spatial-code-syntax",
+  "releaseId": "flce-spatial-code-syntax-5fa63ce48418",
+  "title": "Expansion Depends on Broad Pattern; Contraction Retains Fine Detail",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "multiscale hidden-code intervention",
+  "sourceReportSha256": "343d7968fd4e468fa2d7c469f1ba383f38ab6c4a3a444c02071a322ea5880c83",
+  "publicReportSha256": "a22287e6dbf09de2fe00aeea783a6ea0cac48225374239dccfa9ae3134b12f9d",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "bc93f3819d3e7a38ae4935f55fe1a34b9a1a7554bb03d1944097881888604629",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "a699739f9751df12fd9da9c9962c85a0a8ef4890e8f80af58ee07603c02e10ff"
+}

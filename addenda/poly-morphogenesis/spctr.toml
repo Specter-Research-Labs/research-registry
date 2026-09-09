@@ -6,7 +6,7 @@ summary = "Julia implementation of the BITSEY reaction-diffusion controller as c
 status = "concept"
 
 [site]
-visible = false
+visible = true
 featured = false
 
 [labels]

@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-causal-echo-tomography",
+  "releaseId": "flce-developmental-causal-echo-tomography-a2db12d25369",
+  "title": "Earlier Interventions Shift the Response Between Surface and Core",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "spatial response mapping",
+  "sourceReportSha256": "b3f423d6aed32f958291dd969a623e423d178382883e25f7d3003d145ecfe7c2",
+  "publicReportSha256": "fb6dc13eb90c5bec61363a80c9aa955d838092b2316160ea3264cdc8aac28bae",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "af9ef9c4bcf84046e8a01530c7b66a7e5c8dd1e4e865c6a67df0841347e134b1",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

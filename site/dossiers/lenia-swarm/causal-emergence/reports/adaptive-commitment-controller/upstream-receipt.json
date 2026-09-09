@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "adaptive-commitment-controller",
+  "releaseId": "flce-adaptive-commitment-controller-84427a004868",
+  "title": "Updating the Intervention as the State Changes Narrows Later Futures",
+  "date": "2026-08-22",
+  "status": "library",
+  "evidenceClass": "adaptive closed-loop intervention",
+  "sourceReportSha256": "fae2f7711831b19520b59f107f1c079dfb6d00f4601dbdb07ca69f0f1b390c17",
+  "publicReportSha256": "effce78ecc7a28122f3e717a1954ddd6b76a03515e29d3d68a9a9d2027f97281",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "55b3cb8f7b5274857553d9c1983c8c1999ba94e58a739ea728be7b477af85bd0",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

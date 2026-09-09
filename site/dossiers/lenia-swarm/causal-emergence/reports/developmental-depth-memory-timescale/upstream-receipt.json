@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-depth-memory-timescale",
+  "releaseId": "flce-developmental-depth-memory-timescale-153bfad0a375",
+  "title": "The Body's Response to an Earlier Intervention Reappears Later",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "memory-timescale intervention",
+  "sourceReportSha256": "61965d2e6aee78a62eb1f3632f40a94043bfa293f957ddc1f61627af55bfd195",
+  "publicReportSha256": "03ea1ae5e4791d19cbb2dd05cfa445b93f3a67dd75d905b6f8f3245b5c54f9b3",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "1d3dc22b07250c65efcf852c05177f85a2ef9f3182749d3e2073d451d0c1cf35",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

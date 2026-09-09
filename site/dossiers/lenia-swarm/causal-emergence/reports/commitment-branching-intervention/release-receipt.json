@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-branching-intervention",
+  "releaseId": "flce-commitment-branching-intervention-eac44c929c3d",
+  "title": "An Early Intervention Narrows Later Responses on Average",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "future-blind sibling intervention in a new cohort",
+  "sourceReportSha256": "83360f4a8f88eb95514d619f7a7c0358a5dff5d598712b17b7d484b03e4b293e",
+  "publicReportSha256": "feffb1bdc1a7f47adb4e015056afa6161c8ff9deed60a3136206e669fd3d9248",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "fe225c302cda1d09a8a2fee3bb1f6832f3bcfb286a2e0100a9411be29e91c2d1",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "45b8d277578dbabff605f40622915f357099c055d594c52ff5ed393613cdee44"
+}

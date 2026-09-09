@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en" class="specter-report" data-specter-surface="bg-panel"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spatial Repair Changes Its Effect with Development</title><style>
+:root{--ink:#f1f5ff;--muted:#aeb9d1;--bg:#080b12;--panel:#101621;--line:#273249;--mint:#66f2c2;--gold:#ffd166;--pink:#ff6685;--orange:#ff9f68;--blue:#76a9ff}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% -10%,#24182a 0,#080b12 43%);color:var(--ink);font:16px/1.58 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}nav{position:sticky;top:0;z-index:3;background:#080b12e8;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}nav .wrap{display:flex;gap:20px;align-items:center;min-height:56px;overflow:auto}nav a{color:var(--muted);text-decoration:none;white-space:nowrap;font-size:13px}nav strong{margin-right:auto}.wrap{width:min(1180px,calc(100% - 40px));margin:auto}header{padding:90px 0 72px;background:#171526}.kicker{color:var(--mint);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}h1{font-size:clamp(56px,9vw,112px);line-height:.9;letter-spacing:-.065em;margin:18px 0 24px;max-width:1000px}.lede{font-size:clamp(20px,3vw,30px);line-height:1.3;color:#d6e0f5;max-width:940px}.verdict{margin-top:34px;padding:24px;border:1px solid #ff668566;background:#28121b;border-radius:18px;font-size:20px;max-width:980px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:28px}.stat{padding:20px;background:var(--panel);border:1px solid var(--line);border-radius:16px}.stat b{display:block;font-size:31px;line-height:1.1}.stat span{color:var(--muted);font-size:13px}section{padding:74px 0;border-top:1px solid var(--line)}h2{font-size:clamp(36px,5vw,62px);letter-spacing:-.045em;line-height:1.02;margin:10px 0 24px;max-width:950px}h3{font-size:21px;margin:0 0 8px}p{max-width:830px}.big{font-size:22px;color:#dce6fa}.muted,.caption{color:var(--muted)}.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:32px 0}.moment{padding:20px 10px;text-align:center;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.moment b{display:block;font-size:24px}.paired-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:30px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:5px}.delay{grid-column:1/-1;text-align:center;color:var(--muted);font-weight:800;font-size:13px}figure{margin:0;background:#05070b;border:1px solid var(--line);border-radius:12px;overflow:hidden}figure img{width:100%;display:block;image-rendering:pixelated}figcaption{padding:8px;color:var(--muted);font-size:11px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chart{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}.chart svg{width:100%;height:auto;margin-top:8px;overflow:visible}.chart text{fill:var(--ink);font:700 14px ui-monospace,monospace}.chart .axis{fill:var(--muted);font:12px ui-sans-serif,system-ui}.chart p{font-size:13px;color:var(--muted);margin:4px 0 0}.legend{font-size:13px;color:var(--muted)}.callout{padding:28px;border-left:4px solid var(--pink);background:#1c111b;border-radius:0 18px 18px 0;margin:30px 0;font-size:22px}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}ul{padding-left:20px}li{margin:8px 0}footer{padding:48px 0 80px;color:var(--muted);border-top:1px solid var(--line)}code{font-family:ui-monospace,monospace;font-size:.9em}@media(max-width:900px){.paired-strip{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}.grid2,.split{grid-template-columns:1fr}.timeline{grid-template-columns:repeat(3,1fr)}}@media(max-width:480px){.stats,.timeline,.paired-strip{grid-template-columns:1fr}h1{font-size:54px}}
+</style><!-- specter-report-style:begin sha256=a28376706e9e68b08ed3d8e07cbe97c7b63be4817de94e0bf55c67a1184c09ce -->
+<style data-specter-shared>
+/*
+ * Specter Flow Lenia report skin.
+ *
+ * This is the only authored copy. _report-style/sync.py embeds it verbatim in
+ * every standalone report so the HTML files still work when shared alone.
+ */
+
+html.specter-report {
+  color-scheme: light;
+
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-dim: #81827c;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-blue-soft: #dfe6ff;
+  --specter-acid: #d8ff39;
+  --specter-acid-soft: #efffb2;
+  --specter-coral: #f05237;
+  --specter-coral-soft: #f9ded7;
+  --specter-green: #14795c;
+  --specter-green-soft: #d8efe6;
+  --specter-violet: #7652c8;
+  --specter-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --specter-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --specter-serif: Iowan Old Style, Baskerville, Georgia, "Times New Roman", serif;
+
+  /* Common aliases used across the report lineage. */
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --cream: var(--specter-ink);
+  --white: var(--specter-sheet);
+  --soft: #3e4248;
+  --muted: var(--specter-muted);
+  --dim: var(--specter-dim);
+  --faint: var(--specter-dim);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+
+  --blue: var(--specter-blue);
+  --blue2: var(--specter-blue);
+  --blue-soft: var(--specter-blue-soft);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --mint: var(--specter-green);
+  --green: var(--specter-green);
+  --green2: var(--specter-green);
+  --green-soft: var(--specter-green-soft);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --yellow: var(--specter-acid);
+  --yellow-soft: var(--specter-acid-soft);
+  --gold: var(--specter-coral);
+  --gold-soft: var(--specter-coral-soft);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --orange2: var(--specter-coral);
+  --orange-soft: var(--specter-coral-soft);
+  --red: var(--specter-coral);
+  --red2: var(--specter-coral);
+  --red-soft: var(--specter-coral-soft);
+  --rose: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+  --coral-soft: var(--specter-coral-soft);
+  --violet: var(--specter-violet);
+  --purple: var(--specter-violet);
+  --sans: var(--specter-sans);
+  --serif: var(--specter-serif);
+  --mono: var(--specter-mono);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-sheet);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-sheet"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report[data-specter-surface="bg-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report {
+  scroll-behavior: smooth;
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  margin: 0;
+  overflow-x: clip;
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+  font-family: var(--specter-sans);
+  text-rendering: optimizeLegibility;
+}
+
+html.specter-report body,
+html.specter-report p,
+html.specter-report li,
+html.specter-report td,
+html.specter-report th {
+  color: inherit;
+}
+
+html.specter-report a {
+  color: inherit;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+}
+
+html.specter-report a:hover { color: var(--specter-blue); }
+
+html.specter-report a:focus-visible,
+html.specter-report button:focus-visible,
+html.specter-report summary:focus-visible {
+  outline: 3px solid var(--specter-blue);
+  outline-offset: 4px;
+}
+
+html.specter-report h1,
+html.specter-report h2,
+html.specter-report h3,
+html.specter-report h4 {
+  color: inherit;
+  font-family: var(--specter-sans) !important;
+  font-weight: 850 !important;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+html.specter-report h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.06em;
+}
+
+/*
+ * Keep the poster voice without making a headline consume a whole monitor.
+ * Individual reports may choose smaller type; this caps only hero/masthead
+ * display titles that historically scaled directly with very wide viewports.
+ */
+html.specter-report .hero h1,
+html.specter-report .masthead h1,
+html.specter-report .hero-title,
+html.specter-report body > header h1,
+html.specter-report main > header h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(3.25rem, 6.4vw, 7rem) !important;
+  line-height: 0.9 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .hero {
+  min-height: auto !important;
+  padding-block: clamp(2.75rem, 5vw, 5.5rem) !important;
+}
+
+html.specter-report .section-head h2 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.35rem, 4.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .lede,
+html.specter-report .lead,
+html.specter-report .deck,
+html.specter-report .dek,
+html.specter-report .standfirst,
+html.specter-report .plain,
+html.specter-report blockquote {
+  font-family: var(--specter-serif);
+}
+
+/* Two poster-style reports use a bare div.lead on the normalized paper
+ * surface. Keep this deliberately narrow so paragraph leads in dark headers
+ * retain their authored white foreground. */
+html.specter-report div.lead {
+  color: var(--specter-ink) !important;
+}
+
+/* Four legacy verdict headers use a dark authored surface without declaring a
+ * foreground on the header itself. Restore their deliberately pale lede. */
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) .lede {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.lead) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.hero-facts) h1 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .eyebrow,
+html.specter-report .kicker,
+html.specter-report .label,
+html.specter-report .micro,
+html.specter-report .section-number,
+html.specter-report .section-no,
+html.specter-report .num {
+  color: var(--specter-blue) !important;
+  font-family: var(--specter-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.specter-report body > nav,
+html.specter-report .topbar,
+html.specter-report .top {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-acid) !important;
+  border-bottom-width: 4px !important;
+  box-shadow: none !important;
+}
+
+html.specter-report body > nav a,
+html.specter-report body > nav .brand,
+html.specter-report .topbar a,
+html.specter-report .topbar strong,
+html.specter-report .top a {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > nav .brand,
+html.specter-report .topbar .brand {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report section,
+html.specter-report header,
+html.specter-report footer {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report .sheet,
+html.specter-report .panel,
+html.specter-report .card,
+html.specter-report .mini,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .flow-box,
+html.specter-report .question-card,
+html.specter-report .metric,
+html.specter-report .finding,
+html.specter-report .stat,
+html.specter-report .data-viz,
+html.specter-report .hero-proof > div {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Normalized paper surfaces own their foreground. Some legacy descendants
+ * carried a hard-coded dark-theme heading or caption; make those inherit the
+ * surface they now visibly sit on. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Legacy .plain and .next blocks rely on their container foreground. The
+ * default is paper/ink; the dark exceptions below deliberately flip it. */
+html.specter-report .next {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report :is(.plain, .next) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Exact unclassed body-copy surface retained by the geometry-turn atlas. */
+html.specter-report .copy {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report .card,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .hero-card,
+html.specter-report .question-card {
+  box-shadow: var(--specter-shadow);
+}
+
+html.specter-report .hero-card,
+html.specter-report .hero-result,
+html.specter-report .highlight,
+html.specter-report .callout.acid {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same * { color: inherit !important; }
+
+html.specter-report .callout,
+html.specter-report .thesis,
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .north-star,
+html.specter-report .result-banner,
+html.specter-report .plain-result,
+html.specter-report .closed-note,
+html.specter-report .phi-lock,
+html.specter-report .route,
+html.specter-report .route-future,
+html.specter-report .hetero-note,
+html.specter-report .matrix-wrap,
+html.specter-report .formula,
+html.specter-report .equation {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Editorial cutouts used by the synthesis lineage. Their headings used to
+ * inherit the global ink color and disappear into the dark surface. */
+html.specter-report .definition,
+html.specter-report .ink-band,
+html.specter-report .closure-thesis {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .definition,
+html.specter-report .closure-thesis {
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .definition *,
+html.specter-report .ink-band *,
+html.specter-report .closure-thesis *,
+html.specter-report .next-title * {
+  color: inherit !important;
+}
+
+html.specter-report .definition .eyebrow,
+html.specter-report .closure-thesis .eyebrow {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report .callout *,
+html.specter-report .thesis *,
+html.specter-report .verdict *,
+html.specter-report .hero-aside *,
+html.specter-report .north-star *,
+html.specter-report .result-banner *,
+html.specter-report .plain-result *,
+html.specter-report .closed-note *,
+html.specter-report .phi-lock *,
+html.specter-report .route *,
+html.specter-report .route-future *,
+html.specter-report .hetero-note * {
+  color: inherit !important;
+}
+
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .result-banner {
+  border-top: 8px solid var(--specter-coral) !important;
+}
+
+html.specter-report .dark,
+html.specter-report .inverse,
+html.specter-report .ink {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+}
+
+html.specter-report .dark h1,
+html.specter-report .dark h2,
+html.specter-report .dark h3,
+html.specter-report .inverse h1,
+html.specter-report .inverse h2,
+html.specter-report .inverse h3,
+html.specter-report .ink h1,
+html.specter-report .ink h2,
+html.specter-report .ink h3 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .dark .lede,
+html.specter-report .dark .lead,
+html.specter-report .dark .deck,
+html.specter-report .dark .dek,
+html.specter-report .dark .standfirst,
+html.specter-report .inverse .lede,
+html.specter-report .inverse .lead,
+html.specter-report .inverse .deck,
+html.specter-report .inverse .dek,
+html.specter-report .inverse .standfirst,
+html.specter-report .ink .lede,
+html.specter-report .ink .lead,
+html.specter-report .ink .deck,
+html.specter-report .ink .dek,
+html.specter-report .ink .standfirst {
+  color: inherit !important;
+}
+
+/* Authored dark sub-surfaces that do not carry a .dark/.inverse marker. The
+ * shared paper skin must preserve their local foreground instead of feeding
+ * the global ink alias back into a near-black panel. */
+html.specter-report section#next.next,
+html.specter-report div.next:has(> h3),
+html.specter-report section#next .next > div,
+html.specter-report section#memory .memory > div,
+html.specter-report figure.future-card,
+html.specter-report .films > .film,
+html.specter-report .arrow > .mode,
+html.specter-report .frame-grid > .time-column,
+html.specter-report .fans > .fan,
+html.specter-report .frame-pair,
+html.specter-report .explain > article,
+html.specter-report .organisms > .organism-card,
+html.specter-report .chart-card,
+html.specter-report .sequence figure:has(> img) {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report div.next:has(> h3) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#next .next > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#memory .memory > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report figure.future-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .films > .film :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .arrow > .mode :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-grid > .time-column :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .fans > .fan :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-pair :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .explain > article :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .organisms > .organism-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .chart-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .sequence figure:has(> img) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report section#next.next :is(.eyebrow, .kicker, .label),
+html.specter-report div.next:has(> h3) :is(.eyebrow, .kicker, .label) {
+  color: var(--specter-acid) !important;
+}
+
+/* A light card nested in a dark chapter is still a light card. Keep this
+ * guard after the dark-surface compatibility rules so the card's own surface,
+ * not its ancestor, decides heading/caption/body contrast. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Final light/dark ownership repairs for legacy report structures that reused
+ * the same class names on opposite surfaces. Keep these selectors structural:
+ * the surrounding surface, not a generic class alias, decides the foreground. */
+html.specter-report section#next:has(> .intro) > .next,
+html.specter-report section#next:has(> .intro) > .next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .state-strip .frames > figure > figcaption,
+html.specter-report section#organism .frames > figure > figcaption,
+html.specter-report section:not(#memory):not(#map):has(+ section#meaning) > .wrap > .frames > figure > figcaption,
+html.specter-report .aperture-map figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report article.case .frames > figure:has(> img) > figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report section > article.case > .frames > figure:has(> img) > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#map .frames > figure > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing,
+html.specter-report section.next > .wrap.chapter {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section.next > .wrap.chapter :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report table {
+  border-collapse: collapse;
+  background: var(--specter-sheet);
+}
+
+html.specter-report th {
+  background: var(--specter-ink);
+  color: var(--specter-sheet) !important;
+  font-family: var(--specter-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.specter-report th,
+html.specter-report td {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report code,
+html.specter-report pre {
+  font-family: var(--specter-mono);
+}
+
+html.specter-report ::selection {
+  color: var(--specter-ink);
+  background: var(--specter-acid);
+}
+
+@media (max-width: 760px) {
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: relative;
+  }
+
+  html.specter-report h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 640px) {
+  html.specter-report .hero h1,
+  html.specter-report .masthead h1,
+  html.specter-report .hero-title,
+  html.specter-report body > header h1,
+  html.specter-report main > header h1 {
+    font-size: clamp(2.75rem, 11vw, 3.25rem) !important;
+    line-height: 0.92 !important;
+    overflow-wrap: anywhere !important;
+    text-wrap: wrap;
+  }
+
+  /* Long source receipts must wrap rather than disappear beyond the phone. */
+  html.specter-report footer {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  html.specter-report footer code,
+  html.specter-report footer .receipt,
+  html.specter-report footer .hash {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media print {
+  html.specter-report,
+  html.specter-report body {
+    background: white !important;
+  }
+
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: static !important;
+  }
+
+  html.specter-report .card,
+  html.specter-report .visual,
+  html.specter-report .case,
+  html.specter-report .hero-card,
+  html.specter-report .question-card {
+    box-shadow: none !important;
+  }
+}
+</style>
+<!-- specter-report-style:end -->
+<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><style data-specter-public-polish>
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
+
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
+  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
+  font-family: var(--editorial-display) !important;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
+html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
+html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
+html.anatomical-editorial .hero-specimens { margin: 0; }
+html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
+html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
+html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
+html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
+html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
+html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
+html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
+html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
+html.anatomical-editorial .synthesis .metric span { color:#414c45; }
+html.anatomical-editorial .opening-method { margin:1rem 0; }
+html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
+html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
+html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
+html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
+html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
+html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
+html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
+html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
+html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
+html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
+html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
+html.anatomical-editorial .caption { border:0; }
+html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
+html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
+html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
+html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
+html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
+html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
+html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
+html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
+html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
+html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
+html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
+html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
+html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
+html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
+html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
+html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
+@media(max-width:800px) {
+ html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
+ html:has(.editorial-synthesis) .hero-answer { transform:none; }
+ html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
+}
+html:has(.editorial-synthesis) .ink { border-block:0; }
+html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
+html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .section-no { border:0; }
+@media(max-width:700px) {
+ html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
+ html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
+ html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
+ html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
+ html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
+}
+html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
+
+html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
+html.anatomical-editorial .measurement-comparison,
+html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
+html.anatomical-editorial .measurement-comparison h3,
+html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
+.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
+.measurement-heading { font: 12px/1.5 monospace; }
+.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
+.measurement-track { position: relative; height: 18px; background: #fff8; }
+.measurement-track i { display: block; height: 100%; background: #18796f; }
+.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
+.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
+html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
+.experiment-method summary { cursor: pointer; font-weight: 700; }
+.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
+.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
+.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.orbium-frames figure { margin: 0; }
+.orbium-frames img { display: block; width: 100%; }
+.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
+#orbium-time-note { margin-top: 16px; }
+.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
+.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
+.comparison-story p { max-width: 72ch; line-height: 1.65; }
+.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
+.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 650px) {
+  .measurement-heading { display: none; }
+  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
+  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
+  .orbium-frames { gap: 10px; }
+}
+
+#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
+html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
+html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
+
+html:has(.editorial-synthesis) .evidence {
+  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
+}
+html:has(.editorial-synthesis) .evidence::before { content: none; }
+html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
+html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
+html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
+html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
+.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
+.figure-introduction { max-width: 760px; margin-bottom: 30px; }
+.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
+.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
+.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
+.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
+.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.response-plots > div, .transplant-panels > div { min-width: 0; }
+.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
+.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
+.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
+.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
+.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
+.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
+#response-reading { font-size: 19px; }
+html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
+html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
+html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
+html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
+html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #17282d; }
+html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
+html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
+html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
+html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
+@media (max-width: 700px) {
+  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
+  .response-controls { gap: 14px; }
+  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
+  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
+}
+
+#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
+
+/* These explicit light fills label dark inset panels inside otherwise light charts. */
+html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
+html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
+
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
+  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
+}
+html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
+html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
+html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+</style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/delayed-canalization-rescue/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav><nav><div class="wrap"><strong>BEFORE THE ORGANISM</strong><a href="#move">The move</a><a href="#flip">The flip</a><a href="#clock">The clock</a><a href="#meaning">Interpretation</a></div></nav>
+<header><div class="wrap"><div class="kicker">FLOW LENIA · TIME-DELAYED SPATIAL RESCUE</div><h1>Spatial Repair Changes Its Effect with Development</h1><p class="lede">At passage 8, the inverse spatial repair reconstructs the organism's causal grammar. Eight passages later, the same operation reverses the action map and delays formation.</p><div class="verdict"><b>Discovery:</b> an intervention does not have a fixed meaning. Its meaning depends on developmental phase. The early state accepts an ancestral repair; the evolved state experiences it as damage.</div><div class="stats"><div class="stat"><b>39</b><span>same organisms</span></div><div class="stat"><b>5</b><span>repair delays</span></div><div class="stat"><b>+0.227 → −0.179</b><span>tangent effect by passage 8</span></div><div class="stat"><b>+21.2 → −6.6</b><span>passage benefit by passage 8</span></div></div></div></header>
+<main><section id="move"><div class="wrap"><div class="kicker">THE MOVE</div><h2>Same scrambled state. Same inverse map. Different time.</h2><p class="big">Every organism began in its fully scrambled passage 8 state. We let it evolve untouched for 0, 8, 16, 24, or 32 passages. At each age we cloned the state: one copy continued unchanged; the other received the exact inverse of the original 4×4 block permutation.</p><div class="timeline"><div class="moment"><b>+0</b><span>passages before repair</span></div><div class="moment"><b>+8</b><span>passages before repair</span></div><div class="moment"><b>+16</b><span>passages before repair</span></div><div class="moment"><b>+24</b><span>passages before repair</span></div><div class="moment"><b>+32</b><span>passages before repair</span></div></div><p>The inverse operation preserves the current genotype, cell-vector inventory, channel masses, and outside field. At delay 0 it reconstructs the intact passage 8 field byte-for-byte. The same four intact-passage 8 action histories were then applied to every arm—no new action search.</p><div class="paired-strip"><div class="pair"><div class="delay">+0 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 0 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 0 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+8 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 8 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 8 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+16 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 16 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 16 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+24 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 24 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 24 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+32 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 32 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 32 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div></div><p class="caption">Representative source s17; unrepaired and inverse-repaired starting states at each delay, one shared intensity scale.</p></div></section>
+<section id="flip"><div class="wrap"><div class="kicker">THE SIGN FLIP</div><h2>Rescue becomes anti-rescue before passage 8.</h2><div class="grid2"><div class="chart"><h3>Repair effect on history-tangent agreement</h3><svg viewBox="0 0 760 300" role="img" aria-label="Repair effect on history-tangent agreement"><line x1="82" x2="678" y1="136.2" y2="136.2" stroke="#66738d" stroke-dasharray="7 7"/><path d="M 82.0 84.0 L 231.0 177.4 L 380.0 190.9 L 529.0 215.7 L 678.0 215.3" fill="none" stroke="#d6e0ff" stroke-width="3" opacity=".7"/><line x1="82.0" x2="82.0" y1="93.6" y2="74.6" stroke="#d6e0ff" stroke-width="3"/><circle cx="82.0" cy="84.0" r="7" fill="#66f2c2"/><text x="82.0" y="68.0" text-anchor="middle">+0.227</text><text class="axis" x="82.0" y="284" text-anchor="middle">+0</text><line x1="231.0" x2="231.0" y1="189.3" y2="165.5" stroke="#d6e0ff" stroke-width="3"/><circle cx="231.0" cy="177.4" r="7" fill="#ff6685"/><text x="231.0" y="161.4" text-anchor="middle">-0.179</text><text class="axis" x="231.0" y="284" text-anchor="middle">+8</text><line x1="380.0" x2="380.0" y1="201.3" y2="180.0" stroke="#d6e0ff" stroke-width="3"/><circle cx="380.0" cy="190.9" r="7" fill="#ff6685"/><text x="380.0" y="174.9" text-anchor="middle">-0.238</text><text class="axis" x="380.0" y="284" text-anchor="middle">+16</text><line x1="529.0" x2="529.0" y1="224.8" y2="207.3" stroke="#d6e0ff" stroke-width="3"/><circle cx="529.0" cy="215.7" r="7" fill="#ff6685"/><text x="529.0" y="199.7" text-anchor="middle">-0.346</text><text class="axis" x="529.0" y="284" text-anchor="middle">+24</text><line x1="678.0" x2="678.0" y1="225.4" y2="204.3" stroke="#d6e0ff" stroke-width="3"/><circle cx="678.0" cy="215.3" r="7" fill="#ff6685"/><text x="678.0" y="199.3" text-anchor="middle">-0.344</text><text class="axis" x="678.0" y="284" text-anchor="middle">+32</text></svg><p>Positive means the inverse repair makes the fixed action panel more coherent; negative means it makes the panel more contradictory.</p></div><div class="chart"><h3>Repair effect on local history separation</h3><svg viewBox="0 0 760 300" role="img" aria-label="Repair effect on local history separation"><line x1="82" x2="678" y1="142.5" y2="142.5" stroke="#66738d" stroke-dasharray="7 7"/><path d="M 82.0 85.9 L 231.0 179.6 L 380.0 191.7 L 529.0 195.3 L 678.0 211.3" fill="none" stroke="#d6e0ff" stroke-width="3" opacity=".7"/><line x1="82.0" x2="82.0" y1="94.9" y2="76.8" stroke="#d6e0ff" stroke-width="3"/><circle cx="82.0" cy="85.9" r="7" fill="#66f2c2"/><text x="82.0" y="69.9" text-anchor="middle">+0.023</text><text class="axis" x="82.0" y="284" text-anchor="middle">+0</text><line x1="231.0" x2="231.0" y1="189.7" y2="170.1" stroke="#d6e0ff" stroke-width="3"/><circle cx="231.0" cy="179.6" r="7" fill="#ff6685"/><text x="231.0" y="163.6" text-anchor="middle">-0.015</text><text class="axis" x="231.0" y="284" text-anchor="middle">+8</text><line x1="380.0" x2="380.0" y1="204.8" y2="178.7" stroke="#d6e0ff" stroke-width="3"/><circle cx="380.0" cy="191.7" r="7" fill="#ff6685"/><text x="380.0" y="175.7" text-anchor="middle">-0.020</text><text class="axis" x="380.0" y="284" text-anchor="middle">+16</text><line x1="529.0" x2="529.0" y1="207.4" y2="183.8" stroke="#d6e0ff" stroke-width="3"/><circle cx="529.0" cy="195.3" r="7" fill="#ff6685"/><text x="529.0" y="179.3" text-anchor="middle">-0.021</text><text class="axis" x="529.0" y="284" text-anchor="middle">+24</text><line x1="678.0" x2="678.0" y1="223.2" y2="198.6" stroke="#d6e0ff" stroke-width="3"/><circle cx="678.0" cy="211.3" r="7" fill="#ff6685"/><text x="678.0" y="195.3" text-anchor="middle">-0.028</text><text class="axis" x="678.0" y="284" text-anchor="middle">+32</text></svg><p>Positive means the repair restores distinct local meanings for the matched histories.</p></div></div><div class="callout">Immediate repair: tangent effect <b>+0.227</b> [0.186, 0.268]. After eight passages: <b>−0.179</b> [−0.231, −0.128]. By passage 24, all 39 organisms are negative. The sign reversal lies somewhere between delay 0 and delay 8; the current five-point experiment does not pretend to locate it more finely.</div><p class="big">This is hysteresis in operational form. “Put the blocks back” is beneficial only while the state still lives in the phase for which that spatial map is meaningful.</p></div></section>
+<section id="clock"><div class="wrap"><div class="kicker">THE DEVELOPMENTAL CLOCK</div><h2>The same flip appears in formation time.</h2><div class="grid2"><div class="chart"><h3>Repair benefit in passages</h3><svg viewBox="0 0 760 300" role="img" aria-label="Repair benefit in passages"><line x1="82" x2="678" y1="148.7" y2="148.7" stroke="#66738d" stroke-dasharray="7 7"/><path d="M 82.0 103.2 L 231.0 162.9 L 380.0 177.2 L 529.0 191.5 L 678.0 175.0" fill="none" stroke="#d6e0ff" stroke-width="3" opacity=".7"/><line x1="82.0" x2="82.0" y1="128.0" y2="74.6" stroke="#d6e0ff" stroke-width="3"/><circle cx="82.0" cy="103.2" r="7" fill="#66f2c2"/><text x="82.0" y="87.2" text-anchor="middle">+21.2</text><text class="axis" x="82.0" y="284" text-anchor="middle">+0</text><line x1="231.0" x2="231.0" y1="189.5" y2="136.1" stroke="#d6e0ff" stroke-width="3"/><circle cx="231.0" cy="162.9" r="7" fill="#ff6685"/><text x="231.0" y="146.9" text-anchor="middle">-6.6</text><text class="axis" x="231.0" y="284" text-anchor="middle">+8</text><line x1="380.0" x2="380.0" y1="201.0" y2="152.0" stroke="#d6e0ff" stroke-width="3"/><circle cx="380.0" cy="177.2" r="7" fill="#ff6685"/><text x="380.0" y="161.2" text-anchor="middle">-13.3</text><text class="axis" x="380.0" y="284" text-anchor="middle">+16</text><line x1="529.0" x2="529.0" y1="225.4" y2="158.2" stroke="#d6e0ff" stroke-width="3"/><circle cx="529.0" cy="191.5" r="7" fill="#ff6685"/><text x="529.0" y="175.5" text-anchor="middle">-19.9</text><text class="axis" x="529.0" y="284" text-anchor="middle">+24</text><line x1="678.0" x2="678.0" y1="197.2" y2="150.7" stroke="#d6e0ff" stroke-width="3"/><circle cx="678.0" cy="175.0" r="7" fill="#ff6685"/><text x="678.0" y="159.0" text-anchor="middle">-12.2</text><text class="axis" x="678.0" y="284" text-anchor="middle">+32</text></svg><p>Positive means repair makes the frozen visible transition earlier; negative means it delays it.</p></div><div class="chart"><h3>Absolute age of visible transition</h3><div class="legend"><span style="color:#ff9f68">● Unrepaired</span> · <span style="color:#66f2c2">● Repaired</span></div><svg viewBox="0 0 760 300" role="img" aria-label="Absolute age of visible transition"><path d="M 82.0 147.6 L 231.0 147.6 L 380.0 147.6 L 529.0 147.6 L 678.0 145.9" fill="none" stroke="#ff9f68" stroke-width="4"/><circle cx="82.0" cy="147.6" r="6" fill="#ff9f68"/><text x="82.0" y="132.6" text-anchor="middle">79.3</text><circle cx="231.0" cy="147.6" r="6" fill="#ff9f68"/><text x="231.0" y="132.6" text-anchor="middle">79.3</text><circle cx="380.0" cy="147.6" r="6" fill="#ff9f68"/><text x="380.0" y="132.6" text-anchor="middle">79.3</text><circle cx="529.0" cy="147.6" r="6" fill="#ff9f68"/><text x="529.0" y="132.6" text-anchor="middle">79.3</text><circle cx="678.0" cy="145.9" r="6" fill="#ff9f68"/><text x="678.0" y="130.9" text-anchor="middle">79.7</text><path d="M 82.0 225.4 L 231.0 123.3 L 380.0 99.0 L 529.0 74.6 L 678.0 101.1" fill="none" stroke="#66f2c2" stroke-width="4"/><circle cx="82.0" cy="225.4" r="6" fill="#66f2c2"/><text x="82.0" y="210.4" text-anchor="middle">58.1</text><circle cx="231.0" cy="123.3" r="6" fill="#66f2c2"/><text x="231.0" y="108.3" text-anchor="middle">85.9</text><circle cx="380.0" cy="99.0" r="6" fill="#66f2c2"/><text x="380.0" y="84.0" text-anchor="middle">92.5</text><circle cx="529.0" cy="74.6" r="6" fill="#66f2c2"/><text x="529.0" y="59.6" text-anchor="middle">99.2</text><circle cx="678.0" cy="101.1" r="6" fill="#66f2c2"/><text x="678.0" y="86.1" text-anchor="middle">91.9</text><text class="axis" x="82.0" y="284" text-anchor="middle">+0</text><text class="axis" x="231.0" y="284" text-anchor="middle">+8</text><text class="axis" x="380.0" y="284" text-anchor="middle">+16</text><text class="axis" x="529.0" y="284" text-anchor="middle">+24</text><text class="axis" x="678.0" y="284" text-anchor="middle">+32</text></svg><p>The unrepaired clock stays almost perfectly fixed near age 79 across recaptures—a strong internal control.</p></div></div><div class="callout">Immediate repair advances formation by <b>21.2 passages</b> [9.6, 34.5]. Repair after 16 passages delays it by <b>13.3</b> [1.5, 24.3]; after 24 passages, by <b>19.9</b> [4.4, 35.7]. All 39 organisms eventually transition in every arm.</div><div class="paired-strip"><div class="pair"><div class="delay">+0 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 0 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 0 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+8 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 8 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 8 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+16 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 16 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 16 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+24 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 24 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 24 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div><div class="pair"><div class="delay">+32 passages</div><figure><img src="data:image/png;base64,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" alt="unrepaired state after 32 passages"><figcaption><span style="color:#ff9f68">●</span> Unrepaired</figcaption></figure><figure><img src="data:image/png;base64,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" alt="repaired state after 32 passages"><figcaption><span style="color:#66f2c2">●</span> Repaired</figcaption></figure></div></div><p class="caption">The same representative source s17 after 128 untouched passages from each delayed state.</p></div></section>
+<section><div class="wrap"><div class="kicker">NOT PERTURBATION SIZE</div><h2>The failed repair was not simply a bigger wound.</h2><div class="chart"><h3>Hellinger size of the inverse move</h3><div class="legend"><span style="color:#ff9f68">● Unrepaired</span> · <span style="color:#66f2c2">● Repaired</span></div><svg viewBox="0 0 760 300" role="img" aria-label="Hellinger size of the inverse move"><path d="M 82.0 167.9 L 231.0 167.9 L 380.0 167.9 L 529.0 167.9 L 678.0 167.9" fill="none" stroke="#ff9f68" stroke-width="4"/><circle cx="82.0" cy="167.9" r="6" fill="#ff9f68"/><text x="82.0" y="152.9" text-anchor="middle">0.00</text><circle cx="231.0" cy="167.9" r="6" fill="#ff9f68"/><text x="231.0" y="152.9" text-anchor="middle">0.00</text><circle cx="380.0" cy="167.9" r="6" fill="#ff9f68"/><text x="380.0" y="152.9" text-anchor="middle">0.00</text><circle cx="529.0" cy="167.9" r="6" fill="#ff9f68"/><text x="529.0" y="152.9" text-anchor="middle">0.00</text><circle cx="678.0" cy="167.9" r="6" fill="#ff9f68"/><text x="678.0" y="152.9" text-anchor="middle">0.00</text><path d="M 82.0 136.8 L 231.0 139.9 L 380.0 135.4 L 529.0 133.4 L 678.0 132.1" fill="none" stroke="#66f2c2" stroke-width="4"/><circle cx="82.0" cy="136.8" r="6" fill="#66f2c2"/><text x="82.0" y="121.8" text-anchor="middle">0.39</text><circle cx="231.0" cy="139.9" r="6" fill="#66f2c2"/><text x="231.0" y="124.9" text-anchor="middle">0.35</text><circle cx="380.0" cy="135.4" r="6" fill="#66f2c2"/><text x="380.0" y="120.4" text-anchor="middle">0.41</text><circle cx="529.0" cy="133.4" r="6" fill="#66f2c2"/><text x="529.0" y="118.4" text-anchor="middle">0.43</text><circle cx="678.0" cy="132.1" r="6" fill="#66f2c2"/><text x="678.0" y="117.1" text-anchor="middle">0.45</text><text class="axis" x="82.0" y="284" text-anchor="middle">+0</text><text class="axis" x="231.0" y="284" text-anchor="middle">+8</text><text class="axis" x="380.0" y="284" text-anchor="middle">+16</text><text class="axis" x="529.0" y="284" text-anchor="middle">+24</text><text class="axis" x="678.0" y="284" text-anchor="middle">+32</text></svg><p>State distance between repaired and unrepaired clones at each delay.</p></div><p class="big">The successful immediate repair moves the field by Hellinger distance 0.388. The failed eight-passage repair is smaller: 0.349. Yet its causal and developmental effects have already reversed. Timing—not raw perturbation magnitude—changes the meaning of the operation.</p></div></section>
+<section id="meaning"><div class="wrap"><div class="kicker">WHAT THIS MEANS</div><h2>The organism remembers which repairs still belong to it.</h2><div class="split"><div class="card"><h3 style="color:var(--mint)">Before commitment</h3><ul><li>ancestral spatial coordinates remain causally valid</li><li>inverse repair restores coherent intervention semantics</li><li>the developmental clock accelerates</li></ul></div><div class="card"><h3 style="color:var(--pink)">After commitment</h3><ul><li>the material has reorganized around a new phase</li><li>ancestral coordinates conflict with the current dynamics</li><li>the same repair folds the action map and delays formation</li></ul></div></div><p class="big">This is a powerful form of causal emergence: the macroscopic developmental state determines what a physically identical rearrangement *means*. Causal meaning is not in the operation alone. It is relational, historical, and phase-dependent.</p></div></section>
+<section><div class="wrap"><div class="kicker">NEXT DIRECT SWING</div><h2>Resolve the commitment window passage by passage.</h2><p class="big">The sign flips somewhere between delay 0 and delay 8. Next we repeat the exact fixed-panel intervention at delays 1, 2, 3, 4, 5, 6, and 7. That will tell us whether commitment is a sharp boundary, a smooth crossing, or an organism-specific distribution.</p><p>If the causal sign flips before the developmental benefit, or vice versa, we will finally have the temporal order of commitment itself.</p></div></section></main>
+<footer><div class="wrap"><b>Flow Lenia delayed-canalization rescue experiment.</b><br>39 organisms · 5 delays · 195 paired repaired/unrepaired states · 1,560 fixed-panel dense readouts · 390 untouched transition clocks. The zero-delay inverse repair exactly recovers the intact passage 8 field. Same-organism causal intervention; bootstrap intervals resample organisms (10,000 draws).<br><br>Result SHA-256: <code>3a875560f802b05aacce2e6151c97a5a73f32e5e3452d1a8c687daa40c273c1e</code></div></footer></body></html>

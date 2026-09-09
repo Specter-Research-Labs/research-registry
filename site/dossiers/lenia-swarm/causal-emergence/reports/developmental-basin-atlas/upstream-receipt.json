@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-basin-atlas",
+  "releaseId": "flce-developmental-basin-atlas-66cdb1d03baa",
+  "title": "The Same Interventions Change Effect as the Body Develops",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "event-aligned exploratory atlas",
+  "sourceReportSha256": "ef3685d1236d8c4d3e111053aa6cd31c6ef17a400f45fefd5e47bdcba996b9aa",
+  "publicReportSha256": "a1a41aed6af3142f2099f183feb7b2f592cf0a0791f8c0fe1d8b110fd68f162d",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "602f4a42a0ce1e260fca97d4f2d0e442ca05e1e0ac1f24cca3e06aa9c9356bf6",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

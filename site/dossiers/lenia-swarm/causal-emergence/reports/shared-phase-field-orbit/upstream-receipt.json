@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "shared-phase-field-orbit",
+  "releaseId": "flce-shared-phase-field-orbit-5285f309180f",
+  "title": "Reversing the Hidden Pattern Reverses Its Effect",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "geometric orbit intervention",
+  "sourceReportSha256": "23a8d8c01ae439f55e648e79b79b2ac88ed8d55d9bd4bb4a9db4ab383f0b5af2",
+  "publicReportSha256": "d6e3df9a79d5a546d661483c5f0dc14c23ad149448763635fa604f61a167467b",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "116b516b027e5a9f3ca9571c339c85abfbd25dce877ef31b1acecd585b4f4ed6",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

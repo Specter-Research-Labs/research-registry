@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "reservoir-causal-steering",
+  "releaseId": "flce-reservoir-causal-steering-f26e043ca5c9",
+  "title": "Policy Changes Composition Without Establishing Restoration",
+  "date": "2026-08-14",
+  "status": "archive",
+  "evidenceClass": "mixed causal-steering experiment",
+  "sourceReportSha256": "cae6ad8b33a679765b621a3f76c4338d6b07088754ca824ebc754e147c8f960e",
+  "publicReportSha256": "3cd1baa941ecd171065c6a6786a7ccada7d97ba6b9e644998bbffcae0c90e83d",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "27abe5354b1830356131ebe49331d4acbc51f5de54cc3b208dbebac071434e70",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

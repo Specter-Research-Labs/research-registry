@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "preinjury-recovery-confirmation",
+  "releaseId": "flce-preinjury-recovery-confirmation-5b3cdf6e9410",
+  "title": "The Information Score Did Not Predict Recovery",
+  "date": "2026-08-11",
+  "status": "archive",
+  "evidenceClass": "prospective negative confirmation",
+  "sourceReportSha256": "a3439ce79d2b3a3ffa1f5c33d55e98b185f52be41027041b442a0982aa8624bf",
+  "publicReportSha256": "604e49f74b8db527c781fee9ec0825fafecf949b798106ead29087e542cbcbc8",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "3632c1da4bf2f97e3da507257ce1125b100d184eda2ebf1b73fa9802f6b571b2",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

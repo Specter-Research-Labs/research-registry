@@ -1,0 +1,997 @@
+<!doctype html><html lang="en" class="specter-report" data-specter-surface="bg-panel"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Where Hidden Composition Is Placed Controls Expansion and Contraction</title><style>
+    :root{--ink:#f5f0e6;--cream:#ead9b7;--muted:#aaa69d;--dim:#74716b;--bg:#08090c;--panel:#111319;--line:#292d35;--orange:#ff8a4c;--cyan:#43c7d9;--violet:#b99cff;--green:#7fd6a6}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 82% 0,#25160d 0,transparent 38rem),radial-gradient(circle at 4% 58%,#071d23 0,transparent 36rem),var(--bg);color:var(--ink);font:17px/1.62 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}.wrap{width:min(1180px,calc(100% - 40px));margin:auto}nav{position:sticky;top:0;z-index:9;background:#08090cdb;backdrop-filter:blur(13px);border-bottom:1px solid var(--line)}nav .wrap{height:58px;display:flex;align-items:center;justify-content:space-between}nav b{font:700 11px/1 ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase}nav a{color:var(--muted);text-decoration:none;font-size:13px;margin-left:20px}.hero{padding:116px 0 82px}.kicker,.eyebrow{color:var(--orange);font:700 12px/1.2 ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase}h1{font:500 clamp(58px,9.5vw,126px)/.88 Georgia,serif;letter-spacing:-.058em;margin:22px 0 34px;max-width:1140px}.lede{font:400 clamp(23px,3.25vw,39px)/1.28 Georgia,serif;color:var(--cream);max-width:1090px}.lede em{color:var(--orange);font-style:normal}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:15px;overflow:hidden;margin-bottom:78px}.stat{padding:28px;background:#101217;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat b{display:block;font:500 37px/1 Georgia,serif;color:var(--orange)}.stat span{display:block;color:var(--muted);font-size:13px;margin-top:10px}section{padding:92px 0;border-top:1px solid var(--line)}h2{font:500 clamp(39px,5.7vw,74px)/1.01 Georgia,serif;letter-spacing:-.04em;margin:18px 0 28px;max-width:1100px}h3{font-size:14px;letter-spacing:.045em;margin:0 0 15px}p{max-width:900px}.big{font:400 clamp(25px,3.4vw,43px)/1.31 Georgia,serif;color:var(--cream)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:linear-gradient(150deg,#15171d,#0e1014);border:1px solid var(--line);border-radius:15px;padding:28px;overflow:hidden}.card p{color:var(--muted)}.card.orange{border-top:3px solid var(--orange)}.card.cyan{border-top:3px solid var(--cyan)}.card.violet{border-top:3px solid var(--violet)}.metric{font:500 45px/1 Georgia,serif;color:var(--cream)}.submetric{color:var(--muted);font-size:13px}.chart{margin-top:34px}.chart svg{width:100%;height:auto}.grid{stroke:#242832;stroke-width:1}.zero{stroke:#7b8089;stroke-width:1;stroke-dasharray:7 7}.axis-label{fill:#a7a9ad;font:12px ui-monospace,monospace}.chart-title{fill:#f5f0e6;font:700 12px ui-monospace,monospace;letter-spacing:.12em}.heat-value{fill:#fff;font:700 13px ui-monospace,monospace;text-shadow:0 1px 4px #000}.callout{padding:36px;border:1px solid var(--line);border-left:4px solid var(--green);background:#101318;margin-top:36px}.axes{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;margin-top:34px}.axis-card{padding:28px;border:1px solid var(--line);border-radius:13px;background:#111319}.axis-card b{display:block;font:500 28px Georgia,serif}.axis-card span{color:var(--muted)}.cross{font:500 42px Georgia,serif;color:var(--orange)}.next{counter-reset:swing}.swing{position:relative;padding:28px 28px 28px 72px;background:#111319;border:1px solid var(--line);border-radius:13px;margin-top:14px}.swing:before{counter-increment:swing;content:counter(swing);position:absolute;left:25px;top:25px;color:var(--orange);font:500 28px Georgia,serif}.swing b{display:block;color:var(--cream);font-size:18px}.swing span{color:var(--muted)}.proof{font:12px/1.7 ui-monospace,monospace;color:var(--dim);overflow-wrap:anywhere}footer{padding:48px 0 72px;border-top:1px solid var(--line)}@media(max-width:860px){nav a{display:none}.stats,.grid2,.grid3,.axes{grid-template-columns:1fr}.cross{text-align:center}.stat{border-right:0;border-bottom:1px solid var(--line)}section{padding:64px 0}.hero{padding-top:76px}}@media(max-width:480px){.wrap{width:min(100% - 24px,1180px)}h1{font-size:53px}}
+    </style><!-- specter-report-style:begin sha256=a28376706e9e68b08ed3d8e07cbe97c7b63be4817de94e0bf55c67a1184c09ce -->
+<style data-specter-shared>
+/*
+ * Specter Flow Lenia report skin.
+ *
+ * This is the only authored copy. _report-style/sync.py embeds it verbatim in
+ * every standalone report so the HTML files still work when shared alone.
+ */
+
+html.specter-report {
+  color-scheme: light;
+
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-dim: #81827c;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-blue-soft: #dfe6ff;
+  --specter-acid: #d8ff39;
+  --specter-acid-soft: #efffb2;
+  --specter-coral: #f05237;
+  --specter-coral-soft: #f9ded7;
+  --specter-green: #14795c;
+  --specter-green-soft: #d8efe6;
+  --specter-violet: #7652c8;
+  --specter-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --specter-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --specter-serif: Iowan Old Style, Baskerville, Georgia, "Times New Roman", serif;
+
+  /* Common aliases used across the report lineage. */
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --cream: var(--specter-ink);
+  --white: var(--specter-sheet);
+  --soft: #3e4248;
+  --muted: var(--specter-muted);
+  --dim: var(--specter-dim);
+  --faint: var(--specter-dim);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+
+  --blue: var(--specter-blue);
+  --blue2: var(--specter-blue);
+  --blue-soft: var(--specter-blue-soft);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --mint: var(--specter-green);
+  --green: var(--specter-green);
+  --green2: var(--specter-green);
+  --green-soft: var(--specter-green-soft);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --yellow: var(--specter-acid);
+  --yellow-soft: var(--specter-acid-soft);
+  --gold: var(--specter-coral);
+  --gold-soft: var(--specter-coral-soft);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --orange2: var(--specter-coral);
+  --orange-soft: var(--specter-coral-soft);
+  --red: var(--specter-coral);
+  --red2: var(--specter-coral);
+  --red-soft: var(--specter-coral-soft);
+  --rose: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+  --coral-soft: var(--specter-coral-soft);
+  --violet: var(--specter-violet);
+  --purple: var(--specter-violet);
+  --sans: var(--specter-sans);
+  --serif: var(--specter-serif);
+  --mono: var(--specter-mono);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-sheet);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-sheet"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report[data-specter-surface="bg-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report {
+  scroll-behavior: smooth;
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  margin: 0;
+  overflow-x: clip;
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+  font-family: var(--specter-sans);
+  text-rendering: optimizeLegibility;
+}
+
+html.specter-report body,
+html.specter-report p,
+html.specter-report li,
+html.specter-report td,
+html.specter-report th {
+  color: inherit;
+}
+
+html.specter-report a {
+  color: inherit;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+}
+
+html.specter-report a:hover { color: var(--specter-blue); }
+
+html.specter-report a:focus-visible,
+html.specter-report button:focus-visible,
+html.specter-report summary:focus-visible {
+  outline: 3px solid var(--specter-blue);
+  outline-offset: 4px;
+}
+
+html.specter-report h1,
+html.specter-report h2,
+html.specter-report h3,
+html.specter-report h4 {
+  color: inherit;
+  font-family: var(--specter-sans) !important;
+  font-weight: 850 !important;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+html.specter-report h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.06em;
+}
+
+/*
+ * Keep the poster voice without making a headline consume a whole monitor.
+ * Individual reports may choose smaller type; this caps only hero/masthead
+ * display titles that historically scaled directly with very wide viewports.
+ */
+html.specter-report .hero h1,
+html.specter-report .masthead h1,
+html.specter-report .hero-title,
+html.specter-report body > header h1,
+html.specter-report main > header h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(3.25rem, 6.4vw, 7rem) !important;
+  line-height: 0.9 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .hero {
+  min-height: auto !important;
+  padding-block: clamp(2.75rem, 5vw, 5.5rem) !important;
+}
+
+html.specter-report .section-head h2 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.35rem, 4.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .lede,
+html.specter-report .lead,
+html.specter-report .deck,
+html.specter-report .dek,
+html.specter-report .standfirst,
+html.specter-report .plain,
+html.specter-report blockquote {
+  font-family: var(--specter-serif);
+}
+
+/* Two poster-style reports use a bare div.lead on the normalized paper
+ * surface. Keep this deliberately narrow so paragraph leads in dark headers
+ * retain their authored white foreground. */
+html.specter-report div.lead {
+  color: var(--specter-ink) !important;
+}
+
+/* Four legacy verdict headers use a dark authored surface without declaring a
+ * foreground on the header itself. Restore their deliberately pale lede. */
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) .lede {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.lead) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.hero-facts) h1 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .eyebrow,
+html.specter-report .kicker,
+html.specter-report .label,
+html.specter-report .micro,
+html.specter-report .section-number,
+html.specter-report .section-no,
+html.specter-report .num {
+  color: var(--specter-blue) !important;
+  font-family: var(--specter-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.specter-report body > nav,
+html.specter-report .topbar,
+html.specter-report .top {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-acid) !important;
+  border-bottom-width: 4px !important;
+  box-shadow: none !important;
+}
+
+html.specter-report body > nav a,
+html.specter-report body > nav .brand,
+html.specter-report .topbar a,
+html.specter-report .topbar strong,
+html.specter-report .top a {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > nav .brand,
+html.specter-report .topbar .brand {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report section,
+html.specter-report header,
+html.specter-report footer {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report .sheet,
+html.specter-report .panel,
+html.specter-report .card,
+html.specter-report .mini,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .flow-box,
+html.specter-report .question-card,
+html.specter-report .metric,
+html.specter-report .finding,
+html.specter-report .stat,
+html.specter-report .data-viz,
+html.specter-report .hero-proof > div {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Normalized paper surfaces own their foreground. Some legacy descendants
+ * carried a hard-coded dark-theme heading or caption; make those inherit the
+ * surface they now visibly sit on. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Legacy .plain and .next blocks rely on their container foreground. The
+ * default is paper/ink; the dark exceptions below deliberately flip it. */
+html.specter-report .next {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report :is(.plain, .next) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Exact unclassed body-copy surface retained by the geometry-turn atlas. */
+html.specter-report .copy {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report .card,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .hero-card,
+html.specter-report .question-card {
+  box-shadow: var(--specter-shadow);
+}
+
+html.specter-report .hero-card,
+html.specter-report .hero-result,
+html.specter-report .highlight,
+html.specter-report .callout.acid {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same * { color: inherit !important; }
+
+html.specter-report .callout,
+html.specter-report .thesis,
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .north-star,
+html.specter-report .result-banner,
+html.specter-report .plain-result,
+html.specter-report .closed-note,
+html.specter-report .phi-lock,
+html.specter-report .route,
+html.specter-report .route-future,
+html.specter-report .hetero-note,
+html.specter-report .matrix-wrap,
+html.specter-report .formula,
+html.specter-report .equation {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Editorial cutouts used by the synthesis lineage. Their headings used to
+ * inherit the global ink color and disappear into the dark surface. */
+html.specter-report .definition,
+html.specter-report .ink-band,
+html.specter-report .closure-thesis {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .definition,
+html.specter-report .closure-thesis {
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .definition *,
+html.specter-report .ink-band *,
+html.specter-report .closure-thesis *,
+html.specter-report .next-title * {
+  color: inherit !important;
+}
+
+html.specter-report .definition .eyebrow,
+html.specter-report .closure-thesis .eyebrow {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report .callout *,
+html.specter-report .thesis *,
+html.specter-report .verdict *,
+html.specter-report .hero-aside *,
+html.specter-report .north-star *,
+html.specter-report .result-banner *,
+html.specter-report .plain-result *,
+html.specter-report .closed-note *,
+html.specter-report .phi-lock *,
+html.specter-report .route *,
+html.specter-report .route-future *,
+html.specter-report .hetero-note * {
+  color: inherit !important;
+}
+
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .result-banner {
+  border-top: 8px solid var(--specter-coral) !important;
+}
+
+html.specter-report .dark,
+html.specter-report .inverse,
+html.specter-report .ink {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+}
+
+html.specter-report .dark h1,
+html.specter-report .dark h2,
+html.specter-report .dark h3,
+html.specter-report .inverse h1,
+html.specter-report .inverse h2,
+html.specter-report .inverse h3,
+html.specter-report .ink h1,
+html.specter-report .ink h2,
+html.specter-report .ink h3 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .dark .lede,
+html.specter-report .dark .lead,
+html.specter-report .dark .deck,
+html.specter-report .dark .dek,
+html.specter-report .dark .standfirst,
+html.specter-report .inverse .lede,
+html.specter-report .inverse .lead,
+html.specter-report .inverse .deck,
+html.specter-report .inverse .dek,
+html.specter-report .inverse .standfirst,
+html.specter-report .ink .lede,
+html.specter-report .ink .lead,
+html.specter-report .ink .deck,
+html.specter-report .ink .dek,
+html.specter-report .ink .standfirst {
+  color: inherit !important;
+}
+
+/* Authored dark sub-surfaces that do not carry a .dark/.inverse marker. The
+ * shared paper skin must preserve their local foreground instead of feeding
+ * the global ink alias back into a near-black panel. */
+html.specter-report section#next.next,
+html.specter-report div.next:has(> h3),
+html.specter-report section#next .next > div,
+html.specter-report section#memory .memory > div,
+html.specter-report figure.future-card,
+html.specter-report .films > .film,
+html.specter-report .arrow > .mode,
+html.specter-report .frame-grid > .time-column,
+html.specter-report .fans > .fan,
+html.specter-report .frame-pair,
+html.specter-report .explain > article,
+html.specter-report .organisms > .organism-card,
+html.specter-report .chart-card,
+html.specter-report .sequence figure:has(> img) {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report div.next:has(> h3) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#next .next > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#memory .memory > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report figure.future-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .films > .film :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .arrow > .mode :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-grid > .time-column :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .fans > .fan :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-pair :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .explain > article :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .organisms > .organism-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .chart-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .sequence figure:has(> img) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report section#next.next :is(.eyebrow, .kicker, .label),
+html.specter-report div.next:has(> h3) :is(.eyebrow, .kicker, .label) {
+  color: var(--specter-acid) !important;
+}
+
+/* A light card nested in a dark chapter is still a light card. Keep this
+ * guard after the dark-surface compatibility rules so the card's own surface,
+ * not its ancestor, decides heading/caption/body contrast. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Final light/dark ownership repairs for legacy report structures that reused
+ * the same class names on opposite surfaces. Keep these selectors structural:
+ * the surrounding surface, not a generic class alias, decides the foreground. */
+html.specter-report section#next:has(> .intro) > .next,
+html.specter-report section#next:has(> .intro) > .next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .state-strip .frames > figure > figcaption,
+html.specter-report section#organism .frames > figure > figcaption,
+html.specter-report section:not(#memory):not(#map):has(+ section#meaning) > .wrap > .frames > figure > figcaption,
+html.specter-report .aperture-map figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report article.case .frames > figure:has(> img) > figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report section > article.case > .frames > figure:has(> img) > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#map .frames > figure > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing,
+html.specter-report section.next > .wrap.chapter {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section.next > .wrap.chapter :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report table {
+  border-collapse: collapse;
+  background: var(--specter-sheet);
+}
+
+html.specter-report th {
+  background: var(--specter-ink);
+  color: var(--specter-sheet) !important;
+  font-family: var(--specter-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.specter-report th,
+html.specter-report td {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report code,
+html.specter-report pre {
+  font-family: var(--specter-mono);
+}
+
+html.specter-report ::selection {
+  color: var(--specter-ink);
+  background: var(--specter-acid);
+}
+
+@media (max-width: 760px) {
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: relative;
+  }
+
+  html.specter-report h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 640px) {
+  html.specter-report .hero h1,
+  html.specter-report .masthead h1,
+  html.specter-report .hero-title,
+  html.specter-report body > header h1,
+  html.specter-report main > header h1 {
+    font-size: clamp(2.75rem, 11vw, 3.25rem) !important;
+    line-height: 0.92 !important;
+    overflow-wrap: anywhere !important;
+    text-wrap: wrap;
+  }
+
+  /* Long source receipts must wrap rather than disappear beyond the phone. */
+  html.specter-report footer {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  html.specter-report footer code,
+  html.specter-report footer .receipt,
+  html.specter-report footer .hash {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media print {
+  html.specter-report,
+  html.specter-report body {
+    background: white !important;
+  }
+
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: static !important;
+  }
+
+  html.specter-report .card,
+  html.specter-report .visual,
+  html.specter-report .case,
+  html.specter-report .hero-card,
+  html.specter-report .question-card {
+    box-shadow: none !important;
+  }
+}
+</style>
+<!-- specter-report-style:end -->
+<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><style data-specter-public-polish>
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
+
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
+  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
+  font-family: var(--editorial-display) !important;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
+html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
+html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
+html.anatomical-editorial .hero-specimens { margin: 0; }
+html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
+html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
+html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
+html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
+html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
+html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
+html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
+html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
+html.anatomical-editorial .synthesis .metric span { color:#414c45; }
+html.anatomical-editorial .opening-method { margin:1rem 0; }
+html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
+html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
+html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
+html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
+html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
+html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
+html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
+html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
+html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
+html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
+html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
+html.anatomical-editorial .caption { border:0; }
+html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
+html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
+html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
+html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
+html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
+html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
+html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
+html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
+html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
+html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
+html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
+html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
+html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
+html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
+html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
+html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
+@media(max-width:800px) {
+ html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
+ html:has(.editorial-synthesis) .hero-answer { transform:none; }
+ html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
+}
+html:has(.editorial-synthesis) .ink { border-block:0; }
+html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
+html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .section-no { border:0; }
+@media(max-width:700px) {
+ html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
+ html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
+ html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
+ html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
+ html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
+}
+html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
+
+html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
+html.anatomical-editorial .measurement-comparison,
+html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
+html.anatomical-editorial .measurement-comparison h3,
+html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
+.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
+.measurement-heading { font: 12px/1.5 monospace; }
+.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
+.measurement-track { position: relative; height: 18px; background: #fff8; }
+.measurement-track i { display: block; height: 100%; background: #18796f; }
+.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
+.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
+html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
+.experiment-method summary { cursor: pointer; font-weight: 700; }
+.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
+.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
+.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.orbium-frames figure { margin: 0; }
+.orbium-frames img { display: block; width: 100%; }
+.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
+#orbium-time-note { margin-top: 16px; }
+.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
+.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
+.comparison-story p { max-width: 72ch; line-height: 1.65; }
+.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
+.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 650px) {
+  .measurement-heading { display: none; }
+  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
+  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
+  .orbium-frames { gap: 10px; }
+}
+
+#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
+html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
+html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
+
+html:has(.editorial-synthesis) .evidence {
+  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
+}
+html:has(.editorial-synthesis) .evidence::before { content: none; }
+html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
+html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
+html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
+html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
+.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
+.figure-introduction { max-width: 760px; margin-bottom: 30px; }
+.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
+.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
+.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
+.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
+.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.response-plots > div, .transplant-panels > div { min-width: 0; }
+.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
+.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
+.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
+.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
+.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
+.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
+#response-reading { font-size: 19px; }
+html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
+html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
+html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
+html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
+html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #17282d; }
+html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
+html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
+html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
+html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
+@media (max-width: 700px) {
+  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
+  .response-controls { gap: 14px; }
+  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
+  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
+}
+
+#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
+
+/* These explicit light fills label dark inset panels inside otherwise light charts. */
+html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
+html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
+
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
+  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
+}
+html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
+html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
+html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+</style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/composition-control-surface/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav>
+    <nav><div class="wrap"><b>Before the organism · Composition surface</b><div><a href="#finding">Finding</a><a href="#surface">Surface</a><a href="#time">Time</a><a href="#meaning">Interpretation</a><a href="#next">Next</a></div></div></nav>
+    <header class="wrap hero"><div class="kicker">A causal map inside an unchanged body</div><h1>Where Hidden Composition Is Placed Controls Expansion and Contraction</h1><p class="lede">Same visible body. Same global channel balance. Different hidden spatial arrangement. <em>The later morphology follows the donor pattern.</em></p></header>
+    <div class="wrap stats"><div class="stat"><b>4,368</b><span>new untouched futures</span></div><div class="stat"><b>34,944</b><span>new morphology frames</span></div><div class="stat"><b>30</b><span>cells in the causal surface</span></div><div class="stat"><b>0.0</b><span>visible starting-field change</span></div></div>
+    <main><section id="finding"><div class="wrap"><div class="eyebrow">01 / The finding</div><h2>Local hidden composition redirects development without changing either shape or bulk composition.</h2><div class="grid2"><div class="card orange"><h3>PURE PATTERN TRANSFER → EXPANSION</h3><div class="metric">+0.292</div><p>movement toward the expansive donor future · 95% CI [+0.102, +0.484] · 12/16 positive families</p></div><div class="card cyan"><h3>PURE PATTERN TRANSFER → COMPACTIFICATION</h3><div class="metric">+0.447</div><p>movement toward the compact donor future · 95% CI [+0.281, +0.614] · 15/16 positive families</p></div></div><div class="callout"><p class="big">We moved only the <strong>relative spatial arrangement</strong> of channel composition. Total visible matter stayed identical at every pixel. Global channel balance stayed at the host value. The autonomous future still bent toward the donor.</p></div><div class="axes"><div class="axis-card"><b>Global balance held at host</b><span>same weighted amount of channel 0 versus channel 1</span></div><div class="cross">×</div><div class="axis-card"><b>Spatial pattern moved to donor</b><span>local channel ratios rearranged across the same visible body</span></div></div></div></section>
+    <section id="surface"><div class="wrap"><div class="eyebrow">02 / The full control surface</div><h2>Development is a surface, not a one-dimensional dose response.</h2><div class="grid2"><div class="card"><svg viewBox="0 0 650 520" role="img" aria-label="EXPANSION response surface"><text x="332" y="24" text-anchor="middle" class="chart-title">EXPANSION</text><text x="140.0" y="52" text-anchor="middle" class="axis-label">0%</text><text x="236.0" y="52" text-anchor="middle" class="axis-label">25%</text><text x="332.0" y="52" text-anchor="middle" class="axis-label">50%</text><text x="428.0" y="52" text-anchor="middle" class="axis-label">75%</text><text x="524.0" y="52" text-anchor="middle" class="axis-label">100%</text><text x="78" y="99.0" text-anchor="end" class="axis-label">0%</text><rect x="94" y="66" width="92" height="58" rx="7" fill="rgb(20, 22, 28)"><title>global 0, spatial 0: +0.000 [+0.000, +0.000]</title></rect><text x="140.0" y="100.0" text-anchor="middle" class="heat-value">+0.00</text><rect x="190" y="66" width="92" height="58" rx="7" fill="rgb(25, 24, 29)"><title>global 0, spatial 0.25: +0.012 [-0.126, +0.146]</title></rect><text x="236.0" y="100.0" text-anchor="middle" class="heat-value">+0.01</text><rect x="286" y="66" width="92" height="58" rx="7" fill="rgb(87, 55, 42)"><title>global 0, spatial 0.5: +0.158 [-0.063, +0.396]</title></rect><text x="332.0" y="100.0" text-anchor="middle" class="heat-value">+0.16</text><rect x="382" y="66" width="92" height="58" rx="7" fill="rgb(52, 38, 35)"><title>global 0, spatial 0.75: +0.076 [-0.080, +0.236]</title></rect><text x="428.0" y="100.0" text-anchor="middle" class="heat-value">+0.08</text><rect x="478" y="66" width="92" height="58" rx="7" fill="rgb(145, 84, 53)"><title>global 0, spatial 1: +0.292 [+0.101, +0.486]</title></rect><text x="524.0" y="100.0" text-anchor="middle" class="heat-value">+0.29</text><text x="78" y="161.0" text-anchor="end" class="axis-label">12.5%</text><rect x="94" y="128" width="92" height="58" rx="7" fill="rgb(38, 91, 102)"><title>global 0.125, spatial 0: -0.078 [-0.191, +0.019]</title></rect><text x="140.0" y="162.0" text-anchor="middle" class="heat-value">-0.08</text><rect x="190" y="128" width="92" height="58" rx="7" fill="rgb(93, 58, 43)"><title>global 0.125, spatial 0.25: +0.171 [+0.008, +0.367]</title></rect><text x="236.0" y="162.0" text-anchor="middle" class="heat-value">+0.17</text><rect x="286" y="128" width="92" height="58" rx="7" fill="rgb(50, 37, 34)"><title>global 0.125, spatial 0.5: +0.071 [-0.074, +0.208]</title></rect><text x="332.0" y="162.0" text-anchor="middle" class="heat-value">+0.07</text><rect x="382" y="128" width="92" height="58" rx="7" fill="rgb(78, 51, 40)"><title>global 0.125, spatial 0.75: +0.136 [-0.088, +0.380]</title></rect><text x="428.0" y="162.0" text-anchor="middle" class="heat-value">+0.14</text><rect x="478" y="128" width="92" height="58" rx="7" fill="rgb(68, 46, 38)"><title>global 0.125, spatial 1: +0.113 [-0.063, +0.282]</title></rect><text x="524.0" y="162.0" text-anchor="middle" class="heat-value">+0.11</text><text x="78" y="223.0" text-anchor="end" class="axis-label">25%</text><rect x="94" y="190" width="92" height="58" rx="7" fill="rgb(60, 42, 36)"><title>global 0.25, spatial 0: +0.093 [-0.014, +0.227]</title></rect><text x="140.0" y="224.0" text-anchor="middle" class="heat-value">+0.09</text><rect x="190" y="190" width="92" height="58" rx="7" fill="rgb(55, 39, 35)"><title>global 0.25, spatial 0.25: +0.081 [-0.078, +0.230]</title></rect><text x="236.0" y="224.0" text-anchor="middle" class="heat-value">+0.08</text><rect x="286" y="190" width="92" height="58" rx="7" fill="rgb(51, 38, 34)"><title>global 0.25, spatial 0.5: +0.074 [-0.092, +0.238]</title></rect><text x="332.0" y="224.0" text-anchor="middle" class="heat-value">+0.07</text><rect x="382" y="190" width="92" height="58" rx="7" fill="rgb(53, 38, 35)"><title>global 0.25, spatial 0.75: +0.076 [-0.141, +0.289]</title></rect><text x="428.0" y="224.0" text-anchor="middle" class="heat-value">+0.08</text><rect x="478" y="190" width="92" height="58" rx="7" fill="rgb(107, 65, 46)"><title>global 0.25, spatial 1: +0.204 [+0.034, +0.362]</title></rect><text x="524.0" y="224.0" text-anchor="middle" class="heat-value">+0.20</text><text x="78" y="285.0" text-anchor="end" class="axis-label">50%</text><rect x="94" y="252" width="92" height="58" rx="7" fill="rgb(21, 26, 33)"><title>global 0.5, spatial 0: -0.005 [-0.153, +0.143]</title></rect><text x="140.0" y="286.0" text-anchor="middle" class="heat-value">-0.00</text><rect x="190" y="252" width="92" height="58" rx="7" fill="rgb(54, 39, 35)"><title>global 0.5, spatial 0.25: +0.080 [-0.090, +0.232]</title></rect><text x="236.0" y="286.0" text-anchor="middle" class="heat-value">+0.08</text><rect x="286" y="252" width="92" height="58" rx="7" fill="rgb(54, 39, 35)"><title>global 0.5, spatial 0.5: +0.080 [-0.107, +0.288]</title></rect><text x="332.0" y="286.0" text-anchor="middle" class="heat-value">+0.08</text><rect x="382" y="252" width="92" height="58" rx="7" fill="rgb(97, 60, 44)"><title>global 0.5, spatial 0.75: +0.179 [-0.020, +0.379]</title></rect><text x="428.0" y="286.0" text-anchor="middle" class="heat-value">+0.18</text><rect x="478" y="252" width="92" height="58" rx="7" fill="rgb(95, 59, 43)"><title>global 0.5, spatial 1: +0.177 [-0.077, +0.444]</title></rect><text x="524.0" y="286.0" text-anchor="middle" class="heat-value">+0.18</text><text x="78" y="347.0" text-anchor="end" class="axis-label">75%</text><rect x="94" y="314" width="92" height="58" rx="7" fill="rgb(76, 50, 39)"><title>global 0.75, spatial 0: +0.132 [-0.078, +0.355]</title></rect><text x="140.0" y="348.0" text-anchor="middle" class="heat-value">+0.13</text><rect x="190" y="314" width="92" height="58" rx="7" fill="rgb(91, 57, 43)"><title>global 0.75, spatial 0.25: +0.167 [+0.013, +0.324]</title></rect><text x="236.0" y="348.0" text-anchor="middle" class="heat-value">+0.17</text><rect x="286" y="314" width="92" height="58" rx="7" fill="rgb(64, 44, 37)"><title>global 0.75, spatial 0.5: +0.102 [-0.063, +0.271]</title></rect><text x="332.0" y="348.0" text-anchor="middle" class="heat-value">+0.10</text><rect x="382" y="314" width="92" height="58" rx="7" fill="rgb(73, 48, 39)"><title>global 0.75, spatial 0.75: +0.123 [-0.104, +0.363]</title></rect><text x="428.0" y="348.0" text-anchor="middle" class="heat-value">+0.12</text><rect x="478" y="314" width="92" height="58" rx="7" fill="rgb(167, 95, 58)"><title>global 0.75, spatial 1: +0.344 [+0.108, +0.582]</title></rect><text x="524.0" y="348.0" text-anchor="middle" class="heat-value">+0.34</text><text x="78" y="409.0" text-anchor="end" class="axis-label">100%</text><rect x="94" y="376" width="92" height="58" rx="7" fill="rgb(99, 61, 44)"><title>global 1, spatial 0: +0.185 [-0.054, +0.453]</title></rect><text x="140.0" y="410.0" text-anchor="middle" class="heat-value">+0.18</text><rect x="190" y="376" width="92" height="58" rx="7" fill="rgb(99, 61, 44)"><title>global 1, spatial 0.25: +0.184 [-0.024, +0.404]</title></rect><text x="236.0" y="410.0" text-anchor="middle" class="heat-value">+0.18</text><rect x="286" y="376" width="92" height="58" rx="7" fill="rgb(114, 68, 47)"><title>global 1, spatial 0.5: +0.220 [-0.025, +0.509]</title></rect><text x="332.0" y="410.0" text-anchor="middle" class="heat-value">+0.22</text><rect x="382" y="376" width="92" height="58" rx="7" fill="rgb(103, 63, 45)"><title>global 1, spatial 0.75: +0.195 [-0.096, +0.523]</title></rect><text x="428.0" y="410.0" text-anchor="middle" class="heat-value">+0.20</text><rect x="478" y="376" width="92" height="58" rx="7" fill="rgb(190, 106, 63)"><title>global 1, spatial 1: +0.398 [+0.035, +0.871]</title></rect><text x="524.0" y="410.0" text-anchor="middle" class="heat-value">+0.40</text><text x="332" y="508" text-anchor="middle" class="axis-label">host → donor spatial-pattern identity</text><text x="20" y="249" transform="rotate(-90 20 249)" text-anchor="middle" class="axis-label">host → donor global balance</text></svg></div><div class="card"><svg viewBox="0 0 650 520" role="img" aria-label="COMPACTIFICATION response surface"><text x="332" y="24" text-anchor="middle" class="chart-title">COMPACTIFICATION</text><text x="140.0" y="52" text-anchor="middle" class="axis-label">0%</text><text x="236.0" y="52" text-anchor="middle" class="axis-label">25%</text><text x="332.0" y="52" text-anchor="middle" class="axis-label">50%</text><text x="428.0" y="52" text-anchor="middle" class="axis-label">75%</text><text x="524.0" y="52" text-anchor="middle" class="axis-label">100%</text><text x="78" y="99.0" text-anchor="end" class="axis-label">0%</text><rect x="94" y="66" width="92" height="58" rx="7" fill="rgb(20, 22, 28)"><title>global 0, spatial 0: +0.000 [+0.000, +0.000]</title></rect><text x="140.0" y="100.0" text-anchor="middle" class="heat-value">+0.00</text><rect x="190" y="66" width="92" height="58" rx="7" fill="rgb(102, 63, 45)"><title>global 0, spatial 0.25: +0.192 [+0.039, +0.360]</title></rect><text x="236.0" y="100.0" text-anchor="middle" class="heat-value">+0.19</text><rect x="286" y="66" width="92" height="58" rx="7" fill="rgb(144, 83, 53)"><title>global 0, spatial 0.5: +0.290 [+0.082, +0.504]</title></rect><text x="332.0" y="100.0" text-anchor="middle" class="heat-value">+0.29</text><rect x="382" y="66" width="92" height="58" rx="7" fill="rgb(189, 105, 62)"><title>global 0, spatial 0.75: +0.395 [+0.224, +0.581]</title></rect><text x="428.0" y="100.0" text-anchor="middle" class="heat-value">+0.39</text><rect x="478" y="66" width="92" height="58" rx="7" fill="rgb(211, 116, 67)"><title>global 0, spatial 1: +0.447 [+0.281, +0.613]</title></rect><text x="524.0" y="100.0" text-anchor="middle" class="heat-value">+0.45</text><text x="78" y="161.0" text-anchor="end" class="axis-label">12.5%</text><rect x="94" y="128" width="92" height="58" rx="7" fill="rgb(85, 54, 41)"><title>global 0.125, spatial 0: +0.151 [-0.029, +0.372]</title></rect><text x="140.0" y="162.0" text-anchor="middle" class="heat-value">+0.15</text><rect x="190" y="128" width="92" height="58" rx="7" fill="rgb(106, 64, 46)"><title>global 0.125, spatial 0.25: +0.201 [+0.072, +0.324]</title></rect><text x="236.0" y="162.0" text-anchor="middle" class="heat-value">+0.20</text><rect x="286" y="128" width="92" height="58" rx="7" fill="rgb(133, 78, 51)"><title>global 0.125, spatial 0.5: +0.264 [+0.081, +0.473]</title></rect><text x="332.0" y="162.0" text-anchor="middle" class="heat-value">+0.26</text><rect x="382" y="128" width="92" height="58" rx="7" fill="rgb(210, 116, 67)"><title>global 0.125, spatial 0.75: +0.445 [+0.208, +0.680]</title></rect><text x="428.0" y="162.0" text-anchor="middle" class="heat-value">+0.45</text><rect x="478" y="128" width="92" height="58" rx="7" fill="rgb(233, 127, 71)"><title>global 0.125, spatial 1: +0.498 [+0.253, +0.723]</title></rect><text x="524.0" y="162.0" text-anchor="middle" class="heat-value">+0.50</text><text x="78" y="223.0" text-anchor="end" class="axis-label">25%</text><rect x="94" y="190" width="92" height="58" rx="7" fill="rgb(80, 51, 40)"><title>global 0.25, spatial 0: +0.139 [-0.008, +0.323]</title></rect><text x="140.0" y="224.0" text-anchor="middle" class="heat-value">+0.14</text><rect x="190" y="190" width="92" height="58" rx="7" fill="rgb(136, 79, 52)"><title>global 0.25, spatial 0.25: +0.272 [+0.104, +0.450]</title></rect><text x="236.0" y="224.0" text-anchor="middle" class="heat-value">+0.27</text><rect x="286" y="190" width="92" height="58" rx="7" fill="rgb(188, 105, 62)"><title>global 0.25, spatial 0.5: +0.394 [+0.153, +0.633]</title></rect><text x="332.0" y="224.0" text-anchor="middle" class="heat-value">+0.39</text><rect x="382" y="190" width="92" height="58" rx="7" fill="rgb(198, 110, 64)"><title>global 0.25, spatial 0.75: +0.418 [+0.114, +0.721]</title></rect><text x="428.0" y="224.0" text-anchor="middle" class="heat-value">+0.42</text><rect x="478" y="190" width="92" height="58" rx="7" fill="rgb(208, 115, 66)"><title>global 0.25, spatial 1: +0.441 [+0.126, +0.691]</title></rect><text x="524.0" y="224.0" text-anchor="middle" class="heat-value">+0.44</text><text x="78" y="285.0" text-anchor="end" class="axis-label">50%</text><rect x="94" y="252" width="92" height="58" rx="7" fill="rgb(51, 37, 34)"><title>global 0.5, spatial 0: +0.073 [-0.155, +0.271]</title></rect><text x="140.0" y="286.0" text-anchor="middle" class="heat-value">+0.07</text><rect x="190" y="252" width="92" height="58" rx="7" fill="rgb(119, 71, 48)"><title>global 0.5, spatial 0.25: +0.231 [+0.061, +0.393]</title></rect><text x="236.0" y="286.0" text-anchor="middle" class="heat-value">+0.23</text><rect x="286" y="252" width="92" height="58" rx="7" fill="rgb(128, 75, 50)"><title>global 0.5, spatial 0.5: +0.253 [+0.048, +0.445]</title></rect><text x="332.0" y="286.0" text-anchor="middle" class="heat-value">+0.25</text><rect x="382" y="252" width="92" height="58" rx="7" fill="rgb(164, 93, 57)"><title>global 0.5, spatial 0.75: +0.336 [+0.003, +0.680]</title></rect><text x="428.0" y="286.0" text-anchor="middle" class="heat-value">+0.34</text><rect x="478" y="252" width="92" height="58" rx="7" fill="rgb(174, 98, 60)"><title>global 0.5, spatial 1: +0.361 [+0.000, +0.658]</title></rect><text x="524.0" y="286.0" text-anchor="middle" class="heat-value">+0.36</text><text x="78" y="347.0" text-anchor="end" class="axis-label">75%</text><rect x="94" y="314" width="92" height="58" rx="7" fill="rgb(53, 38, 35)"><title>global 0.75, spatial 0: +0.077 [-0.152, +0.304]</title></rect><text x="140.0" y="348.0" text-anchor="middle" class="heat-value">+0.08</text><rect x="190" y="314" width="92" height="58" rx="7" fill="rgb(141, 82, 53)"><title>global 0.75, spatial 0.25: +0.282 [-0.043, +0.638]</title></rect><text x="236.0" y="348.0" text-anchor="middle" class="heat-value">+0.28</text><rect x="286" y="314" width="92" height="58" rx="7" fill="rgb(149, 86, 54)"><title>global 0.75, spatial 0.5: +0.302 [+0.039, +0.566]</title></rect><text x="332.0" y="348.0" text-anchor="middle" class="heat-value">+0.30</text><rect x="382" y="314" width="92" height="58" rx="7" fill="rgb(136, 79, 52)"><title>global 0.75, spatial 0.75: +0.272 [-0.059, +0.569]</title></rect><text x="428.0" y="348.0" text-anchor="middle" class="heat-value">+0.27</text><rect x="478" y="314" width="92" height="58" rx="7" fill="rgb(118, 70, 48)"><title>global 0.75, spatial 1: +0.230 [-0.106, +0.525]</title></rect><text x="524.0" y="348.0" text-anchor="middle" class="heat-value">+0.23</text><text x="78" y="409.0" text-anchor="end" class="axis-label">100%</text><rect x="94" y="376" width="92" height="58" rx="7" fill="rgb(83, 53, 41)"><title>global 1, spatial 0: +0.147 [-0.131, +0.422]</title></rect><text x="140.0" y="410.0" text-anchor="middle" class="heat-value">+0.15</text><rect x="190" y="376" width="92" height="58" rx="7" fill="rgb(105, 64, 45)"><title>global 1, spatial 0.25: +0.199 [-0.120, +0.522]</title></rect><text x="236.0" y="410.0" text-anchor="middle" class="heat-value">+0.20</text><rect x="286" y="376" width="92" height="58" rx="7" fill="rgb(60, 42, 36)"><title>global 1, spatial 0.5: +0.093 [-0.234, +0.390]</title></rect><text x="332.0" y="410.0" text-anchor="middle" class="heat-value">+0.09</text><rect x="382" y="376" width="92" height="58" rx="7" fill="rgb(137, 80, 52)"><title>global 1, spatial 0.75: +0.273 [-0.094, +0.601]</title></rect><text x="428.0" y="410.0" text-anchor="middle" class="heat-value">+0.27</text><rect x="478" y="376" width="92" height="58" rx="7" fill="rgb(89, 56, 42)"><title>global 1, spatial 1: +0.161 [-0.181, +0.445]</title></rect><text x="524.0" y="410.0" text-anchor="middle" class="heat-value">+0.16</text><text x="332" y="508" text-anchor="middle" class="axis-label">host → donor spatial-pattern identity</text><text x="20" y="249" transform="rotate(-90 20 249)" text-anchor="middle" class="axis-label">host → donor global balance</text></svg></div></div><p class="big">Move horizontally: change the hidden spatial pattern while holding bulk balance fixed. Move vertically: change bulk channel balance while preserving pattern identity.</p><div class="chart card"><svg viewBox="0 0 920 390" role="img" aria-label="Four edge contrasts of the developmental surface"><line x1="390" y1="35" x2="390" y2="360" class="zero"/><text x="18" y="75" class="axis-label">donor pattern · host balance</text><line x1="422.7" y1="61" x2="544.7" y2="61" stroke="#ff8a4c" stroke-width="4" stroke-linecap="round"/><circle cx="483.5" cy="61" r="6" fill="#ff8a4c"><title>expand: +0.292 [+0.102, +0.484]</title></circle><line x1="479.8" y1="79" x2="586.5" y2="79" stroke="#43c7d9" stroke-width="4" stroke-linecap="round"/><circle cx="532.9" cy="79" r="6" fill="#43c7d9"><title>compact: +0.447 [+0.281, +0.614]</title></circle><text x="18" y="153" class="axis-label">donor balance · host pattern</text><line x1="370.7" y1="139" x2="533.9" y2="139" stroke="#ff8a4c" stroke-width="4" stroke-linecap="round"/><circle cx="449.1" cy="139" r="6" fill="#ff8a4c"><title>expand: +0.185 [-0.060, +0.450]</title></circle><line x1="348.9" y1="157" x2="523.7" y2="157" stroke="#43c7d9" stroke-width="4" stroke-linecap="round"/><circle cx="437.0" cy="157" r="6" fill="#43c7d9"><title>compact: +0.147 [-0.129, +0.418]</title></circle><text x="18" y="231" class="axis-label">pattern effect · donor balance</text><line x1="379.2" y1="217" x2="554.0" y2="217" stroke="#ff8a4c" stroke-width="4" stroke-linecap="round"/><circle cx="458.3" cy="217" r="6" fill="#ff8a4c"><title>expand: +0.213 [-0.034, +0.513]</title></circle><line x1="322.5" y1="235" x2="465.8" y2="235" stroke="#43c7d9" stroke-width="4" stroke-linecap="round"/><circle cx="394.6" cy="235" r="6" fill="#43c7d9"><title>compact: +0.014 [-0.211, +0.237]</title></circle><text x="18" y="309" class="axis-label">global effect · donor pattern</text><line x1="332.8" y1="295" x2="532.9" y2="295" stroke="#ff8a4c" stroke-width="4" stroke-linecap="round"/><circle cx="423.8" cy="295" r="6" fill="#ff8a4c"><title>expand: +0.106 [-0.179, +0.447]</title></circle><line x1="220.5" y1="313" x2="370.0" y2="313" stroke="#43c7d9" stroke-width="4" stroke-linecap="round"/><circle cx="298.6" cy="313" r="6" fill="#43c7d9"><title>compact: -0.286 [-0.530, -0.062]</title></circle><line x1="695" y1="20" x2="719" y2="20" stroke="#ff8a4c" stroke-width="4"/><text x="727" y="24" class="axis-label">expansion</text><line x1="800" y1="20" x2="824" y2="20" stroke="#43c7d9" stroke-width="4"/><text x="832" y="24" class="axis-label">compactification</text><text x="390" y="387" text-anchor="middle" class="axis-label">effect on donor-direction future</text></svg></div><p>The cleanest edge is the top one: donor pattern at host balance. Changing only global balance with the host pattern preserved is much weaker and its intervals cross zero in both directions.</p></div></section>
+    <section><div class="wrap"><div class="eyebrow">03 / Context changes the code</div><h2>The compactifying pattern works best inside the host’s global context.</h2><div class="grid2"><div class="card cyan"><h3>DONOR PATTERN · HOST BALANCE</h3><div class="metric">+0.447</div><p>[+0.281, +0.614] toward compactification.</p></div><div class="card violet"><h3>SAME PATTERN · DONOR BALANCE</h3><div class="metric">+0.014</div><p>[-0.211, +0.237]; the incremental pattern effect nearly vanishes.</p></div></div><div class="callout"><p class="big">The corner interaction is -0.432 [-0.668, -0.226]. Copying more of the donor is not always better. The local pattern is interpreted relative to the receiver’s global composition.</p></div><p>This is a relational code: the same map has different causal meaning in a different bulk state. The strongest compactifying region sits near donor spatial identity but host or lightly shifted global balance—not at the wholesale donor corner.</p></div></section>
+    <section id="time"><div class="wrap"><div class="eyebrow">04 / When the pattern becomes visible</div><h2>Compactification answers early. Expansion reveals itself later.</h2><div class="chart card"><svg viewBox="0 0 840 390" role="img" aria-label="Pure spatial-pattern transplant effect over time"><line x1="74" y1="289.0" x2="812" y2="289.0" class="zero"/><text x="62" y="293.0" text-anchor="end" class="axis-label">+0.0</text><line x1="74" y1="207.1" x2="812" y2="207.1" class="grid"/><text x="62" y="211.1" text-anchor="end" class="axis-label">+0.2</text><line x1="74" y1="125.1" x2="812" y2="125.1" class="grid"/><text x="62" y="129.1" text-anchor="end" class="axis-label">+0.4</text><line x1="74" y1="43.2" x2="812" y2="43.2" class="grid"/><text x="62" y="47.2" text-anchor="end" class="axis-label">+0.6</text><polygon points="74.0,208.3 179.4,124.4 284.9,138.2 390.3,183.9 495.7,182.4 601.1,174.4 706.6,78.8 812.0,90.9 812.0,247.2 706.6,258.9 601.1,307.5 495.7,407.2 390.3,387.0 284.9,532.2 179.4,297.2 74.0,309.0" fill="#ff8a4c" opacity=".11"/><polyline points="74.0,258.9 179.4,212.4 284.9,316.6 390.3,276.8 495.7,279.0 601.1,232.8 706.6,166.4 812.0,169.3" fill="none" stroke="#ff8a4c" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="258.9" r="4" fill="#ff8a4c"/><circle cx="179.4" cy="212.4" r="4" fill="#ff8a4c"/><circle cx="284.9" cy="316.6" r="4" fill="#ff8a4c"/><circle cx="390.3" cy="276.8" r="4" fill="#ff8a4c"/><circle cx="495.7" cy="279.0" r="4" fill="#ff8a4c"/><circle cx="601.1" cy="232.8" r="4" fill="#ff8a4c"/><circle cx="706.6" cy="166.4" r="4" fill="#ff8a4c"/><circle cx="812.0" cy="169.3" r="4" fill="#ff8a4c"/><polygon points="74.0,152.6 179.4,115.4 284.9,67.3 390.3,168.9 495.7,81.8 601.1,66.4 706.6,37.6 812.0,37.5 812.0,174.0 706.6,213.6 601.1,255.0 495.7,244.2 390.3,265.7 284.9,303.4 179.4,330.9 74.0,286.0" fill="#43c7d9" opacity=".11"/><polyline points="74.0,215.9 179.4,236.0 284.9,200.3 390.3,214.0 495.7,169.4 601.1,160.4 706.6,127.7 812.0,106.1" fill="none" stroke="#43c7d9" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="215.9" r="4" fill="#43c7d9"/><circle cx="179.4" cy="236.0" r="4" fill="#43c7d9"/><circle cx="284.9" cy="200.3" r="4" fill="#43c7d9"/><circle cx="390.3" cy="214.0" r="4" fill="#43c7d9"/><circle cx="495.7" cy="169.4" r="4" fill="#43c7d9"/><circle cx="601.1" cy="160.4" r="4" fill="#43c7d9"/><circle cx="706.6" cy="127.7" r="4" fill="#43c7d9"/><circle cx="812.0" cy="106.1" r="4" fill="#43c7d9"/><text x="74.0" y="367" text-anchor="middle" class="axis-label">16</text><text x="179.4" y="367" text-anchor="middle" class="axis-label">32</text><text x="284.9" y="367" text-anchor="middle" class="axis-label">48</text><text x="390.3" y="367" text-anchor="middle" class="axis-label">64</text><text x="495.7" y="367" text-anchor="middle" class="axis-label">80</text><text x="601.1" y="367" text-anchor="middle" class="axis-label">96</text><text x="706.6" y="367" text-anchor="middle" class="axis-label">112</text><text x="812.0" y="367" text-anchor="middle" class="axis-label">128</text><line x1="580" y1="19" x2="604" y2="19" stroke="#ff8a4c" stroke-width="5"/><text x="612" y="23" class="axis-label">expansion</text><line x1="690" y1="19" x2="714" y2="19" stroke="#43c7d9" stroke-width="5"/><text x="722" y="23" class="axis-label">compactification</text><text x="443.0" y="389" text-anchor="middle" class="axis-label">steps after pure spatial-pattern transplant</text></svg></div><div class="grid2"><div class="card cyan"><h3>COMPACTIFICATION</h3><p>Already positive at step 16: +0.179 [+0.007, +0.333]. It then grows to +0.447 by step 128.</p></div><div class="card orange"><h3>EXPANSION</h3><p>The spatial signal is initially subtle and becomes clear late: +0.299 at step 112 and +0.292 at step 128.</p></div></div><p class="big">The hidden intervention acts before its full morphological consequence is visible—and different directions have different developmental latency.</p></div></section>
+    <section id="meaning"><div class="wrap"><div class="eyebrow">05 / What this means</div><h2>We have found a causal, pre-morphological state variable.</h2><div class="grid3"><div class="card orange"><h3>NOT SHAPE</h3><p>The visible matter field is exactly unchanged at the intervention.</p></div><div class="card cyan"><h3>NOT BULK AMOUNT</h3><p>The strongest test holds global channel balance exactly at the host value.</p></div><div class="card violet"><h3>ORGANIZED RELATION</h3><p>Only the spatial allocation between hidden channels is changed, and the later form responds.</p></div></div><p class="big">This is the strongest bridge yet between the causal-emergence program and organism formation in Flow Lenia. The relevant precursor is not merely a scalar that rises before a form appears. It is an organized hidden field with direct causal leverage over which morphology emerges next.</p><p>It also gives a concrete meaning to “pattern space”: the receiving body reads a distributed compositional pattern, and that pattern biases its future without being a visible body itself.</p></div></section>
+    <section id="next"><div class="wrap"><div class="eyebrow">06 / The next direct swing</div><h2>Decode the spatial language.</h2><div class="next"><div class="swing"><b>Destroy one spatial scale at a time.</b><span>Coarse blocks, local shuffles, Fourier phase disruption, and translations can reveal whether the causal code lives in broad polarity, mesoscopic domains, or fine local texture.</span></div><div class="swing"><b>Transplant only one region.</b><span>Patchwise donor maps can locate organizer-like areas: small parts whose composition redirects the future of the whole body.</span></div><div class="swing"><b>Cross donors between organisms.</b><span>If a foreign pattern works across bodies, we have a shared morphogenetic syntax. If it only works within paired branches, the code is identity-specific.</span></div><div class="swing"><b>Move the transplant earlier.</b><span>Repeat this surface before the organic body becomes obvious and ask when the hidden field first gains causal control.</span></div></div><div class="callout"><p class="big">The next experiment should find the minimum spatial structure that still turns the future.</p></div></div></section></main>
+    <footer><div class="wrap proof">Complete global-balance × spatial-pattern causal surface · 4368 new futures · 34944 frames · 16 independent families · global target residual ≤ 4.15e-09 · reported results SHA-256 e82b83552c60d61d49fa8c56ea5c6888140aa0771dcdaa890938c35fb3ce64c9</div></footer></body></html>

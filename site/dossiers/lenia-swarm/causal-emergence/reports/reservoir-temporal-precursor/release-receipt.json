@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "reservoir-temporal-precursor",
+  "releaseId": "flce-reservoir-temporal-precursor-1afc2f4c485a",
+  "title": "Core Recurrence May Have an Early Precursor",
+  "date": "2026-08-12",
+  "status": "archive",
+  "evidenceClass": "exploratory temporal precursor analysis",
+  "sourceReportSha256": "0b237e7368ea60568439e69cbf07aa026b4932bbfd925385f48df70ccc35d8f8",
+  "publicReportSha256": "0c486facd0893a252c7fae6a9b4f2565c25df3d17cd29e253943e4167a1e48f7",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "da63f54f7ae9cf891fd12eb2867d260037851e97669a018ff7afcf2591b07dcc",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "e516c5cfe4ab322bf057e7c3e2df24f8f8ece64fe5f8c5b5863d21d5267664c9"
+}

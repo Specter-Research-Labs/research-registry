@@ -1,0 +1,20 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "synthesis-v7",
+  "releaseId": "flce-synthesis-v7-be5d576a918b",
+  "title": "Individuality Precedes Coherent Form",
+  "date": "2026-08-30",
+  "status": "feature",
+  "evidenceClass": "multi-experiment synthesis",
+  "sourceReportSha256": "608d2507a5540603ef1f93cf2b694827c91b5d8f71eccea59134af60527d28dd",
+  "publicReportSha256": "90df3f7a10d94088a626b84856f295e20a2735388688d374426e37f249ba0ba4",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "refine_synthesis_reading_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "0174db650cb640b7be43d10ffc571d91bb8fcbeb3098efe214c765a5baaa2432",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

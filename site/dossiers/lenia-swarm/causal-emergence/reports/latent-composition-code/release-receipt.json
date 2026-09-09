@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "latent-composition-code",
+  "releaseId": "flce-latent-composition-code-a187996872cd",
+  "title": "Expansion Requires Spatial Pattern; Contraction Does Not",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "mechanism-disambiguation intervention",
+  "sourceReportSha256": "5cbf2d084539e2b53a0db6e89edc62cd9b9db5dcf858c631a49301db456e76ff",
+  "publicReportSha256": "19609048d8b9c0724115973b5397c2449bd480fc9c8a04ce43151f1ffb4d8c1c",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "5dd4527f8614109c03117d8fece9a6c15a6ddbb3484a324b4a157a4c12c66876",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "d047765521baefd16aeaaaf45a4f89b7d114e9dda0b5f86c15d14eb2fa4350cb"
+}

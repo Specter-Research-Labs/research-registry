@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "initial-action-world",
+  "releaseId": "flce-initial-action-world-470b229b4081",
+  "title": "Different Early Histories Produce Different Responses by Passage Eight",
+  "date": "2026-08-23",
+  "status": "feature",
+  "evidenceClass": "prospective same-organism challenge comparison",
+  "sourceReportSha256": "887b66b982d872934b7e377bf2229dd1bc131ec2c9af2725cd477438b0919f09",
+  "publicReportSha256": "ed35f9e47d3fee072e157bd76ee79664ef048a967b0fa006be55e13d0a5b2b30",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "normalize_public_editorial_language_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "a80d52daaa3df873574a2ade07a0d8d7a4ea8bd970f13fe4ed0c2c20a567141e",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "517610a5a4043f12542fbf0d99f3ec4463561ff0ede27c4a40bd61ecf151d1ee"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "organism-birth-signal",
+  "releaseId": "flce-organism-birth-signal-60e021992596",
+  "title": "Whole-Field Organization Rises Before Coherent Form",
+  "date": "2026-08-21",
+  "status": "feature",
+  "evidenceClass": "prospective measurement",
+  "sourceReportSha256": "720a8e2933bdfbca70cab3719518293ffea7ccc4884bd40c8bccf6bb65ae8780",
+  "publicReportSha256": "b094268aa83e076e84ec3cdae7bd4cb53aed5927689700f38d295652c540ea28",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "507a8326b71f7469eaf330f01e54d8b6de5c362bb55deec04e204513f5d86c71",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

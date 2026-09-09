@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "organism-birth-causal-exploration",
+  "releaseId": "flce-organism-birth-causal-exploration-cdf6a4a062c1",
+  "title": "Early Interventions Reveal Broad Microscopic Futures",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "exploratory causal atlas",
+  "sourceReportSha256": "a035d8afd5bd07f43e6dd790b780e30246acb42269527aa139a119e4e7964ffd",
+  "publicReportSha256": "42cf2dc9ce0dbf7729769d2a13ba40ff75d786d38b5bbe644ca317839f789604",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "ace958f8943c068ad14aff0702a44551102e3b18b08c6c3c21842125a3f3b1e9",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "46accd65f15927edcc74b6946ec34f4269f83301bbcf801025b06320e20c4674"
+}

@@ -9,7 +9,7 @@ use std::fs;
 use super::discover::SitePageRecord;
 
 pub(crate) const CATALOG_PATH: &str = "site/dossiers/lenia-swarm/causal-emergence/catalog.json";
-const RELEASE_ROUTE: &str = "https://releases.specterlab.org/lenia-swarm/causal-emergence/releases";
+const RELEASE_ROUTE: &str = "/dossiers/lenia-swarm/causal-emergence/reports";
 
 pub const LANDING_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/index.html";
 pub const LIBRARY_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/library/index.html";
@@ -250,8 +250,8 @@ fn contains_internal_checkpoint_notation(value: &str) -> bool {
 }
 
 #[must_use]
-pub fn sitemap_pages() -> Vec<SitePageRecord> {
-    vec![
+pub fn sitemap_pages(catalog: &Catalog) -> Vec<SitePageRecord> {
+    let mut pages = vec![
         SitePageRecord {
             title: "Causal Emergence in Flow Lenia".into(),
             href: "dossiers/lenia-swarm/causal-emergence/".into(),
@@ -264,11 +264,16 @@ pub fn sitemap_pages() -> Vec<SitePageRecord> {
             title: "Flow Lenia Causal Emergence Archive".into(),
             href: "dossiers/lenia-swarm/causal-emergence/archive/".into(),
         },
-    ]
+    ];
+    pages.extend(catalog.reports.iter().map(|report| SitePageRecord {
+        title: report.title.clone(),
+        href: format!("dossiers/lenia-swarm/causal-emergence/reports/{}/", report.id),
+    }));
+    pages
 }
 
 fn release_href(report: &Report) -> String {
-    format!("{RELEASE_ROUTE}/{}/", report.release_id)
+    format!("{RELEASE_ROUTE}/{}/", report.id)
 }
 
 fn report_href(report: &Report) -> String {
@@ -276,7 +281,7 @@ fn report_href(report: &Report) -> String {
 }
 
 fn exact_report_href(report: &Report) -> String {
-    format!("{}report.html", release_href(report))
+    release_href(report)
 }
 
 #[must_use]
@@ -311,8 +316,7 @@ fn category_label<'a>(catalog: &'a Catalog, category: &str) -> &'a str {
 fn report_links(report: &Report) -> Markup {
     html! {
         div class="ce-report-links" {
-            a class="ce-button ce-button-primary" href=(report_href(report)) { "Read the introduction" }
-            a class="ce-button" href=(exact_report_href(report)) { "Read the full report" }
+            a class="ce-button ce-button-primary" href=(exact_report_href(report)) { "Read the report" }
         }
     }
 }
@@ -361,9 +365,8 @@ fn question_triptych(report: &Report) -> Markup {
 fn report_card(report: &Report) -> Markup {
     html! {
         article class="ce-report-card" id=(report.id) {
-            h3 { a href=(report_href(report)) { (&report.title) } }
-            p class="ce-dek" { (&report.dek) }
-            (question_triptych(report))
+            h2 { a href=(report_href(report)) { (&report.title) } }
+            p class="ce-dek" { (&report.answer) }
             div class="ce-card-footer" {
                 (report_links(report))
                 (report_receipt(report))
@@ -434,8 +437,8 @@ pub fn render_landing(catalog: &Catalog) -> String {
             section class="ce-report-section" aria-labelledby="featured-experiments" {
                 div class="ce-section-heading" {
                     div class="ce-kicker" { "Key experiments" }
-                    h2 id="featured-experiments" { "How the central claims were tested" }
-                    p { "These reports contain the clearest direct tests behind the synthesis. Each one states the intervention, the observed result, and the question that remains open." }
+                    h2 id="featured-experiments" { "Five comparisons and a failed prediction" }
+                    p { "These selected studies ask different questions: what appears before form, what early history changes, what spatial organization contributes, what hidden channels control, and what the recovery score failed to predict." }
                 }
                 div class="ce-card-grid" {
                     @for report in remaining {
@@ -449,7 +452,7 @@ pub fn render_landing(catalog: &Catalog) -> String {
             div {
                 div class="ce-kicker" { "All reports" }
                 h2 { "Read the evidence behind the synthesis" }
-                p { "The library groups current experiments by the question they address. The archive keeps earlier pilots, null results, and previous syntheses available for comparison." }
+                p { "The reading selection brings distinct comparisons together. Supporting experiments and earlier versions remain in the archive; inclusion there is not a verdict that a result is false." }
             }
             div class="ce-report-links" {
                 a class="ce-button ce-button-primary" href="/dossiers/lenia-swarm/causal-emergence/library/" { "Browse the library" }
@@ -462,43 +465,18 @@ pub fn render_landing(catalog: &Catalog) -> String {
 
 #[must_use]
 pub fn render_library(catalog: &Catalog) -> String {
-    let reports: Vec<&Report> = catalog
-        .reports
-        .iter()
-        .filter(|report| !report.archive)
-        .collect();
-    let groups = grouped_reports(&reports);
-
+    let reports: Vec<&Report> = catalog.reports.iter().filter(|report| !report.archive).collect();
     html! {
         (page_nav("library"))
         header class="ce-page-header" {
-            div class="ce-kicker" { (reports.len()) " current reports" }
-            h1 { "Report library" }
-            p { "Each report states a testable question, the result, and what remains unresolved. Together they trace the work from early organization and intervention responses to developmental commitment, hidden composition, control, and memory." }
+            h1 { "Selected reports" }
+            p { "One overview and six studies: an early signal, matched histories, spatial controls, hidden composition, declining sensitivity to intervention, and a failed recovery prediction." }
         }
-        nav class="ce-category-nav" aria-label="Report categories" {
-            @for (category, entries) in &groups {
-                a href=(format!("#{category}")) { (category_label(catalog, category)) " " span { (entries.len()) } }
-            }
+        section class="ce-reading-list" aria-label="Selected studies" {
+            @for report in reports { (report_card(report)) }
         }
-        @for (category, entries) in &groups {
-            section class="ce-report-section" aria-labelledby=(format!("{category}-heading")) {
-                div class="ce-section-heading ce-section-heading-row" {
-                    div {
-                        div class="ce-kicker" { "Topic" }
-                        h2 id=(format!("{category}-heading")) { (category_label(catalog, category)) }
-                    }
-                    div class="ce-count" { (entries.len()) " reports" }
-                }
-                div class="ce-card-grid" id=(*category) {
-                    @for report in entries {
-                        (report_card(report))
-                    }
-                }
-            }
-        }
-    }
-    .into_string()
+        p { "The " a href="../archive/" { "experimental archive" } " keeps supporting comparisons and previous versions available. " a href="../editorial-review.json" { "Selection notes" } " record which pages need consolidation or further editing." }
+    }.into_string()
 }
 
 #[must_use]
@@ -515,7 +493,8 @@ pub fn render_archive(catalog: &Catalog) -> String {
         header class="ce-page-header" {
             div class="ce-kicker" { "Experimental record / " (reports.len()) }
             h1 { "Archive" }
-            p { "These earlier pilots and syntheses show which questions were tested, where an apparent pattern weakened, and why later experiments changed direction." }
+            p { a href="../editorial-review.json" { "Read the selection notes for all 81 records" } }
+            p { "These supporting records include useful narrow comparisons, serial follow-ups that would read better as a single article, and superseded syntheses. Their evidence remains accessible. They are not all endorsed as finished editorial pieces; the selected library is the starting point." }
         }
         @if reports.is_empty() {
             p class="ce-empty" { "No reports are currently archived." }
@@ -583,8 +562,9 @@ mod tests {
         assert!(!landing.contains("ce-report-meta"));
         assert!(landing.contains("Report date"));
         assert!(landing.contains("2026-08-30"));
-        assert!(library.contains("Next question"));
-        assert!(library.contains("Synthesis"));
+        assert!(library.contains("Read the report"));
+        assert!(!library.contains("Read the introduction"));
+        assert!(library.contains("Selected reports"));
         assert!(!library.contains("ce-chip"));
         assert!(archive.contains("No reports are currently archived"));
     }

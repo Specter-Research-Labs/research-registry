@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-decoder-memory",
+  "releaseId": "flce-developmental-decoder-memory-9251214247b6",
+  "title": "Intervention Order Reaches Different Body Depths",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "factorial prime-test intervention",
+  "sourceReportSha256": "6329a7a2d34c51132da53a2af4a18850a6510f4b3b87c9fedd0a4efddc24de70",
+  "publicReportSha256": "0028e0a6f51312391ac8475cab728faf970a85e14f7080ddddc9cba2782e8fcb",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "3d64c7c62f167330a60a36bfb10c31b86aa820124f37be6daa528a6a39303e0d",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "1419e284b876a5ee79fe1c1720f9bfa5b2d11cf839ea59ea932d95251cc000fb"
+}

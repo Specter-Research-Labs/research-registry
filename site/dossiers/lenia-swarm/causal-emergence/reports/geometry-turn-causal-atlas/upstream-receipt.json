@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "geometry-turn-causal-atlas",
+  "releaseId": "flce-geometry-turn-causal-atlas-6fe1acb99e12",
+  "title": "Intervention Rankings Shift Before Formation",
+  "date": "2026-08-22",
+  "status": "library",
+  "evidenceClass": "fresh-cohort causal atlas",
+  "sourceReportSha256": "23206cec8746efedf116faca69e8cecc02d7389e4e0efbb61371064028044f51",
+  "publicReportSha256": "310c7dd9842536475e203f9c2a2318580902987063c7c6d09f4f5233a89b94e8",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "ee595a85a08989ae6a28bc8ead5ad854fcbe3abb13ca2e8b0124701e16bfec65",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

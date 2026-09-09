@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="en" class="specter-report" data-specter-surface="bg-paper"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A plain-English report of a GARD-inspired temporal precursor test in Flow Lenia."><title>Core Recurrence May Have an Early Precursor</title><style>
+:root{--bg:#ececea;--paper:#fffefa;--ink:#0a0d12;--muted:#64666b;--rule:rgba(10,13,18,.19);--orange:#ff5a1f;--orange2:#ffddcf;--green:#357653;--green2:#d8eadf;--red:#a84d3b;--red2:#f2d8d1;--blue:#5169c8;--blue2:#dfe4fa;--gold:#a98016;--sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--serif:Iowan Old Style,Baskerville,"Times New Roman",serif;--mono:"SFMono-Regular",Consolas,monospace}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:linear-gradient(rgba(10,13,18,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(10,13,18,.035) 1px,transparent 1px),var(--bg);background-size:24px 24px;font:18px/1.5 var(--serif)}.top{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;padding:10px max(16px,calc((100vw - 1180px)/2));color:#fff;background:var(--ink);font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase}.top a{color:#fff;text-decoration:none;opacity:.7}.top nav{display:flex;gap:18px}main{width:min(1180px,calc(100% - 32px));margin:28px auto 80px}section{margin-top:24px;padding:clamp(24px,4vw,52px);background:var(--paper);border:1px solid var(--ink);box-shadow:8px 8px 0 rgba(10,13,18,.1)}h1,h2,h3{margin:0;font-family:var(--sans);line-height:.98;letter-spacing:-.045em}h1{margin-top:20px;font-size:clamp(58px,9vw,116px)}h1 span,.orange{color:var(--orange)}h2{font-size:clamp(40px,5.6vw,68px)}h3{font-size:25px;line-height:1.05}.eyebrow,.section-no,.micro{font:750 11px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase}.eyebrow,.section-no{color:var(--orange)}.hero{min-height:650px;display:grid;grid-template-columns:1.2fr .8fr;gap:55px;align-items:center;position:relative;overflow:hidden}.hero:after{content:"Φ";position:absolute;right:-20px;bottom:-170px;color:rgba(255,90,31,.07);font:800 430px/.8 var(--sans)}.dek{max-width:780px;margin:28px 0 0;font-size:clamp(21px,2.3vw,30px);line-height:1.3}.note{color:var(--muted)}.verdict{z-index:1;padding:28px;color:#fff;background:var(--ink);border-top:9px solid var(--orange);transform:rotate(1deg)}.verdict strong{display:block;margin:18px 0;font:850 clamp(38px,5vw,62px)/.94 var(--sans);letter-spacing:-.05em}.verdict p{color:#d8d9dc}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--ink)}.stats article{padding:22px;border-right:1px solid var(--ink)}.stats article:last-child{border:0}.stats strong{display:block;color:var(--orange);font:850 47px/.95 var(--sans)}.stats span{display:block;margin-top:10px;color:var(--muted);font-size:15px;line-height:1.25}.section-head{display:grid;grid-template-columns:105px 1fr;gap:20px;margin-bottom:36px}.section-intro{max-width:850px;margin:17px 0 0;font-size:23px;line-height:1.35}.timeline{display:grid;grid-template-columns:1.4fr 70px 1fr;gap:0;align-items:stretch}.past,.future{padding:26px;border:1px solid var(--ink)}.past{background:var(--blue2)}.future{background:var(--green2)}.cut{display:grid;place-items:center;color:#fff;background:var(--orange);font:800 13px var(--mono);writing-mode:vertical-rl}.states{display:flex;gap:5px;margin:22px 0}.states i{height:38px;flex:1;background:var(--blue);opacity:.35;border:1px solid var(--ink)}.states i:nth-last-child(-n+8){opacity:.9}.future .states i{background:var(--green);opacity:.75}.equation{margin-top:18px;padding:18px;background:var(--ink);color:#fff;font:700 14px/1.5 var(--mono)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{padding:24px;border:1px solid var(--ink)}.card.red{background:var(--red2)}.card.green{background:var(--green2)}.card.blue{background:var(--blue2)}.card h3{margin-bottom:14px}.card p:last-child{margin-bottom:0}.chart{position:relative;margin-top:22px;padding:16px;background:#f4f3ee;border:1px solid var(--ink)}canvas{display:block;width:100%;height:360px}.chart.short canvas{height:270px}.chart-note{margin:12px 0 0;color:var(--muted);font-size:14px}.coverage{display:grid;gap:12px}.barrow{display:grid;grid-template-columns:180px 1fr 92px;gap:14px;align-items:center}.barrow label{font:700 12px var(--mono)}.bar{height:32px;display:flex;border:1px solid var(--ink);background:#ddd}.bar .yes{background:var(--blue)}.bar .no{background:var(--red2)}.barrow b{text-align:right;font:800 18px var(--sans)}table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}th,td{padding:12px;border:1px solid var(--ink);text-align:left}th{color:#fff;background:var(--ink)}td.pos{background:var(--green2)}td.neg{background:var(--red2)}.mini{font-size:14px;color:var(--muted)}.claims{display:grid;grid-template-columns:1fr 1fr;gap:18px}.claim{padding:28px;border:1px solid var(--ink)}.claim.yes{background:var(--green2)}.claim.no{background:var(--red2)}.claim ul{padding-left:20px}.next{margin-top:22px;padding:30px;color:#fff;background:var(--ink);border-top:8px solid var(--orange)}.next h3{color:var(--orange)}.next ol{padding-left:22px}.foot{font:12px/1.6 var(--mono);overflow-wrap:anywhere}.pill{display:inline-block;padding:4px 8px;color:#fff;background:var(--ink);font:700 10px var(--mono);text-transform:uppercase}.pill.orange{background:var(--orange)}.callout{margin-top:20px;padding:18px 22px;border-left:7px solid var(--orange);background:var(--orange2)}@media(max-width:820px){.hero,.grid2,.claims{grid-template-columns:1fr}.hero{min-height:0}.stats{grid-template-columns:1fr 1fr}.stats article:nth-child(2){border-right:0}.timeline{grid-template-columns:1fr}.cut{writing-mode:horizontal-tb;padding:9px}.section-head{grid-template-columns:1fr}.barrow{grid-template-columns:110px 1fr 70px}.top nav{display:none}}@media(max-width:520px){main{width:min(100% - 18px,1180px)}section{padding:22px}.stats{grid-template-columns:1fr}.stats article{border-right:0;border-bottom:1px solid var(--ink)}.stats article:last-child{border:0}canvas{height:300px}table{font-size:10px}th,td{padding:8px}}
+</style><!-- specter-report-style:begin sha256=a28376706e9e68b08ed3d8e07cbe97c7b63be4817de94e0bf55c67a1184c09ce -->
+<style data-specter-shared>
+/*
+ * Specter Flow Lenia report skin.
+ *
+ * This is the only authored copy. _report-style/sync.py embeds it verbatim in
+ * every standalone report so the HTML files still work when shared alone.
+ */
+
+html.specter-report {
+  color-scheme: light;
+
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-dim: #81827c;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-blue-soft: #dfe6ff;
+  --specter-acid: #d8ff39;
+  --specter-acid-soft: #efffb2;
+  --specter-coral: #f05237;
+  --specter-coral-soft: #f9ded7;
+  --specter-green: #14795c;
+  --specter-green-soft: #d8efe6;
+  --specter-violet: #7652c8;
+  --specter-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --specter-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --specter-serif: Iowan Old Style, Baskerville, Georgia, "Times New Roman", serif;
+
+  /* Common aliases used across the report lineage. */
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --cream: var(--specter-ink);
+  --white: var(--specter-sheet);
+  --soft: #3e4248;
+  --muted: var(--specter-muted);
+  --dim: var(--specter-dim);
+  --faint: var(--specter-dim);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+
+  --blue: var(--specter-blue);
+  --blue2: var(--specter-blue);
+  --blue-soft: var(--specter-blue-soft);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --mint: var(--specter-green);
+  --green: var(--specter-green);
+  --green2: var(--specter-green);
+  --green-soft: var(--specter-green-soft);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --yellow: var(--specter-acid);
+  --yellow-soft: var(--specter-acid-soft);
+  --gold: var(--specter-coral);
+  --gold-soft: var(--specter-coral-soft);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --orange2: var(--specter-coral);
+  --orange-soft: var(--specter-coral-soft);
+  --red: var(--specter-coral);
+  --red2: var(--specter-coral);
+  --red-soft: var(--specter-coral-soft);
+  --rose: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+  --coral-soft: var(--specter-coral-soft);
+  --violet: var(--specter-violet);
+  --purple: var(--specter-violet);
+  --sans: var(--specter-sans);
+  --serif: var(--specter-serif);
+  --mono: var(--specter-mono);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-sheet);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-sheet"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report[data-specter-surface="bg-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report {
+  scroll-behavior: smooth;
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  margin: 0;
+  overflow-x: clip;
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+  font-family: var(--specter-sans);
+  text-rendering: optimizeLegibility;
+}
+
+html.specter-report body,
+html.specter-report p,
+html.specter-report li,
+html.specter-report td,
+html.specter-report th {
+  color: inherit;
+}
+
+html.specter-report a {
+  color: inherit;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+}
+
+html.specter-report a:hover { color: var(--specter-blue); }
+
+html.specter-report a:focus-visible,
+html.specter-report button:focus-visible,
+html.specter-report summary:focus-visible {
+  outline: 3px solid var(--specter-blue);
+  outline-offset: 4px;
+}
+
+html.specter-report h1,
+html.specter-report h2,
+html.specter-report h3,
+html.specter-report h4 {
+  color: inherit;
+  font-family: var(--specter-sans) !important;
+  font-weight: 850 !important;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+html.specter-report h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.06em;
+}
+
+/*
+ * Keep the poster voice without making a headline consume a whole monitor.
+ * Individual reports may choose smaller type; this caps only hero/masthead
+ * display titles that historically scaled directly with very wide viewports.
+ */
+html.specter-report .hero h1,
+html.specter-report .masthead h1,
+html.specter-report .hero-title,
+html.specter-report body > header h1,
+html.specter-report main > header h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(3.25rem, 6.4vw, 7rem) !important;
+  line-height: 0.9 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .hero {
+  min-height: auto !important;
+  padding-block: clamp(2.75rem, 5vw, 5.5rem) !important;
+}
+
+html.specter-report .section-head h2 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.35rem, 4.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .lede,
+html.specter-report .lead,
+html.specter-report .deck,
+html.specter-report .dek,
+html.specter-report .standfirst,
+html.specter-report .plain,
+html.specter-report blockquote {
+  font-family: var(--specter-serif);
+}
+
+/* Two poster-style reports use a bare div.lead on the normalized paper
+ * surface. Keep this deliberately narrow so paragraph leads in dark headers
+ * retain their authored white foreground. */
+html.specter-report div.lead {
+  color: var(--specter-ink) !important;
+}
+
+/* Four legacy verdict headers use a dark authored surface without declaring a
+ * foreground on the header itself. Restore their deliberately pale lede. */
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) .lede {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.lead) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.hero-facts) h1 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .eyebrow,
+html.specter-report .kicker,
+html.specter-report .label,
+html.specter-report .micro,
+html.specter-report .section-number,
+html.specter-report .section-no,
+html.specter-report .num {
+  color: var(--specter-blue) !important;
+  font-family: var(--specter-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.specter-report body > nav,
+html.specter-report .topbar,
+html.specter-report .top {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-acid) !important;
+  border-bottom-width: 4px !important;
+  box-shadow: none !important;
+}
+
+html.specter-report body > nav a,
+html.specter-report body > nav .brand,
+html.specter-report .topbar a,
+html.specter-report .topbar strong,
+html.specter-report .top a {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > nav .brand,
+html.specter-report .topbar .brand {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report section,
+html.specter-report header,
+html.specter-report footer {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report .sheet,
+html.specter-report .panel,
+html.specter-report .card,
+html.specter-report .mini,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .flow-box,
+html.specter-report .question-card,
+html.specter-report .metric,
+html.specter-report .finding,
+html.specter-report .stat,
+html.specter-report .data-viz,
+html.specter-report .hero-proof > div {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Normalized paper surfaces own their foreground. Some legacy descendants
+ * carried a hard-coded dark-theme heading or caption; make those inherit the
+ * surface they now visibly sit on. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Legacy .plain and .next blocks rely on their container foreground. The
+ * default is paper/ink; the dark exceptions below deliberately flip it. */
+html.specter-report .next {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report :is(.plain, .next) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Exact unclassed body-copy surface retained by the geometry-turn atlas. */
+html.specter-report .copy {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report .card,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .hero-card,
+html.specter-report .question-card {
+  box-shadow: var(--specter-shadow);
+}
+
+html.specter-report .hero-card,
+html.specter-report .hero-result,
+html.specter-report .highlight,
+html.specter-report .callout.acid {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same * { color: inherit !important; }
+
+html.specter-report .callout,
+html.specter-report .thesis,
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .north-star,
+html.specter-report .result-banner,
+html.specter-report .plain-result,
+html.specter-report .closed-note,
+html.specter-report .phi-lock,
+html.specter-report .route,
+html.specter-report .route-future,
+html.specter-report .hetero-note,
+html.specter-report .matrix-wrap,
+html.specter-report .formula,
+html.specter-report .equation {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Editorial cutouts used by the synthesis lineage. Their headings used to
+ * inherit the global ink color and disappear into the dark surface. */
+html.specter-report .definition,
+html.specter-report .ink-band,
+html.specter-report .closure-thesis {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .definition,
+html.specter-report .closure-thesis {
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .definition *,
+html.specter-report .ink-band *,
+html.specter-report .closure-thesis *,
+html.specter-report .next-title * {
+  color: inherit !important;
+}
+
+html.specter-report .definition .eyebrow,
+html.specter-report .closure-thesis .eyebrow {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report .callout *,
+html.specter-report .thesis *,
+html.specter-report .verdict *,
+html.specter-report .hero-aside *,
+html.specter-report .north-star *,
+html.specter-report .result-banner *,
+html.specter-report .plain-result *,
+html.specter-report .closed-note *,
+html.specter-report .phi-lock *,
+html.specter-report .route *,
+html.specter-report .route-future *,
+html.specter-report .hetero-note * {
+  color: inherit !important;
+}
+
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .result-banner {
+  border-top: 8px solid var(--specter-coral) !important;
+}
+
+html.specter-report .dark,
+html.specter-report .inverse,
+html.specter-report .ink {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+}
+
+html.specter-report .dark h1,
+html.specter-report .dark h2,
+html.specter-report .dark h3,
+html.specter-report .inverse h1,
+html.specter-report .inverse h2,
+html.specter-report .inverse h3,
+html.specter-report .ink h1,
+html.specter-report .ink h2,
+html.specter-report .ink h3 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .dark .lede,
+html.specter-report .dark .lead,
+html.specter-report .dark .deck,
+html.specter-report .dark .dek,
+html.specter-report .dark .standfirst,
+html.specter-report .inverse .lede,
+html.specter-report .inverse .lead,
+html.specter-report .inverse .deck,
+html.specter-report .inverse .dek,
+html.specter-report .inverse .standfirst,
+html.specter-report .ink .lede,
+html.specter-report .ink .lead,
+html.specter-report .ink .deck,
+html.specter-report .ink .dek,
+html.specter-report .ink .standfirst {
+  color: inherit !important;
+}
+
+/* Authored dark sub-surfaces that do not carry a .dark/.inverse marker. The
+ * shared paper skin must preserve their local foreground instead of feeding
+ * the global ink alias back into a near-black panel. */
+html.specter-report section#next.next,
+html.specter-report div.next:has(> h3),
+html.specter-report section#next .next > div,
+html.specter-report section#memory .memory > div,
+html.specter-report figure.future-card,
+html.specter-report .films > .film,
+html.specter-report .arrow > .mode,
+html.specter-report .frame-grid > .time-column,
+html.specter-report .fans > .fan,
+html.specter-report .frame-pair,
+html.specter-report .explain > article,
+html.specter-report .organisms > .organism-card,
+html.specter-report .chart-card,
+html.specter-report .sequence figure:has(> img) {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report div.next:has(> h3) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#next .next > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#memory .memory > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report figure.future-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .films > .film :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .arrow > .mode :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-grid > .time-column :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .fans > .fan :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-pair :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .explain > article :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .organisms > .organism-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .chart-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .sequence figure:has(> img) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report section#next.next :is(.eyebrow, .kicker, .label),
+html.specter-report div.next:has(> h3) :is(.eyebrow, .kicker, .label) {
+  color: var(--specter-acid) !important;
+}
+
+/* A light card nested in a dark chapter is still a light card. Keep this
+ * guard after the dark-surface compatibility rules so the card's own surface,
+ * not its ancestor, decides heading/caption/body contrast. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Final light/dark ownership repairs for legacy report structures that reused
+ * the same class names on opposite surfaces. Keep these selectors structural:
+ * the surrounding surface, not a generic class alias, decides the foreground. */
+html.specter-report section#next:has(> .intro) > .next,
+html.specter-report section#next:has(> .intro) > .next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .state-strip .frames > figure > figcaption,
+html.specter-report section#organism .frames > figure > figcaption,
+html.specter-report section:not(#memory):not(#map):has(+ section#meaning) > .wrap > .frames > figure > figcaption,
+html.specter-report .aperture-map figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report article.case .frames > figure:has(> img) > figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report section > article.case > .frames > figure:has(> img) > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#map .frames > figure > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing,
+html.specter-report section.next > .wrap.chapter {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section.next > .wrap.chapter :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report table {
+  border-collapse: collapse;
+  background: var(--specter-sheet);
+}
+
+html.specter-report th {
+  background: var(--specter-ink);
+  color: var(--specter-sheet) !important;
+  font-family: var(--specter-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.specter-report th,
+html.specter-report td {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report code,
+html.specter-report pre {
+  font-family: var(--specter-mono);
+}
+
+html.specter-report ::selection {
+  color: var(--specter-ink);
+  background: var(--specter-acid);
+}
+
+@media (max-width: 760px) {
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: relative;
+  }
+
+  html.specter-report h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 640px) {
+  html.specter-report .hero h1,
+  html.specter-report .masthead h1,
+  html.specter-report .hero-title,
+  html.specter-report body > header h1,
+  html.specter-report main > header h1 {
+    font-size: clamp(2.75rem, 11vw, 3.25rem) !important;
+    line-height: 0.92 !important;
+    overflow-wrap: anywhere !important;
+    text-wrap: wrap;
+  }
+
+  /* Long source receipts must wrap rather than disappear beyond the phone. */
+  html.specter-report footer {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  html.specter-report footer code,
+  html.specter-report footer .receipt,
+  html.specter-report footer .hash {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media print {
+  html.specter-report,
+  html.specter-report body {
+    background: white !important;
+  }
+
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: static !important;
+  }
+
+  html.specter-report .card,
+  html.specter-report .visual,
+  html.specter-report .case,
+  html.specter-report .hero-card,
+  html.specter-report .question-card {
+    box-shadow: none !important;
+  }
+}
+</style>
+<!-- specter-report-style:end -->
+<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><style data-specter-public-polish>
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
+
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
+  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
+  font-family: var(--editorial-display) !important;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
+html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
+html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
+html.anatomical-editorial .hero-specimens { margin: 0; }
+html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
+html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
+html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
+html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
+html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
+html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
+html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
+html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
+html.anatomical-editorial .synthesis .metric span { color:#414c45; }
+html.anatomical-editorial .opening-method { margin:1rem 0; }
+html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
+html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
+html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
+html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
+html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
+html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
+html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
+html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
+html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
+html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
+html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
+html.anatomical-editorial .caption { border:0; }
+html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
+html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
+html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
+html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
+html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
+html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
+html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
+html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
+html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
+html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
+html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
+html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
+html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
+html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
+html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
+html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
+@media(max-width:800px) {
+ html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
+ html:has(.editorial-synthesis) .hero-answer { transform:none; }
+ html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
+}
+html:has(.editorial-synthesis) .ink { border-block:0; }
+html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
+html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .section-no { border:0; }
+@media(max-width:700px) {
+ html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
+ html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
+ html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
+ html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
+ html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
+}
+html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
+
+html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
+html.anatomical-editorial .measurement-comparison,
+html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
+html.anatomical-editorial .measurement-comparison h3,
+html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
+.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
+.measurement-heading { font: 12px/1.5 monospace; }
+.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
+.measurement-track { position: relative; height: 18px; background: #fff8; }
+.measurement-track i { display: block; height: 100%; background: #18796f; }
+.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
+.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
+html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
+.experiment-method summary { cursor: pointer; font-weight: 700; }
+.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
+.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
+.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.orbium-frames figure { margin: 0; }
+.orbium-frames img { display: block; width: 100%; }
+.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
+#orbium-time-note { margin-top: 16px; }
+.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
+.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
+.comparison-story p { max-width: 72ch; line-height: 1.65; }
+.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
+.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 650px) {
+  .measurement-heading { display: none; }
+  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
+  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
+  .orbium-frames { gap: 10px; }
+}
+
+#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
+html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
+html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
+
+html:has(.editorial-synthesis) .evidence {
+  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
+}
+html:has(.editorial-synthesis) .evidence::before { content: none; }
+html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
+html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
+html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
+html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
+.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
+.figure-introduction { max-width: 760px; margin-bottom: 30px; }
+.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
+.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
+.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
+.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
+.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.response-plots > div, .transplant-panels > div { min-width: 0; }
+.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
+.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
+.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
+.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
+.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
+.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
+#response-reading { font-size: 19px; }
+html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
+html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
+html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
+html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
+html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #17282d; }
+html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
+html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
+html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
+html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
+@media (max-width: 700px) {
+  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
+  .response-controls { gap: 14px; }
+  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
+  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
+}
+
+#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
+
+/* These explicit light fills label dark inset panels inside otherwise light charts. */
+html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
+html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
+
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
+  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
+}
+html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
+html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
+html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+</style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/reservoir-temporal-precursor/"></head>
+<body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav><header class="top"><span>Before the Replicator · Flow Lenia</span><nav><a href="#test">Test</a><a href="#broad">Broad result</a><a href="#onset">Onsets</a><a href="#next">Next</a></nav></header><main>
+<section class="hero"><div><div class="eyebrow">GARD-inspired temporal precursor exploration · August 2026</div><h1>Core Recurrence May Have an Early Precursor</h1><p class="dek">We asked whether the four founder-composition channels become more predictively integrated <em>before</em> stronger compositional restoration. First strict passes were a secondary view.</p><p class="note">The broad answer is no. Across the 1,660 estimable valid episodes, our integration score was not a useful robust precursor. A much narrower onset pattern is interesting enough to test prospectively.</p></div><aside class="verdict"><span class="micro orange">Honest verdict</span><strong>No broad signal.<br><span class="orange">One sharp clue.</span></strong><p>The integration score did not track recovery across the estimable ecology. But all three measurable core onsets rose beforehand. That is a hypothesis—not yet a finding.</p></aside></section>
+<div class="stats"><article><strong>72</strong><span>frozen Flow Lenia trajectories</span></article><article><strong>2,027</strong><span>valid four-passage recovery episodes</span></article><article><strong>1,660</strong><span>episodes with usable W64 Φ</span></article><article><strong>3 / 3</strong><span>measurable onsets rose; four core onsets existed</span></article></div>
+<section id="test"><div class="section-head"><span class="section-no">01 / The test</span><div><h2>Past only. Then future.</h2><p class="section-intro">At each passage we froze the clock. We measured the previous 65 composition states, then asked how well the lineage restored its composition over the next four passages.</p></div></div><div class="timeline"><div class="past"><span class="pill">Predictor</span><h3 style="margin-top:18px">65 states before T</h3><div class="states"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>Compare prediction by all four founder channels together with prediction after each of the seven possible splits. Keep the least-integrated split, then subtract the median score from 256 shuffled-future fits.</p></div><div class="cut">T · passage</div><div class="future"><span class="pill">Outcome</span><h3 style="margin-top:18px">4 recovery cycles after T</h3><div class="states"><i></i><i></i><i></i><i></i></div><p>Use the continuous median improvement in parent-to-return similarity—not a binary pass gate.</p></div></div><div class="equation">past q₄[T−65 : T] → excess Φ-R at T &nbsp;&nbsp; | &nbsp;&nbsp; future median ΔH over passages T…T+3</div><div class="callout"><b>In normal words:</b> Φ-R asks how much predictive structure belongs to the four-channel system as a whole rather than to separated groups of channels. <b>“Leakage-safe”</b> means nothing at T or later is allowed into that score. The future cannot sneak into the measurement that claims to precede it.</div></section>
+<section><div class="section-head"><span class="section-no">02 / Coverage</span><div><h2>What could be measured?</h2><p class="section-intro">We did not lower thresholds or fill missing values. Early passages often lacked a full 65-state history, so availability is much worse exactly where early warning matters most.</p></div></div><div id="coverage" class="coverage"></div><p class="chart-note">Usable Φ by checkpoint time. Before step 128: 291/555 (52%). At steps 384–512: 208/212 (98%). Only 27/56 old strict passing episodes were estimable.</p></section>
+<section id="broad"><div class="section-head"><span class="section-no">03 / Broad result</span><div><h2>The cloud is flat.</h2><p class="section-intro">Across all usable episodes, more integrated past dynamics did not reliably mean better future compositional restoration.</p></div></div><div class="grid2"><div class="chart"><canvas id="scatter" aria-label="Scatter plot of excess Phi versus future recovery"></canvas><p class="chart-note">Each dot is an episode. Colors are families. The orange line is the overall linear trend.</p></div><div class="card red"><span class="pill">Within each run</span><h3 style="margin-top:18px">Essentially zero</h3><p><b>Pearson:</b> 0.018, bootstrap range −0.052 to 0.085.</p><p><b>Rank correlation:</b> −0.004, bootstrap range −0.069 to 0.065.</p><p>Those ranges comfortably include no relationship. This is the clearest answer to the broad question.</p></div></div>
+<div class="section-head" style="margin-top:48px"><span class="section-no">Held out</span><div><h3>Does Φ add anything beyond 25 ordinary measurements?</h3><p class="section-intro">We trained without one family—or one passage schedule—and predicted the held-out group. Ordinary measurements included composition, flux, total predictability, mass, growth, motion, fragmentation, component count, and passage timing.</p></div></div><div class="chart short"><canvas id="prediction" aria-label="Held-out prediction improvement chart"></canvas><p class="chart-note">Orange bars show the percentage reduction in prediction error after adding excess Φ. Both gains are real numerically but tiny: 0.18% and 0.07%. Under every aggregate weighting, held-out R² stayed below zero, meaning the full models lost to simply predicting the evaluation-set mean on squared error.</p></div><div class="grid2" style="margin-top:18px"><div class="card blue"><h3>Unseen family</h3><p>Error fell by <b>0.18%</b>. Run-balanced R² moved from −0.0277 to −0.0245.</p><p class="mini">9/12 family folds improved in MAE; the improvement was not large.</p></div><div class="card blue"><h3>Unseen schedule</h3><p>Error fell by <b>0.07%</b>. Run-balanced R² moved from −0.1478 to −0.1463.</p><p class="mini">4/6 schedule folds improved in MAE; only 2/6 improved rank correlation.</p></div></div></section>
+<section id="onset"><div class="section-head"><span class="section-no">04 / The clue</span><div><h2>Right before strict onset.</h2><p class="section-intro">The old pass gate is still useful as a landmark. A “core onset” is the first strict pass after an earlier, non-overlapping informative failure. We compared four nearer checkpoints with the four before them.</p></div></div><div class="chart"><canvas id="onsets" aria-label="Pre-onset Phi rise chart"></canvas><p class="chart-note">Only four core onsets existed. Three had complete eight-checkpoint histories and all three rose. The fourth became constant in one founder coordinate, so this estimator was unavailable. Thin grey dots show the sparse at-risk matched comparisons.</p></div><div class="grid2" style="margin-top:18px"><div class="card green"><h3>Why this is interesting</h3><p>The three measurable core onsets rose by +0.101, +0.112, and +0.215 excess Φ. The c06 and c10 rises exceeded every available family match, although c06 did so by only 0.010.</p></div><div class="card red"><h3>Why this is not the result yet</h3><p>We already knew the onsets. There are only three measurable cases. Matched controls are sparse and sometimes rise too. Across all 22 first-pass trajectories, only five had complete histories: three rose and two fell.</p></div></div></section>
+<section><div class="section-head"><span class="section-no">05 / Stress test</span><div><h2>Change the ruler; change the story.</h2><p class="section-intro">A robust precursor should survive reasonable estimator choices. This one did not.</p></div></div><div style="overflow-x:auto"><table id="sensitivity"><thead><tr><th>Variant</th><th>Within-run rank</th><th>ΔR² unseen family</th><th>ΔR² unseen schedule</th><th>Read</th></tr></thead><tbody></tbody></table></div><div class="callout"><b>Important:</b> W32 has near-zero rank association but small positive ΔR² in both held-out tests; W96 reverses; one ridge choice reverses schedule prediction; CLR has a positive Pearson value but essentially zero rank relationship and no useful incremental prediction. That inconsistency blocks a robust precursor claim.</div></section>
+<section id="next"><div class="section-head"><span class="section-no">06 / Meaning</span><div><h2>What we can say.</h2></div></div><div class="claims"><div class="claim yes"><h3>Yes</h3><ul><li>The old <code>stop_without_phi</code> gate ruled out restoration, but it did not explain the temporal structure we could still see.</li><li>We built a past-only, GARD-inspired measure over four founder-composition channels.</li><li>That measure is not a meaningful broad predictor of continuous recovery in this cohort.</li><li>Three measurable strict onsets share a concrete pre-onset rise worth testing fresh.</li></ul></div><div class="claim no"><h3>No</h3><ul><li>We have not found causal emergence in all of Lenia.</li><li>We have not shown autonomous reproduction.</li><li>We have not shown that Φ causes restoration.</li><li>We have not prospectively predicted an unseen onset yet.</li></ul></div></div><div class="next"><h3>The clean next experiment</h3><ol><li>Before simulation, freeze the cohort size, families, schedules, exclusions, missingness handling, matched contrast, and numerical success rule.</li><li>Generate the fresh cohort without inspecting outcomes.</li><li>Measure excess Φ at every passage from the start, using a shorter history only if it was frozen in step 1 so early onsets are observable.</li><li>Freeze the event: first strict pass after a non-overlapping informative failure.</li><li>Freeze one onset score: mean of checkpoints j−3…j minus j−7…j−4.</li><li>Compare onset runs with the predeclared family- and schedule-matched risk set at j.</li><li>Require the rise to meet the frozen rule across held-out families and schedules before calling it an early-warning signal.</li></ol><p><b>If that passes:</b> perturb matched states up or down in Φ while preserving composition, mass, and spatial statistics. Only then start talking about causality.</p></div></section>
+<section><div class="section-head"><span class="section-no">07 / Audit</span><div><h2>What stayed fixed.</h2></div></div><div class="grid2"><div class="card"><h3>Analysis</h3><p>72 frozen trajectories · 360 exact raw files · 65 past states · 256 null shuffles per checkpoint · all seven partitions · 25 controls · leave-one-family-out and leave-one-schedule-out.</p></div><div class="card"><h3>Boundary</h3><p>Post-outcome exploratory. No p-values. No threshold tuning. No imputation. The earlier result remains provenance, not a veto.</p></div></div><p class="foot">Source checksum: 21e2adf1c50d3cdc835010e3927fc1bffbd18c000f07b1cdb433fe7c37ba966b (exploration report) · a21d65d22968a20d08a2a317628d59418334f72ea376affdbea40bb64b84cdda (point stream). Generated from the completed local artifacts; this HTML is explanatory, not part of the recorded result.</p></section>
+</main><script id="data" type="application/json">{"scatter":[[0.643680198361938,-0.0010454469937384303,"c01"],[0.6325389890744386,-0.0010990412930267923,"c01"],[0.7264532329255047,-0.0008529830376302061,"c01"],[0.8595916228394952,3.0476500521570138e-05,"c01"],[0.8446236231210822,0.000694540614964434,"c01"],[0.6643701927185627,0.000694540614964434,"c01"],[0.3564051743579504,-4.865282129951076e-06,"c01"],[0.2573379803327392,-0.0007674969475217064,"c01"],[0.5898088563634855,-0.0007674969475217064,"c01"],[0.4513338457494293,-0.0011520032722212026,"c01"],[1.0035298833199724,-0.0021044761706768833,"c01"],[0.5829797279346518,-0.0012269258139018802,"c01"],[0.3805148890466875,-0.0012269258139018802,"c01"],[0.4099700571499548,0.00020863879568683297,"c01"],[0.528587346615575,0.00020863879568683297,"c01"],[0.5266810212875885,0.000528824192488786,"c01"],[0.5146319733251179,0.0004932287797517199,"c01"],[0.45951610361981676,-0.00043580189270403524,"c01"],[0.31045617195330444,0.00018094905125831673,"c01"],[0.33621585456801784,-0.00010407462534334222,"c01"],[0.4247626136709711,-0.0003805838246911386,"c01"],[0.24644365940956448,-0.0003805838246911386,"c01"],[0.3100617956060987,-0.0006992820084323892,"c01"],[0.39031045993057273,-0.0006992820084323892,"c01"],[0.3950271447311673,-0.0009122736983701585,"c01"],[0.3303804569525362,8.355743099403012e-05,"c01"],[0.4467013720195846,-0.000621251831259273,"c01"],[0.47964976373532964,-0.0021761979944427967,"c01"],[0.3578426493464309,-0.001412763971011477,"c01"],[0.6465015864355224,-0.0014173346919675311,"c01"],[0.5083765994856538,-0.0007382423772976932,"c01"],[0.4294961576400023,-0.0007313845784714945,"c01"],[0.49081004629714176,-0.0007359552994275487,"c01"],[0.6722525791801195,-0.0006444041884831608,"c01"],[0.520284627045568,-0.0006444041884831608,"c01"],[0.9087619567524086,-0.0006444041884831608,"c01"],[0.39416238227657036,-0.0010798543886723078,"c01"],[0.15927212373065083,-0.00048354421695556704,"c01"],[0.45992143379590267,-0.00030317928728590404,"c01"],[0.2842625864517774,0.0013347199415641442,"c01"],[0.5315322623524986,0.0013347199415641442,"c01"],[0.5058024562439157,0.0006737155323990329,"c01"],[0.4608482465966456,0.00030495030089455755,"c01"],[0.6670641553443808,0.00030495030089455755,"c01"],[0.8367361288785469,-9.700939566703592e-06,"c01"],[0.297316834856617,-0.0014005285554505864,"c01"],[0.17708558666939372,-0.0014931466525418546,"c01"],[0.28973755475197405,-0.0014931466525418546,"c01"],[0.45335103346709293,-0.0005532670219411395,"c01"],[0.22226684908133654,-0.0005532670219411395,"c01"],[0.36426747810717064,-0.0016355170350838555,"c01"],[0.6240868641945788,-0.0016355170350838555,"c01"],[0.960414860943913,-0.003549477243617871,"c01"],[0.47452680130666436,-0.0034025047000318387,"c01"],[0.7252884225122254,-0.0015361252563235173,"c01"],[0.6821633207401568,-0.0020306630173141937,"c01"],[0.6149223734694111,-0.0009024616285026599,"c01"],[0.455973782475537,-0.0008176271351429953,"c01"],[0.7345027124502195,-0.0005899266526466218,"c01"],[0.42261819044840915,-0.0005899266526466218,"c01"],[0.4115550174483144,-0.0011380393641763353,"c01"],[0.9332003509026262,-0.0009638104404145476,"c01"],[0.49793417325317835,-0.0009638104404145476,"c01"],[0.5353357888114072,-0.0009638104404145476,"c01"],[0.601297856411334,-0.0008504273094260828,"c01"],[0.7076953779550671,0.0007112720871667033,"c01"],[0.5222210049439828,-0.0004113947624505565,"c01"],[0.505354026732783,-0.0004113947624505565,"c01"],[0.5931764034743771,-0.00022657672641668292,"c01"],[0.7254760654000717,0.000435657186047933,"c01"],[0.695647753001452,0.0005690195585236202,"c01"],[0.5292957137189299,0.00042313556636047744,"c01"],[0.9971500874494332,-0.000276185372556248,"c01"],[0.5705494763279966,-0.001098769892097784,"c01"],[0.3449148814709255,-0.0011209667423497938,"c01"],[0.316068451634225,-0.0011209667423497938,"c01"],[0.38567867403418127,-0.0005223431656636301,"c01"],[0.36987548758487887,-0.0008659984321421899,"c01"],[0.1921408140324965,-0.0006961559762759251,"c01"],[0.44567749795332867,-0.0006961559762759251,"c01"],[0.8460559816836529,-0.0006961559762759251,"c01"],[0.7547323719581149,-0.0005718600389007511,"c01"],[0.7782516883989878,-7.271430982119798e-05,"c01"],[0.2832980626606563,0.00024041738792879297,"c01"],[0.36415726611422594,0.0013363353421017576,"c01"],[0.404925734558824,0.004052964318711327,"c01"],[0.0976305850370307,0.004052964318711327,"c01"],[0.36454091091606344,0.0033980613342197707,"c01"],[0.9000218452988232,-0.0008982170900547759,"c01"],[0.21923458649532157,-0.0019404313559069908,"c01"],[0.353387487506005,-0.002343414152515322,"c01"],[0.7225773116001581,-0.0019404313559069908,"c01"],[0.2725462058038037,-0.00027515062651062294,"c01"],[0.15737847251775444,0.002222601731681595,"c01"],[0.6576626607204608,0.002222601731681595,"c01"],[0.23249053085863647,0.0005215440491153078,"c01"],[0.48031677163521846,-0.0021575082351923403,"c01"],[0.5834083674999182,-0.0021575082351923403,"c01"],[0.7407109626442119,0.0002438705963450638,"c01"],[0.7673947559918355,0.0006855849172562323,"c01"],[0.30892803887699616,0.0015050895600669523,"c01"],[0.41208434971401053,0.0006855849172562323,"c01"],[0.5992148215103741,0.00012797983657686363,"c01"],[0.7212373726418029,0.00010559439025942252,"c01"],[0.6815027612629978,-0.0001896118258358781,"c01"],[0.6918303260606303,8.992244144861994e-05,"c01"],[0.461137235703194,-0.00018875915587329706,"c01"],[0.24847089272672357,-0.00018875915587329706,"c01"],[0.6903098383352602,-0.00022022818892647456,"c01"],[0.7963248084641865,-0.0006712205002409322,"c01"],[0.4876667668422361,-0.0012612768253739692,"c01"],[0.5508698998619326,-0.0012612768253739692,"c01"],[0.7698192392239853,0.003798866809817558,"c01"],[0.42788175983656657,0.003798866809817558,"c01"],[0.7789308749847895,0.002637704446139033,"c01"],[0.46753295364503417,-0.0003959793319870397,"c01"],[0.484937498315845,-0.0018469991673285002,"c01"],[0.3102360024253178,-0.0018469991673285002,"c01"],[0.5559668955726375,0.001121475599018762,"c01"],[0.4101371730686929,-0.0002611634231209359,"c01"],[0.42807349523920796,0.00015121659289946132,"c01"],[0.5407802593479507,-0.0005665044306683575,"c01"],[0.7176400236210178,-0.0009875774016064875,"c01"],[0.6168278509687901,-0.0005665044306683575,"c01"],[0.9628396352525761,0.001306543502791413,"c01"],[0.7449050951807271,0.0012750619297923205,"c01"],[0.6530768216091383,0.0010303284060148576,"c01"],[0.5689725822664009,0.0003267393130970131,"c01"],[0.6725653899649131,0.0026880553115729566,"c01"],[0.4961667841160226,0.0016216334427516799,"c01"],[0.5014778268618012,0.00042187938832483063,"c01"],[0.38842517834751256,-0.00010949643327878844,"c01"],[0.7279047097380079,-0.0004558104307023636,"c01"],[0.42402495079505986,0.0011642938607099307,"c01"],[0.4381325573945958,0.0015739668588302669,"c01"],[0.22222076657885004,0.00028513816000597103,"c01"],[0.452575420475964,0.00028513816000597103,"c01"],[0.5107474159625418,-0.00041725541907822183,"c01"],[0.27383867937936274,0.0019474428980803538,"c01"],[0.4263618758862047,0.004884992004989153,"c01"],[0.7431806294731982,0.004884992004989153,"c01"],[0.6230298097290381,0.003623410909606384,"c01"],[0.3904675327701759,0.003528944956954272,"c01"],[0.7698931667626367,-0.0010809740712101057,"c02"],[0.41158747235306486,-0.002025195874172825,"c02"],[0.5300589820387646,-0.0023869975591422343,"c02"],[0.5659831270910851,-0.0023869975591422343,"c02"],[0.6141808132403417,-0.0023869975591422343,"c02"],[0.5813791941433162,-0.002090589347788274,"c02"],[0.6354244854470533,-0.0007216780947915669,"c02"],[0.6092506655792819,-0.00037160433753979927,"c02"],[0.388909964034838,-0.00037160433753979927,"c02"],[0.3586670847557509,-0.0004470959336787539,"c02"],[0.33140371627309867,-0.0005358296924058981,"c02"],[0.32604911428703603,-0.0005358296924058981,"c02"],[0.31950166302045746,1.5176131308469731e-05,"c02"],[0.21234317516654935,8.830546080879076e-05,"c02"],[0.4178365432321989,8.830546080879076e-05,"c02"],[0.352294290841914,-0.0007740674468315056,"c02"],[0.3609607101865314,-0.0007854199501565184,"c02"],[0.2810600258128769,-0.0007854199501565184,"c02"],[0.41156834196823083,-0.0002680719405157017,"c02"],[0.2194833838779986,-0.0002680719405157017,"c02"],[0.20228099741015482,-0.0003649507351188852,"c02"],[0.2670437396824401,-0.00013386673686005546,"c02"],[0.2600233383014193,-0.0007073366498221989,"c02"],[0.481117205046196,-0.0003209185741631648,"c02"],[0.38874744106587983,0.00028476902698104656,"c02"],[0.2235470368632809,-0.000398307991318847,"c02"],[0.16078661890197088,-0.0003588338433002103,"c02"],[0.1730877057589377,-0.0007844288025637414,"c02"],[0.18109314372563018,-0.0009632954579530395,"c02"],[0.1877502459879652,-0.0010584138709078816,"c02"],[0.3603479209877231,-0.0009190213635372202,"c02"],[0.487278835711915,0.006909784459305679,"c02"],[0.4681402574841206,0.006909784459305679,"c02"],[0.21281944078118267,0.003956124337577138,"c02"],[0.5749787126261683,0.0026607754265556283,"c02"],[0.8058833737335754,0.0020052543095850917,"c02"],[0.5506724614894327,0.0020579830304675584,"c02"],[0.5275605944285554,0.00036210323667573707,"c02"],[0.4698774063192568,-0.000605472740873525,"c02"],[0.730135597511101,0.0006425909580337064,"c02"],[0.568186065980292,0.0006425909580337064,"c02"],[1.0797086494289414,0.0006425909580337064,"c02"],[0.34370347843882515,0.0005812375414298576,"c02"],[0.22473978249283222,-0.0004777550753298776,"c02"],[0.18796852369013006,-0.0004777550753298776,"c02"],[0.2538462476634956,0.0009733965699743607,"c02"],[0.6392363586589663,0.0020518719788198414,"c02"],[0.50182336799149,0.0020518719788198414,"c02"],[0.5990767144217548,0.0016870754188739734,"c02"],[0.4671325514518329,0.00028179058398675183,"c02"],[0.45425887871568593,-0.0008312483237251089,"c02"],[0.4618602229295002,-0.0015296798844038895,"c02"],[0.4175772645070347,-0.0008312483237251089,"c02"],[0.3086488588036732,-0.0009769279044646306,"c02"],[0.6142274769561279,-0.00018319049520193476,"c02"],[0.3515860531390461,0.00019362160058444822,"c02"],[0.26101547138981307,-0.0009216442979089745,"c02"],[0.23618492648473993,-0.001442990174836456,"c02"],[0.6603665367578121,-0.0014202720358671428,"c02"],[0.5661588114356781,-0.0019886355612722117,"c02"],[0.6231850317099092,0.00012836147426165123,"c02"],[0.3143683264543857,-0.0008077742068506866,"c02"],[0.6108277271888591,-9.075346739279011e-05,"c02"],[0.632095097092869,0.0006616141474622417,"c02"],[0.8760846010181661,0.00041746465848691017,"c02"],[0.5852604784853042,0.0004171481232812524,"c02"],[0.48196003366702955,-0.0006668267129315564,"c02"],[0.3893681510243487,-0.0015088101111885854,"c02"],[0.3018325927745565,-0.002236082203552092,"c02"],[0.08053396636427768,-0.002236082203552092,"c02"],[0.5436280918865266,-0.001332441900211201,"c02"],[0.24088884237192593,-0.0008461627478752454,"c02"],[0.47395895485386547,-0.00022990058142596803,"c02"],[0.17021190169778894,-0.0009484987671701806,"c02"],[0.24682242116066377,-0.00046307727337446813,"c02"],[0.26356106340984853,0.0023995273910197845,"c02"],[0.15321202934926445,0.0009348212302350833,"c02"],[0.40340238723806576,-0.00016397212418606255,"c02"],[0.4126281352655248,-0.002197467611237902,"c02"],[0.3565345555983094,-0.0025779206348901518,"c02"],[0.5887909762071518,-0.0025779206348901518,"c02"],[0.7165013601173219,-0.0011929684368235938,"c02"],[0.6320991606221724,-0.0009231260191867596,"c02"],[0.5483078672814803,-0.0007932749024898156,"c02"],[0.3390350822078104,-0.0005960900155565496,"c02"],[0.40335329003933185,-0.0006869459814068946,"c02"],[0.49466216322172485,-0.0008791320487573917,"c02"],[0.41971038765080854,-0.0015672417751805834,"c02"],[0.27187933354488225,-0.0015672417751805834,"c02"],[0.3771986255474876,-8.439533600074212e-05,"c02"],[0.4597634394833649,0.00221712416229658,"c02"],[0.5943989110448396,0.00221712416229658,"c02"],[0.5059655249267926,0.001135032492270871,"c02"],[0.6369737392888438,-0.0003712862334925293,"c02"],[1.0116180508734203,-0.0003712862334925293,"c02"],[0.9333225743696807,-6.930732296361874e-05,"c02"],[0.6178362313956514,0.0003044214053997685,"c02"],[0.5800749074970193,0.0003044214053997685,"c02"],[0.633787808852702,-0.0006311631665559259,"c02"],[0.6397239231346855,-0.0009517929596480901,"c02"],[0.7732915771507092,-0.0010184054097558959,"c02"],[0.5561499418462977,-0.000570907679967203,"c02"],[0.6205612760889443,-0.0003107158477476113,"c02"],[0.39284559325849144,-0.0003773282978554171,"c02"],[0.615959001651587,-0.0010467205051118977,"c02"],[0.8334483074525012,-0.0010691854173696114,"c02"],[0.5252644475363332,-0.0010480169174801879,"c02"],[0.6303032314681092,-0.0010480169174801879,"c02"],[0.34441831673381634,-0.0010480169174801879,"c02"],[0.5077661459370163,-0.00161097557886275,"c02"],[0.22388726993783337,-0.001411256855086418,"c02"],[0.28150066346267133,-0.0029867130187554713,"c02"],[0.7401213835075855,-0.0012351317325779987,"c02"],[0.5776224619686301,9.038081727807956e-06,"c02"],[0.6088712562488567,9.038081727807956e-06,"c02"],[0.6104568711247513,0.0004538257472246898,"c02"],[0.79132808762354,0.0004538257472246898,"c02"],[0.8854886384113214,0.0008697151296446215,"c02"],[0.8633401010846242,1.2958643547833493e-05,"c02"],[0.8612650459754755,-0.0004378486003258075,"c02"],[0.768319105560618,-0.0002004070773857225,"c02"],[0.2696805150982904,-0.0006232938614948447,"c02"],[0.12812760343385327,-0.0013801687844565702,"c02"],[0.345787894950112,-0.002009161334500964,"c02"],[0.789633761892565,-0.002009161334500964,"c02"],[0.5848571494849206,-0.002128321172883696,"c02"],[0.4828171222206173,-0.0010297104489322417,"c02"],[0.562473220855041,-0.005408506592024853,"c03"],[0.371422155340902,0.000309289104531707,"c03"],[0.2279699038099478,0.0006224652540429143,"c03"],[0.3090205923545855,0.0006224652540429143,"c03"],[0.5273380395917499,0.0006224652540429143,"c03"],[0.5392388875049079,-0.0009626683846640782,"c03"],[0.5370284145493244,-0.0015672327826568022,"c03"],[0.4122405975945156,-0.0015672327826568022,"c03"],[0.8666468408548715,-0.002881222455941912,"c03"],[0.6997338720177111,-0.002881222455941912,"c03"],[0.36689984329010394,-0.005084934354525894,"c03"],[0.7997177662484233,-0.0023810490875247337,"c03"],[0.6502506026169036,-0.0011300093146033863,"c03"],[0.47182930586996225,-0.0011300093146033863,"c03"],[0.813130360802181,-0.0004282029603585036,"c03"],[0.5983294501350788,-0.0009774049145157004,"c03"],[0.5279866505275793,0.0002643948309060118,"c03"],[0.5159879452604215,0.00016652492453889112,"c03"],[0.5323776924764966,-0.0007981665126856052,"c03"],[0.6146246317380875,-0.0005506088414142241,"c03"],[0.5341739896266826,-0.0008774369810947702,"c03"],[0.33389168070005426,-0.0008774369810947702,"c03"],[0.3386377014799302,-0.000766835797374521,"c03"],[0.2770222240817344,-0.0010482973830772124,"c03"],[0.34441818289910553,-0.0007030246195899315,"c03"],[0.32405404499910506,-0.0006338716083350571,"c03"],[0.29282234315010003,-0.00034856323485260576,"c03"],[0.6014680824640063,-0.0001562868802739703,"c03"],[0.3753679291025707,-0.0001562868802739703,"c03"],[0.4833723191250593,-0.0004855806377622174,"c03"],[0.4595139161919448,-0.001639447501125768,"c03"],[0.3788259211077792,-0.001639447501125768,"c03"],[0.3271301093834836,-0.0019338789599401829,"c03"],[0.5559780900661568,-0.0019760635351809275,"c03"],[1.317912465588124,-0.009039783167742732,"c03"],[0.7219671029747943,-0.012295802442967907,"c03"],[0.9253972226655788,-0.0032460425743711108,"c03"],[0.6694139313330567,0.002498403925878634,"c03"],[0.6191582686190661,-0.00042009700214556966,"c03"],[0.6760501660002793,0.0014021107115205211,"c03"],[0.5491533526499048,-0.0004105557293309636,"c03"],[0.5439775492562681,-0.0004105557293309636,"c03"],[0.5490871279851526,-0.0004105557293309636,"c03"],[0.5680023614994985,0.0013009980988009096,"c03"],[0.5162824608123607,0.002905567166186118,"c03"],[0.5106260412833181,0.0010540895285956475,"c03"],[0.5963192822103351,0.0010540895285956475,"c03"],[0.43113309104450037,-0.0006919430509406133,"c03"],[0.418064555068987,-0.0006919430509406133,"c03"],[0.2682290477327621,-0.0015912336251823755,"c03"],[0.36012764647460355,-0.0006688972012839356,"c03"],[0.5227086314704299,0.0007161220154452974,"c03"],[0.4693777057258115,0.000741948023457728,"c03"],[0.5137022631907394,0.000741948023457728,"c03"],[0.3636078918397495,7.107525017335803e-05,"c03"],[0.2503545848751703,-0.0008103202629036188,"c03"],[0.4687602251996374,-0.0008103202629036188,"c03"],[0.27325543719072554,-0.010581195887428063,"c03"],[0.39154741783293934,-0.00494625388094011,"c03"],[0.7786535275172054,-0.001545522323843973,"c03"],[0.7696913925696679,-0.0002708424325287284,"c03"],[0.39073574350371937,-0.0002708424325287284,"c03"],[0.21744775127668647,0.001109024911198464,"c03"],[0.9885072645020254,-5.937281034867903e-05,"c03"],[0.7447507539545495,-0.0009585348459135168,"c03"],[0.5926518465572734,-0.0004063677030696211,"c03"],[0.586764310161259,-0.0004457718695137225,"c03"],[0.5475856568677324,-0.0006946289469562106,"c03"],[0.5622303038739853,-0.0004233957236293162,"c03"],[0.6249818030584844,-0.0004773195213887971,"c03"],[0.8812190038145163,-0.0009341401838962593,"c03"],[0.686840083478367,-0.0010357649024484994,"c03"],[0.7802755162708064,-0.0010657050065520646,"c03"],[0.42298097897556,-0.0010657050065520646,"c03"],[0.6091058144034527,-0.0006881584162752863,"c03"],[0.6221239740379815,-0.0004999859436455867,"c03"],[0.839521722052242,0.001764603257831121,"c03"],[0.9434534913678254,0.005420972886045594,"c03"],[0.49914420564509854,0.009248391286179602,"c03"],[1.1075924776814272,0.011768127885178836,"c03"],[0.7640625721477087,0.002710809506213163,"c03"],[0.46124426984807876,0.0007764308200162162,"c03"],[0.34835067558453603,-0.0009693933176709302,"c03"],[0.5552266497628896,0.0007764308200162162,"c03"],[0.5008596743676993,0.0004722975485050851,"c03"],[0.6344272774633404,0.0004722975485050851,"c03"],[0.4377754652121075,0.0005762086815274681,"c03"],[0.34700812311339435,0.0018069475742862884,"c03"],[0.3616475194840486,0.0018069475742862884,"c03"],[0.3528503174655566,0.0007312302858710207,"c03"],[0.2939151281186704,0.00011033284075656624,"c03"],[0.4279707709528231,-0.0010722188981178715,"c03"],[0.12081624589514428,-0.001803382691696498,"c03"],[0.5404978383994492,-0.001803382691696498,"c03"],[0.3651651911484498,-0.0010050552630831988,"c03"],[0.48238887657149976,-0.0010050552630831988,"c03"],[0.4665051231316559,6.695207132534353e-06,"c03"],[0.581772678983305,-0.00038935884070312454,"c03"],[0.779100347245329,-0.0005897837893441005,"c03"],[0.9207906054877751,-0.0005897837893441005,"c03"],[0.8019662963096024,-0.0005897837893441005,"c03"],[0.6172899985669101,0.0007321445806717786,"c03"],[0.8292380551395795,0.0014803482651545297,"c03"],[0.5115026682045865,0.001595528786992817,"c03"],[0.7599478705427912,-0.0017807902959057764,"c03"],[0.19954443334205868,-0.0006912811337863589,"c03"],[0.3944731081452977,-0.0004881226582630349,"c03"],[0.2767829201342813,-0.0004881226582630349,"c03"],[0.5362893305990027,-0.0006846580770177857,"c03"],[0.37854470197358725,-0.0017775968081953364,"c03"],[0.4184169094368706,-0.0017333366852060883,"c03"],[0.7588341857460645,-0.0008969281022598863,"c03"],[0.8554998704294527,-0.0004736578408043868,"c03"],[0.9829842825088164,0.00036062059824237824,"c03"],[0.5552795421993015,-0.0020255857283034695,"c03"],[0.4342181912613855,-0.0010874637413325616,"c03"],[0.4953434070006339,-0.0010874637413325616,"c03"],[0.5895033982338047,-0.0006524374878336681,"c03"],[0.3652928594557372,-0.00016555680954793983,"c03"],[0.6998339486642328,-0.00016555680954793983,"c03"],[0.4256006758117283,0.0002824899770220157,"c03"],[0.347582204222374,0.000798995425967175,"c03"],[0.49811216386835505,0.0007872302134701026,"c03"],[0.7818912786021404,0.0008149947475918906,"c03"],[0.6654265165771538,0.0006603217416226159,"c03"],[0.6879771151833945,2.7717922391645722e-05,"c03"],[0.5602852366809734,0.00019801161807353473,"c03"],[0.30435152245328445,0.00019801161807353473,"c03"],[0.4276254117099649,-0.00030848120943782753,"c03"],[0.4565266999531111,-0.00021063518742214793,"c03"],[0.4633186230884887,-0.0004723169721553844,"c03"],[0.3591306926958809,-0.0005917617606260306,"c03"],[0.34123173953205443,-0.00064938575124035,"c03"],[0.5098989432517934,-0.0015212151710510824,"c03"],[0.47024476359267525,-0.002364814561198858,"c03"],[0.4283223935079662,-0.0015212151710510824,"c03"],[0.5739136133653233,-0.001671796322846586,"c03"],[0.4753668950095524,-0.0022635232415384454,"c03"],[0.2886902261114959,-0.0024062546399841733,"c03"],[0.4752260668403105,-0.0024062546399841733,"c03"],[0.4097504652206861,-0.0016950096558672745,"c03"],[0.46007993477410447,0.000458217174402753,"c03"],[0.27153915130714573,0.0015604925090294541,"c03"],[0.3445368501781936,0.0027729519646884637,"c03"],[0.7272325751319763,0.0038408540803243074,"c03"],[0.5585822570203482,0.0038408540803243074,"c03"],[0.6067393665083147,0.002873543634494602,"c03"],[0.765650728568738,0.003044402385420697,"c03"],[0.7130328255020638,-0.014943194486953637,"c04"],[0.7478853035946615,-0.014943194486953637,"c04"],[0.6132867263455303,-0.007428984577553477,"c04"],[1.0623269634760972,2.7669491685200498e-05,"c04"],[0.7368097005295731,0.001332837299007461,"c04"],[0.7568437115493384,0.001332837299007461,"c04"],[1.0013417380366656,-6.974678610349727e-05,"c04"],[0.8832347866013512,-9.50440809388553e-07,"c04"],[0.5851079353590118,-5.841455765265291e-06,"c04"],[0.9237184039385964,0.00019868007397066956,"c04"],[0.6543177287847823,0.00019868007397066956,"c04"],[0.2545693828642809,4.684173915725509e-05,"c04"],[0.33330373886121556,0.0006081787834608665,"c04"],[0.36988989835838376,-0.00026034522755019607,"c04"],[0.5025772592241097,0.0004479391366109531,"c04"],[0.33289123844475266,-0.0002255263478147529,"c04"],[0.6993443592287667,-0.0007314232428556888,"c04"],[0.5239105068000421,-0.00023469030713946237,"c04"],[0.5177033024014415,-0.001270782907535295,"c04"],[0.5182254063288617,-0.0007932630637350058,"c04"],[0.4400728749270615,6.14393104838018e-05,"c04"],[0.36153844736659363,0.00013520402803901543,"c04"],[0.3407008246248813,3.0266298122916258e-05,"c04"],[0.3387650920923243,-0.0007636479672495922,"c04"],[0.4219454027478974,-0.0011430949703010729,"c04"],[0.3965033903517485,-0.0012225752405367607,"c04"],[0.40039614586863237,-0.0012225752405367607,"c04"],[0.8112429817756079,-0.0012202301936669047,"c04"],[0.7117604865639682,-0.01105869888636224,"c04"],[0.7076856941100054,-0.01105869888636224,"c04"],[0.6850718359582446,-0.01105869888636224,"c04"],[0.636897892525125,-0.005471423871782122,"c04"],[0.7599089178790366,-0.0008264447346983395,"c04"],[0.8551112613727705,-0.0008264447346983395,"c04"],[1.2607409105543534,-0.001621698845529096,"c04"],[0.6460794613267218,-6.314727756495664e-05,"c04"],[0.30669083563534905,-0.0002470536716909777,"c04"],[0.498518984267902,-0.0002470536716909777,"c04"],[0.9623062707674747,-3.2553641425514535e-05,"c04"],[0.5924976793731684,-3.2553641425514535e-05,"c04"],[0.6679202077120338,-0.0009212491706898085,"c04"],[0.45327855893154284,-0.0003007452212749895,"c04"],[0.5471500156224745,-0.00032175725131267097,"c04"],[0.49062130508728585,-0.00032175725131267097,"c04"],[0.4472668267538017,-1.1669190894014747e-05,"c04"],[0.5316287420519319,-0.000251261984120954,"c04"],[0.4838564644121664,-0.0005455122807532797,"c04"],[1.1762106990401557,0.005518918854637456,"c04"],[1.2005819231014188,0.002509697915980713,"c04"],[1.3730486066492296,0.002509697915980713,"c04"],[1.1145397646856088,0.0022122748087876065,"c04"],[0.746627168579438,0.0008615184884014915,"c04"],[0.6832903016780965,0.002024578914520958,"c04"],[0.8472991735639552,0.002024578914520958,"c04"],[1.2409905940469896,0.002081326529258576,"c04"],[0.4572586204897534,-5.8422322396112225e-05,"c04"],[0.7436675102341572,-0.0011427806864094392,"c04"],[0.7981929171107376,-0.0011427806864094392,"c04"],[0.5390875509245814,0.0017691967906156014,"c04"],[0.5135804732585274,0.0029163484124712924,"c04"],[0.5061921895692156,0.007868451785708996,"c04"],[0.6410725221943097,0.005960732304446159,"c04"],[0.710990083055694,0.0012254810319231035,"c04"],[0.9921030554610264,0.004933437211085079,"c04"],[0.3508482606339174,0.0037603427625634844,"c04"],[0.2699964866121259,0.0024050688113919083,"c04"],[0.5897825742085774,0.0009967862383659098,"c04"],[0.42968718380992255,2.0758362220762994e-05,"c04"],[0.2966893575855368,2.0758362220762994e-05,"c04"],[0.5837725416583532,-0.00013269554268308115,"c04"],[0.6388635030895874,-0.0013802919863890595,"c04"],[0.7178620387001862,-0.0009377542849837162,"c04"],[0.6667155153297754,-0.0006443508376565155,"c04"],[0.6179378531116793,0.00021731858809559412,"c04"],[0.49113415322108234,0.001012557157231475,"c04"],[0.5025079294900316,0.00027105139938676803,"c04"],[0.7938023198698487,0.00027105139938676803,"c04"],[0.865288019799443,-0.0001727812605254453,"c04"],[0.4835299615502784,-0.0005268946724087953,"c04"],[0.48987425093071285,0.001430795741662494,"c04"],[0.9607062104555981,0.001430795741662494,"c04"],[0.7968776967429483,0.0026453545311411197,"c04"],[0.5143339338824833,0.0030756474971351255,"c04"],[0.4161299066184675,0.00311923032725131,"c04"],[0.4381004659491176,0.00311923032725131,"c04"],[0.4482457841386436,0.002170727190062227,"c04"],[0.5105218651722591,0.0012016927319267179,"c04"],[0.4464471104962127,0.004290142202612146,"c04"],[0.2583195668204784,0.004084276630181016,"c04"],[0.429956960034555,0.0025485140331282796,"c04"],[0.5868626988406613,-0.001056657158659935,"c04"],[0.5834838467204336,-0.0004870016414632583,"c04"],[0.5381642079608904,-0.0003302689621392796,"c04"],[0.25193386931004624,-0.0002438858326637705,"c04"],[0.6555985707534782,-0.0003302689621392796,"c04"],[0.4788663298226055,-0.0003240793783151341,"c04"],[0.44943935619467296,-0.00015057077862873358,"c04"],[0.8431511249550926,-0.0004369242099248605,"c04"],[0.35693068685479584,-0.00024922915760827724,"c04"],[0.6918106305035212,-0.00047017223387396667,"c04"],[0.7451570472031529,-0.00047017223387396667,"c04"],[0.6048051488310295,8.401926488743605e-05,"c04"],[0.4644408123416989,0.0013958344649228627,"c04"],[0.9442897711212934,0.0013958344649228627,"c04"],[0.4900027150168418,0.00034518323816129515,"c04"],[0.690326778423934,-6.128396252969015e-05,"c04"],[0.6476558339777889,-0.00033239155954045696,"c04"],[0.7397058769979661,-0.00033239155954045696,"c04"],[0.5076498375318832,-0.0020230448529383604,"c04"],[0.4374320764940013,-0.0018580331841231978,"c04"],[0.6892485553716834,-0.0018580331841231978,"c04"],[0.6858672822009044,-0.0010994354846971532,"c04"],[0.36294398249972015,-0.0010994354846971532,"c04"],[0.37684870190910325,-0.0008445452921579388,"c04"],[0.5423591531731227,-0.0008445452921579388,"c04"],[0.5514537602321168,-0.0009872279063671274,"c04"],[0.9134167794111178,-0.0006486309561187786,"c04"],[0.5781949139134694,-0.0002770825991461612,"c04"],[0.4651404762492453,-0.00061567954939451,"c04"],[0.41089748678764887,-0.000464751561753296,"c04"],[0.4632573877502119,-0.000464751561753296,"c04"],[0.44659055296171,-0.0010102420762691522,"c04"],[0.45885582497610095,-0.0009283819614970268,"c04"],[0.37733688063711257,-9.938466793052436e-05,"c04"],[0.5370113387799943,0.00013413505014314708,"c04"],[0.3752721355123906,0.00013413505014314708,"c04"],[0.29547677150178386,0.0017037204685100282,"c04"],[0.5354585533600311,0.0031017960023332347,"c04"],[0.619112878315833,0.002759844426291791,"c04"],[0.19827200632737263,0.002759844426291791,"c04"],[0.31280371733799184,-0.0017807939512859972,"c04"],[0.4210884912715524,-0.0037848952501943756,"c04"],[0.26209584911598416,-0.0037848952501943756,"c04"],[0.3960623679353005,-0.0018168806141551919,"c04"],[0.8257148465064882,0.0006287158536897319,"c04"],[0.45750475543876185,0.0014473803603630708,"c04"],[0.3653763678212142,0.0014473803603630708,"c04"],[0.37328554192793495,-5.3363642867121364e-05,"c04"],[0.21457632501451024,-5.507913291058486e-05,"c04"],[0.825747306940486,-0.00029945067008779747,"c05"],[0.7534126001453803,-0.001718279921509025,"c05"],[0.5514363443127317,-0.002601512363956948,"c05"],[0.5041285944599423,-0.002601512363956948,"c05"],[0.4816687877187651,-0.0024829278924418663,"c05"],[0.7147507339710404,0.00023608861526697167,"c05"],[0.3767084337454851,0.00023608861526697167,"c05"],[0.38764611280419103,-0.00031866295797755573,"c05"],[0.720132444487829,-0.0006453653278401528,"c05"],[0.3344090665206224,-0.0017026266422741076,"c05"],[0.6445392722710077,-0.0006453653278401528,"c05"],[0.5181540232938144,2.06055793526283e-05,"c05"],[0.4351955353794367,-0.0010366557350813266,"c05"],[0.6696263106429848,0.00014822593099200754,"c05"],[0.6846051604938334,-0.0008299692040389939,"c05"],[0.7123005419710059,-0.001698270017409742,"c05"],[0.7041031642695195,-0.0016777326864041986,"c05"],[0.38789932629004703,-0.001831653953983492,"c05"],[0.9040656580709014,-0.001831653953983492,"c05"],[0.45614333629435655,-0.0011795590477945428,"c05"],[0.45594459326735093,-0.0006418888433564751,"c05"],[0.21179343350398927,-0.0006418888433564751,"c05"],[0.23217554152984357,-0.0006928781736951772,"c05"],[0.24452090018452727,-0.0002662170073767234,"c05"],[0.27278942865979966,-0.0007184318502547193,"c05"],[0.5516981037248199,-0.0002662170073767234,"c05"],[0.5293395141615377,-3.5614408175399515e-05,"c05"],[0.42411302929594186,0.00016922474946806654,"c05"],[0.5353606549367927,0.00016922474946806654,"c05"],[0.6215923487385953,-0.0002947752982727647,"c05"],[0.5085965828272859,-0.0010872867481132031,"c05"],[0.6640241997912748,-0.0018096470788720453,"c05"],[0.6355864617790415,-0.0018096470788720453,"c05"],[0.4495368284993495,-0.012185807905376378,"c05"],[0.7756595276173188,-0.010045752565343846,"c05"],[0.6001790825805949,-3.8092245054188734e-05,"c05"],[0.6873781880200374,0.0004551757749185481,"c05"],[0.6038428590764906,0.0006655470276050734,"c05"],[0.47867404752423115,0.0026717696487103537,"c05"],[0.3708682743607442,0.0026717696487103537,"c05"],[0.4699932027383918,-0.000446131517499726,"c05"],[0.4643073686177283,-0.004955305775316554,"c05"],[0.4470285043149399,-0.004955305775316554,"c05"],[0.5402590839916295,-0.0010979450675696611,"c05"],[0.349889469013091,0.0033361457619976997,"c05"],[1.2089935913874739,0.0033361457619976997,"c05"],[0.7213809037934509,0.0029148432753309805,"c05"],[0.6035242094093467,0.0029646408520405676,"c05"],[0.5228596495635918,0.0026408657207661612,"c05"],[0.7317232217628978,0.0029646408520405676,"c05"],[0.5274819342996073,0.003159680977789292,"c05"],[0.870402212048824,0.0034433063915155215,"c05"],[0.643807530720468,0.0038892376904592907,"c05"],[0.4359974776767232,0.0037611701724091784,"c05"],[0.3676291619235017,0.0016354048795220733,"c05"],[0.5204309227135956,-0.0006332915354335111,"c05"],[0.28505016499162433,-0.0006332915354335111,"c05"],[0.8794942570666492,0.00020754882352047588,"c05"],[0.8711892232404068,0.0005039189734770133,"c05"],[0.20279608554395112,0.0032551479227549973,"c05"],[0.33471090586092656,0.0017789995008694603,"c05"],[0.7215420107806765,-0.0016491382484219441,"c05"],[0.7513391994428364,-0.001852497555831445,"c05"],[0.7683418748574448,-0.0017809818629677676,"c05"],[0.5807097039553473,-0.004204292501315932,"c05"],[0.3529557634470208,-0.0015249776175985108,"c05"],[0.626267351004079,-0.00307323041798907,"c05"],[0.5048713431616441,-0.0008175619273299017,"c05"],[0.5358510716114815,0.0017384527147114026,"c05"],[0.47967233681209587,0.00019019991432084327,"c05"],[0.7306952132491136,0.0031262990816960934,"c05"],[0.6059136048568597,0.0026065860542794916,"c05"],[0.42348023168719756,0.0012527118313438446,"c05"],[0.25286620140924176,0.0012527118313438446,"c05"],[0.46816096262020845,0.00041569022039356085,"c05"],[0.3612501773327427,-0.0002558319682129384,"c05"],[0.5712245847586577,-0.0002558319682129384,"c05"],[0.6511559186058657,3.5794989828585866e-05,"c05"],[0.5169871887615725,0.00045876273611616947,"c05"],[0.5364242920685711,0.0010157921652922397,"c05"],[0.6481467217549874,0.0005958741292048653,"c05"],[0.2446188944913746,0.0005838040689831181,"c05"],[0.4660888477645392,0.0040532627343390915,"c05"],[0.04549217763808344,0.0005281248333641742,"c05"],[0.3598705384385796,0.0005281248333641742,"c05"],[0.4161888483882872,-0.0006494814237150703,"c05"],[0.6627205351215546,-0.0011322482952894064,"c05"],[0.39409723344043046,-0.0013624357490719108,"c05"],[0.3282989562466744,-0.0030498706954626975,"c05"],[0.37828555075207404,0.0008401064647087786,"c05"],[0.5378775499082958,0.0006150084562013269,"c05"],[0.5008482535349774,0.0012867299813379418,"c05"],[0.5411884753485864,0.0006150084562013269,"c05"],[0.39631920448565866,0.002330665370761875,"c05"],[0.4849907768812479,0.0025846057209161777,"c05"],[0.33023657144278207,0.0017697768881673182,"c05"],[0.6952152409341816,0.0017697768881673182,"c05"],[1.0244851701384912,0.000863030143365473,"c05"],[1.0353570073320686,0.0007433023638117042,"c05"],[0.8819238099164812,0.00025650161857171394,"c05"],[0.44049762469203263,-0.0004306042389872755,"c05"],[0.30943931061800156,-0.0004476357500809991,"c05"],[0.4427327634818908,-0.0004476357500809991,"c05"],[0.030104936751518464,-0.0004476357500809991,"c05"],[0.22800759153041308,0.000324228612486932,"c05"],[0.4024287472983128,-0.0004855190009482313,"c05"],[0.719846105395518,0.0017432500356120428,"c05"],[0.3132248362144288,0.0033892709758013284,"c05"],[0.4775401769883752,-0.0003311021067958775,"c05"],[0.2734463011115135,-0.0003311021067958775,"c05"],[0.8181684768860116,0.00036433685972153684,"c05"],[1.1343737438424628,0.00036433685972153684,"c05"],[0.7631908253076805,0.00025475332409113927,"c05"],[0.7690159079634016,-0.0008225090223970555,"c05"],[0.4637840238144619,-0.0012675761562970789,"c05"],[0.4934624922398003,-0.0012675761562970789,"c05"],[0.676652320067793,-0.0027464038504926847,"c05"],[0.5686024390431205,-0.0020422415041760345,"c05"],[0.47039570071404746,6.0635491281324505e-05,"c05"],[0.7172946569089833,-0.0001491459021414343,"c05"],[0.6687762670695134,3.080043881270589e-05,"c05"],[0.5594962105962171,-0.0001491459021414343,"c05"],[0.3709541891887199,-0.0007293537628929037,"c05"],[0.30470673806699733,-0.0017484882802268897,"c05"],[0.13403050762875854,-0.0017484882802268897,"c05"],[0.38641411050243246,-0.0013305992669108146,"c05"],[0.7859926842568187,-0.0008816666460216283,"c05"],[1.2012509122361226,-0.0001305631394926121,"c05"],[0.7482880283572111,-0.00019884023222171976,"c05"],[0.6134822567854289,-0.00019884023222171976,"c05"],[0.7648763633395816,0.00014116966009852794,"c05"],[0.7490635506056422,-0.0039694520105885145,"c05"],[0.6405523330310346,-0.0039694520105885145,"c05"],[0.549657574233158,-0.0018454656187041896,"c05"],[0.3464352199952308,0.0004315917109205536,"c05"],[0.333209330708643,0.0004315917109205536,"c05"],[0.5094437471401237,0.0002605311721513015,"c05"],[0.9300073346720443,0.0002605311721513015,"c05"],[0.566504169777355,9.932340574880794e-05,"c05"],[0.911513661916845,0.00020098244119154396,"c05"],[0.4679095845323238,-0.001942992768782903,"c05"],[0.4745437094457841,-0.001942992768782903,"c05"],[0.4408399511214929,-0.001659602871659227,"c05"],[0.6550434895152211,-0.003110824771727805,"c05"],[0.5438854112062992,-0.002312040821448369,"c05"],[0.2475696596952613,-0.002312040821448369,"c05"],[0.2620400393302966,0.0006388771708871199,"c05"],[0.6583922584686002,0.0029852750881921852,"c05"],[0.8009338698848292,0.0032841859851395205,"c05"],[0.8210230291770013,0.0029852750881921852,"c05"],[0.8465896711072034,0.0021668353608548796,"c05"],[0.7856223050207574,0.0003043484220043857,"c05"],[1.0229536493877216,-0.00022128337267762754,"c05"],[0.5462705753218581,-0.0023755286221079364,"c05"],[0.4733245751745752,-0.0005048688065655837,"c05"],[0.5144069924104927,-0.00026066263126617306,"c05"],[0.6103861988630441,-0.0007647062087662304,"c05"],[0.5514952845815283,-0.00026066263126617306,"c05"],[0.4211945442110212,0.0013882543331441566,"c05"],[0.47617037073691293,0.004170072400123237,"c05"],[0.28391001103801833,0.004170072400123237,"c05"],[0.5129293497793028,0.004201892591152223,"c05"],[0.7493760295042844,0.008065732593101282,"c05"],[0.6125183035627348,0.00742420600680449,"c05"],[0.6046541474671273,-0.005231077945124507,"c06"],[0.8610739228055655,-0.002316157238411165,"c06"],[0.8402317189684638,-0.003964182656565118,"c06"],[0.5958962678946722,-0.004793655758278004,"c06"],[0.7193466962429187,-0.003156019442003055,"c06"],[0.787418958940417,-0.0027984949281716354,"c06"],[0.84564808166649,-0.0017144868906331379,"c06"],[0.8852608666533296,-0.0011425679752490314,"c06"],[0.718215187881891,-0.000722257839537499,"c06"],[0.589847211033882,-0.000722257839537499,"c06"],[0.6155229261317083,-0.000722257839537499,"c06"],[0.7159178728426963,-0.0006218177689180093,"c06"],[0.6995924188339536,-0.00011540485619537799,"c06"],[1.0360599227512086,-0.0010209618278310129,"c06"],[0.5068269628148838,-0.00011540485619537799,"c06"],[0.49482041248055264,-0.0006636081873946376,"c06"],[0.3791379872809401,-0.0010192505342903613,"c06"],[0.4222491647724178,-0.0008339543654004578,"c06"],[0.45112076704764287,-0.0013690568270726122,"c06"],[0.9327829522799824,-0.0008339543654004578,"c06"],[0.38957921621853,-0.000998184593804019,"c06"],[0.6020511760348092,-0.0003368719498862416,"c06"],[0.21697208283237757,-0.0003368719498862416,"c06"],[0.46841213933853654,-0.0008780976875311652,"c06"],[0.28876611717969314,-0.000589759463227757,"c06"],[0.298548599528292,-0.000589759463227757,"c06"],[0.5367040737839819,-0.00017267731286868537,"c06"],[0.546617343985333,0.0009513466843150686,"c06"],[0.5724396577308951,0.0030085369406896434,"c06"],[0.3254386052155182,0.0030085369406896434,"c06"],[0.27204849810122245,0.0004566101167301495,"c06"],[0.24392733402103228,-0.0006698804807444558,"c06"],[0.5476113369604052,-0.001234043203955204,"c06"],[0.7974604930200496,-0.001234043203955204,"c06"],[0.9170434934329083,-0.0012491415879881673,"c06"],[0.7047738082102496,-0.001409184802501351,"c06"],[0.9864701568343354,-0.000231374391263528,"c06"],[0.6544621297008891,-0.000231374391263528,"c06"],[0.6262233812624545,-0.000231374391263528,"c06"],[1.046897821496214,0.0014666949261421536,"c06"],[0.5109254237008708,0.000491673467806486,"c06"],[0.8986021371368766,0.0011517384903084738,"c06"],[0.6026003172927168,-0.0005862382806980371,"c06"],[0.6033975364898047,-0.0005862382806980371,"c06"],[0.3680925864362188,-0.00013724839479328788,"c06"],[0.4909070137778684,-1.0315767621338345e-05,"c06"],[0.14882634514906024,-1.0315767621338345e-05,"c06"],[0.8372758566259022,0.0006568072772569766,"c06"],[0.5202363804051733,0.00018337925416045397,"c06"],[0.42461957050993904,0.0009276432303973459,"c06"],[0.3919748229971106,0.001462512882851097,"c06"],[0.9410668297946743,0.0015253069728002888,"c06"],[0.7596190682028323,0.0016230195158240535,"c06"],[0.32479192390065725,0.00162166705523209,"c06"],[0.6311700237875085,-0.0003923141460756563,"c06"],[0.4468460654230597,-0.0014590084449996876,"c06"],[0.3805417053337193,-0.0027004116192603234,"c06"],[0.4717246955926626,-0.009792147986290689,"c06"],[0.4451744438958426,-0.010073933331566531,"c06"],[0.8824758152200662,-0.004692517423168174,"c06"],[0.8354118087407165,-0.002677225082825252,"c06"],[0.7754795475317583,-0.0011347926029540711,"c06"],[0.8701671234952044,-0.0011347926029540711,"c06"],[0.5150632171489843,-0.0014313628775744491,"c06"],[0.8700764716517992,-0.0014313628775744491,"c06"],[0.3845355291482956,-0.0010797707096094067,"c06"],[0.5261296736946276,0.00023513402266128747,"c06"],[0.5008417026568864,0.000762790741954511,"c06"],[0.8918619140508455,0.000762790741954511,"c06"],[0.4425606549989775,0.0001811335549696258,"c06"],[0.6162521414895868,-0.0005011302624940983,"c06"],[0.6966574036892244,-0.001079750437290028,"c06"],[0.5407910284882819,-0.0006202932673555761,"c06"],[0.5936705064487235,-0.0006260164092256604,"c06"],[0.45140487946689256,-0.00020299667433965052,"c06"],[0.46617245092746595,3.155009434968603e-05,"c06"],[0.5064846387306935,0.0012795185245187968,"c06"],[0.5175272035469414,0.0011506646376400753,"c06"],[0.5167472081699709,0.0017772438161743342,"c06"],[0.647300967595706,0.0056819800923454955,"c06"],[0.5362723725480998,0.0031102602957691072,"c06"],[0.6904907419371349,0.005175789091088456,"c06"],[0.6998903783533506,0.005796767574416717,"c06"],[0.21210471805339748,0.005175789091088456,"c06"],[0.29134762050909213,0.005545725985946992,"c06"],[0.3993948790836758,0.0017287248344516337,"c06"],[0.5413535567270563,-0.0008924137451177261,"c06"],[0.5911764727411006,-0.0033557216297946946,"c06"],[0.37695508652517906,-0.006163175358379014,"c06"],[0.3325828650644867,-0.0008808238477014396,"c06"],[0.30538895723907494,0.00079579383841899,"c06"],[0.5777193216209301,0.00020328208980369133,"c06"],[0.7228101374196363,0.00020328208980369133,"c06"],[0.19934677427588152,-0.0004408830310623224,"c06"],[0.6710168697025551,-0.00046661135433506695,"c06"],[0.684163444253777,-0.00046661135433506695,"c06"],[0.7537011430364956,-0.00031984162009884853,"c06"],[0.9183212865065826,-0.00012795025736528354,"c06"],[0.357804657010857,0.00020027841837033655,"c06"],[0.5263468730426846,-0.00036002809737245567,"c06"],[0.419027254830738,-0.0008387434267294047,"c06"],[0.300045504762237,-0.0004703282737201775,"c06"],[0.21115215648781818,-0.0002482777076640019,"c06"],[0.34309446897346907,0.0022641884850456706,"c06"],[0.2447226987532524,0.0022641884850456706,"c06"],[0.30675010710811473,0.002573870950844215,"c06"],[0.36094002712078477,0.0020477920562402274,"c06"],[0.42528314077620005,0.0013512493850816876,"c06"],[0.628529725929202,-0.002909679050815628,"c06"],[0.5807992141829746,-0.002792715777426291,"c06"],[0.8204081721523472,-0.0008895157035094248,"c06"],[0.8237841556922625,-0.0009893802998799939,"c06"],[0.42443556807974114,-0.0009893802998799939,"c06"],[0.7035714049710856,-0.0009052807840017052,"c06"],[0.34213804843133677,-4.233394369568266e-05,"c06"],[0.3230831084530502,0.000281499957044018,"c06"],[0.2360761662918249,0.00022145471274931383,"c06"],[0.3914953360332751,-0.00011323235374166574,"c06"],[0.3873626231855534,-0.0004649924567360353,"c06"],[0.49184287533397597,-0.0004649924567360353,"c06"],[0.3236750830920288,-5.581521576603077e-05,"c06"],[0.1919554401094616,-5.581521576603077e-05,"c06"],[0.5186465366581614,-0.0003087165255963864,"c06"],[0.8963873224025554,-0.000870834401336229,"c06"],[0.4445262540642292,0.0021153880865167896,"c06"],[0.6677631546231765,0.00046001458402761264,"c06"],[0.7536861039400276,0.00046001458402761264,"c06"],[0.5126955268339968,-0.0002181336015299462,"c06"],[0.21056336197441453,-0.00043052935794235525,"c06"],[0.30260722508982163,-0.00043052935794235525,"c06"],[0.2467447447089089,-0.00017904913860289362,"c06"],[0.4758071436173268,-0.0012058573633750291,"c06"],[0.5266807785658407,0.0013146525031400014,"c06"],[0.5700020387400628,6.589075127511057e-05,"c06"],[0.8115970615045656,-0.0010685499553224065,"c06"],[0.475683804426438,8.869435610864285e-05,"c06"],[0.4856526960356075,-5.6563746606563825e-06,"c06"],[0.4496515041047734,-5.6563746606563825e-06,"c06"],[0.5445408609219287,-0.0006084013367921859,"c06"],[0.2263695402154523,-0.0009341279389865065,"c06"],[0.4566818602674788,-0.0009341279389865065,"c06"],[0.3718475443423859,-0.00029412199372053083,"c06"],[0.4306848827197486,0.0005702150575098153,"c06"],[0.7773870463534046,0.0005702150575098153,"c06"],[0.44961865003796886,-0.0012508593087326436,"c06"],[0.4326621844794896,-0.0016232270862793219,"c06"],[0.40246701685720976,-0.0018570383011862202,"c06"],[0.7127345206756864,-0.0014243423455366222,"c06"],[0.7079078195982648,-0.0014243423455366222,"c06"],[0.6756470550205755,-0.0018179583647793263,"c06"],[0.5008226650664012,-0.0018179583647793263,"c06"],[0.4687981713661794,-0.001233408502664679,"c06"],[0.4695292448931071,0.0021863148237455943,"c06"],[0.4513947724959054,0.0021863148237455943,"c06"],[0.2703653396977102,0.000433111471137837,"c06"],[0.1963891056022049,0.0016157895264106714,"c06"],[0.3429700658882118,0.0008331723780435341,"c06"],[0.34985677419125705,0.0016157895264106714,"c06"],[0.6781881908697748,0.0012411753812396342,"c07"],[0.5354271865773,0.0012411753812396342,"c07"],[0.45271680908543466,-0.00016575463507956245,"c07"],[0.8346467465791598,-0.00016575463507956245,"c07"],[0.9485518909259139,-1.4122904165303485e-05,"c07"],[0.4495853257974228,-0.001576152962515065,"c07"],[0.3353543574753689,-0.0004689456981093465,"c07"],[0.2829571824114556,-0.0009681587720704599,"c07"],[0.37351835568592906,-0.0009681587720704599,"c07"],[0.4237216739422626,-0.0005928945799623109,"c07"],[0.5645289965246253,0.0003437521887222905,"c07"],[0.20041069717802604,0.0005851744408431059,"c07"],[0.30598437800540595,-0.00014475563180810225,"c07"],[0.4238751274230086,0.0005851744408431059,"c07"],[0.4966627288021305,-0.00039486210497580165,"c07"],[0.6047577043388483,-0.000714048449948157,"c07"],[0.5999141677712289,-0.00020140904020621297,"c07"],[0.5206518082312407,-0.000818914738670351,"c07"],[0.5823391077393472,-0.0005196483136892249,"c07"],[0.5616168796827107,-0.0002464487770758028,"c07"],[0.17761249522964906,-9.648188252109335e-05,"c07"],[0.6026351359497024,-9.648188252109335e-05,"c07"],[0.48635219503436494,-9.648188252109335e-05,"c07"],[0.32472874239892513,-0.0004551686126316734,"c07"],[0.3871840424063448,-0.0008898888963301266,"c07"],[0.460680064527124,-0.0014710096654089733,"c07"],[0.2571284592601968,-0.0014710096654089733,"c07"],[0.3048789195410081,-0.001227262213115421,"c07"],[0.48060750709206984,-0.0017034355055425277,"c07"],[0.599285310784153,-0.0030355116985294472,"c07"],[0.6092301554232666,-0.0015823819451347698,"c07"],[0.6672995634177149,0.0009868573387924462,"c07"],[0.9251723390364434,-0.0015823819451347698,"c07"],[0.3654276215509716,-0.0007821640558390297,"c07"],[0.36737911390969924,-0.0031191666850263755,"c07"],[0.3334635974514371,-0.0031191666850263755,"c07"],[0.40551186051161825,-0.002420695674569151,"c07"],[0.1901300417166823,-0.0022760057362911645,"c07"],[0.38064327225745653,-0.0031502971371394906,"c07"],[0.4144405817872345,-0.00793743258158719,"c07"],[0.48031908838853954,-0.00793743258158719,"c07"],[0.640428591275269,-0.004886510434513991,"c07"],[0.5452448299664883,-0.0031864152632177234,"c07"],[0.7994457553631057,-0.0006530527189765878,"c07"],[0.7753521920958153,-0.0009100095429004362,"c07"],[1.0134437932659053,-0.00044053808380017934,"c07"],[0.36135187029216054,-0.00044053808380017934,"c07"],[0.4353187167770196,-0.00044053808380017934,"c07"],[0.4553266070063589,0.0003958497507536296,"c07"],[1.1288124839806013,0.0011125977410836319,"c07"],[0.6224222784427886,0.0011125977410836319,"c07"],[0.48797694905706734,0.0008071337939401513,"c07"],[0.6001283378035254,0.0006493567741909234,"c07"],[0.7932485600827143,9.566087240786558e-05,"c07"],[0.8898389456221957,0.00025343789215709345,"c07"],[0.8676765865184085,0.00029222568923620296,"c07"],[0.37054377977648156,0.0006520120323997847,"c07"],[0.5069631434140633,0.0007818824563449178,"c07"],[0.4776056546990936,0.0017754245651621647,"c07"],[0.5791144395584222,0.0022889785961026643,"c07"],[0.8343057691713878,0.0029760129370137167,"c07"],[0.32953253324622084,0.0021574887767719653,"c07"],[0.3227070009689228,0.00027295559350054566,"c07"],[0.41460900105467074,-0.00020674224772931904,"c07"],[0.3551777847580837,-0.0010354477688181984,"c07"],[0.6833972977541429,-0.00020674224772931904,"c07"],[0.6323929598739408,-0.0010354477688181984,"c07"],[0.4183090869454327,-0.0007401136471792413,"c07"],[0.2156238002121102,0.00777734554765902,"c07"],[0.12623155103202754,0.005543146651339093,"c07"],[0.1989749945169776,0.004223935472051521,"c07"],[0.27872461309189067,0.0016152348929813765,"c07"],[0.6845369581203827,-0.0005718379555606501,"c07"],[0.4312235993943124,-0.0007864749143863814,"c07"],[0.7850559504406946,-0.0007864749143863814,"c07"],[0.8336466050776352,-0.001069019835545637,"c07"],[0.6777579355438654,-0.00031155759230533375,"c07"],[0.6521414662677951,0.000147729162774779,"c07"],[0.5371818825476926,0.000147729162774779,"c07"],[0.4862236818071487,0.000147729162774779,"c07"],[0.5871396594929512,0.00017266390808373666,"c07"],[0.5298849084510348,-5.5845748836880205e-05,"c07"],[0.8617545248382255,-0.00031998774503128047,"c07"],[0.6075725126637053,0.0005300646583051294,"c07"],[0.79170804244399,0.00032337684813560363,"c07"],[0.8578459270119158,0.0019453906542937771,"c07"],[0.5078563138997787,0.003605194512543264,"c07"],[0.36664661028613166,0.0026903989347242807,"c07"],[0.34230424203290444,0.0026903989347242807,"c07"],[0.44828584703941055,-0.0029001051923668864,"c07"],[0.26223769998812063,-0.0004730928520115252,"c07"],[0.618680956055517,-0.00040007730465768665,"c07"],[0.48473750268420457,-0.0013380141180208138,"c07"],[0.5353253434862182,-0.00037880257463057676,"c07"],[0.525120420700868,-0.0008146142560234715,"c07"],[0.3549357891220126,-0.002080572783423107,"c07"],[0.4765762594416356,-0.0008146142560234715,"c07"],[0.3363804069201677,-0.0023787117420973614,"c07"],[0.6901227054239403,-0.0014818368078767241,"c07"],[0.44471496657262344,0.0002789575611274464,"c07"],[0.5918112358346952,-3.723230474012018e-05,"c07"],[0.3297843864112826,-3.723230474012018e-05,"c07"],[0.5718977483958583,-0.00027727895242490863,"c07"],[0.7174288298195128,-0.00038141080107001457,"c07"],[0.746754020053841,-0.00038141080107001457,"c07"],[0.631542217099688,-0.0002995983948895775,"c07"],[0.2955082081143724,0.0008423722220197161,"c07"],[0.33296763998592843,0.0025254120950481407,"c07"],[0.5493436598265243,0.0025254120950481407,"c07"],[0.357211300400352,0.0025254120950481407,"c07"],[0.33185337192178976,0.00225735931238058,"c07"],[0.1193450862780218,0.0014182421197152517,"c07"],[0.16083556891889095,8.331687077939298e-05,"c07"],[0.4355791403696113,-0.0003489017356150259,"c07"],[0.3466914972711748,-0.0003489017356150259,"c07"],[0.3141829938584801,-0.0015060634995528455,"c07"],[0.42505051043100645,-0.00046071044428985797,"c07"],[0.4802679906422074,0.00043419209671674563,"c07"],[0.5179112696323164,-0.0007106810451860679,"c07"],[0.36847255224686587,-0.0005653696046382661,"c07"],[0.9139638010647276,-0.0007106810451860679,"c07"],[0.9490349784333614,-0.0009253514204482505,"c07"],[0.5466785062722956,-0.0007990420102627072,"c07"],[0.06161101257205022,-0.0007688176208051622,"c07"],[0.13012669772548002,-0.0003771326884441928,"c07"],[0.5593642445609731,-0.00020436084734110072,"c07"],[0.3382204151895104,-0.00020436084734110072,"c07"],[0.49842594563570614,-0.0007963442117124298,"c07"],[0.3442471933926716,-0.0006250510977027779,"c07"],[0.4744151460746262,-0.0005641381825943204,"c07"],[0.285445302412197,0.000319381860987622,"c07"],[0.5982337656214888,0.000319381860987622,"c07"],[0.2886721773087617,0.0010330933562010536,"c07"],[0.5539438133179367,0.0018236808246506198,"c07"],[0.46250148575904815,0.0018236808246506198,"c07"],[0.38724372200655954,0.0018236808246506198,"c07"],[0.5754064811015762,0.0021122946042246293,"c07"],[0.5829441669054423,0.0021115679375264818,"c07"],[0.44673360364896414,0.001233470820542315,"c07"],[0.9100619150212467,0.0016765590576804934,"c07"],[0.5430074783994662,-0.002584836047403394,"c08"],[0.8240843916628545,-0.00021401081134986288,"c08"],[0.3357848306568856,0.0004909898298902093,"c08"],[0.33224644193205055,-0.00012903194151331343,"c08"],[0.7264606687034493,0.00030460554724431876,"c08"],[0.417803049256142,-0.00012903194151331343,"c08"],[0.4014950668507693,-0.000850755422904137,"c08"],[0.6806643111929187,-0.0019262428439247303,"c08"],[0.8183372003472524,-0.0019262428439247303,"c08"],[0.5230624922392778,-9.83822320584915e-05,"c08"],[0.22838961712189293,-7.36225115242628e-05,"c08"],[0.5524307636605718,0.0010564968035101097,"c08"],[0.5934878227866095,0.00017856737225119268,"c08"],[1.1140744062794967,0.00015669469782736423,"c08"],[1.0669396956104018,0.0003842143190004865,"c08"],[0.9125283729963247,-0.00017993869296017984,"c08"],[0.8643621048398764,-0.00017993869296017984,"c08"],[0.7458494267465645,-0.00019666285045177867,"c08"],[0.4913729082222478,-9.046173260612855e-05,"c08"],[0.393663050625384,-0.00037118767885435666,"c08"],[0.2804610366739966,-5.5409236851211574e-05,"c08"],[0.7206752170772699,-0.0015486301336142816,"c08"],[0.4393358812182981,0.0037546808068086857,"c08"],[0.4537308524766724,0.002768672087366475,"c08"],[0.7097964745069736,0.0007980355599379041,"c08"],[0.8789361714033205,-0.001818459530309069,"c08"],[0.44139330667102156,-0.001818459530309069,"c08"],[0.4499212973030935,0.0017465452477369858,"c08"],[0.5902690472617822,0.0031978970531261752,"c08"],[0.7966053037177856,0.0031978970531261752,"c08"],[0.8435441370514069,0.0010223313796063338,"c08"],[0.8971756344389419,0.0010223313796063338,"c08"],[0.5187915858418408,0.0014538246724013493,"c08"],[0.43737516952728156,0.0007010332818316867,"c08"],[0.7409224628737653,0.0007010332818316867,"c08"],[0.7605855047590331,-0.0008221515096106802,"c08"],[0.758123730948322,-0.0008221515096106802,"c08"],[0.5157565687478303,0.00012923955267746257,"c08"],[0.5384406007420864,0.0009340192030900529,"c08"],[0.7753364847641719,0.0011820999124552145,"c08"],[0.7911905199583278,0.0013883010539599838,"c08"],[0.660518262363121,0.0012439070471824132,"c08"],[0.4365487208328457,0.0002772268414891754,"c08"],[0.7651806806931104,-0.00045318923458403937,"c08"],[0.948324153611021,-0.0009249654469693502,"c08"],[0.2845581577762887,-0.0008949024588540966,"c08"],[0.41178964011245855,-0.0008702340828665167,"c08"],[0.328487400779246,-0.014617442082813181,"c08"],[0.6100081849753818,-0.011874748872289453,"c08"],[1.03581919782925,-0.0009315965044053853,"c08"],[1.3086539451348027,0.0001819476561807365,"c08"],[1.1709090686683985,0.0017821180054131691,"c08"],[0.41389189141074534,0.00023656145569384002,"c08"],[0.13314940995804825,0.00041650379871460697,"c08"],[0.40338896786480805,0.00021864820144695818,"c08"],[0.7788000914919703,0.00021864820144695818,"c08"],[0.6042645474030761,0.00021864820144695818,"c08"],[0.616987769916221,0.0004181857757781793,"c08"],[1.0832211260688358,0.004100365579997545,"c08"],[0.7096800250837401,0.004100365579997545,"c08"],[0.2537164480000289,0.0009778128986625,"c08"],[0.28868232238990466,-0.0002416237947626132,"c08"],[0.7939241794351828,0.008704830468505065,"c08"],[0.3920193848263904,0.0058446120096806164,"c08"],[0.2837308124853165,0.004986063610250613,"c08"],[0.11884165130748613,0.0023791546410369957,"c08"],[0.6171100161813272,-0.0006642772948803888,"c08"],[0.4372348688008759,-0.0006642772948803888,"c08"],[0.1977817125580663,-0.0012847223544661945,"c08"],[0.20044442057029443,-0.002396273078619171,"c08"],[0.22393645721155664,-0.0007365762897788009,"c08"],[0.3152004643847781,-0.0007365762897788009,"c08"],[0.4024721140890104,-0.0005044859149783143,"c08"],[0.3234962632556554,0.00017471696271681436,"c08"],[0.5258153454263894,-0.0002895242638460416,"c08"],[0.4306144782939013,0.00013910498704183816,"c08"],[0.4232528397207923,-0.00041617090864198847,"c08"],[0.6121933461785865,0.0005446598601703267,"c08"],[0.24116641180251586,-0.0006829212946454222,"c08"],[0.5472820379450564,-0.0004974759955572172,"c08"],[0.5288722287218813,-0.0007544430295765014,"c08"],[0.137668083648815,-0.0010439898586454,"c08"],[0.2913491305508442,-0.0005453875348768733,"c08"],[0.1972964432287243,-0.0005453875348768733,"c08"],[0.6406711459249572,-0.0005453875348768733,"c08"],[0.4245485523679361,0.00015160440073430648,"c08"],[0.4680674308933347,0.0006758575670756661,"c08"],[0.6466027852435332,2.661503225970252e-05,"c08"],[0.6530994402543316,0.0002265602661743471,"c08"],[0.5430673116996938,-0.00044418893146097593,"c08"],[0.7027553466316743,-0.0006441341653756205,"c08"],[0.5728605822848338,-0.00044418893146097593,"c08"],[0.6507946870160349,-0.0007114711810900509,"c08"],[0.7606307435128352,0.0017480559326518152,"c08"],[0.4102085656106904,-0.001184832286274029,"c08"],[0.6198222796064037,-0.007343162768347289,"c08"],[0.7333694777325415,-0.008225019907631859,"c08"],[0.45451145074743476,-0.007727675959382063,"c08"],[1.598588954814252,-0.005408025463942034,"c08"],[0.9986202772907429,-0.0005731142385307919,"c08"],[0.9586141851386498,-0.00024773810564471255,"c08"],[0.8797646503004234,-0.00018809912258510586,"c08"],[0.992019551950067,-0.00052852571760309,"c08"],[0.6823174695643731,-0.0014961265803856705,"c08"],[0.40336964856236956,-0.00058059608233757,"c08"],[0.6121084184290083,-0.00037149634684546795,"c08"],[1.122838446880882,-0.0017628465051997555,"c08"],[0.6104423222050085,-0.002189860986997416,"c08"],[0.5898549501922431,-0.002189860986997416,"c08"],[0.6616359536723609,0.0024616959418322093,"c08"],[0.8859438260475219,0.0037388613913240665,"c08"],[0.6026454941846379,0.004948080221506168,"c08"],[0.5650445249631362,0.0007374930202885821,"c08"],[0.5976395146382871,-8.601029060839593e-05,"c08"],[0.48424927174808463,-0.0008270615044501661,"c08"],[0.8035827754624485,-0.001225328330782316,"c08"],[0.6244918846236232,-0.00075058097146663,"c08"],[0.6161577360770653,-0.00014416965356417455,"c08"],[0.6626800567530613,-0.0005424364798963244,"c08"],[0.41300611586381586,-0.0017315009205235987,"c08"],[0.7400284132265588,-0.006951979037949141,"c08"],[0.8666825261490255,-0.0072531544949906435,"c08"],[0.520745050381225,-0.003828152136094831,"c08"],[0.45095531684600776,-0.003747186693933424,"c08"],[0.644597804487972,0.0040689072300093,"c09"],[0.5477693828095493,0.0028632723663639115,"c09"],[0.4615947193601837,0.001388522706958828,"c09"],[0.5819620191983554,-6.38214494281808e-05,"c09"],[0.3013539486093032,-0.0007225602369246298,"c09"],[0.360503436910676,-0.000590908935172274,"c09"],[0.36035097822698664,-0.0007836294310196168,"c09"],[0.15376410331804605,-0.001275212778118484,"c09"],[0.5688640712776966,-0.0010505302016364793,"c09"],[0.4342863005213917,-0.0038003423629103805,"c09"],[0.30371729050333274,-0.0009949688117862898,"c09"],[0.2748687165581434,-0.0008835122140230522,"c09"],[0.3918997793114607,-0.0008835122140230522,"c09"],[0.34556182659297907,-0.0008835122140230522,"c09"],[0.3575934776841603,-0.0007164293297429736,"c09"],[0.8803305069894076,-0.0007857634964948956,"c09"],[0.49396735106220263,-0.0007857634964948956,"c09"],[0.3883843789947155,-8.853058316538043e-05,"c09"],[0.5007419104338532,-4.766583081206033e-05,"c09"],[0.6075687711793311,-4.766583081206033e-05,"c09"],[0.2293385491931026,-0.00015731505353944186,"c09"],[0.26133683829044335,-0.00047613720993616715,"c09"],[0.236958004903073,-0.0005290113365645221,"c09"],[0.22545577218551666,-0.0006854131238809291,"c09"],[0.5122531145137588,-0.0010956528402085164,"c09"],[0.45143654041371245,-0.0009550910624091524,"c09"],[0.5470031845024598,-0.0016758729563657315,"c09"],[0.5608441108842787,-0.0017717352694220923,"c09"],[0.6177665234844083,-0.0013219043188955615,"c09"],[0.6053309249775372,-0.0013219043188955615,"c09"],[0.7762298850653626,-0.001053629937156797,"c09"],[0.7312202077382453,-0.0009809368463609136,"c09"],[0.5675394797231901,-0.0030843886444228974,"c09"],[0.9763777303787035,-0.0030843886444228974,"c09"],[0.7560885521289674,-0.004517879969679395,"c09"],[0.4485727157772281,-0.003056771757620924,"c09"],[0.23526465367423022,-0.0028674389626577312,"c09"],[0.2629070259645585,-0.0028674389626577312,"c09"],[0.7263232540938473,-0.002374947777438574,"c09"],[0.7634000743040782,-0.001923698712528954,"c09"],[0.5397443324767004,-0.003755170970068278,"c09"],[0.777954166002316,-0.0017039304050817106,"c09"],[0.788083502619519,-0.0016699292820088751,"c09"],[0.8664665184972522,-0.00015051727284587368,"c09"],[0.9791192834577988,0.00015995775061239392,"c09"],[0.7006387026780585,0.0011864633949073,"c09"],[0.702823111286667,0.0030880367105130535,"c09"],[0.20020526478880776,0.0011406618288918313,"c09"],[0.1824557241140045,-0.0011502157727010243,"c09"],[0.34967852638537394,-0.0011502157727010243,"c09"],[0.4188708433506025,-0.00020167325726622165,"c09"],[0.6817291433239273,0.004282052568533978,"c09"],[0.30294426544366115,0.0017873866621956336,"c09"],[0.9032929564598388,0.0003402237465915947,"c09"],[0.7442493253148383,6.85986174787101e-05,"c09"],[0.3530160077756629,4.5133191554413976e-05,"c09"],[0.2406853773600609,-0.00036217452570158626,"c09"],[0.40166740175232485,-0.00028576814122455163,"c09"],[0.4402944627740044,-0.0003127277915760396,"c09"],[0.38970427019738996,-0.0004928926319489046,"c09"],[0.3700706119693344,-0.0003127277915760396,"c09"],[0.2307062435285093,0.005220270317818965,"c09"],[0.7925221557577262,0.006853322058546885,"c09"],[0.628030635875165,0.006517805755629158,"c09"],[1.3148618400899275,0.006517805755629158,"c09"],[0.8144380864318999,0.003282628185963088,"c09"],[0.533434410350462,-1.920960494727897e-06,"c09"],[0.6725449149772904,1.3530931275040903e-05,"c09"],[0.6809352923443108,0.0009224685009530109,"c09"],[0.6000943998730706,1.3530931275040903e-05,"c09"],[0.6146663732251842,3.056816727747824e-05,"c09"],[0.5675850662348505,0.000861100672464088,"c09"],[0.8778942522259721,5.251212446200082e-05,"c09"],[0.8409530722352483,0.000754662526324501,"c09"],[0.8309677540164935,2.447904281377422e-05,"c09"],[0.7300288104697158,-0.00022957970693171514,"c09"],[0.7954455517471979,-0.0005072022435628765,"c09"],[0.4610614825348335,-0.0011113858244806707,"c09"],[0.26238317254716703,-0.0003856716357324985,"c09"],[0.5355861628349448,-0.00042800792030289747,"c09"],[0.6696190257554522,-0.00042800792030289747,"c09"],[0.7545318964889404,9.21274227496105e-05,"c09"],[0.7524352761709611,-0.0006055274301619007,"c09"],[0.4178776524772109,-0.0006055274301619007,"c09"],[0.9402270448017895,-0.0006055274301619007,"c09"],[0.8489824965338045,-0.0004173698307640694,"c09"],[1.083864329722417,9.950129902147609e-05,"c09"],[1.2196146458695605,-0.0002505812060876744,"c09"],[0.7002699871266398,-0.008107494081853961,"c09"],[0.7735632614323984,-0.0006816421204954848,"c09"],[0.4722780711270049,0.001222850576968193,"c09"],[0.8235608673486082,0.001152857026698595,"c09"],[0.6396641601877744,0.001152857026698595,"c09"],[1.0085541655795516,0.0010115358494982574,"c09"],[0.23667833110279113,0.0003472236940401663,"c09"],[0.37575149194547297,-0.0005386901089927121,"c09"],[0.3896572621039286,-0.000618935979824542,"c09"],[0.4107545353059471,-0.0009990540838400452,"c09"],[0.2604754476862634,-0.0023054996468100386,"c09"],[0.5877025714343691,-0.0009990540838400452,"c09"],[0.39437570525571175,-0.0009089599755007227,"c09"],[1.0031960243337714,-0.0007328202232441683,"c09"],[0.8759027495173837,0.00028489917635576845,"c09"],[0.8741166888055887,0.002046324907212349,"c09"],[0.5839408224132789,0.002673268876416557,"c09"],[0.7062451553009634,0.002673268876416557,"c09"],[0.380398019723318,0.0007563464312288493,"c09"],[0.2960359663492901,0.0007563464312288493,"c09"],[0.10077210036956143,0.0017272537223423923,"c09"],[0.4226478763380694,0.0024800411064712646,"c09"],[0.7180873190403035,0.0006219226596518301,"c09"],[0.43105720521883045,0.0024800411064712646,"c09"],[0.40905692807510696,0.0018532624762641614,"c10"],[0.5029617803426685,0.0028570831154456355,"c10"],[0.6994220798111621,0.0008537673504851462,"c10"],[0.7646538133029324,0.001632372414393679,"c10"],[0.6687076462908831,0.0004600966064955969,"c10"],[0.6575360812045392,-0.001786283958525814,"c10"],[0.4867683799356626,-0.0019574804178048577,"c10"],[0.5953169000944223,-0.0012293361293507221,"c10"],[0.30311387171866744,-0.0017810136024800083,"c10"],[0.5531536246080097,-0.001051034792845018,"c10"],[0.4825243406074927,-0.001051034792845018,"c10"],[0.49054374437526893,-0.0012435228042049218,"c10"],[0.4254058735343907,-0.0013566499275445842,"c10"],[0.874927325117603,-0.001152848410027052,"c10"],[0.871397160420077,-0.0003041040446297161,"c10"],[0.8185596396884922,0.0004959047707964181,"c10"],[0.48013677867128074,0.0004959047707964181,"c10"],[0.5934834188367598,-0.00017745645538991273,"c10"],[0.3758393936277006,-0.0009722049627349238,"c10"],[0.6328556287120564,-0.0009722049627349238,"c10"],[0.226115629589926,-0.0012599724617849972,"c10"],[0.521025468193671,-0.0006951133835534917,"c10"],[0.6878718508548806,-0.0008898218494426402,"c10"],[0.5622009108663719,-0.0009177213372205117,"c10"],[0.4687570822198863,-0.0014656550958053183,"c10"],[0.5520836494980206,-0.0029926903588425313,"c10"],[0.6932386401034925,-0.0018636118069550456,"c10"],[0.7376454815742611,-0.0029794554501732518,"c10"],[0.7462918629732649,-0.0026761292779285406,"c10"],[0.5519175361467872,-0.001643534510544442,"c10"],[0.5134037702827998,-0.0019880756705514813,"c10"],[0.59085666707441,-0.002047406499608606,"c10"],[0.9821851545756868,-0.0012109016466407274,"c10"],[0.40268402118179203,-0.0028467914425158725,"c10"],[0.3186713781123175,-0.000811740359716262,"c10"],[0.5397930244317753,0.0033071173374331075,"c10"],[0.9535703600659013,0.006430321427040975,"c10"],[0.6693211943594519,0.0033071173374331075,"c10"],[0.6790149944105734,0.0032335760190969065,"c10"],[0.9661891655880737,0.00028375744955910776,"c10"],[0.7578428382751196,0.00028375744955910776,"c10"],[0.6879823314983371,-0.0004914895234710004,"c10"],[0.49958014218050617,-0.0005334836775344742,"c10"],[0.6235977207860615,0.0016448764843891572,"c10"],[1.20979765824125,-0.0005334836775344742,"c10"],[1.0980422960870786,-0.00018348845621146692,"c10"],[0.985638929281842,-0.0018891040398519299,"c10"],[0.8900141629209555,-0.0018891040398519299,"c10"],[1.1791852599343953,-0.0002428428629797641,"c10"],[0.8961494552420912,0.0009569107107690877,"c10"],[0.736510206849602,0.0015677602200169227,"c10"],[0.6378064646115588,0.0015677602200169227,"c10"],[0.5352589948946195,0.0009287957268537816,"c10"],[0.32849545871162567,-0.0004380197302897293,"c10"],[0.38372861338507547,-0.0006450944850887597,"c10"],[0.24474796630999252,-0.0007579691448114101,"c10"],[0.13617210912696226,-0.00020699160773629544,"c10"],[0.41498511391661036,-0.0007052808856092274,"c10"],[0.5523630869127016,-0.010178863951184891,"c10"],[0.5246737394685632,-0.0024148080759729407,"c10"],[0.6557058163506068,0.002579374886704011,"c10"],[0.5764641764257608,0.0017474751294587199,"c10"],[0.4046271141166024,0.0025725200866499875,"c10"],[0.34783475635326844,0.0026653149321501646,"c10"],[0.5918407286639591,-0.00089539108513631,"c10"],[0.41794613935222547,-0.0009816087093424963,"c10"],[0.25953948753209294,-0.0009816087093424963,"c10"],[0.39192678954825955,-0.0008313562092072679,"c10"],[0.4459292879753052,-0.0013665258724414597,"c10"],[0.4192443655259431,-0.0007506677274487505,"c10"],[0.6657732616938994,-0.0013665258724414597,"c10"],[1.0532820241447616,-0.0007506677274487505,"c10"],[1.3968750432562793,0.000961011048206839,"c10"],[1.2995266930910798,0.004165178346974219,"c10"],[0.590149312087467,0.005050096383104663,"c10"],[0.15767556688266357,0.005553297903852061,"c10"],[0.8190671473362833,0.005553297903852061,"c10"],[0.5721299993976061,0.004490483834343306,"c10"],[0.7454003989388984,0.00235437940084543,"c10"],[0.5723687606160133,-0.00010110277777169996,"c10"],[0.4780020247810799,-0.0004706078066001873,"c10"],[0.3507065679639192,-0.00028678403097204264,"c10"],[0.414131295097139,0.0004194259862073113,"c10"],[0.6604424566358852,0.003626781345254626,"c10"],[0.6468665641928789,0.0010460573554670893,"c10"],[0.6561406803777269,0.0010460573554670893,"c10"],[0.6052941874135516,-0.00038427450775235794,"c10"],[0.6656247070108259,-0.00149963532320746,"c10"],[0.20309548251661225,0.00015626314722716472,"c10"],[0.3444160277484262,-0.0018289929243334724,"c10"],[0.3527345661419967,-0.001153829520724181,"c10"],[0.4647800100230849,-0.0010700625153434729,"c10"],[0.5634189758067641,-0.0010700625153434729,"c10"],[0.3837938853425629,-0.00039412598875160354,"c10"],[0.6258879478879675,-0.00039412598875160354,"c10"],[0.5029124329278307,0.00013464547494457246,"c10"],[0.6173361081544748,0.0013221933347418169,"c10"],[0.26718397916883496,0.0023486893923581054,"c10"],[0.437484512885806,0.0010447739747883045,"c10"],[0.5445196183437572,0.0010447739747883045,"c10"],[0.132136719002297,-0.0003683304247940056,"c10"],[0.6077468136132691,-0.0003683304247940056,"c10"],[0.39737034817829464,-0.0002435120790417189,"c10"],[0.19588557512837518,-0.0016559613357804426,"c10"],[0.5260723458484395,-0.0016559613357804426,"c10"],[0.48362508297536533,-0.0024576907542203097,"c10"],[0.331791010109314,-0.0024977218903771137,"c10"],[0.368845284727564,1.5349278668808086e-05,"c10"],[0.47544107419321413,1.5349278668808086e-05,"c10"],[0.684193756097589,1.5349278668808086e-05,"c10"],[0.3789279916552618,-0.00021853120353237943,"c10"],[0.4994416675146614,0.0006261534260339485,"c10"],[0.7420018428699287,0.0010922744742352108,"c10"],[0.9467587322033518,0.000660246420471966,"c10"],[0.779583707735047,0.0004406972979169588,"c10"],[0.8405610709632527,-0.00018421622404202198,"c10"],[0.8022763354064647,-0.0006491682891678341,"c10"],[0.5805526850197958,-0.0009374889209250448,"c10"],[0.49505540215279453,-0.000876732272127756,"c10"],[0.4478330669242857,-0.0012325799942146665,"c10"],[0.5878346581205167,-0.0016616823060818797,"c10"],[0.6323537157632535,-0.001603134898155667,"c10"],[0.6465925480954715,-0.0019584491558445882,"c10"],[0.6164560855769946,-0.003451279876779123,"c10"],[0.6086855124819996,-0.0021039272220316763,"c10"],[0.46079786436047376,-0.0035057567667095,"c10"],[0.6268010679461653,-0.005222620843183423,"c10"],[0.36083343423124514,-0.0035536037436444956,"c10"],[0.9541601403226954,-0.0029260353199516698,"c10"],[0.7554201986164713,-0.00040216978674006976,"c10"],[0.9507649635906081,-0.00040216978674006976,"c10"],[0.6824708012467734,-0.0005312378358947045,"c10"],[0.6063983730537785,-0.0013788743539903114,"c10"],[0.8337527111733696,-0.0013788743539903114,"c10"],[0.6194520192181603,-0.0003019604207275539,"c10"],[0.6610289808167031,-0.0008410958566236748,"c10"],[0.13936712432965787,4.287486668141938e-05,"c10"],[0.41410562661248396,-0.00022506804485644683,"c11"],[0.3811038515412497,0.0013250651944922143,"c11"],[0.8857826446649744,0.00165940138518611,"c11"],[0.41380720716475416,0.0013250651944922143,"c11"],[0.4140608777473527,0.000383844754407614,"c11"],[0.6035826639310174,0.0005726853111129304,"c11"],[0.5623055088462097,0.0003619471055142931,"c11"],[0.48701783280627425,0.0010794366356194907,"c11"],[0.545149864794807,0.0010794366356194907,"c11"],[0.37520536926436543,0.0006549501089742615,"c11"],[0.5599895132229555,0.0005114211262248758,"c11"],[0.45189173072665056,3.168644298179313e-05,"c11"],[0.8996193896559255,0.0005114211262248758,"c11"],[0.9129765577342996,0.0010147232266010109,"c11"],[0.8827051887058148,0.0009490491808215595,"c11"],[0.6516494294326818,0.0009490491808215595,"c11"],[0.2732326011182676,1.7082443061033903e-05,"c11"],[0.41086778194968593,-0.0002655916861148966,"c11"],[0.4532592737262415,-0.0008300847093441477,"c11"],[0.3456670060362881,9.623715562490087e-05,"c11"],[0.3346416208559191,-0.0011098517428236865,"c11"],[0.3361871844711619,-0.0016971444600085706,"c11"],[0.43996417437326996,-0.0010079201436946073,"c11"],[0.42427083290524537,-0.0010079201436946073,"c11"],[0.47756133555127445,-0.0009828338155798422,"c11"],[0.8236280725568863,-0.0008203021370892238,"c11"],[0.3104583707452313,0.0007669614361099364,"c11"],[0.6323555973506787,-0.00010830237355274885,"c11"],[0.7199310996069562,0.0007669614361099364,"c11"],[0.11068103847016902,0.0011441576749949833,"c11"],[0.4259653679447428,0.0002688938653322981,"c11"],[0.3380629994288355,0.00014031497716515684,"c11"],[0.44841320060257317,-0.0011119865976784715,"c11"],[0.6631526547335779,-0.002996678961203203,"c11"],[0.359717454604745,0.0023773702545564768,"c11"],[0.8501882438436403,-0.0018110792923804464,"c11"],[0.6358989901805221,-0.0018110792923804464,"c11"],[0.5342258505269593,-0.0012639760259615662,"c11"],[0.2908506246107183,0.0008539131701533753,"c11"],[0.2664180979238507,0.0008539131701533753,"c11"],[1.1118016948614655,0.0006203563861661987,"c11"],[0.3440768482687051,-0.0003552408559700515,"c11"],[0.4016306509016312,0.00013867328907468668,"c11"],[0.47038400895898297,0.000636053386694424,"c11"],[0.45661499431646657,0.0010159494108850642,"c11"],[0.37406130002578675,0.0010159494108850642,"c11"],[0.7910593776733384,0.0002614605891844146,"c11"],[0.8440480348859407,-0.0001093870036592004,"c11"],[0.87119036817001,-0.0005952332916415171,"c11"],[0.2540887666433784,-0.0004899938592191622,"c11"],[0.37741663338995685,-0.0004903898824892838,"c11"],[0.532176940585918,4.061376818953466e-05,"c11"],[0.4903303789868243,0.001375558567836499,"c11"],[0.2029804653667876,0.0038265453581178277,"c11"],[0.4004757589500645,0.005290361776964847,"c11"],[0.45155139030885877,0.005290361776964847,"c11"],[0.645914804848505,0.004107934557041171,"c11"],[0.5401329110792339,0.0015255445962450431,"c11"],[0.5634936544913045,-0.0013682166769973247,"c11"],[0.41840676222445516,-0.003325476100399627,"c11"],[0.41150481007988016,-0.00315448930646417,"c11"],[0.49463821773427796,-0.00315448930646417,"c11"],[0.6640925922081112,-0.0012349511059502327,"c11"],[0.4807196938816622,-0.0011989647340462373,"c11"],[0.35868132611393033,0.00057305494697385,"c11"],[0.35687301407230326,0.0007950211188233469,"c11"],[0.7108605595473959,0.003425097037717151,"c11"],[0.4866771318471528,0.001395859279253231,"c11"],[0.6712563960652078,0.0019177220458831967,"c11"],[0.4025907249522805,0.0004901534158499588,"c11"],[0.5406912809576377,-3.5370399758538618e-06,"c11"],[0.5060056779250011,-0.00026523687696144993,"c11"],[0.48390204227925626,-0.0005312725156618181,"c11"],[0.5123236326251072,-0.00024140036787206887,"c11"],[0.4423233684630969,-0.00022421497055463702,"c11"],[0.2806732013839708,-0.00022421497055463702,"c11"],[0.23746362343979044,5.665104261198817e-06,"c11"],[0.3577847822100423,-1.0961731555791943e-05,"c11"],[0.5896222282541946,0.0010904382219026343,"c11"],[0.10160773092125362,-0.0010100524742769346,"c11"],[0.37191423389953804,-0.0011881457950537189,"c11"],[0.3464800532068414,0.0010939698575678225,"c11"],[0.34071359839193954,0.0007496470115535558,"c11"],[0.06308261098266799,0.0015263646302546285,"c11"],[0.6953381331852536,0.0015263646302546285,"c11"],[0.4939762434840846,0.00011376955799391464,"c11"],[0.4567367843323596,-0.0007460992181959614,"c11"],[0.38020876857054886,-0.0007460992181959614,"c11"],[0.4691979256281486,-0.0007460992181959614,"c11"],[0.41403585412650024,-0.0011096563380325608,"c11"],[0.5808848873282907,-0.0010000957801468147,"c11"],[0.4657859531698689,-0.0007653450087018454,"c11"],[0.5483221048162672,-0.0007921499866381243,"c11"],[0.5646624024197051,4.471196667238386e-05,"c11"],[0.8777162052359109,-0.004410394013835861,"c11"],[0.58434531317551,0.0013086728353602917,"c11"],[0.6879047710683129,0.0021265599247330957,"c11"],[0.7642990188969265,0.0021265599247330957,"c11"],[0.4328288713187436,0.0012060996734278295,"c11"],[0.6186833874811772,0.0012060996734278295,"c11"],[0.4827347229178551,0.0009010511935303445,"c11"],[0.4567495068688781,0.0016190279073587943,"c11"],[0.43486951119027967,0.0014361967819112031,"c11"],[0.33209954507981476,0.0012081933834703351,"c11"],[0.575940329074813,0.0010871732214895458,"c11"],[0.4980154544512977,0.0005219622487419029,"c11"],[0.42597253406930313,0.000483356335420293,"c11"],[0.29384011016094375,-0.00019035410991269375,"c11"],[0.5749476742064559,-0.00010596569197035555,"c11"],[0.48633907378753194,0.00045888044998443345,"c11"],[0.4958085127802404,3.062701712469584e-05,"c11"],[0.7481628249550112,0.0003059409683319747,"c11"],[0.41833603318149193,-0.0016959033643996757,"c11"],[0.370899663468109,-0.0016959033643996757,"c11"],[0.6736514164462769,-0.0008195796064584537,"c11"],[0.8438856384938127,-0.0005423567493269554,"c11"],[0.8004564202241126,-0.0005423567493269554,"c11"],[0.4016678524855686,-0.000568741674681128,"c11"],[0.7443847329890371,-0.0006247346415028665,"c11"],[0.24017256982926877,-0.0006247346415028665,"c11"],[0.5587381393215363,0.0014815595726058728,"c11"],[0.47428254348795773,0.005732031635699908,"c11"],[0.49917330939416704,0.005732031635699908,"c11"],[0.3836982351402882,0.004718464577251669,"c11"],[0.8548374111808499,0.0026269636113261385,"c11"],[0.708616613659687,-0.0007180000319415569,"c11"],[0.5932553305425701,0.00020726347369659504,"c11"],[0.6677654054196727,0.001135640493388157,"c12"],[0.47776987229438933,0.0006829002848627308,"c12"],[0.4664954072457117,0.001851601129002789,"c12"],[0.760380735651513,0.001851601129002789,"c12"],[0.5032234273646212,0.0013963148965706607,"c12"],[0.7509897331615241,0.0005286914767927975,"c12"],[0.6306174787643593,-0.00012302523485691053,"c12"],[0.34047458816859044,-0.00013224403056544265,"c12"],[0.2187005397598425,-0.00013224403056544265,"c12"],[0.39693784583632263,0.0003277616372376335,"c12"],[0.4478836017300959,0.0007424899200837443,"c12"],[0.6738275337294517,0.0011788498272269354,"c12"],[0.4439696686400711,0.0012727063735062383,"c12"],[0.39003490859854556,0.0012727063735062383,"c12"],[0.2841392090365007,0.0012727063735062383,"c12"],[0.39475758575000064,0.001166023849167086,"c12"],[0.39051903466173676,0.0009776711253371984,"c12"],[0.6449346821532955,0.00017694348791630343,"c12"],[0.3626901454977426,-0.0006867670137132298,"c12"],[0.4687932021128475,-0.0014320400504927444,"c12"],[0.5907472896289273,-0.0014320400504927444,"c12"],[0.5908223827251928,-0.0014320400504927444,"c12"],[0.5886790264056034,-0.0014469183774566963,"c12"],[0.027118210208692123,-0.0008371363702313062,"c12"],[0.046905621090437194,-0.00026843100984269563,"c12"],[0.22354593489706548,-0.0008371363702313062,"c12"],[0.183289236141634,-0.0003895892835265591,"c12"],[0.3617751461100242,-0.00010204555892795453,"c12"],[0.47180798636352606,-0.00010204555892795453,"c12"],[0.44788305821156915,-0.00010204555892795453,"c12"],[0.3894349687281431,-0.0010274694764508263,"c12"],[0.3570362959337609,-0.0019104873241043707,"c12"],[0.2616854997860677,-0.0019104873241043707,"c12"],[0.625478932723768,-0.0019005434539112187,"c12"],[0.5771968574288991,0.0025395133131502767,"c12"],[0.5971435485977256,0.0025395133131502767,"c12"],[0.5357723498980563,-0.001145053140776453,"c12"],[0.5126455948559995,-0.009548011292170755,"c12"],[0.6785599754703902,-0.013861078178713016,"c12"],[0.7184446335770218,-0.009050394552123031,"c12"],[0.8978513211949921,-0.008144079027828377,"c12"],[0.9813215211047289,-0.0027757228982673854,"c12"],[0.5668541790768201,-0.0021225750750958894,"c12"],[0.7734055715609549,-0.0021225750750958894,"c12"],[0.8024497141392044,-0.0004753132391817072,"c12"],[0.5024296184662465,0.001322815789549403,"c12"],[0.8128356489074746,0.001322815789549403,"c12"],[0.9387304035647781,0.00023922820490984709,"c12"],[0.4064408712971333,2.2917809429534586e-05,"c12"],[0.29994888275087295,-0.0015153051744955515,"c12"],[0.7798123958924243,2.2917809429534586e-05,"c12"],[0.5561026474796137,0.0013813292495933882,"c12"],[0.2519122757542838,0.0015351907302425527,"c12"],[0.35749155928543697,0.0015351907302425527,"c12"],[0.435330483939917,0.0015351907302425527,"c12"],[0.48073389614407025,0.001127642349963598,"c12"],[0.6262985401726523,0.0001635100479003282,"c12"],[0.3811156147459108,0.00853386358257241,"c12"],[1.039176607336908,0.006635246613600709,"c12"],[0.7050769456463397,0.0006304987615487478,"c12"],[0.4771316730210297,-0.0003970161832478336,"c12"],[0.4334047787516362,-0.0003970161832478336,"c12"],[0.7721256136908061,0.0024466900343805276,"c12"],[1.5397699103361069,0.003040806406417129,"c12"],[0.6107136066461927,-0.0007229725785410923,"c12"],[1.0905825651259802,-0.00045654243074150225,"c12"],[0.9717804512060146,-0.0004703587946355836,"c12"],[0.2282094904722019,-0.0024650945999880602,"c12"],[0.23291354266433784,-0.0024650945999880602,"c12"],[0.3514584918146962,-0.0010041255584741782,"c12"],[1.03388016825798,0.005094403087022803,"c12"],[0.36691378552767895,0.007065619406377344,"c12"],[0.4374907100536698,0.007065619406377344,"c12"],[0.5347561079707766,0.002727448463720472,"c12"],[0.5658429369559508,0.0034267876736933656,"c12"],[0.8898580131732013,0.005576531653271155,"c12"],[0.7307581747372425,0.0016374517285410173,"c12"],[0.4983688412992584,-1.0354669169931885e-05,"c12"],[0.752975544835536,-1.0354669169931885e-05,"c12"],[0.28677821592652664,-0.00023153197887926247,"c12"],[0.4810182941454837,-0.0007677861560234089,"c12"],[0.32462333682459454,-0.0007677861560234089,"c12"],[0.4309072450464175,-0.00013397577328988497,"c12"],[0.37024830649095314,0.0003335269501592575,"c12"],[0.3559131477053979,0.0003569840426336235,"c12"],[0.6972197793874324,0.0003569840426336235,"c12"],[1.04637535735089,0.000246818274931615,"c12"],[0.9762711439991221,-3.376791605780305e-07,"c12"],[1.052192019843327,7.938141821806077e-05,"c12"],[0.869874127673408,2.3297978670733244e-06,"c12"],[0.5884166646807871,6.168734735123582e-05,"c12"],[0.5694928667828058,0.00012690760631672848,"c12"],[0.17622381415215937,-0.00020535595269616236,"c12"],[0.4209643100280372,0.0020588794539951882,"c12"],[0.967597630826215,0.0010197313735807456,"c12"],[0.7625510328815739,0.0028126612660765993,"c12"],[0.4390240481906666,-0.002641492823753422,"c12"],[0.27678972905210264,-0.003155488697615394,"c12"],[0.3191077558033134,-0.003155488697615394,"c12"],[0.4218131321741878,-0.0009600915919260045,"c12"],[0.5345638535425251,0.0005974885783860961,"c12"],[0.36575404485063645,0.0012635919899272041,"c12"],[0.49694253471845995,0.0013572299402851429,"c12"],[0.4346555922957843,0.0009950533396100858,"c12"],[0.545423646549952,0.0006999699650617197,"c12"],[0.6287354429048528,0.00015675755135091674,"c12"],[0.4373238241185333,-0.0002501238574993403,"c12"],[0.42949094410735644,0.00015675755135091674,"c12"],[0.4333988798298304,-0.0005146864105624593,"c12"],[0.9239508014891263,-0.00127329572088275,"c12"],[0.9511937495631204,-0.0008149445043552639,"c12"],[0.8053054244396032,-0.0009968663453960303,"c12"],[0.705828904789632,-0.0009968663453960303,"c12"],[0.5539132736281868,-0.0002968586916571314,"c12"],[0.6671376227841531,-0.0013426787585722466,"c12"],[0.6357093823822852,-0.002930764632454508,"c12"],[0.5318170855413189,-0.004153270297614864,"c12"],[0.427854472539933,-0.0025235368330351338,"c12"],[0.4964697541078559,-0.0025235368330351338,"c12"],[0.3988246318329285,-0.0023203407349782212,"c12"],[0.39706325538491094,-0.0020395605402058203,"c12"],[0.31322318298755614,-0.0013378933909579116,"c12"],[0.7979153553053236,0.0013144909091519774,"c12"],[0.7083074563646786,0.0004953420026947986,"c12"],[0.36923592053396126,0.002609798383006845,"c12"],[0.3089601891615233,0.0002833630939572118,"c12"],[0.4744789329190097,0.0002463525101493169,"c12"],[0.6503242702535261,0.0003361081144147571,"c12"],[0.5086305841754016,-0.0009496303465400535,"c12"],[0.41510170536074226,-0.0009496303465400535,"c12"],[0.25933562523297915,-0.0012911864824205477,"c12"],[0.2893293948778868,-0.0009151837621969028,"c12"],[0.4405826755092044,-0.00020922750935020717,"c12"],[0.27061680226011897,0.0007909625556445365,"c12"],[0.6016104761959462,0.0007909625556445365,"c12"],[0.4058599264839017,-5.8686405457752944e-05,"c12"],[0.16982302269421215,-0.0005332856384541729,"c12"],[0.27436307714211805,-0.0008475922127541557,"c12"],[0.1857049787594478,0.002039144573427021,"c12"],[0.5621089440788529,0.003766490083181806,"c12"],[0.918466212934707,0.004603522593252696,"c12"]],"coverage":{"allEpisodeCount":2565,"byFamily":[{"availabilityRate":0.8313953488372093,"availableCount":143,"availableTargetMedian":-0.0004113947624505565,"unavailableCount":29,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":6,"insufficient_history_requires_65_states":22,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":1},"unavailableTargetMedian":-0.0009347581433576391,"validEpisodeCount":172,"value":"c01"},{"availabilityRate":0.774390243902439,"availableCount":127,"availableTargetMedian":-0.0005358296924058981,"unavailableCount":37,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":7,"insufficient_history_requires_65_states":30},"unavailableTargetMedian":-0.000385584710011988,"validEpisodeCount":164,"value":"c02"},{"availabilityRate":0.8554913294797688,"availableCount":148,"availableTargetMedian":-0.00048685164801262615,"unavailableCount":25,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":6,"insufficient_history_requires_65_states":19},"unavailableTargetMedian":-0.0019083029906772353,"validEpisodeCount":173,"value":"c03"},{"availabilityRate":0.8633540372670807,"availableCount":139,"availableTargetMedian":-9.938466793052436e-05,"unavailableCount":22,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":3,"insufficient_history_requires_65_states":19},"unavailableTargetMedian":-0.002777130438327141,"validEpisodeCount":161,"value":"c04"},{"availabilityRate":0.8817204301075269,"availableCount":164,"availableTargetMedian":-0.0001491459021414343,"unavailableCount":22,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":2,"insufficient_history_requires_65_states":20},"unavailableTargetMedian":-0.0039288879185733205,"validEpisodeCount":186,"value":"c05"},{"availabilityRate":0.8876404494382022,"availableCount":158,"availableTargetMedian":-0.0003484500236293486,"unavailableCount":20,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":1,"insufficient_history_requires_65_states":19},"unavailableTargetMedian":-0.002521210380897143,"validEpisodeCount":178,"value":"c06"},{"availabilityRate":0.7954545454545454,"availableCount":140,"availableTargetMedian":-0.0002618638647503557,"unavailableCount":36,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":14,"insufficient_history_requires_65_states":22},"unavailableTargetMedian":5.87008379221432e-05,"validEpisodeCount":176,"value":"c07"},{"availabilityRate":0.8157894736842105,"availableCount":124,"availableTargetMedian":-0.00020533683090082078,"unavailableCount":28,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":6,"insufficient_history_requires_65_states":20,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":2},"unavailableTargetMedian":-0.0007187370471624932,"validEpisodeCount":152,"value":"c08"},{"availabilityRate":0.6706586826347305,"availableCount":112,"availableTargetMedian":-0.0003739230807170424,"unavailableCount":55,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":29,"insufficient_history_requires_65_states":26},"unavailableTargetMedian":6.058084425131227e-05,"validEpisodeCount":167,"value":"c09"},{"availabilityRate":0.8404907975460123,"availableCount":137,"availableTargetMedian":-0.0005312378358947045,"unavailableCount":26,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":6,"insufficient_history_requires_65_states":20},"unavailableTargetMedian":-0.00013344915946594815,"validEpisodeCount":163,"value":"c10"},{"availabilityRate":0.7383720930232558,"availableCount":127,"availableTargetMedian":0.00014031497716515684,"unavailableCount":45,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":18,"insufficient_history_requires_65_states":27},"unavailableTargetMedian":0.00016193417992838022,"validEpisodeCount":172,"value":"c11"},{"availabilityRate":0.8650306748466258,"availableCount":141,"availableTargetMedian":-1.0354669169931885e-05,"unavailableCount":22,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":4,"insufficient_history_requires_65_states":18},"unavailableTargetMedian":-0.0031224957483492743,"validEpisodeCount":163,"value":"c12"}],"byOldPassLabel":[{"availabilityRate":0.8285134449518011,"availableCount":1633,"availableTargetMedian":-0.0003007452212749895,"unavailableCount":338,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":99,"insufficient_history_requires_65_states":236,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":3},"unavailableTargetMedian":-0.0009347581433576391,"validEpisodeCount":1971,"value":"False"},{"availabilityRate":0.48214285714285715,"availableCount":27,"availableTargetMedian":0.0058446120096806164,"unavailableCount":29,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":3,"insufficient_history_requires_65_states":26},"unavailableTargetMedian":0.00777734554765902,"validEpisodeCount":56,"value":"True"}],"bySchedule":[{"availabilityRate":0.8846153846153846,"availableCount":368,"availableTargetMedian":-0.0006418888433564751,"unavailableCount":48,"unavailableReasons":{"insufficient_history_requires_65_states":48},"unavailableTargetMedian":-0.0032468282416768524,"validEpisodeCount":416,"value":"31001"},{"availabilityRate":0.7708978328173375,"availableCount":249,"availableTargetMedian":-0.0002470536716909777,"unavailableCount":74,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":34,"insufficient_history_requires_65_states":40},"unavailableTargetMedian":-0.0020570796251679624,"validEpisodeCount":323,"value":"31002"},{"availabilityRate":0.8195266272189349,"availableCount":277,"availableTargetMedian":-5.8422322396112225e-05,"unavailableCount":61,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":21,"insufficient_history_requires_65_states":39,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":1},"unavailableTargetMedian":0.000631518468738157,"validEpisodeCount":338,"value":"31003"},{"availabilityRate":0.7126865671641791,"availableCount":191,"availableTargetMedian":6.85986174787101e-05,"unavailableCount":77,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":25,"insufficient_history_requires_65_states":52},"unavailableTargetMedian":0.000646402516612854,"validEpisodeCount":268,"value":"31004"},{"availabilityRate":0.7750865051903114,"availableCount":224,"availableTargetMedian":-0.00035036099216723127,"unavailableCount":65,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":22,"insufficient_history_requires_65_states":43},"unavailableTargetMedian":-0.0007004864330856786,"validEpisodeCount":289,"value":"31005"},{"availabilityRate":0.8931297709923665,"availableCount":351,"availableTargetMedian":-0.00022128337267762754,"unavailableCount":42,"unavailableReasons":{"insufficient_history_requires_65_states":40,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":2},"unavailableTargetMedian":-0.004394077936868773,"validEpisodeCount":393,"value":"31006"}],"byTargetQuartile":[{"availabilityRate":0.6785009861932939,"availableCount":344,"availableTargetMedian":-0.0018948237468815743,"unavailableCount":163,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":15,"insufficient_history_requires_65_states":148},"unavailableTargetMedian":-0.0051953105408203415,"validEpisodeCount":507,"value":"Q1"},{"availabilityRate":0.9329388560157791,"availableCount":473,"availableTargetMedian":-0.0006919430509406133,"unavailableCount":34,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":18,"insufficient_history_requires_65_states":14,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":2},"unavailableTargetMedian":-0.0007094408799844243,"validEpisodeCount":507,"value":"Q2"},{"availabilityRate":0.8754940711462451,"availableCount":443,"availableTargetMedian":8.830546080879076e-05,"unavailableCount":63,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":43,"insufficient_history_requires_65_states":19,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":1},"unavailableTargetMedian":0.0001432087750976585,"validEpisodeCount":506,"value":"Q3"},{"availabilityRate":0.7889546351084813,"availableCount":400,"availableTargetMedian":0.0018069475742862884,"unavailableCount":107,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":26,"insufficient_history_requires_65_states":81},"unavailableTargetMedian":0.0033892709758013284,"validEpisodeCount":507,"value":"Q4"}],"byTime":[{"availabilityRate":0.5243243243243243,"availableCount":291,"availableTargetMedian":-1.0354669169931885e-05,"unavailableCount":264,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":2,"insufficient_history_requires_65_states":262},"unavailableTargetMedian":-0.0017807567693258752,"validEpisodeCount":555,"value":"000-127"},{"availabilityRate":0.9096385542168675,"availableCount":604,"availableTargetMedian":-0.0002473958886678451,"unavailableCount":60,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":59,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":1},"unavailableTargetMedian":-0.0001565097830983908,"validEpisodeCount":664,"value":"128-255"},{"availabilityRate":0.9345637583892618,"availableCount":557,"availableTargetMedian":-0.00042800792030289747,"unavailableCount":39,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":37,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":2},"unavailableTargetMedian":0.0005270884498419504,"validEpisodeCount":596,"value":"256-383"},{"availabilityRate":0.9811320754716981,"availableCount":208,"availableTargetMedian":-0.00019884023222171976,"unavailableCount":4,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":4},"unavailableTargetMedian":0.005703213876514651,"validEpisodeCount":212,"value":"384-512"}],"invalidEpisodeCount":538,"primaryAvailabilityRate":0.8189442525900346,"primaryAvailableCount":1660,"primaryUnavailableCount":367,"targetQuartileCuts":[-0.0011311288049463963,-0.0003007452212749895,0.000706152684499195],"trajectoryCount":72,"unavailableReasons":{"constant_hellinger_founder_coordinate_in_fit_window":102,"insufficient_history_requires_65_states":262,"numerically_invalid:every partition entropy normalizer must be finite and greater than 1e-8":3},"validEpisodeCount":2027},"associations":{"excessPhiR":{"bootstrapDrawsRequested":2000,"bootstrapSeed":20260812,"pValueComputed":false,"pearson":0.01787768119948597,"pearsonRunBlockBootstrap95":[-0.05194207912502958,0.08476061329946644],"pearsonValidBootstrapDraws":2000,"rowCount":1660,"runCount":72,"signal":"excessPhiR","spearman":-0.004045898658931593,"spearmanRunBlockBootstrap95":[-0.06927547437129196,0.06514389301622649],"spearmanValidBootstrapDraws":2000,"target":"medianDeltaH"},"rawPhiR":{"bootstrapDrawsRequested":2000,"bootstrapSeed":20260812,"pValueComputed":false,"pearson":0.016091101032261027,"pearsonRunBlockBootstrap95":[-0.053813451799083055,0.08334514801512967],"pearsonValidBootstrapDraws":2000,"rowCount":1660,"runCount":72,"signal":"rawPhiR","spearman":-0.005247650735841968,"spearmanRunBlockBootstrap95":[-0.07168219633272147,0.06374048596962721],"spearmanValidBootstrapDraws":2000,"target":"medianDeltaH"},"wholeTDMI":{"bootstrapDrawsRequested":2000,"bootstrapSeed":20260812,"pValueComputed":false,"pearson":0.06204627951896322,"pearsonRunBlockBootstrap95":[-0.02582390961659494,0.14183690885044362],"pearsonValidBootstrapDraws":2000,"rowCount":1660,"runCount":72,"signal":"wholeTDMI","spearman":0.025376998024090738,"spearmanRunBlockBootstrap95":[-0.05049476726190514,0.10020413206159323],"spearmanValidBootstrapDraws":2000,"target":"medianDeltaH"}},"prediction":{"leaveOneFamilyOut":{"label":"Unseen family","controlsMAE":0.0014984934847673108,"phiMAE":0.0014958211124116866,"maePercent":0.17833726891639937,"controlsR2":-0.027658259862414436,"phiR2":-0.02453992424094742,"controlsRank":0.07315679104073236,"phiRank":0.07856782712351361},"leaveOneScheduleOut":{"label":"Unseen schedule","controlsMAE":0.0016213506552343645,"phiMAE":0.0016201949330650466,"maePercent":0.07128144461451226,"controlsR2":-0.1477750610723756,"phiR2":-0.14630557120858279,"controlsRank":0.02513145111109884,"phiRank":0.050647569158440785}},"onsets":[{"run":"c03","kind":"core","step":377,"rise":0.10126024999374039,"matched":[-0.1019934784737247,0.11737600967478684,0.604239841959045,-0.11009160304598486,0.006978141221172018,-0.1708055824303376,0.2510514688413336,0.010774103109260968]},{"run":"c04","kind":"secondary","step":86,"rise":null,"matched":[]},{"run":"c04","kind":"secondary","step":52,"rise":null,"matched":[]},{"run":"c05","kind":"secondary","step":10,"rise":null,"matched":[]},{"run":"c05","kind":"secondary","step":454,"rise":-0.018774314751891952,"matched":[]},{"run":"c06","kind":"core","step":408,"rise":0.11230552939472954,"matched":[-0.27570879317551633,-0.12074484863251655,-0.07161278227264611,0.10210091214028116]},{"run":"c06","kind":"secondary","step":36,"rise":null,"matched":[]},{"run":"c07","kind":"secondary","step":28,"rise":null,"matched":[]},{"run":"c07","kind":"secondary","step":10,"rise":null,"matched":[]},{"run":"c08","kind":"secondary","step":32,"rise":null,"matched":[]},{"run":"c09","kind":"secondary","step":22,"rise":null,"matched":[]},{"run":"c09","kind":"core","step":382,"rise":null,"matched":[-0.357770902018817,0.30684641656864264,-0.13032241140843892,0.0016267320614042902]},{"run":"c09","kind":"secondary","step":9,"rise":null,"matched":[]},{"run":"c09","kind":"secondary","step":70,"rise":null,"matched":[]},{"run":"c10","kind":"secondary","step":119,"rise":null,"matched":[]},{"run":"c10","kind":"core","step":380,"rise":0.21499941899439512,"matched":[-0.4186764729058368,0.15004914984649953,-0.251935219373314,0.12000841447155075]},{"run":"c10","kind":"secondary","step":25,"rise":null,"matched":[]},{"run":"c11","kind":"secondary","step":22,"rise":null,"matched":[]},{"run":"c11","kind":"secondary","step":33,"rise":null,"matched":[]},{"run":"c11","kind":"secondary","step":353,"rise":-0.1755208355054927,"matched":[0.1323042072067232,-0.039640265805797714,-0.037424377463022795,-0.12442734847553527,-0.03524360131609683,0.07520441362300861,-0.47316598613501054,-0.08852195149416275,0.0008910149746485518]},{"run":"c12","kind":"secondary","step":31,"rise":null,"matched":[]},{"run":"c12","kind":"secondary","step":56,"rise":null,"matched":[]}],"sensitivities":[{"id":"Hellinger_W32","available":1609,"common":1498,"pearson":0.024765495960735216,"spearman":0.009612258595466891,"familyDeltaR2":0.0025205811342730033,"scheduleDeltaR2":0.003271369314600703},{"id":"Hellinger_W96","available":1585,"common":1523,"pearson":-0.06345371403605601,"spearman":-0.07982893305271556,"familyDeltaR2":-0.005588257462321167,"scheduleDeltaR2":-0.0032994403088877355},{"id":"Hellinger_W64_ridge_1e-8","available":1660,"common":1660,"pearson":0.01673566431598776,"spearman":-0.007445855576523861,"familyDeltaR2":0.003306178502936463,"scheduleDeltaR2":0.0023510288557400116},{"id":"Hellinger_W64_ridge_1e-4","available":1661,"common":1660,"pearson":0.019846622006944422,"spearman":-0.00032046722050943315,"familyDeltaR2":0.002615753138324406,"scheduleDeltaR2":-0.004318026687497145},{"id":"reduced_CLR_W64_drop_index_3_zero_replacement_1e-8","available":1327,"common":1237,"pearson":0.11187117184814221,"spearman":-0.0025299550881846063,"familyDeltaR2":0.0006210007532156947,"scheduleDeltaR2":-0.0001951877867940599}]}</script><script>
+const D=JSON.parse(document.getElementById('data').textContent);const C={ink:'#0a0d12',muted:'#64666b',orange:'#ff5a1f',blue:'#5169c8',green:'#357653',red:'#a84d3b',paper:'#fffefa',grid:'rgba(10,13,18,.14)'};
+function canvas(id,draw){const el=document.getElementById(id),dpr=Math.min(devicePixelRatio||1,2),rect=el.getBoundingClientRect();el.width=Math.round(rect.width*dpr);el.height=Math.round(rect.height*dpr);const x=el.getContext('2d');x.scale(dpr,dpr);draw(x,rect.width,rect.height)}function text(x,s,a,b,size=12,color=C.muted,align='left'){x.fillStyle=color;x.font=`${size}px ui-monospace,monospace`;x.textAlign=align;x.fillText(s,a,b)}function axes(x,w,h,l=62,r=18,t=18,b=46){x.strokeStyle=C.grid;x.lineWidth=1;x.beginPath();x.moveTo(l,t);x.lineTo(l,h-b);x.lineTo(w-r,h-b);x.stroke();return{l,r,t,b,pw:w-l-r,ph:h-t-b}}
+function scatter(){canvas('scatter',(x,w,h)=>{const a=axes(x,w,h),pts=D.scatter,xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys),X=v=>a.l+(v-xmin)/(xmax-xmin)*a.pw,Y=v=>a.t+(ymax-v)/(ymax-ymin)*a.ph;for(let i=0;i<=4;i++){let yy=a.t+i*a.ph/4;x.strokeStyle=C.grid;x.beginPath();x.moveTo(a.l,yy);x.lineTo(w-a.r,yy);x.stroke();text(x,(ymax-i*(ymax-ymin)/4).toFixed(3),a.l-8,yy+4,10,C.muted,'right')}const pal=['#ff5a1f','#5169c8','#357653','#a98016','#a84d3b','#7f55a0','#11818a','#d67d1e','#34506f','#8d496b','#63752d','#3f3f3f'];pts.forEach(p=>{x.fillStyle=pal[(parseInt(p[2].slice(1))-1)%pal.length];x.globalAlpha=.35;x.beginPath();x.arc(X(p[0]),Y(p[1]),2.2,0,Math.PI*2);x.fill()});x.globalAlpha=1;const mx=xs.reduce((a,b)=>a+b)/xs.length,my=ys.reduce((a,b)=>a+b)/ys.length,slope=pts.reduce((s,p)=>s+(p[0]-mx)*(p[1]-my),0)/pts.reduce((s,p)=>s+(p[0]-mx)**2,0);x.strokeStyle=C.orange;x.lineWidth=3;x.beginPath();x.moveTo(X(xmin),Y(my+slope*(xmin-mx)));x.lineTo(X(xmax),Y(my+slope*(xmax-mx)));x.stroke();text(x,'excess Φ-R before passage',a.l+a.pw/2,h-13,11,C.ink,'center');x.save();x.translate(15,a.t+a.ph/2);x.rotate(-Math.PI/2);text(x,'future median ΔH',0,0,11,C.ink,'center');x.restore()})}
+function prediction(){canvas('prediction',(x,w,h)=>{const a=axes(x,w,h,76,22,25,55),rows=Object.values(D.prediction),max=0.2;rows.forEach((r,i)=>{const y=a.t+45+i*90,bw=r.maePercent/max*a.pw*.8;x.fillStyle=C.orange;x.fillRect(a.l,y,bw,34);text(x,r.label,a.l,y-10,12,C.ink);text(x,r.maePercent.toFixed(2)+'% less MAE',a.l+bw+8,y+22,12,C.ink);text(x,`R² ${r.controlsR2.toFixed(3)} → ${r.phiR2.toFixed(3)}`,a.l,y+55,11,C.muted)});text(x,'increment from adding excess Φ to ordinary controls',a.l+a.pw/2,h-12,11,C.ink,'center')})}
+function onsets(){canvas('onsets',(x,w,h)=>{const a=axes(x,w,h,65,25,28,55),core=D.onsets.filter(o=>o.kind==='core'),vals=core.flatMap(o=>o.matched.concat(o.rise===null?[]:[o.rise])),min=Math.min(-.45,...vals),max=Math.max(.25,...vals),Y=v=>a.t+(max-v)/(max-min)*a.ph,step=a.pw/core.length;x.strokeStyle=C.ink;x.setLineDash([5,5]);x.beginPath();x.moveTo(a.l,Y(0));x.lineTo(w-a.r,Y(0));x.stroke();x.setLineDash([]);core.forEach((o,i)=>{const cx=a.l+step*(i+.5);o.matched.forEach((v,j)=>{const jitter=((j*17)%29)-14;x.fillStyle='rgba(100,102,107,.38)';x.beginPath();x.arc(cx+jitter,Y(v),3,0,Math.PI*2);x.fill()});if(o.rise!==null){x.strokeStyle=C.orange;x.lineWidth=3;x.beginPath();x.moveTo(cx,Y(0));x.lineTo(cx,Y(o.rise));x.stroke();x.fillStyle=C.orange;x.beginPath();x.arc(cx,Y(o.rise),7,0,Math.PI*2);x.fill();text(x,'+'+o.rise.toFixed(3),cx,Y(o.rise)-13,11,C.ink,'center')}else{text(x,'unavailable',cx,Y(0)-12,10,C.red,'center')}text(x,o.run,cx,h-25,11,C.ink,'center');text(x,'step '+o.step,cx,h-10,9,C.muted,'center')});x.save();x.translate(16,a.t+a.ph/2);x.rotate(-Math.PI/2);text(x,'near-onset mean minus earlier mean',0,0,11,C.ink,'center');x.restore()})}
+function coverage(){const root=document.getElementById('coverage');D.coverage.byTime.forEach(r=>{const el=document.createElement('div');el.className='barrow';el.innerHTML=`<label>steps ${r.value}</label><div class="bar"><i class="yes" style="width:${100*r.availabilityRate}%"></i><i class="no" style="width:${100*(1-r.availabilityRate)}%"></i></div><b>${Math.round(100*r.availabilityRate)}%</b>`;root.appendChild(el)})}function sensitivities(){const body=document.querySelector('#sensitivity tbody'),names={Hellinger_W32:'Hellinger · W32',Hellinger_W96:'Hellinger · W96','Hellinger_W64_ridge_1e-8':'W64 · ridge 1e−8','Hellinger_W64_ridge_1e-4':'W64 · ridge 1e−4','reduced_CLR_W64_drop_index_3_zero_replacement_1e-8':'Reduced CLR · W64'};D.sensitivities.forEach(s=>{const coherent=s.familyDeltaR2>0&&s.scheduleDeltaR2>0&&s.spearman>.02,read=s.familyDeltaR2<0||s.scheduleDeltaR2<0?'mixed / reverses':coherent?'weakly positive':'near zero',tr=document.createElement('tr');tr.innerHTML=`<td>${names[s.id]}</td><td class="${s.spearman>=0?'pos':'neg'}">${s.spearman.toFixed(3)}</td><td class="${s.familyDeltaR2>=0?'pos':'neg'}">${s.familyDeltaR2>=0?'+':''}${s.familyDeltaR2.toFixed(4)}</td><td class="${s.scheduleDeltaR2>=0?'pos':'neg'}">${s.scheduleDeltaR2>=0?'+':''}${s.scheduleDeltaR2.toFixed(4)}</td><td>${read}</td>`;body.appendChild(tr)})}function draw(){scatter();prediction();onsets()}coverage();sensitivities();draw();let timer;addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(draw,120)});
+</script></body></html>

@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-topology-dose-transition",
+  "releaseId": "flce-developmental-topology-dose-transition-94f5db3e5486",
+  "title": "Intervention Dose Selects Distinct Body Responses",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "nonlinear dose-regime intervention",
+  "sourceReportSha256": "71458ef67a3f68a19e9e35ba0a7bc902be1a5ea8879143b5d024916cd9143974",
+  "publicReportSha256": "84931e8e5f4be314564636d361519449429e9761142c78bf0e75959c44c339e9",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "11c2f5ca01b5b8979e189aed8f5adeedcf1b25bb3fde2c20731632bd3d9616bf",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

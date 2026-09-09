@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-fission-lineage",
+  "releaseId": "flce-developmental-fission-lineage-d62c28a34fae",
+  "title": "Mature Bodies Show Low-Density Fraying, Not Fission",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "topology and lineage analysis",
+  "sourceReportSha256": "a578e5b0b1fcb12b0f7d66737e41de666a9ad314b9cd5ba95afadc85313b7f47",
+  "publicReportSha256": "6d099f8a92ac3897224107b7982e118462ed2fe0947140168b6c46a17ceb5c64",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "38d4f8b73dd8bb3fece7e27c093d0e47564778727c9c02f4cad8359cefff032e",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

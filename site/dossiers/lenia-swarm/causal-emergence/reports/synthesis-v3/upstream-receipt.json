@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "synthesis-v3",
+  "releaseId": "flce-synthesis-v3-f338448209aa",
+  "title": "Possible Futures Organize Before Coherent Form",
+  "date": "2026-08-26",
+  "status": "archive",
+  "evidenceClass": "early synthesis",
+  "sourceReportSha256": "bb78ae343fa081d957486518521a4d60c926291e68e5c7c5e158b9395ec3c408",
+  "publicReportSha256": "d2da4582a509dc053eb43819c9b45cef7edbdf374d32b3475ebb974c37a187c4",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "f9b43e441435accdf7c12b32bee33bdc703618d126f43fdd736542ebcd6bb4a1",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

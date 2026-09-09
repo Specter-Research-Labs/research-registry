@@ -296,12 +296,12 @@ enum SiteCommand {
     },
     #[command(about = "Stage the SHA-matched Flow Lenia causal-emergence report library")]
     StageLeniaCausalReports {
-        #[arg(long, help = "Local root containing the versioned report HTML files")]
+        #[arg(long, help = "Local root containing source report HTML or a verified public library bundle")]
         input_root: camino::Utf8PathBuf,
         #[arg(
             long,
             default_value = "artifacts/publication/causal-emergence",
-            help = "New output directory for the public release bundle"
+            help = "New output directory for the website report bundle"
         )]
         output: camino::Utf8PathBuf,
         #[arg(

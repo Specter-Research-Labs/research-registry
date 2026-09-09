@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "synthesis-v2",
+  "releaseId": "flce-synthesis-v2-7423200b1076",
+  "title": "Early Organization and the Search for Replication",
+  "date": "2026-08-21",
+  "status": "archive",
+  "evidenceClass": "early synthesis",
+  "sourceReportSha256": "a16a74e0db281a5c9e605bda1d0eca49c5751be93c5c05d50c2c822d56d865eb",
+  "publicReportSha256": "afecde8abc8722fbef45312a2882936e4c634e7d924132959fdd2a6e22745aef",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "0e689b9e26a98cf3d36a18b2c662dac2178e9639ce7762c99f7dc43c3575cf52",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

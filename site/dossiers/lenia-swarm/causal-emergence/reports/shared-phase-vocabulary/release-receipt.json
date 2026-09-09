@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "shared-phase-vocabulary",
+  "releaseId": "flce-shared-phase-vocabulary-0cacfc94400c",
+  "title": "The Same Hidden Pattern Has Different Effects Across Organisms",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "cross-family transfer study",
+  "sourceReportSha256": "fbe28ede368de99de8bc68a7a7ba3fa98b0acf922e11eed3ffaa64c8dc1954f7",
+  "publicReportSha256": "6fb08519f50280bba2fa1fa3835b3ff88c999e6107b0d733de9bfc3b0fe41953",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "a5a355219f6aa7e302607d77deaf8676ba918f1cf0b8f451ad71a914e5f725db",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "19b9118156e601228009768d75bacbc6e8c75f44ac2d3cd328c2f036ff7c1153"
+}

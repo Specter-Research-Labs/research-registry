@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "developmental-causal-address",
+  "releaseId": "flce-developmental-causal-address-52ac8564fb76",
+  "title": "The Same Hidden-State Intervention Changes Effect with Age",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "cross-age direction intervention",
+  "sourceReportSha256": "e836b4ec4b47193417f5fb18ca50968185be4d243404764885f1ce4192bdb324",
+  "publicReportSha256": "745fe85c43e667c06fddc391edb81ea8b5b570cffdd844b0b809200d9d061275",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "c6e6fd8c1d5f603991371323c3b77323c871bd99667eb754b71aa13270e3b819",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

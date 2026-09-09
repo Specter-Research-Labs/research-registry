@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-causal-grammar",
+  "releaseId": "flce-developmental-causal-grammar-28a3242e0d25",
+  "title": "Interventions Have More Consistent Effects After Commitment",
+  "date": "2026-08-24",
+  "status": "archive",
+  "evidenceClass": "controlled history intervention",
+  "sourceReportSha256": "1cd10ba8449f2ad3f5b3de15c8122bdd7f0e3896907ed4b6fc75c7136fd79ba4",
+  "publicReportSha256": "9a774a5f4a58ace053d20bbc10eda73579ff667fc301e603ac143e6f5c34ff53",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "5613e3a34c9ad86a0d24be6a8151278bdbce4031e14a22a8668a81c52cd92a1f",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "364f0c0707cfcb3743604a6d1a34a7cb61f1b5af8cad1808a352ef907da92ddb"
+}

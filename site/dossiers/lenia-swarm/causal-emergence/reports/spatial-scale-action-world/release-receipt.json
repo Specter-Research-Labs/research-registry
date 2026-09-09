@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "spatial-scale-action-world",
+  "releaseId": "flce-spatial-scale-action-world-b23384b62adf",
+  "title": "Spatial Organization Constrains Later Futures",
+  "date": "2026-08-23",
+  "status": "feature",
+  "evidenceClass": "exact-preservation intervention",
+  "sourceReportSha256": "b5be71dba587b0ce5983ce5c4f4600f6b71635874732eb1b9089019ce1c5fc63",
+  "publicReportSha256": "77c5acacc9fa6240e811a3fe8b2087a395a188db8dd0f19606739b87cda546a6",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "normalize_public_editorial_language_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "464cd6cf3156f2c9587055d617c704d2ba845fcbc9b2c7f411a09aa3d97f4c61",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "49103c82749f9b099639ba42ccc61d32e07e92290b278b88d474e5a2ca539ca8"
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "causal-return-loop",
+  "releaseId": "flce-causal-return-loop-02e1103e1324",
+  "title": "Equal Scores Can Encode Different Histories",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "score-matched return-loop intervention",
+  "sourceReportSha256": "5160c5474aeaf1082e07c5453500d7bf2887bf010ba4f231b7f47ee454efbf8b",
+  "publicReportSha256": "d6c884c80ccb4eca00aa12946dc36c29cdc02919a021bea35ca8971093d834ea",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "f437fca3ecb6a5b7306f75007f0bc01a0f8f67f48c7429e652a3d846190ad31c",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "074d403fbfb0e437f19933904e76595aafc22f0df186a76aeef3704d75736dfd"
+}

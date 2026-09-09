@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "fresh-phase-operator",
+  "releaseId": "flce-fresh-phase-operator-0e2c47f8849c",
+  "title": "Invisible State Rewrites Redirect Development",
+  "date": "2026-08-23",
+  "status": "feature",
+  "evidenceClass": "exact hidden-allocation intervention",
+  "sourceReportSha256": "d17c517c43715c993331bfd95897b231d6b63d80a6994973c6a67f8bba1c4384",
+  "publicReportSha256": "691e872b19af6f1166f6f1048e18393387880b5ed69a725ae2e5fdd8aeaed701",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "017c431960729cfe61b8f9759c482487ba7d120037f3c59e70c9d15aa8729fac",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}

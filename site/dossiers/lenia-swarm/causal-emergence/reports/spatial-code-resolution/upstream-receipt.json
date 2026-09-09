@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v2",
+  "id": "spatial-code-resolution",
+  "releaseId": "flce-spatial-code-resolution-c9cb94a77b1b",
+  "title": "Developmental Response Depends on Multiscale Spatial Relationships",
+  "date": "2026-08-23",
+  "status": "library",
+  "evidenceClass": "phase-preserving spatial intervention",
+  "sourceReportSha256": "e0f164b62e9f4930f7d18823c45233c2159e4cb43195df9af47a90cd11518c98",
+  "publicReportSha256": "5a5fa1ca25d97c83eab721629bf6590efa907ed17dadbf571992bee964a1b391",
+  "transformations": [
+    "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "add_publication_navigation_v1",
+    "normalize_public_mobile_wrapping_v1"
+  ],
+  "contextSha256": "3058eab6c0d8b59871bde42e6d34a484581ea20759debf8cd12a0d172a93a199",
+  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+}
