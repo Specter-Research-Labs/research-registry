@@ -276,8 +276,10 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
                         (record.status)
                     }
                 }
-                span class="dossier-hub-metabar-item" {
-                    "activity " span class="dossier-hub-metabar-value" { (record.last_activity) }
+                @if record.last_activity != "unknown" {
+                    span class="dossier-hub-metabar-item" {
+                        "activity " span class="dossier-hub-metabar-value" { (record.last_activity) }
+                    }
                 }
                 span class="dossier-hub-metabar-item" {
                     "license " span class="dossier-hub-metabar-value" { (license_short(&record.license)) }

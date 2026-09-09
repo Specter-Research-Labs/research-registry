@@ -458,6 +458,11 @@ fn project_public_report(
         transformations.push(EXPAND_INTERNAL_CHECKPOINTS);
     }
 
+    if report.id == "synthesis-v7" {
+        projected = refine_synthesis_reading(&projected)?;
+        transformations.push("refine_synthesis_reading_v1");
+    }
+
     if projected.contains(".codex/") || projected.contains("artifacts/replication-precursor/") {
         projected = projected.replace(".codex/", "evidence-source/").replace(
             "artifacts/replication-precursor/",
@@ -470,6 +475,21 @@ fn project_public_report(
     projected = with_public_links;
     if links_changed {
         transformations.push(NEUTRALIZE_LOCAL_LINKS);
+    }
+
+    if let Some(body_start) = projected.find("<body") {
+        let body_end = body_start
+            + projected[body_start..]
+                .find('>')
+                .context("report body is unterminated")?
+            + 1;
+        let archive = if report.archive {
+            "<span>Earlier report · retained in the archive</span>"
+        } else {
+            ""
+        };
+        projected.insert_str(body_end, &format!(r#"<nav class="publication-navigation" aria-label="Research publication"><a href="https://specterlab.org/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="index.html">About this report</a>{archive}</nav>"#));
+        transformations.push("add_publication_navigation_v1");
     }
 
     let needs_mobile_normalization = !transformations.is_empty()
@@ -562,6 +582,125 @@ fn expand_internal_checkpoint_notation(source: &str) -> Result<(String, bool)> {
     }
 
     Ok((projected.clone(), projected != source))
+}
+
+fn refine_synthesis_reading(source: &str) -> Result<String> {
+    let mut projected = source.replace(
+        "<header class=\"hero\" id=\"top\">",
+        "<header class=\"hero editorial-synthesis\" id=\"top\">",
+    );
+    let dek = Regex::new(r#"<p class="dek">[\s\S]*?</p>"#)?;
+    let opening = [
+        r#"<p class="dek">Before a persistent body is visible, a developing Flow Lenia field already responds differently to nearby interventions. Later, the same push has less influence—yet sibling runs keep reaching different shapes.</p>"#,
+        r##"<p class="dek">We began by asking whether a disturbed run could recover the organization and trajectory of its undisturbed counterpart. That recovery was not clean or consistent. Following the different futures instead led to the experiments below: forecasts, branching interventions, feedback, and hidden-state rewrites.</p><nav class="reading-route" aria-label="Follow the investigation"><a href="#future">Watch futures separate →</a><a href="#control">Test steering and release →</a><a href="#passport">Recognize a response →</a></nav>"##,
+    ];
+    let matches = dek.find_iter(&projected).take(2).collect::<Vec<_>>();
+    if matches.len() != 2 {
+        bail!("synthesis opening must contain two introductory paragraphs");
+    }
+    let ranges = matches.iter().map(|m| m.range()).collect::<Vec<_>>();
+    for (range, replacement) in ranges.into_iter().zip(opening).rev() {
+        projected.replace_range(range, replacement);
+    }
+    let aside = Regex::new(r#"(<aside class="hero-answer">[\s\S]*?<p>)[\s\S]*?(</p>)"#)?;
+    projected = aside.replace(&projected, "${1}The prospective cohort shows constrained futures before a persistent silhouette. A separate cohort shows recognizable responses by passages 12–24. These are complementary findings, not one shared developmental clock.${2}").into_owned();
+    for (from, to) in [
+        ("To see this, we had to look beyond the picture.", "One visible field can have different futures."),
+        ("Before a persistent body can be seen, interventions already open different futures.", "Different futures open before a persistent body appears."),
+        ("Development closes some possibilities while leaving shape plural.", "Harder to redirect. Still many possible shapes."),
+        ("The small shape effect did not repeat cleanly, and the distinction became sharper.", "The small shape effect did not repeat cleanly."),
+        ("The same standardized write produces less future change as the body ages.", "The same push loses influence with age."),
+        ("Whole-state feedback reaches the target while it is active, although its unique edge disappears.", "Steering works while the controller is on."),
+        ("The recognizable response is field-like, distributed, and slow to read.", "The fingerprint is spread across the field."),
+        ("The strange observations only matter if the misses remain visible beside them.", "What passed, what failed, and what we corrected."),
+        ("which left-censors its onset rather than locating a birth at passage 12 or anywhere else inside that window.", "so it may have appeared earlier; this test does not locate its onset."),
+    ] {
+        projected = projected.replace(from, to);
+    }
+    for (from, to) in [
+        ("possibility first, form later", "Different responses before a persistent body"),
+        ("action-world", "set of intervention outcomes"),
+        ("We found this in two independent ways: a fresh prospective run showed the whole-over-parts relation rising during the reorganization that precedes sustained form, while a fixed-age branching assay found that the alternative futures opened at passage 8 were already at least as separated as those opened at passage 32.", "We saved early fields, applied different interventions, and let each copy continue. The futures opened at passage 8 were already at least as separated as those at passage 32. A separate forecasting experiment asked how well the whole field predicts its future compared with its parts."),
+        ("Across forecasting, branching, transplantation, and control, the same picture keeps returning: organization appears first as a changing relation among possible futures, interventions, and remembered history, while visible morphology remains plural and autonomous replication has not yet appeared.", "The experiments separate properties that a still image cannot distinguish. A field can become harder to redirect while sibling runs keep reaching different shapes. Its response can identify the source across time, yet transferring hidden composition does not reliably transfer that identity. These findings come from separate comparisons and cohorts."),
+        ("The system is genuinely steerable during the active window", "Feedback steers the system during the active window"),
+        (", or informally a causal address", ""),
+        ("09 · the next large swings", "09 · the next experiments"),
+        ("The system becomes an individual by changing what can happen next.", "A persistent shape is only part of the story."),
+        ("followed an address through fission", "followed a response fingerprint through fission"),
+        ("Closed-loop release ecology", "After feedback stops"),
+        ("a more local response syntax", "a smaller region of the field"),
+        ("one that merely leaves a divergent scar", "one whose effects persist without maintaining the target"),
+        ("learned, portable, and generative", "shaped by life history, transferable, and inherited"),
+    ] {
+        projected = projected.replace(from, to);
+    }
+    for (section, fragment) in [
+        ("impedance", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-age-comparison.html")),
+        ("control", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-control-comparison.html")),
+        ("passport", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-hidden-comparison.html")),
+    ] {
+        if let Some(start) = projected.find(&format!("id=\"{section}\"")) {
+            let insertion = if section == "passport" {
+                start + projected[start..].find("<div class=\"patch-grid\">").context("passport paired fields missing")?
+            } else {
+                start + projected[start..].find("</header>").context("comparison section has no header")? + "</header>".len()
+            };
+            projected.insert_str(insertion, fragment);
+        }
+    }
+    let image_digest = Regex::new(r"Embedded PNG SHA ([a-f0-9]{64})\.")?;
+    projected = image_digest.replace_all(&projected, "<details class=\"image-provenance\"><summary>Image checksum</summary><code>$1</code></details>").into_owned();
+    let legend = Regex::new(r#"<div class="evidence-legend"[^>]*>[\s\S]*?</div>"#)?;
+    projected = legend.replace(&projected, "").into_owned();
+    let exploration =
+        Regex::new(r#"<section aria-labelledby="exploration-title">[\s\S]*?</section>"#)?;
+    projected = exploration.replace(&projected, |caps: &regex_lite::Captures| {
+        format!("<details class=\"research-detail\"><summary>Further analyses: where the response fingerprint is detectable</summary>{}</details>", &caps[0])
+    }).into_owned();
+    let numerical_cards = Regex::new(r#"<div class="metric-grid[^"]*">[\s\S]*?</div>"#)?;
+    projected = numerical_cards.replace_all(&projected, |caps: &regex_lite::Captures| {
+        format!("<details class=\"research-detail\"><summary>Estimates, uncertainty, and additional checks</summary>{}</details>", &caps[0])
+    }).into_owned();
+    let card_labels =
+        Regex::new(r#"(<article class="explore-card">)<span class="evidence [^"]*">[^<]*</span>"#)?;
+    projected = card_labels.replace_all(&projected, "$1").into_owned();
+    let figures = Regex::new(r#"<figure class="figure"><svg[\s\S]*?</figure>"#)?;
+    projected = figures.replace_all(&projected, |caps: &regex_lite::Captures| {
+        let figure = &caps[0];
+        let detail = if figure.contains("impedance-heatmap") {
+            Some(("Inspect both intervention arms across all ages and horizons", ""))
+        } else if figure.contains("dose-chart") {
+            Some(("Inspect the requested dose and the realized initial effect", ""))
+        } else if figure.contains("route-fingerprint") {
+            Some(("Inspect how the controllers chose different action sequences", ""))
+        } else if figure.contains("transplant-chart") {
+            Some(("Inspect the full transplant estimates", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-transplant-comparison.html")))
+        } else if figure.contains("early-forecasting-and-future-separation-results") {
+            Some(("Inspect the prospective forecasting estimates", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-early-comparison.html")))
+        } else if figure.contains("five-developmental-evidence-axes") {
+            Some(("Compare the separate experimental timelines", ""))
+        } else { None };
+        match detail {
+            Some((label, replacement)) => format!("{replacement}<details class=\"research-detail\"><summary>{label}</summary>{figure}</details>"),
+            None => figure.to_owned(),
+        }
+    }).into_owned();
+    let explorer_script = format!(
+        "<script>{}</script>",
+        include_str!(
+            "../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-explorers.js"
+        )
+    );
+    if let Some(end) = projected.rfind("</body>") {
+        projected.insert_str(end, &explorer_script);
+    }
+    let marker =
+        "<header class=\"section-head\"><div><span class=\"section-no\">01 · how we looked</span>";
+    if !projected.contains(marker) {
+        bail!("synthesis instrument section missing");
+    }
+    projected = projected.replace(marker, &format!("<p class=\"passage-note\">Passage numbers count forward from the seeded starting field. Passages 8, 12, and later checkpoints are scheduled observations, not life stages inferred from appearance.</p>{marker}"));
+    Ok(projected)
 }
 
 fn ensure_report_root_class(source: &str) -> Result<String> {
@@ -781,6 +920,24 @@ mod tests {
     }
 
     #[test]
+    fn synthesis_reading_keeps_evidence_and_defines_passages() {
+        let source = r#"<header class="hero" id="top"><p class="dek">Old opening.</p><p class="dek">Old continuation.</p><aside class="hero-answer"><strong>Finding</strong><p>Old answer.</p></aside></header><header class="section-head"><div><span class="section-no">01 · how we looked</span></div></header><svg data-evidence="unchanged"><text>−6.5831</text></svg><script>const data = [12,72];</script><p class="dek">Later paragraph.</p><section id="impedance"><header></header></section><section id="control"><header></header></section><section id="passport"><header></header><div class="patch-grid"></div></section>"#;
+        let result = refine_synthesis_reading(source).unwrap();
+        assert!(result.contains("editorial-synthesis"));
+        assert!(result.contains(
+            "<aside class=\"hero-answer\"><strong>Finding</strong><p>The prospective cohort"
+        ));
+        assert!(result.contains("response-by-age"));
+        assert!(result.contains("losing an advantage does not mean losing all absolute progress"));
+        assert!(result.contains("Its composition changes"));
+        assert!(result.contains("Passage numbers count forward"));
+        assert!(result.contains(r#"<svg data-evidence="unchanged"><text>−6.5831</text></svg>"#));
+        assert!(result.contains("<script>const data = [12,72];</script>"));
+        assert!(result.contains(r#"<p class="dek">Later paragraph.</p>"#));
+        assert!(refine_synthesis_reading("<p>No expected opening</p>").is_err());
+    }
+
+    #[test]
     fn public_editorial_projection_removes_release_management_language() {
         let source = "Flow Lenia mega synthesis · public edition. This source-bound standalone report leaves the sealed result available.";
         let replacements = [
@@ -841,7 +998,8 @@ mod tests {
         assert_eq!(public.matches("A Clear Result").count(), 3);
         assert!(public.contains("content=\"A Clear Result\""));
         assert!(!public.contains("The Future Speaks"));
-        assert!(!public.contains("aria-label"));
+        assert!(!public.contains("<h1 aria-label"));
+        assert!(public.contains("href=\"index.html\">About this report</a>"));
         assert!(projection
             .transformations
             .contains(&NORMALIZE_PUBLIC_EDITORIAL));
@@ -1055,6 +1213,7 @@ mod tests {
             vec![
                 APPLY_REPORT_POLISH,
                 NORMALIZE_PUBLIC_EDITORIAL,
+                "add_publication_navigation_v1",
                 NORMALIZE_MOBILE_WRAP,
             ]
         );

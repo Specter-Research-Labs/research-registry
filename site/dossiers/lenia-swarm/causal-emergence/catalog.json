@@ -1,25 +1,52 @@
 {
   "schema_version": 1,
   "categories": [
-    {"id": "synthesis", "label": "Synthesis"},
-    {"id": "orientation", "label": "Early organization"},
-    {"id": "action-world", "label": "Response maps"},
-    {"id": "commitment", "label": "Developmental commitment"},
-    {"id": "control", "label": "Control"},
-    {"id": "body", "label": "Body form"},
-    {"id": "hidden-state", "label": "Hidden composition"},
-    {"id": "history", "label": "Developmental history"},
-    {"id": "replication", "label": "Restoration and recurrence"}
+    {
+      "id": "synthesis",
+      "label": "Synthesis"
+    },
+    {
+      "id": "orientation",
+      "label": "Early organization"
+    },
+    {
+      "id": "action-world",
+      "label": "Response maps"
+    },
+    {
+      "id": "commitment",
+      "label": "Developmental commitment"
+    },
+    {
+      "id": "control",
+      "label": "Control"
+    },
+    {
+      "id": "body",
+      "label": "Body form"
+    },
+    {
+      "id": "hidden-state",
+      "label": "Hidden composition"
+    },
+    {
+      "id": "history",
+      "label": "Developmental history"
+    },
+    {
+      "id": "replication",
+      "label": "Restoration and recurrence"
+    }
   ],
   "reports": [
     {
       "id": "synthesis-v7",
       "title": "Individuality Precedes Coherent Form",
       "date": "2026-08-30",
-      "dek": "Each Flow Lenia run begins as a seeded, continuous multichannel field that is still reorganizing, and although our first experiments asked whether a disturbed run would recover the organization and trajectory of its matched undisturbed counterpart, the clearer pattern was already visible in the different futures opened by nearby interventions.",
-      "question": "When does a seeded field begin to behave as an individual whose history changes both its reachable futures and the meaning of an intervention?",
-      "answer": "In the prospective cohort, nearby futures reorganized before a persistent body was obvious; across separate experiments, responses became more history-specific and the system grew harder to rewrite, even though its descendants did not converge on one final shape.",
-      "next_question": "Can the early response address predict how a completely new genotype will react, and can an intervention change that address as well as the visible body?",
+      "dek": "Before a persistent body is visible, developing Flow Lenia fields already respond differently to interventions. Later, the same push has less influence, while sibling runs still reach different shapes.",
+      "question": "What changes during development that a still image cannot reveal?",
+      "answer": "Across separate experiments, responses distinguish their source, interventions lose influence with age, and feedback steers bodies while active. Transplanting hidden composition does not reliably transfer the donor’s response fingerprint.",
+      "next_question": "Does a response fingerprint distinguish different life histories under the same rule, and can feedback produce a state that maintains itself after release?",
       "category": "synthesis",
       "status": "feature",
       "evidence_class": "multi-experiment synthesis",
@@ -663,7 +690,7 @@
     },
     {
       "id": "delayed-canalization-rescue",
-      "title": "Spatial Repair Reverses Sign Before Passage Eight",
+      "title": "Spatial Repair Changes Its Effect with Development",
       "date": "2026-08-23",
       "dek": "The inverse block map exactly reconstructed the intact passage-eight state when applied immediately. After the scrambled state developed for eight or more passages, however, the same operation reversed the response pattern and delayed formation.",
       "question": "Does an exact ancestral repair retain its meaning as the current state develops away from the injury?",
@@ -1141,7 +1168,7 @@
     },
     {
       "id": "synthesis-v2",
-      "title": "Whole-Field Organization Precedes Visible Replication",
+      "title": "Early Organization and the Search for Replication",
       "date": "2026-08-21",
       "dek": "This early synthesis connected the prospective whole-over-parts rise with a structural information peak, proposing that higher-level organization could precede both obvious replication and settled body form.",
       "question": "Does a coordinated whole change before recognizable replication-like behavior or committed morphology appears?",

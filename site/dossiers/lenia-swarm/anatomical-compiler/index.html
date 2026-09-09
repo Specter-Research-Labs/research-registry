@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="anatomical-editorial">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,19 +52,6 @@
     .dek { font-size: clamp(19px, 2vw, 25px); line-height: 1.43; max-width: 840px; margin: 0; }
     .status { display: inline-flex; gap: 10px; align-items: center; margin-top: 26px; padding: 9px 11px; border: 1px solid var(--ink); background: var(--panel); text-transform: uppercase; letter-spacing: .06em; font-size: 10px; font-weight: 800; }
     .status::before { content: ""; width: 9px; height: 9px; background: var(--coral); border: 1px solid var(--ink); }
-    .hero-diagram { position: relative; min-height: 470px; border: 1px solid var(--ink); background: var(--night); overflow: hidden; box-shadow: var(--shadow); }
-    .hero-diagram::before, .hero-diagram::after { content: ""; position: absolute; border: 1px solid rgba(214,255,63,.28); border-radius: 50%; }
-    .hero-diagram::before { width: 420px; height: 420px; right: -145px; top: -170px; }
-    .hero-diagram::after { width: 250px; height: 250px; left: -110px; bottom: -120px; }
-    .fiber-thread { position: absolute; left: 16%; right: 16%; height: 1px; background: linear-gradient(90deg, var(--coral), var(--acid)); transform-origin: right center; opacity: .88; }
-    .fiber-thread::before { content: ""; position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--coral); }
-    .fiber-thread::after { content: ""; position: absolute; right: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--acid); box-shadow: 0 0 24px rgba(214,255,63,.7); }
-    .t1 { top: 22%; transform: rotate(18deg); } .t2 { top: 35%; transform: rotate(9deg); } .t3 { top: 49%; transform: rotate(0deg); } .t4 { top: 64%; transform: rotate(-10deg); } .t5 { top: 78%; transform: rotate(-19deg); }
-    .hero-label { position: absolute; color: #dce0e9; font: 700 11px/1.35 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; }
-    .hero-label.rules { left: 22px; top: 22px; color: var(--coral); }
-    .hero-label.body { right: 22px; bottom: 22px; color: var(--acid); text-align: right; }
-    .hero-count { position: absolute; right: 22px; top: 55px; color: white; font: 800 76px/.9 ui-monospace, monospace; letter-spacing: -.08em; }
-    .hero-count small { display: block; margin-top: 12px; color: #aeb4c2; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-align: right; }
     section { margin-top: 100px; scroll-margin-top: 96px; }
     .chapter-head { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(280px, 420px); gap: 28px; align-items: end; margin-bottom: 34px; border-top: 2px solid var(--ink); padding-top: 20px; scroll-margin-top: 104px; }
     .chapter-no { color: var(--coral); font-size: 14px; font-weight: 800; letter-spacing: .08em; }
@@ -203,7 +190,6 @@
     footer .shell { display: flex; justify-content: space-between; gap: 28px; flex-wrap: wrap; font-size: 13px; }
     @media (max-width: 980px) {
       .hero { grid-template-columns: 1fr; }
-      .hero-diagram { min-height: 360px; }
       .chapter-head { grid-template-columns: 84px 1fr; }
       .chapter-head > p { grid-column: 2; }
       .question-grid, .metrics, .pipeline, .case-metrics { grid-template-columns: 1fr 1fr; }
@@ -219,8 +205,6 @@
       .nav { display: none; }
       main { padding-top: 40px; }
       h1 { font-size: 48px; }
-      .hero-diagram { min-height: 300px; }
-      .hero-count { font-size: 56px; }
       section { margin-top: 70px; }
       .chapter-head { grid-template-columns: 1fr; gap: 10px; }
       .chapter-head > p { grid-column: auto; }
@@ -247,13 +231,14 @@
       .figure, .synthesis { break-inside: avoid; box-shadow: none; }
     }
   </style>
+<link rel="stylesheet" href="../causal-emergence/report-polish.css?v=20260909-narrative-9">
 </head>
 <body>
   <header>
     <div class="shell masthead">
       <a class="brand" href="#top">SPECTER LABS / ANATOMICAL COMPILER</a>
       <nav class="nav" aria-label="Report navigation">
-        <a href="#inverse">The inverse</a><a href="#compiler">The compiler</a><a href="#forms">Forms</a><a href="#function">Function</a><a href="#limits">Limits</a><a href="#evidence">Evidence</a>
+        <a href="#forms">Match a body</a><a href="#form-maintenance">Maintain it</a><a href="#orbium-diagnostic">Recover a rule</a><a href="#inverse">Why it is ambiguous</a><a href="#function">Function</a><a href="#limits">Limits</a><a href="#evidence">Evidence</a>
       </nav>
     </div>
   </header>
@@ -263,122 +248,18 @@
       <div>
         <div class="eyebrow">Flow Lenia / inverse design / experimental report</div>
         <h1>From a desired body to the rules that build it.</h1>
-        <p class="dek">Inspired by <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3899861/">Michael Levin's work on target morphology</a>, the anatomical compiler turns a biological question into an engineering goal: specify a desired self-organizing body, then discover a compact seed and local rules that reliably grow, maintain, and repair it. Flow Lenia provides a tractable world for building the first prototypes. We test three search modes here: matching developmental measurements, maintaining a supplied form, and recovering Orbium's hidden parameters from a mature field.</p>
+        <p class="dek">Can we specify a body and find the rules that produce it? In Flow Lenia, matching a few measurements can grow a very different anatomy. Supplying a complete field—or a known rule family—changes what the search can recover.</p>
         <div class="status">5,000-rule corpus + specimen 2876 and Orbium reruns · rebuilt 2026-09-02</div>
       </div>
-      <div class="hero-diagram" role="img" aria-label="Five distinct rule threads converge toward one body description, illustrating a many-to-one inverse.">
-        <span class="hero-label rules">different rules</span><span class="hero-label body">one body description</span>
-        <span class="hero-count">~19.6 D<small>rule dimensions remain<br>after measuring the body</small></span>
-        <i class="fiber-thread t1"></i><i class="fiber-thread t2"></i><i class="fiber-thread t3"></i><i class="fiber-thread t4"></i><i class="fiber-thread t5"></i>
-      </div>
+      <figure class="hero-specimens"><div><div><img src="assets/organic-target-late.png" alt="The target: one tapered body."><span>Requested body</span></div><div><img src="assets/organic-recovered-late.png" alt="The fitted result: repeated segments."><span>Fitted rule</span></div></div><figcaption><strong>Similar mass. Different anatomy.</strong> Four trajectory measurements brought these bodies close in the score. They left their spatial arrangement largely unconstrained. <a href="#forms">Follow this search →</a></figcaption></figure>
     </div>
 
-    <section class="shell synthesis" aria-labelledby="synthesis-title">
-      <div class="eyebrow">Summary</div>
-      <h2 id="synthesis-title">Body measurements define a broad family of candidate rules.</h2>
-      <p>The compiler's output is a developmental program: a compact seed and local rule that grow the requested form, maintain it while it acts, and restore its organization after perturbation. Ultimately, the target should describe a reliable developmental basin, so changed starts and moderate damage still converge on the requested anatomy. We therefore examine geometry, trajectories, function, and robustness as distinct parts of the specification.</p>
-      <p>Each Flow Lenia rule in this analysis has 40 parameters. We ran 5,000 distinct rules and described each stable result with 15 measurements covering body form, mass, energy, and movement. We then asked how much those measurements narrow down the rule that produced them.</p>
-      <p>Although each rule has 40 parameters, the sampled rules vary along about 25.5 independent directions. Their 15 measured outcomes vary along only about 5.9. The 19.6-direction gap is a coarse estimate of the rule variation available within a measured region of body space. A second calculation estimated a similar gap of 20.9 directions.</p>
-      <p>A neighbor analysis found the same breadth. Rules that produced nearby measured bodies were separated by 98.6% of the distance between randomly paired rules. The compiler can exploit these alternatives: propose several rules, run them, and choose according to the anatomy, stability, or behavior specified by the target.</p>
-      <div class="question-grid">
-        <article><div class="tag">Ultimate goal</div><p>Compile a requested anatomy into a compact seed and a local rule that can grow, maintain, and repair it.</p></article>
-        <article><div class="tag">Present finding</div><p>Rules producing nearby measured bodies remain almost as far apart as random pairs.</p></article>
-        <article><div class="tag">Current strategy</div><p>Generate several candidates, run each one, and choose with criteria suited to the target. The three approaches differ in what the target specifies and which variables can change.</p></article>
-      </div>
-      <div class="metrics">
-        <div class="metric"><strong>5,000</strong><span>stable and distinct forms</span></div>
-        <div class="metric"><strong>19.6 D</strong><span>global rule dimensions left after measuring the body</span></div>
-        <div class="metric"><strong>37.7 / 40</strong><span>mean local rule dimensions left by the descriptors</span></div>
-        <div class="metric"><strong>0.986</strong><span>neighbor ratio (shuffled = 1.0)</span></div>
-      </div>
-    </section>
-
-    <section id="inverse" class="shell">
-      <div class="chapter-head">
-        <div class="chapter-no">01 / THE INVERSE</div>
-        <div><div class="eyebrow">Relating rules to bodies</div><h2>Nearby body measurements can come from distant rules.</h2></div>
-        <p>Phenotype space contains the measurements made on each body. We call the set of rules that produce similar measurements a fiber. A large fiber means that the body measurements constrain the generating rule only loosely.</p>
-      </div>
-      <div class="visual-pair">
-        <figure class="figure light">
-          <img src="assets/fiber-bundle.svg" alt="Schematic of a phenotype base space with genotype fibers above several phenotypes.">
-          <figcaption class="caption"><span class="figure-no">01A</span><p>Each point below represents a set of body measurements. The rules compatible with those measurements form the vertical set above it. The geometry is illustrative rather than measured.</p><span class="tag">reused schematic</span></figcaption>
-        </figure>
-        <figure class="figure light">
-          <img src="assets/sections.svg" alt="Two different sections through genotype fibers selecting different rules over the same phenotype positions.">
-          <figcaption class="caption"><span class="figure-no">01B</span><p>Because several rules can fit the same target, the system needs a policy for choosing among them. Different policies may select rules with different unmeasured dynamics.</p><span class="tag">reused schematic</span></figcaption>
-        </figure>
-      </div>
-      <figure class="figure light" style="margin-top:22px">
-        <img src="assets/genotype-phenotype-bridge.svg" alt="A path through genotype space projects to a phenotype path until it enters a failure band where no stable phenotype is produced.">
-        <figcaption class="caption"><span class="figure-no">01C</span><p>A smooth change in rule parameters can still pass through a region where no viable body develops. Search therefore has to preserve viability as well as reduce distance to the target.</p><span class="tag">reused schematic</span></figcaption>
-      </figure>
-      <p class="schematic-note"><strong>Figures 01A–01C are conceptual diagrams.</strong> Figures 02–04 are generated from the frozen anatomical-compiler results.</p>
-      <div class="visual-stack" style="margin-top:22px">
-        <figure class="figure"><img src="assets/dimension-decomposition.svg" alt="A dimension bar decomposing the genotype into measured phenotype dimension and inverse-fiber dimension."><figcaption class="caption"><span class="figure-no">02</span><p>The corpus occupies about 25.5 intrinsic rule dimensions and 5.9 intrinsic phenotype dimensions. Their 19.6-dimension difference is estimated from the geometry of the samples; it is not the raw count of 40 parameters minus 15 measurements.</p><span class="tag">5,000 forms</span></figcaption></figure>
-        <div class="visual-pair">
-          <figure class="figure"><img src="assets/inverse-locality.svg" alt="Observed inverse locality ratio with a narrow interval compared with the shuffled null."><figcaption class="caption"><span class="figure-no">03</span><p>The ratio is 0.986, where 1.0 means that nearby measured bodies are no closer in rule space than shuffled pairs. The difference from 1.0 is detectable, but it is small.</p><span class="tag">cohort diagnostic</span></figcaption></figure>
-          <figure class="figure"><img src="assets/jacobian-spectrum.svg" alt="Heatmap of seven local Jacobian singular values across twelve genotypes."><figcaption class="caption"><span class="figure-no">04</span><p>This local test perturbed 12 rules and followed seven descriptors. About five response directions crossed the threshold, but most sensitivity was concentrated in roughly 2.3 effective directions.</p><span class="tag">12 local probes</span></figcaption></figure>
-        </div>
-      </div>
-      <p class="schematic-note">The 19.6 and 37.7 dimension estimates answer different questions. The first compares the global intrinsic dimensions of the 5,000-rule corpus and its 15 measured outcomes. The second subtracts the effective rank of a seven-descriptor local response from the full 40-parameter rule. Both indicate substantial ambiguity and should not be compared numerically.</p>
-    </section>
-
-    <section id="compiler" class="shell">
-      <div class="chapter-head">
-        <div class="chapter-no">02 / THE COMPILER</div>
-        <div><div class="eyebrow">Three targets, three inverse problems</div><h2>Three target types require three different searches.</h2></div>
-        <p>All three searches use forward simulation. The target may be a handful of measurements, a complete spatial field, or an observed field from a known rule family. Each target defines a different success criterion.</p>
-      </div>
-      <div class="approach-grid" aria-label="Three anatomical compiler approaches">
-        <article class="approach-card" id="approach-descriptors">
-          <div class="eyebrow">Approach 01 / descriptors</div>
-          <h3>Match trajectory measurements</h3>
-          <p>Search for a rule whose trajectory has the requested mass, occupied area, variation, and spatial spread.</p>
-          <dl><div><dt>Target</dt><dd>Four summary measurements</dd></div><div><dt>Starting field</dt><dd>A fixed generic patch</dd></div><div><dt>Search variables</dt><dd>The full 40-parameter rule</dd></div></dl>
-          <a href="#descriptor-case">See specimen 2876</a>
-        </article>
-        <article class="approach-card" id="approach-form">
-          <div class="eyebrow">Approach 02 / form</div>
-          <h3>Maintain a supplied body</h3>
-          <p>Use the requested spatial field as the initial condition and search for a rule that keeps it coherent and active.</p>
-          <dl><div><dt>Target</dt><dd>The complete multichannel field</dd></div><div><dt>Starting field</dt><dd>The target body itself</dd></div><div><dt>Search variables</dt><dd>The full 40-parameter rule</dd></div></dl>
-          <a href="#form-maintenance">See the form demonstration</a>
-        </article>
-        <article class="approach-card" id="approach-parameters">
-          <div class="eyebrow">Approach 03 / parameters</div>
-          <h3>Recover hidden rule values</h3>
-          <p>Keep the rule family and starting cells fixed, then fit the unknown parameters to an observed field.</p>
-          <dl><div><dt>Target</dt><dd>Orbium at step 600</dd></div><div><dt>Starting field</dt><dd>Known native cells</dd></div><div><dt>Search variables</dt><dd><code>R</code>, <code>m</code>, and <code>s</code></dd></div></dl>
-          <a href="#orbium-diagnostic">See the Orbium recovery</a>
-        </article>
-      </div>
-      <div class="eyebrow approach-loop-label">Shared search loop</div>
-      <div class="pipeline">
-        <article class="stage"><h3>Specify the target</h3><p>Choose measurements, a spatial field, or a known-family observation. That choice determines what a successful result means.</p><span class="tag">approach-specific</span></article>
-        <article class="stage"><h3>Choose starting rules</h3><p>Retrieve nearby rules, sample a conditional model, or draw values from a declared parameter range.</p><span class="tag small">proposal stage</span></article>
-        <article class="stage"><h3>Simulate and score</h3><p>Run every candidate forward and compare its measurements or field with the target.</p><span class="tag small">forward rollouts</span></article>
-        <article class="stage"><h3>Refine and replay</h3><p>Concentrate the next search around the better candidates, then replay the selected rule beyond the scored interval.</p><span class="tag small">validation</span></article>
-      </div>
-      <p class="schematic-note">The results below test parts of this system. The conditional proposal check used eight samples across two targets. The refinement result used four targets. The MLX and Swift comparison covered one rule, one starting field, and six steps.</p>
-      <div class="visual-pair">
-        <div class="visual-stack">
-          <div class="bars">
-            <div class="eyebrow">Small conditional proposal test</div>
-            <h3 style="margin-top:10px">The conditional model produced stable bodies but missed the target measurements.</h3>
-            <div class="sample-grid" aria-label="Eight stable samples across two targets"><span>1A</span><span>1B</span><span>1C</span><span>1D</span><span>2A</span><span>2B</span><span>2C</span><span>2D</span></div>
-            <p class="sample-note">All eight simulations remained stable. Their mean descriptor error was 2.79 standardized units, where zero is a perfect match, and an average of 3.6 parameters per sample had to be clamped back into range. This is a two-target mechanism check, not an accuracy estimate for the full target population.</p>
-          </div>
-          <figure class="figure"><img src="assets/refinement.svg" alt="Four dumbbells showing every target moving from a higher start cost to a lower refined cost."><figcaption class="caption"><span class="figure-no">05</span><p>Lower is better on this standardized descriptor distance. Refinement improved all four targets, reducing the mean from 1.149 to 0.576, although one target still ended at 0.947.</p><span class="tag">four targets</span></figcaption></figure>
-        </div>
-        <figure class="figure"><img src="assets/runtime-validation.svg" alt="Line chart of MLX versus Swift disagreement across steps two through six."><figcaption class="caption"><span class="figure-no">06</span><p>For one genotype and initialization seed, MLX and Swift remained closely aligned through step six. This check covers the beginning of one trajectory.</p><span class="tag">implementation check</span></figcaption></figure>
-      </div>
-    </section>
+    <div class="shell investigation-intro"><p>A body is the result of a rule acting over time. Can we work backward? We tried giving the search progressively more information: four measurements, an entire body, then an observation from a known rule family. The differences between the results show what each request leaves unspecified.</p></div>
 
     <section id="forms" class="shell">
       <div class="chapter-head">
-        <div class="chapter-no">03A / DESCRIPTOR MATCHING</div>
-        <div><div class="eyebrow">Approach one</div><h2>The fitted rule matched four measurements and grew a different anatomy.</h2></div>
+        <div class="chapter-no">01</div>
+        <div><div class="eyebrow">Approach one</div><h2>The score improved. The anatomy changed.</h2></div>
         <p id="descriptor-case">Specimen 2876 was selected from the 5,000-form corpus because its developed body is compact, tapered, and easy to recognize. The search receives four measurements from its 1,200-step trajectory. It does not receive the target images.</p>
       </div>
 
@@ -394,35 +275,9 @@
       </div>
       <p class="attempt-reading"><strong>The fitted organism reproduces several bulk measurements, yet its anatomy is visibly different.</strong> The segmented structure shows how much body-plan variation remains when the target specifies only four measurements.</p>
 
-      <div class="case-metrics" aria-label="Target and fitted phenotype measurements">
-        <div><strong>799.9 → 791.1</strong><span>mean mass · 1.1% relative error</span></div>
-        <div><strong>0.0141 → 0.0141</strong><span>mass variation over the recorded trajectory</span></div>
-        <div><strong>11.7% → 10.5%</strong><span>occupied area · 10.2% relative error</span></div>
-        <div><strong>1005.0 → 1152.8</strong><span>spatial spread · 14.7% relative error</span></div>
-      </div>
-
-      <div class="case-step-grid">
-        <article class="case-step">
-          <img src="assets/organic-target.png" alt="Leaf-like source organism midway through its development.">
-          <div class="case-step-copy"><h3>Observe the full trajectory</h3><p>The body changes as it develops, so a single frame misses part of the phenotype. The target measurements cover the full trajectory.</p></div>
-        </article>
-        <article class="case-step">
-          <img src="assets/organic-target-late.png" alt="The same source organism near the end of the measured trajectory.">
-          <div class="case-step-copy"><h3>Define the scoring measurements</h3><p>Mass, mass variation, occupied area, and gyration, a measure of spatial spread, define the request. Orientation, segmentation, topology, and locomotion are absent from the target.</p>
-            <table class="compare-table"><thead><tr><th>measurement</th><th>target</th><th>fitted</th></tr></thead><tbody><tr><td>mass</td><td>799.9</td><td>791.1</td></tr><tr><td>occupancy</td><td>11.7%</td><td>10.5%</td></tr><tr><td>gyration</td><td>1005.0</td><td>1152.8</td></tr></tbody></table>
-          </div>
-        </article>
-        <article class="case-step">
-          <img src="assets/organic-trace-00.png" alt="Body grown by the nearest retrieved rule before refinement.">
-          <div class="case-step-copy"><h3>Retrieve a starting rule</h3><p>The target specimen itself was excluded from retrieval. The search finds twelve other corpus entries with nearby measurements, simulates them, and starts from the lowest-cost proposal. This is one leave-one-out example, not a cohort evaluation.</p></div>
-        </article>
-        <article class="case-step">
-          <img src="assets/organic-trace-06.png" alt="Body grown by the best rule after six refinement generations.">
-          <div class="case-step-copy"><h3>Refine through simulation</h3><p>Six generations of 32 candidates reduced the MLX descriptor cost from 6.99 to 5.26, a 25% decrease. A separate Swift replay measured a standardized cost of 0.975. The two values come from different forward implementations and are reported separately.</p></div>
-        </article>
-      </div>
-
-      <figure class="figure" style="margin-top:22px"><img src="assets/organic-search-trace.svg" alt="Best descriptor cost over six search generations."><figcaption class="caption"><span class="figure-no">07A</span><p>The largest improvement occurred in the first generation. Later generations changed the rule only slightly under the MLX objective.</p><span class="tag">6 × 32 rollouts</span></figcaption></figure>
+      <figure class="measurement-comparison" id="measurement-comparison"><h3>Close on mass. Farther apart on spread.</h3><p>Each measurement has its own units. Here the target is always 100%; the teal bar shows the fitted value relative to it.</p><div class="measurement-heading"><span>Trajectory measurement</span><span>0 → target at 100%</span><span>Target / fitted</span></div><div class="measurement-row"><span>Mean mass</span><div class="measurement-track"><i style="width:79.120%"></i><b></b></div><span>799.9 / <strong>791.1</strong></span></div><div class="measurement-row"><span>Mass variation</span><div class="measurement-track"><i style="width:80.000%"></i><b></b></div><span>0.0141 / <strong>0.0141</strong></span></div><div class="measurement-row"><span>Occupied area</span><div class="measurement-track"><i style="width:71.795%"></i><b></b></div><span>11.7% / <strong>10.5%</strong></span></div><div class="measurement-row"><span>Spatial spread</span><div class="measurement-track"><i style="width:91.765%"></i><b></b></div><span>1005.0 / <strong>1152.8</strong></span></div><figcaption>The two mass-variation values agree at the displayed precision. These four quantities describe bulk properties; none scores the number or arrangement of segments.</figcaption></figure>
+      <p class="reading">We excluded specimen 2876 itself, retrieved twelve rules with nearby measurements, and refined the best proposal through six generations of 32 simulations. The search cost fell from 6.99 to 5.26. The bodies below show what that improvement actually bought.</p>
+      <figure class="figure" style="margin-top:22px"><img src="assets/organic-search-trace.svg?v=3" alt="Best descriptor cost over six search generations."><figcaption class="caption"><span class="figure-no">07A</span><p>The largest improvement occurred in the first generation. Later generations changed the rule only slightly under the MLX objective.</p><span class="tag">6 × 32 rollouts</span></figcaption></figure>
       <div class="trace-strip" aria-label="Bodies produced by the best rule during refinement">
         <figure><img src="assets/organic-trace-00.png" alt="Initial retrieved organism."><figcaption>retrieval · cost 6.99</figcaption></figure>
         <figure><img src="assets/organic-trace-01.png" alt="Best organism after generation one."><figcaption>generation 1</figcaption></figure>
@@ -430,20 +285,12 @@
         <figure><img src="assets/organic-trace-06.png" alt="Best organism after generation six."><figcaption>generation 6 · cost 5.26</figcaption></figure>
       </div>
 
-      <figure class="figure" style="margin-top:22px"><img src="assets/organic-genotype.svg" alt="Radial kernel profiles, growth responses, and parameter values for the fitted three-kernel rule."><figcaption class="caption"><span class="figure-no">07B</span><p>The fitted genotype contains one shared radius and three kernel blocks. Each block specifies a radial profile and a growth response. The second kernel has zero growth height in the selected rule, so two kernels drive the final dynamics.</p><span class="tag">40 parameters</span></figcaption></figure>
+<details class="experiment-method"><summary>Inspect the fitted rule and the implementation comparison</summary>      <figure class="figure" style="margin-top:22px"><img src="assets/organic-genotype.svg" alt="Radial kernel profiles, growth responses, and parameter values for the fitted three-kernel rule."><figcaption class="caption"><span class="figure-no">07B</span><p>The fitted genotype contains one shared radius and three kernel blocks. Each block specifies a radial profile and a growth response. The second kernel has zero growth height in the selected rule, so two kernels drive the final dynamics.</p><span class="tag">40 parameters</span></figcaption></figure>
 
-      <div class="chapter-head" style="margin-top:76px">
-        <div class="chapter-no">03A.1 / WHAT THE TARGET OMITTED</div>
-        <div><div class="eyebrow">Similar measurements, different anatomy</div><h2>Four measurements preserved scale while anatomy changed.</h2></div>
-        <p>The target and recovered trajectories have similar mass and occupied area, but their late bodies remain visibly different. Segmentation and pixelwise structure are absent from the objective, so they have no effect on the score.</p>
-      </div>
-      <div class="visual-pair">
-        <figure class="figure"><img src="assets/organic-target-late.png" alt="Late target body with one tapered central form."><figcaption class="caption"><span class="figure-no">08A</span><p>The source trajectory retains one dominant tapered body with peripheral material.</p><span class="tag">target</span></figcaption></figure>
-        <figure class="figure"><img src="assets/organic-recovered-late.png" alt="Late fitted body split into repeated segments."><figcaption class="caption"><span class="figure-no">08B</span><p>The fitted rule distributes similar mass across a repeated segmented arrangement.</p><span class="tag">fitted</span></figcaption></figure>
-      </div>
+<p>The MLX search cost and the separate Swift replay cost of 0.975 use different forward implementations. They are not successive points on the same improvement curve. This is one leave-one-out target.</p></details>
 
       <div id="form-maintenance" class="chapter-head" style="margin-top:76px">
-        <div class="chapter-no">03B / FORM MAINTENANCE</div>
+        <div class="chapter-no">02</div>
         <div><div class="eyebrow">Approach two</div><h2>We searched for a rule that could maintain a supplied body.</h2></div>
         <p>In this experiment, the target is a body taken from the dataset, and its complete field is also the initial condition. Candidate rules are judged by whether that field remains coherent, active, and topologically similar during the recorded rollout.</p>
       </div>
@@ -456,8 +303,8 @@
       <p class="reading"><strong>This experiment solves maintenance: the fitted rule holds an existing anatomy together.</strong> The full compiler must also discover a compact starting pattern and the rule that develops it into the requested body.</p>
 
       <div id="orbium-diagnostic" class="chapter-head" style="margin-top:76px">
-        <div class="chapter-no">03C / ORBIUM INVERSE</div>
-        <div><div class="eyebrow">Approach three</div><h2>We recovered three Orbium parameters from one mature field.</h2></div>
+        <div class="chapter-no">03</div>
+        <div><div class="eyebrow">Approach three</div><h2>One mature frame was enough to recover nearby Orbium parameters.</h2></div>
         <p>This experiment isolates within-family parameter recovery. We supplied Orbium's update law, kernel, growth function, and starting cells, then hid three numerical parameters: the interaction radius <code>R</code>, growth center <code>m</code>, and growth width <code>s</code>. The search evaluates values by comparing each simulated body with the reference at step 600.</p>
       </div>
 
@@ -495,7 +342,7 @@
 
       <figure class="figure"><div class="rule-recovery-scroll"><img src="assets/orbium-rule-recovery.svg" alt="Initial, native, broad-search, refined still-frame, and refined trajectory parameter values for the Orbium inverse experiment."></div><figcaption class="caption"><span class="figure-no">10</span><p>The narrow second stage improved the field match from 0.878 to 0.969 and brought all three hidden values close to the native rule.</p><span class="tag">broad search → local refinement</span></figcaption></figure>
 
-      <div class="orbium-strip" aria-label="Native and compiled Orbium at observed and held-out steps">
+<figure class="orbium-reader" aria-labelledby="orbium-reader-title"><h3 id="orbium-reader-title">Fit one frame. Follow the body beyond it.</h3><div class="orbium-controls"><label for="orbium-time">Recorded step</label><select id="orbium-time"><option value="100">100 · not scored</option><option value="300">300 · not scored</option><option value="600" selected>600 · search target</option><option value="1200">1,200 · unscored continuation</option></select></div><div class="orbium-frames"><figure><img id="orbium-native-frame" src="assets/orbium-target-600.png" alt="Native Orbium at step 600"><figcaption>Native rule</figcaption></figure><figure><img id="orbium-fitted-frame" src="assets/orbium-still-600.png" alt="Recovered Orbium at step 600"><figcaption>Recovered rule</figcaption></figure></div><figcaption id="orbium-time-note" aria-live="polite">Step 600 is the only field scored by this search.</figcaption></figure><details class="experiment-method"><summary>Compare all four recorded steps together</summary>      <div class="orbium-strip" aria-label="Native and compiled Orbium at observed and held-out steps">
         <div></div><div class="strip-head">step 100 · unseen</div><div class="strip-head">step 300 · unseen</div><div class="strip-head">step 600 · target</div><div class="strip-head">step 1,200 · unseen</div>
         <div class="strip-label">native rule</div>
         <figure><img src="assets/orbium-target-100.png" alt="Native Orbium at step 100."><figcaption>early history</figcaption></figure>
@@ -507,7 +354,7 @@
         <figure><img src="assets/orbium-still-300.png" alt="Compiled Orbium at step 300."><figcaption>not scored</figcaption></figure>
         <figure><img src="assets/orbium-still-600.png" alt="Compiled Orbium at step 600."><figcaption>search target</figcaption></figure>
         <figure><img src="assets/orbium-still-1200.png" alt="Compiled Orbium at step 1200."><figcaption>not scored</figcaption></figure>
-      </div>
+      </div></details>
 
       <p class="reading"><strong>The fitted parameters also produced a coherent body at the unscored steps.</strong> This experiment isolates parameter recovery by supplying the update family, kernel geometry, growth function, starting cells, and elapsed time.</p>
 
@@ -517,9 +364,62 @@
       </div>
     </section>
 
+    <section id="inverse" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">04</div>
+        <div><div class="eyebrow">Relating rules to bodies</div><h2>Nearby body measurements can come from distant rules.</h2></div>
+        <p>Phenotype space contains the measurements made on each body. We call the set of rules that produce similar measurements a fiber. A large fiber means that the body measurements constrain the generating rule only loosely.</p>
+      </div>
+      <div class="visual-stack" style="margin-top:22px">
+        <figure class="figure"><img src="assets/dimension-decomposition.svg" alt="A dimension bar decomposing the genotype into measured phenotype dimension and inverse-fiber dimension."><figcaption class="caption"><span class="figure-no">02</span><p>The corpus occupies about 25.5 intrinsic rule dimensions and 5.9 intrinsic phenotype dimensions. Their 19.6-dimension difference (20.9 with an alternative estimator) is estimated from the geometry of the samples; it is not the raw count of 40 parameters minus 15 measurements.</p><span class="tag">5,000 forms</span></figcaption></figure>
+        <div class="visual-pair">
+          <figure class="figure"><img src="assets/inverse-locality.svg" alt="Observed inverse locality ratio with a narrow interval compared with the shuffled null."><figcaption class="caption"><span class="figure-no">03</span><p>The ratio is 0.986, where 1.0 means that nearby measured bodies are no closer in rule space than shuffled pairs. The difference from 1.0 is detectable, but it is small.</p><span class="tag">cohort diagnostic</span></figcaption></figure>
+          <figure class="figure"><img src="assets/jacobian-spectrum.svg" alt="Heatmap of seven local Jacobian singular values across twelve genotypes."><figcaption class="caption"><span class="figure-no">04</span><p>This local test perturbed 12 rules and followed seven descriptors. About five response directions crossed the threshold, but most sensitivity was concentrated in roughly 2.3 effective directions.</p><span class="tag">12 local probes</span></figcaption></figure>
+        </div>
+      </div>
+      <p class="schematic-note">The 19.6 and 37.7 dimension estimates answer different questions. The first compares the global intrinsic dimensions of the 5,000-rule corpus and its 15 measured outcomes. The second subtracts the effective rank of a seven-descriptor local response from the full 40-parameter rule. Both indicate substantial ambiguity and should not be compared numerically.</p>
+<details class="experiment-method"><summary>How to picture the family of compatible rules</summary>      <div class="visual-pair">
+        <figure class="figure light">
+          <img src="assets/fiber-bundle.svg" alt="Schematic of a phenotype base space with genotype fibers above several phenotypes.">
+          <figcaption class="caption"><span class="figure-no">01A</span><p>Each point below represents a set of body measurements. The rules compatible with those measurements form the vertical set above it. The geometry is illustrative rather than measured.</p><span class="tag">schematic</span></figcaption>
+        </figure>
+        <figure class="figure light">
+          <img src="assets/sections.svg" alt="Two different sections through genotype fibers selecting different rules over the same phenotype positions.">
+          <figcaption class="caption"><span class="figure-no">01B</span><p>Because several rules can fit the same target, the system needs a policy for choosing among them. Different policies may select rules with different unmeasured dynamics.</p><span class="tag">schematic</span></figcaption>
+        </figure>
+      </div>
+      <figure class="figure light" style="margin-top:22px">
+        <img src="assets/genotype-phenotype-bridge.svg" alt="A path through genotype space projects to a phenotype path until it enters a failure band where no stable phenotype is produced.">
+        <figcaption class="caption"><span class="figure-no">01C</span><p>A smooth change in rule parameters can still pass through a region where no viable body develops. Search therefore has to preserve viability as well as reduce distance to the target.</p><span class="tag">schematic</span></figcaption>
+      </figure>
+      <p class="schematic-note"><strong>Figures 01A–01C are conceptual diagrams.</strong> Figures 02–04 are generated from the frozen anatomical-compiler results.</p>
+</details>
+    </section>
+
+    <section id="compiler" class="shell">
+      <div class="chapter-head">
+        <div class="chapter-no">05</div>
+        <div><div class="eyebrow">Three targets, three inverse problems</div><h2>How reliably does the search improve a target?</h2></div>
+        <p>The examples above are individual reconstructions. Earlier tests asked whether proposed rules remain stable and whether simulation-guided refinement improves more than one target.</p>
+      </div>
+      <p class="schematic-note">The results below test parts of this system. The conditional proposal check used eight samples across two targets. The refinement result used four targets. The MLX and Swift comparison covered one rule, one starting field, and six steps.</p>
+      <div class="visual-pair">
+        <div class="visual-stack">
+          <div class="bars">
+            <div class="eyebrow">Small conditional proposal test</div>
+            <h3 style="margin-top:10px">The conditional model produced stable bodies but missed the target measurements.</h3>
+            <div class="sample-grid" aria-label="Eight stable samples across two targets"><span>1A</span><span>1B</span><span>1C</span><span>1D</span><span>2A</span><span>2B</span><span>2C</span><span>2D</span></div>
+            <p class="sample-note">All eight simulations remained stable. Their mean descriptor error was 2.79 standardized units, where zero is a perfect match, and an average of 3.6 parameters per sample had to be clamped back into range. This is a two-target mechanism check, not an accuracy estimate for the full target population.</p>
+          </div>
+          <figure class="figure"><img src="assets/refinement.svg" alt="Four dumbbells showing every target moving from a higher start cost to a lower refined cost."><figcaption class="caption"><span class="figure-no">05</span><p>Lower is better on this standardized descriptor distance. Refinement improved all four targets, reducing the mean from 1.149 to 0.576, although one target still ended at 0.947.</p><span class="tag">four targets</span></figcaption></figure>
+        </div>
+        <figure class="figure"><img src="assets/runtime-validation.svg" alt="Line chart of MLX versus Swift disagreement across steps two through six."><figcaption class="caption"><span class="figure-no">06</span><p>For one genotype and initialization seed, MLX and Swift remained closely aligned through step six. This check covers the beginning of one trajectory.</p><span class="tag">implementation check</span></figcaption></figure>
+      </div>
+    </section>
+
     <section id="function" class="shell">
       <div class="chapter-head">
-        <div class="chapter-no">04 / FUNCTION</div>
+        <div class="chapter-no">06</div>
         <div><div class="eyebrow">Predicting behavior from shape</div><h2>Shape predicted activity far better than locomotion.</h2></div>
         <p>We measured six behaviors in 8,174 creatures and reduced them to principal axes. The first axis is dominated by speed, path length, displacement, and center velocity, so we call it locomotion. The second is dominated by energy and temporal variance, so we call it activity. Together they account for 87.2% of the behavioral variation.</p>
       </div>
@@ -539,7 +439,7 @@
 
     <section id="limits" class="shell">
       <div class="chapter-head">
-        <div class="chapter-no">05 / LIMITS</div>
+        <div class="chapter-no">07</div>
         <div><div class="eyebrow">Development across initial conditions</div><h2>Endpoint density was a poor guide to developmental motion.</h2></div>
         <p>We fitted a potential surface to the regions where trajectories ended, then compared its downhill direction with their observed motion. The alignment was weak. In a separate perturbation test, five of eight genotypes became more dispersed over time. These results give no evidence that a selected rule will correct perturbations or converge from nearby starts.</p>
       </div>
@@ -556,19 +456,16 @@
 
     <section class="shell" aria-labelledby="boundary-title">
       <div class="chapter-head">
-        <div class="chapter-no">06 / SYNTHESIS</div>
-        <div><div class="eyebrow">What works now</div><h2 id="boundary-title">Three working searches define the path to the full compiler.</h2></div>
+        <div class="chapter-no">08</div>
+        <div><div class="eyebrow">What works now</div><h2 id="boundary-title">Can the search discover how to grow the body?</h2></div>
         <p>A full system will connect them: describe a target through geometry, function, and development; explore the many rules that can produce it; then search jointly for a compact seed and a rule whose development remains reliable after changed starts or damage.</p>
       </div>
-      <div class="boundary">
-        <article><h3>What the experiments show</h3><ul><li>In the 5,000-form regime, many rules produce similar measured bodies.</li><li>The conditional model produced eight stable rules across two held-out targets; their mean descriptor error remained 2.79.</li><li>Simulation-guided refinement lowered descriptor cost for all four historical targets.</li><li>The organic descriptor case matched bulk measurements while producing a different anatomy.</li><li>In one form-maintenance demonstration, a fitted rule kept a supplied field coherent and active.</li><li>Inside the known additive family, the Orbium search recovered three nearby parameter values from one mature field.</li><li>The Orbium reconstruction remained coherent for 600 steps beyond its search horizon.</li><li>Shape predicted the activity axis much better than the locomotion axis.</li></ul></article>
-        <article><h3>What the full compiler needs next</h3><ul><li>Measure descriptor-matching success across a held-out target cohort.</li><li>Test form maintenance across many supplied fields.</li><li>Search jointly for a compact seed and its developmental rule.</li><li>Select or infer the rule family before continuous parameter search.</li><li>Determine when a short trajectory adds useful information beyond a mature final frame.</li><li>Test whether MLX and another implementation remain equivalent over long trajectories.</li><li>Add locomotion and other behaviors directly to the target.</li></ul></article>
-      </div>
+      <p class="reading">The next demanding test is to withhold a set of target bodies and search jointly for a compact seed and a developmental rule. Each result should then face changed starting conditions and damage. Success would mean reliably growing and maintaining the requested anatomy across those tests, rather than matching one recorded field.</p>
     </section>
 
     <section id="evidence" class="shell">
       <div class="chapter-head">
-        <div class="chapter-no">07 / RECEIPTS</div>
+        <div class="chapter-no">09</div>
         <div><div class="eyebrow">Files and digests</div><h2>Each chart points back to a specific file.</h2></div>
         <p>The ledger records the source for every number, specimen, replay, and reused schematic. SHA-256 identifies the exact bytes. The June files do not contain the revision that produced those historical results; the September case-study entries include their exact configs and media.</p>
       </div>
@@ -649,6 +546,7 @@
     </section>
   </main>
 
-  <footer><div class="shell"><span>Anatomical compiler · experimental report v3 · 2026-09-02</span><span>Historical cohort + September case reruns · exact local source ledger</span></div></footer>
+  <footer><div class="shell"><a href="../">Lenia Swarm dossier</a><span>Anatomical compiler · experimental report v3 · 2026-09-02</span><span>Historical cohort + September case reruns · source files and checksums</span></div></footer>
+<script src="assets/report-explorers.js"></script>
 </body>
 </html>
