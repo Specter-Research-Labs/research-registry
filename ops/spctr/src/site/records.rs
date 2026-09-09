@@ -30,6 +30,7 @@ pub struct SiteRecord {
     pub last_activity: String,
     pub has_docs_dir: bool,
     pub has_docs_readme: bool,
+    pub cabinet_landing_href: Option<String>,
     pub series: Option<String>,
 }
 
@@ -66,8 +67,7 @@ impl SiteRecord {
     }
 
     pub fn cabinet_href(&self) -> Option<String> {
-        self.has_docs_readme
-            .then(|| format!("cabinet/{}/README/", self.slug))
+        self.cabinet_landing_href.clone()
     }
 
     pub fn relative_cabinet_href(&self, page_path: &str) -> Option<String> {
@@ -169,6 +169,7 @@ fn graph_to_record(
         last_activity,
         has_docs_dir,
         has_docs_readme,
+        cabinet_landing_href: graph::attr_str(node, "cabinet_href").map(str::to_owned),
         series: graph::attr_str(node, "series_id").map(str::to_owned),
     })
 }
@@ -479,6 +480,7 @@ mod tests {
             last_activity: "today".to_owned(),
             has_docs_dir: true,
             has_docs_readme: true,
+            cabinet_landing_href: Some("cabinet/alpha/README/".to_owned()),
             series: Some("D-001".to_owned()),
         }
     }

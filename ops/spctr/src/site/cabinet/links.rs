@@ -360,14 +360,13 @@ pub fn transform_markdown(
 
         let code_spans: Vec<(usize, usize)> = INLINE_CODE_RE
             .find_iter(line)
+            .filter(|code| {
+                !MD_LINK_RE
+                    .find_iter(line)
+                    .any(|link| link.start() < code.start() && code.end() < link.end())
+            })
             .map(|m| (m.start(), m.end()))
             .collect();
-
-        let is_in_code = |pos: usize| -> bool {
-            code_spans
-                .iter()
-                .any(|&(start, end)| pos >= start && pos < end)
-        };
 
         let segments = collect_non_code_segments(line, &code_spans);
 
@@ -387,7 +386,6 @@ pub fn transform_markdown(
         }
         result.push_str(&line[last_end..]);
 
-        let _ = is_in_code;
         output_lines.push(result);
     }
 
@@ -462,7 +460,35 @@ fn rewrite_markdown_links(
                         source.slug
                     );
                 }
-                full_match.as_str().to_owned()
+                if !is_external_href(href) && !href.starts_with('/') && !href.starts_with('#') {
+                    let candidate = source.path.parent().unwrap().join(path_part);
+                    let project_root = source.docs_root.parent().unwrap();
+                    if let (Ok(file), Ok(root)) = (
+                        candidate.canonicalize_utf8(),
+                        project_root.canonicalize_utf8(),
+                    ) {
+                        if let Ok(relative) = file.strip_prefix(&root) {
+                            let collection = if source.project_kind == "dossier" {
+                                "dossiers"
+                            } else {
+                                "addenda"
+                            };
+                            let (_, anchor) = split_anchor(href);
+                            format!(
+                                "[{label}]({}/{collection}/{}/{}{anchor})",
+                                crate::manifest::REPO_TREE_URL,
+                                source.project_slug,
+                                relative.as_str().replace(' ', "%20")
+                            )
+                        } else {
+                            full_match.as_str().to_owned()
+                        }
+                    } else {
+                        full_match.as_str().to_owned()
+                    }
+                } else {
+                    full_match.as_str().to_owned()
+                }
             }
         };
 
@@ -554,4 +580,46 @@ pub fn build_backlink_graph(
     }
 
     Ok(backlinks)
+}
+
+#[cfg(test)]
+mod source_link_tests {
+    use super::*;
+
+    #[test]
+    fn code_labels_link_to_source_but_literal_code_stays_unchanged() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = Utf8Path::from_path(temp.path()).unwrap();
+        std::fs::create_dir(root.join("docs")).unwrap();
+        std::fs::write(root.join("core.py"), "pass").unwrap();
+        std::fs::write(root.join("docs/guide.md"), "Guide").unwrap();
+        let entry = DocEntry {
+            path: root.join("docs/guide.md"),
+            docs_root: root.join("docs"),
+            project_kind: "addendum".into(),
+            project_slug: "example".into(),
+            publish_docs: true,
+            published: true,
+            title: "Guide".into(),
+            slug: "guide".into(),
+            category: String::new(),
+            doc_id: "A-001.001".into(),
+            project_display: "Example".into(),
+            series_id: None,
+            render_markdown: None,
+        };
+        let entries = vec![entry];
+        let lookup = build_doc_lookup(&entries);
+        let literal = "`[core](../core.py)`";
+        let result = transform_markdown(
+            &format!("[`core.py`](../core.py) and {literal}"),
+            &entries[0],
+            &lookup,
+            &entries,
+            &mut HashSet::new(),
+        )
+        .unwrap();
+        assert!(result.contains("[`core.py`](https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/example/core.py)"));
+        assert!(result.contains(literal));
+    }
 }

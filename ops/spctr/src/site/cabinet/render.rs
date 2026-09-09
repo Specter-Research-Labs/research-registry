@@ -84,6 +84,7 @@ pub fn render_doc(
 
     let backlinks_html = render_backlinks_html(entry, backlinks, all_entries);
     let rendered = html.replace(BACKLINKS_MARKER, &backlinks_html);
+    let rendered = publish_images(&rendered, entry, site_root)?;
 
     std::fs::write(&out_file, &rendered)
         .with_context(|| format!("failed to write {}", out_file))?;
@@ -95,6 +96,56 @@ pub fn render_doc(
     eprintln!("  {rel}");
 
     Ok(())
+}
+
+fn publish_images(html: &str, entry: &DocEntry, site_root: &Utf8Path) -> Result<String> {
+    let image = regex_lite::Regex::new(r#"(<img\b[^>]*\bsrc=")([^"]+)(")"#)?;
+    let content_start = html
+        .find("<article class=\"doc-content\">")
+        .context("cabinet template missing doc-content article")?;
+    let content_end = content_start
+        + html[content_start..]
+            .find("</article>")
+            .context("cabinet template missing closing article")?;
+    let docs_root = entry.docs_root.canonicalize_utf8()?;
+    let mut rendered = String::new();
+    let mut end = 0;
+    for cap in image.captures_iter(html) {
+        let found = cap.get(0).unwrap();
+        if found.start() < content_start || found.start() >= content_end {
+            continue;
+        }
+        let src = &cap[2];
+        if src.starts_with('/') || src.contains(':') {
+            continue;
+        }
+        let source = entry
+            .path
+            .parent()
+            .unwrap()
+            .join(src)
+            .canonicalize_utf8()
+            .with_context(|| format!("missing image {src} in {}", entry.path))?;
+        // Only publish images within the document collection, never arbitrary local paths.
+        let relative = source
+            .strip_prefix(&docs_root)
+            .with_context(|| format!("image outside document collection: {src}"))?;
+        let destination = site_root
+            .join("cabinet")
+            .join(&entry.project_slug)
+            .join("_assets")
+            .join(relative);
+        std::fs::create_dir_all(destination.parent().unwrap())?;
+        std::fs::copy(&source, &destination)?;
+        rendered.push_str(&html[end..found.start()]);
+        rendered.push_str(&format!(
+            "{}/cabinet/{}/_assets/{}{}",
+            &cap[1], entry.project_slug, relative, &cap[3]
+        ));
+        end = found.end();
+    }
+    rendered.push_str(&html[end..]);
+    Ok(rendered)
 }
 
 fn render_backlinks_html(
@@ -288,5 +339,51 @@ fn category_sort_key(category: &str) -> (u8, String) {
         (1, String::new())
     } else {
         (0, category.to_lowercase())
+    }
+}
+
+#[cfg(test)]
+mod image_tests {
+    use super::*;
+
+    #[test]
+    fn publishes_document_images_without_rewriting_the_site_logo() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = Utf8Path::from_path(tmp.path()).unwrap();
+        let docs = root.join("docs");
+        std::fs::create_dir_all(docs.join("figures")).unwrap();
+        std::fs::create_dir_all(docs.join("concepts")).unwrap();
+        std::fs::write(docs.join("figures/example.svg"), "<svg/>").unwrap();
+        let entry = DocEntry {
+            path: docs.join("concepts/example.md"),
+            docs_root: docs,
+            project_kind: "addenda".into(),
+            project_slug: "example".into(),
+            publish_docs: true,
+            published: true,
+            title: "Example".into(),
+            slug: "concepts/example".into(),
+            category: String::new(),
+            doc_id: "A-001.001".into(),
+            project_display: "Example".into(),
+            series_id: None,
+            render_markdown: None,
+        };
+        let html = r#"<img src="../../../assets/logo-black.svg"><article class="doc-content"><img src="../figures/example.svg"><img src="https://example.org/image.svg"></article>"#;
+        let rendered = publish_images(html, &entry, &root.join("site")).unwrap();
+        assert!(rendered.contains("src=\"../../../assets/logo-black.svg\""));
+        assert!(rendered.contains("src=\"/cabinet/example/_assets/figures/example.svg\""));
+        assert!(rendered.contains("src=\"https://example.org/image.svg\""));
+        assert_eq!(
+            std::fs::read_to_string(root.join("site/cabinet/example/_assets/figures/example.svg"))
+                .unwrap(),
+            "<svg/>"
+        );
+        assert!(publish_images(
+            &html.replace("../figures/example.svg", "../missing.svg"),
+            &entry,
+            &root.join("site")
+        )
+        .is_err());
     }
 }

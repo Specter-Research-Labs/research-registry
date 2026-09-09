@@ -107,7 +107,12 @@ pub fn load_spec(spec_dir: &Utf8Path, context: &str) -> Result<DesignTokens> {
     }
     let ctx_text = std::fs::read_to_string(&ctx_path)
         .with_context(|| format!("failed to read {}", ctx_path))?;
-    let ctx = parse_context(&ctx_text)?;
+    // Web overrides must retain parsed colors for inherited alpha and overlay tokens.
+    let ctx = if context == "web" {
+        parse_base(&ctx_text)?
+    } else {
+        parse_context(&ctx_text)?
+    };
     Ok(merge(&base, &ctx))
 }
 
@@ -603,6 +608,35 @@ pub fn spec_dir(repo_root: &Utf8Path) -> Utf8PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn web_palette_overrides_resolve_inherited_alpha_colors() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = Utf8Path::from_path(temp.path()).unwrap();
+        std::fs::write(
+            root.join("base.toml"),
+            r##"[colors]
+ink = "#000000"
+[colors.alpha]
+rule = { base = "ink", alpha = 0.2 }
+[overlays]
+base = "ink"
+stops = [0.12]
+"##,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("web.toml"),
+            r##"[colors]
+ink = "#172021"
+"##,
+        )
+        .unwrap();
+        let tokens = load_spec(root, "web").unwrap();
+        let css = crate::design_tokens_css::generate_css(&tokens).unwrap();
+        assert!(css.contains("rgba(23, 32, 33, 0.2)"));
+        assert!(css.contains("rgba(23, 32, 33, 0.12)"));
+    }
 
     #[test]
     fn test_parse_and_merge() {

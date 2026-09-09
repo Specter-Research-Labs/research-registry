@@ -460,6 +460,15 @@ fn add_project_subgraph(
     );
     project_attrs.insert("has_docs_dir".to_owned(), json!(docs_root.is_dir()));
     project_attrs.insert("has_docs_readme".to_owned(), json!(docs_landing.is_file()));
+    let cabinet_href = if manifest.site.publish_docs && docs_landing.is_file() {
+        docs_landing
+            .strip_prefix(&docs_root)
+            .ok()
+            .map(|path| format!("cabinet/{}/{}/", manifest.slug, path.with_extension("")))
+    } else {
+        None
+    };
+    project_attrs.insert("cabinet_href".to_owned(), json!(cabinet_href));
     project_attrs.insert(
         "release_stage".to_owned(),
         json!(manifest.release.stage.as_str()),
