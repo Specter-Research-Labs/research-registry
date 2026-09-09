@@ -1,19 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "developmental-causal-order",
   "releaseId": "flce-developmental-causal-order-08656de0f8c1",
   "title": "Intervention Order Outlasts the Final Pulse",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "zero-net causal-order intervention",
-  "sourceReportSha256": "f314a8272f315b9763185d1d220844532b1751dfa63d7de35bf1246c8b4e1971",
-  "publicReportSha256": "10d9fd49e5bc112c50703b867d8a5799c4d35843a9cf783931d9672dd20ea7b1",
+  "sourceReportSha256": "10d9fd49e5bc112c50703b867d8a5799c4d35843a9cf783931d9672dd20ea7b1",
+  "publicReportSha256": "507844073b1d4c7701ec903f19fbd27b25d46611b3f7ddf409a7f18eb89bae2e",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "bfa1e096a0dd6a0a4ca371cbc19f536b0baed63575ff08861cf6998bebdac689",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "e46d7b132ec94f5892f9e2ccc85f2be6352b7d3437329875952da92b0e19a3ed",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "d4fc83290c308a2aff93825aa81b409ea3b18c80de1bb54ff03350eb1d87977f"
 }

@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "developmental-causal-plasticity-window",
   "releaseId": "flce-developmental-causal-plasticity-window-5f8c0ab6562d",
   "title": "Influence over Body Shape Falls After an Early Plateau",
   "date": "2026-08-24",
   "status": "archive",
   "evidenceClass": "reused-cohort developmental profile",
-  "sourceReportSha256": "577204d054e28980232d33721e04d7076f2ffb2acc7ad65b047f8926bd616f6e",
-  "publicReportSha256": "7828eb509b7959cd4fa0359b418fd8281d7ec42d402e47487f50f5545d1496a1",
+  "sourceReportSha256": "7828eb509b7959cd4fa0359b418fd8281d7ec42d402e47487f50f5545d1496a1",
+  "publicReportSha256": "9d8c22b5e7609cbc32a5dc44755bae93b544fdf3c67d46a3a57d47a1a1bfa15e",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "8ebe92fa62ee89b6eafdaa4a6fc145b5c97c5d6a8127462416041cc560964f75",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "d5156754c4ca8bf1b1160c4fe327d57950a035175cea68273eca103c151c59f5",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "bc966ad89945ca22013699714c3403240a9a6623a8b47c75070f3f8b43808bf7"
 }

@@ -1,12 +1,12 @@
 ---
-title: "Why the same disturbance matters less later in development"
+title: "Older Lenia organisms resist the same disturbance"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# Why the same disturbance matters less later in development
+# Older Lenia organisms resist the same disturbance
 
 _16–29 August 2026 · Developmental perturbation study._
 

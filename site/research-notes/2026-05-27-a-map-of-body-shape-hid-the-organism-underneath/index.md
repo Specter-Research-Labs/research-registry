@@ -1,12 +1,12 @@
 ---
-title: "A map of body shape hid most of the organism underneath"
+title: "What a shape map leaves out"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# A map of body shape hid most of the organism underneath
+# What a shape map leaves out
 
 _19–27 May 2026 · Cross-system morphospace analysis._
 

@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "causal-compass-peak",
   "releaseId": "flce-causal-compass-peak-cf2fb522cc96",
   "title": "Interventions Shift from Constricting to Expanding the Body",
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "post-selection causal exploration",
-  "sourceReportSha256": "39d72549e6496f00fc5a524bd9afa3a0b5aeff5e9b24b6a5d841b1aafd842b95",
-  "publicReportSha256": "9d8323848d78e513e85ee462478aa37cfd59730cd33cf8bcd86564e361b0bd16",
+  "sourceReportSha256": "9d8323848d78e513e85ee462478aa37cfd59730cd33cf8bcd86564e361b0bd16",
+  "publicReportSha256": "7d92838e6af2afb951035c2aa14863d01ef285c055e35515d0b9f27c7dab625c",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "d8d04f651a2b193028a26b064197d763bf1506b2fd46c4cac2462f672f152e1f",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "40855418006f33cfd8866c7ea6401d48bd23abbd8a1c1e023658508edc8ab833",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "68004a6ce73255870b9d4b41d7eab6a2e616aadb346256d12416e259036dec1c"
 }

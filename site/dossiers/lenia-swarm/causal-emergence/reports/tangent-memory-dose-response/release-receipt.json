@@ -6,13 +6,13 @@
   "date": "2026-08-25",
   "status": "archive",
   "evidenceClass": "dose-response memory intervention",
-  "sourceReportSha256": "2fe1cb56937da289cc287ff90a304ebd6e87570ef55200fd62fec97ed18a389c",
-  "publicReportSha256": "d68d65311a6c0691d59924761d588130709cdea68efba4423ff0510f4dc30231",
+  "sourceReportSha256": "d68d65311a6c0691d59924761d588130709cdea68efba4423ff0510f4dc30231",
+  "publicReportSha256": "e41c9272f9f171a3fb002104f5a2bb058c23465fb9634bdeb3fa24106d989827",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "9def869cee4a996f5f0bea74d4afef7758798adf03bcbfba580b00332b29562b",
+  "contextSha256": "f64f235440572ad103fe400fe941469724df0ac6b9e24ab4d82d2d77c09573b4",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "c953274549814fcad8bd4708031171c73be038cd66cc08cd606021355c38d0a8"
+  "upstreamReceiptSha256": "50e3d38f9bf611198a14d68f06f5b372a50bf2bc80785a6923e04dc7906a8841"
 }

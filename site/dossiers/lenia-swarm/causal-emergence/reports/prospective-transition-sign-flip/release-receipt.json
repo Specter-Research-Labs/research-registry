@@ -6,13 +6,13 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "prospective null-and-rotation test",
-  "sourceReportSha256": "9a4353e5c400215706da2dc677dc72fe3466104f8990017504cbf47881d319c3",
-  "publicReportSha256": "e25a3d300c57ec1ae142230b6ac3fcbecfb478b5100f9e448d68e601b590e283",
+  "sourceReportSha256": "e25a3d300c57ec1ae142230b6ac3fcbecfb478b5100f9e448d68e601b590e283",
+  "publicReportSha256": "efa34d0bb7df87a085f53dca2f097604076f11391bba90cc5e4b804c89335527",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "01a1b0579623adeadae12746b4fdbeed09a600899ceeb55d63868307f9f3e326",
+  "contextSha256": "7d95e356dc852315e50a322aee10710cec594c2cd4e9b2c5244db14d6a3a986e",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "6868c2cc3903f55f608703d253533ac390c658d8e2543c3b5dcfde232558780d"
+  "upstreamReceiptSha256": "a9da6f99372ea97999942bfa9cf230bb2837d632f6b069946dd30d38ab99f688"
 }

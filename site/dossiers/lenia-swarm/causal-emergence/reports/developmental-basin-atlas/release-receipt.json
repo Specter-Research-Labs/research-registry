@@ -6,13 +6,13 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "event-aligned exploratory atlas",
-  "sourceReportSha256": "a1a41aed6af3142f2099f183feb7b2f592cf0a0791f8c0fe1d8b110fd68f162d",
-  "publicReportSha256": "b7f85985901cee084ecf24bc05857edea46e191ab2be55d677e2f71facf96d3f",
+  "sourceReportSha256": "b7f85985901cee084ecf24bc05857edea46e191ab2be55d677e2f71facf96d3f",
+  "publicReportSha256": "bcc1400719e348dccf0da227c997d5327324879d4c13f7af900cd9e16ec73226",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "ec01b3a510f24426c56bb9c826d83e5db20df307652cfd4cda0d81ad04e80154",
+  "contextSha256": "c86707140d6925d026a5ed6e0e9d973a30faee6b98d8a68ea768f3ab2def34e4",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "24a6521eed5bc1290add10a91956fe3c3527dec6c78cc83608c7cff6a9700b63"
+  "upstreamReceiptSha256": "424b259002466c53fcf9eda8faa4ce2c72639a3f64b8c35d4e38c8cdacf45064"
 }

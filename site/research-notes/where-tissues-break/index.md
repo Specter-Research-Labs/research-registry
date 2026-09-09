@@ -1,12 +1,12 @@
 ---
-title: "Critical Fragment Size and Morphogenetic Vulnerability"
+title: "When a fragment becomes too small to sustain a pattern"
 release: "draft"
 provenance: "assistant-drafted"
 source_id: "A-013"
 toc: true
 ---
 
-# Critical Fragment Size and Morphogenetic Vulnerability
+# When a fragment becomes too small to sustain a pattern
 
 If a patterned tissue is severed, which cut causes the largest phenotype change?
 

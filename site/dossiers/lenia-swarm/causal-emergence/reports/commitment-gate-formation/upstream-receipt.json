@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "commitment-gate-formation",
   "releaseId": "flce-commitment-gate-formation-a1ee79827ed1",
   "title": "Matched Actions Preserve Distinct Body Histories",
   "date": "2026-08-23",
-  "status": "feature",
+  "status": "archive",
   "evidenceClass": "frozen matched-action continuation",
-  "sourceReportSha256": "5dea699791f4da2cce743eb081cbc58c0ec2269ceaaf96d3c9498c131f316fa6",
-  "publicReportSha256": "0903fd744dd919a06d63f8a02dd34bd389c842325c12e3ac4e8e2b0db88e9664",
+  "sourceReportSha256": "0903fd744dd919a06d63f8a02dd34bd389c842325c12e3ac4e8e2b0db88e9664",
+  "publicReportSha256": "cbfc966d119f5bec630bbc5c5eeda66580af62c569c5d28388a730951c970bdc",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "4ada3c9323a86204827f34a62069f4e8ca678d40c4fa31f3077d6aac49eed866",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "8d0001547cbc3a98dbda18d27ab13640856335d0ef1a08923ecda280e0604c9e",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "1c6d2790c4a2364be6163fb276a878de1424f421248489e64519dc8d5979b3d3"
 }

@@ -1,19 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "prediction-falls-direction-appears",
   "releaseId": "flce-prediction-falls-direction-appears-11c6ccd967a7",
   "title": "Predictability Falls as Hidden-State Control Strengthens",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "paired information-and-intervention study",
-  "sourceReportSha256": "aff589c2fff9302646fffbd10fcb259aef1524d8ecd901fd56093568442e871a",
-  "publicReportSha256": "23e543ec78f43b0128cb8fba4c91b12def1e150dee9e22b5dc908b25659bdf8e",
+  "sourceReportSha256": "23e543ec78f43b0128cb8fba4c91b12def1e150dee9e22b5dc908b25659bdf8e",
+  "publicReportSha256": "ab327c73d22c6fbb83ec7f4af9e7008f9336b8ca4727348ad95a25d996cfdc7b",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "913698a20a4972ecf897ec425af95457b63c260a537d181f46aa81e6830e451a",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "74ff83cb8273c4e661e57efa7817a28cf0dc9a0c316c670c93e1a69440f80985",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "a45908ea34e0a8da2644edc65116aff8239d067a4dca27566437c5755beb7641"
 }

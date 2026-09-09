@@ -6,13 +6,13 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "event-aligned future-fan study",
-  "sourceReportSha256": "7aad036b716fcb445c2a39828b15608a5862a28e3441cab0f1d21f52f229a47c",
-  "publicReportSha256": "79c7b6be028ed9fd8f441831e5dde964ad002072271fb3fc3893dcb76183db16",
+  "sourceReportSha256": "79c7b6be028ed9fd8f441831e5dde964ad002072271fb3fc3893dcb76183db16",
+  "publicReportSha256": "5a4b000f9da2b7daa5ba2f1593787524af146a0187d62c7b8f62f607f1c13f99",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "c6e7f4e97988f43598352a2a5e640e2bf0b61e89779bb4476a8b62509eb755a5",
+  "contextSha256": "4e54aa824c4b5bb13ae1520774e944935a58a8cbe00e56745adbb96efdc8e9a9",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "5485fdcfe7cf7799b2f3ee72b354e10202aa8813950f4fede27628bab4629b38"
+  "upstreamReceiptSha256": "70425f9580002cb1d70e86168f35525f2d57f243bdd6efceb56354e72b307f68"
 }

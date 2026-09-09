@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "synthesis-v5",
   "releaseId": "flce-synthesis-v5-a9539ecc2dfd",
   "title": "Rigidity, Control, Memory, and Identity Follow Different Timelines",
   "date": "2026-08-29",
   "status": "archive",
   "evidenceClass": "multi-experiment synthesis",
-  "sourceReportSha256": "cf21d90440e6779463e4948b53dd4d1abb773f6094c639b8fbf25b14c23d8463",
-  "publicReportSha256": "d715e4adf287e62fe47a86450c715390479ff517e5e917d25204186d081add6c",
+  "sourceReportSha256": "d715e4adf287e62fe47a86450c715390479ff517e5e917d25204186d081add6c",
+  "publicReportSha256": "f13f8edef9c1b511a98d6de6f2a739a96421496d893825d490bb82b748d29a56",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "d673d31a4fde4f2bac3bd686bae51f0d6c2489233f5bad8a684d42504d586eef",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "4d5293d18b6626f1026f4274d33af22cc1b5c8242461c8a70031b1249f691735",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "98cf023b414ba82bbe39780bba698e849b090cf1a06f8e780749170211bec79b"
 }

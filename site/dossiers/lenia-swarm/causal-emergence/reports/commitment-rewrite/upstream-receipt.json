@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "commitment-rewrite",
   "releaseId": "flce-commitment-rewrite-47eb03326814",
   "title": "Matched Pulses Write Opposite Causal Memories",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "direction-matched pulse intervention",
-  "sourceReportSha256": "0ef6117062dfc11208dc4f53d78f537be4bce3da718b046a74f45fa4c5336448",
-  "publicReportSha256": "4887c5c69713fdc8b02ef4ca25f8f35be766ff73f15e1832b109d965647351d7",
+  "sourceReportSha256": "4887c5c69713fdc8b02ef4ca25f8f35be766ff73f15e1832b109d965647351d7",
+  "publicReportSha256": "355b6a0da6d7c74dcb75a4a389f8f1a483cfca303a16e409c9e178b984dbd771",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "8f97310e41808fac9c8b93bd45fdbae4c2d0e5d3e6a63667dd7d2a521e7fbc65",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "e02164363e0b9bbaac34c69f30d29014056ea902a627358ec5bd1cb53eae1940",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "96fb50c1f47e576b234b847c49c7c88a3fd1ff1f47a4117c4d3da980efa5e3e0"
 }

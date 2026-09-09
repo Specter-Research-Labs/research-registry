@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "tangent-induced-causal-grammar",
   "releaseId": "flce-tangent-induced-causal-grammar-a2857547400b",
   "title": "Early Intervention Order Leaves Different Later Responses",
   "date": "2026-08-25",
   "status": "archive",
   "evidenceClass": "exploratory causal-memory intervention",
-  "sourceReportSha256": "aae97553c3fe036a2afe5f1f224a2e422dd1db65d9e7d9236e13f3f900aaf0f4",
-  "publicReportSha256": "5fe8b584bf4a01de430e3ae18baad66445131ba24c3a683367e03843b906f46d",
+  "sourceReportSha256": "5fe8b584bf4a01de430e3ae18baad66445131ba24c3a683367e03843b906f46d",
+  "publicReportSha256": "a0b80a3a81356716dfad7cd824b8f2054c9a3a9b4463e63bde002a133db08942",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "74b5a7efcf77a371d44b6b0177c5c24716495505884e1dd2b535f7f879a75b2e",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "bfbb7ca8442d332b91954a3fdcc56be49812767117b96c0bf283b441e71a043e",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "83135ce364b104c6c7451a5caab06065e7182de6821c2f382d22aa1b7e48d91e"
 }

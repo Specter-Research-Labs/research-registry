@@ -6,13 +6,13 @@
   "date": "2026-08-30",
   "status": "archive",
   "evidenceClass": "earlier synthesis",
-  "sourceReportSha256": "31e3469ae605063364f73e4a49e6911837aeec969cbd96d3b796e485254ddafb",
-  "publicReportSha256": "a9a720e072ee4c51478593ddd733c9e12e5b679f32f1764d61bc73e8b275820f",
+  "sourceReportSha256": "a9a720e072ee4c51478593ddd733c9e12e5b679f32f1764d61bc73e8b275820f",
+  "publicReportSha256": "bb437427d15a7c38821a581f5039a757744a0794b0faf98813fe51c8e44ead0c",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "82c61db0849fe073f3acdbe08747564864ab5c10b93613b9f831a2ef4caa8f29",
+  "contextSha256": "e2a066e5f9b11c601bfb58516c2fd0f3e53d57fbe7a646f27e38eefe197e2951",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "ed9cfbff6d140672923b137452ef285f37e793ce1fdd10d489eae53923b541ba"
+  "upstreamReceiptSha256": "f558e82b86349fc975bb5f86c92c2c1289725b834314b601da4cbbd24848b03f"
 }

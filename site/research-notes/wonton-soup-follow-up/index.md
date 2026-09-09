@@ -1,12 +1,12 @@
 ---
-title: "Wonton Soup Follow-Up"
+title: "How proof search responds to blocked tactics"
 release: "draft"
 provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
 
-# Wonton Soup Follow-Up
+# How proof search responds to blocked tactics
 
 The follow-up splits into smaller pieces: provider differences, blocked-tactic responses, distributed MCTS sweeps, and the cases where a failure becomes informative once we perturb the prover.
 

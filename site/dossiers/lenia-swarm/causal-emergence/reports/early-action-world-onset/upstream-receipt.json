@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "early-action-world-onset",
   "releaseId": "flce-early-action-world-onset-cbcf49e8786e",
   "title": "Early Histories Already Shape Later Responses",
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "early-window future-fan assay",
-  "sourceReportSha256": "cac1531a76c092335be6bd1b56a895ac972bfdf2131896963fd23c31df5a7805",
-  "publicReportSha256": "48fab8f8aa98444c6a4da055fc62798681e9ed4591ccbed043491d103647170c",
+  "sourceReportSha256": "48fab8f8aa98444c6a4da055fc62798681e9ed4591ccbed043491d103647170c",
+  "publicReportSha256": "e9f5e19c5efd5bb2daf541251942202d31d1636a200dbe319d6d245ae2bd5c35",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "8ed5a4c13e0b47c4c9350e663a9f8b27a9ade23263cd44bd7511903aa3c77547",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "36d25feeb7d6a9a363b70035d5828d39b08f1e2946082ef8e97017923f50f5f4",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "0656aa905162d0a714139e5886cd6f1ccda417dc2933cabad9dea8f559f5c059"
 }

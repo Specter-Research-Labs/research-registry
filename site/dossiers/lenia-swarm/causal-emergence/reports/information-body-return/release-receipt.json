@@ -6,13 +6,13 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "post-release convergence test",
-  "sourceReportSha256": "539e67fc51c743735966ebc42b090d0e30c56503bbb552a3e42f460c8c917ac2",
-  "publicReportSha256": "8b914b3ef1b7be518ca064f69f4285d9bdb55c58930e8426c92bc82bd1001322",
+  "sourceReportSha256": "8b914b3ef1b7be518ca064f69f4285d9bdb55c58930e8426c92bc82bd1001322",
+  "publicReportSha256": "7863e9030dc201f084a1f11856c4212edad771b9e558766dd4e1d62baa69259e",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "c1bc1d81b69b03d807cad84e54ff0b02c9dcce6503d7717afe45a301813c71e5",
+  "contextSha256": "a52fa8cc6cfe098eb3ba4ce7629efe4dff533a887d869dc2a8fbcbdc8fe0f32b",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "27742524b1c1cbddb4781b2dfe6ae5c62c28596050afbdd824f51dea8f52603c"
+  "upstreamReceiptSha256": "10583681400562a39781bcb7bd605a54c1811234af835ca3c566956c60a426bd"
 }

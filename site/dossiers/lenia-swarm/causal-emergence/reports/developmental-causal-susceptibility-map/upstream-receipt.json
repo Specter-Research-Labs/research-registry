@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "developmental-causal-susceptibility-map",
   "releaseId": "flce-developmental-causal-susceptibility-map-829fe7d3beb0",
   "title": "Influence over Body Shape Drops After the Structural Transition",
   "date": "2026-08-24",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "age-resolved forced-founder assay",
-  "sourceReportSha256": "318ecec382150e270cbc491cac9773a1bf14a9ee994e9b7e213702318a0ada6b",
-  "publicReportSha256": "dfb2691814c50a5a01fdd326abdf6e297198a787e0ba007e1e9e153efe17cd85",
+  "sourceReportSha256": "dfb2691814c50a5a01fdd326abdf6e297198a787e0ba007e1e9e153efe17cd85",
+  "publicReportSha256": "080bfce774424aafbf2d5adf7c42eb6f0fda13afa0cd2d721e527e133cd2d39c",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "cacfbbe1252b3f03fe1f5f0041d5e5c118b6b319a0fca96c24a12e0c2df654c4",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "4684c8e870745574258e7cdc002f7f2c591dfe1981dde6fa7dbeeb9826add56a",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "a5a84896a53d6447a5616f658b52f211e75fa4c223721cc917807f7cdee7f3d5"
 }

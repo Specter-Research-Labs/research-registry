@@ -1,18 +1,19 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "orthogonal-pulse-release-pilot",
   "releaseId": "flce-orthogonal-pulse-release-pilot-69933d2d032d",
   "title": "Changing the Information Score Did Not Improve Restoration",
   "date": "2026-08-16",
   "status": "archive",
   "evidenceClass": "discovery pilot with null behavioral endpoint",
-  "sourceReportSha256": "6bb50ef7c3b850c9d574e56f4f4e5b62482927287283a4b46fc4726a27810e1c",
-  "publicReportSha256": "24f019fdc9527485d510b522cf18da5b3d48332a6aaaa60a1bd6b5d394bdeaf5",
+  "sourceReportSha256": "24f019fdc9527485d510b522cf18da5b3d48332a6aaaa60a1bd6b5d394bdeaf5",
+  "publicReportSha256": "768ba8bdf8c6e7dba5c553f31c69c0947d7dbf78252471cd6aec04340fd40c22",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "normalize_public_editorial_language_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "6d6d53fc45b14f9685ff34d110e7abe855e4bc10375b71d02d39e95ec47fa388",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "1fe93bbe5dd1331bec367c16ae69a48c388aa3797295b9214a1ba2e7bbc6f96f",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "45d03fd51d97a2e6e41b5a1fabf91633b77355313d1dc8a7442201f3b723cbae"
 }

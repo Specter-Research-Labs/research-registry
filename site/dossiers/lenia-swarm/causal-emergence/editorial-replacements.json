@@ -103,7 +103,7 @@
     },
     {
       "from": "confirmation v2 Sealed result",
-      "to": "confirmation · Negative result"
+      "to": "confirmation \u00b7 Negative result"
     },
     {
       "from": "sealed census v2",
@@ -111,7 +111,7 @@
     },
     {
       "from": "census v2 Sealed result",
-      "to": "census · Result"
+      "to": "census \u00b7 Result"
     },
     {
       "from": "sealed v2 result",
@@ -282,23 +282,23 @@
       "to": "The old <code>stop_without_phi</code> gate ruled out restoration, but it did not explain the temporal structure we could still see."
     },
     {
-      "from": "From q12 through q32, Flow Lenia reads the same early Φ-R direction as a signed instruction for how to build its body. By q48, the instruction still moves the state—but no longer moves the body in the same way. <em>We found a developmental commitment window.</em>",
+      "from": "From q12 through q32, Flow Lenia reads the same early \u03a6-R direction as a signed instruction for how to build its body. By q48, the instruction still moves the state\u2014but no longer moves the body in the same way. <em>We found a developmental commitment window.</em>",
       "to": "We applied the same balanced sequence of opposing hidden-state pulses at six stages of development. It changed body shape when applied from passages 12 through 32, but not at passage 48 or 64. The transition therefore lies somewhere between passages 32 and 48."
     },
     {
-      "from": "q12–q32",
-      "to": "passages 12–32"
+      "from": "q12\u2013q32",
+      "to": "passages 12\u201332"
     },
     {
       "from": "q32 minus q48 response",
       "to": "passage 32 minus passage 48 response"
     },
     {
-      "from": "q32→q48 loss of geometric readability",
+      "from": "q32\u2192q48 loss of geometric readability",
       "to": "loss of the body-shape response from passage 32 to 48"
     },
     {
-      "from": "raw field divergence at both q32 and q48—the perturbation itself did not disappear",
+      "from": "raw field divergence at both q32 and q48\u2014the perturbation itself did not disappear",
       "to": "raw field divergence at passages 32 and 48; the intervention still changed the state"
     },
     {
@@ -306,7 +306,7 @@
       "to": "The same intervention changes body shape early, then stops doing so."
     },
     {
-      "from": "At q12, q16, q24, and q32, “cancel first, amplify last” leaves a larger immediate body than the opposite zero-net order. The same comparison becomes directionless at q48 and q64.",
+      "from": "At q12, q16, q24, and q32, \u201ccancel first, amplify last\u201d leaves a larger immediate body than the opposite zero-net order. The same comparison becomes directionless at q48 and q64.",
       "to": "When the canceling pulses came first and the amplifying pulses came last, the body ended larger at passages 12, 16, 24, and 32 than it did under the opposite order. At passages 48 and 64, neither order reliably produced the larger body."
     },
     {
@@ -374,7 +374,7 @@
       "to": "at passage 48, shown 32 passages later"
     },
     {
-      "from": "A median-pattern organism (radiant-blob-1453), selected mechanically as closest to the cohort’s q32 and q48 immediate effects—not selected for visual drama.",
+      "from": "A median-pattern organism (radiant-blob-1453), selected mechanically as closest to the cohort\u2019s q32 and q48 immediate effects\u2014not selected for visual drama.",
       "to": "The example is radiant-blob-1453, selected because its immediate responses at passages 32 and 48 were closest to the cohort median."
     },
     {
@@ -382,12 +382,12 @@
       "to": "The loss of the response appears across the cohort."
     },
     {
-      "from": "Thirteen of sixteen families have a stronger response in the q12–q32 interval than at q48–q64. The exact age profile varies, but the collapse is distributed across the cohort.",
+      "from": "Thirteen of sixteen families have a stronger response in the q12\u2013q32 interval than at q48\u2013q64. The exact age profile varies, but the collapse is distributed across the cohort.",
       "to": "Thirteen of sixteen families responded more strongly from passages 12 through 32 than at passages 48 and 64. The exact progression varies by family, but the later loss is present across the cohort."
     },
     {
-      "from": "cyan = amplify-first larger · orange = cancel-first larger",
-      "to": "cyan = amplify-first produced the larger body · orange = cancel-first produced the larger body"
+      "from": "cyan = amplify-first larger \u00b7 orange = cancel-first larger",
+      "to": "cyan = amplify-first produced the larger body \u00b7 orange = cancel-first produced the larger body"
     },
     {
       "from": "04 / What q32 is doing",
@@ -402,7 +402,7 @@
       "to": "At passage 32, putting the canceling pulses first produces a wider, more occupied body with fewer connected components. Total mass remains nearly unchanged, so the difference concerns how matter is arranged."
     },
     {
-      "from": "The early Φ-R direction behaves like an instruction for coordinated morphogenesis: how far to spread, how densely to occupy space, and whether to stay consolidated.",
+      "from": "The early \u03a6-R direction behaves like an instruction for coordinated morphogenesis: how far to spread, how densely to occupy space, and whether to stay consolidated.",
       "to": "At this stage, pulse order changes how far the body spreads, how densely it occupies space, and whether its material remains connected."
     },
     {
@@ -462,7 +462,7 @@
       "to": "The experiment shows a developmental change in response: the same ordered pulses alter body size early, lose that effect between passages 32 and 48, and may still alter connectivity later."
     },
     {
-      "from": "The next direct swing is obvious: densely scan q32→q48 and transplant the <em>state of susceptibility itself</em>. Can an early body make a q48 body listen again—and can a q48 hidden organization prematurely close a q32 body?",
+      "from": "The next direct swing is obvious: densely scan q32\u2192q48 and transplant the <em>state of susceptibility itself</em>. Can an early body make a q48 body listen again\u2014and can a q48 hidden organization prematurely close a q32 body?",
       "to": "The next experiment should test every passage between 32 and 48, then exchange hidden composition between early and late bodies. That would locate when the radius effect disappears and test whether the change follows the receiving body or the transplanted hidden state."
     },
     {
@@ -478,8 +478,8 @@
       "to": ">Interpretation<"
     },
     {
-      "from": "The same information direction · six ages · zero net dose",
-      "to": "one pulse sequence · six stages · balanced total dose"
+      "from": "The same information direction \u00b7 six ages \u00b7 zero net dose",
+      "to": "one pulse sequence \u00b7 six stages \u00b7 balanced total dose"
     },
     {
       "from": "four consecutive ages with a direction-specific immediate radius response",
@@ -514,7 +514,7 @@
       "to": "developmental passage"
     },
     {
-      "from": "Thirteen of sixteen families have a stronger response in the passages 12–32 interval than at q48–q64. The exact age profile varies, but the collapse is distributed across the cohort.",
+      "from": "Thirteen of sixteen families have a stronger response in the passages 12\u201332 interval than at q48\u2013q64. The exact age profile varies, but the collapse is distributed across the cohort.",
       "to": "Thirteen of sixteen families responded more strongly from passages 12 through 32 than at passages 48 and 64. The exact progression varies by family, but the later loss is present across the cohort."
     },
     {
@@ -526,8 +526,8 @@
       "to": "Ordered-pulse response across development"
     },
     {
-      "from": "native and orthogonal ++−− / −−++ histories",
-      "to": "forward and sideways control directions · opposing pulse orders"
+      "from": "native and orthogonal ++\u2212\u2212 / \u2212\u2212++ histories",
+      "to": "forward and sideways control directions \u00b7 opposing pulse orders"
     },
     {
       "from": "an temporally consistent",
@@ -722,12 +722,20 @@
       "to": "<p class=\"lede\">At passage 8, we rearranged the same material at three spatial scales and applied matched challenges. Disorganization delayed formation, reduced the consistency of nearby interventions, and increased separation among distant futures. The comparison asks what spatial arrangement contributes beyond the material itself.</p>"
     },
     {
-      "from": "<p>That is directly relevant to causal emergence. It suggests that the interesting precursor may not be a scalar “more information” peak. It may be the onset of <b>canalization</b>: the moment distributed structure begins to make interventions have stable, coordinated meanings for the future of the whole.</p>",
+      "from": "<p>That is directly relevant to causal emergence. It suggests that the interesting precursor may not be a scalar \u201cmore information\u201d peak. It may be the onset of <b>canalization</b>: the moment distributed structure begins to make interventions have stable, coordinated meanings for the future of the whole.</p>",
       "to": "<p>The control separates spatial arrangement from total material. It does not identify a universal information score: it shows that preserving spatial relationships changes how these early fields respond to intervention.</p>"
     },
     {
       "from": "The forecasting gap narrowed before sustained form",
       "to": "Whole-state predictive advantage rose before sustained form"
+    },
+    {
+      "from": "Individuality precedes coherent form",
+      "to": "Individual responses before coherent bodies"
+    },
+    {
+      "from": "Individuality Precedes Coherent Form",
+      "to": "Individual responses before coherent bodies"
     }
   ]
 }

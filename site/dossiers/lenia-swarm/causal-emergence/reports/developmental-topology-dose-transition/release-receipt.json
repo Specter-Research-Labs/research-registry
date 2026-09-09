@@ -6,13 +6,13 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "nonlinear dose-regime intervention",
-  "sourceReportSha256": "84931e8e5f4be314564636d361519449429e9761142c78bf0e75959c44c339e9",
-  "publicReportSha256": "267ae6cfb87ad4c89f0b3063b7f1b2123d827a86870b7cec67194bea56817cbe",
+  "sourceReportSha256": "267ae6cfb87ad4c89f0b3063b7f1b2123d827a86870b7cec67194bea56817cbe",
+  "publicReportSha256": "060fffd143cfcca66b7f82b67e9a2bfbfc15b6d55e6d0b2f13fb9ecd7da8137d",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "ec5999a99efa506c2583632f946647057b41a397967d29551fc37a9b0a4e3650",
+  "contextSha256": "00d0671d48a190b50dfe09a1d14c0f6a2c73f3ee1b8ee68e19d374c9cc6af9bb",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "a2be59d60946184b4290df660acaab121c26c25c733851461d833d29846390a9"
+  "upstreamReceiptSha256": "f0e4eb136baea248610dbe32ccbdf34084a2cd6f9d1d43c86ce68d9f40b6d3fa"
 }

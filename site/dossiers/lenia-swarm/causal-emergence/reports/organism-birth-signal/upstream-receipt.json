@@ -1,19 +1,19 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "organism-birth-signal",
   "releaseId": "flce-organism-birth-signal-60e021992596",
   "title": "Whole-Field Organization Rises Before Coherent Form",
   "date": "2026-08-21",
   "status": "feature",
   "evidenceClass": "prospective measurement",
-  "sourceReportSha256": "720a8e2933bdfbca70cab3719518293ffea7ccc4884bd40c8bccf6bb65ae8780",
-  "publicReportSha256": "b094268aa83e076e84ec3cdae7bd4cb53aed5927689700f38d295652c540ea28",
+  "sourceReportSha256": "b094268aa83e076e84ec3cdae7bd4cb53aed5927689700f38d295652c540ea28",
+  "publicReportSha256": "6471fd80f275d9ed2e5c97094b88ca49eefb2489a433e3f4a23d4fb8b23e4d22",
   "transformations": [
-    "apply_shared_report_polish_v1",
+    "import_verified_public_projection_v1",
     "normalize_public_editorial_language_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "507a8326b71f7469eaf330f01e54d8b6de5c362bb55deec04e204513f5d86c71",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "814f633c28d11e18b121af4d4647fb428cb549364f8718baf239103fdc983b4a",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "a651706f80e309c3dc2af609eeb6240ced3d273d1b90175ae5eee30b4d90919e"
 }

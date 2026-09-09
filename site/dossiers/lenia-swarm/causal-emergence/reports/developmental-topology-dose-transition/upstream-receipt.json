@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "developmental-topology-dose-transition",
   "releaseId": "flce-developmental-topology-dose-transition-94f5db3e5486",
   "title": "Intervention Dose Selects Distinct Body Responses",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "nonlinear dose-regime intervention",
-  "sourceReportSha256": "71458ef67a3f68a19e9e35ba0a7bc902be1a5ea8879143b5d024916cd9143974",
-  "publicReportSha256": "84931e8e5f4be314564636d361519449429e9761142c78bf0e75959c44c339e9",
+  "sourceReportSha256": "84931e8e5f4be314564636d361519449429e9761142c78bf0e75959c44c339e9",
+  "publicReportSha256": "267ae6cfb87ad4c89f0b3063b7f1b2123d827a86870b7cec67194bea56817cbe",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "11c2f5ca01b5b8979e189aed8f5adeedcf1b25bb3fde2c20731632bd3d9616bf",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "ec5999a99efa506c2583632f946647057b41a397967d29551fc37a9b0a4e3650",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "a2be59d60946184b4290df660acaab121c26c25c733851461d833d29846390a9"
 }

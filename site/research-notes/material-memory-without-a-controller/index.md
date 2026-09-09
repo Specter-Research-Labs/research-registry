@@ -1,12 +1,12 @@
 ---
-title: "Material Memory Without a Controller"
+title: "Material memory without a controller"
 release: "draft"
 provenance: "assistant-drafted"
 source_id: "D-004"
 toc: true
 ---
 
-# Material Memory Without a Controller
+# Material memory without a controller
 
 A minimal Jolt rigid-body assembly with local, history-dependent updates and no centralized
 controller. Each body receives local updates to friction, stiffness, and plasticity from

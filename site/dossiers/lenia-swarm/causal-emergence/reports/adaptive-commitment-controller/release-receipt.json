@@ -6,13 +6,13 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "adaptive closed-loop intervention",
-  "sourceReportSha256": "effce78ecc7a28122f3e717a1954ddd6b76a03515e29d3d68a9a9d2027f97281",
-  "publicReportSha256": "e9e785b5e8de629913b88fdf9ad76fa80d4954d00431845c451d371d7bb345c5",
+  "sourceReportSha256": "e9e785b5e8de629913b88fdf9ad76fa80d4954d00431845c451d371d7bb345c5",
+  "publicReportSha256": "cf852960e0393dd2decc688e4965e71618a68f879190b019bce938c64db0d31c",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "f89c6b1b5bd7149fd41993222b8e7d43688cce7548b4c6910466e99532f11ee2",
+  "contextSha256": "74e82d89202a6151e7d18283ebd72edcf6c5e43e6ac05c2eec6467308f22936b",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "55f10ccdb71e5a8000a2643bd53c9f31a6734997dffe77c1952103ad62d7a494"
+  "upstreamReceiptSha256": "94e19c69567c671bc43c49cd72d687a9a6c3a61f8340c4762830f97510839eab"
 }

@@ -6,13 +6,13 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "phase-direction atlas",
-  "sourceReportSha256": "efb4621084aca9d74002fe36c608909149f3c629d39194d3a20864ecbf581cf4",
-  "publicReportSha256": "c9fd978cbbc223cef8175ef749264f59eb5702e00a8864dc803ca048a44a0864",
+  "sourceReportSha256": "c9fd978cbbc223cef8175ef749264f59eb5702e00a8864dc803ca048a44a0864",
+  "publicReportSha256": "4f895bbe8386ec5232fc483bc1a1bf52a5bfbb5089e1e51eee76115fac34e512",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "af0d066b4e6a50ca981cd5f6970af1e07c0a55181bc6c15285400668d6eac0ca",
+  "contextSha256": "6399ca29444660b703a142d8303da10fc5783698bf66ac620d54d53a649c2a23",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "2392312d1db01a4a26d4241c8f30197345add93498f8e70cc433f3414427b684"
+  "upstreamReceiptSha256": "da6feb9ed4cd4c49d4aa8cfe30f465ebd63364934bf41d8eb0232bf115344adf"
 }

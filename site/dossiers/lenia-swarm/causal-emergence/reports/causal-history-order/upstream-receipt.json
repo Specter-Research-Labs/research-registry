@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "causal-history-order",
   "releaseId": "flce-causal-history-order-3c885ac5af9b",
   "title": "Intervention Order Leaves Bodies in Different Later Positions",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "matched-order history intervention",
-  "sourceReportSha256": "e09637e4ebfe4db28c524b78eb97c40c365743843e5bf8a0ca68438f7056df5f",
-  "publicReportSha256": "bbeb9b53c6e219edec76fd5c4e6c91b5228ddef2638d085a27c530f5f3813bfb",
+  "sourceReportSha256": "bbeb9b53c6e219edec76fd5c4e6c91b5228ddef2638d085a27c530f5f3813bfb",
+  "publicReportSha256": "9e87e9b279d4da6a11c1aef7e30b0e0c90aa240e7f2272dea966d0b5e077d770",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "ab152a1653cb8ed38a49dfa53a351a422cfce3d97a51c17fb01f164ef4a87ed9",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "aeafa49a35ac5db8bb753724ac9f909e8575719394e612bca90c391489e718af",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "e7025e5ae1ffa87ab5b62f512733e4e23dc4800cee8cec3f5f89e5e7d84fdec1"
 }

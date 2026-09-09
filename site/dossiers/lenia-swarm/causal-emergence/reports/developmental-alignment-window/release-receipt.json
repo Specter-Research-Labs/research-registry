@@ -6,13 +6,13 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "prospective age-alignment study",
-  "sourceReportSha256": "6e9020817c9c05f4be705c4ca4cf72ed7570a5393430e721941a76dfb3ef3bdc",
-  "publicReportSha256": "87f51f9a853309eeca7f126da82ba4ec0d146b819279f15a131b701b6b278227",
+  "sourceReportSha256": "87f51f9a853309eeca7f126da82ba4ec0d146b819279f15a131b701b6b278227",
+  "publicReportSha256": "20ab308ebdd14782e55ef1f484c877826e1c81c36c09e9c7787751842e2163be",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "9cc0fadfa04ad36b1d72861246c527174ba3313f0f96f15ddd5eb39804daad2c",
+  "contextSha256": "58a2d68b2128e863d472adb8520926371313305cb4c3b6a030539532cc27b7e8",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "b7e5e7651dd7251e1279d77cd38640982647a8eec810e95faa3ee321f99c50ce"
+  "upstreamReceiptSha256": "6cf04fb9369f855b9166ee63b8eae8d928f5fe2d79dbb9a3bd4ea7c0d0482a5f"
 }

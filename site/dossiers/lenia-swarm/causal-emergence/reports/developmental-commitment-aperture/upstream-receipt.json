@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "developmental-commitment-aperture",
   "releaseId": "flce-developmental-commitment-aperture-bc514043ff88",
   "title": "The Fine-Shape Commitment Signal Did Not Replicate",
   "date": "2026-08-25",
   "status": "archive",
   "evidenceClass": "mixed primary-and-exploratory intervention",
-  "sourceReportSha256": "02a1247696a2c5537a91578b38f36aa5e66151df6e89ec8903f186bbdc4aed83",
-  "publicReportSha256": "e8649715575ac550288e98c4b036c159faea53341bf024526b148318f069cf64",
+  "sourceReportSha256": "e8649715575ac550288e98c4b036c159faea53341bf024526b148318f069cf64",
+  "publicReportSha256": "f6ed071d97f0d940efca3f20834f4c486b75802d373ebf0262a52861577d90de",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "610b8a6a1423ce0b7a8e443e4490c3596930220242b6efd0f79053883b84b81e",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "9cfa138255a4214f68fb28eada8304aac6d3a62cc0a9bb2aad7af7d691bd406b",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "41aa679fda5d68953d811e33331a548322f26962bc6f4750a2a97b07de361a24"
 }

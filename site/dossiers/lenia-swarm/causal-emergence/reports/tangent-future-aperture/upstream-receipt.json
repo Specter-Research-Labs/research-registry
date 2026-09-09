@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "tangent-future-aperture",
   "releaseId": "flce-tangent-future-aperture-aa13e64c53c0",
   "title": "Information-Directed Pulses Favor a Dominant Body",
   "date": "2026-08-25",
   "status": "archive",
   "evidenceClass": "reused-cohort aperture exploration",
-  "sourceReportSha256": "ea73499a824aca1d39c29ac42867187eb69fe345c7bee84eaa0d1bbccba3823a",
-  "publicReportSha256": "d38bdf889405c8450a91cfd647106e106e21b718710a03e9f0d20e192d7bb7ba",
+  "sourceReportSha256": "d38bdf889405c8450a91cfd647106e106e21b718710a03e9f0d20e192d7bb7ba",
+  "publicReportSha256": "a389e4d93fe1e51ea8d098482a0a8d86eb28d031baf3e29031d8cef29cf6147e",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "07fb9fd19700f32d1bcbe4350809175e57b74730f453069801d6f0b41aa7614c",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "66d03009bbc4824926d7b30c20a44bae4f64439e7039aa5c13d1ffc93e87c3ba",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "5dc09492bc59e62eb1bf2d84b5b5bdaaf1c8514b59717700a4c2773243d9316f"
 }

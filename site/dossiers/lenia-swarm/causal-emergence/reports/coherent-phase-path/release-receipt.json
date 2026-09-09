@@ -6,13 +6,13 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "coherent-path phase intervention",
-  "sourceReportSha256": "dc73d25fa88d6048cc6741d1b4e9d00ebdb41b1cb0f4569f7a4c4f97395f07d9",
-  "publicReportSha256": "85a5aa0e0d33ca5c7e849216f02b5e71d648981588b834164fbe694417c40ee1",
+  "sourceReportSha256": "85a5aa0e0d33ca5c7e849216f02b5e71d648981588b834164fbe694417c40ee1",
+  "publicReportSha256": "9d4cbca5e2e87e0843b62d356b1baccade1d80857036c6c8b81844446f8ddae5",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "023e1ef181586d19d08d51567824f6fae7afbdb4f631074631914312325c75d5",
+  "contextSha256": "4621f56c8694f204e53c1c388f8c5098588aa59434f5bb3ac0fca5a2a7e65203",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "e51b9aacc9165d394ca036a4721a3d209faa434aa3a3479deac6ad99040da8d4"
+  "upstreamReceiptSha256": "0cb7b2a31eda636a51331955e145e1e42f4357b9ed57d6ca5123976f3516c216"
 }

@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "coherent-phase-path",
   "releaseId": "flce-coherent-phase-path-54dbfe453e57",
   "title": "Equal Disruption Can Send the Body Toward Different Futures",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "coherent-path phase intervention",
-  "sourceReportSha256": "f3168e5a5a49d51efa88ab13f3fe90e5f74a8bda8d9c135a8f7e1e400a51fa78",
-  "publicReportSha256": "dc73d25fa88d6048cc6741d1b4e9d00ebdb41b1cb0f4569f7a4c4f97395f07d9",
+  "sourceReportSha256": "dc73d25fa88d6048cc6741d1b4e9d00ebdb41b1cb0f4569f7a4c4f97395f07d9",
+  "publicReportSha256": "85a5aa0e0d33ca5c7e849216f02b5e71d648981588b834164fbe694417c40ee1",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "98e3f528d0b6b055eec843df6627bd80ed18c910ec5d6f2147cc5daa56455694",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "023e1ef181586d19d08d51567824f6fae7afbdb4f631074631914312325c75d5",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "e51b9aacc9165d394ca036a4721a3d209faa434aa3a3479deac6ad99040da8d4"
 }

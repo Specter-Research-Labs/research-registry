@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "latent-composition-code",
   "releaseId": "flce-latent-composition-code-a187996872cd",
   "title": "Expansion Requires Spatial Pattern; Contraction Does Not",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "mechanism-disambiguation intervention",
-  "sourceReportSha256": "054f86f7b11dbb735efae0fc682be595d4532abb9420f4d807ec20058461f3bd",
-  "publicReportSha256": "5cbf2d084539e2b53a0db6e89edc62cd9b9db5dcf858c631a49301db456e76ff",
+  "sourceReportSha256": "5cbf2d084539e2b53a0db6e89edc62cd9b9db5dcf858c631a49301db456e76ff",
+  "publicReportSha256": "19609048d8b9c0724115973b5397c2449bd480fc9c8a04ce43151f1ffb4d8c1c",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "a5a5f9a88c12e4d0067a531679b43b8acd2c84f9b76c0d053a3665acf606b502",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "5dd4527f8614109c03117d8fece9a6c15a6ddbb3484a324b4a157a4c12c66876",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "d047765521baefd16aeaaaf45a4f89b7d114e9dda0b5f86c15d14eb2fa4350cb"
 }

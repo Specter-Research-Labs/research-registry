@@ -1,12 +1,12 @@
 ---
-title: "How to retire 281 GB without losing the experiment"
+title: "Preserving an experiment while retiring 281 GB"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# How to retire 281 GB without losing the experiment
+# Preserving an experiment while retiring 281 GB
 
 _19 July–1 August 2026 · Data-integrity investigation._
 

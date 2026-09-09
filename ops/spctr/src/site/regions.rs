@@ -67,6 +67,14 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
     for record in &slices.visible_dossiers {
         let block = html! {
             article class="dossier-card" id=(record.slug) {
+                @if let Some(href) = record.relative_hub_href("dossiers/index.html") {
+                    @match record.slug.as_str() {
+                        "lenia-swarm" => { a class="dossier-preview" href=(href) { img src="/home-prototype/assets/quadrium-poster.webp?v=2" alt="A Quadrium-derived Lenia pattern." loading="lazy"; } }
+                        "wonton-soup" => { a class="dossier-preview" href=(href) { img src="/assets/research-proof.svg" alt="Two routes to an algebraic proof, shown schematically." loading="lazy"; } }
+                        "zang-levin-playground" => { a class="dossier-preview" href=(href) { img src="/assets/research-sorting.svg" alt="A schematic of local exchanges producing a sorted sequence." loading="lazy"; } }
+                        _ => {}
+                    }
+                }
                 div class="dossier-card-header" {
                     div class="dossier-card-tab" {
                         @if let Some(ref sid) = record.series {

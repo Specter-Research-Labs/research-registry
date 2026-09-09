@@ -1,12 +1,12 @@
 ---
-title: "A brain model could not tell us whether a Lenia creature looked alive"
+title: "Can a brain-response model measure lifelikeness?"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "A-014"
 toc: true
 ---
 
-# A brain model could not tell us whether a Lenia creature looked alive
+# Can a brain-response model measure lifelikeness?
 
 _4–8 May 2026 · Negative methodological result._
 

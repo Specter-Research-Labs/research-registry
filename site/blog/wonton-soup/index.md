@@ -1,12 +1,12 @@
 ---
-title: "Wonton Soup: Proof Structures Under Interventions"
+title: "Proof search with a missing tactic"
 release: "published"
 summary: Intervention studies in proof search, with structural comparison across runs.
 series: B-001
 pdf: wonton-soup.pdf
 ---
 
-# Wonton Soup: Proof Structures Under Interventions
+# Proof search with a missing tactic
 
 `wonton-soup` is our intervention harness for proof-search experiments. The question:
 

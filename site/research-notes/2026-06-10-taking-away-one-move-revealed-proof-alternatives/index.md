@@ -1,12 +1,12 @@
 ---
-title: "Taking away one move revealed which proofs had alternatives"
+title: "Which proofs survive a blocked tactic?"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
 
-# Taking away one move revealed which proofs had alternatives
+# Which proofs survive a blocked tactic?
 
 _21 May–10 June 2026 · Retrospective intervention analysis of completed Wonton runs._
 

@@ -1,19 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "developmental-causal-address",
   "releaseId": "flce-developmental-causal-address-52ac8564fb76",
   "title": "The Same Hidden-State Intervention Changes Effect with Age",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "cross-age direction intervention",
-  "sourceReportSha256": "e836b4ec4b47193417f5fb18ca50968185be4d243404764885f1ce4192bdb324",
-  "publicReportSha256": "745fe85c43e667c06fddc391edb81ea8b5b570cffdd844b0b809200d9d061275",
+  "sourceReportSha256": "745fe85c43e667c06fddc391edb81ea8b5b570cffdd844b0b809200d9d061275",
+  "publicReportSha256": "b615401798a7360c8cdb1bd2be1215f86d1f16f5e8c4d12d94a6c53b4782cf62",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "c6e6fd8c1d5f603991371323c3b77323c871bd99667eb754b71aa13270e3b819",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "d3feb56362bef8f945922f67b9d693f97218a12cc506b7c7e54719314affc6cd",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "34827c9b1b003d1c7778c97f88c6f1756b099bd93f14ec6843d769c0440f2a4f"
 }

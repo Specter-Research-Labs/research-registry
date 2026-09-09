@@ -1,18 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "morphology-information-return",
   "releaseId": "flce-morphology-information-return-08fbc2eece2a",
   "title": "Response-State Differences Reappear as Morphology Converges",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "morphology-control release study",
-  "sourceReportSha256": "1f9f6c9d39c5c9da25f44cd2069578e269100dd991cd36f16e563576d4cf27a0",
-  "publicReportSha256": "1f5c3867d2d5f876a0ce4fdcbeb35295697f64a0a7e028ab4f3599e94b22cf2c",
+  "sourceReportSha256": "1f5c3867d2d5f876a0ce4fdcbeb35295697f64a0a7e028ab4f3599e94b22cf2c",
+  "publicReportSha256": "3f56bbae9fe076ce52d5b6b5214b32ca3e2656fbf1f00dbb94a9835abbc73e15",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "adcce92acce5bda469e72ef0fe4bab526449ddcb2abc642a2a6fffce754fc2a9",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "a669686cb38a9c42b44f1b4fd464d9bfebfa9a7b4f09606c18ce3dcbb3b080ec",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "99b3995b7ef4868569d7ab1578094e37844a271a87030f24745f953fc7d203c4"
 }

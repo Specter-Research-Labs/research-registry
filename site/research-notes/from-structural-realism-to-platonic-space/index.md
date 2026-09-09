@@ -1,11 +1,11 @@
 ---
-title: "Structural Realism Is The Guardrail"
+title: "When does a recurring pattern deserve an explanation?"
 release: "draft"
 provenance: "assistant-drafted"
 toc: true
 ---
 
-# Structural Realism Is The Guardrail
+# When does a recurring pattern deserve an explanation?
 
 <!-- release-target: 2026-05-13. -->
 

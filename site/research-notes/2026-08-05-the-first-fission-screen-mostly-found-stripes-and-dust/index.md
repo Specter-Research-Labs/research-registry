@@ -1,12 +1,12 @@
 ---
-title: "Before studying fission, we had to learn what was not fission"
+title: "Stripes, dust, and false fission"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# Before studying fission, we had to learn what was not fission
+# Stripes, dust, and false fission
 
 _5–8 August 2026 · Negative pilot result._
 

@@ -1,19 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "gate-conditioned-morphology-navigation",
   "releaseId": "flce-gate-conditioned-morphology-navigation-2d008b014b06",
   "title": "Earlier State Changes How Later Interventions Shape the Body",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "gate-conditioned morphology follow-up",
-  "sourceReportSha256": "a6e4959942db6b07911ad9ffdfb0f26137809a60513dcd8f34f90fc8cb39c364",
-  "publicReportSha256": "8e900b0e4396f17125730a1d6b834c8859f89792482d95c35f33faafeca515f0",
+  "sourceReportSha256": "8e900b0e4396f17125730a1d6b834c8859f89792482d95c35f33faafeca515f0",
+  "publicReportSha256": "aa03bd772575bf059624c1112fd0bd65be286f2088c864cc2f57ce1db094ddb9",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "785f5849248e2d19d59134c871c5c126445c04b226bac721be1b77c578353b80",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "c710745877b5fd7e9c1740b9f2a88bbe7469fdaae1966211d3f43868830b4a00",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "f541da3e98b3ece90f18ab9241d7ebe7178c11b529c910510deb8f9483503efd"
 }

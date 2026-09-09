@@ -1,19 +1,18 @@
 {
-  "schema": "specter_flow_lenia_report_release_v2",
+  "schema": "specter_flow_lenia_report_release_v3",
   "id": "causal-score-sheets",
   "releaseId": "flce-causal-score-sheets-914634c5fdbd",
   "title": "Prior History Changes How the Score Responds to an Intervention",
   "date": "2026-08-23",
-  "status": "library",
+  "status": "archive",
   "evidenceClass": "matched-sheet causal geometry",
-  "sourceReportSha256": "5c7ec09ff39f685e7ac07366c59e860b774fdefcd11dc9d06d12a893ceabaf45",
-  "publicReportSha256": "71bbe268a3e5366cae5ffacd389999b92480051111562c700461e4309ffaf6c3",
+  "sourceReportSha256": "71bbe268a3e5366cae5ffacd389999b92480051111562c700461e4309ffaf6c3",
+  "publicReportSha256": "a6977c50a4a9948fe5f9a5840ca8a97816ca3e87381eb7bf740dd8b15864e127",
   "transformations": [
-    "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
-    "add_publication_navigation_v1",
-    "normalize_public_mobile_wrapping_v1"
+    "import_verified_public_projection_v1",
+    "move_reports_to_website_v1"
   ],
-  "contextSha256": "c6641e4610055f6c48f0a83003ab1d073d1ef3f7f8cf367ad706406984fe76d0",
-  "catalogSha256": "af35d16407f237df427597f48f20d4a5be31df695d6289ac6737593a23e11c68"
+  "contextSha256": "7249fb1d6e8dd108d54983fa59b39987f0fedb14c6e81fd750dc653a049a26f2",
+  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
+  "upstreamReceiptSha256": "b439ad9adff1fe1118df7e8192f41b9cb020e0c7dd7c70b6102882b81a477915"
 }

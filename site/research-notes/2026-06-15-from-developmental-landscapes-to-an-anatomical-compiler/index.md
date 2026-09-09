@@ -1,12 +1,12 @@
 ---
-title: "Building a map through development—and back again"
+title: "Running morphogenesis in reverse"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# Building a map through development—and back again
+# Running morphogenesis in reverse
 
 _15–20 June 2026 · Research design and first prototype._
 

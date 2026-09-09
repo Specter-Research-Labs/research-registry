@@ -6,13 +6,13 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "geometric orbit intervention",
-  "sourceReportSha256": "d6e3df9a79d5a546d661483c5f0dc14c23ad149448763635fa604f61a167467b",
-  "publicReportSha256": "81d7114fd6c2a2d915eb57d78596eb96d6c391ad99dd8b8f0792a156e7c68fe1",
+  "sourceReportSha256": "81d7114fd6c2a2d915eb57d78596eb96d6c391ad99dd8b8f0792a156e7c68fe1",
+  "publicReportSha256": "9357caa0c8739f15d01499bd3bd37b24bb5fbc69ee86c555423ecba16642130f",
   "transformations": [
     "import_verified_public_projection_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "79a97be966c6f8ce083f2ed06a626a0259f765410d7ddb4658068a1b5b205ef5",
+  "contextSha256": "fcb8fdb3ad3f0f11f28c2ee092fa56345a8b7251c2f15a172f8cc1150cdd43f7",
   "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "1df691f60f0a0edb4cbb317488241dfd1ae7d75029c7d7427df5264ae0ba18bb"
+  "upstreamReceiptSha256": "08f7328bc5940a5d799338f6b3960414176f4042c3f508d653ee509f291d04f0"
 }
