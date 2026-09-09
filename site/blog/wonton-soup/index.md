@@ -1,32 +1,24 @@
 ---
 title: "Wonton Soup: Proof Structures Under Interventions"
 release: "published"
-summary: Intervention studies in proof search, with structural comparison across runs.
+summary: Block a tactic, rerun the same theorem, and inspect whether proof search reroutes, collapses, or reaches the same proof family by another route.
 series: B-001
 pdf: wonton-soup.pdf
 ---
 
 # Wonton Soup: Proof Structures Under Interventions
 
-`wonton-soup` is our intervention harness for proof-search experiments. The question:
+Block a tactic in a known solution path and the solver can fail, find another route, or land in what is effectively the same proof family. `wonton-soup` records enough of the search to separate those cases instead of calling them all “solved” or “failed.”
 
-when we perturb a solver's search process, does it return to the same proof structure, or settle into a different one?
-
-We run wild-type and intervention sweeps over deterministic theorem samples, capture full search artifacts (`*_history.json`, `*_mcts_tree.json`, `*_graph.json`, `*_comparison.json`), and compare outcomes across seeds, tactics, providers, and backends.
+We run wild-type and intervention sweeps over deterministic theorem samples, capture `*_history.json`, `*_mcts_tree.json`, `*_graph.json`, and `*_comparison.json`, then compare outcomes across seeds, tactics, providers, and backends.
 
 ![MCTS Proof Search Tree](../../assets/blog/wonton-soup/fig1-mcts-tree.png)
 
-## 1. What We're Looking For
+## Reroutes, Collapse, and Recurrence
 
-We treat proof search as a stochastic process over structured states.
+Proof search is stochastic and structured. We block a tactic or tactic family, change a seed, or change scheduling; the response may be recovery to a recurring proof shape or migration to another proof-graph cluster. Logs preserve the full comparison under fixed configuration.
 
-- A perturbation can be a blocked tactic or tactic family, a seed change, or a policy/scheduler change.
-- A response can be recovery to the same recurring proof shape or migration into a different proof-graph cluster, which the basin analysis treats as an attractor.
-- The object of study is not only solve rate; it is the shape and stability of search trajectories.
-
-This is why we log enough structure to replay and compare runs months later under fixed configuration.
-
-## 2. Theoretical Mapping
+## The Measurements
 
 Our intervention protocol applies three specific concepts from the [Diverse Intelligence](https://www.diverseintelligence.org/) research program to formal proof search.
 
@@ -41,7 +33,7 @@ A positive $K$ quantifies how many orders of magnitude our policy saves over a b
 ### Pattern Invariance (TAME)
 The TAME framework ([Levin, 2022](https://arxiv.org/abs/2201.10346)) argues that behavioral structures, not just low-level mechanisms, persist under perturbation, and in `wonton-soup` we use Graph Edit Distance (GED) and basin analysis to determine whether proof search repeatedly settles into the same proof-graph clusters across different seeds and interventions.
 
-## 3. Harness and Corpus Design
+## Harness and Corpus
 
 Corpus and run configuration are saved as explicit inputs to every comparison: corpus builds are manifest-backed, run configs are snapshot-pinned, and downstream analysis reads those inputs directly, keeping the baseline fixed while only the intervention changes.
 
@@ -58,7 +50,7 @@ Run-level schemas complete the provenance record with `run_config.json`, `run_st
 - Search budget and core execution knobs (mode, iteration budget, intervention declaration).
 - Analysis inputs consumed by downstream tools (`run_config.json`, `run_status.json`, `summary.json.gz`, theorem subfiles).
 
-## 4. Search Core: Centralized and Distributed MCTS
+## Centralized and Distributed MCTS
 
 Both modes walk a tactic-conditioned state graph and use compatible log formats, so a mode switch changes execution dynamics without changing what downstream analysis reads.
 
@@ -74,7 +66,7 @@ Both modes emit compatible tree and trace files, so comparisons can use the same
 
 How to read the figure: each worker lane represents local agent activity against a shared frontier, with reservations and scheduler policy shaping contention and handoff, while dense synchronized bands suggest strong coupling and staggered bands indicate looser parallel exploration.
 
-## 5. Backend Families and Artifact Compatibility
+## Backends and Artifacts
 
 We use a multi-backend harness to test whether behavioral patterns persist across backends or are implementation artifacts. A pattern that recurs across backend families with different proof objects and trace outputs is a stronger candidate invariant.
 
@@ -117,7 +109,7 @@ We pin two recurring analysis views: attractor separation and blind-relative eff
   </figure>
 </div>
 
-## 6. Metrics and Comparison Families
+## Metrics
 
 Each metric answers a different comparison question:
 
@@ -157,7 +149,7 @@ Two related outputs:
 - `k_search_efficiency`: trace-derived null model from postprocess.
 - `paper_k`: paired blind baseline from basin runs with `--basin-blind`.
 
-## 7. Intervention Protocol
+## Intervention Protocol
 
 For each theorem, we first solve a wild-type run and extract the solution path $\pi = \{\tau_1, \dots, \tau_n\}$. We then run controlled lesions by blocking one tactic (or tactic family) from that path and rerun under the same budget and configuration.
 
@@ -175,7 +167,7 @@ This gives a clean comparison: same theorem, same search budget, one constrained
 
 Interpretation: low GED + large shared basin mass implies robust proof structure; high GED with split mass implies genuine rerouting under intervention.
 
-## 8. Log-Derived Vignettes
+## Three Runs
 
 ### Vignette Gallery Player
 
@@ -288,22 +280,22 @@ From **2026-02-04**:
 - `nat_succ_pred`: block `positivity` solved, normalized GED `0.00`. A local tactic swap: the proof keeps the same goal sequence but replaces an automated step with a direct lemma.
 - `iff_intro`: block `exact` solved, normalized GED `0.00`. A shallow reroute: the structure is intact but the terminal discharge uses a different tactic.
 
-## 9. Observations and Results
+## What the Runs Show
 
-### Multistability in Proof Space
-Proof search is not a single path: different seeds and interventions often converge to a small number of recurring proof shapes, suggesting that "the proof" is often a family of related trajectories rather than a single sequence of steps.
+### Proof Families
+Different seeds and interventions often converge to a small number of recurring proof shapes. “The proof” is often a family of related trajectories rather than one sequence of steps.
 
-### Competency through Constraint
-Targeted damage to search sometimes improves global outcomes, as in cases like `set_inter_self`, where blocking the highest-priority tactics forces the system into routes that the unconstrained policy does not reach within budget, while the relevant parallel to biological morphogenesis is concrete: a local disruption can change the route without preventing the target pattern.
+### Damage Can Reroute Search
+On `set_inter_self`, blocking the highest-priority tactics forced routes that the unconstrained policy did not reach within budget. A local disruption changed the route without preventing the terminal proof.
 
 ### Search Efficiency
-When $K > 0$, the observed search reaches a solve with fewer attempted tactic edges than its matched blind null, and the measurement is useful only after calibration to the available tactic choices: evidence that the policy is using useful structure in the action space, not a universal intelligence score.
+When $K > 0$, the observed search reaches a solve with fewer attempted tactic edges than its matched blind null. The figure depends on calibration to the available tactic choices; it describes this policy on this action space, not a universal intelligence score.
 
 ### Recurring Proof Families
-When wild-type, blocked-tactic, and seed-variation runs converge to the same low-GED proof shape, the narrow claim is that this policy/corpus slice has a stable cluster of related proofs, with recurrence as the evidence; stronger TAME-style claims require the same family to survive broader backends, encodings, and null calibrations.
+When wild-type, blocked-tactic, and seed-variation runs converge to the same low-GED proof shape, this policy/corpus slice contains a stable cluster of related proofs. Other backends, encodings, and null calibrations remain separate experiments.
 
-Next steps: cross-backend basin agreement tests, calibrated $K$ estimation with matched null models, and wider corpus and provider coverage.
+Next: cross-backend basin agreement, calibrated $K$ estimates with matched null models, and a wider corpus/provider slice.
 
 ---
 
-*This is a technical draft for the Specter Labs research blog. For a compiled dashboard of selected runs, visit the [Wonton Soup Dashboard](/dashboards/wonton-soup/).*
+For selected compiled runs, visit the [Wonton Soup Dashboard](/dashboards/wonton-soup/).

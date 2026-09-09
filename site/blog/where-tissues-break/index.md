@@ -1,5 +1,5 @@
 ---
-title: "Draft for formalization of Grodstein's closed-loop morphogenesis model using CatLab"
+title: "Where Tissues Break"
 release: "draft"
 summary: We formalized a closed-loop morphogenesis model using polynomial functors and wiring diagrams, then used that compositional structure to predict which cuts do the most damage. Vulnerability is set by fragment viability, not connectivity alone, and the worst cut shifts abruptly as diffusion parameters change.
 toc: true
@@ -7,13 +7,11 @@ toc: true
 
 # Where Tissues Break
 
-## A compositional prediction of morphogenetic vulnerability
+## The Midpoint Is Not the Worst Cut
 
-In 2023, Joel Grodstein, Patrick McMillen, and Michael Levin published [Closing the loop on morphogenesis](https://doi.org/10.3389/fcell.2023.1087650). The model is small and crisp: a 1D chain of cells forms a reaction-diffusion pattern, counts its own peaks with a computation wave, and adjusts its parameters until the count matches a target.
+The worst cut in this tissue model is the one that strands a fragment below the size needed to sustain its reaction-diffusion pattern. It is not the midpoint, despite the midpoint maximizing the usual disconnected-pairs score. As the activator diffusion coefficient $D_a$ changes, the identity of the worst cut jumps.
 
-We recast that model categorically: each cell as a polynomial functor, the tissue as a wiring diagram, and the feedback loop as a composition of phases connected by dependent lenses. That reformulation does not change the underlying dynamics. It does make one operation explicit: cut the tissue, factor the wiring diagram, and compute the fragments separately.
-
-That yields a concrete prediction. The most damaging cut is not determined by connectivity alone, and in the regimes we scanned it is not the midpoint. It is determined by fragment viability: which cut isolates a fragment too small to sustain the pattern it had in the intact tissue. As the activator diffusion coefficient $D_a$ changes, the identity of the worst cut changes abruptly.
+The model comes from [Closing the loop on morphogenesis](https://doi.org/10.3389/fcell.2023.1087650) (Grodstein, McMillen, and Levin, 2023): a 1D chain forms a reaction-diffusion pattern, counts its peaks with a computation wave, and adjusts its parameters until the count matches a target. We recast its cells as polynomial functors and the tissue as a wiring diagram so that severing it produces explicit independent fragments.
 
 ---
 
@@ -47,19 +45,17 @@ The cycle repeats until the tissue reaches the target count. That is the closed 
 
 ## The formalization
 
-### Why formalize it categorically?
+### Cutting the model
 
-Not to make the ODEs "more correct." The hand-written coupled ODE system and the composed categorical system agree at machine precision.
-
-The gain is compositional. When you sever the chain, the wiring diagram literally splits into independent pieces. That turns tissue cutting into a structured operation rather than an ad hoc edit to a state vector.
+The hand-written coupled ODE system and the composed categorical system agree at machine precision. The diagram exposes what a cut does: it splits the tissue into independent pieces instead of mutating one state vector in place.
 
 ### Cells as polynomial functors
 
-The one formal definition we need is:
+The formal definition is:
 
 $$p(y) = \sum_{s \in S} y^{R(s)}$$
 
-What matters here is not the notation but the use: polynomial functors encode systems whose interface depends on their current state.
+Polynomial functors encode systems whose interface depends on current state.
 
 A cell in the Grodstein model fits that shape exactly:
 
@@ -67,7 +63,7 @@ A cell in the Grodstein model fits that shape exactly:
 - **Wave mode:** the state includes the GRN counter, and the cell passes counting signals to the next cell.
 - **Done mode:** the state includes the final peak count, and the cell exposes that count to the controller.
 
-The ports change with the mode. That is the point.
+The ports change with the mode.
 
 ### The wiring diagram
 
@@ -77,7 +73,7 @@ We implement this in [Catlab.jl](https://github.com/AlgebraicJulia/Catlab.jl). F
 
 ![RD wiring diagram](../../addenda/poly-morphogenesis/docs/diagrams/rd_styled.svg)
 
-Here the diagram is executable structure, not just illustration. The runtime uses these wires to route signals and build the composed dynamics.
+The runtime uses these wires to route signals and build the composed dynamics.
 
 ### The tissue is the composition
 
@@ -104,7 +100,7 @@ $$d(k) = k(n-k)$$
 
 That is maximized at the midpoint. If you reason only in terms of connectivity, the midpoint looks worst.
 
-### The stronger answer is fragment viability
+### Fragment viability
 
 We rank cuts by a **severity functional** measuring phenotype shift between the intact tissue and the severed one:
 
@@ -136,9 +132,9 @@ The identity of the worst cut changes at two transition points:
 | 8.25 -- 9.25 | Position 25 | 5-cell head fragment | Small (collapsing) |
 | 9.5 -- 12.5 | Position 24 | 6-cell head fragment | Medium (~0.006) |
 
-So the right object is not a single "most vulnerable location" full stop. It is a phase diagram in $(D_a, \text{cut position})$ space. As $D_a$ changes, the identity of the worst cut jumps.
+This produces a phase diagram in $(D_a, \text{cut position})$ space. As $D_a$ changes, the identity of the worst cut jumps.
 
-The top-2 gap matters too. When the gap is large, the tissue has one clearly dominant weak point. When the gap collapses, the tissue is broadly fragile: many nearby cuts are almost equally bad. That is a different failure regime.
+When the top-two gap is large, the tissue has one dominant weak point. When it collapses, many nearby cuts are almost equally bad.
 
 ### Why the transitions happen
 
@@ -148,7 +144,7 @@ At low $D_a$, the characteristic wavelength is short, so a 5-cell fragment can s
 
 As $D_a$ increases, the wavelength lengthens. Now a 5-cell fragment drops below viability, so the worst cut shifts. The jump is abrupt because the underlying event is abrupt: a fragment crosses from "large enough to support this attractor" to "too small."
 
-This is the core picture we would push hardest: vulnerability is organized by **critical fragment size**, not by symmetric graph partitioning.
+Vulnerability is organized by **critical fragment size**, not symmetric graph partitioning.
 
 ### The effect survives simple extensions
 
@@ -166,21 +162,19 @@ In a validated 100-cell subset `{50, 75, 80, 85, 90}`, connectivity ranks the mi
 
 The literature already contains the ingredients: minimum domain size for Turing patterns ([Murray & Sperb, 1983](https://doi.org/10.1007/BF00280665)), mode selection on bounded domains ([Crampin et al., 2002](https://doi.org/10.1007/s002850100112)), gap junction disruption causing morphological change ([Nogi & Levin, 2005](https://doi.org/10.1016/j.ydbio.2005.09.002)), and critical fragment size for regeneration ([Shimizu et al., 1993](https://doi.org/10.1006/dbio.1993.1028)).
 
-What this addendum contributes is the combination: a vulnerability ranking over parameter and cut-position space. The compositional formalization makes that combination natural. Factor the severed tissue, predict each fragment's attractor, and score the result.
+We rank vulnerability over parameter and cut-position space: factor the severed tissue, predict each fragment's attractor, and score the phenotype shift.
 
 ### The biological claim
 
-Taken as a model claim, the prediction is straightforward: two lesions that break the same number of gap-junction links can have very different consequences, because the important variable is not just connectivity loss. It is whether one of the resulting fragments falls below the size needed to sustain its attractor.
+Two lesions that break the same number of gap-junction links can have very different consequences. The variable is whether one of the resulting fragments falls below the size needed to sustain its attractor.
 
 If that picture survives contact with richer models and experiments, then the most vulnerable anatomical location should depend on the tissue's bioelectric parameters and should reorganize abruptly as those parameters change.
 
 That is testable. Spatially targeted gap-junction disruption, combined with voltage imaging, could look for position-dependent vulnerability in planaria or frog embryos.
 
-### What the formalization adds
+### The formalization
 
-You do not need category theory to notice that a cut 1D chain falls into two pieces. The value here is not that the chain itself becomes possible. The value is that the factorization becomes typed, checkable, and extensible.
-
-It buys three things:
+You do not need category theory to see a cut 1D chain fall into two pieces. The formalization makes that factorization typed, checkable, and portable to less obvious topologies:
 
 1. The cut is a typed decomposition of a wiring diagram, not an ad hoc splice of a vector.
 2. The same language can carry to less trivial topologies, where the right factorization is not obvious by inspection.

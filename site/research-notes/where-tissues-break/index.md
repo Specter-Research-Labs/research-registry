@@ -1,7 +1,6 @@
 ---
 title: "Critical Fragment Size and Morphogenetic Vulnerability"
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "A-013"
 toc: true
 ---
