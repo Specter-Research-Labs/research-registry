@@ -1213,3 +1213,67 @@
 .lenia-overview .site-main .section-block .feature-card { padding: 2rem 0; border: 0; border-bottom: 1px solid var(--report-rule); background: transparent; box-shadow: none; }
 .lenia-overview .site-main .feature-card .link-row { margin-top: 1rem; }
 .lenia-overview .link-row a { color: var(--report-accent); }
+
+
+/* Morphospace: quiet navigation and evidence-led emphasis. */
+.report-morphospace .report-nav {
+  gap: 0.5rem 1.75rem;
+  border-bottom: 1px solid #c9ccc3;
+  padding-bottom: 0.75rem;
+}
+.report-morphospace .report-nav a {
+  background: transparent;
+  border: 0;
+  padding: 0.5rem 0;
+  color: #505b57;
+  letter-spacing: 0.025em;
+  text-transform: none;
+  font-weight: 400;
+}
+.report-morphospace .report-nav a:hover,
+.report-morphospace .report-nav a[aria-current="page"] {
+  background: transparent;
+  color: var(--report-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+  transform: none;
+}
+.report-morphospace .report-hero h1 span { color: inherit; }
+.report-morphospace .report-margin-note {
+  background: #e3e9dd;
+  border-color: #bdc8b7;
+  box-shadow: none;
+  transform: none;
+}
+.report-morphospace .report-margin-note strong {
+  font-size: clamp(1.65rem, 2.5vw, 2.2rem);
+  white-space: nowrap;
+  margin: 0.85rem 0;
+}
+.report-morphospace .report-synthesis {
+  background: #e3e9dd;
+  color: var(--report-ink);
+  border-color: #bdc8b7;
+  box-shadow: none;
+}
+.report-morphospace .report-synthesis .report-kicker { color: #435e51; }
+.report-morphospace .report-next-experiment .report-prediction {
+  background: #fffdf7;
+  border-color: #bdc8b7;
+}
+.report-morphospace .report-next-experiment .report-method { border-color: #bdc8b7; }
+.report-morphospace .report-next-experiment .report-button--primary {
+  background: #365b4e;
+  border-color: #365b4e;
+  color: #fffdf7;
+}
+.report-morphospace .report-next-experiment .report-button + .report-button {
+  background: transparent;
+  border-color: #788b7c;
+  color: var(--report-ink);
+}
+.report-morphospace .report-next-experiment .report-button:hover {
+  background: #28473d;
+  border-color: #28473d;
+  color: #fffdf7;
+}

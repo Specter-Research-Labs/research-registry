@@ -484,6 +484,7 @@ fn page_shell(title: &str, root_prefix: &str, body: Markup) -> String {
                 title { (title) " | SPECTER Labs" }
                 link rel="icon" href=(format!("{root_prefix}/assets/logo-black.svg")) type="image/svg+xml";
                 link rel="stylesheet" href=(format!("{root_prefix}/style.css"));
+                link rel="stylesheet" href=(format!("{root_prefix}/assets/editorial.css?v=20260909-3"));
             }
             body {
                 div class="site-shell" {
@@ -493,9 +494,9 @@ fn page_shell(title: &str, root_prefix: &str, body: Markup) -> String {
                             span class="site-brand-name" { "SPECTER LABS" }
                         }
                         nav class="site-topnav-links" aria-label="Site navigation" {
-                            a class="nav-link" href=(format!("{root_prefix}/dossiers/")) { "Dossiers" }
+                            a class="nav-link" href=(format!("{root_prefix}/dossiers/")) { "Research" }
+                            a class="nav-link" href=(format!("{root_prefix}/blog/")) { "Writing" }
                             a class="nav-link" href=(format!("{root_prefix}/addenda/")) { "Addenda" }
-                            a class="nav-link" href=(format!("{root_prefix}/blog/")) { "Blog" }
                             a class="nav-link" href=(format!("{root_prefix}/cabinet/")) { "Cabinet" }
                         }
                     }

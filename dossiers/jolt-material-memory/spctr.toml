@@ -6,6 +6,7 @@ summary = "Jolt simulations that compare local material-memory updates against m
 status = "concept"
 
 [site]
+hub_path = "site/dossiers/jolt-material-memory/index.html"
 visible = true
 featured = false
 

@@ -42,62 +42,6 @@ fn license_short(license: &str) -> &str {
     }
 }
 
-pub fn render_home_active_projects(records: &[SiteRecord]) -> String {
-    let slices = records::slice_records(records);
-    let mut blocks: Vec<String> = Vec::new();
-    for record in &slices.featured_dossiers {
-        let title_html = if let Some(href) = record.relative_hub_href("index.html") {
-            html! {
-                a class="project-title project-title-link" href=(href) { (record.title) }
-            }
-        } else {
-            html! {
-                span class="project-title" { (record.title) }
-            }
-        };
-        let block = html! {
-            div class="project" id=(format!("project-{}", record.slug)) {
-                (title_html)
-                p { (record.summary) }
-            }
-        };
-        blocks.push(block.into_string());
-    }
-    blocks.join("\n\n")
-}
-
-pub fn render_home_featured_addenda(records: &[SiteRecord]) -> String {
-    let slices = records::slice_records(records);
-    let mut blocks: Vec<String> = Vec::new();
-    for record in &slices.featured_addenda {
-        let block = html! {
-            div class="addenda-list-item" role="listitem" {
-                div class="addenda-title" { (record.title) }
-                p { (inline_markdown(&record.summary)) }
-            }
-        };
-        blocks.push(block.into_string());
-    }
-    blocks.join("\n")
-}
-
-pub fn render_home_blog_posts(posts: &[BlogPostRecord]) -> String {
-    let mut blocks: Vec<String> = Vec::new();
-    for post in posts {
-        let href = discover::relative_href("index.html", &post.href);
-        let block = html! {
-            div class="addenda-list-item" role="listitem" {
-                div class="addenda-title" { a href=(href) { (post.title) } }
-                @if !post.summary.is_empty() {
-                    p { (post.summary) }
-                }
-            }
-        };
-        blocks.push(block.into_string());
-    }
-    blocks.join("\n")
-}
-
 fn render_dossier_links(record: &SiteRecord, page_path: &str) -> Markup {
     let mut links: Vec<Markup> = Vec::new();
     if let Some(href) = record.relative_hub_href(page_path) {
@@ -149,9 +93,11 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
                                 }
                             }
                         }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Activity" }
-                            span class="card-meta-value" { (record.last_activity) }
+                        @if record.last_activity != "unknown" {
+                            div class="card-meta-row" {
+                                span class="card-meta-label" { "Activity" }
+                                span class="card-meta-value" { (record.last_activity) }
+                            }
                         }
                     }
                     p { (record.summary) }
@@ -222,9 +168,11 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
                                 }
                             }
                         }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Activity" }
-                            span class="card-meta-value" { (record.last_activity) }
+                        @if record.last_activity != "unknown" {
+                            div class="card-meta-row" {
+                                span class="card-meta-label" { "Activity" }
+                                span class="card-meta-value" { (record.last_activity) }
+                            }
                         }
                     }
                     p { (inline_markdown(&record.summary)) }

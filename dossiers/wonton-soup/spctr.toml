@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Wonton Soup"
 series = "D-002"
-summary = "MCTS search over Lean tactic proofs: an intervention harness for proof structures and basins, and a study of distributed MCTS as a search algorithm in its own right."
+summary = "Proof searches in Lean: remove a tactic, change the search, and test which routes to a theorem remain available."
 status = "active"
 
 [site]

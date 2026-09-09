@@ -116,20 +116,7 @@ fn build_from_projection(
         PageRegion {
             template_path: "site/templates/index.html".into(),
             output_path: "site/index.html".into(),
-            regions: vec![
-                (
-                    "HOME_ACTIVE_PROJECTS",
-                    regions::render_home_active_projects(&records),
-                ),
-                (
-                    "HOME_FEATURED_ADDENDA",
-                    regions::render_home_featured_addenda(&records),
-                ),
-                (
-                    "HOME_BLOG_POSTS",
-                    regions::render_home_blog_posts(&blog_posts),
-                ),
-            ],
+            regions: vec![],
         },
         PageRegion {
             template_path: "site/templates/dossiers/index.html".into(),

@@ -257,8 +257,11 @@
                 .site-shell {
                     padding-inline: 12px;
                 }}</style>
-    </head>
-    <body>
+        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/dossier-stories.css?v=2">
+<script src="/assets/dossier-stories.js?v=1" defer></script>
+</head>
+    <body class="dossier-story">
         <div class="site-shell">
             <header class="site-topnav">
                 <a class="site-brand" href="../../">
@@ -266,9 +269,9 @@
                     <span class="site-brand-name">SPECTER LABS</span>
                 </a>
                 <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="../../dossiers/" aria-current="page">Dossiers</a>
+                    <a class="nav-link" href="../../dossiers/" aria-current="page">Research</a>
+                    <a class="nav-link" href="../../blog/">Writing</a>
                     <a class="nav-link" href="../../addenda/">Addenda</a>
-                    <a class="nav-link" href="../../blog/">Blog</a>
                     <a class="nav-link" href="../../cabinet/">Cabinet</a>
                 </nav>
             </header>
@@ -281,45 +284,30 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER START -->
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-                <section class="ws-section ws-hero" id="overview">
-                    <div class="ws-hero-copy">
-                        <p class="ws-deck">
-                            We solve a theorem with Monte Carlo tree search, then block
-                            a tactic it used or stall the scheduler, and run it again.
-                            The same goal can come back through a different proof, take
-                            a longer route, fail, or solve faster once a wasteful step
-                            is gone.
-                        </p>
-                        <div class="ws-action-row">
-                            <a class="ws-button primary" href="../../blog/wonton-soup/wonton-soup.pdf">Read the preprint</a>
-                            <a class="ws-button" href="showcase.html">Visual showcase</a>
-                            <a class="ws-button" href="../../dashboards/wonton-soup/">Open dashboard</a>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="ws-section" id="evidence">
-                    <h2 class="ws-panel-title">From the paper</h2>
+                <section class="story-split">
+<div><h2 class="story-question">Take away a move.<br>Can the proof still be found?</h2><p class="story-deck">A theorem can have several proofs. We let a search find one, block a tactic it used, and try again. Some searches find another route. Others reveal a dependency they cannot escape.</p><div class="story-jumps"><a href="showcase.html">Explore the results →</a><a href="https://specterlab.org/blog/wonton-soup/wonton-soup.pdf">Read the preprint</a></div></div>
+<figure class="tactic-study" data-tactic-study><div class="story-controls" role="group" aria-label="Compare recorded tactic conditions"><button type="button" data-tactic="available" aria-pressed="true">Tactic available</button><button type="button" data-tactic="blocked" aria-pressed="false">Block linarith</button></div><div class="tactic-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><p class="tactic-count" aria-live="polite">16 of 16 runs found a proof</p><figcaption>One theorem, sixteen ReProver seeds. Each dot is a recorded run. Switch conditions to compare the results when <code>linarith</code> is available or blocked. <a href="showcase.html">Published comparison</a>.</figcaption></figure>
+</section>
+<section class="ws-section" id="evidence">
+                    <h2 class="ws-panel-title">Across the larger intervention cohort</h2>
                     <p class="ws-small">
-                        When the baseline solved a theorem, a lesion still reaches a
-                        proof often enough, and many of those recoveries are different
-                        proofs.
+                        Of 5,161 interventions on baseline-successful runs, 1,754 still reached a proof. The other counts below describe different checks on how the successful searches changed; they are not separate slices of the total.
                     </p>
-                    <div class="ws-metrics">
+                    <figure class="story-survival"><div class="story-survival-track" role="img" aria-label="1,754 of 5,161 interventions still reached a proof, or 34 percent."><span></span></div><figcaption>1,754 still reached a proof · 3,407 did not. Each segment occupies its share of the 5,161 interventions.</figcaption></figure><div class="ws-metrics">
                         <div class="ws-metric">
-                            <div class="ws-metric-label">preserve reachability</div>
+                            <div class="ws-metric-label">Still found a proof</div>
                             <div class="ws-metric-value">34.0%</div>
                             <div class="ws-metric-note">1,754 of 5,161 solve after lesion</div>
                         </div>
                         <div class="ws-metric">
-                            <div class="ws-metric-label">strict reroutes</div>
+                            <div class="ws-metric-label">Different final proof</div>
                             <div class="ws-metric-value">602</div>
-                            <div class="ws-metric-note">solved on a different proof hash</div>
+                            <div class="ws-metric-note">successful runs with a different proof hash</div>
                         </div>
                         <div class="ws-metric">
-                            <div class="ws-metric-label">nonzero GED</div>
+                            <div class="ws-metric-label">Changed search structure</div>
                             <div class="ws-metric-value">730</div>
-                            <div class="ws-metric-note">structural drift among strict solves</div>
+                            <div class="ws-metric-note">nonzero graph edit distance among strict solves</div>
                         </div>
                     </div>
                 </section>
@@ -329,8 +317,7 @@
                         <div class="ws-panel accent-blue">
                             <h3 class="ws-panel-title">Resilience</h3>
                             <p>
-                                A lesioned run still solves. The minimum sign of
-                                goal-directed recovery.
+                                A lesioned run still solves. The search reaches the goal within its budget.
                             </p>
                         </div>
                         <div class="ws-panel accent-purple">
@@ -344,66 +331,20 @@
                         <div class="ws-panel accent-green">
                             <h3 class="ws-panel-title">Rescue</h3>
                             <p>
-                                The baseline fails but the damaged run solves. The
-                                block removed a path that was leading search astray.
+                                The baseline fails but the damaged run solves. Removing a move can change which branches receive the search budget.
                             </p>
                         </div>
                     </div>
                 </section>
 
-                <section class="ws-section" id="resource-cut">
-                    <div class="ws-cut">
-                        <div class="ws-cut-box">
-                            <div class="ws-tiny-label">wild type</div>
-                            <div class="ws-cut-big">16/16</div>
-                            <p class="ws-small">
-                                ReProver solves the theorem when
-                                <span class="ws-code">linarith</span> is available.
-                            </p>
-                        </div>
-                        <div class="ws-cut-arrow">block linarith</div>
-                        <div class="ws-cut-box">
-                            <div class="ws-tiny-label">lesioned</div>
-                            <div class="ws-cut-big">0/16</div>
-                            <p class="ws-small">
-                                Block <span class="ws-code">linarith</span> and it
-                                collapses completely.
-                            </p>
-                        </div>
-                    </div>
-                </section>
+                
 
-                <section class="ws-section" id="interpretation">
-                    <div class="ws-grid-3">
-                        <div class="ws-panel accent-purple">
-                            <h3 class="ws-panel-title">The theorem is an endpoint, not the object.</h3>
-                            <p>
-                                The object is the fiber of histories and proof
-                                structures that can realize that endpoint.
-                            </p>
-                        </div>
-                        <div class="ws-panel accent-orange">
-                            <h3 class="ws-panel-title">A block tests whether a tactic was necessary.</h3>
-                            <p>
-                                If a block recovers, the removed resource was
-                                substitutable. If it collapses, that resource carried
-                                the basin.
-                            </p>
-                        </div>
-                        <div class="ws-panel accent-green">
-                            <h3 class="ws-panel-title">Some damage makes search better.</h3>
-                            <p>
-                                Some constraints prune bad branches, so a lesion can
-                                sharpen the search instead of breaking it.
-                            </p>
-                        </div>
-                    </div>
-                </section>
+                <section class="ws-section"><h2 class="story-heading">Count the routes that remain usable</h2><p class="story-deck">Different-looking proofs can depend on the same indispensable tactic. Blocking a move asks whether the alternatives remain available under pressure. A successful rerun shows a route the search could still reach within its budget; a failure identifies a limit of that search.</p><div class="story-jumps"><a href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">Follow the experiment →</a><a href="../../dashboards/wonton-soup/">Inspect individual searches →</a></div></section>
 
                 <section class="ws-section" id="sources">
                     <ul class="ws-source-list">
                         <li>
-                            <a href="../../blog/wonton-soup/wonton-soup.pdf">Preprint PDF</a>
+                            <a href="https://specterlab.org/blog/wonton-soup/wonton-soup.pdf">Preprint PDF</a>
                             has the frozen numbers from the paper.
                         </li>
                         <li>

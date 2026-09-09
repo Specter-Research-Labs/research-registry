@@ -22,8 +22,11 @@
     />
     <link rel="stylesheet" href="../../style.css" />
   <link rel="stylesheet" href="/assets/report.css?v=20260909-final-pass-2" />
-  </head>
-  <body class="report-page report-theme-morphospace lenia-overview">
+      <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/dossier-stories.css?v=2">
+<script src="/assets/dossier-stories.js?v=1" defer></script>
+</head>
+  <body class="dossier-story report-page report-theme-morphospace lenia-overview">
     <div class="site-shell">
       <header class="site-topnav">
         <a class="site-brand" href="../../">
@@ -34,14 +37,7 @@
           />
           <span class="site-brand-name">SPECTER LABS</span>
         </a>
-        <nav class="site-topnav-links" aria-label="Site navigation">
-          <a class="nav-link" href="../../dossiers/" aria-current="page"
-            >Dossiers</a
-          >
-          <a class="nav-link" href="../../addenda/">Addenda</a>
-          <a class="nav-link" href="../../blog/">Blog</a>
-          <a class="nav-link" href="../../cabinet/">Cabinet</a>
-        </nav>
+        <nav class="site-topnav-links" aria-label="Site navigation"><a class="nav-link" href="/dossiers/" aria-current="page">Research</a><a class="nav-link" href="/blog/">Writing</a><a class="nav-link" href="/addenda/">Addenda</a><a class="nav-link" href="/cabinet/">Cabinet</a></nav>
       </header>
       <div class="site-rules" aria-hidden="true">
         <div class="site-rule strong"></div>
@@ -52,27 +48,11 @@
         <!-- GENERATED:DOSSIER_HUB_HEADER START -->
         <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-        <section class="section-block">
-          <p>
-            Flow Lenia is a continuous cellular automaton in which local rules
-            move matter and generate changing forms. We can save a state, change
-            one part of it, and replay the result alongside an unchanged control.
-            That makes it possible to ask what maintains a body, what changes
-            its behavior, and which features of its history affect its future.
-          </p>
-          <p>
-            Three reports follow different parts of that investigation. The
-            morphospace report compares measured shapes, the anatomical compiler
-            searches for rules that produce requested outcomes, and the causal
-            synthesis follows how responses to interventions change during
-            development. Their cohorts and tests differ; the reports explain
-            which observations can be compared directly.
-          </p>
-        </section>
+        <section class="section-block"><h2 class="story-question">What makes a pattern a body?</h2><p class="story-deck">Local rules move matter across a grid. Some patterns persist; others break apart. By saving a state and replaying it under a changed condition, we can ask what holds a body together—and what determines its next move.</p><nav class="story-jumps" aria-label="Research questions"><a href="#shape-story">Compare shapes</a><a href="#rule-story">Recover rules</a><a href="#response-story">Change the future</a></nav></section>
 
         <section class="section-block">
           <div class="feature-card">
-            <h2 class="feature-title">The Geometry of a Synthetic Morphospace</h2>
+            <figure class="story-figure"><a href="morphospace/#result-map"><img src="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" alt="Measured morphospace of Flow Lenia, fish, and simulated tissue." loading="lazy"></a><figcaption>25,167 Flow Lenia observations. The selected region was found without fish data.</figcaption></figure><h2 id="shape-story" class="feature-title">A map of shapes finds an unexpected neighbor</h2>
             <p>
               Twelve shared measurements compare 25,167 Flow Lenia observations,
               859 EmbryoMaker snapshots, and 232 fish. A Lenia region selected
@@ -89,7 +69,7 @@
 
         <section class="section-block">
           <div class="feature-card">
-            <h2 class="feature-title">From a Desired Body to the Rules That Build It</h2>
+            <figure class="story-figure"><div class="story-pair"><div><video controls autoplay muted loop playsinline preload="metadata" src="/home-prototype/assets/orbium-native.mp4" poster="/home-prototype/assets/orbium-native-600.webp"></video><span>Native rule</span></div><div><video controls autoplay muted loop playsinline preload="metadata" src="/home-prototype/assets/orbium-recovered.mp4" poster="/home-prototype/assets/orbium-recovered-600.webp"></video><span>Recovered rule</span></div></div><figcaption>Rule recovery in standard Lenia: the same Orbium seed under native and recovered rules. <a href="/home-prototype/assets/orbium-pair.json">Recording provenance</a>.</figcaption></figure><h2 id="rule-story" class="feature-title">From a desired body to the rules that build it</h2>
             <p>
               We give a search four measurements, a complete body, or an
               observation from a known rule family. Matching measurements can
@@ -109,7 +89,7 @@
 
         <section class="section-block">
           <div class="feature-card">
-            <h2 class="feature-title">Causal Emergence in Flow Lenia</h2>
+            <h2 id="response-story" class="feature-title">The same disturbance has different consequences as a body develops</h2>
             <p>
               Developing fields become harder to redirect even while sibling
               runs reach different shapes. Matched interventions, feedback and
@@ -161,7 +141,7 @@
           </div>
         </section>
 
-        <section class="section-block">
+        <details class="story-method"><summary>Tools for reproducing the experiments</summary>
           <p>
             The system is a controller-worker topology over a SWIM gossip
             cluster, with an MLX Swift engine for GPU-accelerated Flow Lenia
@@ -183,7 +163,7 @@
               host mode, and worker mode.
             </li>
           </ul>
-        </section>
+        </details>
 
         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
         <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
