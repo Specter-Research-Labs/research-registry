@@ -23,6 +23,11 @@ publish = false
 [spctr]
 project = "poly-morphogenesis"
 
+[spctr.docs]
+root = "docs"
+landing = "docs/report-draft.md"
+require_frontmatter = false
+
 [spctr.exec.check]
 description = "Run the Julia parity and CLI test suite in the pinned root flake shell"
 command = ["bash", "-lc", '''set -euo pipefail
