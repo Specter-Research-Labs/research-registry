@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "phase-direction atlas",
-  "sourceReportSha256": "c9fd978cbbc223cef8175ef749264f59eb5702e00a8864dc803ca048a44a0864",
-  "publicReportSha256": "4f895bbe8386ec5232fc483bc1a1bf52a5bfbb5089e1e51eee76115fac34e512",
+  "sourceReportSha256": "091f121a83c7c825db2fb7c7141be7e00d6454d11fc9efd5b7a6ec0f4b4efffe",
+  "publicReportSha256": "091f121a83c7c825db2fb7c7141be7e00d6454d11fc9efd5b7a6ec0f4b4efffe",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "6399ca29444660b703a142d8303da10fc5783698bf66ac620d54d53a649c2a23",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "da6feb9ed4cd4c49d4aa8cfe30f465ebd63364934bf41d8eb0232bf115344adf"
+  "contextSha256": "3470636051ce115eb60281c71ecba967a64fc6efb55205eef5532cf58fdddd41",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "1381b98136a36a569880d30db88a38e1ad654c6ae83d199344987197f1a57feb"
 }

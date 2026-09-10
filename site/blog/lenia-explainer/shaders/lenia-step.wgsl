@@ -109,7 +109,7 @@ fn compute_flow(@builtin(global_invocation_id) gid: vec3<u32>) {
     flow_field[flow_base + 0u] = (1.0 - alpha) * nabla_U.x - alpha * nabla_A.x;
     flow_field[flow_base + 1u] = (1.0 - alpha) * nabla_U.y - alpha * nabla_A.y;
 
-    state_out[(y * config.sx + x) * config.channels + ch] = 0.0;
+    // Neighbor gradients still read this growth buffer during the same dispatch.
   }
 }
 

@@ -6,13 +6,14 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "prospective future-fan assay",
-  "sourceReportSha256": "cf5f605c904fc0efa43150bbdb0a656d708b3e1696c75c8168f5467c111fa554",
-  "publicReportSha256": "dcdc7ff2a0f9d0b29bd31655eff18e7667675c05ead8d24936deac30f286932c",
+  "sourceReportSha256": "6a4ac7fe3bb68ad7bb7ba011629af99e5c1ae1e680bb4a4893d3ff9d1443c881",
+  "publicReportSha256": "6a4ac7fe3bb68ad7bb7ba011629af99e5c1ae1e680bb4a4893d3ff9d1443c881",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "a6f624a941406f1f8423e3c31b72b4314afefad0187c5356af809773fcb25e60",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "a53249eb1b52ee6bf732e8b668b6fc8b727a51b8cf5305d4138e9f9606475499"
+  "contextSha256": "9f84c61bd6d84079e759857c5a38b53438315b53f9fd5396a234a4eb4f42e9eb",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "b58ce42d548771d1d973d9a9cc44fc2ac246d0bb2d490010de0ec4c9cb34248f"
 }

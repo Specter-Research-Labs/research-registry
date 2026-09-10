@@ -120,29 +120,46 @@ pub fn stage_library(
     // manifest authenticates every report. Keep that receipt chain with the new page.
     let imported = input_root.join("manifest.json").is_file();
     let selected_sources = if imported {
-        let manifest: serde_json::Value = serde_json::from_slice(&fs::read(input_root.join("manifest.json"))?)?;
-        selected.iter().map(|report| {
-            let entry = manifest["reports"].as_array().context("library manifest has no reports")?
-                .iter().find(|entry| entry["releaseId"] == report.release_id)
-                .with_context(|| format!("library manifest is missing {}", report.id))?;
-            let source = match manifest["schema"].as_str() {
-                Some("specter_flow_lenia_report_library_bundle_v2") => input_root.join("releases").join(&report.release_id).join("report.html"),
-                Some(BUNDLE_SCHEMA) => input_root.join("reports").join(&report.id).join("index.html"),
-                _ => bail!("unsupported input library manifest schema"),
-            };
-            if entry["publicReportSha256"].as_str() != Some(sha256_file(&source)?.as_str()) {
-                bail!("public report hash mismatch: {}", report.id);
-            }
-            let receipt = source.parent().unwrap().join("release-receipt.json");
-            if entry["receiptSha256"].as_str() != Some(sha256_file(&receipt)?.as_str()) {
-                bail!("upstream receipt hash mismatch: {}", report.id);
-            }
-            Ok((*report, source))
-        }).collect::<Result<Vec<_>>>()?
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(input_root.join("manifest.json"))?)?;
+        selected
+            .iter()
+            .map(|report| {
+                let entry = manifest["reports"]
+                    .as_array()
+                    .context("library manifest has no reports")?
+                    .iter()
+                    .find(|entry| entry["releaseId"] == report.release_id)
+                    .with_context(|| format!("library manifest is missing {}", report.id))?;
+                let source = match manifest["schema"].as_str() {
+                    Some("specter_flow_lenia_report_library_bundle_v2") => input_root
+                        .join("releases")
+                        .join(&report.release_id)
+                        .join("report.html"),
+                    Some(BUNDLE_SCHEMA) => input_root
+                        .join("reports")
+                        .join(&report.id)
+                        .join("index.html"),
+                    _ => bail!("unsupported input library manifest schema"),
+                };
+                if entry["publicReportSha256"].as_str() != Some(sha256_file(&source)?.as_str()) {
+                    bail!("public report hash mismatch: {}", report.id);
+                }
+                let receipt = source.parent().unwrap().join("release-receipt.json");
+                if entry["receiptSha256"].as_str() != Some(sha256_file(&receipt)?.as_str()) {
+                    bail!("upstream receipt hash mismatch: {}", report.id);
+                }
+                Ok((*report, source))
+            })
+            .collect::<Result<Vec<_>>>()?
     } else {
         let candidates = discover_html_by_sha(input_root)?;
-        selected.iter().map(|report| unique_source(&candidates, report)
-            .map(|source| (*report, source.to_owned()))).collect::<Result<Vec<_>>>()?
+        selected
+            .iter()
+            .map(|report| {
+                unique_source(&candidates, report).map(|source| (*report, source.to_owned()))
+            })
+            .collect::<Result<Vec<_>>>()?
     };
 
     let releases_root = output_root.join("reports");
@@ -160,38 +177,111 @@ pub fn stage_library(
             let upstream = source.parent().unwrap().join("release-receipt.json");
             fs::copy(upstream, report_release_dir.join("upstream-receipt.json"))?;
             let mut html = String::from_utf8(report_bytes)?;
-            if !html.contains("class=\"publication-header\"") { html = html.replace("<body>", &format!("<body>{}", include_str!("../../../../site/templates/publication-header.html"))); }
-            html = html.replace("</head>", "<link rel=\"stylesheet\" href=\"/assets/publication-layout.css?v=20260909-curated\"></head>");
-            html = html.replace("href=\"index.html\"", "href=\"about.html\"")
+            if !html.contains("class=\"publication-header\"") {
+                html = html.replace(
+                    "<body>",
+                    &format!(
+                        "<body>{}",
+                        include_str!("../../../../site/templates/publication-header.html")
+                    ),
+                );
+            }
+            if !html.contains("/assets/publication-layout.css") {
+                html = html.replace("</head>", "<link rel=\"stylesheet\" href=\"/assets/publication-layout.css?v=20260909-curated\"></head>");
+            }
+            html = html
+                .replace("href=\"index.html\"", "href=\"about.html\"")
                 .replace("https://specterlab.org/", "/");
-            html = Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?.replace_all(&html, "").into_owned();
-            PublicProjection { bytes: html.into_bytes(), transformations: vec!["import_verified_public_projection_v1"] }
+            html =
+                Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?
+                    .replace_all(&html, "")
+                    .into_owned();
+            // Refresh the shared style when an already verified projection is imported.
+            // Keep its authored figures and earlier projection layers intact.
+            let polish = format!(
+                "<style data-specter-public-polish>\n{}\n</style>",
+                report_polish.trim()
+            );
+            let previous_polish = Regex::new(r"(?s)<style data-specter-public-polish>.*?</style>")?;
+            if previous_polish.is_match(&html) {
+                html = previous_polish
+                    .replace_all(&html, regex_lite::NoExpand(&polish))
+                    .into_owned();
+            } else {
+                html = html.replace("</head>", &format!("{polish}</head>"));
+            }
+            PublicProjection {
+                bytes: html.into_bytes(),
+                transformations: vec!["import_verified_public_projection_v1", APPLY_REPORT_POLISH],
+            }
         } else {
-            project_public_report(report, &report_bytes, &editorial_config.replacements, &report_polish)?
+            project_public_report(
+                report,
+                &report_bytes,
+                &editorial_config.replacements,
+                &report_polish,
+            )?
         };
         let mut linked = String::from_utf8(public_report.bytes)?;
         for target in &catalog.reports {
-            let old = format!("https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/{}/", target.release_id);
-            let new = format!("/dossiers/lenia-swarm/causal-emergence/reports/{}/", target.id);
-            linked = linked.replace(&format!("{old}report.html"), &new).replace(&old, &format!("{new}about.html"));
+            let old = format!(
+                "https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/{}/",
+                target.release_id
+            );
+            let new = format!(
+                "/dossiers/lenia-swarm/causal-emergence/reports/{}/",
+                target.id
+            );
+            linked = linked
+                .replace(&format!("{old}report.html"), &new)
+                .replace(&old, &format!("{new}about.html"));
         }
-        linked = Regex::new(r#"<link[^>]+rel="canonical"[^>]*>"#)?.replace_all(&linked, "").into_owned();
-        linked = linked.replace("</head>", &format!(r#"<link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/{}/"></head>"#, report.id));
+        linked = Regex::new(r#"<link[^>]+rel="canonical"[^>]*>"#)?
+            .replace_all(&linked, "")
+            .into_owned();
+        let canonical = format!(
+            r#"<link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/{}/">"#,
+            report.id
+        );
+        if !linked.contains(&canonical) {
+            linked = linked.replace("</head>", &format!("{canonical}</head>"));
+        }
         if report.id == "synthesis-v7" {
-            for (from, to) in [(">instrument</a>", ">How we measured</a>"), (">future</a>", ">Possible futures</a>"), (">closure</a>", ">Development</a>"), (">impedance</a>", ">The same push, later</a>"), (">control</a>", ">Steering</a>"), (">passport</a>", ">Recognizing a response</a>"), (">ledger</a>", ">Evidence</a>")] {
+            for (from, to) in [
+                (">instrument</a>", ">How we measured</a>"),
+                (">future</a>", ">Possible futures</a>"),
+                (">closure</a>", ">Development</a>"),
+                (">impedance</a>", ">The same push, later</a>"),
+                (">control</a>", ">Steering</a>"),
+                (">passport</a>", ">Recognizing a response</a>"),
+                (">ledger</a>", ">Evidence</a>"),
+            ] {
                 linked = linked.replace(from, to);
             }
         }
         let (edited, changed) = normalize_public_editorial(&linked, &editorial_config.replacements);
         linked = edited;
-        if changed { public_report.transformations.push(NORMALIZE_PUBLIC_EDITORIAL); }
-        linked = linked.replace("<span>Earlier report · retained in the archive</span>", "")
+        if changed {
+            public_report
+                .transformations
+                .push(NORMALIZE_PUBLIC_EDITORIAL);
+        }
+        if report.id == "synthesis-v7" {
+            linked = apply_synthesis_publication(&linked)?;
+            public_report
+                .transformations
+                .push("synthesis_publication_instruments_v1");
+        }
+        linked = linked
+            .replace("<span>Earlier report · retained in the archive</span>", "")
             .replace("<span>Supporting experimental record</span>", "");
         if report.archive {
             linked = linked.replace("href=\"about.html\">About this report</a>", "href=\"about.html\">About this report</a><span>Supporting experimental record</span>");
         }
         public_report.bytes = linked.into_bytes();
-        public_report.transformations.push("move_reports_to_website_v1");
+        public_report
+            .transformations
+            .push("move_reports_to_website_v1");
         let public_report_sha256 = sha256_bytes(&public_report.bytes);
         let report_path = report_release_dir.join("index.html");
         fs::write(&report_path, &public_report.bytes)
@@ -216,12 +306,22 @@ pub fn stage_library(
             date: &report.date,
             status: &report.status,
             evidence_class: &report.evidence_class,
-            source_report_sha256: if imported { &input_sha256 } else { &report.sha256 },
+            source_report_sha256: if imported {
+                &input_sha256
+            } else {
+                &report.sha256
+            },
             public_report_sha256: public_report_sha256.clone(),
             transformations: public_report.transformations.clone(),
             context_sha256: context_sha256.clone(),
             catalog_sha256: &catalog_sha256,
-            upstream_receipt_sha256: if imported { Some(sha256_file(&report_release_dir.join("upstream-receipt.json"))?) } else { None },
+            upstream_receipt_sha256: if imported {
+                Some(sha256_file(
+                    &report_release_dir.join("upstream-receipt.json"),
+                )?)
+            } else {
+                None
+            },
         };
         let mut receipt_bytes = serde_json::to_vec_pretty(&receipt)?;
         receipt_bytes.push(b'\n');
@@ -264,27 +364,42 @@ pub fn stage_library(
 pub fn validate_website_library(repo_root: &Utf8Path) -> Result<()> {
     let root = repo_root.join("site/dossiers/lenia-swarm/causal-emergence/reports");
     let catalog = causal_emergence::load_catalog(repo_root)?;
-    let Some(catalog) = catalog else { return Ok(()); };
-    let manifest: serde_json::Value = serde_json::from_slice(&fs::read(root.join("manifest.json"))
-        .context("website report library is missing; stage and install the report bundle first")?)?;
-    if manifest["schema"].as_str() != Some(BUNDLE_SCHEMA) { bail!("unsupported website report manifest schema"); }
-    let entries = manifest["reports"].as_array().context("website report manifest has no reports")?;
+    let Some(catalog) = catalog else {
+        return Ok(());
+    };
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(root.join("manifest.json")).context(
+            "website report library is missing; stage and install the report bundle first",
+        )?)?;
+    if manifest["schema"].as_str() != Some(BUNDLE_SCHEMA) {
+        bail!("unsupported website report manifest schema");
+    }
+    let entries = manifest["reports"]
+        .as_array()
+        .context("website report manifest has no reports")?;
     for report in &catalog.reports {
-        let entry = entries.iter().find(|entry| entry["id"] == report.id)
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == report.id)
             .with_context(|| format!("website report is missing from manifest: {}", report.id))?;
-        for (file, field) in [("index.html", "publicReportSha256"), ("about.html", "contextSha256"), ("release-receipt.json", "receiptSha256")] {
+        for (file, field) in [
+            ("index.html", "publicReportSha256"),
+            ("about.html", "contextSha256"),
+            ("release-receipt.json", "receiptSha256"),
+        ] {
             let path = root.join(&report.id).join(file);
             if entry[field].as_str() != Some(sha256_file(&path)?.as_str()) {
                 bail!("website report integrity check failed: {path}");
             }
         }
-        let receipt: serde_json::Value = serde_json::from_slice(&fs::read(root.join(&report.id).join("release-receipt.json"))?)?;
+        let receipt: serde_json::Value = serde_json::from_slice(&fs::read(
+            root.join(&report.id).join("release-receipt.json"),
+        )?)?;
         if let Some(expected) = receipt["upstreamReceiptSha256"].as_str() {
             if sha256_file(&root.join(&report.id).join("upstream-receipt.json"))? != expected {
                 bail!("upstream receipt integrity check failed: {}", report.id);
             }
         }
-
     }
     Ok(())
 }
@@ -406,12 +521,13 @@ fn render_context(
     let publication_changes = transformations
         .iter()
         .filter_map(|transformation| match *transformation {
+            "synthesis_publication_instruments_v1" => Some("interactive views were derived from the recorded fields and measurements, and the channel decoder was repaired"),
             REDACT_SOURCE_PREFIX => Some("internal file paths were shortened"),
             NEUTRALIZE_LOCAL_LINKS => {
                 Some("links to files that are not published here were disabled")
             }
             NORMALIZE_PUBLIC_EDITORIAL => {
-                Some("release-management labels were removed from the reading copy")
+                Some("public-facing wording and explanations were revised without changing the recorded measurements")
             }
             EXPAND_INTERNAL_CHECKPOINTS => {
                 Some("internal checkpoint labels were written out as developmental passages")
@@ -488,7 +604,11 @@ fn render_context(
                             details {
                                 summary { "About this publication" }
                                 p {
-                                    "The figures and results match the source file. For publication, "
+                                    @if transformations.contains(&"synthesis_publication_instruments_v1") {
+                                        "The recorded measurements are retained. For publication, "
+                                    } @else {
+                                        "The figures and results match the source file. For publication, "
+                                    }
                                     (publication_changes)
                                     ". Source checksum: "
                                     code { (&report.sha256) }
@@ -584,7 +704,9 @@ fn project_public_report(
     if let Some(head_end) = projected.find("</head>") {
         projected.insert_str(head_end, r#"<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="icon" href="/assets/logo-black.svg">"#);
     }
-    projected = Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?.replace_all(&projected, "").into_owned();
+    projected = Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?
+        .replace_all(&projected, "")
+        .into_owned();
 
     let needs_mobile_normalization = !transformations.is_empty()
         || matches!(
@@ -906,6 +1028,60 @@ fn escape_html_attribute(value: &str) -> String {
     escape_html_text(value).replace('"', "&quot;")
 }
 
+fn apply_synthesis_publication(source: &str) -> Result<String> {
+    let mut html = source.replace(
+        "class=\"specter-report\"",
+        "class=\"specter-report synthesis-publication\"",
+    );
+    let observation = Regex::new(r#"(?s)<section class="synthesis-observation".*?</section>"#)?;
+    html = observation.replace_all(&html, "").into_owned();
+    let hero = Regex::new(r#"(?s)<header class="hero editorial-synthesis" id="top">.*?</header>"#)?;
+    if !hero.is_match(&html) {
+        bail!("synthesis publication opening is missing");
+    }
+    html = hero.replace_all(&html, regex_lite::NoExpand(include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-opening.html"))).into_owned();
+    let forecast = Regex::new(
+        r#"(?s)<figure class="figure"><svg[^>]+aria-labelledby="how-whole-state-and-separable-forecasting-are-compared-title[^>]*>.*?</figure>|<figure class="synthesis-forecast".*?</figure>"#,
+    )?;
+    html = forecast.replace_all(&html, regex_lite::NoExpand(include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-forecast.html"))).into_owned();
+    for (before, after) in [
+        ("However, the geometry behaved like a clock", "Developmental geometry"),
+        ("it did not behave like a lever", "Tracking development did not make it easier to control"),
+        ("the same picture can contain a different future", "Composition changed growth; donor identity did not reliably transfer"),
+        ("Harder to redirect. Still many possible shapes.", "Older bodies resist redirection without converging on one shape"),
+        ("A persistent shape is only part of the story.", "Stability, identity, and shape develop differently"),
+        ("Those results made the geometry useful in a different way, because it could tell us where a run was in its reorganization even though pushing the score itself did not reliably advance that process.", "The score tracked reorganization, but interventions that raised it did not consistently accelerate development."),
+    ] {
+        html = html.replace(before, after);
+    }
+    let footer = Regex::new(r#"(?s)<footer class="footer">.*?</footer>"#)?;
+    html = footer.replace_all(&html, r##"<footer class="footer"><nav class="wrap footer-grid" aria-label="Report resources"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="#ledger">Methods and sources</a><a href="about.html">About this report</a></nav></footer>"##).into_owned();
+    // The upstream patch payloads contain little-endian Float32 bytes, not an array.
+    let decoder = r#"function renderPatch(canvas, patch, hidden) {
+  if (typeof patch.data === 'string') {
+    const bytes = Uint8Array.from(atob(patch.data), c => c.charCodeAt(0));
+    if (bytes.length !== patch.width * patch.height * patch.channels * 4) throw new Error('Invalid field payload length');
+    const view = new DataView(bytes.buffer);
+    patch.data = Float32Array.from({length: bytes.length / 4}, (_, i) => view.getFloat32(i * 4, true));
+  }"#;
+    if !html.contains("Invalid field payload length") {
+        if !html.contains("function renderPatch(canvas, patch, hidden) {") {
+            bail!("synthesis channel renderer is missing");
+        }
+        html = html.replace("function renderPatch(canvas, patch, hidden) {", decoder);
+    }
+    for (tag, contents) in [
+        ("style", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-publication.css")),
+        ("script", include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-publication.js")),
+    ] {
+        let previous = Regex::new(&format!(r#"(?s)<{tag} data-synthesis-publication>.*?</{tag}>"#))?;
+        html = previous.replace_all(&html, "").into_owned();
+        let end = if tag == "style" { "</head>" } else { "</body>" };
+        html = html.replace(end, &format!("<{tag} data-synthesis-publication>{contents}</{tag}>{end}"));
+    }
+    Ok(html)
+}
+
 fn normalize_public_editorial(
     source: &str,
     replacements: &[EditorialReplacement],
@@ -1011,6 +1187,37 @@ mod tests {
             "html.specter-report{color-scheme:light}\n",
         )
         .unwrap();
+    }
+
+    #[test]
+    fn synthesis_publication_refresh_preserves_evidence_and_single_instruments() {
+        let evidence = r#"<svg data-evidence="original"><text>0.008877</text></svg><script>const PATCHES = {"data":"AACAPw=="};function renderPatch(canvas, patch, hidden) { return patch; }</script>"#;
+        let source = format!(
+            r#"<html class="specter-report"><head></head><body><header class="hero editorial-synthesis" id="top"><h1>Old heading</h1></header><main>{evidence}</main></body></html>"#
+        );
+        let first = apply_synthesis_publication(&source).unwrap();
+        let refreshed = apply_synthesis_publication(&first).unwrap();
+        assert_eq!(
+            refreshed.matches("id=\"development-observation\"").count(),
+            1
+        );
+        assert_eq!(refreshed.matches("id=\"synthesis-field\"").count(), 1);
+        assert_eq!(
+            refreshed
+                .matches("<style data-synthesis-publication>")
+                .count(),
+            1
+        );
+        assert_eq!(
+            refreshed
+                .matches("<script data-synthesis-publication>")
+                .count(),
+            1
+        );
+        assert_eq!(refreshed.matches("Invalid field payload length").count(), 1);
+        assert!(refreshed.contains(r#"<svg data-evidence="original"><text>0.008877</text></svg>"#));
+        assert!(refreshed.contains(r#"const PATCHES = {"data":"AACAPw=="};"#));
+        assert!(apply_synthesis_publication("<p>No opening</p>").is_err());
     }
 
     #[test]
@@ -1263,17 +1470,66 @@ mod tests {
         let legacy = root.join("legacy");
         let legacy_report = legacy.join("releases/projected-report-aaaaaaaaaaaa");
         fs::create_dir_all(&legacy_report).unwrap();
-        fs::copy(release.join("index.html"), legacy_report.join("report.html")).unwrap();
-        fs::copy(release.join("release-receipt.json"), legacy_report.join("release-receipt.json")).unwrap();
-        let mut legacy_manifest: serde_json::Value = serde_json::from_slice(&fs::read(output.join("manifest.json")).unwrap()).unwrap();
-        legacy_manifest["schema"] = serde_json::json!("specter_flow_lenia_report_library_bundle_v2");
-        fs::write(legacy.join("manifest.json"), serde_json::to_vec(&legacy_manifest).unwrap()).unwrap();
+        fs::copy(
+            release.join("index.html"),
+            legacy_report.join("report.html"),
+        )
+        .unwrap();
+        fs::copy(
+            release.join("release-receipt.json"),
+            legacy_report.join("release-receipt.json"),
+        )
+        .unwrap();
+        let mut legacy_manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(output.join("manifest.json")).unwrap()).unwrap();
+        legacy_manifest["schema"] =
+            serde_json::json!("specter_flow_lenia_report_library_bundle_v2");
+        fs::write(
+            legacy.join("manifest.json"),
+            serde_json::to_vec(&legacy_manifest).unwrap(),
+        )
+        .unwrap();
         let migrated = root.join("migrated");
         stage_library(root, &legacy, &migrated, None).unwrap();
-        assert!(migrated.join("reports/projected-report/upstream-receipt.json").is_file());
-        let migrated_receipt = fs::read_to_string(migrated.join("reports/projected-report/release-receipt.json")).unwrap();
+        assert!(migrated
+            .join("reports/projected-report/upstream-receipt.json")
+            .is_file());
+        let migrated_receipt =
+            fs::read_to_string(migrated.join("reports/projected-report/release-receipt.json"))
+                .unwrap();
         assert!(migrated_receipt.contains(&sha256_bytes(public.as_bytes())));
-        fs::write(legacy_report.join("report.html"), "modified after publication").unwrap();
+        fs::write(
+            root.join(REPORT_POLISH_PATH),
+            ".specimen figcaption { color: #fff; }",
+        )
+        .unwrap();
+        let refreshed = root.join("refreshed");
+        stage_library(root, &migrated, &refreshed, None).unwrap();
+        let refreshed_html =
+            fs::read_to_string(refreshed.join("reports/projected-report/index.html")).unwrap();
+        assert!(refreshed_html.contains(".specimen figcaption { color: #fff; }"));
+        assert_eq!(
+            refreshed_html.matches("data-specter-public-polish").count(),
+            1
+        );
+        assert_eq!(
+            refreshed_html
+                .matches("/assets/publication-layout.css")
+                .count(),
+            1
+        );
+        let repeated = root.join("repeated");
+        stage_library(root, &refreshed, &repeated, None).unwrap();
+        assert_eq!(
+            refreshed_html,
+            fs::read_to_string(repeated.join("reports/projected-report/index.html")).unwrap()
+        );
+
+        fs::write(
+            legacy_report.join("report.html"),
+            "modified after publication",
+        )
+        .unwrap();
         let error = stage_library(root, &legacy, &root.join("corrupt"), None).unwrap_err();
         assert!(error.to_string().contains("public report hash mismatch"));
     }
@@ -1333,7 +1589,7 @@ mod tests {
             &sha256_bytes(public.as_bytes()),
             &projection.transformations,
         );
-        assert!(context.contains("release-management labels were removed"));
+        assert!(context.contains("public-facing wording and explanations were revised"));
         assert!(!context.contains("scientific prose"));
     }
 }

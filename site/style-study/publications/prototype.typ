@@ -66,7 +66,7 @@
   pagebreak()
   text(size: 24pt)[Comparison plate]
   v(8mm)
-  image("../assets/comparison-plate.svg", width: 100%)
+  image("../../assets/blog/lenia-morphospace-report/comparison-plate.svg", width: 100%)
   pagebreak()
   text(size: 28pt)[Figure sources]
   v(12mm)

@@ -1,13 +1,14 @@
 [colors]
-ink = "#172021"
-paper = "#f4f1e8"
-bg = "#f4f1e8"
-muted = "#5f645e"
-rule = "#17202133"
-rule-strong = "#17202166"
-accent = "#a44733"
-accent-2 = "#365b4e"
+ink = "#20212b"
+paper = "#f8f4ea"
+bg = "#f8f4ea"
+muted = "#62616a"
+rule = "#20212b33"
+rule-strong = "#20212b66"
+accent = "#ae4a28"
+accent-2 = "#344aa0"
 panel = "#fffdf7"
+surface = "#f5e7d7"
 
 [fonts]
 display = ["Arial", "Helvetica", "sans-serif"]

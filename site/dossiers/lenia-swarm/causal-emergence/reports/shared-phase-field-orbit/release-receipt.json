@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "geometric orbit intervention",
-  "sourceReportSha256": "81d7114fd6c2a2d915eb57d78596eb96d6c391ad99dd8b8f0792a156e7c68fe1",
-  "publicReportSha256": "9357caa0c8739f15d01499bd3bd37b24bb5fbc69ee86c555423ecba16642130f",
+  "sourceReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
+  "publicReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "fcb8fdb3ad3f0f11f28c2ee092fa56345a8b7251c2f15a172f8cc1150cdd43f7",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "08f7328bc5940a5d799338f6b3960414176f4042c3f508d653ee509f291d04f0"
+  "contextSha256": "dc2793c72f1c5a108f222e3f67b5c29a92dcc5539def10aa50ce17b707763acc",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "36818e8f274669a2de8cad6bbff6a1325660bd0095d78fbd24bf3d62eb4e7e6c"
 }

@@ -8,6 +8,8 @@ toc: true
 
 # Material memory without a controller
 
+*Paused exploratory draft. Retained for the experimental record; this project is not part of the current release work. The damage-recovery failures and layout dependence below remain essential to its interpretation.*
+
 A minimal Jolt rigid-body assembly with local, history-dependent updates and no centralized
 controller. Each body receives local updates to friction, stiffness, and plasticity from
 interaction history. The question: what does the substrate retain after perturbation, and
@@ -162,4 +164,4 @@ attraction would move the result from "persistent commitments" toward set-points
 
 ---
 
-That is the draft.
+

@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "early-age direction intervention",
-  "sourceReportSha256": "8f90f8228f12961e14cd2e21fccdd7637528912944e1b65fc0609cf75b9850ad",
-  "publicReportSha256": "eaa406d3024d3f93c99cbd2fcdadc9418331e97ca527aef3c82205c47bf124d7",
+  "sourceReportSha256": "dccd35fbeca5595859cb31736f9e051928747b32a9dcb959576641b465f16802",
+  "publicReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "f28433e65d62667af642415b90a1e831971ab38d4e2209fa7a98a1cfd4d350ab",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "efbc78acbb189483791408e2d3ffbddb94d348ea252effad110f73d78e82873e"
+  "contextSha256": "61e636f9d9c506c2afa1dcef6184cb8c1c68c100c513f4dcb2cd0e811d76e360",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "d9c5bba39cb40a01a10a97db97aa4d8c718e33ae8147238d4b6c6b48a9e66c95"
 }

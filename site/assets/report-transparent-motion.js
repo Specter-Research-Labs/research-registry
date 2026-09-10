@@ -1,4 +1,4 @@
-// Native RGBA renders, encoded as lossless animated WebP for browser transparency.
+// Native RGBA renders, encoded as animated WebP for browser transparency.
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 document.querySelectorAll('.report-motion-frame').forEach(frame => {
   const image = frame.querySelector('.report-transparent-motion');
@@ -23,6 +23,6 @@ document.querySelectorAll('.report-motion-frame').forEach(frame => {
     if (playing) { playing = false; image.src = image.dataset.still; button.textContent = 'Retry motion'; button.setAttribute('aria-pressed', 'false'); }
   });
   button.addEventListener('click', () => setPlaying(!playing));
-  if (!motionPreference.matches) setPlaying(true);
+  if (!motionPreference.matches && frame.dataset.motionAutoplay !== 'false') setPlaying(true);
   motionPreference.addEventListener('change', () => { if (motionPreference.matches && playing) setPlaying(false); });
 });

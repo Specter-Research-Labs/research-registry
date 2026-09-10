@@ -258,7 +258,13 @@ pub struct SitemapGroup {
     pub children: Vec<SitePageRecord>,
 }
 
-const SITEMAP_SKIP: &[&str] = &["templates", "sitemap", "research-notes"];
+const SITEMAP_SKIP: &[&str] = &[
+    "templates",
+    "sitemap",
+    "research-notes",
+    "review",
+    "style-study",
+];
 const SITEMAP_SHALLOW: &[&str] = &["cabinet"];
 
 pub fn discover_sitemap_pages(repo_root: &Utf8Path) -> Vec<SitemapGroup> {

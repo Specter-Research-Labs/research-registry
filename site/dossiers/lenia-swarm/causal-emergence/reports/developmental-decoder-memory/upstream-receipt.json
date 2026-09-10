@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "factorial prime-test intervention",
-  "sourceReportSha256": "6329a7a2d34c51132da53a2af4a18850a6510f4b3b87c9fedd0a4efddc24de70",
-  "publicReportSha256": "0028e0a6f51312391ac8475cab728faf970a85e14f7080ddddc9cba2782e8fcb",
+  "sourceReportSha256": "d23351c9a3fa02fc02731281fb08be6b4ea1e0508539352670208d1cd0c5599e",
+  "publicReportSha256": "6de654e6ea60c8ec5592f6b7abc7c74bd74dae3e466caed3ab310dafc5694e1e",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "3d64c7c62f167330a60a36bfb10c31b86aa820124f37be6daa528a6a39303e0d",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "1419e284b876a5ee79fe1c1720f9bfa5b2d11cf839ea59ea932d95251cc000fb"
+  "contextSha256": "2aac5b995f6772284ca48dc9964a24649217a52131fc81469c440e1b129f6605",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "d32b1c1bc7561aed72859ade29cabea09f8d23deb669ac0c1e45b0e4c329f1f0"
 }

@@ -4,6 +4,8 @@ release: "draft"
 
 # Material Memory Without a Controller
 
+*Paused exploratory draft. Retained for the experimental record; this project is not part of the current release work. The damage-recovery failures and layout dependence below remain essential to its interpretation.*
+
 A physical substrate with only local, history-dependent updates. No controller. What does it
 retain after perturbation?
 
@@ -245,4 +247,4 @@ Order-sensitive overwriting, spontaneous return to a prior target, or a measurab
 attraction would push the story from "persistent commitments" toward set-points. If none of that
 shows up, the substrate stores traces but not flexible goals.
 
-So far the system remembers things and sometimes that memory gets in the way. That is the draft.
+So far the system remembers things and sometimes that memory gets in the way. 

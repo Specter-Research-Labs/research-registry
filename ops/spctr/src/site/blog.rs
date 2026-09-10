@@ -47,6 +47,103 @@ pub fn build_blog(repo_root: &Utf8Path, write: bool) -> Result<()> {
     Ok(())
 }
 
+pub fn preview_blog(repo_root: &Utf8Path, slug: &str) -> Result<()> {
+    let posts = discover::discover_all_blog_posts(repo_root)?;
+    let post = posts
+        .iter()
+        .find(|post| post.href == format!("blog/{slug}/"))
+        .with_context(|| format!("unknown blog article: {slug}"))?;
+    let html = preview_links(&render_blog(repo_root, post)?, slug)?;
+    let dest = repo_root.join(format!("site/review/blog/{slug}/index.html"));
+    fs::create_dir_all(dest.parent().context("preview has no parent")?)?;
+    fs::write(&dest, html)?;
+    eprintln!("built local preview /review/blog/{slug}/ (publication status unchanged)");
+    Ok(())
+}
+
+fn preview_links(html: &str, slug: &str) -> Result<String> {
+    let base = url::Url::parse(&format!("https://preview.invalid/blog/{slug}/"))?;
+    let attrs = regex_lite::Regex::new(r#"\b(href|src|poster|data-trace-src)=("|')([^"']+)("|')"#)?;
+    let mut rendered = String::new();
+    let mut offset = 0;
+    for caps in attrs.captures_iter(html) {
+        let span = caps.get(0).context("missing URL attribute match")?;
+        rendered.push_str(&html[offset..span.start()]);
+        let href = &caps[3];
+        if href.starts_with(['#', '/']) || url::Url::parse(href).is_ok() {
+            rendered.push_str(&caps[0]);
+        } else {
+            let target = base
+                .join(href)
+                .with_context(|| format!("invalid article URL: {href}"))?;
+            rendered.push_str(&format!(
+                "{}={}{}{}",
+                &caps[1],
+                &caps[2],
+                &target[url::Position::BeforePath..],
+                &caps[4]
+            ));
+        }
+        offset = span.end();
+    }
+    rendered.push_str(&html[offset..]);
+    Ok(rendered.replace(
+        "</head>",
+        "<meta name=\"robots\" content=\"noindex, nofollow\" /></head>",
+    ))
+}
+
+fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<String> {
+    let slug = discover::blog_slug_from_href(&post.href)?;
+    let md = discover::blog_markdown_path(repo_root, slug);
+    let site_root = repo_root.join("site");
+    let result = Command::new("pandoc")
+        .arg(&md)
+        .args([
+            "--from=markdown+autolink_bare_uris",
+            "--to=html5",
+            "--standalone",
+            "--wrap=none",
+            "--citeproc",
+            "--metadata=reference-section-title:References",
+            "--toc",
+            "--toc-depth=2",
+            "--mathml",
+        ])
+        .arg(format!(
+            "--template={}",
+            site_root.join("blog/pandoc-template.html")
+        ))
+        .arg(format!(
+            "--resource-path={}:{}",
+            md.parent().context("article has no parent")?,
+            site_root
+        ))
+        .args([
+            "--metadata",
+            "lang=en",
+            "--metadata",
+            &format!("pagetitle={} | SPECTER Labs", post.title),
+            "--metadata",
+            &format!("slug={slug}"),
+            "--metadata",
+            &format!("status={}", post.release),
+        ])
+        .current_dir(&site_root)
+        .output()
+        .context("failed to run pandoc")?;
+    if !result.status.success() {
+        bail!(
+            "pandoc failed for blog/{slug}/index.md: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    }
+    if !result.stderr.is_empty() {
+        eprint!("{}", String::from_utf8_lossy(&result.stderr));
+    }
+    String::from_utf8(result.stdout).context("pandoc produced invalid UTF-8")
+}
+
 struct ResearchNoteRecord {
     slug: String,
     title: String,
@@ -77,13 +174,12 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
     notes.par_iter().try_for_each(|note| -> Result<()> {
         let md_path = notes_root.join(&note.slug).join("index.md");
         let out_path = notes_root.join(&note.slug).join("index.html");
+        let pagetitle = format!("{} | SPECTER Labs", note.title);
         let dest = if write {
             out_path.to_string()
         } else {
             "/dev/null".into()
         };
-
-        let pagetitle = format!("{} | SPECTER Labs", note.title);
         let mut command = Command::new("pandoc");
         command
             .arg(&md_path)
@@ -92,6 +188,8 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
                 "--to=html5",
                 "--standalone",
                 "--wrap=none",
+                "--citeproc",
+                "--metadata=reference-section-title:References",
             ])
             .arg(format!("--template={}", template))
             .args(["--toc", "--toc-depth=2", "--mathml"])
@@ -200,41 +298,11 @@ pub(crate) fn build_blog_for_posts(
             return Ok(());
         }
         let slug = discover::blog_slug_from_href(&post.href)?;
-        let md_path = discover::blog_markdown_path(repo_root, slug);
         let out_path = site_root.join(format!("blog/{slug}/index.html"));
 
-        let dest = if write {
-            out_path.to_string()
-        } else {
-            "/dev/null".into()
-        };
-
-        let pagetitle = format!("{} | SPECTER Labs", post.title);
-        let status = Command::new("pandoc")
-            .arg(&md_path)
-            .args([
-                "--from=markdown+autolink_bare_uris",
-                "--to=html5",
-                "--standalone",
-                "--wrap=none",
-            ])
-            .arg(format!("--template={}", template))
-            .args(["--toc", "--toc-depth=2", "--mathml"])
-            .arg("--metadata")
-            .arg("lang=en")
-            .arg("--metadata")
-            .arg(format!("pagetitle={pagetitle}"))
-            .arg("--metadata")
-            .arg(format!("slug={slug}"))
-            .arg("--metadata")
-            .arg(format!("status={}", post.release))
-            .arg(format!("--output={dest}"))
-            .current_dir(&site_root)
-            .status()
-            .context("failed to run pandoc")?;
-
-        if !status.success() {
-            bail!("pandoc failed for blog/{slug}/index.md");
+        let html = render_blog(repo_root, post)?;
+        if write {
+            fs::write(&out_path, html).with_context(|| format!("failed to write {out_path}"))?;
         }
 
         if write {
@@ -458,6 +526,18 @@ mod tests {
         let path = root.join(rel);
         fs::create_dir_all(path.parent().expect("test path has parent")).unwrap();
         fs::write(path, content).unwrap();
+    }
+
+    #[test]
+    fn preview_keeps_anchors_and_resolves_source_assets() {
+        let html = r##"<head></head><a href="#kernel">Kernel</a><script src="lenia.js"></script><a href="../../dossiers/">Research</a><img src="https://example.org/figure.png"><div data-trace-src="trace.json"></div>"##;
+        let preview = preview_links(html, "lenia-explainer").unwrap();
+        assert!(preview.contains(r##"href="#kernel""##));
+        assert!(preview.contains(r#"src="/blog/lenia-explainer/lenia.js""#));
+        assert!(preview.contains(r#"href="/dossiers/""#));
+        assert!(preview.contains(r#"src="https://example.org/figure.png""#));
+        assert!(preview.contains(r#"data-trace-src="/blog/lenia-explainer/trace.json""#));
+        assert!(preview.contains("noindex, nofollow"));
     }
 
     #[test]

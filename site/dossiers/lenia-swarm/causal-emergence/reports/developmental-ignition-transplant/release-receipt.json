@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "hidden-state transplant intervention",
-  "sourceReportSha256": "4578ea5a51665f796bab71ad2e5ce16d657a9c51ad35fa051788a62c1c36fffe",
-  "publicReportSha256": "f5f5a9c10613eb7841fa70a367f84c210d6282d38fea3c3703eac68d2e262b2d",
+  "sourceReportSha256": "5ae2bd52019d0c3db4dfd8bbbb22a63451d9ff316e9e19bf371edd9f5aefce2a",
+  "publicReportSha256": "5ae2bd52019d0c3db4dfd8bbbb22a63451d9ff316e9e19bf371edd9f5aefce2a",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "3b701c3280d49aced1c9c0088bfd958b8fc5a6434704220e32cd9844eb193a88",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "b066efcbc67065563c540ffde9e39d13aa7e42059beda5c8adc30ff8a02255ca"
+  "contextSha256": "325a908ffa4b5638e1542426f66afc85698e3e61b57556925d34d13c29776e47",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "f9099968a08707ad156bace58c287055ac46e55bea05801bdd9629e5a195c11f"
 }

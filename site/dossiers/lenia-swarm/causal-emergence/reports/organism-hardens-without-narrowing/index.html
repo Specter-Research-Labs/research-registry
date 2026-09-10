@@ -1148,7 +1148,7 @@ html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: 
 html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
 html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
 html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #17282d; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
 html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
 html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
 html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
@@ -1172,6 +1172,61 @@ html.specter-report svg[aria-label="Same-action gate effects across eight morpho
 html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
 html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
 html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+
+/* Native specimen panels retain their black image field. Their labels must
+ * remain legible after the surrounding report adopts paper-colored tokens. */
+html.specter-report .specimen > figcaption {
+  color: #d3d5d7 !important;
+  background: #050608;
+}
+html.specter-report .specimen > figcaption :is(b, strong, span) {
+  color: inherit !important;
+}
+
+/* Keep imported data labels readable on a phone instead of shrinking an
+ * entire desktop plot into a few hundred pixels. Captions still wrap. */
+@media (max-width: 700px) {
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+  html.specter-report div.chart > svg { min-width: 760px; }
+  html.specter-report div.card.chart > svg { min-width: 940px; }
+  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
+  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 var(--specter-mono);
+    color: var(--specter-muted);
+  }
+}
+
+@media (max-width: 700px) {
+  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
+  html.anatomical-editorial .figure > svg { min-width: 640px; }
+  html.anatomical-editorial .figure:has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 ui-monospace, monospace;
+  }
+  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
+}
+
+/* A source report's compact local navigation must not hide the injected
+ * site navigation or the links back to its dossier and report library. */
+html.specter-report :is(.publication-header, .publication-navigation) a {
+  display: inline-flex !important;
+}
+
+/* The commitment report deliberately keeps dark data panels. */
+html.specter-report:has(#steerability) .chart-grid .figure svg text {
+  fill: #e9e7df !important;
+}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/organism-hardens-without-narrowing/"></head>
 <body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a></nav>
@@ -1291,7 +1346,7 @@ html.specter-report body > nav.publication-navigation span { color: #59615a !imp
       </div>
     </div>
   </div>
-  <p class="intro" style="margin-top:44px;">For this cohort and measurement, effects outside the reported interval are not supported: compressions stronger than about &minus;0.008 per pair distance are outside the interval. What it cannot do is distinguish the original &minus;0.0040 from zero, because twelve fresh families buy an interval half-width of about 0.006, so a true effect of the original size would fail this criterion more often than not. The late-passage shape of the profile matches the original finding while its magnitude, at half the original point estimate, does not clear it. The fine-shape compression now stands as an unconfirmed hypothesis with a direction-consistent replication attempt on record, not as a result.</p>
+  <p class="intro" style="margin-top:44px;">The fresh interval includes both zero and the original &minus;0.0040 estimate. This experiment therefore neither confirms the earlier compression nor rules out an effect of that size. The point estimate is about half the original magnitude, and the late-passage profile has the same direction. Fine-shape compression remains an unconfirmed hypothesis; the frequency with which a new study would detect it requires a separate power analysis.</p>
   <div class="disclosure">
     <h3>Disclosures</h3>
     <p>The fresh cohort's appearance review was not repeated by a human: the plan replaces the appearance rubric with the three mechanical gates and records appearanceRubricReplacedByMechanicalGates: true, scientificOutcomesInspected: false.</p>
@@ -1423,7 +1478,7 @@ html.specter-report body > nav.publication-navigation span { color: #59615a !imp
 </section>
 
 <section id="method">
-  <h2>Large enough to see the profile. Frozen enough to trust the misses.</h2>
+  <h2>How the follow-up experiments were specified</h2>
   <div class="method">
     <div><strong>3,910</strong><small>physics runs: 774 confirmation, 2,624 steerability, 512 basin, 0 disambiguation (frozen analysis over the basin corpus)</small></div>
     <div><strong>4 plans</strong><small>frozen before outcomes, write-once, SHA-256 bound to code, tests, and upstream artifacts, cross-bound between experiments</small></div>

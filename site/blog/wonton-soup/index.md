@@ -8,30 +8,26 @@ pdf: wonton-soup.pdf
 
 # Proof search with a missing tactic
 
-`wonton-soup` is our intervention harness for proof-search experiments. The question:
+In one Wonton search, the prover found a proof using `contrapose!`. When we blocked that tactic, it still reached the theorem, this time through `intro` and `exact`. The result stayed the same while the route changed. That small detour is what we want to understand: when a familiar proof becomes unavailable, what alternatives can the prover actually find?
 
-when we perturb a solver's search process, does it return to the same proof structure, or settle into a different one?
+A theorem may have many valid proofs while a particular search depends heavily on one tactic. Even visibly different proof terms can share that dependency. Wonton records the attempted tactics and intermediate goals so we can compare the route as well as the final success or failure. Blocking a tactic turns a collection of observed proofs into a test of which alternatives remain usable under the same search budget.
 
-We run wild-type and intervention sweeps over deterministic theorem samples, capture full search artifacts (`*_history.json`, `*_mcts_tree.json`, `*_graph.json`, `*_comparison.json`), and compare outcomes across seeds, tactics, providers, and backends.
+This article follows the early experiments and the machinery built to make those comparisons. The later [controlled tactic-blocking study](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/) tests the question across a larger cohort. Along the way, an [unused-tactic control](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) exposed a problem with inference reproducibility that a fixed search seed had concealed.
 
 ![MCTS Proof Search Tree](../../assets/blog/wonton-soup/fig1-mcts-tree.png)
 
-## 1. What We're Looking For
+## 1. Following the route to a proof
 
-We treat proof search as a stochastic process over structured states.
+At each unfinished goal, the prover proposes tactics and explores the proof states they produce. Some proposals fail immediately; others open new goals or complete the proof. Repeating the search can reveal routes that meet at the same intermediate state, reach the same theorem through different proof terms, or exhaust the budget without a solution.
 
-- A perturbation can be a blocked tactic or tactic family, a seed change, or a policy/scheduler change.
-- A response can be recovery to the same recurring proof shape or migration into a different proof-graph cluster, which the basin analysis treats as an attractor.
-- The object of study is not only solve rate; it is the shape and stability of search trajectories.
+We change one part of that process and compare the traces. A tactic block removes an action; changing a seed alters exploration; a scheduling intervention changes when workers examine parts of the search. Recording those differences lets us distinguish a local tactic substitution from a broader change of route. Recurring proof-graph clusters summarize the outcomes, though their recurrence alone does not establish dynamical attractors.
 
-This is why we log enough structure to replay and compare runs months later under fixed configuration.
+## 2. What an intervention can reveal
 
-## 2. Theoretical Mapping
-
-Our intervention protocol applies three specific concepts from the [Diverse Intelligence](https://www.diverseintelligence.org/) research program to formal proof search.
+The [Diverse Intelligence](https://www.diverseintelligence.org/) programme asks how systems preserve or reach outcomes when their usual mechanisms are disturbed. Proof search gives us an unusually explicit target for that question: the theorem checker determines whether the result is valid, while the trace records how the prover reached it. We use efficiency, rerouting and recurring structure to examine different parts of the response.
 
 ### Search efficiency as a metric ($K$)
-Following [Chis-Ciure and Levin (2025)](https://link.springer.com/article/10.1007/s11229-025-05319-6), we treat intelligence as search efficiency in problem spaces, measuring the log-ratio between a random walk ($\tau_{blind}$) and our observed agent ($\tau_{agent}$):
+Following [Chis-Ciure and Levin (2025)](https://link.springer.com/article/10.1007/s11229-025-05319-6), we measure one proposed aspect of problem-solving performance: search efficiency relative to a specified blind policy. The score is the log-ratio between a random walk ($\tau_{blind}$) and our observed agent ($\tau_{agent}$):
 $$K = \log_{10}(\tau_{blind} / \tau_{agent})$$
 A positive $K$ quantifies how many orders of magnitude our policy saves over a brute-force baseline.
 
@@ -41,15 +37,11 @@ A positive $K$ quantifies how many orders of magnitude our policy saves over a b
 ### Pattern Invariance (TAME)
 The TAME framework ([Levin, 2022](https://arxiv.org/abs/2201.10346)) argues that behavioral structures, not just low-level mechanisms, persist under perturbation, and in `wonton-soup` we use Graph Edit Distance (GED) and basin analysis to determine whether proof search repeatedly settles into the same proof-graph clusters across different seeds and interventions.
 
-## 3. Harness and Corpus Design
+## 3. Making the rerun comparable
 
-Corpus and run configuration are saved as explicit inputs to every comparison: corpus builds are manifest-backed, run configs are snapshot-pinned, and downstream analysis reads those inputs directly, keeping the baseline fixed while only the intervention changes.
+A failed rerun is informative only if we know what changed. We therefore save the theorem collection, selected items, search budget and intervention with each run. Repeating the corpus reference and seeded selection recovers the same theorem slice; matched controls test whether the inference and search process also behave comparably.
 
-We also separate validity from capability: a theorem can be well-formed for a backend even if the provider cannot solve it under budget, so Gate A checks that an item is structurally processable for the chosen backend and schema, whereas Gate B checks whether the provider and search policy can do meaningful work on that valid slice.
-
-Deterministic selection (`--sample` with `--seed`) is how we ensure replayability, since rerunning later with the same corpus ref and selector inputs should recover the same theorem slice and comparable outputs.
-
-Run-level schemas complete the provenance record with `run_config.json`, `run_status.json`, and `summary.json.gz` for postprocess, lake extraction, and cross-run audits.
+Before testing an intervention, we separate a malformed input from a theorem the prover cannot solve. The first check asks whether the backend can process the item. The second asks whether the provider can solve or meaningfully search it within the budget. The recorded configuration, status and summary preserve those distinctions for later analysis.
 
 ### What is fixed per comparison run
 
@@ -58,25 +50,21 @@ Run-level schemas complete the provenance record with `run_config.json`, `run_st
 - Search budget and core execution knobs (mode, iteration budget, intervention declaration).
 - Analysis inputs consumed by downstream tools (`run_config.json`, `run_status.json`, `summary.json.gz`, theorem subfiles).
 
-## 4. Search Core: Centralized and Distributed MCTS
+## 4. Centralized and distributed Monte Carlo tree search
 
-Both modes walk a tactic-conditioned state graph and use compatible log formats, so a mode switch changes execution dynamics without changing what downstream analysis reads.
+The order in which a prover explores alternatives may matter as much as the alternatives themselves. In centralized Monte Carlo tree search, one selection loop chooses which frontier state to expand next. That gives us a baseline with one expansion order.
 
-Centralized mode is the structural baseline, where a single global selection loop owns frontier choice and expansion order, gives one policy view over one queue, and minimizes coordination effects, making it the simplest setup for studying proof families, basin structure, reroute versus collapse, recovery after intervention, and blind-relative efficiency.
+Distributed search lets several workers explore the same frontier. Reservations reduce duplicated effort, while blocking or delaying workers changes which possibilities are examined first. The comparison asks whether a successful route remains accessible under a different schedule, or depended on the original order of exploration.
 
-Distributed mode adds multiple workers over that same proof-search space, where local agents operate over a shared frontier, inflight reservations reduce duplicate expansion pressure, and scheduling controls let us change coordination directly: block, delay, reroute, virtual loss, and depth/path bias interventions change who explores what and when.
-
-Centralized MCTS maps the proof-search space for a theorem slice, whereas distributed MCTS changes how workers choose and reserve parts of that same shared frontier, testing whether solve behavior depends on one expansion regime or stays robust when worker scheduling changes.
-
-Both modes emit compatible tree and trace files, so comparisons can use the same analysis path (`*_mcts_tree.json`, traces, run summaries) instead of requiring mode-specific postprocess logic.
+Both modes record compatible trees and traces. We can therefore compare the changed search directly, while keeping the theorem and budget fixed, instead of treating the parallel run as a different kind of result.
 
 ![Distributed Frontier](../../assets/blog/wonton-soup/fig9-distributed-frontier.png)
 
 How to read the figure: each worker lane represents local agent activity against a shared frontier, with reservations and scheduler policy shaping contention and handoff, while dense synchronized bands suggest strong coupling and staggered bands indicate looser parallel exploration.
 
-## 5. Backend Families and Artifact Compatibility
+## 5. Comparing different provers
 
-We use a multi-backend harness to test whether behavioral patterns persist across backends or are implementation artifacts. A pattern that recurs across backend families with different proof objects and trace outputs is a stronger candidate invariant.
+A route that is easy for one prover may be inaccessible to another. Comparing backends lets us ask how much of a recurring proof structure belongs to the theorem and how much depends on the solver. The comparison must account for what each solver records: a search graph, a completed proof and an execution trace are different objects.
 
 `wonton-soup` currently supports five execution backends:
 
@@ -102,14 +90,14 @@ This matters for mixed analyses: `ged_search_graph` is meaningful only when a tr
 
 Cross-backend comparisons are safest on shared run-level outcomes and explicitly labeled measurement types. Structure-level comparisons should be grouped by compatible output types, not collapsed into one undifferentiated score.
 
-### Showcase
+### Two views of the same experiment
 
-We pin two recurring analysis views: attractor separation and blind-relative efficiency.
+Two views recur in the analysis: proof-structure clusters and search efficiency relative to a specified blind policy.
 
 <div class="ws-focus-grid">
   <figure>
     <img src="../../assets/blog/wonton-soup/fig4-attractors.png" alt="Attractor analysis figure: GED matrix, clustering cut, and basin mass panels." />
-    <figcaption>Attractor view: structural families and basin mass concentration.</figcaption>
+    <figcaption>Proof-structure clusters and the fraction of sampled runs assigned to each. The figure uses historical “attractor” terminology; it measures recurring outcomes.</figcaption>
   </figure>
   <figure>
     <img src="../../assets/blog/wonton-soup/fig7-k-metric.png" alt="K metric visualization: blind-relative search efficiency calibration." />
@@ -117,9 +105,9 @@ We pin two recurring analysis views: attractor separation and blind-relative eff
   </figure>
 </div>
 
-## 6. Metrics and Comparison Families
+## 6. Measuring the change
 
-Each metric answers a different comparison question:
+A solved/failed label tells us whether a route survived, but not whether it became longer or structurally different. The measurements below separate those changes:
 
 - K-style search efficiency (`k_search_efficiency`) from trace-derived blind nulls.
 - Paper-style paired blind baseline (`paper_k`) from basin runs with `--basin-blind`.
@@ -137,8 +125,8 @@ Each metric answers a different comparison question:
 | `normalized GED_search` | Search-graph structure relative to wild-type | Near `0` means structurally similar search; larger values mean stronger reroute |
 | shared prefix | Number of early wild-type steps replayed before divergence | High prefix means late divergence; low prefix means early policy/path change |
 | divergence iteration/depth | First step where intervention path differs | Lower means early structural perturbation; higher means late perturbation |
-| solve status under block | Whether constrained run still reaches terminal proof | Distinguishes robust reroute from true tactic dependency |
-| basin mass + attractor ID | Fraction of seeds ending in each clustered trajectory family | Concentrated mass indicates stable basin; split mass indicates multimodal behavior |
+| solve status under block | Whether constrained run still reaches terminal proof | Distinguishes a successful alternative from failure within the search budget |
+| basin mass + attractor ID | Fraction of seeds ending in each clustered trajectory family | Concentrated mass means one frequent cluster; split mass means several observed clusters |
 
 K is reported as:
 
@@ -157,11 +145,11 @@ Two related outputs:
 - `k_search_efficiency`: trace-derived null model from postprocess.
 - `paper_k`: paired blind baseline from basin runs with `--basin-blind`.
 
-## 7. Intervention Protocol
+## 7. Blocking a tactic and repeating the search
 
 For each theorem, we first solve a wild-type run and extract the solution path $\pi = \{\tau_1, \dots, \tau_n\}$. We then run controlled lesions by blocking one tactic (or tactic family) from that path and rerun under the same budget and configuration.
 
-This gives a clean comparison: same theorem, same search budget, one constrained action channel, repeated across all path tactics.
+This fixes the intended comparison: the same theorem and budget with one action constrained. An inert-control rerun is also needed to measure variation from the inference service or search execution; the shared seed alone does not supply that control.
 
 ![Canonical Loop](../../assets/blog/wonton-soup/fig6-canonical-loop.png)
 
@@ -173,11 +161,11 @@ This gives a clean comparison: same theorem, same search budget, one constrained
 - Panel B (clustering + cut): where we place the cut determines attractor families.
 - Panel C (basins): seed mass captured by each attractor family.
 
-Interpretation: low GED + large shared basin mass implies robust proof structure; high GED with split mass implies genuine rerouting under intervention.
+Low GED and a frequent shared cluster describe repeated structural similarity. Higher GED with several clusters describes a broader set of observed routes. A causal claim about rerouting also requires the matched controls; neither clustering nor GED establishes a dynamical attractor.
 
-## 8. Log-Derived Vignettes
+## 8. What rerouting looks like
 
-### Vignette Gallery Player
+The recorded examples below range from a changed proof strategy to a substituted final tactic. Step through them to compare what the prover attempted before and after the block.
 
 <div class="ws-stepper ws-vignette-stepper" data-title="Log-derived vignette gallery" data-slides='[
   {
@@ -288,7 +276,7 @@ From **2026-02-04**:
 - `nat_succ_pred`: block `positivity` solved, normalized GED `0.00`. A local tactic swap: the proof keeps the same goal sequence but replaces an automated step with a direct lemma.
 - `iff_intro`: block `exact` solved, normalized GED `0.00`. A shallow reroute: the structure is intact but the terminal discharge uses a different tactic.
 
-## 9. Observations and Results
+## 9. What the early searches revealed
 
 ### Multistability in Proof Space
 Proof search is not a single path: different seeds and interventions often converge to a small number of recurring proof shapes, suggesting that "the proof" is often a family of related trajectories rather than a single sequence of steps.
@@ -306,4 +294,4 @@ Next steps: cross-backend basin agreement tests, calibrated $K$ estimation with 
 
 ---
 
-*This is a technical draft for the Specter Labs research blog. For a compiled dashboard of selected runs, visit the [Wonton Soup Dashboard](/dashboards/wonton-soup/).*
+*This article records the early experimental framework. For the later controlled results, read [Which proofs survive a blocked tactic?](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/). Selected runs are available in the [Wonton Soup Dashboard](/dashboards/wonton-soup/).*

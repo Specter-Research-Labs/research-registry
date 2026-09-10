@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "matched-order history intervention",
-  "sourceReportSha256": "bbeb9b53c6e219edec76fd5c4e6c91b5228ddef2638d085a27c530f5f3813bfb",
-  "publicReportSha256": "9e87e9b279d4da6a11c1aef7e30b0e0c90aa240e7f2272dea966d0b5e077d770",
+  "sourceReportSha256": "565c7664f09035113eb10e5fc3e4dbc1373b0c88059f83fc5873bc20d088b27f",
+  "publicReportSha256": "96faecbee7414235a768c7ed823e9c036b0b4f9d7a89fee27a8e8513aa61c21d",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "aeafa49a35ac5db8bb753724ac9f909e8575719394e612bca90c391489e718af",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "e7025e5ae1ffa87ab5b62f512733e4e23dc4800cee8cec3f5f89e5e7d84fdec1"
+  "contextSha256": "3ca01c3213e85657eb124bbee6992baab764a5244c57736dbba23d36896b2e2c",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "6bb956e36203ab8863b5c4616155fc24691986cc95d573696fab3e0da3ff4c47"
 }

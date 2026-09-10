@@ -248,18 +248,18 @@
       <div>
         <div class="eyebrow">Flow Lenia / inverse design / experimental report</div>
         <h1>Can we recover the rules of a Lenia creature?</h1>
-        <p class="dek">Can we specify a body and find the rules that produce it? In Flow Lenia, matching a few measurements can grow a very different anatomy. Supplying a complete field—or a known rule family—changes what the search can recover.</p>
+        <p class="dek">We asked a search algorithm to reproduce a tapered Lenia body. It found a segmented one with similar measurements. The mismatch exposes a difficulty in designing living-looking forms: what must we specify for a rule to grow the body we actually want?</p>
         <div class="status">5,000-rule corpus + specimen 2876 and Orbium reruns · rebuilt 2026-09-02</div>
       </div>
       <figure class="hero-specimens"><div><div><img src="assets/organic-target-late.png" alt="The target: one tapered body."><span>Requested body</span></div><div><img src="assets/organic-recovered-late.png" alt="The fitted result: repeated segments."><span>Fitted rule</span></div></div><figcaption><strong>Similar mass. Different anatomy.</strong> Four trajectory measurements brought these bodies close in the score. They left their spatial arrangement largely unconstrained. <a href="#forms">Follow this search →</a></figcaption></figure>
     </div>
 
-    <div class="shell investigation-intro"><p>A body is the result of a rule acting over time. Can we work backward? We tried giving the search progressively more information: four measurements, an entire body, then an observation from a known rule family. The differences between the results show what each request leaves unspecified.</p></div>
+    <div class="shell investigation-intro"><p>The desired body keeps its form through a continuous process of local change. Recovering it means finding dynamics that sustain the anatomy, not merely an image that resembles it. We approached that problem with three different requests. A search scored on four measurements exposed what those measurements leave out. Supplying a complete body let us search for a rule that maintains it. Fixing a known rule family let us recover hidden parameters from an observed frame. Each experiment makes a different part of the inverse problem visible.</p></div>
 
     <section id="forms" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">01</div>
-        <div><div class="eyebrow">Approach one</div><h2>The score improved. The anatomy changed.</h2></div>
+        <div><div class="eyebrow">Approach one</div><h2>A better score produced a different body.</h2></div>
         <p id="descriptor-case">Specimen 2876 was selected from the 5,000-form corpus because its developed body is compact, tapered, and easy to recognize. The search receives four measurements from its 1,200-step trajectory. It does not receive the target images.</p>
       </div>
 
@@ -292,7 +292,7 @@
       <div id="form-maintenance" class="chapter-head" style="margin-top:76px">
         <div class="chapter-no">02</div>
         <div><div class="eyebrow">Approach two</div><h2>We searched for a rule that could maintain a supplied body.</h2></div>
-        <p>In this experiment, the target is a body taken from the dataset, and its complete field is also the initial condition. Candidate rules are judged by whether that field remains coherent, active, and topologically similar during the recorded rollout.</p>
+        <p>The segmented result suggests giving the search the spatial information its score omitted. Here we supply a complete body from the dataset as the initial field. The search must find a rule that keeps that field coherent, active, and topologically similar during the recorded rollout. It can now test how to sustain the anatomy without also having to discover how to grow it.</p>
       </div>
       <figure class="figure">
         <img src="assets/form-compile.png" alt="Target multichannel field, the target reseeded under the fitted rule, and a coherent body grown from noise under the same rule.">
@@ -300,12 +300,12 @@
         <figcaption class="caption"><span class="figure-no">09</span><p>The center panel tests the actual objective: whether the fitted rule maintains the supplied field. The right panel asks a separate question. Starting the same rule from generic noise produces a coherent body, but not the requested anatomy.</p><span class="tag">one form demo</span></figcaption>
       </figure>
       <div class="fact-strip"><div><strong>0.095 → 0.060</strong>best recorded form drift</div><div><strong>96%</strong>largest-component fraction in the target</div><div><strong>10</strong>recorded search iterations</div></div>
-      <p class="reading"><strong>This experiment solves maintenance: the fitted rule holds an existing anatomy together.</strong> The full compiler must also discover a compact starting pattern and the rule that develops it into the requested body.</p>
+      <p class="reading"><strong>The fitted rule maintains the supplied anatomy over the recorded rollout.</strong> The full compiler must also discover a compact starting pattern and the rule that develops it into the requested body.</p>
 
       <div id="orbium-diagnostic" class="chapter-head" style="margin-top:76px">
         <div class="chapter-no">03</div>
         <div><div class="eyebrow">Approach three</div><h2>One mature frame was enough to recover nearby Orbium parameters.</h2></div>
-        <p>This experiment isolates within-family parameter recovery. We supplied Orbium's update law, kernel, growth function, and starting cells, then hid three numerical parameters: the interaction radius <code>R</code>, growth center <code>m</code>, and growth width <code>s</code>. The search evaluates values by comparing each simulated body with the reference at step 600.</p>
+        <p>Orbium lets us ask how much a mature body reveals when we already know the kind of rule that made it. We supplied its update law, kernel, growth function, and starting cells, then hid three numerical parameters: the interaction radius <code>R</code>, growth center <code>m</code>, and growth width <code>s</code>. Each candidate develops from those same starting cells and is compared with the reference body at step 600.</p>
       </div>
 
       <div class="pipeline">
@@ -368,7 +368,7 @@
       <div class="chapter-head">
         <div class="chapter-no">04</div>
         <div><div class="eyebrow">Relating rules to bodies</div><h2>Nearby body measurements can come from distant rules.</h2></div>
-        <p>Phenotype space contains the measurements made on each body. We call the set of rules that produce similar measurements a fiber. A large fiber means that the body measurements constrain the generating rule only loosely.</p>
+        <p>The reconstructions raise a question about the whole collection: how many different rules can fit a similar body? We represent each body by its measured phenotype and call the set of compatible rules a fiber. If that set is broad, choosing a measured form still leaves considerable freedom in the dynamics that produce it.</p>
       </div>
       <div class="visual-stack" style="margin-top:22px">
         <figure class="figure"><img src="assets/dimension-decomposition.svg" alt="A dimension bar decomposing the genotype into measured phenotype dimension and inverse-fiber dimension."><figcaption class="caption"><span class="figure-no">02</span><p>The corpus occupies about 25.5 intrinsic rule dimensions and 5.9 intrinsic phenotype dimensions. Their 19.6-dimension difference (20.9 with an alternative estimator) is estimated from the geometry of the samples; it is not the raw count of 40 parameters minus 15 measurements.</p><span class="tag">5,000 forms</span></figcaption></figure>
@@ -400,7 +400,7 @@
       <div class="chapter-head">
         <div class="chapter-no">05</div>
         <div><div class="eyebrow">Three targets, three inverse problems</div><h2>How reliably does the search improve a target?</h2></div>
-        <p>The examples above are individual reconstructions. Earlier tests asked whether proposed rules remain stable and whether simulation-guided refinement improves more than one target.</p>
+        <p>Retrieving a nearby rule gives the search a starting point; running it reveals whether that proposal produces the requested measurements. Earlier tests examined both parts: whether proposed rules produce stable bodies, and whether simulation-guided refinement improves their match across several targets.</p>
       </div>
       <p class="schematic-note">The results below test parts of this system. The conditional proposal check used eight samples across two targets. The refinement result used four targets. The MLX and Swift comparison covered one rule, one starting field, and six steps.</p>
       <div class="visual-pair">
@@ -421,7 +421,7 @@
       <div class="chapter-head">
         <div class="chapter-no">06</div>
         <div><div class="eyebrow">Predicting behavior from shape</div><h2>Shape predicted activity far better than locomotion.</h2></div>
-        <p>We measured six behaviors in 8,174 creatures and reduced them to principal axes. The first axis is dominated by speed, path length, displacement, and center velocity, so we call it locomotion. The second is dominated by energy and temporal variance, so we call it activity. Together they account for 87.2% of the behavioral variation.</p>
+        <p>A body that matches the requested shape may still move differently. To examine that gap, we measured six behaviors in 8,174 creatures and reduced them to principal axes. The first axis is dominated by speed, path length, displacement, and center velocity, so we call it locomotion. The second is dominated by energy and temporal variance, so we call it activity. Together they account for 87.2% of the behavioral variation.</p>
       </div>
       <figure class="figure"><img src="assets/functional-morphospace.png" alt="Scatterplot of 8,174 creatures in the first two functional principal axes, colored by speed."><figcaption class="caption"><span class="figure-no">11</span><p>Most creatures occupy a dense low-speed region, while fast locomotion forms a sparse tail. Any model trained on this distribution will see many more slow examples than fast ones.</p><span class="tag">8,174 creatures</span></figcaption></figure>
       <div class="visual-pair" style="margin-top:22px">
@@ -441,7 +441,7 @@
       <div class="chapter-head">
         <div class="chapter-no">07</div>
         <div><div class="eyebrow">Development across initial conditions</div><h2>Endpoint density was a poor guide to developmental motion.</h2></div>
-        <p>We fitted a potential surface to the regions where trajectories ended, then compared its downhill direction with their observed motion. The alignment was weak. In a separate perturbation test, five of eight genotypes became more dispersed over time. These results give no evidence that a selected rule will correct perturbations or converge from nearby starts.</p>
+        <p>If many trajectories finish in the same region, it is tempting to picture development as rolling downhill toward it. We tested that picture by fitting a potential surface to the endpoints and comparing its downhill direction with the observed motion. The alignment was weak. In a separate test, five of eight genotypes became more dispersed after their starting conditions were perturbed. Frequent endpoints therefore did not supply the restoring dynamics a compiler would need to rely on.</p>
       </div>
       <div class="visual-pair">
         <figure class="figure"><img src="assets/basin-map.svg" alt="Eight inferred basins in a two-dimensional descriptor space, sized by weight, with aggregate downhill alignment 0.124."><figcaption class="caption"><span class="figure-no">13</span><p>Across 3,600 trajectory points, observed drift aligned with the fitted downhill direction by 0.124. An alignment of 1 would follow the fitted landscape exactly; zero would show no preferred alignment.</p><span class="tag">descriptive</span></figcaption></figure>
@@ -458,9 +458,9 @@
       <div class="chapter-head">
         <div class="chapter-no">08</div>
         <div><div class="eyebrow">What works now</div><h2 id="boundary-title">Can the search discover how to grow the body?</h2></div>
-        <p>A full system will connect them: describe a target through geometry, function, and development; explore the many rules that can produce it; then search jointly for a compact seed and a rule whose development remains reliable after changed starts or damage.</p>
+        <p>The three searches solve different parts of the problem: matching measurements, maintaining a supplied field, and recovering parameters within a known family. None yet discovers both a compact seed and a rule that reliably grows an arbitrary requested body.</p>
       </div>
-      <p class="reading">The next demanding test is to withhold a set of target bodies and search jointly for a compact seed and a developmental rule. Each result should then face changed starting conditions and damage. Success would mean reliably growing and maintaining the requested anatomy across those tests, rather than matching one recorded field.</p>
+      <p class="reading">The next test should require the search to discover a developmental route: start from a compact seed, grow a withheld target body, and maintain its anatomy. Searching for the seed and rule together would address the part that the supplied-field experiment leaves open. Changed starting conditions and damage would then test whether the fitted dynamics keep producing and sustaining the requested body beyond the trajectory used to select them.</p>
     </section>
 
     <section id="evidence" class="shell">

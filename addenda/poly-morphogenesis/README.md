@@ -91,11 +91,18 @@ julia --project=. -e 'using PolyMorphogenesis; main(["demo", "wiring-k", "--n-ce
 
 ## Current Result
 
-Single-cut wiring search already gives a nontrivial prediction. In the verified
-20-cell top-severity check, the connectivity heuristic ranks cut `10` first.
-The decomposition-ranked severity score ranks cut `16` first. With
-`--target-top-k 1`, the decomposition policy finds the target in one test; the
-connectivity policy needs twelve.
+The documented 20-cell top-severity example compares two precomputed rankings.
+Connectivity ranks cut `10` first; outcome-based severity ranks cut `16` first.
+With `--target-top-k 1`, the target is defined using that same severity ordering.
+It therefore appears first in the severity ranking and twelfth in the connectivity
+ranking. These are lookup positions after the outcome sweep, not end-to-end costs
+of predicting an unseen outcome. Any predictive-efficiency comparison must include
+the simulations needed to construct the severity ranking or use an independently
+specified predictor.
+
+The [implementation audit](docs/report-audit.md) distinguishes exact factorization
+of the disconnected dynamics from claims about prospective prediction and biological
+injury. The [revised report draft](docs/report-draft.md) preserves those limits.
 
 The code uses Catlab wiring diagrams, AlgebraicDynamics where it fits, SciML
 ODE integration for RD settling, and a custom Poly/dependent-lens layer for the

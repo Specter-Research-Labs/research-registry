@@ -90,15 +90,12 @@ fn normalize_css(text: &str) -> String {
 }
 
 fn has_tokens_import(normalized_css: &str, import_path: &str) -> bool {
-    matches_import(
-        normalized_css,
-        &format!("@import\"{import_path}"),
-        "\";",
-    ) || matches_import(
-        normalized_css,
-        &format!("@importurl(\"{import_path}"),
-        "\");",
-    )
+    matches_import(normalized_css, &format!("@import\"{import_path}"), "\";")
+        || matches_import(
+            normalized_css,
+            &format!("@importurl(\"{import_path}"),
+            "\");",
+        )
 }
 
 fn matches_import(normalized_css: &str, prefix: &str, suffix: &str) -> bool {

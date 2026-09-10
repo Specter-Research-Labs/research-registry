@@ -6,14 +6,14 @@
   "date": "2026-08-23",
   "status": "feature",
   "evidenceClass": "exact hidden-allocation intervention",
-  "sourceReportSha256": "691e872b19af6f1166f6f1048e18393387880b5ed69a725ae2e5fdd8aeaed701",
-  "publicReportSha256": "d7795d4e20d328d92ab89c4ebb87c410d5554b3d67efaa17bd28504a8a9683b8",
+  "sourceReportSha256": "dad5ca2c50fe9f6d8ec2a57a7cfe42aea03c227fc75d8e8df92d4eb38db6040d",
+  "publicReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
   "transformations": [
     "import_verified_public_projection_v1",
-    "normalize_public_editorial_language_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "ce826e78b4de30bb8062d0c38131a2d4e3f18ad6aa90cdaf8d9a42313660fa67",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "1013f8b7df073ebcd20e562898f63481f86268616725ba3a68b306d7fdeafcef"
+  "contextSha256": "ce2599706a7cb4617d6debbe091892668ad2bd4205c17f255dfcc6623a1cdaf4",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "365c41271075d4af05472aefaccb43465ba283656de9ac3cc789c21ef75a011f"
 }

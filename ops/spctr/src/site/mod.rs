@@ -195,14 +195,18 @@ fn build_from_projection(
                     .strip_prefix("site/")
                     .expect("hub_path validated to start with site/")
             );
+            let header_path = repo_root.join(&template).with_file_name("header.html");
+            let header = if header_path.exists() {
+                fs::read_to_string(&header_path)
+                    .with_context(|| format!("failed to read dossier header {header_path}"))?
+            } else {
+                regions::render_dossier_hub_header(record)
+            };
             pages.push(PageRegion {
                 template_path: template,
                 output_path: hub_path.clone(),
                 regions: vec![
-                    (
-                        "DOSSIER_HUB_HEADER",
-                        regions::render_dossier_hub_header(record),
-                    ),
+                    ("DOSSIER_HUB_HEADER", header),
                     (
                         "DOSSIER_HUB_FOOTER",
                         regions::render_dossier_hub_footer(record),

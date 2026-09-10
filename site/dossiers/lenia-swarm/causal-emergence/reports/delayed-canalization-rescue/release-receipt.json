@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "delayed exact-repair intervention",
-  "sourceReportSha256": "af0c9bb195ddef822e37ce9c33441611061cf775f8a74b6321252de1e12dcbed",
-  "publicReportSha256": "b0d7e24389958b67fafc21200460b74da5af8df5d6d079ca93efeacc8214e3be",
+  "sourceReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
+  "publicReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "20f246d162e8582f467ddec119dab0fa2665327c0776490779f91fca4d03a061",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "a648ec36de6d24efd9a2ac9bf2f531e29a4467742b02f89b8d56ca7acf1365e4"
+  "contextSha256": "213aa1d78d44c4cebb5d67eb7c66ff909803c08873ac0389e30e0ec5002be647",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "c844b5973b5c11eb1995d30e42a503f67edc133c22c41e6c2afd4d8c233272ae"
 }

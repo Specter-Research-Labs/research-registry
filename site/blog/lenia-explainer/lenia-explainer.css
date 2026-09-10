@@ -171,7 +171,7 @@
 .lenia-slider-group label {
     font-family: var(--sl-font-mono);
     letter-spacing: 0.06em;
-    text-transform: uppercase;
+    text-transform: none;
     min-width: 20px;
     color: var(--doc-muted);
     font-size: 10px;
@@ -367,6 +367,7 @@
 }
 
 @media (max-width: 480px) {
+    .lenia-widget-header { flex-direction: column; gap: 6px; }
     .lenia-widget-header,
     .lenia-widget-body,
     .lenia-controls,

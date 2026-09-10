@@ -17,3 +17,5 @@ There are two distinct versions of that question. Search paths might separate an
 The second kind was much more common. Among repeated successful searches, between 12 and 33 per cent produced a structurally different final proof, depending on how much of the search setup had been allowed to vary. Each run established the same theorem, but the prover did so by constructing a different proof term.
 
 That distinction also sets a precise limit on the biological analogy. The theorem is the shared outcome; each proof term is one concrete way of reaching it. We did not show that every intermediate state has a rich collection of interchangeable routes, and the 12 per cent result under fixed conditions still includes residual sampling variation. What we can say is that agreement on the theorem concealed substantial diversity in the proofs that produced it.
+
+For the intervention follow-up, see [Which proofs survive a blocked tactic?](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/). The [Wonton report](/blog/wonton-soup/) describes the search and structural comparisons.

@@ -1,19 +1,21 @@
 ---
-title: "Draft for formalization of Grodstein's closed-loop morphogenesis model using CatLab"
+title: "Cutting a reaction–diffusion model into parts"
 release: "draft"
-summary: We formalized a closed-loop morphogenesis model using polynomial functors and wiring diagrams, then used that compositional structure to predict which cuts do the most damage. Vulnerability is set by fragment viability, not connectivity alone, and the worst cut shifts abruptly as diffusion parameters change.
+summary: Historical draft of a compositional reaction–diffusion study. The implementation audit distinguishes altered wiring from initialization, retrospective outcome scoring, and a still-unreproduced numerical sweep.
 toc: true
 ---
 
-# Where Tissues Break
+# Cutting a reaction–diffusion model into parts
 
-## A compositional prediction of morphogenetic vulnerability
+## Historical draft: interpretation under revision
+
+The [implementation audit](https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/poly-morphogenesis/docs/report-audit.md) found that the two-dimensional experiment changes connectivity from initialization; it does not injure a settled pattern. Its severity score uses simulated outcomes, so it is not an independently tested predictor. The sweep tables below have not been independently reproduced. The revised account is [Same-sized cuts, different patterns](https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/poly-morphogenesis/docs/report-draft.md). This earlier draft is retained to document the claims being revised.
 
 In 2023, Joel Grodstein, Patrick McMillen, and Michael Levin published [Closing the loop on morphogenesis](https://doi.org/10.3389/fcell.2023.1087650). The model is small and crisp: a 1D chain of cells forms a reaction-diffusion pattern, counts its own peaks with a computation wave, and adjusts its parameters until the count matches a target.
 
 We recast that model categorically: each cell as a polynomial functor, the tissue as a wiring diagram, and the feedback loop as a composition of phases connected by dependent lenses. That reformulation does not change the underlying dynamics. It does make one operation explicit: cut the tissue, factor the wiring diagram, and compute the fragments separately.
 
-That yields a concrete prediction. The most damaging cut is not determined by connectivity alone, and in the regimes we scanned it is not the midpoint. It is determined by fragment viability: which cut isolates a fragment too small to sustain the pattern it had in the intact tissue. As the activator diffusion coefficient $D_a$ changes, the identity of the worst cut changes abruptly.
+The earlier numerical draft proposed that fragment size, rather than a connectivity score alone, would explain which altered wiring produced the largest phenotype change. The formal decomposition does not establish that mechanism. The tables below retain the original reported values, while the audit and revised account identify which comparisons require reproduction.
 
 ---
 
@@ -170,7 +172,7 @@ What this addendum contributes is the combination: a vulnerability ranking over 
 
 ### The biological claim
 
-Taken as a model claim, the prediction is straightforward: two lesions that break the same number of gap-junction links can have very different consequences, because the important variable is not just connectivity loss. It is whether one of the resulting fragments falls below the size needed to sustain its attractor.
+A biological extension would ask whether two disruptions of comparable coupling have different consequences because of the pattern-supporting capacities of the resulting regions. Gap junctions, bioelectric state and recovery after injury are not measured by the present altered-wiring simulation. Critical fragment size is a proposed explanation to separate from directional-wave and boundary effects.
 
 If that picture survives contact with richer models and experiments, then the most vulnerable anatomical location should depend on the tissue's bioelectric parameters and should reorganize abruptly as those parameters change.
 

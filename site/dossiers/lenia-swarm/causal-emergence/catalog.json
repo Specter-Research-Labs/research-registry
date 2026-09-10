@@ -41,11 +41,11 @@
   "reports": [
     {
       "id": "synthesis-v7",
-      "title": "Individuality Precedes Coherent Form",
+      "title": "Individual responses before coherent bodies",
       "date": "2026-08-30",
-      "dek": "Before a persistent body is visible, developing Flow Lenia fields already respond differently to interventions. Later, the same push has less influence, while sibling runs still reach different shapes.",
-      "question": "What changes during development that a still image cannot reveal?",
-      "answer": "Across separate experiments, responses distinguish their source, interventions lose influence with age, and feedback steers bodies while active. Transplanting hidden composition does not reliably transfer the donor’s response fingerprint.",
+      "dek": "A developing Lenia body becomes less sensitive to the same disturbance, even as runs with the same rule grow into different shapes. To understand that combination, we follow how its responses change before and after a coherent body appears.",
+      "question": "How does development change the way a Lenia body responds to its surroundings?",
+      "answer": "The same disturbance has less influence later in development, while differences among sibling forms grow. Earlier fields already respond in ways that distinguish their source. Together, these experiments make response to intervention part of the description of a body, alongside its visible shape.",
       "next_question": "Does a response fingerprint distinguish different life histories under the same rule, and can feedback produce a state that maintains itself after release?",
       "category": "synthesis",
       "status": "feature",

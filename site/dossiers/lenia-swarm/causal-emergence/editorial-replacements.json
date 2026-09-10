@@ -103,7 +103,7 @@
     },
     {
       "from": "confirmation v2 Sealed result",
-      "to": "confirmation \u00b7 Negative result"
+      "to": "confirmation · Negative result"
     },
     {
       "from": "sealed census v2",
@@ -111,7 +111,7 @@
     },
     {
       "from": "census v2 Sealed result",
-      "to": "census \u00b7 Result"
+      "to": "census · Result"
     },
     {
       "from": "sealed v2 result",
@@ -282,23 +282,23 @@
       "to": "The old <code>stop_without_phi</code> gate ruled out restoration, but it did not explain the temporal structure we could still see."
     },
     {
-      "from": "From q12 through q32, Flow Lenia reads the same early \u03a6-R direction as a signed instruction for how to build its body. By q48, the instruction still moves the state\u2014but no longer moves the body in the same way. <em>We found a developmental commitment window.</em>",
+      "from": "From q12 through q32, Flow Lenia reads the same early Φ-R direction as a signed instruction for how to build its body. By q48, the instruction still moves the state—but no longer moves the body in the same way. <em>We found a developmental commitment window.</em>",
       "to": "We applied the same balanced sequence of opposing hidden-state pulses at six stages of development. It changed body shape when applied from passages 12 through 32, but not at passage 48 or 64. The transition therefore lies somewhere between passages 32 and 48."
     },
     {
-      "from": "q12\u2013q32",
-      "to": "passages 12\u201332"
+      "from": "q12–q32",
+      "to": "passages 12–32"
     },
     {
       "from": "q32 minus q48 response",
       "to": "passage 32 minus passage 48 response"
     },
     {
-      "from": "q32\u2192q48 loss of geometric readability",
+      "from": "q32→q48 loss of geometric readability",
       "to": "loss of the body-shape response from passage 32 to 48"
     },
     {
-      "from": "raw field divergence at both q32 and q48\u2014the perturbation itself did not disappear",
+      "from": "raw field divergence at both q32 and q48—the perturbation itself did not disappear",
       "to": "raw field divergence at passages 32 and 48; the intervention still changed the state"
     },
     {
@@ -306,7 +306,7 @@
       "to": "The same intervention changes body shape early, then stops doing so."
     },
     {
-      "from": "At q12, q16, q24, and q32, \u201ccancel first, amplify last\u201d leaves a larger immediate body than the opposite zero-net order. The same comparison becomes directionless at q48 and q64.",
+      "from": "At q12, q16, q24, and q32, “cancel first, amplify last” leaves a larger immediate body than the opposite zero-net order. The same comparison becomes directionless at q48 and q64.",
       "to": "When the canceling pulses came first and the amplifying pulses came last, the body ended larger at passages 12, 16, 24, and 32 than it did under the opposite order. At passages 48 and 64, neither order reliably produced the larger body."
     },
     {
@@ -374,7 +374,7 @@
       "to": "at passage 48, shown 32 passages later"
     },
     {
-      "from": "A median-pattern organism (radiant-blob-1453), selected mechanically as closest to the cohort\u2019s q32 and q48 immediate effects\u2014not selected for visual drama.",
+      "from": "A median-pattern organism (radiant-blob-1453), selected mechanically as closest to the cohort’s q32 and q48 immediate effects—not selected for visual drama.",
       "to": "The example is radiant-blob-1453, selected because its immediate responses at passages 32 and 48 were closest to the cohort median."
     },
     {
@@ -382,12 +382,12 @@
       "to": "The loss of the response appears across the cohort."
     },
     {
-      "from": "Thirteen of sixteen families have a stronger response in the q12\u2013q32 interval than at q48\u2013q64. The exact age profile varies, but the collapse is distributed across the cohort.",
+      "from": "Thirteen of sixteen families have a stronger response in the q12–q32 interval than at q48–q64. The exact age profile varies, but the collapse is distributed across the cohort.",
       "to": "Thirteen of sixteen families responded more strongly from passages 12 through 32 than at passages 48 and 64. The exact progression varies by family, but the later loss is present across the cohort."
     },
     {
-      "from": "cyan = amplify-first larger \u00b7 orange = cancel-first larger",
-      "to": "cyan = amplify-first produced the larger body \u00b7 orange = cancel-first produced the larger body"
+      "from": "cyan = amplify-first larger · orange = cancel-first larger",
+      "to": "cyan = amplify-first produced the larger body · orange = cancel-first produced the larger body"
     },
     {
       "from": "04 / What q32 is doing",
@@ -402,7 +402,7 @@
       "to": "At passage 32, putting the canceling pulses first produces a wider, more occupied body with fewer connected components. Total mass remains nearly unchanged, so the difference concerns how matter is arranged."
     },
     {
-      "from": "The early \u03a6-R direction behaves like an instruction for coordinated morphogenesis: how far to spread, how densely to occupy space, and whether to stay consolidated.",
+      "from": "The early Φ-R direction behaves like an instruction for coordinated morphogenesis: how far to spread, how densely to occupy space, and whether to stay consolidated.",
       "to": "At this stage, pulse order changes how far the body spreads, how densely it occupies space, and whether its material remains connected."
     },
     {
@@ -462,7 +462,7 @@
       "to": "The experiment shows a developmental change in response: the same ordered pulses alter body size early, lose that effect between passages 32 and 48, and may still alter connectivity later."
     },
     {
-      "from": "The next direct swing is obvious: densely scan q32\u2192q48 and transplant the <em>state of susceptibility itself</em>. Can an early body make a q48 body listen again\u2014and can a q48 hidden organization prematurely close a q32 body?",
+      "from": "The next direct swing is obvious: densely scan q32→q48 and transplant the <em>state of susceptibility itself</em>. Can an early body make a q48 body listen again—and can a q48 hidden organization prematurely close a q32 body?",
       "to": "The next experiment should test every passage between 32 and 48, then exchange hidden composition between early and late bodies. That would locate when the radius effect disappears and test whether the change follows the receiving body or the transplanted hidden state."
     },
     {
@@ -478,8 +478,8 @@
       "to": ">Interpretation<"
     },
     {
-      "from": "The same information direction \u00b7 six ages \u00b7 zero net dose",
-      "to": "one pulse sequence \u00b7 six stages \u00b7 balanced total dose"
+      "from": "The same information direction · six ages · zero net dose",
+      "to": "one pulse sequence · six stages · balanced total dose"
     },
     {
       "from": "four consecutive ages with a direction-specific immediate radius response",
@@ -514,7 +514,7 @@
       "to": "developmental passage"
     },
     {
-      "from": "Thirteen of sixteen families have a stronger response in the passages 12\u201332 interval than at q48\u2013q64. The exact age profile varies, but the collapse is distributed across the cohort.",
+      "from": "Thirteen of sixteen families have a stronger response in the passages 12–32 interval than at q48–q64. The exact age profile varies, but the collapse is distributed across the cohort.",
       "to": "Thirteen of sixteen families responded more strongly from passages 12 through 32 than at passages 48 and 64. The exact progression varies by family, but the later loss is present across the cohort."
     },
     {
@@ -526,8 +526,8 @@
       "to": "Ordered-pulse response across development"
     },
     {
-      "from": "native and orthogonal ++\u2212\u2212 / \u2212\u2212++ histories",
-      "to": "forward and sideways control directions \u00b7 opposing pulse orders"
+      "from": "native and orthogonal ++−− / −−++ histories",
+      "to": "forward and sideways control directions · opposing pulse orders"
     },
     {
       "from": "an temporally consistent",
@@ -722,7 +722,7 @@
       "to": "<p class=\"lede\">At passage 8, we rearranged the same material at three spatial scales and applied matched challenges. Disorganization delayed formation, reduced the consistency of nearby interventions, and increased separation among distant futures. The comparison asks what spatial arrangement contributes beyond the material itself.</p>"
     },
     {
-      "from": "<p>That is directly relevant to causal emergence. It suggests that the interesting precursor may not be a scalar \u201cmore information\u201d peak. It may be the onset of <b>canalization</b>: the moment distributed structure begins to make interventions have stable, coordinated meanings for the future of the whole.</p>",
+      "from": "<p>That is directly relevant to causal emergence. It suggests that the interesting precursor may not be a scalar “more information” peak. It may be the onset of <b>canalization</b>: the moment distributed structure begins to make interventions have stable, coordinated meanings for the future of the whole.</p>",
       "to": "<p>The control separates spatial arrangement from total material. It does not identify a universal information score: it shows that preserving spatial relationships changes how these early fields respond to intervention.</p>"
     },
     {
@@ -736,6 +736,86 @@
     {
       "from": "Individuality Precedes Coherent Form",
       "to": "Individual responses before coherent bodies"
+    },
+    {
+      "from": "If the number rises, the next transition is increasingly predictable only when the spatial regions are considered together—not as independent pieces.",
+      "to": "A rise means that the whole-state forecast improves relative to the strongest tested split. It does not mean that the whole predicts better: the prospective comparison remained below zero, with the split still ahead."
+    },
+    {
+      "from": "Whole-state predictive advantage rose before sustained form",
+      "to": "Whole-state forecasting closed part of the gap before sustained form"
+    },
+    {
+      "from": "The information model knew nothing about the future event. Yet in fresh specimens the integrated predictive advantage climbed during the final 16 transitions before the certified seed break.",
+      "to": "The information features used past states. In fresh specimens, the whole-versus-parts score rose during the 16 transitions before the independently detected event. This pre-event rise did not establish a useful improvement in held-out event prediction."
+    },
+    {
+      "from": "Biological breadth",
+      "to": "Coverage of the simulated cohort"
+    },
+    {
+      "from": "Large enough to see the profile. Frozen enough to trust the misses.",
+      "to": "How the follow-up experiments were specified"
+    },
+    {
+      "from": "We did not rerun ugly cases, lower thresholds, extend convenient trajectories, or add fake noise when a founder coordinate was constant.",
+      "to": "Runs with missing features or outcomes were accounted for rather than rerun or altered to meet the analysis requirements."
+    },
+    {
+      "from": "The radius recovers, but the future does not return to the untouched trajectory.",
+      "to": "The mean radius difference relaxes, but the full field remains different from its untouched continuation over the measured interval."
+    },
+    {
+      "from": "The organized state did not maximize the number of possible futures. It canalized them.",
+      "to": "The organized state produced less separation among the tested futures and more consistent formation times."
+    },
+    {
+      "from": "Disorder opened more futures. It did not create a better map.",
+      "to": "Spatial shuffling increased separation among distant outcomes."
+    },
+    {
+      "from": "Distant outcomes diverge more after any spatial shuffle. Raw possibility expands as organization is removed.",
+      "to": "Distant outcomes diverge more after any spatial shuffle. This measures separation within the tested intervention panel, not the total number of reachable forms."
+    },
+    {
+      "from": "If a partial spatial repair restores the action geometry first, we have a manipulable order parameter for developmental commitment—not merely an ablation effect. That is where we go next.",
+      "to": "If partial spatial repair restores the response geometry before visible form returns, it would support a causal role for those spatial relationships. We would then need to test whether the same measure tracks that restoration across other specimens and interventions."
+    },
+    {
+      "from": "For this cohort and measurement, effects outside the reported interval are not supported: compressions stronger than about &minus;0.008 per pair distance are outside the interval. What it cannot do is distinguish the original &minus;0.0040 from zero, because twelve fresh families buy an interval half-width of about 0.006, so a true effect of the original size would fail this criterion more often than not. The late-passage shape of the profile matches the original finding while its magnitude, at half the original point estimate, does not clear it. The fine-shape compression now stands as an unconfirmed hypothesis with a direction-consistent replication attempt on record, not as a result.",
+      "to": "The fresh interval includes both zero and the original &minus;0.0040 estimate. This experiment therefore neither confirms the earlier compression nor rules out an effect of that size. The point estimate is about half the original magnitude, and the late-passage profile has the same direction. Fine-shape compression remains an unconfirmed hypothesis; the frequency with which a new study would detect it requires a separate power analysis."
+    },
+    {
+      "from": "current founder fractions passage 0, passage 1, passage 2",
+      "to": "current fractions of founders 0, 1, and 2"
+    },
+    {
+      "from": "Before a persistent body is visible, a developing Flow Lenia field already responds differently to nearby interventions. Later, the same push has less influence—yet sibling runs keep reaching different shapes.",
+      "to": "A developing Lenia body becomes less sensitive to the same disturbance, even as runs with the same rule grow into different shapes. To understand that combination, we follow how its responses change before and after a coherent body appears."
+    },
+    {
+      "from": "We began by asking whether a disturbed run could recover the organization and trajectory of its undisturbed counterpart. That recovery was not clean or consistent. Following the different futures instead led to the experiments below: forecasts, branching interventions, feedback, and hidden-state rewrites.",
+      "to": "A still image shows where the matter is. It cannot show how that matter will respond when its surroundings change. In Flow Lenia, we can copy an exact developing state, disturb one copy, and compare the two as they continue. Repeating this at different ages lets us ask how a body acquires a characteristic response, and whether becoming harder to change also makes its development more predictable."
+    },
+    {
+      "from": "<span class=\"micro\">What we can see now</span>\n        <strong>Different responses before a persistent body</strong>\n        <p>The prospective cohort shows constrained futures before a persistent silhouette. A separate cohort shows recognizable responses by passages 12–24. These are complementary findings, not one shared developmental clock.</p>",
+      "to": "<span class=\"micro\">The developmental puzzle</span>\n        <strong>Resistance grows while sibling forms diverge.</strong>\n        <p>Later bodies resist the tested disturbance more strongly, yet runs with the same rule keep growing apart. We need to explain both changes together.</p>"
+    },
+    {
+      "from": "    <div class=\"quickread\" aria-label=\"Ninety-second reading\">\n      <article><b>01</b><h2>Different futures are already open at passage 8.</h2><p>The early set of intervention outcomes is as separated as it is at passage 32, while a whole-over-parts forecasting relation rises before sustained visible structure.</p></article>\n      <article><b>02</b><h2>By passage 12→24, the response is recognizable.</h2><p>A response fingerprint can re-identify its source specimen or genotype across the earliest interval tested, so it may have appeared earlier; this test does not locate its onset.</p></article>\n      <article><b>03</b><h2>Development closes possibilities selectively.</h2><p>Timing and spatial leverage harden while sibling shapes spread farther apart, so becoming harder to rewrite does not mean converging on one body.</p></article>\n    </div>",
+      "to": "    <div class=\"prose\">\n      <p>Resistance to a disturbance and convergence on a common form might seem like two signs of the same developmental stability. Here they separate. That distinction leads us back to the early field: before a coherent body has formed, what already constrains its later responses? The experiments below follow those constraints through development, then test how far feedback and changes in hidden composition can redirect them.</p>\n    </div>"
+    },
+    {
+      "from": "<p class=\"passage-note\">Passage numbers count forward from the seeded starting field. Passages 8, 12, and later checkpoints are scheduled observations, not life stages inferred from appearance.</p><header class=\"section-head\"><div><span class=\"section-no\">01 · how we looked</span><h2>One visible field can have different futures.</h2></div><p class=\"lede\">A visible Flow Lenia frame shows where the matter is, although it does not show all of the channel composition hidden beneath that sum, nor does it tell us which nearby futures remain reachable; we therefore compared forecasts, interventions, and later responses from the same exact checkpoints.</p></header>",
+      "to": "<header class=\"section-head\"><div><span class=\"section-no\">01 · following the response</span><h2>What the visible body leaves out</h2></div><p class=\"lede\">The visible field adds together the matter in Flow Lenia’s channels. Different channel mixtures can therefore produce the same picture. Because those channels interact differently, a matching image need not imply a matching future.</p></header><p class=\"passage-note\">We count simulation passages from the seeded starting field and save states at scheduled checkpoints. Repeating the comparison at later passages follows the same rule and developing field through time.</p>"
+    },
+    {
+      "from": "One instrument, which we call <em>whole-over-parts</em>, compares how well the full state forecasts its next state with how well the strongest tested separable split forecasts it; when this difference rises, the whole is catching up with that split, although in the prospective precursor its absolute level remains negative and the best split still forecasts better at every measured phase. This is a forecasting comparison inspired by GARD and related compositional questions, not an identification with IIT Φ.",
+      "to": "To ask whether spatial regions become more informative about one another as a body forms, we compare two forecasts. One uses the measured state jointly; the other divides it into parts and treats those groups independently. We choose the strongest tested split as the comparator. The difference, which we call <em>whole-over-parts</em>, measures how much predictive information the joint description gains or loses relative to that split."
+    },
+    {
+      "from": "Because one score could easily mistake a convenient coordinate for a cause, we also intervened directly: we branched exact futures from the same checkpoint, applied matched writes at different ages, ran feedback policies and then released them, and swapped hidden channel composition while holding the visible field exactly fixed. The account that follows depends on where these different views agree, and it keeps their disagreements visible when they do not.",
+      "to": "If the difference rises before coherent form appears, interactions among the measured regions may be changing in a way that the outline does not capture. That is what the prospective comparison found: the joint forecast closed part of its deficit, although the best split remained ahead. The score is inspired by GARD’s whole-versus-parts question; it is not a measurement of IIT Φ.</p>\n      <p>A changing forecast does not tell us what controls development. For that, we return to the saved states and intervene. By comparing each disturbed continuation with an untouched copy, we measure the consequences of the intervention directly. Hidden-channel rewrites make this especially revealing: the initial picture can remain exactly the same while the later body changes. These comparisons connect the information measurement to a physical question about how the field maintains and changes its organization."
     }
   ]
 }

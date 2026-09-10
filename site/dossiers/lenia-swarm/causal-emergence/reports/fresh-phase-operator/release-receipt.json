@@ -6,13 +6,14 @@
   "date": "2026-08-23",
   "status": "feature",
   "evidenceClass": "exact hidden-allocation intervention",
-  "sourceReportSha256": "d7795d4e20d328d92ab89c4ebb87c410d5554b3d67efaa17bd28504a8a9683b8",
-  "publicReportSha256": "cdda322b8c54ba731fa4a4460c3b14aed617db35321971bb1430ea8354baed0c",
+  "sourceReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
+  "publicReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
   "transformations": [
     "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "756198773698eddcc2388a58c9af2f2f3060d41f9a141e5aa0da47f0e3f47985",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "8154e85abc028453659fcea36c383840e4b66c30465fb9cbe4692e6718cee3e4"
+  "contextSha256": "ce2599706a7cb4617d6debbe091892668ad2bd4205c17f255dfcc6623a1cdaf4",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "e6416db4e260352b5065007981e3642abb48fece59e3480d5a13a7fbc46d0441"
 }

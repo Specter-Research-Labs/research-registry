@@ -1,12 +1,12 @@
 ---
-title: "Preserving an experiment while retiring 281 GB"
+title: "A faster database query was not enough to retire the archive"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# Preserving an experiment while retiring 281 GB
+# A faster database query was not enough to retire the archive
 
 _19 July–1 August 2026 · Data-integrity investigation._
 

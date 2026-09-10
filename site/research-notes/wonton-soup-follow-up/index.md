@@ -8,7 +8,9 @@ toc: true
 
 # How proof search responds to blocked tactics
 
-The follow-up splits into smaller pieces: provider differences, blocked-tactic responses, distributed MCTS sweeps, and the cases where a failure becomes informative once we perturb the prover.
+*Historical April analysis draft. Its cohorts and controls differ from the later [controlled tactic-blocking study](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/). Preserve these numbers as an earlier analysis, not as an additional estimate of the June result. The [inert-control investigation](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) limits causal interpretation of the DeepSeek comparisons.*
+
+This draft separates provider differences, blocked-tactic outcomes and scheduling interventions. A changed search trace can arise from the intended intervention or from variation between inference calls; both must be measured.
 
 Three figures anchor the result:
 
@@ -18,9 +20,9 @@ Three figures anchor the result:
 
 ![Basin multistability versus blind-relative gain](../../assets/blog/wonton-soup-follow-up/fig18-followup-basins.png)
 
-## What the lake shows
+## What the April run database records
 
-The lake DB holds **17,400 wild-type runs** and **19,700 intervention comparisons** with valid GED scores as of April 2026.
+The April database snapshot records **17,400 wild-type runs** and **19,700 intervention comparisons** with valid GED scores as of April 2026.
 
 ### Provider-level comparison
 
@@ -29,13 +31,13 @@ The lake DB holds **17,400 wild-type runs** and **19,700 intervention comparison
 | reprover | 9,296 | 0.32 | -0.10 | 0.224 | 0.01 |
 | deepseek | 3,874 | 0.30 | -0.08 | 0.442 | 0.06 |
 
-reprover and deepseek have similar solve rates (32% vs 30%) and similar negative mean K—neither beats the blind baseline on average. But intervention GED norm is 2x higher for deepseek (0.442 vs 0.224): deepseek interventions are more structurally disruptive. Hash mismatch rate is low for both (4-5%), meaning proof structure is usually preserved.
+reprover and deepseek have similar solve rates (32% vs 30%) and similar negative mean K—neither beats the blind baseline on average. But intervention GED norm is 2x higher for deepseek (0.442 vs 0.224): DeepSeek runs differ more in this structural measurement. Without successful paired inert controls, that difference cannot be attributed entirely to the intervention. The reported hash mismatch rate is low for both (4–5%). Hash identity and search-graph distance describe different objects and should not be treated as interchangeable evidence of preserved structure.
 
-Basin multistability is rare. reprover has >1 structure on 1% of theorems, deepseek on 6%. The dominant structure captures 43% of seeds for reprover, 32% for deepseek.
+Multiple recorded proof-structure clusters are rare in this analysis. reprover has >1 structure on 1% of theorems, deepseek on 6%. The dominant structure captures 43% of seeds for reprover, 32% for deepseek.
 
 ### Tactic-role visibility (distributed MCTS sweep)
 
-1,354 intervention runs across 771 wild-type solves reveal which tactics are essential:
+1,354 intervention runs across 771 wild-type solves record which tactic blocks the sampled prover could survive within its budget:
 
 | Intervention | Runs | Solve rate |
 |---|---:|---:|
@@ -55,7 +57,7 @@ Basin multistability is rare. reprover has >1 structure on 1% of theorems, deeps
 | `block_cases` | 77 | 0.00 |
 | `block_induction` | 25 | 0.00 |
 
-`block_simp` and `block_rw` kill the proof entirely: non-negotiable rewrite tactics. `block_left`, `block_push_neg`, and `block_contrapose!` are fully survivable; the prover finds an alternate route every time. `block_exact` kills most proofs, but 11% survive through `assumption` or direct term discharge.
+`block_simp` and `block_rw` left no successful runs in this April sample. This is a result for these theorem/provider/budget combinations, not mathematical necessity of either tactic. `block_left`, `block_push_neg`, and `block_contrapose!` are fully survivable; every recorded run under those blocks solved. `block_exact` kills most proofs, but 11% survive through `assumption` or direct term discharge.
 
 The paired intervention panel is not simply "damage search" versus "help search." Some perturbations expose an alternate successful route, some block the obvious route and collapse, and some shift tactic usage without changing terminal success. If two perturbations solve the same theorem through different tactic roles, do not collapse them into the same outcome class too early.
 
@@ -63,7 +65,7 @@ The paired intervention panel is not simply "damage search" versus "help search.
 
 The cross-provider notes mostly keep us honest. Early comparison runs looked like high structural convergence, but much of that came from trivial one-step proofs—the convergence was expected and uninformative.
 
-The divergent multi-step examples are the ones worth keeping. One provider leans on library lemmas where another performs explicit construction; tactic overlap can be low even when both systems reach the theorem. Provider-specific basin structure becomes visible when we score interventions below the solved/failed outcome.
+The divergent multi-step examples are the ones worth keeping. One provider leans on library lemmas where another performs explicit construction; tactic overlap can be low even when both systems reach the theorem. Differences between providers become visible when we record the tactics and intermediate goals as well as the solved/failed outcome.
 
 ## Sampling Broke One Failure Mode
 
@@ -104,6 +106,6 @@ The damage-block-f0.5 condition added eight interventions relative to baseline. 
 
 Blocking tactics matters when the prover reroutes. Separate terminal outcome from tactic-role structure: which tactic families become necessary or brittle, where one provider reroutes while another collapses, and whether extra interventions produce solved routes or only churn.
 
-This is the competency-motif test: a blocked local channel matters when the system reroutes through a nontrivial alternate path.
+The later controlled study is the preferred account of this question. Its null result for proof diversity versus recovery is important: many observed proof variants need not supply an alternative when their shared tactic is blocked.
 
 For the broader framing on cognition across heterogeneous systems, see Robert Chis-Ciure and Michael Levin, "Cognition all the way down 2.0: neuroscience beyond neurons in the diverse intelligence era," *Synthese* 206, 257 (2025), [doi:10.1007/s11229-025-05319-6](https://doi.org/10.1007/s11229-025-05319-6).

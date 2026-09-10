@@ -8,6 +8,8 @@ toc: true
 
 # When a fragment becomes too small to sustain a pattern
 
+*Historical draft, not a validated result. An implementation audit found that the two-dimensional experiment alters wiring from initialization, uses retrospective outcome scoring, and lacks a local reproduction of the reported sweep. See the [revised account and its evidence limits](https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/poly-morphogenesis/docs/report-draft.md).*
+
 If a patterned tissue is severed, which cut causes the largest phenotype change?
 
 The natural graph heuristic says: maximize disconnected cell pairs. In a 1D chain of
@@ -107,9 +109,7 @@ preserves the effect.
 
 ## Prediction
 
-Two lesions that break the same number of gap-junction links can have very different
-consequences. The important variable is not connectivity loss; it is whether a
-resulting fragment falls below the minimum domain size for its attractor.
+A future biological test could compare disruptions of similar numbers of gap-junction links at different positions. The conjecture is that a region's ability to sustain its pattern would explain response differences beyond a connectivity count. The present altered-wiring simulations do not measure gap junctions or recovery after injury.
 
 If this holds in richer models, the most vulnerable anatomical location should depend
 on the tissue's bioelectric parameters and should reorganize abruptly as those

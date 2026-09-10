@@ -267,7 +267,10 @@ pub fn sitemap_pages(catalog: &Catalog) -> Vec<SitePageRecord> {
     ];
     pages.extend(catalog.reports.iter().map(|report| SitePageRecord {
         title: report.title.clone(),
-        href: format!("dossiers/lenia-swarm/causal-emergence/reports/{}/", report.id),
+        href: format!(
+            "dossiers/lenia-swarm/causal-emergence/reports/{}/",
+            report.id
+        ),
     }));
     pages
 }
@@ -465,7 +468,11 @@ pub fn render_landing(catalog: &Catalog) -> String {
 
 #[must_use]
 pub fn render_library(catalog: &Catalog) -> String {
-    let reports: Vec<&Report> = catalog.reports.iter().filter(|report| !report.archive).collect();
+    let reports: Vec<&Report> = catalog
+        .reports
+        .iter()
+        .filter(|report| !report.archive)
+        .collect();
     html! {
         (page_nav("library"))
         header class="ce-page-header" {

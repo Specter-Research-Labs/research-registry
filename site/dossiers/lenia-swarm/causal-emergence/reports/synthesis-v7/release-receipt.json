@@ -2,18 +2,19 @@
   "schema": "specter_flow_lenia_report_release_v3",
   "id": "synthesis-v7",
   "releaseId": "flce-synthesis-v7-be5d576a918b",
-  "title": "Individuality Precedes Coherent Form",
+  "title": "Individual responses before coherent bodies",
   "date": "2026-08-30",
   "status": "feature",
   "evidenceClass": "multi-experiment synthesis",
-  "sourceReportSha256": "001f2150f7cf9fb8039c4f31d158d44a7a9e6e369bddb787cf663c20719ace63",
-  "publicReportSha256": "40ad449808f47dfbc30d5368348475a88353a7f0c5921e2cfdebe5546c1504d4",
+  "sourceReportSha256": "6ade2d62a2273408887969df18521535090db09e69ee65c1aa25f39530cd07e5",
+  "publicReportSha256": "7fcc26f51b59b9f604662c9abe4afb296cfc870ac478c79ef216f340610d53ea",
   "transformations": [
     "import_verified_public_projection_v1",
-    "normalize_public_editorial_language_v1",
+    "apply_shared_report_polish_v1",
+    "synthesis_publication_instruments_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "065c58d345dfb2bd49b9c7e0e97a7f33a6900b9ca82d07973089125a1294304e",
-  "catalogSha256": "eccb9d928f4623aedcf2ff2b606cba0150550f3826c153100a77e99ca213f41e",
-  "upstreamReceiptSha256": "1809136025a5c70ea0c558879ebff22b7e942c20b8fecbe6e3729af717d8156c"
+  "contextSha256": "be1e638d34f571f5902ec45fdce81dcd169f44a280bb5ede6c3cdb591e4bba3d",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "170ad03f7b8c7043c14e21f102d66143250cd4b457c604237f8b8eeaf31fbfba"
 }

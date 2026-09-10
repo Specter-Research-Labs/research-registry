@@ -970,7 +970,7 @@ html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: 
 html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
 html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
 html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #17282d; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
 html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
 html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
 html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
@@ -994,6 +994,61 @@ html.specter-report svg[aria-label="Same-action gate effects across eight morpho
 html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
 html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
 html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+
+/* Native specimen panels retain their black image field. Their labels must
+ * remain legible after the surrounding report adopts paper-colored tokens. */
+html.specter-report .specimen > figcaption {
+  color: #d3d5d7 !important;
+  background: #050608;
+}
+html.specter-report .specimen > figcaption :is(b, strong, span) {
+  color: inherit !important;
+}
+
+/* Keep imported data labels readable on a phone instead of shrinking an
+ * entire desktop plot into a few hundred pixels. Captions still wrap. */
+@media (max-width: 700px) {
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+  html.specter-report div.chart > svg { min-width: 760px; }
+  html.specter-report div.card.chart > svg { min-width: 940px; }
+  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
+  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 var(--specter-mono);
+    color: var(--specter-muted);
+  }
+}
+
+@media (max-width: 700px) {
+  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
+  html.anatomical-editorial .figure > svg { min-width: 640px; }
+  html.anatomical-editorial .figure:has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 ui-monospace, monospace;
+  }
+  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
+}
+
+/* A source report's compact local navigation must not hide the injected
+ * site navigation or the links back to its dossier and report library. */
+html.specter-report :is(.publication-header, .publication-navigation) a {
+  display: inline-flex !important;
+}
+
+/* The commitment report deliberately keeps dark data panels. */
+html.specter-report:has(#steerability) .chart-grid .figure svg text {
+  fill: #e9e7df !important;
+}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/organism-birth-signal/"></head>
 <body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a></nav>
@@ -1009,7 +1064,7 @@ html.specter-report body > nav.publication-navigation span { color: #59615a !imp
       <span class="label">What “integrated” means here</span>
       <div class="quadrants"><i>A</i><i>B</i><i>C</i><i>D</i></div>
       <div class="equation"><b>whole</b> − Σ parts</div>
-      <p>If the number rises, the next transition is increasingly predictable only when the spatial regions are considered together—not as independent pieces.</p>
+      <p>A rise means that the whole-state forecast improves relative to the strongest tested split. It does not mean that the whole predicts better: the prospective comparison remained below zero, with the split still ahead.</p>
     </div>
   </header>
   <div class="stats">
@@ -1021,7 +1076,7 @@ html.specter-report body > nav.publication-navigation span { color: #59615a !imp
 
   <main>
     <section class="sheet" id="result"><div class="wrap">
-      <div class="chapter-head"><div class="kicker">01</div><div><h2>Whole-state predictive advantage rose before sustained form</h2><p class="lead">The morphology rule knew nothing about information theory. The information model knew nothing about the future event. Yet in fresh specimens the integrated predictive advantage climbed during the final 16 transitions before the certified seed break.</p></div></div>
+      <div class="chapter-head"><div class="kicker">01</div><div><h2>Whole-state forecasting closed part of the gap before sustained form</h2><p class="lead">The morphology rule knew nothing about information theory. The information features used past states. In fresh specimens, the whole-versus-parts score rose during the 16 transitions before the independently detected event. This pre-event rise did not establish a useful improvement in held-out event prediction.</p></div></div>
       <div class="sequence"><figure><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAAAAADmVT4XAAAAOGVYSWZNTQAqAAAACAABh2kABAAAAAEAAAAaAAAAAAACoAIABAAAAAEAAACAoAMABAAAAAEAAACAAAAAAGtGJk0AAAQnSURBVHgB7Zfdb9NlFMfP1i3t1klt2nXQdaljjslGEDGSAaIxXoiJQUNCCGQhwagXKhe8eaM3aggiUZOBRsQwzBS9GBNmWHESNljKttq1s1j3yrbUzrZzXV/Wl9/arsfn18ofcBpfbs5z8/yeX3/n+z3P53ktABcmwASYABNgAkyACTABJsAEmAATYAJMgAkwASbABJgAE2ACTIAJ/M8EFGT/ErW+pmxV0vCcZr5IqTJIirq1GWWdKlmjPbjzrkSWowdonpqJ915/3orDr/8yiXj6xz9W3CcnOq0oyhkNXY8coWjHM/uPBTyvXET8FXEOE4juKcQQfpcOGMhyxeSIpj221ulaja1iJ0C1z2KEMoDpHoDzsLdESpHlSsgRm+FUdb2pqMjcnW58yLQGIFEOuhfg3nH4cvv61WGqHp3A8I3SL+p39Ta+Wl06YorcXvIIidUXYO72CXd8JEP1hyJyhPlIxLCjEcAVSyqflKMX9IP9TeoK95ZVRlg7Q9WjD0HcuFXSDRjNwWfyXtG2482py5VbDohmIkn1L+D7B/rRJy85FNN/ynpx5tgl8Xh4U+5NWF+AIDVELcUmxKoTZdsbzswYdtxBHMvkc0oaqWpAHwJUKpMbYUXhUm3/0JLdvGjYCrOBBpVw9q74leQE6AEvWsUOlCu/40ei/gxxFlP5Nz1ash59GT5Rc98k21YLcFkMuwtKAebtAHfx/m//Yl1+aCjX3da9KC2i357v+7Xuo19Lk59Wko3p+0D1iB7c5bXQ2dQAofTfm7+zUhtO+RZt5+apGdCHoEkwT9RC2izqLl3e789Pei7prdt2PKam+hewCjwAEeFT+qAGev3564TnyumqWX8LjNK7Q04YoOaO7+Qw4gd2W8yRG/+uc3FRf484dBabCxCkhmj7c7aTllwVwriwjt98LyY35zZQ1Qr43ojYOYDozPnjOH4jHqZ+FleTU5hurStAkBryJr7V0iGb/obYMe5yZORMRP8XEI/iHqpaAd/vbh8Tx8+8bIvY8z6iH9GFmMWbov0oWZB+FgyutDQASBDSwqxD9w5EquDAs8bBh1PyUewjJ0BfOKYr0jWxFkQKENxdhaMaGNtliqiKh8QlBZbJCdAD1svoA11db4txSPj6ggt4FcdPoEOeF1a6HD1ijRPd7e9iUPh5f0LsQ/y8/7Xo8vIo4sB5+s5OnwPZpUBffRQqAAaCT4v7qCW4TnlWnIaPADTfUv0Hd7I69Hwlej+C2I1htGN4ytHqjDiz4p39QhWZKH0S7lv07oMf2jbCx9+CJfS419a7dMgT3TR9fWZi0BclJ0AftJd1bZqlZIk54lW/dKMYksqUojxWpk4kskFU0P8XkDPmACbABJgAE2ACTIAJMAEmwASYABNgAkyACTABJsAEmAATYAJMgAn80wT+AolZDrtDFjvvAAAAAElFTkSuQmCC" alt="Flow Lenia specimen p01 at step 1"><figcaption><b>Artificial seed</b><span>step 1</span></figcaption></figure>
 <figure><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAAAAADmVT4XAAAAOGVYSWZNTQAqAAAACAABh2kABAAAAAEAAAAaAAAAAAACoAIABAAAAAEAAACAoAMABAAAAAEAAACAAAAAAGtGJk0AAAXASURBVHgB7ZhrbBRVFMf/d2b21X116doXFStgi9CCBSSSNFJEKAhEKFJNMUIRjVGCCIKRl2JADVEJoiQGEnlEMUEpD0OokPCQ0lZRCIQIWLrQB9Ratt3u7GtmdsbbQlr7bS9Jw5c7H2bvbO695z+/e+45Zy7AL06AE+AEOAFOgBPgBDgBToAT4AQ4AU6AE+AEOAFOgBPgBDgBTuABEyD3Z797mHF/Y/uOYhZAiAAY9E7icR10eO8MAtHjfWdP4Kl3eAKdaRcims1CXINoklRZAwQTMYihG0SUVEuyI94QSmyenl5STyuhBhFtnmQhGCR2lxqI6QYkh0UnoqCJohQNedbPfHUXIwRWASZ3VnqsMe5Md9TpdlOcWOx2m5Q6x/nrFcHTMGsmxle0J/QmPZ0YBQgWp9Po1Ec7rjfqaSlOaJoSN954CVBE/+g9QKng7GDzTTYBRDBJwVZTcehc0GLPHDnWFQgHSTmwv5FIm1KA7X5fRGBbAzYBoM6vOYoDfyJDsGYvdUGtmkthbqyLlC+hvydfs22M9cBNrMEogLp9Wm5brdUexdDPgMOXVgGty23ywmIoi25lFxW6brKtAOimZrjoftON6B8WVyD6+FTgWC21f3aRVVs8DXVLbd4XUK2xvhFjHBAdXls8KfvfwMgZpXeFR2Y9nFRegM99WnD1cExsuS33qw/o4dYk8yOq/Obr97id+mSIZ1QBPr4WUT7Nxeo2WRdodGC4WInpUcNubn+osNvEL0f+EUdlO0ux+0pn/Ak7UBlQDEamrAJoMLb4ydLhUat6wXLZKShleSKqKmKPFSwAVqT4NYHp/QFGAUSw2sRYQT6sd457g4aQvI6iaNpYtBINtJEVuq0aejechG9sAgiRbGbzkGUDUXMy905LeMIz0K7efvYINeeKtVQnjW1q1Qw2BGwCaCASLOJeau9gdqBNfm4cvj2WlvzUqS8rcfxGpiLlDK1mc0HmJaDp1+YF3mkfCLNp+pP4an/qqAVofxvb5HRLLJUgSU4Y/t2ObARo+rVaKPArXtmUnw9sqRB+wLHJLyPom+ZqJJOaVbtI+nUJIDjGADOTYpjjBjZUinTTTcaH5+W9qb7LXqvHkKR+3obE/QHeF2DMdaN+w9/B1E0U5OxIx7ZUHBLn44xhiP26BLQUHCAh7NGLCtG4tS3w3jzg6EFVnj8a86bMx9kbmij0MwGt8/yALK+0kNYA0Y4fc4B1tcR/wo5508tQ5bPEyP+K1IRYMGZDQ2moCeY9PQ040Ny4mtpHrtD2rh27J5bh4NGscZaoxuaDrJEQJBz0WJVHgdO+FROA9ddD/lUlUG+uRcW+nNyMSFhlFMBGoKssV2KBsy5cuPY8tf9dh962QkNgzVrs2GnPz2irU+OMAhidlpbldmusHFhVRivRoNRQv3j2CHy/Eutrk6Jr8aIvFmNUwBaIQIxYU/1s4GrpVHyxzBlsPgxUXx5U/9NNV3QvzvymMGYC5lBsmCTip6lo/4zmb8rQtLOEuuHXmaHzTVbTdpxaEo3Tki0h5+/pxEjAMJJzBwNbh/51eswwLM+YDix0hOogFs3BxU23VLPCaJ91FxCiudbBN8gQ1gC7cj/C7/vSQnqUTC3BoS3XdLcCwpgLGOOWmDas5K17+GoCxTi92eTOGazljcCBlUHijIY0NdavRalheyXrxET6JWbecc6Td+nizzHVnTw+E3phvSZ5o6rNkJWe5U2owegDupI+afuenOg5GbJa47YTBGRFza+q9BtkQDBotbHuQtbIDeuUxS2b6x16RKTFEbE4xXCEmC16nKiyHhbtkswaChl9ALCkWOVOWvt2nZHQ5GuCqnedmYhEV3SJHl2w5gJmAfTrkB7RdJ3MkK6fe/fuR/o/vRJa+d5O9yGgd3CfFp2J1Xif8fyBE+AEOAFOgBPgBDgBToAT4AQ4AU6AE+AEOAFOgBPgBDgBToATeFAE/gPf/Q+mU4YTjAAAAABJRU5ErkJggg==" alt="Flow Lenia specimen p01 at step 10"><figcaption><b>Structure begins</b><span>step 10</span></figcaption></figure>
 <figure><img src="data:image/png;base64,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" alt="Flow Lenia specimen p01 at step 26"><figcaption><b>16 steps before</b><span>step 26</span></figcaption></figure>
@@ -1083,7 +1138,7 @@ html.specter-report body > nav.publication-navigation span { color: #59615a !imp
       <div class="meaning">
         <article><h3>Development</h3><p>Four-fold method development found a +0.507 whole-over-parts rise in 44/59 fully measurable specimens.</p></article>
         <article><h3>Fresh replication</h3><p>The next 64 source specimens were frozen before replay. Among 54 with complete 32-step event windows, the mean rise was +0.364, with the whole interval above zero.</p></article>
-        <article><h3>Biological breadth</h3><p>Sixty-three of 64 formed the certified morphology within 900 steps. One did not and remains explicitly right-censored—never assigned an imaginary event.</p></article>
+        <article><h3>Coverage of the simulated cohort</h3><p>Sixty-three of 64 formed the certified morphology within 900 steps. One did not and remains explicitly right-censored—never assigned an imaginary event.</p></article>
       </div>
       <div class="north-star"><span class="label">The new working claim</span><strong>A whole-over-parts predictive configuration precedes a reproducible Flow Lenia morphogenesis event.</strong></div>
     </div></section>

@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 SOURCE = ROOT / 'site/assets/blog/lenia-morphospace-report'
-OUT = ROOT / 'site/style-study/assets'
+OUT = SOURCE
 data = json.loads((SOURCE / 'fish-explainer.json').read_text())
 
 def text(x, y, value, size=16, color='#20212b', extra=''):
