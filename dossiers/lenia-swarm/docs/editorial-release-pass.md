@@ -34,6 +34,10 @@ Fresh checkpoint validation (10 September 2026):
 - Twenty browser checks across ten routes at desktop and phone widths passed: HTTP responses, script/resource errors, image loading, and horizontal overflow. The empty image in Wonton's closed lightbox is intentionally excluded from image-loading checks. Homepage and synthesis screenshots were also inspected.
 - This checkpoint commits the website source, approved assets, report projections, and internal review records. Generated outputs follow the repository's existing ignore rules. The full publication preparation and deployed-site checks remain outstanding; no deployment or push is included.
 
+## Re-analysis source recovery
+
+The later [re-analysis handoff](report-reanalysis-handoff.md) locates the original causal campaign and compiler artifacts in sibling workspaces: all 81 causal source reports, all 49 synthesis source entries, and all 65 non-schematic compiler manifest entries match their hashes. Earlier notes below about absence refer to this website checkout, not loss of the original data. The exact Morphospace warehouse still requires the unmounted archive volume.
+
 ## Changes made
 
 - Development note: define the early measurement horizon as four steps. Separate response recognition from transfer; state that aligned-versus-scrambled donor comparisons are unresolved. Match the downloadable Typst edition to the corrected prose.
