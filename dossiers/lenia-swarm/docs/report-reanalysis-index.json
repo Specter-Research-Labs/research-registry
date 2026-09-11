@@ -1,7 +1,7 @@
 {
   "checkedOn": "2026-09-10",
   "websiteRevision": "715e2a78",
-  "pathConvention": "Causal paths are relative to the lenia-perturbation-recovery dossier. Anatomical paths resolve under the named output roots described in report-reanalysis-handoff.md. This is a locator snapshot, not a replacement for the source manifests.",
+  "pathConvention": "Causal paths are relative to the lenia-perturbation-recovery workspace dossier. Anatomical matchingRoots: historical means research-registry/dossiers/lenia-swarm/outputs/anatomical-compiler; compilerReruns means research-registry-workspaces/slim-anatomical/dossiers/lenia-swarm/outputs/anatomical-compiler. This optional index records the earlier source checks.",
   "causalReports": [
     {
       "id": "synthesis-v7",
