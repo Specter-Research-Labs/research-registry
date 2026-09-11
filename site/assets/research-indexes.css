@@ -34,7 +34,7 @@ body.research-index #jolt-material-memory .dossier-card-tab{font-size:26px}
 @media(max-width:700px){.writing-index .writing-reports,.writing-index .writing-report-lead,body.research-index .card-stack,body.research-index #lenia-swarm,body.research-index #jolt-material-memory{grid-template-columns:1fr;gap:28px}.writing-index .writing-report-lead{padding-bottom:32px}body.research-index #lenia-swarm .dossier-preview{grid-row:auto}body.research-index .dossier-card{gap:18px}.publication-footer a:last-child{margin-left:0}.writing-index .writing-report{padding-bottom:32px;border-bottom:1px solid var(--sl-color-rule)}}
 @media(prefers-reduced-motion:reduce){body.research-index .dossier-preview img{transition:none}}
 
-.writing-index #published-writing .resource-grid { grid-template-columns: 1fr; }
+.writing-index #published-writing .resource-grid { grid-column: 1 / -1; grid-template-columns: 1fr; }
 .writing-index #published-writing .resource-card { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 52px; align-items: start; }
 .writing-index #published-writing .resource-card p { margin: 0; }
 .writing-index #published-writing .link-row { grid-column: 2; }
