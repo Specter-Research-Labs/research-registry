@@ -1239,14 +1239,14 @@ html.synthesis-publication body { background: var(--specter-ground) !important; 
 html.synthesis-publication :is(h1,h2,h3,h4) { text-wrap: pretty; }
 html.synthesis-publication :is(.hero,.section,.section.ink,.section.paper) { background: transparent !important; color: var(--specter-ink) !important; border: 0 !important; }
 html.synthesis-publication .wrap { width: 100%; max-width: var(--publication-width); margin-inline: auto; padding-inline: var(--publication-gutter); box-sizing: border-box; }
-html.synthesis-publication .section { padding-block: clamp(50px,7vw,100px); }
+html.synthesis-publication .section { padding-block: clamp(40px,5vw,64px); }
 html.synthesis-publication .hero { padding: 60px 0 65px; }
 html.synthesis-publication .topbar { position: static; background: transparent !important; border: 0; box-shadow: none; max-width: var(--publication-width); margin:auto; padding:12px var(--publication-gutter); justify-content: flex-start; }
 html.synthesis-publication .topbar .brand { display: none; }
 html.synthesis-publication .topbar nav { display:flex; flex-wrap:wrap; gap:12px 24px; }
 html.synthesis-publication .topbar a { font: 11px/1.6 var(--specter-mono); padding: 0; }
 html.synthesis-publication .publication-navigation { font-size:11px; border:0; padding-block:20px; }
-html.synthesis-publication .hero-grid { display:grid; grid-template-columns: 1.1fr 1fr; gap: clamp(30px,5vw,80px); align-items:center; }
+html.synthesis-publication .hero-grid { display:grid; grid-template-columns: 1.1fr 1fr; gap: clamp(30px,5vw,80px); align-items:start; }
 html.synthesis-publication .hero h1 { font: 400 clamp(46px,5.5vw,79px)/1.04 var(--specter-serif) !important; letter-spacing:-.055em !important; margin:30px 0; max-width:14ch; }
 html.synthesis-publication .hero h1 em { color:var(--specter-ink) !important; font-weight:400; }
 html.synthesis-publication .hero :is(p,.dek) { font:400 clamp(17px,1.5vw,21px)/1.65 var(--specter-serif); max-width:48ch; }
@@ -1290,7 +1290,7 @@ html.synthesis-publication .synthesis-field-instrument figcaption { display:bloc
 html.synthesis-publication .synthesis-field-instrument figcaption strong { display:block; font:italic 26px/1.15 var(--specter-serif); color:#f8f4ea !important; }
 html.synthesis-publication .synthesis-field-instrument figcaption p { font:14px/1.6 var(--specter-serif); color:#f8f4ea !important; }
 html.synthesis-publication .synthesis-field-instrument figcaption .synthesis-source { font:10px/1.7 var(--specter-mono); color:#bac2d3 !important; }
-html.synthesis-publication .synthesis-observation { padding-block:50px 80px; }
+html.synthesis-publication .synthesis-observation { padding-block:40px 48px; }
 html.synthesis-publication .synthesis-observation-head { display:grid; grid-template-columns:1fr 1fr; gap:45px; align-items:end; margin-bottom:35px; }
 html.synthesis-publication .synthesis-observation-head h2 { font:750 clamp(30px,3.4vw,48px)/1.08 var(--specter-sans) !important; margin:16px 0 0; }
 html.synthesis-publication .synthesis-observation-head p { font:18px/1.7 var(--specter-serif); max-width:45ch; }
@@ -1332,8 +1332,8 @@ html.synthesis-publication .synthesis-state-label { display:flex; align-items:ce
 html.synthesis-publication .synthesis-state-label select { color:#f0c7a1; border-color:#566074; max-width:70%; font-size:11px; }
 html.synthesis-publication .synthesis-state-label option { color:#20212b; background:#fffdf7; }
 html.specter-report.synthesis-publication #synthesis-field { max-width:340px; }
-html.specter-report.synthesis-publication .synthesis-field-instrument figcaption p { font-size:14px !important; line-height:1.65 !important; }
-html.specter-report.synthesis-publication .synthesis-field-instrument figcaption .synthesis-source { font-size:10px !important; }
+html.specter-report.synthesis-publication .synthesis-field-instrument figcaption p { font-size:15px !important; line-height:1.65 !important; }
+html.specter-report.synthesis-publication .synthesis-field-instrument figcaption .synthesis-source { font-size:13px !important; }
 html.specter-report.synthesis-publication .hero .micro { color:var(--specter-blue) !important; }
 html.specter-report.synthesis-publication .passport-layout { display:block; }
 html.specter-report.synthesis-publication .passport-thesis { position:static !important; margin:30px 0; }
@@ -1375,9 +1375,20 @@ html.specter-report.synthesis-publication .ink .evidence { color:var(--specter-m
 html.specter-report.synthesis-publication .synthesis-collection-window { width:100%; max-width:320px; margin:auto; background:transparent; }
 html.specter-report.synthesis-publication .synthesis-collection-window img { display:block; width:100%; height:auto; }
 html.specter-report.synthesis-publication #synthesis-collection-play { display:block; margin:14px auto; border:0; background:transparent; color:var(--specter-ink); text-decoration:underline; font:11px/1.5 var(--specter-mono); cursor:pointer; }
+
+html.specter-report.synthesis-publication body .topbar { padding-block:24px; margin-bottom:32px; }
+html.specter-report.synthesis-publication body .topbar nav { gap:12px 24px; }
+html.specter-report.synthesis-publication body .topbar nav a { font-size:12px; }
+html.specter-report.synthesis-publication body > header.hero { padding-block:12px 48px; }
+html.specter-report.synthesis-publication figcaption,
+html.specter-report.synthesis-publication figcaption p,
+html.specter-report.synthesis-publication .synthesis-source { font-size:15px; line-height:1.6; font-style:normal; }
+@media(max-width:700px) {
+  html.specter-report.synthesis-publication body .topbar { padding-block:20px; margin-bottom:28px; }
+}
 </style></head>
 <body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
-<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a></nav>
+
 <div class="topbar"><a class="brand" href="#top">Specter / Flow Lenia</a><nav aria-label="Report sections"><a href="#instrument">How we measured</a><a href="#future">Possible futures</a><a href="#closure">Development</a><a href="#impedance">The same push, later</a><a href="#control">Steering</a><a href="#passport">Recognizing a response</a><a href="#ledger">Evidence</a></nav></div>
 
 <header class="hero editorial-synthesis" id="top">
@@ -1387,11 +1398,9 @@ html.specter-report.synthesis-publication #synthesis-collection-play { display:b
         <span class="micro">Flow Lenia / Development and intervention / August 2026</span>
         <h1>Individual responses<br><em>before coherent bodies</em></h1>
         <p class="dek">A developing Lenia body becomes harder to redirect, even as runs with the same rule grow into different shapes. Stability develops within each history without forcing every body toward the same form.</p>
-        <p>To understand that combination, we follow responses to disturbance through development—and examine the internal composition that a body’s outline conceals.</p>
         <a class="synthesis-read" href="#development-observation">Follow the change with age ↓</a>
       </div>
       <figure class="synthesis-field-instrument" aria-labelledby="field-title">
-        <div class="synthesis-field-heading"><span>One host / four channel mixtures</span><span>128 × 128 / two channels</span></div>
         <label class="synthesis-state-label" for="synthesis-state">Composition <select id="synthesis-state"><option value="self_reencode">Host control</option><option value="near_donor" selected>Nearby donor</option><option value="far_donor">Distant donor</option><option value="near_scrambled">Scrambled nearby donor</option></select></label>
         <canvas id="synthesis-field" width="512" height="512" role="img" aria-label="Measured Flow Lenia field, colored by hidden channel composition"></canvas>
         <div class="synthesis-field-controls" role="group" aria-label="View the saved state"><button type="button" data-field-view="visible" aria-pressed="false">Visible matter</button><button type="button" data-field-view="composition" aria-pressed="true">Channel mixture</button><button type="button" data-field-view="difference" aria-pressed="false">Change from host</button></div>
@@ -1415,6 +1424,8 @@ html.specter-report.synthesis-publication #synthesis-collection-play { display:b
 </section>
 
 
+
+
 <main>
 <section class="section paper" id="instrument">
   <div class="wrap">
@@ -1434,10 +1445,11 @@ html.specter-report.synthesis-publication #synthesis-collection-play { display:b
   <figcaption>Schematic. We compare predictive information with and without connections between region groups. The reported score is their difference, distinct from IIT Φ.</figcaption>
 </figure>
 
+
     <div class="glossary">
-      <article><span class="micro">Future fan</span><h3>One checkpoint, many exact continuations</h3><p>We branch matched interventions or noise futures from the same saved state, then measure how far their later outcomes spread.</p></article>
-      <article><span class="micro">Visible / hidden</span><h3>The same picture can hide different states</h3><p>The visible field is the sum of its channels, so two exactly identical images can contain different channel mixtures and later respond differently.</p></article>
-      <article><span class="micro">Frozen / post-hoc</span><h3>A question fixed before the run / a map drawn afterward</h3><p>Frozen tests answer decisions written before their results were visible, while post-hoc panels help us understand a mechanism or design the next test without taking on that earlier status.</p></article>
+      <article><h3>One checkpoint, many exact continuations</h3><p>We branch matched interventions or noise futures from the same saved state, then measure how far their later outcomes spread.</p></article>
+      <article><h3>The same picture can hide different states</h3><p>The visible field is the sum of its channels, so two exactly identical images can contain different channel mixtures and later respond differently.</p></article>
+      <article><h3>A question fixed before the run / a map drawn afterward</h3><p>Frozen tests answer decisions written before their results were visible, while post-hoc panels help us understand a mechanism or design the next test without taking on that earlier status.</p></article>
     </div>
     <details class="research-detail"><summary>Compare the separate experimental timelines</summary><figure class="figure"><svg class="chart " role="img" aria-labelledby="five-developmental-evidence-axes-title five-developmental-evidence-axes-desc" viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg"><title id="five-developmental-evidence-axes-title">Five developmental evidence axes</title><desc id="five-developmental-evidence-axes-desc">Five separable evidence axes arranged for synthesis rather than as a shared developmental chronology. The passport is already detectable at the earliest passage 12 to passage 24 interval and its onset is left-censored.</desc><text x='480' y='24' text-anchor='middle' class='axis-title'>five evidence axes · not one shared developmental clock</text><circle cx='90' cy='120' r='19' fill='#d8e1ff' stroke='#111722' stroke-width='3'/><text x='90' y='68' text-anchor='middle' class='micro-svg'>passage 8</text><text x='90' y='176' text-anchor='middle' class='row-label'>ACTION WORLD</text><foreignObject x='12' y='191' width='156' height='72'><div xmlns='http://www.w3.org/1999/xhtml' class='fo-copy'>distinct futures already open</div></foreignObject><circle cx='285' cy='120' r='19' fill='#e9ddff' stroke='#111722' stroke-width='3'/><text x='285' y='68' text-anchor='middle' class='micro-svg'>passage 12→24</text><text x='285' y='176' text-anchor='middle' class='row-label'>PASSPORT</text><foreignObject x='207' y='191' width='156' height='72'><div xmlns='http://www.w3.org/1999/xhtml' class='fo-copy'>already detectable; onset left-censored</div></foreignObject><circle cx='480' cy='120' r='19' fill='#d8ff2f' stroke='#111722' stroke-width='3'/><text x='480' y='68' text-anchor='middle' class='micro-svg'>pre-body</text><text x='480' y='176' text-anchor='middle' class='row-label'>INFORMATION RISE</text><foreignObject x='402' y='191' width='156' height='72'><div xmlns='http://www.w3.org/1999/xhtml' class='fo-copy'>whole catches its best split</div></foreignObject><circle cx='675' cy='120' r='19' fill='#ffd9d2' stroke='#111722' stroke-width='3'/><text x='675' y='68' text-anchor='middle' class='micro-svg'>turn</text><text x='675' y='176' text-anchor='middle' class='row-label'>SELECTIVE CLOSURE</text><foreignObject x='597' y='191' width='156' height='72'><div xmlns='http://www.w3.org/1999/xhtml' class='fo-copy'>timing and spatial leverage harden</div></foreignObject><circle cx='870' cy='120' r='19' fill='#d8f2e6' stroke='#111722' stroke-width='3'/><text x='870' y='68' text-anchor='middle' class='micro-svg'>mature</text><text x='870' y='176' text-anchor='middle' class='row-label'>ACTIVE CONTROL</text><foreignObject x='792' y='191' width='156' height='72'><div xmlns='http://www.w3.org/1999/xhtml' class='fo-copy'>targets remain reachable</div></foreignObject></svg><figcaption><div><b>Synthesis map · five separable evidence axes</b><span>The horizontal placement organizes the report; it is explicitly not developmental order. Passport onset is left-censored because re-identification already succeeds at passage 12→24.</span></div><span>Action-world, passport, information, closure, and control are deliberately kept on different clocks.</span></figcaption></figure></details>
   </div>

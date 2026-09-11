@@ -10,3 +10,16 @@
 .addenda-showcases{display:grid;grid-template-columns:1fr 1fr;gap:42px;margin:42px 0 64px}.addendum-feature{min-width:0}.addendum-feature figure{margin:0 0 26px;background:#e5e9de}.addendum-feature svg{display:block;width:100%;height:auto}.addendum-feature svg text{font:15px Georgia,serif;fill:#172021}.addendum-feature svg .figure-number{font:bold 36px Arial,sans-serif}.addendum-feature svg .figure-small{font:13px monospace}.addendum-feature figcaption{padding:14px 20px;font:11px/1.5 var(--sl-font-mono);display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}.addendum-feature h2{font:700 30px/1.12 Arial,sans-serif;letter-spacing:-.03em;margin:0 0 18px}.addendum-feature h2 a{text-decoration:none}.addendum-feature p{font:17px/1.65 var(--site-font-prose);margin-bottom:20px}.addendum-feature>a{font:12px var(--sl-font-mono)}.addendum-feature button{font:inherit;border:0;border-bottom:1px solid;background:none;cursor:pointer;padding:0;color:inherit}@media(max-width:700px){.addenda-showcases{grid-template-columns:1fr;gap:42px}}
 .k-figure{min-height:0;background:#e9e5d9!important}.k-equation{display:flex;gap:12px;align-items:center;justify-content:center;padding:34px 20px;font:24px Georgia,serif}.k-fraction{display:grid;text-align:center;font:14px/1.8 Georgia,serif}.k-fraction>span+span{border-top:1px solid}.k-equation sub{margin-left:-12px;font-size:12px}.k-comparison{padding:0 28px}.k-comparison>div{display:grid;grid-template-columns:95px 1fr 30px;gap:12px;align-items:center;margin:18px 0;font:12px var(--sl-font-mono)}.k-comparison i{display:block;background:#8aab92;height:16px}.k-comparison>div+div i{background:#365b4e}.k-control{display:flex;align-items:center;gap:12px;padding:16px 28px 24px;font:12px var(--sl-font-mono)}.k-control input{width:100%;min-width:35px;accent-color:#365b4e}.k-control label,.k-control output{white-space:nowrap}.addendum-symbol{width:34px;height:34px;float:right;stroke:#365b4e;fill:none;stroke-width:1.5;margin-left:20px}
 #all-addenda .dossier-card-header,#all-addenda .dossier-card-tab{width:100%}
+
+@media(min-width:701px) {
+  .addenda-showcases { align-items: start; }
+  .addendum-feature > figure { height: 350px; display: flex; flex-direction: column; }
+  .addendum-feature .poly-figure svg { flex: 1; min-height: 0; }
+  .addendum-feature figcaption { margin-top: auto; }
+}
+.addendum-feature figcaption { font: 13px/1.6 var(--sl-font-prose); }
+@media(max-width:700px) {
+  .poly-figure svg text { font-size: 22px; }
+  .poly-figure svg .figure-small { font: 19px Georgia,serif; }
+  .poly-figure svg .figure-number { font-size:42px; }
+}

@@ -162,30 +162,6 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
                     }
                 }
                 div class="dossier-card-body" {
-                    div class="card-meta" {
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Type" }
-                            span class="card-meta-value" {
-                                span class=(format!("addenda-chip class-{lt}")) {
-                                    (lt)
-                                }
-                            }
-                        }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Status" }
-                            span class="card-meta-value" {
-                                span class=(format!("addenda-chip status-{}", record.status)) {
-                                    (record.status)
-                                }
-                            }
-                        }
-                        @if record.last_activity != "unknown" {
-                            div class="card-meta-row" {
-                                span class="card-meta-label" { "Activity" }
-                                span class="card-meta-value" { (record.last_activity) }
-                            }
-                        }
-                    }
                     p { (inline_markdown(&record.summary)) }
                     div class="link-row" {
                         (render_addenda_links(record, &slices.dossier_by_slug, "addenda/index.html"))

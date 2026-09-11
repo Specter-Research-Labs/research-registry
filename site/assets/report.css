@@ -1303,3 +1303,11 @@
     font: .75rem/1.5 ui-monospace, monospace;
   }
 }
+
+@media(max-width:700px) {
+  .report-coordinate-row { grid-template-columns:minmax(0,1fr) 90px; gap:8px 14px; padding:12px 0; font-size:12px; line-height:1.5; }
+  .report-coordinate-row:not(.report-coordinate-header) > span:first-child { grid-column:1/-1; }
+  .report-coordinate-header > span:first-child { display:none; }
+  .report-coordinate-header { font-size:11px; }
+  .report-coordinate-row > span:last-child { font-variant-numeric:tabular-nums; }
+}

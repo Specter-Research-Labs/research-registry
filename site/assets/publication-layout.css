@@ -526,3 +526,62 @@ html.specter-report .tournament-montage > figure { min-width: 0;
   body:is(.blog-page, .cabinet-page) .doc-layout .doc-content { order: 0; }
   body:is(.blog-page, .cabinet-page) .doc-layout .doc-aside { order: 1; }
 }
+
+/* Reading conventions shared by the report family. */
+html body.report-page,
+html.anatomical-editorial body {
+  background-color: var(--sl-color-paper, #f8f4ea);
+}
+html.anatomical-editorial .hero h1,
+html body .fiber-hero h1 {
+  font: 400 clamp(44px, 5.5vw, 76px)/1.05 PublicationSerif, Georgia, serif;
+  font-family: PublicationSerif, Georgia, serif !important;
+  letter-spacing: -.045em;
+  max-width: 20ch;
+}
+html.anatomical-editorial .hero { grid-template-columns: 1.1fr 1fr; }
+html.anatomical-editorial main { padding-top: 36px; }
+html.anatomical-editorial .status {
+  border: 0; background: none; padding: 0; font-size: 12px;
+  text-transform: none; letter-spacing: 0; font-weight: 400;
+}
+html.anatomical-editorial .status::before { content: none; }
+html.anatomical-editorial .chapter-head { grid-template-columns: 3rem 1.15fr 1fr; }
+html.anatomical-editorial .chapter-head > p { padding-top: 0; }
+html.anatomical-editorial .chapter-head h2 { margin-top: 0; }
+html.anatomical-editorial .stage { border: 0; border-top: 1px solid var(--sl-color-rule); background: transparent; padding: 20px 0; min-height: 0; }
+html.anatomical-editorial .stage::before { margin-bottom: 20px; }
+html.anatomical-editorial .pipeline { gap: 28px; }
+html.anatomical-editorial .stage .tag { border: 0; padding: 18px 0 0; background: transparent; font-size: 12px; text-transform: none; }
+html body.report-page figcaption,
+html.anatomical-editorial :is(figcaption, .caption) {
+  font: 400 15px/1.6 PublicationSerif, Georgia, serif;
+  letter-spacing: 0; text-transform: none;
+}
+html body.report-page .report-nav,
+html.anatomical-editorial .masthead {
+  margin-block: 0 32px; padding-block: 24px;
+  min-height: 0; border-bottom: 1px solid var(--sl-color-rule);
+}
+html body.report-page .report-nav { gap: 12px 24px; }
+html body.report-page .report-nav a,
+html.anatomical-editorial .masthead .nav a { font: 12px/1.6 PublicationMono, monospace; padding: 0; }
+html body.report-page .report-hero { padding-top: 12px; }
+html body .fiber-section h2 { font-size: 30px; }
+html body .fiber-caption { margin-top: 16px; }
+@media (max-width:700px) {
+  html.anatomical-editorial .masthead .nav { display: flex; gap: 12px 20px; }
+  html.anatomical-editorial .hero,
+  html.anatomical-editorial .chapter-head { grid-template-columns: 1fr; }
+  html.anatomical-editorial .chapter-head { gap: 12px; }
+  html.anatomical-editorial main { padding-top: 12px; }
+  html body.report-page .report-nav, html.anatomical-editorial .masthead { margin-bottom: 28px; padding-block: 20px; }
+}
+
+html body .fiber-hero h1 {
+  font-size:clamp(44px,5.5vw,76px) !important;
+  font-weight:400 !important;
+  line-height:1.05 !important;
+}
+html.anatomical-editorial .hero-specimens figcaption,
+html.anatomical-editorial .media-figure figcaption { font-size:15px; line-height:1.6; }
