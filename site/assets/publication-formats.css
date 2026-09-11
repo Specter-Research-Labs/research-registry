@@ -1,21 +1,267 @@
-:root{--publication-primary:var(--sl-color-accent-2);--publication-secondary:var(--sl-color-accent);--publication-surface:var(--sl-color-surface);--publication-muted:var(--sl-color-muted)}
-body[data-publication]{--paper:var(--publication-paper);--ink:var(--publication-ink);--primary:var(--publication-primary);--secondary:var(--publication-secondary);--surface:var(--publication-surface);--sl-color-paper:var(--publication-paper);--sl-color-bg:var(--publication-paper);--sl-color-ink:var(--publication-ink);--sl-color-accent:var(--publication-secondary);--sl-color-accent-2:var(--publication-primary);background:var(--publication-paper);color:var(--publication-ink)}
-body[data-publication] a:focus-visible,body[data-publication] button:focus-visible{outline:2px solid var(--publication-primary);outline-offset:5px}
-body[data-publication=home]{--paper:#f4f1e8;--ink:#172021;background:#f4f1e8;color:#172021;--sl-color-paper:#f4f1e8;--sl-color-bg:#f4f1e8;--sl-color-ink:#172021}
-body[data-publication=home] .text-link:hover,body[data-publication=home] .index-list a:hover{color:var(--publication-primary)}
-body[data-publication=home] .investigation .eyebrow,body[data-publication=home] .investigation .label{color:var(--publication-primary)}
-body[data-publication=home] .proof-panel{--accent:var(--publication-primary)}
-body[data-publication=dossier] .publication-dossier-cover{display:grid;grid-template-columns:1fr 1.2fr;gap:45px;align-items:center;background:var(--publication-primary);color:var(--publication-paper);padding:50px;margin:30px 0 45px}
-.publication-label,.publication-report-doors span,.publication-dossier-cover figcaption{font:11px/1.6 PublicationMono,monospace}
-.publication-dossier-cover h1{font:700 clamp(64px,7vw,108px)/.93 Arial,sans-serif;letter-spacing:-.065em;color:var(--publication-surface);margin:35px 0}
-.publication-dossier-cover p:not(.publication-label){font:27px/1.25 'IBM Plex Serif',Georgia,serif;margin:20px 0}.publication-dossier-cover div>span{font:17px/1.6 'IBM Plex Serif',Georgia,serif;display:block;max-width:30ch}.publication-dossier-cover figure{margin:0}.publication-dossier-cover img{width:100%;display:block}.publication-dossier-cover figcaption{color:var(--publication-paper);border:0;margin:0;padding:0}.publication-dossier-cover a{color:inherit}
-.publication-report-doors{display:grid;grid-template-columns:repeat(3,1fr);gap:35px;margin:0 0 60px}.publication-report-doors a{display:flex;flex-direction:column;gap:16px;text-decoration:none;color:var(--publication-ink);padding:10px 0}.publication-report-doors span{color:var(--publication-secondary)}.publication-report-doors strong{font:27px/1.15 'IBM Plex Serif',Georgia,serif;letter-spacing:-.025em}.publication-report-doors em{font:12px PublicationMono,monospace;margin-top:auto;text-decoration:underline;text-underline-offset:5px}.publication-report-doors a:hover strong{color:var(--publication-primary)}
-body[data-publication=report]{background-image:none}body[data-publication=report] .report-hero h1{font:400 clamp(50px,6.5vw,88px)/1.02 'IBM Plex Serif',Georgia,serif;letter-spacing:-.05em}body[data-publication=report] .report-hero h1 span{font-style:italic;color:var(--publication-ink)}body[data-publication=report] .report-hero{column-gap:50px}body[data-publication=report] .report-margin-note{background:var(--publication-surface);border:0;box-shadow:none;transform:none;color:var(--publication-ink)}body[data-publication=report] .report-margin-note strong{color:var(--publication-primary)}body[data-publication=report] .report-nav a{border:0;background:none;color:var(--publication-ink);text-transform:none;letter-spacing:0}body[data-publication=report] .report-nav a:hover{color:var(--publication-primary)}body[data-publication=report] .report-synthesis{background:var(--publication-surface);color:var(--publication-ink)}body[data-publication=report] .report-synthesis :is(h2,p,a,summary){color:var(--publication-ink)}body[data-publication=report] .publication-measurement{padding:50px 0 65px}body[data-publication=report] .publication-measurement #live-plate>h3{font-family:var(--sl-font-display)}body[data-publication=report] .report-motion-intro{max-width:780px}
-body[data-publication=note] .doc-paper{background:var(--publication-paper);box-shadow:none;border:0}body[data-publication=note] .doc-layout{grid-template-columns:160px minmax(0,1fr);gap:55px}body[data-publication=note] .doc-content{max-width:820px}body[data-publication=note] .doc-content h1{font:italic 400 clamp(40px,4.5vw,64px)/1.06 'IBM Plex Serif',Georgia,serif;letter-spacing:-.04em;margin:35px 0 25px}body[data-publication=note] .doc-content p{font-size:19px;line-height:1.75;max-width:65ch}body[data-publication=note] .doc-aside{font-size:11px}body[data-publication=note] .doc-stamp{background:none;border:0;padding:0}body[data-publication=note] .toc{display:none}.publication-journal-masthead{display:flex;align-items:baseline;justify-content:space-between;gap:20px}.publication-journal-masthead span{font:italic 28px 'IBM Plex Serif',Georgia,serif}.publication-journal-masthead a{font:11px PublicationMono,monospace}
-@media(max-width:760px){body[data-publication=dossier] .publication-dossier-cover{grid-template-columns:1fr;padding:30px 24px;gap:15px}.publication-dossier-cover h1{font-size:75px}.publication-report-doors{grid-template-columns:1fr;gap:20px}.publication-report-doors strong{font-size:25px}body[data-publication=note] .doc-layout{display:block}body[data-publication=note] .doc-aside{margin-bottom:35px}.publication-journal-masthead{flex-wrap:wrap}body[data-publication=note] .doc-content p{font-size:17px}}
-body[data-publication=dossier] .publication-dossier-cover img{border:0;box-shadow:none}body[data-publication=report] .report-kicker{color:var(--publication-primary)}
+:root {
+  --publication-primary: var(--sl-color-accent-2);
+  --publication-secondary: var(--sl-color-accent);
+  --publication-surface: var(--sl-color-surface);
+  --publication-muted: var(--sl-color-muted);
+}
+
+body[data-publication] {
+  --paper: var(--publication-paper);
+  --ink: var(--publication-ink);
+  --primary: var(--publication-primary);
+  --secondary: var(--publication-secondary);
+  --surface: var(--publication-surface);
+  --sl-color-paper: var(--publication-paper);
+  --sl-color-bg: var(--publication-paper);
+  --sl-color-ink: var(--publication-ink);
+  --sl-color-accent: var(--publication-secondary);
+  --sl-color-accent-2: var(--publication-primary);
+  background: var(--publication-paper);
+  color: var(--publication-ink);
+}
+
+body[data-publication] a:focus-visible,body[data-publication] button:focus-visible {
+  outline: 2px solid var(--publication-primary);
+  outline-offset: 5px;
+}
+
+body[data-publication=home] {
+  --paper: #f4f1e8;
+  --ink: #172021;
+  background: #f4f1e8;
+  color: #172021;
+  --sl-color-paper: #f4f1e8;
+  --sl-color-bg: #f4f1e8;
+  --sl-color-ink: #172021;
+}
+
+body[data-publication=home] .text-link:hover,body[data-publication=home] .index-list a:hover {
+  color: var(--publication-primary);
+}
+
+body[data-publication=home] .investigation .eyebrow,body[data-publication=home] .investigation .label {
+  color: var(--publication-primary);
+}
+
+body[data-publication=home] .proof-panel {
+  --accent: var(--publication-primary);
+}
+
+body[data-publication=dossier] .publication-dossier-cover {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 45px;
+  align-items: center;
+  background: var(--publication-primary);
+  color: var(--publication-paper);
+  padding: 50px;
+  margin: 30px 0 45px;
+}
+
+.publication-label,.publication-report-doors span,.publication-dossier-cover figcaption {
+  font: 11px/1.6 PublicationMono,monospace;
+}
+
+.publication-dossier-cover h1 {
+  font: 700 clamp(64px,7vw,108px)/.93 Arial,sans-serif;
+  letter-spacing: -.065em;
+  color: var(--publication-surface);
+  margin: 35px 0;
+}
+
+.publication-dossier-cover p:not(.publication-label) {
+  font: 27px/1.25 "IBM Plex Serif",Georgia,serif;
+  margin: 20px 0;
+}
+
+.publication-dossier-cover div>span {
+  font: 17px/1.6 "IBM Plex Serif",Georgia,serif;
+  display: block;
+  max-width: 30ch;
+}
+
+.publication-dossier-cover figure {
+  margin: 0;
+}
+
+.publication-dossier-cover img {
+  width: 100%;
+  display: block;
+}
+
+.publication-dossier-cover figcaption {
+  color: var(--publication-paper);
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.publication-dossier-cover a {
+  color: inherit;
+}
+
+.publication-report-doors {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 35px;
+  margin: 0 0 60px;
+}
+
+.publication-report-doors a {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-decoration: none;
+  color: var(--publication-ink);
+  padding: 10px 0;
+}
+
+.publication-report-doors span {
+  color: var(--publication-secondary);
+}
+
+.publication-report-doors strong {
+  font: 27px/1.15 "IBM Plex Serif",Georgia,serif;
+  letter-spacing: -.025em;
+}
+
+.publication-report-doors em {
+  font: 12px PublicationMono,monospace;
+  margin-top: auto;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.publication-report-doors a:hover strong {
+  color: var(--publication-primary);
+}
+
+body[data-publication=report] {
+  background-image: none;
+}
+
+body[data-publication=report] .report-hero h1 {
+  font: 400 clamp(50px,6.5vw,88px)/1.02 "IBM Plex Serif",Georgia,serif;
+  letter-spacing: -.05em;
+}
+
+body[data-publication=report] .report-hero h1 span {
+  font-style: italic;
+  color: var(--publication-ink);
+}
+
+body[data-publication=report] .report-hero {
+  column-gap: 50px;
+}
+
+body[data-publication=report] .report-margin-note {
+  background: var(--publication-surface);
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  color: var(--publication-ink);
+}
+
+body[data-publication=report] .report-margin-note strong {
+  color: var(--publication-primary);
+}
+
+body[data-publication=report] .report-nav a {
+  border: 0;
+  background: none;
+  color: var(--publication-ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+body[data-publication=report] .report-nav a:hover {
+  color: var(--publication-primary);
+}
+
+body[data-publication=report] .report-synthesis {
+  background: var(--publication-surface);
+  color: var(--publication-ink);
+}
+
+body[data-publication=report] .report-synthesis :is(h2,p,a,summary) {
+  color: var(--publication-ink);
+}
+
+body[data-publication=report] .publication-measurement #live-plate>h3 {
+  font-family: var(--sl-font-display);
+}
+
+body[data-publication=report] .report-motion-intro {
+  max-width: 780px;
+}
+
+body[data-publication=note] .doc-paper {
+  background: var(--publication-paper);
+  box-shadow: none;
+  border: 0;
+}
+
+body[data-publication=note] .doc-layout {
+  grid-template-columns: 160px minmax(0,1fr);
+  gap: 55px;
+}
+
+body[data-publication=note] .doc-content {
+  max-width: 820px;
+}
+
+body[data-publication=note] .doc-content h1 {
+  font: italic 400 clamp(40px,4.5vw,64px)/1.06 "IBM Plex Serif",Georgia,serif;
+  letter-spacing: -.04em;
+  margin: 35px 0 25px;
+}
+
+body[data-publication=note] .doc-content p {
+  font-size: 19px;
+  line-height: 1.75;
+  max-width: 65ch;
+}
+
+body[data-publication=note] .doc-aside {
+  font-size: 11px;
+}
+
+body[data-publication=note] .doc-stamp {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+body[data-publication=note] .toc {
+  display: none;
+}
+
+.publication-journal-masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.publication-journal-masthead span {
+  font: italic 28px "IBM Plex Serif",Georgia,serif;
+}
+
+.publication-journal-masthead a {
+  font: 11px PublicationMono,monospace;
+}
+
+body[data-publication=dossier] .publication-dossier-cover img {
+  border: 0;
+  box-shadow: none;
+}
+
+body[data-publication=report] .report-kicker {
+  color: var(--publication-primary);
+}
 
 /* Method reports share the publication typography on a lighter reading surface. */
+
 body.report-format-method[data-publication=report] {
   --publication-paper: #f8f4ea;
   --report-ink: var(--publication-ink);
@@ -24,21 +270,30 @@ body.report-format-method[data-publication=report] {
   --report-display: var(--sl-font-display);
   --report-shadow: none;
 }
+
 body.report-format-method[data-publication=report] .report-hero h1 {
   font-size: clamp(42px, 5.3vw, 72px);
   max-width: 24ch;
 }
+
 body.report-format-method .report-nav a[aria-current=page] {
   text-decoration: underline;
   text-underline-offset: 6px;
 }
+
 body.report-format-method :is(.report-heading, .report-result-copy) h2 {
   font-family: var(--report-display);
   letter-spacing: -.035em;
 }
-body.report-format-method .report-panel { border: 0; }
-body.report-format-method :is(.report-result-copy, .report-figure, .report-comparison) { box-shadow: none; }
-body.report-format-method .report-panel .report-kicker { color: var(--report-accent-bright); }
+
+body.report-format-method :is(.report-result-copy, .report-figure, .report-comparison) {
+  box-shadow: none;
+}
+
+body.report-format-method .report-panel .report-kicker {
+  color: var(--report-accent-bright);
+}
+
 .report-neighbor-replay {
   display: block;
   width: 100%;
@@ -47,17 +302,131 @@ body.report-format-method .report-panel .report-kicker { color: var(--report-acc
   margin: .5rem auto 1rem;
   background: #000;
 }
-.report-fingerprint-detail img { display: block; width: 160px; max-width: 100%; margin-block: 1rem; }
+
+.report-fingerprint-detail img {
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  margin-block: 1rem;
+}
 
 body.report-format-method .report-panel {
-  background: var(--publication-surface); color: var(--publication-ink);
+  border: 0;
+  background: var(--publication-surface);
+  color: var(--publication-ink);
 }
-body.report-format-method .report-panel :is(h2, p, .report-kicker) { color: inherit; }
+
+body.report-format-method .report-panel :is(h2, p, .report-kicker) {
+  color: inherit;
+}
+
 body.report-format-method .report-panel .report-button {
-  background: transparent; color: var(--publication-ink); border: 0;
-  border-bottom: 1px solid currentColor; padding: 4px 0;
-  font: 12px/1.6 PublicationMono, monospace; text-transform: none; letter-spacing: 0; min-height:0;
+  background: transparent;
+  color: var(--publication-ink);
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 4px 0;
+  font: 12px/1.6 PublicationMono, monospace;
+  text-transform: none;
+  letter-spacing: 0;
+  min-height: 0;
 }
-body[data-publication=report] .publication-measurement { padding-block: 24px 48px; }
-body.report-format-method .report-actions { gap:24px; }
-body.report-format-method .report-receipt summary { font:12px/1.6 PublicationMono,monospace; text-transform:none; letter-spacing:0; }
+
+body[data-publication=report] .publication-measurement {
+  padding: 50px 0 65px;
+  padding-block: 24px 48px;
+}
+
+body.report-format-method .report-actions {
+  gap: 24px;
+}
+
+body.report-format-method .report-receipt summary {
+  font: 12px/1.6 PublicationMono,monospace;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+html body.report-format-method .report-result {
+  gap: var(--publication-space-block);
+}
+
+html body.report-format-method .report-result-copy > p {
+  margin-block: var(--publication-space-prose) 0;
+}
+
+html body.report-format-method .report-reading {
+  margin-top: var(--publication-space-prose);
+}
+
+html body.report-format-method .report-result > .report-scroll-hint {
+  margin: 0;
+}
+
+.report-method-heading h2 {
+  font: 700 clamp(30px, 3.8vw, 48px)/1.05 var(--sl-font-display);
+  letter-spacing: -.035em;
+  margin: 12px 0 0;
+  max-width: 20ch;
+}
+
+.report-method-prose > p {
+  font: 1.17rem/1.62 var(--sl-font-prose);
+  margin: 0;
+}
+
+html body.report-format-method .report-result > figure {
+  margin-top: calc(var(--publication-space-topic) - var(--publication-space-block));
+}
+
+@media (min-width: 1000px) {
+  .report-format-method .report-result-copy {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 48px;
+    align-items: start;
+  }
+}
+
+@media (max-width: 999px) {
+  .report-method-prose {
+    margin-top: var(--publication-space-block);
+  }
+}
+
+@media (max-width:760px) {
+  body[data-publication=dossier] .publication-dossier-cover {
+    grid-template-columns: 1fr;
+    padding: 30px 24px;
+    gap: 15px;
+  }
+
+  .publication-dossier-cover h1 {
+    font-size: 75px;
+  }
+
+  .publication-report-doors {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .publication-report-doors strong {
+    font-size: 25px;
+  }
+
+  body[data-publication=note] .doc-layout {
+    display: block;
+  }
+
+  body[data-publication=note] .doc-aside {
+    margin-bottom: 35px;
+  }
+
+  .publication-journal-masthead {
+    flex-wrap: wrap;
+  }
+
+  body[data-publication=note] .doc-content p {
+    font-size: 17px;
+  }
+}

@@ -7,15 +7,15 @@
       "id": "synthesis-v7",
       "releaseId": "flce-synthesis-v7-be5d576a918b",
       "sourceReportSha256": "7fcc26f51b59b9f604662c9abe4afb296cfc870ac478c79ef216f340610d53ea",
-      "publicReportSha256": "467a870703e3346a7d2c2da1c4eaca0b4530f392a2989cb3be63c04b411832b9",
+      "publicReportSha256": "db36d31dee4d25625b72536c9a6a07b6d1848c96311d945871435cde41c4816a",
       "transformations": [
         "import_verified_public_projection_v1",
         "apply_shared_report_polish_v1",
         "synthesis_publication_instruments_v1",
         "move_reports_to_website_v1"
       ],
-      "contextSha256": "dfecd69c25c696f7d5977bb2a8009b3bb9177222482312c737158fce0b05b9b7",
-      "receiptSha256": "b32bb3e7fabaf99e3d41709723eddd4ec5b05987fe6e90b6d6c1c1bd273f45ef"
+      "contextSha256": "29d6b1c85be5868df0cc7a99b59aaeebcc701e29b9dade93856f01ac1896ce01",
+      "receiptSha256": "c19da543bd55bfb78ae431a156ccd61c5b82fc7a006c25a3afb4e309e9428d99"
     },
     {
       "id": "start-here",
