@@ -37,3 +37,22 @@ For stylesheet-only changes, run `ops/spctr/target/debug/spctr site build` and c
 For the Development template, first rebuild `spctr` with `cargo build --manifest-path ops/spctr/Cargo.toml --bin spctr`: its stylesheet is included at compile time. Run `spctr site stage-lenia-causal-reports --input-root <verified-input-root> --output <new-staging-directory> --id synthesis-v7`. Copy the staged report and its receipt together, and replace only the matching entry in the site's report manifest. Do not edit generated report HTML or hashes by hand. Run `cargo test --manifest-path ops/spctr/Cargo.toml --lib site::causal_emergence_release` after regeneration.
 
 Keep temporary snapshots and comparison servers outside the tracked site. Checkpoint an approved design before refactoring, preserve its geometry and content during cleanup, and report local validation separately from deployment.
+
+## Homepage replays
+
+The homepage selects one creature on each load, avoiding the previous selection within the browser tab. The small curated list lives in `site/templates/index.html`; changing it requires `spctr site build --write`. Only the selected hero video loads. Keep pause controls on the shared `.publication-motion` component.
+
+Native replay exports live in `site/assets/home-creatures/`, with a poster and JSON provenance beside each MP4. Use the existing renderer to package another candidate:
+
+```sh
+LeniaCLI publish media --input <single-specimen-replay-root> --output <media-root> \
+  --steps 3600 --frame-budget 900 --fps 30 --render-mode body
+uv run --with numpy --with scipy --with pillow python \
+  dossiers/lenia-swarm/ops/render_homepage_creature.py \
+  --media-root <media-root> --campaign <source-campaign> \
+  --output site/assets/home-creatures/<slug> --title '<accurate specimen label>'
+```
+
+The packager produces 30-second, 1024-square recordings from native total-density frames. It uses one fixed crop across the trajectory and the homepage's density palette. It checks connected mass and clipping; inspect the full playback as well, since those checks cannot establish interesting movement or rule out a persistent strand. Spatial interpolation improves presentation, not simulation resolution. The existing Quadrium study uses a separate, explicitly recorded refinement of the simulation grid.
+
+The initial additions are the Geminidae-derived `4F18F1D6` and Kronidae-derived `B77AE651` family replays. Their receipts identify the source campaign, configuration hash, native grid, captured steps and frame hashes. Both use additive Lenia; do not label them Flow Lenia. The new Flow shortlist (`D899822A`, `DD9A714C`, `206622B9`) developed long strands during replay and was excluded. Keep candidate exports and contact sheets outside the published tree.

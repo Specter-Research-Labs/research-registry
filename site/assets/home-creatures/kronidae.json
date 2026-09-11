@@ -1,0 +1,94 @@
+{
+  "title": "Kronidae-derived Lenia",
+  "source_creature_id": "B77AE651-D59D-5F2E-B38A-49154BAF65FD",
+  "source_campaign": "0508-serene-dancer-0000-b77ae651",
+  "source_config_sha256": "f2b88ee2ee7e5c63dbddbb6ffffddadff01efaa281b636f5ce313d36716220bb",
+  "implementation": {
+    "mode": "qd24_additive_v1"
+  },
+  "simulation_grid": {
+    "sx": 128,
+    "sy": 128
+  },
+  "recorded_steps": {
+    "first": 4,
+    "last": 3600,
+    "stride": 4
+  },
+  "video": {
+    "width": 1024,
+    "height": 1024,
+    "frames": 900,
+    "fps": 30
+  },
+  "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
+  "native_capture": "LeniaCLI publish media --steps 3600 --frame-budget 900 --fps 30 --render-mode body",
+  "presentation": "Native full-world 8-bit total-density frames, using the CLI's shared recording scale. Fixed square crop; bilinear display interpolation; no simulation-grid refinement or camera tracking. Channels are summed.",
+  "crop": {
+    "left": 26,
+    "top": 26,
+    "side": 76
+  },
+  "density_palette": {
+    "values": [
+      0,
+      0.06,
+      0.2,
+      0.35,
+      0.5,
+      0.7,
+      0.85,
+      1
+    ],
+    "rgb": [
+      [
+        244,
+        241,
+        232
+      ],
+      [
+        226,
+        235,
+        222
+      ],
+      [
+        193,
+        222,
+        202
+      ],
+      [
+        135,
+        195,
+        175
+      ],
+      [
+        77,
+        153,
+        137
+      ],
+      [
+        46,
+        122,
+        111
+      ],
+      [
+        31,
+        98,
+        91
+      ],
+      [
+        27,
+        77,
+        76
+      ]
+    ]
+  },
+  "screen": {
+    "minimum_connected_mass_fraction": 0.9994018631726684,
+    "max_to_min_recorded_mass": 1.010556544440489,
+    "max_density_fraction_outside_crop": 0.0
+  },
+  "frames_sha256": "11b85481346c96d15c57fe3d1b52cd3c972b2ad6b62ab150980595340738c4bd",
+  "video_sha256": "60cdf32b299f384276a6ddfe4e6880a7ee772a6746dc84655772f1d7a859ec5a",
+  "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic."
+}
