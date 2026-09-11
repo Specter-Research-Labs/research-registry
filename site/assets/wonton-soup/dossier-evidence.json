@@ -371,6 +371,409 @@
     "still_solved": 406,
     "different_proof_hash": 131
   },
+  "proof_diversity_and_recovery": {
+    "grouping": "Theorem and provider; paper.build_figures.query_basin_rows",
+    "groups": 66,
+    "pearson_r": 0.02098964867253601,
+    "rows": [
+      {
+        "provider": "deepseek",
+        "theorem": "AEMeasurable_x2eneg",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 0.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "AddSemigroup_x2eto_x5fisAssociative",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 5.571428571428571
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "add_comm_nat",
+        "lesion_recovery_rate": 0.25,
+        "unique_structures": 0.4
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "add_x5frotate_x27",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 0.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "add_x5fsub_x5fcancel",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.25
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "add_x5fzsmul",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 2.5714285714285716
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "and_or_distrib",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 0.3333333333333333
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "const_x5fsub_x5finvolutive",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 2.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "contrapositive",
+        "lesion_recovery_rate": 0.7272727272727273,
+        "unique_structures": 2.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "contrapositive_iff",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 0.5
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "coq_pair_diff_false_true",
+        "lesion_recovery_rate": 0.7692307692307693,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "coq_pair_diff_true_false",
+        "lesion_recovery_rate": 0.9090909090909091,
+        "unique_structures": 1.2
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "coq_pair_eq_true_rec_r",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 2.3333333333333335
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "coq_pair_orb_prop",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.3333333333333333
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "de_morgan_not_or",
+        "lesion_recovery_rate": 0.125,
+        "unique_structures": 2.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "div_x5feq_x5fiff_x5feq_x5fmul_x27",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "exists_and_distrib",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 0.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "hf_deepseek_prover_v1_train_03170",
+        "lesion_recovery_rate": 1.0,
+        "unique_structures": 2.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "hf_deepseek_prover_v1_train_11756",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 0.8
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "hf_deepseek_prover_v1_train_11967",
+        "lesion_recovery_rate": 0.5714285714285714,
+        "unique_structures": 0.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "hf_deepseek_prover_v1_train_12118",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 0.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "iff_trans",
+        "lesion_recovery_rate": 0.7777777777777778,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "imp_trans",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.5
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "list_append_nil",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "logic_chain",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "mul_add_distrib",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "nat_succ_pred",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "not_or_and",
+        "lesion_recovery_rate": 0.125,
+        "unique_structures": 2.0
+      },
+      {
+        "provider": "deepseek",
+        "theorem": "zero_add",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.5
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "SubtractionMonoid_x2etoSubNegZeroMonoid_x2eeq_x5f1",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "add_x5feq_x5fright",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "add_x5fleft_x5fiterate",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "add_x5fne_x5fleft",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "add_x5fsub_x5fadd_x5fright_x5feq_x5fsub",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "add_x5fsub_x5fcancel",
+        "lesion_recovery_rate": 0.8333333333333334,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "comp_x5fadd_x5fleft",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "comp_x5fmul_x5fright",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "const_x5fsub_x5finvolutive",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "coq_pair_diff_false_true",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "coq_pair_diff_true_false",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "coq_pair_eq_true_rec_r",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "div_x5fdiv_x5fdiv_x5fcancel_x5fright",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "div_x5feq_x5fdiv_x5fmul_x5fdiv",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "heuristic",
+        "theorem": "hf_deepseek_prover_v1_train_03170",
+        "lesion_recovery_rate": 1.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AEMeasurable_x2edist",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 3.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AEMeasurable_x2eindicator",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 3.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AEMeasurable_x2emk_x2econgr_x5fsimp",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AbsoluteValue_x2ecoe_x5ftoMulHom",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AbsoluteValue_x2ecomp_x2econgr_x5fsimp",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AbsoluteValue_x2enonneg_x27",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 3.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AbsoluteValue_x2epos",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 2.3333333333333335
+      },
+      {
+        "provider": "reprover",
+        "theorem": "AbsolutelyContinuousOnInterval_x2etotalLengthFilter_x2eeq_x5f1",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 0.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "Absorbs_x2eunion",
+        "lesion_recovery_rate": 1.0,
+        "unique_structures": 5.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "Action_x2eFunctor_x2emapActionPreservesColimit_x5fof_x5fpreserves",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 4.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "Action_x2eforget_x2082_x5fpreservesZeroMorphisms",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "SubtractionMonoid_x2etoSubNegZeroMonoid_x2eeq_x5f1",
+        "lesion_recovery_rate": 0.5,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "coq_pair_diff_false_true",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "coq_pair_diff_true_false",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "coq_pair_eq_true_rec_r",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "dite_x5fvadd",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "div_x5feq_x5fiff_x5feq_x5fmul_x27",
+        "lesion_recovery_rate": 0.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "div_x5feq_x5fof_x5feq_x5fmul_x27_x27",
+        "lesion_recovery_rate": 0.3333333333333333,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "hf_deepseek_prover_v1_train_00837",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "hf_deepseek_prover_v1_train_11967",
+        "lesion_recovery_rate": 1.0,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "hf_deepseek_prover_v1_train_12118",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 1.0
+      },
+      {
+        "provider": "reprover",
+        "theorem": "hf_deepseek_prover_v1_train_22126",
+        "lesion_recovery_rate": 0.6666666666666666,
+        "unique_structures": 1.0
+      }
+    ]
+  },
   "example": {
     "run_key": "6043f87af1e797a1",
     "theorem": "mathlib__Mathlib__Logic__Encodable__Basic__L239__encode_inl__16849476",

@@ -11,10 +11,11 @@ import hashlib
 import html
 import json
 import re
+import statistics
 from pathlib import Path
 
 import duckdb
-from build_figures import completed_runs, seed_run_keys
+from build_figures import completed_runs, query_basin_rows, seed_run_keys
 
 ROOT = Path(__file__).resolve().parents[3]
 CASE_RUN = "6043f87af1e797a1"
@@ -25,6 +26,11 @@ def export(db: Path) -> None:
     conn = duckdb.connect(str(db), read_only=True)
     selected = completed_runs(conn)
     seed_run_keys(conn, "selected_completed_runs", [r[0] for r in selected])
+    diversity_rows = query_basin_rows(conn)
+    diversity_correlation = statistics.correlation(
+        [r["unique_structures"] for r in diversity_rows],
+        [r["lesion_recovery_rate"] for r in diversity_rows],
+    )
     archive_runs = conn.execute("SELECT count(*) FROM runs").fetchone()[0]
     archive_theorems = conn.execute("""
         SELECT count(DISTINCT theorem) FROM (
@@ -134,6 +140,12 @@ def export(db: Path) -> None:
             "still_solved": survived,
             "different_proof_hash": rerouted,
         },
+        "proof_diversity_and_recovery": {
+            "grouping": "Theorem and provider; paper.build_figures.query_basin_rows",
+            "groups": len(diversity_rows),
+            "pearson_r": diversity_correlation,
+            "rows": diversity_rows,
+        },
         "example": case,
     }
     output = ROOT / "site/assets/wonton-soup/dossier-evidence.json"
@@ -181,6 +193,18 @@ route above.</p>
 <p class="ws-small">Counts recomputed from the preserved lake, covering completed runs through
 {evidence["latest_run_created_at"][:10]}. <a
 href="/assets/wonton-soup/dossier-evidence.json">Cohort selection and recorded evidence</a>.</p>
+</section>
+<section class="ws-section">
+<h2 class="story-heading">Observed proof diversity was a poor guide to recovery</h2>
+<p class="story-deck">We expected theorems with more observed proof structures to be easier
+to solve after a tactic was blocked. Across {len(diversity_rows)} theorem–prover groups,
+the correlation between the number of observed structures and the fraction of successful
+tactic-removal reruns was {diversity_correlation:.2f}. The variety recorded in ordinary
+searches gave little indication of which searches would recover.</p>
+<div class="story-jumps"><a
+href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">
+Follow the experiment →</a><a href="../../dashboards/wonton-soup/">
+Inspect individual searches →</a></div>
 </section>
 '''
     template = ROOT / "site/templates/dossiers/wonton-soup/index.html"
