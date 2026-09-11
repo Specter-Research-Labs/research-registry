@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run a fixed cell-swap pilot on visually selected, long-lived Flow Lenia bodies.
 
-See docs/coherent-body-pilot.md for selection, interpretation, and invocation.
+See ops/docs/publication-review/coherent-body-pilot.md at the repository root for selection, interpretation, and invocation.
 The original causal-emergence cohorts are never modified.
 """
 

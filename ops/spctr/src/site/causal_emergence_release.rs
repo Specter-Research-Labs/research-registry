@@ -1056,7 +1056,9 @@ fn apply_synthesis_publication(source: &str) -> Result<String> {
     }
     let resources = Regex::new(r#"(?s)<nav class="publication-navigation"[^>]*>.*?</nav>"#)?;
     html = resources.replace_all(&html, "").into_owned();
-    let labels = Regex::new(r#"<span class="micro">(?:Future fan|Visible / hidden|Frozen / post-hoc)</span>"#)?;
+    let labels = Regex::new(
+        r#"<span class="micro">(?:Future fan|Visible / hidden|Frozen / post-hoc)</span>"#,
+    )?;
     html = labels.replace_all(&html, "").into_owned();
     let footer = Regex::new(r#"(?s)<footer class="footer">.*?</footer>"#)?;
     html = footer.replace_all(&html, r##"<footer class="footer"><nav class="wrap footer-grid" aria-label="Report resources"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="#ledger">Methods and sources</a><a href="about.html">About this report</a></nav></footer>"##).into_owned();
