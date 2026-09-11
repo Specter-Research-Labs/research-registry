@@ -188,8 +188,7 @@ aria-label="{survived:,} of {eligible:,} interventions retained a proof, {surviv
 percent"><span style="width: {survival:.6f}%"></span></div><figcaption>{survived:,} still found
 a proof · {eligible - survived:,} did not.</figcaption></figure>
 <p class="story-deck">{rerouted:,} of the surviving searches produced a different proof hash.
-The goal stayed fixed while the proof changed—the same pattern illustrated by the alternate
-route above.</p>
+</p>
 <p class="ws-small">Counts recomputed from the preserved lake, covering completed runs through
 {evidence["latest_run_created_at"][:10]}. <a
 href="/assets/wonton-soup/dossier-evidence.json">Cohort selection and recorded evidence</a>.</p>
@@ -199,8 +198,7 @@ href="/assets/wonton-soup/dossier-evidence.json">Cohort selection and recorded e
 <p class="story-deck">We expected theorems with more observed proof structures to be easier
 to solve after a tactic was blocked. Across {len(diversity_rows)} theorem–prover groups,
 the correlation between the number of observed structures and the fraction of successful
-tactic-removal reruns was {diversity_correlation:.2f}. The variety recorded in ordinary
-searches gave little indication of which searches would recover.</p>
+tactic-removal reruns was {diversity_correlation:.2f}.</p>
 <div class="story-jumps"><a
 href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">
 Follow the experiment →</a><a href="../../dashboards/wonton-soup/">
