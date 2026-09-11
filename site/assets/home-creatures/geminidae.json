@@ -13,23 +13,24 @@
     "sy": 192
   },
   "recorded_steps": {
-    "first": 4,
-    "last": 3600,
-    "stride": 4
+    "first": 1,
+    "last": 120,
+    "stride": 1
   },
   "video": {
     "width": 1024,
     "height": 1024,
-    "frames": 900,
-    "fps": 30
+    "frames": 120,
+    "fps": 15
   },
   "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
-  "native_capture": "LeniaCLI publish media --steps 3600 --frame-budget 900 --fps 30 --render-mode body",
+  "native_capture": "LeniaCLI publish media --steps 120 --frame-budget 120 --fps 15 --render-mode body",
+  "simulation_recentering": false,
   "presentation": "Native full-world 8-bit total-density frames, using the CLI's shared recording scale. Fixed square crop; bilinear display interpolation; no simulation-grid refinement or camera tracking. Channels are summed.",
   "crop": {
-    "left": 54,
-    "top": 54,
-    "side": 84
+    "left": 51,
+    "top": 39,
+    "side": 125
   },
   "density_palette": {
     "values": [
@@ -86,11 +87,13 @@
     ]
   },
   "screen": {
+    "centroid_displacement_cells": 39.83989168505211,
+    "centroid_displacement_crop_fraction": 0.31871913348041686,
     "minimum_connected_mass_fraction": 0.9985647805853956,
-    "max_to_min_recorded_mass": 1.0246575941889466,
+    "max_to_min_recorded_mass": 1.0208076801534287,
     "max_density_fraction_outside_crop": 0.0
   },
-  "frames_sha256": "5db692c2be7e2843cfeaf0f1d28ca9105acff31c0929d6c4ca6645f9bb0c5dcc",
-  "video_sha256": "2ce25d71c0fdcfef93fc3730f675dec2c98b6e792a15fedb469e064f61f4215d",
+  "frames_sha256": "9b054e05ecb4850cfdc4420e087d967e14d1396f3ff576d887f548350ac751bf",
+  "video_sha256": "3ac5cf0375ce685c4efe2628a4aa5847db64fd244ebf9ae826186f15f6d85fd9",
   "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic."
 }

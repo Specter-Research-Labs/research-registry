@@ -20,8 +20,8 @@ const heroCreatures=[
  {id:'quadrium',title:heroCaption.textContent,video:heroRecording.querySelector('source').src,poster:heroRecording.poster},
  ...[
   ['geminidae','Geminidae-derived Lenia'],
-  ['kronidae','Kronidae-derived Lenia']
- ].map(([id,title])=>({id,title,video:`/assets/home-creatures/${id}.mp4`,poster:`/assets/home-creatures/${id}.webp`}))
+  ['pterifera','Pterifera-derived Lenia']
+ ].map(([id,title])=>({id,title,video:`/assets/home-creatures/${id}.mp4?v=2`,poster:`/assets/home-creatures/${id}.webp?v=2`}))
 ];
 let availableCreatures=heroCreatures;
 try{availableCreatures=heroCreatures.filter(c=>c.id!==sessionStorage.getItem('specter-last-creature'));}

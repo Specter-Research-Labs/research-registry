@@ -55,7 +55,7 @@ public final class SearchEngine {
     private var persistentMetalRunnerCache: [MetalRunnerCacheKey: FlowLeniaMetalFullStateRunner] = [:]
     private(set) var lastBatchProfile: SearchBatchProfile?
 
-    public init(runtimeConfig: LeniaRuntimeConfig) {
+    public init(runtimeConfig: LeniaRuntimeConfig, recenterAdditive: Bool = true) {
         self.runtimeConfig = runtimeConfig
         self.batchedConfig = batchedConfigFromRuntime(runtimeConfig)
         self.useParamEmbedding = runtimeConfig.parameterEmbedding.enabled
@@ -96,7 +96,8 @@ public final class SearchEngine {
             let engine = FlowLeniaBatched(
                 config: batchedConfig,
                 kernels: kernels,
-                wallPotential: crossMapPotential
+                wallPotential: crossMapPotential,
+                recenterAdditive: recenterAdditive
             )
 
             if useParamEmbedding {

@@ -46,16 +46,18 @@ Native replay exports live in `site/assets/home-creatures/`, with a poster and J
 
 ```sh
 LeniaCLI publish media --input <single-specimen-replay-root> --output <media-root> \
-  --steps 3600 --frame-budget 900 --fps 30 --render-mode body
+  --steps 120 --frame-budget 120 --fps 15 --render-mode body
 uv run --with numpy --with scipy --with pillow python \
   dossiers/lenia-swarm/ops/render_homepage_creature.py \
-  --media-root <media-root> --campaign <source-campaign> \
+  --media-root <media-root> --campaign <source-campaign> --steps 120 \
   --output site/assets/home-creatures/<slug> --title '<accurate specimen label>'
 ```
 
-The packager produces 30-second, 1024-square recordings from native total-density frames. It uses one fixed crop across the trajectory and the homepage's density palette. It checks connected mass and clipping; inspect the full playback as well, since those checks cannot establish interesting movement or rule out a persistent strand. Spatial interpolation improves presentation, not simulation resolution. The existing Quadrium study uses a separate, explicitly recorded refinement of the simulation grid.
+Use the current native CLI: media capture disables the additive search engine's automatic recentering so locomotion remains visible. Search itself retains its existing behavior. An unchanged crop alone does not guarantee world-coordinate footage when an older capture engine centers the simulation.
 
-The initial additions are the Geminidae-derived `4F18F1D6` and Kronidae-derived `B77AE651` family replays. Their receipts identify the source campaign, configuration hash, native grid, captured steps and frame hashes. Both use additive Lenia; do not label them Flow Lenia. The new Flow shortlist (`D899822A`, `DD9A714C`, `206622B9`) developed long strands during replay and was excluded. Keep candidate exports and contact sheets outside the published tree.
+The packager uses one fixed crop across the recording and preserves its playback rate. It checks connected mass, clipping, and centroid travel of at least 12% of the crop width. Inspect the playback as well: displacement alone does not establish an interesting or persistent body. Choose a segment that ends before a torus-edge crossing; a wrap can split the visible creature. `--steps` must match the native capture command. Spatial interpolation improves presentation, not simulation resolution.
+
+The homepage mixes the original Quadrium study with Geminidae-derived `4F18F1D6` and Pterifera-derived `46E696E5`, from the preserved family replay collection. The latter two are eight-second, 1024-square recordings of 120 native steps at 15 fps. Their receipts record source configurations, capture timing, connected mass, displacement, and file hashes. The original Quadrium study uses its separately documented simulation-grid refinement. All three are additive Lenia; do not label them Flow Lenia. Keep candidate exports and contact sheets outside the published tree.
 
 ## Wonton dossier evidence
 

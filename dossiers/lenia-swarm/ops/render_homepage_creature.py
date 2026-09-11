@@ -44,13 +44,39 @@ PALETTE = np.array(
 KNOTS = [0, 0.06, 0.2, 0.35, 0.5, 0.7, 0.85, 1]
 
 
-def video_writer(output: Path, size: int, crf: int) -> subprocess.Popen:
-    return subprocess.Popen([
-        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "rawvideo",
-        "-pixel_format", "rgb24", "-video_size", f"{size}x{size}", "-framerate", "30",
-        "-i", "-", "-an", "-c:v", "libx264", "-crf", str(crf), "-preset", "medium",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(output),
-    ], stdin=subprocess.PIPE)
+def video_writer(output: Path, size: int, crf: int, fps: int = 30) -> subprocess.Popen:
+    return subprocess.Popen(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "rawvideo",
+            "-pixel_format",
+            "rgb24",
+            "-video_size",
+            f"{size}x{size}",
+            "-framerate",
+            str(fps),
+            "-i",
+            "-",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-crf",
+            str(crf),
+            "-preset",
+            "medium",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(output),
+        ],
+        stdin=subprocess.PIPE,
+    )
 
 
 def render() -> None:
@@ -140,21 +166,24 @@ def render() -> None:
     )
 
 
-def package_replay(media_root: Path, campaign: Path, output: Path, title: str) -> None:
+def package_replay(media_root: Path, campaign: Path, output: Path, title: str, steps: int) -> None:
     records = json.loads((media_root / "index.json").read_text())
     if len(records) != 1:
         raise ValueError("Select one specimen per media export")
     record = records[0]
     files = sorted(Path(record["framesPath"]).glob("frame_*.png"))
     fields = np.stack([np.asarray(Image.open(path).convert("L")) for path in files])
-    if len(fields) != 900 or record["fps"] != 30:
-        raise ValueError("Render 3,600 steps with --frame-budget 900 --fps 30")
+    frame_count = len(fields)
+    if frame_count != record["frames"] or record["fps"] <= 0 or steps < frame_count:
+        raise ValueError(
+            "Supply the capture step count and a complete frame sequence with its original playback rate"
+        )
     config_bytes = (campaign / "config.json").read_bytes()
     config = json.loads(config_bytes)
     search = json.loads((campaign / "search.json").read_text())
     manifest = json.loads((campaign / "replay-manifest.json").read_text())
-    warmup = min(max(search["warmup_steps"], 0), 3600 - 900)
-    stride = max(1, (3600 - warmup) // 900)
+    warmup = min(max(search["warmup_steps"], 0), steps - frame_count)
+    stride = max(1, (steps - warmup) // frame_count)
     first_step = (warmup // stride + 1) * stride
 
     # Use the entire trajectory to choose one fixed square: camera tracking would hide movement.
@@ -169,17 +198,32 @@ def package_replay(media_root: Path, campaign: Path, output: Path, title: str) -
         parts = sum_labels(field, components, range(1, count + 1))
         coherence.append(float(max(parts, default=0) / max(field.sum(), 1)))
     if min(coherence) < 0.95:
-        raise ValueError(f"Replay loses coherence: minimum connected mass fraction {min(coherence):.3f}")
+        raise ValueError(
+            f"Replay loses coherence: minimum connected mass fraction {min(coherence):.3f}"
+        )
+
+    y, x = np.indices(fields.shape[1:])
+    centers = np.array(
+        [
+            [(field * x).sum() / mass, (field * y).sum() / mass]
+            for field, mass in zip(fields, masses, strict=True)
+        ]
+    )
+    travel = float(np.linalg.norm(centers[-1] - centers[0]))
+    if travel < side * 0.12:
+        raise ValueError(f"Replay lacks visible travel: {travel:.2f} cells in a {side}-cell frame")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     video = output.with_suffix(".mp4")
-    encoder = video_writer(video, 1024, 16)
+    encoder = video_writer(video, 1024, 16, record["fps"])
     outside = []
     for index, field in enumerate(fields):
         cropped = Image.fromarray(field).crop((left, top, left + side, top + side))
         outside.append(float(1 - np.asarray(cropped).sum() / max(field.sum(), 1)))
         enlarged = np.asarray(cropped.resize((1024, 1024), Image.Resampling.BILINEAR)) / 255
-        rgb = np.stack([np.interp(enlarged, KNOTS, PALETTE[:, c]) for c in range(3)], -1).astype("uint8")
+        rgb = np.stack([np.interp(enlarged, KNOTS, PALETTE[:, c]) for c in range(3)], -1).astype(
+            "uint8"
+        )
         encoder.stdin.write(rgb.tobytes())
         if index == 0:
             Image.fromarray(rgb).save(output.with_suffix(".webp"), lossless=True)
@@ -195,15 +239,28 @@ def package_replay(media_root: Path, campaign: Path, output: Path, title: str) -
         "source_config_sha256": hashlib.sha256(config_bytes).hexdigest(),
         "implementation": config["implementation"],
         "simulation_grid": config["grid"],
-        "recorded_steps": {"first": first_step, "last": first_step + 899 * stride, "stride": stride},
-        "video": {"width": 1024, "height": 1024, "frames": 900, "fps": 30},
+        "recorded_steps": {
+            "first": first_step,
+            "last": first_step + (frame_count - 1) * stride,
+            "stride": stride,
+        },
+        "video": {"width": 1024, "height": 1024, "frames": frame_count, "fps": record["fps"]},
         "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
-        "native_capture": "LeniaCLI publish media --steps 3600 --frame-budget 900 --fps 30 --render-mode body",
+        "native_capture": f"LeniaCLI publish media --steps {steps} --frame-budget {frame_count} --fps {record['fps']} --render-mode body",
+        "simulation_recentering": False,
         "presentation": "Native full-world 8-bit total-density frames, using the CLI's shared recording scale. Fixed square crop; bilinear display interpolation; no simulation-grid refinement or camera tracking. Channels are summed.",
         "crop": {"left": left, "top": top, "side": side},
         "density_palette": {"values": KNOTS, "rgb": PALETTE.tolist()},
-        "screen": {"minimum_connected_mass_fraction": min(coherence), "max_to_min_recorded_mass": float(max(masses) / min(masses)), "max_density_fraction_outside_crop": max(outside)},
-        "frames_sha256": hashlib.sha256(b"".join(hashlib.sha256(p.read_bytes()).digest() for p in files)).hexdigest(),
+        "screen": {
+            "centroid_displacement_cells": travel,
+            "centroid_displacement_crop_fraction": travel / side,
+            "minimum_connected_mass_fraction": min(coherence),
+            "max_to_min_recorded_mass": float(max(masses) / min(masses)),
+            "max_density_fraction_outside_crop": max(outside),
+        },
+        "frames_sha256": hashlib.sha256(
+            b"".join(hashlib.sha256(p.read_bytes()).digest() for p in files)
+        ).hexdigest(),
         "video_sha256": hashlib.sha256(video.read_bytes()).hexdigest(),
         "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic.",
     }
@@ -217,10 +274,13 @@ if __name__ == "__main__":
     parser.add_argument("--campaign", type=Path)
     parser.add_argument("--output", type=Path, help="Output basename, without extension")
     parser.add_argument("--title")
+    parser.add_argument(
+        "--steps", type=int, default=3600, help="Step count passed to native media capture"
+    )
     args = parser.parse_args()
     if any((args.media_root, args.campaign, args.output, args.title)):
         if not all((args.media_root, args.campaign, args.output, args.title)):
             parser.error("Replay packaging requires --media-root, --campaign, --output and --title")
-        package_replay(args.media_root, args.campaign, args.output, args.title)
+        package_replay(args.media_root, args.campaign, args.output, args.title, args.steps)
     else:
         render()

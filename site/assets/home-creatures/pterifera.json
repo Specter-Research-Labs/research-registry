@@ -1,33 +1,36 @@
 {
-  "title": "Kronidae-derived Lenia",
-  "source_creature_id": "B77AE651-D59D-5F2E-B38A-49154BAF65FD",
-  "source_campaign": "0508-serene-dancer-0000-b77ae651",
-  "source_config_sha256": "f2b88ee2ee7e5c63dbddbb6ffffddadff01efaa281b636f5ce313d36716220bb",
+  "title": "Pterifera-derived Lenia",
+  "source_creature_id": "46E696E5-FAA2-5428-B800-AB51FEFC9125",
+  "source_campaign": "0577-ancient-pulse-0000-46e696e5",
+  "source_config_sha256": "01c160f21faa1b4887b21c5728e88b148221d5c079ce737679dc126562d4b749",
   "implementation": {
+    "growth_profile": "quad4",
+    "kernel_profile": "qd24_quad4_v1",
     "mode": "qd24_additive_v1"
   },
   "simulation_grid": {
-    "sx": 128,
-    "sy": 128
+    "sx": 192,
+    "sy": 192
   },
   "recorded_steps": {
-    "first": 4,
-    "last": 3600,
-    "stride": 4
+    "first": 1,
+    "last": 120,
+    "stride": 1
   },
   "video": {
     "width": 1024,
     "height": 1024,
-    "frames": 900,
-    "fps": 30
+    "frames": 120,
+    "fps": 15
   },
   "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
-  "native_capture": "LeniaCLI publish media --steps 3600 --frame-budget 900 --fps 30 --render-mode body",
+  "native_capture": "LeniaCLI publish media --steps 120 --frame-budget 120 --fps 15 --render-mode body",
+  "simulation_recentering": false,
   "presentation": "Native full-world 8-bit total-density frames, using the CLI's shared recording scale. Fixed square crop; bilinear display interpolation; no simulation-grid refinement or camera tracking. Channels are summed.",
   "crop": {
-    "left": 26,
-    "top": 26,
-    "side": 76
+    "left": 48,
+    "top": 17,
+    "side": 105
   },
   "density_palette": {
     "values": [
@@ -84,11 +87,13 @@
     ]
   },
   "screen": {
-    "minimum_connected_mass_fraction": 0.9994018631726684,
-    "max_to_min_recorded_mass": 1.010556544440489,
+    "centroid_displacement_cells": 51.85490937920807,
+    "centroid_displacement_crop_fraction": 0.4938562798019816,
+    "minimum_connected_mass_fraction": 0.9992708322163484,
+    "max_to_min_recorded_mass": 1.0412920340512508,
     "max_density_fraction_outside_crop": 0.0
   },
-  "frames_sha256": "11b85481346c96d15c57fe3d1b52cd3c972b2ad6b62ab150980595340738c4bd",
-  "video_sha256": "60cdf32b299f384276a6ddfe4e6880a7ee772a6746dc84655772f1d7a859ec5a",
+  "frames_sha256": "08e6a1b911ef1d7abbc1e515ea94713314903ceb1a213d8c5f0ddb120b15c1a1",
+  "video_sha256": "0162ffb4c0958a96a2d29e738e2792d43aee365449754ab20766fa6bcd1fa170",
   "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic."
 }
