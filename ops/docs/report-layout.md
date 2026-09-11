@@ -56,3 +56,9 @@ uv run --with numpy --with scipy --with pillow python \
 The packager produces 30-second, 1024-square recordings from native total-density frames. It uses one fixed crop across the trajectory and the homepage's density palette. It checks connected mass and clipping; inspect the full playback as well, since those checks cannot establish interesting movement or rule out a persistent strand. Spatial interpolation improves presentation, not simulation resolution. The existing Quadrium study uses a separate, explicitly recorded refinement of the simulation grid.
 
 The initial additions are the Geminidae-derived `4F18F1D6` and Kronidae-derived `B77AE651` family replays. Their receipts identify the source campaign, configuration hash, native grid, captured steps and frame hashes. Both use additive Lenia; do not label them Flow Lenia. The new Flow shortlist (`D899822A`, `DD9A714C`, `206622B9`) developed long strands during replay and was excluded. Keep candidate exports and contact sheets outside the published tree.
+
+## Wonton dossier evidence
+
+Refresh the dossier counts with `uv run --with duckdb python dossiers/wonton-soup/paper/export_dossier_evidence.py --db <preserved-lake.duckdb>`, then run `spctr site build --write`. The exporter reuses the paper's completed-run selection, writes `site/assets/wonton-soup/dossier-evidence.json`, and replaces the marked evidence region in the dossier template. Do not edit those generated counts by hand.
+
+Repeated-seed trial counts, guided/blind tactic-attempt totals, and intervention survival have different denominators. Keep their labels attached. The featured `encode_inl` reroute is checked against original history hashes and recorded proof closure; its unchanged control blocks `decide`, already excluded by the baseline provider. The older full showcase and preprint retain their frozen figures; they are separate snapshots, not sources for a current-lake headline.

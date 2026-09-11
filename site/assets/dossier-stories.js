@@ -4,7 +4,7 @@ for (const study of document.querySelectorAll('[data-tactic-study]')) {
       const blocked = button.dataset.tactic === 'blocked';
       study.classList.toggle('is-blocked', blocked);
       for (const control of study.querySelectorAll('[data-tactic]')) control.setAttribute('aria-pressed', String(control === button));
-      study.querySelector('.tactic-count').textContent = blocked ? '0 of 16 runs found a proof' : '16 of 16 runs found a proof';
+      study.querySelector('.tactic-count').textContent = button.dataset.result;
     });
   }
 }

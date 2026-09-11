@@ -258,8 +258,8 @@
                     padding-inline: 12px;
                 }}</style>
         <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
-<link rel="stylesheet" href="/assets/dossier-stories.css?v=2">
-<script src="/assets/dossier-stories.js?v=1" defer></script>
+<link rel="stylesheet" href="/assets/dossier-stories.css?v=3">
+<script src="/assets/dossier-stories.js?v=2" defer></script>
 <link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
 </head>
     <body class="dossier-story">
@@ -286,59 +286,46 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <section class="story-split">
-<div><h2 class="story-question">Take away a move.<br>Can the proof still be found?</h2><p class="story-deck">A theorem can have several proofs. We let a search find one, block a tactic it used, and try again. Some searches find another route. Others reveal a dependency they cannot escape.</p><div class="story-jumps"><a href="showcase.html">Explore the results →</a><a href="https://specterlab.org/blog/wonton-soup/wonton-soup.pdf">Read the preprint</a></div></div>
-<figure class="tactic-study" data-tactic-study><div class="story-controls" role="group" aria-label="Compare recorded tactic conditions"><button type="button" data-tactic="available" aria-pressed="true">Tactic available</button><button type="button" data-tactic="blocked" aria-pressed="false">Block linarith</button></div><div class="tactic-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><p class="tactic-count" aria-live="polite">16 of 16 runs found a proof</p><figcaption>One theorem, sixteen ReProver seeds. Each dot is a recorded run. Switch conditions to compare the results when <code>linarith</code> is available or blocked. <a href="showcase.html">Published comparison</a>.</figcaption></figure>
+<div><h2 class="story-question">Take away a move.<br>Find another proof.</h2><p class="story-deck">The tactic <code>trivial</code> closes this theorem in one step. Block it, and the search reaches the same result through three algebraic steps. The unchanged control repeats the original route.</p><div class="story-jumps"><a href="#scale">Across the experiments ↓</a><a href="https://specterlab.org/blog/wonton-soup/wonton-soup.pdf">Read the preprint</a></div></div>
+<figure class="tactic-study" data-tactic-study>
+<div class="story-controls" role="group" aria-label="Compare recorded proof routes"><button type="button" data-tactic="available" data-result="Proof found in 1 step" aria-pressed="true">Original search</button><button type="button" data-tactic="blocked" data-result="Proof found in 3 steps" aria-pressed="false">Block trivial</button></div>
+<svg class="tactic-routes" viewBox="0 0 480 350" role="img" aria-label="The original route closes with trivial. With trivial blocked, ring, norm_num and ring reach the same result.">
+<text class="tactic-goal" x="240" y="42" text-anchor="middle">encode(inl a) = 2 · encode(a)</text>
+<g class="tactic-route original"><path d="M222 66 C222 90 108 82 108 120 V278"/><circle cx="108" cy="170" r="7"/><text x="125" y="177">trivial</text><circle class="tactic-finish" cx="108" cy="288" r="11"/><text x="108" y="329" text-anchor="middle">Original route</text></g>
+<g class="tactic-route alternate"><path d="M258 66 C258 90 338 82 338 120 V278"/><circle cx="338" cy="124" r="7"/><text x="355" y="131">ring</text><circle cx="338" cy="191" r="7"/><text x="355" y="198">norm_num</text><circle cx="338" cy="254" r="7"/><text x="355" y="261">ring</text><circle class="tactic-finish" cx="338" cy="288" r="11"/><text x="338" y="329" text-anchor="middle">Alternate route</text></g>
+<path class="tactic-cut" d="M97 157 L119 183 M119 157 L97 183"/>
+</svg>
+<p class="tactic-count" aria-live="polite">Proof found in 1 step</p>
+<figcaption>A recorded heuristic search in Lean. The theorem describes how a value tagged “left” is encoded as a natural number.</figcaption>
+<details class="tactic-source"><summary>Inspect the recorded proof steps</summary><p><code>encode_inl</code>, same seed and search budget. The unchanged control blocks <code>decide</code>, which was already unavailable in the original search.</p><ol><li><code>ring</code> rearranges the multiplication on the right.</li><li><code>norm_num</code> unfolds the encoding and simplifies the numbers.</li><li><code>ring</code> closes <code>2 · encode(a) = encode(a) · 2</code>.</li></ol><p><a href="/assets/wonton-soup/dossier-evidence.json">Recorded goals, source hashes and cohort counts</a></p></details>
+</figure>
+</section>
+<!-- GENERATED:WONTON_EVIDENCE START -->
+<section class="ws-section" id="scale">
+<h2 class="story-heading">Over half a million attempts to find a proof</h2>
+<p class="story-deck">The archive indexes 867 runs and 7,843 theorem
+identifiers. Within its completed research cohort, we revisit 98 theorems under many
+search seeds, comparing the prover with blind search:</p>
+<div class="ws-metrics"><div class="ws-metric"><div class="ws-metric-label">Tactic attempts</div><div class="ws-metric-value">518,252</div><div class="ws-metric-note">guided searches and available blind controls</div></div><div class="ws-metric"><div class="ws-metric-label">Repeated-seed searches</div><div class="ws-metric-value">11,006</div><div class="ws-metric-note">plus 10,749 blind-control searches</div></div><div class="ws-metric"><div class="ws-metric-label">Theorems revisited</div><div class="ws-metric-value">98</div><div class="ws-metric-note">across 111 completed experiment batches</div></div></div>
 </section>
 <section class="ws-section" id="evidence">
-                    <h2 class="ws-panel-title">Across the larger intervention cohort</h2>
-                    <p class="ws-small">
-                        Of 5,161 interventions on baseline-successful runs, 1,754 still reached a proof. The other counts below describe different checks on how the successful searches changed; they are not separate slices of the total.
-                    </p>
-                    <figure class="story-survival"><div class="story-survival-track" role="img" aria-label="1,754 of 5,161 interventions still reached a proof, or 34 percent."><span></span></div><figcaption>1,754 still reached a proof · 3,407 did not. Each segment occupies its share of the 5,161 interventions.</figcaption></figure><div class="ws-metrics">
-                        <div class="ws-metric">
-                            <div class="ws-metric-label">Still found a proof</div>
-                            <div class="ws-metric-value">34.0%</div>
-                            <div class="ws-metric-note">1,754 of 5,161 solve after lesion</div>
-                        </div>
-                        <div class="ws-metric">
-                            <div class="ws-metric-label">Different final proof</div>
-                            <div class="ws-metric-value">602</div>
-                            <div class="ws-metric-note">successful runs with a different proof hash</div>
-                        </div>
-                        <div class="ws-metric">
-                            <div class="ws-metric-label">Changed search structure</div>
-                            <div class="ws-metric-value">730</div>
-                            <div class="ws-metric-note">nonzero graph edit distance among strict solves</div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="ws-section" id="outcomes">
-                    <div class="ws-grid-3">
-                        <div class="ws-panel accent-blue">
-                            <h3 class="ws-panel-title">Resilience</h3>
-                            <p>
-                                A lesioned run still solves. The search reaches the goal within its budget.
-                            </p>
-                        </div>
-                        <div class="ws-panel accent-purple">
-                            <h3 class="ws-panel-title">Reroute</h3>
-                            <p>
-                                The lesion solves but lands in a different proof
-                                family or shows graph distance. The change is
-                                structural.
-                            </p>
-                        </div>
-                        <div class="ws-panel accent-green">
-                            <h3 class="ws-panel-title">Rescue</h3>
-                            <p>
-                                The baseline fails but the damaged run solves. Removing a move can change which branches receive the search budget.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                
+<h2 class="story-heading">How often does a proof survive a missing move?</h2>
+<p class="story-deck">Across 347 completed research runs, we recorded 8,839
+tactic-removal reruns. For the survival comparison, 928 had both a successful original
+search and a successful unchanged control. Of those, 406 still found a proof after the
+tactic was removed.</p>
+<figure class="story-survival"><div class="story-survival-track" role="img"
+aria-label="406 of 928 interventions retained a proof, 43.8
+percent"><span style="width: 43.750000%"></span></div><figcaption>406 still found
+a proof · 522 did not.</figcaption></figure>
+<p class="story-deck">131 of the surviving searches produced a different proof hash.
+The goal stayed fixed while the proof changed—the same pattern illustrated by the alternate
+route above.</p>
+<p class="ws-small">Counts recomputed from the preserved lake, covering completed runs through
+2026-06-10. <a
+href="/assets/wonton-soup/dossier-evidence.json">Cohort selection and recorded evidence</a>.</p>
+</section>
+<!-- GENERATED:WONTON_EVIDENCE END -->
 
                 <section class="ws-section"><h2 class="story-heading">Count the routes that remain usable</h2><p class="story-deck">Different-looking proofs can depend on the same indispensable tactic. Blocking a move asks whether the alternatives remain available under pressure. A successful rerun shows a route the search could still reach within its budget; a failure identifies a limit of that search.</p><div class="story-jumps"><a href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">Follow the experiment →</a><a href="../../dashboards/wonton-soup/">Inspect individual searches →</a></div></section>
 
@@ -349,8 +336,8 @@
                             has the frozen numbers from the paper.
                         </li>
                         <li>
-                            <a href="showcase.html">Visual showcase</a>
-                            walks through every result.
+                            <a href="showcase.html">Earlier visual showcase</a>
+                            presents the previous paper snapshot.
                         </li>
                         <li>
                             <a href="../../dashboards/wonton-soup/">Dashboard</a>
