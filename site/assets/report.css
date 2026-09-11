@@ -1763,23 +1763,10 @@
   background: transparent;
 }
 
-.report-motion-frame>.report-motion-toggle {
-  display: block;
-  margin: 8px auto 0;
-  border: 0;
-  padding: 6px;
-  background: transparent;
-  color: var(--sl-color-ink,#172021);
-  font: 11px/1.5 var(--sl-font-mono);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-
 .report-motion-intro figcaption {
   line-height: 1.65;
   max-width: none;
-  margin-top: 42px;
+  margin-top: var(--publication-space-block);
 }
 
 .report-motion-frame>.report-transparent-motion {

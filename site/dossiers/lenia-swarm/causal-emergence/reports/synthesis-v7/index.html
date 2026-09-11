@@ -1748,17 +1748,6 @@ html.specter-report.synthesis-publication .synthesis-collection-window img {
   height: auto;
 }
 
-html.specter-report.synthesis-publication #synthesis-collection-play {
-  display: block;
-  margin: 14px auto;
-  border: 0;
-  background: transparent;
-  color: var(--specter-ink);
-  text-decoration: underline;
-  font: 11px/1.5 var(--specter-mono);
-  cursor: pointer;
-}
-
 html.specter-report.synthesis-publication body .topbar {
   padding-block: 24px;
   margin-bottom: 32px;
@@ -1975,14 +1964,14 @@ html.synthesis-publication body > main > .section > .wrap > .section-head + figu
   <div class="wrap">
     <div class="synthesis-observation-head"><div><span class="micro">Development / the same intervention</span><h2 id="observation-title">The body keeps changing.<br>The disturbance loses influence.</h2></div><p>The same command produces a smaller departure from the untouched future at later ages. Compare the measured response at five ages; inspect the corresponding experimental snapshots below.</p></div>
     <div class="synthesis-age-instrument">
-      <figure class="synthesis-collection-portrait"><div class="synthesis-collection-window report-motion-frame"><img id="synthesis-collection-motion" class="report-transparent-motion" src="/assets/causal-emergence/collection/b26adef3-hq.png" data-still="/assets/causal-emergence/collection/b26adef3-hq.png" data-motion="/assets/causal-emergence/collection/b26adef3-transparent.webp" width="512" height="512" alt="Native body render of Flow Lenia specimen B26ADEF3"><button id="synthesis-collection-play" class="report-motion-toggle" type="button" aria-pressed="false">Play motion</button></div><figcaption><strong>B26ADEF3 · a coherent mover</strong><p>Native replay, 3,600 steps. The age curve uses a separate cohort. <a href="/assets/causal-emergence/collection/b26adef3.json">Specimen data ↗</a></p></figcaption></figure>
+      <figure class="synthesis-collection-portrait"><div class="synthesis-collection-window report-motion-frame publication-motion"><img id="synthesis-collection-motion" class="report-transparent-motion" src="/assets/causal-emergence/collection/b26adef3-hq.png" data-still="/assets/causal-emergence/collection/b26adef3-hq.png" data-motion="/assets/causal-emergence/collection/b26adef3-transparent.webp" width="512" height="512" alt="Native body render of Flow Lenia specimen B26ADEF3"><button id="synthesis-collection-play" class="report-motion-toggle publication-motion-toggle" type="button" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div><figcaption><strong>B26ADEF3 · a coherent mover</strong><p>Native replay, 3,600 steps. The age curve uses a separate cohort. <a href="/assets/causal-emergence/collection/b26adef3.json">Specimen data ↗</a></p></figcaption></figure>
       <div class="synthesis-age-data"><div class="synthesis-age-readout"><div><span>Future-field difference</span><strong id="synthesis-age-value"></strong></div><label for="synthesis-horizon">Measured after<select id="synthesis-horizon"><option value="4">4 steps</option><option value="8">8 steps</option><option value="16">16 steps</option><option value="32">32 steps</option><option value="64">64 steps</option><option value="120" selected>120 steps</option><option value="240">240 steps</option></select></label></div><svg id="synthesis-age-chart" viewBox="0 0 660 300" role="img" aria-label="Recorded mean effect across nineteen intervention ages"></svg><p id="synthesis-age-reading" aria-live="polite"></p></div>
       <div class="synthesis-age-controls"><label for="synthesis-age">Age at intervention</label><input id="synthesis-age" type="range" min="0" max="4" value="0" step="1"><div class="synthesis-age-stops"><span>60</span><span>180</span><span>380</span><span>580</span><span>780</span></div><button id="synthesis-play" type="button">Play five checkpoints</button></div>
     </div>
     <details class="synthesis-native-inspection"><summary>Inspect the experimental specimen at the selected age</summary>      <div class="synthesis-age-portrait"><canvas id="synthesis-age-field" width="128" height="128" role="img" aria-label="Saved visible field of specimen s01"></canvas><div><span>Specimen s01</span><strong id="synthesis-age-label">Passage 60</strong></div><p>One specimen’s saved field. The curve summarizes 64 organisms across 16 groups.</p></div></details>
     <p class="synthesis-caption">Mean response of 64 organisms across 16 groups, using the same 0.12 command. Lines connect recorded means. <a href="#impedance">Read the dose controls and uncertainty →</a></p>
   </div>
-  <script defer src="/assets/report-transparent-motion.js?v=1"></script>
+  <script type="module" src="/assets/report-transparent-motion.js?v=2"></script>
 </section>
 
 

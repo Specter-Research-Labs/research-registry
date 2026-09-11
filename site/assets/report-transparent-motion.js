@@ -1,5 +1,9 @@
 // Native RGBA renders, encoded as animated WebP for browser transparency.
-const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+export function updateMotionControl(button, playing, subject = 'replay') {
+  button.dataset.playing = String(playing);
+  button.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${subject}`);
+  button.setAttribute('aria-pressed', String(playing));
+}
 document.querySelectorAll('.report-motion-frame').forEach(frame => {
   const image = frame.querySelector('.report-transparent-motion');
   const button = frame.querySelector('.report-motion-toggle');
@@ -16,13 +20,11 @@ document.querySelectorAll('.report-motion-frame').forEach(frame => {
       try { canvas.getContext('2d').drawImage(image, 0, 0); image.src = canvas.toDataURL(); }
       catch { image.src = image.dataset.still; }
     }
-    button.textContent = playing ? 'Pause motion' : 'Play motion';
-    button.setAttribute('aria-pressed', String(playing));
+    updateMotionControl(button, playing);
   }
   image.addEventListener('error', () => {
-    if (playing) { playing = false; image.src = image.dataset.still; button.textContent = 'Retry motion'; button.setAttribute('aria-pressed', 'false'); }
+    if (playing) { playing = false; image.src = image.dataset.still; updateMotionControl(button, false); button.setAttribute('aria-label', 'Retry replay'); }
   });
   button.addEventListener('click', () => setPlaying(!playing));
-  if (!motionPreference.matches && frame.dataset.motionAutoplay !== 'false') setPlaying(true);
-  motionPreference.addEventListener('change', () => { if (motionPreference.matches && playing) setPlaying(false); });
+  setPlaying(true);
 });

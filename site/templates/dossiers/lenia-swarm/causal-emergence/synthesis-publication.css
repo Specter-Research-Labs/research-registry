@@ -694,17 +694,6 @@ html.specter-report.synthesis-publication .synthesis-collection-window img {
   height: auto;
 }
 
-html.specter-report.synthesis-publication #synthesis-collection-play {
-  display: block;
-  margin: 14px auto;
-  border: 0;
-  background: transparent;
-  color: var(--specter-ink);
-  text-decoration: underline;
-  font: 11px/1.5 var(--specter-mono);
-  cursor: pointer;
-}
-
 html.specter-report.synthesis-publication body .topbar {
   padding-block: 24px;
   margin-bottom: 32px;

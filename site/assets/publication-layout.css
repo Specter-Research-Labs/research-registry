@@ -548,6 +548,47 @@ html body.report-page .report-main > .report-nav {
   margin-bottom: 0;
 }
 
+/* Controls overlay the replay, leaving its caption and surrounding spacing intact. */
+.publication-motion { position: relative; }
+.publication-motion > .publication-motion-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 8px;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--publication-paper);
+  color: var(--publication-ink);
+  cursor: pointer;
+  opacity: 0;
+}
+.publication-motion:hover > .publication-motion-toggle,
+.publication-motion:focus-within > .publication-motion-toggle { opacity: 1; }
+.publication-motion-toggle::before {
+  content: "";
+  width: 10px;
+  height: 12px;
+  box-sizing: border-box;
+  border-inline: 3px solid currentColor;
+}
+.publication-motion-toggle[data-playing="false"]::before {
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-right: 0;
+  border-left: 10px solid currentColor;
+}
+.publication-motion-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+@media (hover: none) {
+  .publication-motion > .publication-motion-toggle { opacity: 1; }
+}
+
 @media (max-width: 700px) {
   html body .site-shell {
     padding-top: 22px;
