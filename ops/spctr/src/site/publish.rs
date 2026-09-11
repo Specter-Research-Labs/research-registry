@@ -644,10 +644,12 @@ fn minify_site_tree(site_root: &Utf8Path) -> Result<()> {
 }
 
 fn should_prune_dir(path: &Path) -> bool {
-    matches!(
-        path.file_name().and_then(OsStr::to_str),
-        Some("atlas" | "templates" | "node_modules")
-    )
+    // Report bytes are sealed by the library manifest and release receipts.
+    path.ends_with("causal-emergence/reports")
+        || matches!(
+            path.file_name().and_then(OsStr::to_str),
+            Some("atlas" | "templates" | "node_modules")
+        )
 }
 
 fn should_minify_css(path: &Path) -> bool {
@@ -1086,6 +1088,12 @@ mod tests {
     #[test]
     fn minify_filters_skip_templates_and_atlas_inputs() {
         assert!(should_prune_dir(Path::new("site/templates")));
+        assert!(should_prune_dir(Path::new(
+            "site/dossiers/lenia-swarm/causal-emergence/reports"
+        )));
+        assert!(!should_prune_dir(Path::new(
+            "site/dossiers/lenia-swarm/morphospace"
+        )));
         assert!(should_prune_dir(Path::new("site/atlas")));
         assert!(should_prune_dir(Path::new(
             "site/dashboards/wonton-soup/node_modules"
