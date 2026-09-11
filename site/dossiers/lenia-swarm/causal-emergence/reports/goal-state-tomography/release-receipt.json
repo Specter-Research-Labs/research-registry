@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "goal-state-tomography",
+  "releaseId": "flce-goal-state-tomography-8cd3e0e25d7d",
+  "title": "The Recovery Assay Failed to Displace Its Targets",
+  "date": "2026-08-17",
+  "status": "archive",
+  "evidenceClass": "inconclusive goal-state pilot",
+  "sourceReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
+  "publicReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "c9e345d477bad99db6f19baa1354805c457d21d3e10cfe56d3315b66735e779e",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "04e013809672c3c3726b2f6ce6f33a4883c4596c061586e2fdf71929cc1940c0"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-causal-order-age-map",
+  "releaseId": "flce-developmental-causal-order-age-map-32b2a59693f7",
+  "title": "Pulse Order Changes Body Shape Early in Development, but Not Later",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "age-mapped causal-order intervention",
+  "sourceReportSha256": "f2aed7e5ecc98123b87d810a998a92a73a94a9a6bcc59890b52ba5c9a0ce04a1",
+  "publicReportSha256": "affbabab1479cd89315f9cd54e27a6ade85650372790e89bcc8c8919a036c459",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "680e10ff0b9e0f2f29b6763920f7bb04056ac3e15fce7dbc6cc01db5694c31c9",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "493a7881df7de3144531b4be78052a812383e5ba96a84eaa310c467b24907d66"
+}

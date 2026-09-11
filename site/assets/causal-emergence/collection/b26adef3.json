@@ -1,0 +1,29 @@
+{
+  "config_hash": "ad8e0de954e0da6ca0d1440e",
+  "creature_id": "B26ADEF3-86EB-5F83-83C2-629C7E0490CD",
+  "creature_name": "flow-map-elite-19",
+  "fps": 30,
+  "frames": 300,
+  "init_seed": 0,
+  "run_id": "flow-map-elites-20260509-170514",
+  "score": -0.00039805655,
+  "specimen_id": "result:flow-map-elites-20260509-170514|overall|0",
+  "candidate_id": "0574-flow-map-elite-19-b26adef3",
+  "native_grid": [
+    256,
+    256
+  ],
+  "presentation_pixels": [
+    512,
+    512
+  ],
+  "steps": 3600,
+  "background": "transparent",
+  "source_config_sha256": "5a8e8748753d253135f87ce9add9ac7fa4e5f8018a7246e1ba67c7683b975a85",
+  "source_library_sha256": "eab2120eafef5df62946c7d4575f85a051f591680464d8fb42ba439c8d2f4911",
+  "motion": "/assets/causal-emergence/collection/b26adef3-transparent.webp",
+  "poster": "/assets/causal-emergence/collection/b26adef3-hq.png",
+  "motion_sha256": "d051439a32ecc7f6a18d1d8a08acdfd0d46ac056ab3bbb1e9effd6e81a0c51cf",
+  "rendering": "Native CLI body renderer: reconstructed channel densities, one fixed crop over the complete replay; 256-cell simulation, not a 512-cell rerun",
+  "role": "Collection replay and independent coherent-body pilot; not a member of the original 64-organism developmental cohort"
+}

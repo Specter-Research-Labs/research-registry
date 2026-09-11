@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-fold-onset",
+  "releaseId": "flce-developmental-fold-onset-e00c48748599",
+  "title": "Different Histories Shape Future Responses Before Visible Form",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "event-aligned future-fan study",
+  "sourceReportSha256": "13b9198858163998c6a0faf822fc3592178899fff161ebfd76e77207fd0641b1",
+  "publicReportSha256": "13b9198858163998c6a0faf822fc3592178899fff161ebfd76e77207fd0641b1",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "97bf8461633baf7b3773c4fac841db80001c11a8a578ea56108210feb9e07263",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "4146799e785737e9473d97741a355ff65f6add72b3c0fce2734a608f9c332937"
+}

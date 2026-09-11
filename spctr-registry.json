@@ -263,6 +263,13 @@
         "review-package": "A-010.003"
       }
     },
+    "A-013": {
+      "next_counter": 3,
+      "entries": {
+        "report-audit": "A-013.001",
+        "report-draft": "A-013.002"
+      }
+    },
     "A-014": {
       "next_counter": 4,
       "entries": {
@@ -344,8 +351,9 @@
       }
     },
     "D-004": {
-      "next_counter": 5,
+      "next_counter": 6,
       "entries": {
+        "README": "D-004.005",
         "article-framing": "D-004.003",
         "experiment-matrix": "D-004.001",
         "metric-spec": "D-004.002",

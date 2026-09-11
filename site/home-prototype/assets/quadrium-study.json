@@ -1,0 +1,105 @@
+{
+  "title": "Quadrium-derived Lenia study",
+  "purpose": "Illustrative homepage simulation; not a measured report cohort or new research result.",
+  "source_config": "dossiers/lenia-swarm/Sources/LeniaStudio/Resources/Organisms/track1_quadrium_gyrans.json",
+  "source_sha256": "3ab997df1c10505e6d452f918cefe88a42be35464bbc7450df78abf7c70c7aee",
+  "seed_provenance": {
+    "family": "Quadridae",
+    "native_R": 36,
+    "native_T": 10,
+    "native_growth_function": "quad4",
+    "native_growth_profile": "quad4",
+    "native_kernel_core": "quad4",
+    "native_kernel_profile": "qd24_quad4_v1",
+    "native_patch_height": 42,
+    "native_patch_width": 47,
+    "native_world_scale": 1,
+    "native_world_size": 192,
+    "parity_note": "Uses native Chakazul cells directly; no control-screen state_patch_scale and no R scaling; world enlarges only when the native patch exceeds 192.",
+    "pattern_id": "4Q(5,5,5,5)",
+    "runtime_probe": "qd24_additive_v1_native_parity",
+    "section2_family_lane": true,
+    "source": "https://chakazul.github.io/Lenia/JavaScript/Lenia-LifeForms.js",
+    "species": "Quadrium gyrans"
+  },
+  "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
+  "equations": "Single-channel additive Lenia; quad4 kernel and growth matching FlowLenia.swift formulas. NumPy/SciPy float64 FFT implementation; not numerical parity certification of the native runtime.",
+  "grid": [
+    768,
+    768
+  ],
+  "spatial_refinement": 4,
+  "refinement": "Bilinear seed interpolation on 768x768 grid, interaction radius 36 to 144, original time step 0.1. Spatial refinement changes the discretization and creates a new simulation.",
+  "recorded_steps": {
+    "first": 300,
+    "last": 898,
+    "stride": 2
+  },
+  "video": {
+    "width": 960,
+    "height": 960,
+    "frames": 300,
+    "fps": 30
+  },
+  "render": "Fixed 320x320 crop centered at row 374, column 404; bilinear display interpolation. Color maps scalar density, with no lighting, geometry, motion interpolation, or generated image content.",
+  "density_palette": {
+    "values": [
+      0,
+      0.06,
+      0.2,
+      0.35,
+      0.5,
+      0.7,
+      0.85,
+      1
+    ],
+    "rgb": [
+      [
+        244,
+        241,
+        232
+      ],
+      [
+        226,
+        235,
+        222
+      ],
+      [
+        193,
+        222,
+        202
+      ],
+      [
+        135,
+        195,
+        175
+      ],
+      [
+        77,
+        153,
+        137
+      ],
+      [
+        46,
+        122,
+        111
+      ],
+      [
+        31,
+        98,
+        91
+      ],
+      [
+        27,
+        77,
+        76
+      ]
+    ]
+  },
+  "mass_range": [
+    13796.788156603954,
+    15467.211645996409
+  ],
+  "max_density_fraction_outside_crop": 3.8865905648878155e-16,
+  "loop": "Playback restarts the recorded segment; endpoint is not claimed to be periodic."
+}

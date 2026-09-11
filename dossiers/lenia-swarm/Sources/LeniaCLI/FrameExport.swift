@@ -278,7 +278,8 @@ func captureReplayStateFrames(
             flowByStep[step] = (flow, growth)
         } : nil
     )
-    let engine = SearchEngine(runtimeConfig: runtimeConfig)
+    // Search centering hides locomotion; media must preserve world coordinates.
+    let engine = SearchEngine(runtimeConfig: runtimeConfig, recenterAdditive: false)
     _ = engine.runBatch(
         seeds: [seed],
         initSeedOffset: initSeedOffset,

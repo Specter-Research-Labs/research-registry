@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-counterweight-dose",
+  "releaseId": "flce-developmental-counterweight-dose-6189de4667bc",
+  "title": "Larger Hidden-State Pulses Stop Producing Larger Growth Changes",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "dose-response intervention",
+  "sourceReportSha256": "8a25f0cad407e3bebeaa6ccb404cde9381d6ad05ddfb404bc08e59c892dea05a",
+  "publicReportSha256": "8a25f0cad407e3bebeaa6ccb404cde9381d6ad05ddfb404bc08e59c892dea05a",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "f45a1dd3b492edfff227b5e16be1322edbfdeb1e0d218f896c369abd0ed60fb6",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "df22e101fdf05287d3c690d8b81258daac743192459bf958ff21c295946cbf95"
+}

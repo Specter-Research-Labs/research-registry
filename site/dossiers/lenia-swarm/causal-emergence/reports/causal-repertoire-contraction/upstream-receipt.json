@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "causal-repertoire-contraction",
+  "releaseId": "flce-causal-repertoire-contraction-6de546e55364",
+  "title": "Transition Timing Narrows Before Coherent Form",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "prospective future-fan assay",
+  "sourceReportSha256": "5c6759e51b6b294f6bef3ff24d937e050f2960b3eaaed037dab6e17a7dbab290",
+  "publicReportSha256": "6a4ac7fe3bb68ad7bb7ba011629af99e5c1ae1e680bb4a4893d3ff9d1443c881",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "9f84c61bd6d84079e759857c5a38b53438315b53f9fd5396a234a4eb4f42e9eb",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "604107b40175e6cf54db81059faa3d13c339be2e986f8008267a53a5f5bed1bf"
+}

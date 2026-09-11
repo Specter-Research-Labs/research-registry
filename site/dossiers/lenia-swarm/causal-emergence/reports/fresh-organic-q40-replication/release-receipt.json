@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "fresh-organic-q40-replication",
+  "releaseId": "flce-fresh-organic-q40-replication-ad86d2f8964e",
+  "title": "Timing Narrows While Body-Form Breadth Persists",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "fresh-cohort replication with null volume effect",
+  "sourceReportSha256": "cbb94936d6c84ab33ea530e65b2af8da57710507714601166d74822a8b7cbf34",
+  "publicReportSha256": "cbb94936d6c84ab33ea530e65b2af8da57710507714601166d74822a8b7cbf34",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "e0181618f6f5b38949d6ad98696fa6cc296e27333c41cfd65a78827500d32041",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "bdd797298959c7e96620a9bd9235db99505db207d8b99cfda94645633eeb55c5"
+}

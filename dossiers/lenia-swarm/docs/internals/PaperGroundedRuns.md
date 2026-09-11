@@ -48,7 +48,7 @@ not flatten them into one search API.
 
 Primary code:
 
-- [Evolution.swift](../../Sources/LeniaCore/Layer/Evolution.swift)
+- [Evolution.swift](../../Sources/LeniaCore/Layer/Search/Evolution.swift)
 - [FlowLenia.swift](../../Sources/LeniaCore/Core/FlowLenia.swift)
 - [flowlenia-2022 configs](../../configs/papers/flowlenia-2022/)
 
@@ -74,8 +74,8 @@ Known gap:
 
 Primary code:
 
-- [ReactionDiffusionLenia2023.swift](../../Sources/LeniaCore/Layer/ReactionDiffusionLenia2023.swift)
-- [ReactionDiffusion2023Command.swift](../../Sources/LeniaCLI/ReactionDiffusion2023Command.swift)
+- [ReactionDiffusionLenia2023.swift](../../Sources/LeniaCore/Layer/Papers/RD23.swift)
+- [RD23Command.swift](../../Sources/LeniaCLI/RD23Command.swift)
 - [reaction-diffusion-lenia-2023 configs](../../configs/papers/reaction-diffusion-lenia-2023/)
 
 What we re-implemented:
@@ -97,8 +97,8 @@ Known gap:
 
 Primary code:
 
-- [SensorimotorLenia2024.swift](../../Sources/LeniaCore/Layer/SensorimotorLenia2024.swift)
-- [Sensorimotor2024Command.swift](../../Sources/LeniaCLI/Sensorimotor2024Command.swift)
+- [SensorimotorLenia2024.swift](../../Sources/LeniaCore/Layer/Papers/Sensorimotor24.swift)
+- [Sensorimotor24Command.swift](../../Sources/LeniaCLI/Sensorimotor24Command.swift)
 - [sensorimotor-lenia-2024 configs](../../configs/papers/sensorimotor-lenia-2024/)
 
 What we re-implemented:
@@ -123,8 +123,8 @@ Known gap:
 
 Primary code:
 
-- [LeniaBreeder2024.swift](../../Sources/LeniaCore/Layer/LeniaBreeder2024.swift)
-- [LeniaBreeder2024Command.swift](../../Sources/LeniaCLI/LeniaBreeder2024Command.swift)
+- [LeniaBreeder2024.swift](../../Sources/LeniaCore/Layer/Papers/QD24.swift)
+- [QD24Command.swift](../../Sources/LeniaCLI/QD24Command.swift)
 - [leniabreeder-2024 configs](../../configs/papers/leniabreeder-2024/)
 
 What we re-implemented:
@@ -151,8 +151,8 @@ Known gap:
 
 Primary code:
 
-- [FlowLeniaEcology2025.swift](../../Sources/LeniaCore/Layer/FlowLeniaEcology2025.swift)
-- [FlowLeniaEcology2025Command.swift](../../Sources/LeniaCLI/FlowLeniaEcology2025Command.swift)
+- [FlowLeniaEcology2025.swift](../../Sources/LeniaCore/Layer/Papers/Ecology25.swift)
+- [Ecology25Command.swift](../../Sources/LeniaCLI/Ecology25Command.swift)
 - [flowlenia-ecology-2025 configs](../../configs/papers/flowlenia-ecology-2025/)
 
 What we re-implemented:
@@ -174,8 +174,8 @@ Known gap:
 
 Primary code:
 
-- [AIScientist2025.swift](../../Sources/LeniaCore/Layer/AIScientist2025.swift)
-- [AIScientist2025Command.swift](../../Sources/LeniaCLI/AIScientist2025Command.swift)
+- [AIScientist2025.swift](../../Sources/LeniaCore/Layer/Papers/Curiosity25.swift)
+- [Curiosity25Command.swift](../../Sources/LeniaCLI/Curiosity25Command.swift)
 - [ai-scientist-2025 configs](../../configs/papers/ai-scientist-2025/)
 
 What we re-implemented:
@@ -198,8 +198,8 @@ Known gap:
 
 Primary code:
 
-- [Atlas2026.swift](../../Sources/LeniaCore/Layer/Atlas2026.swift)
-- [Atlas2026Command.swift](../../Sources/LeniaCLI/Atlas2026Command.swift)
+- [Atlas2026.swift](../../Sources/LeniaCore/Layer/Papers/Atlas26.swift)
+- [Atlas26Command.swift](../../Sources/LeniaCLI/Atlas26Command.swift)
 - [lenia-atlas-2026 configs](../../configs/papers/lenia-atlas-2026/)
 
 What we re-implemented:
@@ -238,8 +238,8 @@ The heavy runs use the MLX/Metal path on Apple Silicon.
 Relevant code:
 
 - [FlowLenia.swift](../../Sources/LeniaCore/Core/FlowLenia.swift)
-- [Evolution.swift](../../Sources/LeniaCore/Layer/Evolution.swift)
-- [SignpostSupport.swift](../../Sources/LeniaCore/Layer/SignpostSupport.swift)
+- [Evolution.swift](../../Sources/LeniaCore/Layer/Search/Evolution.swift)
+- [SignpostSupport.swift](../../Sources/LeniaCore/Layer/Infra/SignpostSupport.swift)
 
 What has already been done:
 

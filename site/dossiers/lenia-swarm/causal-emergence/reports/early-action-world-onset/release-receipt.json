@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "early-action-world-onset",
+  "releaseId": "flce-early-action-world-onset-cbcf49e8786e",
+  "title": "Early Histories Already Shape Later Responses",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "early-window future-fan assay",
+  "sourceReportSha256": "6e33088c49bf6c984b8ba3cb5d3aa4e19ebf95f3633ef590b41c08301e3233d0",
+  "publicReportSha256": "6e33088c49bf6c984b8ba3cb5d3aa4e19ebf95f3633ef590b41c08301e3233d0",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "491d5f7dc526da42f79e9043b953b2880851a644d85a157ae6c0bfded91bbe55",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "05fedae5faf777aba56b621a43f3806324eb7e131bb05c882cad5f1384c8935a"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "prediction-falls-direction-appears",
+  "releaseId": "flce-prediction-falls-direction-appears-11c6ccd967a7",
+  "title": "Predictability Falls as Hidden-State Control Strengthens",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "paired information-and-intervention study",
+  "sourceReportSha256": "d0ae2a5d87d48c6c6a47d30d5343efea201b3ee33ac517ab524ba6f4f95fa453",
+  "publicReportSha256": "d0ae2a5d87d48c6c6a47d30d5343efea201b3ee33ac517ab524ba6f4f95fa453",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "6c428cb584ac96cb12c1b1287d564eeaafed9f954622d27a5bc6d0a692085fcd",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "b3b45cd245f5b10d45c425c919428f5ffa991494cfc429ca553390df70086ccb"
+}

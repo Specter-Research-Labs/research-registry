@@ -107,29 +107,17 @@ fn build_from_projection(
     } = projection;
     let record_slices = records::slice_records(&records);
     let causal_emergence_catalog = causal_emergence::load_catalog(repo_root)?;
+    causal_emergence_release::validate_website_library(repo_root)?;
     let causal_emergence_sitemap_pages = causal_emergence_catalog
         .as_ref()
-        .map(|_| causal_emergence::sitemap_pages())
+        .map(causal_emergence::sitemap_pages)
         .unwrap_or_default();
 
     let mut pages: Vec<PageRegion> = vec![
         PageRegion {
             template_path: "site/templates/index.html".into(),
             output_path: "site/index.html".into(),
-            regions: vec![
-                (
-                    "HOME_ACTIVE_PROJECTS",
-                    regions::render_home_active_projects(&records),
-                ),
-                (
-                    "HOME_FEATURED_ADDENDA",
-                    regions::render_home_featured_addenda(&records),
-                ),
-                (
-                    "HOME_BLOG_POSTS",
-                    regions::render_home_blog_posts(&blog_posts),
-                ),
-            ],
+            regions: vec![],
         },
         PageRegion {
             template_path: "site/templates/dossiers/index.html".into(),
@@ -207,14 +195,18 @@ fn build_from_projection(
                     .strip_prefix("site/")
                     .expect("hub_path validated to start with site/")
             );
+            let header_path = repo_root.join(&template).with_file_name("header.html");
+            let header = if header_path.exists() {
+                fs::read_to_string(&header_path)
+                    .with_context(|| format!("failed to read dossier header {header_path}"))?
+            } else {
+                regions::render_dossier_hub_header(record)
+            };
             pages.push(PageRegion {
                 template_path: template,
                 output_path: hub_path.clone(),
                 regions: vec![
-                    (
-                        "DOSSIER_HUB_HEADER",
-                        regions::render_dossier_hub_header(record),
-                    ),
+                    ("DOSSIER_HUB_HEADER", header),
                     (
                         "DOSSIER_HUB_FOOTER",
                         regions::render_dossier_hub_footer(record),
@@ -237,7 +229,7 @@ fn build_from_projection(
             (
                 causal_emergence::LIBRARY_OUTPUT,
                 "Flow Lenia Causal Emergence Report Library",
-                "The complete public library of current Flow Lenia causal-emergence reports, ordered as the experimental questions developed.",
+                "Seven selected reports on development, interventions, hidden composition, and the failed recovery prediction.",
                 "/dossiers/lenia-swarm/causal-emergence/library/",
                 causal_emergence::render_library(catalog),
             ),

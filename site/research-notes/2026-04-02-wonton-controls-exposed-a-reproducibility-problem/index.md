@@ -1,12 +1,12 @@
 ---
-title: "When an inert control refused to stay inert"
+title: "An unused tactic changed the proof result"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
 
-# When an inert control refused to stay inert
+# An unused tactic changed the proof result
 
 _2 April 2026 · Experimental diagnosis._
 

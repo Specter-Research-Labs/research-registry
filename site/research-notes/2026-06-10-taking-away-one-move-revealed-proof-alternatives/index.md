@@ -1,12 +1,12 @@
 ---
-title: "Taking away one move revealed which proofs had alternatives"
+title: "Which proofs survive a blocked tactic?"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
 
-# Taking away one move revealed which proofs had alternatives
+# Which proofs survive a blocked tactic?
 
 _21 May–10 June 2026 · Retrospective intervention analysis of completed Wonton runs._
 
@@ -18,8 +18,10 @@ Within that stricter comparison, 330 blocked runs still reached the theorem. Nin
 
 The tactic being removed mattered enormously. Blocking `simp`, `apply` or `intros` often left another route available. Blocking rewriting or arithmetic tactics such as `rw`, `linarith` and `norm_num` usually did not. One arithmetic theorem made the contrast especially clear: ReProver solved all sixteen unblocked seeds and none of the sixteen runs in which `linarith` was forbidden. DeepSeek showed the same collapse in the smaller set of runs for which control and intervention results could be compared directly. In this theorem, `linarith` was carrying essential proof work: neither prover found a substitute within the budget.
 
-Other dependencies belonged to the prover rather than the theorem. Blocking `cases` destroyed every ReProver attempt on one list theorem, while the heuristic prover solved all sixteen corresponding runs. The experiment could therefore distinguish a generally load-bearing proof resource from a habit peculiar to one search system.
+Other dependencies belonged to the prover rather than the theorem. Blocking `cases` destroyed every ReProver attempt on one list theorem, while the heuristic prover solved all sixteen corresponding runs. The contrast shows that a tactic can be indispensable to one prover’s search within this budget while another prover solves the theorem without it. It does not establish that the tactic is mathematically necessary.
 
 We had expected theorems with many observed proof shapes to survive damage more easily. That prediction failed. Among the theorem-provider groups that supported the controlled comparison, the correlation between the number of observed proof structures and recovery was 0.03. A theorem can have many superficial variants that all depend on the same indispensable tactic, while a theorem with only a few known proofs may have routes that use genuinely different resources.
 
-The intervention changed the question from “How many proofs have we seen?” to “What does each proof depend on?” Diversity in the final proof term is not the same thing as resilience. A proof search becomes robust only when its alternatives remain alternatives after one of its usual tools has been taken away.
+The intervention changed the question from “How many proofs have we seen?” to “What does each proof depend on?” Diversity in the final proof term is not the same thing as resilience. In this experiment, the useful alternatives were those the prover could still find within its budget after a tactic was blocked.
+
+The [Wonton report](/blog/wonton-soup/) describes the protocol. The earlier [inert-control investigation](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) explains the need to check inference variation alongside the tactic block.

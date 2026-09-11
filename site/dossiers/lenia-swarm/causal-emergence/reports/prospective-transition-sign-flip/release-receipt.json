@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "prospective-transition-sign-flip",
+  "releaseId": "flce-prospective-transition-sign-flip-17aed7716388",
+  "title": "Formation Reorders Actions Without a Universal Sign Flip",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "prospective null-and-rotation test",
+  "sourceReportSha256": "ae557961f4af45333035daddccbb2193c2e55b8cc145952c2b68bd336aaa354d",
+  "publicReportSha256": "ae557961f4af45333035daddccbb2193c2e55b8cc145952c2b68bd336aaa354d",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "7deac42477b698449359a463cd5ca1a7dc002eefa512c224fc3fd25781632a58",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "cdfd08b79b82ef4b617b8e51ce54f3c2b5dfe1102fd3f4c4e32ca05d50e52bbf"
+}

@@ -1,12 +1,12 @@
 ---
-title: "What it took to move a theorem prover off the Mac"
+title: "Moving a proof-search model to Tenstorrent"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
 
-# What it took to move a theorem prover off the Mac
+# Moving a proof-search model to Tenstorrent
 
 _26–27 March 2026 · Infrastructure investigation._
 

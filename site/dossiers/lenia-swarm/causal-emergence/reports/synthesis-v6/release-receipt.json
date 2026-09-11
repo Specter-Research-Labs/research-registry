@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "synthesis-v6",
+  "releaseId": "flce-synthesis-v6-c62d798f12c6",
+  "title": "Write Access Falls While Sibling Forms Keep Diverging",
+  "date": "2026-08-30",
+  "status": "archive",
+  "evidenceClass": "earlier synthesis",
+  "sourceReportSha256": "689dd6e9b3fa50a2049008b649aa05c3fb88552c61ff4c341e71ab7675dbd918",
+  "publicReportSha256": "689dd6e9b3fa50a2049008b649aa05c3fb88552c61ff4c341e71ab7675dbd918",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "eba3cb8d0c3910848a9bb44eb8aed36a0f7368e26c93290a2f7bf3366ddef447",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "25effe7b5ff07bdd70c700c7b44d8f9bde48a5871d3c7b4f96ee1827ca5325e6"
+}

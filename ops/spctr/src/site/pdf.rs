@@ -14,10 +14,6 @@ pub fn build_pdf(repo_root: &Utf8Path, slug: &str) -> Result<Utf8PathBuf> {
     }
 
     let pdf_path = repo_root.join(format!("site/blog/{slug}/{slug}.pdf"));
-    if is_up_to_date(&md_path, &pdf_path) {
-        eprintln!("up-to-date blog/{slug}/{slug}.pdf");
-        return Ok(pdf_path);
-    }
 
     let text =
         fs::read_to_string(&md_path).with_context(|| format!("failed to read {}", md_path))?;
@@ -81,12 +77,26 @@ pub(crate) fn build_all_pdfs_for_posts(
 }
 
 fn preprocess_for_pdf(text: &str, slug: &str) -> String {
+    let figures = regex_lite::Regex::new(r#"(?s)<figure[^>]*>\s*<img src="([^"]+)" alt="[^"]*"\s*/?>\s*<figcaption>(.*?)</figcaption>\s*</figure>"#).expect("valid figure pattern");
+    let text = figures.replace_all(text, |caps: &regex_lite::Captures| {
+        format!("\n![{}]({})\n", &caps[2], &caps[1])
+    });
+    let title = markdown::parse_front_matter(&text).get("title").cloned();
+    let mut removed_title = false;
     let mut output = String::with_capacity(text.len());
     let mut in_stepper = false;
     let mut stepper_depth = 0;
 
     for line in text.lines() {
         let trimmed = line.trim();
+        if !removed_title
+            && title
+                .as_ref()
+                .is_some_and(|title| trimmed == format!("# {title}"))
+        {
+            removed_title = true;
+            continue;
+        }
 
         if in_stepper {
             if trimmed.contains("class=\"ws-stepper")
@@ -119,6 +129,11 @@ fn preprocess_for_pdf(text: &str, slug: &str) -> String {
             continue;
         }
 
+        let line = if removed_title && line.starts_with("##") {
+            &line[1..]
+        } else {
+            line
+        };
         let rewritten = rewrite_image_paths(line, slug);
         output.push_str(&rewritten);
         output.push('\n');
@@ -140,7 +155,18 @@ fn pandoc_markdown_to_typst(repo_root: &Utf8Path, markdown: &str, slug: &str) ->
 
     let output = Command::new("pandoc")
         .arg(&tmp_md)
-        .args(["--from=markdown", "--to=typst", "--wrap=none"])
+        .args([
+            "--from=markdown",
+            "--to=typst",
+            "--wrap=none",
+            "--citeproc",
+            "--metadata=reference-section-title:References",
+        ])
+        .arg(format!(
+            "--resource-path={}:{}",
+            tmp_md.parent().context("article has no parent")?,
+            repo_root
+        ))
         .current_dir(repo_root)
         .output()
         .context("failed to run pandoc")?;
@@ -171,18 +197,28 @@ fn wrap_in_paper(typst_body: &str, title: &str) -> String {
     )
 }
 
-fn is_up_to_date(source: &Utf8Path, output: &Utf8Path) -> bool {
-    let Ok(src_meta) = fs::metadata(source) else {
-        return false;
-    };
-    let Ok(out_meta) = fs::metadata(output) else {
-        return false;
-    };
-    let Ok(src_mtime) = src_meta.modified() else {
-        return false;
-    };
-    let Ok(out_mtime) = out_meta.modified() else {
-        return false;
-    };
-    out_mtime >= src_mtime
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pdf_preserves_html_figure_and_uses_the_template_title_once() {
+        let md = r#"---
+title: Example
+---
+# Example
+
+<figure class="wide">
+<img src="../../assets/blog/example/plot.svg" alt="A plot" />
+<figcaption>Measured response.</figcaption>
+</figure>
+
+## Result
+Some text.
+"#;
+        let output = preprocess_for_pdf(md, "example");
+        assert!(!output.contains("# Example"));
+        assert!(output.contains("![Measured response.](/site/assets/blog/example/plot.svg)"));
+        assert!(output.contains("# Result"));
+    }
 }

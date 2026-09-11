@@ -1,4 +1,5 @@
 use camino::Utf8Path;
+use sha2::{Digest, Sha256};
 use std::fs;
 
 fn write(root: &Utf8Path, rel: &str, content: &str) {
@@ -142,12 +143,7 @@ fn minimal_templates(root: &Utf8Path) {
         "\
 <html>
 <body>
-<!-- GENERATED:HOME_ACTIVE_PROJECTS START -->
-<!-- GENERATED:HOME_ACTIVE_PROJECTS END -->
-<!-- GENERATED:HOME_FEATURED_ADDENDA START -->
-<!-- GENERATED:HOME_FEATURED_ADDENDA END -->
-<!-- GENERATED:HOME_BLOG_POSTS START -->
-<!-- GENERATED:HOME_BLOG_POSTS END -->
+<h1>Curated research</h1>
 </body>
 </html>
 ",
@@ -321,7 +317,10 @@ fn hidden_project_excluded_from_output() {
     let addenda_idx = fs::read_to_string(root.join("site/addenda/index.html")).unwrap();
     let catalog = fs::read_to_string(root.join("site/projects/catalog.json")).unwrap();
 
-    assert!(home.contains("Alpha"), "home should contain Alpha");
+    assert!(
+        home.contains("Curated research"),
+        "home should preserve its curated template"
+    );
     assert!(
         dossier_idx.contains("Alpha"),
         "dossier index should contain Alpha"
@@ -401,8 +400,8 @@ Graph-native article.
     let sitemap = fs::read_to_string(root.join("site/sitemap/index.html")).unwrap();
 
     assert!(
-        home.contains("Hello World"),
-        "home should contain article title"
+        home.contains("Curated research") && !home.contains("Hello World"),
+        "articles should populate Writing without changing the curated homepage"
     );
     assert!(
         blog.contains("Hello World"),
@@ -510,7 +509,8 @@ fn spctr_table_is_ignored_for_site_metadata() {
     spctr::site::build(root, true).unwrap();
 
     let catalog = fs::read_to_string(root.join("site/projects/catalog.json")).unwrap();
-    let home = fs::read_to_string(root.join("site/index.html")).unwrap();
+    let dossiers = fs::read_to_string(root.join("site/dossiers/index.html")).unwrap();
+    let addenda = fs::read_to_string(root.join("site/addenda/index.html")).unwrap();
 
     assert!(
         catalog.contains("\"slug\": \"alpha\""),
@@ -520,8 +520,14 @@ fn spctr_table_is_ignored_for_site_metadata() {
         catalog.contains("\"slug\": \"tool-a\""),
         "catalog should contain tool-a"
     );
-    assert!(home.contains("Alpha"), "home should contain Alpha");
-    assert!(home.contains("ToolA"), "home should contain ToolA");
+    assert!(
+        dossiers.contains("Alpha"),
+        "dossier index should contain Alpha"
+    );
+    assert!(
+        addenda.contains("ToolA"),
+        "addenda index should contain ToolA"
+    );
 }
 
 #[test]
@@ -654,7 +660,7 @@ fn visible_dossier_without_declared_hub_gets_generated_public_hub() {
     spctr::site::build(root, true).unwrap();
 
     let hub = fs::read_to_string(root.join("site/dossiers/alpha/index.html")).unwrap();
-    let home = fs::read_to_string(root.join("site/index.html")).unwrap();
+    let dossiers = fs::read_to_string(root.join("site/dossiers/index.html")).unwrap();
     let addenda = fs::read_to_string(root.join("site/addenda/index.html")).unwrap();
     let catalog_text = fs::read_to_string(root.join("site/projects/catalog.json")).unwrap();
     let catalog: serde_json::Value = serde_json::from_str(&catalog_text).unwrap();
@@ -684,8 +690,8 @@ fn visible_dossier_without_declared_hub_gets_generated_public_hub() {
         "auto-gen hub should no longer render the Start Here block"
     );
     assert!(
-        home.contains("href=dossiers/alpha/") || home.contains("href=\"dossiers/alpha/\""),
-        "home should link to the generated hub"
+        dossiers.contains("href=alpha/") || dossiers.contains("href=\"alpha/\""),
+        "dossier index should link to the generated hub"
     );
     assert!(
         addenda.contains("Linked Dossier"),
@@ -1256,6 +1262,37 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
         .unwrap(),
     );
 
+    let report_root = "site/dossiers/lenia-swarm/causal-emergence/reports";
+    let report = "<html><body>Published synthesis</body></html>";
+    let about = "<html><body>Report sources</body></html>";
+    let receipt = "{}";
+    for (name, content) in [
+        ("index.html", report),
+        ("about.html", about),
+        ("release-receipt.json", receipt),
+    ] {
+        write(
+            root,
+            &format!("{report_root}/organism-appears-first/{name}"),
+            content,
+        );
+    }
+    let digest = |text: &str| format!("{:x}", Sha256::digest(text.as_bytes()));
+    write(
+        root,
+        &format!("{report_root}/manifest.json"),
+        &serde_json::to_string(&serde_json::json!({
+            "schema": "specter_flow_lenia_report_library_bundle_v3",
+            "reports": [{
+                "id": "organism-appears-first",
+                "publicReportSha256": digest(report),
+                "contextSha256": digest(about),
+                "receiptSha256": digest(receipt)
+            }]
+        }))
+        .unwrap(),
+    );
+
     spctr::site::build(root, true).unwrap();
     spctr::site::build(root, true).unwrap();
 
@@ -1274,9 +1311,9 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
 
     assert!(landing.contains("Current synthesis"));
     assert!(landing.contains("<title>Causal Emergence in Flow Lenia | SPECTER Labs</title>"));
-    assert!(landing.contains(
-        "https://releases.specterlab.org/lenia-swarm/causal-emergence/releases/flce-organism-appears-first-aaaaaaaaaaaa/"
-    ));
+    assert!(
+        landing.contains("/dossiers/lenia-swarm/causal-emergence/reports/organism-appears-first/")
+    );
     assert!(landing.contains("property=\"og:title\""));
     assert!(library.contains("Report library"));
     assert!(archive.contains("No reports are currently archived"));
@@ -1288,6 +1325,15 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
         1,
         "explicit sitemap routes should not duplicate discovered output pages"
     );
+    write(
+        root,
+        &format!("{report_root}/organism-appears-first/index.html"),
+        "tampered",
+    );
+    let error = spctr::site::build(root, true).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("website report integrity check failed"));
 }
 
 #[test]

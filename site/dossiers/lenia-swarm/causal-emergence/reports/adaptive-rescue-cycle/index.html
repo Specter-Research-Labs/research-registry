@@ -1,0 +1,1059 @@
+<!doctype html><html lang="en" class="specter-report" data-specter-surface="bg-panel"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Restoring the Score Does Not Restore Its Earlier Effect</title><style>
+:root{--bg:#071012;--panel:#0d191c;--line:#203238;--text:#e8f2ef;--muted:#92a9a8;--cyan:#72d9e2;--amber:#f1b85b;--lime:#a9d86e;--pink:#ef7d9a;--red:#ff6d6d}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% -10%,#123034 0,transparent 34%),var(--bg);color:var(--text);font:17px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}main{max-width:1120px;margin:auto;padding:38px 24px 80px}nav{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:18px}header{min-height:75vh;display:grid;align-content:center;padding:70px 0}.kicker,.eyebrow{color:var(--cyan);font:700 12px/1.2 ui-monospace,SFMono-Regular,monospace;letter-spacing:.15em;text-transform:uppercase}h1{font-size:clamp(58px,9vw,122px);line-height:.87;letter-spacing:-.065em;max-width:1000px;margin:22px 0}h1 em{color:var(--amber);font-style:normal}header p{max-width:760px;color:#c5d5d2;font-size:22px}.hero-grid,.two,.three,.frames{display:grid;gap:16px}.hero-grid{grid-template-columns:repeat(3,1fr);margin-top:38px}.stat,.card,.interval-card,.turn,.frame{background:linear-gradient(145deg,#102024,#0b1518);border:1px solid var(--line);border-radius:15px;padding:20px}.stat strong,.big{display:block;font-size:40px;line-height:1.05;margin:10px 0}.stat span,.note,small,.caption{color:var(--muted)}section{padding:80px 0;border-top:1px solid var(--line)}.section-head{display:grid;grid-template-columns:190px 1fr;gap:22px;align-items:start;margin-bottom:30px}h2{font-size:clamp(36px,5vw,66px);line-height:.98;letter-spacing:-.045em;margin:0;max-width:850px}h3{font-size:24px;margin:0 0 8px}p{max-width:820px}.plain{font-size:22px;color:#c7d8d5}.cyan{color:var(--cyan)}.amber{color:var(--amber)}.pink{color:var(--pink)}.lime{color:var(--lime)}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}.interval-card{padding:10px 22px}.interval{padding:18px 0;border-bottom:1px solid var(--line)}.interval:last-child{border-bottom:0}.interval-title{display:flex;justify-content:space-between;gap:15px}.axis{height:22px;position:relative;margin:8px 0;background:#081013;border-radius:10px}.zero{position:absolute;left:50%;height:100%;border-left:1px solid #526669}.whisker{position:absolute;height:4px;top:9px;border-radius:5px}.axis b{position:absolute;top:4px;width:3px;height:14px;transform:translateX(-1px)}.chart{display:block;width:100%;background:#091416;border:1px solid var(--line);border-radius:15px;padding:12px}.chart text{fill:var(--muted);font-size:13px}.chart .callout{fill:var(--amber);font-size:14px;font-weight:700}.grid{stroke:#526669;stroke-dasharray:4 5}.curve{fill:none;stroke:var(--cyan);stroke-width:4}.chart circle{fill:var(--amber);stroke:#071012;stroke-width:2}.turns{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.turn strong{font-size:34px;color:var(--cyan)}.turn span{display:block;color:var(--muted)}.frames{grid-template-columns:repeat(4,1fr)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:5px}img{width:100%;display:block;background:#020505;border-radius:8px}.caption{font-size:13px;margin-top:10px}.logic{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;margin:28px 0}.logic .card{min-height:180px}.arrow{font-size:34px;color:var(--amber)}.next{background:linear-gradient(135deg,#102529,#151e17);border:1px solid #2b4543;border-radius:22px;padding:42px;margin-top:70px}footer{color:var(--muted);font:12px/1.6 ui-monospace,SFMono-Regular,monospace;margin-top:60px}@media(max-width:760px){header{min-height:auto}.hero-grid,.two,.three,.frames,.section-head,.logic{grid-template-columns:1fr}.turns{grid-template-columns:1fr 1fr}.arrow{transform:rotate(90deg);text-align:center}}
+</style><!-- specter-report-style:begin sha256=a28376706e9e68b08ed3d8e07cbe97c7b63be4817de94e0bf55c67a1184c09ce -->
+<style data-specter-shared>
+/*
+ * Specter Flow Lenia report skin.
+ *
+ * This is the only authored copy. _report-style/sync.py embeds it verbatim in
+ * every standalone report so the HTML files still work when shared alone.
+ */
+
+html.specter-report {
+  color-scheme: light;
+
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-dim: #81827c;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-blue-soft: #dfe6ff;
+  --specter-acid: #d8ff39;
+  --specter-acid-soft: #efffb2;
+  --specter-coral: #f05237;
+  --specter-coral-soft: #f9ded7;
+  --specter-green: #14795c;
+  --specter-green-soft: #d8efe6;
+  --specter-violet: #7652c8;
+  --specter-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --specter-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --specter-serif: Iowan Old Style, Baskerville, Georgia, "Times New Roman", serif;
+
+  /* Common aliases used across the report lineage. */
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --cream: var(--specter-ink);
+  --white: var(--specter-sheet);
+  --soft: #3e4248;
+  --muted: var(--specter-muted);
+  --dim: var(--specter-dim);
+  --faint: var(--specter-dim);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+
+  --blue: var(--specter-blue);
+  --blue2: var(--specter-blue);
+  --blue-soft: var(--specter-blue-soft);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --mint: var(--specter-green);
+  --green: var(--specter-green);
+  --green2: var(--specter-green);
+  --green-soft: var(--specter-green-soft);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --yellow: var(--specter-acid);
+  --yellow-soft: var(--specter-acid-soft);
+  --gold: var(--specter-coral);
+  --gold-soft: var(--specter-coral-soft);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --orange2: var(--specter-coral);
+  --orange-soft: var(--specter-coral-soft);
+  --red: var(--specter-coral);
+  --red2: var(--specter-coral);
+  --red-soft: var(--specter-coral-soft);
+  --rose: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+  --coral-soft: var(--specter-coral-soft);
+  --violet: var(--specter-violet);
+  --purple: var(--specter-violet);
+  --sans: var(--specter-sans);
+  --serif: var(--specter-serif);
+  --mono: var(--specter-mono);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-sheet);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-sheet"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report[data-specter-surface="bg-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report {
+  scroll-behavior: smooth;
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  margin: 0;
+  overflow-x: clip;
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+  font-family: var(--specter-sans);
+  text-rendering: optimizeLegibility;
+}
+
+html.specter-report body,
+html.specter-report p,
+html.specter-report li,
+html.specter-report td,
+html.specter-report th {
+  color: inherit;
+}
+
+html.specter-report a {
+  color: inherit;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+}
+
+html.specter-report a:hover { color: var(--specter-blue); }
+
+html.specter-report a:focus-visible,
+html.specter-report button:focus-visible,
+html.specter-report summary:focus-visible {
+  outline: 3px solid var(--specter-blue);
+  outline-offset: 4px;
+}
+
+html.specter-report h1,
+html.specter-report h2,
+html.specter-report h3,
+html.specter-report h4 {
+  color: inherit;
+  font-family: var(--specter-sans) !important;
+  font-weight: 850 !important;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+html.specter-report h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.06em;
+}
+
+/*
+ * Keep the poster voice without making a headline consume a whole monitor.
+ * Individual reports may choose smaller type; this caps only hero/masthead
+ * display titles that historically scaled directly with very wide viewports.
+ */
+html.specter-report .hero h1,
+html.specter-report .masthead h1,
+html.specter-report .hero-title,
+html.specter-report body > header h1,
+html.specter-report main > header h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(3.25rem, 6.4vw, 7rem) !important;
+  line-height: 0.9 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .hero {
+  min-height: auto !important;
+  padding-block: clamp(2.75rem, 5vw, 5.5rem) !important;
+}
+
+html.specter-report .section-head h2 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.35rem, 4.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .lede,
+html.specter-report .lead,
+html.specter-report .deck,
+html.specter-report .dek,
+html.specter-report .standfirst,
+html.specter-report .plain,
+html.specter-report blockquote {
+  font-family: var(--specter-serif);
+}
+
+/* Two poster-style reports use a bare div.lead on the normalized paper
+ * surface. Keep this deliberately narrow so paragraph leads in dark headers
+ * retain their authored white foreground. */
+html.specter-report div.lead {
+  color: var(--specter-ink) !important;
+}
+
+/* Four legacy verdict headers use a dark authored surface without declaring a
+ * foreground on the header itself. Restore their deliberately pale lede. */
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) .lede {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.lead) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.hero-facts) h1 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .eyebrow,
+html.specter-report .kicker,
+html.specter-report .label,
+html.specter-report .micro,
+html.specter-report .section-number,
+html.specter-report .section-no,
+html.specter-report .num {
+  color: var(--specter-blue) !important;
+  font-family: var(--specter-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.specter-report body > nav,
+html.specter-report .topbar,
+html.specter-report .top {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-acid) !important;
+  border-bottom-width: 4px !important;
+  box-shadow: none !important;
+}
+
+html.specter-report body > nav a,
+html.specter-report body > nav .brand,
+html.specter-report .topbar a,
+html.specter-report .topbar strong,
+html.specter-report .top a {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > nav .brand,
+html.specter-report .topbar .brand {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report section,
+html.specter-report header,
+html.specter-report footer {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report .sheet,
+html.specter-report .panel,
+html.specter-report .card,
+html.specter-report .mini,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .flow-box,
+html.specter-report .question-card,
+html.specter-report .metric,
+html.specter-report .finding,
+html.specter-report .stat,
+html.specter-report .data-viz,
+html.specter-report .hero-proof > div {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Normalized paper surfaces own their foreground. Some legacy descendants
+ * carried a hard-coded dark-theme heading or caption; make those inherit the
+ * surface they now visibly sit on. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Legacy .plain and .next blocks rely on their container foreground. The
+ * default is paper/ink; the dark exceptions below deliberately flip it. */
+html.specter-report .next {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report :is(.plain, .next) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Exact unclassed body-copy surface retained by the geometry-turn atlas. */
+html.specter-report .copy {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report .card,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .hero-card,
+html.specter-report .question-card {
+  box-shadow: var(--specter-shadow);
+}
+
+html.specter-report .hero-card,
+html.specter-report .hero-result,
+html.specter-report .highlight,
+html.specter-report .callout.acid {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same * { color: inherit !important; }
+
+html.specter-report .callout,
+html.specter-report .thesis,
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .north-star,
+html.specter-report .result-banner,
+html.specter-report .plain-result,
+html.specter-report .closed-note,
+html.specter-report .phi-lock,
+html.specter-report .route,
+html.specter-report .route-future,
+html.specter-report .hetero-note,
+html.specter-report .matrix-wrap,
+html.specter-report .formula,
+html.specter-report .equation {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Editorial cutouts used by the synthesis lineage. Their headings used to
+ * inherit the global ink color and disappear into the dark surface. */
+html.specter-report .definition,
+html.specter-report .ink-band,
+html.specter-report .closure-thesis {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .definition,
+html.specter-report .closure-thesis {
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .definition *,
+html.specter-report .ink-band *,
+html.specter-report .closure-thesis *,
+html.specter-report .next-title * {
+  color: inherit !important;
+}
+
+html.specter-report .definition .eyebrow,
+html.specter-report .closure-thesis .eyebrow {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report .callout *,
+html.specter-report .thesis *,
+html.specter-report .verdict *,
+html.specter-report .hero-aside *,
+html.specter-report .north-star *,
+html.specter-report .result-banner *,
+html.specter-report .plain-result *,
+html.specter-report .closed-note *,
+html.specter-report .phi-lock *,
+html.specter-report .route *,
+html.specter-report .route-future *,
+html.specter-report .hetero-note * {
+  color: inherit !important;
+}
+
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .result-banner {
+  border-top: 8px solid var(--specter-coral) !important;
+}
+
+html.specter-report .dark,
+html.specter-report .inverse,
+html.specter-report .ink {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+}
+
+html.specter-report .dark h1,
+html.specter-report .dark h2,
+html.specter-report .dark h3,
+html.specter-report .inverse h1,
+html.specter-report .inverse h2,
+html.specter-report .inverse h3,
+html.specter-report .ink h1,
+html.specter-report .ink h2,
+html.specter-report .ink h3 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .dark .lede,
+html.specter-report .dark .lead,
+html.specter-report .dark .deck,
+html.specter-report .dark .dek,
+html.specter-report .dark .standfirst,
+html.specter-report .inverse .lede,
+html.specter-report .inverse .lead,
+html.specter-report .inverse .deck,
+html.specter-report .inverse .dek,
+html.specter-report .inverse .standfirst,
+html.specter-report .ink .lede,
+html.specter-report .ink .lead,
+html.specter-report .ink .deck,
+html.specter-report .ink .dek,
+html.specter-report .ink .standfirst {
+  color: inherit !important;
+}
+
+/* Authored dark sub-surfaces that do not carry a .dark/.inverse marker. The
+ * shared paper skin must preserve their local foreground instead of feeding
+ * the global ink alias back into a near-black panel. */
+html.specter-report section#next.next,
+html.specter-report div.next:has(> h3),
+html.specter-report section#next .next > div,
+html.specter-report section#memory .memory > div,
+html.specter-report figure.future-card,
+html.specter-report .films > .film,
+html.specter-report .arrow > .mode,
+html.specter-report .frame-grid > .time-column,
+html.specter-report .fans > .fan,
+html.specter-report .frame-pair,
+html.specter-report .explain > article,
+html.specter-report .organisms > .organism-card,
+html.specter-report .chart-card,
+html.specter-report .sequence figure:has(> img) {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report div.next:has(> h3) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#next .next > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#memory .memory > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report figure.future-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .films > .film :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .arrow > .mode :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-grid > .time-column :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .fans > .fan :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-pair :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .explain > article :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .organisms > .organism-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .chart-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .sequence figure:has(> img) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report section#next.next :is(.eyebrow, .kicker, .label),
+html.specter-report div.next:has(> h3) :is(.eyebrow, .kicker, .label) {
+  color: var(--specter-acid) !important;
+}
+
+/* A light card nested in a dark chapter is still a light card. Keep this
+ * guard after the dark-surface compatibility rules so the card's own surface,
+ * not its ancestor, decides heading/caption/body contrast. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Final light/dark ownership repairs for legacy report structures that reused
+ * the same class names on opposite surfaces. Keep these selectors structural:
+ * the surrounding surface, not a generic class alias, decides the foreground. */
+html.specter-report section#next:has(> .intro) > .next,
+html.specter-report section#next:has(> .intro) > .next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .state-strip .frames > figure > figcaption,
+html.specter-report section#organism .frames > figure > figcaption,
+html.specter-report section:not(#memory):not(#map):has(+ section#meaning) > .wrap > .frames > figure > figcaption,
+html.specter-report .aperture-map figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report article.case .frames > figure:has(> img) > figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report section > article.case > .frames > figure:has(> img) > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#map .frames > figure > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing,
+html.specter-report section.next > .wrap.chapter {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section.next > .wrap.chapter :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report table {
+  border-collapse: collapse;
+  background: var(--specter-sheet);
+}
+
+html.specter-report th {
+  background: var(--specter-ink);
+  color: var(--specter-sheet) !important;
+  font-family: var(--specter-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.specter-report th,
+html.specter-report td {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report code,
+html.specter-report pre {
+  font-family: var(--specter-mono);
+}
+
+html.specter-report ::selection {
+  color: var(--specter-ink);
+  background: var(--specter-acid);
+}
+
+@media (max-width: 760px) {
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: relative;
+  }
+
+  html.specter-report h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 640px) {
+  html.specter-report .hero h1,
+  html.specter-report .masthead h1,
+  html.specter-report .hero-title,
+  html.specter-report body > header h1,
+  html.specter-report main > header h1 {
+    font-size: clamp(2.75rem, 11vw, 3.25rem) !important;
+    line-height: 0.92 !important;
+    overflow-wrap: anywhere !important;
+    text-wrap: wrap;
+  }
+
+  /* Long source receipts must wrap rather than disappear beyond the phone. */
+  html.specter-report footer {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  html.specter-report footer code,
+  html.specter-report footer .receipt,
+  html.specter-report footer .hash {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media print {
+  html.specter-report,
+  html.specter-report body {
+    background: white !important;
+  }
+
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: static !important;
+  }
+
+  html.specter-report .card,
+  html.specter-report .visual,
+  html.specter-report .case,
+  html.specter-report .hero-card,
+  html.specter-report .question-card {
+    box-shadow: none !important;
+  }
+}
+</style>
+<!-- specter-report-style:end -->
+<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><style data-specter-public-polish>
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
+
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
+  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
+  font-family: var(--editorial-display) !important;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
+html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
+html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
+html.anatomical-editorial .hero-specimens { margin: 0; }
+html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
+html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
+html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
+html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
+html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
+html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
+html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
+html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
+html.anatomical-editorial .synthesis .metric span { color:#414c45; }
+html.anatomical-editorial .opening-method { margin:1rem 0; }
+html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
+html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
+html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
+html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
+html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
+html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
+html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
+html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
+html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
+html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
+html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
+html.anatomical-editorial .caption { border:0; }
+html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
+html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
+html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
+html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
+html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
+html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
+html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
+html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
+html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
+html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
+html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
+html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
+html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
+html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
+html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
+html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
+@media(max-width:800px) {
+ html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
+ html:has(.editorial-synthesis) .hero-answer { transform:none; }
+ html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
+}
+html:has(.editorial-synthesis) .ink { border-block:0; }
+html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
+html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .section-no { border:0; }
+@media(max-width:700px) {
+ html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
+ html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
+ html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
+ html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
+ html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
+}
+html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
+
+html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
+html.anatomical-editorial .measurement-comparison,
+html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
+html.anatomical-editorial .measurement-comparison h3,
+html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
+.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
+.measurement-heading { font: 12px/1.5 monospace; }
+.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
+.measurement-track { position: relative; height: 18px; background: #fff8; }
+.measurement-track i { display: block; height: 100%; background: #18796f; }
+.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
+.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
+html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
+.experiment-method summary { cursor: pointer; font-weight: 700; }
+.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
+.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
+.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.orbium-frames figure { margin: 0; }
+.orbium-frames img { display: block; width: 100%; }
+.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
+#orbium-time-note { margin-top: 16px; }
+.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
+.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
+.comparison-story p { max-width: 72ch; line-height: 1.65; }
+.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
+.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 650px) {
+  .measurement-heading { display: none; }
+  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
+  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
+  .orbium-frames { gap: 10px; }
+}
+
+#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
+html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
+html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
+
+html:has(.editorial-synthesis) .evidence {
+  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
+}
+html:has(.editorial-synthesis) .evidence::before { content: none; }
+html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
+html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
+html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
+html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
+.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
+.figure-introduction { max-width: 760px; margin-bottom: 30px; }
+.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
+.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
+.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
+.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
+.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.response-plots > div, .transplant-panels > div { min-width: 0; }
+.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
+.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
+.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
+.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
+.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
+.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
+#response-reading { font-size: 19px; }
+html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
+html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
+html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
+html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
+html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
+html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
+html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
+html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
+html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
+@media (max-width: 700px) {
+  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
+  .response-controls { gap: 14px; }
+  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
+  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
+}
+
+#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
+
+/* These explicit light fills label dark inset panels inside otherwise light charts. */
+html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
+html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
+
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
+  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
+}
+html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
+html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
+html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+
+/* Native specimen panels retain their black image field. Their labels must
+ * remain legible after the surrounding report adopts paper-colored tokens. */
+html.specter-report .specimen > figcaption {
+  color: #d3d5d7 !important;
+  background: #050608;
+}
+html.specter-report .specimen > figcaption :is(b, strong, span) {
+  color: inherit !important;
+}
+
+/* Keep imported data labels readable on a phone instead of shrinking an
+ * entire desktop plot into a few hundred pixels. Captions still wrap. */
+@media (max-width: 700px) {
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+  html.specter-report div.chart > svg { min-width: 760px; }
+  html.specter-report div.card.chart > svg { min-width: 940px; }
+  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
+  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 var(--specter-mono);
+    color: var(--specter-muted);
+  }
+}
+
+@media (max-width: 700px) {
+  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
+  html.anatomical-editorial .figure > svg { min-width: 640px; }
+  html.anatomical-editorial .figure:has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 ui-monospace, monospace;
+  }
+  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
+}
+
+/* A source report's compact local navigation must not hide the injected
+ * site navigation or the links back to its dossier and report library. */
+html.specter-report :is(.publication-header, .publication-navigation) a {
+  display: inline-flex !important;
+}
+
+/* The commitment report deliberately keeps dark data panels. */
+html.specter-report:has(#steerability) .chart-grid .figure svg text {
+  fill: #e9e7df !important;
+}
+</style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/adaptive-rescue-cycle/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav><main><nav><span>BEFORE THE ORGANISM · SWING VI</span><span>FLOW LENIA · 30 MATCHED ANCESTORS</span></nav>
+<header><div class="kicker">A DEVELOPMENTAL GEOMETRY DISCOVERY</div><h1>Restoring the Score Does Not Restore Its Earlier Effect</h1><p>After eight free steps, adaptive feedback rebuilt a huge information split in every organism. But that split no longer narrowed the independent future repertoire. The developmental direction had separated from the instantaneous information gradient.</p><div class="hero-grid"><div class="stat"><div class="eyebrow">REACQUIRED passage 60 SPLIT</div><strong class="cyan">+1.607</strong><span>30/30 high branches above low</span></div><div class="stat"><div class="eyebrow">ADAPTIVE FUTURE EFFECT</div><strong class="pink">+0.002</strong><span>no future narrowing at passage 60</span></div><div class="stat"><div class="eyebrow">STALE passage 45 ACTION</div><strong class="lime">-0.006</strong><span>the older action still narrows the future</span></div></div></header>
+
+<section><div class="section-head"><div class="eyebrow">01 · THE CYCLE</div><h2>Drive. Release. Reacquire.</h2></div><div class="logic"><div class="card"><div class="eyebrow">passage 33 → passage 45</div><h3>Track the moving direction</h3><p>Four adaptive turns create the passage 48 split and narrow the microscopic future.</p></div><div class="arrow">→</div><div class="card"><div class="eyebrow">passage 48 → passage 56</div><h3>Release for eight steps</h3><p>The local split disappears. At passage 57, all eight actions are tested again from the released state.</p></div></div><div class="logic"><div class="card"><div class="eyebrow">passage 57 → passage 60</div><h3>Reacquire the score direction</h3><p>High chooses the new maximum; low chooses the new minimum. The passage 60 split is +1.607.</p></div><div class="arrow">→</div><div class="card"><div class="eyebrow">passage 61 → long future</div><h3>Challenge independently</h3><p>Nine matched futures ask whether the reacquired state has fewer ways to continue.</p></div></div></section>
+
+<section><div class="section-head"><div class="eyebrow">02 · MEMORY</div><h2>The passage 48 split vanishes in one step.</h2></div><svg class="chart" viewBox="0 0 920 300" role="img" aria-label="High minus low information score after release"><line class="grid" x1="55" x2="900" y1="197.9" y2="197.9"/><path class="curve" d="M 55.0 47.0 L 125.4 235.8 L 195.8 213.5 L 266.2 219.8 L 336.7 189.8 L 407.1 221.1 L 477.5 203.2 L 547.9 162.2 L 618.3 203.3 L 688.8 162.1 L 759.2 167.4 L 829.6 207.6 L 900.0 192.6"/><circle cx="55.0" cy="47.0" r="5"><title>passage 48: +1.393</title></circle><circle cx="125.4" cy="235.8" r="5"><title>passage 49: -0.351</title></circle><circle cx="195.8" cy="213.5" r="5"><title>passage 50: -0.145</title></circle><circle cx="266.2" cy="219.8" r="5"><title>passage 51: -0.203</title></circle><circle cx="336.7" cy="189.8" r="5"><title>passage 52: +0.074</title></circle><circle cx="407.1" cy="221.1" r="5"><title>passage 53: -0.215</title></circle><circle cx="477.5" cy="203.2" r="5"><title>passage 54: -0.049</title></circle><circle cx="547.9" cy="162.2" r="5"><title>passage 55: +0.329</title></circle><circle cx="618.3" cy="203.3" r="5"><title>passage 56: -0.050</title></circle><circle cx="688.8" cy="162.1" r="5"><title>passage 57: +0.330</title></circle><circle cx="759.2" cy="167.4" r="5"><title>passage 58: +0.282</title></circle><circle cx="829.6" cy="207.6" r="5"><title>passage 59: -0.090</title></circle><circle cx="900.0" cy="192.6" r="5"><title>passage 60: +0.049</title></circle><text x="55.0" y="284" text-anchor="middle">48</text><text x="195.8" y="284" text-anchor="middle">passage 50</text><text x="336.7" y="284" text-anchor="middle">passage 52</text><text x="477.5" y="284" text-anchor="middle">passage 54</text><text x="618.3" y="284" text-anchor="middle">passage 56</text><text x="759.2" y="284" text-anchor="middle">passage 58</text><text x="900.0" y="284" text-anchor="middle">passage 60</text><text x="55" y="18">high − low whole-minus-sum</text><text class="callout" x="65.0" y="35.0">selected passage 48 split</text><text class="callout" x="135.4" y="259.8">gone one step later</text></svg><p class="plain">This is not a slowly draining reservoir. Whole-minus-sum is a local directional quantity: the deliberately selected +1.393 split at passage 48 becomes −0.351 at passage 49, then wanders around zero.</p></section>
+
+<section><div class="section-head"><div class="eyebrow">03 · REACQUISITION</div><h2>The useful action rotates again.</h2></div><div class="turns"><div class="turn"><strong>28/30</strong><span>high branches reject their passage 45 action</span></div><div class="turn"><strong>26/30</strong><span>low branches reject their passage 45 action</span></div><div class="turn"><strong>20/30</strong><span>high selects an action never used before</span></div><div class="turn"><strong>17/30</strong><span>low selects an action never used before</span></div></div><p class="plain">The controller can find a new information direction at passage 57. It is genuinely state-dependent, and it recreates a clean passage 60 split.</p><div class="interval-card"><div class="interval"><div class="interval-title"><span>adaptive rescue WMS high−low</span><strong style="color:#72d9e2">+1.607</strong></div><div class="axis"><i class="zero"></i><i class="whisker" style="left:70.09%;width:16.22%;background:#72d9e2"></i><b style="left:77.64%;background:#72d9e2"></b></div><small>95% interval [+1.168, +2.111]</small></div><div class="interval"><div class="interval-title"><span>stale replay WMS high−low</span><strong style="color:#f1b85b">-0.023</strong></div><div class="axis"><i class="zero"></i><i class="whisker" style="left:41.50%;width:15.19%;background:#f1b85b"></i><b style="left:49.60%;background:#f1b85b"></b></div><small>95% interval [-0.494, +0.389]</small></div></div></section>
+
+<section><div class="section-head"><div class="eyebrow">04 · THE SURPRISE</div><h2>Reacquiring the score does not reacquire the future.</h2></div><div class="interval-card"><div class="interval"><div class="interval-title"><span>adaptive rescue future repertoire</span><strong style="color:#ef7d9a">+0.002</strong></div><div class="axis"><i class="zero"></i><i class="whisker" style="left:38.71%;width:30.96%;background:#ef7d9a"></i><b style="left:53.92%;background:#ef7d9a"></b></div><small>95% interval [-0.007, +0.011]</small></div><div class="interval"><div class="interval-title"><span>stale passage 45 action future repertoire</span><strong style="color:#a9d86e">-0.006</strong></div><div class="axis"><i class="zero"></i><i class="whisker" style="left:30.36%;width:19.41%;background:#a9d86e"></i><b style="left:40.36%;background:#a9d86e"></b></div><small>95% interval [-0.011, -0.000]</small></div><div class="interval"><div class="interval-title"><span>adaptive minus stale</span><strong style="color:#f1b85b">+0.008</strong></div><div class="axis"><i class="zero"></i><i class="whisker" style="left:51.25%;width:26.53%;background:#f1b85b"></i><b style="left:63.56%;background:#f1b85b"></b></div><small>95% interval [+0.001, +0.016]</small></div><div class="interval"><div class="interval-title"><span>adaptive minus no rescue</span><strong style="color:#92a9a8">+0.001</strong></div><div class="axis"><i class="zero"></i><i class="whisker" style="left:29.57%;width:44.06%;background:#92a9a8"></i><b style="left:51.48%;background:#92a9a8"></b></div><small>95% interval [-0.012, +0.014]</small></div></div><p class="plain">At passage 60, maximizing the local information score no longer makes the high branch’s future narrower. Compared with the stale passage 45 action, it makes the high−low future contrast <strong>+0.008</strong> wider, 95% CI [+0.001, +0.016].</p><p class="note">The stale effect is not carried by one animal: every leave-one-ancestor mean stays negative. Six of eight organism groups point negative. This was a predeclared same-mass control, not a contrast invented after seeing the result.</p></section>
+
+<section><div class="section-head"><div class="eyebrow">05 · DEVELOPMENTAL WINDOW</div><h2>The two directions align only at certain ages.</h2></div><div class="three"><div class="card"><div class="eyebrow">passage 36 · ONE PUSH</div><strong class="big cyan">-0.0078</strong><p>Local information direction and future narrowing align.</p></div><div class="card"><div class="eyebrow">passage 48 · ADAPTIVE TRACKING</div><strong class="big cyan">-0.0077</strong><p>Tracking the rotating direction recovers almost the same contraction.</p></div><div class="card"><div class="eyebrow">passage 60 · REACQUIRED</div><strong class="big pink">+0.0023</strong><p>The score can still be controlled, but it no longer points toward fewer futures.</p></div></div><p class="plain">This is the new object: not a universal scalar called “commitment,” but a developmental window in which an information gradient aligns with the organism’s future-constraining direction.</p></section>
+
+<section><div class="section-head"><div class="eyebrow">06 · VISIBLE STATES</div><h2>Same released organism, three passage 57 choices.</h2></div><p>Representative: <strong>harmonic-dancer-0397</strong>. High branch left, low branch right.</p><div class="frames"><div class="frame"><div class="pair"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAAAAADmVT4XAAAAOGVYSWZNTQAqAAAACAABh2kABAAAAAEAAAAaAAAAAAACoAIABAAAAAEAAACAoAMABAAAAAEAAACAAAAAAGtGJk0AAAiOSURBVHgB7ZhtjBVXGcefM2dm7syde+/u3dcLyy67bF0ollIR1BSb1ixggmgCwdBi+GAopA1NfCFGjFFT45eaqB+ktjamNDS21FppSFONtomVUqA0VrLVIgjLwrrsy929e1/m9cyZ4zN3Ie0nc4bKJ2dg7507mZnnf37neTsHID1SAimBlEBKICWQEkgJpARSAimBlEBKICWQEkgJpARSAv/vBMhHArDwtPgo77g5AdefItA8EQJQA57ejJLEAuIHrv+hfYUoiohYFJtuKkisIZkAvDsedXPksXmF6pkMd+0AFRCigIiipBjUJPNH0Gj8H4/mp6IZLa3UbWiOw0DRdIUFPKmCJATQrtK0juDjb0U1i+3UF0EQNtylF3mL6jV8jyuCJxhVAgJoEZnHIvBbwU+K4w8rUI26+9r3D+15o01TvXFh9rnnQ3kF8gLQMqUqRcuEUIrfVM/l+fRMQ9G17PeGgOmMGu2m+vl9TxyQtw/yAtDnqKpriAAAzyjVjGxQnqxGGf1bXwXv6xSmhLFI33aXUU8AQF5Ac9I1PaMSwQVOgqoZWqM8aytZta/BtPVhUdOcRrDtIRh7Foh8NCYhgAi0jA4MYw1x6Ep1shpCfkP7z69eWDkVRHeMX/WVbwL8zEVG0goSCGiGoKJCFGcDRY1mpxuCEn14K/TuP9GgG9c8Le4dAth/apFTlw/GJAKEEDzkqqoKounh7LxPiVr6yWaAmRca/vJ7ToxFR2a+tOKI2lZgQSiLIIEAARFnlBhqBsfN5qqRRvjQVrT/nRphxa5f/itcAZ3H7qlnXa193sYCIXUkEAAxAF+AoZvULVc4FWZ//wFge193nJZlo9XW4c+hyVOgq3nuus3yICEhgQCcAYEMCDXybHwuBO4236+NVFhuYGYye/u/dwH8EN2C9pcnFdlIoBIim7fEqXchA6smnbzG0M+F1oX6B89Hxm1ijAw98FOAR16bo8aS7qlZX5aAIitg4b6mDO/KOFOIfsefDm2Bt75wOaK3ZS+Hy/O7kf/Z9wRVu2qVMC7OUkcCAXEqitMxL0+jJ/T85uyJVVUY/b1Q+/OXqtbAdgDnd39XNGE54w35ciQvoGkdYxAa80xw3u0DrF82YYOxtHBpylp3YS9mh9dtRShmuexhqpI8pJ0w7j+oqmnUrQWgRStPo4G1f+6FXGe+PE2GHrXw98szJBJZ5tiMy7qAdC0gEKd/XVf9ehCRnn3o8AA/qohcR7Y6yTvb1gIMbz00r4XUZE4QooD/dR7A5KtlDI3VPHT/jn0aVJ77xVWRK9JaxW8vvopyrr1d4yoxNUyDPJImIOms2AJoGdMyovIcB0FqMfAum+VLQc2OdirH38ffK8pgOFGr5jp+TACvyByyTogAMrmC4da5iMgXLdgEp7ywe5U5X6WLf/XUOjT16lxdy6gFMwo5ZiwZ2817ZJ2QKJpVzM1XA2x/N74Mhzc/coz1rqueq1udiwDue/jjJ8/YWT5nFAimoAT2ZfOFQjOF0mJ+YTwAZfeTKP2zI6x0Jx8pW31dT/XEQ7nzaqi5Wk/Brdse9sbSGmSnAJRMa86uMgHdP0ZzD4+FxWWVd2YXrz/T3wM78MqEp/hQbG2mdknHinVLhyEKMN26K4i6uwCw6U3I99cuOq1tw/A4wDaAnY4eRqUeglO0sG5pvl3iQ5JAvPprVDwG+icfhVNPv6/kl3oXnZb2zGNog5fh5FEtCrvW9AJ2IpgyZWcWH5YUAIJXJwNB9L0HseQ+GbQPsFHP2n54uLoFgL73qc2E+1pnMW+JUMRrBomhX79FNgoEsxVLzVl3r4EDf8mZS7wJ0lo6CGu+Dxfmj7ExTzBQ6+cXtXseZux46SAbiJICsBlizIZ1mPGeOWgWutxJvW///c1B7Fh7moWqJzRSsZ3BUlgW/JYQwIWvofUB/OBYR1spuOxvGTIBqi229dIDEy76nm4BCybUpd3RHApAL5BEIEkAG/2I9x0D+NqRRZvaR896Xc/Ew7fw3/OjNfQQms0FjDsTaldL4CchINuSYTFoPQNHNx9XN3zb+8NU6+DIBgiefWkYvvLCHOjFQkioGoWoktDQ80L5RCRLAFdj3s7amNo7tOPcb8st/8Th77mceQWci9NEKd3vH7IDMwM+t8tWmMB8gkQEivUPzyp8bPDFt5TlWP0x33xmH4zs+RsmXbPTWjHihNxSfNYIIjeJAumIJXp3qWOjd3ricjTwNprfW+t+zGCD17A40lzH7euuvDKtWLkwwD2jgN2CcgyCTV/Kri6/c37wXbR/5eQ5d5NxeGCWEDXTqk2+8de7H+wHx6a6CON+TDIEcCCyTohhwFml4lx68DmsBae3Po+F6fyLnmoYGbVvjVMZnV59lz0TKjqNogT9UFw4pA9Czf6V9z0Evz563AtBCWlLrtTbN3tmSlutvTsuBr7c+8c3GXZkvp/EDeUJ4Opc9N77DXht10UMM9wj4D5Xi6UOQ7BrVZPy+dG2T1tVruASVr4hSzIFSEt84nEY/W5dZFTcHzQNJfLKo7WOIvEqTtaA2iV1VYsboH3syaS5JiCApTO3fdcTvKdFMaxiyYpYGHpOwyPcth2ukdC+FvVYQcAwCOQFJPABREAp6LlOneXbg3plDncnMQasHDTqPtFJEJLiiiX1q5M1N4GCRAQAp14EdVYweXWu5uJmEW5aMKfhYBMYxrHP3DC0G97C3rHcLMim4utvExByrtCqYD7Wntg+bhhAJCIMp3i7GDftfAft36IpaKqI98ooGkVni+3E7dcNe/HqkUbsFguIt6njgi9wnE0BKGthwKglboUWrstNQKJE9MErY0vxDklsuOnFNwQ0f97g8cH9/+0sURR86EX43ILVD11LT1MCKYGUQEogJZASSAmkBFICKYGUQEogJZASSAmkBFICKYGbIvAf0GbWf28qerwAAAAASUVORK5CYII=" alt="released high passage 56"><img src="data:image/png;base64,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" alt="released low passage 56"></div><div class="caption"><b>Released · passage 56</b><br>Before rescue.</div></div><div class="frame"><div class="pair"><img src="data:image/png;base64,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" alt="adaptive rescue high passage 60"><img src="data:image/png;base64,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" alt="adaptive rescue low passage 60"></div><div class="caption"><b>Adaptive rescue · passage 60</b><br>New score extrema.</div></div><div class="frame"><div class="pair"><img src="data:image/png;base64,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" alt="stale replay high passage 60"><img src="data:image/png;base64,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" alt="stale replay low passage 60"></div><div class="caption"><b>Stale passage 45 action · passage 60</b><br>Old direction replayed.</div></div><div class="frame"><div class="pair"><img src="data:image/png;base64,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" alt="no rescue high passage 60"><img src="data:image/png;base64,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" alt="no rescue low passage 60"></div><div class="caption"><b>No rescue · passage 60</b><br>Free continuation.</div></div></div></section>
+
+<section id="next" class="next"><div class="kicker">THE NEXT DIRECT SWING</div><h2>Find the alignment window.</h2><p class="plain">At a sequence of developmental passages, independently re-estimate the local information gradient, perturb high and low, then measure the untouched future repertoire. The target is a temporal map of where information geometry actually constrains development—and where it becomes merely a controllable readout.</p><div class="two"><div><div class="eyebrow">IF THE WINDOW IS SHARP</div><p>We have a candidate signal of developmental commitment: a phase where whole-over-parts information and loss of future possibilities become causally aligned before the organism’s visible transition.</p></div><div><div class="eyebrow">IF IT MOVES BY ORGANISM</div><p>Then we learn a state-dependent detector of readiness rather than a global clock—and can ask whether its peak predicts each organism’s own morphological turn.</p></div></div></section>
+
+<footer>30 matched ancestors · 480 fresh rescue candidates · 1,620 closed future trajectories · 1,440 challenge prefixes verified · discovery SHA b5f5773dadc17948f1e6b88c18c5d1669a9468dca25a27596a4ec942df7956a3 · passage 60 WMS is selected; future repertoire is independent · this identifies a moving developmental relationship, not autonomous replication</footer></main></body></html>

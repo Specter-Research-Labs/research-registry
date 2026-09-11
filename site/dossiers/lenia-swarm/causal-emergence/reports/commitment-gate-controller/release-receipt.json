@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-gate-controller",
+  "releaseId": "flce-commitment-gate-controller-66d5816e73d4",
+  "title": "State-Aware Control Preserves a Wider Range of Responses",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "closed-loop intervention",
+  "sourceReportSha256": "23a91d41d69fc68b73fe12cb03ec6a229eb78e794fdae5a30c46c2b714c02b39",
+  "publicReportSha256": "23a91d41d69fc68b73fe12cb03ec6a229eb78e794fdae5a30c46c2b714c02b39",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "3618a7db21568ea8ff691936f19087dc5f56060f59630c52821d7dbff040ee30",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "9fa494ee1829121cf9f28df67f4ad160095cc09189a5d44b7f7a9828d6a814ef"
+}

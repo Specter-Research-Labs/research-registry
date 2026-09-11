@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "adaptive-rescue-cycle",
+  "releaseId": "flce-adaptive-rescue-cycle-5f3ad7361a6a",
+  "title": "Restoring the Score Does Not Restore Its Earlier Effect",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "release-and-reacquisition intervention",
+  "sourceReportSha256": "6d8c297751bbd6011c68bae05298cc00aa270170e1571b11636cef86bbea6619",
+  "publicReportSha256": "6d8c297751bbd6011c68bae05298cc00aa270170e1571b11636cef86bbea6619",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "b0a367678c7f79994c0045a2aa0862ff812d5708082b3fd896d9ba9c84511b5e",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "a3efea62a3daa8e16c310376ec707a4416e397c47b7faddd0ab88832e94a5f1b"
+}

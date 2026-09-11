@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "causal-history-order",
+  "releaseId": "flce-causal-history-order-3c885ac5af9b",
+  "title": "Intervention Order Leaves Bodies in Different Later Positions",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "matched-order history intervention",
+  "sourceReportSha256": "565c7664f09035113eb10e5fc3e4dbc1373b0c88059f83fc5873bc20d088b27f",
+  "publicReportSha256": "96faecbee7414235a768c7ed823e9c036b0b4f9d7a89fee27a8e8513aa61c21d",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "3ca01c3213e85657eb124bbee6992baab764a5244c57736dbba23d36896b2e2c",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "6bb956e36203ab8863b5c4616155fc24691986cc95d573696fab3e0da3ff4c47"
+}

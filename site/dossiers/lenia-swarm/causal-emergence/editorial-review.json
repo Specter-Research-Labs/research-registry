@@ -1,0 +1,1038 @@
+{
+  "date": "2026-09-09",
+  "scope": "Comparative selection across 81 records; close editorial review of the seven selected reports. Supporting records are not certified publication-ready.",
+  "reports": [
+    {
+      "id": "synthesis-v7",
+      "decision": "reading-selection",
+      "reason": "Keep as the overview. It connects distinct experiments and retains failed controls; its length still makes it a report, not a short article.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "d3fca758508fc4fbd9608cb6c1511794ced28e2b918b1dce3654944262a3d41c",
+      "wordCount": 11722,
+      "visualElements": 41,
+      "phrasesForRevision": [
+        "earned"
+      ],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "start-here",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "7aa5b6f5c8785829c8d6bd59003b7550f479129e555479cf6ee84fc7359de7ea",
+      "wordCount": 2053,
+      "visualElements": 2,
+      "phrasesForRevision": [
+        "the program"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "organism-birth-signal",
+      "decision": "reading-selection",
+      "reason": "Keep the prospective precursor result: a quantitative whole-versus-parts comparison, an independently defined event, and family-level breadth.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "2b24fe585dbbf7b4bff06019fde1e545334f0a6db18db9045236fc174bf5aace",
+      "wordCount": 716,
+      "visualElements": 5,
+      "phrasesForRevision": [
+        "clean next",
+        "earned"
+      ],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "initial-action-world",
+      "decision": "reading-selection",
+      "reason": "Keep the matched-history comparison. Actual paired starting fields and later outcomes make the hidden-history question visible.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "252f028df45e1115f089d1763911e3488f4e0925148345a4315b2e455af10f1e",
+      "wordCount": 1443,
+      "visualElements": 10,
+      "phrasesForRevision": [],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "spatial-scale-action-world",
+      "decision": "reading-selection",
+      "reason": "Keep the spatial-disorder control beside the history study; it tests an alternative explanation rather than adding another age curve.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "74c977e144fe25fe8511c92568854a2c205119ab1c40f5b74a7e65d57fb65fb9",
+      "wordCount": 930,
+      "visualElements": 18,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "causal-repertoire-contraction",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Higher whole-over-parts organization predicted a narrower range of transition times across new states, while the microscopic outcomes still remained diverse.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "4ce4ad7496c0bf4f521ea0dfe4f83f9b9daf5b39c95f1eec10a711da73647662",
+      "wordCount": 802,
+      "visualElements": 15,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "geometry-turn-causal-atlas",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The score changed again, but interventions toward higher and lower values changed sign and remained organism-specific. The score therefore marked the stage without providing a universal way to control it.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "b9814aaafbb760eba81aaa0941d912b45b11061bf373a35d4205d81f61a82a9c",
+      "wordCount": 1006,
+      "visualElements": 23,
+      "phrasesForRevision": [
+        "clean next"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "commitment-gate-controller",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Early state-aware control kept the causal gate open, while blindly applying the full pulse at every passage drove the comparison in the other direction.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "7ef20200e08ec5c2f58e04d3881797bf165aade7965fc0f6834794228f1cb438",
+      "wordCount": 762,
+      "visualElements": 2,
+      "phrasesForRevision": [
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "commitment-gate-formation",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The branches remained about 0.45 Hellinger units apart at step 256 under either action pair, so developmental history remained visible in form even after the specially chosen pair lost its extra leverage.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "e598a51c0b16530f13b1bc7ebe988ddb729dc959bc9244aae76329d82f342856",
+      "wordCount": 1218,
+      "visualElements": 6,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-grammar",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. After the commitment turn, spatial outcome geometry became more consistent across prior histories at the population level, even though the effect was not universal in every organism.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "5c15437cf4f35271302c1fcb67bda54d08fd6b778d0c2b30d8f6c2cbc16b1ddd",
+      "wordCount": 1257,
+      "visualElements": 2,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "organism-hardens-without-narrowing",
+      "decision": "reading-selection",
+      "reason": "Keep the separation of declining influence from converging form, together with the failed fresh fine-shape confirmation.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "5478e8ff04333d65be9c90c923ef492eea64f1c6355f4556678a3259b3ccff7e",
+      "wordCount": 2121,
+      "visualElements": 4,
+      "phrasesForRevision": [
+        "cleanest positive",
+        "the program",
+        "four plans"
+      ],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "synthesis-v5",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "3732ad3730819fda4b00cd5d6eb14e1829f3371a9d4239406894dfd34cf67c37",
+      "wordCount": 7880,
+      "visualElements": 28,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "organism-birth-causal-exploration",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The microscopic paths separated strongly, while timing and coarse adult phenotype remained comparatively canalized; robustness here coexists with substantial causal freedom.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "5fd7d765ce3c2a1e13603b90a51c3050cbc0b1db3d2581dd9eacb4ad2173c9af",
+      "wordCount": 1120,
+      "visualElements": 8,
+      "phrasesForRevision": [
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-basin-atlas",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The atlas shows a coordinated turn in information, intervention ranking, and developmental canalization, although the alignment was descriptive rather than a direct test of causation.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "172c79ec1759888f1e5ca92a7a7afbf3df0adc4e8b9a7f39829449d4f567b567",
+      "wordCount": 917,
+      "visualElements": 14,
+      "phrasesForRevision": [
+        "clean next",
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "prospective-geometry-clock",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Whole-over-parts organization rose and high-score outcomes separated from ordinary predictability before formation, providing a developmental coordinate without an exact countdown.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "0fa5c0a28073329d0b935223dabdff79979e029afc2335deb8c0f23e766f5c20",
+      "wordCount": 500,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "earned",
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "prospective-transition-sign-flip",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. No universal negative-to-positive flip appeared; the action ranking changed strongly, while the later future effect remained individual and the mean turn went downward.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "69100a1852f5ac05645faa14b7ad08862ceddb070f9e1754f129367ddf4f6c62",
+      "wordCount": 626,
+      "visualElements": 10,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-alignment-window",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. It does not; the score remains steerable while its alignment with future narrowing changes across age, with most checkpoints fixed before their outcomes were seen.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "9ce69baeb31d34602b205d8802572d1f6e2751a3ba702b8ac9f513eed4e89ce7",
+      "wordCount": 747,
+      "visualElements": 8,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-tangent-controller",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. No; the intervention exposed different microfutures inside a canalized developmental event, with rare organisms showing more open basins.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "8b809f2cf748b16efcee8371d32ef351cd3ad116ce956a28eaeee1232e727ff7",
+      "wordCount": 593,
+      "visualElements": 12,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-fold-onset",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. It was already large in the earliest pre-event window examined, while morphology only gradually revealed the difference.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "770067c0aa563781fc7ea032d6c34fbc0a71d6fa641aced05635dd5b8e8f7473",
+      "wordCount": 1090,
+      "visualElements": 11,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "early-action-world-onset",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The measured response range was already broad at the earliest tested stage and stayed nearly flat, while early history still strongly affected when formation occurred.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "460da5f0a30e8abf14f348d21e7519324db6e596b382b6513760d397b697ee63",
+      "wordCount": 913,
+      "visualElements": 16,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-aperture-map",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The intervention retained the same effect from passages 24 through 48, so it was already able to redirect body development at the beginning of the tested window.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "43059c56b329c7934280e07cae595d11e04bb55157c5b04828c4a16fa20eaee1",
+      "wordCount": 857,
+      "visualElements": 11,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-arrow-birth",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Control along the preferred hidden-state direction increased sharply between passages eight and 12, before development settled into the later body, while sideways controls remained weaker.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "54f241e70b5c35705c95e94c124834c9b1d3825f491c3c17af509c0a3c84a358",
+      "wordCount": 839,
+      "visualElements": 14,
+      "phrasesForRevision": [
+        "earned",
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "prediction-falls-direction-appears",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The measurements support a transfer from ordinary predictability toward directional causal leverage, alongside visible expansion and increasing hidden spatial variation.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "834a8654e42de25907907bee1cc55af11ef08a7d1446790fefa6661fcb486d96",
+      "wordCount": 719,
+      "visualElements": 12,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-ignition-transplant",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Transplanting the direction changed later body size with the sign expected from a negative-feedback constraint, even though the visible starting field was held fixed.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "2ed51285fa1fd4a7185c84c58a2dc63c543f5f89b70f01e01aa38ff0a344a659",
+      "wordCount": 802,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-counterweight-dose",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The body followed a nonlinear dose response with a clear native-direction advantage, then reconstructed much of its usual path after the pulse.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "0f5f87c877ec545d5f20fc0e81f59df33a9b6c0f261f1e3349cbddb585619de9",
+      "wordCount": 656,
+      "visualElements": 8,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-counterweight-clamp",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The selected native direction retained its advantage beyond the last pulse, showing a privileged developmental control axis rather than a correlation with age.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "276307f645a0c0c53eea44d7db65d070d3e421907528f1ea2ee27a344c65a7c7",
+      "wordCount": 829,
+      "visualElements": 11,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "native-tangent-intervention",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Forward and reverse interventions began from identical visible fields but produced different later geometry. At one age, the forward intervention also increased the diversity of later outcomes.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "c7e0481838052608de14267e4807699951982ad123205efe0f24c69b21bf6861",
+      "wordCount": 831,
+      "visualElements": 13,
+      "phrasesForRevision": [
+        "earned",
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "fresh-phase-operator",
+      "decision": "reading-selection",
+      "reason": "Keep the pixel-identical intervention. The intervention and its decoy comparison establish a distinct result without claiming a universal hidden code.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "d724dc083c9f837bf1896706d44f4d08024fdd52a24214f20bb79f6dddfecc4a",
+      "wordCount": 849,
+      "visualElements": 7,
+      "phrasesForRevision": [
+        "magic texture",
+        "earned",
+        "word mostly",
+        "before the organism"
+      ],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "commitment-branching-intervention",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Across 30 ancestors, the higher-scoring siblings reached a narrower set of passage-900 fields on average, although twelve widened; the timing interval still included no change, and the experiment could not separate the coordinate from the action chosen to reach it.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "a52330d0c866d5394df46cc5597a0a7e26b0b82a01d334a01e29d5f664f9631c",
+      "wordCount": 1280,
+      "visualElements": 16,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "commitment-fixed-age-dose",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. It cannot reliably do so; the original information ordering closed within four steps, and later replays drove large changes along other directions.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "65eb16b2a83aafdbcdc52a15fbe8efa98f50c1767299bcc895efc93ab4c5cc91",
+      "wordCount": 771,
+      "visualElements": 7,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "adaptive-commitment-controller",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Yes; action rankings re-indexed almost completely, and adaptive selection restored both the local split and an independent contraction of microscopic futures.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "3b1af4504a2354d4862e5aa4fc09e7b2231b62c61adc53307687751ec7ea4c1c",
+      "wordCount": 684,
+      "visualElements": 6,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "adaptive-rescue-cycle",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. No. The score was controllable at passage 60, but the intervention no longer narrowed later futures in the same way; the action selected at passage 45 retained more of that earlier effect.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "1af749bbcf85f16f80de9c882be3164b995f42e5535f6869e1e814f4b95df05a",
+      "wordCount": 809,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "commitment-gate-repertoire",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The open state had roughly five more effective future dimensions than the closed state, broader raw outcome distances, and stronger sensitivity to the second action.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "41ec5fadc7d9e891665be38ff9ba7c5dd69fff56be3cbf6fdb13b78b70e3c0c7",
+      "wordCount": 680,
+      "visualElements": 1,
+      "phrasesForRevision": [
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "gate-conditioned-morphology-navigation",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The developmental mode persisted after the action-level advantage disappeared, and the open branch became larger, longer, and more skeletal under the same later causes.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "e45cc36ef376c7df6f279f49f6998aa6fe42bcf2678552379c15d789faa384c2",
+      "wordCount": 754,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "gate-conditioned-morphology-reversal",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The bias was strong but negotiable; both states reached opposing body plans, and part of the change persisted after release before relaxing.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "308fa12d590ab0baa44fc9d0bbb41d6a5e13e0ed01af15be6bb5ff5223e5daae",
+      "wordCount": 816,
+      "visualElements": 14,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "morphology-information-return",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: In the open starting state, a clear gate-score difference appeared after 128 untouched steps and was essentially uncorrelated with the organism-level morphology split.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "7e821bf47ab7576097b4b441399e98d1a0b5642c6dc87f27a264fd667d0ab43c",
+      "wordCount": 608,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "information-body-return",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: No; their later trajectories rebounded apart without another intervention, and fresh identical actions preserved rather than created that hidden split.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "92cd5a667e4d57670d281ac4430b9851721de8e7ccc92fd6dd240d6d724f490e",
+      "wordCount": 631,
+      "visualElements": 7,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "canalization-rescue",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Intervention effects became more orderly and formation timing recovered along a graded curve, with no single threshold across the tested repair doses.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "29c35bc5ce39172894aa72a2538f1bce021195bb725721efa7750f413adfe77b",
+      "wordCount": 806,
+      "visualElements": 16,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "delayed-canalization-rescue",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. No; rescue became anti-rescue before passage eight, even though the operation preserved current inventory and was not simply a larger disturbance.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "a64758db472ca8d6d0a548c91451a1745dc63cddfe648eecb9a6ec51a41e7b9e",
+      "wordCount": 879,
+      "visualElements": 25,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "commitment-window",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Most of the sign change occurred by passage three, alongside a nearby morphological turn, while equal operation size could not explain the reversal.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "2279b4a43627d35ac8db228486acd05aa1808060b0b542a08d1d3f219d4d9e83",
+      "wordCount": 1061,
+      "visualElements": 15,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "commitment-rewrite",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Yes; matched physical displacement wrote opposite information-geometric memories, while the same ancestral pulse changed meaning when delayed beyond the commitment boundary.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "f4079ce2e114b3a45006479718daea7d9de683df3c466ea740ee60d1ced1b8e3",
+      "wordCount": 881,
+      "visualElements": 12,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-susceptibility-map",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The intervention's influence stayed nearly constant and then fell by about fourteen percent just after the structural transition. Fixed replication splits showed the same pattern.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "930d07a3e603c96a3be694adb966e0dc6088721edd384dfb7f19c16e2081853c",
+      "wordCount": 819,
+      "visualElements": 4,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "causal-history-order",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Every ancestor retained the order split after release and under identical challenge seeds, with memory appearing mainly in future position rather than breadth.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "6490826cfca722c393ded6db9a73900f7e73de1d80adea39ebb2ab2a814c574b",
+      "wordCount": 767,
+      "visualElements": 4,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "causal-return-loop",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: They have not; the route remained encoded in body, dynamics, and future position, so the scalar compressed multiple history-dependent causal states onto one level.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "4d2392fb9823ea76c2de65ac50bc4afe93b28df2cfea901617001ff135b62949",
+      "wordCount": 854,
+      "visualElements": 6,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "causal-score-sheets",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The landscape is folded: history is a large state coordinate, the low-to-high direction depends on the sheet, and later future clouds move without a simple change in volume.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "9525e2e0c83a189cc6eb1ea2119be7dfbaa96fb0b0d76e6c963dc085779b4950",
+      "wordCount": 944,
+      "visualElements": 10,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-order",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: It does; opposite orders produced different body futures, which rules out both simple dose integration and a last-pulse explanation for the observed direction.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "bcb3240f9fcf2ba86cec9e87dc2f344acf58020c182700277b444acc2bea452c",
+      "wordCount": 824,
+      "visualElements": 6,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-order-age-map",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The intervention changed body shape through passage 32, but that effect was absent at passage 48. The change therefore occurred somewhere between those two measurements; a fresh cohort also reproduced the earlier response.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "30cb7714c28307cda96f78b0d9f2c7b7e6c2885330f748a193bd82d2fd757bb9",
+      "wordCount": 990,
+      "visualElements": 7,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-address",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: At passage 32, the age-matched intervention specifically expanded the body. At passage 48, the response was less age-specific and affected connectivity instead, so the effect depended on the developmental state receiving the intervention.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "b4d78ebfdb7e2d67245d75d34254ca36504a0c9fa721b09f43c29bead3521e9c",
+      "wordCount": 883,
+      "visualElements": 11,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-susceptibility-transplant",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The passage-32 body remained responsive with hidden organization from passage 48, while the passage-48 body remained unresponsive with organization from passage 32. In this transplant, the response followed the recipient body.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "9d13701b6e5b6c0b28fea9b2a809bf94cf6eccc2935f079f2e4c4f9107e25500",
+      "wordCount": 743,
+      "visualElements": 11,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-topology-dose-transition",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The dose curve branched, with topology peaking at half dose and radius responding most clearly at two to four times dose, despite matched direction and zero-net structure.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "d8333a608064541dd752bb9c47596c58df8d82e50c0aaa5f754620f0e9bb2141",
+      "wordCount": 742,
+      "visualElements": 6,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-fission-lineage",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The signal vanished when components had to carry even a small fraction of total mass, so the experiment found density-specific fraying rather than a rise in daughter incidence.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "75f79931deee2c09c8bb0bb64e91216ac0872583818e9a6ba1ad8172824b82f2",
+      "wordCount": 724,
+      "visualElements": 8,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-decoder-memory",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Yes; one order reached inward while the other remained nearer the surface, and connectivity retained a more specific memory than overall size.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "f558c86f7f858f62ca23aae6d7db077e802a241f43bc446b3142531664542d8e",
+      "wordCount": 824,
+      "visualElements": 8,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-depth-memory-timescale",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The trace behaved as a delayed, recurrent process rather than a fading scar, with different gaps exposing inward and surface-biased responses.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "63f073e82f8458d121ec2f3bb7584da6cbe53ce8a7afe1f653e87eedaa03fec9",
+      "wordCount": 780,
+      "visualElements": 7,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-echo-tomography",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The response behaves like a traveling reorganization between the body's surface and core. Component spacing follows the later response curve even when pixel differences remain subtle.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "f3da6ec073717c080c01f2f4e7a9ba3d118d0fc93a25880930d46b5702fdf3a4",
+      "wordCount": 701,
+      "visualElements": 8,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "latent-composition-transplant",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Yes; the donor ratio biased the trajectory while preserving the host's body and global inventory, and the recipient remained its own organism rather than becoming a donor replica.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "3ac51ffc500f73066964f60415189d8cc917512bf6cfcb4e6282f696dc0e7fa2",
+      "wordCount": 791,
+      "visualElements": 2,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "composition-control-surface",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Both donor directions redirected development, but contraction depended more strongly on the host's overall channel balance and appeared earlier than expansion.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "fea6e592b0df685af82b6f8b3fa71a864638518762fa76f2395c32109bd6c705",
+      "wordCount": 1337,
+      "visualElements": 4,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "latent-composition-code",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The evidence points to a spatially organized expansion signal and a contraction signal carried more by overall composition. Even partial transplants changed the later body.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "ea67896ecd2ba3b34928b4053ca0e04e680084d79fccb4140013499270a52092",
+      "wordCount": 673,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "spatial-code-resolution",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: The response depended on relationships within the pattern, tolerated changes in position and orientation, and was distributed across scales. Expansion depended more on the center, while contraction was more diffuse.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "e0da964ddb92e97da2105cce038d23041d6caa86620d037908804a5e93f660b6",
+      "wordCount": 751,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "spatial-code-syntax",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Expansion required broad spatial relationships, whereas contraction retained a usable fine-scale component and responded differently to orientation.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "eaacc9a027672f17c95931a244f71ed9ea106852808592fec2ec02591d7ecaac",
+      "wordCount": 713,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "coherent-phase-path",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: It does not; equal amounts of deformation can lead along different developmental routes, with expansion generally more phase-sensitive than compactification.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "f9e7f1490a954f690c15338ebad639b847a2216948c07f7d222c8f4801486bb7",
+      "wordCount": 548,
+      "visualElements": 2,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "phase-direction-atlas",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Most starting states opened routes on both sides, while distance from the intact pattern barely predicted where a phase direction would lead.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "80a7bcb453bc96e3bd1dcb851738f6c2c43ce06453985d2eb0e56a061bed6f9b",
+      "wordCount": 690,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "shared-phase-vocabulary",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Most response rankings were specific to each body, although one pattern produced a similar directional effect across several families.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "20087c1d28e2855db463cc247dfbc1f2313e7e1ddad741632b25f95487bb5e70",
+      "wordCount": 693,
+      "visualElements": 2,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "shared-phase-field-orbit",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Negating the pattern favored contraction instead of expansion, while rotations and reflections showed that the response depended on orientation. This dependence became more visible later in development.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "52112d11a3a744ecb98884fc97a606282c46484705b0b651f8851c4754c0c7a6",
+      "wordCount": 800,
+      "visualElements": 6,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "tangent-memory-dose-response",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Identity memory rose with dose along the forward direction and weakened along the backward direction, with spatial and founder-composition memory moving together.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "dbf4732a53ae101deca62185d65c6f1cde52bacdb207bdd5e116ce2ee6165b5b",
+      "wordCount": 1176,
+      "visualElements": 4,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "synthesis-v6",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "bc724061c876882640730996f4a2e7c578d5cdbacb9aa417f52e80234432bf1e",
+      "wordCount": 10016,
+      "visualElements": 35,
+      "phrasesForRevision": [
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "synthesis-v1",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "63e71557563942c1acc8d16e70274449e94c741526af7c8dbba11049e4a3f193",
+      "wordCount": 3715,
+      "visualElements": 11,
+      "phrasesForRevision": [
+        "earned",
+        "the program",
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "synthesis-v2",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "6f8e233a0b240427c6ca23a647fd7069706efcff107589fa5d3c2c74dbdd3272",
+      "wordCount": 4176,
+      "visualElements": 5,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "synthesis-v3",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "8177ad08babbd433be3ce4628141b0ff358652cea9690878d40f6b962c4875ad",
+      "wordCount": 3620,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "synthesis-v4",
+      "decision": "superseded",
+      "reason": "Retain for provenance; the current synthesis replaces this overview. Do not present successive versions as independent findings.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "fcbcfe5264274387602b67fac9bc93b5918b3169c22992bfc57abdc5cd623740",
+      "wordCount": 6156,
+      "visualElements": 9,
+      "phrasesForRevision": [
+        "the program",
+        "four plans",
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "goal-state-tomography",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The experiment did not create enough visible displacement to test recovery, so it left the goal-state question unresolved rather than demonstrating return.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "2bd4be663540316ce4bc878f68a12d283a19d4a4e734d0461b902f706bcea853",
+      "wordCount": 2634,
+      "visualElements": 1,
+      "phrasesForRevision": [
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "orthogonal-pulse-release-pilot",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. This pilot showed state steering but not restoration control, because the score response was real and transient while the restoration comparisons stayed flat.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "82e8d146bd596e24e717bde02bdf9f6caaac08131bff8954851bd9f93c9aad7e",
+      "wordCount": 1099,
+      "visualElements": 1,
+      "phrasesForRevision": [
+        "clean next",
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "preinjury-recovery-confirmation",
+      "decision": "reading-selection",
+      "reason": "Keep the negative recovery result in the reading selection. It explains why the research question changed and prevents a success-only account.",
+      "reviewDepth": "close editorial reading",
+      "sourcePublicSha256": "421097ee31854c3014a1496fc3140f57cdd2e0052d8b8bbabf481f2035242bcb",
+      "wordCount": 1311,
+      "visualElements": 6,
+      "phrasesForRevision": [
+        "clean next",
+        "what can we honestly",
+        "nothing was cherry"
+      ],
+      "visualAssessment": "Data-bearing figures present; keep the comparison and controls together."
+    },
+    {
+      "id": "reservoir-causal-steering",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The required primary chain did not separate, so the experiment supports changed compositional dynamics under policy but not a causal-emergence account of restoration.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "beb5553d19bc8e128126e4ae02b199f02545437180c56cd35aa615d2f933aede",
+      "wordCount": 1519,
+      "visualElements": 0,
+      "phrasesForRevision": [
+        "clean next",
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "reservoir-recurrence-census",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. Recurrence occurred, but the label structure was too sparse to evaluate the information score on this cohort; the score was never calculated here and therefore did not fail this test.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "29a83a4888d700274bf8a187724c4d9180fa413ce4d48b4a42befc10d231d40f",
+      "wordCount": 1975,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "clean next",
+        "earned"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "reservoir-temporal-precursor",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The broad relationship was flat, while all three measurable core onsets showed a narrower pre-onset rise that remained an exploratory hypothesis rather than a prospective result.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "df359950809279f079c261bf6afb2f28a40c13e5bd19a4ecbc6596142318226f",
+      "wordCount": 1126,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "clean next"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "causal-compass-peak",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The effect changed with age and was heterogeneous across organisms, an exploratory result that motivated later prospective alignment and sign-flip tests.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "21955f0d8fafb808c6e5ea712e7608156cc052c82ce120b82231e7a6fa1628df",
+      "wordCount": 685,
+      "visualElements": 18,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-causal-plasticity-window",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The reused cohort showed a plateau followed by reduced steerability, which motivated a fuller age map and disjoint-cohort confirmation rather than standing alone as the final estimate.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "a8544dd0bee08203d60f2b7647e007dd9ec2ca8c8b8a8343178d4b1752356193",
+      "wordCount": 1035,
+      "visualElements": 4,
+      "phrasesForRevision": [
+        "before the organism"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "developmental-commitment-aperture",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The coarse body-allocation primary did not separate, and the finer peak-only result did not reproduce in the later fresh confirmation, so this report records the original lead rather than a settled effect.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "783e1c95ee926dbd13903b112b225a211c72a6f253679140e57d3464c03b01c0",
+      "wordCount": 1164,
+      "visualElements": 6,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "fresh-organic-q40-replication",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The overall spread of outcomes stayed flat on average, while transition timing and the geometry of individual futures changed. The informative differences concerned paths and alignment rather than total volume.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "ae66cbe035c4e68be05860b75b85136626b88549df52520a2ae8d85ccc8d8cab",
+      "wordCount": 1080,
+      "visualElements": 14,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "tangent-future-aperture",
+      "decision": "supporting-record",
+      "reason": "Retain the experimental record and source links without giving it equal editorial prominence. The comparison is narrower than the selected studies. The reused cohort showed narrower dominant-body allocation under the forward push, while other morphology remained diverse; this lead was kept separate from the later fresh fine-shape confirmation, which was null.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "c632454375357f3bcda691dad1be5d91abc7e77029c965e9234d3ac4db266ea3",
+      "wordCount": 972,
+      "visualElements": 3,
+      "phrasesForRevision": [
+        "clean next"
+      ],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    },
+    {
+      "id": "tangent-induced-causal-grammar",
+      "decision": "consolidate",
+      "reason": "A distinct technical comparison, but part of a serial investigation. Combine it with adjacent studies before promoting another standalone article. Preserve the reported finding: Resistance to a later overwrite changed, but the size and direction of that change varied across organisms. The result therefore became a more specific question about how response depends on dose.",
+      "reviewDepth": "comparative inventory and prose screening",
+      "sourcePublicSha256": "6fe570f9a4c511cc489da58a85ce35c73e2627dcf34c998a85db7ca43d66e5d2",
+      "wordCount": 961,
+      "visualElements": 3,
+      "phrasesForRevision": [],
+      "visualAssessment": "Presence is recorded, not a visual-quality approval; inspect in context before promotion."
+    }
+  ]
+}

@@ -1,0 +1,1551 @@
+<!doctype html>
+<html lang="en" class="specter-report" data-specter-surface="bg-paper">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A plain-English report of the recorded GARD-inspired reservoir recurrence census in Flow Lenia.">
+  <title>Reservoir Recurrence Was Too Sparse to Test the Score</title>
+  <style>
+    :root {
+      --bg: #ececea;
+      --paper: #fffefa;
+      --ink: #0a0d12;
+      --muted: #64666b;
+      --rule: rgba(10, 13, 18, .19);
+      --orange: #ff5a1f;
+      --orange-soft: #ffddcf;
+      --green: #357653;
+      --green-soft: #d8eadf;
+      --red: #a84d3b;
+      --red-soft: #f2d8d1;
+      --blue: #5169c8;
+      --blue-soft: #dfe4fa;
+      --gold: #a98016;
+      --gold-soft: #f2e6bd;
+      --grey-1: #dedfdc;
+      --grey-2: #c5c7c8;
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --serif: Iowan Old Style, Baskerville, "Times New Roman", serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(10,13,18,.036) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10,13,18,.036) 1px, transparent 1px),
+        var(--bg);
+      background-size: 24px 24px;
+      font: 18px/1.5 var(--serif);
+    }
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 10px max(16px, calc((100vw - 1180px) / 2));
+      color: white;
+      background: var(--ink);
+      font: 700 11px/1.4 var(--mono);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .topbar nav { display: flex; gap: 18px; }
+    .topbar a { color: white; opacity: .72; text-decoration: none; }
+    .topbar a:hover { opacity: 1; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 28px auto 80px; }
+    section {
+      margin-top: 24px;
+      padding: clamp(24px, 4vw, 52px);
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      box-shadow: 8px 8px 0 rgba(10,13,18,.10);
+    }
+    .hero {
+      min-height: 670px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(310px, .8fr);
+      gap: clamp(30px, 5vw, 68px);
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "Φ";
+      position: absolute;
+      right: -35px;
+      bottom: -155px;
+      color: rgba(255,90,31,.07);
+      font: 800 430px/.8 var(--sans);
+      pointer-events: none;
+    }
+    .eyebrow, .section-no, .micro {
+      font: 750 11px/1.4 var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .eyebrow, .section-no { color: var(--orange); }
+    h1, h2, h3, h4 { margin: 0; font-family: var(--sans); line-height: .98; letter-spacing: -.045em; }
+    h1 { margin-top: 22px; font-size: clamp(58px, 9vw, 118px); max-width: 780px; }
+    h1 span { color: var(--orange); }
+    h2 { font-size: clamp(40px, 5.6vw, 70px); }
+    h3 { font-size: clamp(25px, 3vw, 34px); line-height: 1.05; }
+    h4 { font-size: 21px; line-height: 1.1; }
+    .dek { max-width: 760px; margin: 28px 0 0; font-size: clamp(21px, 2.3vw, 30px); line-height: 1.3; }
+    .hero-note { max-width: 730px; margin: 24px 0 0; color: var(--muted); }
+    .verdict {
+      position: relative;
+      z-index: 2;
+      padding: 28px;
+      color: white;
+      background: var(--ink);
+      border-top: 9px solid var(--orange);
+      transform: rotate(1deg);
+    }
+    .verdict .stamp { color: var(--orange); font: 750 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .verdict strong { display: block; margin: 20px 0; font: 850 clamp(36px, 5vw, 62px)/.94 var(--sans); letter-spacing: -.05em; }
+    .verdict p { margin: 0; color: #d8d9dc; }
+    .headline-stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--ink); }
+    .headline-stats article { min-height: 145px; padding: 22px; border-right: 1px solid var(--ink); }
+    .headline-stats article:last-child { border: 0; }
+    .headline-stats strong { display: block; color: var(--orange); font: 850 48px/.95 var(--sans); letter-spacing: -.04em; }
+    .headline-stats span { display: block; margin-top: 12px; color: var(--muted); font-size: 15px; line-height: 1.25; }
+    .section-head { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 20px; margin-bottom: 38px; }
+    .section-no { padding-top: 8px; }
+    .section-intro { max-width: 850px; margin: 18px 0 0; font-size: 23px; line-height: 1.35; }
+    .research-path { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--ink); }
+    .path-step { min-height: 245px; padding: 22px; position: relative; border-right: 1px solid var(--ink); }
+    .path-step:last-child { border: 0; }
+    .path-step::after { content: "→"; position: absolute; z-index: 2; top: 28px; right: -14px; padding: 0 3px; color: var(--orange); background: var(--paper); font: 800 24px var(--sans); }
+    .path-step:last-child::after { display: none; }
+    .path-step .step-status { display: inline-block; padding: 4px 8px; color: white; background: var(--green); font: 750 10px var(--mono); text-transform: uppercase; }
+    .path-step.closed { background: var(--red-soft); }
+    .path-step.closed .step-status { background: var(--red); }
+    .path-step h3 { margin: 32px 0 12px; font-size: 22px; }
+    .path-step p { margin: 0; color: var(--muted); font-size: 15px; }
+    .translation { display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: stretch; margin-top: 24px; }
+    .translation article { padding: 26px; border: 1px solid var(--ink); background: #f4f3ee; }
+    .translation .versus { align-self: center; color: var(--orange); font: 850 28px var(--sans); }
+    .translation small { color: var(--muted); font: 750 10px var(--mono); text-transform: uppercase; }
+    .translation b { display: block; margin-top: 12px; font: 800 24px/1.12 var(--sans); }
+    .translation p { margin-bottom: 0; color: var(--muted); }
+    .closed-note { margin-top: 20px; padding: 18px 22px; color: white; background: var(--ink); border-left: 7px solid var(--orange); }
+    .closed-note b { color: var(--orange); font-family: var(--sans); }
+    .cycle-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+    .cycle-node { min-height: 205px; padding: 24px; border: 1px solid var(--ink); background: #f4f3ee; }
+    .cycle-node .symbol { color: var(--orange); font: 850 48px/.9 var(--sans); }
+    .cycle-node h3 { margin: 28px 0 10px; }
+    .cycle-node p { margin: 0; color: var(--muted); font-size: 16px; }
+    .cycle-arrow { align-self: center; color: var(--orange); font: 850 25px var(--sans); }
+    .four-cycle { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .simple-card { padding: 24px; border: 1px solid var(--ink); }
+    .simple-card.good { background: var(--green-soft); }
+    .simple-card.info { background: var(--blue-soft); }
+    .simple-card h3 { margin-bottom: 14px; }
+    .simple-card ul { margin: 0; padding-left: 20px; }
+    .simple-card li + li { margin-top: 7px; }
+    .cutoff-figure { margin-top: 24px; padding: 24px; border: 1px solid var(--ink); background: #f4f3ee; }
+    .cutoff-track { height: 58px; position: relative; display: grid; grid-template-columns: 1fr 3fr; border: 1px solid var(--ink); }
+    .cutoff-track .prefix { padding: 17px; background: var(--blue-soft); font: 750 12px var(--mono); }
+    .cutoff-track .future { padding: 17px; background: var(--green-soft); font: 750 12px var(--mono); }
+    .cutoff-track .line { position: absolute; left: 25%; top: -11px; bottom: -11px; width: 3px; background: var(--orange); }
+    .cutoff-labels { display: flex; justify-content: space-between; margin-top: 10px; color: var(--muted); font: 11px var(--mono); }
+    .cutoff-figure p { margin: 20px 0 0; }
+    .mechanics-grid { display: grid; grid-template-columns: 1fr 30px 1fr 30px 1fr; gap: 10px; align-items: center; }
+    .flow-arrow { color: var(--orange); font: 850 25px var(--sans); text-align: center; }
+    .field-card { min-width: 0; overflow: hidden; background: #f4f3ee; border: 1px solid var(--ink); }
+    .field-card header { min-height: 74px; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; padding: 12px; border-bottom: 1px solid var(--ink); }
+    .field-card header > span { width: 32px; height: 32px; display: grid; place-items: center; color: white; background: var(--ink); font: 750 12px var(--mono); }
+    .field-card header b, .field-card header small { display: block; }
+    .field-card header b { font: 800 20px var(--sans); }
+    .field-card header small { margin-top: 3px; color: var(--muted); font: 10px/1.25 var(--mono); text-transform: uppercase; }
+    .field-card img { display: block; width: 100%; height: auto; image-rendering: pixelated; background: var(--ink); }
+    .field-meta { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: end; padding: 13px; border-top: 1px solid var(--ink); }
+    .field-meta b { color: var(--muted); font: 750 10px var(--mono); text-transform: uppercase; }
+    .field-meta strong { grid-row: 1 / 3; grid-column: 2; font: 850 31px/.95 var(--sans); }
+    .field-meta small { color: var(--muted); }
+    .composition { display: flex; height: 20px; margin: 0 13px; border: 1px solid var(--ink); }
+    .composition i { display: block; height: 100%; }
+    .composition-labels { display: flex; flex-wrap: wrap; gap: 5px 10px; padding: 8px 13px 13px; color: var(--muted); font: 9px var(--mono); }
+    .composition-labels b { display: inline-block; width: 7px; height: 7px; margin-right: 3px; }
+    .visual-note { margin: 20px 0 0; color: var(--muted); font-size: 15px; }
+    .accounting { display: grid; gap: 12px; }
+    .account-row { display: grid; grid-template-columns: 230px minmax(100px, 1fr) 78px; gap: 16px; align-items: center; }
+    .account-row span { font: 750 12px var(--mono); }
+    .account-track { height: 30px; background: #e2e2df; border: 1px solid var(--ink); }
+    .account-fill { height: 100%; min-width: 2px; background: var(--orange); }
+    .account-row:nth-child(2) .account-fill { background: #e27b50; }
+    .account-row:nth-child(3) .account-fill { background: var(--blue); }
+    .account-row:nth-child(4) .account-fill { background: var(--green); }
+    .account-row:nth-child(5) .account-fill { background: var(--gold); }
+    .account-row strong { min-width: 0; font: 850 25px var(--sans); text-align: right; }
+    .status-bar { display: flex; min-width: 720px; height: 78px; margin-top: 34px; color: var(--ink); border: 1px solid var(--ink); }
+    .status-bar > span { min-width: 28px; display: grid; place-content: center; text-align: center; border-right: 1px solid var(--ink); }
+    .status-bar > span:last-child { border: 0; }
+    .status-bar b { font: 850 20px var(--sans); }
+    .status-bar small { font: 750 9px var(--mono); }
+    .status-positive { background: var(--green-soft); }
+    .status-negative { background: var(--red-soft); }
+    .status-prefix { background: var(--blue-soft); }
+    .status-cutoff { background: var(--gold-soft); }
+    .status-unlabelled { background: var(--grey-1); }
+    .status-bar .status-unlabelled:last-child { background: var(--grey-2); }
+    .legend { display: flex; flex-wrap: wrap; gap: 11px 20px; margin-top: 14px; color: var(--muted); font-size: 14px; }
+    .legend span::before { content: ""; width: 10px; height: 10px; display: inline-block; margin-right: 6px; border: 1px solid var(--ink); }
+    .legend .positive::before { background: var(--green-soft); }
+    .legend .negative::before { background: var(--red-soft); }
+    .legend .prefix::before { background: var(--blue-soft); }
+    .legend .cutoff::before { background: var(--gold-soft); }
+    .legend .unlabelled::before { background: var(--grey-1); }
+    .matrix-wrap { overflow-x: auto; }
+    .outcome-matrix { width: 100%; min-width: 680px; table-layout: fixed; border-collapse: collapse; font-family: var(--mono); }
+    .outcome-matrix th, .outcome-matrix td { height: 48px; padding: 6px; border: 1px solid var(--ink); text-align: center; }
+    .outcome-matrix thead th { font-size: 11px; background: var(--ink); color: white; }
+    .outcome-matrix thead th.shared-positive-schedule { color: var(--orange); }
+    .outcome-matrix tbody th { width: 66px; background: #f4f3ee; font-size: 12px; }
+    .outcome-matrix td span { font: 800 11px var(--mono); }
+    .outcome-matrix td.status-positive { box-shadow: inset 0 0 0 3px var(--green); }
+    .outcome-matrix td.status-negative { box-shadow: inset 0 0 0 3px var(--red); }
+    .matrix-note { margin: 22px 0 0; padding: 20px; background: var(--orange-soft); border-left: 7px solid var(--orange); }
+    .matrix-note b { font-family: var(--sans); }
+    .label-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+    .label-list { padding: 22px; border: 1px solid var(--ink); }
+    .label-list.positive-list { background: var(--green-soft); }
+    .label-list.negative-list { background: var(--red-soft); }
+    .label-list h3 { margin-bottom: 16px; }
+    .label-list ul { margin: 0; padding: 0; list-style: none; }
+    .label-list li { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; padding: 9px 0; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 12px; }
+    .label-list li span { grid-column: 1 / -1; color: var(--muted); }
+    .gate-result { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; }
+    .gate-panel { padding: 26px; border: 1px solid var(--ink); }
+    .gate-panel.target { background: var(--blue-soft); }
+    .gate-panel.actual { color: white; background: var(--ink); border-top: 8px solid var(--orange); }
+    .gate-panel .big { display: block; margin: 20px 0 10px; font: 850 clamp(50px, 7vw, 82px)/.85 var(--sans); letter-spacing: -.06em; }
+    .gate-panel.actual .big { color: var(--orange); }
+    .gate-panel p { margin-bottom: 0; }
+    .gate-versus { align-self: center; color: var(--orange); font: 850 26px var(--sans); }
+    .family-gates { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 24px; }
+    .family-gate { min-height: 120px; padding: 14px; border: 1px solid var(--ink); background: #f4f3ee; }
+    .family-gate > b { font: 850 19px var(--sans); }
+    .gate-counts { display: flex; gap: 5px; margin: 13px 0 7px; }
+    .gate-counts span { flex: 1; padding: 5px; text-align: center; font: 750 11px var(--mono); }
+    .positive-count { background: var(--green-soft); }
+    .negative-count { background: var(--red-soft); }
+    .family-gate small { color: var(--muted); font: 9px var(--mono); }
+    .phi-lock { display: grid; grid-template-columns: minmax(220px, .65fr) 1.35fr; gap: 30px; padding: 34px; color: white; background: var(--ink); border-top: 9px solid var(--orange); }
+    .lock-mark { display: grid; place-items: center; min-height: 270px; color: var(--orange); border: 1px solid #555960; font: 850 150px/.8 var(--sans); }
+    .phi-lock h3 { margin: 8px 0 20px; color: var(--orange); font-size: clamp(35px, 5vw, 60px); }
+    .phi-lock p { color: #d8d9dc; }
+    .equation { margin: 22px 0; padding: 18px; color: var(--ink); background: white; font: 750 clamp(15px, 2vw, 22px)/1.4 var(--mono); }
+    .mapping { width: 100%; margin-top: 28px; border-collapse: collapse; }
+    .mapping th, .mapping td { padding: 15px; border: 1px solid var(--ink); text-align: left; vertical-align: top; }
+    .mapping th { color: white; background: var(--ink); font: 750 11px var(--mono); text-transform: uppercase; }
+    .mapping td:first-child { font-weight: bold; background: #f4f3ee; }
+    .claim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .claim { padding: 28px; border: 1px solid var(--ink); }
+    .claim.yes { background: var(--green-soft); }
+    .claim.no { background: var(--red-soft); }
+    .claim h3 { margin-bottom: 18px; }
+    .claim ul { margin-bottom: 0; padding-left: 21px; }
+    .claim li + li { margin-top: 10px; }
+    .next { margin-top: 24px; padding: 30px; color: white; background: var(--ink); border-top: 8px solid var(--orange); }
+    .next h3 { color: var(--orange); }
+    .next ol { max-width: 900px; margin-bottom: 0; padding-left: 22px; }
+    .next li + li { margin-top: 10px; }
+    details { border-top: 1px solid var(--ink); }
+    details:last-of-type { border-bottom: 1px solid var(--ink); }
+    summary { cursor: pointer; padding: 18px 4px; font: 800 18px var(--sans); }
+    .details-body { padding: 0 4px 22px; color: #34373d; }
+    .receipt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .receipt { padding: 17px; border: 1px solid var(--rule); background: #f4f3ee; }
+    .receipt strong { display: block; font: 850 28px var(--sans); }
+    .receipt span { color: var(--muted); font-size: 14px; }
+    .hashes { width: 100%; border-collapse: collapse; font: 11px/1.4 var(--mono); }
+    .hashes th, .hashes td { padding: 9px; border-top: 1px solid var(--rule); text-align: left; vertical-align: top; }
+    .hashes td:last-child { word-break: break-all; }
+    .source-note { margin-top: 24px; padding: 18px; background: var(--blue-soft); border-left: 6px solid var(--blue); }
+    footer { width: min(1180px, calc(100% - 32px)); margin: -40px auto 50px; display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font: 10px/1.5 var(--mono); text-transform: uppercase; }
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .research-path { grid-template-columns: 1fr 1fr; }
+      .path-step { border-bottom: 1px solid var(--ink); }
+      .path-step:nth-child(even) { border-right: 0; }
+      .path-step:last-child { grid-column: 1 / -1; border-bottom: 0; }
+      .path-step:nth-child(even)::after { display: none; }
+      .mechanics-grid { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); }
+      .family-gates { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 720px) {
+      body { font-size: 16px; }
+      main { width: calc(100% - 18px); margin-top: 9px; }
+      section { padding: 22px 16px; box-shadow: 4px 4px 0 rgba(10,13,18,.1); }
+      .topbar nav { display: none; }
+      .section-head { grid-template-columns: 1fr; gap: 4px; }
+      .headline-stats { grid-template-columns: 1fr 1fr; }
+      .headline-stats article:nth-child(2) { border-right: 0; }
+      .headline-stats article:nth-child(-n+2) { border-bottom: 1px solid var(--ink); }
+      .research-path, .translation, .cycle-flow, .four-cycle, .label-lists, .gate-result, .phi-lock, .claim-grid { grid-template-columns: 1fr; }
+      .path-step { border-right: 0; }
+      .path-step:last-child { grid-column: auto; }
+      .path-step::after, .cycle-arrow { display: none; }
+      .translation .versus, .gate-versus { transform: rotate(90deg); justify-self: center; }
+      .account-row { grid-template-columns: 104px minmax(0, 1fr) 72px; gap: 8px; }
+      .status-bar { min-width: 610px; }
+      .family-gates { grid-template-columns: repeat(3, 1fr); }
+      .receipt-grid { grid-template-columns: 1fr 1fr; }
+      .mapping { font-size: 14px; }
+      footer { width: calc(100% - 18px); flex-direction: column; }
+    }
+    @media (max-width: 430px) {
+      .family-gates { grid-template-columns: 1fr 1fr; }
+      .headline-stats { grid-template-columns: 1fr; }
+      .headline-stats article { border-right: 0; border-bottom: 1px solid var(--ink); }
+      .receipt-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      .topbar { position: static; }
+      body { background: white; }
+      section { box-shadow: none; break-inside: avoid; }
+      details { break-inside: avoid; }
+    }
+  </style>
+<!-- specter-report-style:begin sha256=a28376706e9e68b08ed3d8e07cbe97c7b63be4817de94e0bf55c67a1184c09ce -->
+<style data-specter-shared>
+/*
+ * Specter Flow Lenia report skin.
+ *
+ * This is the only authored copy. _report-style/sync.py embeds it verbatim in
+ * every standalone report so the HTML files still work when shared alone.
+ */
+
+html.specter-report {
+  color-scheme: light;
+
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-dim: #81827c;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-blue-soft: #dfe6ff;
+  --specter-acid: #d8ff39;
+  --specter-acid-soft: #efffb2;
+  --specter-coral: #f05237;
+  --specter-coral-soft: #f9ded7;
+  --specter-green: #14795c;
+  --specter-green-soft: #d8efe6;
+  --specter-violet: #7652c8;
+  --specter-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --specter-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --specter-serif: Iowan Old Style, Baskerville, Georgia, "Times New Roman", serif;
+
+  /* Common aliases used across the report lineage. */
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --cream: var(--specter-ink);
+  --white: var(--specter-sheet);
+  --soft: #3e4248;
+  --muted: var(--specter-muted);
+  --dim: var(--specter-dim);
+  --faint: var(--specter-dim);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+
+  --blue: var(--specter-blue);
+  --blue2: var(--specter-blue);
+  --blue-soft: var(--specter-blue-soft);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --mint: var(--specter-green);
+  --green: var(--specter-green);
+  --green2: var(--specter-green);
+  --green-soft: var(--specter-green-soft);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --yellow: var(--specter-acid);
+  --yellow-soft: var(--specter-acid-soft);
+  --gold: var(--specter-coral);
+  --gold-soft: var(--specter-coral-soft);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --orange2: var(--specter-coral);
+  --orange-soft: var(--specter-coral-soft);
+  --red: var(--specter-coral);
+  --red2: var(--specter-coral);
+  --red-soft: var(--specter-coral-soft);
+  --rose: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+  --coral-soft: var(--specter-coral-soft);
+  --violet: var(--specter-violet);
+  --purple: var(--specter-violet);
+  --sans: var(--specter-sans);
+  --serif: var(--specter-serif);
+  --mono: var(--specter-mono);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-sheet);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-sheet"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report[data-specter-surface="bg-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+}
+
+html.specter-report[data-specter-surface="paper-panel"] {
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ground: var(--specter-ground);
+  --soft: #e7e0d4;
+}
+
+html.specter-report {
+  scroll-behavior: smooth;
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  margin: 0;
+  overflow-x: clip;
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+  font-family: var(--specter-sans);
+  text-rendering: optimizeLegibility;
+}
+
+html.specter-report body,
+html.specter-report p,
+html.specter-report li,
+html.specter-report td,
+html.specter-report th {
+  color: inherit;
+}
+
+html.specter-report a {
+  color: inherit;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+}
+
+html.specter-report a:hover { color: var(--specter-blue); }
+
+html.specter-report a:focus-visible,
+html.specter-report button:focus-visible,
+html.specter-report summary:focus-visible {
+  outline: 3px solid var(--specter-blue);
+  outline-offset: 4px;
+}
+
+html.specter-report h1,
+html.specter-report h2,
+html.specter-report h3,
+html.specter-report h4 {
+  color: inherit;
+  font-family: var(--specter-sans) !important;
+  font-weight: 850 !important;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+html.specter-report h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.06em;
+}
+
+/*
+ * Keep the poster voice without making a headline consume a whole monitor.
+ * Individual reports may choose smaller type; this caps only hero/masthead
+ * display titles that historically scaled directly with very wide viewports.
+ */
+html.specter-report .hero h1,
+html.specter-report .masthead h1,
+html.specter-report .hero-title,
+html.specter-report body > header h1,
+html.specter-report main > header h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(3.25rem, 6.4vw, 7rem) !important;
+  line-height: 0.9 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .hero {
+  min-height: auto !important;
+  padding-block: clamp(2.75rem, 5vw, 5.5rem) !important;
+}
+
+html.specter-report .section-head h2 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.35rem, 4.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
+  text-wrap: balance;
+}
+
+html.specter-report .lede,
+html.specter-report .lead,
+html.specter-report .deck,
+html.specter-report .dek,
+html.specter-report .standfirst,
+html.specter-report .plain,
+html.specter-report blockquote {
+  font-family: var(--specter-serif);
+}
+
+/* Two poster-style reports use a bare div.lead on the normalized paper
+ * surface. Keep this deliberately narrow so paragraph leads in dark headers
+ * retain their authored white foreground. */
+html.specter-report div.lead {
+  color: var(--specter-ink) !important;
+}
+
+/* Four legacy verdict headers use a dark authored surface without declaring a
+ * foreground on the header itself. Restore their deliberately pale lede. */
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) .lede {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > header:not(.hero):has(.kicker):has(.verdict) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.lead) h1,
+html.specter-report body > header:not(.hero):has(.kicker):has(.hero-facts) h1 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .eyebrow,
+html.specter-report .kicker,
+html.specter-report .label,
+html.specter-report .micro,
+html.specter-report .section-number,
+html.specter-report .section-no,
+html.specter-report .num {
+  color: var(--specter-blue) !important;
+  font-family: var(--specter-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.specter-report body > nav,
+html.specter-report .topbar,
+html.specter-report .top {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-acid) !important;
+  border-bottom-width: 4px !important;
+  box-shadow: none !important;
+}
+
+html.specter-report body > nav a,
+html.specter-report body > nav .brand,
+html.specter-report .topbar a,
+html.specter-report .topbar strong,
+html.specter-report .top a {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report body > nav .brand,
+html.specter-report .topbar .brand {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report section,
+html.specter-report header,
+html.specter-report footer {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report .sheet,
+html.specter-report .panel,
+html.specter-report .card,
+html.specter-report .mini,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .flow-box,
+html.specter-report .question-card,
+html.specter-report .metric,
+html.specter-report .finding,
+html.specter-report .stat,
+html.specter-report .data-viz,
+html.specter-report .hero-proof > div {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Normalized paper surfaces own their foreground. Some legacy descendants
+ * carried a hard-coded dark-theme heading or caption; make those inherit the
+ * surface they now visibly sit on. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Legacy .plain and .next blocks rely on their container foreground. The
+ * default is paper/ink; the dark exceptions below deliberately flip it. */
+html.specter-report .next {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report :is(.plain, .next) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Exact unclassed body-copy surface retained by the geometry-turn atlas. */
+html.specter-report .copy {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report .card,
+html.specter-report .visual,
+html.specter-report .case,
+html.specter-report .hero-card,
+html.specter-report .question-card {
+  box-shadow: var(--specter-shadow);
+}
+
+html.specter-report .hero-card,
+html.specter-report .hero-result,
+html.specter-report .highlight,
+html.specter-report .callout.acid {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same {
+  color: var(--specter-ink) !important;
+  background: var(--specter-acid) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .same * { color: inherit !important; }
+
+html.specter-report .callout,
+html.specter-report .thesis,
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .north-star,
+html.specter-report .result-banner,
+html.specter-report .plain-result,
+html.specter-report .closed-note,
+html.specter-report .phi-lock,
+html.specter-report .route,
+html.specter-report .route-future,
+html.specter-report .hetero-note,
+html.specter-report .matrix-wrap,
+html.specter-report .formula,
+html.specter-report .equation {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+/* Editorial cutouts used by the synthesis lineage. Their headings used to
+ * inherit the global ink color and disappear into the dark surface. */
+html.specter-report .definition,
+html.specter-report .ink-band,
+html.specter-report .closure-thesis {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .definition,
+html.specter-report .closure-thesis {
+  background: var(--specter-ink) !important;
+  border-color: var(--specter-ink) !important;
+}
+
+html.specter-report .definition *,
+html.specter-report .ink-band *,
+html.specter-report .closure-thesis *,
+html.specter-report .next-title * {
+  color: inherit !important;
+}
+
+html.specter-report .definition .eyebrow,
+html.specter-report .closure-thesis .eyebrow {
+  color: var(--specter-acid) !important;
+}
+
+html.specter-report .callout *,
+html.specter-report .thesis *,
+html.specter-report .verdict *,
+html.specter-report .hero-aside *,
+html.specter-report .north-star *,
+html.specter-report .result-banner *,
+html.specter-report .plain-result *,
+html.specter-report .closed-note *,
+html.specter-report .phi-lock *,
+html.specter-report .route *,
+html.specter-report .route-future *,
+html.specter-report .hetero-note * {
+  color: inherit !important;
+}
+
+html.specter-report .verdict,
+html.specter-report .hero-aside,
+html.specter-report .result-banner {
+  border-top: 8px solid var(--specter-coral) !important;
+}
+
+html.specter-report .dark,
+html.specter-report .inverse,
+html.specter-report .ink {
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+}
+
+html.specter-report .dark h1,
+html.specter-report .dark h2,
+html.specter-report .dark h3,
+html.specter-report .inverse h1,
+html.specter-report .inverse h2,
+html.specter-report .inverse h3,
+html.specter-report .ink h1,
+html.specter-report .ink h2,
+html.specter-report .ink h3 {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report .dark .lede,
+html.specter-report .dark .lead,
+html.specter-report .dark .deck,
+html.specter-report .dark .dek,
+html.specter-report .dark .standfirst,
+html.specter-report .inverse .lede,
+html.specter-report .inverse .lead,
+html.specter-report .inverse .deck,
+html.specter-report .inverse .dek,
+html.specter-report .inverse .standfirst,
+html.specter-report .ink .lede,
+html.specter-report .ink .lead,
+html.specter-report .ink .deck,
+html.specter-report .ink .dek,
+html.specter-report .ink .standfirst {
+  color: inherit !important;
+}
+
+/* Authored dark sub-surfaces that do not carry a .dark/.inverse marker. The
+ * shared paper skin must preserve their local foreground instead of feeding
+ * the global ink alias back into a near-black panel. */
+html.specter-report section#next.next,
+html.specter-report div.next:has(> h3),
+html.specter-report section#next .next > div,
+html.specter-report section#memory .memory > div,
+html.specter-report figure.future-card,
+html.specter-report .films > .film,
+html.specter-report .arrow > .mode,
+html.specter-report .frame-grid > .time-column,
+html.specter-report .fans > .fan,
+html.specter-report .frame-pair,
+html.specter-report .explain > article,
+html.specter-report .organisms > .organism-card,
+html.specter-report .chart-card,
+html.specter-report .sequence figure:has(> img) {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report div.next:has(> h3) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#next .next > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section#memory .memory > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report figure.future-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .films > .film :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .arrow > .mode :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-grid > .time-column :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .fans > .fan :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .frame-pair :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .explain > article :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .organisms > .organism-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .chart-card :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .sequence figure:has(> img) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report section#next.next :is(.eyebrow, .kicker, .label),
+html.specter-report div.next:has(> h3) :is(.eyebrow, .kicker, .label) {
+  color: var(--specter-acid) !important;
+}
+
+/* A light card nested in a dark chapter is still a light card. Keep this
+ * guard after the dark-surface compatibility rules so the card's own surface,
+ * not its ancestor, decides heading/caption/body contrast. */
+html.specter-report :is(
+  .sheet,
+  .panel,
+  .card,
+  .mini,
+  .visual,
+  .case,
+  .flow-box,
+  .question-card,
+  .metric,
+  .finding,
+  .stat,
+  .data-viz
+) :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .hero-proof > div :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+/* Final light/dark ownership repairs for legacy report structures that reused
+ * the same class names on opposite surfaces. Keep these selectors structural:
+ * the surrounding surface, not a generic class alias, decides the foreground. */
+html.specter-report section#next:has(> .intro) > .next,
+html.specter-report section#next:has(> .intro) > .next :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report .state-strip .frames > figure > figcaption,
+html.specter-report section#organism .frames > figure > figcaption,
+html.specter-report section:not(#memory):not(#map):has(+ section#meaning) > .wrap > .frames > figure > figcaption,
+html.specter-report .aperture-map figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report article.case .frames > figure:has(> img) > figcaption {
+  color: var(--specter-ink) !important;
+}
+
+html.specter-report section > article.case > .frames > figure:has(> img) > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#map .frames > figure > figcaption {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing,
+html.specter-report section.next > .wrap.chapter {
+  color: var(--specter-sheet) !important;
+}
+
+html.specter-report section#next.next > .next.swing :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report section.next > .wrap.chapter :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report table {
+  border-collapse: collapse;
+  background: var(--specter-sheet);
+}
+
+html.specter-report th {
+  background: var(--specter-ink);
+  color: var(--specter-sheet) !important;
+  font-family: var(--specter-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.specter-report th,
+html.specter-report td {
+  border-color: var(--specter-line) !important;
+}
+
+html.specter-report code,
+html.specter-report pre {
+  font-family: var(--specter-mono);
+}
+
+html.specter-report ::selection {
+  color: var(--specter-ink);
+  background: var(--specter-acid);
+}
+
+@media (max-width: 760px) {
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: relative;
+  }
+
+  html.specter-report h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 640px) {
+  html.specter-report .hero h1,
+  html.specter-report .masthead h1,
+  html.specter-report .hero-title,
+  html.specter-report body > header h1,
+  html.specter-report main > header h1 {
+    font-size: clamp(2.75rem, 11vw, 3.25rem) !important;
+    line-height: 0.92 !important;
+    overflow-wrap: anywhere !important;
+    text-wrap: wrap;
+  }
+
+  /* Long source receipts must wrap rather than disappear beyond the phone. */
+  html.specter-report footer {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  html.specter-report footer code,
+  html.specter-report footer .receipt,
+  html.specter-report footer .hash {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media print {
+  html.specter-report,
+  html.specter-report body {
+    background: white !important;
+  }
+
+  html.specter-report body > nav,
+  html.specter-report .topbar,
+  html.specter-report .top {
+    position: static !important;
+  }
+
+  html.specter-report .card,
+  html.specter-report .visual,
+  html.specter-report .case,
+  html.specter-report .hero-card,
+  html.specter-report .question-card {
+    box-shadow: none !important;
+  }
+}
+</style>
+<!-- specter-report-style:end -->
+<style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><style data-specter-public-polish>
+/*
+ * Publication finish for the standalone causal-emergence reports.
+ *
+ * The research reports retain their source HTML and individual visual grammar.
+ * This late, shared layer repairs recurring presentation problems in older
+ * reports without changing their figures, data, or stable release URLs.
+ */
+
+html.specter-report {
+  color-scheme: light;
+  --specter-ground: #f2eee3;
+  --specter-sheet: #fffdf7;
+  --specter-ink: #131821;
+  --specter-muted: #63665f;
+  --specter-line: #c8c1b4;
+  --specter-blue: #254fd4;
+  --specter-acid: #d8ff39;
+  --specter-coral: #f05237;
+  --specter-green: #14795c;
+  --specter-chart-grid: #d8d1c4;
+  --specter-chart-shadow: 7px 7px 0 rgba(19, 24, 33, 0.14);
+  --specter-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: var(--specter-ground);
+  --paper: var(--specter-ground);
+  --panel: var(--specter-sheet);
+  --sheet: var(--specter-sheet);
+  --ink: var(--specter-ink);
+  --text: var(--specter-ink);
+  --muted: var(--specter-muted);
+  --line: var(--specter-line);
+  --rule: var(--specter-line);
+  --edge: var(--specter-line);
+  --blue: var(--specter-blue);
+  --cyan: var(--specter-blue);
+  --teal: var(--specter-green);
+  --green: var(--specter-green);
+  --lime: var(--specter-acid);
+  --acid: var(--specter-acid);
+  --amber: var(--specter-coral);
+  --orange: var(--specter-coral);
+  --pink: var(--specter-coral);
+  --coral: var(--specter-coral);
+}
+
+html.specter-report[data-specter-surface="bg-paper"] {
+  --paper: var(--specter-sheet);
+}
+
+html.specter-report,
+html.specter-report body {
+  background: var(--specter-ground) !important;
+}
+
+html.specter-report body {
+  color: var(--specter-ink) !important;
+  background:
+    linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
+    var(--specter-ground) !important;
+  background-size: 24px 24px !important;
+}
+
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
+  color: var(--specter-green) !important;
+}
+
+/* Older reports often put a small provenance nav inside the report column. */
+html.specter-report main > nav {
+  align-items: center;
+  min-height: 3.25rem;
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  padding: 0.8rem 1rem;
+  color: var(--specter-sheet) !important;
+  background: var(--specter-ink) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--specter-acid) !important;
+  font-family: var(--specter-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+html.specter-report main > nav :is(a, span, strong) {
+  color: inherit !important;
+}
+
+/*
+ * Early chart generators drew directly onto a near-black SVG. Give those
+ * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
+ * Charts already composed inside a semantic figure keep their authored skin.
+ */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+html.specter-report :is(div, article, figure).chart,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  color: var(--specter-ink) !important;
+  background: var(--specter-sheet) !important;
+  border: 2px solid var(--specter-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--specter-chart-shadow) !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+  margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+  padding: clamp(1rem, 2vw, 1.6rem) !important;
+}
+
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
+  color: inherit !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
+html.specter-report :is(div, article, figure).chart svg text,
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
+  fill: var(--specter-muted) !important;
+  font-family: var(--specter-mono) !important;
+  font-weight: 700;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
+  fill: var(--specter-ink) !important;
+  font-weight: 850 !important;
+}
+
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
+  stroke: var(--specter-chart-grid) !important;
+}
+
+/* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
+html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
+html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
+html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
+html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
+html.specter-report svg [stroke="#ef7d9a"],
+html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
+html.specter-report svg [fill="#ef7d9a"],
+html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
+
+@media (max-width: 640px) {
+  html.specter-report main > nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
+    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
+  }
+
+  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
+    font-size: 24px !important;
+  }
+}
+
+@media print {
+  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
+  html.specter-report :is(div, article, figure).chart,
+  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
+    box-shadow: none !important;
+  }
+}
+
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
+  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
+  font-family: var(--editorial-display) !important;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
+html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
+html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
+html.anatomical-editorial .hero-specimens { margin: 0; }
+html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
+html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
+html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
+html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
+html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
+html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
+html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
+html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
+html.anatomical-editorial .synthesis .metric span { color:#414c45; }
+html.anatomical-editorial .opening-method { margin:1rem 0; }
+html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
+html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
+html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
+html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
+html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
+html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
+html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
+html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
+html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
+html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
+html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
+html.anatomical-editorial .caption { border:0; }
+html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
+html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
+html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
+html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
+html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
+html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
+html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
+html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
+html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
+html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
+html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
+html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
+html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
+html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
+html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
+html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
+html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
+@media(max-width:800px) {
+ html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
+ html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
+ html:has(.editorial-synthesis) .hero-answer { transform:none; }
+ html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
+}
+html:has(.editorial-synthesis) .ink { border-block:0; }
+html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
+html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
+html:has(.editorial-synthesis) .section-no { border:0; }
+@media(max-width:700px) {
+ html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
+ html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
+ html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
+ html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
+ html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
+}
+html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
+
+html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
+html.anatomical-editorial .measurement-comparison,
+html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
+html.anatomical-editorial .measurement-comparison h3,
+html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
+.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
+.measurement-heading { font: 12px/1.5 monospace; }
+.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
+.measurement-track { position: relative; height: 18px; background: #fff8; }
+.measurement-track i { display: block; height: 100%; background: #18796f; }
+.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
+.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
+html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
+.experiment-method summary { cursor: pointer; font-weight: 700; }
+.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
+.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
+.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.orbium-frames figure { margin: 0; }
+.orbium-frames img { display: block; width: 100%; }
+.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
+#orbium-time-note { margin-top: 16px; }
+.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
+.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
+.comparison-story p { max-width: 72ch; line-height: 1.65; }
+.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
+.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 650px) {
+  .measurement-heading { display: none; }
+  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
+  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
+  .orbium-frames { gap: 10px; }
+}
+
+#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
+html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
+html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
+
+html:has(.editorial-synthesis) .evidence {
+  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
+}
+html:has(.editorial-synthesis) .evidence::before { content: none; }
+html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
+html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
+html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
+html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
+.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
+.figure-introduction { max-width: 760px; margin-bottom: 30px; }
+.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
+.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
+.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
+.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
+.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.response-plots > div, .transplant-panels > div { min-width: 0; }
+.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
+.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
+.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
+.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
+.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
+.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
+#response-reading { font-size: 19px; }
+html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
+html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
+html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
+html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
+html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
+html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
+html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
+html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
+html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
+html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
+@media (max-width: 700px) {
+  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
+  .response-controls { gap: 14px; }
+  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
+  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
+}
+
+#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
+
+/* These explicit light fills label dark inset panels inside otherwise light charts. */
+html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
+html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
+
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
+  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
+}
+html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
+html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
+html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
+
+/* Native specimen panels retain their black image field. Their labels must
+ * remain legible after the surrounding report adopts paper-colored tokens. */
+html.specter-report .specimen > figcaption {
+  color: #d3d5d7 !important;
+  background: #050608;
+}
+html.specter-report .specimen > figcaption :is(b, strong, span) {
+  color: inherit !important;
+}
+
+/* Keep imported data labels readable on a phone instead of shrinking an
+ * entire desktop plot into a few hundred pixels. Captions still wrap. */
+@media (max-width: 700px) {
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+  html.specter-report div.chart > svg { min-width: 760px; }
+  html.specter-report div.card.chart > svg { min-width: 940px; }
+  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
+  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
+  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 var(--specter-mono);
+    color: var(--specter-muted);
+  }
+}
+
+@media (max-width: 700px) {
+  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
+  html.anatomical-editorial .figure > svg { min-width: 640px; }
+  html.anatomical-editorial .figure:has(> svg)::after {
+    content: "Scroll sideways to explore the figure →";
+    display: block;
+    margin-top: .7rem;
+    font: 400 .75rem/1.5 ui-monospace, monospace;
+  }
+  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
+}
+
+/* A source report's compact local navigation must not hide the injected
+ * site navigation or the links back to its dossier and report library. */
+html.specter-report :is(.publication-header, .publication-navigation) a {
+  display: inline-flex !important;
+}
+
+/* The commitment report deliberately keeps dark data panels. */
+html.specter-report:has(#steerability) .chart-grid .figure svg text {
+  fill: #e9e7df !important;
+}
+</style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/reservoir-recurrence-census/"></head>
+<body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav>
+  <div class="topbar">
+    <span>Specter Labs · Flow Lenia · recurrence census</span>
+    <nav aria-label="Page sections"><a href="#idea">Idea</a><a href="#census">Census</a><a href="#result">Result</a><a href="#next">Next</a></nav>
+  </div>
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Before the Replicator · GARD-inspired Flow Lenia study</div>
+        <h1>Reservoir Recurrence Was Too Sparse to Test the Score</h1>
+        <p class="dek">We found genuine episodes where a four-founder mixture returned after repeated passage and regrowth. But this census did not produce the fair positive-versus-negative comparison needed to ask whether an early whole-system information signal foretold them.</p>
+        <p class="hero-note">That distinction matters: <b>Φ did not fail.</b> It was never calculated on this cohort.</p>
+      </div>
+      <aside class="verdict" aria-label="Final decision">
+        <span class="stamp">Frozen decision · independently recomputed</span>
+        <strong>Stop<br>without Φ.</strong>
+        <p>Four strict later-recurrence runs. Four strict no-later-recurrence runs. Zero families containing enough examples of both.</p>
+      </aside>
+    </section>
+
+    <section aria-label="Headline results">
+      <div class="headline-stats">
+        <article><strong>72/72</strong><span>trajectories reached step 512</span></article>
+        <article><strong>56</strong><span>passing four-cycle recurrence windows</span></article>
+        <article><strong>4 + 4</strong><span>strict positive and negative labels</span></article>
+        <article><strong>0/12</strong><span>families passed the comparison gate</span></article>
+      </div>
+    </section>
+
+    <section id="idea">
+      <div class="section-head">
+        <div class="section-no">01 / The path</div>
+        <div><h2>How this follows the Levin paper.</h2><p class="section-intro">The paper’s striking idea is not merely that replicators exist. It is that a whole-system information quantity changes early enough to predict which chemical systems will later settle into self-replicating compositions.</p></div>
+      </div>
+      <div class="research-path">
+        <article class="path-step"><span class="step-status">paper</span><h3>GARD observation</h3><p>Integrated predictive information tracks the approach to recurring chemical compositions.</p></article>
+        <article class="path-step"><span class="step-status">mapped</span><h3>Lenia state</h3><p>Represent the ecology by the relative amounts of four tracked founder lineages.</p></article>
+        <article class="path-step"><span class="step-status">observed</span><h3>Lenia event</h3><p>Ask whether that mixture returns across repeated growth-and-passage cycles.</p></article>
+        <article class="path-step closed"><span class="step-status">closed</span><h3>Outcome gate</h3><p>First obtain repeated future positives and negatives inside the same families.</p></article>
+        <article class="path-step closed"><span class="step-status">not run</span><h3>Early signal</h3><p>Only then compare prefix-only Φ with mass, growth, motion, fragmentation, and other controls.</p></article>
+      </div>
+      <div class="translation">
+        <article><small>Whole composition</small><b>How much does the full four-founder mixture tell us about its next state?</b><p>This keeps information that may exist only in the coordinated whole.</p></article>
+        <div class="versus">minus</div>
+        <article><small>Best split into parts</small><b>How much can separate groups of founders tell us by themselves?</b><p>The proposed Φ-like score is the extra next-state information left in the whole.</p></article>
+      </div>
+      <div class="closed-note"><b>Important:</b> this would be an integrated predictive-information measure inspired by the paper. By itself it would be an observational precursor—not proof that “causal emergence” causes recurrence. That stronger claim eventually needs an intervention that deliberately moves Φ.</div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-no">02 / The event</div>
+        <div><h2>What “comes back” means here.</h2><p class="section-intro">This is not ordinary Lenia fission. We impose a GARD-like cycle on the ecology and follow composition, not silhouette.</p></div>
+      </div>
+      <div class="cycle-flow">
+        <article class="cycle-node"><span class="symbol">qP</span><h3>Parent mixture</h3><p>The relative amounts of the four founder lineages immediately before passage.</p></article>
+        <div class="cycle-arrow">→</div>
+        <article class="cycle-node"><span class="symbol">qD</span><h3>Passaged daughter</h3><p>A finite-molecule partition removes roughly half the matter and can disrupt the mixture.</p></article>
+        <div class="cycle-arrow">→</div>
+        <article class="cycle-node"><span class="symbol">qR</span><h3>Threshold return</h3><p>A small external founder parcel is added; Flow Lenia regrows until the passage threshold is crossed again.</p></article>
+      </div>
+      <div class="four-cycle">
+        <article class="simple-card info"><h3>One window = four cycles</h3><p>A single lucky recovery is not enough. We slide a four-cycle window through every run and ask whether the mixture repeatedly returns.</p></article>
+        <article class="simple-card good"><h3>A window passes only if…</h3><ul><li>the passage meaningfully disturbed the mixture;</li><li>the return stayed close to the parent every time;</li><li>the median return was at least 0.95 similar;</li><li>at least three of four cycles improved over the daughter.</li></ul></article>
+      </div>
+      <div class="cutoff-figure">
+        <div class="cutoff-track"><div class="prefix">PREFIX · steps 0–128</div><div class="future">FUTURE · steps 129–512</div><i class="line" aria-hidden="true"></i></div>
+        <div class="cutoff-labels"><span>step 0</span><span>frozen cutoff: 128</span><span>step 512</span></div>
+        <p><b>Strict positive:</b> an informative failure in the prefix, followed by a passing window wholly in the future. <b>Strict negative:</b> an informative prefix failure, no later pass, and at least two informative future failures. An early pass, a cutoff-crossing pass, or too little evidence stays unlabelled.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-no">03 / Mechanics</div>
+        <div><h2>One real passage cycle.</h2><p class="section-intro">This is the first cycle of the first fixed family/schedule pair—chosen before outcomes, not selected for appearance.</p></div>
+      </div>
+      <div class="mechanics-grid"><article class="field-card"><header><span>1</span><div><b>Parent</b><small>before passage</small></div></header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAEGUlEQVR42u3du06UQRzGYSoVlt39hl1gAxEbdQMxwVOhicTCGGJpI4WxVEobEguisbSgMRbGG7AxllrIXXgJXoExAeMhQUreaag4BJ/iKbf5T+ZXTGa+HTk12t0B/k8jhgACAAgAIACAAAACAAgAIACAAAACAAgAIACAAAACAAgAIACAAAACAAgAIACAAAACAAgAIACAAAACAAgAIACAAAACAAgAIACAAAACAAgAIACAAIAAGAIIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgACYAggAIAAAAIACAAgAIAAAAIACAAgAIAAAAIACAAgAIAAAAIACAAgAIAAAAIACAAgAIAAAAIACAAgAIAAAAIACAAgACfQ6croWBrbR/17M0UABAAEQAAQAEMQAASA46ndStenSlieTRd7adBtgiAgAAIgAAiAAJivABiCACAAHE/9dhOWBiV8uNELm7f74eG5EupDwvpQUSAEAAEQAAFAAMxfABAABICjUW/QQacJd2dK2H56LWytLoRXCyV0Wt1QB+JMxZoIAAKAACAACAACgABwMOoN2BlP9cWfT7f64ff7tbD9bCm8GJYw2zTB4yIBQAAEQAAQAAEQAARAAASAo1FvyPqi0OtLJfx69zi9eRS2nsyHq1MljLe6waGgACAAAiAACID1EAAEAAHgcNSHcNOdJtycLqG++LPz7Uv483E9/FgZhPtnS9jvMZE1EgAEAAFAABAABAAB4GACUG/Ayd0I7FU/Fvp6byr8fLkc/m5uhK3V+bA+LKHXboKLQgKAAAiAACAA1ksAEAAEgAN6LFSpD+nKeBPOT5SwdiE9H6bvDwbh81I/zDVNqD8wYo0EAAFAABAABAABQAA4nCC0xlIdhGGvhMuTaWUuvV2cCHdmSphoN8GaCAACgAAgAAgAAoAAcDRBqD/oUR8atltpoV/Clcm0WGnt/mYvayAACAACgAAgAAgAAsDxfFy032Oj+iOh/jhEABAAARAABEAABAABEAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQABAAAwBBAAQAEAAAAEABAA4of4BD9WRorlJeQkAAAAASUVORK5CYII=" width="256" height="256" alt="Peak-normalized total-matter field for the parent state"><div class="field-meta"><b>step 11</b><strong>548.6</strong><small>total matter</small></div><div class="composition" aria-label="Four-founder relative composition"><i style="width:25.7647%;background:#ff5a1f" title="Founder 1: 25.8%"></i><i style="width:32.3041%;background:#5169c8" title="Founder 2: 32.3%"></i><i style="width:21.8245%;background:#43805b" title="Founder 3: 21.8%"></i><i style="width:20.1067%;background:#ddb536" title="Founder 4: 20.1%"></i></div><div class="composition-labels"><span><b style="background:#ff5a1f"></b>F1 26%</span><span><b style="background:#5169c8"></b>F2 32%</span><span><b style="background:#43805b"></b>F3 22%</span><span><b style="background:#ddb536"></b>F4 20%</span></div></article><div class="flow-arrow">→</div><article class="field-card"><header><span>2</span><div><b>Daughter</b><small>immediately after finite-molecule passage</small></div></header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAEFElEQVR42u3du2pUURiG4VRqMpmZvTKTMwZRjCEQjIViYYKiRVoLLdKIiKWNhRpsxEqwEb0FEbEWDN6E9+AN2BgjUYgp860mVQ7Ep3jKzYZ/sd5isQ8DJwa728D/acAQQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAEABDAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAQAAMAQQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAATgGDpZGRxKQ3uorzdTBEAAQAAEAAEwBAFAADia2q10ebyElel0oZcmuk0QBARAAAQAARAA8xUAQxAABICjqdduwvJkCR+u9ML6cj/cO1NCfUhYHyoKhAAgAAIgAAiA+QsAAoAAcDjqDTreacLNqRI2Hs6lB+fDy7kS6kPG+n6nKtZEABAABAABQAAQAASA/VFvwM5wmu2VsL7UD38+rYXNZ0vhxU4EdpvuNsHLRQKAAAiAACAAAiAACIAACACHo96Q/XYT3i2UsPX+cfj9ZjX8erQYLo2VMNzqBoeCAoAACIAAIADWQwAQAASAg1Efwo11mnB1vITX82n7+9ew9fFJ2Lh/Ntw+XcJeLxNZIwFAABAABAABQAAQAPYnAPUGrA8Fr0+W8G1lNGw+vxH+fnkVfq5Oh6ezJdT386CQACAAAiAACID1EgAEAAHgYIJQH9KV4SacGymh3tBrlR93J8Lna/0w0zSh0+oGayQACAACgAAgAAgAAsA+fUCkslcQ6g+KLI6mOzPp7UK6NZVG2k2wJgKAACAACAACgAAgABzOIWH9QY/6QaL6RyHz/RLqQFystHau2c0aCAACgAAgAAgAAoAAcDQDsdfLRvVHQv04RAAQAAEQAARAAAQAARAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAQAAMAQQAEABAAAABAAQAOKb+AfaqjaKdx5WCAAAAAElFTkSuQmCC" width="256" height="256" alt="Peak-normalized total-matter field for the daughter state"><div class="field-meta"><b>step 11</b><strong>280.7</strong><small>total matter</small></div><div class="composition" aria-label="Four-founder relative composition"><i style="width:26.3731%;background:#ff5a1f" title="Founder 1: 26.4%"></i><i style="width:36.4198%;background:#5169c8" title="Founder 2: 36.4%"></i><i style="width:17.5612%;background:#43805b" title="Founder 3: 17.6%"></i><i style="width:19.6460%;background:#ddb536" title="Founder 4: 19.6%"></i></div><div class="composition-labels"><span><b style="background:#ff5a1f"></b>F1 26%</span><span><b style="background:#5169c8"></b>F2 36%</span><span><b style="background:#43805b"></b>F3 18%</span><span><b style="background:#ddb536"></b>F4 20%</span></div></article><div class="flow-arrow">→</div><article class="field-card"><header><span>3</span><div><b>Return</b><small>after reservoir-fed regrowth to threshold</small></div></header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAE5ElEQVR42u3dz4uVVRzHcVfmzNyZ+zwzd653kkkliXQS1H5B4Q/QlUpUqyCSQNy0iOhfqCBSaeHOqGWL1kEptKv/QNy5sL8hJXFoetw9n++iiUs3C1+L12bucO/lHJ734nDOuTt2zg23gCfTDoMAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgACAABgEEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQABMAggAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAAAgAIACAAgAAwtbn5tN3r1VNzyZgKAAKAACAACAACgADweIyXmvD6pA27u7/1vbnehoOjVN9vVxeBPmMuAAgAAoAAIAAIAALAv7OItzZswlvdQ9x3cX86sJw+PfjX6v9vt4iIACAACAACgAAgAAgA06kbb4aD9Gz3UPZdO5y+3EjHJ+mlcbq6kT48kGwEEgAEQAAEAAEwPwKAACAAzEbdeDNYSM+vtOHkWvrl9Gr48fgofNQ91H1Hx+nFYtej79RjjgQAAUAAEAAEAAFAAJjNIuD8fFpvmrAxasN7+9LD7z8J9z44HL46uhwmS02oi5A1UBYJBQABEAABQADMnwAgAAgAswnC0kKqh4OOjdtw+9w4/HHru7B544tQg/DCahtWFpvgElEBQAAEQAAQAAEQAARAAASA2QSgLsI1gyYc6R7Svq+7h7jvwfVL6dqF8Ptn58O7e9tQP2+hi1CfIAgAAiAAAoAACIAAIAACIADMJgj1sNBzK22oF3zcOjsOW3dvhM0fPg/3P3411EtHJ8MmjBbTYved+gRBABAAARAABMB8CgACgAAwnYX5VBfp6kahl8dt+Pn0ati8eTls/Xoz/PbOJHxzbDkcGrWhHi6qh5sEQQAQAAEQAATAfAoAAoAAMN2iYN2IMxw0oQbh7fU2XD6Ufjo1Cvfe3x/uvDEO9YKSZ5om1EVLARAABEAABAABMJ8CgAAgAEwXgO02CtULPeoi3WuTNpzdk65spG9fWQnXjyyH1e49++rn18NN5lQAEAAEAAFAABAABIB/JhB1I047aEJdtKs/RnpiLdULSOqPlZ4qagDMkQAgAAgAAoAAIAAIAI9n0bBuJNouEPX1eonomaeTORAABAABQAAQAAQAAeC/qS4a1ks+awB2L6X6wyHGVAAQAAQAAUAAEAAEgP+HeninLhoaIwFAABAABAABQAAQAJ6MjUXGRAAQAAQAAUAAEAAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEABAAQAAAAQAEAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQAEABAAAABAAQABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAEAAAAEABAAQAOBv+xMBu6khTaXhNQAAAABJRU5ErkJggg==" width="256" height="256" alt="Peak-normalized total-matter field for the return state"><div class="field-meta"><b>step 25</b><strong>541.6</strong><small>total matter</small></div><div class="composition" aria-label="Four-founder relative composition"><i style="width:32.1946%;background:#ff5a1f" title="Founder 1: 32.2%"></i><i style="width:27.7248%;background:#5169c8" title="Founder 2: 27.7%"></i><i style="width:12.6475%;background:#43805b" title="Founder 3: 12.6%"></i><i style="width:27.4331%;background:#ddb536" title="Founder 4: 27.4%"></i></div><div class="composition-labels"><span><b style="background:#ff5a1f"></b>F1 32%</span><span><b style="background:#5169c8"></b>F2 28%</span><span><b style="background:#43805b"></b>F3 13%</span><span><b style="background:#ddb536"></b>F4 27%</span></div></article></div>
+      <p class="visual-note"><b>What you are seeing:</b> total-matter fields from c01 / p31001, independently centered and peak-normalized. Brightness therefore shows shape, not total mass; the printed mass values show the loss and regrowth. The colored bars show the four founder fractions. The external reservoir makes this <em>reservoir-fed compositional recurrence</em>, not autonomous self-reproduction.</p>
+    </section>
+
+    <section id="census">
+      <div class="section-head">
+        <div class="section-no">04 / Accounting</div>
+        <div><h2>The behavior was real—but labels were scarce.</h2><p class="section-intro">We retained every trajectory and every frozen rule. Passing windows occurred in 22 runs. The much stricter prefix-versus-future classifier produced only eight binary outcomes.</p></div>
+      </div>
+      <div class="accounting" aria-label="Census accounting">
+        <div class="account-row"><span>completed cycles</span><div class="account-track"><div class="account-fill" style="width:100%"></div></div><strong>2,781</strong></div>
+        <div class="account-row"><span>four-cycle windows</span><div class="account-track"><div class="account-fill" style="width:92.23%"></div></div><strong>2,565</strong></div>
+        <div class="account-row"><span>compositionally valid</span><div class="account-track"><div class="account-fill" style="width:72.89%"></div></div><strong>2,027</strong></div>
+        <div class="account-row"><span>meaningfully challenged</span><div class="account-track"><div class="account-fill" style="width:9.42%"></div></div><strong>262</strong></div>
+        <div class="account-row"><span>passing recurrence windows</span><div class="account-track"><div class="account-fill" style="width:2.01%"></div></div><strong>56</strong></div>
+      </div>
+      <div class="matrix-wrap"><div class="status-bar" aria-label="Final trajectory statuses"><span class="status-positive" style="width:5.55556%" title="4 later recurrence"><b>4</b><small>LR</small></span><span class="status-negative" style="width:5.55556%" title="4 no later recurrence"><b>4</b><small>NR</small></span><span class="status-prefix" style="width:16.66667%" title="12 recurrence already in prefix"><b>12</b><small>PR</small></span><span class="status-cutoff" style="width:5.55556%" title="4 recurrence crosses cutoff"><b>4</b><small>CA</small></span><span class="status-unlabelled" style="width:31.94444%" title="23 not enough prefix evidence"><b>23</b><small>IP</small></span><span class="status-unlabelled" style="width:34.72222%" title="25 not enough future evidence"><b>25</b><small>IF</small></span></div></div>
+      <div class="legend"><span class="positive">LR · later recurrence</span><span class="negative">NR · no later recurrence</span><span class="prefix">PR · prefix recurrence</span><span class="cutoff">CA · cutoff ambiguous</span><span class="unlabelled">IP / IF · insufficient evidence</span></div>
+      <p class="visual-note"><b>Do not read the grey area as failure.</b> Most runs were unlabelled, not negative. A run could be excluded because recurrence appeared too early, crossed the cutoff, or lacked enough informative evidence before or after it. Nine runs had at least one future passing window; only four satisfied every strict positive rule.</p>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-no">05 / Every run</div>
+        <div><h2>The complete 12 × 6 outcome map.</h2><p class="section-intro">Rows are biological families. Columns are common random passage/reservoir schedules. Nothing is hidden.</p></div>
+      </div>
+      <div class="matrix-wrap"><table class="outcome-matrix" aria-label="Outcome for every family and schedule"><thead><tr><th>family</th><th>p31001</th><th>p31002</th><th class="shared-positive-schedule">p31003</th><th>p31004</th><th>p31005</th><th>p31006</th></tr></thead><tbody><tr><th>c01</th><td class="status-unlabelled" title="c01, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c01, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-negative" title="c01, p31003: no later recurrence"><span>NR</span></td><td class="status-unlabelled" title="c01, p31004: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c01, p31005: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c01, p31006: not enough future evidence"><span>IF</span></td></tr><tr><th>c02</th><td class="status-unlabelled" title="c02, p31001: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c02, p31002: not enough future evidence"><span>IF</span></td><td class="status-negative" title="c02, p31003: no later recurrence"><span>NR</span></td><td class="status-unlabelled" title="c02, p31004: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c02, p31005: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c02, p31006: not enough future evidence"><span>IF</span></td></tr><tr><th>c03</th><td class="status-unlabelled" title="c03, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c03, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-positive" title="c03, p31003: later recurrence"><span>LR</span></td><td class="status-unlabelled" title="c03, p31004: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c03, p31005: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c03, p31006: not enough future evidence"><span>IF</span></td></tr><tr><th>c04</th><td class="status-unlabelled" title="c04, p31001: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c04, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-cutoff" title="c04, p31003: recurrence crosses cutoff"><span>CA</span></td><td class="status-unlabelled" title="c04, p31004: not enough future evidence"><span>IF</span></td><td class="status-prefix" title="c04, p31005: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c04, p31006: not enough future evidence"><span>IF</span></td></tr><tr><th>c05</th><td class="status-unlabelled" title="c05, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c05, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-prefix" title="c05, p31003: recurrence already in prefix"><span>PR</span></td><td class="status-negative" title="c05, p31004: no later recurrence"><span>NR</span></td><td class="status-unlabelled" title="c05, p31005: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c05, p31006: not enough prefix evidence"><span>IP</span></td></tr><tr><th>c06</th><td class="status-unlabelled" title="c06, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c06, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-positive" title="c06, p31003: later recurrence"><span>LR</span></td><td class="status-prefix" title="c06, p31004: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c06, p31005: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c06, p31006: not enough prefix evidence"><span>IP</span></td></tr><tr><th>c07</th><td class="status-unlabelled" title="c07, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c07, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-prefix" title="c07, p31003: recurrence already in prefix"><span>PR</span></td><td class="status-prefix" title="c07, p31004: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c07, p31005: not enough future evidence"><span>IF</span></td><td class="status-negative" title="c07, p31006: no later recurrence"><span>NR</span></td></tr><tr><th>c08</th><td class="status-unlabelled" title="c08, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c08, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c08, p31003: not enough future evidence"><span>IF</span></td><td class="status-prefix" title="c08, p31004: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c08, p31005: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c08, p31006: not enough prefix evidence"><span>IP</span></td></tr><tr><th>c09</th><td class="status-unlabelled" title="c09, p31001: not enough future evidence"><span>IF</span></td><td class="status-prefix" title="c09, p31002: recurrence already in prefix"><span>PR</span></td><td class="status-positive" title="c09, p31003: later recurrence"><span>LR</span></td><td class="status-prefix" title="c09, p31004: recurrence already in prefix"><span>PR</span></td><td class="status-cutoff" title="c09, p31005: recurrence crosses cutoff"><span>CA</span></td><td class="status-unlabelled" title="c09, p31006: not enough prefix evidence"><span>IP</span></td></tr><tr><th>c10</th><td class="status-unlabelled" title="c10, p31001: not enough future evidence"><span>IF</span></td><td class="status-cutoff" title="c10, p31002: recurrence crosses cutoff"><span>CA</span></td><td class="status-positive" title="c10, p31003: later recurrence"><span>LR</span></td><td class="status-unlabelled" title="c10, p31004: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c10, p31005: not enough future evidence"><span>IF</span></td><td class="status-prefix" title="c10, p31006: recurrence already in prefix"><span>PR</span></td></tr><tr><th>c11</th><td class="status-unlabelled" title="c11, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c11, p31002: not enough future evidence"><span>IF</span></td><td class="status-prefix" title="c11, p31003: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c11, p31004: not enough future evidence"><span>IF</span></td><td class="status-prefix" title="c11, p31005: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c11, p31006: not enough prefix evidence"><span>IP</span></td></tr><tr><th>c12</th><td class="status-unlabelled" title="c12, p31001: not enough prefix evidence"><span>IP</span></td><td class="status-unlabelled" title="c12, p31002: not enough prefix evidence"><span>IP</span></td><td class="status-cutoff" title="c12, p31003: recurrence crosses cutoff"><span>CA</span></td><td class="status-prefix" title="c12, p31004: recurrence already in prefix"><span>PR</span></td><td class="status-unlabelled" title="c12, p31005: not enough future evidence"><span>IF</span></td><td class="status-unlabelled" title="c12, p31006: not enough prefix evidence"><span>IP</span></td></tr></tbody></table></div>
+      <div class="legend"><span class="positive">LR · strict positive</span><span class="negative">NR · strict negative</span><span class="prefix">PR · happened too early</span><span class="cutoff">CA · crossed cutoff</span><span class="unlabelled">IP / IF · not enough evidence</span></div>
+      <div class="matrix-note"><b>The pattern to notice:</b> all four strict positives occurred under common schedule p31003. Two strict negatives also occurred there, but each family contributed at most one binary label. A positive-versus-negative Φ comparison could therefore mistake family or schedule structure for an early warning signal.</div>
+      <div class="label-lists">
+        <article class="label-list positive-list"><h3>Four strict positives</h3><ul><li><b>c03</b> · p31003<span>first pass 377–425</span></li><li><b>c06</b> · p31003<span>first pass 408–456</span></li><li><b>c09</b> · p31003<span>first pass 382–429</span></li><li><b>c10</b> · p31003<span>first pass 380–426</span></li></ul></article>
+        <article class="label-list negative-list"><h3>Four strict negatives</h3><ul><li><b>c01</b> · p31003<span>2 future informative failures</span></li><li><b>c02</b> · p31003<span>4 future informative failures</span></li><li><b>c05</b> · p31004<span>3 future informative failures</span></li><li><b>c07</b> · p31006<span>2 future informative failures</span></li></ul></article>
+      </div>
+    </section>
+
+    <section id="result">
+      <div class="section-head">
+        <div class="section-no">06 / The gate</div>
+        <div><h2>Why Φ stayed closed.</h2><p class="section-intro">The frozen rule deliberately demanded variation inside families. Without that, “prediction” can be nothing more than recognizing which family or schedule a run came from.</p></div>
+      </div>
+      <div class="gate-result">
+        <article class="gate-panel target"><span class="micro">Required before signal analysis</span><strong class="big">3 families</strong><p>Each with at least <b>2 later-recurrence</b> and <b>2 no-later-recurrence</b> trajectories.</p></article>
+        <div class="gate-versus">vs.</div>
+        <article class="gate-panel actual"><span class="micro">Observed</span><strong class="big">0 families</strong><p>No family contained even one example of both strict classes. Selected families: none.</p></article>
+      </div>
+      <div class="family-gates"><article class="family-gate"><b>c01</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 1</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c02</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 1</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c03</b><div class="gate-counts"><span class="positive-count">+ 1</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c04</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c05</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 1</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c06</b><div class="gate-counts"><span class="positive-count">+ 1</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c07</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 1</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c08</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c09</b><div class="gate-counts"><span class="positive-count">+ 1</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c10</b><div class="gate-counts"><span class="positive-count">+ 1</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c11</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article><article class="family-gate"><b>c12</b><div class="gate-counts"><span class="positive-count">+ 0</span><span class="negative-count">− 0</span></div><small>need +2 and −2</small></article></div>
+      <div class="phi-lock">
+        <div class="lock-mark" aria-hidden="true">Φ</div>
+        <div><span class="micro">Predictive-information phase · unopened</span><h3>No Φ value exists for this census.</h3><p>Had the gate passed, the next stage would have used only the prefix to estimate how much the whole four-founder state predicts its next state beyond its best split into parts.</p><div class="equation">ΦR = information in the whole − information in the best-separated parts</div><p>We would then ask whether ΦR predicts later recurrence beyond mass, recent growth, fragmentation, motion, component count, and other plain controls. That test was not run, because its outcome comparison was not identified.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-no">07 / Paper ↔ Lenia</div>
+        <div><h2>Same research track. Different ontology.</h2><p class="section-intro">The analogy is useful only if we keep the differences visible.</p></div>
+      </div>
+      <table class="mapping">
+        <thead><tr><th>Levin / GARD</th><th>Our Flow Lenia translation</th><th>Important limit</th></tr></thead>
+        <tbody>
+          <tr><td>Molecular composition</td><td>Relative mass of four tracked founder lineages, q(t)</td><td>We ignore most spatial morphology in this first state description.</td></tr>
+          <tr><td>Assembly grows and fissions</td><td>Finite-molecule passage, external founder reservoir, then Flow Lenia regrowth</td><td>The division and feeding are imposed operators, not autonomous behavior.</td></tr>
+          <tr><td>Recurring compositional attractor</td><td>Four-cycle return of founder composition after meaningful disruption</td><td>We call it recurrence, not a self-replicating creature.</td></tr>
+          <tr><td>Early integrated-information trajectory</td><td>Planned prefix-only whole-versus-parts predictive information</td><td>Not computed until a fair within-family outcome contrast exists.</td></tr>
+          <tr><td>Φ-directed interventions</td><td>Later: matched interventions that raise or lower the proposed signal</td><td>Needed before making a genuinely causal claim.</td></tr>
+        </tbody>
+      </table>
+      <div class="source-note">Paper followed: <a href="https://arxiv.org/abs/2607.28250"><b>Pigozzi &amp; Levin, “Causal Architecture Dynamics Prior to Arrival of Self-replicators…”</b></a>. Their implementation leaves several estimator details unspecified; our eventual Lenia estimator must therefore be fully declared and frozen rather than presented as an exact software replication.</div>
+    </section>
+
+    <section id="next">
+      <div class="section-head">
+        <div class="section-no">08 / Meaning</div>
+        <div><h2>What we learned—and what we did not.</h2><p class="section-intro">This is a useful intermediate result: the phenotype exists, while the current sampling design does not identify its precursor.</p></div>
+      </div>
+      <div class="claim-grid">
+        <article class="claim yes"><h3>We can say</h3><ul><li>The reservoir passage operator worked mechanically in all 72 trajectories.</li><li>Reservoir-fed founder-composition recurrence genuinely occurred: 56 passing windows across 22 runs.</li><li>Four runs showed a strict transition from prefix failure to future recurrence.</li><li>This cohort cannot support a clean whole-versus-parts precursor comparison.</li></ul></article>
+        <article class="claim no"><h3>We cannot say</h3><ul><li>Integrated predictive information rose before recurrence.</li><li>Integrated predictive information failed to predict recurrence.</li><li>Flow Lenia has—or lacks—causal emergence.</li><li>These systems autonomously reproduce, or that p31003 caused recurrence.</li></ul></article>
+      </div>
+      <div class="next"><h3>A different test would need new data: fix the contrast, not the answer.</h3><ol><li>Use this census only to design a new, prospectively frozen outcome-yield study.</li><li>Run more fresh schedules per family and a longer pre/future observation horizon, while keeping the recurrence thresholds unchanged for the first extension.</li><li>Require repeated positives and negatives inside at least three families. Do not select only p31003, relabel grey runs, or loosen thresholds.</li><li>Then freeze a separate fresh confirmation cohort and open the prefix-only Φ-versus-controls analysis exactly once.</li><li>If a precursor survives confirmation, perturb it with no-op, random, mass-matched, and spatially matched controls before using causal language.</li></ol></div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-no">09 / Receipts</div>
+        <div><h2>Why trust this stopping decision?</h2><p class="section-intro">The mechanics, outcome pair, and arithmetic amendment were independently reconstructed and cryptographically bound.</p></div>
+      </div>
+      <div class="receipt-grid">
+        <div class="receipt"><strong>72 / 72</strong><span>mechanically clean, complete trajectories</span></div>
+        <div class="receipt"><strong>2,803</strong><span>division events with exact identity-mass checks</span></div>
+        <div class="receipt"><strong>0</strong><span>identity-mass mismatches</span></div>
+        <div class="receipt"><strong>closed</strong><span>predictive information, causal emergence, and Φ</span></div>
+      </div>
+      <details>
+        <summary>The arithmetic amendment, in plain English</summary>
+        <div class="details-body"><p>The first analysis attempt stopped before producing any outcome labels. It had compared two totals accumulated in different—but both legitimate—Float32 orders: one global sum and four founder-bucket sums. Seven late events in one trajectory differed only because floating-point addition is order-sensitive.</p><p>The stage-local amendment did not widen a tolerance. It required the incoming founder identity vector to bit-match the recorded event, reconstructed the grouped mass through the exact same arithmetic path, and authorized only the already identified events. All 2,803 division events passed before outcomes were opened. No simulation state, recurrence threshold, history window, episode rule, label, or frozen input changed.</p></div>
+      </details>
+      <details>
+        <summary>Independent outcome reconstruction</summary>
+        <div class="details-body"><p>The saved mechanical audit was replayed from the raw artifacts. Every cycle, four-cycle episode, status, family count, and final decision reconstructed exactly: four later-recurrence labels, four no-later-recurrence labels, zero qualifying families, and <code>stop_without_phi</code>.</p><p>Final claim boundary: <code>Outcome-only census of founder-composition recurrence across externally imposed growth-passage cycles; not autonomous reproduction, causal emergence, or Phi.</code></p></div>
+      </details>
+      <details>
+        <summary>Bound artifact hashes</summary>
+        <div class="details-body"><table class="hashes"><tbody>
+          <tr><th>Stream records</th><td>b4a291bde013b86b3e2bb0e919ef35836422d3f263172c45aba641a0a6aa47d3</td></tr>
+          <tr><th>Outcome report</th><td>46e6def179715ad72cbb4ed5ef39d411278b4b0327d157a0261da93f3c9f6d4c</td></tr>
+          <tr><th>Analysis amendment</th><td>b6471a1f73d95b1206eea4199ad237a2ab73d47f6009df81fe63234a94466da1</td></tr>
+          <tr><th>Mechanical audit</th><td>ef2e2fdd5bd4bd6d253dbe69401e738e97c139c1f08cf108180e70dc85ba0eb8</td></tr>
+          <tr><th>Freeze</th><td>6fdbeef181fc939c1597f1beba8b625c0d4945a99a53ac3af815d41afe70d9a0</td></tr>
+          <tr><th>Manifest</th><td>a2dd6760eeff20207898056ece8dfd09d410ece00308a1157edd240467d03685</td></tr>
+        </tbody></table><p>This standalone page is explanatory output generated after the recorded result. It is not itself part of the prospective freeze.</p></div>
+      </details>
+    </section>
+  </main>
+  <footer><span>Before the Replicator · Flow Lenia reservoir recurrence census v2</span><span>Recorded result · 12 August 2026 · stop without Φ</span></footer>
+</body>
+</html>

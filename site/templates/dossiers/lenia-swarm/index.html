@@ -21,11 +21,16 @@
       crossorigin
     />
     <link rel="stylesheet" href="../../style.css" />
-  </head>
-  <body>
+  <link rel="stylesheet" href="/assets/report.css?v=20260909-final-pass-2" />
+      <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/dossier-stories.css?v=2">
+<script src="/assets/dossier-stories.js?v=1" defer></script>
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+<link rel="stylesheet" href="/assets/publication-formats.css"></head>
+  <body class="dossier-story report-page report-theme-morphospace lenia-overview" data-publication="dossier">
     <div class="site-shell">
       <header class="site-topnav">
-        <a class="site-brand" href="../../">
+        <a class="site-brand" href="/">
           <img
             src="../../assets/logo-black.svg"
             alt="SPECTER Labs logo"
@@ -33,14 +38,7 @@
           />
           <span class="site-brand-name">SPECTER LABS</span>
         </a>
-        <nav class="site-topnav-links" aria-label="Site navigation">
-          <a class="nav-link" href="../../dossiers/" aria-current="page"
-            >Dossiers</a
-          >
-          <a class="nav-link" href="../../addenda/">Addenda</a>
-          <a class="nav-link" href="../../blog/">Blog</a>
-          <a class="nav-link" href="../../cabinet/">Cabinet</a>
-        </nav>
+        <nav class="site-topnav-links" aria-label="Site navigation"><a class="nav-link" href="/dossiers/" aria-current="page">Research</a><a class="nav-link" href="/blog/">Writing</a><a class="nav-link" href="/addenda/">Addenda</a><a class="nav-link" href="/cabinet/">Cabinet</a></nav>
       </header>
       <div class="site-rules" aria-hidden="true">
         <div class="site-rule strong"></div>
@@ -51,96 +49,20 @@
         <!-- GENERATED:DOSSIER_HUB_HEADER START -->
         <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-        <section class="section-block">
-          <p>
-            Flow Lenia generalizes cellular automata to continuous state, time,
-            and space. Two functions define its dynamics: a kernel
-            <code>K</code> for neighborhood sensing and a growth function
-            <code>G</code> for updates over time. Every persistent structure
-            emerges from those two, from gliders and walkers up to
-            self-replicators. The flow variant we use conserves mass for these
-            spatially localized patterns (SLPs) and allows local,
-            position-dependent rules, which is what makes multi-species
-            evolution possible.
-          </p>
-          <p>
-            Because every rule is known and cheap to rerun, this is a clean
-            place to study morphogenesis and emergence. We grow a creature,
-            perturb it, and watch whether it holds together, the same
-            competency-under-stress question Levin's TAME framing asks of living
-            matter. And because a creature's genotype is just its rule
-            parameters, we can map the whole space of forms instead of studying
-            one creature at a time.
-          </p>
-          <p>
-            The perturbation harness matches control-versus-intervention pairs
-            across two environments, flat and high-theta, with three families.
-            <code>init_state</code> re-seeds the initial mass placement,
-            <code>flow_regime</code> halves the integration timestep, and
-            <code>param_noise</code> re-rolls the growth function, holding
-            architecture fixed but resampling rule parameters. Recovery falls
-            off across them: <code>init_state</code> perturbations leave the
-            trajectory intact in nearly all cases, <code>flow_regime</code>
-            recovers in some, and <code>param_noise</code> in few.
-          </p>
-          <p>
-            A related question, prompted by
-            <a
-              href="https://arxiv.org/abs/2605.30708"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Cool et al. 2026</a
-            >, is whether a creature's position in the morphospace predicts how
-            perturbation couples to its heading. Three of their four
-            Chan-catalog creatures swerve around occluded regions that carry no
-            sensory information while the fourth dies on contact, and they find
-            the difference is hardwired per creature without saying which rules
-            cause it. Our first replay pilot exposed a cohort problem: centroid
-            displacement alone admitted diffuse and weakly moving patterns. We are
-            replacing it with an assay that qualifies spatial localization,
-            persistence, and locomotion before testing obstacle response.
-          </p>
-          <p>
-            The morphospace work measures the structure of Flow Lenia's
-            genotype-to-phenotype map and compares its synthetic shapes with
-            developmental and biological data. Flow Lenia specimens,
-            developmental-model snapshots, and biological outlines all enter
-            the same descriptor space. Topological data analysis finds loops.
-            Local cohort comparison identifies Lenia neighborhoods that lie
-            closer to one biological cohort. Transport follows a loop and
-            checks whether the measured shape and the rule state both return.
-          </p>
-          <span class="path-note">Repository path: dossiers/lenia-swarm</span>
-        </section>
+        <section class="section-block"><p class="story-deck">Local rules move matter across a grid. Some patterns persist; others break apart. By saving a state and replaying it under a changed condition, we can ask what holds a body together—and what determines its next move.</p><nav class="story-jumps" aria-label="Research questions"><a href="/dossiers/lenia-swarm/#shape-story">Compare shapes</a><a href="/dossiers/lenia-swarm/#rule-story">Recover rules</a><a href="/dossiers/lenia-swarm/#response-story">Study development</a></nav></section>
 
         <section class="section-block">
           <div class="feature-card">
-            <div class="feature-title">Obstacle Responses in Coherent Flow Lenia Bodies</div>
+            <figure class="story-figure"><a href="/dossiers/lenia-swarm/morphospace/#result-map"><img src="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" alt="Measured morphospace of Flow Lenia, fish, and simulated tissue." loading="lazy"></a><figcaption>25,167 Flow Lenia observations. The selected region was found without fish data.</figcaption></figure><h2 id="shape-story" class="feature-title">How much does shape explain?</h2>
             <p>
-              Five temporally consistent, coherent movers completed fifteen matched
-              obstacle encounters. All retained their matter, but their motion and
-              organization changed in different ways: bending, arrest, reversal, and
-              loss of coherence.
+              Twelve shared measurements compare 25,167 Flow Lenia observations,
+              859 EmbryoMaker snapshots, and 232 fish. A Lenia region selected
+              without fish data lies unusually close to the fish cohort. A
+              separate experiment follows five coherent moving bodies through
+              matched obstacle encounters.
             </p>
             <div class="link-row">
-              <a href="morphospace/obstacle-response/">Read the Experiment</a>
-              <a href="morphospace/">Return to the Morphospace</a>
-            </div>
-          </div>
-        </section>
-
-        <section class="section-block">
-          <div class="feature-card">
-            <div class="feature-title">The Geometry of a Synthetic Morphospace</div>
-            <p>
-              The same twelve measurements find persistent gaps in 25,167 Flow Lenia
-              specimens, 859 EmbryoMaker snapshots, and 232 fish outlines. One Lenia
-              region selected without fish data is unusually fish-near. Rare closed
-              paths also retain rule-state differences, giving the obstacle assay a
-              concrete prediction problem.
-            </p>
-            <div class="link-row">
-              <a href="morphospace/">Open the Report</a>
+              <a href="/dossiers/lenia-swarm/morphospace/">Open the Report</a>
               <a href="fiber-theory/">See the Geometric Model</a>
             </div>
           </div>
@@ -148,33 +70,13 @@
 
         <section class="section-block">
           <div class="feature-card">
-            <div class="feature-title">Causal Emergence in Flow Lenia</div>
+            <figure class="story-figure"><div class="story-pair"><div><video controls autoplay muted loop playsinline preload="metadata" src="/home-prototype/assets/orbium-native.mp4" poster="/home-prototype/assets/orbium-native-600.webp"></video><span>Native rule</span></div><div><video controls autoplay muted loop playsinline preload="metadata" src="/home-prototype/assets/orbium-recovered.mp4" poster="/home-prototype/assets/orbium-recovered-600.webp"></video><span>Recovered rule</span></div></div><figcaption>Rule recovery in standard Lenia: the same Orbium seed under native and recovered rules. <a href="/home-prototype/assets/orbium-pair.json">Recording provenance</a>.</figcaption></figure><h2 id="rule-story" class="feature-title">Can we recover the rules of a Lenia creature?</h2>
             <p>
-              Our experiments begin while a seeded field is still reorganizing,
-              then follow what happens as broad steerability narrows and the
-              response to an intervention becomes more specific to one
-              developmental history. The synthesis asks whether the first clear
-              sign of an organism may therefore appear in its changing
-              possibilities before it is obvious in its shape.
-            </p>
-            <div class="link-row">
-              <a href="causal-emergence/">Read the Synthesis</a>
-              <a href="causal-emergence/library/">Browse the Report Library</a>
-              <a href="causal-emergence/archive/">Open the Archive</a>
-            </div>
-          </div>
-        </section>
-
-        <section class="section-block">
-          <div class="feature-card">
-            <div class="feature-title">Many Rules Can Build the Same Body</div>
-            <p>
-              The anatomical compiler begins with a body and searches backward
-              for Flow Lenia rules that can sustain it. The report follows the
-              inverse from a 5,000-form fiber study through conditional
-              proposals, simulation-in-the-loop refinement, and an explicit
-              form demonstration, while keeping the failed simple landscape
-              story and the shape-versus-behavior boundary visible.
+              We give a search four measurements, a complete body, or an
+              observation from a known rule family. Matching measurements can
+              produce a different anatomy; maintaining a supplied body does not
+              yet solve how to grow it. An Orbium reconstruction shows what
+              becomes possible when the rule family and starting cells are known.
             </p>
             <div class="link-row">
               <a href="anatomical-compiler/">Open the Report</a>
@@ -188,12 +90,45 @@
 
         <section class="section-block">
           <div class="feature-card">
-            <div class="feature-title">Compendium Inspector</div>
+            <h2 id="response-story" class="feature-title">The same disturbance has different consequences as a body develops</h2>
             <p>
-              The compendium is the materialized morphospace. 13,390 indexed
-              creatures, 7,664 stable under standard initial conditions, spread
-              across 698 species in 8 families. Each row ties a genotype to its
-              phenotype, provenance, and a replay config.
+              Developing fields become harder to redirect even while sibling
+              runs reach different shapes. Matched interventions, feedback and
+              hidden-composition swaps reveal what a still image leaves out—and
+              which apparent effects did not survive a direct test.
+            </p>
+            <div class="link-row">
+              <a href="causal-emergence/">Explore the Findings</a>
+              <a href="causal-emergence/library/">Browse the Report Library</a>
+              <a href="causal-emergence/archive/">Open the Archive</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="feature-card">
+            <h2 class="feature-title">Obstacle Responses in Coherent Flow Lenia Bodies</h2>
+            <p>
+              Five temporally consistent, coherent movers completed fifteen matched
+              obstacle encounters. All retained their matter, but their motion and
+              organization changed in different ways: bending, arrest, reversal, and
+              loss of coherence.
+            </p>
+            <div class="link-row">
+              <a href="morphospace/obstacle-response/">Read the Experiment</a>
+              <a href="/dossiers/lenia-swarm/morphospace/">Read the Morphospace Report</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="feature-card">
+            <h2 class="feature-title">Compendium Inspector</h2>
+            <p>
+              Browse selected published releases, inspect the recorded shape and
+              motion measurements, and open a specimen’s replay configuration.
+              These galleries are selections from the broader archive; they are
+              not the complete cohort used in the morphospace analysis.
             </p>
             <div class="link-row">
               <a href="compendium/">Open Inspector</a>
@@ -207,7 +142,7 @@
           </div>
         </section>
 
-        <section class="section-block">
+        <details class="story-method"><summary>Tools for reproducing the experiments</summary>
           <p>
             The system is a controller-worker topology over a SWIM gossip
             cluster, with an MLX Swift engine for GPU-accelerated Flow Lenia
@@ -229,9 +164,10 @@
               host mode, and worker mode.
             </li>
           </ul>
-        </section>
+        </details>
 
         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
+<footer class="dossier-hub-footer-row"><a href="../../cabinet/lenia-swarm/README/">Cabinet docs</a><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/lenia-swarm" target="_blank" rel="noopener noreferrer">Repository</a></footer>
         <!-- GENERATED:DOSSIER_HUB_FOOTER END -->
       </main>
     </div>

@@ -6,7 +6,7 @@ summary = "Julia implementation of the BITSEY reaction-diffusion controller as c
 status = "concept"
 
 [site]
-visible = false
+visible = true
 featured = false
 
 [labels]
@@ -22,6 +22,11 @@ publish = false
 
 [spctr]
 project = "poly-morphogenesis"
+
+[spctr.docs]
+root = "docs"
+landing = "docs/report-draft.md"
+require_frontmatter = false
 
 [spctr.exec.check]
 description = "Run the Julia parity and CLI test suite in the pinned root flake shell"

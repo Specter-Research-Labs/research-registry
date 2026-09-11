@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "tangent-induced-causal-grammar",
+  "releaseId": "flce-tangent-induced-causal-grammar-a2857547400b",
+  "title": "Early Intervention Order Leaves Different Later Responses",
+  "date": "2026-08-25",
+  "status": "archive",
+  "evidenceClass": "exploratory causal-memory intervention",
+  "sourceReportSha256": "575ea67168d5e631fac474427e54a6edeb61b5482a729a0c4fe876a9b5b7060e",
+  "publicReportSha256": "575ea67168d5e631fac474427e54a6edeb61b5482a729a0c4fe876a9b5b7060e",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "fb25a9961551a1633589f58c4ce20a9d213f463a91d7feff06f153860a05a454",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "7d39007ad2efb509a22040824b0173d7fee644a2b9139f5f983bfc0f47fd274e"
+}

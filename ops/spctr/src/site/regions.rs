@@ -42,62 +42,6 @@ fn license_short(license: &str) -> &str {
     }
 }
 
-pub fn render_home_active_projects(records: &[SiteRecord]) -> String {
-    let slices = records::slice_records(records);
-    let mut blocks: Vec<String> = Vec::new();
-    for record in &slices.featured_dossiers {
-        let title_html = if let Some(href) = record.relative_hub_href("index.html") {
-            html! {
-                a class="project-title project-title-link" href=(href) { (record.title) }
-            }
-        } else {
-            html! {
-                span class="project-title" { (record.title) }
-            }
-        };
-        let block = html! {
-            div class="project" id=(format!("project-{}", record.slug)) {
-                (title_html)
-                p { (record.summary) }
-            }
-        };
-        blocks.push(block.into_string());
-    }
-    blocks.join("\n\n")
-}
-
-pub fn render_home_featured_addenda(records: &[SiteRecord]) -> String {
-    let slices = records::slice_records(records);
-    let mut blocks: Vec<String> = Vec::new();
-    for record in &slices.featured_addenda {
-        let block = html! {
-            div class="addenda-list-item" role="listitem" {
-                div class="addenda-title" { (record.title) }
-                p { (inline_markdown(&record.summary)) }
-            }
-        };
-        blocks.push(block.into_string());
-    }
-    blocks.join("\n")
-}
-
-pub fn render_home_blog_posts(posts: &[BlogPostRecord]) -> String {
-    let mut blocks: Vec<String> = Vec::new();
-    for post in posts {
-        let href = discover::relative_href("index.html", &post.href);
-        let block = html! {
-            div class="addenda-list-item" role="listitem" {
-                div class="addenda-title" { a href=(href) { (post.title) } }
-                @if !post.summary.is_empty() {
-                    p { (post.summary) }
-                }
-            }
-        };
-        blocks.push(block.into_string());
-    }
-    blocks.join("\n")
-}
-
 fn render_dossier_links(record: &SiteRecord, page_path: &str) -> Markup {
     let mut links: Vec<Markup> = Vec::new();
     if let Some(href) = record.relative_hub_href(page_path) {
@@ -123,6 +67,14 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
     for record in &slices.visible_dossiers {
         let block = html! {
             article class="dossier-card" id=(record.slug) {
+                @if let Some(href) = record.relative_hub_href("dossiers/index.html") {
+                    @match record.slug.as_str() {
+                        "lenia-swarm" => { a class="dossier-preview" href=(href) { img src="/home-prototype/assets/quadrium-poster.webp?v=2" alt="A Quadrium-derived Lenia pattern." loading="lazy"; } }
+                        "wonton-soup" => { a class="dossier-preview" href=(href) { img src="/assets/research-proof.svg" alt="Two routes to an algebraic proof, shown schematically." loading="lazy"; } }
+                        "zang-levin-playground" => { a class="dossier-preview" href=(href) { img src="/assets/research-sorting.svg" alt="A schematic of local exchanges producing a sorted sequence." loading="lazy"; } }
+                        _ => {}
+                    }
+                }
                 div class="dossier-card-header" {
                     div class="dossier-card-tab" {
                         @if let Some(ref sid) = record.series {
@@ -149,9 +101,11 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
                                 }
                             }
                         }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Activity" }
-                            span class="card-meta-value" { (record.last_activity) }
+                        @if record.last_activity != "unknown" {
+                            div class="card-meta-row" {
+                                span class="card-meta-label" { "Activity" }
+                                span class="card-meta-value" { (record.last_activity) }
+                            }
                         }
                     }
                     p { (record.summary) }
@@ -190,12 +144,13 @@ fn render_addenda_links(
 
 pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     let slices = records::slice_records(records);
-    let label_type = |r: &SiteRecord| r.labels.get("type").map_or("", String::as_str).to_owned();
     let mut blocks: Vec<String> = Vec::new();
     for record in &slices.visible_addenda {
-        let lt = label_type(record);
         let block = html! {
             article class="dossier-card" id=(record.slug) {
+                svg class="addendum-symbol" aria-hidden="true" {
+                    use href=(format!("/assets/addenda-symbols.svg?v=20260911#{}", record.slug)) {}
+                }
                 div class="dossier-card-header" {
                     div class="dossier-card-tab" {
                         @if let Some(ref sid) = record.series {
@@ -205,28 +160,6 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
                     }
                 }
                 div class="dossier-card-body" {
-                    div class="card-meta" {
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Type" }
-                            span class="card-meta-value" {
-                                span class=(format!("addenda-chip class-{lt}")) {
-                                    (lt)
-                                }
-                            }
-                        }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Status" }
-                            span class="card-meta-value" {
-                                span class=(format!("addenda-chip status-{}", record.status)) {
-                                    (record.status)
-                                }
-                            }
-                        }
-                        div class="card-meta-row" {
-                            span class="card-meta-label" { "Activity" }
-                            span class="card-meta-value" { (record.last_activity) }
-                        }
-                    }
                     p { (inline_markdown(&record.summary)) }
                     div class="link-row" {
                         (render_addenda_links(record, &slices.dossier_by_slug, "addenda/index.html"))
@@ -276,8 +209,10 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
                         (record.status)
                     }
                 }
-                span class="dossier-hub-metabar-item" {
-                    "activity " span class="dossier-hub-metabar-value" { (record.last_activity) }
+                @if record.last_activity != "unknown" {
+                    span class="dossier-hub-metabar-item" {
+                        "activity " span class="dossier-hub-metabar-value" { (record.last_activity) }
+                    }
                 }
                 span class="dossier-hub-metabar-item" {
                     "license " span class="dossier-hub-metabar-value" { (license_short(&record.license)) }

@@ -1,24 +1,18 @@
 ---
+title: "Wonton follow-up: earlier figure outline"
 release: "draft"
 ---
 
-# Follow-Up
+# Wonton follow-up: earlier figure outline
 
-## What is in scope
+This outline collects figures for the April analysis. It is retained as a draft, not a second article. The [April analysis draft](/research-notes/wonton-soup-follow-up/) records its cohorts and limitations; [Which proofs survive a blocked tactic?](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/) is the later controlled account.
 
-## The paired panel is three-way, not bimodal
+## Figures retained for the April analysis
 
-![Paired-panel intervention taxonomy](../../assets/blog/wonton-soup-follow-up/fig16-followup-taxonomy.png)
+![Paired intervention outcome categories](../../assets/blog/wonton-soup-follow-up/fig16-followup-taxonomy.png)
 
-## Constraint-generated competency 
+![Provider outcomes in the paired April panel](../../assets/blog/wonton-soup-follow-up/fig17-followup-provider-splits.png)
 
-![Provider-specific intervention outcomes on the paired panel](../../assets/blog/wonton-soup-follow-up/fig17-followup-provider-splits.png)
+![Historical proof-cluster analysis versus blind-relative efficiency](../../assets/blog/wonton-soup-follow-up/fig18-followup-basins.png)
 
-## Tactic roles are visible
-
-## Is basin structure provider-specific?
-
-![Basin multistability versus blind-relative gain](../../assets/blog/wonton-soup-follow-up/fig18-followup-basins.png)
-
-## $K$-metric context
-For the broader framing on cognition across heterogeneous substrates, see Robert Chis-Ciure and Michael Levin, "Cognition all the way down 2.0: neuroscience beyond neurons in the diverse intelligence era," *Synthese* 206, 257 (2025), [doi:10.1007/s11229-025-05319-6](https://doi.org/10.1007/s11229-025-05319-6).
+These figures should be read with their original cohort definitions. The cluster labels do not establish dynamical attractors, and uncontrolled variation in DeepSeek inference can also change the recorded search.

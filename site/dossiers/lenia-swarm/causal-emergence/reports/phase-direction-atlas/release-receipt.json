@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "phase-direction-atlas",
+  "releaseId": "flce-phase-direction-atlas-5f32dc67e690",
+  "title": "Similar Bodies Can Respond in Opposite Directions",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "phase-direction atlas",
+  "sourceReportSha256": "091f121a83c7c825db2fb7c7141be7e00d6454d11fc9efd5b7a6ec0f4b4efffe",
+  "publicReportSha256": "091f121a83c7c825db2fb7c7141be7e00d6454d11fc9efd5b7a6ec0f4b4efffe",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "3470636051ce115eb60281c71ecba967a64fc6efb55205eef5532cf58fdddd41",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "1381b98136a36a569880d30db88a38e1ad654c6ae83d199344987197f1a57feb"
+}

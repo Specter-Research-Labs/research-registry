@@ -1,0 +1,80 @@
+[
+  {
+    "id": "spatial-scale-action-world",
+    "old": "The organized state did not maximize the number of possible futures. It canalized them.",
+    "new": "The organized state produced less separation among the tested futures and more consistent formation times.",
+    "reason": "Pairwise distances over a fixed intervention panel do not estimate the number of reachable futures."
+  },
+  {
+    "id": "spatial-scale-action-world",
+    "old": "Disorder opened more futures. It did not create a better map.",
+    "new": "Spatial shuffling increased separation among distant outcomes.",
+    "reason": "Replace possibility-count claim with measured separation."
+  },
+  {
+    "id": "spatial-scale-action-world",
+    "old": "Distant outcomes diverge more after any spatial shuffle. Raw possibility expands as organization is removed.",
+    "new": "Distant outcomes diverge more after any spatial shuffle. This measures separation within the tested intervention panel, not the total number of reachable forms.",
+    "reason": "Distinguish measured outcome distances from accessible-state cardinality."
+  },
+  {
+    "id": "spatial-scale-action-world",
+    "old": "If a partial spatial repair restores the action geometry first, we have a manipulable order parameter for developmental commitment—not merely an ablation effect. That is where we go next.",
+    "new": "If partial spatial repair restores the response geometry before visible form returns, it would support a causal role for those spatial relationships. We would then need to test whether the same measure tracks that restoration across other specimens and interventions.",
+    "reason": "A successful rescue alone does not establish an order parameter."
+  },
+  {
+    "id": "organism-hardens-without-narrowing",
+    "old": "For this cohort and measurement, effects outside the reported interval are not supported: compressions stronger than about &minus;0.008 per pair distance are outside the interval. What it cannot do is distinguish the original &minus;0.0040 from zero, because twelve fresh families buy an interval half-width of about 0.006, so a true effect of the original size would fail this criterion more often than not. The late-passage shape of the profile matches the original finding while its magnitude, at half the original point estimate, does not clear it. The fine-shape compression now stands as an unconfirmed hypothesis with a direction-consistent replication attempt on record, not as a result.",
+    "new": "The fresh interval includes both zero and the original &minus;0.0040 estimate. This experiment therefore neither confirms the earlier compression nor rules out an effect of that size. The point estimate is about half the original magnitude, and the late-passage profile has the same direction. Fine-shape compression remains an unconfirmed hypothesis; the frequency with which a new study would detect it requires a separate power analysis.",
+    "reason": "Observed confidence interval width alone does not establish replication power."
+  },
+  {
+    "id": "preinjury-recovery-confirmation",
+    "old": "current founder fractions passage 0, passage 1, passage 2",
+    "new": "current fractions of founders 0, 1, and 2",
+    "reason": "Founder coordinate indices were mistakenly editorialized as passage numbers."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "Before a persistent body is visible, a developing Flow Lenia field already responds differently to nearby interventions. Later, the same push has less influence—yet sibling runs keep reaching different shapes.",
+    "new": "A developing Lenia body becomes less sensitive to the same disturbance, even as runs with the same rule grow into different shapes. To understand that combination, we follow how its responses change before and after a coherent body appears.",
+    "reason": "Lead with the developmental result and the question it creates, in connected prose."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "We began by asking whether a disturbed run could recover the organization and trajectory of its undisturbed counterpart. That recovery was not clean or consistent. Following the different futures instead led to the experiments below: forecasts, branching interventions, feedback, and hidden-state rewrites.",
+    "new": "A still image shows where the matter is. It cannot show how that matter will respond when its surroundings change. In Flow Lenia, we can copy an exact developing state, disturb one copy, and compare the two as they continue. Repeating this at different ages lets us ask how a body acquires a characteristic response, and whether becoming harder to change also makes its development more predictable.",
+    "reason": "Introduce the experimental operation and scientific motivation before reporting limits or listing methods."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "<span class=\"micro\">What we can see now</span>\n        <strong>Different responses before a persistent body</strong>\n        <p>The prospective cohort shows constrained futures before a persistent silhouette. A separate cohort shows recognizable responses by passages 12–24. These are complementary findings, not one shared developmental clock.</p>",
+    "new": "<span class=\"micro\">The developmental puzzle</span>\n        <strong>Resistance grows while sibling forms diverge.</strong>\n        <p>Later bodies resist the tested disturbance more strongly, yet runs with the same rule keep growing apart. We need to explain both changes together.</p>",
+    "reason": "Give the margin emphasis to the result that motivates the argument; cohort distinctions remain beside their comparisons."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "    <div class=\"quickread\" aria-label=\"Ninety-second reading\">\n      <article><b>01</b><h2>Different futures are already open at passage 8.</h2><p>The early set of intervention outcomes is as separated as it is at passage 32, while a whole-over-parts forecasting relation rises before sustained visible structure.</p></article>\n      <article><b>02</b><h2>By passage 12→24, the response is recognizable.</h2><p>A response fingerprint can re-identify its source specimen or genotype across the earliest interval tested, so it may have appeared earlier; this test does not locate its onset.</p></article>\n      <article><b>03</b><h2>Development closes possibilities selectively.</h2><p>Timing and spatial leverage harden while sibling shapes spread farther apart, so becoming harder to rewrite does not mean converging on one body.</p></article>\n    </div>",
+    "new": "    <div class=\"prose\">\n      <p>Resistance to a disturbance and convergence on a common form might seem like two signs of the same developmental stability. Here they separate. That distinction leads us back to the early field: before a coherent body has formed, what already constrains its later responses? The experiments below follow those constraints through development, then test how far feedback and changes in hidden composition can redirect them.</p>\n    </div>",
+    "reason": "Replace a staccato three-result digest with the reasoning that connects the experiments."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "<p class=\"passage-note\">Passage numbers count forward from the seeded starting field. Passages 8, 12, and later checkpoints are scheduled observations, not life stages inferred from appearance.</p><header class=\"section-head\"><div><span class=\"section-no\">01 · how we looked</span><h2>One visible field can have different futures.</h2></div><p class=\"lede\">A visible Flow Lenia frame shows where the matter is, although it does not show all of the channel composition hidden beneath that sum, nor does it tell us which nearby futures remain reachable; we therefore compared forecasts, interventions, and later responses from the same exact checkpoints.</p></header>",
+    "new": "<header class=\"section-head\"><div><span class=\"section-no\">01 · following the response</span><h2>What the visible body leaves out</h2></div><p class=\"lede\">The visible field adds together the matter in Flow Lenia’s channels. Different channel mixtures can therefore produce the same picture. Because those channels interact differently, a matching image need not imply a matching future.</p></header><p class=\"passage-note\">We count simulation passages from the seeded starting field and save states at scheduled checkpoints. Repeating the comparison at later passages follows the same rule and developing field through time.</p>",
+    "reason": "Explain the concrete hidden-state mechanism before introducing measurement terminology."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "One instrument, which we call <em>whole-over-parts</em>, compares how well the full state forecasts its next state with how well the strongest tested separable split forecasts it; when this difference rises, the whole is catching up with that split, although in the prospective precursor its absolute level remains negative and the best split still forecasts better at every measured phase. This is a forecasting comparison inspired by GARD and related compositional questions, not an identification with IIT Φ.",
+    "new": "To ask whether spatial regions become more informative about one another as a body forms, we compare two forecasts. One uses the measured state jointly; the other divides it into parts and treats those groups independently. We choose the strongest tested split as the comparator. The difference, which we call <em>whole-over-parts</em>, measures how much predictive information the joint description gains or loses relative to that split.",
+    "reason": "Define the measurement through the question and comparison, without treating the full microscopic state as the fitted feature vector."
+  },
+  {
+    "id": "synthesis-v7",
+    "old": "Because one score could easily mistake a convenient coordinate for a cause, we also intervened directly: we branched exact futures from the same checkpoint, applied matched writes at different ages, ran feedback policies and then released them, and swapped hidden channel composition while holding the visible field exactly fixed. The account that follows depends on where these different views agree, and it keeps their disagreements visible when they do not.",
+    "new": "If the difference rises before coherent form appears, interactions among the measured regions may be changing in a way that the outline does not capture. That is what the prospective comparison found: the joint forecast closed part of its deficit, although the best split remained ahead. The score is inspired by GARD’s whole-versus-parts question; it is not a measurement of IIT Φ.</p>\n      <p>A changing forecast does not tell us what controls development. For that, we return to the saved states and intervene. By comparing each disturbed continuation with an untouched copy, we measure the consequences of the intervention directly. Hidden-channel rewrites make this especially revealing: the initial picture can remain exactly the same while the later body changes. These comparisons connect the information measurement to a physical question about how the field maintains and changes its organization.",
+    "reason": "Connect descriptive forecasting to intervention through a sustained explanation; preserve negative predictive relation and conceptual distinction."
+  }
+]

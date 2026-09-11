@@ -251,6 +251,9 @@ enum SiteCommand {
     Blog {
         #[arg(long)]
         write: bool,
+        /// Render one article under the unpublished review surface.
+        #[arg(long, requires = "write")]
+        preview: Option<String>,
     },
     Pdf {
         #[arg(long)]
@@ -296,12 +299,15 @@ enum SiteCommand {
     },
     #[command(about = "Stage the SHA-matched Flow Lenia causal-emergence report library")]
     StageLeniaCausalReports {
-        #[arg(long, help = "Local root containing the versioned report HTML files")]
+        #[arg(
+            long,
+            help = "Local root containing source report HTML or a verified public library bundle"
+        )]
         input_root: camino::Utf8PathBuf,
         #[arg(
             long,
             default_value = "artifacts/publication/causal-emergence",
-            help = "New output directory for the public release bundle"
+            help = "New output directory for the website report bundle"
         )]
         output: camino::Utf8PathBuf,
         #[arg(
@@ -947,8 +953,11 @@ fn dispatch_site(command: SiteCommand) -> anyhow::Result<()> {
             let repo_root = crate::manifest::repo_root()?;
             site::export_project_feeds(&repo_root, write)
         }
-        SiteCommand::Blog { write } => {
+        SiteCommand::Blog { write, preview } => {
             let repo_root = crate::manifest::repo_root()?;
+            if let Some(slug) = preview {
+                return crate::site::blog::preview_blog(&repo_root, &slug);
+            }
             crate::site::blog::build_blog(&repo_root, write)
         }
         SiteCommand::Pdf { all, slug, output } => {

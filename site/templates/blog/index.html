@@ -4,13 +4,16 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="color-scheme" content="light" />
-        <title>Blog | SPECTER Labs</title>
+        <title>Writing | SPECTER Labs</title>
         <link rel="icon" href="../assets/logo-black.svg" type="image/svg+xml" />
         <link rel="preload" href="../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="stylesheet" href="../style.css?v=20260518-sitecss" />
-    </head>
-    <body>
+        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+<link rel="stylesheet" href="/assets/research-indexes.css?v=20260911">
+</head>
+    <body class="writing-index">
         <div class="site-shell">
             <header class="site-topnav">
                 <a class="site-brand" href="../">
@@ -18,9 +21,9 @@
                     <span class="site-brand-name">SPECTER LABS</span>
                 </a>
                 <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="../dossiers/">Dossiers</a>
+                    <a class="nav-link" href="../dossiers/">Research</a>
+                    <a class="nav-link" href="../blog/" aria-current="page">Writing</a>
                     <a class="nav-link" href="../addenda/">Addenda</a>
-                    <a class="nav-link" href="../blog/" aria-current="page">Blog</a>
                     <a class="nav-link" href="../cabinet/">Cabinet</a>
                 </nav>
             </header>
@@ -31,19 +34,56 @@
 
             <main class="site-main">
                 <section class="section-block" id="overview">
-                    <div class="site-page-title">Blog</div>
-                    <p class="section-lead">
-                        Public writing on current work.
-                    </p>
+                    <h1 class="site-page-title">Writing</h1>
                 </section>
 
-                <section class="section-block" id="published-writing">
+                <section class="writing-reports" id="published-writing" aria-labelledby="articles-heading"><h2 class="site-section-title" id="articles-heading">Articles</h2>
+<article class="writing-report writing-report-lead">
+<a class="writing-cover" href="/dossiers/lenia-swarm/morphospace/" aria-label="Read How much does shape explain?"><img src="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" alt="The measured shape map comparing Flow Lenia, fish, and simulated tissue."></a>
+<div><h2><a href="/dossiers/lenia-swarm/morphospace/">How much does shape explain?</a></h2><p>A map of 25,167 Flow Lenia patterns reveals an unexpected resemblance to fish. Experiments on movement and disruption ask how far that resemblance helps explain what a body does.</p></div>
+</article>
+<article class="writing-report">
+<a class="writing-cover writing-specimens" href="/dossiers/lenia-swarm/anatomical-compiler/" aria-label="Read Can we recover the rules of a Lenia creature?"><figure><img src="/dossiers/lenia-swarm/anatomical-compiler/assets/organic-target-late.png" alt="The requested tapered body."><figcaption>Requested body</figcaption></figure><figure><img src="/dossiers/lenia-swarm/anatomical-compiler/assets/organic-recovered-late.png" alt="Repeated segments produced by the fitted rule."><figcaption>Fitted rule</figcaption></figure></a>
+<div><h2><a href="/dossiers/lenia-swarm/anatomical-compiler/">Can we recover the rules of a Lenia creature?</a></h2><p>A fitted rule matches the requested measurements but produces a different body. We trace the gap between matching a shape, maintaining it, and recovering the rule that made it.</p></div>
+</article>
+<article class="writing-report">
+<a class="writing-cover writing-causal" href="/dossiers/lenia-swarm/causal-emergence/reports/synthesis-v7/" aria-label="Read Individual responses before coherent bodies"><img src="/assets/writing-causal-response.svg" alt="Measured response to the same disturbance decreases with developmental age, measured 120 steps later."></a>
+<div><h2><a href="/dossiers/lenia-swarm/causal-emergence/reports/synthesis-v7/">Individual responses before coherent bodies</a></h2><p>As Flow Lenia develops, the same disturbance has less influence even while sibling forms keep diverging. Experiments reveal changes in response that a still image cannot show.</p></div>
+</article>
                     <div class="resource-grid">
                         <!-- GENERATED:BLOG_INDEX_POSTS START -->
                         <!-- GENERATED:BLOG_INDEX_POSTS END -->
                     </div>
                 </section>
-            </main>
+            <section class="section-block"><h2 class="site-section-title">Research notes</h2><ol class="writing-notes"><li class="research-note-card">
+                            <div class="research-note-header">
+                                <span class="research-note-id">21 May–10 June 2026</span>
+                                
+                            </div>
+                            <h2 class="research-note-title">
+                                <a href="/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">Which proofs survive a blocked tactic?</a>
+                            </h2>
+                            <p>Blocking a tactic tests whether the prover can still find an alternative within its search budget.</p>
+                        </li><li class="research-note-card">
+                            <div class="research-note-header">
+                                <span class="research-note-id">5–8 August 2026</span>
+                                
+                            </div>
+                            <h2 class="research-note-title">
+                                <a href="/research-notes/2026-08-05-the-first-fission-screen-mostly-found-stripes-and-dust/">Stripes, dust, and false fission</a>
+                            </h2>
+                            <p>How stripes, dust, and mutation artifacts forced a change in experimental design.</p>
+                        </li><li class="research-note-card">
+                            <div class="research-note-header">
+                                <span class="research-note-id">16–29 August 2026</span>
+                                
+                            </div>
+                            <h2 class="research-note-title">
+                                <a href="/research-notes/2026-08-16-development-changes-what-the-same-perturbation-can-do/">Older Lenia organisms resist the same disturbance</a>
+                            </h2>
+                            <p>Separating simple growth from a measured change in developmental susceptibility.</p>
+                        </li></ol><p><a href="/research-notes/">All research notes →</a></p></section>
+            </main><footer class="publication-footer"><a href="mailto:contact@specterlab.org">contact@specterlab.org</a><a href="https://github.com/Specter-Research-Labs/research-registry">Research registry ↗</a><a href="/">Specter Labs</a></footer>
         </div>
     </body>
 </html>

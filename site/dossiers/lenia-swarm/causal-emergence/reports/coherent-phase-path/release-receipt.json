@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "coherent-phase-path",
+  "releaseId": "flce-coherent-phase-path-54dbfe453e57",
+  "title": "Equal Disruption Can Send the Body Toward Different Futures",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "coherent-path phase intervention",
+  "sourceReportSha256": "dae8be72ec7de0471875b82927484afce1e4e4763a3f7a3f5bff23148e13589b",
+  "publicReportSha256": "dae8be72ec7de0471875b82927484afce1e4e4763a3f7a3f5bff23148e13589b",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "0ecec6f7bc4fb08e4e8531000681feb1123877c35a78f0bc07bbcbd5d7ed3160",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "dd072c6a3292c4ae379123db61eb48461bbb0b8e000607daf5e5f1b757a641a9"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-rewrite",
+  "releaseId": "flce-commitment-rewrite-47eb03326814",
+  "title": "Matched Pulses Write Opposite Causal Memories",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "direction-matched pulse intervention",
+  "sourceReportSha256": "85999ea34a21c30223f975facc5c67d007b8adafe9cdee1d7db127c663fe3359",
+  "publicReportSha256": "d85b634076b1ba607b51d16e60d52847b763a157a9f04fa7d70e404493c90508",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "85814ef186029e660009f52e9d9a28bce141ebb0283a0e786a1955d40d16564f",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "89b889ccce796183fffd41d3baefe58ca5620a26c64dfffa401b3be79f88d134"
+}

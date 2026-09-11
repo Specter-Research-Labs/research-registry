@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-alignment-window",
+  "releaseId": "flce-developmental-alignment-window-45a517147cbb",
+  "title": "The Same Intervention Changes Effect with Age",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "prospective age-alignment study",
+  "sourceReportSha256": "5898338e398f31a61b0a5f378d633b04b34b4ce5803d4f55555867a6bea149d1",
+  "publicReportSha256": "821cff83138e12013527fa829d171b85492f7b77d682f0c57b39c43b1f2940a1",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "fb581e298194dd7b14be3acda35b53df3fef4baf7dd8ae0355941bf99643124b",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "a8fe4fec0aee9c78d865665bfef3615e050ee8b3bdc365e71ea43c1e0de09a06"
+}

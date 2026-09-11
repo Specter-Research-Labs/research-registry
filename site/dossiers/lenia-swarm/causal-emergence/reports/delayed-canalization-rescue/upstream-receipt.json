@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "delayed-canalization-rescue",
+  "releaseId": "flce-delayed-canalization-rescue-4f20bc066b06",
+  "title": "Spatial Repair Changes Its Effect with Development",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "delayed exact-repair intervention",
+  "sourceReportSha256": "5ab23750e028e88c7c10ffe1c0e245309f307b8a1f314b578b0e7b874df62a0e",
+  "publicReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "213aa1d78d44c4cebb5d67eb7c66ff909803c08873ac0389e30e0ec5002be647",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "617a63e484954d7424852481afb0c76c859779d55a990dffa8c41635c025a673"
+}

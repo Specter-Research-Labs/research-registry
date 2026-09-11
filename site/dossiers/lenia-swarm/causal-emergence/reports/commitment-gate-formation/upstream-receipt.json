@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-gate-formation",
+  "releaseId": "flce-commitment-gate-formation-a1ee79827ed1",
+  "title": "Matched Actions Preserve Distinct Body Histories",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "frozen matched-action continuation",
+  "sourceReportSha256": "fb6d52a75f8b722e761481129f9eab94b17002573de943da0e1a814d6f3232da",
+  "publicReportSha256": "81aa33822d31f8f73e33535524ace81e579c29c5363ada9afd562e8a86a74c6b",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "c053bd4f0ede37569fd805428a5998532fe606cbd3542134f1a94d4b8dbc219a",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "65f44bb34b9a409648df4e629971c3a0eb73d3cdfe3ec0314a6d7d59547d1777"
+}

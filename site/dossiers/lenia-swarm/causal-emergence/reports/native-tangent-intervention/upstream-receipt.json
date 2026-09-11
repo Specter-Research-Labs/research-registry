@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "native-tangent-intervention",
+  "releaseId": "flce-native-tangent-intervention-241e9fc85119",
+  "title": "Forward and Backward Hidden-State Pulses Produce Different Bodies",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "native-direction intervention",
+  "sourceReportSha256": "8236b290b60a42cacfde6893de7662dedf8f523c8e11201331506439ae10eb9d",
+  "publicReportSha256": "9aedd78a425b040e1dd1da5ccea33a9dab4a69068e7976353b0eb06aa23c6292",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "13584d2db98b85b451de1ac49ca4e54a27948184aa5e4f0111b72c1c45cb7591",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "37636ceb6fe3f5228d1691ec9ded0bdd7839c69692bada6ec208f0d7a511ee36"
+}

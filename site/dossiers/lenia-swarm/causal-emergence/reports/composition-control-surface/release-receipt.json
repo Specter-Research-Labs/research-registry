@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "composition-control-surface",
+  "releaseId": "flce-composition-control-surface-8af8b4732a5d",
+  "title": "Where Hidden Composition Is Placed Controls Expansion and Contraction",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "local composition-control intervention",
+  "sourceReportSha256": "b7781b011fa789bfb057b9e5ad22bd71c5a114acfd40cd2573f36aab42bf87cd",
+  "publicReportSha256": "b7781b011fa789bfb057b9e5ad22bd71c5a114acfd40cd2573f36aab42bf87cd",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "c28dd1236f574eb0be92fb4f18e71787da606339eea888cd6c645b9ee947bb35",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "c8c46a30fb9c311e8f73b767d901c18380400f658947864cad7d5cf63ab6a02d"
+}

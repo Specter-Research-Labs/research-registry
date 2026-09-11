@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-commitment-aperture",
+  "releaseId": "flce-developmental-commitment-aperture-bc514043ff88",
+  "title": "The Fine-Shape Commitment Signal Did Not Replicate",
+  "date": "2026-08-25",
+  "status": "archive",
+  "evidenceClass": "mixed primary-and-exploratory intervention",
+  "sourceReportSha256": "088ee783d14a6ad35f1673445068baf21ae0e4b2144cd68cb5ff31c8b7c68507",
+  "publicReportSha256": "088ee783d14a6ad35f1673445068baf21ae0e4b2144cd68cb5ff31c8b7c68507",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "97741dd462c563ff8824e0f5dc8f643c43a519306163fc36f62f68925a826894",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "530e19d218340862e51ab10adb4cf0c5f0d771b8fe88e75266d16f5b446adf6e"
+}

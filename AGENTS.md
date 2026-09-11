@@ -61,7 +61,8 @@ Each Python dossier or addenda directory should have:
 
 # What NOT to Do
 - Do not create documentation markdown files outside `dossiers/*/docs/` or `addenda/*/docs/`.
-  - Exceptions: repo root `README.md`, per-dossier/per-addendum `README.md` entry points, and public research-note sources under `site/research-notes/*/index.md`.
+  - Exceptions: repo root `README.md`, per-dossier/per-addendum `README.md` entry points, public research-note sources under `site/research-notes/*/index.md`, and internal maintainer documentation under `ops/docs/`.
+  - Dossier and addendum `docs/` directories feed the public website Cabinet. Keep internal maintenance guides and operational notes in `ops/docs/`, linked from `ops/README.md`; do not put them in published research docs or `site/`.
 - For public prose and research notes, avoid abstract institutional scaffolding.
   - Do not default to "types of things" lists, stacked tiny sections, symmetrical
     "what X can/cannot prove" framing, or taxonomy-first exposition.

@@ -18,8 +18,11 @@
     <link rel="preload" href="/fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="/assets/report.css?v=20260902-report-7" />
-  </head>
-  <body class="report-page report-theme-morphospace">
+      <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+<link rel="stylesheet" href="/assets/publication-formats.css?v=20260910-method">
+</head>
+  <body class="report-page report-theme-morphospace report-format-method" data-publication="report">
     <div class="site-shell report-shell">
       <header class="site-topnav">
         <a class="site-brand" href="/">
@@ -27,11 +30,11 @@
           <span class="site-brand-name">SPECTER LABS</span>
         </a>
         <nav class="site-topnav-links" aria-label="Site navigation">
-          <a class="nav-link" href="/dossiers/" aria-current="page">Dossiers</a>
-          <a class="nav-link" href="/addenda/">Addenda</a>
-          <a class="nav-link" href="/blog/">Blog</a>
-          <a class="nav-link" href="/cabinet/">Cabinet</a>
-        </nav>
+                    <a class="nav-link" href="/dossiers/" aria-current="page">Research</a>
+                    <a class="nav-link" href="/blog/">Writing</a>
+                    <a class="nav-link" href="/addenda/">Addenda</a>
+                    <a class="nav-link" href="/cabinet/">Cabinet</a>
+                </nav>
       </header>
 
       <div class="site-rules" aria-hidden="true"><div class="site-rule strong"></div><div class="site-rule"></div></div>
@@ -59,14 +62,14 @@
 
         <section class="report-panel" aria-labelledby="lead-title">
           <div class="report-heading">
-            <div class="report-kicker">Main result / 15 matched encounters</div>
+            
             <h2 id="lead-title">The obstacle caused deflection, arrest, and one near-reversal</h2>
             <p class="report-dek">
               Every valid obstacle branch made contact and every organism departed from
               its unobstructed trajectory. No trial lost matter: retained mass remained
               at 100% within numerical drift. What changed was the organization and
               direction of that matter. Two specimens continued at roughly 30% of sham
-              speed with modest turns; two almost stopped while turning about 60°; one
+              forward progress with modest turns; two almost stopped while turning about 60°; one
               response included an approximately 180° reversal and a marked loss of
               dominant-body coherence.
             </p>
@@ -81,7 +84,7 @@
           <div class="report-card-footer">
             <div class="report-actions"><a class="report-button report-button--primary" href="#responses">Compare specimens</a><a class="report-button" href="#interpretation">Read the interpretation</a></div>
             <details class="report-receipt">
-              <summary>Exact receipts</summary>
+              <summary>Data and methods</summary>
               <dl>
                 <div><dt>Outcome rows</dt><dd><code>a9e3af18abce9d13efb6f7f4308ffecb550fe8d693ae43c3529399c17785d7ac</code></dd></div>
                 <div><dt>Candidates</dt><dd><code>4455ea5edd5b5754d601069fcaf8770c77b28e88a9f029beed8e8b36de00dcda</code></dd></div>
@@ -93,10 +96,14 @@
 
         <section class="report-result" id="cohort" aria-labelledby="cohort-title">
           <div class="report-result-copy">
-            <div class="report-kicker">01 / Finding actual individuals</div>
-            <h2 id="cohort-title">The later compendium did contain coherent movers</h2>
-            <p>The archive contains sixteen later campaigns built around individual persistence, locomotion, compact bodies, and shape preservation. Their 626 exact exports were replayed for 3,600 steps with all state channels included in the body measurement.</p>
-            <div class="report-reading"><p>Of those replays, 184 passed the temporal-individuality threshold and nine also moved at least half a body diameter. They came from four discovery campaigns and moved between 0.59 and 2.09 body diameters. These are not visually selected “organic-looking” patterns. Each passed a quantitative identity test before its motion was considered.</p></div>
+            <div class="report-method-heading">
+              <div class="report-kicker">01 / Finding actual individuals</div>
+              <h2 id="cohort-title">The later compendium did contain coherent movers</h2>
+            </div>
+            <div class="report-method-prose">
+              <p>The archive contains sixteen later campaigns built around individual persistence, locomotion, compact bodies, and shape preservation. Their 626 exact exports were replayed for 3,600 steps with all state channels included in the body measurement.</p>
+              <div class="report-reading"><p>Of those replays, 184 passed the temporal-individuality threshold and nine also moved at least half a body diameter. They came from four discovery campaigns and moved between 0.59 and 2.09 body diameters. Each passed a quantitative identity test before its motion was considered.</p></div>
+            </div>
           </div>
           <figure class="report-figure report-figure--data">
             <div class="report-figure-scroll" tabindex="0" aria-label="Scrollable cohort qualification figure"><img src="/assets/blog/lenia-morphospace-obstacle-response/fig-qualified-cohort.svg" alt="Qualification funnel from 626 exact replays to five valid paired obstacle assays." /></div>
@@ -120,10 +127,14 @@
 
         <section class="report-result" id="assay" aria-labelledby="assay-title">
           <div class="report-result-copy">
-            <div class="report-kicker">02 / Matched perturbation</div>
-            <h2 id="assay-title">The grid grew; the creatures did not</h2>
-            <p>Several bodies occupied too much of their native 128² or 256² arena to place an obstacle entirely outside them and still leave enough runway for contact. We therefore recentered each exact state patch in a 512² wall arena. The rule parameters, two state channels, 5×5 connectivity between each channel pair, time step, reintegration, and patch contents remained unchanged.</p>
-            <div class="report-reading"><p>Each specimen developed for 1,200 steps. Its recent displacement defined a heading. A 3,600-step sham continuation then supplied the earliest future position where ahead, left, and right placements would all begin clear and later intersect the body. The three exposed branches began from the identical checkpoint. The obstacle was an external circular wall potential with radius half the body’s 95% mass radius; it did not erase state or add a sensor channel.</p></div>
+            <div class="report-method-heading">
+              <div class="report-kicker">02 / Matched perturbation</div>
+              <h2 id="assay-title">The grid grew; the creatures did not</h2>
+            </div>
+            <div class="report-method-prose">
+              <p>Several bodies occupied too much of their native 128² or 256² arena to place an obstacle entirely outside them and still leave enough runway for contact. We therefore recentered each exact state patch in a 512² wall arena. The rule parameters, two state channels, 5×5 connectivity between each channel pair, time step, reintegration, and patch contents remained unchanged.</p>
+              <div class="report-reading"><p>Each specimen developed for 1,200 steps. Its recent displacement defined a heading. A 3,600-step sham continuation then supplied the earliest future position where ahead, left, and right placements would all begin clear and later intersect the body. The three exposed branches began from the identical checkpoint. The obstacle was an external circular wall potential with radius half the body’s 95% mass radius; it did not erase state or add a sensor channel.</p></div>
+            </div>
           </div>
           <figure class="report-figure report-figure--diagram">
             <p class="report-figure-hint">Swipe or scroll to inspect the labels</p>
@@ -134,10 +145,14 @@
 
         <section class="report-result" id="responses" aria-labelledby="responses-title">
           <div class="report-result-copy">
-            <div class="report-kicker">03 / Response modes</div>
-            <h2 id="responses-title">The strongest individuals bent; the weaker ones stalled</h2>
-            <p>The two highest-scoring individuals, 870DA94A and 781D0200, kept about 30% of their sham progress and changed heading by 12–13°. Three specimens nearer the identity threshold made only 9–17% of sham progress and showed larger median turns. B26ADEF3 was different again: one branch nearly reversed while its dominant-body coherence fell sharply.</p>
-            <div class="report-reading"><p>With only five organisms, this ordering is a hypothesis rather than a fitted relationship. Still, it suggests that temporal individuality may also measure mechanical robustness: more internally stable bodies absorb a local perturbation without as much reorientation or arrest. A larger cohort should test that directly while holding lineage apart.</p></div>
+            <div class="report-method-heading">
+              <div class="report-kicker">03 / Response modes</div>
+              <h2 id="responses-title">The strongest individuals bent; the weaker ones stalled</h2>
+            </div>
+            <div class="report-method-prose">
+              <p>The two highest-scoring individuals, 870DA94A and 781D0200, kept about 30% of their sham progress and changed heading by 12–13°. Three specimens nearer the identity threshold made only 9–17% of sham progress and showed larger median turns. B26ADEF3 was different again: one branch nearly reversed while its dominant-body coherence fell sharply.</p>
+              <div class="report-reading"><p>With only five organisms, this ordering is a hypothesis rather than a fitted relationship. Still, it suggests that temporal individuality may also measure mechanical robustness: more internally stable bodies absorb a local perturbation without as much reorientation or arrest. A larger cohort should test that directly while holding lineage apart.</p></div>
+            </div>
           </div>
           <figure class="report-figure report-figure--data">
             <div class="report-figure-scroll" tabindex="0" aria-label="Scrollable response-mode chart"><img src="/assets/blog/lenia-morphospace-obstacle-response/fig-response-modes.svg" alt="Five specimens compared by individuality score, progress relative to sham, heading change, and coherence change." /></div>
@@ -162,7 +177,7 @@
           <div class="report-kicker">Interpretation</div>
           <h2 id="interpretation-title">A response map should predict a vector, not a “swerver” label</h2>
           <p>The original question divided organisms into those that turn away and those that die on contact. Neither category fits these trials. Matter was conserved in every exposure, while course, speed, scale, and connected-body coherence changed independently. Those are separate response variables and should remain separate in the map.</p>
-          <p>The signed lateral result is especially revealing. Among ten side-placement trials, four bodies moved away from the obstacle side and six moved toward it. A uniformly repelled point mass would not produce that mixture. Body shape, internal flow, and handedness are interacting with the perturbation. Repeating mirrored initial conditions would tell us whether this asymmetry belongs to morphology or to an intrinsic chiral mode.</p>
+          <p>The signed lateral result is especially revealing. Among ten side-placement trials, four bodies moved away from the obstacle side and six moved toward it. That mixture does not support a simple avoidance label. Body shape, internal flow, and handedness are possible contributors, but this assay did not isolate them. Mirrored initial conditions would test whether the directional bias reverses with the body; further controls would be needed to distinguish shape from internal flow.</p>
           <p>Five assayed organisms are not enough to ask whether one response occupies a connected region of the old map, especially because they come from two related rule families. They are enough to replace the old endpoint. The next map should predict forward progress, signed lateral displacement, turn, coherence loss, and recovery time, with rule lineage held out during validation. A connected response region may then emerge without forcing qualitatively different interactions into one binary label.</p>
         </section>
 

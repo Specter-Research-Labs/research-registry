@@ -34,8 +34,12 @@
                 for (const entry of entries) {
                     if (entry.isIntersecting) {
                         observer.unobserve(el);
-                        initFn(el);
-                        el.classList.add("is-ready");
+                        Promise.resolve().then(() => initFn(el)).then(() => {
+                            el.classList.add("is-ready");
+                        }).catch((error) => {
+                            console.error(error);
+                            el.appendChild(makeCaption("This interactive could not load. The article remains available below."));
+                        });
                     }
                 }
             },
@@ -79,6 +83,7 @@
         lbl.textContent = label;
         const input = document.createElement("input");
         input.type = "range";
+        input.setAttribute("aria-label", label);
         input.min = String(min);
         input.max = String(max);
         input.step = String(step);
@@ -304,7 +309,9 @@
                 const targetMass = state.reduce((a, b) => a + b, 0);
                 if (totalMass > 0) {
                     const f = targetMass / totalMass;
-                    for (let i = 0; i < next.length; i++) next[i] = Math.min(1, next[i] * f);
+                    for (let i = 0; i < next.length; i++) next[i] *= f;
+                } else {
+                    next.set(state);
                 }
             }
             state = next;
@@ -339,7 +346,7 @@
     // ---------------------------------------------------------------
 
     function initCreatureWall(el) {
-        makeHeader(el, "Orbium", "single-channel single-Gaussian Lenia, running on WebGPU");
+        makeHeader(el, "Orbium-derived rule", "Flow Lenia · live simulation");
 
         const wrap = makeCanvasWrap("dark");
         const canvas = document.createElement("canvas");
@@ -363,15 +370,20 @@
                 caption.textContent = "init failed";
                 return;
             }
-            caption.textContent = "";
+            caption.textContent = "Live simulation";
+            let playing = !reducedMotion;
+            const playBtn = makeBtn(playing ? "Pause" : "Play", () => {
+                playing = !playing;
+                playBtn.textContent = playing ? "Pause" : "Play";
+            });
+            body.appendChild(playBtn);
             engine.render();
             const tick = () => {
-                if (!reducedMotion) engine.step();
-                engine.render();
+                if (playing && !document.hidden) { engine.step(); engine.render(); }
                 requestAnimationFrame(tick);
             };
             requestAnimationFrame(tick);
-        });
+        }).catch((error) => { console.error(error); caption.textContent = "Simulation unavailable: WebGPU initialization failed."; });
     }
 
     // ---------------------------------------------------------------
@@ -379,7 +391,7 @@
     // ---------------------------------------------------------------
 
     function initSandbox(el) {
-        makeHeader(el, "Live Lenia simulation", "switch creature in the dropdown, click to reseed");
+        makeHeader(el, "Live Flow Lenia simulation", "browser implementation with adapted rule presets; reset to repeat the initial state");
 
         const defaultCreature = el.dataset.creature || "orbium";
         const wrap = makeCanvasWrap("dark");
@@ -409,7 +421,7 @@
             playingRef.value = !playingRef.value;
             playBtn.textContent = playingRef.value ? "Pause" : "Play";
         });
-        const resetBtn = makeBtn("Reset", () => engine && engine.reset && engine.reset());
+        const resetBtn = makeBtn("Reset", () => { if (engine) { engine.reset(); engine.render(); stepCount = 0; stepMetric.querySelector(".lenia-metric-value").textContent = "0"; } });
         const resetSpeed = { value: 1 };
         const speedSlider = makeSlider("speed", 0.25, 4.0, 0.25, 1, (v) => { resetSpeed.value = v; }, (v) => Number(v).toFixed(2) + "x");
 
@@ -439,12 +451,20 @@
         let lastFpsTime = performance.now();
         let frames = 0;
 
+        let loading = false;
         function loadCreature(name) {
+            if (loading) return;
+            loading = true;
+            select.disabled = true;
+            playBtn.disabled = true;
+            resetBtn.disabled = true;
+            if (engine) engine.destroy();
+            engine = null;
             stepCount = 0;
             stepMetric.querySelector(".lenia-metric-value").textContent = "0";
             caption.textContent = name;
             if (typeof LeniaGPU === "undefined" || !navigator.gpu) {
-                caption.textContent = "WebGPU required";
+                caption.textContent = "WebGPU is unavailable in this browser. The CPU demonstrations below still work.";
                 return;
             }
             LeniaGPU.load(name, canvas).then((e) => {
@@ -453,7 +473,15 @@
                     return;
                 }
                 engine = e;
-                runLoop();
+                engine.render();
+            }).catch((error) => {
+                console.error(error);
+                caption.textContent = "Simulation unavailable: WebGPU initialization failed.";
+            }).finally(() => {
+                loading = false;
+                select.disabled = false;
+                playBtn.disabled = !engine;
+                resetBtn.disabled = !engine;
             });
         }
 
@@ -461,26 +489,29 @@
 
         canvas.addEventListener("click", () => {
             if (!engine || !engine.reset) return;
-            engine.reset();
+            resetBtn.click();
         });
 
         loadCreature(defaultCreature);
+        runLoop();
 
         function runLoop() {
             let acc = 0;
             const target = 16;
             let lastTime = performance.now();
             function frame(now) {
-                const dt = now - lastTime;
+                const dt = Math.min(50, now - lastTime);
                 lastTime = now;
-                acc += dt * resetSpeed.value;
-                if (playingRef.value && engine && engine.step) {
+                if (playingRef.value && engine && !document.hidden) {
+                    acc += dt * resetSpeed.value;
                     while (acc >= target) {
                         engine.step();
                         stepCount++;
                         acc -= target;
                     }
-                    if (engine.render) engine.render();
+                    engine.render();
+                } else {
+                    acc = 0;
                 }
                 frames++;
                 if (now - lastFpsTime > 500) {
@@ -744,7 +775,12 @@
         const sM = makeSlider("μ", 0.01, 0.5, 0.001, m, (v) => { m = v; rebuildPreview(); draw(); });
         const sS = makeSlider("σ", 0.005, 0.2, 0.001, s, (v) => { s = v; rebuildPreview(); draw(); });
         const sH = makeSlider("h", 0.01, 1.0, 0.001, h, (v) => { h = v; rebuildPreview(); draw(); });
-        controls.append(sM.group, sS.group, sH.group);
+        let previewPlaying = !reducedMotion;
+        const previewPlay = makeBtn(previewPlaying ? "Pause" : "Play", () => {
+            previewPlaying = !previewPlaying;
+            previewPlay.textContent = previewPlaying ? "Pause" : "Play";
+        });
+        controls.append(sM.group, sS.group, sH.group, previewPlay);
 
         const body = document.createElement("div");
         body.className = "lenia-widget-body sandbox-layout";
@@ -760,6 +796,7 @@
                 sx, sy, R: 11, r: 0.5, b: [1], w: [0.2], a: [0.5],
                 mu: m, sigma: s, h, dt: 0.2, seed: 0, patchR: 0.18,
             });
+            renderPreview();
         }
         rebuildPreview();
         function renderPreview() {
@@ -769,7 +806,7 @@
         renderPreview();
         let previewLast = 0;
         function previewTick(now) {
-            if (now - previewLast > 80) {
+            if (previewPlaying && !document.hidden && now - previewLast > 80) {
                 previewEngine.step();
                 renderPreview();
                 previewLast = now;
@@ -940,7 +977,7 @@
     // ---------------------------------------------------------------
 
     function initMassConservation(el) {
-        makeHeader(el, "Mass: lost vs conserved", "same seed, same K and G, different update");
+        makeHeader(el, "A fixed total is not yet Flow Lenia", "illustration: additive updates compared with global rescaling, not local transport");
 
         const sx = 96, sy = 96;
         const opts = {
@@ -976,7 +1013,7 @@
         cardB.className = "lenia-creature-card";
         const titleB = document.createElement("div");
         titleB.className = "lenia-panel-title";
-        titleB.textContent = "Flow Lenia (mass-preserving)";
+        titleB.textContent = "Global mass rescaling (toy control)";
         const wrapB = makeCanvasWrap("dark");
         wrapB.appendChild(cvsB);
         const massPlotB = document.createElement("div");
@@ -1005,11 +1042,12 @@
 
         const legend = makeLegend([
             { label: "Basic", color: "#c1623f" },
-            { label: "Flow (rescaled)", color: "#3f8458" },
+            { label: "Rescaled toy", color: "#3f8458" },
             { label: "initial mass reference", color: "rgba(11,14,20,0.35)" },
         ]);
         controls.append(legend);
         el.appendChild(controls);
+        el.appendChild(makeCaption("The right panel rescales the entire field after each additive update. Flow Lenia instead transports matter locally. Values above one are saturated only in this display; if an additive step erases the whole toy field, that step is rejected."));
 
         const ctxA = cvsA.getContext("2d");
         const ctxB = cvsB.getContext("2d");
@@ -1087,7 +1125,7 @@
 
         let lastFrame = 0;
         function tick(now) {
-            if (playing && now - lastFrame > 60) {
+            if (playing && !document.hidden && now - lastFrame > 60) {
                 engineA.step(false);
                 engineB.step(true);
                 massHistA.push(engineA.mass());
@@ -1107,7 +1145,7 @@
     // ---------------------------------------------------------------
 
     function initSearch(el) {
-        makeHeader(el, "Search strategy comparison", "200-step fitness budget on the same multimodal landscape");
+        makeHeader(el, "Search strategy illustration", "one fitness evaluation per step on a synthetic landscape; not Lenia experiment results");
         const maxSteps = parseInt(el.dataset.steps) || 200;
         const autoPlay = el.dataset.autoPlay !== "false";
 
@@ -1152,7 +1190,7 @@
         }
 
         const pRandom = makePanel("Random search", "#ffcc45");
-        const pES = makePanel("ES (gradient)", "#7cf5ff");
+        const pES = makePanel("Local hill climbing", "#7cf5ff");
         const pME = makePanel("MAP-Elites", "#ff6600");
 
         const body = document.createElement("div");
@@ -1182,7 +1220,7 @@
         controls.append(stepSlider.group, playBtn, resetBtn);
         el.append(body, controls);
 
-        let randomTrace, esTrace, meGrid;
+        let randomTrace, esTrace, meGrid, meHistory;
 
         function initTraces() {
             const rng = splitmix32(42);
@@ -1200,7 +1238,7 @@
                 const prev = esTrace[i - 1];
                 let bestX = prev.x, bestY = prev.y, bestF = prev.f;
                 const sigma = 0.05 * (1 - i / maxSteps);
-                for (let t = 0; t < 8; t++) {
+                for (let t = 0; t < 1; t++) {
                     const nx = Math.max(0, Math.min(1, prev.x + (esRng() - 0.5) * sigma * 2));
                     const ny = Math.max(0, Math.min(1, prev.y + (esRng() - 0.5) * sigma * 2));
                     const nf = landscape(nx, ny);
@@ -1212,9 +1250,12 @@
             const gridN = 8;
             meGrid = Array.from({ length: gridN * gridN }, () => null);
             const meRng = splitmix32(99);
+            meHistory = [meGrid.slice()];
             for (let i = 0; i < maxSteps; i++) {
-                const cx = meRng();
-                const cy = meRng();
+                const occupied = meGrid.filter(Boolean);
+                const parent = occupied.length ? occupied[Math.floor(meRng() * occupied.length)] : null;
+                const cx = parent ? Math.max(0, Math.min(1, parent.x + (meRng() - 0.5) * 0.3)) : meRng();
+                const cy = parent ? Math.max(0, Math.min(1, parent.y + (meRng() - 0.5) * 0.3)) : meRng();
                 const cf = landscape(cx, cy);
                 const gx = Math.min(gridN - 1, Math.floor(cx * gridN));
                 const gy = Math.min(gridN - 1, Math.floor(cy * gridN));
@@ -1222,6 +1263,7 @@
                 if (meGrid[idx] === null || cf > meGrid[idx].f) {
                     meGrid[idx] = { x: cx, y: cy, f: cf, step: i };
                 }
+                meHistory.push(meGrid.slice());
             }
         }
 
@@ -1345,7 +1387,7 @@
             let coverage = 0;
             let meBest = 0;
             for (let i = 0; i < meGrid.length; i++) {
-                const cell = meGrid[i];
+                const cell = meHistory[step][i];
                 if (cell && cell.step < step) {
                     coverage++;
                     if (cell.f > meBest) meBest = cell.f;
@@ -1372,28 +1414,22 @@
             pME.bestVal.textContent = meBest.toFixed(3);
 
             const mSpark = [];
-            let runningMax = 0;
-            const sortedByStep = meGrid.filter((c) => c !== null).sort((a, b) => a.step - b.step);
-            let cur = 0;
-            for (let i = 0; i < step; i++) {
-                while (cur < sortedByStep.length && sortedByStep[cur].step <= i) {
-                    if (sortedByStep[cur].f > runningMax) runningMax = sortedByStep[cur].f;
-                    cur++;
-                }
-                mSpark.push(runningMax);
+            for (let i = 1; i <= step; i++) {
+                mSpark.push(Math.max(0, ...meHistory[i].filter(Boolean).map(cell => cell.f)));
             }
             drawSpark(pME, mSpark);
         }
 
         drawAll();
 
-        if (!reducedMotion) {
+        {
             function autoStep() {
                 if (playing && step < maxSteps) {
                     step++;
                     stepSlider.input.value = String(step);
                     stepSlider.readout.textContent = String(step);
                     drawAll();
+                    if (step === maxSteps) { playing = false; playBtn.textContent = "Play"; }
                 }
                 requestAnimationFrame(autoStep);
             }
@@ -1479,7 +1515,7 @@
             }
             iteration++;
             iterMetric.querySelector(".lenia-metric-value").textContent = String(iteration);
-            anim.progress = 0;
+            anim.progress = reducedMotion ? 1 : 0;
         }
 
         function lerpCentroid(k) {
@@ -1544,7 +1580,7 @@
         initCentroids();
         draw();
 
-        if (!reducedMotion) {
+        {
             let lastStep = 0;
             function tick(now) {
                 if (anim.progress < 1) {
@@ -1600,13 +1636,27 @@
         function loadTrace() {
             if (!traceSrc) { useSyntheticTrace(); return; }
             fetch(traceSrc)
-                .then((r) => r.json())
+                .then((r) => { if (!r.ok) throw new Error("Trace HTTP " + r.status); return r.json(); })
                 .then((data) => {
+                    const archive = new Array(data.centroids.length).fill(null);
+                    for (const event of data.generations) {
+                        const nearest = data.centroids.reduce((best, point, i) => {
+                            const distance = point.reduce((sum, value, axis) => sum + (value - event.child_descriptor[axis]) ** 2, 0);
+                            return distance < best.distance ? { index: i, distance } : best;
+                        }, { index: -1, distance: Infinity }).index;
+                        const old = archive[nearest];
+                        const expected = old === null || event.child_fitness > old ? "placed" : "discarded";
+                        if (event.landing_cell !== nearest || event.outcome !== expected || event.previous_fitness !== old) {
+                            throw new Error("Trace event does not follow nearest-cell elite replacement");
+                        }
+                        if (expected === "placed") archive[nearest] = event.child_fitness;
+                    }
+                    el.appendChild(makeCaption("Loaded teaching trace. This widget does not establish the provenance of a research run."));
                     trace = data;
                     setupControls();
                     drawState();
                 })
-                .catch(() => useSyntheticTrace());
+                .catch((error) => { console.error(error); narration.textContent = "The supplied trace could not be loaded or validated. No substitute data is shown."; });
         }
 
         function useSyntheticTrace() {
@@ -1614,8 +1664,11 @@
             const cents = [];
             for (let i = 0; i < nCentroids; i++) cents.push([rng(), rng()]);
             const gens = [];
+            const archive = new Array(nCentroids).fill(null);
+            el.appendChild(makeCaption("Synthetic teaching sequence generated in this browser. It is not a recorded Lenia search."));
             for (let i = 0; i < 80; i++) {
-                const parentIdx = Math.floor(rng() * nCentroids);
+                const occupied = archive.map((v, idx) => v === null ? -1 : idx).filter(idx => idx >= 0);
+                const parentIdx = occupied.length ? occupied[Math.floor(rng() * occupied.length)] : Math.floor(rng() * nCentroids);
                 const childDesc = [
                     Math.max(0, Math.min(1, cents[parentIdx][0] + (rng() - 0.5) * 0.3)),
                     Math.max(0, Math.min(1, cents[parentIdx][1] + (rng() - 0.5) * 0.3)),
@@ -1633,9 +1686,10 @@
                     child_descriptor: childDesc,
                     child_fitness: fitness,
                     landing_cell: landing,
-                    outcome: rng() > 0.4 ? "placed" : "discarded",
-                    previous_fitness: rng() > 0.6 ? 0.2 + rng() * 0.5 : null,
+                    outcome: archive[landing] === null || fitness > archive[landing] ? "placed" : "discarded",
+                    previous_fitness: archive[landing],
                 });
+                if (archive[landing] === null || fitness > archive[landing]) archive[landing] = fitness;
             }
             trace = { centroids: cents, generations: gens };
             setupControls();
@@ -1649,6 +1703,7 @@
                 drawState();
             }, (v) => String(Math.round(v)));
             const playBtn = makeBtn("Play", () => {
+                if (gen === maxGen) { gen = 0; slider.input.value = "0"; slider.readout.textContent = "0"; drawState(); }
                 playing = !playing;
                 playBtn.textContent = playing ? "Pause" : "Play";
             });
@@ -1663,7 +1718,7 @@
             controls.replaceChildren();
             controls.append(slider.group, playBtn, resetBtn);
 
-            if (!reducedMotion) {
+            {
                 let lastTick = 0;
                 function tick(now) {
                     if (playing && now - lastTick > 350) {

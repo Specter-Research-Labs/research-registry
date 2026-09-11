@@ -1,117 +1,85 @@
 <!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="color-scheme" content="light" />
-        <title>SPECTER LABS</title>
-        <link rel="icon" href="assets/logo-black.svg" type="image/svg+xml" />
-        <link rel="preload" href="fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="stylesheet" href="style.css?v=20260518-sitecss" />
-    </head>
-    <body>
-        <div class="site-shell">
-            <header class="site-topnav">
-                <a class="site-brand" href="./">
-                    <img src="assets/logo-black.svg" alt="SPECTER Labs logo" class="logo" />
-                    <span class="site-brand-name">SPECTER LABS</span>
-                </a>
-                <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="dossiers/">Dossiers</a>
-                    <a class="nav-link" href="addenda/">Addenda</a>
-                    <a class="nav-link" href="blog/">Blog</a>
-                    <a class="nav-link" href="cabinet/">Cabinet</a>
-                </nav>
-            </header>
-            <div class="site-rules" aria-hidden="true">
-                <div class="site-rule strong"></div>
-                <div class="site-rule"></div>
-            </div>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Specter Labs</title><link rel="icon" href="/assets/logo-black.svg"><link rel="stylesheet" href="/assets/home.css?v=20260909-tokens"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+<link rel="stylesheet" href="/assets/publication-formats.css"></head><body class="publication-home" data-publication="home">
+<header><a class="brand" href="/"><img src="/assets/logo-black.svg" alt="Specter Labs emblem">SPECTER LABS</a><nav aria-label="Main navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<main>
+<section class="hero"><div><h1>What recurs<br>across <em>different</em><br>systems?</h1><p class="intro">We investigate whether different kinds of systems share principles of organization: how a body takes shape, how a collective finds a solution, how a pattern survives disruption. We build experiments in artificial life, algorithms, and mathematical search to uncover those principles.</p><a class="text-link" href="/#investigations">Explore the investigations ↘</a></div><figure class="hero-art publication-motion"><canvas id="hero-canvas" width="1024" height="1024" aria-label="Quadrium-derived Lenia evolving"></canvas><video aria-hidden="true" id="hero-motion" muted loop playsinline preload="none" poster="/home-prototype/assets/quadrium-poster.webp?v=2" aria-label="Recorded evolution of a Quadrium-derived Lenia pattern"><source src="/home-prototype/assets/quadrium-study.mp4?v=2" type="video/mp4"></video><button id="motion-toggle" class="publication-motion-toggle" type="button" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button><figcaption><span>Quadrium-derived Lenia</span></figcaption></figure></section>
+<section class="quote" aria-label="An intellectual starting point"><img class="recurrence" src="/home-prototype/assets/recurrence.svg" alt="" aria-hidden="true"><div><blockquote>“We realised that my equations describing molecular evolution were similar – and some almost identical – to those left over on the blackboard by Hermann Haken. <em>Could it be that things as different as laser modes and DNA resemble one another so closely in their dynamic behaviour?</em>”</blockquote><p class="attribution">— Manfred Eigen, recalling a <a href="https://www.are.na/block/46811297">1969 meeting in Versailles</a></p></div></section>
+<section id="investigations"><div class="section-heading"><span class="label">Selected investigations</span><a href="/dossiers/">All research dossiers ↗</a></div><article class="feature"><figure class="map"><a href="/dossiers/lenia-swarm/morphospace/#result-map"><picture><source media="(max-width:620px)" srcset="/assets/blog/lenia-morphospace-report/fig-measured-map-mobile.svg"><img src="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" alt="Measured morphospace comparing Flow Lenia, EmbryoMaker, and fish"></picture></a><figcaption>25,167 Flow Lenia observations · 859 EmbryoMaker snapshots · 232 fish</figcaption></figure><div><h2>What Lenia and fish<br>share in shape</h2><p>We grouped patterns made by Flow Lenia by their shape, then compared them with measurements of real fish. One group had unexpectedly similar proportions. Does that tell us anything about how these patterns behave?</p><a class="text-link" href="/dossiers/lenia-swarm/morphospace/">Read the morphospace report →</a></div></article></section>
 
-            <main class="site-main">
-                <p class="intro">
-                    We are an independent research lab studying recurrent
-                    structure and invariants in computational and physical
-                    systems, informed in part by
-                    <a href="https://www.frontiersin.org/journals/systems-neuroscience/articles/10.3389/fnsys.2022.768201/full" target="_blank"
-                        >Michael Levin's work on cognition across scales, from cells and tissues to artificial and collective systems</a
-                    >.
-                </p>
-                <section class="site-section" id="active-projects">
-                    <div class="site-section-title">Current Dossiers</div>
-                    <!-- GENERATED:HOME_ACTIVE_PROJECTS START -->
-                    <!-- GENERATED:HOME_ACTIVE_PROJECTS END -->
-                </section>
-                <div class="site-rules" aria-hidden="true">
-                    <div class="site-rule strong"></div>
-                    <div class="site-rule"></div>
-                </div>
-                <section class="site-section" id="addenda">
-                    <div class="site-section-title">Addenda</div>
-                    <div class="addenda-list" role="list">
-                        <!-- GENERATED:HOME_FEATURED_ADDENDA START -->
-                        <!-- GENERATED:HOME_FEATURED_ADDENDA END -->
-                    </div>
-                    <p class="addenda-index-link">
-                        <a href="addenda/">View all addenda</a>
-                    </p>
-                </section>
-                <div class="site-rules" aria-hidden="true">
-                    <div class="site-rule strong"></div>
-                    <div class="site-rule"></div>
-                </div>
-                <section class="site-section" id="blog">
-                    <div class="site-section-title">Blog</div>
-                    <div class="addenda-list" role="list">
-                        <!-- GENERATED:HOME_BLOG_POSTS START -->
-                        <!-- GENERATED:HOME_BLOG_POSTS END -->
-                    </div>
-                    <p class="addenda-index-link">
-                        <a href="blog/">All Posts</a>
-                    </p>
-                </section>
-                <div class="site-rules" aria-hidden="true">
-                    <div class="site-rule strong"></div>
-                    <div class="site-rule"></div>
-                </div>
-                <section class="site-section" id="documentation">
-                    <div class="site-section-title">Documentation</div>
-                    <p>
-                        <a href="cabinet/">Document Cabinet</a>
-                    </p>
-                    <p>
-                        <a href="sitemap/">Sitemap</a>
-                    </p>
-                </section>
-                <div class="site-rules" aria-hidden="true">
-                    <div class="site-rule strong"></div>
-                    <div class="site-rule"></div>
-                </div>
-                <section class="site-section" id="contact">
-                    <div class="site-section-title">Contact</div>
-                    <p>
-                        <a href="mailto:contact@specterlab.org"
-                            >contact@specterlab.org</a
-                        >
-                    </p>
-                    <p>
-                        <a
-                            href="https://github.com/Specter-Research-Labs/research-registry"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >Research Registry</a
-                        >
-                    </p>
-                    <p>
-                        <a href="https://specterlabs.zulipchat.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >Zulip Server</a
-                        >
-                    </p>
-                </section>
-            </main>
-        </div>
-    </body>
-</html>
+<section class="investigations" aria-label="Further investigations"><article class="investigation"><h2>Can we recover the rules<br>of a Lenia creature?</h2><figure class="paired-motion publication-motion" id="rule-comparison"><div><video autoplay muted loop playsinline preload="metadata" poster="/home-prototype/assets/orbium-native-1200.webp" aria-label="Native Orbium trajectory"><source src="/home-prototype/assets/orbium-native.mp4" type="video/mp4"></video><img class="comparison-still" hidden src="/home-prototype/assets/orbium-native-600.webp" alt="Native Orbium at step 600"><span>Native rule</span></div><div><video autoplay muted loop playsinline preload="metadata" poster="/home-prototype/assets/orbium-recovered-1200.webp" aria-label="Orbium trajectory using recovered rules"><source src="/home-prototype/assets/orbium-recovered.mp4" type="video/mp4"></video><img class="comparison-still" hidden src="/home-prototype/assets/orbium-recovered-600.webp" alt="Recovered-rule Orbium at step 600"><span>Recovered rule</span></div><button type="button" id="comparison-play" class="publication-motion-toggle" aria-label="Pause comparison" aria-pressed="true" data-playing="true"></button><figcaption>The same seed, under <a href="/dossiers/lenia-swarm/anatomical-compiler/">native and recovered rules</a>.</figcaption></figure><div class="time-study"><div class="time-strip" role="group" aria-label="Compare the fitted observation with a later observation"><button type="button" data-step="600" aria-pressed="false">Step 600 · fitted</button><button type="button" data-step="1200" aria-pressed="false">Step 1,200 · unscored</button></div><p>The search fitted the body at step 600. Its form persists at step 1,200, beyond the fitted observation.</p></div><details class="comparison-alternative"><summary>When similar measurements produce a different body</summary><figure><div class="alternative-pair"><img src="/dossiers/lenia-swarm/anatomical-compiler/assets/organic-target-late.png" alt="Requested tapered body"><img src="/dossiers/lenia-swarm/anatomical-compiler/assets/organic-recovered-late.png" alt="Fitted rule producing repeated segments"></div><figcaption>Requested body (left), fitted rule (right). In this separate search, four trajectory measurements left the spatial arrangement largely unconstrained.</figcaption></figure></details><p>Recovering a rule from one observation can work when the rule family is known. Searching from a few measurements is harder: similar scores can hide very different bodies.</p><a class="text-link" href="/dossiers/lenia-swarm/anatomical-compiler/">Explore the anatomical compiler →</a></article><article class="investigation"><h2>Proof search with<br>a missing tactic</h2><figure class="proof-study" id="proof-study"><svg viewBox="0 0 540 380" role="img" aria-labelledby="proof-title proof-desc"><title id="proof-title">Two routes through an algebraic proof</title><desc id="proof-desc">A schematic proof of distributivity. One branch rewrites by distributivity, the other swaps the factors and uses ring normalization. The toggle removes the direct rewrite from the illustrated search.</desc><text class="goal-label" x="270" y="27" text-anchor="middle">For real a, b, c, prove</text><text class="goal" x="270" y="62" text-anchor="middle">a(b + c) = ab + ac</text><g class="proof-route alternate"><path d="M260 86C260 125 128 124 128 164V190M128 231V269"/><circle cx="128" cy="180" r="5"/><text x="72" y="132" text-anchor="middle">swap factors</text><text class="formula" x="128" y="213" text-anchor="middle">(b + c)a</text><text x="109" y="250" text-anchor="end">ring</text><circle class="terminal" cx="128" cy="286" r="15"/><path class="check" d="M121 286l5 5 10-12"/><text x="128" y="323" text-anchor="middle">Proved</text></g><g class="proof-route direct"><path d="M280 86C280 125 405 124 405 164V190M405 231V269"/><circle cx="405" cy="180" r="5"/><text x="468" y="132" text-anchor="middle">distribute</text><text class="formula" x="405" y="213" text-anchor="middle">ab + ac</text><text x="386" y="250" text-anchor="end">ring</text><circle class="terminal" cx="405" cy="286" r="15"/><path class="check" d="M398 286l5 5 10-12"/><text x="405" y="323" text-anchor="middle">Proved</text></g><path class="removed-mark" d="M392 168l26 24m0-24-26 24"/></svg><div class="proof-controls"><button id="proof-toggle" type="button" aria-pressed="false">Remove the direct rewrite</button></div><figcaption id="proof-reading" aria-live="polite">Two routes reach a proof in this schematic.</figcaption></figure><p>Of 928 tactic-removal tests whose original and unchanged-control searches both succeeded, 406 still found a proof after the tactic was blocked. In 131 of those cases, the proof hash changed.</p><a class="text-link" href="/dossiers/wonton-soup/">Explore Wonton Soup →</a></article></section>
+<section class="index"><div><h2 style="margin-top:16px">Explore the lab</h2></div><div class="index-list"><a href="/dossiers/zang-levin-playground/"><span>Morphogenetic signatures in sorting algorithms ↗</span></a><a href="/dossiers/lenia-swarm/causal-emergence/"><span>How development changes the response to intervention ↗</span></a><a href="/blog/"><span>Writing &amp; research notes ↗</span></a><a href="/addenda/"><span>Tools, datasets &amp; supporting experiments ↗</span></a><a href="/cabinet/"><span>The document cabinet ↗</span></a></div></section>
+</main><footer><div><a href="mailto:contact@specterlab.org">contact@specterlab.org</a><a href="https://github.com/Specter-Research-Labs/research-registry">Research registry ↗</a></div><span class="prototype">Specter Labs</span></footer>
+<script type="module">
+import { updateMotionControl } from "/assets/report-transparent-motion.js?v=2";
+const motionButton=document.querySelector('#motion-toggle');
+const heroRecording=document.querySelector('#hero-motion');
+const heroCanvas=document.querySelector('#hero-canvas');
+const heroCaption=document.querySelector('.hero-art figcaption span');
+const heroCreatures=[
+ {id:'quadrium',title:heroCaption.textContent,video:heroRecording.querySelector('source').src,poster:heroRecording.poster},
+ ...[
+  ['geminidae','Geminidae-derived Lenia'],
+  ['pterifera','Pterifera-derived Lenia']
+ ].map(([id,title])=>({id,title,video:`/assets/home-creatures/${id}.mp4?v=2`,poster:`/assets/home-creatures/${id}.webp?v=2`}))
+];
+let availableCreatures=heroCreatures;
+try{availableCreatures=heroCreatures.filter(c=>c.id!==sessionStorage.getItem('specter-last-creature'));}
+catch{/* Storage can be disabled; independent random selection still works. */}
+const creature=availableCreatures[Math.floor(Math.random()*availableCreatures.length)];
+try{sessionStorage.setItem('specter-last-creature',creature.id);}catch{}
+heroRecording.src=creature.video;
+heroRecording.poster=creature.poster;
+heroRecording.setAttribute('aria-label',`${creature.title} evolving`);
+heroCanvas.setAttribute('aria-label',`${creature.title} evolving`);
+heroCaption.textContent=creature.title;
+const heroContext=heroCanvas.getContext('2d',{willReadFrequently:true});
+function drawHero(){
+ if(heroRecording.readyState<2)return;
+ heroContext.drawImage(heroRecording,0,0,heroCanvas.width,heroCanvas.height);
+ const frame=heroContext.getImageData(0,0,heroCanvas.width,heroCanvas.height), pixels=frame.data;
+ // Remove the paper backdrop baked into this presentation recording.
+ // Simulation values and timing are unchanged.
+ for(let i=0;i<pixels.length;i+=4){
+  const distance=Math.max(Math.abs(pixels[i]-244),Math.abs(pixels[i+1]-241),Math.abs(pixels[i+2]-232));
+  pixels[i+3]=Math.round(255*Math.max(0,Math.min(1,(distance-10)/16)));
+ }
+ heroContext.putImageData(frame,0,0);
+}
+heroRecording.addEventListener('loadeddata',drawHero);
+heroRecording.addEventListener('seeked',drawHero);
+if('requestVideoFrameCallback' in heroRecording){const frame=()=>{drawHero();heroRecording.requestVideoFrameCallback(frame);};heroRecording.requestVideoFrameCallback(frame);}
+else{const frame=()=>{if(!heroRecording.paused)drawHero();requestAnimationFrame(frame);};requestAnimationFrame(frame);}
+const comparisonVideos=[...document.querySelectorAll('.paired-motion video')];
+const comparisonStills=[...document.querySelectorAll('.comparison-still')];
+const comparisonButton=document.querySelector('#comparison-play');
+const stepButtons=[...document.querySelectorAll('[data-step]')];
+async function playHero(){try{await heroRecording.play();}catch{} updateMotionControl(motionButton,!heroRecording.paused);}
+function pauseHero(){heroRecording.pause();updateMotionControl(motionButton,false);}
+function pauseComparison(){comparisonVideos.forEach(v=>v.pause());updateMotionControl(comparisonButton,false,'comparison');}
+async function playComparison(){
+ comparisonStills.forEach(i=>i.hidden=true);comparisonVideos.forEach(v=>{v.hidden=false;v.currentTime=0;});
+ stepButtons.forEach(b=>b.setAttribute('aria-pressed','false'));
+ const results=await Promise.allSettled(comparisonVideos.map(v=>v.play()));
+ updateMotionControl(comparisonButton,results.every(r=>r.status==='fulfilled'),'comparison');
+}
+motionButton.addEventListener('click',()=>heroRecording.paused?playHero():pauseHero());
+comparisonButton.addEventListener('click',()=>comparisonVideos[0].paused?playComparison():pauseComparison());
+stepButtons.forEach(button=>button.addEventListener('click',()=>{
+ pauseComparison();const step=button.dataset.step;
+ comparisonVideos.forEach(v=>v.hidden=true);
+ comparisonStills.forEach((img,i)=>{img.src='/home-prototype/assets/orbium-'+(i?'recovered':'native')+'-'+step+'.webp';img.alt=(i?'Recovered-rule':'Native')+' Orbium at step '+step;img.hidden=false;});
+ stepButtons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+}));
+playHero();
+playComparison();
+
+const proofToggle=document.querySelector('#proof-toggle');
+proofToggle.addEventListener('click',()=>{
+ const blocked=proofToggle.getAttribute('aria-pressed')!=='true';
+ proofToggle.setAttribute('aria-pressed',String(blocked));
+ document.querySelector('#proof-study').classList.toggle('is-blocked',blocked);
+ proofToggle.textContent=blocked?'Restore the direct rewrite':'Remove the direct rewrite';
+ document.querySelector('#proof-reading').textContent=blocked?'The direct rewrite is unavailable. Swapping the factors still leaves a route through ring normalization.':'Two routes reach a proof in this schematic.';
+});
+</script></body></html>

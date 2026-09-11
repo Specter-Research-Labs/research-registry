@@ -1,8 +1,8 @@
 version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
-title = "k-semantics-reference"
+title = "K Semantics Reference"
 series = "A-009"
-summary = "Reworked CATWD 2.0 semantics and cross-domain calibration of K."
+summary = "Compare search policies within the same problem space, horizon, and cost units."
 status = "active"
 
 [site]

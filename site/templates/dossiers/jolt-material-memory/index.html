@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light" />
+        <title>
+Material Memory in Physical Collectives | SPECTER Labs
+        </title>
+        <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
+        <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="../../style.css?v=20260518-sitecss" />
+        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/dossier-stories.css?v=2"><script src="/assets/dossier-stories.js?v=1" defer></script>
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+</head>
+    <body class="dossier-story">
+        <div class="site-shell">
+            <header class="site-topnav">
+                <a class="site-brand" href="../../">
+                    <img
+                        src="../../assets/logo-black.svg"
+                        alt="SPECTER Labs logo"
+                        class="logo"
+                    />
+                    <span class="site-brand-name">SPECTER LABS</span>
+                </a>
+                <nav class="site-topnav-links" aria-label="Site navigation">
+                    <a class="nav-link" href="../../dossiers/" aria-current="page">Research</a>
+                    <a class="nav-link" href="../../blog/">Writing</a>
+                    <a class="nav-link" href="../../addenda/">Addenda</a>
+                    <a class="nav-link" href="../../cabinet/">Cabinet</a>
+                </nav>
+            </header>
+            <div class="site-rules" aria-hidden="true">
+                <div class="site-rule strong"></div>
+                <div class="site-rule"></div>
+            </div>
+
+            <main class="site-main">
+                <!-- GENERATED:DOSSIER_HUB_HEADER START -->
+<!-- GENERATED:DOSSIER_HUB_HEADER END -->
+<section class="story-split"><div><h2 class="story-question">When the push stops,<br>what does the material remember?</h2><p class="story-deck">A connected assembly can respond to a force because of its current shape, its motion, or changes left by earlier interactions. We use a rigid-body simulation to separate those possibilities.</p><p>Local rules update friction, stiffness, and plasticity from interaction history. The experiment asks whether those changes leave a persistent trace, and whether that trace helps or hinders the next response.</p></div>
+<figure class="material-study" data-material-study><div class="story-controls" role="group" aria-label="Explore experiment stages"><button type="button" data-stage="drive" aria-pressed="true">Apply a pulse</button><button type="button" data-stage="release" aria-pressed="false">Release</button><button type="button" data-stage="damage" aria-pressed="false">Disturb</button></div>
+<svg viewBox="0 0 580 270" role="img" aria-labelledby="material-title material-description"><title id="material-title">A connected assembly under an experimental protocol</title><desc id="material-description">Six connected bodies. The buttons show a driving force, its removal, or a disturbance to the assembly. This is an experiment schematic.</desc><g stroke="#82927c" stroke-width="3" fill="none"><path class="material-link" d="M82 160h12l6 -9 9 18 9 -18 9 18 6 -9h17"/><path class="material-link" d="M172 160h12l6 -9 9 18 9 -18 9 18 6 -9h17"/><path class="material-link" d="M262 160h12l6 -9 9 18 9 -18 9 18 6 -9h17"/><path class="material-link" d="M352 160h12l6 -9 9 18 9 -18 9 18 6 -9h17"/><path class="material-link" d="M442 160h12l6 -9 9 18 9 -18 9 18 6 -9h17"/><circle cx="60" cy="160" r="23" fill="#e3e9dd" stroke="#365b4e"/><circle cx="150" cy="160" r="23" fill="#e3e9dd" stroke="#365b4e"/><circle cx="240" cy="160" r="23" fill="#e3e9dd" stroke="#365b4e"/><circle cx="330" cy="160" r="23" fill="#e3e9dd" stroke="#365b4e"/><circle cx="420" cy="160" r="23" fill="#e3e9dd" stroke="#365b4e"/><circle cx="510" cy="160" r="23" fill="#e3e9dd" stroke="#365b4e"/></g><g class="material-force" stroke="#b74631" stroke-width="3" fill="none"><path d="M65 45v68m-10-12 10 12 10-12M245 45v68m-10-12 10 12 10-12M425 45v68m-10-12 10 12 10-12"/></g><g class="material-disturbance" stroke="#b74631" stroke-width="3"><path d="m265 125 34 70m0-70-34 70"/></g><text x="290" y="235" text-anchor="middle" fill="#5f645e" font-size="14">Connected bodies · local material updates</text></svg>
+<p class="material-reading" aria-live="polite">Apply a temporary driving force. Record how the bodies move and how their local material properties change.</p><figcaption>Protocol schematic, not simulation output. Switching stages shows what is changed and what would be measured.</figcaption></figure></section>
+<section class="section-block"><h2 class="story-heading">A lasting offset is only the start of the question</h2><p class="story-deck">A system can keep moving or settle slowly without storing a useful trace of its history. Every campaign therefore pairs the memory rule with controls that separate changes from interaction history from guidance and extra damping.</p><div class="story-control-grid"><article><h3>No guidance, no memory</h3><p>The null baseline: movement without the directed policy or history-dependent updates.</p></article><article><h3>Guidance alone</h3><p>Keep the directed policy, but turn material memory off. This isolates what guidance already accomplishes.</p></article><article><h3>Guidance with memory</h3><p>Enable local changes from interaction history. This is the treatment being tested.</p></article><article><h3>Damping control</h3><p>Retain the directed policy with the inertial control. This tests whether apparent retention can be explained by extra damping.</p></article></div></section>
+<section class="section-block"><h2 class="story-heading">Three ways to ask what remains</h2><div class="story-control-grid"><article><h3>After a pulse</h3><p>Remove guidance and measure the remaining displacement: does the assembly retain an imprint?</p></article><article><h3>After a reversal</h3><p>Ramp the drive back and forth. Does the response depend on the path taken to the current input?</p></article><article><h3>After damage</h3><p>Disturb an imprinted assembly and let it continue. Does stored history help it recover, or hold it in an unhelpful configuration?</p></article></div><p>The dossier currently presents the protocol and implementation. A results page needs the recorded trajectories and control comparisons alongside the conclusions.</p><div class="story-jumps"><a href="/cabinet/jolt-material-memory/experiment-matrix/">Experiment matrix →</a><a href="/cabinet/jolt-material-memory/metric-spec/">What is measured →</a><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/jolt-material-memory">Code and campaign configuration →</a></div></section>
+<!-- GENERATED:DOSSIER_HUB_FOOTER START -->
+<!-- GENERATED:DOSSIER_HUB_FOOTER END -->
+            </main>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "synthesis-v7",
+  "releaseId": "flce-synthesis-v7-be5d576a918b",
+  "title": "Individual responses before coherent bodies",
+  "date": "2026-08-30",
+  "status": "feature",
+  "evidenceClass": "multi-experiment synthesis",
+  "sourceReportSha256": "7fcc26f51b59b9f604662c9abe4afb296cfc870ac478c79ef216f340610d53ea",
+  "publicReportSha256": "33ad80ff225d9ab037861d77208a075632d5842eff62d0d4f1cb53adcdf3fd5f",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "synthesis_publication_instruments_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "a1cff9cd6d089fcbbb4e729807a068385a082f2260344ca37a8262cdea6973be",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "9029c8e9352e4a63401b16b6fb09862bc486755f43108b305a9c3f6ccdcf95bc"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "gate-conditioned-morphology-navigation",
+  "releaseId": "flce-gate-conditioned-morphology-navigation-2d008b014b06",
+  "title": "Earlier State Changes How Later Interventions Shape the Body",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "gate-conditioned morphology follow-up",
+  "sourceReportSha256": "6dd75f18606d4131d6f8faeb96e7552bf1990a73b1abb28df90c0e76b30d37d7",
+  "publicReportSha256": "6a493756e5848e79f82b1ad1681ea94a4cf87d38a0744bcafd96eec071225ffc",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "5d618ab7026a9c56f9c8fda736de704a16e0fb7b7ea7f0db52c7b23efd85fb7c",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "8848ade36f5804ebe0ae590c15af52631f1759fb21bb93c58dcd1fe8641a7427"
+}

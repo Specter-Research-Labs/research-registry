@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "start-here",
+  "releaseId": "flce-start-here-b20cf14e6821",
+  "title": "Flow Lenia Causal Emergence: A Guide",
+  "date": "2026-08-29",
+  "status": "archive",
+  "evidenceClass": "editorial introduction",
+  "sourceReportSha256": "03dab3e2ec7346777073cb3be6cc8bc7697b662796a6526ea84f928349adf78e",
+  "publicReportSha256": "e17b2bc584f31b31539efd0d23b6734314f55f87e672a311d4ee430220177912",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "9e418de199f53f951a9dccce1cd431766523602988b697774e33c7d92e98bd96",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "d7d594a123bc06d600ba82508a5fa3d2f2dce9f0b65db2adaba9a1da6e039446"
+}

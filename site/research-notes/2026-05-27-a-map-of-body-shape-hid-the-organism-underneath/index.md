@@ -1,12 +1,12 @@
 ---
-title: "A map of body shape hid most of the organism underneath"
+title: "What a shape map leaves out"
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
 
-# A map of body shape hid most of the organism underneath
+# What a shape map leaves out
 
 _19–27 May 2026 · Cross-system morphospace analysis._
 
@@ -14,10 +14,12 @@ We wanted one map on which a Flow Lenia organism, an EmbryoMaker embryo and a re
 
 Putting these systems together made comparison possible, but it also made the loss of information measurable. The fish data had its own anatomical coordinate system, EmbryoMaker recorded properties of a developmental simulation, and every Lenia body still had a rule and a dynamical state behind it. The shared map retained only what could be seen through the same twelve measurements.
 
-All three collections contained persistent gaps and loops in that common space. A loop means that the observed bodies surround a region of forms the system does not occupy. In Lenia, a closed walk around such a gap could return to roughly the same visible body while ending at a different underlying rule. This was the intriguing possibility: perhaps familiar-looking anatomy concealed several distinct ways of making it.
+The sampled collections contained persistent topological features in that common space. A loop surrounds a gap in the observations; it does not show that the missing forms are impossible. In Lenia, we could also ask whether a closed path in the measured shape coordinates returns to a different underlying rule. Returning to the same measurements need not mean recovering the complete visible body. This was the intriguing possibility: perhaps familiar-looking anatomy concealed several distinct ways of making it.
 
-The broader comparison showed just how coarse the shared map was. For fish, distances in the twelve visible measurements only weakly agreed with distances in the conventional anatomical coordinates. Agreement was better for EmbryoMaker, whose native measurements also describe final form. It was weakest for Lenia: the correlation between visible similarity and similarity in its native dynamical measurements was 0.078, and local-neighbour overlap was only about three to four per cent. Two Lenia organisms could therefore look close on the common map while being far apart in the state that generated and sustained them.
+The broader comparison showed just how coarse the shared map was. For fish, distances in the twelve visible measurements only weakly agreed with distances in the conventional anatomical coordinates. Agreement was better for EmbryoMaker, whose native measurements also describe final form. It was weakest for Lenia: the correlation between visible similarity and similarity in its native dynamical measurements was 0.078, and local-neighbour overlap was only about three to four per cent. Two Lenia organisms could therefore be close in the shared shape measurements while differing in the native dynamical measurements. This comparison did not reconstruct their complete internal states.
 
 One neighborhood of 256 Lenia specimens lay unusually close to the fish collection and showed larger changes in rule state around closed paths. The pattern was suggestive, but the combined permutation test reached about 0.094, and none of the five densely tested specimens passed both follow-up controls. Under the test we had chosen in advance, the apparent fish-associated effect could not be distinguished reliably from chance.
 
 The shared map was still useful. It let us place otherwise incomparable bodies beside one another, and then measure how much that comparison left out. The failed fish-near lead redirected the work toward paired descriptions: one for what the body looks like, another for the rule, developmental history and dynamics that make that body possible.
+
+The [morphospace report](/dossiers/lenia-swarm/morphospace/) shows the shared measurements, selected specimens and loop controls.

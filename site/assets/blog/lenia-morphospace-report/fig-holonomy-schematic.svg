@@ -11,7 +11,7 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 .blue { font-size: 13px; fill: #4f66bc; }
 .note { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
 </style>
-<rect width="800" height="460" fill="#ffffff"/>
+<rect width="800" height="460" fill="#fffdf7"/>
 <defs>
   <marker id="arrowGold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
     <path d="M 0 0 L 10 5 L 0 10 z" fill="#9f6f00"/>
@@ -24,8 +24,8 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 <!-- Fiber over the starting phenotype neighborhood -->
 <rect x="125" y="42" width="58" height="295" rx="6" fill="#ff6600" fill-opacity="0.08" stroke="#ff6600" stroke-opacity="0.2"/>
 <line x1="154" y1="54" x2="154" y2="323" stroke="#ff6600" stroke-opacity="0.3" stroke-width="1" stroke-dasharray="3,4"/>
-<text x="154" y="28" class="accent" text-anchor="middle">fiber over</text>
-<text x="154" y="44" class="accent" text-anchor="middle">a neighborhood</text>
+<text x="154" y="28" class="accent" text-anchor="middle">rules for</text>
+<text x="154" y="44" class="accent" text-anchor="middle">nearby shapes</text>
 
 <!-- Other phenotype fibers -->
 <g stroke="#ff6600" stroke-opacity="0.08" stroke-width="1">
@@ -49,10 +49,10 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 <line x1="173" y1="125" x2="190" y2="125" stroke="#3f8458" stroke-width="1"/>
 <line x1="173" y1="205" x2="190" y2="205" stroke="#4f66bc" stroke-width="1"/>
 <line x1="190" y1="130" x2="190" y2="200" stroke="#b4573d" stroke-width="2" marker-end="url(#arrowRed)"/>
-<text x="204" y="164" class="red">state</text>
-<text x="204" y="180" class="red">residue</text>
+<text x="204" y="164" class="red">rule</text>
+<text x="204" y="180" class="red">difference</text>
 
-<text x="360" y="72" class="gold" text-anchor="middle">move around phenotype space</text>
+<text x="360" y="72" class="gold" text-anchor="middle">adjust rules along the shape path</text>
 <text x="360" y="276" class="gold" text-anchor="middle">return near the starting form</text>
 
 <!-- Base-space loop -->
@@ -61,22 +61,22 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 <path d="M 155 380 C 170 412, 345 414, 535 380" stroke="#9f6f00" stroke-width="2" fill="none" opacity="0.5"/>
 <circle cx="155" cy="380" r="5" fill="#b4573d"/>
 <text x="155" y="404" class="label" text-anchor="middle">same neighborhood</text>
-<text x="345" y="438" class="red" text-anchor="middle">closed loop in phenotype space</text>
+<text x="345" y="438" class="red" text-anchor="middle">closed path in measured shape</text>
 
 <!-- Right-side operational readout -->
 <text x="610" y="88" class="title">Test:</text>
-<text x="610" y="106" class="label">lift a closed</text>
-<text x="610" y="122" class="label">phenotype loop</text>
+<text x="610" y="106" class="label">follow a closed</text>
+<text x="610" y="122" class="label">shape path</text>
 
 <text x="610" y="166" class="title">Measure:</text>
-<text x="610" y="184" class="red">endpoint residue</text>
-<text x="610" y="200" class="small">state distance at return</text>
+<text x="610" y="184" class="red">change in the rule</text>
+<text x="610" y="200" class="small">compare start and return</text>
 
 <text x="610" y="244" class="title">Control:</text>
 <text x="610" y="262" class="label">matched out-and-back</text>
 <text x="610" y="278" class="small">same local scale</text>
 
-<text x="610" y="322" class="title">Signal:</text>
-<text x="610" y="340" class="red">residue enrichment</text>
-<text x="610" y="356" class="small">in selected neighborhoods</text>
+<text x="610" y="322" class="title">Question:</text>
+<text x="610" y="340" class="red">larger difference</text>
+<text x="610" y="356" class="small">than the retraced path?</text>
 </svg>

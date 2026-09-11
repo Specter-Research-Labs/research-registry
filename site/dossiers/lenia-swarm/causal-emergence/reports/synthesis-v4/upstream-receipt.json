@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "synthesis-v4",
+  "releaseId": "flce-synthesis-v4-69107dac3f18",
+  "title": "What Remained After Checking Every Claim Against Its Experiment",
+  "date": "2026-08-26",
+  "status": "archive",
+  "evidenceClass": "claim review",
+  "sourceReportSha256": "8537c18adbc1f0ab0bc908c64272c4e5a953a8304b095483e99c94ea37df79f8",
+  "publicReportSha256": "5cdf1767896ec859afaaa94fd08c8c46e39b04e5bd1f4a30b4c43f0b209e400c",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "a393d5b2524a3a6117c0534e4ddfbd4c04b1b49cb293e98ed24e704b96ace8e2",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "98289d5c0bdbf136a4e44641e162d0072eb6d946f256c9d864354309fadd7c1a"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "reservoir-recurrence-census",
+  "releaseId": "flce-reservoir-recurrence-census-b1d08f94b52f",
+  "title": "Reservoir Recurrence Was Too Sparse to Test the Score",
+  "date": "2026-08-12",
+  "status": "archive",
+  "evidenceClass": "behavioral census without signal test",
+  "sourceReportSha256": "82fd001c40a923b1439822b71dfb1194d41970b216b4430d0c45da9eb2f729bb",
+  "publicReportSha256": "2a6c54b025cd5694bd92d1a59a5ab570904e7cab65753be0d9d7f9c402ebec83",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "506cf26e97d9de3bab4b781f41943e76d855e7d1dcbc99d17774a70256fcc740",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "3f847cb13d59df43d747e589c1c8b205ac4ecd6675900c88b502c0ce9979841e"
+}

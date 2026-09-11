@@ -1,0 +1,33 @@
+{
+  "source": "Lenia CLI publish media",
+  "simulation_steps": 3600,
+  "frame_budget": 300,
+  "fps": 30,
+  "render_mode": "body",
+  "transparent_format": "lossless animated WebP",
+  "simulation_grid": [
+    256,
+    256
+  ],
+  "presentation_frame": [
+    512,
+    512
+  ],
+  "purpose": "Unperturbed replay of two coherent movers used in the obstacle assay; not the fish-near selection.",
+  "specimens": [
+    {
+      "id": "781d0200",
+      "source_label": "library-0-flow-map-elite-11",
+      "presentation_frames_sha256": "99ab70250c119f0add5f05587d4a59ac74849a7d2c6ea57083faceef9a7e282d",
+      "video_sha256": "8fb26b68de28dc2bc8213553aaf59a9ebc697a5f2cd2dd775645573fafe760f8",
+      "transparent_sha256": "d6fe46b1b1829dae0daa573b7484eed69228ca4f56cb3b7ebe177ef82f9df9b5"
+    },
+    {
+      "id": "870da94a",
+      "source_label": "library-0-flow-map-elite-12",
+      "presentation_frames_sha256": "ce2c9d53c5dc0c41358b273caa6902af3faf0965e97864f1e557757eb77e72dd",
+      "video_sha256": "c59a71f37cd3bc547d30580d74f5ef91f17b68dd7804b09af418603b4e9ed01c",
+      "transparent_sha256": "2de25b6add822413ac1bd1fcfe48055b836cc6a1c5b02de6bff136b71c84968f"
+    }
+  ]
+}

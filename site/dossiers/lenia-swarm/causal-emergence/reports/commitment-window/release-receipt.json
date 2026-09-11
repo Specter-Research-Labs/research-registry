@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-window",
+  "releaseId": "flce-commitment-window-e6caa005cd52",
+  "title": "A Helpful Perturbation Becomes Harmful by Passage Three",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "passage-resolved repair intervention",
+  "sourceReportSha256": "243baf5012c1bc6392935dcd8b2c20b82843de100e8fae25d7a31681372e6262",
+  "publicReportSha256": "243baf5012c1bc6392935dcd8b2c20b82843de100e8fae25d7a31681372e6262",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "8b85a23ed224b06bac058740139826acb26ba29b0ec8e93d3742db832535af60",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "b62dd647b5e02667efb2f713b73dba5a055be935916540ffe47ecbef5cb9beed"
+}

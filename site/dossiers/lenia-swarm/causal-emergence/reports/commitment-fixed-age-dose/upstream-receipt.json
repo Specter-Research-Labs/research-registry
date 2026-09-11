@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "commitment-fixed-age-dose",
+  "releaseId": "flce-commitment-fixed-age-dose-301cec5aff76",
+  "title": "An Intervention That Works Early Stops Working Four Steps Later",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "fixed-action dose study",
+  "sourceReportSha256": "a5c0b023dc980f2604328468e9ccce995917b92debc992d440742b76ba85f1f0",
+  "publicReportSha256": "35916b632cf5d3df9b70f9a6675ca7dcb8dd5c2190e5542e4e594dbb07bdf2a8",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "c09079396c06db933b7da6f9316456c95d0748d32bd81dd1b2b1a48f45b19121",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "85559a6a655991f229017800396ea8beea5999a14d2d591e841cd4edf17d8a38"
+}

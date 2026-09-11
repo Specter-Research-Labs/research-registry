@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-tangent-controller",
+  "releaseId": "flce-developmental-tangent-controller-4de5dcd33647",
+  "title": "Interventions Split Futures Without Shifting Formation",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "fresh-cohort tangent intervention",
+  "sourceReportSha256": "cd1d2da5242ad38c508ac613944d911a3df67081860c6fabb503c6474a2412d8",
+  "publicReportSha256": "cd1d2da5242ad38c508ac613944d911a3df67081860c6fabb503c6474a2412d8",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "0f34b51728bc092141634977a6141573f8455626e0171074e0db79fd66e01af1",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "cd31e7689f7dbd4427d085a0825bbd14fc69d928a04f450960e678953dbadf76"
+}

@@ -234,8 +234,12 @@
                 }
             }
         </style>
-    </head>
-    <body>
+        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/dossier-stories.css?v=2">
+<script src="/assets/dossier-stories.js?v=1" defer></script>
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+</head>
+    <body class="dossier-story">
         <div class="site-shell">
             <header class="site-topnav">
                 <a class="site-brand" href="../../">
@@ -243,9 +247,9 @@
                     <span class="site-brand-name">SPECTER LABS</span>
                 </a>
                 <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="../../dossiers/" aria-current="page">Dossiers</a>
+                    <a class="nav-link" href="../../dossiers/" aria-current="page">Research</a>
+                    <a class="nav-link" href="../../blog/">Writing</a>
                     <a class="nav-link" href="../../addenda/">Addenda</a>
-                    <a class="nav-link" href="../../blog/">Blog</a>
                     <a class="nav-link" href="../../cabinet/">Cabinet</a>
                 </nav>
             </header>
@@ -259,31 +263,12 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <section class="section-block">
-                    <p>
-                        Zhang et al. (2024) propose a minimal morphogenesis
-                        substrate. A 1D line, or 2D grid, of agents update
-                        from a local cell-view state using rules derived
-                        from classical sorting algorithms. Each cell is a
-                        thread that decides whether to swap using bounded
-                        local state and shared state protected by a lock.
-                        From those ingredients the system exhibits three
-                        behaviors: convergence to an ordered configuration
-                        in 1D, algotype clustering where cells running the
-                        same algorithm become spatially adjacent, and
-                        robustness in the presence of frozen cells.
-                    </p>
-                    <p>
-                        The wrinkle is in the operator class. Bubble,
-                        Insertion, Gnome, and Shaker use adjacent swaps.
-                        Published 1D Selection performs direct transpositions
-                        toward an explicit ideal index, and reroutes when its
-                        target is blocked. Cell-view describes how each cell
-                        decides, not how it moves. The stress-tests below vary
-                        the move operator while holding that decision rule
-                        fixed.
-                    </p>
-
-                    <figure class="zl-figure" id="zl-dip-fig">
+<h2 class="story-question">Can order survive when some cells stop acting?</h2>
+<p class="story-deck">Each cell holds a value and follows a sorting rule. Together they put themselves in order. Freeze some cells, mix different rules, or change which moves are allowed: the way order returns reveals what the collective depends on.</p>
+<nav class="story-jumps" aria-label="Experiments"><a href="#zl-dip-fig">Recovering from disorder</a><a href="#zl-cluster-fig">Why like cells cluster</a><a href="#zl-gate-fig">Transplanting the waiting rule</a></nav>
+<h2 class="story-heading">Order returns through temporary setbacks</h2>
+<p>In this replay, three cells cannot initiate a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials, every run contained at least one such dip.</p>
+<figure class="zl-figure" id="zl-dip-fig">
                         <div class="zl-fig-head">
                             <span class="zl-fig-name">Figure A — Dip replay</span>
                             <span class="zl-fig-meta">1D cell-view Bubble &middot; n=30 &middot; 3 movable frozen cells &middot; seed 447</span>
@@ -328,6 +313,7 @@
                         </div>
                     </figure>
 
+                    <h2 class="story-heading">Cells cluster when they move at different times</h2>
                     <p>
                         Algotype clustering turns out not to require attraction,
                         type-aware communication, or explicit coordination.
@@ -344,11 +330,7 @@
                         (<code>InsertionNoWait</code>) sharply reduces
                         clustering, and exporting the same gate to Bubble and
                         Gnome clones reproduces the predicted rise in temporal
-                        separation and clustering. The morphogenetic analogy
-                        survives, but the emphasis shifts from intelligence to
-                        heterochrony: timing shifts between developmental phases
-                        produce spatial pattern without any explicit patterning
-                        instruction.
+                        separation and clustering. Timing differences can produce spatial pattern without an explicit instruction to group by type.
                     </p>
 
                     <figure class="zl-figure" id="zl-cluster-fig">
@@ -410,7 +392,8 @@
                         </div>
                     </figure>
 
-                    <figure class="zl-figure" id="zl-gate-fig">
+                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
+<figure class="zl-figure" id="zl-gate-fig">
                         <div class="zl-fig-head">
                             <span class="zl-fig-name">Figure C — The gate, not the algotype</span>
                             <span class="zl-fig-meta">clustering increase &Delta;C &middot; 30 archived trials per pair</span>

@@ -1,12 +1,14 @@
 ---
-title: "Material Memory Without a Controller"
+title: "Material memory without a controller"
 release: "draft"
 provenance: "assistant-drafted"
 source_id: "D-004"
 toc: true
 ---
 
-# Material Memory Without a Controller
+# Material memory without a controller
+
+*Paused exploratory draft. Retained for the experimental record; this project is not part of the current release work. The damage-recovery failures and layout dependence below remain essential to its interpretation.*
 
 A minimal Jolt rigid-body assembly with local, history-dependent updates and no centralized
 controller. Each body receives local updates to friction, stiffness, and plasticity from
@@ -162,4 +164,4 @@ attraction would move the result from "persistent commitments" toward set-points
 
 ---
 
-That is the draft.
+

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-susceptibility-transplant",
+  "releaseId": "flce-developmental-susceptibility-transplant-565b5cd70e38",
+  "title": "The Recipient Body Determines Whether a Hidden-State Transplant Works",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "cross-age hidden-state transplant",
+  "sourceReportSha256": "79e06d987e75e8e5c094e89e12e4976dc1ff4d48eb17dd04b160c32a68dc79bf",
+  "publicReportSha256": "6c93df5a117b742b2d16004b0810b62155f8c612ec041d67bb5f3050bb645461",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "2058e344be28418b65a36eb03b0e341f0092062c87fb5b25d8445f60fe64ff0a",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "246ec2ab877bbb0308b306342d8ffd1d3993d64217257f6821051868018b769a"
+}

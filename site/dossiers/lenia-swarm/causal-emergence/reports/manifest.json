@@ -1,0 +1,1061 @@
+{
+  "schema": "specter_flow_lenia_report_library_bundle_v3",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "leadReleaseId": "flce-synthesis-v7-be5d576a918b",
+  "reports": [
+    {
+      "id": "synthesis-v7",
+      "releaseId": "flce-synthesis-v7-be5d576a918b",
+      "sourceReportSha256": "7fcc26f51b59b9f604662c9abe4afb296cfc870ac478c79ef216f340610d53ea",
+      "publicReportSha256": "33ad80ff225d9ab037861d77208a075632d5842eff62d0d4f1cb53adcdf3fd5f",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "synthesis_publication_instruments_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "a1cff9cd6d089fcbbb4e729807a068385a082f2260344ca37a8262cdea6973be",
+      "receiptSha256": "eb9af73a46b68f1e9ce150f3401b67c933fad4119e2b905d29139a90a0ce9955"
+    },
+    {
+      "id": "start-here",
+      "releaseId": "flce-start-here-b20cf14e6821",
+      "sourceReportSha256": "e17b2bc584f31b31539efd0d23b6734314f55f87e672a311d4ee430220177912",
+      "publicReportSha256": "e17b2bc584f31b31539efd0d23b6734314f55f87e672a311d4ee430220177912",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "9e418de199f53f951a9dccce1cd431766523602988b697774e33c7d92e98bd96",
+      "receiptSha256": "0b57424484259e7ecfc7531030c4d3cdf0fb1a232e116eafcca012cc335d601e"
+    },
+    {
+      "id": "organism-birth-signal",
+      "releaseId": "flce-organism-birth-signal-60e021992596",
+      "sourceReportSha256": "53c1920387c5565cd8292c99cbcaeb6bc26cfdade27ff0b885efac9a7b8903d2",
+      "publicReportSha256": "53c1920387c5565cd8292c99cbcaeb6bc26cfdade27ff0b885efac9a7b8903d2",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "0a0f9e8e8d86264eeba45dc7814045d65b30d225064d0d153435360cd678d8a6",
+      "receiptSha256": "bfcc83eebd0f995d519707a99d93638e2866cfa0363280b84647f1174591a46e"
+    },
+    {
+      "id": "initial-action-world",
+      "releaseId": "flce-initial-action-world-470b229b4081",
+      "sourceReportSha256": "03ed7016a113d1c91fe0615f0dab09ae7624dbc349f16623624fa181acf572a3",
+      "publicReportSha256": "03ed7016a113d1c91fe0615f0dab09ae7624dbc349f16623624fa181acf572a3",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "44afaeb754e2fa4016d7e2c056266cddcbbbd2c0356abc8f962c431b8f9f04f6",
+      "receiptSha256": "c7a4e22c1866ae0b59105112332ea2f8c7645684a01f9c425caff869cbcbbe38"
+    },
+    {
+      "id": "spatial-scale-action-world",
+      "releaseId": "flce-spatial-scale-action-world-b23384b62adf",
+      "sourceReportSha256": "d8711d5864c83c795c31d4ce21abae102a081da7fd7cbd37acbdbcb7e2d9c39c",
+      "publicReportSha256": "d8711d5864c83c795c31d4ce21abae102a081da7fd7cbd37acbdbcb7e2d9c39c",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "e7d9134f7b172ac62c728c9f8f5180fe31b0e5c57011136bb0f0c4f3231747e5",
+      "receiptSha256": "66ae5d3b8bc0cdb23071f29700d6b730f338c3e4e26f80685edd97e78a1bcd63"
+    },
+    {
+      "id": "causal-repertoire-contraction",
+      "releaseId": "flce-causal-repertoire-contraction-6de546e55364",
+      "sourceReportSha256": "6a4ac7fe3bb68ad7bb7ba011629af99e5c1ae1e680bb4a4893d3ff9d1443c881",
+      "publicReportSha256": "6a4ac7fe3bb68ad7bb7ba011629af99e5c1ae1e680bb4a4893d3ff9d1443c881",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "9f84c61bd6d84079e759857c5a38b53438315b53f9fd5396a234a4eb4f42e9eb",
+      "receiptSha256": "bfbaa92463d193ea97f953a809a177c8f07a83f9247b443998213ae68c876b8a"
+    },
+    {
+      "id": "geometry-turn-causal-atlas",
+      "releaseId": "flce-geometry-turn-causal-atlas-6fe1acb99e12",
+      "sourceReportSha256": "03692e1168ab187210927bb7a25f084d3cfc255042a6b90bacacb39fb166be1a",
+      "publicReportSha256": "03692e1168ab187210927bb7a25f084d3cfc255042a6b90bacacb39fb166be1a",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "94c015a051336490dc51f733d5cb5574f59f99efeaa65504f4b37bd0af852290",
+      "receiptSha256": "f080f140497a73fcf9de06f5c57c794e5ba3da686ff721d96e3a7480f08d7374"
+    },
+    {
+      "id": "commitment-gate-controller",
+      "releaseId": "flce-commitment-gate-controller-66d5816e73d4",
+      "sourceReportSha256": "23a91d41d69fc68b73fe12cb03ec6a229eb78e794fdae5a30c46c2b714c02b39",
+      "publicReportSha256": "23a91d41d69fc68b73fe12cb03ec6a229eb78e794fdae5a30c46c2b714c02b39",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "3618a7db21568ea8ff691936f19087dc5f56060f59630c52821d7dbff040ee30",
+      "receiptSha256": "d577af512141d400073a572acb23884588120184439ab71018354459c1e0a061"
+    },
+    {
+      "id": "commitment-gate-formation",
+      "releaseId": "flce-commitment-gate-formation-a1ee79827ed1",
+      "sourceReportSha256": "81aa33822d31f8f73e33535524ace81e579c29c5363ada9afd562e8a86a74c6b",
+      "publicReportSha256": "81aa33822d31f8f73e33535524ace81e579c29c5363ada9afd562e8a86a74c6b",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "c053bd4f0ede37569fd805428a5998532fe606cbd3542134f1a94d4b8dbc219a",
+      "receiptSha256": "d95a5d379a2e64f309fb9f320ff0010c26b79723ca9a46b1655302c281db8338"
+    },
+    {
+      "id": "developmental-causal-grammar",
+      "releaseId": "flce-developmental-causal-grammar-28a3242e0d25",
+      "sourceReportSha256": "4e313eac23ebc8bbb5d0abbbc2665bc1223ccf608c2ba4fd7bc0c4c13d1b793f",
+      "publicReportSha256": "4e313eac23ebc8bbb5d0abbbc2665bc1223ccf608c2ba4fd7bc0c4c13d1b793f",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "ba666423c56d66741cab175aa670449262095987f5f90fda6d2c6a45fe46d7d8",
+      "receiptSha256": "d67ff8ede0b377ad26e665d618a41c6c1a449f48c8c84fb0ca438bbed37900e0"
+    },
+    {
+      "id": "organism-hardens-without-narrowing",
+      "releaseId": "flce-organism-hardens-without-narrowing-0523893c4c4f",
+      "sourceReportSha256": "06f6876bca1249c319abb19756048bb0c386c51457350ea95c6056019ee7f41b",
+      "publicReportSha256": "06f6876bca1249c319abb19756048bb0c386c51457350ea95c6056019ee7f41b",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "88e2ac12f9d6e2df4bf365ce035d9e969f5e1a283ee8a2cbaf916301e9d61895",
+      "receiptSha256": "7c740421b3f69e51c53e0c99dd2db693a897d326c9ab3cf818f93776fe430db1"
+    },
+    {
+      "id": "synthesis-v5",
+      "releaseId": "flce-synthesis-v5-a9539ecc2dfd",
+      "sourceReportSha256": "f4a310e3bf6bb91e065d4bd240b51f7178d78eb65f9fe3c455479fe6231dfe4d",
+      "publicReportSha256": "f4a310e3bf6bb91e065d4bd240b51f7178d78eb65f9fe3c455479fe6231dfe4d",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "a0b74aa1e7d037f4ac5ee814ffacc0ca6bdd7d87652c141e91cc0ff892426df3",
+      "receiptSha256": "49233019984f14171e676ce285c70553058b27ea4485323476099e6fbabdcc8b"
+    },
+    {
+      "id": "organism-birth-causal-exploration",
+      "releaseId": "flce-organism-birth-causal-exploration-cdf6a4a062c1",
+      "sourceReportSha256": "235bbb048894863439dc8c84e128f470464214a2da63cd3dc6d3a519d2f4d024",
+      "publicReportSha256": "235bbb048894863439dc8c84e128f470464214a2da63cd3dc6d3a519d2f4d024",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "165a04a2ffb335bdcd1eabaca603fc04a3d8aa12bd9f3fa043407a68a6c48dbe",
+      "receiptSha256": "f018ed490afba0f3635c2060fa3543494287f9f5696a95753fc423d2d0d15682"
+    },
+    {
+      "id": "developmental-basin-atlas",
+      "releaseId": "flce-developmental-basin-atlas-66cdb1d03baa",
+      "sourceReportSha256": "07ac5297aca4b9a655206686c6de70b4a5bf63ef4af302928188ac1b4d3afa28",
+      "publicReportSha256": "07ac5297aca4b9a655206686c6de70b4a5bf63ef4af302928188ac1b4d3afa28",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "1b39535b0d206c11d0a4f119f650326c4ba0d6014b74175b17abdd6b8c0a25ff",
+      "receiptSha256": "3fd34c093ab04e70b3ff62bad0d4286d858267a595c7005a405e096951e496ce"
+    },
+    {
+      "id": "prospective-geometry-clock",
+      "releaseId": "flce-prospective-geometry-clock-3bee10b15db8",
+      "sourceReportSha256": "ef445e409c1d730b23044111f6e913ed058543458c5ade3bc9dfb9abcff34588",
+      "publicReportSha256": "ef445e409c1d730b23044111f6e913ed058543458c5ade3bc9dfb9abcff34588",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "4574bacae2704a349547f80c75b07cc852a0aa5656364d3a7e0732806e7be8a9",
+      "receiptSha256": "69db5b9e5299f05ee18d21aa23077df7336b2de380bf5f9057c3f1d04cb9a488"
+    },
+    {
+      "id": "prospective-transition-sign-flip",
+      "releaseId": "flce-prospective-transition-sign-flip-17aed7716388",
+      "sourceReportSha256": "ae557961f4af45333035daddccbb2193c2e55b8cc145952c2b68bd336aaa354d",
+      "publicReportSha256": "ae557961f4af45333035daddccbb2193c2e55b8cc145952c2b68bd336aaa354d",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "7deac42477b698449359a463cd5ca1a7dc002eefa512c224fc3fd25781632a58",
+      "receiptSha256": "5da40dc6768b946e33b6d35f662a1fd2e3532b4aa48e8e5ae9f00ca04b3d2c64"
+    },
+    {
+      "id": "developmental-alignment-window",
+      "releaseId": "flce-developmental-alignment-window-45a517147cbb",
+      "sourceReportSha256": "821cff83138e12013527fa829d171b85492f7b77d682f0c57b39c43b1f2940a1",
+      "publicReportSha256": "821cff83138e12013527fa829d171b85492f7b77d682f0c57b39c43b1f2940a1",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "fb581e298194dd7b14be3acda35b53df3fef4baf7dd8ae0355941bf99643124b",
+      "receiptSha256": "c8a2e41797448adfe5beb24d2ac595c8871c6e1625f473052c2794174e6655e7"
+    },
+    {
+      "id": "developmental-tangent-controller",
+      "releaseId": "flce-developmental-tangent-controller-4de5dcd33647",
+      "sourceReportSha256": "cd1d2da5242ad38c508ac613944d911a3df67081860c6fabb503c6474a2412d8",
+      "publicReportSha256": "cd1d2da5242ad38c508ac613944d911a3df67081860c6fabb503c6474a2412d8",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "0f34b51728bc092141634977a6141573f8455626e0171074e0db79fd66e01af1",
+      "receiptSha256": "8674d2f0d1fd97843db7a0ad10620cdefee6b81e11bdcc777731c1c22ed4e6f1"
+    },
+    {
+      "id": "developmental-fold-onset",
+      "releaseId": "flce-developmental-fold-onset-e00c48748599",
+      "sourceReportSha256": "13b9198858163998c6a0faf822fc3592178899fff161ebfd76e77207fd0641b1",
+      "publicReportSha256": "13b9198858163998c6a0faf822fc3592178899fff161ebfd76e77207fd0641b1",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "97bf8461633baf7b3773c4fac841db80001c11a8a578ea56108210feb9e07263",
+      "receiptSha256": "4fca764255663a2c80119bc2ea139693d6aef689fa523e05ac3bab439ca070a8"
+    },
+    {
+      "id": "early-action-world-onset",
+      "releaseId": "flce-early-action-world-onset-cbcf49e8786e",
+      "sourceReportSha256": "6e33088c49bf6c984b8ba3cb5d3aa4e19ebf95f3633ef590b41c08301e3233d0",
+      "publicReportSha256": "6e33088c49bf6c984b8ba3cb5d3aa4e19ebf95f3633ef590b41c08301e3233d0",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "491d5f7dc526da42f79e9043b953b2880851a644d85a157ae6c0bfded91bbe55",
+      "receiptSha256": "ef347d054bb6db8318913300184a9fb131a25a95d47db4380b1a051ab815eb0d"
+    },
+    {
+      "id": "developmental-aperture-map",
+      "releaseId": "flce-developmental-aperture-map-5b1880d2b2fc",
+      "sourceReportSha256": "0c0a7e913cfa02cfe66df7c44eeabe96285b5130f5020beeb725ab7b96aaaaa4",
+      "publicReportSha256": "0c0a7e913cfa02cfe66df7c44eeabe96285b5130f5020beeb725ab7b96aaaaa4",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "c048e278960c1286c924f0f2f4e478b604d7ba6408737de1013504c0f8ab5a30",
+      "receiptSha256": "96d57ae7688c09cbed470e1d541f9ee3112bd94522738e00a7a498b721831602"
+    },
+    {
+      "id": "developmental-arrow-birth",
+      "releaseId": "flce-developmental-arrow-birth-ef7795f7ec12",
+      "sourceReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
+      "publicReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "61e636f9d9c506c2afa1dcef6184cb8c1c68c100c513f4dcb2cd0e811d76e360",
+      "receiptSha256": "f0f4b7ced3daac960f241da4919376023cfac7f1c064d3a72dcde608541d7a99"
+    },
+    {
+      "id": "prediction-falls-direction-appears",
+      "releaseId": "flce-prediction-falls-direction-appears-11c6ccd967a7",
+      "sourceReportSha256": "d0ae2a5d87d48c6c6a47d30d5343efea201b3ee33ac517ab524ba6f4f95fa453",
+      "publicReportSha256": "d0ae2a5d87d48c6c6a47d30d5343efea201b3ee33ac517ab524ba6f4f95fa453",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "6c428cb584ac96cb12c1b1287d564eeaafed9f954622d27a5bc6d0a692085fcd",
+      "receiptSha256": "f820f7ac868b80a00318e65aa691033a439f69f4e714fb8e0ff69545d21e7cf1"
+    },
+    {
+      "id": "developmental-ignition-transplant",
+      "releaseId": "flce-developmental-ignition-transplant-dc4501025c9c",
+      "sourceReportSha256": "5ae2bd52019d0c3db4dfd8bbbb22a63451d9ff316e9e19bf371edd9f5aefce2a",
+      "publicReportSha256": "5ae2bd52019d0c3db4dfd8bbbb22a63451d9ff316e9e19bf371edd9f5aefce2a",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "325a908ffa4b5638e1542426f66afc85698e3e61b57556925d34d13c29776e47",
+      "receiptSha256": "b6a9079e83e6f24b309f2e85f727413ad66ba9e9d5c67c42c9a2e0021b41447f"
+    },
+    {
+      "id": "developmental-counterweight-dose",
+      "releaseId": "flce-developmental-counterweight-dose-6189de4667bc",
+      "sourceReportSha256": "8a25f0cad407e3bebeaa6ccb404cde9381d6ad05ddfb404bc08e59c892dea05a",
+      "publicReportSha256": "8a25f0cad407e3bebeaa6ccb404cde9381d6ad05ddfb404bc08e59c892dea05a",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "f45a1dd3b492edfff227b5e16be1322edbfdeb1e0d218f896c369abd0ed60fb6",
+      "receiptSha256": "de537c15ad5afd7c75b9fc8d275bd394a982d1ffd5835b165b30b73a19e51851"
+    },
+    {
+      "id": "developmental-counterweight-clamp",
+      "releaseId": "flce-developmental-counterweight-clamp-5cfaaa2307e9",
+      "sourceReportSha256": "efe37182feaad461c3e277fc62341e389b13516e614c9c4246fc8fd54983836f",
+      "publicReportSha256": "efe37182feaad461c3e277fc62341e389b13516e614c9c4246fc8fd54983836f",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "6d183a058abd0e270ad11c72c72edebe754d5a6f6e586757736526734c06b7d8",
+      "receiptSha256": "ec89217be3aeff880e248ba87ced3bdd4aadc127dbdf71663c6653f7a6bf7fbb"
+    },
+    {
+      "id": "native-tangent-intervention",
+      "releaseId": "flce-native-tangent-intervention-241e9fc85119",
+      "sourceReportSha256": "9aedd78a425b040e1dd1da5ccea33a9dab4a69068e7976353b0eb06aa23c6292",
+      "publicReportSha256": "9aedd78a425b040e1dd1da5ccea33a9dab4a69068e7976353b0eb06aa23c6292",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "13584d2db98b85b451de1ac49ca4e54a27948184aa5e4f0111b72c1c45cb7591",
+      "receiptSha256": "7f8a704e5bf71b2ee3fe65afdb0085d1784ede5f7e813e2f4d9c3107fb9efc70"
+    },
+    {
+      "id": "fresh-phase-operator",
+      "releaseId": "flce-fresh-phase-operator-0e2c47f8849c",
+      "sourceReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
+      "publicReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "ce2599706a7cb4617d6debbe091892668ad2bd4205c17f255dfcc6623a1cdaf4",
+      "receiptSha256": "be5451de2e8a8a919fb5c8e877821e0c9300d96390df4c04d3dd6af9401f9e29"
+    },
+    {
+      "id": "commitment-branching-intervention",
+      "releaseId": "flce-commitment-branching-intervention-eac44c929c3d",
+      "sourceReportSha256": "bab5815cbdf724734800af5fa946f6a9fa46d8993817247231f4bc687ed37a90",
+      "publicReportSha256": "bab5815cbdf724734800af5fa946f6a9fa46d8993817247231f4bc687ed37a90",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "d18f63976bc99d1dc7fd47c93188c01f799747a4319a1410b0813cfd9766e962",
+      "receiptSha256": "d72ca8fae8dafc84babe3c22ed5afdeba71681c1bec9f76cde964c809f2fe583"
+    },
+    {
+      "id": "commitment-fixed-age-dose",
+      "releaseId": "flce-commitment-fixed-age-dose-301cec5aff76",
+      "sourceReportSha256": "35916b632cf5d3df9b70f9a6675ca7dcb8dd5c2190e5542e4e594dbb07bdf2a8",
+      "publicReportSha256": "35916b632cf5d3df9b70f9a6675ca7dcb8dd5c2190e5542e4e594dbb07bdf2a8",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "c09079396c06db933b7da6f9316456c95d0748d32bd81dd1b2b1a48f45b19121",
+      "receiptSha256": "1888014c7879eba5318f26b334de5c1e991cae1a0ab577151db418ee72303f0f"
+    },
+    {
+      "id": "adaptive-commitment-controller",
+      "releaseId": "flce-adaptive-commitment-controller-84427a004868",
+      "sourceReportSha256": "7dc2f2bae9a6032eaccd5c22af2ef3c171a8fe584671f1b30ae745256c72e682",
+      "publicReportSha256": "7dc2f2bae9a6032eaccd5c22af2ef3c171a8fe584671f1b30ae745256c72e682",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "ced1884e3d969cc1f378b83b3016b6806ad7c5963250264997765985565b67de",
+      "receiptSha256": "c9e49262ef01e766ad48a530757e580dd4a5b7b7eb4512f6c49e910756a412c3"
+    },
+    {
+      "id": "adaptive-rescue-cycle",
+      "releaseId": "flce-adaptive-rescue-cycle-5f3ad7361a6a",
+      "sourceReportSha256": "6d8c297751bbd6011c68bae05298cc00aa270170e1571b11636cef86bbea6619",
+      "publicReportSha256": "6d8c297751bbd6011c68bae05298cc00aa270170e1571b11636cef86bbea6619",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "b0a367678c7f79994c0045a2aa0862ff812d5708082b3fd896d9ba9c84511b5e",
+      "receiptSha256": "7210ae9a401d1cb2e93b981c1714ff5b53d9ffce4c84c7a14a00e4208c594f16"
+    },
+    {
+      "id": "commitment-gate-repertoire",
+      "releaseId": "flce-commitment-gate-repertoire-6eae1696c29e",
+      "sourceReportSha256": "d2ddeebf22497c81d56c42a6bb18c8d02e5ab70b7a986c0640ff3721902d607f",
+      "publicReportSha256": "d2ddeebf22497c81d56c42a6bb18c8d02e5ab70b7a986c0640ff3721902d607f",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "76f8ab608793f1cb1d23ec8110dbca0dc95ac8c8635cc7b9b923badc0689bf91",
+      "receiptSha256": "64c20f8975b7ae73d5335e267f8583f04ffbc6c24846a2a8932d6d72a911c2b1"
+    },
+    {
+      "id": "gate-conditioned-morphology-navigation",
+      "releaseId": "flce-gate-conditioned-morphology-navigation-2d008b014b06",
+      "sourceReportSha256": "6a493756e5848e79f82b1ad1681ea94a4cf87d38a0744bcafd96eec071225ffc",
+      "publicReportSha256": "6a493756e5848e79f82b1ad1681ea94a4cf87d38a0744bcafd96eec071225ffc",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "5d618ab7026a9c56f9c8fda736de704a16e0fb7b7ea7f0db52c7b23efd85fb7c",
+      "receiptSha256": "6ab5a22deb827e32eb605fb6f01b028021aca6ff686e0059cb75b2479f419aad"
+    },
+    {
+      "id": "gate-conditioned-morphology-reversal",
+      "releaseId": "flce-gate-conditioned-morphology-reversal-4bd40328464d",
+      "sourceReportSha256": "2cb0c97de16e8e18a8605fb18a9a72a10a0295e47b6cba07a0046edc91619eff",
+      "publicReportSha256": "2cb0c97de16e8e18a8605fb18a9a72a10a0295e47b6cba07a0046edc91619eff",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "4573f4a8461041b89c0d20344fc5c0c018d035f7569f28942acaf9f601a81e82",
+      "receiptSha256": "b9d4b049a3c0bd99e6d2e46b00159eb3c0404ea0fe06082fcae628828235e2f7"
+    },
+    {
+      "id": "morphology-information-return",
+      "releaseId": "flce-morphology-information-return-08fbc2eece2a",
+      "sourceReportSha256": "17970b7631525a795e3bd530bba53b924bf2b89e4677fe7cecb6da61181bdd01",
+      "publicReportSha256": "17970b7631525a795e3bd530bba53b924bf2b89e4677fe7cecb6da61181bdd01",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "93425886e05f9b136ddb86d1b97f2c221246b29d9c03624923cdb1caa1d490da",
+      "receiptSha256": "2cb69e37db31eebe805a2ef714cc81ae5ab486e00b2ec3f3fe11a6202e64bfd4"
+    },
+    {
+      "id": "information-body-return",
+      "releaseId": "flce-information-body-return-4041e914cf91",
+      "sourceReportSha256": "f76cfbaff52de2dc50803634baae41a05c181a4ef63c5a95d176f0939485b8bc",
+      "publicReportSha256": "f76cfbaff52de2dc50803634baae41a05c181a4ef63c5a95d176f0939485b8bc",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "69900d78ed479b6b1203776e33d8974e09303bf19814946dae8571ec8bbdd75f",
+      "receiptSha256": "27d19d45bbc9ef665334fd156634c3b76af27829e29049cc34a66190491a7165"
+    },
+    {
+      "id": "canalization-rescue",
+      "releaseId": "flce-canalization-rescue-0112ba31cdf4",
+      "sourceReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
+      "publicReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "08ce410919ea14aa2eba1c84e02c85c23508c1417e9ff156c3b27ffe7f7fae15",
+      "receiptSha256": "3ceeae3c9a704c81b182c97aecaee3ac27721b0c5f344bb61923eedcfc1dc680"
+    },
+    {
+      "id": "delayed-canalization-rescue",
+      "releaseId": "flce-delayed-canalization-rescue-4f20bc066b06",
+      "sourceReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
+      "publicReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "213aa1d78d44c4cebb5d67eb7c66ff909803c08873ac0389e30e0ec5002be647",
+      "receiptSha256": "cea6d9c85beb7dc3a9d82c7d757994bcc435fde677a5501943cade880374c645"
+    },
+    {
+      "id": "commitment-window",
+      "releaseId": "flce-commitment-window-e6caa005cd52",
+      "sourceReportSha256": "243baf5012c1bc6392935dcd8b2c20b82843de100e8fae25d7a31681372e6262",
+      "publicReportSha256": "243baf5012c1bc6392935dcd8b2c20b82843de100e8fae25d7a31681372e6262",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "8b85a23ed224b06bac058740139826acb26ba29b0ec8e93d3742db832535af60",
+      "receiptSha256": "86c01ef7634a90d8941269b69aac26681decb888b67ccd08dbf16c89812c526e"
+    },
+    {
+      "id": "commitment-rewrite",
+      "releaseId": "flce-commitment-rewrite-47eb03326814",
+      "sourceReportSha256": "d85b634076b1ba607b51d16e60d52847b763a157a9f04fa7d70e404493c90508",
+      "publicReportSha256": "d85b634076b1ba607b51d16e60d52847b763a157a9f04fa7d70e404493c90508",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "85814ef186029e660009f52e9d9a28bce141ebb0283a0e786a1955d40d16564f",
+      "receiptSha256": "f0f7fc52319fe5f3012ef76d9404cd5c4669f57ccf8de590b901402f956ece1a"
+    },
+    {
+      "id": "developmental-causal-susceptibility-map",
+      "releaseId": "flce-developmental-causal-susceptibility-map-829fe7d3beb0",
+      "sourceReportSha256": "d6b9656ff152be2d01b933d46233e73aecd9600c9412ef5bd4c720336776d261",
+      "publicReportSha256": "d6b9656ff152be2d01b933d46233e73aecd9600c9412ef5bd4c720336776d261",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "26dc421bdaa31ff4d7735e7c0bd398eb3196fa449f06f57d7f6efbcc9ce6def0",
+      "receiptSha256": "942a10ad094e7c4797bc9a3d3b635b46908e45a31309429df71e77ee45cd7333"
+    },
+    {
+      "id": "causal-history-order",
+      "releaseId": "flce-causal-history-order-3c885ac5af9b",
+      "sourceReportSha256": "96faecbee7414235a768c7ed823e9c036b0b4f9d7a89fee27a8e8513aa61c21d",
+      "publicReportSha256": "96faecbee7414235a768c7ed823e9c036b0b4f9d7a89fee27a8e8513aa61c21d",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "3ca01c3213e85657eb124bbee6992baab764a5244c57736dbba23d36896b2e2c",
+      "receiptSha256": "c73da68350d585deace658f05b51129dea4b26c6754e1f83200d5f1f32b8d6bd"
+    },
+    {
+      "id": "causal-return-loop",
+      "releaseId": "flce-causal-return-loop-02e1103e1324",
+      "sourceReportSha256": "12faa9d8642aab7ac3d219265db6bde74e7e2091d020b5f2be87936473cc8c6f",
+      "publicReportSha256": "12faa9d8642aab7ac3d219265db6bde74e7e2091d020b5f2be87936473cc8c6f",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "7d1b1726077a1b6f08f102b9c67201c73f2ecaf00dc596b102d5d98d28b0994b",
+      "receiptSha256": "999222b9d09277639872a644e899ea0998dc0e01f16462fe5cad708e8748323e"
+    },
+    {
+      "id": "causal-score-sheets",
+      "releaseId": "flce-causal-score-sheets-914634c5fdbd",
+      "sourceReportSha256": "097d69a3f31bdd18f0066f71bfce6ef07089d18fe9a4ba5a07a03d8a77bcb768",
+      "publicReportSha256": "097d69a3f31bdd18f0066f71bfce6ef07089d18fe9a4ba5a07a03d8a77bcb768",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "f1ac7912a3308f1a642d17ea09272faf54a7ab5bd1ae89c0b35fd406cb06a433",
+      "receiptSha256": "c3741b428fc39cb69a1f6d6dd9ea56872c185b85cefcc211462063be1d5fa9bf"
+    },
+    {
+      "id": "developmental-causal-order",
+      "releaseId": "flce-developmental-causal-order-08656de0f8c1",
+      "sourceReportSha256": "dfae09561d15fd3913a877c1914507b556170f198eb23bb4b0a3e7f97462a324",
+      "publicReportSha256": "dfae09561d15fd3913a877c1914507b556170f198eb23bb4b0a3e7f97462a324",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "643d64b9d17feff4a727e5b5299d8014cad4ce27c2a5e84f93fdaacfe8b2e3f0",
+      "receiptSha256": "deb93a79c9cd381e041f13a44c006d553638b9c49bb6581dda966fe08ce5c061"
+    },
+    {
+      "id": "developmental-causal-order-age-map",
+      "releaseId": "flce-developmental-causal-order-age-map-32b2a59693f7",
+      "sourceReportSha256": "affbabab1479cd89315f9cd54e27a6ade85650372790e89bcc8c8919a036c459",
+      "publicReportSha256": "affbabab1479cd89315f9cd54e27a6ade85650372790e89bcc8c8919a036c459",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "680e10ff0b9e0f2f29b6763920f7bb04056ac3e15fce7dbc6cc01db5694c31c9",
+      "receiptSha256": "da5454130d8ed80257a7ca0829e9c6faa4e04ea76c47b40d6dc99d72a5b2ef0c"
+    },
+    {
+      "id": "developmental-causal-address",
+      "releaseId": "flce-developmental-causal-address-52ac8564fb76",
+      "sourceReportSha256": "eaf332a21a810933424c692c056ecde9c0740286fbfb86b0c2400cdb58c601ce",
+      "publicReportSha256": "eaf332a21a810933424c692c056ecde9c0740286fbfb86b0c2400cdb58c601ce",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "5683d7e8472292ef5eb2051346e5d34d525636e449990e74346f883e569a23ad",
+      "receiptSha256": "87e8b8148971c6b0eff94f9de7336da259ec370a298c213f32a47923a8ecbcc2"
+    },
+    {
+      "id": "developmental-susceptibility-transplant",
+      "releaseId": "flce-developmental-susceptibility-transplant-565b5cd70e38",
+      "sourceReportSha256": "6c93df5a117b742b2d16004b0810b62155f8c612ec041d67bb5f3050bb645461",
+      "publicReportSha256": "6c93df5a117b742b2d16004b0810b62155f8c612ec041d67bb5f3050bb645461",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "2058e344be28418b65a36eb03b0e341f0092062c87fb5b25d8445f60fe64ff0a",
+      "receiptSha256": "49a331afb1d47ee89bc00f7aaca34391774d8b18e1319a7c13cb606f858ea99d"
+    },
+    {
+      "id": "developmental-topology-dose-transition",
+      "releaseId": "flce-developmental-topology-dose-transition-94f5db3e5486",
+      "sourceReportSha256": "b47c12169d3a40a0a9319833bf1a7fea01d0466fa97c108028ae164b235d8c75",
+      "publicReportSha256": "b47c12169d3a40a0a9319833bf1a7fea01d0466fa97c108028ae164b235d8c75",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "510b671d175c3c1d551d4f07258cca55205c8a6e0b196fc3749996239a3b7bec",
+      "receiptSha256": "a28d187e5caa2ec36be5309a8a6f064c67e3ee0a46d5bc6fb191352903dd89f6"
+    },
+    {
+      "id": "developmental-fission-lineage",
+      "releaseId": "flce-developmental-fission-lineage-d62c28a34fae",
+      "sourceReportSha256": "c1b070a55c7613ffcbae1613a977967b5b202865085cc734f4723067048e6e9b",
+      "publicReportSha256": "c1b070a55c7613ffcbae1613a977967b5b202865085cc734f4723067048e6e9b",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "b00a23e778ebb9ef6f93e64e33cad664ee1330136f4daa9269cb2993fb0c0c65",
+      "receiptSha256": "b5eb84fc272929086a3e41a590706dd8d19a4bea1b7645b366f00d3265b70de7"
+    },
+    {
+      "id": "developmental-decoder-memory",
+      "releaseId": "flce-developmental-decoder-memory-9251214247b6",
+      "sourceReportSha256": "6de654e6ea60c8ec5592f6b7abc7c74bd74dae3e466caed3ab310dafc5694e1e",
+      "publicReportSha256": "6de654e6ea60c8ec5592f6b7abc7c74bd74dae3e466caed3ab310dafc5694e1e",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "2aac5b995f6772284ca48dc9964a24649217a52131fc81469c440e1b129f6605",
+      "receiptSha256": "0400c2e37a30a07ac98f5b57c55d95154a86568495e2f47020a440d0c7c37053"
+    },
+    {
+      "id": "developmental-depth-memory-timescale",
+      "releaseId": "flce-developmental-depth-memory-timescale-153bfad0a375",
+      "sourceReportSha256": "181138cf34e4c43fd28bc5b1f3b8b70d72e887cac0a84a59ff09b97dba45470a",
+      "publicReportSha256": "181138cf34e4c43fd28bc5b1f3b8b70d72e887cac0a84a59ff09b97dba45470a",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "8cf934de672e94441577975036505cbc1ca4013a7d1c5b6bf2f6970cb7092f21",
+      "receiptSha256": "e8815832a0a8d1ed1b1502c9f3cb72ddd45115ec313b2793569047e6180d3dab"
+    },
+    {
+      "id": "developmental-causal-echo-tomography",
+      "releaseId": "flce-developmental-causal-echo-tomography-a2db12d25369",
+      "sourceReportSha256": "7d4dc3af3172c2b55e6f9c755de20ff6ea46f31b4b49000e00efa94bae7bc0a1",
+      "publicReportSha256": "7d4dc3af3172c2b55e6f9c755de20ff6ea46f31b4b49000e00efa94bae7bc0a1",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "763616cd1869e3983c7854e85f9486ef59cf8324f111ddf325fe32b0ce5839fc",
+      "receiptSha256": "c1a6cc4919556a7c059d5039b8df644f806afc8abc06b515449b03fe2272aed2"
+    },
+    {
+      "id": "latent-composition-transplant",
+      "releaseId": "flce-latent-composition-transplant-c2da1a0b5b34",
+      "sourceReportSha256": "b8499dc8968c2eae35097ff34de17502fbd8bc112ea0268ea557a1d9f2e9a46e",
+      "publicReportSha256": "b8499dc8968c2eae35097ff34de17502fbd8bc112ea0268ea557a1d9f2e9a46e",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "fb6bc811365d8be605b1eae46c5d490dbe9c0b8416363fad2c8f0a0edc65eaf7",
+      "receiptSha256": "22fa652034a0d84c3542614e53df9c563116264a81232a7e5d728fdc5779e349"
+    },
+    {
+      "id": "composition-control-surface",
+      "releaseId": "flce-composition-control-surface-8af8b4732a5d",
+      "sourceReportSha256": "b7781b011fa789bfb057b9e5ad22bd71c5a114acfd40cd2573f36aab42bf87cd",
+      "publicReportSha256": "b7781b011fa789bfb057b9e5ad22bd71c5a114acfd40cd2573f36aab42bf87cd",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "c28dd1236f574eb0be92fb4f18e71787da606339eea888cd6c645b9ee947bb35",
+      "receiptSha256": "b77ad14192fc67e80d740af72bb218fa5cc7c82fde4e19375ab9b93ec938ebbb"
+    },
+    {
+      "id": "latent-composition-code",
+      "releaseId": "flce-latent-composition-code-a187996872cd",
+      "sourceReportSha256": "2c0f99294d371f114a48f13c20fcb49077dbb355ff1a0d1b348e919addd3650e",
+      "publicReportSha256": "2c0f99294d371f114a48f13c20fcb49077dbb355ff1a0d1b348e919addd3650e",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "d15193eb7dd201b033df8dc47e7d64e23072d274c958a6c3265535deecb940f5",
+      "receiptSha256": "a94adc291f824c4f9cfbbfbfc42745d5c83afab6a839c5bb5f04fff25b099a0b"
+    },
+    {
+      "id": "spatial-code-resolution",
+      "releaseId": "flce-spatial-code-resolution-c9cb94a77b1b",
+      "sourceReportSha256": "6442440759c9dc5a80f544e4afb478a5fca0b1fbb0897e2ad1b222e1078f475c",
+      "publicReportSha256": "6442440759c9dc5a80f544e4afb478a5fca0b1fbb0897e2ad1b222e1078f475c",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "4f74bf5040cef5398b0040a5af7cb7d4b2d940563c6d88683158bdaca5bb6a70",
+      "receiptSha256": "a7ad76ad449f4fea14f9633fec0dac4783d46bc12e5cb05ed5742da6bfcbd2e6"
+    },
+    {
+      "id": "spatial-code-syntax",
+      "releaseId": "flce-spatial-code-syntax-5fa63ce48418",
+      "sourceReportSha256": "9cb8f954ded7d52ef4f1fb0c8f051278bbe06da4a7de808c46918031760cb3d0",
+      "publicReportSha256": "9cb8f954ded7d52ef4f1fb0c8f051278bbe06da4a7de808c46918031760cb3d0",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "61faf7aa7d640f8e74b35676ee41bcb7dd14d2c1eb9fffb9019e6dd1c7841768",
+      "receiptSha256": "6695b37dcc984408e6a6d144b718a7be4ddd15dfc7eefd1fd0a4a1af3b173fa1"
+    },
+    {
+      "id": "coherent-phase-path",
+      "releaseId": "flce-coherent-phase-path-54dbfe453e57",
+      "sourceReportSha256": "dae8be72ec7de0471875b82927484afce1e4e4763a3f7a3f5bff23148e13589b",
+      "publicReportSha256": "dae8be72ec7de0471875b82927484afce1e4e4763a3f7a3f5bff23148e13589b",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "0ecec6f7bc4fb08e4e8531000681feb1123877c35a78f0bc07bbcbd5d7ed3160",
+      "receiptSha256": "64b42ac17d323aa285b7c5fa1033cecc8e5904ff132a4bdf7f7435f5b5023549"
+    },
+    {
+      "id": "phase-direction-atlas",
+      "releaseId": "flce-phase-direction-atlas-5f32dc67e690",
+      "sourceReportSha256": "091f121a83c7c825db2fb7c7141be7e00d6454d11fc9efd5b7a6ec0f4b4efffe",
+      "publicReportSha256": "091f121a83c7c825db2fb7c7141be7e00d6454d11fc9efd5b7a6ec0f4b4efffe",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "3470636051ce115eb60281c71ecba967a64fc6efb55205eef5532cf58fdddd41",
+      "receiptSha256": "4244593375d96fcb28d685a339f8931ebcda2874e260ded8d8cfe5ffdd7b6b1f"
+    },
+    {
+      "id": "shared-phase-vocabulary",
+      "releaseId": "flce-shared-phase-vocabulary-0cacfc94400c",
+      "sourceReportSha256": "44e28630154b7fc5eb44eb5bf16b50190df5a8c38416b0de7e7aaac1f72dca30",
+      "publicReportSha256": "44e28630154b7fc5eb44eb5bf16b50190df5a8c38416b0de7e7aaac1f72dca30",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "9c68504f9e171446716ad5e2d3d3d9d2da6237146b33871d5e969659f7668bed",
+      "receiptSha256": "f9b90a9f7a452e37cdd60e8dc3823d7e7834ba69cfa8b769a205c6851228df36"
+    },
+    {
+      "id": "shared-phase-field-orbit",
+      "releaseId": "flce-shared-phase-field-orbit-5285f309180f",
+      "sourceReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
+      "publicReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "dc2793c72f1c5a108f222e3f67b5c29a92dcc5539def10aa50ce17b707763acc",
+      "receiptSha256": "73a8be866bda24db8ee5c33a30b466cca25ee633f73f66ad8e0bfe8ed398c3eb"
+    },
+    {
+      "id": "tangent-memory-dose-response",
+      "releaseId": "flce-tangent-memory-dose-response-7ab5702a7030",
+      "sourceReportSha256": "b726fbd5aacb1eb4cc6f2f8da63cdfba08ba9809cddb07854c7dbdad8676e097",
+      "publicReportSha256": "b726fbd5aacb1eb4cc6f2f8da63cdfba08ba9809cddb07854c7dbdad8676e097",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "52586c6feeadfbea93948229591595848731557891c603770c8a2f9309debdd6",
+      "receiptSha256": "c9bbceeda10b38bdd41b812013b3f488217c11e01caeba13205a39d289d2de2e"
+    },
+    {
+      "id": "synthesis-v6",
+      "releaseId": "flce-synthesis-v6-c62d798f12c6",
+      "sourceReportSha256": "689dd6e9b3fa50a2049008b649aa05c3fb88552c61ff4c341e71ab7675dbd918",
+      "publicReportSha256": "689dd6e9b3fa50a2049008b649aa05c3fb88552c61ff4c341e71ab7675dbd918",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "eba3cb8d0c3910848a9bb44eb8aed36a0f7368e26c93290a2f7bf3366ddef447",
+      "receiptSha256": "77e29de82a28cfda257e523688df1c1f0608d7e713789d74314cd5afe45955d9"
+    },
+    {
+      "id": "synthesis-v1",
+      "releaseId": "flce-synthesis-v1-001894e5a095",
+      "sourceReportSha256": "b69edfd5c322b09e44980d6b7cfda52e1e265f760c7bbf409824064953069f43",
+      "publicReportSha256": "b69edfd5c322b09e44980d6b7cfda52e1e265f760c7bbf409824064953069f43",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "43b5961466b696ddca7196d9831f2f99d10327e6c581895e68d6a1f569b39e56",
+      "receiptSha256": "79bb4b586a3a044c893a50f7bdadac6dd1d893384b19a74476f67c960ffe16ab"
+    },
+    {
+      "id": "synthesis-v2",
+      "releaseId": "flce-synthesis-v2-7423200b1076",
+      "sourceReportSha256": "309b931c284b671a5f6bf4e38cfc3fb862b0e9de17adaedd2b312c7608f4e11e",
+      "publicReportSha256": "309b931c284b671a5f6bf4e38cfc3fb862b0e9de17adaedd2b312c7608f4e11e",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "1dc085cf72ee42ff96da7214b682e73658a39eb018d16281311a11f674d79f73",
+      "receiptSha256": "c7e521ea012538ff5c31567fca6c45a766ca616e2e990bc868f3ef4ca278cd47"
+    },
+    {
+      "id": "synthesis-v3",
+      "releaseId": "flce-synthesis-v3-f338448209aa",
+      "sourceReportSha256": "653240dc0bf25aaab72fa81fcf26b94318d69ece8d9e9ebf19664cc91c9fda41",
+      "publicReportSha256": "653240dc0bf25aaab72fa81fcf26b94318d69ece8d9e9ebf19664cc91c9fda41",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "f8edfb9a7880d6129920ab1a1d637adc53189a281215fa31ab5a950dfef7fb13",
+      "receiptSha256": "625c8e250891825a318be67f029fba99cb6b09cb94aca0d49e52c6e625f08dfa"
+    },
+    {
+      "id": "synthesis-v4",
+      "releaseId": "flce-synthesis-v4-69107dac3f18",
+      "sourceReportSha256": "5cdf1767896ec859afaaa94fd08c8c46e39b04e5bd1f4a30b4c43f0b209e400c",
+      "publicReportSha256": "5cdf1767896ec859afaaa94fd08c8c46e39b04e5bd1f4a30b4c43f0b209e400c",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "a393d5b2524a3a6117c0534e4ddfbd4c04b1b49cb293e98ed24e704b96ace8e2",
+      "receiptSha256": "31448e4e0a9110e844a393359197a5ce9d11a44097b2627d215ebc7e9154a5ee"
+    },
+    {
+      "id": "goal-state-tomography",
+      "releaseId": "flce-goal-state-tomography-8cd3e0e25d7d",
+      "sourceReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
+      "publicReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "c9e345d477bad99db6f19baa1354805c457d21d3e10cfe56d3315b66735e779e",
+      "receiptSha256": "6b079c57713ee51aa96eeced005d989c1182c98a00fa5863a0b20907e1f4ade3"
+    },
+    {
+      "id": "orthogonal-pulse-release-pilot",
+      "releaseId": "flce-orthogonal-pulse-release-pilot-69933d2d032d",
+      "sourceReportSha256": "dc723eb2ad78de8cb73d15b08aa63ca3cc7d0e3626363e7746498975d0bd5b2b",
+      "publicReportSha256": "dc723eb2ad78de8cb73d15b08aa63ca3cc7d0e3626363e7746498975d0bd5b2b",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "fc0b0dd4d2f4e74177c53411f2ff4e162db5bbfea7993eb72bc42c41bbad8ff3",
+      "receiptSha256": "bc16225f18766dd5c155e23a46bafa493585c74ab888154b444476c8841e0e5b"
+    },
+    {
+      "id": "preinjury-recovery-confirmation",
+      "releaseId": "flce-preinjury-recovery-confirmation-5b3cdf6e9410",
+      "sourceReportSha256": "0fcfc8c159ac3aa72903f5a2587070dd557c867f24dcd4713df965f5c153345d",
+      "publicReportSha256": "0fcfc8c159ac3aa72903f5a2587070dd557c867f24dcd4713df965f5c153345d",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "ddc46f1f697b4d6fcbafafdb0e07dcca12aff2ee009a8d50b9f02b4ee68d26d2",
+      "receiptSha256": "adea09d416d6ffad4ce67a706ea801eab38e8893974e2b45e65cc48caae56151"
+    },
+    {
+      "id": "reservoir-causal-steering",
+      "releaseId": "flce-reservoir-causal-steering-f26e043ca5c9",
+      "sourceReportSha256": "a5b71b11986ec880d0e5fde7281099fc11246476cd3f2a1daa71875b6980f64c",
+      "publicReportSha256": "a5b71b11986ec880d0e5fde7281099fc11246476cd3f2a1daa71875b6980f64c",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "3e0460ac1c7afcdc1f8264f72a43edbfea32b11ced14b77cc6cfa27f8a7ea4f7",
+      "receiptSha256": "79fa67d4319c61215ee364302743cf7a87dba280683791c4a04429f9a82bba0b"
+    },
+    {
+      "id": "reservoir-recurrence-census",
+      "releaseId": "flce-reservoir-recurrence-census-b1d08f94b52f",
+      "sourceReportSha256": "2a6c54b025cd5694bd92d1a59a5ab570904e7cab65753be0d9d7f9c402ebec83",
+      "publicReportSha256": "2a6c54b025cd5694bd92d1a59a5ab570904e7cab65753be0d9d7f9c402ebec83",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "506cf26e97d9de3bab4b781f41943e76d855e7d1dcbc99d17774a70256fcc740",
+      "receiptSha256": "6cd7fe128bc908a97f2def6116d9e5c1428f161c8b8ba2b52bf086895e31bab5"
+    },
+    {
+      "id": "reservoir-temporal-precursor",
+      "releaseId": "flce-reservoir-temporal-precursor-1afc2f4c485a",
+      "sourceReportSha256": "d741e4941fc6da1b81641ae8198e9ea895254925bdc2bd31260f904776467cac",
+      "publicReportSha256": "d741e4941fc6da1b81641ae8198e9ea895254925bdc2bd31260f904776467cac",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "dc2f468219b472cf3c251c85dcc8ae0ba7a3f14cf898ba263b1e5c975ce50893",
+      "receiptSha256": "4cec467e908f3d64825cffce3c23dd4427c8dce71066fd643a29c7ffd13c7ab0"
+    },
+    {
+      "id": "causal-compass-peak",
+      "releaseId": "flce-causal-compass-peak-cf2fb522cc96",
+      "sourceReportSha256": "c9aa7e63ba2a61134f9f32edba01e3406bb3b7fa6fac377d172d210257501f04",
+      "publicReportSha256": "c9aa7e63ba2a61134f9f32edba01e3406bb3b7fa6fac377d172d210257501f04",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "581a957af14b6eefa037c18ac5668fc0ab9ef283f3d8522a3ffbbaa666732ae1",
+      "receiptSha256": "5533237936b6737bb95aa77c11c1be157198e0bcc568146609ea7472177c947e"
+    },
+    {
+      "id": "developmental-causal-plasticity-window",
+      "releaseId": "flce-developmental-causal-plasticity-window-5f8c0ab6562d",
+      "sourceReportSha256": "ab36c1978229c8a5f2f53803c00f5d644a2b5722da2469b099910c225a00c202",
+      "publicReportSha256": "ab36c1978229c8a5f2f53803c00f5d644a2b5722da2469b099910c225a00c202",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "277ce855f999734d35975b4b3b484c275dd18e50f15a3ac220fba1ccd8efc059",
+      "receiptSha256": "efcfbb27d515d8b804dc07789d2fa6cc4bf9ec7156671a9c9218374ded6c5aea"
+    },
+    {
+      "id": "developmental-commitment-aperture",
+      "releaseId": "flce-developmental-commitment-aperture-bc514043ff88",
+      "sourceReportSha256": "088ee783d14a6ad35f1673445068baf21ae0e4b2144cd68cb5ff31c8b7c68507",
+      "publicReportSha256": "088ee783d14a6ad35f1673445068baf21ae0e4b2144cd68cb5ff31c8b7c68507",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "97741dd462c563ff8824e0f5dc8f643c43a519306163fc36f62f68925a826894",
+      "receiptSha256": "ca58fa98d7ea83f2707eec25af96013a626d41c9e58823b5cb1ec109a0852502"
+    },
+    {
+      "id": "fresh-organic-q40-replication",
+      "releaseId": "flce-fresh-organic-q40-replication-ad86d2f8964e",
+      "sourceReportSha256": "cbb94936d6c84ab33ea530e65b2af8da57710507714601166d74822a8b7cbf34",
+      "publicReportSha256": "cbb94936d6c84ab33ea530e65b2af8da57710507714601166d74822a8b7cbf34",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "e0181618f6f5b38949d6ad98696fa6cc296e27333c41cfd65a78827500d32041",
+      "receiptSha256": "578e2be17349f395048bf44af2710c9f48103c0eac867fa636180e6e5ce3349e"
+    },
+    {
+      "id": "tangent-future-aperture",
+      "releaseId": "flce-tangent-future-aperture-aa13e64c53c0",
+      "sourceReportSha256": "92285bb2789fdf3af70de40271f0915b2f29cb81ac58e997b76a3e3cc08aeae2",
+      "publicReportSha256": "92285bb2789fdf3af70de40271f0915b2f29cb81ac58e997b76a3e3cc08aeae2",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "fda9f273fe3bfcd551ba9558c98e9b0b0e558baa778cbf5acdf0b320059107c3",
+      "receiptSha256": "43039fd257e4591fe8b42f423e4eae4fd5e6371238f59b4220418f111d0ab293"
+    },
+    {
+      "id": "tangent-induced-causal-grammar",
+      "releaseId": "flce-tangent-induced-causal-grammar-a2857547400b",
+      "sourceReportSha256": "575ea67168d5e631fac474427e54a6edeb61b5482a729a0c4fe876a9b5b7060e",
+      "publicReportSha256": "575ea67168d5e631fac474427e54a6edeb61b5482a729a0c4fe876a9b5b7060e",
+      "transformations": [
+        "import_verified_public_projection_v1",
+        "apply_shared_report_polish_v1",
+        "move_reports_to_website_v1"
+      ],
+      "contextSha256": "fb25a9961551a1633589f58c4ce20a9d213f463a91d7feff06f153860a05a454",
+      "receiptSha256": "b103596628c8cd2c0e4bec787fd14fd76e27346abb953c15592162de8333b2dd"
+    }
+  ]
+}

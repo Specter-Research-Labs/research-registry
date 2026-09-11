@@ -9,8 +9,10 @@
         <link rel="preload" href="../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="stylesheet" href="../style.css?v=20260518-sitecss" />
-        <link rel="stylesheet" href="../assets/addenda.css" />
-    </head>
+        <link rel="stylesheet" href="../assets/addenda.css?v=20260911-emblems" />
+        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
+</head>
     <body>
         <div class="site-shell">
             <header class="site-topnav">
@@ -19,9 +21,9 @@
                     <span class="site-brand-name">SPECTER LABS</span>
                 </a>
                 <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="../dossiers/">Dossiers</a>
+                    <a class="nav-link" href="../dossiers/">Research</a>
+                    <a class="nav-link" href="../blog/">Writing</a>
                     <a class="nav-link" href="../addenda/" aria-current="page">Addenda</a>
-                    <a class="nav-link" href="../blog/">Blog</a>
                     <a class="nav-link" href="../cabinet/">Cabinet</a>
                 </nav>
             </header>
@@ -32,14 +34,17 @@
 
             <main class="site-main">
                 <section class="section-block" id="all-addenda">
-                    <div class="site-page-title">Addenda</div>
-                    <p class="section-lead">Supporting projects and notes.</p>
-                    <div class="card-stack">
+                    <h1 class="site-page-title">Addenda</h1>
+                    <p class="section-lead">Tools, datasets, and experiments that support the research.</p>
+                    <div class="addenda-showcases">
+<article class="addendum-feature"><figure class="poly-figure"><svg viewBox="0 0 540 285" role="img" aria-labelledby="poly-title poly-desc"><title id="poly-title">A controller that counts its own pattern</title><desc id="poly-desc">Diffusion settles, the gene network resets, then counts peaks and feeds back. Below is a schematic of the twenty-cell chain used in the wiring benchmark.</desc><g fill="none" stroke="#365b4e" stroke-width="1.5"><path d="M55 65H450M450 65V30H55V65"/><path d="m190 61 6 4-6 4m165-8 6 4-6 4M175 26l-6 4 6 4"/></g><g fill="#e5e9de"><rect x="45" y="48" width="115" height="32"/><rect x="207" y="48" width="100" height="32"/><rect x="374" y="48" width="120" height="32"/></g><g font-family="monospace" font-size="13" fill="#172021"><text x="55" y="69">Diffusion</text><text x="220" y="69">Reset</text><text x="390" y="69">Count peaks</text></g><path d="M26 130H501" stroke="#71917e" stroke-width="2"/><g fill="#365b4e"><circle cx="26" cy="130" r="6"/><circle cx="51" cy="130" r="6"/><circle cx="76" cy="130" r="6"/><circle cx="101" cy="130" r="6"/><circle cx="126" cy="130" r="6"/><circle cx="151" cy="130" r="6"/><circle cx="176" cy="130" r="6"/><circle cx="201" cy="130" r="6"/><circle cx="226" cy="130" r="6"/><circle cx="251" cy="130" r="6"/><circle cx="276" cy="130" r="6"/><circle cx="301" cy="130" r="6"/><circle cx="326" cy="130" r="6"/><circle cx="351" cy="130" r="6"/><circle cx="376" cy="130" r="6"/><circle cx="401" cy="130" r="6"/><circle cx="426" cy="130" r="6"/><circle cx="451" cy="130" r="6"/><circle cx="476" cy="130" r="6"/><circle cx="501" cy="130" r="6"/></g><path data-cut-marker d="M414 115L414 145" stroke="#a44733" stroke-width="4"/><g fill="#172021"><text x="26" y="184" class="figure-small">Where the highest-severity cut ranks</text><text x="26" y="223" class="figure-number" data-cut-count>Rank 1</text><text x="26" y="253" data-cut-label>Decomposition ranking · cut 16 first</text></g></svg><figcaption><span>20-cell example · precomputed outcome ranking</span><button type="button" data-cut-toggle aria-pressed="false">Compare connectivity ranking</button></figcaption></figure><h2><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/poly-morphogenesis">A pattern that feeds back on itself</a></h2><p>A Julia implementation joins diffusion, a peak-counting gene network, and feedback using Catlab wiring diagrams and polynomial interfaces. In a 20-cell example, the cut with the largest measured pattern change ranks first by outcome-based severity and twelfth by a connectivity heuristic. Computing the severity ranking already requires simulating the outcomes; these positions are not a comparison of total prediction costs.</p><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/poly-morphogenesis#current-result">Explore the controller and wiring test →</a></article>
+<article class="addendum-feature"><figure class="k-figure"><div class="k-equation">K = log<sub>10</sub><span class="k-fraction"><span>blind search cost</span><span>policy cost</span></span></div><div class="k-comparison"><div><span>Blind search</span><i style="width:100%"></i><b>100</b></div><div><span>Policy</span><i data-policy-bar style="width:10%"></i><b data-policy-cost>10</b></div></div><div class="k-control"><label for="k-cost">Policy cost</label><input id="k-cost" type="range" min="1" max="100" value="10"><output for="k-cost" data-k-result>K = 1.00</output></div><figcaption>Illustration · one shared task, horizon, and cost unit</figcaption></figure><h2><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/k-semantics-reference">How much search does a policy save?</a></h2><p>K compares the expected costs of an agent and a blind policy in the same problem space. This reference implementation makes the comparison executable: the moves, constraints, goal, horizon, and cost units stay fixed while the policy changes.</p><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/k-semantics-reference">Explore the reference implementation →</a></article>
+</div><h2 class="site-section-title">All addenda</h2><div class="card-stack">
                         <!-- GENERATED:ADDENDA_INDEX_GRID START -->
                         <!-- GENERATED:ADDENDA_INDEX_GRID END -->
                     </div>
                 </section>
             </main>
         </div>
-    </body>
+    <script src="/assets/addenda.js?v=20260909-curated"></script></body>
 </html>

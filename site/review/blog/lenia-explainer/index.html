@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light" />
+        <title>A Primer on Lenia | SPECTER Labs</title>
+        <link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml" />
+        <link rel="preload" href="/fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/blog/blog.css?v=field-note-sidebar-20260426" />
+        <link rel="stylesheet" href="/blog/morphospace.css" />
+        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><meta name="robots" content="noindex, nofollow" /></head>
+    <body class="blog-page">
+        <div class="blog-shell">
+            <div class="doc-paper">
+                <div class="doc-top">
+                    <header class="site-topnav">
+                        <a class="site-brand" href="/">
+                            <img
+                                src="/assets/logo-black.svg"
+                                alt="SPECTER Labs logo"
+                                class="logo"
+                            />
+                            <span class="site-brand-name">SPECTER LABS</span>
+                        </a>
+                        <nav class="site-topnav-links" aria-label="Site navigation">
+                    <a class="nav-link" href="/dossiers/">Research</a>
+                    <a class="nav-link" href="/blog/" aria-current="page">Writing</a>
+                    <a class="nav-link" href="/addenda/">Addenda</a>
+                    <a class="nav-link" href="/cabinet/">Cabinet</a>
+                </nav>
+                    </header>
+                    <div class="site-rules" aria-hidden="true">
+                        <div class="site-rule strong"></div>
+                        <div class="site-rule"></div>
+                    </div>
+                </div>
+
+                <main class="doc-layout">
+                    <aside class="doc-aside">
+                        <div class="doc-stamp">
+                            <div class="doc-stamp-title">Field Note</div>
+                                                        <div class="doc-stamp-sub">lenia-explainer</div>
+                                                                                                                <div class="doc-stamp-field">
+                                <strong>Status</strong>
+                                draft
+                            </div>
+                                                    </div>
+
+                                                <nav class="toc" aria-label="Table of contents">
+                            <div class="toc-title">Contents</div>
+                            <ul>
+                            <li><a href="#a-primer-on-lenia" id="toc-a-primer-on-lenia">A Primer on Lenia</a>
+                            <ul>
+                            <li><a href="#from-a-local-rule-to-a-moving-body" id="toc-from-a-local-rule-to-a-moving-body">From a local rule to a moving body</a></li>
+                            <li><a href="#the-search-problem-parameter-space-and-fitness" id="toc-the-search-problem-parameter-space-and-fitness">The search problem – parameter space and fitness</a></li>
+                            <li><a href="#map-elites-and-quality-diversity" id="toc-map-elites-and-quality-diversity">MAP-Elites and Quality-Diversity</a></li>
+                            <li><a href="#the-research-ladder" id="toc-the-research-ladder">The research ladder</a></li>
+                            <li><a href="#running-it-campaigns-at-scale" id="toc-running-it-campaigns-at-scale">Running it – campaigns at scale</a></li>
+                            <li><a href="#what-the-atlas-is-for" id="toc-what-the-atlas-is-for">What the atlas is for</a></li>
+                            </ul></li>
+                            <li><a href="#bibliography" id="toc-bibliography">References</a></li>
+                            </ul>
+                        </nav>
+                                            </aside>
+
+                    <article class="doc-content"><p><link rel="stylesheet" href="/blog/lenia-explainer/lenia-explainer.css" /></p>
+<h1 id="a-primer-on-lenia">A Primer on Lenia</h1>
+<p>A Lenia creature keeps its shape by continually remaking it. Each part responds to nearby activity, and those local changes can sustain a body that moves across the field. There is no separate instruction describing its outline or steering its path <span class="citation" data-cites="chan2019">(<a href="#ref-chan2019" role="doc-biblioref">Chan 2019</a>)</span>.</p>
+<p>How can a rule about a neighbourhood produce something that behaves as a whole? We can investigate by changing that rule, watching the body reorganize, and searching for other forms the system can support. This primer develops the mechanics behind those experiments, from a single local update to an archive of discovered creatures.</p>
+<div class="lenia-widget" data-widget="creaturewall">
+<noscript>
+<p>
+Live Lenia gallery requires JavaScript.
+</p>
+</noscript>
+</div>
+<details>
+<summary>
+About this simulation
+</summary>
+<p>
+This browser simulation applies Flow Lenia transport to an Orbium-derived rule. It is an adapted example; the original Orbium can be explored in <a href="https://chakazul.github.io/Lenia/JavaScript/Lenia.html">Chan’s catalogue</a>. The browser implementation has not been validated against the research CLI. The other demonstrations identify their algorithms and any illustrative data where they appear.
+</p>
+</details>
+<h2 id="from-a-local-rule-to-a-moving-body">From a local rule to a moving body</h2>
+<p>Game of Life uses binary cells on a grid and a discrete update rule. Lenia replaces the binary state with concentrations between 0 and 1 and uses smooth functions to compute their change. The implementations here still sample space on a grid and advance time in finite steps. A kernel <code>K</code> weights the neighbourhood; a growth function <code>G</code> converts that weighted concentration into a local update <span class="citation" data-cites="chan2019">(<a href="#ref-chan2019" role="doc-biblioref">Chan 2019</a>)</span>.</p>
+<p>In basic Lenia, the kernel and growth function specify the update rule. Movement and body shape are not programmed as separate behaviours, but the rule is not the complete creature: its initial field and numerical settings also matter. Chan’s <a href="https://chakazul.github.io/Lenia/JavaScript/Lenia.html">interactive catalogue</a> shows the variety of persistent patterns those choices can produce. Multi-channel versions couple several fields; Flow Lenia changes the update to conserve and transport matter.</p>
+<p>Changing the rule lets us explore which interactions sustain a body and which break it apart. Saving the rule together with its initial field lets us return to the same experiment. Later, we will use that ability to search for many different bodies and compare how they behave.</p>
+<h3 id="the-kernel-convolution-as-neighborhood-sensing">The kernel – convolution as neighborhood sensing</h3>
+<p>Each cell first measures its neighbourhood. Convolution combines the state grid <code>A</code> with a kernel <code>K</code> to give a potential <code>U(x, y)</code>. Many Lenia kernels emphasize one or more rings around the cell, so concentration at a characteristic distance can matter more than concentration immediately beside it. Changing the ring widths and radii changes those interactions.</p>
+<p>The ring is built as a mixture of Gaussians indexed by their position along the radius. For each Gaussian <code>g</code>, three parameters: an amplitude <code>b[g]</code>, a radial center <code>a[g]</code> saying where along the ring it peaks, and a width <code>w[g]</code> saying how sharp the peak is. A base radius <code>R</code> (in grid cells) and a per-kernel fraction <code>r</code> set the effective kernel size, so the actual reach in pixels is <code>R * r</code>. The kernel gets normalized so the weights sum to 1 and the potential <code>U</code> stays a weighted average that does not blow up with kernel size.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>x</mi><mo>,</mo><mi>d</mi><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><mi>K</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>x</mi><mo>,</mo><mi>d</mi><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>d</mi><mi>x</mi><mo>,</mo><mspace width="0.167em"></mspace><mi>y</mi><mo>+</mo><mi>d</mi><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(x, y) = \sum_{(dx, dy)} K(dx, dy)\, A(x + dx,\, y + dy)</annotation></semantics></math></p>
+<p>Adding kernels and channels enlarges the rule space. Each kernel has its own radial profile, growth parameters and input/output connections. Direct convolution becomes expensive as the grid and neighbourhood grow; FFT-based convolution is one implementation strategy used to evaluate these interactions efficiently.</p>
+<div class="lenia-widget" data-widget="kernel" data-defaults="{&quot;R&quot;:13,&quot;r&quot;:0.5,&quot;b&quot;:[1],&quot;w&quot;:[0.2],&quot;a&quot;:[0.5]}">
+<noscript>
+<p>
+Interactive kernel visualizer requires JavaScript.
+</p>
+</noscript>
+</div>
+<h3 id="the-growth-function-the-local-update-rule">The growth function – the local update rule</h3>
+<p>Once a cell has its potential <code>U</code>, the growth function <code>G(U)</code> turns that number into a signed rate of change. The shape is a shifted bell curve minus a baseline:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mn>2</mn><mrow><mi>exp</mi><mo>&#8289;</mo></mrow><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mo>−</mo><mstyle displaystyle="false"><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>−</mo><mi>μ</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><mn>2</mn><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac></mstyle><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>−</mo><mn>1</mn><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>⋅</mo><mi>h</mi></mrow><annotation encoding="application/x-tex">G(U) = \bigl(2\exp\!\bigl(-\tfrac{(U - \mu)^2}{2\sigma^2}\bigr) - 1\bigr) \cdot h</annotation></semantics></math></p>
+<p>When <code>U</code> lands near the preferred neighbor density <code>mu</code>, growth is positive and the cell fills in. When <code>U</code> is far from <code>mu</code>, growth is negative and the cell actively shrinks, with the decay rate saturating at <code>-h</code> once it gets far enough away. So three numbers per kernel decide the cell’s personality: <code>mu</code> (the sweet spot for how crowded its shell should be), <code>sigma</code> (how picky it is about hitting that target), and <code>h</code> (how aggressively it grows or decays once it has decided).</p>
+<p>In basic Lenia, concentration can grow or decay according to this response. Whether a localized pattern persists depends on the entire evolving field: it must continually produce neighbourhood values that sustain it. A narrow growth window alone does not establish the geometry or dimension of the viable parameter set.</p>
+<p>With multiple kernels and channels the bookkeeping is a connectivity matrix: each kernel reads from one channel and contributes to one or more output channels, and the per-cell update is the sum of contributions across kernels (with <code>dt</code> scaling and clamping to <code>[0, 1]</code>). The Aquarium creature, for instance, runs 15 kernels across 3 channels with cross-channel connections, so a single cell update has fifteen separate convolution reads and writes feeding into three output channels.</p>
+<div class="lenia-widget" data-widget="growth" data-defaults="{&quot;m&quot;:0.15,&quot;s&quot;:0.017,&quot;h&quot;:0.1}">
+<noscript>
+<p>
+Interactive growth function explorer requires JavaScript.
+</p>
+</noscript>
+</div>
+<figure class="sl-diagram" aria-label="The basic Lenia update step as a dataflow pipeline">
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" font-family="var(--sl-font-mono)">
+<defs> <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"> <path d="M0 0L10 5L0 10z" fill="var(--doc-ink)"/></marker> <marker id="ahA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"> <path d="M0 0L10 5L0 10z" fill="var(--doc-accent)"/></marker> </defs> <g fill="var(--doc-paper)" stroke="var(--doc-ink)" stroke-width="1.5"> <rect x="5"   y="55" width="120" height="78"/> <rect x="215" y="55" width="120" height="78"/> <rect x="425" y="55" width="120" height="78"/> <rect x="635" y="55" width="120" height="78"/> </g> <g text-anchor="middle" fill="var(--doc-ink)"> <text x="65"  y="90"  font-size="26">A</text> <text x="275" y="90"  font-size="26">U</text> <text x="485" y="90"  font-size="24">ΔA</text> <text x="695" y="90"  font-size="26">A′</text> </g> <g text-anchor="middle" fill="var(--doc-muted)" font-size="9.5" letter-spacing="1"> <text x="65"  y="116" text-transform="uppercase">STATE · t</text> <text x="275" y="116" text-transform="uppercase">POTENTIAL</text> <text x="485" y="116" text-transform="uppercase">GROWTH RATE</text> <text x="695" y="116" text-transform="uppercase">STATE · t+dt</text> </g> <g stroke="var(--doc-ink)" stroke-width="1.5" fill="none"> <line x1="125" y1="94" x2="213" y2="94" marker-end="url(#ah)"/> <line x1="335" y1="94" x2="423" y2="94" marker-end="url(#ah)"/> </g> <line x1="545" y1="94" x2="633" y2="94" stroke="var(--doc-accent)" stroke-width="2" fill="none" marker-end="url(#ahA)"/> <g text-anchor="middle" font-size="12" fill="var(--doc-ink)"> <text x="169" y="80">⊛ K</text> <text x="379" y="80">G( · )</text> <text x="589" y="80" fill="var(--doc-accent)">· dt, clamp</text> </g> <g text-anchor="middle" font-size="9" fill="var(--doc-muted)" letter-spacing="0.6"> <text x="169" y="111" text-transform="uppercase">CONVOLVE / RING</text> <text x="379" y="111" text-transform="uppercase">BELL CURVE</text> <text x="589" y="111" text-transform="uppercase">[0, 1]</text> </g> <path d="M695 133 V178 H65 V133" stroke="var(--doc-ink)" stroke-width="1.2" fill="none"
+        stroke-dasharray="4 3" marker-end="url(#ah)"/> <text x="380" y="172" text-anchor="middle" font-size="9.5" fill="var(--doc-muted)"
+        letter-spacing="1" text-transform="uppercase">NEXT STEP</text> <text x="380" y="210" text-anchor="middle" font-size="11" fill="var(--doc-muted)"> basic Lenia writes growth straight into the state along the orange arrow; </text> <text x="380" y="225" text-anchor="middle" font-size="11" fill="var(--doc-muted)"> Flow Lenia keeps A → U → ΔA and replaces that one arrow with mass transport. </text>
+</svg>
+<figcaption>
+The whole basic update is four fields and three operations. K and G specify the basic local rule. The initial field and numerical settings determine the rollout on which we observe a body.
+</figcaption>
+</figure>
+<h3 id="flow-lenia-mass-conserving-transport-plantec-et-al.-2023">Flow Lenia – mass-conserving transport (Plantec et al., 2023)</h3>
+<p>Basic Lenia does not conserve mass. The update <code>state += dt * G(U)</code> can create concentration at the front of a moving pattern and remove it at the back. Flow Lenia instead redistributes existing matter <span class="citation" data-cites="plantec2023">(<a href="#ref-plantec2023" role="doc-biblioref">Plantec et al. 2023</a>)</span>. This makes material exchange and the movement of a persistent pattern distinct quantities that can be followed through the simulation.</p>
+<p>Flow Lenia (Plantec et al., 2023) fixes this by separating <em>what should grow</em> from <em>where the mass actually goes</em>. The growth function still produces a desired rate, but instead of writing that rate straight into the state, we use it to build a velocity field, then transport mass along that field with an explicit redistribution step. One simulation step becomes two passes.</p>
+<p>The first pass runs kernel convolutions and growth functions to form a growth-affinity field, written here as <code>H</code>. Unlike the earlier convolution potential <code>U</code>, <code>H</code> already includes the growth response. Its gradient attracts matter toward higher affinity. A density-dependent pressure term opposes crowding. Schematically, with total density <code>M</code> and a density-dependent weight <code>alpha</code>, the velocity combines these contributions:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>α</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>∇</mi><msub><mi>H</mi><mi>c</mi></msub><mspace width="0.278em"></mspace><mo>−</mo><mspace width="0.278em"></mspace><mi>α</mi><mspace width="0.167em"></mspace><mi>∇</mi><mi>M</mi></mrow><annotation encoding="application/x-tex">v(x, y, c) = (1 - \alpha)\,\nabla H_c \;-\; \alpha\,\nabla M</annotation></semantics></math></p>
+<p>At low density the affinity contribution dominates; at high density the negative density gradient pushes matter away from crowded regions. The exact discretization and pressure parameters belong to the implementation, not to a universal numerical constant of Lenia.</p>
+<p>The second pass redistributes matter along the velocity field. In the illustrated box-overlap scheme, each source cell contributes to destination cells in proportion to the overlap of its displaced box with theirs. The contributions partition the source mass. Conservation follows from that partition when the search neighbourhood and boundary handling include all destinations; floating-point arithmetic still introduces numerical error.</p>
+<figure class="sl-diagram" aria-label="Flow Lenia mass transport by box overlap">
+<svg viewBox="0 0 700 366" xmlns="http://www.w3.org/2000/svg" role="img" font-family="var(--sl-font-mono)">
+<defs> <marker id="ov" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"> <path d="M0 0L10 5L0 10z" fill="var(--doc-accent)"/></marker> </defs> <g stroke="var(--doc-rule)" stroke-width="1" fill="none"> <rect x="120" y="60"  width="80" height="80"/> <rect x="200" y="60"  width="80" height="80"/> <rect x="280" y="60"  width="80" height="80"/> <rect x="120" y="140" width="80" height="80"/> <rect x="280" y="140" width="80" height="80"/> <rect x="120" y="220" width="80" height="80"/> <rect x="200" y="220" width="80" height="80"/> <rect x="280" y="220" width="80" height="80"/> </g> <rect x="200" y="140" width="80" height="80" fill="var(--doc-overlay-soft)" stroke="var(--doc-ink)" stroke-width="2"/> <rect x="280" y="220" width="80" height="80" fill="none" stroke="var(--doc-ink)" stroke-width="1.6"/> <rect x="185" y="125" width="80" height="80" fill="none" stroke="var(--doc-accent)" stroke-width="1.6" stroke-dasharray="5 3"/> <rect x="200" y="140" width="65" height="65" fill="var(--doc-accent)" fill-opacity="0.22" stroke="none"/> <line x1="320" y1="260" x2="232" y2="172" stroke="var(--doc-accent)" stroke-width="2" marker-end="url(#ov)"/> <g font-size="11" fill="var(--doc-ink)"> <text x="240" y="135" text-anchor="middle" fill="var(--doc-muted)" font-size="9.5" letter-spacing="1" text-transform="uppercase">TARGET CELL</text> <text x="300" y="316" text-anchor="middle" fill="var(--doc-muted)" font-size="9.5" letter-spacing="0.6" text-transform="uppercase">NEIGHBOR MASS, CURRENT POSITION</text> <text x="338" y="214" fill="var(--doc-accent)" font-size="11.5">dt · v</text> <text x="338" y="229" fill="var(--doc-muted)" font-size="9">bounded transport step</text> </g> <line x1="232" y1="172" x2="470" y2="120" stroke="var(--doc-rule-strong)" stroke-width="1"/> <text x="476" y="118" font-size="11" fill="var(--doc-ink)">overlap area = mass this</text> <text x="476" y="134" font-size="11" fill="var(--doc-ink)">neighbor delivers here</text> <text x="350" y="344" text-anchor="middle" font-size="10.5" fill="var(--doc-muted)"> sum the overlaps from every neighbor within dd, divide by 4σ², </text> <text x="350" y="359" text-anchor="middle" font-size="10.5" fill="var(--doc-muted)"> and that sum is the new state. mass is conserved by construction. </text>
+</svg>
+<figcaption>
+One transport step for one cell. The growth-affinity field helps determine velocity. This step redistributes existing matter by sliding each source box by dt·v and counting how much lands inside the destination cell.
+</figcaption>
+</figure>
+<p>Transport depends on the timestep, the redistribution kernel, the neighbourhood used to collect incoming mass, and the density at which pressure becomes dominant. These must be recorded with a replay. Periodic boundaries wrap matter across opposite edges; a wall requires its own boundary rule and does not guarantee that a creature will bounce or recover.</p>
+<p>The extra transport work changes runtime as well as behaviour. Its cost depends on grid size, channel count, neighbourhood and hardware; two conceptual passes do not imply a fixed twofold slowdown.</p>
+<p>The next widget contrasts additive growth with a deliberately simpler control: rescale the whole field to its previous total after each update. This illustrates why a fixed mass total alone does not implement Flow Lenia. It lacks the local velocity field and transport law described above.</p>
+<div class="lenia-widget" data-widget="massconservation">
+<noscript>
+<p>
+Mass conservation comparison requires JavaScript.
+</p>
+</noscript>
+</div>
+<div class="lenia-widget" data-widget="sandbox" data-creature="orbium">
+<noscript>
+<p>
+Live Lenia simulation requires JavaScript and WebGPU.
+</p>
+</noscript>
+</div>
+<h2 id="the-search-problem-parameter-space-and-fitness">The search problem – parameter space and fitness</h2>
+<p>A reproducible Lenia experiment needs an update rule, an initial field and numerical settings. We call the rule parameters the <strong>genotype</strong> by analogy with biology. The <strong>phenotype</strong> is the form or behaviour that emerges, not the initial condition. A seed and an initialization recipe can specify the initial field compactly, while the grid, timestep and boundary rules remain part of the run configuration.</p>
+<p>Uniform sampling provides a useful baseline, but it can spend much of its budget on outcomes outside the behaviour we want to study. In basic Lenia these may disappear or saturate. In a mass-conserving Flow Lenia run, losing a coherent body does not mean losing the total matter: it may disperse or break into fragments. Search therefore needs an explicit definition of the outcome worth retaining, rather than treating nonzero mass as life.</p>
+<p>To say anything quantitative about what came out of a run, we measure each simulation with a fixed battery (the <code>SimulationMetrics</code> struct in the lenia-swarm code). Most of it is bookkeeping you never read directly, but it answers four questions:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Did anything survive?</td>
+<td><code>massMean</code>, <code>massStd</code>, <code>massMin</code>, <code>massMax</code></td>
+</tr>
+<tr>
+<td>How big, what shape?</td>
+<td><code>occupancyMean</code>, <code>varianceMean</code>, radius of gyration; plus Hu moments <code>hu1..hu7</code>, Flusser invariants <code>flusser1..flusser4</code> and <code>momentAnisotropy</code> for shape up to rotation and reflection</td>
+</tr>
+<tr>
+<td>Moving or just shimmering?</td>
+<td><code>speedMean</code>, <code>pathLength</code>, <code>displacement</code>, <code>centerVelocity</code>, <code>headingRad</code></td>
+</tr>
+<tr>
+<td>One thing or many?</td>
+<td>flood-fill <code>componentCount</code> and largest-component dominance; plus activity entropy, complexity decompositions, <code>isStable</code>, <code>survivalSteps</code></td>
+</tr>
+</tbody>
+</table>
+<p>Evaluation settings—including warm-up, recording interval and thresholds—are part of the measurement. A candidate that persists for a short scout run may fail during a longer replay. Report those horizons with the result rather than treating one default evaluation as a universal survival test.</p>
+<h3 id="three-search-strategies-illustrated">Three search strategies illustrated</h3>
+<p>Uniform random sampling tells us what the chosen parameter distribution produces. Evolution Strategies use batches of nearby candidates to improve an objective, but an objective alone need not reward a diverse collection. MAP-Elites retains good candidates in many behavioural niches, allowing a catalogue of different outcomes rather than only the highest-scoring specimen.</p>
+<p>The demonstration uses a synthetic two-dimensional fitness landscape. It compares uniform sampling, a simple local hill climber, and archive-based variation with one new fitness evaluation per step. The hill climber is not a full Evolution Strategy, and this example does not benchmark the algorithms on Lenia.</p>
+<div class="lenia-widget" data-widget="search" data-steps="200" data-auto-play="true">
+<noscript>
+<p>
+Interactive search comparison requires JavaScript.
+</p>
+</noscript>
+</div>
+<h2 id="map-elites-and-quality-diversity">MAP-Elites and Quality-Diversity</h2>
+<p>Quality-Diversity flips the usual optimization question. Instead of asking “which parameter setting maximizes fitness?”, it asks “what is the best creature we can find <em>for each kind of behavior</em>?”. The archive is structured by behavioral descriptors (speed, mass, gyration, symmetry, the oscillation frequency of the mass over time, and so on), and competition is local within a niche, so an eligible candidate in an empty niche can be retained even if other niches contain higher-scoring candidates. The QD-score is the total fitness summed over all niches, which rewards quality and diversity at the same time. A run that fills 40 of 64 niches with average fitness 0.7 scores higher than a run that fills 60 of 64 with average 0.3, even though it covers less ground. Coverage with nothing good in it is not the goal, and one brilliant creature in an empty archive is not either.</p>
+<p>MAP-Elites is one widely used algorithm for this purpose <span class="citation" data-cites="mouret2015">(<a href="#ref-mouret2015" role="doc-biblioref">Mouret and Clune 2015</a>)</span>. The archive is an array of <code>K</code> cells, each storing the best <code>(genotype, fitness, descriptor)</code> it has seen, with <code>K</code> usually between 1024 and 16384. The four-step loop is select a random occupied cell, vary its genotype, evaluate the child in simulation, and place the child into the nearest niche if that niche is empty or if the child beats the incumbent. For a fixed archive and stored evaluations, replacement only improves the recorded incumbent in each cell. Re-evaluation, noisy fitness or changed descriptors require separate handling.</p>
+<p class="sl-skip">
+The next two sections, CVT and isoline variation, are implementation detail. You can skip them on a first read and lose nothing conceptual: they cover how the archive is partitioned and how children are mutated, not why any of it works.
+</p>
+<h3 id="cvt-partitioning-descriptor-space">CVT – partitioning descriptor space</h3>
+<p>The naive way to partition descriptor space is a regular grid, but that costs <code>n^D</code> cells once you have more than two or three descriptors and most of those cells will never be reached. A centroidal Voronoi tessellation gives you <code>K</code> cells regardless of how many descriptors you use <span class="citation" data-cites="vassiliades2016">(<a href="#ref-vassiliades2016" role="doc-biblioref">Vassiliades, Chatzilygeroudis, and Mouret 2016</a>)</span>. You sample a few thousand points from where the descriptors actually live, run Lloyd’s algorithm (assign each sample to the nearest centroid, then move each centroid to the mean of its assigned samples, repeat), and the centroids partition the sampled distribution; the cells need not have equal volume or equal probability. Production runs pre-compute centroids once in Python with pyribs and reuse the same <code>centroids.npy</code> across campaigns.</p>
+<p>This two-dimensional widget approximates uniform-area Lloyd updates on a fixed 128 × 128 sample grid. It illustrates centroid relaxation rather than reproducing the production descriptor distribution.</p>
+<div class="lenia-widget" data-widget="cvt" data-centroids="64" data-samples="5000">
+<noscript>
+<p>
+Interactive CVT builder requires JavaScript.
+</p>
+</noscript>
+</div>
+<h3 id="the-map-elites-loop">The MAP-Elites loop</h3>
+<p>The widget below generates a synthetic teaching sequence on 64 Voronoi cells. Its scores and descriptors are illustrative, not measurements from Lenia creatures; placements follow the nearest-cell and elite-replacement rules. Watch which niches receive candidates, when an incumbent is replaced, and where the map remains empty. An empty niche is an absence from this search, not proof that its behaviour is impossible.</p>
+<div class="lenia-widget" data-widget="mapelites" data-centroids="64">
+<noscript>
+<p>
+Interactive MAP-Elites step-through requires JavaScript.
+</p>
+</noscript>
+</div>
+<h3 id="isoline-variation-vassiliades-and-mouret-2018">Isoline variation (Vassiliades and Mouret, 2018)</h3>
+<p>Isoline variation combines an isotropic perturbation with a displacement along the line joining two archived candidates <span class="citation" data-cites="vassiliades2018">(<a href="#ref-vassiliades2018" role="doc-biblioref">Vassiliades and Mouret 2018</a>)</span>. The line term uses relationships already present in the archive. Whether that helps depends on how those relationships align with useful changes in behaviour; it is a search operator to compare, not a guarantee of better offspring.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">child</mtext><mo>=</mo><mi>A</mi><mo>+</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">iso</mtext><mn>2</mn></msubsup><mi>I</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">line</mtext><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mover><mrow><mo stretchy="false" form="prefix">(</mo><mi>B</mi><mo>−</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">\text{child} = A + \mathcal{N}(0, \sigma_{\text{iso}}^2 I) + \mathcal{N}(0, \sigma_{\text{line}}^2) \cdot \widehat{(B - A)}</annotation></semantics></math></p>
+<p>This widget uses a normalized-direction variant: the standard line operator uses the unnormalized difference <code>B - A</code>. Here <code>A</code> is the parent and <code>B</code> is a second creature pulled from a different niche, and <code>widehat{(B - A)}</code> is the unit vector pointing from <code>A</code> toward <code>B</code>. The isotropic term (<code>sigma_iso</code> typically <code>0.005</code>) does fine-tuning within the parent’s niche. The directional term (<code>sigma_line</code> typically <code>0.05</code>) jumps along the line between two creatures whose genotypes already differ in some behaviorally-meaningful way, which provides a candidate direction to test. A difference between archived genotypes need not change every measured behaviour. The slider widget below makes the effect of the two sigmas legible at a glance.</p>
+<div class="lenia-widget" data-widget="isoline" data-iso-sigma="0.03" data-line-sigma="0.12">
+<noscript>
+<p>
+Interactive isoline visualizer requires JavaScript.
+</p>
+</noscript>
+</div>
+<h2 id="the-research-ladder">The research ladder</h2>
+<p>Flow Lenia plus MAP-Elites gets us solitary creatures that move. Everything past that is about extending what a creature can do, what kind of world it lives in, and what we let the search figure out for itself.</p>
+<h3 id="sensorimotor-lenia">Sensorimotor Lenia</h3>
+<p>A moving Flow Lenia pattern can already interact with other matter or an imposed boundary. Sensorimotor variants make particular environmental signals available to the update rule and search for responses to them. Food seeking, obstacle avoidance and other tasks require defined environments and evaluation protocols; none follows merely from adding an input channel.</p>
+<h3 id="ecological-search">Ecological search</h3>
+<p>An ecological experiment places multiple interacting patterns in a shared world. Localized rule parameters allow different rule identities to coexist within Flow Lenia. Competition, material exchange or sustained coexistence must then be measured from the dynamics. Several channels or many kernels do not by themselves establish distinct species or symbiosis.</p>
+<h3 id="aurora-learned-descriptors">AURORA – learned descriptors</h3>
+<p>MAP-Elites needs you to pick the descriptors up front, and the choice biases everything downstream. AURORA replaces hand-picked descriptors with learned ones: train a dimensionality-reduction model, such as an autoencoder, on the behavioural observations from a run, use the learned coordinates as descriptors, continue quality-diversity search, retrain, and repeat <span class="citation" data-cites="cully2019">(<a href="#ref-cully2019" role="doc-biblioref">Cully 2019</a>)</span>. The learned coordinates depend on the observations, training objective and model; they remain a choice of representation that needs validation.</p>
+<h3 id="the-atlas">The atlas</h3>
+<p>The atlas is where all of this ends up. Every creature we keep gets stored with its genotype, phenotype, full descriptor vector, the ecology it came from, the campaign that produced it, a replay you can scrub, and the anatomy panels (mass, components, moments) that summarize what it does. The format (<code>SavedCreature</code> with <code>ParamsPayload</code>, <code>InitConfig</code>, <code>SimulationMetrics</code>, score, weights, <code>configHash</code>) is meant to be both a scientific dataset and an interactive catalog, so the same record renders as a row in a SQLite query and as a card on a creature page.</p>
+<h2 id="running-it-campaigns-at-scale">Running it – campaigns at scale</h2>
+<p>Campaigns separate discovery from verification. Short evaluations can rank large numbers of candidates; longer replays then check whether selected bodies persist and whether their saved records reproduce the observations. Parallel workers accelerate the evaluations, while the archive records the candidates selected under a particular descriptor and scoring scheme.</p>
+<p>Reproducibility requires more than a fixed seed. The rule, initial condition, run configuration and backend must all be recorded, and replay agreement must be tested. The <a href="/dossiers/lenia-swarm/">Lenia dossier</a> links the current experiments and their evidence.</p>
+<h2 id="what-the-atlas-is-for">What the atlas is for</h2>
+<p>The archive lets us compare observed forms with the rules and histories that produced them. Do neighbouring rules make neighbouring bodies? Can similar-looking bodies respond differently to the same obstacle? Can we find a rule that produces and maintains a requested shape?</p>
+<p>A sampled map can suggest connected regions or persistent gaps, but those features depend on sampling, descriptors and distance. It does not establish a smooth manifold of all viable creatures, or prove that unobserved forms cannot exist. The <a href="/dossiers/lenia-swarm/morphospace/">current morphospace report</a> examines that distinction using 25,167 Flow Lenia observations and two external shape collections.</p>
+<script src="/blog/lenia-explainer/lenia-gpu.js"></script>
+<script src="/blog/lenia-explainer/lenia-explainer.js"></script>
+<h1 class="unnumbered" id="bibliography">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-chan2019" class="csl-entry" role="listitem">
+Chan, Bert Wang-Chak. 2019. <span>“<span>Lenia</span>: Biology of Artificial Life.”</span> <em>Complex Systems</em> 28 (3): 251–86. <a href="https://doi.org/10.25088/ComplexSystems.28.3.251">https://doi.org/10.25088/ComplexSystems.28.3.251</a>.
+</div>
+<div id="ref-cully2019" class="csl-entry" role="listitem">
+Cully, Antoine. 2019. <span>“Autonomous Skill Discovery with Quality-Diversity and Unsupervised Descriptors.”</span> In <em>Proceedings of the Genetic and Evolutionary Computation Conference</em>. <a href="https://doi.org/10.1145/3321707.3321804">https://doi.org/10.1145/3321707.3321804</a>.
+</div>
+<div id="ref-mouret2015" class="csl-entry" role="listitem">
+Mouret, Jean-Baptiste, and Jeff Clune. 2015. <span>“Illuminating Search Spaces by Mapping Elites.”</span> <a href="https://arxiv.org/abs/1504.04909">https://arxiv.org/abs/1504.04909</a>.
+</div>
+<div id="ref-plantec2023" class="csl-entry" role="listitem">
+Plantec, Erwan, Gautier Hamon, Mayalen Etcheverry, Pierre-Yves Oudeyer, Clément Moulin-Frier, and Bert Wang-Chak Chan. 2023. <span>“<span>Flow-Lenia</span>: Towards Open-Ended Evolution in Cellular Automata Through Mass Conservation and Parameter Localization.”</span> <a href="https://arxiv.org/abs/2212.07906v2">https://arxiv.org/abs/2212.07906v2</a>.
+</div>
+<div id="ref-vassiliades2016" class="csl-entry" role="listitem">
+Vassiliades, Vassilis, Konstantinos Chatzilygeroudis, and Jean-Baptiste Mouret. 2016. <span>“Using Centroidal Voronoi Tessellations to Scale up the Multi-Dimensional Archive of Phenotypic Elites Algorithm.”</span> <a href="https://arxiv.org/abs/1610.05729">https://arxiv.org/abs/1610.05729</a>.
+</div>
+<div id="ref-vassiliades2018" class="csl-entry" role="listitem">
+Vassiliades, Vassilis, and Jean-Baptiste Mouret. 2018. <span>“Discovering the Elite Hypervolume by Leveraging Interspecies Correlation.”</span> In <em>Proceedings of the Genetic and Evolutionary Computation Conference</em>. <a href="https://doi.org/10.1145/3205455.3205602">https://doi.org/10.1145/3205455.3205602</a>.
+</div>
+</div></article>
+                </main>
+
+                <footer class="doc-footer">
+                    <div class="doc-footer-inner">
+                        <div>Specter Labs</div>
+                                                <div>lenia-explainer</div>
+                                            </div>
+                </footer>
+            </div>
+        </div>
+        <script src="/blog/blog.js"></script>
+    </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "latent-composition-transplant",
+  "releaseId": "flce-latent-composition-transplant-c2da1a0b5b34",
+  "title": "Hidden Composition Biases Futures Without Changing Form",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "exact latent-composition transplant",
+  "sourceReportSha256": "b8499dc8968c2eae35097ff34de17502fbd8bc112ea0268ea557a1d9f2e9a46e",
+  "publicReportSha256": "b8499dc8968c2eae35097ff34de17502fbd8bc112ea0268ea557a1d9f2e9a46e",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "fb6bc811365d8be605b1eae46c5d490dbe9c0b8416363fad2c8f0a0edc65eaf7",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "d729938f9d6950606d4a547f7f16d39a9cb8c52bd4c0028570923e3201ba6eae"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "gate-conditioned-morphology-reversal",
+  "releaseId": "flce-gate-conditioned-morphology-reversal-4bd40328464d",
+  "title": "Later Actions Can Reverse a Body-Form Bias",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "late closed-loop morphology control",
+  "sourceReportSha256": "5cab04ea7b7213e9ed31d0a8644c9795a58dd31fed0e423c94dea1ed7ccb0513",
+  "publicReportSha256": "2cb0c97de16e8e18a8605fb18a9a72a10a0295e47b6cba07a0046edc91619eff",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "4573f4a8461041b89c0d20344fc5c0c018d035f7569f28942acaf9f601a81e82",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "7135bd5db1260a59c1ea1e6935ea1c4d24cad8b5910a3964e0fe572ceff76fb4"
+}

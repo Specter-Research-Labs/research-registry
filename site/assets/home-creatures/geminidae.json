@@ -1,0 +1,99 @@
+{
+  "title": "Geminidae-derived Lenia",
+  "source_creature_id": "4F18F1D6-427C-5390-B730-AD4EEAE24E5B",
+  "source_campaign": "0326-serene-blob-0000-4f18f1d6",
+  "source_config_sha256": "51459c67816d28475dc6efe226f711e44f42fbbb9643f24fb04de3c623fe29d9",
+  "implementation": {
+    "growth_profile": "quad4",
+    "kernel_profile": "qd24_quad4_v1",
+    "mode": "qd24_additive_v1"
+  },
+  "simulation_grid": {
+    "sx": 192,
+    "sy": 192
+  },
+  "recorded_steps": {
+    "first": 1,
+    "last": 120,
+    "stride": 1
+  },
+  "video": {
+    "width": 1024,
+    "height": 1024,
+    "frames": 120,
+    "fps": 15
+  },
+  "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
+  "native_capture": "LeniaCLI publish media --steps 120 --frame-budget 120 --fps 15 --render-mode body",
+  "simulation_recentering": false,
+  "presentation": "Native full-world 8-bit total-density frames, using the CLI's shared recording scale. Fixed square crop; bilinear display interpolation; no simulation-grid refinement or camera tracking. Channels are summed.",
+  "crop": {
+    "left": 51,
+    "top": 39,
+    "side": 125
+  },
+  "density_palette": {
+    "values": [
+      0,
+      0.06,
+      0.2,
+      0.35,
+      0.5,
+      0.7,
+      0.85,
+      1
+    ],
+    "rgb": [
+      [
+        244,
+        241,
+        232
+      ],
+      [
+        226,
+        235,
+        222
+      ],
+      [
+        193,
+        222,
+        202
+      ],
+      [
+        135,
+        195,
+        175
+      ],
+      [
+        77,
+        153,
+        137
+      ],
+      [
+        46,
+        122,
+        111
+      ],
+      [
+        31,
+        98,
+        91
+      ],
+      [
+        27,
+        77,
+        76
+      ]
+    ]
+  },
+  "screen": {
+    "centroid_displacement_cells": 39.83989168505211,
+    "centroid_displacement_crop_fraction": 0.31871913348041686,
+    "minimum_connected_mass_fraction": 0.9985647805853956,
+    "max_to_min_recorded_mass": 1.0208076801534287,
+    "max_density_fraction_outside_crop": 0.0
+  },
+  "frames_sha256": "9b054e05ecb4850cfdc4420e087d967e14d1396f3ff576d887f548350ac751bf",
+  "video_sha256": "3ac5cf0375ce685c4efe2628a4aa5847db64fd244ebf9ae826186f15f6d85fd9",
+  "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic."
+}

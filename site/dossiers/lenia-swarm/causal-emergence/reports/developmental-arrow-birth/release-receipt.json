@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "developmental-arrow-birth",
+  "releaseId": "flce-developmental-arrow-birth-ef7795f7ec12",
+  "title": "Hidden-State Control Strengthens Between Passages 8 and 12",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "early-age direction intervention",
+  "sourceReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
+  "publicReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "61e636f9d9c506c2afa1dcef6184cb8c1c68c100c513f4dcb2cd0e811d76e360",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "8904709cd4cb83b3ef40d85144596576fdd6b9067a8e88f9ab2f1a5b16545054"
+}

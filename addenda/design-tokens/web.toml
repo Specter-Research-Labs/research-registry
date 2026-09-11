@@ -1,22 +1,61 @@
+[colors]
+ink = "#20212b"
+paper = "#f8f4ea"
+bg = "#f8f4ea"
+muted = "#62616a"
+rule = "#20212b33"
+rule-strong = "#20212b66"
+accent = "#ae4a28"
+accent-2 = "#344aa0"
+panel = "#fffdf7"
+surface = "#f5e7d7"
+
+[fonts]
+display = ["Arial", "Helvetica", "sans-serif"]
+heading = ["Arial", "Helvetica", "sans-serif"]
+body = ["IBM Plex Serif", "Georgia", "serif"]
+
 [layout]
-shell-max-width = "900px"
-shell-max-width-doc = "1100px"
-shell-pad-inline = "24px"
-shell-pad-top = "32px"
+shell-max-width = "1320px"
+shell-max-width-doc = "1320px"
+shell-pad-inline = "52px"
+shell-pad-top = "30px"
 shell-pad-bottom = "64px"
-shell-pad-inline-mobile = "14px"
-shell-pad-top-mobile = "18px"
+shell-pad-inline-mobile = "22px"
+shell-pad-top-mobile = "22px"
 shell-pad-bottom-mobile = "38px"
 layout-gap = "24px"
 layout-gap-mobile = "16px"
+brand-size = "51px"
+brand-gap = "15px"
+nav-gap = "27px"
+nav-gap-mobile = "22px"
+header-gap = "24px"
+header-bottom = "30px"
+header-bottom-mobile = "22px"
+header-rule-gap = "38px"
+prose-measure = "75ch"
 
 card-gap = "14px"
 card-gap-mobile = "10px"
 card-pad = "10px 12px 12px"
 
 [type-scale]
-section-title = "13px"
-page-title = "16px"
-card-title = "13px"
-page-title-mobile = "14px"
+section-title = "12px"
+page-title = "clamp(36px, 5vw, 66px)"
+card-title = "25px"
+page-title-mobile = "36px"
 section-title-mobile = "12px"
+brand = "20px"
+brand-mobile = "16px"
+nav = "13px"
+prose = "17px"
+intro = "18px"
+
+[leading]
+title = "1.04"
+prose = "1.65"
+
+[tracking]
+title = "-.045em"
+brand = ".08em"

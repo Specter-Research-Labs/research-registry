@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "canalization-rescue",
+  "releaseId": "flce-canalization-rescue-0112ba31cdf4",
+  "title": "Graded Spatial Repair Restores Canalization",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "nested exact-repair dose study",
+  "sourceReportSha256": "068e5845b6c5e5e84dc438bc42561db584880f63b057a314b4599348e366c072",
+  "publicReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "08ce410919ea14aa2eba1c84e02c85c23508c1417e9ff156c3b27ffe7f7fae15",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "327240c2e70977ec27bcc9620228f37dfd0e8e14f758ed1d2ce2f15afa92cbf3"
+}

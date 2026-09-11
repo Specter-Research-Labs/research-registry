@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "tangent-memory-dose-response",
+  "releaseId": "flce-tangent-memory-dose-response-7ab5702a7030",
+  "title": "Information-Directed Dose Strengthens Identity Memory",
+  "date": "2026-08-25",
+  "status": "archive",
+  "evidenceClass": "dose-response memory intervention",
+  "sourceReportSha256": "1dd668161f531455130e4e8f3f2027d47df3f4255f0e3d8e4d241d69b1b55d92",
+  "publicReportSha256": "b726fbd5aacb1eb4cc6f2f8da63cdfba08ba9809cddb07854c7dbdad8676e097",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "52586c6feeadfbea93948229591595848731557891c603770c8a2f9309debdd6",
+  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
+  "upstreamReceiptSha256": "477ecf68ddc4d005669468e74f8daffac5e09290e2501c7710b6883194a5f8bf"
+}

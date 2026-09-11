@@ -1,0 +1,36 @@
+{
+  "schema": "coherent_body_cell_swap_pilot_v1",
+  "selection": "Visual body persistence in an independent 3600-step replay; not intervention response",
+  "runner_sha256": "2060bad49679e2300acce3922ca35fd9ee7551b03f845cbcc1ed55df9ae34694",
+  "ages": [
+    900,
+    2700
+  ],
+  "future_steps": 240,
+  "swap_fraction": 0.12,
+  "swap_seeds": [
+    17,
+    31,
+    47
+  ],
+  "specimens": [
+    {
+      "candidate": "0574-flow-map-elite-19-b26adef3",
+      "creature_id": "71E5A2ED-1C42-5676-9E8E-02351BC3FDF8",
+      "source_config_sha256": "5a8e8748753d253135f87ce9add9ac7fa4e5f8018a7246e1ba67c7683b975a85",
+      "source_library_sha256": "eab2120eafef5df62946c7d4575f85a051f591680464d8fb42ba439c8d2f4911"
+    },
+    {
+      "candidate": "0531-flow-map-elite-0-ff41daf6",
+      "creature_id": "704288AA-7BBB-56B6-8E64-C0C809666676",
+      "source_config_sha256": "cbf7d982900cec69ceaf8c0be7908bd102e7dba1c8d2f8235d6a401cfe7964a8",
+      "source_library_sha256": "537249883e05b11a329155afa032f754a6c2b0900e6d33b8731c8245428c85da"
+    },
+    {
+      "candidate": "0555-flow-map-elite-0-ae9700f0",
+      "creature_id": "D4B1A00B-9ECC-5214-98F7-21C4B7ADD6EA",
+      "source_config_sha256": "b9f12982d53061351566a7eefd3ad9c27e529d973a42bd61878c8fe717c561e9",
+      "source_library_sha256": "7b717e99f436dca139d04ecda3f93535e8214f0e754d8f9dc8f1f1c636918d9e"
+    }
+  ]
+}

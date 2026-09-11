@@ -212,6 +212,7 @@ var LeniaGPU = (() => {
 
     async function fetchShader(basePath, name) {
         const resp = await fetch(basePath + name);
+        if (!resp.ok) throw new Error("Shader HTTP " + resp.status + ": " + name);
         return await resp.text();
     }
 
@@ -282,17 +283,17 @@ var LeniaGPU = (() => {
             ],
         });
 
-        const growthPipeline = device.createComputePipeline({
+        const growthPipeline = await device.createComputePipelineAsync({
             layout: device.createPipelineLayout({ bindGroupLayouts: [stepBindGroupLayout] }),
             compute: { module: stepModule, entryPoint: "compute_growth" },
         });
 
-        const flowPipeline = device.createComputePipeline({
+        const flowPipeline = await device.createComputePipelineAsync({
             layout: device.createPipelineLayout({ bindGroupLayouts: [stepBindGroupLayout] }),
             compute: { module: stepModule, entryPoint: "compute_flow" },
         });
 
-        const reintegratePipeline = device.createComputePipeline({
+        const reintegratePipeline = await device.createComputePipelineAsync({
             layout: device.createPipelineLayout({ bindGroupLayouts: [stepBindGroupLayout] }),
             compute: { module: stepModule, entryPoint: "reintegrate" },
         });
@@ -465,6 +466,7 @@ var LeniaGPU = (() => {
         const shaderBasePath = basePath + "shaders/";
 
         const resp = await fetch(basePath + "creatures.json");
+        if (!resp.ok) throw new Error("Creature catalog HTTP " + resp.status);
         const catalog = await resp.json();
         const creature = catalog[creatureName];
         if (!creature) return null;
@@ -481,7 +483,7 @@ var LeniaGPU = (() => {
         const engine = await createEngine(device, genotype, phenotype, runConfig, shaderBasePath);
 
         const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
-        const renderPipeline = device.createRenderPipeline({
+        const renderPipeline = await device.createRenderPipelineAsync({
             layout: "auto",
             vertex: { module: engine._renderModule, entryPoint: "vs" },
             fragment: { module: engine._renderModule, entryPoint: "fs", targets: [{ format: canvasFormat }] },
@@ -510,6 +512,7 @@ var LeniaGPU = (() => {
 
             destroy() {
                 engine.destroy();
+                device.destroy();
             },
         };
     }

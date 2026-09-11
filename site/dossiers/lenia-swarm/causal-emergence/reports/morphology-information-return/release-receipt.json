@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "morphology-information-return",
+  "releaseId": "flce-morphology-information-return-08fbc2eece2a",
+  "title": "Response-State Differences Reappear as Morphology Converges",
+  "date": "2026-08-23",
+  "status": "archive",
+  "evidenceClass": "morphology-control release study",
+  "sourceReportSha256": "17970b7631525a795e3bd530bba53b924bf2b89e4677fe7cecb6da61181bdd01",
+  "publicReportSha256": "17970b7631525a795e3bd530bba53b924bf2b89e4677fe7cecb6da61181bdd01",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "93425886e05f9b136ddb86d1b97f2c221246b29d9c03624923cdb1caa1d490da",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "ed0debcec69edf7e5ae7975b01c86c38b53fc690391a024556adc13d6b746570"
+}

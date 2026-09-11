@@ -1,0 +1,19 @@
+{
+  "schema": "specter_flow_lenia_report_release_v3",
+  "id": "prospective-geometry-clock",
+  "releaseId": "flce-prospective-geometry-clock-3bee10b15db8",
+  "title": "Whole-Field Organization Anticipates Formation",
+  "date": "2026-08-22",
+  "status": "archive",
+  "evidenceClass": "prospective intervention map",
+  "sourceReportSha256": "ef445e409c1d730b23044111f6e913ed058543458c5ade3bc9dfb9abcff34588",
+  "publicReportSha256": "ef445e409c1d730b23044111f6e913ed058543458c5ade3bc9dfb9abcff34588",
+  "transformations": [
+    "import_verified_public_projection_v1",
+    "apply_shared_report_polish_v1",
+    "move_reports_to_website_v1"
+  ],
+  "contextSha256": "4574bacae2704a349547f80c75b07cc852a0aa5656364d3a7e0732806e7be8a9",
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "19a4fe5de6e1150b323a5b478088f1a72528f645c5fa8b9d3c4069bf58ede5b2"
+}

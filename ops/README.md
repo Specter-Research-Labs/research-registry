@@ -110,6 +110,7 @@ The publish path preserves that split:
 - immutable archived bundle is copied into the releases host
 
 The site publish entrypoint is `spctr site publish`.
+Internal stylesheet ownership, spacing conventions, and report regeneration are documented in [Report layout maintenance](docs/report-layout.md). These maintainer notes stay under `ops/docs/`, outside the site and Cabinet sources.
 The release portal renderer is `spctr site portal`.
 The stable direct-tree sync for the records corpus is `spctr site push-records --source <records-bureau>`.
 Project-specific archive publishes are also first-class `spctr` commands:
@@ -187,3 +188,5 @@ The Storage Box is for off-VM backups only:
 - selected site snapshots
 
 The current sync entrypoint is `ops/spctr/dispatch/deploy/sync_storage_box.sh`.
+
+Publication review records: [editorial ledger](docs/publication-review/editorial-release-pass.md), [source handoff](docs/publication-review/report-reanalysis-handoff.md), and [specimen replay selection](docs/publication-review/coherent-body-pilot.md). These internal records are outside the website Cabinet.
