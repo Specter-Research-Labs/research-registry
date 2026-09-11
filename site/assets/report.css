@@ -1309,15 +1309,69 @@
   .report-coordinate-row > span:last-child { font-variant-numeric:tabular-nums; }
 }
 
-/* Section gaps own the space between blocks; figure margins must not add a second gap. */
-.report-morphospace .report-result > :is(.report-prose, .report-original-replays) {
-  width: min(100%, 48rem);
+/* Each transition has one spacing owner, so nested margins cannot compound it. */
+.report-morphospace {
+  --report-reading-width: 48rem;
+  --report-figure-width: 64rem;
+  --report-paragraph-space: 16px;
+  --report-block-space: 32px;
+  --report-chapter-space: 64px;
+}
+.report-morphospace .report-main { gap: var(--report-chapter-space); }
+.report-morphospace .report-main > .report-nav { margin-bottom: 0; }
+.report-morphospace .report-motion-intro { margin-block: 0; }
+.report-morphospace .report-motion-intro figcaption {
+  width: min(100%, var(--report-reading-width));
+  margin-inline: auto;
+}
+.report-morphospace .report-result { gap: 0; }
+.report-morphospace .report-result > * { margin-block: 0; }
+.report-morphospace .report-result > * + * { margin-top: var(--report-block-space); }
+.report-morphospace .report-result > .report-method { margin-top: var(--report-paragraph-space); }
+.report-morphospace .report-result > :is(figure, .report-method, .publication-measurement) {
+  width: min(100%, var(--report-figure-width));
+  max-width: none;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+.report-morphospace .report-result > :is(.report-prose, .report-table-wrap),
+.report-morphospace .report-chapter-head,
+.report-morphospace .report-fish-intro,
+.report-morphospace .report-neighbors > :is(h3, .report-chart-note) {
+  width: min(100%, var(--report-reading-width));
   max-width: none;
   margin-inline: auto;
 }
-.report-morphospace .report-result > :is(.report-fish-story, .report-coordinate-comparison, .report-original-replays) { margin-block: 0; }
-.report-morphospace #result-fish-near > .report-comparison { padding-block: 0; }
+.report-morphospace .report-chapter-title h2 { margin: 12px 0 24px; }
+.report-morphospace .report-chapter-head > p + p,
+.report-morphospace .report-prose p + p { margin-top: var(--report-paragraph-space); }
+.report-morphospace .report-original-replays { margin: var(--report-paragraph-space) 0 0; }
+.report-morphospace .report-original-replays .report-specimens { margin-block: var(--report-paragraph-space) 0; }
+.report-morphospace #result-fish-near > .report-comparison,
 .report-morphospace .report-result > .publication-measurement { padding-block: 0; }
+.report-morphospace .report-fish-intro { display: block; }
+.report-morphospace .report-fish-intro h3,
+.report-morphospace .report-neighbors > h3 {
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  line-height: 1.2;
+  margin-block: 0 var(--report-paragraph-space);
+  text-wrap: balance;
+}
+.report-morphospace .report-fish-intro p,
+.report-morphospace .report-neighbors > .report-chart-note { max-width: none; margin-block: 0; font-size: 1.15rem; line-height: 1.7; }
+.report-morphospace .report-fish-source { margin: var(--report-block-space) 0 var(--report-paragraph-space); }
+.report-morphospace .report-image-credit { margin-block: 0; }
+.report-morphospace .report-fish-lab { margin: var(--report-block-space) 0 0; }
+.report-morphospace .report-coordinate-comparison > .report-chart-note { margin-top: var(--report-block-space); }
+.report-morphospace .report-neighbor-pair { margin-top: var(--report-block-space); }
+.report-morphospace .report-neighbor-pair :is(img, video) {
+  height: min(70vw, 280px);
+  object-fit: contain;
+  margin-block: 8px 16px;
+}
+.report-morphospace .report-neighbor-pair strong { display: block; }
+.report-morphospace .report-table--compact th:last-child { white-space: nowrap; }
 .report-morphospace #live-plate > h3 { margin-top: 0; }
-.report-morphospace .report-fish-intro { align-items: start; }
-.report-morphospace .report-fish-intro :is(h3, p) { margin-block: 0; }
+@media (max-width: 700px) {
+  .report-morphospace { --report-block-space: 24px; --report-chapter-space: 48px; }
+}
