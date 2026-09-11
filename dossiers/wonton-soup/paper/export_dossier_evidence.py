@@ -166,7 +166,7 @@ search seeds, comparing the prover with blind search:</p>
 <div class="ws-metrics">{scale}</div>
 </section>
 <section class="ws-section" id="evidence">
-<h2 class="story-heading">How often does a proof survive a missing move?</h2>
+<h2 class="story-heading">How often does the search still find a proof?</h2>
 <p class="story-deck">Across {len(selected):,} completed research runs, we recorded {lesions:,}
 tactic-removal reruns. For the survival comparison, {eligible:,} had both a successful original
 search and a successful unchanged control. Of those, {survived:,} still found a proof after the

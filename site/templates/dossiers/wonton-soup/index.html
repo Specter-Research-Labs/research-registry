@@ -286,7 +286,7 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <section class="story-split">
-<div><h2 class="story-question">Take away a move.<br>Find another proof.</h2><p class="story-deck">The tactic <code>trivial</code> closes this theorem in one step. Block it, and the search reaches the same result through three algebraic steps. The unchanged control repeats the original route.</p><div class="story-jumps"><a href="#scale">Across the experiments ↓</a><a href="https://specterlab.org/blog/wonton-soup/wonton-soup.pdf">Read the preprint</a></div></div>
+<div><h2 class="story-question">Removing a tactic can lead to a different proof</h2><p class="story-deck">The tactic <code>trivial</code> closes this theorem in one step. With that tactic disabled, the search reaches the same result through three algebraic steps. The unchanged control repeats the original route.</p><div class="story-jumps"><a href="#scale">Across the experiments ↓</a><a href="https://specterlab.org/blog/wonton-soup/wonton-soup.pdf">Read the preprint</a></div></div>
 <figure class="tactic-study" data-tactic-study>
 <div class="story-controls" role="group" aria-label="Compare recorded proof routes"><button type="button" data-tactic="available" data-result="Proof found in 1 step" aria-pressed="true">Original search</button><button type="button" data-tactic="blocked" data-result="Proof found in 3 steps" aria-pressed="false">Block trivial</button></div>
 <svg class="tactic-routes" viewBox="0 0 480 350" role="img" aria-label="The original route closes with trivial. With trivial blocked, ring, norm_num and ring reach the same result.">
@@ -309,7 +309,7 @@ search seeds, comparing the prover with blind search:</p>
 <div class="ws-metrics"><div class="ws-metric"><div class="ws-metric-label">Tactic attempts</div><div class="ws-metric-value">518,252</div><div class="ws-metric-note">guided searches and available blind controls</div></div><div class="ws-metric"><div class="ws-metric-label">Repeated-seed searches</div><div class="ws-metric-value">11,006</div><div class="ws-metric-note">plus 10,749 blind-control searches</div></div><div class="ws-metric"><div class="ws-metric-label">Theorems revisited</div><div class="ws-metric-value">98</div><div class="ws-metric-note">across 111 completed experiment batches</div></div></div>
 </section>
 <section class="ws-section" id="evidence">
-<h2 class="story-heading">How often does a proof survive a missing move?</h2>
+<h2 class="story-heading">How often does the search still find a proof?</h2>
 <p class="story-deck">Across 347 completed research runs, we recorded 8,839
 tactic-removal reruns. For the survival comparison, 928 had both a successful original
 search and a successful unchanged control. Of those, 406 still found a proof after the
@@ -327,7 +327,7 @@ href="/assets/wonton-soup/dossier-evidence.json">Cohort selection and recorded e
 </section>
 <!-- GENERATED:WONTON_EVIDENCE END -->
 
-                <section class="ws-section"><h2 class="story-heading">Count the routes that remain usable</h2><p class="story-deck">Different-looking proofs can depend on the same indispensable tactic. Blocking a move asks whether the alternatives remain available under pressure. A successful rerun shows a route the search could still reach within its budget; a failure identifies a limit of that search.</p><div class="story-jumps"><a href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">Follow the experiment →</a><a href="../../dashboards/wonton-soup/">Inspect individual searches →</a></div></section>
+                <section class="ws-section"><h2 class="story-heading">Different proofs can depend on the same tactic</h2><p class="story-deck">Different-looking proofs can depend on the same indispensable tactic. Removing that tactic tests which alternatives the search can still reach within its budget. A failed rerun does not establish that no other proof exists.</p><div class="story-jumps"><a href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">Follow the experiment →</a><a href="../../dashboards/wonton-soup/">Inspect individual searches →</a></div></section>
 
                 <section class="ws-section" id="sources">
                     <ul class="ws-source-list">
