@@ -169,3 +169,22 @@ html.specter-report.synthesis-publication .synthesis-source { font-size:15px; li
 @media(max-width:700px) {
   html.specter-report.synthesis-publication body .topbar { padding-block:20px; margin-bottom:28px; }
 }
+
+/* A section boundary owns one gap; top and bottom padding must not double it. */
+html.specter-report.synthesis-publication body > main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--publication-space-section); padding-top: var(--publication-space-section); }
+html.specter-report.synthesis-publication main > .section { padding-block: 0; }
+html.specter-report.synthesis-publication .section > .wrap { display: flow-root; }
+html.specter-report.synthesis-publication .section > .wrap > * { margin-block: 0; }
+html.specter-report.synthesis-publication .section > .wrap > * + * { margin-top: var(--publication-space-block); }
+html.specter-report.synthesis-publication .section > .wrap > details { margin-top: var(--publication-space-prose); }
+html.specter-report.synthesis-publication .section-head :is(h2, p) { margin-bottom: 0; }
+html.specter-report.synthesis-publication .section-head h2 { margin-top: 12px; }
+html.specter-report.synthesis-publication .section-head .lede { margin-top: 0; }
+html.specter-report.synthesis-publication .prose > p { margin-block: 0; }
+html.specter-report.synthesis-publication .prose > p + p { margin-top: var(--publication-space-prose); }
+html.specter-report.synthesis-publication .synthesis-forecast { padding-block: 0; }
+
+html.specter-report.synthesis-publication body > header.hero { padding-bottom: 0; }
+html.specter-report.synthesis-publication .synthesis-observation { padding-block: var(--publication-space-section) 0; }
+html.specter-report.synthesis-publication .synthesis-observation-head { margin-bottom: var(--publication-space-block); }
+html.specter-report.synthesis-publication .synthesis-observation .synthesis-caption { margin-bottom: 0; }

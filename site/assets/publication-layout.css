@@ -585,3 +585,58 @@ html body .fiber-hero h1 {
 }
 html.anatomical-editorial .hero-specimens figcaption,
 html.anatomical-editorial .media-figure figcaption { font-size:15px; line-height:1.6; }
+
+/* Shared rhythm does not prescribe columns: each report keeps its own composition. */
+:root {
+  --publication-space-prose: 16px;
+  --publication-space-block: 32px;
+  --publication-space-section: 64px;
+}
+html.anatomical-editorial,
+html.synthesis-publication,
+body.report-page { --publication-width: 1440px; }
+html body.report-page .report-main { gap: var(--publication-space-section); }
+html body.report-page .report-main > .report-nav { margin-bottom: 0; }
+html body.report-format-method .report-result { gap: var(--publication-space-block); }
+html body.report-format-method .report-result-copy > p { margin-block: var(--publication-space-prose) 0; }
+html body.report-format-method .report-reading { margin-top: var(--publication-space-prose); }
+html body.report-format-method .report-result > .report-scroll-hint { margin: 0; }
+
+html.anatomical-editorial main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--publication-space-section); padding-top: 48px; }
+html.anatomical-editorial .masthead { margin-bottom: 0; }
+html.anatomical-editorial main > * { margin-block: 0; min-width: 0; }
+html.anatomical-editorial .investigation-intro { padding-block: 0; }
+html.anatomical-editorial .investigation-intro > p { margin: 0; }
+html.anatomical-editorial main > section.shell { display: flow-root; }
+html.anatomical-editorial main > section.shell > * { margin-block: 0; }
+html.anatomical-editorial main > section.shell > * + * { margin-top: var(--publication-space-block); }
+html.anatomical-editorial main > section.shell > :is(.reading, .attempt-reading, details) { margin-top: var(--publication-space-prose); }
+html.anatomical-editorial main > section.shell > .chapter-head:not(:first-child) { margin-top: var(--publication-space-section); }
+html.anatomical-editorial .chapter-head { padding-top: 0; }
+html.anatomical-editorial .attempt-reading { padding-block: 0; }
+html.anatomical-editorial .media-figure figcaption { padding-bottom: 0; }
+
+html body .fiber-page .site-main { display: grid; gap: var(--publication-space-section); }
+html body .fiber-page .site-main > * { margin-block: 0; min-width: 0; }
+html body .fiber-section h2 { padding-top: 24px; margin-bottom: var(--publication-space-prose); }
+html body .fiber-section > p { margin-block: var(--publication-space-prose); }
+html body .fiber-section .fiber-figure { margin-top: var(--publication-space-block); }
+html body .fiber-section > :last-child { margin-bottom: 0; }
+@media (max-width: 700px) {
+  :root { --publication-space-block: 24px; --publication-space-section: 48px; }
+  html.anatomical-editorial main { padding-top: 32px; }
+}
+
+.report-method-heading h2 {
+  font: 700 clamp(30px, 3.8vw, 48px)/1.05 var(--sl-font-display);
+  letter-spacing: -.035em;
+  margin: 12px 0 0;
+  max-width: 20ch;
+}
+.report-method-prose > p { font: 1.17rem/1.62 var(--sl-font-prose); margin: 0; }
+@media (min-width: 1000px) {
+  .report-format-method .report-result-copy { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
+}
+@media (max-width: 999px) {
+  .report-method-prose { margin-top: var(--publication-space-block); }
+}

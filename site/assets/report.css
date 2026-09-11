@@ -1311,11 +1311,11 @@
 
 /* Each transition has one spacing owner, so nested margins cannot compound it. */
 .report-morphospace {
-  --report-reading-width: 48rem;
-  --report-figure-width: 64rem;
-  --report-paragraph-space: 16px;
-  --report-block-space: 32px;
-  --report-chapter-space: 64px;
+  --report-reading-width: 52rem;
+  --report-figure-width: 76rem;
+  --report-paragraph-space: var(--publication-space-prose);
+  --report-block-space: var(--publication-space-block);
+  --report-chapter-space: var(--publication-space-section);
 }
 .report-morphospace .report-main { gap: var(--report-chapter-space); }
 .report-morphospace .report-main > .report-nav { margin-bottom: 0; }
@@ -1360,7 +1360,7 @@
 .report-morphospace .report-fish-intro p,
 .report-morphospace .report-neighbors > .report-chart-note { max-width: none; margin-block: 0; font-size: 1.15rem; line-height: 1.7; }
 .report-morphospace .report-fish-source { margin: var(--report-block-space) 0 var(--report-paragraph-space); }
-.report-morphospace .report-image-credit { margin-block: 0; }
+.report-morphospace .report-image-credit { margin-block: 0; font-size: 15px; line-height: 1.6; }
 .report-morphospace .report-fish-lab { margin: var(--report-block-space) 0 0; }
 .report-morphospace .report-coordinate-comparison > .report-chart-note { margin-top: var(--report-block-space); }
 .report-morphospace .report-neighbor-pair { margin-top: var(--report-block-space); }
@@ -1372,6 +1372,13 @@
 .report-morphospace .report-neighbor-pair strong { display: block; }
 .report-morphospace .report-table--compact th:last-child { white-space: nowrap; }
 .report-morphospace #live-plate > h3 { margin-top: 0; }
-@media (max-width: 700px) {
-  .report-morphospace { --report-block-space: 24px; --report-chapter-space: 48px; }
+@media (min-width: 1000px) {
+  .report-morphospace .report-fish-intro {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 48px;
+    align-items: start;
+  }
+  .report-morphospace .report-fish-intro h3 { margin-bottom: 0; font-size: 2.3rem; }
 }
