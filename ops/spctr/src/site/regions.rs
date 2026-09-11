@@ -144,17 +144,15 @@ fn render_addenda_links(
 
 pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     let slices = records::slice_records(records);
-    let label_type = |r: &SiteRecord| r.labels.get("type").map_or("", String::as_str).to_owned();
     let mut blocks: Vec<String> = Vec::new();
     for record in &slices.visible_addenda {
-        let lt = label_type(record);
         let block = html! {
             article class="dossier-card" id=(record.slug) {
+                svg class="addendum-symbol" aria-hidden="true" {
+                    use href=(format!("/assets/addenda-symbols.svg?v=20260911#{}", record.slug)) {}
+                }
                 div class="dossier-card-header" {
                     div class="dossier-card-tab" {
-                        svg class="addendum-symbol" aria-hidden="true" {
-                            use href=(format!("/assets/addenda-symbols.svg#{}", match lt.as_str() { "research" => "research", "competition" => "competition", "dataset" => "dataset", _ => "tooling" })) {}
-                        }
                         @if let Some(ref sid) = record.series {
                             span class="series-badge" { (sid) }
                         }

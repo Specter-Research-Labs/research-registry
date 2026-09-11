@@ -62,3 +62,9 @@ The initial additions are the Geminidae-derived `4F18F1D6` and Kronidae-derived 
 Refresh the dossier counts with `uv run --with duckdb python dossiers/wonton-soup/paper/export_dossier_evidence.py --db <preserved-lake.duckdb>`, then run `spctr site build --write`. The exporter reuses the paper's completed-run selection, writes `site/assets/wonton-soup/dossier-evidence.json`, and replaces the marked evidence region in the dossier template. Do not edit those generated counts by hand.
 
 Repeated-seed trial counts, guided/blind tactic-attempt totals, and intervention survival have different denominators. Keep their labels attached. The featured `encode_inl` reroute is checked against original history hashes and recorded proof closure; its unchanged control blocks `decide`, already excluded by the baseline provider. The older full showcase and preprint retain their frozen figures; they are separate snapshots, not sources for a current-lake headline.
+
+## Addenda emblems
+
+`site/assets/addenda-symbols.svg` contains the original editorial emblems; symbol IDs match addendum slugs. Add a corresponding symbol when adding an addendum. These are schematic illustrations of the subjects, not measured results. Their engraved linework takes its visual cue from the recursive book illustration in the [SPECTER reference board](https://www.are.na/block/49421548).
+
+The index renderer places each emblem beside its entry using the shared layout in `site/assets/addenda.css`. Keep the SVG sprite as the artwork source, use the existing 160-unit viewBox, and check both the 144px desktop and 80px phone treatments. No drawing library or client-side generation is required.
