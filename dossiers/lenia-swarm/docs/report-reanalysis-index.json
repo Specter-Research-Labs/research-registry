@@ -6172,5 +6172,15 @@
       ]
     }
   ],
-  "pathValidationDate": "2026-09-11"
+  "pathValidationDate": "2026-09-11",
+  "morphospaceWarehouse": {
+    "access": "ssh",
+    "host": "macmini",
+    "path": "/Volumes/Addenda/archive/specter/lenia-swarm/warehouse-retention/v8/a09f700ca1e89a7b6a6c7266c7b8b482c9ccd52ecbe7fec2f765a4a5759dc0b9/morphospace-v8-schema8-pre-v9-20260712.duckdb",
+    "bytes": 281098072064,
+    "expectedSha256": "a09f700ca1e89a7b6a6c7266c7b8b482c9ccd52ecbe7fec2f765a4a5759dc0b9",
+    "remoteExistenceVerified": "2026-09-11",
+    "fullHashRecomputed": false,
+    "usage": "Open on the remote host with a read-only DuckDB connection."
+  }
 }

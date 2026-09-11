@@ -36,7 +36,7 @@ Fresh checkpoint validation (10 September 2026):
 
 ## Re-analysis source recovery
 
-The later [re-analysis handoff](report-reanalysis-handoff.md) locates the original causal campaign and compiler artifacts in sibling workspaces: all 81 causal source reports, all 49 synthesis source entries, and all 65 non-schematic compiler manifest entries match their hashes. Earlier notes below about absence refer to this website checkout, not loss of the original data. The exact Morphospace warehouse still requires the unmounted archive volume.
+The later [re-analysis handoff](report-reanalysis-handoff.md) locates the original causal campaign and compiler artifacts in sibling workspaces: all 81 causal source reports, all 49 synthesis source entries, and all 65 non-schematic compiler manifest entries match their hashes. Earlier notes below about absence refer to this website checkout, not loss of the original data. The exact Morphospace warehouse is available on the Addenda volume through `ssh macmini`; its remote existence and size were verified on 11 September 2026. Absence of a local mount is not a data-availability gap.
 
 ## Changes made
 
