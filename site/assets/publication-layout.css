@@ -590,7 +590,8 @@ html.anatomical-editorial .media-figure figcaption { font-size:15px; line-height
 :root {
   --publication-space-prose: 16px;
   --publication-space-block: 32px;
-  --publication-space-section: 64px;
+  --publication-space-topic: 64px;
+  --publication-space-section: 96px;
 }
 html.anatomical-editorial,
 html.synthesis-publication,
@@ -620,10 +621,10 @@ html body .fiber-page .site-main { display: grid; gap: var(--publication-space-s
 html body .fiber-page .site-main > * { margin-block: 0; min-width: 0; }
 html body .fiber-section h2 { padding-top: 24px; margin-bottom: var(--publication-space-prose); }
 html body .fiber-section > p { margin-block: var(--publication-space-prose); }
-html body .fiber-section .fiber-figure { margin-top: var(--publication-space-block); }
+html body .fiber-section .fiber-figure { margin-top: var(--publication-space-topic); }
 html body .fiber-section > :last-child { margin-bottom: 0; }
 @media (max-width: 700px) {
-  :root { --publication-space-block: 24px; --publication-space-section: 48px; }
+  :root { --publication-space-block: 24px; --publication-space-topic: 48px; --publication-space-section: 72px; }
   html.anatomical-editorial main { padding-top: 32px; }
 }
 
@@ -639,4 +640,17 @@ html body .fiber-section > :last-child { margin-bottom: 0; }
 }
 @media (max-width: 999px) {
   .report-method-prose { margin-top: var(--publication-space-block); }
+}
+
+/* New topics need a larger pause than the space inside an explanation. */
+html.anatomical-editorial main > section.shell > :is(figure, h3, .media-grid):not(:first-child),
+html.synthesis-publication body > main > .section > .wrap > :is(figure, .comparison-story):not(:first-child) {
+  margin-top: var(--publication-space-topic);
+}
+html.anatomical-editorial main > section.shell > .chapter-head + :is(figure, .media-grid),
+html.synthesis-publication body > main > .section > .wrap > .section-head + figure {
+  margin-top: var(--publication-space-block);
+}
+html body.report-format-method .report-result > figure {
+  margin-top: calc(var(--publication-space-topic) - var(--publication-space-block));
 }

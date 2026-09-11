@@ -1382,3 +1382,9 @@
   }
   .report-morphospace .report-fish-intro h3 { margin-bottom: 0; font-size: 2.3rem; }
 }
+
+.report-morphospace .report-result > :is(figure, .publication-measurement),
+.report-morphospace .report-result > .report-prose:has(> h3:first-child),
+.report-morphospace .report-result > figure + .report-prose {
+  margin-top: var(--publication-space-topic);
+}
