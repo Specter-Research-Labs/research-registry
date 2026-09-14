@@ -187,7 +187,7 @@ pub fn stage_library(
                 );
             }
             if !html.contains("/assets/publication-layout.css") {
-                html = html.replace("</head>", "<link rel=\"stylesheet\" href=\"/assets/publication-layout.css?v=20260909-curated\"></head>");
+                html = html.replace("</head>", "<link rel=\"stylesheet\" href=\"/assets/publication-layout.css?v=20260914-logo\"></head>");
             }
             html = html
                 .replace("href=\"index.html\"", "href=\"about.html\"")
@@ -558,7 +558,7 @@ fn render_context(
                 meta property="og:url" content=(&release_url);
                 title { (&report.title) " | SPECTER Labs" }
                 style { (maud::PreEscaped(CONTEXT_CSS)) }
-                link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated";
+                link rel="stylesheet" href="/assets/publication-layout.css?v=20260914-logo";
             }
             body class="publication-context" {
                 (maud::PreEscaped(include_str!("../../../../site/templates/publication-header.html")))
@@ -702,7 +702,7 @@ fn project_public_report(
     }
 
     if let Some(head_end) = projected.find("</head>") {
-        projected.insert_str(head_end, r#"<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="icon" href="/assets/logo-black.svg">"#);
+        projected.insert_str(head_end, r#"<link rel="stylesheet" href="/assets/publication-layout.css?v=20260914-logo"><link rel="icon" href="/assets/logo-black.svg">"#);
     }
     projected = Regex::new(r#"<a[^>]+href="https://releases\.specterlab\.org/cdn-cgi/[^>]+></a>"#)?
         .replace_all(&projected, "")
