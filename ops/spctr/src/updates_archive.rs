@@ -485,7 +485,7 @@ fn page_shell(title: &str, root_prefix: &str, body: Markup) -> String {
                 link rel="icon" href=(format!("{root_prefix}/assets/logo-black.svg")) type="image/svg+xml";
                 link rel="stylesheet" href=(format!("{root_prefix}/style.css"));
                 link rel="stylesheet" href=(format!("{root_prefix}/assets/editorial.css?v=20260909-3"));
-                link rel="stylesheet" href=(format!("{root_prefix}/assets/publication-layout.css?v=20260909-curated"));
+                link rel="stylesheet" href=(format!("{root_prefix}/assets/publication-layout.css?v=20260914-logo"));
             }
             body {
                 div class="site-shell" {
