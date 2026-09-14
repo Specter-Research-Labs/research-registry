@@ -1,0 +1,15 @@
+name = "lean_tactic_representation"
+version = "0.1.0"
+defaultTargets = ["tactic_bridge", "tactic_compile"]
+
+[[lean_lib]]
+name = "LeanTacticRepresentation"
+
+[[lean_exe]]
+name = "tactic_bridge"
+root = "LeanTacticRepresentation.Main"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "tactic_compile"
+root = "LeanTacticRepresentation.Compiler.Main"
