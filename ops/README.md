@@ -42,6 +42,13 @@ The intent is one obvious operational path, not a grab bag of parallel wrappers.
 
 Current Caddy wiring lives in `ops/spctr/dispatch/deploy/Caddyfile`.
 
+- `review.specterlab.org`
+  - private proposal review application
+  - uses a dedicated Cloudflare Origin CA certificate because Access protects the HTTP certificate-challenge path
+  - reverse-proxied to `127.0.0.1:8921`
+  - Cloudflare Access protects the complete hostname; the application independently verifies signed reviewer identity
+  - proposal artifacts and discussion stay outside the public site and release directories
+
 ## Request Path
 
 - Cloudflare terminates TLS, proxies the request, and applies cache rules.

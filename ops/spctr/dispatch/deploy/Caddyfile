@@ -23,3 +23,12 @@ releases.specterlab.org {
     encode zstd gzip
     file_server browse
 }
+
+review.specterlab.org {
+    tls /etc/caddy/certs/review.specterlab.org.pem /etc/caddy/certs/review.specterlab.org.key
+    encode zstd gzip
+    request_body {
+        max_size 40KB
+    }
+    reverse_proxy 127.0.0.1:8921
+}
