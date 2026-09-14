@@ -51,7 +51,8 @@ html body .site-brand {
 
 .site-brand .logo {
   width: var(--sl-layout-brand-size) !important;
-  height: var(--sl-layout-brand-size) !important;
+  height: auto !important;
+  flex: none;
 }
 
 html body .site-brand-name {
@@ -99,7 +100,8 @@ html .publication-brand {
 html .publication-brand img {
   display: block;
   width: var(--sl-layout-brand-size);
-  height: var(--sl-layout-brand-size);
+  height: auto;
+  flex: none;
   max-width: none;
 }
 
