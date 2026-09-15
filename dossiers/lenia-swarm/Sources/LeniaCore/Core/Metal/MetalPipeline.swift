@@ -1192,8 +1192,8 @@ final class FlowLeniaMetalFullPipeline {
                 float u20 = sampleU(u, batch, x + 1, y - 1, \(channel));
                 float u21 = sampleU(u, batch, x + 1, y, \(channel));
                 float u22 = sampleU(u, batch, x + 1, y + 1, \(channel));
-                float gxU = (u00 + 2.0f * u10 + u20) - (u02 + 2.0f * u12 + u22);
-                float gyU = (u00 + 2.0f * u01 + u02) - (u20 + 2.0f * u21 + u22);
+                float gxU = (u20 + 2.0f * u21 + u22) - (u00 + 2.0f * u01 + u02);
+                float gyU = (u02 + 2.0f * u12 + u22) - (u00 + 2.0f * u10 + u20);
                 float alphaSource = kAlphaPerChannel ? mass[massBase + \(channel)] : matterCenter;
                 float alphaBase = alphaSource / kThetaA;
                 float alpha = \(alphaPowerExpression);
@@ -1205,8 +1205,8 @@ final class FlowLeniaMetalFullPipeline {
                     flowX = metal::fmin(metal::fmax(flowX, -kMaxAdvection), kMaxAdvection);
                 }
                 int outputBase = flowIndex(batch, x, y, \(channel));
-                flow[outputBase] = flowY;
-                flow[outputBase + 1] = flowX;
+                flow[outputBase] = flowX;
+                flow[outputBase + 1] = flowY;
             }
             """
         }.joined(separator: "\n")
@@ -1216,8 +1216,8 @@ final class FlowLeniaMetalFullPipeline {
                             float sourceMass = mass[sourceMassBase + \(channel)];
                             if (sourceMass > 0.0f) {
                                 int sourceFlowIndex = sourceFlowBase + \(channel * 2);
-                                float flowY = flow[sourceFlowIndex];
-                                float flowX = flow[sourceFlowIndex + 1];
+                                float flowX = flow[sourceFlowIndex];
+                                float flowY = flow[sourceFlowIndex + 1];
                                 float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
                                 float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
 
@@ -1240,8 +1240,8 @@ final class FlowLeniaMetalFullPipeline {
                             float sourceMass = mass[sourceMassBase + \(channel)];
                             if (sourceMass > 0.0f) {
                                 int sourceFlowIndex = sourceFlowBase + \(channel * 2);
-                                float flowY = flow[sourceFlowIndex];
-                                float flowX = flow[sourceFlowIndex + 1];
+                                float flowX = flow[sourceFlowIndex];
+                                float flowY = flow[sourceFlowIndex + 1];
                                 float clippedY = metal::fmin(metal::fmax(flowY * kDt, -kMaxAdvection), kMaxAdvection);
                                 float clippedX = metal::fmin(metal::fmax(flowX * kDt, -kMaxAdvection), kMaxAdvection);
             \(reintegrateDistanceBody)
@@ -1483,8 +1483,8 @@ final class FlowLeniaMetalFullPipeline {
                 }
             }
 
-            float gxA = (matterGrid[0][0] + 2.0f * matterGrid[1][0] + matterGrid[2][0]) - (matterGrid[0][2] + 2.0f * matterGrid[1][2] + matterGrid[2][2]);
-            float gyA = (matterGrid[0][0] + 2.0f * matterGrid[0][1] + matterGrid[0][2]) - (matterGrid[2][0] + 2.0f * matterGrid[2][1] + matterGrid[2][2]);
+            float gxA = (matterGrid[2][0] + 2.0f * matterGrid[2][1] + matterGrid[2][2]) - (matterGrid[0][0] + 2.0f * matterGrid[0][1] + matterGrid[0][2]);
+            float gyA = (matterGrid[0][2] + 2.0f * matterGrid[1][2] + matterGrid[2][2]) - (matterGrid[0][0] + 2.0f * matterGrid[1][0] + matterGrid[2][0]);
             int massBase = massIndex(batch, x, y, 0);
             float matterCenter = matterGrid[1][1];
         \(flowChannelBodies)
@@ -1551,7 +1551,8 @@ final class FlowLeniaMetalFullPipeline {
             }
 
             int outputScalarIndex = scalarIndex(batch, x, y);
-            float denom = totalWeight > 1.0e-10f ? totalWeight : 1.0e-10f;
+            // Match the MLX weighted average, including near-empty transport cells.
+            float denom = totalWeight + 1.0e-10f;
             int outputParamBase = outputScalarIndex * kParamCount;
             if (kParameterMixMode == 0) {
                 for (int k = 0; k < kParamCount; ++k) {

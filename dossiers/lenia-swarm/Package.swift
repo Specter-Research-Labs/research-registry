@@ -99,7 +99,8 @@ let package = Package(
                 .product(name: "MLX", package: "mlx-swift"),
                 .product(name: "MLXFFT", package: "mlx-swift"),
             ],
-            path: "Tests/LeniaCoreTests"
+            path: "Tests/LeniaCoreTests",
+            resources: [.process("Fixtures")]
         ),
         .testTarget(
             name: "LeniaCLITests",

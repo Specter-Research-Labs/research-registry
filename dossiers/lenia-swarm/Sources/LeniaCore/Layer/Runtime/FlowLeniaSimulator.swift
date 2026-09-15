@@ -1637,7 +1637,8 @@ private func flowLeniaBuildCircularWallPotential(
                 dy = min(dy, Float(sy) - dy)
             }
             if dx * dx + dy * dy <= radiusSquared {
-                values[x * sy + y] = height
+                // A positive obstacle height lowers growth potential because flow ascends it.
+                values[x * sy + y] = -height
             }
         }
     }

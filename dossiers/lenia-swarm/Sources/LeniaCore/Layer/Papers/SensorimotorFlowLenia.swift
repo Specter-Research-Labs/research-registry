@@ -10,8 +10,7 @@ import MLXFFT
 // conserved, "death" is dispersal (the body spreads thin or fragments), not the
 // mass decay used by the asymptotic runner, so viability and the behavior
 // embedding are built from gyration and fragmentation rather than mass collapse.
-// Obstacles are positive wall potentials: mass flows down the growth potential
-// (a negative well attracts), so a positive hill repels mass and acts as a wall.
+// Flow ascends the growth potential, so obstacles lower it to repel matter.
 // CLI: discover sensorimotor-flowlenia.
 
 // MARK: - Physics core
@@ -84,13 +83,13 @@ func flowSensorimotorPosGrid(sx: Int, sy: Int) -> MLXArray {
     let coordsX = MLXArray((0..<sx).map { Float($0) })
     let coordsY = MLXArray((0..<sy).map { Float($0) })
     let (X, Y) = meshgrid(coordsX, coordsY)
-    var pos = MLX.stacked([Y, X], axis: -1) + MLXArray(Float(0.5))
+    var pos = MLX.stacked([X, Y], axis: -1) + MLXArray(Float(0.5))
     pos = pos.expandedDimensions(axis: 0)
     return pos.expandedDimensions(axis: -1)
 }
 
 // One differentiable, mass-conserving Flow-Lenia rollout. `initial` is
-// [1, sx, sy, channels]; `wallPotential` (positive inside obstacles) is added to
+// [1, sx, sy, channels]; `wallPotential` (negative inside obstacles) is added to
 // the growth potential so advection steers mass away from it. Returns the final
 // state [1, sx, sy, channels].
 func flowSensorimotorRollout(
@@ -597,7 +596,7 @@ func flowSensorimotorObstaclePotential(config: FlowSensorimotorConfig, rng: inou
                 let dr = row - cr
                 let dc = col - cc
                 if dr * dr + dc * dc <= radius * radius {
-                    field[row * sy + col] = height
+                    field[row * sy + col] = -height
                 }
             }
         }

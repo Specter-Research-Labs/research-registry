@@ -268,3 +268,6 @@ Run `LeniaCLI discover mutate --help` for all flags.
 - `config.json`: Mutated config
 - `params.json`: Extracted parameters
 - `mutation.json`: Mutation record
+
+Flow integrator conventions and the pinned author regression are documented in
+[Flow coordinates and the reference regression](docs/flow-spatial-conventions.md).

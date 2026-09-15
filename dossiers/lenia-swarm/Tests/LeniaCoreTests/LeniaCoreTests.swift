@@ -981,8 +981,8 @@ final class LeniaCoreTests: XCTestCase {
 
         let leftX = flow[0, 3, 2, 1].item(Float.self)
         let rightX = flow[0, 3, 4, 1].item(Float.self)
-        XCTAssertGreaterThan(leftX, 0.0)
-        XCTAssertLessThan(rightX, 0.0)
+        XCTAssertLessThan(leftX, 0.0)
+        XCTAssertGreaterThan(rightX, 0.0)
     }
 
     func testSampleOpenESNoiseUsesAntitheticPairs() {
@@ -2506,7 +2506,7 @@ final class LeniaCoreTests: XCTestCase {
         let fxYVal = fxY.asArray(Float.self)[0]
         let fxXVal = fxX.asArray(Float.self)[0]
 
-        XCTAssertGreaterThan(abs(fxYVal), 1e-3)
+        XCTAssertEqual(fxYVal, -8, accuracy: 1e-5)
         XCTAssertLessThan(abs(fxXVal), 1e-3)
 
         let F_y = computeFlow(
@@ -2534,7 +2534,7 @@ final class LeniaCoreTests: XCTestCase {
         let fyYVal = fyY.asArray(Float.self)[0]
         let fyXVal = fyX.asArray(Float.self)[0]
 
-        XCTAssertGreaterThan(abs(fyXVal), 1e-3)
+        XCTAssertEqual(fyXVal, -8, accuracy: 1e-5)
         XCTAssertLessThan(abs(fyYVal), 1e-3)
     }
 
@@ -8562,8 +8562,8 @@ private func flowSandboxReferenceSobel(_ A: MLXArray, gradientBoundary: String) 
         let a22 = rollMultiAxis(A, shifts: [-1, -1], axes: [1, 2])
 
         let two = MLXArray(Float(2.0))
-        let gx = (a00 + two * a10 + a20) - (a02 + two * a12 + a22)
-        let gy = (a00 + two * a01 + a02) - (a20 + two * a21 + a22)
+        let gx = (a02 + two * a12 + a22) - (a00 + two * a10 + a20)
+        let gy = (a20 + two * a21 + a22) - (a00 + two * a01 + a02)
         return MLX.stacked([gy, gx], axis: 3)
     default:
         fatalError("Test helper only supports periodic Sobel gradients.")
