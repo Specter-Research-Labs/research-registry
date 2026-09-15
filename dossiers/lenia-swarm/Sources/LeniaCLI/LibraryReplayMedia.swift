@@ -243,7 +243,7 @@ func renderLibraryReplayMediaBundle(
         bundle: bundle,
         specimenId: specimenId,
         videoURL: videoURL,
-        frameCount: frames.count,
+        capturedSteps: frames.map(\.step),
         fps: fps
     )
 
@@ -276,6 +276,7 @@ struct LibraryReplaySidecar: Codable {
     let configHash: String?
     let score: Float?
     let frames: Int
+    let capturedSteps: [Int]
     let fps: Int
     let videoPath: String
 
@@ -288,6 +289,7 @@ struct LibraryReplaySidecar: Codable {
         case configHash = "config_hash"
         case score
         case frames
+        case capturedSteps = "captured_steps"
         case fps
         case videoPath = "video_path"
     }
@@ -298,7 +300,7 @@ private func writeLibraryReplaySidecar(
     bundle: LibraryReplayBundle,
     specimenId: String,
     videoURL: URL,
-    frameCount: Int,
+    capturedSteps: [Int],
     fps: Int
 ) throws {
     let creature = bundle.entry.creature
@@ -310,7 +312,8 @@ private func writeLibraryReplaySidecar(
         creatureId: creature.id.uuidString,
         configHash: bundle.entry.configHash ?? creature.configHash,
         score: creature.score,
-        frames: frameCount,
+        frames: capturedSteps.count,
+        capturedSteps: capturedSteps,
         fps: fps,
         videoPath: videoURL.path
     )

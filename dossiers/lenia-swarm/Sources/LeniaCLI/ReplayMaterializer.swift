@@ -263,7 +263,16 @@ func executeReplayResolvedInput(
             name: sourceCreature.name,
             ownerId: sourceCreature.ownerId,
             result: resultData,
-            initialCondition: sourceCreature.initialCondition,
+            // Export configs can relocate or replace the archived patch. Media must
+            // replay the executed initialization, including the batch's actual seed.
+            initialCondition: InitConfig(
+                seed: replaySearchConfig.seedStart + (replaySearchConfig.initSeedOffset ?? 0),
+                patches: replayBaseConfig.`init`.patches,
+                a_uniform: replayBaseConfig.`init`.a_uniform,
+                p_uniform: replayBaseConfig.`init`.p_uniform,
+                state_patch: replayBaseConfig.`init`.state_patch,
+                p_state_patch: replayBaseConfig.`init`.p_state_patch
+            ),
             configHash: configHash,
             score: sourceCreature.score,
             scoreWeights: sourceCreature.scoreWeights

@@ -5,11 +5,11 @@ final class CapacityPilotTests: XCTestCase {
     func testSpatialTransformsPreserveChannelsAndInvertExactly() {
         let original = (0..<32).map(Float.init)
         var rotated = original
-        for _ in 0..<4 { rotated = capacityPilotTransform(rotated, side: 4, transpose: false) }
+        for _ in 0..<4 { rotated = capacityPilotTransform(rotated, side: 4, channels: 2, transpose: false) }
         XCTAssertEqual(rotated, original)
-        let transposed = capacityPilotTransform(original, side: 4, transpose: true)
-        XCTAssertEqual(capacityPilotTransform(transposed, side: 4, transpose: true), original)
-        let once = capacityPilotTransform(original, side: 4, transpose: false)
+        let transposed = capacityPilotTransform(original, side: 4, channels: 2, transpose: true)
+        XCTAssertEqual(capacityPilotTransform(transposed, side: 4, channels: 2, transpose: true), original)
+        let once = capacityPilotTransform(original, side: 4, channels: 2, transpose: false)
         XCTAssertEqual(once[(3 * 4) * 2], original[0])
         XCTAssertEqual(once[(3 * 4) * 2 + 1], original[1])
         for c in 0..<2 {
@@ -20,7 +20,7 @@ final class CapacityPilotTests: XCTestCase {
     func testBalancedWritePreservesVisibleMatterAndInventoriesAtRequestedDose() {
         let original: [Float] = (0..<128).map { Float(($0 * 17) % 29 + 1) / 29 }
         for mode in ["positive", "negative", "scrambled"] {
-            let edited = capacityPilotWrite(original, width: 8, height: 8, centerX: 3.5, mode: mode, dose: 0.04)
+            let edited = capacityPilotWrite(original, width: 8, height: 8, channels: 2, centerX: 3.5, mode: mode, dose: 0.04)
             var delta0 = 0.0, delta1 = 0.0, l1 = 0.0
             for i in stride(from: 0, to: original.count, by: 2) {
                 XCTAssertEqual(edited[i] + edited[i + 1], original[i] + original[i + 1], accuracy: 1e-6)
@@ -36,10 +36,39 @@ final class CapacityPilotTests: XCTestCase {
         }
     }
 
+    func testMultichannelWriteAndSpatialOperationsPreserveMatter() {
+        for channels in [3, 4] {
+            let original = (0..<(64 * channels)).map { Float(($0 * 17) % 29 + 1) / 29 }
+            for mode in ["positive", "negative", "scrambled"] {
+                let edited = capacityPilotWrite(original, width: 8, height: 8, channels: channels,
+                                               centerX: 3.5, mode: mode, dose: 0.04)
+                for i in stride(from: 0, to: original.count, by: channels) {
+                    XCTAssertEqual(edited[i..<(i + channels)].reduce(0, +),
+                                   original[i..<(i + channels)].reduce(0, +), accuracy: 1e-6)
+                    for c in 2..<channels { XCTAssertEqual(edited[i + c], original[i + c]) }
+                }
+                for c in 0..<channels {
+                    let difference = stride(from: c, to: original.count, by: channels)
+                        .reduce(0.0) { $0 + Double(edited[$1]) - Double(original[$1]) }
+                    XCTAssertEqual(difference, 0, accuracy: 1e-5)
+                }
+                XCTAssertGreaterThanOrEqual(edited.min()!, 0)
+                let dose = zip(original, edited).reduce(0.0) { $0 + abs(Double($1.0) - Double($1.1)) }
+                    / original.reduce(0.0) { $0 + Double($1) }
+                XCTAssertEqual(dose, 0.04, accuracy: 1e-6)
+            }
+            let shifted = capacityPilotShear(original, width: 8, height: 8, channels: channels, centerX: 3.5, amount: 0.3)
+            XCTAssertEqual(capacityPilotShear(shifted, width: 8, height: 8, channels: channels, centerX: 3.5, amount: -0.3), original)
+            var rotated = original
+            for _ in 0..<4 { rotated = capacityPilotTransform(rotated, side: 8, channels: channels, transpose: false) }
+            XCTAssertEqual(rotated, original)
+        }
+    }
+
     func testShearIsInvertibleAndPreservesEveryChannelValue() {
         let original = (0..<128).map { Float($0) / 128 }
-        let edited = capacityPilotShear(original, width: 8, height: 8, centerX: 3.5, amount: 0.3)
-        let reversed = capacityPilotShear(edited, width: 8, height: 8, centerX: 3.5, amount: -0.3)
+        let edited = capacityPilotShear(original, width: 8, height: 8, channels: 2, centerX: 3.5, amount: 0.3)
+        let reversed = capacityPilotShear(edited, width: 8, height: 8, channels: 2, centerX: 3.5, amount: -0.3)
         XCTAssertEqual(original, reversed)
         XCTAssertNotEqual(original, edited)
     }
