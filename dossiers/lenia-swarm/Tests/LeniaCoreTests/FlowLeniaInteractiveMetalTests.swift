@@ -7,6 +7,82 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
         try LeniaMetalLibrarySupport.ensureAvailable()
     }
 
+
+    func testMatchesPinnedAuthorJAXAtOneAndEightSteps() throws {
+        struct Fixture: Decodable {
+            let input: String
+            let steps: [String: String]
+        }
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "flowlenia-author", withExtension: "json"))
+        let fixture = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
+        func field(_ encoded: String) throws -> MLXArray {
+            let data = try XCTUnwrap(Data(base64Encoded: encoded))
+            let values = data.withUnsafeBytes { bytes in
+                stride(from: 0, to: bytes.count, by: 4).map {
+                    Float(bitPattern: UInt32(littleEndian: bytes.loadUnaligned(fromByteOffset: $0, as: UInt32.self)))
+                }
+            }
+            return MLXArray(values).reshaped([32, 32, 2])
+        }
+        let runtime = interactiveRuntimeConfig(backend: .mlx, authorReference: true)
+        let cfg = batchedConfigFromRuntime(runtime)
+        let kernels = compileKernels(params: runtime.params, config: cfg, c0: runtime.c0, c1: runtime.c1)
+        let direct = FlowLeniaBatched(config: cfg, kernels: kernels)
+        var state = try field(fixture.input).expandedDimensions(axis: 0)
+        for step in 1...8 {
+            state = direct.stepUncompiled(state)
+            if step == 1 || step == 8 {
+                let difference = maxAbsDifference(state[0], try field(XCTUnwrap(fixture.steps[String(step)])))
+                print("AUTHOR_REFERENCE backend=mlx-uncompiled step=\(step) max_abs=\(difference)")
+                XCTAssertLessThan(difference, 1e-4)
+            }
+        }
+        for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
+            let simulator = FlowLeniaInteractiveSimulator(
+                runtimeConfig: interactiveRuntimeConfig(backend: backend, authorReference: true))
+            let initial = FlowLeniaInteractiveState(step: 0, mass: try field(fixture.input), params: nil, food: nil)
+            for step in [1, 8] {
+                let actual = simulator.step(initial, count: step)
+                let expected = try field(XCTUnwrap(fixture.steps[String(step)]))
+                let difference = maxAbsDifference(actual.mass, expected)
+                print("AUTHOR_REFERENCE backend=\(backend) step=\(step) max_abs=\(difference)")
+                XCTAssertLessThan(difference, 1e-4)
+            }
+        }
+    }
+
+    func testQuarterTurnAndReflectionCommuteWithOneStep() {
+        let n = 32, channels = 2
+        func transform(_ a: MLXArray, reflect: Bool) -> MLXArray {
+            let input = a.asArray(Float.self)
+            var output = input
+            for x in 0..<n { for y in 0..<n { for c in 0..<channels {
+                let tx = reflect ? n - 1 - x : n - 1 - y
+                let ty = reflect ? y : x
+                output[(tx * n + ty) * channels + c] = input[(x * n + y) * channels + c]
+            } } }
+            return MLXArray(output).reshaped([n, n, channels])
+        }
+        for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
+            for embedded in [false, true] {
+                let simulator = FlowLeniaInteractiveSimulator(
+                    runtimeConfig: interactiveRuntimeConfig(backend: backend, embedded: embedded))
+                let initial = simulator.makeInitialState()
+                // Uniform embedded weights keep the rule identical under spatial transforms.
+                let params = initial.params.map { MLX.ones(like: $0) * Float(0.4) }
+                let base = FlowLeniaInteractiveState(step: 0, mass: initial.mass, params: params, food: nil)
+                let advanced = simulator.step(base)
+                for reflect in [false, true] {
+                    let turned = FlowLeniaInteractiveState(step: 0,
+                        mass: transform(base.mass, reflect: reflect), params: params, food: nil)
+                    let actual = simulator.step(turned)
+                    XCTAssertLessThan(maxAbsDifference(actual.mass, transform(advanced.mass, reflect: reflect)),
+                                      1e-4, "backend=\(backend), embedded=\(embedded), reflect=\(reflect)")
+                }
+            }
+        }
+    }
+
     func testResidentMetalCountMatchesSequentialAndResynchronizesBranches() {
         let metalConfig = interactiveRuntimeConfig(backend: .metalFull)
         let batchedSimulator = FlowLeniaInteractiveSimulator(runtimeConfig: metalConfig)
@@ -229,7 +305,8 @@ private func interactiveRuntimeConfig(
     embedded: Bool = false,
     mix: String = "avg",
     includeFoodAndWalls: Bool = false,
-    environment: EnvironmentConfig? = nil
+    environment: EnvironmentConfig? = nil,
+    authorReference: Bool = false
 ) -> LeniaRuntimeConfig {
     let params = ResolvedParams(
         r: [0.42, 0.55, 0.68, 0.81],
@@ -254,7 +331,7 @@ private func interactiveRuntimeConfig(
         sy: 32,
         channels: 2,
         nbK: 4,
-        profile: includeFoodAndWalls ? .experimental : .paper,
+        profile: includeFoodAndWalls || authorReference ? .experimental : .paper,
         c0: connectivity.c0,
         c1: connectivity.c1,
         dt: 0.2,
@@ -262,13 +339,13 @@ private func interactiveRuntimeConfig(
         sigma: 0.65,
         n: 2,
         thetaA: 2,
-        border: "torus",
+        border: authorReference ? "wall" : "torus",
         implementation: ImplementationSettings(
-            mode: "flowlenia_2022_paper_equations",
-            border: "torus",
-            gradientBoundary: "periodic",
-            alphaMode: "mass",
-            kernelProfile: "flowlenia_2022_paper_equations",
+            mode: authorReference ? "custom" : "flowlenia_2022_paper_equations",
+            border: authorReference ? "wall" : "torus",
+            gradientBoundary: authorReference ? "zero_pad" : "periodic",
+            alphaMode: authorReference ? "per_channel" : "mass",
+            kernelProfile: authorReference ? "flowlenia_2022_colab" : "flowlenia_2022_paper_equations",
             flowClip: "none"
         ),
         params: params,

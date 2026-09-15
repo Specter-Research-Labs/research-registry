@@ -117,7 +117,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         }
     }
 
-    func testPositiveWallPotentialProducesRepulsiveFlow() {
+    func testNegativeGrowthPotentialProducesRepulsiveFlow() {
         let cfg = config()
         let p = ruleParams()
         let maps = channelMaps()
@@ -128,10 +128,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         // mass gradient.
         let field = MLXArray([Float](repeating: 0.02, count: sx * sy)).reshaped([1, sx, sy, 1])
 
-        // Positive Gaussian hill at the center. Mass flows down the potential (a
-        // negative well attracts), so an obstacle must be a positive potential
-        // hill: flow near it points outward, away from the obstacle. This is the
-        // repulsion the runner relies on.
+        // Flow ascends growth potential; a negative Gaussian well must repel.
         let cx = Float(sx / 2)
         let cy = Float(sy / 2)
         var hill = [Float](repeating: 0.0, count: sx * sy)
@@ -139,7 +136,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
             for col in 0..<sy {
                 let dr = Float(row) - cx
                 let dc = Float(col) - cy
-                hill[row * sy + col] = 30.0 * exp(-(dr * dr + dc * dc) / (2.0 * 8.0 * 8.0))
+                hill[row * sy + col] = -30.0 * exp(-(dr * dr + dc * dc) / (2.0 * 8.0 * 8.0))
             }
         }
         let wallPotential = MLXArray(hill).reshaped([1, sx, sy, 1])
@@ -167,8 +164,8 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         let belowDy = dy[sx / 2 + offset, sy / 2].item(Float.self)
         let aboveDy = dy[sx / 2 - offset, sy / 2].item(Float.self)
 
-        XCTAssertGreaterThan(rightDx, 0.0, "flow right of a positive obstacle must point right (outward)")
-        XCTAssertLessThan(leftDx, 0.0, "flow left of a positive obstacle must point left (outward)")
+        XCTAssertGreaterThan(rightDx, 0.0, "flow right of a negative growth well must point right (outward)")
+        XCTAssertLessThan(leftDx, 0.0, "flow left of a negative growth well must point left (outward)")
         XCTAssertGreaterThan(belowDy, 0.0, "flow below a positive obstacle must point down (outward)")
         XCTAssertLessThan(aboveDy, 0.0, "flow above a positive obstacle must point up (outward)")
     }
