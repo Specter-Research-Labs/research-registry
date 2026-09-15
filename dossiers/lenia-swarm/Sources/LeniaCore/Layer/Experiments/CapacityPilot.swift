@@ -21,10 +21,10 @@ public struct CapacityPilotBranch: Codable {
 }
 
 // Pair equal and opposite transfers so every cell retains its total matter and
-// the two channel inventories stay fixed. The dose counts both channel edits.
-public func capacityPilotWrite(_ values: [Float], width: Int, height: Int,
+// channel inventories stay fixed. Only channels 0 and 1 exchange matter. The dose counts both channel edits.
+public func capacityPilotWrite(_ values: [Float], width: Int, height: Int, channels: Int,
                                centerX: Float, mode: String, dose: Double) -> [Float] {
-    precondition(values.count == width * height * 2 && dose >= 0 && dose < 1)
+    precondition(channels >= 2 && values.count == width * height * channels && dose >= 0 && dose < 1)
     precondition(["positive", "negative", "scrambled"].contains(mode))
     let total = values.reduce(0.0) { $0 + Double($1) }
     var positive = [Bool](repeating: false, count: width * height)
@@ -34,31 +34,31 @@ public func capacityPilotWrite(_ values: [Float], width: Int, height: Int,
         let hashed = (UInt64(i) &* 2654435761) ^ (UInt64(i) >> 3)
         positive[i] = mode == "scrambled" ? (hashed % 2 == 0) :
             (mode == "positive" ? Float(x) >= centerX : Float(x) < centerX)
-        if positive[i] { plus += Double(values[2 * i + 1]) }
-        else { minus += Double(values[2 * i]) }
+        if positive[i] { plus += Double(values[channels * i + 1]) }
+        else { minus += Double(values[channels * i]) }
     }
     let amount = min(total * dose / 4, min(plus, minus) * 0.95)
     guard amount > 0 else { return values }
     var result = values
     for i in positive.indices {
-        let a = Double(values[2 * i]), b = Double(values[2 * i + 1])
+        let a = Double(values[channels * i]), b = Double(values[channels * i + 1])
         let delta = positive[i] ? amount * b / plus : -amount * a / minus
-        result[2 * i] = Float(a + delta)
-        result[2 * i + 1] = Float(b - delta)
+        result[channels * i] = Float(a + delta)
+        result[channels * i + 1] = Float(b - delta)
     }
     return result
 }
 
-public func capacityPilotShear(_ values: [Float], width: Int, height: Int,
+public func capacityPilotShear(_ values: [Float], width: Int, height: Int, channels: Int,
                                centerX: Float, amount: Float) -> [Float] {
-    precondition(values.count == width * height * 2)
+    precondition(channels >= 2 && values.count == width * height * channels)
     var result = values
     for x in 0..<width {
         let shift = Int((amount * (Float(x) - centerX)).rounded())
         for y in 0..<height {
             let destinationY = ((y + shift) % height + height) % height
-            for channel in 0..<2 {
-                result[(x * height + destinationY) * 2 + channel] = values[(x * height + y) * 2 + channel]
+            for channel in 0..<channels {
+                result[(x * height + destinationY) * channels + channel] = values[(x * height + y) * channels + channel]
             }
         }
     }
@@ -69,17 +69,21 @@ public final class CapacityPilotHarness {
     private let simulator: FlowLeniaInteractiveSimulator
     private let width: Int
     private let height: Int
+    private let channelCount: Int
 
     public init(config: LeniaRuntimeConfig) {
-        precondition(config.channels == 2)
+        precondition(config.channels >= 2)
         simulator = FlowLeniaInteractiveSimulator(runtimeConfig: config)
         width = config.sx
         height = config.sy
+        channelCount = config.channels
     }
 
     private func frame(_ state: FlowLeniaInteractiveState, relativeStep: Int) -> CapacityPilotFrame {
         let channels = state.mass.asArray(Float.self)
-        let values = stride(from: 0, to: channels.count, by: 2).map { channels[$0] + channels[$0 + 1] }
+        let values = stride(from: 0, to: channels.count, by: channelCount).map { start in
+            channels[start..<(start + channelCount)].reduce(0, +)
+        }
         let body = unseenObstacleLargestBody(values: values, width: width, height: height,
                                              threshold: 0.01, periodic: false)
         var image = [Float](repeating: 0, count: 128 * 128)
@@ -90,7 +94,7 @@ public final class CapacityPilotHarness {
         }
         return CapacityPilotFrame(step: relativeStep,
             mass: channels.reduce(0.0) { $0 + Double($1) },
-            channel0: stride(from: 0, to: channels.count, by: 2).reduce(0.0) { $0 + Double(channels[$1]) },
+            channel0: stride(from: 0, to: channels.count, by: channelCount).reduce(0.0) { $0 + Double(channels[$1]) },
             radius95: body?.radius95, coherence: body?.massFraction,
             centerX: body?.center.x, centerY: body?.center.y, image: image)
     }
@@ -105,26 +109,19 @@ public final class CapacityPilotHarness {
                           userInfo: [NSLocalizedDescriptionKey: "No thresholded body at checkpoint"])
         }
         try original.withUnsafeBytes { try Data($0).write(to: output.appendingPathComponent("checkpoint.f32")) }
-        let total = checkpointFrame.mass
         let branches: [(String, [Float], Int)] = [
             ("sham", original, horizon),
-            ("probe-positive", capacityPilotShear(original, width: width, height: height, centerX: centerX, amount: 0.10), 128),
-            ("probe-negative", capacityPilotShear(original, width: width, height: height, centerX: centerX, amount: -0.10), 128),
-            ("challenge-positive", capacityPilotShear(original, width: width, height: height, centerX: centerX, amount: 0.30), horizon),
-            ("challenge-negative", capacityPilotShear(original, width: width, height: height, centerX: centerX, amount: -0.30), horizon),
-            ("write-positive", capacityPilotWrite(original, width: width, height: height, centerX: centerX, mode: "positive", dose: 0.04), horizon),
-            ("write-negative", capacityPilotWrite(original, width: width, height: height, centerX: centerX, mode: "negative", dose: 0.04), horizon),
-            ("write-scrambled", capacityPilotWrite(original, width: width, height: height, centerX: centerX, mode: "scrambled", dose: 0.04), horizon)
+            ("probe-positive", capacityPilotShear(original, width: width, height: height, channels: channelCount, centerX: centerX, amount: 0.10), 128),
+            ("probe-negative", capacityPilotShear(original, width: width, height: height, channels: channelCount, centerX: centerX, amount: -0.10), 128),
+            ("challenge-positive", capacityPilotShear(original, width: width, height: height, channels: channelCount, centerX: centerX, amount: 0.30), horizon),
+            ("challenge-negative", capacityPilotShear(original, width: width, height: height, channels: channelCount, centerX: centerX, amount: -0.30), horizon),
+            ("write-positive", capacityPilotWrite(original, width: width, height: height, channels: channelCount, centerX: centerX, mode: "positive", dose: 0.04), horizon),
+            ("write-negative", capacityPilotWrite(original, width: width, height: height, channels: channelCount, centerX: centerX, mode: "negative", dose: 0.04), horizon),
+            ("write-scrambled", capacityPilotWrite(original, width: width, height: height, channels: channelCount, centerX: centerX, mode: "scrambled", dose: 0.04), horizon)
         ]
         for (name, values, steps) in branches {
-            var visible = 0.0, edit = 0.0, channelDifference = 0.0
-            for i in stride(from: 0, to: values.count, by: 2) {
-                visible += abs(Double(values[i] + values[i + 1]) - Double(original[i] + original[i + 1]))
-                edit += abs(Double(values[i]) - Double(original[i])) + abs(Double(values[i + 1]) - Double(original[i + 1]))
-                channelDifference += Double(values[i]) - Double(original[i])
-            }
-            guard abs(channelDifference) / total < 1e-6,
-                  !name.hasPrefix("write") || visible / total < 1e-6 else {
+            let (visible, edit, inventory) = editMetrics(original, values)
+            guard inventory < 1e-6, !name.hasPrefix("write") || visible < 1e-6 else {
                 throw NSError(domain: "CapacityPilot", code: 2,
                               userInfo: [NSLocalizedDescriptionKey: "Intervention invariant failed"])
             }
@@ -138,8 +135,8 @@ public final class CapacityPilotHarness {
             try state.mass.asArray(Float.self).withUnsafeBytes {
                 try Data($0).write(to: output.appendingPathComponent("\(name)-final.f32"))
             }
-            try emit(CapacityPilotBranch(name: name, visibleEditL1: visible / total,
-                channelEditL1: edit / total, channelInventoryError: abs(channelDifference) / total, frames: frames))
+            try emit(CapacityPilotBranch(name: name, visibleEditL1: visible,
+                channelEditL1: edit, channelInventoryError: inventory, frames: frames))
         }
         let replay = simulator.step(FlowLeniaInteractiveState(step: checkpoint.step,
             mass: MLXArray(original, checkpoint.mass.shape), params: checkpoint.params, food: checkpoint.food), count: 32)
@@ -152,14 +149,14 @@ public final class CapacityPilotHarness {
     }
 }
 
-public func capacityPilotTransform(_ values: [Float], side: Int, transpose: Bool) -> [Float] {
-    precondition(values.count == side * side * 2)
+public func capacityPilotTransform(_ values: [Float], side: Int, channels: Int, transpose: Bool) -> [Float] {
+    precondition(channels >= 2 && values.count == side * side * channels)
     var result = values
     for x in 0..<side {
         for y in 0..<side {
             let tx = transpose ? y : side - 1 - y
             let ty = x
-            for c in 0..<2 { result[(tx * side + ty) * 2 + c] = values[(x * side + y) * 2 + c] }
+            for c in 0..<channels { result[(tx * side + ty) * channels + c] = values[(x * side + y) * channels + c] }
         }
     }
     return result
@@ -178,13 +175,19 @@ extension CapacityPilotHarness {
 
     private func editMetrics(_ original: [Float], _ values: [Float]) -> (Double, Double, Double) {
         let total = original.reduce(0.0) { $0 + Double($1) }
-        var visible = 0.0, edit = 0.0, inventory = 0.0
-        for i in stride(from: 0, to: values.count, by: 2) {
-            visible += abs(Double(values[i] + values[i + 1]) - Double(original[i] + original[i + 1]))
-            edit += abs(Double(values[i]) - Double(original[i])) + abs(Double(values[i + 1]) - Double(original[i + 1]))
-            inventory += Double(values[i]) - Double(original[i])
+        var visible = 0.0, edit = 0.0
+        var inventory = [Double](repeating: 0, count: channelCount)
+        for i in stride(from: 0, to: values.count, by: channelCount) {
+            let before = original[i..<(i + channelCount)].reduce(0, +)
+            let after = values[i..<(i + channelCount)].reduce(0, +)
+            visible += abs(Double(after) - Double(before))
+            for c in 0..<channelCount {
+                let delta = Double(values[i + c]) - Double(original[i + c])
+                edit += abs(delta)
+                inventory[c] += delta
+            }
         }
-        return (visible / total, edit / total, abs(inventory) / total)
+        return (visible / total, edit / total, inventory.map { abs($0) }.max()! / total)
     }
 
     private func continueBranch(_ source: FlowLeniaInteractiveState, values: [Float], name: String,
@@ -217,11 +220,11 @@ extension CapacityPilotHarness {
             let values = source.mass.asArray(Float.self)
             let total = values.reduce(0.0) { $0 + Double($1) }
             for transpose in [false, true] {
-                let transformed = capacityPilotTransform(values, side: width, transpose: transpose)
+                let transformed = capacityPilotTransform(values, side: width, channels: channelCount, transpose: transpose)
                 for steps in [1, 8, 32] {
                     let direct = simulator.step(copied(source, values: values), count: steps)
                     let other = simulator.step(copied(source, values: transformed), count: steps)
-                    let expected = capacityPilotTransform(direct.mass.asArray(Float.self), side: width, transpose: transpose)
+                    let expected = capacityPilotTransform(direct.mass.asArray(Float.self), side: width, channels: channelCount, transpose: transpose)
                     let actual = other.mass.asArray(Float.self)
                     let difference = zip(expected, actual).map { abs(Double($0) - Double($1)) }
                     rows.append(["age": age, "transform": transpose ? "transpose" : "quarter-turn", "steps": steps,
@@ -246,7 +249,7 @@ extension CapacityPilotHarness {
             try continueBranch(ageState, values: values, name: prefix + "-sham", steps: horizon, output: output, emit: emit)
             for (direction, sign): (String, Float) in [("positive", 1), ("negative", -1)] {
                 for (kind, dose, steps): (String, Float, Int) in [("probe", 0.1, 128), ("challenge", 0.3, horizon)] {
-                    let edited = capacityPilotShear(values, width: width, height: height, centerX: center, amount: sign * dose)
+                    let edited = capacityPilotShear(values, width: width, height: height, channels: channelCount, centerX: center, amount: sign * dose)
                     try continueBranch(ageState, values: edited, name: prefix + "-" + kind + "-" + direction,
                                        steps: steps, output: output, emit: emit)
                 }
@@ -257,7 +260,7 @@ extension CapacityPilotHarness {
         var events: [[String: Any]] = []
         for condition in ["sham", "positive", "negative", "scrambled", "positive-immediate-undo", "positive-then-negative", "scrambled-twice"] {
             let mode = condition.hasPrefix("positive") ? "positive" : (condition.hasPrefix("scrambled") ? "scrambled" : condition)
-            var values = mode == "sham" ? original : capacityPilotWrite(original, width: width, height: height, centerX: center, mode: mode, dose: 0.04)
+            var values = mode == "sham" ? original : capacityPilotWrite(original, width: width, height: height, channels: channelCount, centerX: center, mode: mode, dose: 0.04)
             let first = editMetrics(original, values)
             guard first.0 < 1e-6, first.2 < 1e-6 else { throw NSError(domain: "CapacityPilot", code: 6) }
             events.append(["condition": condition, "step": 0, "visibleL1": first.0, "channelL1": first.1, "inventoryError": first.2])
@@ -270,7 +273,7 @@ extension CapacityPilotHarness {
                 if t == 128 && ["positive-then-negative", "scrambled-twice"].contains(condition) {
                     let before = state.mass.asArray(Float.self)
                     guard let x = frame(state, relativeStep: t).centerX else { throw NSError(domain: "CapacityPilot", code: 5) }
-                    let after = capacityPilotWrite(before, width: width, height: height, centerX: x,
+                    let after = capacityPilotWrite(before, width: width, height: height, channels: channelCount, centerX: x,
                                                   mode: condition == "scrambled-twice" ? "scrambled" : "negative", dose: 0.04)
                     let edit = editMetrics(before, after)
                     guard edit.0 < 1e-6, edit.2 < 1e-6 else { throw NSError(domain: "CapacityPilot", code: 6) }
@@ -287,7 +290,7 @@ extension CapacityPilotHarness {
             guard let x = frame(state, relativeStep: 0).centerX else { throw NSError(domain: "CapacityPilot", code: 5) }
             try continueBranch(state, values: waiting, name: prefix + "-unchallenged", steps: horizon, output: output, emit: emit)
             for (direction, sign): (String, Float) in [("positive", 1), ("negative", -1)] {
-                let edited = capacityPilotShear(waiting, width: width, height: height, centerX: x, amount: sign * 0.3)
+                let edited = capacityPilotShear(waiting, width: width, height: height, channels: channelCount, centerX: x, amount: sign * 0.3)
                 try continueBranch(state, values: edited, name: prefix + "-challenge-" + direction,
                                    steps: horizon, output: output, emit: emit)
             }

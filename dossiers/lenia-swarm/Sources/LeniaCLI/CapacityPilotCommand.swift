@@ -38,11 +38,11 @@ struct CapacityPilotCommand: ParsableCommand {
             }
             overrides["backend"] = "metal-full"
             let runtime = try loadRuntimeConfig(from: source, overrides: overrides)
-            guard runtime.channels == 2, runtime.border == "wall",
+            guard runtime.channels >= 2, runtime.border == "wall",
                   runtime.environment == nil, runtime.walls?.enabled != true,
                   runtime.obstacleField?.enabled != true, runtime.interventions.isEmpty,
                   FlowLeniaInteractiveSimulator.supportsResidentMetal(runtime) else {
-                throw ValidationError("pilot requires supported two-channel Metal runtime in a clean wall arena")
+                throw ValidationError("pilot requires supported multi-channel Metal runtime in a clean wall arena")
             }
             try JSONSerialization.data(withJSONObject: ["source": JSONSerialization.jsonObject(with: source),
                 "overrides": overrides], options: [.sortedKeys]).write(to: directory.appendingPathComponent("runtime-inputs.json"))
