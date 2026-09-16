@@ -619,7 +619,7 @@ final class FlowLeniaMetalFullPipeline {
         return firstChannel
     }
 
-    func readFlow(batchCount: Int) -> [Float] {
+    func readFlow(batchCount: Int, allChannels: Bool = false) -> [Float] {
         let values = Self.copyFloatsFromGPUBuffer(
             flowBuffer,
             count: batchCount * config.sx * config.sy * channelCount * 2,
@@ -627,7 +627,7 @@ final class FlowLeniaMetalFullPipeline {
             commandQueue: commandQueue,
             label: "flow-metal.flow"
         )
-        if channelCount == 1 {
+        if allChannels || channelCount == 1 {
             return values
         }
         var firstChannel = [Float](repeating: 0, count: batchCount * config.sx * config.sy * 2)

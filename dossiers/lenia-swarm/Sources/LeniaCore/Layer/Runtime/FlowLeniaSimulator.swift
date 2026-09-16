@@ -745,6 +745,11 @@ public final class FlowLeniaInteractiveSimulator {
         )
     }
 
+    func capacityPilotLastFlow() -> [Float] {
+        guard let metalRunner else { preconditionFailure("Transport tracing requires resident Metal") }
+        return metalRunner.materializeLastFlow()
+    }
+
     public func step(_ state: FlowLeniaInteractiveState) -> FlowLeniaInteractiveState {
         step(state, count: 1)
     }
