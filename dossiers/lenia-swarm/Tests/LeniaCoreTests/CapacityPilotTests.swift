@@ -65,6 +65,17 @@ final class CapacityPilotTests: XCTestCase {
         }
     }
 
+    func testSingleChannelShearUsesShortestPeriodicDistanceAtSeam() {
+        var field = [Float](repeating: 0, count: 8 * 8)
+        field[7 * 8 + 3] = 1
+        let edited = capacityPilotShear(field, width: 8, height: 8, channels: 1,
+                                         centerX: 0, amount: 0.6, periodic: true)
+        XCTAssertEqual(edited[7 * 8 + 2], 1)
+        XCTAssertEqual(edited.reduce(0, +), 1)
+        XCTAssertEqual(capacityPilotShear(edited, width: 8, height: 8, channels: 1,
+                                          centerX: 0, amount: -0.6, periodic: true), field)
+    }
+
     func testShearIsInvertibleAndPreservesEveryChannelValue() {
         let original = (0..<128).map { Float($0) / 128 }
         let edited = capacityPilotShear(original, width: 8, height: 8, channels: 2, centerX: 3.5, amount: 0.3)

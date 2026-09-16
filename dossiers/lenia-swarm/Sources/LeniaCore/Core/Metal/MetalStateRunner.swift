@@ -445,6 +445,10 @@ final class FlowLeniaMetalFullStateRunner {
         )
     }
 
+    func materializeLastFlow() -> [Float] {
+        pipeline.readFlow(batchCount: batchCount, allChannels: true)
+    }
+
     func materializeState() -> (mass: MLXArray, params: MLXArray) {
         let cellCount = batchCount * config.sx * config.sy
         let massCount = cellCount * channelCount

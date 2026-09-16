@@ -1,5 +1,6 @@
 import Foundation
 import MLX
+import MLXFFT
 
 public struct CapacityPilotFrame: Codable {
     public let step: Int
@@ -50,11 +51,13 @@ public func capacityPilotWrite(_ values: [Float], width: Int, height: Int, chann
 }
 
 public func capacityPilotShear(_ values: [Float], width: Int, height: Int, channels: Int,
-                               centerX: Float, amount: Float) -> [Float] {
-    precondition(channels >= 2 && values.count == width * height * channels)
+                               centerX: Float, amount: Float, periodic: Bool = false) -> [Float] {
+    precondition(channels >= 1 && values.count == width * height * channels)
     var result = values
     for x in 0..<width {
-        let shift = Int((amount * (Float(x) - centerX)).rounded())
+        let offset = Float(x) - centerX
+        let distance = periodic ? periodicDelta(offset, period: Float(width)) : offset
+        let shift = Int((amount * distance).rounded())
         for y in 0..<height {
             let destinationY = ((y + shift) % height + height) % height
             for channel in 0..<channels {
@@ -72,7 +75,7 @@ public final class CapacityPilotHarness {
     private let channelCount: Int
 
     public init(config: LeniaRuntimeConfig) {
-        precondition(config.channels >= 2)
+        precondition(config.channels >= 1)
         simulator = FlowLeniaInteractiveSimulator(runtimeConfig: config)
         width = config.sx
         height = config.sy
@@ -85,7 +88,7 @@ public final class CapacityPilotHarness {
             channels[start..<(start + channelCount)].reduce(0, +)
         }
         let body = unseenObstacleLargestBody(values: values, width: width, height: height,
-                                             threshold: 0.01, periodic: false)
+                                             threshold: 0.01, periodic: simulator.runtimeConfig.border == "torus")
         var image = [Float](repeating: 0, count: 128 * 128)
         for x in 0..<width {
             for y in 0..<height {
@@ -191,24 +194,80 @@ extension CapacityPilotHarness {
     }
 
     private func continueBranch(_ source: FlowLeniaInteractiveState, values: [Float], name: String,
-                                steps: Int, output: URL, emit: (CapacityPilotBranch) throws -> Void) throws {
+                                steps: Int, output: URL, saveFrames: Bool = false,
+                                emit: (CapacityPilotBranch) throws -> Void) throws {
         let original = source.mass.asArray(Float.self)
         let edits = editMetrics(original, values)
         var state = copied(source, values: values)
         var frames = [frame(state, relativeStep: 0)]
         let mass = frames[0].mass
+        let conservesMatter = simulator.runtimeConfig.implementation.mode != "qd24_additive_v1"
+        if saveFrames { try saveField(state, name: name + "-step-0", output: output) }
         for t in stride(from: 32, through: steps, by: 32) {
             state = simulator.step(state, count: 32)
             let f = frame(state, relativeStep: t)
             let field = state.mass.asArray(Float.self)
-            guard field.allSatisfy({ $0.isFinite && $0 >= 0 }), abs(f.mass / mass - 1) < 0.001 else {
+            guard field.allSatisfy({ $0.isFinite && $0 >= 0 }),
+                  !conservesMatter || abs(f.mass / mass - 1) < 0.001 else {
                 throw NSError(domain: "CapacityPilot", code: 4, userInfo: [NSLocalizedDescriptionKey: "Invalid continuation: \(name), step \(t)"])
             }
             frames.append(f)
+            if saveFrames { try saveField(state, name: name + "-step-\(t)", output: output) }
         }
         try saveField(state, name: name + "-final", output: output)
         try emit(CapacityPilotBranch(name: name, visibleEditL1: edits.0, channelEditL1: edits.1,
                                     channelInventoryError: edits.2, frames: frames))
+    }
+
+    public func runDevelopment(horizon: Int, output: URL,
+                               emit: (CapacityPilotBranch) throws -> Void) throws {
+        var state = simulator.makeInitialState()
+        var frames = [frame(state, relativeStep: 0)]
+        try saveField(state, name: "development-step-0", output: output)
+        while state.step < horizon {
+            state = simulator.step(state, count: min(32, horizon - state.step))
+            let values = state.mass.asArray(Float.self)
+            guard values.allSatisfy({ $0.isFinite && $0 >= 0 }) else {
+                throw NSError(domain: "CapacityPilot", code: 4,
+                              userInfo: [NSLocalizedDescriptionKey: "Invalid development field"])
+            }
+            frames.append(frame(state, relativeStep: state.step))
+            try saveField(state, name: "development-step-\(state.step)", output: output)
+        }
+        try emit(CapacityPilotBranch(name: "development", visibleEditL1: 0,
+                                    channelEditL1: 0, channelInventoryError: 0, frames: frames))
+    }
+
+    public func runResponse(checkpointSteps: Int, horizon: Int, output: URL,
+                            offsets: [Int] = [0, 128, 256], probeHorizon: Int = 128,
+                            emit: (CapacityPilotBranch) throws -> Void) throws {
+        precondition(offsets.first == 0 && offsets == offsets.sorted() && Set(offsets).count == offsets.count)
+        precondition(offsets.allSatisfy { $0 >= 0 && $0 % 32 == 0 })
+        precondition(probeHorizon >= 128 && probeHorizon % 32 == 0)
+        var state = simulator.step(simulator.makeInitialState(), count: checkpointSteps)
+        var previousOffset = 0
+        for offset in offsets {
+            if offset > previousOffset { state = simulator.step(state, count: offset - previousOffset) }
+            previousOffset = offset
+            let values = state.mass.asArray(Float.self)
+            guard let center = frame(state, relativeStep: 0).centerX else {
+                throw NSError(domain: "CapacityPilot", code: 5,
+                              userInfo: [NSLocalizedDescriptionKey: "No body at response checkpoint"])
+            }
+            let prefix = "age-\(checkpointSteps + offset)"
+            try saveField(state, name: prefix + "-checkpoint", output: output)
+            try continueBranch(state, values: values, name: prefix + "-sham", steps: horizon,
+                               output: output, saveFrames: true, emit: emit)
+            for (direction, sign): (String, Float) in [("positive", 1), ("negative", -1)] {
+                for (kind, dose, steps): (String, Float, Int) in [("probe", 0.1, probeHorizon), ("challenge", 0.3, horizon)] {
+                    let edited = capacityPilotShear(values, width: width, height: height, channels: channelCount,
+                                                    centerX: center, amount: sign * dose,
+                                                    periodic: simulator.runtimeConfig.border == "torus")
+                    try continueBranch(state, values: edited, name: prefix + "-" + kind + "-" + direction,
+                                       steps: steps, output: output, saveFrames: true, emit: emit)
+                }
+            }
+        }
     }
 
     public func runSymmetry(checkpointSteps: Int, output: URL) throws {
@@ -234,6 +293,161 @@ extension CapacityPilotHarness {
         }
         try JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys, .prettyPrinted])
             .write(to: output.appendingPathComponent("symmetry.json"))
+    }
+
+    public func runStateContinuation(values: [Float], steps: Int, output: URL,
+                                     emit: (CapacityPilotBranch) throws -> Void) throws {
+        guard !simulator.runtimeConfig.parameterEmbedding.enabled,
+              values.count == width * height * channelCount,
+              values.allSatisfy({ $0.isFinite && $0 >= 0 }),
+              values.contains(where: { $0 > 0 }) else {
+            throw NSError(domain: "CapacityPilot", code: 7,
+                          userInfo: [NSLocalizedDescriptionKey: "Restart requires a finite, nonempty mass field and fixed parameters"])
+        }
+        // In the clean autonomous runtime, fixed parameters and mass are the full
+        // dynamical state. Relative step zero does not restart a time-dependent input.
+        let source = simulator.makeInitialState()
+        try continueBranch(source, values: values, name: "continuation", steps: steps,
+                           output: output, saveFrames: true, emit: emit)
+    }
+
+    public func runStateFlow(values: [Float], steps: Int, output: URL) throws {
+        precondition(!simulator.runtimeConfig.parameterEmbedding.enabled)
+        guard values.count == width * height * channelCount,
+              values.allSatisfy({ $0.isFinite && $0 >= 0 }), values.contains(where: { $0 > 0 }) else {
+            throw NSError(domain: "CapacityPilot", code: 8,
+                          userInfo: [NSLocalizedDescriptionKey: "Flow tracing requires a finite, nonempty mass field"])
+        }
+        func save(_ values: [Float], _ name: String) throws {
+            try values.withUnsafeBytes { try Data($0).write(to: output.appendingPathComponent(name + ".f32")) }
+        }
+        let k = simulator.kernels
+        let spatial = MLXFFT.ifft2(k.fK, axes: [1, 2]).realPart()
+        try save(spatial.asArray(Float.self), "kernels")
+        let samples = Set([0, 1, 2, 4, 8, 16, 32, 64, 128, steps])
+        var state = copied(simulator.makeInitialState(), values: values)
+        for t in 0...steps {
+            if samples.contains(t) { try save(state.mass.asArray(Float.self), "mass-\(t)") }
+            state = simulator.step(state, count: 1)
+            if samples.contains(t) {
+                try save(simulator.capacityPilotLastFlow(), "flow-\(t)")
+                try save(state.mass.asArray(Float.self), "next-\(t)")
+            }
+        }
+        try JSONSerialization.data(withJSONObject: [
+            "shape": [width, height, channelCount], "kernelShape": spatial.shape,
+            "samples": samples.sorted(), "flowOrder": "x,y per channel; pre-step flow",
+            "c0": k.c0Idxs.asArray(Int32.self).map { Int($0) },
+            "c1Mask": k.c1Mask.asArray(Float.self), "m": k.m.asArray(Float.self),
+            "s": k.s.asArray(Float.self), "h": k.h.asArray(Float.self)
+        ], options: [.sortedKeys, .prettyPrinted]).write(to: output.appendingPathComponent("state-flow.json"))
+    }
+
+    public func runTransport(checkpointSteps: Int, releaseSteps: Int, horizon: Int, output: URL) throws {
+        precondition(width >= 256 && height >= 256 && releaseSteps >= 0)
+        var state = simulator.step(simulator.makeInitialState(), count: checkpointSteps)
+        let start = frame(state, relativeStep: 0)
+        let x0 = min(max(Int(start.centerX!) - 128, 0), width - 256)
+        let y0 = min(max(Int(start.centerY!) - 128, 0), height - 256)
+        var observations: [[String: Any]] = []
+        func save(_ values: [Float], stride: Int, name: String) throws {
+            var crop: [Float] = []
+            crop.reserveCapacity(256 * 256 * stride)
+            for x in x0..<(x0 + 256) {
+                let lower = (x * height + y0) * stride
+                crop.append(contentsOf: values[lower..<(lower + 256 * stride)])
+            }
+            try crop.withUnsafeBytes { try Data($0).write(to: output.appendingPathComponent(name + ".f32")) }
+            if stride == channelCount {
+                let total = values.reduce(0.0) { $0 + Double($1) }
+                observations.append(["name": name, "mass": total,
+                    "cropMass": crop.reduce(0.0) { $0 + Double($1) }])
+            }
+        }
+        func follow(_ prefix: String, steps: Int) throws {
+            try save(state.mass.asArray(Float.self), stride: channelCount, name: prefix + "-mass-0")
+            for t in 0..<steps {
+                state = simulator.step(state, count: 1)
+                // The buffer records the pre-step flow actually used for this transport.
+                try save(simulator.capacityPilotLastFlow(), stride: channelCount * 2, name: prefix + "-flow-\(t)")
+                try save(state.mass.asArray(Float.self), stride: channelCount, name: prefix + "-mass-\(t + 1)")
+            }
+        }
+        try follow("release", steps: releaseSteps)
+        let center = frame(state, relativeStep: 0).centerX!
+        let values = capacityPilotShear(state.mass.asArray(Float.self), width: width, height: height,
+            channels: channelCount, centerX: center, amount: 0.3)
+        state = copied(state, values: values)
+        try follow("challenge", steps: horizon)
+        try JSONSerialization.data(withJSONObject: ["cropOrigin": [x0, y0], "cropSide": 256,
+            "channels": channelCount, "flowOrder": "x,y per channel", "checkpointSteps": checkpointSteps,
+            "releaseSteps": releaseSteps, "horizon": horizon, "shearCenterX": center,
+            "shearAmount": 0.3, "observations": observations], options: [.prettyPrinted, .sortedKeys])
+            .write(to: output.appendingPathComponent("transport.json"))
+    }
+
+    public func runWriteResponse(checkpointSteps: Int, horizon: Int, output: URL,
+                                 mode: String, dose: Double, releaseSteps: Int, challengeSign: Int,
+                                 challengeAxis: String, replaceState: Bool = false, releaseOnly: Bool = false, writeField: [Float]?,
+                                 emit: (CapacityPilotBranch) throws -> Void) throws {
+        precondition(["sham", "positive", "negative", "scrambled", "field"].contains(mode))
+        precondition((mode == "field") == (writeField != nil) && ["x", "y"].contains(challengeAxis))
+        precondition(dose >= 0 && dose < 1 && releaseSteps >= 0 && releaseSteps % 32 == 0)
+        precondition(challengeSign == -1 || challengeSign == 1)
+        let checkpoint = simulator.step(simulator.makeInitialState(), count: checkpointSteps)
+        let original = checkpoint.mass.asArray(Float.self)
+        guard let center = frame(checkpoint, relativeStep: 0).centerX else {
+            throw NSError(domain: "CapacityPilot", code: 5)
+        }
+        try saveField(checkpoint, name: "prewrite", output: output)
+        let values = writeField ?? (mode == "sham" ? original : capacityPilotWrite(original, width: width,
+            height: height, channels: channelCount, centerX: center, mode: mode, dose: dose))
+        guard values.count == original.count else { throw NSError(domain: "CapacityPilot", code: 6) }
+        let edits = editMetrics(original, values)
+        // Counterfactual state replacements may change density and channel inventory;
+        // balanced writes retain both. Both studies retain total matter.
+        let mass = original.reduce(0.0) { $0 + Double($1) }
+        let replacementMass = values.reduce(0.0) { $0 + Double($1) }
+        guard !replaceState || (mode == "field" && releaseSteps == 0),
+              replaceState || (edits.0 < 1e-6 && edits.2 < 1e-6),
+              mass > 0, abs(replacementMass / mass - 1) < 1e-6,
+              values.allSatisfy({ $0.isFinite && $0 >= 0 }) else {
+            throw NSError(domain: "CapacityPilot", code: 6)
+        }
+        var state = copied(checkpoint, values: values)
+        var frames = [frame(state, relativeStep: 0)]
+        try saveField(state, name: "release-step-0", output: output)
+        if releaseSteps > 0 {
+            for t in stride(from: 32, through: releaseSteps, by: 32) {
+                state = simulator.step(state, count: 32)
+                frames.append(frame(state, relativeStep: t))
+                try saveField(state, name: "release-step-\(t)", output: output)
+            }
+        }
+        try emit(CapacityPilotBranch(name: "release", visibleEditL1: edits.0,
+            channelEditL1: edits.1, channelInventoryError: edits.2, frames: frames))
+        if releaseOnly { return }
+        try saveField(state, name: "challenge-checkpoint", output: output)
+        let released = state.mass.asArray(Float.self)
+        guard let x = frame(state, relativeStep: 0).centerX else {
+            throw NSError(domain: "CapacityPilot", code: 5)
+        }
+        try continueBranch(state, values: released, name: "unchallenged", steps: horizon,
+                           output: output, saveFrames: true, emit: emit)
+        let challenged: [Float]
+        if challengeAxis == "x" {
+            challenged = capacityPilotShear(released, width: width, height: height,
+                channels: channelCount, centerX: x, amount: Float(challengeSign) * 0.3)
+        } else {
+            precondition(width == height)
+            let y = frame(state, relativeStep: 0).centerY!
+            let transposed = capacityPilotTransform(released, side: width, channels: channelCount, transpose: true)
+            let shifted = capacityPilotShear(transposed, width: width, height: height,
+                channels: channelCount, centerX: y, amount: Float(challengeSign) * 0.3)
+            challenged = capacityPilotTransform(shifted, side: width, channels: channelCount, transpose: true)
+        }
+        try continueBranch(state, values: challenged, name: "challenge", steps: horizon,
+                           output: output, saveFrames: true, emit: emit)
     }
 
     public func runFollowup(checkpointSteps: Int, horizon: Int, output: URL,
