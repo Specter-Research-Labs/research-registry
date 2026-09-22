@@ -21,6 +21,8 @@ export GraphMorphologySnapshot,
     GridPatchMetricSensitivityResult,
     GridThresholdSensitivityCase,
     GridPatchThresholdSensitivityResult,
+    graph_active_domain_count,
+    graph_morphology_snapshot,
     isolate_rectangle_edges,
     grid_patch_placements,
     grid_patch_isolation_demo,
@@ -240,7 +242,8 @@ function grid_patch_placements(rows::Int, cols::Int, patch_rows::Int, patch_cols
     return placements
 end
 
-function _graph_active_component_count(config::RDGraphConfig, active_mask::BitVector)
+function graph_active_domain_count(config::RDGraphConfig, active_mask::AbstractVector{Bool})
+    length(active_mask) == config.n_cells || error("active_mask length must match n_cells")
     adjacency = [Int[] for _ in 1:config.n_cells]
     for edge in config.edges
         left, right = edge
@@ -270,20 +273,31 @@ function _graph_active_component_count(config::RDGraphConfig, active_mask::BitVe
     return count
 end
 
-function _graph_snapshot(state::Vector{Float64}, config::RDGraphConfig; active_fraction::Float64=0.5)
-    active_fraction > 0 || error("active_fraction must be > 0")
+function graph_morphology_snapshot(
+    state::Vector{Float64},
+    config::RDGraphConfig;
+    threshold::Float64,
+)
+    expected_length = 2 * config.n_cells
+    length(state) == expected_length || error("expected state length $expected_length for n_cells=$(config.n_cells)")
     n = config.n_cells
     A = collect(@view state[1:n])
     I = collect(@view state[n + 1:end])
-    threshold = active_fraction * maximum(A)
     active_mask = BitVector(A .>= threshold)
     return GraphMorphologySnapshot(
-        _graph_active_component_count(config, active_mask),
+        graph_active_domain_count(config, active_mask),
         count(identity, active_mask),
         active_mask,
         A,
         I,
     )
+end
+
+function _graph_snapshot(state::Vector{Float64}, config::RDGraphConfig; active_fraction::Float64=0.5)
+    active_fraction > 0 || error("active_fraction must be > 0")
+    n = config.n_cells
+    threshold = active_fraction * maximum(@view state[1:n])
+    return graph_morphology_snapshot(state, config; threshold=threshold)
 end
 
 function _settled_graph_snapshot(
