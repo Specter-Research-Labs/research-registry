@@ -1,31 +1,42 @@
 # Lean Tactic Representation
 
-Research agenda and toy interpreter for structured Lean tactic representations.
+Research experiment for representing tactics as typed objects rather than tactic
+strings.
 
-The question is whether proof tactics can be represented as compositional
-objects instead of strings, with executable semantics and a testable evaluation protocol.
+The executable slice has two independent parts:
 
-Start with `docs/general-algebraic-tactic-calculus-spec.md` for the technical
-target.
+- a pure Lean compiler lowers a sequential `exact` / `apply` / `constructor`
+  source program into a nested program and predicts its goal transitions;
+- a `MetaM` interpreter executes that program, records its obligation tree and
+  residual builders, and asks `Lean.Kernel.check` to verify the completed proof.
 
-The runnable code is a toy interpreter and visualizer for calculus fragments.
+The Python boundary runs both sides and requires their shared execution
+projection to agree. It deliberately does not define downstream graph schemas or
+artifact bundles; those contracts remain owned by their consuming projects.
 
-## Check
+## Run
 
 ```bash
 cd addenda/lean-tactic-representation
 nix develop
+lake build
+
+uv run python cli.py compile scenarios/source/constructor.json
+uv run python cli.py compile-run scenarios/source/constructor.json
+uv run python cli.py compile-run scenarios/source/apply.json
+```
+
+`compile-run` succeeds only when source validation, compiler prediction,
+independent Lean execution, and kernel checking all pass.
+
+## Verify
+
+```bash
+lake build
 uv run ruff check .
 uv run ty check .
 uv run python -m pytest
 ```
 
-## Related
-
-This addendum asks the representation question. The concrete IR docs live in
-`wonton-soup`:
-
-- [TacticActionIR](../../dossiers/wonton-soup/docs/concepts/tactic-action-ir.md):
-  a pragmatic typed summary of what one observed proof step did
-- [ProofGraphIR](../../dossiers/wonton-soup/docs/concepts/proof-graph-ir.md):
-  the downstream graph-level abstraction used for cross-assistant comparison
+The broader research target remains in
+[the calculus specification](docs/general-algebraic-tactic-calculus-spec.md).

@@ -30,5 +30,6 @@ jobs:
           python-version: '3.12'
           use-uv: 'true'
           sync-python: 'true'
+          use-lean: 'true'
       - name: Run exec check
         run: ./ops/spctr/target/release/spctr exec run --project lean-tactic-representation check
