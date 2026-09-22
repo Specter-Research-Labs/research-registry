@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" width="800" height="380">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 380" width="880" height="380">
 <style>
 text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 .label { font-size: 13px; fill: rgba(11,14,20,0.68); }
@@ -10,7 +10,7 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 .label-accent5 { font-size: 13px; fill: #4f66bc; }
 .annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
 </style>
-<rect width="800" height="380" fill="#ffffff"/>
+<rect width="880" height="380" fill="#ffffff"/>
   <!-- Fibers -->
   <g stroke="#ff6600" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="3,4">
     <line x1="120" y1="40" x2="120" y2="260"/>

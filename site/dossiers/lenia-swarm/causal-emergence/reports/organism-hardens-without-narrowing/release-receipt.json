@@ -7,13 +7,14 @@
   "status": "feature",
   "evidenceClass": "predeclared four-experiment series",
   "sourceReportSha256": "06f6876bca1249c319abb19756048bb0c386c51457350ea95c6056019ee7f41b",
-  "publicReportSha256": "06f6876bca1249c319abb19756048bb0c386c51457350ea95c6056019ee7f41b",
+  "publicReportSha256": "4b3a107a2fed9b0bdf1935f12aa6043080c2a759bd6e2544c6aae61f03805ab2",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "88e2ac12f9d6e2df4bf365ce035d9e969f5e1a283ee8a2cbaf916301e9d61895",
+  "contextSha256": "c06cc6d21cbbc624166e33729ebbe02ccfa9620efa23ff83392da0cf5512ec4a",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "62347a73f5bb47f9caf82c1e2f7e3792bbdb1416b2d9b89438b19611b6fe0ca8"
+  "upstreamReceiptSha256": "7c740421b3f69e51c53e0c99dd2db693a897d326c9ab3cf818f93776fe430db1"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "geometric orbit intervention",
   "sourceReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
-  "publicReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
+  "publicReportSha256": "372ada35a00a1d2106b921c96257c5acff668bbc1e5b3408e5c98afdafdb1361",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "dc2793c72f1c5a108f222e3f67b5c29a92dcc5539def10aa50ce17b707763acc",
+  "contextSha256": "de3d195196610b57e49935fa4e7b8a3ac36136aee1e613b9b98f5698d8faac42",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "36818e8f274669a2de8cad6bbff6a1325660bd0095d78fbd24bf3d62eb4e7e6c"
+  "upstreamReceiptSha256": "73a8be866bda24db8ee5c33a30b466cca25ee633f73f66ad8e0bfe8ed398c3eb"
 }

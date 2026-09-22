@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 232" width="800" height="232">
 <style>
 text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 .label { font-size: 13px; fill: rgba(11,14,20,0.68); }
@@ -10,7 +10,7 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
 .label-accent5 { font-size: 13px; fill: #4f66bc; }
 .annotation { font-size: 12px; fill: rgba(11,14,20,0.5); font-style: italic; }
 </style>
-<rect width="800" height="200" fill="#ffffff"/>
+<rect width="800" height="232" fill="#ffffff"/>
     <!-- Genotype space (top) -->
     <text x="20" y="20" class="label-bold">Genotype space (R axis)</text>
 
@@ -32,8 +32,8 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
     <circle cx="740" cy="60" r="7" fill="#3f8458" stroke="#ffffff" stroke-width="2"/>
 
     <!-- Parameter annotations -->
-    <text x="60"  y="45" class="label" text-anchor="middle">R=10.57, s=0.058</text>
-    <text x="740" y="45" class="label" text-anchor="middle">R=17.43, s=0.013</text>
+    <text x="28" y="42" class="label" text-anchor="start">R=10.57, s=0.058</text>
+    <text x="772" y="42" class="label" text-anchor="end">R=17.43, s=0.013</text>
 
     <!-- Phenotype space (bottom) -->
     <text x="20" y="145" class="label-bold">Phenotype space</text>
@@ -43,15 +43,15 @@ text { font-family: "Berkeley Mono", ui-monospace, monospace; fill: #0b0e14; }
     <path d="M 60 170 C 100 165, 150 158, 200 155 C 215 153, 225 160, 230 170"
           stroke="#3f8458" stroke-width="2" fill="none"/>
     <!-- gap -->
-    <text x="385" y="175" class="label-accent2" text-anchor="middle">no phenotype</text>
+    <text x="385" y="158" class="label-accent2" text-anchor="middle">no phenotype</text>
     <!-- resume -->
     <path d="M 530 170 C 560 158, 620 150, 680 155 C 710 158, 730 165, 740 170"
           stroke="#3f8458" stroke-width="2" fill="none"/>
 
     <circle cx="60"  cy="170" r="5" fill="#b4573d"/>
     <circle cx="740" cy="170" r="5" fill="#b4573d"/>
-    <text x="60"  y="192" class="label" text-anchor="middle">vel=0.007</text>
-    <text x="60"  y="202" class="label" text-anchor="middle">gyr=588</text>
-    <text x="740" y="192" class="label" text-anchor="middle">vel=0.001</text>
-    <text x="740" y="202" class="label" text-anchor="middle">gyr=458</text>
+    <text x="60"  y="202" class="label" text-anchor="middle">vel=0.007</text>
+    <text x="60"  y="220" class="label" text-anchor="middle">gyr=588</text>
+    <text x="740" y="202" class="label" text-anchor="middle">vel=0.001</text>
+    <text x="740" y="220" class="label" text-anchor="middle">gyr=458</text>
   </svg>

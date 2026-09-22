@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "exploratory causal atlas",
   "sourceReportSha256": "235bbb048894863439dc8c84e128f470464214a2da63cd3dc6d3a519d2f4d024",
-  "publicReportSha256": "235bbb048894863439dc8c84e128f470464214a2da63cd3dc6d3a519d2f4d024",
+  "publicReportSha256": "53ee06dd6b27461e69b06223be50e77fb5225657bd2797cc64f6a25bc7120b00",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "165a04a2ffb335bdcd1eabaca603fc04a3d8aa12bd9f3fa043407a68a6c48dbe",
+  "contextSha256": "f76a06f945c13beee8188ec99daca96d4ac913ff5d46d060ab591f8df20d7d70",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "98c652b7fffe6cd045caf377aa31120108048c2eaa7d27349b39696737017e07"
+  "upstreamReceiptSha256": "f018ed490afba0f3635c2060fa3543494287f9f5696a95753fc423d2d0d15682"
 }

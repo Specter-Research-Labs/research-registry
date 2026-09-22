@@ -40,29 +40,6 @@
 
                 <main class="doc-layout">
                     <aside class="doc-aside">
-                        <div class="doc-stamp">
-                            <div class="doc-stamp-title">Research Note</div>
-                            $if(spctr_id)$
-                            <div class="doc-stamp-sub">$spctr_id$</div>
-                            $endif$
-                            $if(provenance)$
-                            <div class="doc-stamp-field">
-                                <strong>Provenance</strong>
-                                $provenance$
-                            </div>
-                            $endif$
-                            $if(source_id)$
-                            <div class="doc-stamp-field">
-                                <strong>Source</strong>
-                                $if(source_href)$
-                                <a href="$source_href$">$source_id$</a>
-                                $else$
-                                $source_id$
-                                $endif$
-                            </div>
-                            $endif$
-                        </div>
-
                         $if(toc)$
                         <nav class="toc" aria-label="Table of contents">
                             <div class="toc-title">Contents</div>
@@ -71,15 +48,13 @@
                         $endif$
                     </aside>
 
-                    <article class="doc-content">$if(publication)$<div class="publication-journal-masthead"><span>Studies in form</span>$if(publication_pdf)$<a href="$publication_pdf$" download>Download PDF ↓</a>$endif$</div>$endif$$body$</article>
+                    <article class="doc-content">$if(publication)$<div class="publication-journal-masthead">$if(publication_pdf)$<a href="$publication_pdf$" download>Download PDF ↓</a>$endif$</div>$endif$$body$</article>
                 </main>
 
                 <footer class="doc-footer">
                     <div class="doc-footer-inner">
                         <div>Specter Labs</div>
-                        $if(spctr_id)$
-                        <div>$spctr_id$</div>
-                        $endif$
+
                     </div>
                 </footer>
             </div>

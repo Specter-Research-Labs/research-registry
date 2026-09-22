@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "post-selection causal exploration",
   "sourceReportSha256": "c9aa7e63ba2a61134f9f32edba01e3406bb3b7fa6fac377d172d210257501f04",
-  "publicReportSha256": "c9aa7e63ba2a61134f9f32edba01e3406bb3b7fa6fac377d172d210257501f04",
+  "publicReportSha256": "dacce82b299b5f97ab18ba66bfd9bededbf3d84bbf633e9f3d56339b45ef9a05",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "581a957af14b6eefa037c18ac5668fc0ab9ef283f3d8522a3ffbbaa666732ae1",
+  "contextSha256": "e89265d8cb87f2fbaaf74bed070f848732e90a54fca63b6a58f0ed482df7b18b",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "cfb65119640794c20a2550db9a7f4b31911a2776ec4a0926bd4ee9fb9932c6ff"
+  "upstreamReceiptSha256": "5533237936b6737bb95aa77c11c1be157198e0bcc568146609ea7472177c947e"
 }

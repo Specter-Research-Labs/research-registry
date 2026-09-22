@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "reused-cohort developmental profile",
   "sourceReportSha256": "ab36c1978229c8a5f2f53803c00f5d644a2b5722da2469b099910c225a00c202",
-  "publicReportSha256": "ab36c1978229c8a5f2f53803c00f5d644a2b5722da2469b099910c225a00c202",
+  "publicReportSha256": "9859c0c47539bf8497d19b19acb76e1122b0f33b119e91e0157658c581419106",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "277ce855f999734d35975b4b3b484c275dd18e50f15a3ac220fba1ccd8efc059",
+  "contextSha256": "02e8d8b8e618967b2bf5a6b38e80fede2f82ab505ac85f7981291d56a712544c",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "5208ce23686c4d9b81be24562e71256510fda361a26a8cf56a91ff084186b7af"
+  "upstreamReceiptSha256": "efcfbb27d515d8b804dc07789d2fa6cc4bf9ec7156671a9c9218374ded6c5aea"
 }

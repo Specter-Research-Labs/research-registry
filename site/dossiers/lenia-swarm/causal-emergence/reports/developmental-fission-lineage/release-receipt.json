@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "topology and lineage analysis",
   "sourceReportSha256": "c1b070a55c7613ffcbae1613a977967b5b202865085cc734f4723067048e6e9b",
-  "publicReportSha256": "c1b070a55c7613ffcbae1613a977967b5b202865085cc734f4723067048e6e9b",
+  "publicReportSha256": "007875dfdc7cf0af7cb98580f4054d5a4eb9e7b1a34d128681917b73469c8cb7",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "b00a23e778ebb9ef6f93e64e33cad664ee1330136f4daa9269cb2993fb0c0c65",
+  "contextSha256": "d21d9fe9cd6768ae493b2c88214e1a92b84223c20024ff254ba196681dbff4b8",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "df80193018126a03f7c481b0e580c66c04999b22986fcfd1872be2951eaddab8"
+  "upstreamReceiptSha256": "b5eb84fc272929086a3e41a590706dd8d19a4bea1b7645b366f00d3265b70de7"
 }

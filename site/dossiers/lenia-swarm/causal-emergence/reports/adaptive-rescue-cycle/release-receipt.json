@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "release-and-reacquisition intervention",
   "sourceReportSha256": "6d8c297751bbd6011c68bae05298cc00aa270170e1571b11636cef86bbea6619",
-  "publicReportSha256": "6d8c297751bbd6011c68bae05298cc00aa270170e1571b11636cef86bbea6619",
+  "publicReportSha256": "9c445ebd3f768c49ff77c93f8924725615abe66daafd9e7e96bfe84b324d97d4",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "b0a367678c7f79994c0045a2aa0862ff812d5708082b3fd896d9ba9c84511b5e",
+  "contextSha256": "fc75f1d5a09e8196a6bcd660595c874661529be37aae14ca9211f8fbe640cdcc",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "a3efea62a3daa8e16c310376ec707a4416e397c47b7faddd0ab88832e94a5f1b"
+  "upstreamReceiptSha256": "7210ae9a401d1cb2e93b981c1714ff5b53d9ffce4c84c7a14a00e4208c594f16"
 }

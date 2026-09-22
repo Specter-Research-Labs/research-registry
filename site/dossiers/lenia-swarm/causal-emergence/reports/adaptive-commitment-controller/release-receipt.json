@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "adaptive closed-loop intervention",
   "sourceReportSha256": "7dc2f2bae9a6032eaccd5c22af2ef3c171a8fe584671f1b30ae745256c72e682",
-  "publicReportSha256": "7dc2f2bae9a6032eaccd5c22af2ef3c171a8fe584671f1b30ae745256c72e682",
+  "publicReportSha256": "6110b0f6a6ec2994fb232e5c1cf5f7788d49ef1aaca9baeb712c52573368d3cd",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "ced1884e3d969cc1f378b83b3016b6806ad7c5963250264997765985565b67de",
+  "contextSha256": "6d13b8f1889e59711e47e8301ad75f5f4177712aeb06024147078151cc7ebb26",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "440bbdd79aa9c595d1bdbd7ddc37ea21a6d74888515504d3c007540ec99d25b4"
+  "upstreamReceiptSha256": "c9e49262ef01e766ad48a530757e580dd4a5b7b7eb4512f6c49e910756a412c3"
 }

@@ -22,9 +22,7 @@ footer{padding:28px 0 42px;color:var(--muted);font:10px/1.65 var(--mono)} detail
  * This late, shared layer repairs recurring presentation problems in older
  * reports without changing their figures, data, or stable release URLs.
  */
-
-html.specter-report {
-  color-scheme: light;
+html.specter-report {color-scheme: light;
   --specter-ground: #f2eee3;
   --specter-sheet: #fffdf7;
   --specter-ink: #131821;
@@ -57,34 +55,18 @@ html.specter-report {
   --amber: var(--specter-coral);
   --orange: var(--specter-coral);
   --pink: var(--specter-coral);
-  --coral: var(--specter-coral);
-}
-
-html.specter-report[data-specter-surface="bg-paper"] {
-  --paper: var(--specter-sheet);
-}
-
-html.specter-report,
-html.specter-report body {
-  background: var(--specter-ground) !important;
-}
-
-html.specter-report body {
-  color: var(--specter-ink) !important;
+  --coral: var(--specter-coral);}
+html.specter-report[data-specter-surface="bg-paper"] {--paper: var(--specter-sheet);}
+html.specter-report,html.specter-report body {background: var(--specter-ground) !important;}
+html.specter-report body {color: var(--specter-ink) !important;
   background:
     linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     var(--specter-ground) !important;
-  background-size: 24px 24px !important;
-}
-
-html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
-  color: var(--specter-green) !important;
-}
-
+  background-size: 24px 24px !important;}
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {color: var(--specter-green) !important;}
 /* Older reports often put a small provenance nav inside the report column. */
-html.specter-report main > nav {
-  align-items: center;
+html.specter-report main > nav {align-items: center;
   min-height: 3.25rem;
   margin: 0 0 clamp(2rem, 5vw, 4rem);
   padding: 0.8rem 1rem;
@@ -95,330 +77,185 @@ html.specter-report main > nav {
   font-family: var(--specter-mono) !important;
   font-size: 0.72rem !important;
   font-weight: 750;
-  line-height: 1.25;
-}
-
-html.specter-report main > nav :is(a, span, strong) {
-  color: inherit !important;
-}
-
+  line-height: 1.25;}
+html.specter-report main > nav :is(a, span, strong) {color: inherit !important;}
 /*
  * Early chart generators drew directly onto a near-black SVG. Give those
  * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
  * Charts already composed inside a semantic figure keep their authored skin.
  */
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-html.specter-report :is(div, article, figure).chart,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  color: var(--specter-ink) !important;
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {color: var(--specter-ink) !important;
   background: var(--specter-sheet) !important;
   border: 2px solid var(--specter-ink) !important;
   border-radius: 0 !important;
-  box-shadow: var(--specter-chart-shadow) !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-  margin-block: 1.5rem 2rem;
-  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
-}
-
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  padding: clamp(1rem, 2vw, 1.6rem) !important;
-}
-
-html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
-  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
-  color: inherit !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
-html.specter-report :is(div, article, figure).chart svg text,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
-  fill: var(--specter-muted) !important;
+  box-shadow: var(--specter-chart-shadow) !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;}
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {padding: clamp(1rem, 2vw, 1.6rem) !important;}
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {color: inherit !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,html.specter-report :is(div, article, figure).chart svg text,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {fill: var(--specter-muted) !important;
   font-family: var(--specter-mono) !important;
-  font-weight: 700;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
-  fill: var(--specter-ink) !important;
-  font-weight: 850 !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
-  stroke: var(--specter-chart-grid) !important;
-}
-
+  font-weight: 700;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {fill: var(--specter-ink) !important;
+  font-weight: 850 !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {stroke: var(--specter-chart-grid) !important;}
 /* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
-html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
-html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
-html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
-html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
-html.specter-report svg [stroke="#ef7d9a"],
-html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
-html.specter-report svg [fill="#ef7d9a"],
-html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
-
-@media (max-width: 640px) {
-  html.specter-report main > nav {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
-  }
-
-  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
-    font-size: 24px !important;
-  }
-}
-
-@media print {
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-  html.specter-report :is(div, article, figure).chart,
-  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-    box-shadow: none !important;
-  }
-}
-
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
-  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
-  font-family: var(--editorial-display) !important;
+html.specter-report svg [stroke="#a9d86e"] {stroke: var(--specter-green) !important;}
+html.specter-report svg [fill="#a9d86e"] {fill: var(--specter-green) !important;}
+html.specter-report svg [stroke="#72d9e2"] {stroke: var(--specter-blue) !important;}
+html.specter-report svg [fill="#72d9e2"] {fill: var(--specter-blue) !important;}
+html.specter-report svg [stroke="#ef7d9a"],html.specter-report svg [stroke="#f1b85b"] {stroke: var(--specter-coral) !important;}
+html.specter-report svg [fill="#ef7d9a"],html.specter-report svg [fill="#f1b85b"] {fill: var(--specter-coral) !important;}
+@media (max-width: 640px) {html.specter-report main > nav {align-items: flex-start;
+    flex-direction: column;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;}
+/* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {font-size: 24px !important;}}
+@media print {html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {box-shadow: none !important;}}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {--editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {font-family: var(--editorial-display) !important;
   font-weight: 850;
   letter-spacing: -.035em;
-  text-wrap: balance;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
-html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
-html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
-html.anatomical-editorial .hero-specimens { margin: 0; }
-html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
-html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
-html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
-html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
-html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
-html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
-html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
-html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
-html.anatomical-editorial .synthesis .metric span { color:#414c45; }
-html.anatomical-editorial .opening-method { margin:1rem 0; }
-html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
-html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
-html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
-html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
-html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
-html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
-html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
-html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
-html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
-html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
-html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
-html.anatomical-editorial .caption { border:0; }
-html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
-html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
-html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
-html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
-html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
-html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
-html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
-html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
-html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
-html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
-html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
-html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
-html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
-html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
-html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
-html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
-@media(max-width:800px) {
- html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
- html:has(.editorial-synthesis) .hero-answer { transform:none; }
- html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
-}
-html:has(.editorial-synthesis) .ink { border-block:0; }
-html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
-html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .section-no { border:0; }
-@media(max-width:700px) {
- html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
- html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
- html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
- html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
- html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
-}
-html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
-
-html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
-html.anatomical-editorial .measurement-comparison,
-html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
-html.anatomical-editorial .measurement-comparison h3,
-html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
-.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
-.measurement-heading { font: 12px/1.5 monospace; }
-.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
-.measurement-track { position: relative; height: 18px; background: #fff8; }
-.measurement-track i { display: block; height: 100%; background: #18796f; }
-.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
-.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
-html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
-.experiment-method summary { cursor: pointer; font-weight: 700; }
-.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
-.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
-.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.orbium-frames figure { margin: 0; }
-.orbium-frames img { display: block; width: 100%; }
-.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
-#orbium-time-note { margin-top: 16px; }
-.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
-.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
-.comparison-story p { max-width: 72ch; line-height: 1.65; }
-.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
-.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
-@media (max-width: 650px) {
-  .measurement-heading { display: none; }
-  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
-  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
-  .orbium-frames { gap: 10px; }
-}
-
-#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
-html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
-html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
-
-html:has(.editorial-synthesis) .evidence {
-  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
-  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
-}
-html:has(.editorial-synthesis) .evidence::before { content: none; }
-html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
-html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
-html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
-html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
-.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
-.figure-introduction { max-width: 760px; margin-bottom: 30px; }
-.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
-.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
-.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
-.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
-.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
-.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-.response-plots > div, .transplant-panels > div { min-width: 0; }
-.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
-.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
-.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
-.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
-.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
-.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
-#response-reading { font-size: 19px; }
-html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
-html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
-html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
-html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
-html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
-html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
-html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
-html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
-html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
-@media (max-width: 700px) {
-  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
-  .response-controls { gap: 14px; }
-  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
-  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
-}
-
-#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
-
+  text-wrap: balance;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 {font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 {font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) {box-shadow: none !important;}
+html:has(.editorial-synthesis) .hero {padding-bottom:3rem;}
+html:has(.editorial-synthesis) .hero .dek {font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch;}
+html:has(.editorial-synthesis) .hero-grid {grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center;}
+html:has(.editorial-synthesis) .hero-answer {border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg);}
+html:has(.editorial-synthesis) .hero-answer strong {font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .hero-answer p {font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .quickread {border:0 !important; gap:2rem; background:transparent !important;}
+html:has(.editorial-synthesis) .quickread article {border:0 !important; background:transparent !important; padding:1rem 0;}
+html:has(.editorial-synthesis) .quickread h2 {font-size:1.5rem;}
+html:has(.editorial-synthesis) .section-head {border:0 !important; gap:3rem;}
+html:has(.editorial-synthesis) .section-head .lede {font:400 1.12rem/1.7 var(--specter-serif);}
+html:has(.editorial-synthesis) .figure {border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important;}
+html:has(.editorial-synthesis) .figure svg {border:0 !important; box-shadow:none !important;}
+html:has(.editorial-synthesis) .metric-card {border:0 !important; padding:1.25rem;}
+html:has(.editorial-synthesis) .callout {border:0; font:400 1.1rem/1.65 var(--specter-serif);}
+html:has(.editorial-synthesis) .explore-card {border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important;}
+html:has(.editorial-synthesis) .explore-card h3 {font-size:1.45rem;}
+html:has(.editorial-synthesis) .explore-card p {font:400 1rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .reading-route {display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono);}
+@media (max-width:800px) {html:has(.editorial-synthesis) .hero-grid {grid-template-columns:1fr;}
+html:has(.editorial-synthesis) .hero-answer {transform:none;}
+html:has(.editorial-synthesis) .section-head {gap:1.3rem;}}
+html:has(.editorial-synthesis) .ink {border-block:0;}
+html:has(.editorial-synthesis) .ink .figure {background:var(--specter-sheet) !important; padding:1rem !important;}
+html:has(.editorial-synthesis) .passage-note {max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .section-no {border:0;}
+@media (max-width:700px) {html:has(.editorial-synthesis) .figure:has(svg.chart) {overflow-x:auto; max-width:100%;}
+html:has(.editorial-synthesis) .figure svg.chart {min-width:720px;}
+html:has(.editorial-synthesis) .figure:has(svg.chart)::after {content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f);}
+html:has(.editorial-synthesis) .figure figcaption {grid-template-columns:1fr;}}
+html:has(.editorial-synthesis) .passport-layout > * {min-width:0;}
+.measurement-heading,.measurement-row {display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0;}
+.measurement-heading {font: 12px/1.5 monospace;}
+.measurement-row > span:last-child {text-align: right; font: 14px/1.5 monospace;}
+.measurement-track {position: relative; height: 18px; background: #fff8;}
+.measurement-track i {display: block; height: 100%; background: #18796f;}
+.measurement-track b {position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d;}
+.measurement-comparison figcaption {margin-top: 24px; max-width: 70ch;}
+.experiment-method summary {cursor: pointer; font-weight: 700;}
+.orbium-controls {display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0;}
+.orbium-controls select {font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60;}
+.orbium-frames {display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
+.orbium-frames figure {margin: 0;}
+.orbium-frames img {display: block; width: 100%;}
+.orbium-frames figcaption {padding-block: 10px; font-weight: 700;}
+#orbium-time-note {margin-top: 16px;}
+.comparison-story {background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0;}
+.comparison-story h3 {font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px;}
+.comparison-story p {max-width: 72ch; line-height: 1.65;}
+.comparison-story h4 {font: 700 21px/1.25 sans-serif; margin: 12px 0;}
+.comparison-story figcaption {border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6;}
+@media (max-width: 650px) {.measurement-heading {display: none;}
+.measurement-row {grid-template-columns: 1fr 1fr; gap: 12px;}
+.measurement-track {grid-column: 1 / -1; grid-row: 2;}
+.measurement-row > span:last-child {grid-column: 2; grid-row: 1; font-size: 12px;}
+.orbium-frames {gap: 10px;}}
+#measurement-comparison,.orbium-reader {scroll-margin-top: 90px;}
+html:has(.editorial-synthesis) .evidence {display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;}
+html:has(.editorial-synthesis) .evidence::before {content: none;}
+html:has(.editorial-synthesis) .ink .evidence {color: #cbd0c8;}
+html:has(.editorial-synthesis) .research-detail {margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555;}
+html:has(.editorial-synthesis) .research-detail summary {cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif);}
+html:has(.editorial-synthesis) .research-detail .section-head {margin-top: 32px;}
+.response-explorer,.transplant-comparison {margin: 44px 0; color: #17282d;}
+.figure-introduction {max-width: 760px; margin-bottom: 30px;}
+.figure-introduction h3 {font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px;}
+.figure-introduction p,.experiment-reading {font: 19px/1.65 Georgia, serif;}
+.response-controls {display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px;}
+.response-controls label {font: 15px/1.6 var(--specter-display-font, sans-serif);}
+.response-controls select {padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b;}
+.response-plots,.transplant-panels {display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
+.response-plots > div,.transplant-panels > div {min-width: 0;}
+.response-plots h4,.transplant-panels h4 {font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px;}
+.response-plots svg,.transplant-panels svg {display: block; width: 100%; height: auto; overflow: visible;}
+.response-plots svg text,.transplant-panels svg text {font: 16px var(--specter-display-font, sans-serif); fill: #17282d;}
+.response-plots svg text[fill="#8561b0"] {fill: #8561b0;}
+.response-plots svg text[fill="#187a6b"] {fill: #187a6b;}
+.response-explorer > figcaption,.transplant-comparison > figcaption {font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px;}
+#response-reading {font-size: 19px;}
+html:has(.editorial-synthesis) .passport-layout {grid-template-columns: 1fr;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px;}
+html:has(.editorial-synthesis) .patch-card {border: 0; padding: 0; background: none; box-shadow: none;}
+html:has(.editorial-synthesis) .patch-card figcaption {color: #17282d; padding: 12px 0;}
+html:has(.editorial-synthesis) .patch-card figcaption span,html:has(.editorial-synthesis) .native-strip figcaption span {display: none;}
+html:has(.editorial-synthesis) .patch-canvases {position: relative; padding-top: 28px;}
+html:has(.editorial-synthesis) .patch-canvases::before,html:has(.editorial-synthesis) .patch-canvases::after {position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df;}
+html:has(.editorial-synthesis) .patch-canvases::before {content: "Visible matter"; left: 0;}
+html:has(.editorial-synthesis) .patch-canvases::after {content: "Hidden composition"; left: 51%;}
+html:has(.editorial-synthesis) .patch-canvases canvas {width: 100%; height: auto;}
+html:has(.editorial-synthesis) .comparison-story {background: none; padding: 0; margin-top: 40px;}
+@media (max-width: 700px) {.response-plots,.transplant-panels {grid-template-columns: 1fr; gap: 35px;}
+.response-controls {gap: 14px;}
+.response-plots svg text,.transplant-panels svg text {font-size: 18px;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: 1fr;}}
+#response-explorer,.transplant-comparison {scroll-margin-top: 80px;}
 /* These explicit light fills label dark inset panels inside otherwise light charts. */
-html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
-html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
-
-html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
-  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
-}
-html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
-html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
-html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
-
+html.specter-report svg.chart text[fill="#d8ff2f"] {fill: #d8ff2f !important;}
+html.specter-report svg.chart text[fill="#f7f4ec"] {fill: #f7f4ec !important;}
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;}
+html.specter-report body > nav.publication-navigation {display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif;}
+html.specter-report body > nav.publication-navigation a {color: #14252c !important; text-decoration: underline;}
+html.specter-report body > nav.publication-navigation span {color: #59615a !important;}
 /* Native specimen panels retain their black image field. Their labels must
  * remain legible after the surrounding report adopts paper-colored tokens. */
-html.specter-report .specimen > figcaption {
-  color: #d3d5d7 !important;
-  background: #050608;
-}
-html.specter-report .specimen > figcaption :is(b, strong, span) {
-  color: inherit !important;
-}
-
+html.specter-report .specimen > figcaption {color: #d3d5d7 !important;
+  background: #050608;}
+html.specter-report .specimen > figcaption :is(b, strong, span) {color: inherit !important;}
 /* Keep imported data labels readable on a phone instead of shrinking an
  * entire desktop plot into a few hundred pixels. Captions still wrap. */
-@media (max-width: 700px) {
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
-    max-width: 100%;
+@media (max-width: 700px) {html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {max-width: 100%;
     min-width: 0;
     overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-  html.specter-report div.chart > svg { min-width: 760px; }
-  html.specter-report div.card.chart > svg { min-width: 940px; }
-  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
-  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
+    overscroll-behavior-inline: contain;}
+html.specter-report div.chart > svg {min-width: 760px;}
+html.specter-report div.card.chart > svg {min-width: 940px;}
+html.specter-report .trajectory-wrap > svg {min-width: 1120px;}
+html.specter-report .chart-grid .figure > svg.chart {min-width: 640px;}
+html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {content: "Scroll sideways to explore the figure →";
     display: block;
     margin-top: .7rem;
     font: 400 .75rem/1.5 var(--specter-mono);
-    color: var(--specter-muted);
-  }
-}
-
-@media (max-width: 700px) {
-  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
-  html.anatomical-editorial .figure > svg { min-width: 640px; }
-  html.anatomical-editorial .figure:has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
-    display: block;
-    margin-top: .7rem;
-    font: 400 .75rem/1.5 ui-monospace, monospace;
-  }
-  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
-}
-
+    color: var(--specter-muted);}}
 /* A source report's compact local navigation must not hide the injected
  * site navigation or the links back to its dossier and report library. */
-html.specter-report :is(.publication-header, .publication-navigation) a {
-  display: inline-flex !important;
-}
-
+html.specter-report :is(.publication-header, .publication-navigation) a {display: inline-flex !important;}
 /* The commitment report deliberately keeps dark data panels. */
-html.specter-report:has(#steerability) .chart-grid .figure svg text {
-  fill: #e9e7df !important;
-}
+html.specter-report:has(#steerability) .chart-grid .figure svg text {fill: #e9e7df !important;}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/commitment-gate-formation/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav>
 <header class="wrap site-head"><span>Flow Lenia · matched-action formation</span><span>Frozen continuation · 23 Aug 2026</span></header>
 <main>
-<article class="hero"><div class="wrap hero-grid"><div><div class="kicker">Gate-conditioned formation · 256-step continuation</div><h1>Matched Actions Preserve Distinct Body Histories</h1><p class="lede">Flow Lenia is a continuous field whose bright mass gathers into moving, deformable forms; an earlier feedback experiment produced two versions of each organism, an <strong>open</strong> branch chosen to preserve separation between alternative causal histories and a <strong>closed</strong> branch chosen to reduce it, and when we applied the same pair of later actions to both branches, their shapes remained far apart 256 steps later, although the particular action pair chosen to maximize the early split was no better at maintaining it by the end than the within-organism control.</p><div class="question"><b>What we wanted to know</b>Would the two gate-conditioned futures remain visibly different as the organisms continued to form?</div></div>
+<article class="hero"><div class="wrap hero-grid"><div><h1>Matched Actions Preserve Distinct Body Histories</h1><p class="lede">Flow Lenia is a continuous field whose bright mass gathers into moving, deformable forms; an earlier feedback experiment produced two versions of each organism, an <strong>open</strong> branch chosen to preserve separation between alternative causal histories and a <strong>closed</strong> branch chosen to reduce it, and when we applied the same pair of later actions to both branches, their shapes remained far apart 256 steps later, although the particular action pair chosen to maximize the early split was no better at maintaining it by the end than the within-organism control.</p><div class="question"><b>What we wanted to know</b>Would the two gate-conditioned futures remain visibly different as the organisms continued to form?</div></div>
 <figure class="field-figure"><div class="field-grid"><div class="frame"><div class="frame-label"><b>OPEN</b><span>STEP 32</span></div><img src="data:image/png;base64,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" width="128" height="128" alt="Grayscale Flow Lenia field for the open branch of organism s63 at step 32, showing a compact diagonally striped form against black"></div><div class="frame"><div class="frame-label"><b>CLOSED</b><span>STEP 32</span></div><img src="data:image/png;base64,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" width="128" height="128" alt="Grayscale Flow Lenia field for the closed branch of organism s63 at step 32, showing a compact diagonally striped form against black"></div><div class="frame"><div class="frame-label"><b>OPEN</b><span>STEP 256</span></div><img src="data:image/png;base64,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" width="128" height="128" alt="Grayscale Flow Lenia field for the open branch of organism s63 at step 256, showing a long narrow diagonally striped form"></div><div class="frame"><div class="frame-label"><b>CLOSED</b><span>STEP 256</span></div><img src="data:image/png;base64,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" width="128" height="128" alt="Grayscale Flow Lenia field for the closed branch of organism s63 at step 256, showing a broader comb-like form"></div></div><figcaption>The montage follows serene-spiral-0219 (s63, family g16), the same trace used in the earlier report; the curves and numerical estimates below include all 39 organisms.</figcaption></figure></div></article>
-<div class="status" aria-label="What remained and what faded"><div class="status-item observed"><b>What remained</b><p>Under matched later actions, the open and closed fields ended about 0.45 Hellinger units apart.</p></div><div class="status-item faded"><b>What faded</b><p>The max-selected pair’s extra separation fell from +0.040 at step 32 to +0.002 at step 256.</p></div><div class="status-item"><b>Cohort</b><strong>39</strong><p>organisms from 16 source families</p></div><div class="status-item"><b>Continuation</b><strong>312</strong><p>matched trajectories</p></div><div class="status-item"><b>Readout</b><strong>79,872</strong><p>simulator frames</p></div></div>
+<div class="evidence-label" aria-label="What remained and what faded"><div class="status-item observed"><b>What remained</b><p>Under matched later actions, the open and closed fields ended about 0.45 Hellinger units apart.</p></div><div class="status-item faded"><b>What faded</b><p>The max-selected pair’s extra separation fell from +0.040 at step 32 to +0.002 at step 256.</p></div><div class="status-item"><b>Cohort</b><strong>39</strong><p>organisms from 16 source families</p></div><div class="status-item"><b>Continuation</b><strong>312</strong><p>matched trajectories</p></div><div class="status-item"><b>Readout</b><strong>79,872</strong><p>simulator frames</p></div></div>
 
 <section><div class="wrap"><div class="eyebrow">01 · Freezing the continuation</div><h2>At step 32 we kept the widest and narrowest open–closed splits, then watched another 224 steps without choosing again.</h2><p class="intro">For every organism, each ordered action pair was applied once to its open branch and once to its closed counterpart, keeping the later causes matched. We retained the pair with the largest open–closed Hellinger distance at step 32, together with the pair that produced the smallest distance as a within-organism control; both choices and their action schedules were fixed before steps 33 through 256 were run, so the later morphology could not influence what had been selected.</p><div class="protocol"><div class="protocol-step"><i>01</i><b>The earlier controller</b><span>Feedback prepared open and closed gate states, alongside untouched and blind-full comparisons.</span></div><div class="protocol-step"><i>02</i><b>Matched replay</b><span>Each action pair was replayed on both gate states, keeping the later causes the same.</span></div><div class="protocol-step"><i>03</i><b>The step-32 choice</b><span>One pair gave each organism its widest split, while another gave it the narrowest.</span></div><div class="protocol-step"><i>04</i><b>The unseen continuation</b><span>Only after both pairs were fixed did steps 33 through 256 run.</span></div></div><div class="selection-note"><b>Why keep two pairs?</b><p>The wider pair showed what happened to an intentionally selected early split, while the narrower pair showed whether an ordinary action pair would also separate after passing through different gate states; because the wider pair was chosen using step 32 itself, its extra separation would have to remain larger later, rather than being inferred merely because its two branches were different.</p></div></div></section>
 

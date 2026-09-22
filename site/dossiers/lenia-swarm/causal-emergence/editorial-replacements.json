@@ -817,5 +817,3567 @@
       "from": "Because one score could easily mistake a convenient coordinate for a cause, we also intervened directly: we branched exact futures from the same checkpoint, applied matched writes at different ages, ran feedback policies and then released them, and swapped hidden channel composition while holding the visible field exactly fixed. The account that follows depends on where these different views agree, and it keeps their disagreements visible when they do not.",
       "to": "If the difference rises before coherent form appears, interactions among the measured regions may be changing in a way that the outline does not capture. That is what the prospective comparison found: the joint forecast closed part of its deficit, although the best split remained ahead. The score is inspired by GARD’s whole-versus-parts question; it is not a measurement of IIT Φ.</p>\n      <p>A changing forecast does not tell us what controls development. For that, we return to the saved states and intervene. By comparing each disturbed continuation with an untouched copy, we measure the consequences of the intervention directly. Hidden-channel rewrites make this especially revealing: the initial picture can remain exactly the same while the later body changes. These comparisons connect the information measurement to a physical question about how the field maintains and changes its organization."
     }
-  ]
+  ],
+  "report_replacements": {
+    "adaptive-commitment-controller": [
+      {
+        "from": "<h2>One repeats. One listens.</h2>",
+        "to": "<h2>Comparing repeated actions with feedback</h2>"
+      },
+      {
+        "from": "<h2>The state can be held. It does not yet hold itself.</h2>",
+        "to": "<h2>Feedback holds a state that does not yet sustain itself</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Adaptive Flow Lenia control</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Open-loop replay</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Adaptive re-selection</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Original one-push window · passage 36</div>",
+        "to": "<div class=\"evidence-label\">Original one-push window · passage 36</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Adaptive four-turn control · passage 48</div>",
+        "to": "<div class=\"evidence-label\">Adaptive four-turn control · passage 48</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 48 · active control</div>",
+        "to": "<div class=\"evidence-label\">passage 48 · active control</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 56 · released</div>",
+        "to": "<div class=\"evidence-label\">passage 56 · released</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">NEXT DIRECT SWING</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Pulse frequency</div>",
+        "to": "<div class=\"evidence-label\">Pulse frequency</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Hold → release → rescue</div>",
+        "to": "<div class=\"evidence-label\">Hold → release → rescue</div>"
+      }
+    ],
+    "adaptive-rescue-cycle": [
+      {
+        "from": "<h2>Drive. Release. Reacquire.</h2>",
+        "to": "<h2>Testing reacquisition after the controller is released</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">A DEVELOPMENTAL GEOMETRY DISCOVERY</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">REACQUIRED passage 60 SPLIT</div>",
+        "to": "<div class=\"evidence-label\">REACQUIRED passage 60 SPLIT</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">ADAPTIVE FUTURE EFFECT</div>",
+        "to": "<div class=\"evidence-label\">ADAPTIVE FUTURE EFFECT</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">STALE passage 45 ACTION</div>",
+        "to": "<div class=\"evidence-label\">STALE passage 45 ACTION</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 33 → passage 45</div>",
+        "to": "<div class=\"evidence-label\">passage 33 → passage 45</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 48 → passage 56</div>",
+        "to": "<div class=\"evidence-label\">passage 48 → passage 56</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 57 → passage 60</div>",
+        "to": "<div class=\"evidence-label\">passage 57 → passage 60</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 61 → long future</div>",
+        "to": "<div class=\"evidence-label\">passage 61 → long future</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 36 · ONE PUSH</div>",
+        "to": "<div class=\"evidence-label\">passage 36 · ONE PUSH</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 48 · ADAPTIVE TRACKING</div>",
+        "to": "<div class=\"evidence-label\">passage 48 · ADAPTIVE TRACKING</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">passage 60 · REACQUIRED</div>",
+        "to": "<div class=\"evidence-label\">passage 60 · REACQUIRED</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">THE NEXT DIRECT SWING</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">IF THE WINDOW IS SHARP</div>",
+        "to": "<div class=\"evidence-label\">IF THE WINDOW IS SHARP</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">IF IT MOVES BY ORGANISM</div>",
+        "to": "<div class=\"evidence-label\">IF IT MOVES BY ORGANISM</div>"
+      }
+    ],
+    "canalization-rescue": [
+      {
+        "from": "<h2>Put the relationships back. Change nothing else.</h2>",
+        "to": "<h2>Restoring spatial relationships while holding other properties fixed</h2>"
+      },
+      {
+        "from": "<h2>No magic threshold. A continuous canalization curve.</h2>",
+        "to": "<h2>Canalization changes continuously with restoration strength</h2>"
+      },
+      {
+        "from": "<h2>Organization does not create possibility. It gives possibility a grammar.</h2>",
+        "to": "<h2>Organization structures the available possibilities</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">FLOW LENIA · EXACT passage 8 SPATIAL RESCUE</div>",
+        "to": "<div class=\"evidence-label\">FLOW LENIA · EXACT passage 8 SPATIAL RESCUE</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">THE REPAIR</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">CAUSAL GEOMETRY</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">DEVELOPMENT</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">RECOVERY SHAPE</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">WHAT THIS OPENS</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NEXT DIRECT SWING</div>",
+        "to": ""
+      }
+    ],
+    "causal-compass-peak": [
+      {
+        "from": "<div class=\"kicker\">1,536 direct intervention futures</div>",
+        "to": "<div class=\"evidence-label\">1,536 direct intervention futures</div>"
+      }
+    ],
+    "causal-history-order": [
+      {
+        "from": "<h2>Same counts. Same beginning. Same ending. Different syntax.</h2>",
+        "to": "<h2>Changing action order with the same counts, start, and endpoint</h2>"
+      },
+      {
+        "from": "<h2>Location changed. Volume did not.</h2>",
+        "to": "<h2>Action order changed location without changing volume</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">A causal-history experiment in Flow Lenia</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">What changed</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">What kind of memory?</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">One representative ancestor</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">The new picture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">Where this points</div>",
+        "to": ""
+      }
+    ],
+    "causal-repertoire-contraction": [
+      {
+        "from": "<h2>More whole-over-parts. A narrower causal future.</h2>",
+        "to": "<h2>Greater whole-over-parts organization accompanies a narrower causal future</h2>"
+      },
+      {
+        "from": "<h2>Timing closes. Microscopic futures remain broad.</h2>",
+        "to": "<h2>Timing becomes constrained while microscopic futures remain broad</h2>"
+      },
+      {
+        "from": "<h2>One state is open. One is already committed.</h2>",
+        "to": "<h2>Comparing states before and after commitment</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Fresh future-blind full causal-repertoire test</div>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"410.0\" y=\"411\" text-anchor=\"middle\" class=\"label\">whole-over-parts organization →</text>",
+        "to": "<text x=\"410.0\" y=\"395\" text-anchor=\"middle\" class=\"label\">whole-over-parts organization →</text>"
+      },
+      {
+        "from": "<text x=\"65\" y=\"26\" class=\"label\">more whole-over-parts ← association → wider timing repertoire</text>",
+        "to": "<text x=\"65\" y=\"238\" class=\"label\">more whole-over-parts ← association → wider timing repertoire</text>"
+      },
+      {
+        "from": "<svg viewBox=\"0 0 800 215\" role=\"img\" aria-label=\"Whole-over-parts association is negative at all four checkpoints\">",
+        "to": "<svg viewBox=\"0 0 800 260\" role=\"img\" aria-label=\"Whole-over-parts association is negative at all four checkpoints\">"
+      },
+      {
+        "from": "<text x=\"710\" y=\"34\" class=\"missing\">no event by 900</text>",
+        "to": "<text x=\"785\" y=\"34\" class=\"missing\" text-anchor=\"end\">no event by 900</text>"
+      },
+      {
+        "from": "<text x=\"710\" y=\"78\" class=\"missing\">no event by 900</text>",
+        "to": "<text x=\"785\" y=\"78\" class=\"missing\" text-anchor=\"end\">no event by 900</text>"
+      }
+    ],
+    "causal-return-loop": [
+      {
+        "from": "<div class=\"kicker\">A fresh causal return-loop experiment</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">The loop</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">Memory through release</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">The causal future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">A representative organism</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">What this means</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">The next experiments</div>",
+        "to": ""
+      }
+    ],
+    "causal-score-sheets": [
+      {
+        "from": "<h2>Same score level. Different organism.</h2>",
+        "to": "<h2>Different organisms can share the same score</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Flow Lenia · causal score sheets · 64 fresh organisms</div>",
+        "to": "<div class=\"evidence-label\">Flow Lenia · causal score sheets · 64 fresh organisms</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">The result in one sentence</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">A representative four-corner slice</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The metric geometry</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Why “folds”?</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Causal future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">One matched challenge, 900 steps later</div>",
+        "to": "<div class=\"evidence-label\">One matched challenge, 900 steps later</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Matching sanity check</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">What changed conceptually</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "coherent-phase-path": [
+      {
+        "from": "<h2>Three endpoints. Three different journeys.</h2>",
+        "to": "<h2>Three journeys toward three endpoints</h2>"
+      },
+      {
+        "from": "<h2>Expansion remains more phase-sensitive. Compactification remains more robust.</h2>",
+        "to": "<h2>Expansion is more sensitive to phase than compactification</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Three exact-energy paths through hidden phase space</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The paths</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The geometry</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What survived replication</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      },
+      {
+        "from": "<svg viewBox=\"0 0 940 500\" role=\"img\" aria-label=\"Three coherent phase paths per developmental direction\">",
+        "to": "<svg viewBox=\"0 0 985 500\" role=\"img\" aria-label=\"Three coherent phase paths per developmental direction\">"
+      }
+    ],
+    "commitment-branching-intervention": [
+      {
+        "from": "<div class=\"eyebrow\">Flow Lenia · one ancestor, eight early pushes, nine shared futures</div>",
+        "to": ""
+      },
+      {
+        "from": "<p>Plan <code>1dbafff90f20c711a8f495f3e756fa62eb3dbc4bde451838ca648bb35a75d691</code><br>Analysis freeze <code>e7b9d1f30f85678053bd1dd12b275186ad506048e90383592d4679c5fc69e896</code><br>Results <code>2ccd2af0ed14f2f329ca31fc982f0e1e0d314681db43ba9fd2994c2e586dcf64</code><br>Discovery synthesis <code>4f67cd6a34cbaee6e3acc68fc01522de8cae73a29ae9c6750f8336692b27cbe6</code><br>Embedded image manifest <code>c0d7032bf7e0904211e84c856197777da0a3a7fd717b1eac6bfdf7d0d580abb0</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\">Plan <code>1dbafff90f20c711a8f495f3e756fa62eb3dbc4bde451838ca648bb35a75d691</code><br>Analysis freeze <code>e7b9d1f30f85678053bd1dd12b275186ad506048e90383592d4679c5fc69e896</code><br>Results <code>2ccd2af0ed14f2f329ca31fc982f0e1e0d314681db43ba9fd2994c2e586dcf64</code><br>Discovery synthesis <code>4f67cd6a34cbaee6e3acc68fc01522de8cae73a29ae9c6750f8336692b27cbe6</code><br>Embedded image manifest <code>c0d7032bf7e0904211e84c856197777da0a3a7fd717b1eac6bfdf7d0d580abb0</code></p></details>"
+      }
+    ],
+    "commitment-fixed-age-dose": [
+      {
+        "from": "<h2>Same ancestor. Same action. Different moments.</h2>",
+        "to": "<h2>Applying the same action at different times in one history</h2>"
+      },
+      {
+        "from": "<h2>No accumulation along commitment. Large movement elsewhere.</h2>",
+        "to": "<h2>Repeated pulses move the field without accumulating commitment</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Flow Lenia · commitment dose & memory</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NEXT DIRECT SWING</div>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"832.0\" y=\"362\" class=\"axis\" text-anchor=\"middle\">passage 56</text>",
+        "to": "<text x=\"832.0\" y=\"362\" class=\"axis\" text-anchor=\"end\">passage 56</text>"
+      }
+    ],
+    "commitment-gate-controller": [
+      {
+        "from": "<h2>Hit early. Then get out of the way.</h2>",
+        "to": "<h2>An early intervention followed by free development</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Closed-loop developmental control</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The controller discovered a strategy</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Release test</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Feedback mattered</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / A hidden state, not a crude shape change</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What this means</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / Breadth</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">07 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "commitment-gate-formation": [
+      {
+        "from": "<div class=\"kicker\">Gate-conditioned formation · 256-step continuation</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"status\" aria-label=\"What remained and what faded\"><div class=\"status-item observed\"><b>What remained</b><p>Under matched later actions, the open and closed fields ended about 0.45 Hellinger units apart.</p></div><div class=\"status-item faded\"><b>What faded</b><p>The max-selected pair’s extra separation fell from +0.040 at step 32 to +0.002 at step 256.</p></div><div class=\"status-item\"><b>Cohort</b><strong>39</strong><p>organisms from 16 source families</p></div><div class=\"status-item\"><b>Continuation</b><strong>312</strong><p>matched trajectories</p></div><div class=\"status-item\"><b>Readout</b><strong>79,872</strong><p>simulator frames</p></div></div>",
+        "to": "<div class=\"evidence-label\" aria-label=\"What remained and what faded\"><div class=\"status-item observed\"><b>What remained</b><p>Under matched later actions, the open and closed fields ended about 0.45 Hellinger units apart.</p></div><div class=\"status-item faded\"><b>What faded</b><p>The max-selected pair’s extra separation fell from +0.040 at step 32 to +0.002 at step 256.</p></div><div class=\"status-item\"><b>Cohort</b><strong>39</strong><p>organisms from 16 source families</p></div><div class=\"status-item\"><b>Continuation</b><strong>312</strong><p>matched trajectories</p></div><div class=\"status-item\"><b>Readout</b><strong>79,872</strong><p>simulator frames</p></div></div>"
+      }
+    ],
+    "commitment-gate-repertoire": [
+      {
+        "from": "<h2>Put the system through the same 64 futures. Count no categories. Set no threshold.</h2>",
+        "to": "<h2>Comparing 64 futures without categories or thresholds</h2>"
+      },
+      {
+        "from": "<h2>Stop observing the repertoire. Start navigating it.</h2>",
+        "to": "<h2>Using the measured repertoire to choose interventions</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Gate-conditioned future repertoire</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The direct test</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / More directions remain alive</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The futures spread apart</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Later causes regain leverage</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The map itself was rewritten</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / Across the cohort</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">07 / What we found</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">08 / The next experiments</div>",
+        "to": ""
+      }
+    ],
+    "commitment-rewrite": [
+      {
+        "from": "<h2>One state. Two directions. A third copy waits until after commitment.</h2>",
+        "to": "<h2>Comparing two rewrite directions before and after commitment</h2>"
+      },
+      {
+        "from": "<h2>Equal physical displacement. Opposite causal inheritance.</h2>",
+        "to": "<h2>Equal physical displacements produce opposite inherited effects</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">FLOW LENIA · CAUSAL COMMITMENT REWRITE</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE INTERVENTION</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE MEMORY</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NOT PERTURBATION SIZE</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE BODY CLOCK</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">WHAT WE FOUND</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NEXT BOLD SWING</div>",
+        "to": ""
+      }
+    ],
+    "commitment-window": [
+      {
+        "from": "<div class=\"kicker\">FLOW LENIA · DEVELOPMENTAL COMMITMENT WINDOW</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE DIRECT SWING</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE CROSSING</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE VISIBLE CLOCK</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE POPULATION</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NOT A BIGGER PERTURBATION</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">WHAT WE FOUND</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE NEXT BOLD SWING</div>",
+        "to": ""
+      }
+    ],
+    "composition-control-surface": [
+      {
+        "from": "<h2>Compactification answers early. Expansion reveals itself later.</h2>",
+        "to": "<h2>Compactification responds earlier than expansion</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">A causal map inside an unchanged body</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The full control surface</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Context changes the code</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / When the pattern becomes visible</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What this means</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
+        "to": ""
+      },
+      {
+        "from": "<svg viewBox=\"0 0 920 390\" role=\"img\" aria-label=\"Four edge contrasts of the developmental surface\">",
+        "to": "<svg viewBox=\"0 0 980 390\" role=\"img\" aria-label=\"Four edge contrasts of the developmental surface\">"
+      },
+      {
+        "from": "<svg viewBox=\"0 0 840 390\" role=\"img\" aria-label=\"Pure spatial-pattern transplant effect over time\">",
+        "to": "<svg viewBox=\"0 0 840 412\" role=\"img\" aria-label=\"Pure spatial-pattern transplant effect over time\">"
+      }
+    ],
+    "delayed-canalization-rescue": [
+      {
+        "from": "<h2>Same scrambled state. Same inverse map. Different time.</h2>",
+        "to": "<h2>Applying the same inverse map at different times after scrambling</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">FLOW LENIA · TIME-DELAYED SPATIAL RESCUE</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE MOVE</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE SIGN FLIP</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">THE DEVELOPMENTAL CLOCK</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NOT PERTURBATION SIZE</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">WHAT THIS MEANS</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NEXT DIRECT SWING</div>",
+        "to": ""
+      }
+    ],
+    "developmental-alignment-window": [
+      {
+        "from": "<h2>The score is controllable throughout development. Its meaning is not.</h2>",
+        "to": "<h2>The score remains controllable as its developmental meaning changes</h2>"
+      },
+      {
+        "from": "<h2>Freeze the sign flip. Test fresh organisms.</h2>",
+        "to": "<h2>Testing the frozen sign-flip prediction in fresh organisms</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">THE INFORMATION–FUTURE ALIGNMENT WINDOW</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">LAST PRE → FIRST POST</div>",
+        "to": "<div class=\"evidence-label\">LAST PRE → FIRST POST</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">PRE-TRANSITION passage 40/passage 48</div>",
+        "to": "<div class=\"evidence-label\">PRE-TRANSITION passage 40/passage 48</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">POST-TRANSITION passage 40/passage 48</div>",
+        "to": "<div class=\"evidence-label\">POST-TRANSITION passage 40/passage 48</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">LAST PRE-TRANSITION</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">FIRST POST-TRANSITION</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">BEFORE THE FORM</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">AFTER THE FORM</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">NEXT DIRECT SWING · ALREADY DETERMINED</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">PREDICTION 1</div>",
+        "to": "<div class=\"evidence-label\">PREDICTION 1</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">PREDICTION 2</div>",
+        "to": "<div class=\"evidence-label\">PREDICTION 2</div>"
+      },
+      {
+        "from": "<svg class=\"chart\" viewBox=\"0 0 940 350\" role=\"img\" aria-label=\"Future repertoire effect by developmental passage\">",
+        "to": "<svg class=\"chart\" viewBox=\"0 0 1000 350\" role=\"img\" aria-label=\"Future repertoire effect by developmental passage\">"
+      }
+    ],
+    "developmental-aperture-map": [
+      {
+        "from": "<h2>We did not find a narrow magic window. We found an early compass.</h2>",
+        "to": "<h2>Early interventions bias developmental direction across a broad window</h2>"
+      },
+      {
+        "from": "<h2>The intervention is invisible. The consequence is not.</h2>",
+        "to": "<h2>An invisible intervention changes the later body</h2>"
+      },
+      {
+        "from": "<h2>The body compass is robust. The wider-futures effect is conditional.</h2>",
+        "to": "<h2>Developmental direction is robustly biased, but repertoire widening is conditional</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Four ages · third fresh cohort · invisible state interventions</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The age map</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Same visible start, different becoming</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What did not stay universal</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next experiment</div>",
+        "to": ""
+      }
+    ],
+    "developmental-arrow-birth": [
+      {
+        "from": "<div class=\"kicker\">passage 8 → passage 24 · fourth fresh cohort · 1,600 futures</div>",
+        "to": "<div class=\"evidence-label\">passage 8 → passage 24 · fourth fresh cohort · 1,600 futures</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The developmental profile</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Actual early development</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What we may have found</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-basin-atlas": [
+      {
+        "from": "<div class=\"eyebrow\">A developmental causal atlas · 1,280 complete futures</div>",
+        "to": "<div class=\"evidence-label\">A developmental causal atlas · 1,280 complete futures</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">01</div>",
+        "to": "<div class=\"evidence-label\">01</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">02</div>",
+        "to": "<div class=\"evidence-label\">02</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">03</div>",
+        "to": "<div class=\"evidence-label\">03</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">04</div>",
+        "to": "<div class=\"evidence-label\">04</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">05</div>",
+        "to": "<div class=\"evidence-label\">05</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">06</div>",
+        "to": "<div class=\"evidence-label\">06</div>"
+      },
+      {
+        "from": "<text x=\"736.00\" y=\"304\" class=\"tick\" text-anchor=\"middle\">transition</text>",
+        "to": "<text x=\"736.00\" y=\"304\" class=\"tick\" text-anchor=\"end\">transition</text>"
+      }
+    ],
+    "developmental-causal-address": [
+      {
+        "from": "<div class=\"kicker\">Three body ages × three information directions × four zero-net histories</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The causal address</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The mature decoder</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The effect has an afterlife</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What we found</div>",
+        "to": ""
+      }
+    ],
+    "developmental-causal-echo-tomography": [
+      {
+        "from": "<h2>Subtle in pixels. Large in causal organization.</h2>",
+        "to": "<h2>Small visible changes accompany large changes in causal organization</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Finding 10 · unforced state tomography</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / What the movie revealed</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The body carrying the memory</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / A physical lead on the causal echo</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Next direct swing</div>",
+        "to": ""
+      },
+      {
+        "from": "<svg class=\"echo\" viewBox=\"0 0 860 330\" role=\"img\" aria-label=\"Standardized component separation lead and later causal echo\">",
+        "to": "<svg class=\"echo\" viewBox=\"0 0 900 330\" role=\"img\" aria-label=\"Standardized component separation lead and later causal echo\">"
+      }
+    ],
+    "developmental-causal-grammar": [
+      {
+        "from": "<h2>Not universal. Still population-level.</h2>",
+        "to": "<h2>The population effect varies across individual organisms</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Future-blind Flow Lenia experiment · 24 August 2026</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"micro\">Primary result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">01 / The question</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"micro\">Every ordered pair, not selected examples</div>",
+        "to": "<div class=\"evidence-label\">Every ordered pair, not selected examples</div>"
+      },
+      {
+        "from": "<div class=\"section-no\">02 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">03 / Dynamics</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">04 / Decomposition</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">05 / Families</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">06 / Meaning</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">07 / Next swings</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">08 / Source boundary</div>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"790\" y=\"466\" text-anchor=\"end\">STABILIZATION →</text>",
+        "to": "<text x=\"790\" y=\"495\" text-anchor=\"end\">STABILIZATION →</text>"
+      },
+      {
+        "from": "<svg class=\"family-chart\" viewBox=\"0 0 820 475\" role=\"img\" aria-labelledby=\"family-title family-desc\">",
+        "to": "<svg class=\"family-chart\" viewBox=\"0 0 820 515\" role=\"img\" aria-labelledby=\"family-title family-desc\">"
+      }
+    ],
+    "developmental-causal-order": [
+      {
+        "from": "<h2>Four pulses. Zero net input. Two histories.</h2>",
+        "to": "<h2>Two histories built from four pulses with zero net input</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">64 new organisms · equal net dose · different temporal order</div>",
+        "to": "<div class=\"evidence-label\">64 new organisms · equal net dose · different temporal order</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / Same ingredients, different grammar</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The order effect</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Primacy, not recency</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Not perturbation size</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The direction replicates again</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / What we have now</div>",
+        "to": ""
+      }
+    ],
+    "developmental-causal-order-age-map": [
+      {
+        "from": "<div class=\"kicker\">one pulse sequence · six stages · balanced total dose</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / Response across developmental passages</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The fields still separate</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Across organisms</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What happens at passage 32</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What remains at passage 64</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / What this opens</div>",
+        "to": ""
+      },
+      {
+        "from": "<svg viewBox=\"0 0 980 330\" role=\"img\" aria-label=\"Response collapse despite stable raw trajectory distance\">",
+        "to": "<svg viewBox=\"0 0 1040 350\" role=\"img\" aria-label=\"Response collapse despite stable raw trajectory distance\">"
+      }
+    ],
+    "developmental-causal-plasticity-window": [
+      {
+        "from": "<h2>Same action. Three organism-relative moments.</h2>",
+        "to": "<h2>Applying the same action at three organism-relative times</h2>"
+      },
+      {
+        "from": "<h2>Not a spike. A plateau, then a drop.</h2>",
+        "to": "<h2>The response plateaus before dropping</h2>"
+      },
+      {
+        "from": "<h2>The identities remain steerable. The form becomes rigid.</h2>",
+        "to": "<h2>Identity remains steerable as form becomes resistant to change</h2>"
+      },
+      {
+        "from": "<p class=\"eyebrow\">Before the organism / swing 01</p>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">What we found</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\" style=\"color:#e8c14a\">15 / 19 organisms agree</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">01 / Intervention</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">02 / Result</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">03 / Dynamics</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">04 / Specificity</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">05 / Population</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">06 / Synthesis</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">07 / Boundary</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">08 / Next swing</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">09 / Ledger</span>",
+        "to": ""
+      },
+      {
+        "from": "<p class=\"ledger\">closed result · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6<br>commitment exploration · 48cf44c315bb049289671df9c4587a2b3aa70f6971d9c59c793ddea418128aa5<br>report generator · ad25956032d86f2587a942dda9a980c746ac857d66621bd2f60166b83e4eaaf5<br>generated report · standalone HTML · no external assets</p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\" class=\"ledger\">closed result · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6<br>commitment exploration · 48cf44c315bb049289671df9c4587a2b3aa70f6971d9c59c793ddea418128aa5<br>report generator · ad25956032d86f2587a942dda9a980c746ac857d66621bd2f60166b83e4eaaf5<br>generated report · standalone HTML · no external assets</p></details>"
+      },
+      {
+        "from": "<svg class=\"chart\" viewBox=\"0 0 940 360\" role=\"img\" aria-label=\"Five family-bootstrap contrasts with 95 percent intervals\">",
+        "to": "<svg class=\"chart\" viewBox=\"-65 0 1030 375\" role=\"img\" aria-label=\"Five family-bootstrap contrasts with 95 percent intervals\">"
+      }
+    ],
+    "developmental-causal-susceptibility-map": [
+      {
+        "from": "<h2>Move the turn. Does the boundary follow?</h2>",
+        "to": "<h2>Does the susceptibility boundary move with the developmental turn?</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Before the replicator · dense causal susceptibility map</div>",
+        "to": ""
+      }
+    ],
+    "developmental-commitment-aperture": [
+      {
+        "from": "<h2>Large enough to see structure. Specific enough to stay honest.</h2>",
+        "to": "<h2>The cohort and limits of the claim</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Flow Lenia · developmental commitment · 3,648 unseen futures</div>",
+        "to": ""
+      }
+    ],
+    "developmental-counterweight-clamp": [
+      {
+        "from": "<h2>Touch the hidden mixture. Leave the visible body alone.</h2>",
+        "to": "<h2>Changing the hidden mixture while preserving the visible body</h2>"
+      },
+      {
+        "from": "<h2>First consolidation. Then reorganization.</h2>",
+        "to": "<h2>Reorganization follows consolidation</h2>"
+      },
+      {
+        "from": "<h2>The intervention is gone. Its geometry remains.</h2>",
+        "to": "<h2>The geometry persists after the intervention ends</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">64 new organisms · 1,728 hidden-state pulses · 512 later futures</div>",
+        "to": "<div class=\"evidence-label\">64 new organisms · 1,728 hidden-state pulses · 512 later futures</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The direct intervention</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / A privileged direction</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Delayed morphological scheduling</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / A temporal aperture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / Long-lived memory</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / What changed in our picture</div>",
+        "to": ""
+      }
+    ],
+    "developmental-counterweight-dose": [
+      {
+        "from": "<div class=\"kicker\">64 new organisms · half/full/double passage 12 intervention · 512-step release</div>",
+        "to": "<div class=\"evidence-label\">64 new organisms · half/full/double passage 12 intervention · 512-step release</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / A controllable growth axis</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The causal aperture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The memory of the push</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The emerging dynamical picture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-decoder-memory": [
+      {
+        "from": "<h2>One path reaches inward. The other stays near the surface.</h2>",
+        "to": "<h2>Dose order determines whether memory reaches the dense core</h2>"
+      },
+      {
+        "from": "<h2>Connectivity remembers specifically. Size mostly remembers timing.</h2>",
+        "to": "<h2>Connectivity retains order-specific memory while size mainly reflects timing</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">1,023 futures · full 3×3 prime/test matrix · 16 unforced steps</div>",
+        "to": "<div class=\"evidence-label\">1,023 futures · full 3×3 prime/test matrix · 16 unforced steps</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The causal question</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The memory trace</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / What kind of memory?</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The fission bridge</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-depth-memory-timescale": [
+      {
+        "from": "<h2>Not decay. A sequence of gates.</h2>",
+        "to": "<h2>Memory changes through successive developmental gates</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Five fixed delays · 0 to 128 unforced steps · equal-total order interaction</div>",
+        "to": "<div class=\"evidence-label\">Five fixed delays · 0 to 128 unforced steps · equal-total order interaction</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The memory curve</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / It must first become memory</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The trace travels</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The return</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-fission-lineage": [
+      {
+        "from": "<div class=\"kicker\">8,928 passage 48 frames · every direction age · every zero-net history</div>",
+        "to": "<div class=\"evidence-label\">8,928 passage 48 frames · every direction age · every zero-net history</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / Follow the components</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The topology has a depth</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / What it does—and does not—move</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-fold-onset": [
+      {
+        "from": "<div class=\"eyebrow\">Flow Lenia · developmental fold onset · 53 fresh organisms</div>",
+        "to": "<div class=\"evidence-label\">Flow Lenia · developmental fold onset · 53 fresh organisms</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">How we looked</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Morphological fold</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Causal future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Causal leverage</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">One organism, untouched</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">One score-matched route pair</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">What this changes</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-ignition-transplant": [
+      {
+        "from": "<h2>The body grows. Its hidden control field learns to constrain growth.</h2>",
+        "to": "<h2>Hidden composition increasingly constrains the growing body</h2>"
+      },
+      {
+        "from": "<h2>Insert it at passage 8: contraction. Remove it at passage 12: expansion.</h2>",
+        "to": "<h2>Early insertion contracts the body; later removal expands it</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">64 new organisms · passage 8↔passage 12 hidden-state intervention</div>",
+        "to": "<div class=\"evidence-label\">64 new organisms · passage 8↔passage 12 hidden-state intervention</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The sign reversal</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The effect over time</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The reciprocal test</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What it is not</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The emerging model</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "developmental-susceptibility-transplant": [
+      {
+        "from": "<h2>Swap the inside. Keep the body.</h2>",
+        "to": "<h2>Swapping hidden composition while preserving the body</h2>"
+      },
+      {
+        "from": "<h2>Rows matter. Columns do not.</h2>",
+        "to": "<h2>Visible body age explains more than hidden donor age</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Reciprocal hidden-age transplant · recipient body held visible</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The direct transplant</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The 2 × 2 answer</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Where embodiment changes</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The larger idea</div>",
+        "to": ""
+      }
+    ],
+    "developmental-tangent-controller": [
+      {
+        "from": "<h2>Different microfutures. The same developmental event.</h2>",
+        "to": "<h2>Different microscopic futures share the same developmental event</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Developmental tangent controller · fresh cohort</div>",
+        "to": ""
+      }
+    ],
+    "developmental-topology-dose-transition": [
+      {
+        "from": "<div class=\"kicker\">31 mature bodies · five doses · native and orthogonal order controls</div>",
+        "to": "<div class=\"evidence-label\">31 mature bodies · five doses · native and orthogonal order controls</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / One direction, two response regimes</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / What half dose does</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / What high dose does</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Daughter-like dynamics</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "early-action-world-onset": [
+      {
+        "from": "<div class=\"eyebrow\">Flow Lenia · early action-world onset · 39 organisms</div>",
+        "to": "<div class=\"evidence-label\">Flow Lenia · early action-world onset · 39 organisms</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Curve one · causal future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Curve two · visible state</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Curve three · plasticity</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">One untouched developmental sequence</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">One primordial score sheet</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The same challenge, much later</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The developmental principle</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The next direct swing</div>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"836.0\" y=\"322\" text-anchor=\"middle\" class=\"axis\">crossing</text>",
+        "to": "<text x=\"836.0\" y=\"322\" text-anchor=\"end\" class=\"axis\">crossing</text>"
+      }
+    ],
+    "fresh-organic-q40-replication": [
+      {
+        "from": "<h2>Same assay. Very different individual geometry.</h2>",
+        "to": "<h2>The same assay reveals different individual geometries</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Before the replicator · fresh 64-organism causal test</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The direct result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">What changed in the theory</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The cross-experiment synthesis</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Representative causal futures</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "fresh-phase-operator": [
+      {
+        "from": "<h2>One visible beginning. Several real trajectories.</h2>",
+        "to": "<h2>Different trajectories begin from the same visible field</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Same visible organism · different hidden composition · different future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The direct result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The developmental response</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Actual futures</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The surprise</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / Why this matters for causal emergence</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next experiment</div>",
+        "to": ""
+      }
+    ],
+    "gate-conditioned-morphology-navigation": [
+      {
+        "from": "<h2>The gate did not add generic randomness. It favored a kind of body.</h2>",
+        "to": "<h2>The gate favors a kind of body rather than adding generic randomness</h2>"
+      },
+      {
+        "from": "<h2>The action grammar faded. The developmental mode remained.</h2>",
+        "to": "<h2>The developmental mode outlasts the action-specific response</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Gate-conditioned morphology navigation</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Watch it happen</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The phenotype</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Morphological polarity</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / Two timescales</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The sequence</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">07 / Next swings</div>",
+        "to": ""
+      }
+    ],
+    "gate-conditioned-morphology-reversal": [
+      {
+        "from": "<h2>Developmental bias is strong. Developmental fate is negotiable.</h2>",
+        "to": "<h2>Later intervention can redirect a strong developmental bias</h2>"
+      },
+      {
+        "from": "<h2>Same hidden state. Different requested body.</h2>",
+        "to": "<h2>Requesting different bodies from the same hidden state</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Gate-conditioned morphology reversal</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Feedback takes hold</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / After release</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Watch one organism</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What changed in our picture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "geometry-turn-causal-atlas": [
+      {
+        "from": "<h2>Same clock. Same operator. Radically different futures.</h2>",
+        "to": "<h2>The same operator and clock produce different futures</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Before the replicator · direct causal swing</div>",
+        "to": ""
+      }
+    ],
+    "information-body-return": [
+      {
+        "from": "<h2>One history relaxed. The other crossed through itself and rebounded.</h2>",
+        "to": "<h2>One history relaxes while the other crosses and rebounds</h2>"
+      },
+      {
+        "from": "<h2>At the handoff, almost identical. Later, measurably different.</h2>",
+        "to": "<h2>Nearly identical handoff states become measurably different</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Information → body → information → future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The long trajectory</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The same future challenge</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / One organism</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What changed</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / Next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "initial-action-world": [
+      {
+        "from": "<div class=\"eyebrow\">Fixed-age comparison · passage 8→passage 32</div>",
+        "to": "<div class=\"evidence-label\">Fixed-age comparison · passage 8→passage 32</div>"
+      },
+      {
+        "from": "<div class=\"status\"><b>What was fixed, and when</b>The 39-organism cohort, pulse sequences, matching rule, checkpoints, and outcome measurements were fixed before any of these histories or outcomes were run, and the later continuation and challenge panel was frozen before any release or passage 900 run. Because the same 39 organisms appear at passage 8, passage 16, passage 24, and passage 32, the age curves describe changes within one cohort; they are not independent replications in four populations.</div>",
+        "to": "<div class=\"evidence-label\"><b>What was fixed, and when</b>The 39-organism cohort, pulse sequences, matching rule, checkpoints, and outcome measurements were fixed before any of these histories or outcomes were run, and the later continuation and challenge panel was frozen before any release or passage 900 run. Because the same 39 organisms appear at passage 8, passage 16, passage 24, and passage 32, the age curves describe changes within one cohort; they are not independent replications in four populations.</div>"
+      },
+      {
+        "from": "<text class=\"panel-label\" x=\"20\" y=\"74.0\">passage 900 outcome separation</text>",
+        "to": "<text class=\"panel-label\" x=\"20\" y=\"32\">passage 900 outcome separation</text>"
+      },
+      {
+        "from": "<text class=\"unit\" x=\"20\" y=\"100.0\">mean distance</text>",
+        "to": "<text class=\"unit\" x=\"20\" y=\"50\">mean distance</text>"
+      },
+      {
+        "from": "<text class=\"panel-label\" x=\"20\" y=\"318.0\">Release-shape separation</text>",
+        "to": "<text class=\"panel-label\" x=\"20\" y=\"276\">Release-shape separation</text>"
+      },
+      {
+        "from": "<text class=\"unit\" x=\"20\" y=\"344.0\">mean distance</text>",
+        "to": "<text class=\"unit\" x=\"20\" y=\"294\">mean distance</text>"
+      },
+      {
+        "from": "<text class=\"panel-label\" x=\"20\" y=\"562.0\">Range of later formation times</text>",
+        "to": "<text class=\"panel-label\" x=\"20\" y=\"520\">Range of later formation times</text>"
+      },
+      {
+        "from": "<text class=\"unit\" x=\"20\" y=\"588.0\">passage range</text>",
+        "to": "<text class=\"unit\" x=\"20\" y=\"538\">passage range</text>"
+      }
+    ],
+    "latent-composition-code": [
+      {
+        "from": "<div class=\"kicker\">What does hidden composition carry?</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The answer</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Dose</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Development through time</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / What we found</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "latent-composition-transplant": [
+      {
+        "from": "<h2>A developmental vector moved. Whole-body identity did not.</h2>",
+        "to": "<h2>A developmental vector transfers without transferring whole-body identity</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">A causal transplant into hidden state</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / What we changed</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / What moved—and what did not</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Why the simple label cancels</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What this opens</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "morphology-information-return": [
+      {
+        "from": "<h2>Visible form moved first. Information geometry followed on its own clock.</h2>",
+        "to": "<h2>Information geometry follows visible form on a different timescale</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Morphology → information return</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The handoff</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The older state is still there</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / One representative organism</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The loop</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / Next swing</div>",
+        "to": ""
+      }
+    ],
+    "native-tangent-intervention": [
+      {
+        "from": "<h2>Forward and backward begin invisibly. The body then chooses different geometry.</h2>",
+        "to": "<h2>Opposite invisible changes send the body toward different geometries</h2>"
+      },
+      {
+        "from": "<h2>Same young body. Same four perturbations. Different spread.</h2>",
+        "to": "<h2>The same four perturbations spread differently from the young body</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Learned from the organism's own untouched past · tested in a fresh future</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Direction becomes morphology</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / A transient causal aperture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Actual branch fans</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What this changes</div>",
+        "to": ""
+      }
+    ],
+    "organism-birth-causal-exploration": [
+      {
+        "from": "<div class=\"eyebrow\">A fresh causal exploration · 576 complete futures</div>",
+        "to": "<div class=\"evidence-label\">A fresh causal exploration · 576 complete futures</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">01</div>",
+        "to": "<div class=\"evidence-label\">01</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">02</div>",
+        "to": "<div class=\"evidence-label\">02</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">03</div>",
+        "to": "<div class=\"evidence-label\">03</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">04</div>",
+        "to": "<div class=\"evidence-label\">04</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">05</div>",
+        "to": "<div class=\"evidence-label\">05</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">06</div>",
+        "to": "<div class=\"evidence-label\">06</div>"
+      },
+      {
+        "from": "<text x=\"62.87\" y=\"313\" class=\"tick\" text-anchor=\"middle\">9</text>",
+        "to": "<g><title>Passage 9</title><line x1=\"62.87\" x2=\"62.87\" y1=\"282\" y2=\"288\" class=\"axis\"/></g>"
+      },
+      {
+        "from": "<text x=\"65.49\" y=\"313\" class=\"tick\" text-anchor=\"middle\">12</text>",
+        "to": "<g><title>Passage 12</title><line x1=\"65.49\" x2=\"65.49\" y1=\"282\" y2=\"288\" class=\"axis\"/></g>"
+      },
+      {
+        "from": "<text x=\"75.96\" y=\"313\" class=\"tick\" text-anchor=\"middle\">24</text>",
+        "to": "<g><title>Passage 24</title><line x1=\"75.96\" x2=\"75.96\" y1=\"282\" y2=\"288\" class=\"axis\"/></g>"
+      }
+    ],
+    "organism-birth-signal": [
+      {
+        "from": "<div class=\"eyebrow\">Fresh prospective replication · 21 August 2026</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">01</div>",
+        "to": "<div class=\"evidence-label\">01</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">02</div>",
+        "to": "<div class=\"evidence-label\">02</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">03</div>",
+        "to": "<div class=\"evidence-label\">03</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">04</div>",
+        "to": "<div class=\"evidence-label\">04</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">05</div>",
+        "to": "<div class=\"evidence-label\">05</div>"
+      }
+    ],
+    "organism-hardens-without-narrowing": [
+      {
+        "from": "<div class=\"kicker\">Four plans frozen before outcomes · 3,910 physics runs · August 2026</div>",
+        "to": ""
+      }
+    ],
+    "orthogonal-pulse-release-pilot": [
+      {
+        "from": "<h2>One link worked. Three did not.</h2>",
+        "to": "<h2>One of four tested links succeeded</h2>"
+      },
+      {
+        "from": "<p class=\"eyebrow\">GARD-inspired causal-emergence test</p>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">The four-step verdict</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">01 / Setup</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">02 / Result</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"status\">Yes</span>",
+        "to": "<span class=\"evidence-label\">Yes</span>"
+      },
+      {
+        "from": "<span class=\"status\">No</span>",
+        "to": "<span class=\"evidence-label\">No</span>"
+      },
+      {
+        "from": "<div class=\"section-no\">03 / Signal</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">04 / Behavior</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">05 / Meaning</div>",
+        "to": ""
+      }
+    ],
+    "phase-direction-atlas": [
+      {
+        "from": "<div class=\"kicker\">Twelve equally strong hidden directions from every state</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The junction</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The reach</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Developmental commitment</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What simple similarity misses</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "prediction-falls-direction-appears": [
+      {
+        "from": "<div class=\"kicker\">Dense untouched passage 1→passage 24 movie · same 64 organisms</div>",
+        "to": "<div class=\"evidence-label\">Dense untouched passage 1→passage 24 movie · same 64 organisms</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The coordinated turn</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The information transition</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / What the state is doing</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The emerging picture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The decisive intervention</div>",
+        "to": ""
+      }
+    ],
+    "preinjury-recovery-confirmation": [
+      {
+        "from": "<h2>Measure first. Injure later.</h2>",
+        "to": "<h2>Testing recovery predictions measured before injury</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">GARD-inspired predictive information in Flow Lenia</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">01 / Question</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">02 / Design</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">03 / Accounting</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">04 / Injury</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">05 / Result</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"kicker\">Test 1 · raw score</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"kicker\">Test 2 · after ordinary controls</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"kicker\">Test 3 · prediction on held-out runs</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">06 / Decision</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"status\">PASS</span>",
+        "to": "<span class=\"evidence-label\">PASS</span>"
+      },
+      {
+        "from": "<span class=\"status\">FAIL</span>",
+        "to": "<span class=\"evidence-label\">FAIL</span>"
+      },
+      {
+        "from": "<div class=\"section-no\">07 / Meaning</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">08 / Receipts</div>",
+        "to": ""
+      }
+    ],
+    "prospective-geometry-clock": [
+      {
+        "from": "<div class=\"eyebrow\">Fresh prospective state interrogation · 64 unused organisms</div>",
+        "to": "<div class=\"evidence-label\">Fresh prospective state interrogation · 64 unused organisms</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">The emerging picture</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">A prospective rotation</div>",
+        "to": "<div class=\"evidence-label\">A prospective rotation</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">Matched organisms, not just pooled averages</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">What the frozen clock learned</div>",
+        "to": "<div class=\"evidence-label\">What the frozen clock learned</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">The next direct causal swing</div>",
+        "to": ""
+      }
+    ],
+    "prospective-transition-sign-flip": [
+      {
+        "from": "<h2>You can see the boundary. The causal turn is not visually uniform.</h2>",
+        "to": "<h2>A visible boundary accompanies varied causal turns</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">The next causal-emergence swing</div>",
+        "to": ""
+      }
+    ],
+    "reservoir-causal-steering": [
+      {
+        "from": "<h3 style=\"margin-top: 14px\">Same past.<br>Opposite policy.</h3>",
+        "to": "<h3 style=\"margin-top: 14px\">Applying opposite policies after a shared history</h3>"
+      },
+      {
+        "from": "<div class=\"eyebrow\" style=\"margin-top: 24px\">Flow Lenia · GARD-inspired information experiment</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro orange-text\">Frozen claim decision</span>",
+        "to": "<span class=\"evidence-label\">Frozen claim decision</span>"
+      },
+      {
+        "from": "<span class=\"section-no\">00 / In 20 seconds</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">01 / Primary evidence</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">02 / The tempting pattern</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">03 / What did resolve</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">04 / Natural prediction</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">05 / What was measured</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">06 / Cohort geometry</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">07 / Claim ladder</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">08 / Boundary</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">09 / Receipt</span>",
+        "to": ""
+      }
+    ],
+    "reservoir-recurrence-census": [
+      {
+        "from": "<h2>Same research track. Different ontology.</h2>",
+        "to": "<h2>How the molecular model differs from the Flow Lenia experiment</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Before the Replicator · GARD-inspired Flow Lenia study</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">01 / The path</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">02 / The event</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">03 / Mechanics</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">04 / Accounting</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">05 / Every run</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">06 / The gate</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Required before signal analysis</span>",
+        "to": "<span class=\"evidence-label\">Required before signal analysis</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Observed</span>",
+        "to": "<span class=\"evidence-label\">Observed</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Predictive-information phase · unopened</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">07 / Paper ↔ Lenia</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">08 / Meaning</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"section-no\">09 / Receipts</div>",
+        "to": ""
+      }
+    ],
+    "reservoir-temporal-precursor": [
+      {
+        "from": "<h2>Past only. Then future.</h2>",
+        "to": "<h2>Separating past-only measurements from future outcomes</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">GARD-inspired temporal precursor exploration · August 2026</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro orange\">Honest verdict</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">01 / The test</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">02 / Coverage</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">03 / Broad result</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">Held out</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">04 / The clue</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">05 / Stress test</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">06 / Meaning</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">07 / Audit</span>",
+        "to": ""
+      },
+      {
+        "from": "<p class=\"foot\">Source checksum: 21e2adf1c50d3cdc835010e3927fc1bffbd18c000f07b1cdb433fe7c37ba966b (exploration report) · a21d65d22968a20d08a2a317628d59418334f72ea376affdbea40bb64b84cdda (point stream). Generated from the completed local artifacts; this HTML is explanatory, not part of the recorded result.</p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\" class=\"foot\">Source checksum: 21e2adf1c50d3cdc835010e3927fc1bffbd18c000f07b1cdb433fe7c37ba966b (exploration report) · a21d65d22968a20d08a2a317628d59418334f72ea376affdbea40bb64b84cdda (point stream). Generated from the completed local artifacts; this HTML is explanatory, not part of the recorded result.</p></details>"
+      }
+    ],
+    "shared-phase-field-orbit": [
+      {
+        "from": "<h2>Flip the hidden pattern. Flip the developmental preference.</h2>",
+        "to": "<h2>Reversing the hidden pattern reverses the developmental preference</h2>"
+      },
+      {
+        "from": "<h2>The visible body begins the same. Its hidden allocation sends it elsewhere.</h2>",
+        "to": "<h2>Hidden allocation redirects the future of the same visible body</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Same visible body · same perturbation energy · opposite hidden sign</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / What we actually changed</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The orbit</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / The future separates</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / One organism, reciprocal futures</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / What changed in our picture</div>",
+        "to": ""
+      }
+    ],
+    "shared-phase-vocabulary": [
+      {
+        "from": "<div class=\"kicker\">The same twelve hidden phase fields across every organism</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Field 06</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / The private grammar</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Did selection fool us?</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "spatial-code-resolution": [
+      {
+        "from": "<h2>Rigid motion preserves meaning. Phase destruction does not.</h2>",
+        "to": "<h2>Rigid motion preserves the effect, but destroying phase does not</h2>"
+      },
+      {
+        "from": "<h2>Compactification is distributed. Expansion is more centralized.</h2>",
+        "to": "<h2>Compactification is more spatially distributed than expansion</h2>"
+      },
+      {
+        "from": "<h2>Wrongly arranged codes do not merely fail. They kick the trajectory sideways.</h2>",
+        "to": "<h2>Misarranged patterns redirect the trajectory</h2>"
+      },
+      {
+        "from": "<h2>Match intervention energy exactly. Then map the syntax.</h2>",
+        "to": "<h2>Testing spatial arrangement at matched intervention energy</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">A causal dissection of the hidden developmental field</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / What survives</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Where it lives</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Two developmental grammars</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / The dynamical surprise</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"865.0\" y=\"398\" text-anchor=\"middle\" class=\"axis-label\">passage 128</text>",
+        "to": "<text x=\"865.0\" y=\"398\" text-anchor=\"end\" class=\"axis-label\">passage 128</text>"
+      }
+    ],
+    "spatial-code-syntax": [
+      {
+        "from": "<h2>Expansion lives broadly. Compactification also survives in the fine structure.</h2>",
+        "to": "<h2>Expansion is broadly distributed, while compactification also survives in fine structure</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">The hidden field is not one universal code</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">01 / The split</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / Phase</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">03 / Scale</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">04 / Pose</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">05 / What we found</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">06 / Next</div>",
+        "to": ""
+      }
+    ],
+    "spatial-scale-action-world": [
+      {
+        "from": "<h2>Change arrangement. Change nothing else.</h2>",
+        "to": "<h2>Changing spatial arrangement while holding other properties fixed</h2>"
+      },
+      {
+        "from": "<h2>Causal plasticity comes first. Organization canalizes it.</h2>",
+        "to": "<h2>Organization canalizes an initially plastic causal response</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Flow Lenia · exact passage 8 spatial ablation</div>",
+        "to": "<div class=\"evidence-label\">Flow Lenia · exact passage 8 spatial ablation</div>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">The move</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The local action map</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Developmental control</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The distant action world</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">What we found</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The next direct swing</div>",
+        "to": ""
+      }
+    ],
+    "start-here": [
+      {
+        "from": "<div class=\"eyebrow\">A colleague's entrance · five minutes first, receipts underneath</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Best current reading</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"eyebrow\">01 / Five-minute map</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">02 / The measurement</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"eyebrow\">03 / The discovery arc</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"eyebrow\">04 / What survived</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"eyebrow\">05 / The correction that improved the story</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">The cleaner interpretation</span>",
+        "to": "<span class=\"evidence-label\">The cleaner interpretation</span>"
+      },
+      {
+        "from": "<span class=\"eyebrow\">06 / The campaign, not just the winners</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"eyebrow\">07 / Why this matters</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"eyebrow\">08 / Tiny glossary</span>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"56\" y=\"36\" font-family=\"ui-monospace, monospace\" font-size=\"12\" font-weight=\"800\" fill=\"#254fd4\">NORMALIZED WITHIN EACH SERIES · DIRECTION IS THE CLAIM</text>",
+        "to": "<text x=\"56\" y=\"56\" font-family=\"ui-monospace, monospace\" font-size=\"12\" font-weight=\"800\" fill=\"#254fd4\">NORMALIZED WITHIN EACH SERIES · DIRECTION IS THE CLAIM</text>"
+      }
+    ],
+    "synthesis-v1": [
+      {
+        "from": "<h3>Zero in the smooth regime. Two at the boundary.</h3>",
+        "to": "<h3>Boundary behavior differs from the smooth regime</h3>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">\n      <div>Research synthesis · 18 August 2026</div>\n      <span>Experimental record · working hypotheses · falsification criteria</span>\n    </div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">01 / definition</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">02 / evidence</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"status\">No broad signal</span>",
+        "to": "<span class=\"evidence-label\">No broad signal</span>"
+      },
+      {
+        "from": "<span class=\"status\">Timing clue failed prospectively</span>",
+        "to": "<span class=\"evidence-label\">Timing clue failed prospectively</span>"
+      },
+      {
+        "from": "<span class=\"status\">Causal null</span>",
+        "to": "<span class=\"evidence-label\">Causal null</span>"
+      },
+      {
+        "from": "<span class=\"status\">Φ separated; selectivity failed</span>",
+        "to": "<span class=\"evidence-label\">Φ separated; selectivity failed</span>"
+      },
+      {
+        "from": "<span class=\"status\">Futures dispersed</span>",
+        "to": "<span class=\"evidence-label\">Futures dispersed</span>"
+      },
+      {
+        "from": "<span class=\"status lead-status\">Structural lead</span>",
+        "to": "<span class=\"evidence-label\">Structural lead</span>"
+      },
+      {
+        "from": "<span class=\"status\">Assay invalid</span>",
+        "to": "<span class=\"evidence-label\">Assay invalid</span>"
+      },
+      {
+        "from": "<span class=\"status lead-status\">Direction achieved</span>",
+        "to": "<span class=\"evidence-label\">Direction achieved</span>"
+      },
+      {
+        "from": "<span class=\"status lead-status\">Woundability mapped</span>",
+        "to": "<span class=\"evidence-label\">Woundability mapped</span>"
+      },
+      {
+        "from": "<div class=\"kicker\">03 / ladder</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">04 / newest result</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">05 / next tests</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">06 / kill criteria</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">07 / belief</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">08 / record</div>",
+        "to": ""
+      }
+    ],
+    "synthesis-v2": [
+      {
+        "from": "<div class=\"eyebrow\">Research synthesis · 21 August 2026</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">01 / idea</div>",
+        "to": "<div class=\"evidence-label\">01 / idea</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">02 / journey</div>",
+        "to": "<div class=\"evidence-label\">02 / journey</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">03 / discoveries</div>",
+        "to": "<div class=\"evidence-label\">03 / discoveries</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">04 / turn</div>",
+        "to": "<div class=\"evidence-label\">04 / turn</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">05 / result</div>",
+        "to": "<div class=\"evidence-label\">05 / result</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">05B / morphogenesis</div>",
+        "to": "<div class=\"evidence-label\">05B / morphogenesis</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">06 / meaning</div>",
+        "to": "<div class=\"evidence-label\">06 / meaning</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">07 / parallel read</div>",
+        "to": "<div class=\"evidence-label\">07 / parallel read</div>"
+      },
+      {
+        "from": "<p class=\"micro\" style=\"margin:1.1rem 0 0;color:var(--muted)\">All controlled arms began the pulse at division 25 with 174/192 scorable states.</p>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">08 / response surface</div>",
+        "to": "<div class=\"evidence-label\">08 / response surface</div>"
+      },
+      {
+        "from": "<p class=\"micro\" style=\"margin:1.1rem 0 0;color:var(--muted)\">Thirty-two matched blocks per duration; the 32-action loss-time comparison had 31 joint events because one Φ-driven ecology never lost a founder by passage 100.</p>",
+        "to": "<p class=\"evidence-label\" style=\"margin:1.1rem 0 0;color:var(--muted)\">Thirty-two matched blocks per duration; the 32-action loss-time comparison had 31 joint events because one Φ-driven ecology never lost a founder by passage 100.</p>"
+      },
+      {
+        "from": "<div class=\"kicker\">09 / next</div>",
+        "to": "<div class=\"evidence-label\">09 / next</div>"
+      },
+      {
+        "from": "<div class=\"kicker\">10 / ledger</div>",
+        "to": "<div class=\"evidence-label\">10 / ledger</div>"
+      },
+      {
+        "from": "<p>Create matched interventions that promote or block the boundary/MIP/rank event while holding mass, founder composition, and ordinary predictability as close as possible. Then measure whether Q moves.</p>",
+        "to": "<p>Create matched interventions that promote or block the boundary, minimum-information-partition, and rank changes while holding mass, founder composition, and ordinary predictability as close as possible. Then measure whether Q moves.</p>"
+      }
+    ],
+    "synthesis-v3": [
+      {
+        "from": "<h2>Yes. There is already something worth sharing.</h2>",
+        "to": "<h2>What the combined experiments establish</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">GARD-inspired Flow Lenia synthesis · 26 Aug 2026</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"hero-meta\" aria-label=\"Evidence classes\">\n            <span class=\"badge prospective\">prospective</span>\n            <span class=\"badge causal\">direct causal</span>\n            <span class=\"badge replication\">fresh cohorts</span>\n            <span class=\"badge secondary\">predeclared secondary</span>\n          </div>",
+        "to": "<div class=\"evidence-label\" aria-label=\"Evidence classes\">\n            <span class=\"badge prospective\">prospective</span>\n            <span class=\"badge causal\">direct causal</span>\n            <span class=\"badge replication\">fresh cohorts</span>\n            <span class=\"badge secondary\">predeclared secondary</span>\n          </div>"
+      },
+      {
+        "from": "<span class=\"micro\">The short version</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The instrument, without the fog</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">What changed our mind</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">The evidence chain</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Predictive whole</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Fresh pre-form whole−sum</span>",
+        "to": "<span class=\"evidence-label\">Fresh pre-form whole−sum</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Developmental atlas</span>",
+        "to": "<span class=\"evidence-label\">Developmental atlas</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Compass rotation</span>",
+        "to": "<span class=\"evidence-label\">Compass rotation</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Causal compass</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Phase coordinate</span>",
+        "to": "<span class=\"evidence-label\">Phase coordinate</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Fresh turn</span>",
+        "to": "<span class=\"evidence-label\">Fresh turn</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Actuator test</span>",
+        "to": "<span class=\"evidence-label\">Actuator test</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">From forecast to intervention</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Timing repertoire</span>",
+        "to": "<span class=\"evidence-label\">Timing repertoire</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Same eight actions</span>",
+        "to": "<span class=\"evidence-label\">Same eight actions</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Direct branch effect</span>",
+        "to": "<span class=\"evidence-label\">Direct branch effect</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Organized action-world</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">passage 8 causal world</span>",
+        "to": "<span class=\"evidence-label\">passage 8 causal world</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Matched futures</span>",
+        "to": "<span class=\"evidence-label\">Matched futures</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Scramble delays</span>",
+        "to": "<span class=\"evidence-label\">Scramble delays</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">State-setting and memory</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Post-release memory</span>",
+        "to": "<span class=\"evidence-label\">Post-release memory</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Field divergence</span>",
+        "to": "<span class=\"evidence-label\">Field divergence</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Action advantage</span>",
+        "to": "<span class=\"evidence-label\">Action advantage</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Embodied decoder</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Visible residual</span>",
+        "to": "<span class=\"evidence-label\">Visible residual</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Donor-native pull</span>",
+        "to": "<span class=\"evidence-label\">Donor-native pull</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Hidden counterweight</span>",
+        "to": "<span class=\"evidence-label\">Hidden counterweight</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Causal grammar</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Morphological steerability</span>",
+        "to": "<span class=\"evidence-label\">Morphological steerability</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Action-geometry rewrite</span>",
+        "to": "<span class=\"evidence-label\">Action-geometry rewrite</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Selective closure</span>",
+        "to": "<span class=\"evidence-label\">Selective closure</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Selective future closure</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Post-hoc dominant-body lead</span>",
+        "to": "<span class=\"evidence-label\">Post-hoc dominant-body lead</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Fine shape at peak</span>",
+        "to": "<span class=\"evidence-label\">Fine shape at peak</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Delayed effect</span>",
+        "to": "<span class=\"evidence-label\">Delayed effect</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\" style=\"color:var(--specter-acid)\">The synthesis</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Share readiness</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\" style=\"color:var(--specter-acid)\">One decisive next replication</div>",
+        "to": ""
+      },
+      {
+        "from": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4% of passage 32</text>",
+        "to": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4%<tspan x=\"0\" dy=\"20\" font-size=\"13\"> of passage 32</tspan></text>"
+      }
+    ],
+    "synthesis-v4": [
+      {
+        "from": "<div class=\"eyebrow\">GARD-inspired Flow Lenia synthesis · v4 · 26 Aug 2026</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"hero-meta\" aria-label=\"Evidence classes\">\n            <span class=\"badge prospective\">prospective</span>\n            <span class=\"badge causal\">direct causal</span>\n            <span class=\"badge replication\">fresh cohorts</span>\n            <span class=\"badge secondary\">predeclared secondary</span>\n          </div>",
+        "to": "<div class=\"evidence-label\" aria-label=\"Evidence classes\">\n            <span class=\"badge prospective\">prospective</span>\n            <span class=\"badge causal\">direct causal</span>\n            <span class=\"badge replication\">fresh cohorts</span>\n            <span class=\"badge secondary\">predeclared secondary</span>\n          </div>"
+      },
+      {
+        "from": "<span class=\"micro\">The short version</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">The instrument</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Before the evidence</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">How the question changed</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">The evidence chain</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Predictive whole</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Fresh pre-form whole−sum</span>",
+        "to": "<span class=\"evidence-label\">Fresh pre-form whole−sum</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Developmental atlas</span>",
+        "to": "<span class=\"evidence-label\">Developmental atlas</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Compass rotation</span>",
+        "to": "<span class=\"evidence-label\">Compass rotation</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Geometry clock and actuator test</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Phase coordinate · predeclared</span>",
+        "to": "<span class=\"evidence-label\">Phase coordinate · predeclared</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Fresh turn · post-hoc</span>",
+        "to": "<span class=\"evidence-label\">Fresh turn · post-hoc</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Actuator test</span>",
+        "to": "<span class=\"evidence-label\">Actuator test</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">From forecast to intervention</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Timing repertoire</span>",
+        "to": "<span class=\"evidence-label\">Timing repertoire</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Same eight actions</span>",
+        "to": "<span class=\"evidence-label\">Same eight actions</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Branch secondary · timing primary null</span>",
+        "to": "<span class=\"evidence-label\">Branch secondary · timing primary null</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">The action-world at passage 8</div>",
+        "to": "<div class=\"evidence-label\">The action-world at passage 8</div>"
+      },
+      {
+        "from": "<span class=\"micro\">passage 8 causal world</span>",
+        "to": "<span class=\"evidence-label\">passage 8 causal world</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Matched futures</span>",
+        "to": "<span class=\"evidence-label\">Matched futures</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Scramble delays</span>",
+        "to": "<span class=\"evidence-label\">Scramble delays</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">State-setting and memory</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Post-release memory</span>",
+        "to": "<span class=\"evidence-label\">Post-release memory</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Field divergence</span>",
+        "to": "<span class=\"evidence-label\">Field divergence</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Action advantage</span>",
+        "to": "<span class=\"evidence-label\">Action advantage</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Hidden-channel transplant</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Visible residual · by construction</span>",
+        "to": "<span class=\"evidence-label\">Visible residual · by construction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Donor-native pull · predeclared secondary</span>",
+        "to": "<span class=\"evidence-label\">Donor-native pull · predeclared secondary</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Hidden counterweight · second pass</span>",
+        "to": "<span class=\"evidence-label\">Hidden counterweight · second pass</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Causal grammar</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Morphological steerability</span>",
+        "to": "<span class=\"evidence-label\">Morphological steerability</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Action-geometry rewrite</span>",
+        "to": "<span class=\"evidence-label\">Action-geometry rewrite</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Selective closure</span>",
+        "to": "<span class=\"evidence-label\">Selective closure</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Selective future closure</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Post-hoc dominant-body lead</span>",
+        "to": "<span class=\"evidence-label\">Post-hoc dominant-body lead</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Fine shape at peak</span>",
+        "to": "<span class=\"evidence-label\">Fine shape at peak</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Delayed effect</span>",
+        "to": "<span class=\"evidence-label\">Delayed effect</span>"
+      },
+      {
+        "from": "<div class=\"eyebrow\" style=\"color:var(--specter-acid)\">The synthesis</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\">Share readiness</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">The campaign record</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"eyebrow\" style=\"color:var(--specter-acid)\">One decisive next replication · since executed</div>",
+        "to": ""
+      },
+      {
+        "from": "<p><code>prospective-results-v1b/prospective-analysis-report-v1b.json · eab15f3c894edf4c8865f8ebc22f7ee84a9052b630d1376c593ae29967ca1815</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>prospective-results-v1b/prospective-analysis-report-v1b.json · eab15f3c894edf4c8865f8ebc22f7ee84a9052b630d1376c593ae29967ca1815</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · 3ff7652b91f2670201364275e46dc11bb806c0316f574cff79847f889971436e</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · 3ff7652b91f2670201364275e46dc11bb806c0316f574cff79847f889971436e</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · a321b7922195f0a8cf3198d6961f2159ed4c6065b8cef69a3b9e616d21f7bc2e</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · a321b7922195f0a8cf3198d6961f2159ed4c6065b8cef69a3b9e616d21f7bc2e</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · 779277c93261976e9d95eacb2812cbc4f69e03005e9af3063d7329f4a30fb8f3</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · 779277c93261976e9d95eacb2812cbc4f69e03005e9af3063d7329f4a30fb8f3</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · 5318aa930cd789d446372828dd0fc1bcf55edbeafc7b07d7868feb76d5bc77d4</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · 5318aa930cd789d446372828dd0fc1bcf55edbeafc7b07d7868feb76d5bc77d4</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · 7f88560f446752adb31483f8f9e5f851a67069e97050d40393ab26784f98f949</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · 7f88560f446752adb31483f8f9e5f851a67069e97050d40393ab26784f98f949</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · f71fd77f180cd081ea9011970ac2e109ec7b25179b5b7982f467a8f40deed91e</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · f71fd77f180cd081ea9011970ac2e109ec7b25179b5b7982f467a8f40deed91e</code></p></details>"
+      },
+      {
+        "from": "<p><code>results.json · 6cb3e4a06fa6244bc2347d11543d0a54484105edb7fbd346c0e9202380bf68f1</code></p>",
+        "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\"><code>results.json · 6cb3e4a06fa6244bc2347d11543d0a54484105edb7fbd346c0e9202380bf68f1</code></p></details>"
+      },
+      {
+        "from": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4% of passage 32</text>",
+        "to": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4%<tspan x=\"0\" dy=\"20\" font-size=\"13\"> of passage 32</tspan></text>"
+      }
+    ],
+    "synthesis-v5": [
+      {
+        "from": "<span class=\"section-no\">Three direct swings · 29 Aug 2026</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">The cumulative answer</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Frozen · matched +240</span>",
+        "to": "<span class=\"evidence-label\">Frozen · matched +240</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Post-hoc · requested dose</span>",
+        "to": "<span class=\"evidence-label\">Post-hoc · requested dose</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Post-hoc · macro write per matter</span>",
+        "to": "<span class=\"evidence-label\">Post-hoc · macro write per matter</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Active mature achievement</span>",
+        "to": "<span class=\"evidence-label\">Active mature achievement</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Corrected mature advantage</span>",
+        "to": "<span class=\"evidence-label\">Corrected mature advantage</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Held-out +128 advantage</span>",
+        "to": "<span class=\"evidence-label\">Held-out +128 advantage</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Earliest tested residual margin</span>",
+        "to": "<span class=\"evidence-label\">Earliest tested residual margin</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Earliest top-1 retrieval</span>",
+        "to": "<span class=\"evidence-label\">Earliest top-1 retrieval</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Late residual margin</span>",
+        "to": "<span class=\"evidence-label\">Late residual margin</span>"
+      },
+      {
+        "from": "<span class=\"micro\">What these swings changed</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">Evidence ledger</span>",
+        "to": ""
+      },
+      {
+        "from": "<figcaption><div><b>Four visibly identical passage 48 bodies, four hidden allocations.</b><p>Left canvas: visible matter, channel 0 + channel 1. Right canvas: channel-0 fraction in blue-to-coral, brightness weighted by visible matter. These are deterministic renders from the frozen f32 state patches, not simulator screenshots.</p></div><span>All four visible fields: <code>537f431663a945bf81ddf03dc782c6cd2bde8333334e8ba4022b44d41ba54979</code></span></figcaption>",
+        "to": "<figcaption><div><b>Four visibly identical passage 48 bodies, four hidden allocations.</b><p>Left canvas: visible matter, channel 0 + channel 1. Right canvas: channel-0 fraction in blue-to-coral, brightness weighted by visible matter. These are deterministic renders from the frozen f32 state patches, not simulator screenshots.</p></div></figcaption>"
+      }
+    ],
+    "synthesis-v6": [
+      {
+        "from": "<h2>Whole-state feedback reaches the target. It does not earn a unique edge.</h2>",
+        "to": "<h2>Whole-state feedback reaches targets without a unique advantage</h2>"
+      },
+      {
+        "from": "<span class=\"micro\">GARD-inspired Flow Lenia synthesis · research synthesis · 30 Aug 2026</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">The short answer</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Future fan</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Visible / hidden</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Frozen / post-hoc</span>",
+        "to": "<span class=\"evidence-label\">Frozen / post-hoc</span>"
+      },
+      {
+        "from": "<span class=\"micro\">prospective whole−sum rise</span>",
+        "to": "<span class=\"evidence-label\">prospective whole−sum rise</span>"
+      },
+      {
+        "from": "<span class=\"micro\">held-out event prediction</span>",
+        "to": "<span class=\"evidence-label\">held-out event prediction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">prospective repertoire</span>",
+        "to": "<span class=\"evidence-label\">prospective repertoire</span>"
+      },
+      {
+        "from": "<span class=\"micro\">fixed passage 8 action-world</span>",
+        "to": "<span class=\"evidence-label\">fixed passage 8 action-world</span>"
+      },
+      {
+        "from": "<span class=\"micro\">What the null taught us</span>",
+        "to": "<span class=\"evidence-label\">What the null taught us</span>"
+      },
+      {
+        "from": "<span class=\"micro\">future timing repertoire</span>",
+        "to": "<span class=\"evidence-label\">future timing repertoire</span>"
+      },
+      {
+        "from": "<span class=\"micro\">gate release memory</span>",
+        "to": "<span class=\"evidence-label\">gate release memory</span>"
+      },
+      {
+        "from": "<span class=\"micro\">spatial leverage</span>",
+        "to": "<span class=\"evidence-label\">spatial leverage</span>"
+      },
+      {
+        "from": "<span class=\"micro\">action grammar rewrite</span>",
+        "to": "<span class=\"evidence-label\">action grammar rewrite</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Timing closes</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Spatial leverage closes</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Action grammar hardens</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Shape stays plural</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Exact visible-state control</span>",
+        "to": "<span class=\"evidence-label\">Exact visible-state control</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Status of the original lead</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">fine shape sole primary</span>",
+        "to": "<span class=\"evidence-label\">fine shape sole primary</span>"
+      },
+      {
+        "from": "<span class=\"micro\">steerability prediction</span>",
+        "to": "<span class=\"evidence-label\">steerability prediction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">basin-width prediction</span>",
+        "to": "<span class=\"evidence-label\">basin-width prediction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">history primary</span>",
+        "to": "<span class=\"evidence-label\">history primary</span>"
+      },
+      {
+        "from": "<span class=\"micro\">fixed .12 · D4</span>",
+        "to": "<span class=\"evidence-label\">fixed .12 · D4</span>"
+      },
+      {
+        "from": "<span class=\"micro\">physical write</span>",
+        "to": "<span class=\"evidence-label\">physical write</span>"
+      },
+      {
+        "from": "<span class=\"micro\">approximate match</span>",
+        "to": "<span class=\"evidence-label\">approximate match</span>"
+      },
+      {
+        "from": "<span class=\"micro\">common support</span>",
+        "to": "<span class=\"evidence-label\">common support</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Protocol-conformant correction</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">whole vs sham</span>",
+        "to": "<span class=\"evidence-label\">whole vs sham</span>"
+      },
+      {
+        "from": "<span class=\"micro\">whole advantage</span>",
+        "to": "<span class=\"evidence-label\">whole advantage</span>"
+      },
+      {
+        "from": "<span class=\"micro\">developmental gain</span>",
+        "to": "<span class=\"evidence-label\">developmental gain</span>"
+      },
+      {
+        "from": "<span class=\"micro\">held-out +128</span>",
+        "to": "<span class=\"evidence-label\">held-out +128</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Operational result</span>",
+        "to": "<span class=\"evidence-label\">Operational result</span>"
+      },
+      {
+        "from": "<span class=\"micro\">earliest pooled visible</span>",
+        "to": "<span class=\"evidence-label\">earliest pooled visible</span>"
+      },
+      {
+        "from": "<span class=\"micro\">strict quartet</span>",
+        "to": "<span class=\"evidence-label\">strict quartet</span>"
+      },
+      {
+        "from": "<span class=\"micro\">hidden response</span>",
+        "to": "<span class=\"evidence-label\">hidden response</span>"
+      },
+      {
+        "from": "<span class=\"micro\">long horizon</span>",
+        "to": "<span class=\"evidence-label\">long horizon</span>"
+      },
+      {
+        "from": "<span class=\"section-no\">07b · documented map</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Possibility</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Commitment</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Control</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Individuality</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Not claimed</span>",
+        "to": "<span class=\"evidence-label\">Not claimed</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Same-genotype lives</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Closed-loop release ecology</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Passport surgery</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Reproduction and inheritance</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">10 · evidence and correction ledger</span>",
+        "to": ""
+      },
+      {
+        "from": "<figcaption>Native held-out frames · the same prospective trajectory moves from an artificial square through a pre-form reorganization to a persistent elongated body. Embedded PNG SHA 3e5670c3ad3ab7d2beab36cdb529eb2d66f42816cfbc9ccbbd80027dbe2d1d4c.</figcaption>",
+        "to": "<figcaption>Native held-out frames · the same prospective trajectory moves from an artificial square through a pre-form reorganization to a persistent elongated body. </figcaption>"
+      },
+      {
+        "from": "<figcaption>Native pulse-release comparison · histories chosen by opposite feedback policies remain morphologically distinct after release. This is branch memory, not persistent target-relative controller advantage. Embedded PNG SHA a6e9572da0d7d71a4104284ea0f06da81f34d9af0ccdff358ec5154e6a5263bb.</figcaption>",
+        "to": "<figcaption>Native pulse-release comparison · histories chosen by opposite feedback policies remain morphologically distinct after release. This is branch memory, not persistent target-relative controller advantage. </figcaption>"
+      },
+      {
+        "from": "Interval -0.6762 to +1.2916; strongest per-instance sham/replay/local comparator. Null.",
+        "to": "Interval -0.6762 to +1.2916, relative to the strongest control for each instance: sham, replay, or local control. The interval includes zero."
+      }
+    ],
+    "synthesis-v7": [
+      {
+        "from": "<span class=\"micro\">The forecasting comparison</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">prospective whole−sum rise</span>",
+        "to": "<span class=\"evidence-label\">prospective whole−sum rise</span>"
+      },
+      {
+        "from": "<span class=\"micro\">held-out event prediction</span>",
+        "to": "<span class=\"evidence-label\">held-out event prediction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">prospective repertoire</span>",
+        "to": "<span class=\"evidence-label\">prospective repertoire</span>"
+      },
+      {
+        "from": "<span class=\"micro\">fixed passage 8 set of intervention outcomes</span>",
+        "to": "<span class=\"evidence-label\">fixed passage 8 set of intervention outcomes</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Developmental geometry</span>",
+        "to": "<span class=\"evidence-label\">Developmental geometry</span>"
+      },
+      {
+        "from": "<span class=\"micro\">future timing repertoire</span>",
+        "to": "<span class=\"evidence-label\">future timing repertoire</span>"
+      },
+      {
+        "from": "<span class=\"micro\">gate release memory</span>",
+        "to": "<span class=\"evidence-label\">gate release memory</span>"
+      },
+      {
+        "from": "<span class=\"micro\">spatial leverage</span>",
+        "to": "<span class=\"evidence-label\">spatial leverage</span>"
+      },
+      {
+        "from": "<span class=\"micro\">action grammar rewrite</span>",
+        "to": "<span class=\"evidence-label\">action grammar rewrite</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Timing closes</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Spatial leverage closes</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Action grammar hardens</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Shape stays plural</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Exact visible-state control</span>",
+        "to": "<span class=\"evidence-label\">Exact visible-state control</span>"
+      },
+      {
+        "from": "<span class=\"micro\">What happened when we repeated it</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">fine shape sole primary</span>",
+        "to": "<span class=\"evidence-label\">fine shape sole primary</span>"
+      },
+      {
+        "from": "<span class=\"micro\">steerability prediction</span>",
+        "to": "<span class=\"evidence-label\">steerability prediction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">basin-width prediction</span>",
+        "to": "<span class=\"evidence-label\">basin-width prediction</span>"
+      },
+      {
+        "from": "<span class=\"micro\">history primary</span>",
+        "to": "<span class=\"evidence-label\">history primary</span>"
+      },
+      {
+        "from": "<span class=\"micro\">fixed .12 · D4</span>",
+        "to": "<span class=\"evidence-label\">fixed .12 · D4</span>"
+      },
+      {
+        "from": "<span class=\"micro\">physical write</span>",
+        "to": "<span class=\"evidence-label\">physical write</span>"
+      },
+      {
+        "from": "<span class=\"micro\">approximate match</span>",
+        "to": "<span class=\"evidence-label\">approximate match</span>"
+      },
+      {
+        "from": "<span class=\"micro\">common support</span>",
+        "to": "<span class=\"evidence-label\">common support</span>"
+      },
+      {
+        "from": "<span class=\"micro\">One comparator error, repaired</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">whole vs sham</span>",
+        "to": "<span class=\"evidence-label\">whole vs sham</span>"
+      },
+      {
+        "from": "<span class=\"micro\">whole advantage</span>",
+        "to": "<span class=\"evidence-label\">whole advantage</span>"
+      },
+      {
+        "from": "<span class=\"micro\">developmental gain</span>",
+        "to": "<span class=\"evidence-label\">developmental gain</span>"
+      },
+      {
+        "from": "<span class=\"micro\">held-out +128</span>",
+        "to": "<span class=\"evidence-label\">held-out +128</span>"
+      },
+      {
+        "from": "<span class=\"micro\">What the experiment locates</span>",
+        "to": "<span class=\"evidence-label\">What the experiment locates</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Read the paired fields below</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">earliest pooled visible</span>",
+        "to": "<span class=\"evidence-label\">earliest pooled visible</span>"
+      },
+      {
+        "from": "<span class=\"micro\">strict quartet</span>",
+        "to": "<span class=\"evidence-label\">strict quartet</span>"
+      },
+      {
+        "from": "<span class=\"micro\">hidden response</span>",
+        "to": "<span class=\"evidence-label\">hidden response</span>"
+      },
+      {
+        "from": "<span class=\"micro\">long horizon</span>",
+        "to": "<span class=\"evidence-label\">long horizon</span>"
+      },
+      {
+        "from": "<span class=\"section-no\">07b · looking inside the fingerprint</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Possibility</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Commitment</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Control</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Individuality</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Still open</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Still entangled</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Several clocks</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Same-genotype lives</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">After feedback stops</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Fingerprint surgery</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Reproduction and inheritance</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"section-no\">10 · evidence and correction ledger</span>",
+        "to": ""
+      }
+    ],
+    "tangent-future-aperture": [
+      {
+        "from": "<h2>Push once. Then let eight futures answer.</h2>",
+        "to": "<h2>Comparing eight futures after a single intervention</h2>"
+      },
+      {
+        "from": "<h2>Not an immediate scar. A late developmental convergence.</h2>",
+        "to": "<h2>Development converges later, after the immediate perturbation</h2>"
+      },
+      {
+        "from": "<div class=\"kicker\">Flow Lenia · information tangent · 1,216 unseen futures</div>",
+        "to": ""
+      },
+      {
+        "from": "el(svg,'text',{x:x(xv)+(i===0?10:8),y:y(yv)+(i===0?-12:label==='untouched'?17:-10),fill:color,'font-size':11},label);",
+        "to": "const offsets=[[10,-12],[10,18],[12,-4],[-70,-12]], offset=offsets[i];el(svg,'line',{x1:x(xv),y1:y(yv),x2:x(xv)+offset[0],y2:y(yv)+offset[1]-4,stroke:color,'stroke-width':.8});el(svg,'text',{x:x(xv)+offset[0],y:y(yv)+offset[1],fill:color,'font-size':11},label);"
+      }
+    ],
+    "tangent-induced-causal-grammar": [
+      {
+        "from": "<h2>Memory moved. The whole grammar did not.</h2>",
+        "to": "<h2>Memory transfers without transferring the full action grammar</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Future-blind Flow Lenia intervention</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Φ-forward</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Φ-backward</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">01 / The question</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">02 / The finding</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">03 / The shape of the effect</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">04 / Across organisms</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Built-in causal sanity check</span>",
+        "to": "<span class=\"evidence-label\">Built-in causal sanity check</span>"
+      },
+      {
+        "from": "<div class=\"kicker\">05 / Why this is causal</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">06 / What opened</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Experiment</span>",
+        "to": "<span class=\"evidence-label\">Experiment</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Source boundary</span>",
+        "to": "<span class=\"evidence-label\">Source boundary</span>"
+      },
+      {
+        "from": "memorySvg.append(svgEl(\"text\",{x:W-m.r+8,y:y(values.at(-1))+4,fill:colors[name],class:\"series-label\"},name));",
+        "to": "const labelY = {\"Φ-forward\":46,\"Untouched\":68,\"Blind swap\":90,\"Φ-backward\":112}[name];\n        memorySvg.append(svgEl(\"line\",{x1:W-m.r,y1:y(values.at(-1)),x2:W-m.r+6,y2:labelY-4,stroke:colors[name],\"stroke-width\":1}));\n        memorySvg.append(svgEl(\"text\",{x:W-m.r+8,y:labelY,fill:colors[name],class:\"series-label\"},name));"
+      }
+    ],
+    "tangent-memory-dose-response": [
+      {
+        "from": "<h2>Forward preserved. Backward erased.</h2>",
+        "to": "<h2>Forward intervention preserves memory while backward intervention erases it</h2>"
+      },
+      {
+        "from": "<div class=\"eyebrow\">Future-blind Flow Lenia dose response</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Φ-forward / high dose</span>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Φ-backward / high dose</span>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">01 / The question</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">02 / The response curve</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">03 / What moved</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"micro\">The simplest reading</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Φ-forward</span>",
+        "to": "<span class=\"evidence-label\">Φ-forward</span>"
+      },
+      {
+        "from": "<span class=\"micro\">Φ-backward</span>",
+        "to": "<span class=\"evidence-label\">Φ-backward</span>"
+      },
+      {
+        "from": "<div class=\"kicker\">04 / Developmental time</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">05 / A shared susceptibility</div>",
+        "to": ""
+      },
+      {
+        "from": "<div class=\"kicker\">06 / The exact control</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">maximum later difference</span>",
+        "to": "<span class=\"evidence-label\">maximum later difference</span>"
+      },
+      {
+        "from": "<div class=\"kicker\">07 / The direct next swing</div>",
+        "to": ""
+      },
+      {
+        "from": "<span class=\"micro\">Before the Replicator</span>",
+        "to": "<span class=\"evidence-label\">Before the Replicator</span>"
+      },
+      {
+        "from": "text(svg, x(d.composition) + 7, y(d.field) - 6, d.familyId, \"start\", \"tick\");",
+        "to": "const offsets = {f33:[28,14], f38:[28,-6], f40:[28,-20], f44:[-28,-2]};\n          const offset = offsets[d.familyId] || [7,-6];\n          if (offsets[d.familyId]) svg.appendChild(el(\"line\", {x1:x(d.composition),y1:y(d.field),x2:x(d.composition)+offset[0],y2:y(d.field)+offset[1]-4,stroke:\"currentColor\",\"stroke-width\":.7,opacity:.5}));\n          text(svg, x(d.composition) + offset[0], y(d.field) + offset[1], d.familyId, offset[0]<0?\"end\":\"start\", \"tick\");"
+      }
+    ]
+  }
 }

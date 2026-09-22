@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "morphology-control release study",
   "sourceReportSha256": "17970b7631525a795e3bd530bba53b924bf2b89e4677fe7cecb6da61181bdd01",
-  "publicReportSha256": "17970b7631525a795e3bd530bba53b924bf2b89e4677fe7cecb6da61181bdd01",
+  "publicReportSha256": "250ed3c5bdf5c6a973d84aa6cb2ac5f1802da62059a0fe94215466f0db64388c",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "93425886e05f9b136ddb86d1b97f2c221246b29d9c03624923cdb1caa1d490da",
+  "contextSha256": "78857568fce385c55fd2f97cbc55746212b3190629a62d2a035a19b9bc64f419",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "ed0debcec69edf7e5ae7975b01c86c38b53fc690391a024556adc13d6b746570"
+  "upstreamReceiptSha256": "2cb69e37db31eebe805a2ef714cc81ae5ab486e00b2ec3f3fe11a6202e64bfd4"
 }

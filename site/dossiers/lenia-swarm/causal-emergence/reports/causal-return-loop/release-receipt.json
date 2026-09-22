@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "score-matched return-loop intervention",
   "sourceReportSha256": "12faa9d8642aab7ac3d219265db6bde74e7e2091d020b5f2be87936473cc8c6f",
-  "publicReportSha256": "12faa9d8642aab7ac3d219265db6bde74e7e2091d020b5f2be87936473cc8c6f",
+  "publicReportSha256": "c7a5899b24bdfb30658c45e07e0a4adabbb67528e764e11948ba4b15ae5fba9c",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "7d1b1726077a1b6f08f102b9c67201c73f2ecaf00dc596b102d5d98d28b0994b",
+  "contextSha256": "b22b52baa4e5dd8c32541cc5f429578b132fec1d8965f79cf7eefe17e9e534f5",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "2facf7d5ea74e91736bdb29ac1d5425fff74dc859ed3c93282a090056b162fe8"
+  "upstreamReceiptSha256": "999222b9d09277639872a644e899ea0998dc0e01f16462fe5cad708e8748323e"
 }

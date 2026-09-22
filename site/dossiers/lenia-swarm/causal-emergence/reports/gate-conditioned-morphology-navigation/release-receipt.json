@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "gate-conditioned morphology follow-up",
   "sourceReportSha256": "6a493756e5848e79f82b1ad1681ea94a4cf87d38a0744bcafd96eec071225ffc",
-  "publicReportSha256": "6a493756e5848e79f82b1ad1681ea94a4cf87d38a0744bcafd96eec071225ffc",
+  "publicReportSha256": "362e33af72884b763405c8b093b6dbf038de499411be2ec604d61052d376a152",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "5d618ab7026a9c56f9c8fda736de704a16e0fb7b7ea7f0db52c7b23efd85fb7c",
+  "contextSha256": "2ba1ef2b0ff837c5887b882f175c4fb5469dcd8b4dfe73d911dc7cd35a1d5488",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "eb8c5f7c8c376367baa871119b2a376dd48111b98e4e17ecbbd73418aa65904a"
+  "upstreamReceiptSha256": "6ab5a22deb827e32eb605fb6f01b028021aca6ff686e0059cb75b2479f419aad"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "multiscale hidden-code intervention",
   "sourceReportSha256": "9cb8f954ded7d52ef4f1fb0c8f051278bbe06da4a7de808c46918031760cb3d0",
-  "publicReportSha256": "9cb8f954ded7d52ef4f1fb0c8f051278bbe06da4a7de808c46918031760cb3d0",
+  "publicReportSha256": "c580c153cca4344d621f54b357bec27fae5e619870d9e78cb10455c04b4cd6df",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "61faf7aa7d640f8e74b35676ee41bcb7dd14d2c1eb9fffb9019e6dd1c7841768",
+  "contextSha256": "0b09071110f49b874c7b5fc8170e57274795970fd26581918a50113aed3cea0d",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "f3466d5e4b4cfc20378542a4f82a70f84aa3def7255746b56aca72a4398665fe"
+  "upstreamReceiptSha256": "6695b37dcc984408e6a6d144b718a7be4ddd15dfc7eefd1fd0a4a1af3b173fa1"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "age-mapped causal-order intervention",
   "sourceReportSha256": "affbabab1479cd89315f9cd54e27a6ade85650372790e89bcc8c8919a036c459",
-  "publicReportSha256": "affbabab1479cd89315f9cd54e27a6ade85650372790e89bcc8c8919a036c459",
+  "publicReportSha256": "fb5468d5c079e9a40c39512a824a28f8fcc01b75de82f19c69707768eaab3241",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "680e10ff0b9e0f2f29b6763920f7bb04056ac3e15fce7dbc6cc01db5694c31c9",
+  "contextSha256": "2d765f12d6ccb5b50c5e59d8a35193b62bda4b8ff37a6011f15f9981a982162b",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "487aeb77c699e995c2a03e07e670a2e253e3b7aa6df671395ea255d6a88d033a"
+  "upstreamReceiptSha256": "da5454130d8ed80257a7ca0829e9c6faa4e04ea76c47b40d6dc99d72a5b2ef0c"
 }

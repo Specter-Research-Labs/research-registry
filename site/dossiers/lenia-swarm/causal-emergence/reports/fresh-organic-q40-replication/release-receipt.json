@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "fresh-cohort replication with null volume effect",
   "sourceReportSha256": "cbb94936d6c84ab33ea530e65b2af8da57710507714601166d74822a8b7cbf34",
-  "publicReportSha256": "cbb94936d6c84ab33ea530e65b2af8da57710507714601166d74822a8b7cbf34",
+  "publicReportSha256": "487507d1b4999b2164e48e7fc4f2a9759837f991d9392f285adf090db01a5d2d",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "e0181618f6f5b38949d6ad98696fa6cc296e27333c41cfd65a78827500d32041",
+  "contextSha256": "d25185d079329f4e1dd38068b90a40ba67f343d9ed0090b1db20e1149dc03895",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "bdd797298959c7e96620a9bd9235db99505db207d8b99cfda94645633eeb55c5"
+  "upstreamReceiptSha256": "578e2be17349f395048bf44af2710c9f48103c0eac867fa636180e6e5ce3349e"
 }

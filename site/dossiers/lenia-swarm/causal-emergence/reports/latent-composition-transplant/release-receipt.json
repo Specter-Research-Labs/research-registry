@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "exact latent-composition transplant",
   "sourceReportSha256": "b8499dc8968c2eae35097ff34de17502fbd8bc112ea0268ea557a1d9f2e9a46e",
-  "publicReportSha256": "b8499dc8968c2eae35097ff34de17502fbd8bc112ea0268ea557a1d9f2e9a46e",
+  "publicReportSha256": "7dd169acb65f27db20aae012df9e62dd918754ba2d928590437bd3e7bff2760a",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "fb6bc811365d8be605b1eae46c5d490dbe9c0b8416363fad2c8f0a0edc65eaf7",
+  "contextSha256": "5d9d8e0abe00a1e64a0684cadf394a6db15cbd1a81e3d5601934eeaa6ed1851e",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "d729938f9d6950606d4a547f7f16d39a9cb8c52bd4c0028570923e3201ba6eae"
+  "upstreamReceiptSha256": "22fa652034a0d84c3542614e53df9c563116264a81232a7e5d728fdc5779e349"
 }

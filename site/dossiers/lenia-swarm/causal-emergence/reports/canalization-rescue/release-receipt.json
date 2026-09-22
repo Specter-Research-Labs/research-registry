@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "nested exact-repair dose study",
   "sourceReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
-  "publicReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
+  "publicReportSha256": "2858e63a9924025f63d912e246cd62cd1fb523eef3f2f452b899d55b4bc3f881",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "08ce410919ea14aa2eba1c84e02c85c23508c1417e9ff156c3b27ffe7f7fae15",
+  "contextSha256": "a9f0858a73d334db5c4d690ac5ad1a48d5da7f8cd3a4d13cffa692a310b465a6",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "9e3110572693f4904fefbcf9254d319f7183b3bd89cc55578e4e5aa054981f1b"
+  "upstreamReceiptSha256": "3ceeae3c9a704c81b182c97aecaee3ac27721b0c5f344bb61923eedcfc1dc680"
 }

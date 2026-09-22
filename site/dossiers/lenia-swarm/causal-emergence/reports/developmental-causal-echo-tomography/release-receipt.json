@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "spatial response mapping",
   "sourceReportSha256": "7d4dc3af3172c2b55e6f9c755de20ff6ea46f31b4b49000e00efa94bae7bc0a1",
-  "publicReportSha256": "7d4dc3af3172c2b55e6f9c755de20ff6ea46f31b4b49000e00efa94bae7bc0a1",
+  "publicReportSha256": "019b82b7b7d3b593559781aee4292ae05a9001fa5ac899255ae30712fc97c22c",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "763616cd1869e3983c7854e85f9486ef59cf8324f111ddf325fe32b0ce5839fc",
+  "contextSha256": "6b4e96a6351fa7093bca1883c0959639ae7d4eba528c29b16182808aae91333a",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "5ba269fa43356dec5b6cb112e3d641e2a48594234af4680748551306466cf1ff"
+  "upstreamReceiptSha256": "c1a6cc4919556a7c059d5039b8df644f806afc8abc06b515449b03fe2272aed2"
 }

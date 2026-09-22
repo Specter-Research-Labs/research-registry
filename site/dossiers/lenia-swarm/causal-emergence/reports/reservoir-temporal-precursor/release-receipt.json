@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "exploratory temporal precursor analysis",
   "sourceReportSha256": "d741e4941fc6da1b81641ae8198e9ea895254925bdc2bd31260f904776467cac",
-  "publicReportSha256": "d741e4941fc6da1b81641ae8198e9ea895254925bdc2bd31260f904776467cac",
+  "publicReportSha256": "692bdaf78bdf22ee82621bdc5c547b69d51203d4812c064112c4ecade05d07bb",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "dc2f468219b472cf3c251c85dcc8ae0ba7a3f14cf898ba263b1e5c975ce50893",
+  "contextSha256": "101702b4d9084ba87f239f40d3255af342b8d87136cc27e37a4c4400ee834f5d",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "fe84f5b9730faa3d4c1884b0a73d85fc709f41dea1d4159c61eb5bb380b71ae8"
+  "upstreamReceiptSha256": "4cec467e908f3d64825cffce3c23dd4427c8dce71066fd643a29c7ffd13c7ab0"
 }

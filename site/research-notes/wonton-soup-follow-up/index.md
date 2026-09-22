@@ -39,25 +39,25 @@ Multiple recorded proof-structure clusters are rare in this analysis. reprover h
 
 1,354 intervention runs across 771 wild-type solves record which tactic blocks the sampled prover could survive within its budget:
 
-| Intervention | Runs | Solve rate |
+| Blocked tactic | Runs | Solve rate |
 |---|---:|---:|
-| `block_left` | 43 | 1.00 |
-| `block_push_neg` | 40 | 1.00 |
-| `block_contrapose!` | 20 | 1.00 |
-| `block_positivity` | 20 | 1.00 |
-| `block_intro` | 20 | 1.00 |
-| `block_tauto` | 60 | 0.67 |
-| `block_constructor` | 40 | 0.50 |
-| `block_exact` | 349 | 0.11 |
-| `block_cases'` | 116 | 0.17 |
-| `block_simpa` | 82 | 0.24 |
-| `block_simp` | 201 | 0.00 |
-| `block_rw` | 96 | 0.00 |
-| `block_ext` | 90 | 0.00 |
-| `block_cases` | 77 | 0.00 |
-| `block_induction` | 25 | 0.00 |
+| `left` | 43 | 1.00 |
+| `push_neg` | 40 | 1.00 |
+| `contrapose!` | 20 | 1.00 |
+| `positivity` | 20 | 1.00 |
+| `intro` | 20 | 1.00 |
+| `tauto` | 60 | 0.67 |
+| `constructor` | 40 | 0.50 |
+| `exact` | 349 | 0.11 |
+| `cases'` | 116 | 0.17 |
+| `simpa` | 82 | 0.24 |
+| `simp` | 201 | 0.00 |
+| `rw` | 96 | 0.00 |
+| `ext` | 90 | 0.00 |
+| `cases` | 77 | 0.00 |
+| `induction` | 25 | 0.00 |
 
-`block_simp` and `block_rw` left no successful runs in this April sample. This is a result for these theorem/provider/budget combinations, not mathematical necessity of either tactic. `block_left`, `block_push_neg`, and `block_contrapose!` are fully survivable; every recorded run under those blocks solved. `block_exact` kills most proofs, but 11% survive through `assumption` or direct term discharge.
+Blocking `simp` or `rw` left no successful runs in this April sample. This result depends on the sampled theorems, providers, and search budgets; it does not establish that either tactic is mathematically necessary. Every recorded run with `left`, `push_neg`, or `contrapose!` blocked still solved. Blocking `exact` stopped most searches, but 11% succeeded through `assumption` or direct term discharge.
 
 The paired intervention panel is not simply "damage search" versus "help search." Some perturbations expose an alternate successful route, some block the obvious route and collapse, and some shift tactic usage without changing terminal success. If two perturbations solve the same theorem through different tactic roles, do not collapse them into the same outcome class too early.
 

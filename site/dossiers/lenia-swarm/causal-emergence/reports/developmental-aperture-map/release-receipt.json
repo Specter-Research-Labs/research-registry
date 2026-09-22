@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "age-mapped native-direction intervention",
   "sourceReportSha256": "0c0a7e913cfa02cfe66df7c44eeabe96285b5130f5020beeb725ab7b96aaaaa4",
-  "publicReportSha256": "0c0a7e913cfa02cfe66df7c44eeabe96285b5130f5020beeb725ab7b96aaaaa4",
+  "publicReportSha256": "07c03c1d531d517678f80a11a172cfcfdda5d841a6457ccee2de2697136700cf",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "c048e278960c1286c924f0f2f4e478b604d7ba6408737de1013504c0f8ab5a30",
+  "contextSha256": "0fbb631cf1362b8f1aed72fa5ecea00ce784baecde0540b28422eb5379c277db",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "e0ee2c48436ddac793f177aa9297411db6966818fddc8605157de288f80df23e"
+  "upstreamReceiptSha256": "96d57ae7688c09cbed470e1d541f9ee3112bd94522738e00a7a498b721831602"
 }

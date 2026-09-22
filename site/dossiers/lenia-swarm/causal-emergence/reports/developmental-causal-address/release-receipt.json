@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "cross-age direction intervention",
   "sourceReportSha256": "eaf332a21a810933424c692c056ecde9c0740286fbfb86b0c2400cdb58c601ce",
-  "publicReportSha256": "eaf332a21a810933424c692c056ecde9c0740286fbfb86b0c2400cdb58c601ce",
+  "publicReportSha256": "f60f969a02e8db4a2d5d333a3bf5148afd14397df776bca774cc2616444c6418",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "5683d7e8472292ef5eb2051346e5d34d525636e449990e74346f883e569a23ad",
+  "contextSha256": "014e3b08442ee8346978d7bfb707be91356077fcce1b47fe0305100b59c805df",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "8166f4d4aaf0e669d4530bed62b9b8d04f07c08d614ac85af44fe7f5e7314e8f"
+  "upstreamReceiptSha256": "87e8b8148971c6b0eff94f9de7336da259ec370a298c213f32a47923a8ecbcc2"
 }

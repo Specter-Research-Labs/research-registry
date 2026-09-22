@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "clamped hidden-state intervention",
   "sourceReportSha256": "efe37182feaad461c3e277fc62341e389b13516e614c9c4246fc8fd54983836f",
-  "publicReportSha256": "efe37182feaad461c3e277fc62341e389b13516e614c9c4246fc8fd54983836f",
+  "publicReportSha256": "897dc1d39cdbec3e1d59ed0dac860443913f67ac86912a74b34ed3ba3a159e49",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "6d183a058abd0e270ad11c72c72edebe754d5a6f6e586757736526734c06b7d8",
+  "contextSha256": "57474a8f2051a2b427dda83ae7f7fdb6e9de1af0a3c9a293e2c4a8634a86df52",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "e1e9fad35a034cbbe119e81d935c1f234f25107b56608d5baff7e66db14a605c"
+  "upstreamReceiptSha256": "ec89217be3aeff880e248ba87ced3bdd4aadc127dbdf71663c6653f7a6bf7fbb"
 }

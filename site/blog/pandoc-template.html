@@ -41,25 +41,6 @@
 
                 <main class="doc-layout">
                     <aside class="doc-aside">
-                        <div class="doc-stamp">
-                            <div class="doc-stamp-title">Field Note</div>
-                            $if(slug)$
-                            <div class="doc-stamp-sub">$slug$</div>
-                            $endif$
-                            $if(pdf)$
-                            <div class="doc-stamp-field">
-                                <strong>PDF</strong>
-                                <a href="$pdf$">$pdf$</a>
-                            </div>
-                            $endif$
-                            $if(status)$
-                            <div class="doc-stamp-field">
-                                <strong>Status</strong>
-                                $status$
-                            </div>
-                            $endif$
-                        </div>
-
                         $if(toc)$
                         <nav class="toc" aria-label="Table of contents">
                             <div class="toc-title">Contents</div>
@@ -74,9 +55,7 @@
                 <footer class="doc-footer">
                     <div class="doc-footer-inner">
                         <div>Specter Labs</div>
-                        $if(slug)$
-                        <div>$slug$</div>
-                        $endif$
+
                     </div>
                 </footer>
             </div>

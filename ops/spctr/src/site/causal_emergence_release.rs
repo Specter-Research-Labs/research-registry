@@ -83,6 +83,8 @@ struct PublicProjection {
 struct EditorialConfig {
     schema_version: u32,
     replacements: Vec<EditorialReplacement>,
+    #[serde(default)]
+    report_replacements: HashMap<String, Vec<EditorialReplacement>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -272,6 +274,13 @@ pub fn stage_library(
                 .transformations
                 .push("synthesis_publication_instruments_v1");
         }
+        if let Some(replacements) = editorial_config.report_replacements.get(&report.id) {
+            let (edited, changed) = normalize_public_editorial(&linked, replacements);
+            linked = edited;
+            if changed && !public_report.transformations.contains(&NORMALIZE_PUBLIC_EDITORIAL) {
+                public_report.transformations.push(NORMALIZE_PUBLIC_EDITORIAL);
+            }
+        }
         linked = linked
             .replace("<span>Earlier report · retained in the archive</span>", "")
             .replace("<span>Supporting experimental record</span>", "");
@@ -415,19 +424,20 @@ fn load_editorial_config(repo_root: &Utf8Path) -> Result<EditorialConfig> {
             config.schema_version
         );
     }
-    let mut seen = std::collections::HashSet::new();
-    for (index, replacement) in config.replacements.iter().enumerate() {
-        if replacement.from.is_empty() {
-            bail!("editorial replacements[{index}].from must not be empty");
-        }
-        if replacement.from == replacement.to {
-            bail!("editorial replacements[{index}] does not change the text");
-        }
-        if !seen.insert(replacement.from.as_str()) {
-            bail!(
-                "duplicate editorial replacement source: {}",
-                replacement.from
-            );
+    for (scope, replacements) in std::iter::once(("global", &config.replacements))
+        .chain(config.report_replacements.iter().map(|(id, items)| (id.as_str(), items)))
+    {
+        let mut seen = std::collections::HashSet::new();
+        for (index, replacement) in replacements.iter().enumerate() {
+            if replacement.from.is_empty() {
+                bail!("editorial {scope}[{index}].from must not be empty");
+            }
+            if replacement.from == replacement.to {
+                bail!("editorial {scope}[{index}] does not change the text");
+            }
+            if !seen.insert(replacement.from.as_str()) {
+                bail!("duplicate editorial replacement source in {scope}: {}", replacement.from);
+            }
         }
     }
     Ok(config)
@@ -865,7 +875,7 @@ fn refine_synthesis_reading(source: &str) -> Result<String> {
         }
     }
     let image_digest = Regex::new(r"Embedded PNG SHA ([a-f0-9]{64})\.")?;
-    projected = image_digest.replace_all(&projected, "<details class=\"image-provenance\"><summary>Image checksum</summary><code>$1</code></details>").into_owned();
+    projected = image_digest.replace_all(&projected, "").into_owned();
     let legend = Regex::new(r#"<div class="evidence-legend"[^>]*>[\s\S]*?</div>"#)?;
     projected = legend.replace(&projected, "").into_owned();
     let exploration =
@@ -1029,22 +1039,27 @@ fn escape_html_attribute(value: &str) -> String {
 }
 
 fn apply_synthesis_publication(source: &str) -> Result<String> {
+    let image_provenance = Regex::new(r#"(?s)<details class="image-provenance">.*?</details>"#)?;
+    let source = image_provenance.replace_all(source, "");
     let mut html = source.replace(
         "class=\"specter-report\"",
         "class=\"specter-report synthesis-publication\"",
     );
-    let observation = Regex::new(r#"(?s)<section class="synthesis-observation".*?</section>"#)?;
+    let observation = Regex::new(r#"(?s)<section class="synthesis-observation".*?</section>\s*"#)?;
     html = observation.replace_all(&html, "").into_owned();
-    let hero = Regex::new(r#"(?s)<header class="hero editorial-synthesis" id="top">.*?</header>"#)?;
+    let hero = Regex::new(r#"(?s)<header class="hero editorial-synthesis" id="top">.*?</header>\s*"#)?;
     if !hero.is_match(&html) {
         bail!("synthesis publication opening is missing");
     }
     html = hero.replace_all(&html, regex_lite::NoExpand(include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-opening.html"))).into_owned();
     let forecast = Regex::new(
-        r#"(?s)<figure class="figure"><svg[^>]+aria-labelledby="how-whole-state-and-separable-forecasting-are-compared-title[^>]*>.*?</figure>|<figure class="synthesis-forecast".*?</figure>"#,
+        r#"(?s)<figure class="figure"><svg[^>]+aria-labelledby="how-whole-state-and-separable-forecasting-are-compared-title[^>]*>.*?</figure>\s*|<figure class="synthesis-forecast".*?</figure>\s*"#,
     )?;
     html = forecast.replace_all(&html, regex_lite::NoExpand(include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-forecast.html"))).into_owned();
     for (before, after) in [
+        ("Futures are already distinct. Forecasting is still catching up.", "Distinct futures appear before accurate forecasts"),
+        ("The visible matter is held fixed. Its composition changes.", "Changing composition while holding visible matter fixed"),
+        ("Both transplants move donor-ward. Does the arrangement matter?", "Does arrangement explain why both transplants move toward the donor?"),
         ("However, the geometry behaved like a clock", "Developmental geometry"),
         ("it did not behave like a lever", "Tracking development did not make it easier to control"),
         ("the same picture can contain a different future", "Composition changed growth; donor identity did not reliably transfer"),
@@ -1062,6 +1077,8 @@ fn apply_synthesis_publication(source: &str) -> Result<String> {
     html = labels.replace_all(&html, "").into_owned();
     let footer = Regex::new(r#"(?s)<footer class="footer">.*?</footer>"#)?;
     html = footer.replace_all(&html, r##"<footer class="footer"><nav class="wrap footer-grid" aria-label="Report resources"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="#ledger">Methods and sources</a><a href="about.html">About this report</a></nav></footer>"##).into_owned();
+    let graphical_details = Regex::new(r#"<details class="(synthesis-native-inspection|research-detail)"(?: open)?>"#)?;
+    html = graphical_details.replace_all(&html, "<details class=\"$1\" open>").into_owned();
     // The upstream patch payloads contain little-endian Float32 bytes, not an array.
     let decoder = r#"function renderPatch(canvas, patch, hidden) {
   if (typeof patch.data === 'string') {
@@ -1236,7 +1253,7 @@ mod tests {
         ));
         assert!(result.contains("response-by-age"));
         assert!(result.contains("losing an advantage does not mean losing all absolute progress"));
-        assert!(result.contains("Its composition changes"));
+        assert!(result.contains("Changing composition while holding visible matter fixed"));
         assert!(result.contains("Passage numbers count forward"));
         assert!(result.contains(r#"<svg data-evidence="unchanged"><text>−6.5831</text></svg>"#));
         assert!(result.contains("<script>const data = [12,72];</script>"));
@@ -1400,6 +1417,29 @@ mod tests {
         assert!(!manifest.contains("private-input"));
         assert!(receipt.contains("move_reports_to_website_v1"));
         assert!(receipt.contains(&format!("\"publicReportSha256\": \"{report_sha256}\"")));
+        let scoped_config = serde_json::json!({
+            "schema_version": 1,
+            "replacements": [],
+            "report_replacements": {
+                "unrelated-report": [{"from": "Exact report", "to": "Unrelated title"}]
+            }
+        });
+        fs::write(root.join(EDITORIAL_REPLACEMENTS_PATH), scoped_config.to_string()).unwrap();
+        let scoped_output = root.join("scoped-output");
+        stage_library(root, &input, &scoped_output, None).unwrap();
+        assert_eq!(fs::read(scoped_output.join("reports/exact-report/index.html")).unwrap(), report_bytes);
+
+        let mut matching_config = scoped_config;
+        matching_config["report_replacements"]["exact-report"] =
+            serde_json::json!([{"from": "Exact report", "to": "Reframed report"}]);
+        fs::write(root.join(EDITORIAL_REPLACEMENTS_PATH), matching_config.to_string()).unwrap();
+        let edited_output = root.join("edited-output");
+        stage_library(root, &input, &edited_output, None).unwrap();
+        let edited = fs::read_to_string(edited_output.join("reports/exact-report/index.html")).unwrap();
+        assert!(edited.contains("Reframed report"));
+        assert!(!edited.contains("Unrelated title"));
+        assert_eq!(fs::read(input.join("source.html")).unwrap(), report_bytes);
+
     }
 
     #[test]
