@@ -667,9 +667,7 @@ html.specter-report ::selection {
  * This late, shared layer repairs recurring presentation problems in older
  * reports without changing their figures, data, or stable release URLs.
  */
-
-html.specter-report {
-  color-scheme: light;
+html.specter-report {color-scheme: light;
   --specter-ground: #f2eee3;
   --specter-sheet: #fffdf7;
   --specter-ink: #131821;
@@ -702,34 +700,18 @@ html.specter-report {
   --amber: var(--specter-coral);
   --orange: var(--specter-coral);
   --pink: var(--specter-coral);
-  --coral: var(--specter-coral);
-}
-
-html.specter-report[data-specter-surface="bg-paper"] {
-  --paper: var(--specter-sheet);
-}
-
-html.specter-report,
-html.specter-report body {
-  background: var(--specter-ground) !important;
-}
-
-html.specter-report body {
-  color: var(--specter-ink) !important;
+  --coral: var(--specter-coral);}
+html.specter-report[data-specter-surface="bg-paper"] {--paper: var(--specter-sheet);}
+html.specter-report,html.specter-report body {background: var(--specter-ground) !important;}
+html.specter-report body {color: var(--specter-ink) !important;
   background:
     linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     var(--specter-ground) !important;
-  background-size: 24px 24px !important;
-}
-
-html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
-  color: var(--specter-green) !important;
-}
-
+  background-size: 24px 24px !important;}
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {color: var(--specter-green) !important;}
 /* Older reports often put a small provenance nav inside the report column. */
-html.specter-report main > nav {
-  align-items: center;
+html.specter-report main > nav {align-items: center;
   min-height: 3.25rem;
   margin: 0 0 clamp(2rem, 5vw, 4rem);
   padding: 0.8rem 1rem;
@@ -740,348 +722,203 @@ html.specter-report main > nav {
   font-family: var(--specter-mono) !important;
   font-size: 0.72rem !important;
   font-weight: 750;
-  line-height: 1.25;
-}
-
-html.specter-report main > nav :is(a, span, strong) {
-  color: inherit !important;
-}
-
+  line-height: 1.25;}
+html.specter-report main > nav :is(a, span, strong) {color: inherit !important;}
 /*
  * Early chart generators drew directly onto a near-black SVG. Give those
  * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
  * Charts already composed inside a semantic figure keep their authored skin.
  */
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-html.specter-report :is(div, article, figure).chart,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  color: var(--specter-ink) !important;
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {color: var(--specter-ink) !important;
   background: var(--specter-sheet) !important;
   border: 2px solid var(--specter-ink) !important;
   border-radius: 0 !important;
-  box-shadow: var(--specter-chart-shadow) !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-  margin-block: 1.5rem 2rem;
-  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
-}
-
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  padding: clamp(1rem, 2vw, 1.6rem) !important;
-}
-
-html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
-  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
-  color: inherit !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
-html.specter-report :is(div, article, figure).chart svg text,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
-  fill: var(--specter-muted) !important;
+  box-shadow: var(--specter-chart-shadow) !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;}
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {padding: clamp(1rem, 2vw, 1.6rem) !important;}
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {color: inherit !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,html.specter-report :is(div, article, figure).chart svg text,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {fill: var(--specter-muted) !important;
   font-family: var(--specter-mono) !important;
-  font-weight: 700;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
-  fill: var(--specter-ink) !important;
-  font-weight: 850 !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
-  stroke: var(--specter-chart-grid) !important;
-}
-
+  font-weight: 700;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {fill: var(--specter-ink) !important;
+  font-weight: 850 !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {stroke: var(--specter-chart-grid) !important;}
 /* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
-html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
-html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
-html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
-html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
-html.specter-report svg [stroke="#ef7d9a"],
-html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
-html.specter-report svg [fill="#ef7d9a"],
-html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
-
-@media (max-width: 640px) {
-  html.specter-report main > nav {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
-  }
-
-  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
-    font-size: 24px !important;
-  }
-}
-
-@media print {
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-  html.specter-report :is(div, article, figure).chart,
-  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-    box-shadow: none !important;
-  }
-}
-
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
-  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
-  font-family: var(--editorial-display) !important;
+html.specter-report svg [stroke="#a9d86e"] {stroke: var(--specter-green) !important;}
+html.specter-report svg [fill="#a9d86e"] {fill: var(--specter-green) !important;}
+html.specter-report svg [stroke="#72d9e2"] {stroke: var(--specter-blue) !important;}
+html.specter-report svg [fill="#72d9e2"] {fill: var(--specter-blue) !important;}
+html.specter-report svg [stroke="#ef7d9a"],html.specter-report svg [stroke="#f1b85b"] {stroke: var(--specter-coral) !important;}
+html.specter-report svg [fill="#ef7d9a"],html.specter-report svg [fill="#f1b85b"] {fill: var(--specter-coral) !important;}
+@media (max-width: 640px) {html.specter-report main > nav {align-items: flex-start;
+    flex-direction: column;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;}
+/* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {font-size: 24px !important;}}
+@media print {html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {box-shadow: none !important;}}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {--editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {font-family: var(--editorial-display) !important;
   font-weight: 850;
   letter-spacing: -.035em;
-  text-wrap: balance;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
-html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
-html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
-html.anatomical-editorial .hero-specimens { margin: 0; }
-html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
-html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
-html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
-html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
-html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
-html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
-html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
-html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
-html.anatomical-editorial .synthesis .metric span { color:#414c45; }
-html.anatomical-editorial .opening-method { margin:1rem 0; }
-html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
-html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
-html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
-html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
-html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
-html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
-html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
-html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
-html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
-html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
-html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
-html.anatomical-editorial .caption { border:0; }
-html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
-html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
-html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
-html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
-html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
-html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
-html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
-html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
-html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
-html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
-html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
-html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
-html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
-html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
-html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
-html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
-@media(max-width:800px) {
- html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
- html:has(.editorial-synthesis) .hero-answer { transform:none; }
- html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
-}
-html:has(.editorial-synthesis) .ink { border-block:0; }
-html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
-html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .section-no { border:0; }
-@media(max-width:700px) {
- html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
- html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
- html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
- html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
- html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
-}
-html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
-
-html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
-html.anatomical-editorial .measurement-comparison,
-html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
-html.anatomical-editorial .measurement-comparison h3,
-html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
-.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
-.measurement-heading { font: 12px/1.5 monospace; }
-.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
-.measurement-track { position: relative; height: 18px; background: #fff8; }
-.measurement-track i { display: block; height: 100%; background: #18796f; }
-.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
-.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
-html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
-.experiment-method summary { cursor: pointer; font-weight: 700; }
-.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
-.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
-.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.orbium-frames figure { margin: 0; }
-.orbium-frames img { display: block; width: 100%; }
-.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
-#orbium-time-note { margin-top: 16px; }
-.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
-.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
-.comparison-story p { max-width: 72ch; line-height: 1.65; }
-.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
-.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
-@media (max-width: 650px) {
-  .measurement-heading { display: none; }
-  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
-  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
-  .orbium-frames { gap: 10px; }
-}
-
-#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
-html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
-html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
-
-html:has(.editorial-synthesis) .evidence {
-  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
-  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
-}
-html:has(.editorial-synthesis) .evidence::before { content: none; }
-html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
-html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
-html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
-html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
-.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
-.figure-introduction { max-width: 760px; margin-bottom: 30px; }
-.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
-.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
-.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
-.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
-.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
-.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-.response-plots > div, .transplant-panels > div { min-width: 0; }
-.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
-.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
-.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
-.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
-.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
-.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
-#response-reading { font-size: 19px; }
-html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
-html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
-html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
-html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
-html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
-html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
-html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
-html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
-html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
-@media (max-width: 700px) {
-  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
-  .response-controls { gap: 14px; }
-  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
-  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
-}
-
-#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
-
+  text-wrap: balance;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 {font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 {font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) {box-shadow: none !important;}
+html:has(.editorial-synthesis) .hero {padding-bottom:3rem;}
+html:has(.editorial-synthesis) .hero .dek {font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch;}
+html:has(.editorial-synthesis) .hero-grid {grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center;}
+html:has(.editorial-synthesis) .hero-answer {border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg);}
+html:has(.editorial-synthesis) .hero-answer strong {font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .hero-answer p {font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .quickread {border:0 !important; gap:2rem; background:transparent !important;}
+html:has(.editorial-synthesis) .quickread article {border:0 !important; background:transparent !important; padding:1rem 0;}
+html:has(.editorial-synthesis) .quickread h2 {font-size:1.5rem;}
+html:has(.editorial-synthesis) .section-head {border:0 !important; gap:3rem;}
+html:has(.editorial-synthesis) .section-head .lede {font:400 1.12rem/1.7 var(--specter-serif);}
+html:has(.editorial-synthesis) .figure {border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important;}
+html:has(.editorial-synthesis) .figure svg {border:0 !important; box-shadow:none !important;}
+html:has(.editorial-synthesis) .metric-card {border:0 !important; padding:1.25rem;}
+html:has(.editorial-synthesis) .callout {border:0; font:400 1.1rem/1.65 var(--specter-serif);}
+html:has(.editorial-synthesis) .explore-card {border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important;}
+html:has(.editorial-synthesis) .explore-card h3 {font-size:1.45rem;}
+html:has(.editorial-synthesis) .explore-card p {font:400 1rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .reading-route {display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono);}
+@media (max-width:800px) {html:has(.editorial-synthesis) .hero-grid {grid-template-columns:1fr;}
+html:has(.editorial-synthesis) .hero-answer {transform:none;}
+html:has(.editorial-synthesis) .section-head {gap:1.3rem;}}
+html:has(.editorial-synthesis) .ink {border-block:0;}
+html:has(.editorial-synthesis) .ink .figure {background:var(--specter-sheet) !important; padding:1rem !important;}
+html:has(.editorial-synthesis) .passage-note {max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .section-no {border:0;}
+@media (max-width:700px) {html:has(.editorial-synthesis) .figure:has(svg.chart) {overflow-x:auto; max-width:100%;}
+html:has(.editorial-synthesis) .figure svg.chart {min-width:720px;}
+html:has(.editorial-synthesis) .figure:has(svg.chart)::after {content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f);}
+html:has(.editorial-synthesis) .figure figcaption {grid-template-columns:1fr;}}
+html:has(.editorial-synthesis) .passport-layout > * {min-width:0;}
+.measurement-heading,.measurement-row {display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0;}
+.measurement-heading {font: 12px/1.5 monospace;}
+.measurement-row > span:last-child {text-align: right; font: 14px/1.5 monospace;}
+.measurement-track {position: relative; height: 18px; background: #fff8;}
+.measurement-track i {display: block; height: 100%; background: #18796f;}
+.measurement-track b {position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d;}
+.measurement-comparison figcaption {margin-top: 24px; max-width: 70ch;}
+.experiment-method summary {cursor: pointer; font-weight: 700;}
+.orbium-controls {display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0;}
+.orbium-controls select {font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60;}
+.orbium-frames {display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
+.orbium-frames figure {margin: 0;}
+.orbium-frames img {display: block; width: 100%;}
+.orbium-frames figcaption {padding-block: 10px; font-weight: 700;}
+#orbium-time-note {margin-top: 16px;}
+.comparison-story {background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0;}
+.comparison-story h3 {font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px;}
+.comparison-story p {max-width: 72ch; line-height: 1.65;}
+.comparison-story h4 {font: 700 21px/1.25 sans-serif; margin: 12px 0;}
+.comparison-story figcaption {border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6;}
+@media (max-width: 650px) {.measurement-heading {display: none;}
+.measurement-row {grid-template-columns: 1fr 1fr; gap: 12px;}
+.measurement-track {grid-column: 1 / -1; grid-row: 2;}
+.measurement-row > span:last-child {grid-column: 2; grid-row: 1; font-size: 12px;}
+.orbium-frames {gap: 10px;}}
+#measurement-comparison,.orbium-reader {scroll-margin-top: 90px;}
+html:has(.editorial-synthesis) .evidence {display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;}
+html:has(.editorial-synthesis) .evidence::before {content: none;}
+html:has(.editorial-synthesis) .ink .evidence {color: #cbd0c8;}
+html:has(.editorial-synthesis) .research-detail {margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555;}
+html:has(.editorial-synthesis) .research-detail summary {cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif);}
+html:has(.editorial-synthesis) .research-detail .section-head {margin-top: 32px;}
+.response-explorer,.transplant-comparison {margin: 44px 0; color: #17282d;}
+.figure-introduction {max-width: 760px; margin-bottom: 30px;}
+.figure-introduction h3 {font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px;}
+.figure-introduction p,.experiment-reading {font: 19px/1.65 Georgia, serif;}
+.response-controls {display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px;}
+.response-controls label {font: 15px/1.6 var(--specter-display-font, sans-serif);}
+.response-controls select {padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b;}
+.response-plots,.transplant-panels {display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
+.response-plots > div,.transplant-panels > div {min-width: 0;}
+.response-plots h4,.transplant-panels h4 {font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px;}
+.response-plots svg,.transplant-panels svg {display: block; width: 100%; height: auto; overflow: visible;}
+.response-plots svg text,.transplant-panels svg text {font: 16px var(--specter-display-font, sans-serif); fill: #17282d;}
+.response-plots svg text[fill="#8561b0"] {fill: #8561b0;}
+.response-plots svg text[fill="#187a6b"] {fill: #187a6b;}
+.response-explorer > figcaption,.transplant-comparison > figcaption {font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px;}
+#response-reading {font-size: 19px;}
+html:has(.editorial-synthesis) .passport-layout {grid-template-columns: 1fr;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px;}
+html:has(.editorial-synthesis) .patch-card {border: 0; padding: 0; background: none; box-shadow: none;}
+html:has(.editorial-synthesis) .patch-card figcaption {color: #17282d; padding: 12px 0;}
+html:has(.editorial-synthesis) .patch-card figcaption span,html:has(.editorial-synthesis) .native-strip figcaption span {display: none;}
+html:has(.editorial-synthesis) .patch-canvases {position: relative; padding-top: 28px;}
+html:has(.editorial-synthesis) .patch-canvases::before,html:has(.editorial-synthesis) .patch-canvases::after {position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df;}
+html:has(.editorial-synthesis) .patch-canvases::before {content: "Visible matter"; left: 0;}
+html:has(.editorial-synthesis) .patch-canvases::after {content: "Hidden composition"; left: 51%;}
+html:has(.editorial-synthesis) .patch-canvases canvas {width: 100%; height: auto;}
+html:has(.editorial-synthesis) .comparison-story {background: none; padding: 0; margin-top: 40px;}
+@media (max-width: 700px) {.response-plots,.transplant-panels {grid-template-columns: 1fr; gap: 35px;}
+.response-controls {gap: 14px;}
+.response-plots svg text,.transplant-panels svg text {font-size: 18px;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: 1fr;}}
+#response-explorer,.transplant-comparison {scroll-margin-top: 80px;}
 /* These explicit light fills label dark inset panels inside otherwise light charts. */
-html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
-html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
-
-html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
-  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
-}
-html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
-html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
-html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
-
+html.specter-report svg.chart text[fill="#d8ff2f"] {fill: #d8ff2f !important;}
+html.specter-report svg.chart text[fill="#f7f4ec"] {fill: #f7f4ec !important;}
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;}
+html.specter-report body > nav.publication-navigation {display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif;}
+html.specter-report body > nav.publication-navigation a {color: #14252c !important; text-decoration: underline;}
+html.specter-report body > nav.publication-navigation span {color: #59615a !important;}
 /* Native specimen panels retain their black image field. Their labels must
  * remain legible after the surrounding report adopts paper-colored tokens. */
-html.specter-report .specimen > figcaption {
-  color: #d3d5d7 !important;
-  background: #050608;
-}
-html.specter-report .specimen > figcaption :is(b, strong, span) {
-  color: inherit !important;
-}
-
+html.specter-report .specimen > figcaption {color: #d3d5d7 !important;
+  background: #050608;}
+html.specter-report .specimen > figcaption :is(b, strong, span) {color: inherit !important;}
 /* Keep imported data labels readable on a phone instead of shrinking an
  * entire desktop plot into a few hundred pixels. Captions still wrap. */
-@media (max-width: 700px) {
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
-    max-width: 100%;
+@media (max-width: 700px) {html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {max-width: 100%;
     min-width: 0;
     overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-  html.specter-report div.chart > svg { min-width: 760px; }
-  html.specter-report div.card.chart > svg { min-width: 940px; }
-  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
-  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
+    overscroll-behavior-inline: contain;}
+html.specter-report div.chart > svg {min-width: 760px;}
+html.specter-report div.card.chart > svg {min-width: 940px;}
+html.specter-report .trajectory-wrap > svg {min-width: 1120px;}
+html.specter-report .chart-grid .figure > svg.chart {min-width: 640px;}
+html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {content: "Scroll sideways to explore the figure →";
     display: block;
     margin-top: .7rem;
     font: 400 .75rem/1.5 var(--specter-mono);
-    color: var(--specter-muted);
-  }
-}
-
-@media (max-width: 700px) {
-  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
-  html.anatomical-editorial .figure > svg { min-width: 640px; }
-  html.anatomical-editorial .figure:has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
-    display: block;
-    margin-top: .7rem;
-    font: 400 .75rem/1.5 ui-monospace, monospace;
-  }
-  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
-}
-
+    color: var(--specter-muted);}}
 /* A source report's compact local navigation must not hide the injected
  * site navigation or the links back to its dossier and report library. */
-html.specter-report :is(.publication-header, .publication-navigation) a {
-  display: inline-flex !important;
-}
-
+html.specter-report :is(.publication-header, .publication-navigation) a {display: inline-flex !important;}
 /* The commitment report deliberately keeps dark data panels. */
-html.specter-report:has(#steerability) .chart-grid .figure svg text {
-  fill: #e9e7df !important;
-}
+html.specter-report:has(#steerability) .chart-grid .figure svg text {fill: #e9e7df !important;}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/commitment-gate-controller/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav>
 <div class="wrap"><header><span>Before the replicator / direct swing 03</span><span>23 Aug 2026</span></header></div>
 <main>
-<div class="wrap hero"><div class="kicker">Closed-loop developmental control</div><h1>State-Aware Control Preserves a Wider Range of Responses</h1><p class="lede">One strong early intervention—followed mostly by restraint—held Flow Lenia’s causal-developmental degrees of freedom open for <em>eight passages after release.</em></p></div>
+<div class="wrap hero"><h1>State-Aware Control Preserves a Wider Range of Responses</h1><p class="lede">One strong early intervention—followed mostly by restraint—held Flow Lenia’s causal-developmental degrees of freedom open for <em>eight passages after release.</em></p></div>
 <div class="wrap stats"><div class="stat"><b>39</b><span>organisms</span></div><div class="stat"><b>6,240</b><span>candidate futures</span></div><div class="stat"><b>4</b><span>feedback decisions</span></div><div class="stat"><b>8</b><span>passages of memory</span></div></div>
 
-<section><div class="wrap"><div class="eyebrow">01 / The controller discovered a strategy</div><h2>Hit early. Then get out of the way.</h2><p class="big">At every passage, the controller tried five spatial pulse sizes and asked which future preserved the greatest separation between alternative causal histories. It was free to keep forcing. It usually chose not to.</p>
+<section><div class="wrap"><h2>An early intervention followed by free development</h2><p class="big">At every passage, the controller tried five spatial pulse sizes and asked which future preserved the greatest separation between alternative causal histories. It was free to keep forcing. It usually chose not to.</p>
 <div class="grid2"><div class="card"><h3>Mean chosen dose by passage</h3><svg viewBox="0 0 580 330" class="chart" role="img" aria-label="Mean selected dose for maximizing and minimizing controllers"><line x1="60" y1="270" x2="540" y2="270" class="axis"/><line x1="60" y1="30" x2="60" y2="270" class="axis"/><line x1="60" y1="270" x2="540" y2="270" class="grid"/><text x="14" y="275" class="label">0</text><line x1="60" y1="210" x2="540" y2="210" class="grid"/><text x="14" y="215" class="label">25</text><line x1="60" y1="150" x2="540" y2="150" class="grid"/><text x="14" y="155" class="label">50</text><line x1="60" y1="90" x2="540" y2="90" class="grid"/><text x="14" y="95" class="label">75</text><line x1="60" y1="30" x2="540" y2="30" class="grid"/><text x="14" y="35" class="label">100</text><polyline points="80.0,85.4 223.3,223.8 366.7,245.4 510.0,240.8" class="max"/><polyline points="80.0,186.9 223.3,114.6 366.7,122.3 510.0,116.2" class="min"/><text x="80" y="300" class="label">P1</text><text x="223" y="300" class="label">P2</text><text x="366" y="300" class="label">P3</text><text x="509" y="300" class="label">P4</text></svg><div class="legend"><span><i style="background:var(--orange)"></i>open</span><span><i style="background:var(--cyan)"></i>close</span></div></div>
 <div class="card"><h3>The asymmetric recipe</h3><p><b>Open:</b> 25 of 39 organisms chose the full pulse at passage 1. Then 28, 32, and 28 chose zero at passages 2–4.</p><p><b>Close:</b> only one chose full strength at passage 1. Later, heavy doses dominated.</p><div class="contrast"><div><b>119</b><span>mean total open dose</span></div><div><b>225</b><span>mean total close dose</span></div><div><b>1.9×</b><span>more dose to close</span></div></div></div></div></div></section>
 
-<section><div class="wrap"><div class="eyebrow">02 / Release test</div><h2>The controlled difference survived after control ended.</h2><p class="big">Passage 4 is the score the controller directly optimized. Passages 6, 8, and 12 were untouched futures. The open and closed worlds remained apart throughout.</p>
+<section><div class="wrap"><h2>The controlled difference survived after control ended.</h2><p class="big">Passage 4 is the score the controller directly optimized. Passages 6, 8, and 12 were untouched futures. The open and closed worlds remained apart throughout.</p>
 <div class="grid2"><div class="card"><h3>Open minus closed: causal-history separation</h3><svg viewBox="0 0 650 340" class="chart" role="img" aria-label="Post-release causal history separation"><line x1="70" y1="258" x2="595" y2="258" class="axis"/><line x1="70" y1="50" x2="70" y2="280" class="axis"/><line x1="70" y1="258" x2="595" y2="258" class="grid"/><text x="14" y="263" class="label">0.00</text><line x1="70" y1="215" x2="595" y2="215" class="grid"/><text x="14" y="220" class="label">0.01</text><line x1="70" y1="172" x2="595" y2="172" class="grid"/><text x="14" y="177" class="label">0.02</text><line x1="70" y1="129" x2="595" y2="129" class="grid"/><text x="14" y="134" class="label">0.03</text><line x1="70" y1="86" x2="595" y2="86" class="grid"/><text x="14" y="91" class="label">0.04</text><polyline points="100,100.33806324964544 255,131.1595318036647 410,141.77460974711943 565,179.44255048190672" class="max"/><line x1="100.0" x2="100.0" y1="84.1" y2="117.2" class="whisker"/><circle cx="100.0" cy="100.3" r="7" class="dot"/><line x1="255.0" x2="255.0" y1="106.1" y2="157.9" class="whisker"/><circle cx="255.0" cy="131.2" r="7" class="dot"/><line x1="410.0" x2="410.0" y1="115.8" y2="168.6" class="whisker"/><circle cx="410.0" cy="141.8" r="7" class="dot"/><line x1="565.0" x2="565.0" y1="159.0" y2="200.7" class="whisker"/><circle cx="565.0" cy="179.4" r="7" class="dot"/><text x="91" y="305" class="label">P4</text><text x="246" y="305" class="label">P6</text><text x="401" y="305" class="label">P8</text><text x="556" y="305" class="label">P12</text><text x="92" y="326" class="label">CONTROL ENDS ↑</text></svg></div>
 <div class="card"><h3>Eight passages later</h3><div class="callout" style="display:block;margin:0"><b>+0.018</b><strong>still separated at passage 12</strong><p>95% interval [0.013, 0.023]. The direction was positive in 34 of 39 organisms.</p></div><p>The cumulative post-release difference across passages 6, 8, and 12 was <b>+0.075</b>, interval [0.059, 0.090].</p></div></div>
 <div class="callout"><strong>Every one of the 16 organism families showed positive accumulated post-release separation.</strong><div><b>16/16</b><small>independent family directions</small></div></div></div></section>
 
-<section><div class="wrap"><div class="eyebrow">03 / Feedback mattered</div><h2>Blindly hammering the system did the opposite.</h2><p class="big">The full-strength pulse applied at every passage did not hold the gate open. It pushed causal-history separation below the untouched world. The adaptive controller beat blind full forcing at every measured age—including eight passages after release.</p>
+<section><div class="wrap"><h2>Blindly hammering the system did the opposite.</h2><p class="big">The full-strength pulse applied at every passage did not hold the gate open. It pushed causal-history separation below the untouched world. The adaptive controller beat blind full forcing at every measured age—including eight passages after release.</p>
 <div class="contrast"><div><b>+0.036</b><span>open over fixed-full at passage 4</span></div><div><b>+0.034</b><span>open over fixed-full at passage 8</span></div><div><b>+0.026</b><span>open over fixed-full at passage 12</span></div></div><div class="plain" style="margin-top:34px">More intervention was not more control. The successful policy acted early, read the response, and mostly stopped. The failed blind policy kept applying the strongest available correction.</div></div></section>
 
-<section><div class="wrap"><div class="eyebrow">04 / A hidden state, not a crude shape change</div><h2>The causal worlds diverged while coarse field displacement stayed almost identical.</h2><div class="grid2"><div><p class="big">Open and closed branches were both far from the untouched state. But their distance from untouched was nearly the same—the mean open-minus-closed field-distance contrast stayed near zero.</p><p>This is not simply “one controller moved more pixels.” The intervention changed what the state could still become under alternative histories.</p></div><div class="card"><h3>Open minus closed field displacement</h3><p><b>P4: -0.000</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.037</span></p><p><b>P6: +0.013</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.029</span></p><p><b>P8: +0.012</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.027</span></p><p><b>P12: +0.000</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.018</span></p></div></div></div></section>
+<section><div class="wrap"><h2>The causal worlds diverged while coarse field displacement stayed almost identical.</h2><div class="grid2"><div><p class="big">Open and closed branches were both far from the untouched state. But their distance from untouched was nearly the same—the mean open-minus-closed field-distance contrast stayed near zero.</p><p>This is not simply “one controller moved more pixels.” The intervention changed what the state could still become under alternative histories.</p></div><div class="card"><h3>Open minus closed field displacement</h3><p><b>P4: -0.000</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.037</span></p><p><b>P6: +0.013</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.029</span></p><p><b>P8: +0.012</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.027</span></p><p><b>P12: +0.000</b> &nbsp; <span style="color:var(--muted)">while causal separation was +0.018</span></p></div></div></div></section>
 
-<section><div class="wrap"><div class="eyebrow">05 / What this means</div><h2>Developmental commitment is now something we can control.</h2><div class="timeline"><div class="phase active"><b>P1</b><span>strong state-setting pulse</span></div><div class="phase active"><b>P2–4</b><span>feedback mostly chooses restraint</span></div><div class="phase release"><b>Release</b><span>all control stops</span></div><div class="phase release"><b>P6–8</b><span>large causal memory remains</span></div><div class="phase release"><b>P12</b><span>memory is smaller, still unmistakable</span></div></div>
+<section><div class="wrap"><h2>Developmental commitment is now something we can control.</h2><div class="timeline"><div class="phase active"><b>P1</b><span>strong state-setting pulse</span></div><div class="phase active"><b>P2–4</b><span>feedback mostly chooses restraint</span></div><div class="phase release"><b>Release</b><span>all control stops</span></div><div class="phase release"><b>P6–8</b><span>large causal memory remains</span></div><div class="phase release"><b>P12</b><span>memory is smaller, still unmistakable</span></div></div>
 <p class="plain" style="margin-top:38px">In plain words: early Flow Lenia development contains a controllable gate. A correctly timed pulse can place the same material into a state that remains more responsive to its later causal history. Repeated brute-force correction closes that gate instead.</p></div></section>
 
-<section><div class="wrap"><div class="eyebrow">06 / Breadth</div><h2>This was not one lucky creature.</h2><div class="group-bars"><div class="group-bar"><span>g01</span><i style="width:37.9%"></i><b>0.049</b></div><div class="group-bar"><span>g02</span><i style="width:50.6%"></i><b>0.066</b></div><div class="group-bar"><span>g03</span><i style="width:57.4%"></i><b>0.075</b></div><div class="group-bar"><span>g04</span><i style="width:34.4%"></i><b>0.045</b></div><div class="group-bar"><span>g05</span><i style="width:76.9%"></i><b>0.100</b></div><div class="group-bar"><span>g06</span><i style="width:40.1%"></i><b>0.052</b></div><div class="group-bar"><span>g07</span><i style="width:27.9%"></i><b>0.036</b></div><div class="group-bar"><span>g08</span><i style="width:77.3%"></i><b>0.100</b></div><div class="group-bar"><span>g09</span><i style="width:73.0%"></i><b>0.095</b></div><div class="group-bar"><span>g10</span><i style="width:52.2%"></i><b>0.068</b></div><div class="group-bar"><span>g11</span><i style="width:29.8%"></i><b>0.039</b></div><div class="group-bar"><span>g12</span><i style="width:52.0%"></i><b>0.068</b></div><div class="group-bar"><span>g13</span><i style="width:62.9%"></i><b>0.082</b></div><div class="group-bar"><span>g14</span><i style="width:89.8%"></i><b>0.117</b></div><div class="group-bar"><span>g15</span><i style="width:94.1%"></i><b>0.122</b></div><div class="group-bar"><span>g16</span><i style="width:68.5%"></i><b>0.089</b></div></div></div></section>
+<section><div class="wrap"><h2>This was not one lucky creature.</h2><div class="group-bars"><div class="group-bar"><span>g01</span><i style="width:37.9%"></i><b>0.049</b></div><div class="group-bar"><span>g02</span><i style="width:50.6%"></i><b>0.066</b></div><div class="group-bar"><span>g03</span><i style="width:57.4%"></i><b>0.075</b></div><div class="group-bar"><span>g04</span><i style="width:34.4%"></i><b>0.045</b></div><div class="group-bar"><span>g05</span><i style="width:76.9%"></i><b>0.100</b></div><div class="group-bar"><span>g06</span><i style="width:40.1%"></i><b>0.052</b></div><div class="group-bar"><span>g07</span><i style="width:27.9%"></i><b>0.036</b></div><div class="group-bar"><span>g08</span><i style="width:77.3%"></i><b>0.100</b></div><div class="group-bar"><span>g09</span><i style="width:73.0%"></i><b>0.095</b></div><div class="group-bar"><span>g10</span><i style="width:52.2%"></i><b>0.068</b></div><div class="group-bar"><span>g11</span><i style="width:29.8%"></i><b>0.039</b></div><div class="group-bar"><span>g12</span><i style="width:52.0%"></i><b>0.068</b></div><div class="group-bar"><span>g13</span><i style="width:62.9%"></i><b>0.082</b></div><div class="group-bar"><span>g14</span><i style="width:89.8%"></i><b>0.117</b></div><div class="group-bar"><span>g15</span><i style="width:94.1%"></i><b>0.122</b></div><div class="group-bar"><span>g16</span><i style="width:68.5%"></i><b>0.089</b></div></div></div></section>
 
-<section><div class="wrap"><div class="eyebrow">07 / The next direct swing</div><h2>Use the open gate to rewrite what organism forms.</h2><div class="next"><div><b>Counterfactual replay</b><p>Freeze each organism’s discovered pulse sequence, perturb its trajectory slightly, then compare blind replay with fresh feedback. This tells us whether the controller learned a transferable recipe or genuinely tracks a moving developmental state.</p></div><div><b>Gate-then-steer</b><p>First place the system in the open or closed regime. Then deliver the same second intervention to both. If the open regime produces a broader or different future repertoire, we have direct control over developmental possibility—not merely a metric.</p></div></div><p style="color:var(--muted);margin-top:30px">Visible transition timing did not yet separate cleanly: open minus closed advance +4.3 steps, interval [-8.8, 18.1]. That is the next frontier, not a reason to shrink the present finding.</p></div></section>
+<section><div class="wrap"><h2>Use the open gate to rewrite what organism forms.</h2><div class="next"><div><b>Counterfactual replay</b><p>Freeze each organism’s discovered pulse sequence, perturb its trajectory slightly, then compare blind replay with fresh feedback. This tells us whether the controller learned a transferable recipe or genuinely tracks a moving developmental state.</p></div><div><b>Gate-then-steer</b><p>First place the system in the open or closed regime. Then deliver the same second intervention to both. If the open regime produces a broader or different future repertoire, we have direct control over developmental possibility—not merely a metric.</p></div></div><p style="color:var(--muted);margin-top:30px">Visible transition timing did not yet separate cleanly: open minus closed advance +4.3 steps, interval [-8.8, 18.1]. That is the next frontier, not a reason to shrink the present finding.</p></div></section>
 </main><div class="wrap"><footer>Result · 7969f195c566d69717b1430095266bab6132472e42d380015e273a46e5b71fc6 · 39 organisms · 16 families · 6,240 candidate probes · 2,496 release readouts · 156 untouched visible futures · Generated from the complete commitment-gate-controller-v1 result.</footer></div></body></html>

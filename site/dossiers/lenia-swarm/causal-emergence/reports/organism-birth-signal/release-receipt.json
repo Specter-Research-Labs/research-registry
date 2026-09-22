@@ -7,13 +7,14 @@
   "status": "feature",
   "evidenceClass": "prospective measurement",
   "sourceReportSha256": "53c1920387c5565cd8292c99cbcaeb6bc26cfdade27ff0b885efac9a7b8903d2",
-  "publicReportSha256": "53c1920387c5565cd8292c99cbcaeb6bc26cfdade27ff0b885efac9a7b8903d2",
+  "publicReportSha256": "f197e914468d2c19f46de247ea5a751d6984e929e93dce9bbc23f8fe2a156891",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "0a0f9e8e8d86264eeba45dc7814045d65b30d225064d0d153435360cd678d8a6",
+  "contextSha256": "15a647565c346dbece5b7a6cf9122c012381405a4b85cc0da888f0018f931716",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "f996228fb2ebd766fc93530d18ea2c0f143571d374608a0c925173bb9004c1a3"
+  "upstreamReceiptSha256": "bfcc83eebd0f995d519707a99d93638e2866cfa0363280b84647f1174591a46e"
 }

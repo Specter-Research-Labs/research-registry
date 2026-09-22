@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "direction-matched pulse intervention",
   "sourceReportSha256": "d85b634076b1ba607b51d16e60d52847b763a157a9f04fa7d70e404493c90508",
-  "publicReportSha256": "d85b634076b1ba607b51d16e60d52847b763a157a9f04fa7d70e404493c90508",
+  "publicReportSha256": "adee2f8d57555a4de4426bd96be4537513a9900d7a52940ded01a97344b00e37",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "85814ef186029e660009f52e9d9a28bce141ebb0283a0e786a1955d40d16564f",
+  "contextSha256": "660217e6c4926c5a8722dcbf44cce2766301fd7ddc819a2c2de03051770974d1",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "683ca75dcdbe2d3d11d5656c46775a230401ea40bf9e847358bc5f2826450fd1"
+  "upstreamReceiptSha256": "f0f7fc52319fe5f3012ef76d9404cd5c4669f57ccf8de590b901402f956ece1a"
 }

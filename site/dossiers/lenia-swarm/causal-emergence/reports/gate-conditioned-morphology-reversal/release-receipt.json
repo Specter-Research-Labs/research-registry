@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "late closed-loop morphology control",
   "sourceReportSha256": "2cb0c97de16e8e18a8605fb18a9a72a10a0295e47b6cba07a0046edc91619eff",
-  "publicReportSha256": "2cb0c97de16e8e18a8605fb18a9a72a10a0295e47b6cba07a0046edc91619eff",
+  "publicReportSha256": "e68fa300ed9d5ba5141b208f035ac10bcd439f4c09f9d5a930e88a7683a9b1fe",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "4573f4a8461041b89c0d20344fc5c0c018d035f7569f28942acaf9f601a81e82",
+  "contextSha256": "0cb15bd228e4347d8931e7a2e5b7ecde3733e85cb91f64031aabedced1f02268",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "7e1a31fc4d1e4aa328efeabe757a7c5ec93ff2c22bfaf8d0cad5e53b7b9c15d7"
+  "upstreamReceiptSha256": "b9d4b049a3c0bd99e6d2e46b00159eb3c0404ea0fe06082fcae628828235e2f7"
 }

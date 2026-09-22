@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "frozen matched-action continuation",
   "sourceReportSha256": "81aa33822d31f8f73e33535524ace81e579c29c5363ada9afd562e8a86a74c6b",
-  "publicReportSha256": "81aa33822d31f8f73e33535524ace81e579c29c5363ada9afd562e8a86a74c6b",
+  "publicReportSha256": "b56ca66a01dc0d7c16350c55b2fad3bb2639e6be7f88439de1ba00faea41136f",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "c053bd4f0ede37569fd805428a5998532fe606cbd3542134f1a94d4b8dbc219a",
+  "contextSha256": "2162c8ff039deaaa47d292cfd4c5c73910fbf69b9f583ec0dd21a70dc4ef0db6",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "5bb876b25cc0bbdb51babdea62be7d72587df2923a056e1f5a75b94a5f900df8"
+  "upstreamReceiptSha256": "d95a5d379a2e64f309fb9f320ff0010c26b79723ca9a46b1655302c281db8338"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "early-window future-fan assay",
   "sourceReportSha256": "6e33088c49bf6c984b8ba3cb5d3aa4e19ebf95f3633ef590b41c08301e3233d0",
-  "publicReportSha256": "6e33088c49bf6c984b8ba3cb5d3aa4e19ebf95f3633ef590b41c08301e3233d0",
+  "publicReportSha256": "6cf5aeb1acba40e62d07043c10db7629146164f4e3b73440d69231b40f3aa868",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "491d5f7dc526da42f79e9043b953b2880851a644d85a157ae6c0bfded91bbe55",
+  "contextSha256": "da5cec15cec43e7b4789df668ed00c9336118e928ca5652c07d1d04b71338e09",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "05fedae5faf777aba56b621a43f3806324eb7e131bb05c882cad5f1384c8935a"
+  "upstreamReceiptSha256": "ef347d054bb6db8318913300184a9fb131a25a95d47db4380b1a051ab815eb0d"
 }

@@ -673,3 +673,20 @@ html .publication-brand {
     --publication-space-section: 72px;
   }
 }
+
+html.specter-report .hero .micro,
+html.specter-report .section-head .section-no,
+.report-hero > .report-kicker,
+.report-chapter-title > .report-kicker {
+  display: none;
+}
+
+.evidence-label {
+  display: block;
+  margin-block-end: .35rem;
+  font-size: .875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+  text-transform: none;
+}

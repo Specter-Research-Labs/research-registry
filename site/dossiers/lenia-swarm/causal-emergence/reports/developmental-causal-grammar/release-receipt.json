@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "controlled history intervention",
   "sourceReportSha256": "4e313eac23ebc8bbb5d0abbbc2665bc1223ccf608c2ba4fd7bc0c4c13d1b793f",
-  "publicReportSha256": "4e313eac23ebc8bbb5d0abbbc2665bc1223ccf608c2ba4fd7bc0c4c13d1b793f",
+  "publicReportSha256": "be90168a153cd1cb10d4250b2f78f66cb7624a06a26c22c19cd74fdeadd72090",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "ba666423c56d66741cab175aa670449262095987f5f90fda6d2c6a45fe46d7d8",
+  "contextSha256": "f1ad24a28cde67d4f2228fb51ba55ce9f478d2b974ff42b9e07553fedb078209",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "7ba7ea733799287e41f2aaef13dbbd864d875032ee03d55078310a7c5596f722"
+  "upstreamReceiptSha256": "d67ff8ede0b377ad26e665d618a41c6c1a449f48c8c84fb0ca438bbed37900e0"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "phase-preserving spatial intervention",
   "sourceReportSha256": "6442440759c9dc5a80f544e4afb478a5fca0b1fbb0897e2ad1b222e1078f475c",
-  "publicReportSha256": "6442440759c9dc5a80f544e4afb478a5fca0b1fbb0897e2ad1b222e1078f475c",
+  "publicReportSha256": "b1622bf5b56219b24e422da86630f371c1e67ee435911a9a8aa12f5e6f7e9ee0",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "4f74bf5040cef5398b0040a5af7cb7d4b2d940563c6d88683158bdaca5bb6a70",
+  "contextSha256": "e36c8b8d460aacdb7de22cdfa8b7167acf39a271a5091e527864465241f4f9ef",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "0e11f2c7154a6e57af0cf264125d88f6341362bdebc74581b4f506a258b68b5d"
+  "upstreamReceiptSha256": "a7ad76ad449f4fea14f9633fec0dac4783d46bc12e5cb05ed5742da6bfcbd2e6"
 }

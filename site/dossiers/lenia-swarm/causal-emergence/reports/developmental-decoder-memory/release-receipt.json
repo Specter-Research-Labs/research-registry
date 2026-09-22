@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "factorial prime-test intervention",
   "sourceReportSha256": "6de654e6ea60c8ec5592f6b7abc7c74bd74dae3e466caed3ab310dafc5694e1e",
-  "publicReportSha256": "6de654e6ea60c8ec5592f6b7abc7c74bd74dae3e466caed3ab310dafc5694e1e",
+  "publicReportSha256": "8d1c5eefeee56727d00e0d98af6f649ff8745820961c953e8c3afad954c3458a",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "2aac5b995f6772284ca48dc9964a24649217a52131fc81469c440e1b129f6605",
+  "contextSha256": "3c9c7a7bbd51f32093811f465fa485d71a6ffad0a12393783d144c89dcdb4366",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "5bec77339b11ccfcf685d9fd7735dbe8b511922dfe5c40fb640fc96c2dc30600"
+  "upstreamReceiptSha256": "0400c2e37a30a07ac98f5b57c55d95154a86568495e2f47020a440d0c7c37053"
 }

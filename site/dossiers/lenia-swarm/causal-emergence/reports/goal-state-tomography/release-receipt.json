@@ -7,13 +7,13 @@
   "status": "archive",
   "evidenceClass": "inconclusive goal-state pilot",
   "sourceReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
-  "publicReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
+  "publicReportSha256": "62c52c4e56d85fd8146bb450a2a905eccf372b5979d9b6b0044b95f4921c0f95",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "c9e345d477bad99db6f19baa1354805c457d21d3e10cfe56d3315b66735e779e",
+  "contextSha256": "b527041a4f428504f1ced67ff78be0ecda17a2350dcd3c6eec0a4cc4049139bb",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "04e013809672c3c3726b2f6ce6f33a4883c4596c061586e2fdf71929cc1940c0"
+  "upstreamReceiptSha256": "6b079c57713ee51aa96eeced005d989c1182c98a00fa5863a0b20907e1f4ade3"
 }

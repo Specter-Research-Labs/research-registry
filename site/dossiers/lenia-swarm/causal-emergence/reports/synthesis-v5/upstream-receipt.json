@@ -6,7 +6,7 @@
   "date": "2026-08-29",
   "status": "archive",
   "evidenceClass": "multi-experiment synthesis",
-  "sourceReportSha256": "b08becfc8145f5350ac514d829eac2df7e5b1bffe05db99ba02393727f63c21e",
+  "sourceReportSha256": "f4a310e3bf6bb91e065d4bd240b51f7178d78eb65f9fe3c455479fe6231dfe4d",
   "publicReportSha256": "f4a310e3bf6bb91e065d4bd240b51f7178d78eb65f9fe3c455479fe6231dfe4d",
   "transformations": [
     "import_verified_public_projection_v1",
@@ -14,6 +14,6 @@
     "move_reports_to_website_v1"
   ],
   "contextSha256": "a0b74aa1e7d037f4ac5ee814ffacc0ca6bdd7d87652c141e91cc0ff892426df3",
-  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
-  "upstreamReceiptSha256": "f662f60410ab8d0fa440405dc6647d00e34a0535e4e8ab4177d0fce71605178a"
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "acfb73a657ae939bbd37ccc60291821182efa58007b07c2180699cf4f70410d6"
 }

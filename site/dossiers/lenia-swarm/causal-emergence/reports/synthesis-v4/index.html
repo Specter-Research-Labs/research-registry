@@ -1258,9 +1258,7 @@ html.specter-report ::selection {
  * This late, shared layer repairs recurring presentation problems in older
  * reports without changing their figures, data, or stable release URLs.
  */
-
-html.specter-report {
-  color-scheme: light;
+html.specter-report {color-scheme: light;
   --specter-ground: #f2eee3;
   --specter-sheet: #fffdf7;
   --specter-ink: #131821;
@@ -1293,34 +1291,18 @@ html.specter-report {
   --amber: var(--specter-coral);
   --orange: var(--specter-coral);
   --pink: var(--specter-coral);
-  --coral: var(--specter-coral);
-}
-
-html.specter-report[data-specter-surface="bg-paper"] {
-  --paper: var(--specter-sheet);
-}
-
-html.specter-report,
-html.specter-report body {
-  background: var(--specter-ground) !important;
-}
-
-html.specter-report body {
-  color: var(--specter-ink) !important;
+  --coral: var(--specter-coral);}
+html.specter-report[data-specter-surface="bg-paper"] {--paper: var(--specter-sheet);}
+html.specter-report,html.specter-report body {background: var(--specter-ground) !important;}
+html.specter-report body {color: var(--specter-ink) !important;
   background:
     linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     var(--specter-ground) !important;
-  background-size: 24px 24px !important;
-}
-
-html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
-  color: var(--specter-green) !important;
-}
-
+  background-size: 24px 24px !important;}
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {color: var(--specter-green) !important;}
 /* Older reports often put a small provenance nav inside the report column. */
-html.specter-report main > nav {
-  align-items: center;
+html.specter-report main > nav {align-items: center;
   min-height: 3.25rem;
   margin: 0 0 clamp(2rem, 5vw, 4rem);
   padding: 0.8rem 1rem;
@@ -1331,323 +1313,178 @@ html.specter-report main > nav {
   font-family: var(--specter-mono) !important;
   font-size: 0.72rem !important;
   font-weight: 750;
-  line-height: 1.25;
-}
-
-html.specter-report main > nav :is(a, span, strong) {
-  color: inherit !important;
-}
-
+  line-height: 1.25;}
+html.specter-report main > nav :is(a, span, strong) {color: inherit !important;}
 /*
  * Early chart generators drew directly onto a near-black SVG. Give those
  * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
  * Charts already composed inside a semantic figure keep their authored skin.
  */
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-html.specter-report :is(div, article, figure).chart,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  color: var(--specter-ink) !important;
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {color: var(--specter-ink) !important;
   background: var(--specter-sheet) !important;
   border: 2px solid var(--specter-ink) !important;
   border-radius: 0 !important;
-  box-shadow: var(--specter-chart-shadow) !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-  margin-block: 1.5rem 2rem;
-  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
-}
-
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  padding: clamp(1rem, 2vw, 1.6rem) !important;
-}
-
-html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
-  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
-  color: inherit !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
-html.specter-report :is(div, article, figure).chart svg text,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
-  fill: var(--specter-muted) !important;
+  box-shadow: var(--specter-chart-shadow) !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;}
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {padding: clamp(1rem, 2vw, 1.6rem) !important;}
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {color: inherit !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,html.specter-report :is(div, article, figure).chart svg text,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {fill: var(--specter-muted) !important;
   font-family: var(--specter-mono) !important;
-  font-weight: 700;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
-  fill: var(--specter-ink) !important;
-  font-weight: 850 !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
-  stroke: var(--specter-chart-grid) !important;
-}
-
+  font-weight: 700;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {fill: var(--specter-ink) !important;
+  font-weight: 850 !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {stroke: var(--specter-chart-grid) !important;}
 /* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
-html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
-html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
-html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
-html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
-html.specter-report svg [stroke="#ef7d9a"],
-html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
-html.specter-report svg [fill="#ef7d9a"],
-html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
-
-@media (max-width: 640px) {
-  html.specter-report main > nav {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
-  }
-
-  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
-    font-size: 24px !important;
-  }
-}
-
-@media print {
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-  html.specter-report :is(div, article, figure).chart,
-  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-    box-shadow: none !important;
-  }
-}
-
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
-  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
-  font-family: var(--editorial-display) !important;
+html.specter-report svg [stroke="#a9d86e"] {stroke: var(--specter-green) !important;}
+html.specter-report svg [fill="#a9d86e"] {fill: var(--specter-green) !important;}
+html.specter-report svg [stroke="#72d9e2"] {stroke: var(--specter-blue) !important;}
+html.specter-report svg [fill="#72d9e2"] {fill: var(--specter-blue) !important;}
+html.specter-report svg [stroke="#ef7d9a"],html.specter-report svg [stroke="#f1b85b"] {stroke: var(--specter-coral) !important;}
+html.specter-report svg [fill="#ef7d9a"],html.specter-report svg [fill="#f1b85b"] {fill: var(--specter-coral) !important;}
+@media (max-width: 640px) {html.specter-report main > nav {align-items: flex-start;
+    flex-direction: column;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;}
+/* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {font-size: 24px !important;}}
+@media print {html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {box-shadow: none !important;}}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {--editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {font-family: var(--editorial-display) !important;
   font-weight: 850;
   letter-spacing: -.035em;
-  text-wrap: balance;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
-html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
-html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
-html.anatomical-editorial .hero-specimens { margin: 0; }
-html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
-html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
-html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
-html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
-html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
-html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
-html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
-html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
-html.anatomical-editorial .synthesis .metric span { color:#414c45; }
-html.anatomical-editorial .opening-method { margin:1rem 0; }
-html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
-html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
-html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
-html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
-html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
-html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
-html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
-html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
-html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
-html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
-html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
-html.anatomical-editorial .caption { border:0; }
-html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
-html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
-html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
-html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
-html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
-html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
-html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
-html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
-html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
-html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
-html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
-html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
-html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
-html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
-html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
-html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
-@media(max-width:800px) {
- html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
- html:has(.editorial-synthesis) .hero-answer { transform:none; }
- html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
-}
-html:has(.editorial-synthesis) .ink { border-block:0; }
-html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
-html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .section-no { border:0; }
-@media(max-width:700px) {
- html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
- html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
- html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
- html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
- html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
-}
-html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
-
-html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
-html.anatomical-editorial .measurement-comparison,
-html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
-html.anatomical-editorial .measurement-comparison h3,
-html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
-.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
-.measurement-heading { font: 12px/1.5 monospace; }
-.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
-.measurement-track { position: relative; height: 18px; background: #fff8; }
-.measurement-track i { display: block; height: 100%; background: #18796f; }
-.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
-.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
-html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
-.experiment-method summary { cursor: pointer; font-weight: 700; }
-.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
-.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
-.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.orbium-frames figure { margin: 0; }
-.orbium-frames img { display: block; width: 100%; }
-.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
-#orbium-time-note { margin-top: 16px; }
-.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
-.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
-.comparison-story p { max-width: 72ch; line-height: 1.65; }
-.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
-.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
-@media (max-width: 650px) {
-  .measurement-heading { display: none; }
-  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
-  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
-  .orbium-frames { gap: 10px; }
-}
-
-#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
-html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
-html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
-
-html:has(.editorial-synthesis) .evidence {
-  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
-  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
-}
-html:has(.editorial-synthesis) .evidence::before { content: none; }
-html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
-html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
-html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
-html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
-.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
-.figure-introduction { max-width: 760px; margin-bottom: 30px; }
-.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
-.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
-.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
-.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
-.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
-.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-.response-plots > div, .transplant-panels > div { min-width: 0; }
-.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
-.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
-.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
-.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
-.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
-.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
-#response-reading { font-size: 19px; }
-html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
-html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
-html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
-html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
-html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
-html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
-html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
-html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
-html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
-@media (max-width: 700px) {
-  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
-  .response-controls { gap: 14px; }
-  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
-  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
-}
-
-#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
-
+  text-wrap: balance;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 {font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 {font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) {box-shadow: none !important;}
+html:has(.editorial-synthesis) .hero {padding-bottom:3rem;}
+html:has(.editorial-synthesis) .hero .dek {font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch;}
+html:has(.editorial-synthesis) .hero-grid {grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center;}
+html:has(.editorial-synthesis) .hero-answer {border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg);}
+html:has(.editorial-synthesis) .hero-answer strong {font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .hero-answer p {font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .quickread {border:0 !important; gap:2rem; background:transparent !important;}
+html:has(.editorial-synthesis) .quickread article {border:0 !important; background:transparent !important; padding:1rem 0;}
+html:has(.editorial-synthesis) .quickread h2 {font-size:1.5rem;}
+html:has(.editorial-synthesis) .section-head {border:0 !important; gap:3rem;}
+html:has(.editorial-synthesis) .section-head .lede {font:400 1.12rem/1.7 var(--specter-serif);}
+html:has(.editorial-synthesis) .figure {border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important;}
+html:has(.editorial-synthesis) .figure svg {border:0 !important; box-shadow:none !important;}
+html:has(.editorial-synthesis) .metric-card {border:0 !important; padding:1.25rem;}
+html:has(.editorial-synthesis) .callout {border:0; font:400 1.1rem/1.65 var(--specter-serif);}
+html:has(.editorial-synthesis) .explore-card {border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important;}
+html:has(.editorial-synthesis) .explore-card h3 {font-size:1.45rem;}
+html:has(.editorial-synthesis) .explore-card p {font:400 1rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .reading-route {display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono);}
+@media (max-width:800px) {html:has(.editorial-synthesis) .hero-grid {grid-template-columns:1fr;}
+html:has(.editorial-synthesis) .hero-answer {transform:none;}
+html:has(.editorial-synthesis) .section-head {gap:1.3rem;}}
+html:has(.editorial-synthesis) .ink {border-block:0;}
+html:has(.editorial-synthesis) .ink .figure {background:var(--specter-sheet) !important; padding:1rem !important;}
+html:has(.editorial-synthesis) .passage-note {max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .section-no {border:0;}
+@media (max-width:700px) {html:has(.editorial-synthesis) .figure:has(svg.chart) {overflow-x:auto; max-width:100%;}
+html:has(.editorial-synthesis) .figure svg.chart {min-width:720px;}
+html:has(.editorial-synthesis) .figure:has(svg.chart)::after {content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f);}
+html:has(.editorial-synthesis) .figure figcaption {grid-template-columns:1fr;}}
+html:has(.editorial-synthesis) .passport-layout > * {min-width:0;}
+.measurement-heading,.measurement-row {display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0;}
+.measurement-heading {font: 12px/1.5 monospace;}
+.measurement-row > span:last-child {text-align: right; font: 14px/1.5 monospace;}
+.measurement-track {position: relative; height: 18px; background: #fff8;}
+.measurement-track i {display: block; height: 100%; background: #18796f;}
+.measurement-track b {position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d;}
+.measurement-comparison figcaption {margin-top: 24px; max-width: 70ch;}
+.experiment-method summary {cursor: pointer; font-weight: 700;}
+.orbium-controls {display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0;}
+.orbium-controls select {font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60;}
+.orbium-frames {display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
+.orbium-frames figure {margin: 0;}
+.orbium-frames img {display: block; width: 100%;}
+.orbium-frames figcaption {padding-block: 10px; font-weight: 700;}
+#orbium-time-note {margin-top: 16px;}
+.comparison-story {background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0;}
+.comparison-story h3 {font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px;}
+.comparison-story p {max-width: 72ch; line-height: 1.65;}
+.comparison-story h4 {font: 700 21px/1.25 sans-serif; margin: 12px 0;}
+.comparison-story figcaption {border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6;}
+@media (max-width: 650px) {.measurement-heading {display: none;}
+.measurement-row {grid-template-columns: 1fr 1fr; gap: 12px;}
+.measurement-track {grid-column: 1 / -1; grid-row: 2;}
+.measurement-row > span:last-child {grid-column: 2; grid-row: 1; font-size: 12px;}
+.orbium-frames {gap: 10px;}}
+#measurement-comparison,.orbium-reader {scroll-margin-top: 90px;}
+html:has(.editorial-synthesis) .evidence {display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;}
+html:has(.editorial-synthesis) .evidence::before {content: none;}
+html:has(.editorial-synthesis) .ink .evidence {color: #cbd0c8;}
+html:has(.editorial-synthesis) .research-detail {margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555;}
+html:has(.editorial-synthesis) .research-detail summary {cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif);}
+html:has(.editorial-synthesis) .research-detail .section-head {margin-top: 32px;}
+.response-explorer,.transplant-comparison {margin: 44px 0; color: #17282d;}
+.figure-introduction {max-width: 760px; margin-bottom: 30px;}
+.figure-introduction h3 {font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px;}
+.figure-introduction p,.experiment-reading {font: 19px/1.65 Georgia, serif;}
+.response-controls {display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px;}
+.response-controls label {font: 15px/1.6 var(--specter-display-font, sans-serif);}
+.response-controls select {padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b;}
+.response-plots,.transplant-panels {display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
+.response-plots > div,.transplant-panels > div {min-width: 0;}
+.response-plots h4,.transplant-panels h4 {font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px;}
+.response-plots svg,.transplant-panels svg {display: block; width: 100%; height: auto; overflow: visible;}
+.response-plots svg text,.transplant-panels svg text {font: 16px var(--specter-display-font, sans-serif); fill: #17282d;}
+.response-plots svg text[fill="#8561b0"] {fill: #8561b0;}
+.response-plots svg text[fill="#187a6b"] {fill: #187a6b;}
+.response-explorer > figcaption,.transplant-comparison > figcaption {font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px;}
+#response-reading {font-size: 19px;}
+html:has(.editorial-synthesis) .passport-layout {grid-template-columns: 1fr;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px;}
+html:has(.editorial-synthesis) .patch-card {border: 0; padding: 0; background: none; box-shadow: none;}
+html:has(.editorial-synthesis) .patch-card figcaption {color: #17282d; padding: 12px 0;}
+html:has(.editorial-synthesis) .patch-card figcaption span,html:has(.editorial-synthesis) .native-strip figcaption span {display: none;}
+html:has(.editorial-synthesis) .patch-canvases {position: relative; padding-top: 28px;}
+html:has(.editorial-synthesis) .patch-canvases::before,html:has(.editorial-synthesis) .patch-canvases::after {position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df;}
+html:has(.editorial-synthesis) .patch-canvases::before {content: "Visible matter"; left: 0;}
+html:has(.editorial-synthesis) .patch-canvases::after {content: "Hidden composition"; left: 51%;}
+html:has(.editorial-synthesis) .patch-canvases canvas {width: 100%; height: auto;}
+html:has(.editorial-synthesis) .comparison-story {background: none; padding: 0; margin-top: 40px;}
+@media (max-width: 700px) {.response-plots,.transplant-panels {grid-template-columns: 1fr; gap: 35px;}
+.response-controls {gap: 14px;}
+.response-plots svg text,.transplant-panels svg text {font-size: 18px;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: 1fr;}}
+#response-explorer,.transplant-comparison {scroll-margin-top: 80px;}
 /* These explicit light fills label dark inset panels inside otherwise light charts. */
-html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
-html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
-
-html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
-  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
-}
-html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
-html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
-html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
-
+html.specter-report svg.chart text[fill="#d8ff2f"] {fill: #d8ff2f !important;}
+html.specter-report svg.chart text[fill="#f7f4ec"] {fill: #f7f4ec !important;}
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;}
+html.specter-report body > nav.publication-navigation {display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif;}
+html.specter-report body > nav.publication-navigation a {color: #14252c !important; text-decoration: underline;}
+html.specter-report body > nav.publication-navigation span {color: #59615a !important;}
 /* Native specimen panels retain their black image field. Their labels must
  * remain legible after the surrounding report adopts paper-colored tokens. */
-html.specter-report .specimen > figcaption {
-  color: #d3d5d7 !important;
-  background: #050608;
-}
-html.specter-report .specimen > figcaption :is(b, strong, span) {
-  color: inherit !important;
-}
-
+html.specter-report .specimen > figcaption {color: #d3d5d7 !important;
+  background: #050608;}
+html.specter-report .specimen > figcaption :is(b, strong, span) {color: inherit !important;}
 /* Keep imported data labels readable on a phone instead of shrinking an
  * entire desktop plot into a few hundred pixels. Captions still wrap. */
-@media (max-width: 700px) {
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
-    max-width: 100%;
+@media (max-width: 700px) {html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {max-width: 100%;
     min-width: 0;
     overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-  html.specter-report div.chart > svg { min-width: 760px; }
-  html.specter-report div.card.chart > svg { min-width: 940px; }
-  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
-  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
+    overscroll-behavior-inline: contain;}
+html.specter-report div.chart > svg {min-width: 760px;}
+html.specter-report div.card.chart > svg {min-width: 940px;}
+html.specter-report .trajectory-wrap > svg {min-width: 1120px;}
+html.specter-report .chart-grid .figure > svg.chart {min-width: 640px;}
+html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {content: "Scroll sideways to explore the figure →";
     display: block;
     margin-top: .7rem;
     font: 400 .75rem/1.5 var(--specter-mono);
-    color: var(--specter-muted);
-  }
-}
-
-@media (max-width: 700px) {
-  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
-  html.anatomical-editorial .figure > svg { min-width: 640px; }
-  html.anatomical-editorial .figure:has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
-    display: block;
-    margin-top: .7rem;
-    font: 400 .75rem/1.5 ui-monospace, monospace;
-  }
-  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
-}
-
+    color: var(--specter-muted);}}
 /* A source report's compact local navigation must not hide the injected
  * site navigation or the links back to its dossier and report library. */
-html.specter-report :is(.publication-header, .publication-navigation) a {
-  display: inline-flex !important;
-}
-
+html.specter-report :is(.publication-header, .publication-navigation) a {display: inline-flex !important;}
 /* The commitment report deliberately keeps dark data panels. */
-html.specter-report:has(#steerability) .chart-grid .figure svg text {
-  fill: #e9e7df !important;
-}
+html.specter-report:has(#steerability) .chart-grid .figure svg text {fill: #e9e7df !important;}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/synthesis-v4/"></head>
 <body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav>
@@ -1668,12 +1505,12 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <header class="hero">
       <div class="wrap hero-grid">
         <div class="hero-title">
-          <div class="eyebrow">GARD-inspired Flow Lenia synthesis · v4 · 26 Aug 2026</div>
+          
           <h1>What Remained After Checking Every Claim Against Its Experiment</h1>
         </div>
         <div class="hero-intro">
           <p class="dek">Before a coherent body is obvious, the state already carries a history-dependent map of what actions can do and which futures remain reachable, and as development runs that map keeps closing, so the visible shape is the late part of a process that has been narrowing possibility for a while.</p>
-          <div class="hero-meta" aria-label="Evidence classes">
+          <div class="evidence-label" aria-label="Evidence classes">
             <span class="badge prospective">prospective</span>
             <span class="badge causal">direct causal</span>
             <span class="badge replication">fresh cohorts</span>
@@ -1682,7 +1519,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
           <p class="revision-note">Revision v4 keeps the evidence base of v3 and changes how it is bound and framed: two receipts are rebound to the analyses that actually produced their numbers, every card states its experiment's predeclared primary next to any promoted secondary, and the campaign record of nulls and stopped experiments is restored below the synthesis. A follow-up programme of four plans frozen after this revision has since executed the closing protocol; its verdicts are folded into the record map below and reported in full in <a data-evidence-ref="src-e4ab09ff3b32">the companion report</a>.</p>
         </div>
         <aside class="hero-note" aria-label="Main result in plain words">
-          <span class="micro">The short version</span>
+          
           <span class="big">The future becomes organism-shaped first.</span>
           <p>Then the visible body catches up.</p>
         </aside>
@@ -1700,7 +1537,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
             <g transform="translate(105 0)">
               <rect x="-82" y="14" width="164" height="54" fill="#dfe6ff" stroke="#131821" stroke-width="2"/>
               <text x="0" y="34" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" font-weight="800">EARLY · passage 8</text>
-              <text x="0" y="57" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="21" font-weight="900">104.4% of passage 32</text>
+              <text x="0" y="57" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="21" font-weight="900">104.4%<tspan x="0" dy="20" font-size="13"> of passage 32</tspan></text>
               <circle cx="0" cy="102" r="11" fill="#254fd4" stroke="#131821" stroke-width="3"/>
               <text x="0" y="133" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11">action-world exists</text>
             </g>
@@ -1753,7 +1590,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <section id="idea" class="section paper-band">
       <div class="wrap plain-grid">
         <article class="definition">
-          <div class="eyebrow">The instrument</div>
+          
           <h2>Can the whole forecast itself better than its best split?</h2>
           <p>We take a short history of the current state and ask how much it tells us about the next state. Then we split that state into parts and ask again. The whole-over-parts difference is our Flow Lenia analogue of integrated predictive information.</p>
           <p style="margin-top:1rem">Only the past chooses the measurement or action. Later morphology remains hidden until the prediction or intervention is fixed.</p>
@@ -1825,7 +1662,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
       </div>
       <div class="wrap">
         <aside class="glossary" aria-label="Recurring terms in plain words">
-          <div class="eyebrow">Before the evidence</div>
+          
           <h3>The recurring terms, in plain words</h3>
           <dl>
             <div><dt>passage 8, passage 12, passage 32, passage 48</dt><dd>The organism's age counted in growth pulses. passage 8 is very early, well before anything looks like a coherent body.</dd></div>
@@ -1849,7 +1686,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <section class="section">
       <div class="wrap">
         <div class="section-head">
-          <div><span class="section-no">How the question changed</span><h2>From steering replication to watching an organism commit.</h2></div>
+          <div><h2>From steering replication to watching an organism commit.</h2></div>
           <p class="lede">We began with a three-link steering programme on fed reservoir lineages, looking for a number that rose before replication and could be pushed, and what actually happened is that the flagship failed its frozen test while the experiments around it kept pointing at how the developing state constrains what a poke can do, which is what the rest of this report measures.</p>
         </div>
         <div class="turns">
@@ -1866,21 +1703,21 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <section id="arc" class="section paper-band">
       <div class="wrap">
         <div class="section-head">
-          <div><span class="section-no">The evidence chain</span><h2>From prediction to causal closure.</h2></div>
+          <div><h2>From prediction to causal closure.</h2></div>
           <p class="lede">The cards below run in the order the questions got harder, from whether the signal appears at all, to whether it forecasts, to whether we can move it and whether the organism remembers being moved, and finally to which kinds of future actually close.</p>
         </div>
 
         <div class="arc">
           <article class="finding-card" data-step="01">
             <div class="card-head">
-              <div><div class="eyebrow">Predictive whole</div><h3>The whole-over-parts signal rises before the body does.</h3></div>
+              <div><h3>The whole-over-parts signal rises before the body does.</h3></div>
               <div class="badges"><span class="badge prospective">prospective</span><span class="badge replication">replicated precursor</span><span class="badge secondary">specificity unresolved</span><span class="badge atlas">event-aligned atlas</span></div>
             </div>
             <p class="finding-dek">Across a fresh 64-specimen cohort, 54 had complete primary windows: frozen whole−sum predictive organization rose before an independently certified sustained break from the artificial square, while the specificity contrast remained unresolved. A second predeclared companion also came back null: adding whole−sum to ordinary visible measurements left held-out event prediction essentially unchanged (AUC 0.8089 to 0.8093), so the rise marks the transition without yet improving a practical forecast. Following that same developmental arc with exact local probes showed a further change: the actions favored by integration and by ordinary prediction stopped agreeing.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Fresh pre-form whole−sum</span><span class="value">+0.364</span><p>54 complete primary windows; 95% interval +0.231 to +0.502; 39 positive, with 15 of 16 family means positive. The rise is about 4 percent of the 8.76-nat whole-state signal, and the whole−sum level stays negative throughout.</p></div>
-              <div class="result blue"><span class="micro">Developmental atlas</span><span class="value">−1.75 → −0.32</span><p>Whole-over-parts increased by +1.43 from early development to transition; 16 of 16 families rose. The phase axis is each organism's own already-observed transition step, so this panel is a retrospective alignment, not a forecast.</p></div>
-              <div class="result coral"><span class="micro">Compass rotation</span><span class="value">44 → 4</span><p>Φ-high and TDMI-high selected the same action in 44 of 64 organisms early, then only 4 at transition. TDMI along Φ flipped +2.16 → −0.73.</p></div>
+              <div class="result acid"><span class="evidence-label">Fresh pre-form whole−sum</span><span class="value">+0.364</span><p>54 complete primary windows; 95% interval +0.231 to +0.502; 39 positive, with 15 of 16 family means positive. The rise is about 4 percent of the 8.76-nat whole-state signal, and the whole−sum level stays negative throughout.</p></div>
+              <div class="result blue"><span class="evidence-label">Developmental atlas</span><span class="value">−1.75 → −0.32</span><p>Whole-over-parts increased by +1.43 from early development to transition; 16 of 16 families rose. The phase axis is each organism's own already-observed transition step, so this panel is a retrospective alignment, not a forecast.</p></div>
+              <div class="result coral"><span class="evidence-label">Compass rotation</span><span class="value">44 → 4</span><p>Φ-high and TDMI-high selected the same action in 44 of 64 organisms early, then only 4 at transition. TDMI along Φ flipped +2.16 → −0.73.</p></div>
             </div>
             <figure class="data-viz field-evidence" aria-labelledby="birth-frames-caption">
               <div class="field-head"><strong>What “before the organism” looked like in one held-out trajectory</strong><span>real Flow Lenia fields · specimen p01-e046315a</span></div>
@@ -1897,14 +1734,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="02">
             <div class="card-head">
-              <div><div class="eyebrow">Geometry clock and actuator test</div><h3>Past-only geometry tracks developmental progress, but pushing along Φ does not advance the transition.</h3></div>
+              <div><h3>Past-only geometry tracks developmental progress, but pushing along Φ does not advance the transition.</h3></div>
               <div class="badges"><span class="badge prospective">future-blind clock</span><span class="badge replication">fresh cohort</span><span class="badge atlas">open causal atlas</span></div>
             </div>
             <p class="finding-dek">Past-only information geometry tracked actual developmental progress, then reproduced its turn in a separate cohort of unseen organisms. But pushing the instantaneously Φ-high action did not reliably advance the visible transition. The measurement reads a real developmental coordinate; force along one local axis is not universally the mechanism.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Phase coordinate · predeclared</span><span class="value">ρ +0.523</span><p>Whole-over-parts versus actual progress, pooled across checkpoints; 39 of 62 eligible organisms were strictly monotone. Exact countdown did not improve: MAE 39.88 with ordinary controls, 40.46 after adding information geometry.</p></div>
-              <div class="result blue"><span class="micro">Fresh turn · post-hoc</span><span class="value">25% → 75%</span><p>Turned-state prevalence from step 24 to 48 in the open-discovery panel of the causal atlas; 33 organisms crossed into the state and 1 crossed back. This reading was made after the data were seen and sits outside the frozen clock claim.</p></div>
-              <div class="result coral"><span class="micro">Actuator test</span><span class="value">No fixed sign</span><p>Φ-high minus Φ-low timing effects changed sign across four clocks. The order parameter survived; the universal one-shot control claim did not.</p></div>
+              <div class="result acid"><span class="evidence-label">Phase coordinate · predeclared</span><span class="value">ρ +0.523</span><p>Whole-over-parts versus actual progress, pooled across checkpoints; 39 of 62 eligible organisms were strictly monotone. Exact countdown did not improve: MAE 39.88 with ordinary controls, 40.46 after adding information geometry.</p></div>
+              <div class="result blue"><span class="evidence-label">Fresh turn · post-hoc</span><span class="value">25% → 75%</span><p>Turned-state prevalence from step 24 to 48 in the open-discovery panel of the causal atlas; 33 organisms crossed into the state and 1 crossed back. This reading was made after the data were seen and sits outside the frozen clock claim.</p></div>
+              <div class="result coral"><span class="evidence-label">Actuator test</span><span class="value">No fixed sign</span><p>Φ-high minus Φ-low timing effects changed sign across four clocks. The order parameter survived; the universal one-shot control claim did not.</p></div>
             </div>
             <div class="mini-chart">
               <svg viewBox="0 0 920 150" role="img" aria-labelledby="compass-title compass-desc">
@@ -1923,14 +1760,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="02B">
             <div class="card-head">
-              <div><div class="eyebrow">From forecast to intervention</div><h3>More whole-over-parts predicts a narrower timing future, and an early push leaves a small trace in later microscopic outcomes.</h3></div>
+              <div><h3>More whole-over-parts predicts a narrower timing future, and an early push leaves a small trace in later microscopic outcomes.</h3></div>
               <div class="badges"><span class="badge prospective">prospective forecast</span><span class="badge causal">direct causal</span></div>
             </div>
             <p class="finding-dek">Every eligible state received the same full eight-action repertoire. Before visible form, higher whole-over-parts organization forecast a smaller range of transition times beyond ordinary morphology. A separate within-ancestor experiment then changed an early commitment coordinate. The outcome it staked itself on, whether high-commitment siblings would spread their transition times over a narrower range, did not resolve: the median difference is exactly zero, with interval [−6.67, +1.0]. What did move is a secondary the plan also named in advance, and it is small: under the same eight actions, high-commitment descendants ended in slightly less varied final fields, a 2.3 percent shift against the low-commitment baseline of 0.341.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Timing repertoire</span><span class="value">−0.248</span><p>Partial rank association, 95% interval [−0.420, −0.045], controlling checkpoint, shape, size, topology, and raw field change; 63 of the 64 cohort specimens entered the analysis.</p></div>
-              <div class="result blue"><span class="micro">Same eight actions</span><span class="value">222 states</span><p>All eligible pre-transition states received untouched plus all eight fixed perturbations; 1,840 long futures.</p></div>
-              <div class="result coral"><span class="micro">Branch secondary · timing primary null</span><span class="value">−0.0078</span><p>Mean pairwise final-field repertoire, high minus low commitment; interval [−0.0152, −0.0008]; 30 pairs. The predeclared timing-range primary was null, median 0.0.</p></div>
+              <div class="result acid"><span class="evidence-label">Timing repertoire</span><span class="value">−0.248</span><p>Partial rank association, 95% interval [−0.420, −0.045], controlling checkpoint, shape, size, topology, and raw field change; 63 of the 64 cohort specimens entered the analysis.</p></div>
+              <div class="result blue"><span class="evidence-label">Same eight actions</span><span class="value">222 states</span><p>All eligible pre-transition states received untouched plus all eight fixed perturbations; 1,840 long futures.</p></div>
+              <div class="result coral"><span class="evidence-label">Branch secondary · timing primary null</span><span class="value">−0.0078</span><p>Mean pairwise final-field repertoire, high minus low commitment; interval [−0.0152, −0.0008]; 30 pairs. The predeclared timing-range primary was null, median 0.0.</p></div>
             </div>
             <figure class="data-viz" aria-labelledby="repertoire-caption">
               <svg viewBox="0 0 920 300" role="img" aria-labelledby="repertoire-title repertoire-desc">
@@ -1982,14 +1819,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="03">
             <div class="card-head">
-              <div><div class="eyebrow">The action-world at passage 8</div><h3>The action-world is already broad at passage 8, and the spatial arrangement is what gives it structure.</h3></div>
+              <div><div class="evidence-label">The action-world at passage 8</div><h3>The action-world is already broad at passage 8, and the spatial arrangement is what gives it structure.</h3></div>
               <div class="badges"><span class="badge atlas">fixed-age atlas</span><span class="badge causal">exact spatial ablation</span></div>
             </div>
             <p class="finding-dek">At the earliest measurable two-pulse state, visually close histories already led to strongly separated later futures. Scrambling the exact same cells, while preserving genotype, masses, composition, and world, made formation slower and its action geometry less coherent. Leaving the cells where they were did not make more futures reachable, it made the reachable futures faster and better sorted by where the poke landed.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">passage 8 causal world</span><span class="value">104.4%</span><p>passage 8 already carried 104.4% of the passage 32 history-conditioned future separation.</p></div>
-              <div class="result blue"><span class="micro">Matched futures</span><span class="value">0.378</span><p>passage 8 history-conditioned future displacement, versus only 0.088 between the corresponding release states.</p></div>
-              <div class="result coral"><span class="micro">Scramble delays</span><span class="value">+12.85 / +22.51 / +30.59</span><p>Passages for 8×8 tiles, 4×4 tiles, and cells relative to intact. All 39 untouched states still formed.</p></div>
+              <div class="result acid"><span class="evidence-label">passage 8 causal world</span><span class="value">104.4%</span><p>passage 8 already carried 104.4% of the passage 32 history-conditioned future separation.</p></div>
+              <div class="result blue"><span class="evidence-label">Matched futures</span><span class="value">0.378</span><p>passage 8 history-conditioned future displacement, versus only 0.088 between the corresponding release states.</p></div>
+              <div class="result coral"><span class="evidence-label">Scramble delays</span><span class="value">+12.85 / +22.51 / +30.59</span><p>Passages for 8×8 tiles, 4×4 tiles, and cells relative to intact. All 39 untouched states still formed.</p></div>
             </div>
             <div class="take">Sensitivity to a local poke at passage 8 depends on where in the arrangement the poke lands, since scrambled copies of the same field lost that dependence, and the intact arrangement both makes nearby interventions more legible and constrains their distant consequences.</div>
             <details class="receipt"><summary>Source receipts for this card</summary><div class="receipt-table-wrap"><table><thead><tr><th>Report</th><th>Result</th><th>Status / claim class</th><th>Cohort</th><th>Completion binding</th></tr></thead><tbody>
@@ -2000,14 +1837,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="04A">
             <div class="card-head">
-              <div><div class="eyebrow">State-setting and memory</div><h3>A brief feedback policy holds the causal gate open, then the state carries itself forward.</h3></div>
+              <div><h3>A brief feedback policy holds the causal gate open, then the state carries itself forward.</h3></div>
               <div class="badges"><span class="badge causal">closed-loop causal</span><span class="badge atlas">selected-future follow-up</span></div>
             </div>
             <p class="finding-dek">The successful controller usually delivered one large pulse and then stopped. Open and closed branches stayed separated after release. In the long follow-up, their field divergence grew even as the special advantage of the originally selected action vanished. After that the two branches kept diverging on their own, so whatever the pulse did is now carried by the state. One detail changes how to read the +0.075: against untouched controls the opened branch itself barely moved (window means +0.002 to +0.007), while the closed branch fell below untouched by −0.014 to −0.029 everywhere, so most of the +0.075 separation comes from closing the gate costing something rather than from opening it adding something.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Post-release memory</span><span class="value">+0.075</span><p>Cumulative open-minus-closed causal-history separation; interval [+0.059, +0.090]. All 16 families positive.</p></div>
-              <div class="result blue"><span class="micro">Field divergence</span><span class="value">0.389 → 0.448</span><p>Open versus closed from selection frame to step 256; all 39 organisms remained separated.</p></div>
-              <div class="result coral"><span class="micro">Action advantage</span><span class="value">0.040 → 0.002</span><p>Max-selected minus min-selected advantage faded while the state divergence continued to grow.</p></div>
+              <div class="result acid"><span class="evidence-label">Post-release memory</span><span class="value">+0.075</span><p>Cumulative open-minus-closed causal-history separation; interval [+0.059, +0.090]. All 16 families positive.</p></div>
+              <div class="result blue"><span class="evidence-label">Field divergence</span><span class="value">0.389 → 0.448</span><p>Open versus closed from selection frame to step 256; all 39 organisms remained separated.</p></div>
+              <div class="result coral"><span class="evidence-label">Action advantage</span><span class="value">0.040 → 0.002</span><p>Max-selected minus min-selected advantage faded while the state divergence continued to grow.</p></div>
             </div>
             <figure class="data-viz field-evidence" aria-labelledby="gate-frames-caption">
               <div class="field-head"><strong>One paired future after release</strong><span>real paired futures · specimen s63</span></div>
@@ -2027,14 +1864,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="04B">
             <div class="card-head">
-              <div><div class="eyebrow">Hidden-channel transplant</div><h3>The same visible body can contain a different future.</h3></div>
+              <div><h3>The same visible body can contain a different future.</h3></div>
               <div class="badges"><span class="badge causal">exact hidden transplant</span><span class="badge replication">fresh reciprocal cohort</span><span class="badge secondary">frozen primaries unresolved</span></div>
             </div>
             <p class="finding-dek">We preserved the visible mass field at every pixel and swapped only the hidden channel mix underneath it. The outcome this experiment staked itself on, that hybrids would slide toward their donor along a single expansive-versus-compact axis, did not come through (+0.050, interval −0.258 to +0.370), and one pre-named secondary even moved the wrong way: hybrids ended farther from their donor's field than their host's in all 16 groups. What survived is a different pre-named secondary: later bodies moved 27.9 percent along the direction their donor naturally grows, though mostly for one direction of the swap, 39.8 percent for compact bodies given expansive composition against 16.1 percent the other way. A fresh experiment swapping hidden state between young and slightly older organisms then asked its own frozen question, whether the older mix advances the developmental clock; it does not, with the shift leaning the other way, while a second look at the same data found a hidden direction that held back later body growth.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Visible residual · by construction</span><span class="value">exactly 0.0</span><p>All 156 transplant starts preserved channel-summed visible fields bit-for-bit. The transplant constructor enforces this and the capture audit confirms it; it is a validity check, not a finding.</p></div>
-              <div class="result blue"><span class="micro">Donor-native pull · predeclared secondary</span><span class="value">27.9%</span><p>Mean movement along the paired donor’s native morphological direction at +128; interval [12.1%, 47.2%]; 14 of 16 groups positive. An unbounded projection, not a fraction of distance covered, and direction-asymmetric: 39.8% one way, 16.1% the other.</p></div>
-              <div class="result coral"><span class="micro">Hidden counterweight · second pass</span><span class="value">−0.096</span><p>passage 8→passage 12 hidden displacement lowered later radius at +96; interval [−0.156, −0.043]; 14 of 16 groups negative. For scale, the natural passage 8→passage 12 radius gap at capture is +0.198, so the displacement is about half that gap, read over a different time base.</p></div>
+              <div class="result acid"><span class="evidence-label">Visible residual · by construction</span><span class="value">exactly 0.0</span><p>All 156 transplant starts preserved channel-summed visible fields bit-for-bit. The transplant constructor enforces this and the capture audit confirms it; it is a validity check, not a finding.</p></div>
+              <div class="result blue"><span class="evidence-label">Donor-native pull · predeclared secondary</span><span class="value">27.9%</span><p>Mean movement along the paired donor’s native morphological direction at +128; interval [12.1%, 47.2%]; 14 of 16 groups positive. An unbounded projection, not a fraction of distance covered, and direction-asymmetric: 39.8% one way, 16.1% the other.</p></div>
+              <div class="result coral"><span class="evidence-label">Hidden counterweight · second pass</span><span class="value">−0.096</span><p>passage 8→passage 12 hidden displacement lowered later radius at +96; interval [−0.156, −0.043]; 14 of 16 groups negative. For scale, the natural passage 8→passage 12 radius gap at capture is +0.198, so the displacement is about half that gap, read over a different time base.</p></div>
             </div>
             <figure class="data-viz" aria-labelledby="transplant-caption">
               <svg viewBox="0 0 920 320" role="img" aria-labelledby="transplant-title transplant-desc">
@@ -2088,14 +1925,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="04C">
             <div class="card-head">
-              <div><div class="eyebrow">Causal grammar</div><h3>After the information turn, morphology becomes harder to steer and actions acquire more stable meanings.</h3></div>
+              <div><h3>After the information turn, morphology becomes harder to steer and actions acquire more stable meanings.</h3></div>
               <div class="badges"><span class="badge causal">fixed intervention panel</span><span class="badge prospective">turn fixed upstream</span></div>
             </div>
             <p class="finding-dek">The same four founder interventions lost spatial leverage just after the structural turn while compositional leverage stayed open. In a two-action experiment, the later action’s spatial meaning also became less rewritable by which action came first. One predeclared check on the map itself did not pass, the rule asking the closure to still be there four passages past the peak, so the claim rests on the turn-versus-after contrast and the grammar experiment rather than on a persistent plateau. Past the turn, what a founder input does depends more on the organism it lands in and less on the input itself.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Morphological steerability</span><span class="value">−13.9%</span><p>Turn versus two passages after: +0.00290 leverage before closure, interval [+0.00049, +0.00529].</p></div>
-              <div class="result blue"><span class="micro">Action-geometry rewrite</span><span class="value">−11.1%</span><p>Before-minus-after rewrite +0.002935, interval [+0.000493, +0.005409].</p></div>
-              <div class="result coral"><span class="micro">Selective closure</span><span class="value">Spatial first</span><p>Founder-composition leverage remained open while later spatial futures became less redirectable and less context-rewritable.</p></div>
+              <div class="result acid"><span class="evidence-label">Morphological steerability</span><span class="value">−13.9%</span><p>Turn versus two passages after: +0.00290 leverage before closure, interval [+0.00049, +0.00529].</p></div>
+              <div class="result blue"><span class="evidence-label">Action-geometry rewrite</span><span class="value">−11.1%</span><p>Before-minus-after rewrite +0.002935, interval [+0.000493, +0.005409].</p></div>
+              <div class="result coral"><span class="evidence-label">Selective closure</span><span class="value">Spatial first</span><p>Founder-composition leverage remained open while later spatial futures became less redirectable and less context-rewritable.</p></div>
             </div>
             <div class="take">The organism-level state increasingly constrains how local founder inputs propagate, without freezing every internal degree of freedom, which is the intervention-level form of causal emergence this programme set out to find.</div>
             <details class="receipt"><summary>Source receipts for this card</summary><div class="receipt-table-wrap"><table><thead><tr><th>Report</th><th>Result</th><th>Status / claim class</th><th>Cohort</th><th>Manifest / completion binding</th></tr></thead><tbody>
@@ -2106,14 +1943,14 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 
           <article class="finding-card" data-step="05">
             <div class="card-head">
-              <div><div class="eyebrow">Selective future closure</div><h3>A Φ-directed push narrows different organism-level futures at different developmental moments.</h3></div>
+              <div><h3>A Φ-directed push narrows different organism-level futures at different developmental moments.</h3></div>
               <div class="badges"><span class="badge causal">direct causal</span><span class="badge atlas">post-hoc coarse lead</span><span class="badge secondary">predeclared fine-shape secondary</span></div>
             </div>
             <p class="finding-dek">A post-hoc reading of one fixed early-state panel found that Φ-forward made eight unseen futures agree more about which connected body would dominate; the frozen primary in that study was unresolved. In the three-age follow-up, the coarse primary again stayed unresolved, but at each organism’s structural peak the predeclared fine-morphology panel converged. Two caveats: the peak arm is selected after the fact, since both predeclared timing contrasts straddle zero, and the fine-shape panel is one of 78 predeclared contrasts in this experiment, of which 5 resolved. The eight futures still differ in coarse layout and founder mix, and only their fine shape drew closer.</p>
             <div class="result-grid">
-              <div class="result acid"><span class="micro">Post-hoc dominant-body lead</span><span class="value">−0.01358</span><p>Φ-forward minus Φ-backward; interval [−0.02509, −0.00181]; 14 of 19 families narrowed.</p></div>
-              <div class="result blue"><span class="micro">Fine shape at peak</span><span class="value">−0.0040</span><p>Pairwise shape distance −0.00399, interval [−0.00713, −0.00117]; 13 of 19 families narrowed. On the frozen effective-shape estimator the same contrast is −0.00426, about 0.4% of a saturated baseline near 1.08 effective shapes of 8; −4.55% is the pairwise-distance framing of the same effect.</p></div>
-              <div class="result coral"><span class="micro">Delayed effect</span><span class="value">P6–P12</span><p>Every fixed passage interval from 6 through 12 pointed toward canalization. Founder mixture and coarse body organization stayed open.</p></div>
+              <div class="result acid"><span class="evidence-label">Post-hoc dominant-body lead</span><span class="value">−0.01358</span><p>Φ-forward minus Φ-backward; interval [−0.02509, −0.00181]; 14 of 19 families narrowed.</p></div>
+              <div class="result blue"><span class="evidence-label">Fine shape at peak</span><span class="value">−0.0040</span><p>Pairwise shape distance −0.00399, interval [−0.00713, −0.00117]; 13 of 19 families narrowed. On the frozen effective-shape estimator the same contrast is −0.00426, about 0.4% of a saturated baseline near 1.08 effective shapes of 8; −4.55% is the pairwise-distance framing of the same effect.</p></div>
+              <div class="result coral"><span class="evidence-label">Delayed effect</span><span class="value">P6–P12</span><p>Every fixed passage interval from 6 through 12 pointed toward canalization. Founder mixture and coarse body organization stayed open.</p></div>
             </div>
             <div class="mini-chart">
               <svg viewBox="0 0 920 220" role="img" aria-labelledby="shape-title shape-desc">
@@ -2153,7 +1990,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <section id="closure" class="section ink-band">
       <div class="wrap closure-layout">
         <article class="closure-thesis">
-          <div class="eyebrow" style="color:var(--specter-acid)">The synthesis</div>
+          
           <h2>Commitment is selective closure.</h2>
           <p>The organism arrives on several schedules at once, since the timing repertoire narrows before visible form while action meanings settle only after the information turn and the fine shape fan closes later still, and that is why one scalar sometimes predicts well, sometimes acts weakly, and sometimes points at one specific aperture.</p>
         </article>
@@ -2218,7 +2055,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <section id="share" class="section">
       <div class="wrap share-grid">
         <article class="share-card">
-          <div class="eyebrow">Share readiness</div>
+          
           <h2>There is already a result worth sharing.</h2>
           <p>We now have a coherent story, every number of which sits in the ledger, across prospective and direct causal experiments: history-dependent causal structure exists before visible form, whole-over-parts organization forecasts how narrow the timing future will be, scrambling the same cells shows that spatial organization disciplines what actions can do, and after the information turn action meanings stabilize. The transplant and branching experiments contribute leads rather than confirmed primaries, and pushing Φ directly does not steer development; that boundary is part of the result.</p>
         </article>
@@ -2234,7 +2071,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     <section id="record" class="section paper-band">
       <div class="wrap">
         <div class="section-head">
-          <div><span class="section-no">The campaign record</span><h2>What did not survive, in the open.</h2></div>
+          <div><h2>What did not survive, in the open.</h2></div>
           <p class="lede">The synthesis above is built from sixteen experiments. The campaign that produced them ran ninety-one, and the follow-up programme below brings the map to ninety-five. Reading the cited few against the ninety-five is what keeps the claim honest.</p>
         </div>
         <div class="record-intro">
@@ -2349,11 +2186,11 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
           </div>
         </div>
         <div class="record-nulls">
-          <article><h3>reservoir-causal-steering-v1 · the flagship</h3><p>The frozen chain required a fixed-horizon onset-reward success and it did not arrive; the report's own label is <code>primary_chain_not_met</code>, and the Φ-specific steering test failed with it. Pushing Φ directly does not steer replication in fed lineages.</p><p><code>prospective-results-v1b/prospective-analysis-report-v1b.json · eab15f3c894edf4c8865f8ebc22f7ee84a9052b630d1376c593ae29967ca1815</code></p></article>
-          <article><h3>tangent-induced-causal-grammar-v1</h3><p>Pushing along the information tangent at fixed age did not reliably move the causal grammar. This bounds the mechanism behind the grammar card: the turn marks when action meanings stabilize, but the tangent itself is not the lever.</p><p><code>results.json · 3ff7652b91f2670201364275e46dc11bb806c0316f574cff79847f889971436e</code></p></article>
-          <article><h3>developmental-causal-plasticity-window-v1</h3><p>Structural information peaks did not amplify founder-action fanout, so the peaks used as intervention moments elsewhere in this report are not general sensitivity windows.</p><p><code>results.json · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6</code></p></article>
-          <article><h3>fresh-organic-passage 40-replication-v1</h3><p>At fixed passage 40 the link between compass rotation and causal future breadth did not replicate: Spearman +0.093 with interval [−0.178, +0.352], prediction not passed.</p><p><code>results.json · a321b7922195f0a8cf3198d6961f2159ed4c6065b8cef69a3b9e616d21f7bc2e</code></p></article>
-          <article><h3>causal-compass-peak-v1</h3><p>The sharpest compass turn did not mark a broader future repertoire: +0.0023 with interval [−0.0028, +0.0073], prediction not passed.</p><p><code>results.json · 779277c93261976e9d95eacb2812cbc4f69e03005e9af3063d7329f4a30fb8f3</code></p></article>
+          <article><h3>reservoir-causal-steering-v1 · the flagship</h3><p>The frozen chain required a fixed-horizon onset-reward success and it did not arrive; the report's own label is <code>primary_chain_not_met</code>, and the Φ-specific steering test failed with it. Pushing Φ directly does not steer replication in fed lineages.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>prospective-results-v1b/prospective-analysis-report-v1b.json · eab15f3c894edf4c8865f8ebc22f7ee84a9052b630d1376c593ae29967ca1815</code></p></details></article>
+          <article><h3>tangent-induced-causal-grammar-v1</h3><p>Pushing along the information tangent at fixed age did not reliably move the causal grammar. This bounds the mechanism behind the grammar card: the turn marks when action meanings stabilize, but the tangent itself is not the lever.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · 3ff7652b91f2670201364275e46dc11bb806c0316f574cff79847f889971436e</code></p></details></article>
+          <article><h3>developmental-causal-plasticity-window-v1</h3><p>Structural information peaks did not amplify founder-action fanout, so the peaks used as intervention moments elsewhere in this report are not general sensitivity windows.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6</code></p></details></article>
+          <article><h3>fresh-organic-passage 40-replication-v1</h3><p>At fixed passage 40 the link between compass rotation and causal future breadth did not replicate: Spearman +0.093 with interval [−0.178, +0.352], prediction not passed.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · a321b7922195f0a8cf3198d6961f2159ed4c6065b8cef69a3b9e616d21f7bc2e</code></p></details></article>
+          <article><h3>causal-compass-peak-v1</h3><p>The sharpest compass turn did not mark a broader future repertoire: +0.0023 with interval [−0.0028, +0.0073], prediction not passed.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · 779277c93261976e9d95eacb2812cbc4f69e03005e9af3063d7329f4a30fb8f3</code></p></details></article>
           <article><h3>Eight stopped runs</h3><p>Five were stopped experiments with forensic notes: goal-state-bite-calibration-v1, goal-state-matched-wound-recovery-v1, perturbation-recovery-engineering-v1 and -v2, and reservoir-cycle-emergence-census-v1. Three more stopped at their own mechanical gates without a scientific verdict: goal-state-tomography-v1 ended with 0 of 8 valid states under a protocol that forbids reading that as a negative result, preinjury-predictor-v1 stopped when its primary feature was unavailable and never ran the test, and orthogonal-pulse-release-v1 never bound its declaration after its qualification runs aborted.</p></article>
         </div>
       </div>
@@ -2363,7 +2200,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
       <div class="wrap">
         <div class="next-box">
           <article class="next-title">
-            <div class="eyebrow" style="color:var(--specter-acid)">One decisive next replication · since executed</div>
+            
             <h2>Freeze the shape claim as the only primary.</h2>
             <p>This was written as the experiment that would turn the newest signal from a strong predeclared secondary result into a clean headline result. The protocol below is preserved exactly as it was published here; the verdict follows it.</p>
           </article>
@@ -2377,10 +2214,10 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
         </div>
         <div class="take" style="margin-top:1.6rem">The protocol has since been run literally as fresh-cohort-fine-shape-confirmation-v1: a fresh 512-seed cohort with byte-identical search parameters, endogenous peaks under a predeclared selection rule, five matched arms, and the P6&ndash;P12 shape fan as the sole primary. The primary came back &minus;0.0019 with interval [&minus;0.0076, +0.0038], six families negative and six positive, so the fine-shape compression is not confirmed at this sample size; twelve families exclude only effects stronger than about &minus;0.008, and the original &minus;0.0040 sits inside what this cohort could easily miss. Three companion experiments ran beside it under their own frozen plans, and the four verdicts together are reported in <a data-evidence-ref="src-e4ab09ff3b32">The Organism Hardens Without Narrowing</a>.</div>
         <div class="record-nulls" style="margin-top:1.6rem">
-          <article><h3>fresh-cohort-fine-shape-confirmation-v1 · the confirmation</h3><p>Sole primary phi-forward minus phi-backward over passages P6&ndash;P12: &minus;0.0019 with interval [&minus;0.0076, +0.0038], prediction not passed, and no arm contrast separates from zero. Twelve families were too few to settle it either way.</p><p><code>results.json · 5318aa930cd789d446372828dd0fc1bcf55edbeafc7b07d7868feb76d5bc77d4</code></p></article>
-          <article><h3>steerability-age-profile-v1 · prediction met</h3><p>The same standard push moves an organism less the older it is, with the age slope of divergence +0.0038 and interval excluding zero across sixteen families; divergence falls about 69 percent from the youngest to the oldest push age, and the fall tracks each organism's past-only turn.</p><p><code>results.json · 7f88560f446752adb31483f8f9e5f851a67069e97050d40393ab26784f98f949</code></p></article>
-          <article><h3>basin-width-init-variation-v1 · wrong direction</h3><p>The predicted contraction of the sibling fan with age resolved backwards: fresh-seed siblings spread apart monotonically, width 0.032 at step 60 to 0.079 at step 900, early minus late &minus;0.038 with the interval entirely on the wrong side. Older siblings sit farther apart, so whatever commits them is not pulling them toward one shape.</p><p><code>results.json · f71fd77f180cd081ea9011970ac2e109ec7b25179b5b7982f467a8f40deed91e</code></p></article>
-          <article><h3>history-disambiguation-curve-v1 · null with a resolved secondary</h3><p>The matched-ratio primary stayed flat at 0.76 to 0.83 across ages, null. The pre-named look-alike count collapsed from 6144 pairs at step 60 to 1665 at step 780, Spearman &minus;0.988, so organisms become individuals even as their sibling fans widen.</p><p><code>results.json · 6cb3e4a06fa6244bc2347d11543d0a54484105edb7fbd346c0e9202380bf68f1</code></p></article>
+          <article><h3>fresh-cohort-fine-shape-confirmation-v1 · the confirmation</h3><p>Sole primary phi-forward minus phi-backward over passages P6&ndash;P12: &minus;0.0019 with interval [&minus;0.0076, +0.0038], prediction not passed, and no arm contrast separates from zero. Twelve families were too few to settle it either way.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · 5318aa930cd789d446372828dd0fc1bcf55edbeafc7b07d7868feb76d5bc77d4</code></p></details></article>
+          <article><h3>steerability-age-profile-v1 · prediction met</h3><p>The same standard push moves an organism less the older it is, with the age slope of divergence +0.0038 and interval excluding zero across sixteen families; divergence falls about 69 percent from the youngest to the oldest push age, and the fall tracks each organism's past-only turn.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · 7f88560f446752adb31483f8f9e5f851a67069e97050d40393ab26784f98f949</code></p></details></article>
+          <article><h3>basin-width-init-variation-v1 · wrong direction</h3><p>The predicted contraction of the sibling fan with age resolved backwards: fresh-seed siblings spread apart monotonically, width 0.032 at step 60 to 0.079 at step 900, early minus late &minus;0.038 with the interval entirely on the wrong side. Older siblings sit farther apart, so whatever commits them is not pulling them toward one shape.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · f71fd77f180cd081ea9011970ac2e109ec7b25179b5b7982f467a8f40deed91e</code></p></details></article>
+          <article><h3>history-disambiguation-curve-v1 · null with a resolved secondary</h3><p>The matched-ratio primary stayed flat at 0.76 to 0.83 across ages, null. The pre-named look-alike count collapsed from 6144 pairs at step 60 to 1665 at step 780, Spearman &minus;0.988, so organisms become individuals even as their sibling fans widen.</p><details class="source-note"><summary>Source verification</summary><p data-source-record="true"><code>results.json · 6cb3e4a06fa6244bc2347d11543d0a54484105edb7fbd346c0e9202380bf68f1</code></p></details></article>
         </div>
       </div>
     </section>

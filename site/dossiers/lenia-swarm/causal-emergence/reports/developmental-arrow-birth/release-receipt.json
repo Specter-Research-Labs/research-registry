@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "early-age direction intervention",
   "sourceReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
-  "publicReportSha256": "dfd89763fa1d97bbf9145e7d7c14a0c29f37b3c5742f1dba03d8978ea0014f2c",
+  "publicReportSha256": "4d16b9076ae3a1733b45c47acb4b0cb1fbbbf3d156ddc851bd092c19dfa317f3",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "61e636f9d9c506c2afa1dcef6184cb8c1c68c100c513f4dcb2cd0e811d76e360",
+  "contextSha256": "fff55b17a3df78617429d64616e0901e402b4035462766715708ec1b597ef8b3",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "8904709cd4cb83b3ef40d85144596576fdd6b9067a8e88f9ab2f1a5b16545054"
+  "upstreamReceiptSha256": "f0f4b7ced3daac960f241da4919376023cfac7f1c064d3a72dcde608541d7a99"
 }

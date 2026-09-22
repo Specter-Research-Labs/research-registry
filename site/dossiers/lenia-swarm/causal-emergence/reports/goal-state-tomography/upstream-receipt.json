@@ -6,7 +6,7 @@
   "date": "2026-08-17",
   "status": "archive",
   "evidenceClass": "inconclusive goal-state pilot",
-  "sourceReportSha256": "805cc36107f57ddbdcae70c60000f2c14c4083b51c63de3c0f0df928f1db1e78",
+  "sourceReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
   "publicReportSha256": "c8ce1f3fad6a011d7cdfebf6ffa22883f30e473e450bd8c7e08b5a233776301a",
   "transformations": [
     "import_verified_public_projection_v1",
@@ -14,6 +14,6 @@
     "move_reports_to_website_v1"
   ],
   "contextSha256": "c9e345d477bad99db6f19baa1354805c457d21d3e10cfe56d3315b66735e779e",
-  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
-  "upstreamReceiptSha256": "3afdf1eb595609729d2774a053fba4f3ee5b105904deaef6efcaf5de1e4a2b2c"
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "04e013809672c3c3726b2f6ce6f33a4883c4596c061586e2fdf71929cc1940c0"
 }

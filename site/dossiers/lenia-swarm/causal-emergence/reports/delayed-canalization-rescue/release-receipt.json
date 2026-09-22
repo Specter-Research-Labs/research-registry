@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "delayed exact-repair intervention",
   "sourceReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
-  "publicReportSha256": "1c5cf00f776fb436c35a4eacd34f90211eb46f0ae030f6486ab2764effcba267",
+  "publicReportSha256": "aa84647bf3c326c1d76a7da3b82ff10e0fea783f16c884b3c3c10d2c15190994",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "213aa1d78d44c4cebb5d67eb7c66ff909803c08873ac0389e30e0ec5002be647",
+  "contextSha256": "2bcadc4f84d921201ce4e4219e381e075bcb2f50e3c865ae70dfa98c6de5e7e5",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "c844b5973b5c11eb1995d30e42a503f67edc133c22c41e6c2afd4d8c233272ae"
+  "upstreamReceiptSha256": "cea6d9c85beb7dc3a9d82c7d757994bcc435fde677a5501943cade880374c645"
 }

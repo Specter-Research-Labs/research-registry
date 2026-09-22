@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "zero-net causal-order intervention",
   "sourceReportSha256": "dfae09561d15fd3913a877c1914507b556170f198eb23bb4b0a3e7f97462a324",
-  "publicReportSha256": "dfae09561d15fd3913a877c1914507b556170f198eb23bb4b0a3e7f97462a324",
+  "publicReportSha256": "28a47934110fef1341639289e57de7a7c0adc497a442c6ba5186f2678b1a1abc",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "643d64b9d17feff4a727e5b5299d8014cad4ce27c2a5e84f93fdaacfe8b2e3f0",
+  "contextSha256": "e463d7821cc60ad85dcb7ad500436e0b3533a8b658d48443d4b138d434d3ddce",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "e16c4f108bf46a4692fca41d125687c57927eefc8d8e70132338bf663c9a0132"
+  "upstreamReceiptSha256": "deb93a79c9cd381e041f13a44c006d553638b9c49bb6581dda966fe08ce5c061"
 }

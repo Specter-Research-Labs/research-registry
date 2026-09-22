@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "age-resolved forced-founder assay",
   "sourceReportSha256": "d6b9656ff152be2d01b933d46233e73aecd9600c9412ef5bd4c720336776d261",
-  "publicReportSha256": "d6b9656ff152be2d01b933d46233e73aecd9600c9412ef5bd4c720336776d261",
+  "publicReportSha256": "80c0f5d92d51e43bdf0e4d35853e76b45f83c2029f0c82b8851cd07677d6801b",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "26dc421bdaa31ff4d7735e7c0bd398eb3196fa449f06f57d7f6efbcc9ce6def0",
+  "contextSha256": "47325f7efe3edc47a5c7ce1767a9e5b786832c000ded9813689aff230ce2a5b8",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "471aba9c46c90e2a421deb7c9cab5cff1f1ebee2923581e2e6846703bdf9998a"
+  "upstreamReceiptSha256": "942a10ad094e7c4797bc9a3d3b635b46908e45a31309429df71e77ee45cd7333"
 }

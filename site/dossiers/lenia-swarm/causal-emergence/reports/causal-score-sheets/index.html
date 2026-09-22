@@ -664,9 +664,7 @@ html.specter-report ::selection {
  * This late, shared layer repairs recurring presentation problems in older
  * reports without changing their figures, data, or stable release URLs.
  */
-
-html.specter-report {
-  color-scheme: light;
+html.specter-report {color-scheme: light;
   --specter-ground: #f2eee3;
   --specter-sheet: #fffdf7;
   --specter-ink: #131821;
@@ -699,34 +697,18 @@ html.specter-report {
   --amber: var(--specter-coral);
   --orange: var(--specter-coral);
   --pink: var(--specter-coral);
-  --coral: var(--specter-coral);
-}
-
-html.specter-report[data-specter-surface="bg-paper"] {
-  --paper: var(--specter-sheet);
-}
-
-html.specter-report,
-html.specter-report body {
-  background: var(--specter-ground) !important;
-}
-
-html.specter-report body {
-  color: var(--specter-ink) !important;
+  --coral: var(--specter-coral);}
+html.specter-report[data-specter-surface="bg-paper"] {--paper: var(--specter-sheet);}
+html.specter-report,html.specter-report body {background: var(--specter-ground) !important;}
+html.specter-report body {color: var(--specter-ink) !important;
   background:
     linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     var(--specter-ground) !important;
-  background-size: 24px 24px !important;
-}
-
-html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
-  color: var(--specter-green) !important;
-}
-
+  background-size: 24px 24px !important;}
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {color: var(--specter-green) !important;}
 /* Older reports often put a small provenance nav inside the report column. */
-html.specter-report main > nav {
-  align-items: center;
+html.specter-report main > nav {align-items: center;
   min-height: 3.25rem;
   margin: 0 0 clamp(2rem, 5vw, 4rem);
   padding: 0.8rem 1rem;
@@ -737,331 +719,186 @@ html.specter-report main > nav {
   font-family: var(--specter-mono) !important;
   font-size: 0.72rem !important;
   font-weight: 750;
-  line-height: 1.25;
-}
-
-html.specter-report main > nav :is(a, span, strong) {
-  color: inherit !important;
-}
-
+  line-height: 1.25;}
+html.specter-report main > nav :is(a, span, strong) {color: inherit !important;}
 /*
  * Early chart generators drew directly onto a near-black SVG. Give those
  * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
  * Charts already composed inside a semantic figure keep their authored skin.
  */
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-html.specter-report :is(div, article, figure).chart,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  color: var(--specter-ink) !important;
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {color: var(--specter-ink) !important;
   background: var(--specter-sheet) !important;
   border: 2px solid var(--specter-ink) !important;
   border-radius: 0 !important;
-  box-shadow: var(--specter-chart-shadow) !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-  margin-block: 1.5rem 2rem;
-  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
-}
-
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  padding: clamp(1rem, 2vw, 1.6rem) !important;
-}
-
-html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
-  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
-  color: inherit !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
-html.specter-report :is(div, article, figure).chart svg text,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
-  fill: var(--specter-muted) !important;
+  box-shadow: var(--specter-chart-shadow) !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;}
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {padding: clamp(1rem, 2vw, 1.6rem) !important;}
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {color: inherit !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,html.specter-report :is(div, article, figure).chart svg text,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {fill: var(--specter-muted) !important;
   font-family: var(--specter-mono) !important;
-  font-weight: 700;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
-  fill: var(--specter-ink) !important;
-  font-weight: 850 !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
-  stroke: var(--specter-chart-grid) !important;
-}
-
+  font-weight: 700;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {fill: var(--specter-ink) !important;
+  font-weight: 850 !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {stroke: var(--specter-chart-grid) !important;}
 /* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
-html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
-html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
-html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
-html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
-html.specter-report svg [stroke="#ef7d9a"],
-html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
-html.specter-report svg [fill="#ef7d9a"],
-html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
-
-@media (max-width: 640px) {
-  html.specter-report main > nav {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
-  }
-
-  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
-    font-size: 24px !important;
-  }
-}
-
-@media print {
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-  html.specter-report :is(div, article, figure).chart,
-  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-    box-shadow: none !important;
-  }
-}
-
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
-  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
-  font-family: var(--editorial-display) !important;
+html.specter-report svg [stroke="#a9d86e"] {stroke: var(--specter-green) !important;}
+html.specter-report svg [fill="#a9d86e"] {fill: var(--specter-green) !important;}
+html.specter-report svg [stroke="#72d9e2"] {stroke: var(--specter-blue) !important;}
+html.specter-report svg [fill="#72d9e2"] {fill: var(--specter-blue) !important;}
+html.specter-report svg [stroke="#ef7d9a"],html.specter-report svg [stroke="#f1b85b"] {stroke: var(--specter-coral) !important;}
+html.specter-report svg [fill="#ef7d9a"],html.specter-report svg [fill="#f1b85b"] {fill: var(--specter-coral) !important;}
+@media (max-width: 640px) {html.specter-report main > nav {align-items: flex-start;
+    flex-direction: column;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;}
+/* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {font-size: 24px !important;}}
+@media print {html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {box-shadow: none !important;}}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {--editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {font-family: var(--editorial-display) !important;
   font-weight: 850;
   letter-spacing: -.035em;
-  text-wrap: balance;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
-html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
-html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
-html.anatomical-editorial .hero-specimens { margin: 0; }
-html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
-html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
-html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
-html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
-html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
-html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
-html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
-html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
-html.anatomical-editorial .synthesis .metric span { color:#414c45; }
-html.anatomical-editorial .opening-method { margin:1rem 0; }
-html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
-html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
-html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
-html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
-html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
-html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
-html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
-html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
-html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
-html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
-html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
-html.anatomical-editorial .caption { border:0; }
-html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
-html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
-html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
-html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
-html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
-html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
-html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
-html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
-html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
-html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
-html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
-html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
-html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
-html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
-html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
-html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
-@media(max-width:800px) {
- html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
- html:has(.editorial-synthesis) .hero-answer { transform:none; }
- html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
-}
-html:has(.editorial-synthesis) .ink { border-block:0; }
-html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
-html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .section-no { border:0; }
-@media(max-width:700px) {
- html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
- html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
- html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
- html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
- html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
-}
-html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
-
-html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
-html.anatomical-editorial .measurement-comparison,
-html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
-html.anatomical-editorial .measurement-comparison h3,
-html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
-.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
-.measurement-heading { font: 12px/1.5 monospace; }
-.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
-.measurement-track { position: relative; height: 18px; background: #fff8; }
-.measurement-track i { display: block; height: 100%; background: #18796f; }
-.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
-.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
-html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
-.experiment-method summary { cursor: pointer; font-weight: 700; }
-.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
-.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
-.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.orbium-frames figure { margin: 0; }
-.orbium-frames img { display: block; width: 100%; }
-.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
-#orbium-time-note { margin-top: 16px; }
-.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
-.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
-.comparison-story p { max-width: 72ch; line-height: 1.65; }
-.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
-.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
-@media (max-width: 650px) {
-  .measurement-heading { display: none; }
-  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
-  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
-  .orbium-frames { gap: 10px; }
-}
-
-#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
-html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
-html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
-
-html:has(.editorial-synthesis) .evidence {
-  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
-  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
-}
-html:has(.editorial-synthesis) .evidence::before { content: none; }
-html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
-html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
-html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
-html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
-.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
-.figure-introduction { max-width: 760px; margin-bottom: 30px; }
-.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
-.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
-.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
-.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
-.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
-.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-.response-plots > div, .transplant-panels > div { min-width: 0; }
-.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
-.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
-.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
-.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
-.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
-.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
-#response-reading { font-size: 19px; }
-html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
-html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
-html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
-html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
-html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
-html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
-html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
-html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
-html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
-@media (max-width: 700px) {
-  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
-  .response-controls { gap: 14px; }
-  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
-  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
-}
-
-#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
-
+  text-wrap: balance;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 {font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 {font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) {box-shadow: none !important;}
+html:has(.editorial-synthesis) .hero {padding-bottom:3rem;}
+html:has(.editorial-synthesis) .hero .dek {font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch;}
+html:has(.editorial-synthesis) .hero-grid {grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center;}
+html:has(.editorial-synthesis) .hero-answer {border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg);}
+html:has(.editorial-synthesis) .hero-answer strong {font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .hero-answer p {font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .quickread {border:0 !important; gap:2rem; background:transparent !important;}
+html:has(.editorial-synthesis) .quickread article {border:0 !important; background:transparent !important; padding:1rem 0;}
+html:has(.editorial-synthesis) .quickread h2 {font-size:1.5rem;}
+html:has(.editorial-synthesis) .section-head {border:0 !important; gap:3rem;}
+html:has(.editorial-synthesis) .section-head .lede {font:400 1.12rem/1.7 var(--specter-serif);}
+html:has(.editorial-synthesis) .figure {border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important;}
+html:has(.editorial-synthesis) .figure svg {border:0 !important; box-shadow:none !important;}
+html:has(.editorial-synthesis) .metric-card {border:0 !important; padding:1.25rem;}
+html:has(.editorial-synthesis) .callout {border:0; font:400 1.1rem/1.65 var(--specter-serif);}
+html:has(.editorial-synthesis) .explore-card {border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important;}
+html:has(.editorial-synthesis) .explore-card h3 {font-size:1.45rem;}
+html:has(.editorial-synthesis) .explore-card p {font:400 1rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .reading-route {display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono);}
+@media (max-width:800px) {html:has(.editorial-synthesis) .hero-grid {grid-template-columns:1fr;}
+html:has(.editorial-synthesis) .hero-answer {transform:none;}
+html:has(.editorial-synthesis) .section-head {gap:1.3rem;}}
+html:has(.editorial-synthesis) .ink {border-block:0;}
+html:has(.editorial-synthesis) .ink .figure {background:var(--specter-sheet) !important; padding:1rem !important;}
+html:has(.editorial-synthesis) .passage-note {max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .section-no {border:0;}
+@media (max-width:700px) {html:has(.editorial-synthesis) .figure:has(svg.chart) {overflow-x:auto; max-width:100%;}
+html:has(.editorial-synthesis) .figure svg.chart {min-width:720px;}
+html:has(.editorial-synthesis) .figure:has(svg.chart)::after {content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f);}
+html:has(.editorial-synthesis) .figure figcaption {grid-template-columns:1fr;}}
+html:has(.editorial-synthesis) .passport-layout > * {min-width:0;}
+.measurement-heading,.measurement-row {display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0;}
+.measurement-heading {font: 12px/1.5 monospace;}
+.measurement-row > span:last-child {text-align: right; font: 14px/1.5 monospace;}
+.measurement-track {position: relative; height: 18px; background: #fff8;}
+.measurement-track i {display: block; height: 100%; background: #18796f;}
+.measurement-track b {position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d;}
+.measurement-comparison figcaption {margin-top: 24px; max-width: 70ch;}
+.experiment-method summary {cursor: pointer; font-weight: 700;}
+.orbium-controls {display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0;}
+.orbium-controls select {font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60;}
+.orbium-frames {display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
+.orbium-frames figure {margin: 0;}
+.orbium-frames img {display: block; width: 100%;}
+.orbium-frames figcaption {padding-block: 10px; font-weight: 700;}
+#orbium-time-note {margin-top: 16px;}
+.comparison-story {background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0;}
+.comparison-story h3 {font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px;}
+.comparison-story p {max-width: 72ch; line-height: 1.65;}
+.comparison-story h4 {font: 700 21px/1.25 sans-serif; margin: 12px 0;}
+.comparison-story figcaption {border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6;}
+@media (max-width: 650px) {.measurement-heading {display: none;}
+.measurement-row {grid-template-columns: 1fr 1fr; gap: 12px;}
+.measurement-track {grid-column: 1 / -1; grid-row: 2;}
+.measurement-row > span:last-child {grid-column: 2; grid-row: 1; font-size: 12px;}
+.orbium-frames {gap: 10px;}}
+#measurement-comparison,.orbium-reader {scroll-margin-top: 90px;}
+html:has(.editorial-synthesis) .evidence {display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;}
+html:has(.editorial-synthesis) .evidence::before {content: none;}
+html:has(.editorial-synthesis) .ink .evidence {color: #cbd0c8;}
+html:has(.editorial-synthesis) .research-detail {margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555;}
+html:has(.editorial-synthesis) .research-detail summary {cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif);}
+html:has(.editorial-synthesis) .research-detail .section-head {margin-top: 32px;}
+.response-explorer,.transplant-comparison {margin: 44px 0; color: #17282d;}
+.figure-introduction {max-width: 760px; margin-bottom: 30px;}
+.figure-introduction h3 {font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px;}
+.figure-introduction p,.experiment-reading {font: 19px/1.65 Georgia, serif;}
+.response-controls {display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px;}
+.response-controls label {font: 15px/1.6 var(--specter-display-font, sans-serif);}
+.response-controls select {padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b;}
+.response-plots,.transplant-panels {display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
+.response-plots > div,.transplant-panels > div {min-width: 0;}
+.response-plots h4,.transplant-panels h4 {font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px;}
+.response-plots svg,.transplant-panels svg {display: block; width: 100%; height: auto; overflow: visible;}
+.response-plots svg text,.transplant-panels svg text {font: 16px var(--specter-display-font, sans-serif); fill: #17282d;}
+.response-plots svg text[fill="#8561b0"] {fill: #8561b0;}
+.response-plots svg text[fill="#187a6b"] {fill: #187a6b;}
+.response-explorer > figcaption,.transplant-comparison > figcaption {font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px;}
+#response-reading {font-size: 19px;}
+html:has(.editorial-synthesis) .passport-layout {grid-template-columns: 1fr;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px;}
+html:has(.editorial-synthesis) .patch-card {border: 0; padding: 0; background: none; box-shadow: none;}
+html:has(.editorial-synthesis) .patch-card figcaption {color: #17282d; padding: 12px 0;}
+html:has(.editorial-synthesis) .patch-card figcaption span,html:has(.editorial-synthesis) .native-strip figcaption span {display: none;}
+html:has(.editorial-synthesis) .patch-canvases {position: relative; padding-top: 28px;}
+html:has(.editorial-synthesis) .patch-canvases::before,html:has(.editorial-synthesis) .patch-canvases::after {position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df;}
+html:has(.editorial-synthesis) .patch-canvases::before {content: "Visible matter"; left: 0;}
+html:has(.editorial-synthesis) .patch-canvases::after {content: "Hidden composition"; left: 51%;}
+html:has(.editorial-synthesis) .patch-canvases canvas {width: 100%; height: auto;}
+html:has(.editorial-synthesis) .comparison-story {background: none; padding: 0; margin-top: 40px;}
+@media (max-width: 700px) {.response-plots,.transplant-panels {grid-template-columns: 1fr; gap: 35px;}
+.response-controls {gap: 14px;}
+.response-plots svg text,.transplant-panels svg text {font-size: 18px;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: 1fr;}}
+#response-explorer,.transplant-comparison {scroll-margin-top: 80px;}
 /* These explicit light fills label dark inset panels inside otherwise light charts. */
-html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
-html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
-
-html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
-  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
-}
-html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
-html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
-html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
-
+html.specter-report svg.chart text[fill="#d8ff2f"] {fill: #d8ff2f !important;}
+html.specter-report svg.chart text[fill="#f7f4ec"] {fill: #f7f4ec !important;}
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;}
+html.specter-report body > nav.publication-navigation {display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif;}
+html.specter-report body > nav.publication-navigation a {color: #14252c !important; text-decoration: underline;}
+html.specter-report body > nav.publication-navigation span {color: #59615a !important;}
 /* Native specimen panels retain their black image field. Their labels must
  * remain legible after the surrounding report adopts paper-colored tokens. */
-html.specter-report .specimen > figcaption {
-  color: #d3d5d7 !important;
-  background: #050608;
-}
-html.specter-report .specimen > figcaption :is(b, strong, span) {
-  color: inherit !important;
-}
-
+html.specter-report .specimen > figcaption {color: #d3d5d7 !important;
+  background: #050608;}
+html.specter-report .specimen > figcaption :is(b, strong, span) {color: inherit !important;}
 /* Keep imported data labels readable on a phone instead of shrinking an
  * entire desktop plot into a few hundred pixels. Captions still wrap. */
-@media (max-width: 700px) {
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
-    max-width: 100%;
+@media (max-width: 700px) {html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {max-width: 100%;
     min-width: 0;
     overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-  html.specter-report div.chart > svg { min-width: 760px; }
-  html.specter-report div.card.chart > svg { min-width: 940px; }
-  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
-  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
+    overscroll-behavior-inline: contain;}
+html.specter-report div.chart > svg {min-width: 760px;}
+html.specter-report div.card.chart > svg {min-width: 940px;}
+html.specter-report .trajectory-wrap > svg {min-width: 1120px;}
+html.specter-report .chart-grid .figure > svg.chart {min-width: 640px;}
+html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {content: "Scroll sideways to explore the figure →";
     display: block;
     margin-top: .7rem;
     font: 400 .75rem/1.5 var(--specter-mono);
-    color: var(--specter-muted);
-  }
-}
-
-@media (max-width: 700px) {
-  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
-  html.anatomical-editorial .figure > svg { min-width: 640px; }
-  html.anatomical-editorial .figure:has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
-    display: block;
-    margin-top: .7rem;
-    font: 400 .75rem/1.5 ui-monospace, monospace;
-  }
-  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
-}
-
+    color: var(--specter-muted);}}
 /* A source report's compact local navigation must not hide the injected
  * site navigation or the links back to its dossier and report library. */
-html.specter-report :is(.publication-header, .publication-navigation) a {
-  display: inline-flex !important;
-}
-
+html.specter-report :is(.publication-header, .publication-navigation) a {display: inline-flex !important;}
 /* The commitment report deliberately keeps dark data panels. */
-html.specter-report:has(#steerability) .chart-grid .figure svg text {
-  fill: #e9e7df !important;
-}
+html.specter-report:has(#steerability) .chart-grid .figure svg text {fill: #e9e7df !important;}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/causal-score-sheets/"></head><body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav><main>
-<header class="hero"><div class="eyebrow">Flow Lenia · causal score sheets · 64 fresh organisms</div>
+<header class="hero"><div class="evidence-label">Flow Lenia · causal score sheets · 64 fresh organisms</div>
 <h1>Prior History Changes How the Score Responds to an Intervention</h1>
 <div class="dek">Φ‑R does not locate the organism. It labels a level containing multiple history-dependent organisms—with different bodies and different causal futures.</div>
 <div class="hero-note">We drove the same fresh Flow Lenia ancestors to low and high Φ‑R through two routes, matched the final score within each level, released control, and mapped the response to nine future interventions.</div></header>
 
-<section><div class="eyebrow">The result in one sentence</div><h2>Similar scores can conceal different histories.</h2>
+<section><h2>Similar scores can conceal different histories.</h2>
 <div class="callout">At the same Φ‑R level, changing the route moved the organism farther than moving across the entire low→high Φ‑R span.</div>
 <div class="numbers">
 <div class="number"><b>1.15×</b><span>history distance ÷ low→high score distance at release; 95% interval 1.14–1.17.</span></div>
@@ -1070,42 +907,42 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
 </div>
 <div class="plain"><p>Plainly: two creatures can have nearly the same Φ‑R and still be as different as two creatures at opposite ends of the reachable Φ‑R range.</p></div></section>
 
-<section><div class="eyebrow">A representative four-corner slice</div><h2>Same score level. Different organism.</h2>
+<section><h2>Different organisms can share the same score</h2>
 <p>These are the four passage 44 states from one strongly separated, tightly matched sheet (ancestor 27, low-ending paths). Columns differ by history; rows differ by Φ‑R level. The quantitative result comes from all 128 sheets, not from this example.</p>
 <div class="fields"><figure class="field"><img src="data:image/png;base64,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" alt="Low Phi-R, Hold history"><figcaption><b>Low Φ‑R</b><span>Hold history</span></figcaption></figure><figure class="field"><img src="data:image/png;base64,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" alt="Low Phi-R, Loop history"><figcaption><b>Low Φ‑R</b><span>Loop history</span></figcaption></figure><figure class="field"><img src="data:image/png;base64,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" alt="High Phi-R, Hold history"><figcaption><b>High Φ‑R</b><span>Hold history</span></figcaption></figure><figure class="field"><img src="data:image/png;base64,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" alt="High Phi-R, Loop history"><figcaption><b>High Φ‑R</b><span>Loop history</span></figcaption></figure></div></section>
 
-<section><div class="eyebrow">The metric geometry</div><h2>The history axis is not small.</h2>
+<section><h2>The history axis is not small.</h2>
 <p>Red measures hold→loop distance while keeping Φ‑R level fixed. Teal measures low→high distance while keeping history fixed. The red axis starts larger and remains comparable through release.</p>
 <div class="chart"><svg viewBox="0 0 760 300" role="img" aria-label="line chart"><style>.axis{font:12px ui-monospace,SFMono-Regular,monospace;fill:#6f6b63}.legend{font:12px Inter,system-ui,sans-serif;fill:#27241f}</style><line x1="58" y1="255.0" x2="742" y2="255.0" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="259.0" text-anchor="end" class="axis">0.10</text><line x1="58" y1="197.2" x2="742" y2="197.2" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="201.2" text-anchor="end" class="axis">0.12</text><line x1="58" y1="139.5" x2="742" y2="139.5" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="143.5" text-anchor="end" class="axis">0.14</text><line x1="58" y1="81.7" x2="742" y2="81.7" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="85.7" text-anchor="end" class="axis">0.15</text><line x1="58" y1="24.0" x2="742" y2="24.0" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="28.0" text-anchor="end" class="axis">0.17</text><path d="M 58.0 155.3 L 194.8 129.5 L 331.6 113.9 L 468.4 100.3 L 605.2 85.5 L 742.0 72.8" fill="none" stroke="#d8492f" stroke-width="3"/><circle cx="58.0" cy="155.3" r="4" fill="#d8492f"/><circle cx="194.8" cy="129.5" r="4" fill="#d8492f"/><circle cx="331.6" cy="113.9" r="4" fill="#d8492f"/><circle cx="468.4" cy="100.3" r="4" fill="#d8492f"/><circle cx="605.2" cy="85.5" r="4" fill="#d8492f"/><circle cx="742.0" cy="72.8" r="4" fill="#d8492f"/><path d="M 58.0 210.0 L 194.8 152.4 L 331.6 129.4 L 468.4 113.3 L 605.2 98.4 L 742.0 84.3" fill="none" stroke="#246b78" stroke-width="3"/><circle cx="58.0" cy="210.0" r="4" fill="#246b78"/><circle cx="194.8" cy="152.4" r="4" fill="#246b78"/><circle cx="331.6" cy="129.4" r="4" fill="#246b78"/><circle cx="468.4" cy="113.3" r="4" fill="#246b78"/><circle cx="605.2" cy="98.4" r="4" fill="#246b78"/><circle cx="742.0" cy="84.3" r="4" fill="#246b78"/><g transform="translate(58, 10)"><line x1="0" y1="0" x2="22" y2="0" stroke="#d8492f" stroke-width="3"/><text x="30" y="4" class="legend">Across history, same Φ‑R</text></g><g transform="translate(283, 10)"><line x1="0" y1="0" x2="22" y2="0" stroke="#246b78" stroke-width="3"/><text x="30" y="4" class="legend">Along Φ‑R, same history</text></g><text x="58.0" y="286" text-anchor="middle" class="axis">passage 44</text><text x="194.8" y="286" text-anchor="middle" class="axis">48</text><text x="331.6" y="286" text-anchor="middle" class="axis">passage 52</text><text x="468.4" y="286" text-anchor="middle" class="axis">passage 56</text><text x="605.2" y="286" text-anchor="middle" class="axis">passage 60</text><text x="742.0" y="286" text-anchor="middle" class="axis">64</text></svg></div>
 <div class="split" style="margin-top:20px"><div class="box"><h3>At passage 44</h3><p>Across history: <strong>0.130</strong><br>Along score: 0.114</p></div><div class="box"><h3>At passage 64</h3><p>Across history: <strong>0.155</strong><br>Along score: 0.152</p></div></div></section>
 
-<section><div class="eyebrow">Why “folds”?</div><h2>The meaning of low→high depends on history.</h2>
+<section><h2>The meaning of low→high depends on history.</h2>
 <p>Hellinger distance has an exact square-root Euclidean embedding, so we can compare displacement directions—not only magnitudes. At passage 44, the hold→loop direction agrees across low and high Φ‑R. But the low→high direction has essentially zero agreement across the two histories.</p>
 <div class="chart"><svg viewBox="0 0 760 300" role="img" aria-label="line chart"><style>.axis{font:12px ui-monospace,SFMono-Regular,monospace;fill:#6f6b63}.legend{font:12px Inter,system-ui,sans-serif;fill:#27241f}</style><line x1="58" y1="255.0" x2="742" y2="255.0" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="259.0" text-anchor="end" class="axis">-0.03</text><line x1="58" y1="197.2" x2="742" y2="197.2" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="201.2" text-anchor="end" class="axis">0.05</text><line x1="58" y1="139.5" x2="742" y2="139.5" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="143.5" text-anchor="end" class="axis">0.12</text><line x1="58" y1="81.7" x2="742" y2="81.7" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="85.7" text-anchor="end" class="axis">0.20</text><line x1="58" y1="24.0" x2="742" y2="24.0" stroke="#d9d6cd" stroke-width="1"/><text x="48" y="28.0" text-anchor="end" class="axis">0.27</text><path d="M 58.0 45.9 L 194.8 148.7 L 331.6 179.7 L 468.4 184.0 L 605.2 189.2 L 742.0 194.7" fill="none" stroke="#d8492f" stroke-width="3"/><circle cx="58.0" cy="45.9" r="4" fill="#d8492f"/><circle cx="194.8" cy="148.7" r="4" fill="#d8492f"/><circle cx="331.6" cy="179.7" r="4" fill="#d8492f"/><circle cx="468.4" cy="184.0" r="4" fill="#d8492f"/><circle cx="605.2" cy="189.2" r="4" fill="#d8492f"/><circle cx="742.0" cy="194.7" r="4" fill="#d8492f"/><path d="M 58.0 231.1 L 194.8 226.5 L 331.6 231.0 L 468.4 225.1 L 605.2 228.5 L 742.0 227.8" fill="none" stroke="#246b78" stroke-width="3"/><circle cx="58.0" cy="231.1" r="4" fill="#246b78"/><circle cx="194.8" cy="226.5" r="4" fill="#246b78"/><circle cx="331.6" cy="231.0" r="4" fill="#246b78"/><circle cx="468.4" cy="225.1" r="4" fill="#246b78"/><circle cx="605.2" cy="228.5" r="4" fill="#246b78"/><circle cx="742.0" cy="227.8" r="4" fill="#246b78"/><g transform="translate(58, 10)"><line x1="0" y1="0" x2="22" y2="0" stroke="#d8492f" stroke-width="3"/><text x="30" y="4" class="legend">History direction agreement</text></g><g transform="translate(283, 10)"><line x1="0" y1="0" x2="22" y2="0" stroke="#246b78" stroke-width="3"/><text x="30" y="4" class="legend">Low→high Φ‑R direction agreement</text></g><text x="58.0" y="286" text-anchor="middle" class="axis">passage 44</text><text x="194.8" y="286" text-anchor="middle" class="axis">48</text><text x="331.6" y="286" text-anchor="middle" class="axis">passage 52</text><text x="468.4" y="286" text-anchor="middle" class="axis">passage 56</text><text x="605.2" y="286" text-anchor="middle" class="axis">passage 60</text><text x="742.0" y="286" text-anchor="middle" class="axis">64</text></svg></div>
 <div class="equation">same history direction across levels: <em>0.242</em><br>same score direction across histories: <em>0.001</em></div>
 <p>The history-direction agreement then decays from 0.242 at passage 44 to 0.048 at passage 64. In the long future cloud it is -0.000: the large positional memory survives, but the local directions have been remapped.</p></section>
 
-<section><div class="eyebrow">Causal future</div><h2>History moves the action world, not its size.</h2>
+<section><h2>History moves the action world, not its size.</h2>
 <div class="split"><div class="box"><h3>Low Φ‑R</h3><p>Matched future displacement: <strong>0.258</strong><br>Shift / repertoire width: 1.009×<br>Width change: 0.0017</p></div>
 <div class="box"><h3>High Φ‑R</h3><p>Matched future displacement: <strong>0.261</strong><br>Shift / repertoire width: 1.015×<br>Width change: 0.0003</p></div></div>
 <p>The challenge cloud is translated by roughly one full repertoire width at both levels, while its breadth barely changes. Challenge rankings and distance topology are nearly unrelated across histories. The system has not merely become “more” or “less” capable; the map from intervention to outcome has been rewritten.</p></section>
 
-<section><div class="eyebrow">One matched challenge, 900 steps later</div><h2>The hidden separation becomes visible.</h2>
+<section><div class="evidence-label">One matched challenge, 900 steps later</div><h2>The hidden separation becomes visible.</h2>
 <p>These four futures start from the passage 44 states above and receive the same c04 challenge. The different histories do not merely preserve small pixel differences; they reorganize the later body.</p>
 <div class="fields"><figure class="field"><img src="data:image/png;base64,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" alt="future from Low Phi-R, Hold history"><figcaption><b>Low Φ‑R</b><span>Hold history · c04</span></figcaption></figure><figure class="field"><img src="data:image/png;base64,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" alt="future from Low Phi-R, Loop history"><figcaption><b>Low Φ‑R</b><span>Loop history · c04</span></figcaption></figure><figure class="field"><img src="data:image/png;base64,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" alt="future from High Phi-R, Hold history"><figcaption><b>High Φ‑R</b><span>Hold history · c04</span></figcaption></figure><figure class="field"><img src="data:image/png;base64,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" alt="future from High Phi-R, Loop history"><figcaption><b>High Φ‑R</b><span>Loop history · c04</span></figcaption></figure></div></section>
 
-<section><div class="eyebrow">Matching sanity check</div><h2>This is not a score-mismatch artifact.</h2>
+<section><h2>This is not a score-mismatch artifact.</h2>
 <div class="numbers"><div class="number"><b>0.9%</b><span>median within-level Φ‑R mismatch across 256 matched comparisons.</span></div>
 <div class="number"><b>0.132</b><span>passage 44 history distance in the tightest-matched half; the full-cohort value is 0.130.</span></div>
 <div class="number"><b>0.263</b><span>future displacement in the tightest-matched half; the full-cohort value is 0.259.</span></div></div>
 <p>Matching error was weakly negatively correlated with both passage 44 state distance (-0.10) and future distance (-0.07). Poor matches are not inflating the finding.</p></section>
 
-<section><div class="eyebrow">What changed conceptually</div><h2>Φ‑R is a coordinate, not a summary of the organism.</h2>
+<section><h2>Φ‑R is a coordinate, not a summary of the organism.</h2>
 <div class="equation">organism state ≠ f(Φ‑R)<br>organism state ≈ f(<em>Φ‑R, history, context</em>)</div>
 <p>Our earlier return loop showed that the score can come back while the organism does not. This experiment generalizes that result across the score axis. Low and high Φ‑R each contain multiple states with different intervention-response worlds. The landscape is many-to-one, history-bearing, and locally folded.</p>
 <div class="plain"><p>This is not merely “memory” in the everyday sense. It is a causal-geometric memory: past information-directed actions determine which futures remain reachable from the same present score.</p></div></section>
 
-<section><div class="eyebrow">The next direct swing</div><h2>Find where the folds become organisms.</h2>
+<section><h2>Find where the folds become organisms.</h2>
 <p>Now we can stop asking whether Φ‑R alone predicts appearance. The sharper target is the <b>fold itself</b>: places where nearby information levels contain sharply different bodies and futures. We should map fold strength through early development, then intervene just before the strongest fold to see whether it redirects organism emergence, fission, identity turnover, or ecological succession.</p>
 <p>That would connect the information geometry directly back to the original Levin-inspired question: not “does one number rise?”, but “does the causal state space reorganize before a new living pattern appears?”</p></section>
 

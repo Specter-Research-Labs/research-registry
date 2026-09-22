@@ -6,7 +6,7 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "cross-age direction intervention",
-  "sourceReportSha256": "e2394ee3f8b4a448a39a0082c581eec62e79f0e7d6589b1e128f93f5ffc888a2",
+  "sourceReportSha256": "eaf332a21a810933424c692c056ecde9c0740286fbfb86b0c2400cdb58c601ce",
   "publicReportSha256": "eaf332a21a810933424c692c056ecde9c0740286fbfb86b0c2400cdb58c601ce",
   "transformations": [
     "import_verified_public_projection_v1",
@@ -14,6 +14,6 @@
     "move_reports_to_website_v1"
   ],
   "contextSha256": "5683d7e8472292ef5eb2051346e5d34d525636e449990e74346f883e569a23ad",
-  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
-  "upstreamReceiptSha256": "966fbccae3d6bc5892ccd9930ed6523dc9eb1ef469277c26ec4edcdbc5faad67"
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "8166f4d4aaf0e669d4530bed62b9b8d04f07c08d614ac85af44fe7f5e7314e8f"
 }

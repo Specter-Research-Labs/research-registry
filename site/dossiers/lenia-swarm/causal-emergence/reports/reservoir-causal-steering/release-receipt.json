@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "mixed causal-steering experiment",
   "sourceReportSha256": "a5b71b11986ec880d0e5fde7281099fc11246476cd3f2a1daa71875b6980f64c",
-  "publicReportSha256": "a5b71b11986ec880d0e5fde7281099fc11246476cd3f2a1daa71875b6980f64c",
+  "publicReportSha256": "660cdbaf3c2fe090e26d9ae91927f57f9f6baa907a2c925659033ec9c119f592",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "3e0460ac1c7afcdc1f8264f72a43edbfea32b11ced14b77cc6cfa27f8a7ea4f7",
+  "contextSha256": "8a0b7c7c82949bcd87628506ca9bceb3790baa4b4386fdc41791e8c4891e5c12",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "95a3b37fa315863ca71405cc95dd314c699d7a7260f80f4dd72a748d8ad7af51"
+  "upstreamReceiptSha256": "79fa67d4319c61215ee364302743cf7a87dba280683791c4a04429f9a82bba0b"
 }

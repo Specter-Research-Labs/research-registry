@@ -649,9 +649,7 @@ html.specter-report ::selection {
  * This late, shared layer repairs recurring presentation problems in older
  * reports without changing their figures, data, or stable release URLs.
  */
-
-html.specter-report {
-  color-scheme: light;
+html.specter-report {color-scheme: light;
   --specter-ground: #f2eee3;
   --specter-sheet: #fffdf7;
   --specter-ink: #131821;
@@ -684,34 +682,18 @@ html.specter-report {
   --amber: var(--specter-coral);
   --orange: var(--specter-coral);
   --pink: var(--specter-coral);
-  --coral: var(--specter-coral);
-}
-
-html.specter-report[data-specter-surface="bg-paper"] {
-  --paper: var(--specter-sheet);
-}
-
-html.specter-report,
-html.specter-report body {
-  background: var(--specter-ground) !important;
-}
-
-html.specter-report body {
-  color: var(--specter-ink) !important;
+  --coral: var(--specter-coral);}
+html.specter-report[data-specter-surface="bg-paper"] {--paper: var(--specter-sheet);}
+html.specter-report,html.specter-report body {background: var(--specter-ground) !important;}
+html.specter-report body {color: var(--specter-ink) !important;
   background:
     linear-gradient(rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(19, 24, 33, 0.035) 1px, transparent 1px),
     var(--specter-ground) !important;
-  background-size: 24px 24px !important;
-}
-
-html.specter-report :is(.stat, .card, .panel, .sheet) .lime {
-  color: var(--specter-green) !important;
-}
-
+  background-size: 24px 24px !important;}
+html.specter-report :is(.stat, .card, .panel, .sheet) .lime {color: var(--specter-green) !important;}
 /* Older reports often put a small provenance nav inside the report column. */
-html.specter-report main > nav {
-  align-items: center;
+html.specter-report main > nav {align-items: center;
   min-height: 3.25rem;
   margin: 0 0 clamp(2rem, 5vw, 4rem);
   padding: 0.8rem 1rem;
@@ -722,341 +704,196 @@ html.specter-report main > nav {
   font-family: var(--specter-mono) !important;
   font-size: 0.72rem !important;
   font-weight: 750;
-  line-height: 1.25;
-}
-
-html.specter-report main > nav :is(a, span, strong) {
-  color: inherit !important;
-}
-
+  line-height: 1.25;}
+html.specter-report main > nav :is(a, span, strong) {color: inherit !important;}
 /*
  * Early chart generators drew directly onto a near-black SVG. Give those
  * plots the same paper, rule, and offset-shadow treatment as the v7 figures.
  * Charts already composed inside a semantic figure keep their authored skin.
  */
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-html.specter-report :is(div, article, figure).chart,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  color: var(--specter-ink) !important;
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {color: var(--specter-ink) !important;
   background: var(--specter-sheet) !important;
   border: 2px solid var(--specter-ink) !important;
   border-radius: 0 !important;
-  box-shadow: var(--specter-chart-shadow) !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-  margin-block: 1.5rem 2rem;
-  padding: clamp(0.75rem, 2vw, 1.5rem) !important;
-}
-
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-  padding: clamp(1rem, 2vw, 1.6rem) !important;
-}
-
-html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
-  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {
-  color: inherit !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,
-html.specter-report :is(div, article, figure).chart svg text,
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {
-  fill: var(--specter-muted) !important;
+  box-shadow: var(--specter-chart-shadow) !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {margin-block: 1.5rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem) !important;}
+html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {padding: clamp(1rem, 2vw, 1.6rem) !important;}
+html.specter-report :is(div, article, figure).chart :is(h1, h2, h3, h4, p, li, figcaption, dt, dd),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap)
+  :is(h1, h2, h3, h4, p, li, figcaption, dt, dd) {color: inherit !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text,html.specter-report :is(div, article, figure).chart svg text,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg text {fill: var(--specter-muted) !important;
   font-family: var(--specter-mono) !important;
-  font-weight: 700;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {
-  fill: var(--specter-ink) !important;
-  font-weight: 850 !important;
-}
-
-html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),
-html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {
-  stroke: var(--specter-chart-grid) !important;
-}
-
+  font-weight: 700;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(div, article, figure).chart svg :is(.val, .value, .strong-status, .chart-title),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.val, .value, .strong-status, .chart-title) {fill: var(--specter-ink) !important;
+  font-weight: 850 !important;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) :is(.zero, .axis, .grid, .gridline),html.specter-report :is(div, article, figure).chart svg :is(.zero, .axis, .grid, .gridline),html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) svg :is(.zero, .axis, .grid, .gridline) {stroke: var(--specter-chart-grid) !important;}
 /* Remap the low-contrast colors used by the earliest dark SVGs onto paper. */
-html.specter-report svg [stroke="#a9d86e"] { stroke: var(--specter-green) !important; }
-html.specter-report svg [fill="#a9d86e"] { fill: var(--specter-green) !important; }
-html.specter-report svg [stroke="#72d9e2"] { stroke: var(--specter-blue) !important; }
-html.specter-report svg [fill="#72d9e2"] { fill: var(--specter-blue) !important; }
-html.specter-report svg [stroke="#ef7d9a"],
-html.specter-report svg [stroke="#f1b85b"] { stroke: var(--specter-coral) !important; }
-html.specter-report svg [fill="#ef7d9a"],
-html.specter-report svg [fill="#f1b85b"] { fill: var(--specter-coral) !important; }
-
-@media (max-width: 640px) {
-  html.specter-report main > nav {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {
-    box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;
-  }
-
-  /* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {
-    font-size: 24px !important;
-  }
-}
-
-@media print {
-  html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),
-  html.specter-report :is(div, article, figure).chart,
-  html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {
-    box-shadow: none !important;
-  }
-}
-
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {
-  --editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {
-  font-family: var(--editorial-display) !important;
+html.specter-report svg [stroke="#a9d86e"] {stroke: var(--specter-green) !important;}
+html.specter-report svg [fill="#a9d86e"] {fill: var(--specter-green) !important;}
+html.specter-report svg [stroke="#72d9e2"] {stroke: var(--specter-blue) !important;}
+html.specter-report svg [fill="#72d9e2"] {fill: var(--specter-blue) !important;}
+html.specter-report svg [stroke="#ef7d9a"],html.specter-report svg [stroke="#f1b85b"] {stroke: var(--specter-coral) !important;}
+html.specter-report svg [fill="#ef7d9a"],html.specter-report svg [fill="#f1b85b"] {fill: var(--specter-coral) !important;}
+@media (max-width: 640px) {html.specter-report main > nav {align-items: flex-start;
+    flex-direction: column;}
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) {box-shadow: 4px 4px 0 rgba(19, 24, 33, 0.14) !important;}
+/* Wide legacy viewBoxes otherwise reduce their labels to four or five pixels. */
+html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart) text {font-size: 24px !important;}}
+@media print {html.specter-report main > section > :is(svg.chart, svg.crossing, svg.groupdots, svg.line-chart, svg.family-chart),html.specter-report :is(div, article, figure).chart,html.specter-report :is(.chart-card, .chart-frame, .chart-shell, .chart-wrap, .mini-chart, .axis-card, .assay-wrap, .atlas-figure, .basin-figure, .cutoff-figure, .diagram, .dose-figure, .family-figure, .family-layout, .field-figure, .four-panel-figure, .futuremap, .interval-chart, .sequence-figure, .trajectory-wrap) {box-shadow: none !important;}}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) {--editorial-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(h1,h2,h3) {font-family: var(--editorial-display) !important;
   font-weight: 850;
   letter-spacing: -.035em;
-  text-wrap: balance;
-}
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 { font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06; }
-:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) { box-shadow: none !important; }
-html.anatomical-editorial .hero { align-items: center; grid-template-columns: 1fr 1.1fr; }
-html.anatomical-editorial .dek { font-size: clamp(1.15rem,1.7vw,1.4rem); line-height: 1.6; }
-html.anatomical-editorial .hero-specimens { margin: 0; }
-html.anatomical-editorial .hero-specimens > div { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-html.anatomical-editorial .hero-specimens img { width:100%; aspect-ratio:1; object-fit:contain; background:#111521; }
-html.anatomical-editorial .hero-specimens span { display:block; padding:.65rem 0; font:700 .75rem/1.4 ui-monospace,monospace; }
-html.anatomical-editorial .hero-specimens figcaption { font-size:1rem; line-height:1.6; margin-top:1rem; }
-html.anatomical-editorial .hero-specimens strong { display:block; font:800 1.3rem/1.3 var(--editorial-display); margin-bottom:.5rem; }
-html.anatomical-editorial .synthesis { border:0; background:#dcefe5; color:var(--ink); padding:clamp(1.5rem,4vw,3rem); }
-html.anatomical-editorial .synthesis .eyebrow { color:#14795c; }
-html.anatomical-editorial .synthesis p { max-width:74ch; font-size:1.1rem; line-height:1.7; }
-html.anatomical-editorial .synthesis .metric { color:var(--ink); border-color:#a9bdb2; }
-html.anatomical-editorial .synthesis .metric span { color:#414c45; }
-html.anatomical-editorial .opening-method { margin:1rem 0; }
-html.anatomical-editorial .opening-method summary { padding:.5rem 0; font-size:.75rem; }
-html.anatomical-editorial .chapter-head { border:0; grid-template-columns:5rem 1.15fr 1fr; gap:1.5rem; align-items:start; }
-html.anatomical-editorial .chapter-head h2 { margin-top:.6rem; }
-html.anatomical-editorial .chapter-head > p { padding-top:1.6rem; font-size:1.1rem; line-height:1.65; }
-html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) { border:0; background:transparent; box-shadow:none; }
-html.anatomical-editorial .approach-grid { border:0; gap:1.2rem; }
-html.anatomical-editorial .approach-card { padding:1.3rem; background:#e3e9fb; border:0; }
-html.anatomical-editorial .approach-card:nth-child(2) { background:#dcefe5; }
-html.anatomical-editorial .approach-card:nth-child(3) { background:#eee4f6; }
-html.anatomical-editorial .case-step-copy { padding:1.2rem 0; }
-html.anatomical-editorial .attempt-reading { border:0; background:transparent; padding:1rem 0; max-width:78ch; }
-html.anatomical-editorial .caption { border:0; }
-html:has(.editorial-synthesis) .hero { padding-bottom:3rem; }
-html:has(.editorial-synthesis) .hero .dek { font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch; }
-html:has(.editorial-synthesis) .hero-grid { grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center; }
-html:has(.editorial-synthesis) .hero-answer { border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg); }
-html:has(.editorial-synthesis) .hero-answer strong { font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .hero-answer p { font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important; }
-html:has(.editorial-synthesis) .quickread { border:0 !important; gap:2rem; background:transparent !important; }
-html:has(.editorial-synthesis) .quickread article { border:0 !important; background:transparent !important; padding:1rem 0; }
-html:has(.editorial-synthesis) .quickread h2 { font-size:1.5rem; }
-html:has(.editorial-synthesis) .section-head { border:0 !important; gap:3rem; }
-html:has(.editorial-synthesis) .section-head .lede { font:400 1.12rem/1.7 var(--specter-serif); }
-html:has(.editorial-synthesis) .figure { border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important; }
-html:has(.editorial-synthesis) .figure svg { border:0 !important; box-shadow:none !important; }
-html:has(.editorial-synthesis) .metric-card { border:0 !important; padding:1.25rem; }
-html:has(.editorial-synthesis) .callout { border:0; font:400 1.1rem/1.65 var(--specter-serif); }
-html:has(.editorial-synthesis) .explore-card { border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important; }
-html:has(.editorial-synthesis) .explore-card h3 { font-size:1.45rem; }
-html:has(.editorial-synthesis) .explore-card p { font:400 1rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .reading-route { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono); }
-@media(max-width:800px) {
- html.anatomical-editorial .hero, html:has(.editorial-synthesis) .hero-grid { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head { grid-template-columns:1fr; }
- html.anatomical-editorial .chapter-head > p { grid-column:auto; padding:0; }
- html:has(.editorial-synthesis) .hero-answer { transform:none; }
- html:has(.editorial-synthesis) .section-head { gap:1.3rem; }
-}
-html:has(.editorial-synthesis) .ink { border-block:0; }
-html:has(.editorial-synthesis) .ink .figure { background:var(--specter-sheet) !important; padding:1rem !important; }
-html:has(.editorial-synthesis) .passage-note { max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif); }
-html:has(.editorial-synthesis) .section-no { border:0; }
-@media(max-width:700px) {
- html:has(.editorial-synthesis) .figure:has(svg.chart), html.anatomical-editorial .figure:has(> img[src$=".svg"]) { overflow-x:auto; max-width:100%; }
- html:has(.editorial-synthesis) .figure svg.chart { min-width:720px; }
- html.anatomical-editorial .figure > img[src$=".svg"] { min-width:640px; }
- html:has(.editorial-synthesis) .figure:has(svg.chart)::after, html.anatomical-editorial .figure:has(> img[src$=".svg"])::after { content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f); }
- html:has(.editorial-synthesis) .figure figcaption { grid-template-columns:1fr; }
-}
-html:has(.editorial-synthesis) .passport-layout > * { min-width:0; }
-
-html.anatomical-editorial .investigation-intro { max-width: 850px; font: 1.35rem/1.65 Georgia, serif; padding-block: 16px 40px; }
-html.anatomical-editorial .measurement-comparison,
-html.anatomical-editorial .orbium-reader { margin: 32px 0; padding: clamp(20px, 4vw, 48px); background: #e0eeea; }
-html.anatomical-editorial .measurement-comparison h3,
-html.anatomical-editorial .orbium-reader h3 { font-size: clamp(24px, 3vw, 36px); }
-.measurement-heading, .measurement-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0; }
-.measurement-heading { font: 12px/1.5 monospace; }
-.measurement-row > span:last-child { text-align: right; font: 14px/1.5 monospace; }
-.measurement-track { position: relative; height: 18px; background: #fff8; }
-.measurement-track i { display: block; height: 100%; background: #18796f; }
-.measurement-track b { position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d; }
-.measurement-comparison figcaption { margin-top: 24px; max-width: 70ch; }
-html.anatomical-editorial .experiment-method { margin: 30px 0; padding: 20px 0; border-block: 1px solid #13262c30; }
-.experiment-method summary { cursor: pointer; font-weight: 700; }
-.orbium-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0; }
-.orbium-controls select { font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60; }
-.orbium-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.orbium-frames figure { margin: 0; }
-.orbium-frames img { display: block; width: 100%; }
-.orbium-frames figcaption { padding-block: 10px; font-weight: 700; }
-#orbium-time-note { margin-top: 16px; }
-.comparison-story { background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0; }
-.comparison-story h3 { font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px; }
-.comparison-story p { max-width: 72ch; line-height: 1.65; }
-.comparison-story h4 { font: 700 21px/1.25 sans-serif; margin: 12px 0; }
-.comparison-story figcaption { border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6; }
-@media (max-width: 650px) {
-  .measurement-heading { display: none; }
-  .measurement-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .measurement-track { grid-column: 1 / -1; grid-row: 2; }
-  .measurement-row > span:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
-  .orbium-frames { gap: 10px; }
-}
-
-#measurement-comparison, .orbium-reader { scroll-margin-top: 90px; }
-html.anatomical-editorial .media-figure figcaption { color: #15242c; border: 0; padding: 18px 0; }
-html.anatomical-editorial .media-figure figcaption strong { color: #176b60; font: 700 18px/1.3 sans-serif; text-transform: none; }
-
-html:has(.editorial-synthesis) .evidence {
-  display: inline; padding: 0; border: 0; background: none; box-shadow: none;
-  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;
-}
-html:has(.editorial-synthesis) .evidence::before { content: none; }
-html:has(.editorial-synthesis) .ink .evidence { color: #cbd0c8; }
-html:has(.editorial-synthesis) .research-detail { margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555; }
-html:has(.editorial-synthesis) .research-detail summary { cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif); }
-html:has(.editorial-synthesis) .research-detail .section-head { margin-top: 32px; }
-.response-explorer, .transplant-comparison { margin: 44px 0; color: #17282d; }
-.figure-introduction { max-width: 760px; margin-bottom: 30px; }
-.figure-introduction h3 { font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px; }
-.figure-introduction p, .experiment-reading { font: 19px/1.65 Georgia, serif; }
-.response-controls { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
-.response-controls label { font: 15px/1.6 var(--specter-display-font, sans-serif); }
-.response-controls select { padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b; }
-.response-plots, .transplant-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-.response-plots > div, .transplant-panels > div { min-width: 0; }
-.response-plots h4, .transplant-panels h4 { font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px; }
-.response-plots svg, .transplant-panels svg { display: block; width: 100%; height: auto; overflow: visible; }
-.response-plots svg text, .transplant-panels svg text { font: 16px var(--specter-display-font, sans-serif); fill: #17282d; }
-.response-plots svg text[fill="#8561b0"] { fill: #8561b0; }
-.response-plots svg text[fill="#187a6b"] { fill: #187a6b; }
-.response-explorer > figcaption, .transplant-comparison > figcaption { font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px; }
-#response-reading { font-size: 19px; }
-html:has(.editorial-synthesis) .passport-layout { grid-template-columns: 1fr; }
-html:has(.editorial-synthesis) .patch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-html:has(.editorial-synthesis) .patch-card { border: 0; padding: 0; background: none; box-shadow: none; }
-html:has(.editorial-synthesis) .patch-card figcaption { color: #17282d; padding: 12px 0; }
-html:has(.editorial-synthesis) .patch-card figcaption span, html:has(.editorial-synthesis) .native-strip figcaption span { display: none; }
-html:has(.editorial-synthesis) .patch-canvases { position: relative; padding-top: 28px; }
-html:has(.editorial-synthesis) .patch-canvases::before, html:has(.editorial-synthesis) .patch-canvases::after { position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df; }
-html:has(.editorial-synthesis) .patch-canvases::before { content: 'Visible matter'; left: 0; }
-html:has(.editorial-synthesis) .patch-canvases::after { content: 'Hidden composition'; left: 51%; }
-html:has(.editorial-synthesis) .patch-canvases canvas { width: 100%; height: auto; }
-html:has(.editorial-synthesis) .comparison-story { background: none; padding: 0; margin-top: 40px; }
-@media (max-width: 700px) {
-  .response-plots, .transplant-panels { grid-template-columns: 1fr; gap: 35px; }
-  .response-controls { gap: 14px; }
-  .response-plots svg text, .transplant-panels svg text { font-size: 18px; }
-  html:has(.editorial-synthesis) .patch-grid { grid-template-columns: 1fr; }
-}
-
-#response-explorer, .transplant-comparison { scroll-margin-top: 80px; }
-
+  text-wrap: balance;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h1 {font-size: clamp(3rem,6.5vw,5.5rem); line-height: .98;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) h2 {font-size: clamp(2rem,4vw,3.5rem); line-height: 1.06;}
+:is(html.anatomical-editorial, html:has(.editorial-synthesis)) :is(.figure,.media-figure,.synthesis,.boundary,.approach-grid,.pivot,.quickread,.hero-answer,.metric-card,.explore-card) {box-shadow: none !important;}
+html:has(.editorial-synthesis) .hero {padding-bottom:3rem;}
+html:has(.editorial-synthesis) .hero .dek {font:400 clamp(1.1rem,1.7vw,1.35rem)/1.65 var(--specter-serif); max-width:64ch;}
+html:has(.editorial-synthesis) .hero-grid {grid-template-columns:minmax(0,1.5fr) minmax(16rem,.65fr); align-items:center;}
+html:has(.editorial-synthesis) .hero-answer {border:0 !important; background:var(--specter-acid-soft) !important; padding:1.5rem; transform:rotate(1deg);}
+html:has(.editorial-synthesis) .hero-answer strong {font:850 clamp(1.8rem,3vw,2.7rem)/1.05 var(--editorial-display); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .hero-answer p {font:400 1rem/1.6 var(--specter-serif); color:var(--specter-ink) !important;}
+html:has(.editorial-synthesis) .quickread {border:0 !important; gap:2rem; background:transparent !important;}
+html:has(.editorial-synthesis) .quickread article {border:0 !important; background:transparent !important; padding:1rem 0;}
+html:has(.editorial-synthesis) .quickread h2 {font-size:1.5rem;}
+html:has(.editorial-synthesis) .section-head {border:0 !important; gap:3rem;}
+html:has(.editorial-synthesis) .section-head .lede {font:400 1.12rem/1.7 var(--specter-serif);}
+html:has(.editorial-synthesis) .figure {border:0 !important; background:transparent !important; box-shadow:none !important; padding:1rem 0 !important;}
+html:has(.editorial-synthesis) .figure svg {border:0 !important; box-shadow:none !important;}
+html:has(.editorial-synthesis) .metric-card {border:0 !important; padding:1.25rem;}
+html:has(.editorial-synthesis) .callout {border:0; font:400 1.1rem/1.65 var(--specter-serif);}
+html:has(.editorial-synthesis) .explore-card {border:0 !important; border-bottom:1px solid var(--specter-line) !important; background:transparent !important;}
+html:has(.editorial-synthesis) .explore-card h3 {font-size:1.45rem;}
+html:has(.editorial-synthesis) .explore-card p {font:400 1rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .reading-route {display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin-top:1.5rem; font:700 .8rem/1.5 var(--specter-mono);}
+@media (max-width:800px) {html:has(.editorial-synthesis) .hero-grid {grid-template-columns:1fr;}
+html:has(.editorial-synthesis) .hero-answer {transform:none;}
+html:has(.editorial-synthesis) .section-head {gap:1.3rem;}}
+html:has(.editorial-synthesis) .ink {border-block:0;}
+html:has(.editorial-synthesis) .ink .figure {background:var(--specter-sheet) !important; padding:1rem !important;}
+html:has(.editorial-synthesis) .passage-note {max-width:75ch; margin:0 0 2rem; color:var(--specter-muted); font:400 .95rem/1.6 var(--specter-serif);}
+html:has(.editorial-synthesis) .section-no {border:0;}
+@media (max-width:700px) {html:has(.editorial-synthesis) .figure:has(svg.chart) {overflow-x:auto; max-width:100%;}
+html:has(.editorial-synthesis) .figure svg.chart {min-width:720px;}
+html:has(.editorial-synthesis) .figure:has(svg.chart)::after {content:"Scroll sideways to explore the figure →"; display:block; margin-top:.7rem; font:400 .72rem/1.4 ui-monospace,monospace; color:var(--specter-muted,#62645f);}
+html:has(.editorial-synthesis) .figure figcaption {grid-template-columns:1fr;}}
+html:has(.editorial-synthesis) .passport-layout > * {min-width:0;}
+.measurement-heading,.measurement-row {display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; align-items: center; padding: 16px 0;}
+.measurement-heading {font: 12px/1.5 monospace;}
+.measurement-row > span:last-child {text-align: right; font: 14px/1.5 monospace;}
+.measurement-track {position: relative; height: 18px; background: #fff8;}
+.measurement-track i {display: block; height: 100%; background: #18796f;}
+.measurement-track b {position: absolute; left: 80%; top: -7px; height: 32px; border-left: 2px solid #10232d;}
+.measurement-comparison figcaption {margin-top: 24px; max-width: 70ch;}
+.experiment-method summary {cursor: pointer; font-weight: 700;}
+.orbium-controls {display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 24px 0;}
+.orbium-controls select {font: inherit; color: #13262c; background: #fffcf3; padding: 10px; max-width: 100%; border: 1px solid #13262c60;}
+.orbium-frames {display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
+.orbium-frames figure {margin: 0;}
+.orbium-frames img {display: block; width: 100%;}
+.orbium-frames figcaption {padding-block: 10px; font-weight: 700;}
+#orbium-time-note {margin-top: 16px;}
+.comparison-story {background: #e0eeea; color: #14252c; padding: clamp(22px, 4vw, 44px); margin: 30px 0;}
+.comparison-story h3 {font: 750 clamp(25px, 3vw, 38px)/1.12 var(--specter-display-font, sans-serif); max-width: 26ch; margin: 12px 0 20px;}
+.comparison-story p {max-width: 72ch; line-height: 1.65;}
+.comparison-story h4 {font: 700 21px/1.25 sans-serif; margin: 12px 0;}
+.comparison-story figcaption {border-top: 1px solid #14252c30; padding-top: 20px; font-size: 15px; line-height: 1.6;}
+@media (max-width: 650px) {.measurement-heading {display: none;}
+.measurement-row {grid-template-columns: 1fr 1fr; gap: 12px;}
+.measurement-track {grid-column: 1 / -1; grid-row: 2;}
+.measurement-row > span:last-child {grid-column: 2; grid-row: 1; font-size: 12px;}
+.orbium-frames {gap: 10px;}}
+#measurement-comparison,.orbium-reader {scroll-margin-top: 90px;}
+html:has(.editorial-synthesis) .evidence {display: inline; padding: 0; border: 0; background: none; box-shadow: none;
+  font: italic 13px/1.5 Georgia, serif; color: #59615a; text-transform: none; letter-spacing: 0;}
+html:has(.editorial-synthesis) .evidence::before {content: none;}
+html:has(.editorial-synthesis) .ink .evidence {color: #cbd0c8;}
+html:has(.editorial-synthesis) .research-detail {margin: 26px 0; padding: 18px 0; border-block: 1px solid #79817555;}
+html:has(.editorial-synthesis) .research-detail summary {cursor: pointer; font: 600 16px/1.5 var(--specter-display-font, sans-serif);}
+html:has(.editorial-synthesis) .research-detail .section-head {margin-top: 32px;}
+.response-explorer,.transplant-comparison {margin: 44px 0; color: #17282d;}
+.figure-introduction {max-width: 760px; margin-bottom: 30px;}
+.figure-introduction h3 {font: 750 clamp(28px, 3.4vw, 43px)/1.1 var(--specter-display-font, sans-serif); letter-spacing: -.035em; margin: 0 0 20px;}
+.figure-introduction p,.experiment-reading {font: 19px/1.65 Georgia, serif;}
+.response-controls {display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin-bottom: 28px;}
+.response-controls label {font: 15px/1.6 var(--specter-display-font, sans-serif);}
+.response-controls select {padding: 8px; font: inherit; background: #e2ece3; color: #15282b; border: 0; border-bottom: 1px solid #187a6b;}
+.response-plots,.transplant-panels {display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
+.response-plots > div,.transplant-panels > div {min-width: 0;}
+.response-plots h4,.transplant-panels h4 {font: 700 21px/1.3 var(--specter-display-font, sans-serif); margin: 0 0 20px;}
+.response-plots svg,.transplant-panels svg {display: block; width: 100%; height: auto; overflow: visible;}
+.response-plots svg text,.transplant-panels svg text {font: 16px var(--specter-display-font, sans-serif); fill: #17282d;}
+.response-plots svg text[fill="#8561b0"] {fill: #8561b0;}
+.response-plots svg text[fill="#187a6b"] {fill: #187a6b;}
+.response-explorer > figcaption,.transplant-comparison > figcaption {font: 16px/1.65 Georgia, serif; max-width: 80ch; margin-top: 20px;}
+#response-reading {font-size: 19px;}
+html:has(.editorial-synthesis) .passport-layout {grid-template-columns: 1fr;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px;}
+html:has(.editorial-synthesis) .patch-card {border: 0; padding: 0; background: none; box-shadow: none;}
+html:has(.editorial-synthesis) .patch-card figcaption {color: #17282d; padding: 12px 0;}
+html:has(.editorial-synthesis) .patch-card figcaption span,html:has(.editorial-synthesis) .native-strip figcaption span {display: none;}
+html:has(.editorial-synthesis) .patch-canvases {position: relative; padding-top: 28px;}
+html:has(.editorial-synthesis) .patch-canvases::before,html:has(.editorial-synthesis) .patch-canvases::after {position: absolute; top: 0; font: 13px/1.5 var(--specter-display-font, sans-serif); color: #e9e7df;}
+html:has(.editorial-synthesis) .patch-canvases::before {content: "Visible matter"; left: 0;}
+html:has(.editorial-synthesis) .patch-canvases::after {content: "Hidden composition"; left: 51%;}
+html:has(.editorial-synthesis) .patch-canvases canvas {width: 100%; height: auto;}
+html:has(.editorial-synthesis) .comparison-story {background: none; padding: 0; margin-top: 40px;}
+@media (max-width: 700px) {.response-plots,.transplant-panels {grid-template-columns: 1fr; gap: 35px;}
+.response-controls {gap: 14px;}
+.response-plots svg text,.transplant-panels svg text {font-size: 18px;}
+html:has(.editorial-synthesis) .patch-grid {grid-template-columns: 1fr;}}
+#response-explorer,.transplant-comparison {scroll-margin-top: 80px;}
 /* These explicit light fills label dark inset panels inside otherwise light charts. */
-html.specter-report svg.chart text[fill="#d8ff2f"] { fill: #d8ff2f !important; }
-html.specter-report svg.chart text[fill="#f7f4ec"] { fill: #f7f4ec !important; }
-
-html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {
-  fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;
-}
-html.specter-report body > nav.publication-navigation { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif; }
-html.specter-report body > nav.publication-navigation a { color: #14252c !important; text-decoration: underline; }
-html.specter-report body > nav.publication-navigation span { color: #59615a !important; }
-
+html.specter-report svg.chart text[fill="#d8ff2f"] {fill: #d8ff2f !important;}
+html.specter-report svg.chart text[fill="#f7f4ec"] {fill: #f7f4ec !important;}
+html.specter-report svg[aria-label="Same-action gate effects across eight morphology targets"] .bar-value {fill: #131821; stroke: #f7f4ec; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round;}
+html.specter-report body > nav.publication-navigation {display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 18px clamp(20px, 5vw, 70px); background: #f5f1e7 !important; color: #14252c !important; border-bottom: 1px solid #14252c30; font: 14px/1.5 sans-serif;}
+html.specter-report body > nav.publication-navigation a {color: #14252c !important; text-decoration: underline;}
+html.specter-report body > nav.publication-navigation span {color: #59615a !important;}
 /* Native specimen panels retain their black image field. Their labels must
  * remain legible after the surrounding report adopts paper-colored tokens. */
-html.specter-report .specimen > figcaption {
-  color: #d3d5d7 !important;
-  background: #050608;
-}
-html.specter-report .specimen > figcaption :is(b, strong, span) {
-  color: inherit !important;
-}
-
+html.specter-report .specimen > figcaption {color: #d3d5d7 !important;
+  background: #050608;}
+html.specter-report .specimen > figcaption :is(b, strong, span) {color: inherit !important;}
 /* Keep imported data labels readable on a phone instead of shrinking an
  * entire desktop plot into a few hundred pixels. Captions still wrap. */
-@media (max-width: 700px) {
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {
-    max-width: 100%;
+@media (max-width: 700px) {html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg) {max-width: 100%;
     min-width: 0;
     overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-  html.specter-report div.chart > svg { min-width: 760px; }
-  html.specter-report div.card.chart > svg { min-width: 940px; }
-  html.specter-report .trajectory-wrap > svg { min-width: 1120px; }
-  html.specter-report .chart-grid .figure > svg.chart { min-width: 640px; }
-  html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
+    overscroll-behavior-inline: contain;}
+html.specter-report div.chart > svg {min-width: 760px;}
+html.specter-report div.card.chart > svg {min-width: 940px;}
+html.specter-report .trajectory-wrap > svg {min-width: 1120px;}
+html.specter-report .chart-grid .figure > svg.chart {min-width: 640px;}
+html.specter-report :is(div.chart, .trajectory-wrap, .chart-grid .figure):has(> svg)::after {content: "Scroll sideways to explore the figure →";
     display: block;
     margin-top: .7rem;
     font: 400 .75rem/1.5 var(--specter-mono);
-    color: var(--specter-muted);
-  }
-}
-
-@media (max-width: 700px) {
-  html.anatomical-editorial .figure:has(> svg) { max-width: 100%; overflow-x: auto; }
-  html.anatomical-editorial .figure > svg { min-width: 640px; }
-  html.anatomical-editorial .figure:has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
-    display: block;
-    margin-top: .7rem;
-    font: 400 .75rem/1.5 ui-monospace, monospace;
-  }
-  html.anatomical-editorial .figure:not(.light)::after { color: #c8cbd3; }
-}
-
+    color: var(--specter-muted);}}
 /* A source report's compact local navigation must not hide the injected
  * site navigation or the links back to its dossier and report library. */
-html.specter-report :is(.publication-header, .publication-navigation) a {
-  display: inline-flex !important;
-}
-
+html.specter-report :is(.publication-header, .publication-navigation) a {display: inline-flex !important;}
 /* The commitment report deliberately keeps dark data panels. */
-html.specter-report:has(#steerability) .chart-grid .figure svg text {
-  fill: #e9e7df !important;
-}
+html.specter-report:has(#steerability) .chart-grid .figure svg text {fill: #e9e7df !important;}
 </style><style data-public-projection="mobile-wrap">code,figcaption,.hash,.receipt{overflow-wrap:anywhere!important;word-break:break-word!important}@media(max-width:420px){.mechanism{grid-template-columns:minmax(0,1fr)!important;min-width:0!important}.mechanism>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:0!important}.outcome-matrix,.mapping{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important}.outcome-matrix th,.outcome-matrix td{padding-inline:.15rem!important;font-size:clamp(.55rem,2.5vw,.75rem)!important}.mapping th,.mapping td{overflow-wrap:anywhere!important;word-break:break-word!important}.status-bar{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:wrap!important}.status-bar>*{min-width:0!important;flex:1 1 5rem!important}.stat-grid{grid-template-columns:1fr!important}.zero-box{width:100%!important;max-width:100%!important;min-width:0!important}}</style><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"><link rel="canonical" href="https://specterlab.org/dossiers/lenia-swarm/causal-emergence/reports/developmental-causal-plasticity-window/"></head>
 <body><header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <nav class="publication-navigation" aria-label="Research publication"><a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a><a href="/dossiers/lenia-swarm/causal-emergence/library/">Report library</a><a href="about.html">About this report</a><span>Supporting experimental record</span></nav><header class="topbar"><span>Flow Lenia · causal plasticity · 24 Aug 2026</span><nav><a href="#experiment">Experiment</a><a href="#result">Result</a><a href="#meaning">Interpretation</a><a href="#next">Next</a></nav></header>
 <main>
-<section class="hero"><div class="hero-copy"><span class="pill">Major discovery · organism-relative intervention</span><p class="eyebrow">Before the organism / swing 01</p><h1>Influence over Body Shape Falls After an Early Plateau</h1><p class="dek">A single founder choice still sends Flow Lenia organisms down different morphological futures <b>before and at</b> their own structural information turn. Two passages later, that leverage falls by <b>12.3%</b>.</p><p class="muted">The information event is not a needle-shaped maximum. It is the closing edge of a broader causal-plasticity window.</p></div><aside class="verdict"><span class="micro">What we found</span><strong>A commitment boundary.</strong><p>Morphological responsiveness stays high through the structural turn, then drops. Founder-composition responsiveness does not.</p><div style="margin-top:24px;border-top:1px solid #4c5056;padding-top:18px"><span class="micro" style="color:#e8c14a">15 / 19 organisms agree</span></div></aside></section>
+<section class="hero"><div class="hero-copy"><span class="pill">Major discovery · organism-relative intervention</span><h1>Influence over Body Shape Falls After an Early Plateau</h1><p class="dek">A single founder choice still sends Flow Lenia organisms down different morphological futures <b>before and at</b> their own structural information turn. Two passages later, that leverage falls by <b>12.3%</b>.</p><p class="muted">The information event is not a needle-shaped maximum. It is the closing edge of a broader causal-plasticity window.</p></div><aside class="verdict"><strong>A commitment boundary.</strong><p>Morphological responsiveness stays high through the structural turn, then drops. Founder-composition responsiveness does not.</p><div style="margin-top:24px;border-top:1px solid #4c5056;padding-top:18px"></div></aside></section>
 
 <section><div class="numbers"><article><strong>1,824</strong><span>fresh fixed-founder futures</span></article><article><strong>19</strong><span>organic Flow Lenia systems</span></article><article><strong>12.3%</strong><span>less morphological fanout two passages after the turn</span></article><article><strong>15/19</strong><span>organisms show peak &gt; after</span></article></div></section>
 
-<section id="experiment"><div class="section-head"><span class="section-no">01 / Intervention</span><div><h2>Same action. Three organism-relative moments.</h2><p class="muted">Each organism supplied its own structural information peak from untouched prefix data. At three fixed moments we forced exactly one founder identity, then released the system into matched stochastic futures.</p></div></div><div class="experiment"><article class="phase"><span class="number">−2</span><h3>Before</h3><p>Two passages before the organism’s own structural turn.</p></article><span class="arrow">→</span><article class="phase peak"><span class="number">0</span><h3>At the turn</h3><p>The prefix-only local peak in estimator validity, MIP partition change, and effective-rank change.</p></article><span class="arrow">→</span><article class="phase after"><span class="number">+2</span><h3>After</h3><p>Two passages after the same turn. Everything else remains matched.</p></article></div><div class="callout"><strong>The causal question:</strong> how far apart do the four founder choices push the later organism, under the same future background?</div></section>
+<section id="experiment"><div class="section-head"><div><h2>Applying the same action at three organism-relative times</h2><p class="muted">Each organism supplied its own structural information peak from untouched prefix data. At three fixed moments we forced exactly one founder identity, then released the system into matched stochastic futures.</p></div></div><div class="experiment"><article class="phase"><span class="number">−2</span><h3>Before</h3><p>Two passages before the organism’s own structural turn.</p></article><span class="arrow">→</span><article class="phase peak"><span class="number">0</span><h3>At the turn</h3><p>The prefix-only local peak in estimator validity, MIP partition change, and effective-rank change.</p></article><span class="arrow">→</span><article class="phase after"><span class="number">+2</span><h3>After</h3><p>Two passages after the same turn. Everything else remains matched.</p></article></div><div class="callout"><strong>The causal question:</strong> how far apart do the four founder choices push the later organism, under the same future background?</div></section>
 
-<section id="result"><div class="section-head"><span class="section-no">02 / Result</span><div><h2>Not a spike. A plateau, then a drop.</h2><p class="muted">The symmetric “peak beats both neighbors” test did not clear its interval. Looking at the fixed timings separately reveals why: before and peak are nearly identical, while after is distinctly lower.</p></div></div><div class="chart-wrap">
-    <svg class="chart" viewBox="0 0 940 360" role="img" aria-label="Five family-bootstrap contrasts with 95 percent intervals">
+<section id="result"><div class="section-head"><div><h2>The response plateaus before dropping</h2><p class="muted">The symmetric “peak beats both neighbors” test did not clear its interval. Looking at the fixed timings separately reveals why: before and peak are nearly identical, while after is distinctly lower.</p></div></div><div class="chart-wrap">
+    <svg class="chart" viewBox="-65 0 1030 375" role="img" aria-label="Five family-bootstrap contrasts with 95 percent intervals">
       <style>.rowlabel{font:700 14px ui-sans-serif,-apple-system,sans-serif;fill:#111} .value{font:700 13px ui-monospace,SFMono-Regular,monospace;fill:#111} .tick{font:12px ui-monospace,SFMono-Regular,monospace;fill:#666}</style>
       <line x1="488.6" y1="18" x2="488.6" y2="324" stroke="#111" stroke-width="2"/><text x="312" y="43" text-anchor="end" class="rowlabel">Peak vs. average neighbors · morphology</text><line x1="456.0" y1="38" x2="685.6" y2="38" stroke="#64676c" stroke-width="8" stroke-linecap="round"/><circle cx="571.4" cy="38" r="8" fill="#64676c" stroke="#fffdf7" stroke-width="3"/><text x="895" y="43" class="value">+0.0021</text><text x="312" y="101" text-anchor="end" class="rowlabel">Peak vs. two passages after · morphology</text><line x1="508.1" y1="96" x2="834.0" y2="96" stroke="#ff5b22" stroke-width="8" stroke-linecap="round"/><circle cx="666.1" cy="96" r="8" fill="#ff5b22" stroke="#fffdf7" stroke-width="3"/><text x="895" y="101" class="value">+0.0045</text><text x="312" y="159" text-anchor="end" class="rowlabel">Two passages before vs. after · morphology</text><line x1="513.3" y1="154" x2="836.1" y2="154" stroke="#ff5b22" stroke-width="8" stroke-linecap="round"/><circle cx="678.1" cy="154" r="8" fill="#ff5b22" stroke="#fffdf7" stroke-width="3"/><text x="895" y="159" class="value">+0.0048</text><text x="312" y="217" text-anchor="end" class="rowlabel">Peak vs. before · morphology</text><line x1="362.4" y1="212" x2="593.3" y2="212" stroke="#526dcc" stroke-width="8" stroke-linecap="round"/><circle cx="476.6" cy="212" r="8" fill="#526dcc" stroke="#fffdf7" stroke-width="3"/><text x="895" y="217" class="value">-0.0003</text><text x="312" y="275" text-anchor="end" class="rowlabel">Peak vs. after · founder composition</text><line x1="395.3" y1="270" x2="569.5" y2="270" stroke="#347452" stroke-width="8" stroke-linecap="round"/><circle cx="480.3" cy="270" r="8" fill="#347452" stroke="#fffdf7" stroke-width="3"/><text x="895" y="275" class="value">-0.0002</text><text x="330.0" y="350" text-anchor="middle" class="tick">-0.004</text><text x="488.6" y="350" text-anchor="middle" class="tick">+0.000</text><text x="647.1" y="350" text-anchor="middle" class="tick">+0.004</text><text x="805.7" y="350" text-anchor="middle" class="tick">+0.008</text>
     </svg>
     </div><div class="split" style="margin-top:22px"><article class="card orange"><h3>Peak → after</h3><p><b>+0.0045</b> more morphological fanout at the turn. Family bootstrap 95% interval <b>[+0.0005, +0.0087]</b>. Positive in 15/19 organisms.</p></article><article class="card"><h3>Before → peak</h3><p>Essentially flat: <b>-0.0003</b>, interval <b>[-0.0032, +0.0026]</b>. The system is already plastic before the information turn.</p></article></div></section>
 
-<section><div class="section-head"><span class="section-no">03 / Dynamics</span><div><h2>The action difference grows into different forms.</h2><p class="muted">Field fanout is the average pairwise distance among the four founder-action futures. The three curves start together; the after-turn futures progressively separate less.</p></div></div><div class="chart-wrap">
+<section><div class="section-head"><div><h2>The action difference grows into different forms.</h2><p class="muted">Field fanout is the average pairwise distance among the four founder-action futures. The three curves start together; the after-turn futures progressively separate less.</p></div></div><div class="chart-wrap">
     <svg class="chart" viewBox="0 0 940 410" role="img" aria-label="Morphological fanout rises over twelve passages and is lower after the structural turn">
       <style>.grid{stroke:#d7d6d0;stroke-width:1} .tick{font:12px ui-monospace,SFMono-Regular,monospace;fill:#666} .legend{font:700 13px ui-sans-serif,-apple-system,sans-serif;fill:#111;text-transform:uppercase}</style>
       <g transform="translate(74,6)"><line x1="0" y1="8" x2="28" y2="8" stroke="#526dcc" stroke-width="5"/><text x="38" y="13" class="legend">before</text></g><g transform="translate(219,6)"><line x1="0" y1="8" x2="28" y2="8" stroke="#ff5b22" stroke-width="5"/><text x="38" y="13" class="legend">peak</text></g><g transform="translate(364,6)"><line x1="0" y1="8" x2="28" y2="8" stroke="#347452" stroke-width="5"/><text x="38" y="13" class="legend">after</text></g><line x1="74" y1="352.0" x2="910" y2="352.0" class="grid"/><text x="62" y="356.0" text-anchor="end" class="tick">0.000</text><line x1="74" y1="287.2" x2="910" y2="287.2" class="grid"/><text x="62" y="291.2" text-anchor="end" class="tick">0.013</text><line x1="74" y1="222.4" x2="910" y2="222.4" class="grid"/><text x="62" y="226.4" text-anchor="end" class="tick">0.026</text><line x1="74" y1="157.6" x2="910" y2="157.6" class="grid"/><text x="62" y="161.6" text-anchor="end" class="tick">0.039</text><line x1="74" y1="92.8" x2="910" y2="92.8" class="grid"/><text x="62" y="96.8" text-anchor="end" class="tick">0.052</text><line x1="74" y1="28.0" x2="910" y2="28.0" class="grid"/><text x="62" y="32.0" text-anchor="end" class="tick">0.065</text><text x="74.0" y="385" text-anchor="middle" class="tick">1</text><text x="150.0" y="385" text-anchor="middle" class="tick">2</text><text x="226.0" y="385" text-anchor="middle" class="tick">3</text><text x="302.0" y="385" text-anchor="middle" class="tick">4</text><text x="378.0" y="385" text-anchor="middle" class="tick">5</text><text x="454.0" y="385" text-anchor="middle" class="tick">6</text><text x="530.0" y="385" text-anchor="middle" class="tick">7</text><text x="606.0" y="385" text-anchor="middle" class="tick">8</text><text x="682.0" y="385" text-anchor="middle" class="tick">9</text><text x="758.0" y="385" text-anchor="middle" class="tick">10</text><text x="834.0" y="385" text-anchor="middle" class="tick">11</text><text x="910.0" y="385" text-anchor="middle" class="tick">12</text><polyline points="74.0,350.8 150.0,323.2 226.0,296.6 302.0,266.6 378.0,239.5 454.0,209.0 530.0,184.9 606.0,151.8 682.0,123.6 758.0,96.0 834.0,70.3 910.0,45.2" fill="none" stroke="#526dcc" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="350.8" r="3.6" fill="#526dcc"/><circle cx="150.0" cy="323.2" r="3.6" fill="#526dcc"/><circle cx="226.0" cy="296.6" r="3.6" fill="#526dcc"/><circle cx="302.0" cy="266.6" r="3.6" fill="#526dcc"/><circle cx="378.0" cy="239.5" r="3.6" fill="#526dcc"/><circle cx="454.0" cy="209.0" r="3.6" fill="#526dcc"/><circle cx="530.0" cy="184.9" r="3.6" fill="#526dcc"/><circle cx="606.0" cy="151.8" r="3.6" fill="#526dcc"/><circle cx="682.0" cy="123.6" r="3.6" fill="#526dcc"/><circle cx="758.0" cy="96.0" r="3.6" fill="#526dcc"/><circle cx="834.0" cy="70.3" r="3.6" fill="#526dcc"/><circle cx="910.0" cy="45.2" r="3.6" fill="#526dcc"/><polyline points="74.0,350.6 150.0,323.8 226.0,294.1 302.0,262.6 378.0,236.6 454.0,206.5 530.0,184.0 606.0,156.7 682.0,130.8 758.0,103.1 834.0,73.9 910.0,50.3" fill="none" stroke="#ff5b22" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="350.6" r="3.6" fill="#ff5b22"/><circle cx="150.0" cy="323.8" r="3.6" fill="#ff5b22"/><circle cx="226.0" cy="294.1" r="3.6" fill="#ff5b22"/><circle cx="302.0" cy="262.6" r="3.6" fill="#ff5b22"/><circle cx="378.0" cy="236.6" r="3.6" fill="#ff5b22"/><circle cx="454.0" cy="206.5" r="3.6" fill="#ff5b22"/><circle cx="530.0" cy="184.0" r="3.6" fill="#ff5b22"/><circle cx="606.0" cy="156.7" r="3.6" fill="#ff5b22"/><circle cx="682.0" cy="130.8" r="3.6" fill="#ff5b22"/><circle cx="758.0" cy="103.1" r="3.6" fill="#ff5b22"/><circle cx="834.0" cy="73.9" r="3.6" fill="#ff5b22"/><circle cx="910.0" cy="50.3" r="3.6" fill="#ff5b22"/><polyline points="74.0,350.7 150.0,323.5 226.0,300.9 302.0,277.6 378.0,254.1 454.0,228.6 530.0,201.6 606.0,177.4 682.0,149.6 758.0,129.9 834.0,110.4 910.0,91.9" fill="none" stroke="#347452" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="350.7" r="3.6" fill="#347452"/><circle cx="150.0" cy="323.5" r="3.6" fill="#347452"/><circle cx="226.0" cy="300.9" r="3.6" fill="#347452"/><circle cx="302.0" cy="277.6" r="3.6" fill="#347452"/><circle cx="378.0" cy="254.1" r="3.6" fill="#347452"/><circle cx="454.0" cy="228.6" r="3.6" fill="#347452"/><circle cx="530.0" cy="201.6" r="3.6" fill="#347452"/><circle cx="606.0" cy="177.4" r="3.6" fill="#347452"/><circle cx="682.0" cy="149.6" r="3.6" fill="#347452"/><circle cx="758.0" cy="129.9" r="3.6" fill="#347452"/><circle cx="834.0" cy="110.4" r="3.6" fill="#347452"/><circle cx="910.0" cy="91.9" r="3.6" fill="#347452"/>
@@ -1064,7 +901,7 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     </svg>
     </div><div class="callout">By passages 3–12, mean field fanout is <strong>0.03684 before</strong>, <strong>0.03654 at the turn</strong>, and <strong>0.03206 after</strong>.</div></section>
 
-<section><div class="section-head"><span class="section-no">04 / Specificity</span><div><h2>The identities remain steerable. The form becomes rigid.</h2><p class="muted">If the action simply stopped affecting founder composition, the morphological drop would be trivial. It did not: composition fanout remains similar—and if anything trends slightly upward after the turn.</p></div></div><div class="chart-wrap">
+<section><div class="section-head"><div><h2>Identity remains steerable as form becomes resistant to change</h2><p class="muted">If the action simply stopped affecting founder composition, the morphological drop would be trivial. It did not: composition fanout remains similar—and if anything trends slightly upward after the turn.</p></div></div><div class="chart-wrap">
     <svg class="chart" viewBox="0 0 940 410" role="img" aria-label="Founder-composition fanout remains similar before, at, and after the structural turn">
       <style>.grid{stroke:#d7d6d0;stroke-width:1} .tick{font:12px ui-monospace,SFMono-Regular,monospace;fill:#666} .legend{font:700 13px ui-sans-serif,-apple-system,sans-serif;fill:#111;text-transform:uppercase}</style>
       <g transform="translate(74,6)"><line x1="0" y1="8" x2="28" y2="8" stroke="#526dcc" stroke-width="5"/><text x="38" y="13" class="legend">before</text></g><g transform="translate(219,6)"><line x1="0" y1="8" x2="28" y2="8" stroke="#ff5b22" stroke-width="5"/><text x="38" y="13" class="legend">peak</text></g><g transform="translate(364,6)"><line x1="0" y1="8" x2="28" y2="8" stroke="#347452" stroke-width="5"/><text x="38" y="13" class="legend">after</text></g><line x1="74" y1="352.0" x2="910" y2="352.0" class="grid"/><text x="62" y="356.0" text-anchor="end" class="tick">0.000</text><line x1="74" y1="287.2" x2="910" y2="287.2" class="grid"/><text x="62" y="291.2" text-anchor="end" class="tick">0.003</text><line x1="74" y1="222.4" x2="910" y2="222.4" class="grid"/><text x="62" y="226.4" text-anchor="end" class="tick">0.007</text><line x1="74" y1="157.6" x2="910" y2="157.6" class="grid"/><text x="62" y="161.6" text-anchor="end" class="tick">0.010</text><line x1="74" y1="92.8" x2="910" y2="92.8" class="grid"/><text x="62" y="96.8" text-anchor="end" class="tick">0.014</text><line x1="74" y1="28.0" x2="910" y2="28.0" class="grid"/><text x="62" y="32.0" text-anchor="end" class="tick">0.017</text><text x="74.0" y="385" text-anchor="middle" class="tick">1</text><text x="150.0" y="385" text-anchor="middle" class="tick">2</text><text x="226.0" y="385" text-anchor="middle" class="tick">3</text><text x="302.0" y="385" text-anchor="middle" class="tick">4</text><text x="378.0" y="385" text-anchor="middle" class="tick">5</text><text x="454.0" y="385" text-anchor="middle" class="tick">6</text><text x="530.0" y="385" text-anchor="middle" class="tick">7</text><text x="606.0" y="385" text-anchor="middle" class="tick">8</text><text x="682.0" y="385" text-anchor="middle" class="tick">9</text><text x="758.0" y="385" text-anchor="middle" class="tick">10</text><text x="834.0" y="385" text-anchor="middle" class="tick">11</text><text x="910.0" y="385" text-anchor="middle" class="tick">12</text><polyline points="74.0,165.9 150.0,194.2 226.0,207.5 302.0,215.3 378.0,235.1 454.0,202.3 530.0,192.4 606.0,162.0 682.0,136.6 758.0,118.1 834.0,130.3 910.0,92.4" fill="none" stroke="#526dcc" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="165.9" r="3.6" fill="#526dcc"/><circle cx="150.0" cy="194.2" r="3.6" fill="#526dcc"/><circle cx="226.0" cy="207.5" r="3.6" fill="#526dcc"/><circle cx="302.0" cy="215.3" r="3.6" fill="#526dcc"/><circle cx="378.0" cy="235.1" r="3.6" fill="#526dcc"/><circle cx="454.0" cy="202.3" r="3.6" fill="#526dcc"/><circle cx="530.0" cy="192.4" r="3.6" fill="#526dcc"/><circle cx="606.0" cy="162.0" r="3.6" fill="#526dcc"/><circle cx="682.0" cy="136.6" r="3.6" fill="#526dcc"/><circle cx="758.0" cy="118.1" r="3.6" fill="#526dcc"/><circle cx="834.0" cy="130.3" r="3.6" fill="#526dcc"/><circle cx="910.0" cy="92.4" r="3.6" fill="#526dcc"/><polyline points="74.0,162.7 150.0,183.8 226.0,207.9 302.0,202.5 378.0,204.3 454.0,193.5 530.0,171.0 606.0,144.3 682.0,142.2 758.0,115.4 834.0,108.5 910.0,59.1" fill="none" stroke="#ff5b22" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="162.7" r="3.6" fill="#ff5b22"/><circle cx="150.0" cy="183.8" r="3.6" fill="#ff5b22"/><circle cx="226.0" cy="207.9" r="3.6" fill="#ff5b22"/><circle cx="302.0" cy="202.5" r="3.6" fill="#ff5b22"/><circle cx="378.0" cy="204.3" r="3.6" fill="#ff5b22"/><circle cx="454.0" cy="193.5" r="3.6" fill="#ff5b22"/><circle cx="530.0" cy="171.0" r="3.6" fill="#ff5b22"/><circle cx="606.0" cy="144.3" r="3.6" fill="#ff5b22"/><circle cx="682.0" cy="142.2" r="3.6" fill="#ff5b22"/><circle cx="758.0" cy="115.4" r="3.6" fill="#ff5b22"/><circle cx="834.0" cy="108.5" r="3.6" fill="#ff5b22"/><circle cx="910.0" cy="59.1" r="3.6" fill="#ff5b22"/><polyline points="74.0,173.5 150.0,200.6 226.0,221.8 302.0,207.9 378.0,199.0 454.0,184.7 530.0,164.4 606.0,127.3 682.0,137.2 758.0,100.2 834.0,102.7 910.0,63.8" fill="none" stroke="#347452" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="74.0" cy="173.5" r="3.6" fill="#347452"/><circle cx="150.0" cy="200.6" r="3.6" fill="#347452"/><circle cx="226.0" cy="221.8" r="3.6" fill="#347452"/><circle cx="302.0" cy="207.9" r="3.6" fill="#347452"/><circle cx="378.0" cy="199.0" r="3.6" fill="#347452"/><circle cx="454.0" cy="184.7" r="3.6" fill="#347452"/><circle cx="530.0" cy="164.4" r="3.6" fill="#347452"/><circle cx="606.0" cy="127.3" r="3.6" fill="#347452"/><circle cx="682.0" cy="137.2" r="3.6" fill="#347452"/><circle cx="758.0" cy="100.2" r="3.6" fill="#347452"/><circle cx="834.0" cy="102.7" r="3.6" fill="#347452"/><circle cx="910.0" cy="63.8" r="3.6" fill="#347452"/>
@@ -1072,18 +909,18 @@ html.specter-report:has(#steerability) .chart-grid .figure svg text {
     </svg>
     </div><div class="split" style="margin-top:22px"><article class="card green"><h3>Composition stays open</h3><p>Peak minus after composition fanout: <b>-0.0002</b>, interval <b>[-0.0024, +0.0020]</b>.</p></article><article class="card orange"><h3>Morphology closes</h3><p>The same founder identities still differ compositionally, but those differences have less leverage over the organism’s later spatial form.</p></article></div></section>
 
-<section><div class="section-head"><span class="section-no">05 / Population</span><div><h2>This is not one photogenic creature.</h2><p class="muted">Peak-minus-after morphological fanout for every organism. Orange points favor the commitment-boundary pattern; blue points run against it.</p></div></div><div class="chart-wrap">
+<section><div class="section-head"><div><h2>This is not one photogenic creature.</h2><p class="muted">Peak-minus-after morphological fanout for every organism. Orange points favor the commitment-boundary pattern; blue points run against it.</p></div></div><div class="chart-wrap">
     <svg class="chart" viewBox="0 0 940 610" role="img" aria-label="Peak minus after morphological fanout for all nineteen organisms">
       <style>.family{font:700 13px ui-monospace,SFMono-Regular,monospace;fill:#111} .value{font:700 12px ui-monospace,SFMono-Regular,monospace;fill:#555}</style>
       <line x1="328.4" y1="12" x2="328.4" y2="574" stroke="#111" stroke-width="2"/><text x="72" y="35" text-anchor="end" class="family">f30</text><line x1="328.4" y1="30" x2="199.4" y2="30" stroke="#526dcc" stroke-width="4"/><circle cx="199.4" cy="30" r="6" fill="#526dcc"/><text x="855" y="35" class="value">-0.0065</text><text x="72" y="63" text-anchor="end" class="family">f31</text><line x1="328.4" y1="58" x2="328.6" y2="58" stroke="#ff5b22" stroke-width="4"/><circle cx="328.6" cy="58" r="6" fill="#ff5b22"/><text x="855" y="63" class="value">+0.0000</text><text x="72" y="91" text-anchor="end" class="family">f32</text><line x1="328.4" y1="86" x2="422.9" y2="86" stroke="#ff5b22" stroke-width="4"/><circle cx="422.9" cy="86" r="6" fill="#ff5b22"/><text x="855" y="91" class="value">+0.0048</text><text x="72" y="119" text-anchor="end" class="family">f33</text><line x1="328.4" y1="114" x2="122.0" y2="114" stroke="#526dcc" stroke-width="4"/><circle cx="122.0" cy="114" r="6" fill="#526dcc"/><text x="855" y="119" class="value">-0.0104</text><text x="72" y="147" text-anchor="end" class="family">f34</text><line x1="328.4" y1="142" x2="525.7" y2="142" stroke="#ff5b22" stroke-width="4"/><circle cx="525.7" cy="142" r="6" fill="#ff5b22"/><text x="855" y="147" class="value">+0.0099</text><text x="72" y="175" text-anchor="end" class="family">f35</text><line x1="328.4" y1="170" x2="347.0" y2="170" stroke="#ff5b22" stroke-width="4"/><circle cx="347.0" cy="170" r="6" fill="#ff5b22"/><text x="855" y="175" class="value">+0.0009</text><text x="72" y="203" text-anchor="end" class="family">f36</text><line x1="328.4" y1="198" x2="514.7" y2="198" stroke="#ff5b22" stroke-width="4"/><circle cx="514.7" cy="198" r="6" fill="#ff5b22"/><text x="855" y="203" class="value">+0.0094</text><text x="72" y="231" text-anchor="end" class="family">f37</text><line x1="328.4" y1="226" x2="197.0" y2="226" stroke="#526dcc" stroke-width="4"/><circle cx="197.0" cy="226" r="6" fill="#526dcc"/><text x="855" y="231" class="value">-0.0066</text><text x="72" y="259" text-anchor="end" class="family">f38</text><line x1="328.4" y1="254" x2="368.5" y2="254" stroke="#ff5b22" stroke-width="4"/><circle cx="368.5" cy="254" r="6" fill="#ff5b22"/><text x="855" y="259" class="value">+0.0020</text><text x="72" y="287" text-anchor="end" class="family">f39</text><line x1="328.4" y1="282" x2="398.0" y2="282" stroke="#ff5b22" stroke-width="4"/><circle cx="398.0" cy="282" r="6" fill="#ff5b22"/><text x="855" y="287" class="value">+0.0035</text><text x="72" y="315" text-anchor="end" class="family">f40</text><line x1="328.4" y1="310" x2="142.8" y2="310" stroke="#526dcc" stroke-width="4"/><circle cx="142.8" cy="310" r="6" fill="#526dcc"/><text x="855" y="315" class="value">-0.0093</text><text x="72" y="343" text-anchor="end" class="family">f41</text><line x1="328.4" y1="338" x2="532.6" y2="338" stroke="#ff5b22" stroke-width="4"/><circle cx="532.6" cy="338" r="6" fill="#ff5b22"/><text x="855" y="343" class="value">+0.0103</text><text x="72" y="371" text-anchor="end" class="family">f42</text><line x1="328.4" y1="366" x2="423.7" y2="366" stroke="#ff5b22" stroke-width="4"/><circle cx="423.7" cy="366" r="6" fill="#ff5b22"/><text x="855" y="371" class="value">+0.0048</text><text x="72" y="399" text-anchor="end" class="family">f43</text><line x1="328.4" y1="394" x2="491.9" y2="394" stroke="#ff5b22" stroke-width="4"/><circle cx="491.9" cy="394" r="6" fill="#ff5b22"/><text x="855" y="399" class="value">+0.0082</text><text x="72" y="427" text-anchor="end" class="family">f44</text><line x1="328.4" y1="422" x2="806.9" y2="422" stroke="#ff5b22" stroke-width="4"/><circle cx="806.9" cy="422" r="6" fill="#ff5b22"/><text x="855" y="427" class="value">+0.0241</text><text x="72" y="455" text-anchor="end" class="family">f45</text><line x1="328.4" y1="450" x2="789.9" y2="450" stroke="#ff5b22" stroke-width="4"/><circle cx="789.9" cy="450" r="6" fill="#ff5b22"/><text x="855" y="455" class="value">+0.0232</text><text x="72" y="483" text-anchor="end" class="family">f46</text><line x1="328.4" y1="478" x2="485.9" y2="478" stroke="#ff5b22" stroke-width="4"/><circle cx="485.9" cy="478" r="6" fill="#ff5b22"/><text x="855" y="483" class="value">+0.0079</text><text x="72" y="511" text-anchor="end" class="family">f47</text><line x1="328.4" y1="506" x2="339.6" y2="506" stroke="#ff5b22" stroke-width="4"/><circle cx="339.6" cy="506" r="6" fill="#ff5b22"/><text x="855" y="511" class="value">+0.0006</text><text x="72" y="539" text-anchor="end" class="family">f48</text><line x1="328.4" y1="534" x2="493.7" y2="534" stroke="#ff5b22" stroke-width="4"/><circle cx="493.7" cy="534" r="6" fill="#ff5b22"/><text x="855" y="539" class="value">+0.0083</text>
     </svg>
     </div></section>
 
-<section id="meaning"><div class="section-head"><span class="section-no">06 / Synthesis</span><div><h2>Prediction and intervention now point to the same developmental event.</h2></div></div><div class="chain"><article class="link"><span class="big">14/19</span><h3 style="margin-top:20px">The state forecasts a turn</h3><p>In the prior fresh prospective panel, the prefix-only structural peak predicted a local reorganization of the later future repertoire.</p></article><article class="link"><span class="big">−2, 0, +2</span><h3 style="margin-top:20px">We intervene around it</h3><p>The same founder action is applied before, at, and after each organism’s own peak, across matched futures.</p></article><article class="link"><span class="big">12.3%</span><h3 style="margin-top:20px">Causal leverage closes</h3><p>After the turn, founder choice still changes composition but produces less divergence in later morphology.</p></article></div><div class="callout"><strong>Our best current picture:</strong> the structural information turn is when a developing Flow Lenia ecology begins converting open causal possibilities into a more committed form.</div></section>
+<section id="meaning"><div class="section-head"><div><h2>Prediction and intervention now point to the same developmental event.</h2></div></div><div class="chain"><article class="link"><span class="big">14/19</span><h3 style="margin-top:20px">The state forecasts a turn</h3><p>In the prior fresh prospective panel, the prefix-only structural peak predicted a local reorganization of the later future repertoire.</p></article><article class="link"><span class="big">−2, 0, +2</span><h3 style="margin-top:20px">We intervene around it</h3><p>The same founder action is applied before, at, and after each organism’s own peak, across matched futures.</p></article><article class="link"><span class="big">12.3%</span><h3 style="margin-top:20px">Causal leverage closes</h3><p>After the turn, founder choice still changes composition but produces less divergence in later morphology.</p></article></div><div class="callout"><strong>Our best current picture:</strong> the structural information turn is when a developing Flow Lenia ecology begins converting open causal possibilities into a more committed form.</div></section>
 
-<section><div class="section-head"><span class="section-no">07 / Boundary</span><div><h2>What this earns us—and what remains open.</h2></div></div><div class="boundary"><article class="yes"><h3>What the result supports</h3><ul><li>An organism-relative information event marks the closing edge of morphological causal plasticity.</li><li>The effect is intervention-based, not merely predictive.</li><li>The closure is selective: morphology changes, founder-composition fanout does not.</li><li>The pattern appears across 15 of 19 fresh organic systems.</li></ul></article><article class="no"><h3>What we have not settled</h3><ul><li>The asymmetric contrast was discovered after the symmetric peak test; it needs a fresh direct replication.</li><li>Founder identity is only one causal direction. The boundary may be action-specific.</li><li>We do not yet know whether the transition is gradual, abrupt, reversible, or hysteretic.</li><li>This is developmental commitment in a Flow Lenia ecology—not yet causal emergence in the strongest whole-over-parts sense.</li></ul></article></div></section>
+<section><div class="section-head"><div><h2>What this earns us—and what remains open.</h2></div></div><div class="boundary"><article class="yes"><h3>What the result supports</h3><ul><li>An organism-relative information event marks the closing edge of morphological causal plasticity.</li><li>The effect is intervention-based, not merely predictive.</li><li>The closure is selective: morphology changes, founder-composition fanout does not.</li><li>The pattern appears across 15 of 19 fresh organic systems.</li></ul></article><article class="no"><h3>What we have not settled</h3><ul><li>The asymmetric contrast was discovered after the symmetric peak test; it needs a fresh direct replication.</li><li>Founder identity is only one causal direction. The boundary may be action-specific.</li><li>We do not yet know whether the transition is gradual, abrupt, reversible, or hysteretic.</li><li>This is developmental commitment in a Flow Lenia ecology—not yet causal emergence in the strongest whole-over-parts sense.</li></ul></article></div></section>
 
-<section id="next" class="next"><div class="next swing"><div><span class="section-no">08 / Next swing</span><h2>Map the causal susceptibility surface.</h2><p>Stop sampling only three moments. Sweep densely through organism-relative time and push in several genuinely different causal directions.</p></div><ol><li><b>Timing:</b> intervene from peak−6 through peak+8, not merely −2/0/+2.</li><li><b>Action bases:</b> founder identity, balanced spatial placement, and mass-routing perturbations.</li><li><b>Readout:</b> ask whether all action directions lose morphological leverage at one shared boundary.</li><li><b>Memory:</b> release, re-drive, and reverse the intervention to expose hysteresis or reopening.</li></ol></div></section>
+<section id="next" class="next"><div class="next swing"><div><h2>Map the causal susceptibility surface.</h2><p>Stop sampling only three moments. Sweep densely through organism-relative time and push in several genuinely different causal directions.</p></div><ol><li><b>Timing:</b> intervene from peak−6 through peak+8, not merely −2/0/+2.</li><li><b>Action bases:</b> founder identity, balanced spatial placement, and mass-routing perturbations.</li><li><b>Readout:</b> ask whether all action directions lose morphological leverage at one shared boundary.</li><li><b>Memory:</b> release, re-drive, and reverse the intervention to expose hysteresis or reopening.</li></ol></div></section>
 
-<section><div class="section-head"><span class="section-no">09 / Ledger</span><div><h2>Exactly what was measured.</h2><p class="muted">Nineteen fresh families × two schedules × three timings × four matched stochastic futures × four founder actions. One action at the first post-checkpoint reservoir event, then ordinary dynamics for twelve passages. Morphological fanout is the mean of six pairwise D4-anchored field distances, averaged over passages 3–12. Intervals resample the 19 organism families 20,000 times.</p></div></div><p class="ledger">closed result · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6<br>commitment exploration · 48cf44c315bb049289671df9c4587a2b3aa70f6971d9c59c793ddea418128aa5<br>report generator · ad25956032d86f2587a942dda9a980c746ac857d66621bd2f60166b83e4eaaf5<br>generated report · standalone HTML · no external assets</p></section>
+<section><div class="section-head"><div><h2>Exactly what was measured.</h2><p class="muted">Nineteen fresh families × two schedules × three timings × four matched stochastic futures × four founder actions. One action at the first post-checkpoint reservoir event, then ordinary dynamics for twelve passages. Morphological fanout is the mean of six pairwise D4-anchored field distances, averaged over passages 3–12. Intervals resample the 19 organism families 20,000 times.</p></div></div><details class="source-note"><summary>Source verification</summary><p data-source-record="true" class="ledger">closed result · 18eed6194ce1125f77e12ca0966b3104b8388d89b09fdce13678d5faf43d3ac6<br>commitment exploration · 48cf44c315bb049289671df9c4587a2b3aa70f6971d9c59c793ddea418128aa5<br>report generator · ad25956032d86f2587a942dda9a980c746ac857d66621bd2f60166b83e4eaaf5<br>generated report · standalone HTML · no external assets</p></details></section>
 </main><footer>FLOW LENIA · DEVELOPMENTAL CAUSAL PLASTICITY WINDOW V1 · DISCOVERY REPORT<br>The predeclared needle-shaped peak test remains recorded as not passing. This report follows the stronger fixed-panel asymmetry that the complete result revealed.</footer></body></html>

@@ -6,7 +6,7 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "clamped hidden-state intervention",
-  "sourceReportSha256": "b17f398a7f916fa8e2b23716293c9c781569b5eb327f07d78eae0904e3514b0b",
+  "sourceReportSha256": "efe37182feaad461c3e277fc62341e389b13516e614c9c4246fc8fd54983836f",
   "publicReportSha256": "efe37182feaad461c3e277fc62341e389b13516e614c9c4246fc8fd54983836f",
   "transformations": [
     "import_verified_public_projection_v1",
@@ -14,6 +14,6 @@
     "move_reports_to_website_v1"
   ],
   "contextSha256": "6d183a058abd0e270ad11c72c72edebe754d5a6f6e586757736526734c06b7d8",
-  "catalogSha256": "ecdd78ba54e8d48da5b65bb0d6067a8db253f13b08dcf320983d70e1c61369c9",
-  "upstreamReceiptSha256": "2cef8c2c5b6b035233777b60b173d50050aeede36646653eab1e29cf739b239c"
+  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
+  "upstreamReceiptSha256": "e1e9fad35a034cbbe119e81d935c1f234f25107b56608d5baff7e66db14a605c"
 }

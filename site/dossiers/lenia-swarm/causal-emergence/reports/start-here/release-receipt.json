@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "editorial introduction",
   "sourceReportSha256": "e17b2bc584f31b31539efd0d23b6734314f55f87e672a311d4ee430220177912",
-  "publicReportSha256": "e17b2bc584f31b31539efd0d23b6734314f55f87e672a311d4ee430220177912",
+  "publicReportSha256": "71575969e93336d57a1b0a491f85cb9ede52bd36859dd9160c314cf91ecfbd52",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "9e418de199f53f951a9dccce1cd431766523602988b697774e33c7d92e98bd96",
+  "contextSha256": "203666b6813ac663c7224e7dde02424bce9c2ad010b09fa46548a74e08c4ed98",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "d666f346f82b7da005e8c8dc83ff336fb9200a1fcef1056739c2fc70d0ab78c7"
+  "upstreamReceiptSha256": "0b57424484259e7ecfc7531030c4d3cdf0fb1a232e116eafcca012cc335d601e"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "claim review",
   "sourceReportSha256": "5cdf1767896ec859afaaa94fd08c8c46e39b04e5bd1f4a30b4c43f0b209e400c",
-  "publicReportSha256": "5cdf1767896ec859afaaa94fd08c8c46e39b04e5bd1f4a30b4c43f0b209e400c",
+  "publicReportSha256": "ab6bb45fc97d546bd24a7159ec32a8c1dd67e064bc8c08bbcd61c641e499f0f7",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "a393d5b2524a3a6117c0534e4ddfbd4c04b1b49cb293e98ed24e704b96ace8e2",
+  "contextSha256": "3c186a1857550d4a39829758b4038adc5dfd93bcfb41e04c29b44d1a77000118",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "0040e5e9f6bda492e46e738c710f6b98a54528edfe3ec10251ece9333c50de48"
+  "upstreamReceiptSha256": "31448e4e0a9110e844a393359197a5ce9d11a44097b2627d215ebc7e9154a5ee"
 }

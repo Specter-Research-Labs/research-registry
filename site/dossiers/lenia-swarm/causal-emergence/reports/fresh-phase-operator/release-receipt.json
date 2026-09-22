@@ -7,13 +7,14 @@
   "status": "feature",
   "evidenceClass": "exact hidden-allocation intervention",
   "sourceReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
-  "publicReportSha256": "dbbe709794cb397c2f5cdde594ad39b6255829e9a878632f7e4cc44322a187c2",
+  "publicReportSha256": "dd18d44f9e8f0a45b5354ed6b8287c1138e5ebc57f589a027c2123cdca912924",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "ce2599706a7cb4617d6debbe091892668ad2bd4205c17f255dfcc6623a1cdaf4",
+  "contextSha256": "80e4742cb7c6d88d02d9a9f4fa5052a92fcd4dc88654431f6e561f2ec1be4dad",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "e6416db4e260352b5065007981e3642abb48fece59e3480d5a13a7fbc46d0441"
+  "upstreamReceiptSha256": "be5451de2e8a8a919fb5c8e877821e0c9300d96390df4c04d3dd6af9401f9e29"
 }

@@ -7,13 +7,14 @@
   "status": "archive",
   "evidenceClass": "cross-family transfer study",
   "sourceReportSha256": "44e28630154b7fc5eb44eb5bf16b50190df5a8c38416b0de7e7aaac1f72dca30",
-  "publicReportSha256": "44e28630154b7fc5eb44eb5bf16b50190df5a8c38416b0de7e7aaac1f72dca30",
+  "publicReportSha256": "ef37f83d1ab5b812ddbecbb25239ae498a996a18ef3219d0dc2836d2528e7fe3",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "9c68504f9e171446716ad5e2d3d3d9d2da6237146b33871d5e969659f7668bed",
+  "contextSha256": "413b9a77eba039167a2a8e0be4fb126b895736425ffbbc203b686d5432ed9b08",
   "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "91bbdc2063cdc79c2f4eb178df6b5e313e5491ab799f51887dc40e2e1000960d"
+  "upstreamReceiptSha256": "f9b90a9f7a452e37cdd60e8dc3823d7e7834ba69cfa8b769a205c6851228df36"
 }
