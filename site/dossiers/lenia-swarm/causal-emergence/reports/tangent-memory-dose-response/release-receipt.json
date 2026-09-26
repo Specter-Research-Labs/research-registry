@@ -6,15 +6,15 @@
   "date": "2026-08-25",
   "status": "archive",
   "evidenceClass": "dose-response memory intervention",
-  "sourceReportSha256": "b726fbd5aacb1eb4cc6f2f8da63cdfba08ba9809cddb07854c7dbdad8676e097",
-  "publicReportSha256": "3925962e9c6bd736468486aa565b8ec29be69e72260ca4136acdee42c0ef5486",
+  "sourceReportSha256": "fbbf8b6878611cb706c8ce60a1cea838ac4ec8b5994816f7db599216b502239c",
+  "publicReportSha256": "3c570cf1d4b8b4c03f128f9de258194cb6a940baba7b93d08e8f9314082ed0cd",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "3789bf2dcd4a3b5627ea50532ab109378d990884cc343e8ddd79cf880f945155",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "c9bbceeda10b38bdd41b812013b3f488217c11e01caeba13205a39d289d2de2e"
+  "contextSha256": "e27b8119dd3d15df4cbb49ae2f4500054641c7ee8113becd35b1dfb1f4baf837",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "dc30fedd56c2d2cc4849969f9a4652029666033c53a7a13b48829a95b4a0c4ca"
 }

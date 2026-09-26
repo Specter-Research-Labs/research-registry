@@ -6,15 +6,15 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "future-blind sibling intervention in a new cohort",
-  "sourceReportSha256": "bab5815cbdf724734800af5fa946f6a9fa46d8993817247231f4bc687ed37a90",
-  "publicReportSha256": "f3c60e84ab2e993c48102cd59001f1532f4c1c900b20d988548f81dd16388c68",
+  "sourceReportSha256": "6d40016a5c7ce7b3aeae25a5ffb8cfd839209a4479f3c4de1bff90e25d8c1b85",
+  "publicReportSha256": "6d40016a5c7ce7b3aeae25a5ffb8cfd839209a4479f3c4de1bff90e25d8c1b85",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "25db26060559c67a6279053b6e3aae0c31545a27fad167ad7ac1fc6b7ef1d60d",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "d72ca8fae8dafc84babe3c22ed5afdeba71681c1bec9f76cde964c809f2fe583"
+  "contextSha256": "d79a36095f253403b30d226509d03248c70eff97fe81a842c9fdd8221a4af876",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "be3308b15bf90cb5ad675866d57b4170340f7454d863525afdcf6afe330d1818"
 }

@@ -1,0 +1,56 @@
+{
+  "sourceStage": "spatial-code-syntax-v1",
+  "sourceSHA256": {
+    "results.json": "f23acce6dfd9f471d3dada82b1df760c2bd7b6c44543adbf245e7376a2a432a2",
+    "analysis.py": "b8fbf63913c67bf7575050ccf8c700ee39885ba5c5d8154a0857987479002bd8",
+    "analyzed-trajectories.jsonl.gz": "16b161d66cb0d7e0282215387019982320d2c8482aeda1e1fd869ea5f8b12a7d"
+  },
+  "rows": 156,
+  "groups": 16,
+  "maximumReaggregationError": 5.551115123125783e-17,
+  "scope": "Means reaggregated from saved analyzed rows; reported bootstrap intervals retained. Raw fields and starting-state invariants not rerun.",
+  "estimates": [
+    {
+      "direction": "Expansion",
+      "condition": "intact",
+      "mean": 0.29211135365594465,
+      "lower": 0.10104158083399808,
+      "upper": 0.48745717317506077
+    },
+    {
+      "direction": "Expansion",
+      "condition": "fine04",
+      "mean": 0.05617168028321247,
+      "lower": -0.16699274399248423,
+      "upper": 0.27689179795996216
+    },
+    {
+      "direction": "Expansion",
+      "condition": "phase100",
+      "mean": 0.008454582532463756,
+      "lower": -0.3072075683882756,
+      "upper": 0.36051682230965026
+    },
+    {
+      "direction": "Contraction",
+      "condition": "intact",
+      "mean": 0.44658113421600587,
+      "lower": 0.2830010975323826,
+      "upper": 0.611942074212872
+    },
+    {
+      "direction": "Contraction",
+      "condition": "fine04",
+      "mean": 0.3788410190482897,
+      "lower": 0.020670328811048837,
+      "upper": 0.7252063815112152
+    },
+    {
+      "direction": "Contraction",
+      "condition": "phase100",
+      "mean": 0.3941263536957053,
+      "lower": 0.14497771549897548,
+      "upper": 0.6504003414275318
+    }
+  ]
+}

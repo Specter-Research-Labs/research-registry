@@ -46,7 +46,7 @@ The May 19 common-morphology comparison ran over four cohorts:
 
 | Cohort | Count | Role |
 |---|---:|---|
-| Flow Lenia, broad comparison cohort | 25,167 | full synthetic morphospace spanning multiple rule families |
+| Flow Lenia, broad comparison cohort | 25,167 | 19 May 2026 analysis cohort spanning multiple rule families |
 | Flow Lenia, single rule-family slice | 8,192 | clean internal control, small enough for exact persistent homology |
 | [EmbryoMaker morphology snapshots](https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker) | 859 | developmental morphospace comparison |
 | [Dryad fish landmark measurements](https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t) | 232 | biological shape comparison |

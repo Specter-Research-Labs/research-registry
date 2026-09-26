@@ -12,6 +12,7 @@ pub(crate) const CATALOG_PATH: &str = "site/dossiers/lenia-swarm/causal-emergenc
 const RELEASE_ROUTE: &str = "/dossiers/lenia-swarm/causal-emergence/reports";
 
 pub const LANDING_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/index.html";
+pub const REPORTS_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/reports/index.html";
 pub const LIBRARY_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/library/index.html";
 pub const ARCHIVE_OUTPUT: &str = "site/dossiers/lenia-swarm/causal-emergence/archive/index.html";
 
@@ -272,6 +273,10 @@ pub fn sitemap_pages(catalog: &Catalog) -> Vec<SitePageRecord> {
             report.id
         ),
     }));
+    pages.extend(reading_structure().articles.into_iter().map(|article| SitePageRecord {
+        title: article.title,
+        href: format!("dossiers/lenia-swarm/causal-emergence/articles/{}/",article.id),
+    }));
     pages
 }
 
@@ -280,10 +285,6 @@ fn release_href(report: &Report) -> String {
 }
 
 fn report_href(report: &Report) -> String {
-    release_href(report)
-}
-
-fn exact_report_href(report: &Report) -> String {
     release_href(report)
 }
 
@@ -307,77 +308,6 @@ pub fn render_page_meta(title: &str, description: &str, canonical_path: &str) ->
     .into_string()
 }
 
-fn category_label<'a>(catalog: &'a Catalog, category: &str) -> &'a str {
-    catalog
-        .categories
-        .iter()
-        .find(|entry| entry.id == category)
-        .map(|entry| entry.label.as_str())
-        .expect("validated catalog contains every report category")
-}
-
-fn report_links(report: &Report) -> Markup {
-    html! {
-        div class="ce-report-links" {
-            a class="ce-button ce-button-primary" href=(exact_report_href(report)) { "Read the report" }
-        }
-    }
-}
-
-fn report_receipt(report: &Report) -> Markup {
-    html! {
-        details class="ce-receipt" {
-            summary { "Methods and sources" }
-            dl {
-                div {
-                    dt { "Report date" }
-                    dd { time datetime=(&report.date) { (&report.date) } }
-                }
-                div {
-                    dt { "Study type" }
-                    dd { (&report.evidence_class) }
-                }
-                div {
-                    dt { "Source checksum" }
-                    dd { code { (&report.sha256[..12]) "..." } }
-                }
-            }
-        }
-    }
-}
-
-fn question_triptych(report: &Report) -> Markup {
-    html! {
-        div class="ce-question-grid" {
-            div class="ce-question-cell" {
-                div class="ce-question-label" { "Question" }
-                p { (&report.question) }
-            }
-            div class="ce-question-cell ce-answer-cell" {
-                div class="ce-question-label" { "Result" }
-                p { (&report.answer) }
-            }
-            div class="ce-question-cell" {
-                div class="ce-question-label" { "Next question" }
-                p { (&report.next_question) }
-            }
-        }
-    }
-}
-
-fn report_card(report: &Report) -> Markup {
-    html! {
-        article class="ce-report-card" id=(report.id) {
-            h2 { a href=(report_href(report)) { (&report.title) } }
-            p class="ce-dek" { (&report.answer) }
-            div class="ce-card-footer" {
-                (report_links(report))
-                (report_receipt(report))
-            }
-        }
-    }
-}
-
 fn page_nav(current: &str) -> Markup {
     html! {
         nav class="ce-section-nav" aria-label="Causal emergence pages" {
@@ -388,142 +318,140 @@ fn page_nav(current: &str) -> Markup {
     }
 }
 
-fn grouped_reports<'a>(reports: &'a [&'a Report]) -> Vec<(&'a str, Vec<&'a Report>)> {
-    let mut groups: Vec<(&str, Vec<&Report>)> = Vec::new();
-    for report in reports {
-        if let Some((_, entries)) = groups
-            .iter_mut()
-            .find(|(category, _)| *category == report.category)
-        {
-            entries.push(*report);
-        } else {
-            groups.push((&report.category, vec![*report]));
+#[derive(Deserialize)]
+pub(crate) struct ReadingArticle {
+    pub id: String,
+    pub title: String,
+    pub dek: String,
+    pub reports: Vec<String>,
+}
+#[derive(Deserialize)]
+struct ReadingStructure {
+    articles: Vec<ReadingArticle>,
+    #[serde(default, rename = "draft_articles")]
+    _draft_articles: Vec<ReadingArticle>,
+    historical_syntheses: Vec<String>,
+}
+fn reading_structure() -> ReadingStructure {
+    serde_json::from_str(include_str!("../../../../site/dossiers/lenia-swarm/causal-emergence/reading-structure.json"))
+        .expect("the authored reading structure must be valid JSON")
+}
+pub(crate) fn record_reading_context(id: &str, date: &str) -> String {
+    let structure = reading_structure();
+    let article = structure.articles.iter().find(|a| a.reports.iter().any(|r| r == id));
+    html! {
+        aside class="ce-record-context" data-reading-context="v1" style="max-width:76rem;margin:1.5rem auto;padding:1rem 1.5rem;border-block:1px solid #999;font:16px/1.5 Georgia,serif" {
+            @if let Some(article) = article {
+                "Experimental record · " (date) ". "
+                a href=(format!("/dossiers/lenia-swarm/causal-emergence/articles/{}/",article.id)) { "Read the consolidated article: " (&article.title) }
+            } @else {
+                "Historical experimental record · " (date) ". "
+                a href="/dossiers/lenia-swarm/causal-emergence/" { "Read the current synthesis and three research questions" }
+            }
         }
-    }
-    groups
+    }.into_string()
 }
 
+fn article_index() -> Markup {
+    html! {
+        section class="ce-reading-list" aria-label="Three research questions" {
+            @for article in reading_structure().articles {
+                article class="ce-report-card" {
+                    h2 { a href=(format!("/dossiers/lenia-swarm/causal-emergence/articles/{}/", article.id)) { (article.title) } }
+                    p { (article.dek) }
+                }
+            }
+        }
+    }
+}
 #[must_use]
-pub fn render_landing(catalog: &Catalog) -> String {
-    let featured: Vec<&Report> = catalog
-        .reports
-        .iter()
-        .filter(|report| report.featured)
-        .collect();
-    let lead = featured[0];
-    let remaining = &featured[1..];
-
+pub fn render_landing(_catalog: &Catalog) -> String {
     html! {
         (page_nav("overview"))
         header class="ce-hero" {
-            div class="ce-kicker" { "Flow Lenia / causal emergence" }
-            h1 { "When does a developing system begin to become itself?" }
-            p class="ce-hero-dek" {
-                "Flow Lenia begins as a seeded field that is still reorganizing. Over hundreds of updates, some fields become temporally consistent, coherent individuals, while others fragment or disperse. We disturbed that process at different moments and measured how the available futures changed. The first signs of an individual may appear in its responses before they become obvious in its shape."
-            }
+            div class="ce-kicker" { "Current synthesis" }
+            h1 { "What must we know about a body to change it?" }
         }
-
-        section class="ce-lead-report" aria-labelledby="ce-lead-title" {
-            div class="ce-section-heading" {
-                div class="ce-kicker" { "Current synthesis" }
-                h2 id="ce-lead-title" { a href=(report_href(lead)) { (&lead.title) } }
-                p class="ce-dek" { (&lead.dek) }
-            }
-            (question_triptych(lead))
-            div class="ce-card-footer" {
-                (report_links(lead))
-                (report_receipt(lead))
-            }
-        }
-
-        @if !remaining.is_empty() {
-            section class="ce-report-section" aria-labelledby="featured-experiments" {
-                div class="ce-section-heading" {
-                    div class="ce-kicker" { "Key experiments" }
-                    h2 id="featured-experiments" { "Five comparisons and a failed prediction" }
-                    p { "These selected studies ask different questions: what appears before form, what early history changes, what spatial organization contributes, what hidden channels control, and what the recovery score failed to predict." }
-                }
-                div class="ce-card-grid" {
-                    @for report in remaining {
-                        (report_card(report))
-                    }
-                }
-            }
-        }
-
-        aside class="ce-library-invite" {
-            div {
-                div class="ce-kicker" { "All reports" }
-                h2 { "Read the evidence behind the synthesis" }
-                p { "The reading selection brings distinct comparisons together. Supporting experiments and earlier versions remain in the archive; inclusion there is not a verdict that a result is false." }
-            }
-            div class="ce-report-links" {
-                a class="ce-button ce-button-primary" href="/dossiers/lenia-swarm/causal-emergence/library/" { "Browse the library" }
-                a class="ce-button" href="/dossiers/lenia-swarm/causal-emergence/archive/" { "Open the archive" }
-            }
-        }
-    }
-    .into_string()
+        (maud::PreEscaped(include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/research-reading.html")))
+        (article_index())
+        p { a href="/dossiers/lenia-swarm/causal-emergence/archive/" { "Search the experimental record" } }
+    }.into_string()
 }
-
 #[must_use]
-pub fn render_library(catalog: &Catalog) -> String {
-    let reports: Vec<&Report> = catalog
-        .reports
-        .iter()
-        .filter(|report| !report.archive)
-        .collect();
+pub fn render_library(_catalog: &Catalog) -> String {
     html! {
         (page_nav("library"))
         header class="ce-page-header" {
-            h1 { "Selected reports" }
-            p { "One overview and six studies: an early signal, matched histories, spatial controls, hidden composition, declining sensitivity to intervention, and a failed recovery prediction." }
+            h1 { "Three questions about a developing body" }
+            p { "These articles bring successive experiments together around the questions they answer. Each follows the result through its controls, limitations, and next discriminating test." }
+            p { a href="/dossiers/lenia-swarm/causal-emergence/" { "Read the short synthesis" } }
         }
-        section class="ce-reading-list" aria-label="Selected studies" {
-            @for report in reports { (report_card(report)) }
-        }
-        p { "The " a href="../archive/" { "experimental archive" } " keeps supporting comparisons and previous versions available. " a href="../editorial-review.json" { "Selection notes" } " record which pages need consolidation or further editing." }
+        (article_index())
+        p { "The " a href="/dossiers/lenia-swarm/causal-emergence/archive/" { "experimental record" } " retains all 81 reports and earlier syntheses. Their presence records the investigation; it does not endorse every historical interpretation." }
     }.into_string()
+}
+pub(crate) fn article_pages(catalog: &Catalog) -> Vec<(String, String, String, String, String)> {
+    reading_structure().articles.into_iter().map(|article| {
+        let body = match article.id.as_str() {
+            "developmental-sensitivity" => include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/article-developmental-sensitivity.html"),
+            "hidden-composition" => include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/article-hidden-composition.html"),
+            "organization-prediction-control" => include_str!("../../../../site/templates/dossiers/lenia-swarm/causal-emergence/article-organization-prediction-control.html"),
+            _ => unreachable!("unknown article"),
+        };
+        let route = format!("/dossiers/lenia-swarm/causal-emergence/articles/{}/",article.id);
+        let content = html! {
+            (page_nav("library"))
+            header class="ce-page-header" { h1 { (&article.title) } p { (&article.dek) } }
+            article class="ce-research-reading" { (maud::PreEscaped(body)) }
+            details class="ce-reading-list" {
+                summary { "Supporting experimental records" }
+                p { "These records preserve the investigation, including exploratory and unresolved results. The article specifies which comparisons support its argument." }
+                ul {
+                    @for id in &article.reports {
+                        @if let Some(report) = catalog.reports.iter().find(|r| &r.id == id) {
+                            li { a href=(report_href(report)) { (&report.title) } }
+                        }
+                    }
+                }
+                @if article.id == "developmental-sensitivity" || article.id == "organization-prediction-control" {
+                    p { "Later dose controls and the corrected controller comparison are preserved in " a href="/dossiers/lenia-swarm/causal-emergence/reports/synthesis-v7/" { "the detailed campaign synthesis" } "." }
+                }
+            }
+            p { a href="/dossiers/lenia-swarm/causal-emergence/reports/" { "Return to the three questions" } }
+        }.into_string();
+        (format!("site{}index.html",route),article.title,article.dek,route,content)
+    }).collect()
 }
 
 #[must_use]
 pub fn render_archive(catalog: &Catalog) -> String {
-    let reports: Vec<&Report> = catalog
-        .reports
-        .iter()
-        .filter(|report| report.archive)
-        .collect();
-    let groups = grouped_reports(&reports);
-
+    let structure = reading_structure();
     html! {
         (page_nav("archive"))
         header class="ce-page-header" {
-            div class="ce-kicker" { "Experimental record / " (reports.len()) }
-            h1 { "Archive" }
-            p { a href="../editorial-review.json" { "Read the selection notes for all 81 records" } }
-            p { "These supporting records include useful narrow comparisons, serial follow-ups that would read better as a single article, and superseded syntheses. Their evidence remains accessible. They are not all endorsed as finished editorial pieces; the selected library is the starting point." }
+            h1 { "Experimental record" }
+            p { "All " (catalog.reports.len()) " reports, grouped by the question they contribute to. Earlier syntheses retain the account at the time; start with the current articles for the revised interpretation." }
+            label for="record-search" { "Find a report" }
+            input id="record-search" type="search" placeholder="Search titles and questions";
+            p id="record-count" role="status" { (catalog.reports.len()) " records" }
         }
-        @if reports.is_empty() {
-            p class="ce-empty" { "No reports are currently archived." }
-        }
-        @for (category, entries) in &groups {
-            section class="ce-report-section" aria-labelledby=(format!("archive-{category}-heading")) {
-                div class="ce-section-heading ce-section-heading-row" {
-                    div {
-                        div class="ce-kicker" { "Topic" }
-                        h2 id=(format!("archive-{category}-heading")) { (category_label(catalog, category)) }
-                    }
-                    div class="ce-count" { (entries.len()) " reports" }
-                }
-                div class="ce-card-grid" id=(format!("archive-{category}")) {
-                    @for report in entries {
-                        (report_card(report))
+        @for (title, ids) in structure.articles.iter().map(|a| (a.title.as_str(), &a.reports)).chain(std::iter::once(("Earlier guides and syntheses", &structure.historical_syntheses))) {
+            section class="ce-record-group" {
+                h2 { (title) }
+                ul {
+                    @for id in ids {
+                        @if let Some(report) = catalog.reports.iter().find(|r| &r.id == id) {
+                            li class="ce-record" data-search=(format!("{} {} {}",report.title,report.question,report.id).to_lowercase()) {
+                                a href=(report_href(report)) { (&report.title) }
+                                p { (&report.question) }
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-    .into_string()
+        script { (maud::PreEscaped(r#"document.getElementById('record-search').addEventListener('input',function(){const q=this.value.toLowerCase().trim();let count=0;document.querySelectorAll('.ce-record').forEach(row=>{row.hidden=!row.dataset.search.includes(q);if(!row.hidden)count++});document.querySelectorAll('.ce-record-group').forEach(group=>{group.hidden=![...group.querySelectorAll('.ce-record')].some(row=>!row.hidden)});document.getElementById('record-count').textContent=count+' records';});"#)) }
+    }.into_string()
 }
 
 #[cfg(test)]
@@ -564,16 +492,27 @@ mod tests {
         let library = render_library(&catalog);
         let archive = render_archive(&catalog);
         assert!(landing.contains("Current synthesis"));
-        assert!(landing.contains("organism-appears-first"));
-        assert!(!landing.contains("ce-chip"));
-        assert!(!landing.contains("ce-report-meta"));
-        assert!(landing.contains("Report date"));
-        assert!(landing.contains("2026-08-30"));
-        assert!(library.contains("Read the report"));
-        assert!(!library.contains("Read the introduction"));
-        assert!(library.contains("Selected reports"));
-        assert!(!library.contains("ce-chip"));
-        assert!(archive.contains("No reports are currently archived"));
+        assert!(landing.contains("What must we know about a body"));
+        assert!(library.contains("Three questions about a developing body"));
+        assert_eq!(library.matches("class=\"ce-report-card\"").count(), 3);
+        assert!(archive.contains("Experimental record"));
+        assert!(archive.contains("record-search"));
+    }
+
+    #[test]
+    fn reading_structure_assigns_every_report_once() {
+        let catalog: Catalog = serde_json::from_str(include_str!("../../../../site/dossiers/lenia-swarm/causal-emergence/catalog.json")).unwrap();
+        let structure = reading_structure();
+        let ids: Vec<_> = structure.articles.iter().chain(structure._draft_articles.iter()).flat_map(|a| a.reports.iter()).chain(structure.historical_syntheses.iter()).collect();
+        assert_eq!(ids.len(),catalog.reports.len());
+        let unique: HashSet<_> = ids.iter().copied().collect();
+        assert_eq!(unique.len(),ids.len());
+        for report in &catalog.reports { assert!(unique.contains(&report.id)); }
+        let pages = article_pages(&catalog);
+        assert_eq!(pages.len(),3);
+        assert!(!render_library(&catalog).contains("articles/history-and-response/"));
+        assert!(pages.iter().all(|(route, _, _, _, _)| !route.contains("history-and-response")));
+        for (_, _, _, _, html) in pages { assert!(html.contains("Supporting experimental records")); }
     }
 
     #[test]

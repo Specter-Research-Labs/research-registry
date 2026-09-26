@@ -6,14 +6,16 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "geometric orbit intervention",
-  "sourceReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
-  "publicReportSha256": "d885a5123ed85ba7844f622905c9c34d5dced214fddf366528d29a914fb7d2bf",
+  "sourceReportSha256": "8619b73907e4ded0f69254bd96498e76d24796f35eb8409077d922351c1f73eb",
+  "publicReportSha256": "7f92f9f5ee5ee5ddba4b1bfda3f61fe01f12233b7444db11f21546923c6ebe2f",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "dc2793c72f1c5a108f222e3f67b5c29a92dcc5539def10aa50ce17b707763acc",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "36818e8f274669a2de8cad6bbff6a1325660bd0095d78fbd24bf3d62eb4e7e6c"
+  "contextSha256": "2a51174f0e70457a2fdf792aafdd97e8d5bfd6a4ffac808f6adf097414e63673",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "3378e3215e6fb679eac18591129745d174e9f54b8aa6dcf2eab8a10bc4b6281d"
 }

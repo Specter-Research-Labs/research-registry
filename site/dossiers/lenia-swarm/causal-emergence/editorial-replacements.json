@@ -867,6 +867,10 @@
       {
         "from": "<div class=\"eyebrow\">Hold → release → rescue</div>",
         "to": "<div class=\"evidence-label\">Hold → release → rescue</div>"
+      },
+      {
+        "from": "<p class=\"plain\">The rotating direction is not a metaphor. Between 83% and 97% of later decisions differ from the action that was optimal at the first pulse.</p>",
+        "to": "<p class=\"plain\">Between 83% and 97% of later decisions differed from the action that was optimal at the first pulse, so continuing to use that initial choice would have missed how the preferred direction changed as the state developed.</p>"
       }
     ],
     "adaptive-rescue-cycle": [
@@ -929,6 +933,22 @@
       {
         "from": "<div class=\"eyebrow\">IF IT MOVES BY ORGANISM</div>",
         "to": "<div class=\"evidence-label\">IF IT MOVES BY ORGANISM</div>"
+      },
+      {
+        "from": "<p class=\"plain\">This is the new object: not a universal scalar called “commitment,” but a developmental window in which an information gradient aligns with the organism’s future-constraining direction.</p>",
+        "to": "<p class=\"plain\">When we reacquired the information-score separation, its earlier relationship with a narrower future repertoire did not return with it, suggesting that the time at which control is applied matters to the alignment between these measurements.</p>"
+      },
+      {
+        "from": "<p class=\"plain\">The controller can find a new information direction at passage 57. It is genuinely state-dependent, and it recreates a clean passage 60 split.</p>",
+        "to": "<p class=\"plain\">The comparison below shows how choosing fresh actions restored the difference between the high- and low-score branches, while replaying the old actions left no clear difference. We then followed both sets of bodies to see whether restoring the score difference also restored the earlier narrowing of their possible futures.</p>"
+      },
+      {
+        "from": "<p>Then we learn a state-dependent detector of readiness rather than a global clock—and can ask whether its peak predicts each organism’s own morphological turn.</p>",
+        "to": "<p>If organisms reach this window at different ages, we could look for a feature of the developing body that reliably changes before its visible form does, then use it to decide when to intervene.</p>"
+      },
+      {
+        "from": "<p>After eight free steps, adaptive feedback rebuilt a huge information split in every organism. But that split no longer narrowed the independent future repertoire. The developmental direction had separated from the instantaneous information gradient.</p>",
+        "to": "<p>After eight free steps, adaptive feedback rebuilt a large information-score separation in every organism without restoring the earlier narrowing of the independent future repertoire. Recovering the score therefore left open how its relationship to the developmental outcome had changed.</p>"
       }
     ],
     "canalization-rescue": [
@@ -971,12 +991,28 @@
       {
         "from": "<div class=\"kicker\">NEXT DIRECT SWING</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">This is stronger than the ablation result. We did not merely break a creature and watch it fail. We turned the organization back up and watched causal coherence return smoothly.</p>",
+        "to": "<p class=\"big\">As we restored more of the original block arrangement, agreement among the intervention responses returned progressively, strengthening the case that spatial relationships contribute to that agreement and giving the rescue sequence a role in explaining the scrambling result.</p>"
+      },
+      {
+        "from": "<p class=\"big\">That is a serious causal-emergence candidate: not merely “more information,” but the construction of a macroscopic constraint that coordinates how local disturbances propagate into development.</p>",
+        "to": "<p class=\"big\">Spatial repair changes how disturbances affect development. To turn this into an explanation at the scale of the body, we need to identify which relationships carry the effect and test whether their measurement predicts responses beyond this repair sequence.</p>"
       }
     ],
     "causal-compass-peak": [
       {
         "from": "<div class=\"kicker\">1,536 direct intervention futures</div>",
         "to": "<div class=\"evidence-label\">1,536 direct intervention futures</div>"
+      },
+      {
+        "from": "<p class=\"plain\">That is a plausible causal-emergence transition: not merely “more information,” but a change in what information-bearing organization allows the system to do.</p>",
+        "to": "<p class=\"plain\">The age split suggests that the same kind of local reordering can accompany different changes in future breadth, but because we identified it after inspecting the outcomes, the next test needs to ask whether that distinction predicts what happens in an independent sample.</p>"
+      },
+      {
+        "from": "<p class=\"plain\">The compass peak was not uniformly expansive. At passage 24 it leaned constrictive. By passage 40 and passage 48 it leaned expansive. The causal meaning of the same geometric event changed with development.</p>",
+        "to": "<p class=\"plain\">The effect associated with the compass peak leaned constrictive at passage 24 and expansive by passage 40 and passage 48, so the same geometric event did not identify one fixed direction of change across development.</p>"
       }
     ],
     "causal-history-order": [
@@ -1015,6 +1051,18 @@
       {
         "from": "<div class=\"kicker\">Where this points</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"intro\" style=\"margin-top:28px\">Because this was closed-loop feedback, “high” and “low” selected actions from the organism’s current state. The physical seed sequence could therefore diverge. That is the point: we changed the <em>temporal grammar of feedback</em>, not merely replayed an open-loop seed list.</p>",
+        "to": "<p class=\"intro\" style=\"margin-top:28px\">Because the feedback selected each physical action from the current state, reversing the order of high- and low-seeking instructions could also change which seed sequence it selected along the way. What we can attribute to order here is the effect of the feedback instructions, with the physical pulses chosen in response to the states those instructions encounter.</p>"
+      },
+      {
+        "from": "<p class=\"quote\">Flow Lenia does not merely remember whether it was pushed “up” or “down.” It remembers the temporal arrangement of those pushes, and carries that history into the organization of its later possibilities.</p>",
+        "to": "<p class=\"quote\">Changing the order of the feedback instructions left different states after release, and those states continued toward different future fields under matched challenges.</p>"
+      },
+      {
+        "from": "<p class=\"intro\">A causal repertoire has at least two distinct properties: how broad it is, and where it sits in form-space. Our frozen prediction expected alternating feedback to preserve more breadth. It did not. The larger discovery is that order translated the whole repertoire instead.</p>",
+        "to": "<p class=\"intro\">Our frozen prediction concerned the breadth of the future repertoire, but alternating feedback did not preserve more of it. The later fields instead differed in where their outcomes lay, making the location and spread of a repertoire separate questions to measure.</p>"
       }
     ],
     "causal-repertoire-contraction": [
@@ -1053,6 +1101,14 @@
       {
         "from": "<text x=\"710\" y=\"78\" class=\"missing\">no event by 900</text>",
         "to": "<text x=\"785\" y=\"78\" class=\"missing\" text-anchor=\"end\">no event by 900</text>"
+      },
+      {
+        "from": "<p class=\"quote\">This is the clearest Lenia analogue yet of the signal we wanted from Levin: a whole-system information property, measured early, forecasting contraction of the system’s causal future.</p>",
+        "to": "<p class=\"quote\">The early score was associated with a narrower range of transition times under the tested interventions, but final-field divergence remained broad, so the apparent narrowing concerned when the transition happened rather than a general contraction of the outcomes we measured.</p>"
+      },
+      {
+        "from": "<p class=\"lead\">Whole-over-parts predicts the range, IQR, and standard deviation of transition timing. It barely predicts final-field divergence. This is a multiscale result: the macroscopic event becomes canalized while microscopic outcomes remain free to separate.</p>",
+        "to": "<p class=\"lead\">Whole-over-parts was associated with the range, IQR, and standard deviation of transition timing while showing little association with final-field divergence. The narrowing therefore concerned when the event happened, leaving substantial differences in the fields that followed it.</p>"
       }
     ],
     "causal-return-loop": [
@@ -1087,6 +1143,18 @@
       {
         "from": "<div class=\"kicker\">The next experiments</div>",
         "to": ""
+      },
+      {
+        "from": "A one-dimensional score hid a two-dimensional history.",
+        "to": "A nearly matched score leaves different states unresolved."
+      },
+      {
+        "from": "If this scalar described the causal state completely, the branches should have converged. They moved farther apart instead.",
+        "to": "The branches remain different despite approximate score matching. This challenges the score as a sufficient practical description; residual score mismatch and other state differences remain, so it is not a test of identical complete states."
+      },
+      {
+        "from": "<p>The score is useful for steering, but it compresses multiple history-dependent causal states onto the same number. Development may be commitment by translation between those hidden sheets—not merely a scalar rising or falling.</p>",
+        "to": "<p>Bringing the score back to nearly the same value left substantial differences between the physical states and the futures they went on to produce, so a description that predicts those continuations will have to retain some of the information that the scalar discards.</p>"
       }
     ],
     "causal-score-sheets": [
@@ -1133,6 +1201,30 @@
       {
         "from": "<div class=\"eyebrow\">The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>The challenge cloud is translated by roughly one full repertoire width at both levels, while its breadth barely changes. Challenge rankings and distance topology are nearly unrelated across histories. The system has not merely become “more” or “less” capable; the map from intervention to outcome has been rewritten.</p>",
+        "to": "<p>The challenge clouds shifted by roughly one repertoire width with little change in their breadth, while the rankings of challenges and pairwise relationships among outcomes also changed across histories. A breadth measure alone would therefore have hidden much of the change in which actions led to which futures.</p>"
+      },
+      {
+        "from": "<p>These four futures start from the passage 44 states above and receive the same c04 challenge. The different histories do not merely preserve small pixel differences; they reorganize the later body.</p>",
+        "to": "<p>These four futures begin from the passage 44 states above and receive the same c04 challenge. They illustrate how the preceding histories changed the later body.</p>"
+      },
+      {
+        "from": "<p>This is not merely “memory” in the everyday sense. It is a causal-geometric memory: past information-directed actions determine which futures remain reachable from the same present score.</p>",
+        "to": "<p>Different histories brought the score to similar present values while leaving different physical states, and those states responded differently when given the same challenges. Matching the score therefore left a history-dependent difference in what the body would do next.</p>"
+      },
+      {
+        "from": "<p>Now we can stop asking whether Φ‑R alone predicts appearance. The sharper target is the <b>fold itself</b>: places where nearby information levels contain sharply different bodies and futures. We should map fold strength through early development, then intervene just before the strongest fold to see whether it redirects organism emergence, fission, identity turnover, or ecological succession.</p>",
+        "to": "<p>The score alone does not tell us which body we have or how it will respond. We proposed following states with similar scores through development to find where their forms and futures diverge most, then intervening just before that divergence to test whether it helps predict emergence, fission, identity turnover, or ecological succession.</p>"
+      },
+      {
+        "from": "<p>Our earlier return loop showed that the score can come back while the organism does not. This experiment generalizes that result across the score axis. Low and high Φ‑R each contain multiple states with different intervention-response worlds. The landscape is many-to-one, history-bearing, and locally folded.</p>",
+        "to": "<p>The earlier return loop brought the score back without bringing the body back, and the present experiment asks whether that mismatch also occurs at different score levels. Both low and high Φ‑R contain states with different subsequent responses, so moving along the scalar axis does not remove the information about history that the score leaves out.</p>"
+      },
+      {
+        "from": "That would connect the information geometry directly back to the original Levin-inspired question: not “does one number rise?”, but “does the causal state space reorganize before a new living pattern appears?”",
+        "to": "The connection to Levin’s question would come from predicting which changes in the developing state make a new form possible, and finding an intervention that alters that relationship."
       }
     ],
     "coherent-phase-path": [
@@ -1241,6 +1333,18 @@
       {
         "from": "<div class=\"eyebrow\">07 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>First place the system in the open or closed regime. Then deliver the same second intervention to both. If the open regime produces a broader or different future repertoire, we have direct control over developmental possibility—not merely a metric.</p>",
+        "to": "<p>Place the system in each controlled state, deliver the same later intervention, and compare the resulting futures. This would test whether the earlier control changes what the later action can do.</p>"
+      },
+      {
+        "from": "<p style=\"color:var(--muted);margin-top:30px\">Visible transition timing did not yet separate cleanly: open minus closed advance +4.3 steps, interval [-8.8, 18.1]. That is the next frontier, not a reason to shrink the present finding.</p>",
+        "to": "<p style=\"color:var(--muted);margin-top:30px\">The open minus closed advance in visible transition timing was +4.3 steps, with interval [−8.8, 18.1], which leaves the timing comparison unresolved even if the later responses differ. A change in what an intervention can do therefore needs its own test, rather than being read as evidence that formation happened earlier.</p>"
+      },
+      {
+        "from": "<p>Freeze each organism’s discovered pulse sequence, perturb its trajectory slightly, then compare blind replay with fresh feedback. This tells us whether the controller learned a transferable recipe or genuinely tracks a moving developmental state.</p>",
+        "to": "<p>Freezing the pulse sequence found for each organism would let us replay it after a small change to the trajectory and compare it with fresh feedback. If feedback still helps, we could then investigate what it learns from the changing state that the saved sequence cannot supply.</p>"
       }
     ],
     "commitment-gate-formation": [
@@ -1297,6 +1401,10 @@
       {
         "from": "<div class=\"eyebrow\">08 / The next experiments</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"formula\" style=\"margin-top:30px\">The opened state did not merely contain more variation. It preserved the ability of <em>later causes to matter.</em></p>",
+        "to": "<p class=\"formula\" style=\"margin-top:30px\">The controlled states differed in how much their later outcomes separated under the same set of challenges.</p>"
       }
     ],
     "commitment-rewrite": [
@@ -1335,6 +1443,10 @@
       {
         "from": "<div class=\"kicker\">NEXT BOLD SWING</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The early ancestral and forward branches begin equally far from the no-pulse state. By passage 8 their raw field distances are still broadly similar and growing. Yet one preserves the separation of causal histories while the other suppresses it. The system remembers direction, not merely disturbance.</p>",
+        "to": "<p class=\"big\">Although the ancestral and forward branches began equally far from the no-pulse state, the separation between their matched histories differed while their raw field distances remained broadly similar and growing at passage 8. The direction of the pulse therefore affected something that its disturbance magnitude alone did not describe.</p>"
       }
     ],
     "commitment-window": [
@@ -1369,6 +1481,14 @@
       {
         "from": "<div class=\"kicker\">THE NEXT BOLD SWING</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">This is an experimentally controlled commitment window in an emergent Flow Lenia developmental process. It is exactly the kind of macroscopic, history-sensitive causal organization we were looking for: the same microstate rearrangement changes sign because the whole has changed phase.</p>",
+        "to": "<p class=\"big\">Applying the inverse rearrangement became harmful after first being helpful as the scrambled state evolved, so putting the composition back through the inverse permutation could no longer undo what had happened in between. The dense timing comparison locates that reversal for this protocol.</p>"
+      },
+      {
+        "from": "<p class=\"big\">Now that we know where commitment lives, we can intervene on it rather than merely observe it. The strongest next move is to slow, accelerate, or reverse commitment with information-directed control—and ask whether shifting this two-passage boundary predictably shifts the later birth of the organism.</p>",
+        "to": "<p class=\"big\">The timing result suggested a way to test the proposed commitment boundary: try to delay or advance it with information-directed control, then measure whether the organism’s later formation moves with it. That was the next hypothesis raised by this report, rather than an established ability to control commitment.</p>"
       }
     ],
     "composition-control-surface": [
@@ -1411,6 +1531,18 @@
       {
         "from": "<svg viewBox=\"0 0 840 390\" role=\"img\" aria-label=\"Pure spatial-pattern transplant effect over time\">",
         "to": "<svg viewBox=\"0 0 840 412\" role=\"img\" aria-label=\"Pure spatial-pattern transplant effect over time\">"
+      },
+      {
+        "from": "<p class=\"big\">This is the strongest bridge yet between the causal-emergence program and organism formation in Flow Lenia. The relevant precursor is not merely a scalar that rises before a form appears. It is an organized hidden field with direct causal leverage over which morphology emerges next.</p>",
+        "to": "<p class=\"big\">The intervention changed hidden composition while preserving the visible starting field. Its effect on later morphology makes that hidden arrangement a candidate explanation to investigate through scrambling, dose, and transplant controls.</p>"
+      },
+      {
+        "from": "<p>The cleanest edge is the top one: donor pattern at host balance. Changing only global balance with the host pattern preserved is much weaker and its intervals cross zero in both directions.</p>",
+        "to": "<p>The top edge compares the donor pattern at host balance, where the effect is most clearly resolved. Changing global balance while preserving the host pattern produces a much weaker response, with intervals crossing zero in both directions.</p>"
+      },
+      {
+        "from": "<p>This is a relational code: the same map has different causal meaning in a different bulk state. The strongest compactifying region sits near donor spatial identity but host or lightly shifted global balance—not at the wholesale donor corner.</p>",
+        "to": "<p>The same spatial map produced different responses at different bulk balances, with the greatest compactification near donor spatial identity and host or lightly shifted global balance. Replacing the host wholesale with the donor therefore did not reproduce the most compactifying combination; both the arrangement and the bulk state mattered.</p>"
       }
     ],
     "delayed-canalization-rescue": [
@@ -1445,6 +1577,10 @@
       {
         "from": "<div class=\"kicker\">NEXT DIRECT SWING</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">This is a powerful form of causal emergence: the macroscopic developmental state determines what a physically identical rearrangement *means*. Causal meaning is not in the operation alone. It is relational, historical, and phase-dependent.</p>",
+        "to": "<p class=\"big\">The same rearrangement changed its effect as development proceeded, which makes the state receiving the intervention part of the explanation. To understand that dependence, we need to follow what changes between those states and test which of those changes alters the response, rather than assigning causal power to the developmental label alone.</p>"
       }
     ],
     "developmental-alignment-window": [
@@ -1503,6 +1639,10 @@
       {
         "from": "<svg class=\"chart\" viewBox=\"0 0 940 350\" role=\"img\" aria-label=\"Future repertoire effect by developmental passage\">",
         "to": "<svg class=\"chart\" viewBox=\"0 0 1000 350\" role=\"img\" aria-label=\"Future repertoire effect by developmental passage\">"
+      },
+      {
+        "from": "<p class=\"note\">We have not yet prospectively confirmed the sign flip on new organisms. That is the next direct test—not a reason to flatten the discovery, but the clean way to find out whether it is a reusable law.</p>",
+        "to": "<p class=\"note\">The age-dependent sign change suggested a prediction we could take to new organisms, but the later prospective test did not establish a universal sign flip. The current reading follows how that result changed the interpretation of the original comparison.</p>"
       }
     ],
     "developmental-aperture-map": [
@@ -1541,6 +1681,14 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next experiment</div>",
         "to": ""
+      },
+      {
+        "from": "<p>The effect is not a one-frame twitch. It appears quickly, is strongest around +64 to +128, and remains visible hundreds of steps later. The youngest intervention is, if anything, the strongest early shove.</p>",
+        "to": "<p>The effect appears quickly, reaches its largest size around +64 to +128, and remains visible hundreds of steps later, with the youngest intervention producing at least as much early change as the later ones. Following the trajectory therefore adds information that a single post-intervention frame would miss.</p>"
+      },
+      {
+        "from": "<p>Future openness is not a generic consequence of moving forward. It may emerge only in particular organisms or near particular spontaneous transitions. That makes it a state-dependent phenomenon to locate, not a scalar to average away.</p>",
+        "to": "<p>Moving forward along the estimated direction did not produce a uniform increase in future breadth, leaving us to investigate whether the effect depends on the organism’s state or proximity to a spontaneous transition.</p>"
       }
     ],
     "developmental-arrow-birth": [
@@ -1567,6 +1715,18 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>passage 8 receives the largest naturalized hidden-state dose (0.0351) yet produces the weakest early causal specificity. passage 12 uses roughly half that energy (0.0183) and produces almost twice the effect. The system changed—not merely the dose.</p>",
+        "to": "<p>Passage 8 received the largest naturalized hidden-state dose (0.0351) yet showed the weakest early direction-specific response, while passage 12 received roughly half that energy (0.0183) and showed almost twice the effect. In this comparison, a larger delivered dose cannot explain why the later body responded more strongly.</p>"
+      },
+      {
+        "from": "<p class=\"big\">The young ecology does not merely acquire a recognizable shape. It acquires a privileged internal direction: a way of changing that has more leverage over its own later form than an equal-sized sideways change.</p>",
+        "to": "<p class=\"big\">The same-sized perturbation had more effect on later form when it followed the recent developmental direction than when it pointed sideways, and the size of that difference changed with age, giving us a comparison in which direction and developmental timing both matter.</p>"
+      },
+      {
+        "from": "<p>A global developmental coordinate becomes selectively consequential before the later morphology has stabilized. That is exactly the sort of early organization we have been looking for: not a replicator label, but a causal geometry that precedes and controls form.</p>",
+        "to": "<p>The directional comparison identifies an early state change with measurable consequences for later morphology. It leaves open which interactions produce the age-dependent difference in susceptibility.</p>"
       }
     ],
     "developmental-basin-atlas": [
@@ -1601,6 +1761,14 @@
       {
         "from": "<text x=\"736.00\" y=\"304\" class=\"tick\" text-anchor=\"middle\">transition</text>",
         "to": "<text x=\"736.00\" y=\"304\" class=\"tick\" text-anchor=\"end\">transition</text>"
+      },
+      {
+        "from": "<p class=\"standfirst\">As the Flow Lenia organism approaches its morphological transition, whole-over-parts organization rises, its preferred perturbations separate from ordinary predictability, and its macroscopic identity becomes more canalized. The system is not merely changing shape. Its causal response geometry is reorganizing.</p>",
+        "to": "<p class=\"standfirst\">As the fields approached their visible transition, whole-over-parts prediction rose and the actions favored by that score separated from those favored by ordinary predictability. This atlas aligns runs using their eventual transition; the prospective follow-up asks what can be learned without that future information.</p>"
+      },
+      {
+        "from": "<p class=\"lead\">Most branches return to almost the same developmental tempo and adult form. A few organisms sit on spectacular edges. Source 44, perturbed at 20%, spans 292 steps across its matched futures. Other specimens change adult topology while barely moving event time.</p>",
+        "to": "<p class=\"lead\">Most branches returned to nearly the same developmental timing and adult form, but source 44, perturbed at 20%, spanned 292 steps across its matched futures, while other specimens changed adult topology with little change in event time. These differences give us cases in which to investigate why timing and anatomy can respond separately.</p>"
       }
     ],
     "developmental-causal-address": [
@@ -1623,6 +1791,10 @@
       {
         "from": "<div class=\"eyebrow\">04 / What we found</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The passage 32 body expands specifically under the passage 32-derived direction. The passage 12 and passage 48 directions miss. This is not generic susceptibility; it is an <em>age-matched resonance</em> between body and hidden direction.</p>",
+        "to": "<p class=\"big\">The passage 32 body expanded under the passage 32-derived direction but not under the passage 12 or passage 48 directions, giving us an age-matched response to investigate rather than an effect shared by every tested hidden direction.</p>"
       }
     ],
     "developmental-causal-echo-tomography": [
@@ -1653,6 +1825,22 @@
       {
         "from": "<svg class=\"echo\" viewBox=\"0 0 860 330\" role=\"img\" aria-label=\"Standardized component separation lead and later causal echo\">",
         "to": "<svg class=\"echo\" viewBox=\"0 0 900 330\" role=\"img\" aria-label=\"Standardized component separation lead and later causal echo\">"
+      },
+      {
+        "from": "<p class=\"lede\">A zero-net, information-directed perturbation does not merely fade away. It starts a delayed reorganization that changes sign, moves between the body’s surface and dense core, and reappears more than a hundred steps later—without another intervention.</p>",
+        "to": "<p class=\"lede\">With no further intervention after the prime, the response changed sign, shifted between density thresholds, and reappeared more than a hundred steps later, giving us a continuation in which to investigate how the effect of the earlier intervention changes as the field develops.</p>"
+      },
+      {
+        "from": "<p class=\"big\">These are one representative organism at three phases. The visible shapes remain recognizably the same creature. The strongest difference lives in how connectivity is distributed across density thresholds—not in a dramatic mass gain or obvious morphological rupture.</p>",
+        "to": "<p class=\"big\">The three phases follow one representative organism whose visible form remains recognizable, while its connectivity changes across density thresholds. Looking at those layers separately reveals a difference that would be easy to miss if we judged the response only by mass or by an obvious break in the body.</p>"
+      },
+      {
+        "from": "<p class=\"big\">The next experiment will prospectively compare state-triggered interventions with time-matched controls. If the body’s component-spacing and density-depth state predicts which layer answers next, then causal susceptibility is a physical phase of the organism—not just a function of age.</p>",
+        "to": "<p class=\"big\">The proposed follow-up would compare interventions triggered by the body’s component spacing and density-depth state with time-matched controls. If those measurements predict which layer responds next, they would give us information about susceptibility beyond the organism’s age.</p>"
+      },
+      {
+        "from": "<p class=\"big\">This is a lead, not a finished clock: it was selected from the physical-state scan after seeing the response curve. But it tells us exactly what to do next. Stop perturbing at arbitrary elapsed times. Ask the body when its own state says it is ready.</p>",
+        "to": "<p class=\"big\">We selected this measurement from the physical-state scan after seeing the response curve, so its apparent timing relationship still needs a prospective test. Intervening when the measurement reaches a specified state, then comparing with time-matched controls, would ask whether it can guide the intervention before the response is known.</p>"
       }
     ],
     "developmental-causal-grammar": [
@@ -1711,6 +1899,14 @@
       {
         "from": "<svg class=\"family-chart\" viewBox=\"0 0 820 475\" role=\"img\" aria-labelledby=\"family-title family-desc\">",
         "to": "<svg class=\"family-chart\" viewBox=\"0 0 820 515\" role=\"img\" aria-labelledby=\"family-title family-desc\">"
+      },
+      {
+        "from": "<p class=\"intro\">The next experiments should locate, move, and transfer the stabilization—not merely repeat the same comparison.</p>",
+        "to": "<p class=\"intro\">The next experiments should ask when the stabilization appears and whether an intervention can advance, delay, or transfer it.</p>"
+      },
+      {
+        "from": "<p class=\"intro\">This is not just a creature becoming harder to perturb. It is a reorganization of its causal action space: recent history has less power to rewrite the relationships among possible futures.</p>",
+        "to": "<p class=\"intro\">Recent history had less effect on the relationships among the tested futures as development proceeded, so the change involved which actions led where, as well as how far an intervention moved the body.</p>"
       }
     ],
     "developmental-causal-order": [
@@ -1745,6 +1941,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / What we have now</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\" style=\"margin-top:42px\">This is exactly the kind of bridge we wanted: information-rich early state is not merely predictive. It interprets causes according to developmental history.</p>",
+        "to": "<p class=\"big\" style=\"margin-top:42px\">Reversing the order of the pulses changed the later body even though their summed signed dose stayed the same, making the states encountered between pulses part of what we need to understand about the outcome.</p>"
       }
     ],
     "developmental-causal-order-age-map": [
@@ -1849,6 +2049,10 @@
       {
         "from": "<svg class=\"chart\" viewBox=\"0 0 940 360\" role=\"img\" aria-label=\"Five family-bootstrap contrasts with 95 percent intervals\">",
         "to": "<svg class=\"chart\" viewBox=\"-65 0 1030 375\" role=\"img\" aria-label=\"Five family-bootstrap contrasts with 95 percent intervals\">"
+      },
+      {
+        "from": "<p>Stop sampling only three moments. Sweep densely through organism-relative time and push in several genuinely different causal directions.</p>",
+        "to": "<p>Sampling more densely through organism-relative time, with several different intervention directions, would let us see whether the apparent window extends between the three measured moments or belongs to one particular kind of disturbance.</p>"
       }
     ],
     "developmental-causal-susceptibility-map": [
@@ -1869,6 +2073,34 @@
       {
         "from": "<div class=\"kicker\">Flow Lenia · developmental commitment · 3,648 unseen futures</div>",
         "to": ""
+      },
+      {
+        "from": "At the structural peak, a single Φ-directed perturbation made eight matched unseen futures converge on fine morphology. It did not simply pick a bigger body, preserve a founder, or reduce fragmentation. It narrowed what shapes the same organism could still become.",
+        "to": "The original experiment found a small reduction in fine-shape differences among eight matched futures after a score-directed perturbation, but when a fresh 12-family test made that effect its sole primary comparison, the interval crossed zero. The earlier secondary finding is preserved below, with the <a href=\"../organism-hardens-without-narrowing/\">confirmation and age experiments</a> following why it remains unconfirmed."
+      },
+      {
+        "from": "Information geometry is acting like a constraint on possibility.",
+        "to": "What remains of the original interpretation?"
+      },
+      {
+        "from": "This is closer to Levin’s motivating idea than a generic predictor would be. A property measured from the organization of the present state identified a physical direction in state space. Moving the organism along that direction changed the multiplicity of later forms available under environmental variation.",
+        "to": "Selecting a physical perturbation by the information score appeared to reduce later variation in shape in the original secondary comparison, but the fresh confirmation did not establish that effect. Its interval still includes the earlier estimate, leaving a small effect unresolved rather than showing that it is absent."
+      },
+      {
+        "from": "Φ did not forecast one ordained creature. It marked a direction that changed how many morphological answers the future could give.",
+        "to": "The intervention-selection rule is still a candidate to test. These results do not establish that increasing the score reliably narrows the range of later forms."
+      },
+      {
+        "from": "The original timing hypothesis was too coarse. The experiment uncovered a more interesting possibility: developmental commitment may be multidimensional. “Which body wins,” “which founders persist,” and “which exact shapes remain reachable” can close at different times and respond to different information directions. No next experiment has been launched.",
+        "to": "The follow-up separates the fine-shape claim from the age trend: later bodies were harder to redirect while sibling shapes spread farther apart. Resistance to a disturbance and convergence on a common form must therefore be measured separately. The four completed follow-ups are reported in <a href=\"../organism-hardens-without-narrowing/\">Commitment Increases Rigidity Without Convergence</a>."
+      },
+      {
+        "from": "Stop here and think",
+        "to": "The completed follow-up"
+      },
+      {
+        "from": "What is causally supported",
+        "to": "The original within-cohort comparison"
       }
     ],
     "developmental-counterweight-clamp": [
@@ -1911,6 +2143,14 @@
       {
         "from": "<div class=\"eyebrow\">06 / What changed in our picture</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The next experiment is order. Apply cancel→amplify and amplify→cancel with exactly zero net signed dose. If the later bodies differ, development remembers the sequence—not just the total push.</p>",
+        "to": "<p class=\"big\">The proposed order test would compare cancel→amplify with amplify→cancel at exactly zero net signed dose. A difference in the later bodies would show why summing the pushes is insufficient: the first pulse changes the state on which the second acts.</p>"
+      },
+      {
+        "from": "<p class=\"big\">The clamp ends at +32. At +512 the native-cancel arm remains +0.113 radius units above the matched clamps, with no detectable terminal mass difference. The system remembers the direction as form.</p>",
+        "to": "<p class=\"big\">Although the clamp ended at +32, the native-cancel arm remained +0.113 radius units above the matched clamps at +512, with no detectable terminal mass difference. The later form retained an effect of the earlier directional intervention, leaving its physical carrier to be identified.</p>"
       }
     ],
     "developmental-counterweight-dose": [
@@ -1937,6 +2177,14 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The hidden counterweight is real enough to steer morphology, finite enough to saturate, and transient enough to be absorbed. The organism does not merely follow the altered state forever. It rebuilds the developmental regime that the pulse disturbed.</p>",
+        "to": "<p class=\"big\">The radius response saturated at larger doses and weakened after a single pulse, leaving us to ask whether some ongoing process restores the earlier dynamics. Repeated cancellation followed by release would give us a way to test that explanation.</p>"
+      },
+      {
+        "from": "<p class=\"big\">If sustained cancellation produces continuing expansion or delayed recovery while matched scrambled clamps do not, we will have identified an actively renewed morphogenetic feedback loop—not just a one-shot control vector.</p>",
+        "to": "<p class=\"big\">If sustained cancellation produces continuing expansion or delays recovery while matched scrambled clamps do not, that would give us a candidate ongoing process to investigate. We would still need to identify and manipulate the feedback responsible before treating the result as an actively renewed morphogenetic loop.</p>"
       }
     ],
     "developmental-decoder-memory": [
@@ -1971,6 +2219,14 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The body does not merely remember that it was perturbed. It remembers <em>which response regime came first</em>, and expresses the next perturbation at a different physical depth.</p>",
+        "to": "<p class=\"big\">The first perturbation changed how the body responded to the second, with that difference appearing at different density thresholds. This gives us a history effect to investigate in the measured response, while locating its physical storage mechanism would require a further intervention on whatever carries it.</p>"
+      },
+      {
+        "from": "<p class=\"big\" style=\"margin-top:40px\">That distinction matters. The information direction is not just a stronger shove. Its specific history is written into the body’s <em>stratified connectivity.</em></p>",
+        "to": "<p class=\"big\" style=\"margin-top:40px\">The later difference appears in connectivity across density layers, which gives us a place to investigate how the body carries the effects of the earlier intervention and whether those effects can be explained by disturbance magnitude alone.</p>"
       }
     ],
     "developmental-depth-memory-timescale": [
@@ -2001,6 +2257,10 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">Gap 128 minus gap 0 immediate depth memory is +3.547 [+0.516, +7.203]. A simple material scar should be strongest immediately and then weaken. This result does the opposite.</p>",
+        "to": "<p class=\"big\">Gap 128 minus gap 0 immediate depth memory is +3.547 [+0.516, +7.203], so the effect is larger after waiting than immediately after the first intervention. That is inconsistent with a simple account in which a scar only fades from its initial maximum, although it leaves open how evolving material could carry or amplify the earlier disturbance.</p>"
       }
     ],
     "developmental-fission-lineage": [
@@ -2023,6 +2283,14 @@
       {
         "from": "<div class=\"eyebrow\">04 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">At 5/255, the diffuse halo remains connected and the order effect is small. At 13/255, the peripheral structure splits into extra islands. By 51/255, the microcomponent response has inverted. Hidden order is changing the <em>stratification of connectivity through the body</em>, not merely adding noise.</p>",
+        "to": "<p class=\"big\">At 5/255 the diffuse halo remained connected and the order effect was small, but raising the threshold to 13/255 revealed extra peripheral islands, and by 51/255 the microcomponent response had inverted. The different density layers therefore give different accounts of the response, which is why the interpretation has to specify which one is being measured.</p>"
+      },
+      {
+        "from": "<p class=\"big\">The bold hypothesis is now concrete: information geometry may control a <em>topological phase transition</em> in the mature Flow Lenia body. The current dose reaches surface fraying. The next experiment asks where full fission begins.</p>",
+        "to": "<p class=\"big\">The current dose produced surface fraying, which leaves a more demanding question for the next experiment: can the same intervention direction lead to full fission, with substantial bodies that remain separate, and if so at what dose?</p>"
       }
     ],
     "developmental-fold-onset": [
@@ -2065,6 +2333,14 @@
       {
         "from": "<div class=\"eyebrow\">The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>The strongest reading is not that a finished organism secretly existed in the soup. It is that an organized <b>causal state</b>—a structured map from action to future—preceded the body that later made it visible.</p>",
+        "to": "<p>Before a coherent body appeared, the intervened states already differed in which later actions produced which futures. This gives us a response structure to follow through development, without requiring us to imagine that the finished organism was already present in the initial field.</p>"
+      },
+      {
+        "from": "<p>The shift is about one entire local repertoire width before, across, and after formation. The strongest challenge remains the same across matched histories only about 10–14% of the time. The hidden organization is not a small residual—it reorganizes which interventions lead where.</p>",
+        "to": "<p>The shift is about one local repertoire width before, across, and after formation, and the strongest challenge stays the same across matched histories only about 10–14% of the time. The histories therefore change both the location of the future outcomes and which interventions reach them.</p>"
       }
     ],
     "developmental-ignition-transplant": [
@@ -2103,6 +2379,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">As the seed opens into an organism, hidden composition differentiates. That differentiation becomes a signed, spatially specific force over the future body. Its direction opposes further expansion. This is exactly the kind of internal constraint one would expect from morphogenetic regulation or primitive homeostasis.</p>",
+        "to": "<p class=\"big\">Hidden composition differentiated as the seed developed, and intervening on that change had a signed, spatially specific effect opposing further expansion. This suggests a possible contribution to regulation, but establishing a restoring process would require testing what happens when the proposed constraint is removed and reinstated.</p>"
       }
     ],
     "developmental-susceptibility-transplant": [
@@ -2133,6 +2413,22 @@
       {
         "from": "<div class=\"eyebrow\">04 / The larger idea</div>",
         "to": ""
+      },
+      {
+        "from": "The causal meaning of Φ-R follows the body, not the transplanted hidden age.",
+        "to": "For the tested pulse-order response, recipient age has a clearer effect than transplanted hidden age."
+      },
+      {
+        "from": "The passage 48 body is not rescued.",
+        "to": "A restored response in the passage 48 body is not established."
+      },
+      {
+        "from": "No portable main effect of donor hidden age.",
+        "to": "The donor-age main effect is unresolved in this comparison."
+      },
+      {
+        "from": "<p>The body is not merely the output of hidden information; it determines what hidden directions can do next.</p>",
+        "to": "<p>Transplanting the same hidden composition into a body of a different age lets us ask how much of its effect belongs to the receiving body, and why knowing the donor’s age alone cannot tell us what the transplant will do.</p>"
       }
     ],
     "developmental-tangent-controller": [
@@ -2143,6 +2439,14 @@
       {
         "from": "<div class=\"eyebrow\">Developmental tangent controller · fresh cohort</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"lead\">Most states are tightly timed. A few organisms remain radically redirectable. These are not selected “wins”; they are the strongest contrasts in the complete panel.</p>",
+        "to": "<p class=\"lead\">Most states had closely grouped transition times, while a few organisms could still be redirected much more widely. The examples shown are the largest contrasts in the complete panel, so the panel itself is needed to judge how unusual they are.</p>"
+      },
+      {
+        "from": "<p>The selected policy panel contained between two and five distinct physical actions. After controlling that count too, the estimate remains -0.184, but its interval just touches zero [-0.355, +0.012]. That does not erase the lead; it tells us exactly how to remove the ambiguity.</p>",
+        "to": "<p>The selected policy panel contained between two and five distinct physical actions, and controlling for that count left an estimate of -0.184 with an interval crossing zero [-0.355, +0.012]. Testing the complete action panel on new organisms would remove the ambiguity introduced by selecting different numbers of actions.</p>"
       }
     ],
     "developmental-topology-dose-transition": [
@@ -2169,6 +2473,22 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">This is the crucial change in picture: information geometry is not merely pushing a scalar phenotype. It is selecting <em>which physical channel the organism uses to answer.</em></p>",
+        "to": "<p class=\"big\">As we increased its amplitude, the same perturbation direction changed radius and thresholded connectivity differently, so describing the response through body size alone would have hidden part of what the intervention was doing to the organization of the field.</p>"
+      },
+      {
+        "from": "<p class=\"big\">Half dose is not just a weaker push. It hits a <em>topological resonance</em>: one shell becomes more fragmented while the denser body becomes more connected.</p>",
+        "to": "<p class=\"big\">At half dose, one density shell became more fragmented while the denser body became more connected, so reducing the intervention did not simply scale down the full-dose response. Its effect depended on which part of the density structure we measured.</p>"
+      },
+      {
+        "from": "<p class=\"big\">Now we can ask a genuinely causal memory question with equal total dose: apply 0.5× then 4×, or 4× then 0.5×. The energy is identical. Only order changes.</p>",
+        "to": "<p class=\"big\">Comparing 0.5× followed by 4× with the reverse order would keep the total dose and energy fixed while changing the states encountered between interventions, giving us a direct test of whether their order affects the later body.</p>"
+      },
+      {
+        "from": "<p class=\"big\">The surface-topology response peaks sharply at 0.5×, then fades and reverses by 4×. Radius does almost the opposite: it is weak at 0.5× and becomes clean at 2–4×. <em>The same perturbation direction is decoded differently at different amplitudes.</em></p>",
+        "to": "<p class=\"big\">The surface-topology response peaked at 0.5× and then faded and reversed by 4×, while radius was weak at 0.5× and clearly affected at 2–4×. Increasing the amplitude therefore changed which part of the body’s organization responded, rather than merely enlarging one fixed effect.</p>"
       }
     ],
     "early-action-world-onset": [
@@ -2215,6 +2535,10 @@
       {
         "from": "<text x=\"836.0\" y=\"322\" text-anchor=\"middle\" class=\"axis\">crossing</text>",
         "to": "<text x=\"836.0\" y=\"322\" text-anchor=\"end\" class=\"axis\">crossing</text>"
+      },
+      {
+        "from": "<p>We still have not found its beginning. The earliest relative window was already too late. The next experiment goes to fixed absolute ages: the first possible two-pulse sheet, then passage 8, passage 16, passage 24, and passage 32. That will tell us whether the action world is present almost immediately after initialization or rises during the ecology's earliest self-organization.</p>",
+        "to": "<p>Because the earliest relative window already showed the separation, this experiment did not locate when it first appeared. The proposed follow-up moved to fixed absolute ages, beginning with the first possible two-pulse comparison and continuing through passage 8, passage 16, passage 24, and passage 32, to ask how early in development the history-dependent responses could be detected.</p>"
       }
     ],
     "fresh-organic-q40-replication": [
@@ -2279,6 +2603,18 @@
       {
         "from": "<div class=\"eyebrow\">06 / The next experiment</div>",
         "to": ""
+      },
+      {
+        "from": "<h3>Long memory</h3>",
+        "to": "<h3>Persistent trajectory difference</h3>"
+      },
+      {
+        "from": "Visible-field distance at +512 steps. The average radius recovers, but the future does not return to the untouched trajectory.",
+        "to": "Visible-field distance at +512 steps. The average radius recovers while the images remain different. This unregistered image distance can include displacement; it does not by itself identify a memory-storage mechanism."
+      },
+      {
+        "from": "<p class=\"big\">That is the direct route back to the Levin question: detect an information-geometric direction in an early state, intervene on it before the organism changes shape, and see whether it controls the emergence of future organization.</p>",
+        "to": "<p class=\"big\">The next test should compare a direction estimated from the untouched history with matched alternatives, then ask whether it predicts a specific later change in form.</p>"
       }
     ],
     "gate-conditioned-morphology-navigation": [
@@ -2321,6 +2657,10 @@
       {
         "from": "<div class=\"eyebrow\">07 / Next swings</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">This is the bridge we were after: a hidden, manipulable informational configuration precedes form and causally biases what sort of organism develops under the same later interaction.</p>",
+        "to": "<p class=\"big\">Changing the hidden configuration before formation biased which body developed under the same later interaction, giving us an intervention whose effect connects the earlier internal state to the later form. The next explanatory task is to identify which features of that configuration carry the bias.</p>"
       }
     ],
     "gate-conditioned-morphology-reversal": [
@@ -2359,6 +2699,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">We now need to close the loop in the other direction: drive morphology hard enough, then ask whether the hidden information geometry crosses with it. If body control can flip the developmental mode—and the new mode then changes later action meaning—we have a genuine state transition rather than a transient deformation.</p>",
+        "to": "<p class=\"big\">The proposed reverse test would first drive morphology far enough to ask whether the hidden information measurements change with it, then apply a common later challenge to see whether the induced state also changes the response. Following the body after control ends would be necessary to distinguish a lasting change from a deformation maintained by the controller.</p>"
       }
     ],
     "geometry-turn-causal-atlas": [
@@ -2369,6 +2713,14 @@
       {
         "from": "<div class=\"kicker\">Before the replicator · direct causal swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>The clean next experiment is a <strong>developmental-tangent controller</strong>. On fresh organisms, learn only from short counterfactual probes which action moves the full state toward the empirically replicated phase direction—not merely which action makes Φ largest for four transitions.</p>",
+        "to": "<p>On fresh organisms, we should use short probes to estimate which action moves the state along its observed developmental trajectory, then compare that choice with one made only to maximize the information score. Measuring formation independently would let us ask whether following the trajectory adds something the score-seeking policy misses.</p>"
+      },
+      {
+        "from": "<p class=\"verdict\">Φ geometry behaves like an <span class=\"em\">order parameter</span>—a way to read where development is—rather than a one-shot <span class=\"em\">control parameter</span> that reliably pushes development forward.</p>",
+        "to": "<p class=\"verdict\">The relation between the information geometry and development changed across the atlas, suggesting that it may help describe where a trajectory is without supplying a direction that reliably advances it. A prospective test has to separate those two uses.</p>"
       }
     ],
     "information-body-return": [
@@ -2407,6 +2759,18 @@
       {
         "from": "<div class=\"eyebrow\">06 / Next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "The organism had forgotten in appearance—but not in state.",
+        "to": "Similar measured appearance did not guarantee identical subsequent trajectories; several cohort-level endpoint comparisons remain unresolved."
+      },
+      {
+        "from": "The autonomous trajectory is the principal result.",
+        "to": "At +128 steps, both the no-pulse starting-mode interaction and the incremental action effects have intervals spanning zero; the stronger autonomous-return interpretation remains unresolved."
+      },
+      {
+        "from": "<p class=\"big\">The latent difference was dynamical, not merely visual: it described where the body would go next.</p>",
+        "to": "<p class=\"big\">The later divergence shows that the preceding similarity in measured morphology did not imply a common continuation.</p>"
       }
     ],
     "initial-action-world": [
@@ -2467,6 +2831,14 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The invisible composition field is not merely “more information.” Its <strong>global balance</strong> can push a body toward compactification, while its <strong>local spatial organization</strong> appears necessary to guide expansion.</p>",
+        "to": "<p class=\"big\">Changing global channel balance favored contraction in this comparison. Expansion depended more strongly on retaining the spatial arrangement of hidden composition, suggesting that the two responses use different features of the field.</p>"
+      },
+      {
+        "from": "<p class=\"big\">This is closer to the kind of hidden organization we were looking for: a pre-morphological state whose structure does not merely predict a future form—it helps select the future trajectory.</p>",
+        "to": "<p class=\"big\">By holding the visible starting body fixed while changing its hidden composition, we could ask whether two initially indistinguishable bodies would continue in the same way, and the change in later form gives us something more specific to investigate: which features of that composition carry the effect?</p>"
       }
     ],
     "latent-composition-transplant": [
@@ -2501,6 +2873,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>The signal appears early, survives the middle of the trajectory, and grows strongest by step 128. This is not the donor image being pasted in: it is the hybrid’s own dynamics progressively expressing a bias carried by hidden composition.</p>",
+        "to": "<p>The bias appears early, persists through the middle of the trajectory, and reaches its largest size by step 128, even though the transplant did not paste the donor’s visible image into the host. The later form develops under the hybrid’s own dynamics, giving us a way to investigate what the transplanted composition contributes.</p>"
       }
     ],
     "morphology-information-return": [
@@ -2535,6 +2911,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / Next swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">This is much closer to the phenomenon we came looking for: a hidden causal organization that precedes form, shapes form, and can itself be rewritten by the history of form-generating interactions.</p>",
+        "to": "<p class=\"big\">The late score difference appeared after the period of morphology control. Applying the same fresh challenge to those branches would test whether it corresponds to a difference in their subsequent responses.</p>"
       }
     ],
     "native-tangent-intervention": [
@@ -2569,6 +2949,18 @@
       {
         "from": "<div class=\"eyebrow\">05 / What this changes</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The organism's hidden trajectory does not merely describe where it has been. Extrapolating that trajectory changes both what body appears and how many nearby futures remain available later.</p>",
+        "to": "<p class=\"big\">Moving hidden composition along a direction estimated from the recent trajectory changed later form and the spread of tested futures. The comparison asks what alignment with that trajectory contributes beyond an equal-sized alternative perturbation.</p>"
+      },
+      {
+        "from": "<p>We have found an early, state-derived coordinate with interventional consequences for later organization and later susceptibility. This is the kind of precursor Levin's result points toward: information geometry before visible transition.</p>",
+        "to": "<p>A direction estimated from the early state changed later organization and susceptibility when we intervened along it. This lets us test an idea motivated by the earlier research: whether information measured before a visible transition can help us choose an action that changes what follows.</p>"
+      },
+      {
+        "from": "<p class=\"big\">Next experiment: repeat the native-tangent intervention at several ages—passage 24, passage 32, passage 40, passage 48—and map the moving window where forward motion maximally opens the future. That gives us a developmental clock made from causal possibility, not just morphology.</p>",
+        "to": "<p class=\"big\">Repeating the native-tangent intervention at passage 24, passage 32, passage 40, and passage 48 would show whether the direction’s effect on the spread of futures changes with age. If that relationship repeats on new organisms, it could provide a developmental timing measure based on response as well as morphology.</p>"
       }
     ],
     "organism-birth-causal-exploration": [
@@ -2611,6 +3003,10 @@
       {
         "from": "<text x=\"75.96\" y=\"313\" class=\"tick\" text-anchor=\"middle\">24</text>",
         "to": "<g><title>Passage 24</title><line x1=\"75.96\" x2=\"75.96\" y1=\"282\" y2=\"288\" class=\"axis\"/></g>"
+      },
+      {
+        "from": "<p class=\"lead\">The controller moved the intended readout. That separation then collapsed. But the exact fields did not return: their distance from the untouched world kept growing. Above that microscopic drift, the organism’s developmental timing stayed stable.</p>",
+        "to": "<p class=\"lead\">The controller first separated the intended readout and that separation later collapsed, while the exact fields continued moving farther from the untouched continuation. Developmental timing stayed stable despite those changes, showing why neither the score nor the field distance alone describes the whole response.</p>"
       }
     ],
     "organism-birth-signal": [
@@ -2643,6 +3039,42 @@
       {
         "from": "<div class=\"kicker\">Four plans frozen before outcomes · 3,910 physics runs · August 2026</div>",
         "to": ""
+      },
+      {
+        "from": "Does a developing body resist intervention because its possible forms are narrowing? Four experiments separate those questions. The same push had less effect at later ages, but sibling shapes spread farther apart. A fresh-cohort test also failed to confirm the earlier fine-shape result.",
+        "to": "Does development bring related forms together, or make each form harder to change? The same local swapping procedure had less effect at later ages, while shapes grown from varied initial conditions spread farther apart. These are different aspects of development, and measuring one does not establish the other. A separate fresh-cohort test did not confirm the earlier fine-shape result."
+      },
+      {
+        "from": "steerability collapse after the past-only turn",
+        "to": "reduced response after the baseline-selected turn"
+      },
+      {
+        "from": "Steerability is the interventional face of commitment: take 64 organisms, push each one with the same local swap at ten ages spanning development, four action seeds per age, and measure how far the pushed future drifts from the untouched twin 120 steps later using the same translation-normalized shape distance throughout. The frozen prediction was that divergence is lower after the organism's structural turn than before it, with the turn computed from the untouched baseline alone as the earliest strict interior local peak of the windowed whole-minus-sum information score, declared before any outcome opened.",
+        "to": "We applied a local swapping procedure to 64 specimens at ten ages, using four action seeds at each age, and compared their shapes with untouched copies 120 steps later. The declared prediction was a smaller response after a turn selected from the untouched baseline. The actual rule selects the highest strict interior local peak of the windowed whole-minus-sum information score, taking the earliest only in a tie. It uses both neighboring ages and the full baseline grid: the selection is independent of intervention outcomes, but is retrospective, not a signal available at the moment of the turn."
+      },
+      {
+        "from": "The amber curve is the mean divergence produced by an identical push at each age. The violet bars count where each organism's past-only structural turn landed: 45 of 60 turned at age 140, right where the curve begins to fall.",
+        "to": "The amber curve shows the effect of the same swap fraction at each age. The violet bars show baseline-selected turns: 45 of the 60 specimens with an eligible peak were assigned age 140. Their alignment does not establish that the information peak causes the decline."
+      },
+      {
+        "from": "Commitment is individuation plus rigidity, not convergence.",
+        "to": "Reduced sensitivity coexists with increasing variation."
+      },
+      {
+        "from": "Push-induced future divergence falls after a past-only structural turn, as a frozen primary with the interval clear of zero, on 60 organisms across 16 families.",
+        "to": "The declared before-versus-after comparison found smaller responses after the baseline-selected turn in the 60 eligible specimens across 16 families. Its interval excludes zero; a turn-specific mechanism remains unestablished."
+      },
+      {
+        "from": "An identical dose loses about two thirds of its effect across development, monotonically by rank.",
+        "to": "The mean effect at age 780 is about a third of that at age 60 under the same swap fraction. This procedure does not guarantee equal realized disturbances at different ages."
+      },
+      {
+        "from": "Basin width grows with age. The prediction failed, and the failure is itself a decisive measurement with every bootstrap draw on one side.",
+        "to": "Sibling shape dispersion grows with age, contrary to the declared prediction. This finite-time distance measure does not estimate the volume of an attractor basin."
+      },
+      {
+        "from": "A fixed push, sibling variation, matched histories, and a fresh confirmation measure different things. Keeping those comparisons separate is what reveals the result: reduced sensitivity to intervention does not require convergence on one form.",
+        "to": "The reduced response and growing sibling variation are measured results. Calling the response decline resistance requires separating how much change the swap delivers from how the body subsequently develops. The <a href=\"../synthesis-v7/#impedance\">later dose-control experiment</a> records the actual matter rearranged and attempts to match early response; it supports a developmental decline in sensitivity, with imperfect matching, but does not identify a special onset at the information turn."
       }
     ],
     "orthogonal-pulse-release-pilot": [
@@ -2715,6 +3147,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The current atlas used independent local directions. Next, apply the same twelve phase fields across every organism. If the same direction repeatedly preserves, amplifies, or reverses development, Flow Lenia has a shared morphogenetic syntax. If rankings scramble completely across organisms, the code is individualized developmental memory.</p>",
+        "to": "<p class=\"big\">Applying the same twelve phase fields to every organism would test whether directions found locally retain their effects elsewhere. Shared rankings would suggest an intervention coordinate worth testing for transfer; changing rankings would tell us that the useful direction depends on the receiving body, without yet identifying what carries that dependence.</p>"
       }
     ],
     "prediction-falls-direction-appears": [
@@ -2741,6 +3177,14 @@
       {
         "from": "<div class=\"eyebrow\">05 / The decisive intervention</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">If passage 12-in-passage 8 advances the visible developmental turn and gives the passage 8 state passage 12-like causal leverage, while passage 8-in-passage 12 delays or weakens both, then we have located and manipulated a hidden pre-morphological state transition—not merely correlated with it.</p>",
+        "to": "<p class=\"big\">Reciprocal transplants would test whether the later hidden composition advances the earlier body and whether earlier composition delays the later body. Both directions need to be compared with the receiving body’s own unchanged continuation.</p>"
+      },
+      {
+        "from": "<p>Both readouts fall through the ignition window. But the causal arrow strengthens. The state is becoming less able to predict its immediate next state while becoming more asymmetrically able to steer its longer-term morphology.</p>",
+        "to": "<p>Both predictive readouts fell through the ignition window while the directional intervention contrast grew, separating how well the state predicted its immediate successor from how differently opposite perturbations affected later morphology.</p>"
       }
     ],
     "preinjury-recovery-confirmation": [
@@ -2803,6 +3247,10 @@
       {
         "from": "<div class=\"section-no\">08 / Receipts</div>",
         "to": ""
+      },
+      {
+        "from": "<p>Do not tune this cohort until it gives the wanted answer. Treat it as a recorded negative. A new prospective study can change one scientifically motivated thing—state description, timescale, or reproduction phenotype—and freeze that choice before new trajectories run. A causal claim would then require an intervention that deliberately moves the proposed precursor before the outcome.</p>",
+        "to": "<p>A new prospective study could change the state description, timescale, or reproduction phenotype for a stated scientific reason, freezing that choice before new trajectories are run and retaining this cohort as a negative result. To move from prediction to a causal explanation, it would also need an intervention on the proposed precursor before the outcome.</p>"
       }
     ],
     "prospective-geometry-clock": [
@@ -2829,6 +3277,10 @@
       {
         "from": "<div class=\"kicker\">The next direct causal swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"lead\">For each fresh organism, wait until the Φ-directed TDMI response first becomes negative. Intervene then. Compare with the exact same action delivered at the same absolute time in organisms whose geometry has not yet turned. If transition timing or adult form changes by inferred phase rather than clock time, we have isolated a causal developmental state.</p>",
+        "to": "<p class=\"lead\">The proposed test would wait for the Φ-directed TDMI response to become negative, intervene then, and compare with the same action at the same absolute time in organisms whose geometry had not yet turned. A difference associated with the inferred phase would support its value beyond clock time, while identifying the state variables responsible would remain a further task.</p>"
       }
     ],
     "prospective-transition-sign-flip": [
@@ -2839,6 +3291,14 @@
       {
         "from": "<div class=\"kicker\">The next causal-emergence swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>This is the stronger object: not one universal Φ arrow, but a local causal compass whose axes move as the organism organizes.</p>",
+        "to": "<p>The prospective result leaves us looking for a state-dependent relationship between the score and the effect of an action, rather than a universal direction in which increasing Φ advances development.</p>"
+      },
+      {
+        "from": "<p>The first cohort had suggested a shared sign reversal: +0.0210 after-minus-before in 11 crossings. The held-out test did not repeat that orientation. That is not the end of the phenomenon; it tells us the scalar story was too simple.</p>",
+        "to": "<p>The first cohort suggested a shared sign reversal, with +0.0210 after-minus-before in 11 crossings, but the held-out test did not reproduce that orientation. The follow-up therefore failed to establish the common direction suggested by the earlier sample.</p>"
       }
     ],
     "reservoir-causal-steering": [
@@ -2893,6 +3353,10 @@
       {
         "from": "<span class=\"section-no\">09 / Receipt</span>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"muted\">So the honest result is: something in the policy changed the compositional dynamics, but we did not show that integrated predictive information predicts or causes restoration.</p>",
+        "to": "<p class=\"muted\">The policy changed the compositional dynamics, but the comparison did not establish that integrated predictive information either predicted restoration or supplied the reason the policy affected it. To answer that, we would need interventions that separate the proposed information change from the other effects of the selected actions.</p>"
       }
     ],
     "reservoir-recurrence-census": [
@@ -2951,6 +3415,10 @@
       {
         "from": "<div class=\"section-no\">09 / Receipts</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"section-intro\">The paper’s striking idea is not merely that replicators exist. It is that a whole-system information quantity changes early enough to predict which chemical systems will later settle into self-replicating compositions.</p>",
+        "to": "<p class=\"section-intro\">The paper prompted us to look earlier in the trajectory: could a whole-system information quantity help predict which chemical systems would later settle into self-replicating compositions, before their replication made the outcome apparent?</p>"
       }
     ],
     "reservoir-temporal-precursor": [
@@ -3001,6 +3469,10 @@
       {
         "from": "<p class=\"foot\">Source checksum: 21e2adf1c50d3cdc835010e3927fc1bffbd18c000f07b1cdb433fe7c37ba966b (exploration report) · a21d65d22968a20d08a2a317628d59418334f72ea376affdbea40bb64b84cdda (point stream). Generated from the completed local artifacts; this HTML is explanatory, not part of the recorded result.</p>",
         "to": "<details class=\"source-note\"><summary>Source verification</summary><p data-source-record=\"true\" class=\"foot\">Source checksum: 21e2adf1c50d3cdc835010e3927fc1bffbd18c000f07b1cdb433fe7c37ba966b (exploration report) · a21d65d22968a20d08a2a317628d59418334f72ea376affdbea40bb64b84cdda (point stream). Generated from the completed local artifacts; this HTML is explanatory, not part of the recorded result.</p></details>"
+      },
+      {
+        "from": "<p class=\"note\">The broad answer is no. Across the 1,660 estimable valid episodes, our integration score was not a useful robust precursor. A much narrower onset pattern is interesting enough to test prospectively.</p>",
+        "to": "<p class=\"note\">Across the 1,660 estimable valid episodes, the integration score did not provide a robust general precursor, leaving the narrower onset pattern as a candidate for prospective testing rather than an explanation of the full cohort.</p>"
       }
     ],
     "shared-phase-field-orbit": [
@@ -3039,6 +3511,14 @@
       {
         "from": "<div class=\"eyebrow\">06 / What changed in our picture</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"lede\">We took the candidate shared phase field and changed only its geometry. <em>Negating the invisible field reversed its developmental bias.</em> Rotating and reflecting it revealed that the effect is also oriented—not a generic shove, and not merely extra disorder.</p>",
+        "to": "<p class=\"lede\">Negating the candidate hidden field reversed its developmental bias, while rotating or reflecting it also changed the response, giving us a way to investigate what its orientation contributes beyond the magnitude of the perturbation.</p>"
+      },
+      {
+        "from": "<p class=\"big\">Next: put the original, its negative, the 180° survivor, and the mirror-x reversal into genuinely fresh developing organisms. If the signed geometry travels, we have found a reusable developmental coordinate.</p>",
+        "to": "<p class=\"big\">The proposed transfer test would apply the original field, its negative, the 180° survivor, and the mirror-x reversal to fresh developing organisms, asking whether their signed effects survive outside the bodies in which we found them.</p>"
       }
     ],
     "shared-phase-vocabulary": [
@@ -3065,6 +3545,22 @@
       {
         "from": "<div class=\"eyebrow\">05 / The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p>For compactification, the field favored by the other families is systematically a poor choice in the omitted family. Its useful directions are body-specific, not merely noisy versions of one universal ranking.</p>",
+        "to": "<p>For compactification, the field favored by the other families was systematically a poor choice in the omitted family, so the shared ranking failed precisely where we needed it to guide an intervention on a new body.</p>"
+      },
+      {
+        "from": "<p>The expansion candidate is compelling but not yet isolated from all chance vocabularies. An independent local-label atlas even produced one accidental transferable-looking compactification label (+0.325). That is why field 06 now goes to new organisms.</p>",
+        "to": "<p>The expansion candidate still needed to be distinguished from chance patterns: an independent local-label atlas produced an accidental transferable-looking compactification label (+0.325). Testing field 06 on new organisms was therefore necessary before treating its apparent transfer as a reusable relationship.</p>"
+      },
+      {
+        "from": "<p class=\"big\">Apply field 06 to a genuinely fresh organism cohort, alongside new shared fields and independent local scrambles. Ask only whether it preserves its signed expansion-over-compactification polarity.</p>",
+        "to": "<p class=\"big\">Testing field 06 on fresh organisms alongside new shared fields and independent local scrambles would ask whether its expansion-over-compactification polarity survives, without choosing another field after seeing the new outcomes.</p>"
+      },
+      {
+        "from": "<p>If it does, we have a transferable developmental coordinate. Then rotate, reflect, translate, and partially dose that field to learn its geometric meaning. If it does not, the apparent word was a cohort-specific coincidence—and the stronger discovery is individualized developmental memory.</p>",
+        "to": "<p>If the signed effect transfers, rotating, reflecting, translating, and partially dosing the field would help identify which aspects of its geometry matter. If it does not, the apparent shared direction remains specific to the discovery cohort, and we would need another explanation of the variation between bodies.</p>"
       }
     ],
     "spatial-code-resolution": [
@@ -3149,6 +3645,10 @@
       {
         "from": "<div class=\"eyebrow\">06 / Next</div>",
         "to": ""
+      },
+      {
+        "from": "<p>Each dose uses an independent deterministic phase realization, so this is a dose-by-distribution curve rather than a single path to one scrambled endpoint. Its direction is nevertheless striking: expansion erodes; compactification does not.</p>",
+        "to": "<p>Each dose uses an independent deterministic phase realization, so the curve follows a changing distribution of rearrangements rather than one path toward a single scrambled endpoint. Across those realizations, expansion erodes while compactification does not, which makes their different dependence on arrangement worth investigating.</p>"
       }
     ],
     "spatial-scale-action-world": [
@@ -3187,6 +3687,14 @@
       {
         "from": "<div class=\"eyebrow\">The next direct swing</div>",
         "to": ""
+      },
+      {
+        "from": "<p class=\"big\">The strongest next intervention is a rescue curve: begin from the cell-shuffled passage 8 state, restore increasing fractions of the original coarse spatial arrangement, and ask whether tangent coherence and developmental timing snap back before visible morphology does.</p>",
+        "to": "<p class=\"big\">A rescue sequence could begin from the cell-shuffled passage 8 state and progressively restore the original coarse arrangement, allowing us to ask whether tangent coherence and developmental timing recover before the visible morphology does.</p>"
+      },
+      {
+        "from": "<p class=\"big\">This is a causal result about arrangement. The same material behaves differently when its spatial relations are destroyed. Early organization acts like a developmental constraint: it turns an already-rich possibility space into a narrower, more coherent trajectory toward form.</p>",
+        "to": "<p class=\"big\">Rearranging the same material changed the later responses, giving us evidence that its spatial relationships contribute to the trajectory. The next question is which of those relationships explain the narrowing and coherence of the tested futures.</p>"
       }
     ],
     "start-here": [
@@ -3237,6 +3745,26 @@
       {
         "from": "<text x=\"56\" y=\"36\" font-family=\"ui-monospace, monospace\" font-size=\"12\" font-weight=\"800\" fill=\"#254fd4\">NORMALIZED WITHIN EACH SERIES · DIRECTION IS THE CLAIM</text>",
         "to": "<text x=\"56\" y=\"56\" font-family=\"ui-monospace, monospace\" font-size=\"12\" font-weight=\"800\" fill=\"#254fd4\">NORMALIZED WITHIN EACH SERIES · DIRECTION IS THE CLAIM</text>"
+      },
+      {
+        "from": "<p>Does a coordinated whole become causally meaningful before the body is obvious? “Meaningful” means measurable in forecasts and in how matched local pokes alter later futures, not merely visually suggestive.</p>",
+        "to": "<p>We ask whether relationships within the field help forecast its future and explain the effects of matched interventions before a coherent body appears.</p>"
+      },
+      {
+        "from": "<p>This is the smallest useful map of the world, the measurement, the interventions, and the claim. The technical labels remain in the report because they identify exact analyses; none are prerequisites for reading it.</p>",
+        "to": "<p>This guide introduces the simulated world, the measurements, and the interventions needed to follow the argument. The technical labels identify the exact analyses in the supporting reports, where readers can inspect how each comparison was made.</p>"
+      },
+      {
+        "from": "<p>The same short past is forecast two ways. One model keeps all cross-part relationships. The other cuts the state at its strongest independent bipartition. Their difference is our whole-over-parts coordinate.</p>",
+        "to": "<p>We forecast the same short past with one model that retains cross-part relationships and another that separates the state at its strongest independent bipartition, using the difference between their predictions as the whole-over-parts coordinate.</p>"
+      },
+      {
+        "from": "<p>The work is interesting because it turns “this looks like an organism” into interventions with competing predictions. We can ask when the whole begins to govern what local actions mean, what becomes harder to change, and which degrees of freedom remain open.</p>",
+        "to": "<p>Once we can intervene, judging whether something looks like an organism becomes only the beginning of the question. We can ask which changes the developing body resists, which still redirect it, and whether a description of its organization helps predict the effects of those actions.</p>"
+      },
+      {
+        "from": "<p>We expected mature sibling futures to occupy a narrower basin. The frozen test resolved decisively in the other direction. That did not flatten the programme; it told us what kind of commitment we were actually seeing.</p>",
+        "to": "<p>We expected mature sibling futures to become less dispersed, but the frozen test found the opposite, requiring us to distinguish convergence in form from the increasing resistance to disturbance found in the separate age comparison.</p>"
       }
     ],
     "synthesis-v1": [
@@ -3551,6 +4079,22 @@
       {
         "from": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4% of passage 32</text>",
         "to": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4%<tspan x=\"0\" dy=\"20\" font-size=\"13\"> of passage 32</tspan></text>"
+      },
+      {
+        "from": "<p class=\"dek\">Before a coherent body is obvious, the state already has a history-dependent map of what actions can do and which futures remain reachable. Development does not merely reveal a shape. It progressively organizes, interprets, and closes possibility.</p>",
+        "to": "<p class=\"dek\">Early interventions led to different futures before a coherent body appeared, which this historical synthesis interpreted in several places as developmental closure. Following that interpretation into the later confirmation and age comparisons brought out a distinction that the earlier account had compressed: a body can become harder to disturb while the forms reached by sibling trajectories continue to spread apart.</p>"
+      },
+      {
+        "from": "<p>The whole increasingly determines how local inputs propagate. That is a concrete intervention-level form of emergent causal organization, inspired by the GARD result rather than a reproduction of its undisclosed estimator.</p>",
+        "to": "<p>The interventions show that the state receiving a local input helps determine its later effect, which gives us a response relationship to investigate as development proceeds. The GARD result motivated this question; the experiment does not reproduce its undisclosed estimator.</p>"
+      },
+      {
+        "from": "<p>This is the experiment that turns the newest signal from a strong predeclared secondary result into a clean headline result.</p>",
+        "to": "<p>At this stage, the next test was to make the secondary finding the primary comparison in a fresh cohort, so that its interpretation would no longer depend on selecting it from the earlier set of outcomes.</p>"
+      },
+      {
+        "from": "<p>The organism does not arrive in one instant. Different counterfactual freedoms close on different schedules. That is why one scalar sometimes predicts beautifully, sometimes acts weakly, and sometimes points to a very specific causal aperture.</p>",
+        "to": "<p>The comparisons place changes in timing, form, and susceptibility at different stages of development, which helps explain why one scalar can be associated with one outcome without predicting or controlling the others.</p>"
       }
     ],
     "synthesis-v4": [
@@ -3765,6 +4309,14 @@
       {
         "from": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4% of passage 32</text>",
         "to": "<text x=\"0\" y=\"57\" text-anchor=\"middle\" font-family=\"ui-sans-serif, sans-serif\" font-size=\"21\" font-weight=\"900\">104.4%<tspan x=\"0\" dy=\"20\" font-size=\"13\"> of passage 32</tspan></text>"
+      },
+      {
+        "from": "<p>The whole increasingly determines how local inputs propagate. That is a concrete intervention-level form of emergent causal organization, inspired by the GARD result rather than a reproduction of its undisclosed estimator.</p>",
+        "to": "<p>The interventions show that the state receiving a local input helps determine its later effect, which gives us a response relationship to investigate as development proceeds. The GARD result motivated this question; the experiment does not reproduce its undisclosed estimator.</p>"
+      },
+      {
+        "from": "<p class=\"lede\">The synthesis above is built from sixteen experiments. The campaign that produced them ran ninety-one, and the follow-up programme below brings the map to ninety-five. Reading the cited few against the ninety-five is what keeps the claim honest.</p>",
+        "to": "<p class=\"lede\">This synthesis selects sixteen experiments from a campaign that had run ninety-one, with the follow-up programme below bringing the total to ninety-five. Keeping the full record accessible lets readers judge how representative the selected findings are and follow the comparisons that changed their interpretation.</p>"
       }
     ],
     "synthesis-v5": [
@@ -4037,6 +4589,10 @@
       {
         "from": "Interval -0.6762 to +1.2916; strongest per-instance sham/replay/local comparator. Null.",
         "to": "Interval -0.6762 to +1.2916, relative to the strongest control for each instance: sham, replay, or local control. The interval includes zero."
+      },
+      {
+        "from": "<p class=\"lede\">The next experiments should discriminate mechanisms that the present corpus has made separable—not just rerun the same tiny contrasts with more seeds.</p>",
+        "to": "<p class=\"lede\">The next experiments should separate the candidate mechanisms by choosing interventions under which they predict different outcomes, using the distinctions in this corpus to decide what to hold fixed and what to change.</p>"
       }
     ],
     "synthesis-v7": [
@@ -4231,6 +4787,14 @@
       {
         "from": "<span class=\"section-no\">10 · evidence and correction ledger</span>",
         "to": ""
+      },
+      {
+        "from": "Initialization-perturbed width grows from 0.032 at age 60 to 0.079 at age 900, so here commitment means increasing rigidity within an individuating history, not convergence on one silhouette.",
+        "to": "Mean shape distance among initialization-perturbed siblings grows from 0.032 at age 60 to 0.079 at age 900. This finite-time dispersion can increase while sensitivity to the tested swap decreases; it does not measure the volume of an attractor basin."
+      },
+      {
+        "from": "<p>The useful comparison is aligned donor composition against the same donor’s scrambled composition. Both can perturb the host. Only their paired difference tests the extra effect of donor alignment.</p>",
+        "to": "<p>Comparing aligned donor composition with the same donor’s scrambled composition holds the donor source fixed while changing its arrangement. Because either transplant can disturb the host, their paired difference is what lets us ask whether retaining donor alignment adds an effect.</p>"
       }
     ],
     "tangent-future-aperture": [
@@ -4249,6 +4813,10 @@
       {
         "from": "el(svg,'text',{x:x(xv)+(i===0?10:8),y:y(yv)+(i===0?-12:label==='untouched'?17:-10),fill:color,'font-size':11},label);",
         "to": "const offsets=[[10,-12],[10,18],[12,-4],[-70,-12]], offset=offsets[i];el(svg,'line',{x1:x(xv),y1:y(yv),x2:x(xv)+offset[0],y2:y(yv)+offset[1]-4,stroke:color,'stroke-width':.8});el(svg,'text',{x:x(xv)+offset[0],y:y(yv)+offset[1],fill:color,'font-size':11},label);"
+      },
+      {
+        "from": "<p>Component-count breadth difference +0.0113, interval [−0.535, +0.574]. The effect concerns dominance, not merely the number of pieces.</p>",
+        "to": "<p>The resolved result concerns the share of matter in the dominant component, whereas component-count breadth differed by +0.0113, with interval [−0.535, +0.574]. Following both matters here, because a change in how much of the field belongs to its largest connected part need not resolve how many separate components it will contain.</p>"
       }
     ],
     "tangent-induced-causal-grammar": [
@@ -4307,6 +4875,14 @@
       {
         "from": "memorySvg.append(svgEl(\"text\",{x:W-m.r+8,y:y(values.at(-1))+4,fill:colors[name],class:\"series-label\"},name));",
         "to": "const labelY = {\"Φ-forward\":46,\"Untouched\":68,\"Blind swap\":90,\"Φ-backward\":112}[name];\n        memorySvg.append(svgEl(\"line\",{x1:W-m.r,y1:y(values.at(-1)),x2:W-m.r+6,y2:labelY-4,stroke:colors[name],\"stroke-width\":1}));\n        memorySvg.append(svgEl(\"text\",{x:W-m.r+8,y:labelY,fill:colors[name],class:\"series-label\"},name));"
+      },
+      {
+        "from": "<p>That is unusually clean. It shows that treatment labels, output paths, and analysis bookkeeping did not manufacture the effect. A difference appeared only when the early physical state was actually pushed in a different direction.</p>",
+        "to": "<p>The bookkeeping controls did not produce the effect, whereas physically perturbing the early state in different directions did. That supports attributing the difference to the intervention rather than to treatment labels, output paths, or analysis handling.</p>"
+      },
+      {
+        "from": "<p>The early state did not choose the organism’s final form outright. It changed how much later history the developing system retained. That is a direct bridge between information geometry and developmental commitment.</p>",
+        "to": "<p>The intervention changed how much of the later history remained detectable in the developing field, giving us a specific response to explain without implying that the early state had fixed the organism’s final form.</p>"
       }
     ],
     "tangent-memory-dose-response": [
@@ -4377,6 +4953,48 @@
       {
         "from": "text(svg, x(d.composition) + 7, y(d.field) - 6, d.familyId, \"start\", \"tick\");",
         "to": "const offsets = {f33:[28,14], f38:[28,-6], f40:[28,-20], f44:[-28,-2]};\n          const offset = offsets[d.familyId] || [7,-6];\n          if (offsets[d.familyId]) svg.appendChild(el(\"line\", {x1:x(d.composition),y1:y(d.field),x2:x(d.composition)+offset[0],y2:y(d.field)+offset[1]-4,stroke:\"currentColor\",\"stroke-width\":.7,opacity:.5}));\n          text(svg, x(d.composition) + offset[0], y(d.field) + offset[1], d.familyId, offset[0]<0?\"end\":\"start\", \"tick\");"
+      },
+      {
+        "from": "<p>The previous future expressed the effect cleanly in spatial fields. This new future expressed the strongest ordered response in founder composition. The stable object may therefore be a deeper retention/overwrite property; its visible carrier depends on what the ecology encounters next.</p>",
+        "to": "<p>The earlier continuation expressed the effect clearly in spatial fields, whereas this one showed its largest ordered response in founder composition. A retention or overwrite process could account for effects appearing in different measurements, but identifying it would require showing what persists through the changed ecological conditions.</p>"
+      }
+    ],
+    "goal-state-tomography": [
+      {
+        "from": "<p class=\"lead\">Replication may not be the beginning of organismality. A system may first acquire a higher-level causal organization—a primitive “self”—and only later become able to copy it.</p>",
+        "to": "<p class=\"lead\">We wanted to know whether a system could maintain an organization before it could reproduce it, and approached that question by disturbing a body and following whether it returned toward an undisturbed continuation. The injury assay below did not displace its targets enough to answer this, leaving us with the need for a disturbance that first establishes something to recover from.</p>"
+      },
+      {
+        "from": "<p>This matters because it turns “when does life begin?” into a measurable dynamical question. Do we see a new level of control before we see a copier? Can that reorganization predict which histories will later become canalized, self-maintaining, or replicative?</p>",
+        "to": "<p>We wanted to know whether a system could begin correcting disturbances before it could reproduce, and whether that ability would help predict which histories later became self-maintaining or replicative. That question gives the experiment a more specific target than deciding, from appearance alone, when life begins.</p>"
+      },
+      {
+        "from": "<p>That is the connection to biological regeneration. Planarian tissues and Hydra are compelling not because they are static shapes, but because they can act across many local routes to rebuild a species-typical whole. In operational terms, teleology means <strong>error correction toward a future state</strong>: disturb the present, then ask whether different damaged histories converge on the same destination.</p>",
+        "to": "<p>Biological regeneration motivates the comparison because different damaged configurations can lead back toward a characteristic whole. In the simulation, we can ask a narrower version of that question by disturbing the present state in different ways and measuring whether the resulting histories converge on a common destination.</p>"
+      },
+      {
+        "from": "<p>And the different injuries did not converge on a common future. Cross-injury contraction was negative in <strong>8 of 8 states</strong>, from −0.1590 to −0.0630. The fans widened. That is the opposite of morphological equifinality.</p>",
+        "to": "<p>The different injuries led to futures that spread farther apart, with cross-injury contraction negative in 8 of 8 states, from −0.1590 to −0.0630. Under this assay, the trajectories therefore did not show the convergence toward a common morphology that we were looking for.</p>"
+      },
+      {
+        "from": "<p class=\"pull\">The cleanest reading is cryptic internal damage followed by dynamical amplification—not a system recognizing and correcting a morphological error.</p>",
+        "to": "<p class=\"pull\">The results are consistent with internal damage that was initially concealed by the chosen image measurement and later amplified by the dynamics. They do not establish recognition and correction of a morphological error.</p>"
+      },
+      {
+        "from": "<p>We injured founder-labelled matter but judged success by a normalized, recentered 32×32 matter-density map. The transform discarded absolute mass and founder identity while retaining coarse normalized internal density. The internal composition changed substantially while this chosen goal variable barely moved. Later, the hidden damage expressed itself as divergent trajectories. The experiment is therefore a powerful demonstration of delayed amplification—but not a clean regeneration test.</p>",
+        "to": "<p>We injured founder-labelled matter but judged recovery through a normalized, recentered 32×32 matter-density map, which discarded absolute mass and founder identity while retaining coarse normalized internal density. The intervention could therefore substantially change internal composition while barely moving the variable we had chosen to call the goal. As that hidden change developed into divergent trajectories, it exposed a problem in the assay: we had followed the amplification of damage without first establishing a visible displacement from which regeneration could be measured.</p>"
+      },
+      {
+        "from": "<p>It is <strong>not</strong> evidence of repair. Repair requires a detectable initial error followed by its reduction. Here the readout said, in effect, “the target shape was barely displaced” at the first moment we looked.</p>",
+        "to": "<p>The readout barely registered an initial displacement of the target shape, leaving no clear error whose subsequent reduction could demonstrate repair. Measuring the later difference alone cannot resolve that missing first part of the comparison.</p>"
+      },
+      {
+        "from": "<p>The atlas converted an unhelpful scalar result into a precise candidate event: a decomposition boundary in two f19 states. That is progress. It says where our information decomposition becomes singular—and therefore where a higher-level organization might be forming, or where the estimator may simply become ill-conditioned. Either way, this is now an exact site to interrogate.</p>",
+        "to": "<p>The atlas located a decomposition boundary in two f19 states, giving us a specific feature to investigate after the scalar comparison proved uninformative. It might reflect a change in organization, but it might also be where the estimator becomes ill-conditioned; distinguishing those explanations is necessary before interpreting the boundary biologically.</p>"
+      },
+      {
+        "from": "<p>We have not seen multiple wounded paths being drawn back toward one future. We have seen the reverse: tiny cryptic differences flowering into different futures. In this assay, history remained causally loud.</p>",
+        "to": "<p>Different injuries led toward increasingly different futures under this assay, so the histories remained distinguishable instead of converging on the common destination that a recovery interpretation would require.</p>"
       }
     ]
   }

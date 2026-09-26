@@ -25,3 +25,10 @@ The report narrative is in [report-draft.md](report-draft.md). Preserve the orig
 6. Generate the linked grid/field comparison and sweep distributions from those exports. Only then replace the draft status with a dated, reproducible report and link it from Writing and Addenda.
 
 The mature-pattern injury extension is a separate experiment, not a silent correction to the original protocol.
+
+
+## Figures needed before a results article
+
+**Figure to build from reproduced data:** a selectable four-by-six grid with all fifteen patch placements. Beside it, show the intact final field, the disconnected final field, and their difference using shared color scales. The selected patch should remain outlined in each view. Keep the initial field visible so the reader can see what was held fixed.
+
+**Figure to build from reproduced data:** show all fifteen placements as a small severity map for one regime, followed by the distribution of within-regime score ranges across seeds and parameters. Include raw concentration differences alongside the normalized scores. Allow switching between scores and activity thresholds without changing the grid or color-scale conventions silently.

@@ -287,6 +287,11 @@ pub fn stage_library(
         if report.archive {
             linked = linked.replace("href=\"about.html\">About this report</a>", "href=\"about.html\">About this report</a><span>Supporting experimental record</span>");
         }
+        linked = Regex::new(r#"(?s)<aside[^>]*data-reading-context="v1"[^>]*>.*?</aside>"#)?
+            .replace_all(&linked, "").into_owned();
+        let reading_context = super::causal_emergence::record_reading_context(&report.id, &report.date);
+        linked = linked.replacen("</header>", &format!("</header>{reading_context}"), 1);
+        public_report.transformations.push("connect_consolidated_reading_v1");
         public_report.bytes = linked.into_bytes();
         public_report
             .transformations

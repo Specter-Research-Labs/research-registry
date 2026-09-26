@@ -6,15 +6,15 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "fresh-cohort tangent intervention",
-  "sourceReportSha256": "cd1d2da5242ad38c508ac613944d911a3df67081860c6fabb503c6474a2412d8",
-  "publicReportSha256": "96a9d14e994bf6db88a02cc88886deccb4ec2635226a478d990072b411315673",
+  "sourceReportSha256": "154bd8e6376274004d0ae58540fd15902f2a6307c2cb4f5322ab112c5b54ca8e",
+  "publicReportSha256": "154bd8e6376274004d0ae58540fd15902f2a6307c2cb4f5322ab112c5b54ca8e",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "a7d699151af621c66219e822534303d52f2c7c3e7a3b68345705874c0110eafb",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "8674d2f0d1fd97843db7a0ad10620cdefee6b81e11bdcc777731c1c22ed4e6f1"
+  "contextSha256": "6efdef3f4aaceb9830e3e70b8914416711bbc607449e337e6751c56435bcd12a",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "e46f3780124a183684958112f3e9469317ac3ffa280baf10902e2e262502938d"
 }

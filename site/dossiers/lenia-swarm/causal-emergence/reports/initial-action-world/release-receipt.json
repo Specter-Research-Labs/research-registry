@@ -6,15 +6,15 @@
   "date": "2026-08-23",
   "status": "feature",
   "evidenceClass": "prospective same-organism challenge comparison",
-  "sourceReportSha256": "03ed7016a113d1c91fe0615f0dab09ae7624dbc349f16623624fa181acf572a3",
-  "publicReportSha256": "a1e9f642699233841af89108100d7b7bbc3d8edb50df0d08a302966d632a843b",
+  "sourceReportSha256": "b41967c672296c575341fe55ca10c51a66c512d752cdf393653453d8f9ad6865",
+  "publicReportSha256": "60f41c8095a3df67c0ae7ef810dfe7d7890b7112356b129e60f30d1021971b63",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "6a559120029bbef3631e8964e6e9d59c48556f5e4985d3f90f6d2ffeb00005aa",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "c7a4e22c1866ae0b59105112332ea2f8c7645684a01f9c425caff869cbcbbe38"
+  "contextSha256": "f65a8f3a9ac9c340104e07bcbb14b5e0d2aacb6f56571681ecac240a043f47c7",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "ecbce89c61c09bcac70c203546787a3029eacfa8bcf6b01a537da15ed25e28ca"
 }

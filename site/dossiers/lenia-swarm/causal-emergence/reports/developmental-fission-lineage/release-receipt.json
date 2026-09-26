@@ -6,15 +6,15 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "topology and lineage analysis",
-  "sourceReportSha256": "c1b070a55c7613ffcbae1613a977967b5b202865085cc734f4723067048e6e9b",
-  "publicReportSha256": "007875dfdc7cf0af7cb98580f4054d5a4eb9e7b1a34d128681917b73469c8cb7",
+  "sourceReportSha256": "6dec36ce7a850609a7a9f4a3751ffe97859e390cb59ce0b23027949964f5ba90",
+  "publicReportSha256": "6dec36ce7a850609a7a9f4a3751ffe97859e390cb59ce0b23027949964f5ba90",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "d21d9fe9cd6768ae493b2c88214e1a92b84223c20024ff254ba196681dbff4b8",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "b5eb84fc272929086a3e41a590706dd8d19a4bea1b7645b366f00d3265b70de7"
+  "contextSha256": "41bf176d824f886f43f3e66845a5df800e6e8744a2001642ae8567020a052119",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "f4df0b35bb0661d11b79f4a0d118287b66c9c7687413503916e2bdda8f85dc40"
 }

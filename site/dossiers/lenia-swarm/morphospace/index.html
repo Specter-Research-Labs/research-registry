@@ -8,14 +8,14 @@
     <title>How much does shape explain? | SPECTER Labs</title>
     <meta
       name="description"
-      content="A region selected from Flow Lenia’s geometry lies closer to fish landmark shapes. A separate obstacle experiment asks how moving bodies respond when their path is blocked."
+      content="Mapping Flow Lenia forms, testing closed paths through their generating rules, and observing how moving bodies respond to obstacles."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SPECTER Labs" />
     <meta property="og:title" content="How much does shape explain?" />
     <meta
       property="og:description"
-      content="A region selected from Flow Lenia’s geometry lies closer to fish landmark shapes. A separate obstacle experiment asks how moving bodies respond when their path is blocked."
+      content="Mapping Flow Lenia forms, testing closed paths through their generating rules, and observing how moving bodies respond to obstacles."
     />
     <meta
       property="og:url"
@@ -44,7 +44,7 @@
     <link rel="stylesheet" href="/assets/report.css?v=20260910-transparent-1" />
       <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
 <link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
-<link rel="stylesheet" href="/assets/publication-formats.css"><link rel="stylesheet" href="/assets/morphospace-plate.css"></head>
+<link rel="stylesheet" href="/assets/publication-formats.css"><link rel="stylesheet" href="/assets/morphospace-plate.css?v=20260924-topology"></head>
   <body class="report-page report-theme-morphospace report-layout-editorial report-morphospace" data-publication="report">
     <div class="site-shell report-shell">
       <header class="site-topnav">
@@ -71,120 +71,45 @@
 
       <main class="site-main report-main">
         <nav class="report-nav" aria-label="Report sections">
-          <a href="/dossiers/lenia-swarm/morphospace/#result-fish-near">The unexpected resemblance</a>
-          <a href="/dossiers/lenia-swarm/morphospace/#result-map">Building the map</a>
-          <a href="/dossiers/lenia-swarm/morphospace/#result-transport">Testing the loops</a>
-          <a href="/dossiers/lenia-swarm/morphospace/#result-response">Meeting an obstacle</a>
+          <a href="#result-map">A geography of form</a>
+          <a href="#result-topology">Gaps in the map</a>
+          <a href="#result-transport">Testing a round trip</a>
+          <a href="#result-response">Meeting an obstacle</a>
         </nav>
 
         <header class="report-hero">
           
           <h1>How much does <br><span>shape explain?</span></h1>
           
-          <div class="report-hero-dek"><p>These Flow Lenia bodies keep moving while retaining a recognizable form. Their shapes arise from the continual redistribution of matter. If we describe those shapes precisely enough, can we begin to predict how the bodies will behave?</p><p>We mapped 25,167 Flow Lenia patterns and compared them with fish and simulated tissue. A group selected before that comparison turned out to share unusually similar proportions with fish. We then tested whether routes through the shape map correspond to reproducible changes in a body, and measured how five moving specimens respond to an obstacle.</p></div>
-          <aside class="report-margin-note"><strong>5.90 → 3.30</strong><p>Median nearest-fish distance in normalized shape coordinates: full sample → selected region. Fish data played no part in selecting its 256 specimens.</p></aside>
+          <div class="report-hero-dek" aria-label="Abstract"><p>What is the shape of a space of possible bodies? Flow Lenia produces patterns whose forms emerge from the continual redistribution of simulated matter. We construct a synthetic morphospace from their measured geometry and use topological data analysis to investigate how the sampled forms connect and which gaps persist as we broaden the scale of comparison.</p><p>The deeper question is whether this geography tells us anything about how bodies can change. A missing form might mark a difficulty in constructing a viable body, and a route around it might offer a way to reach another organization. We test one part of that idea by taking generating rules around closed paths, then use obstacle encounters to examine changes under a fixed rule. Most apparent round-trip effects disappear under stricter controls, leaving us with a map of sampled forms whose routes still need a dynamical explanation.</p></div>
         </header>
 
-        <figure class="report-motion-intro"><div class="report-motion-pair"><div class="report-motion-frame publication-motion"><img class="report-transparent-motion" src="/assets/blog/lenia-morphospace-report/motion/870da94a.png?v=3600" data-motion="/assets/blog/lenia-morphospace-report/motion/870da94a-transparent.webp" data-still="/assets/blog/lenia-morphospace-report/motion/870da94a.png?v=3600" alt="Flow Lenia specimen 870da94a moving across the field"><button type="button" class="report-motion-toggle publication-motion-toggle" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div><div class="report-motion-frame publication-motion"><img class="report-transparent-motion" src="/assets/blog/lenia-morphospace-report/motion/781d0200.png?v=3600" data-motion="/assets/blog/lenia-morphospace-report/motion/781d0200-transparent.webp" data-still="/assets/blog/lenia-morphospace-report/motion/781d0200.png?v=3600" alt="Flow Lenia specimen 781d0200 moving across the field"><button type="button" class="report-motion-toggle publication-motion-toggle" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div></div><figcaption id="motion-caption"><strong>Bodies that hold together while they move.</strong> Two specimens from the obstacle experiment, replayed here without an obstacle for 3,600 steps. The fish comparison below uses a separate group. The fixed camera preserves movement; the two bodies are enlarged independently. <a href="/dossiers/lenia-swarm/morphospace/#result-response">See how they respond to an obstacle →</a></figcaption></figure>
-
-        <section class="report-result report-tone-mint" id="result-fish-near" aria-labelledby="fish-title">
-          <div class="report-result-copy report-chapter-head">
-            <div class="report-chapter-title"><div class="report-kicker">01 / An unexpected resemblance</div>
-            <h2 id="fish-title">Why some Lenia patterns measure like fish</h2></div>
-            <p>A group of 256 Lenia patterns shares closer proportions with fish than the broader collection does. Its median distance to the nearest fish falls from 5.90 to 3.30, while its distance to simulated tissue increases. Fish data played no part in selecting this group: the resemblance emerged from a comparison with a shape map built from Lenia alone.</p>
-            <p>The reversal suggests that these twelve measurements distinguish combinations of proportions across very different systems. The comparison brings together concentrations of simulated matter, anatomical landmarks on fish, and cell positions from EmbryoMaker, a model of tissue development. What they share is a description of geometry; how much biology that description captures depends on what it leaves out.</p>
-            <p>An elongated streak can sit close to a fish in this map because both have similar proportions along their long and short axes. Fin outlines, internal anatomy, and swimming behavior are absent from the comparison. The example below shows which measurements bring the two together.</p>
-            <details class="report-original-replays" open><summary>Inspect three original recordings from the selected group</summary>        <figure class="report-specimens" aria-labelledby="specimen-caption">
-          <p class="report-scroll-hint">Swipe to compare the three replays</p>
-          <div class="report-specimen-grid" tabindex="0" aria-label="Three specimen replays">
-            <div class="report-specimen"><video controls loop muted playsinline preload="metadata" aria-label="Replay of flow-map-elite-53" poster="/assets/blog/lenia-morphospace-report/fish-near/library-0-flow-map-elite-53.png" src="/assets/blog/lenia-morphospace-report/fish-near/library-0-flow-map-elite-53.mp4"></video><span>flow-map-elite-53</span></div>
-<div class="report-specimen"><video controls loop muted playsinline preload="metadata" aria-label="Replay of flow-map-elite-38" poster="/assets/blog/lenia-morphospace-report/fish-near/library-0-flow-map-elite-38.png" src="/assets/blog/lenia-morphospace-report/fish-near/library-0-flow-map-elite-38.mp4"></video><span>flow-map-elite-38</span></div>
-<div class="report-specimen"><video controls loop muted playsinline preload="metadata" aria-label="Replay of glowing-pulse-6186" poster="/assets/blog/lenia-morphospace-report/fish-near/library-6938-glowing-pulse-6186.png" src="/assets/blog/lenia-morphospace-report/fish-near/library-6938-glowing-pulse-6186.mp4"></video><span>glowing-pulse-6186</span></div>
-          </div>
-          <figcaption id="specimen-caption"><strong>The specimens selected by shape.</strong> These are three of the six published replays from a 256-specimen neighborhood. These are the original 128 × 128 replay exports, displayed at a restrained size. The elongated, sometimes fragmented patterns are close to fish in twelve measurements—not necessarily to the eye. They are separate from the coherent movers tested later in this report. Each clip loops 96 frames at 8 fps.</figcaption>
-            </figure></details>
-          </div>
-          <figure class="report-fish-story" id="fish-measurements" aria-labelledby="fish-measurements-title">
-            <div class="report-fish-intro"><div><h3 id="fish-measurements-title">What does the map see when it sees a fish?</h3></div><p>The fish enters our comparison as eleven points in space: the snout, eyes, and fin bases. Their arrangement preserves some of the body’s geometry while leaving out its skin, fins, and movement.</p></div>
-            <div class="report-fish-source"><img src="/assets/blog/lenia-morphospace-report/fish-landmark-source.png" alt="Original study’s diagram: left, right and front views of a fish, with eleven numbered anatomical landmarks." loading="lazy"></div>
-            <p class="report-image-credit">Landmark scheme from Torgersen et al. (2023), <a href="https://doi.org/10.1038/s41598-023-48086-5">Fig. 6d–f</a>, cropped from the original figure. <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. This illustrates the method; it is not a portrait of the matched specimen below.</p>
-            <div class="report-fish-lab" data-fish-explorer>
-              <div class="report-fish-view"><img class="report-fish-fallback" src="/assets/blog/lenia-morphospace-report/fig-neighbor-fish.svg" alt="The eleven measured landmarks of the matched Ameiurus natalis specimen."><svg class="report-fish-canvas" viewBox="0 0 700 320" role="group" aria-label="Measured fish landmarks" hidden></svg></div>
-              <div class="report-fish-controls" hidden><h4>Yellow bullhead</h4><em class="report-fish-scientific">Ameiurus natalis</em><p>The fish nearest to flow-map-elite-53. Turn it to see how paired landmarks separate in three dimensions.</p><label for="fish-choice">Compare a specimen</label><select id="fish-choice"></select><label for="fish-angle">View around the body’s long axis</label><input id="fish-angle" type="range" min="0" max="90" value="18" step="1"><div class="report-fish-view-labels"><span>Side</span><span>Above</span></div><p class="report-fish-point-label" aria-live="polite">Select a numbered point to identify it.</p></div>
-            </div>
-            <figcaption>Dots mark measured anatomy. Lines connect those locations as guides; they do not trace a body outline. <a href="/assets/blog/lenia-morphospace-report/fish-explainer.json">Coordinates and comparison data</a>.</figcaption>
-          </figure>
-          <details class="report-method"><summary>How the fish views and distances are constructed</summary><p>The four fish use the source study’s size-normalized landmark coordinates and a common display scale. They are rotated to align the snout-to-tail axis and dorsal direction; lengths on screen are not millimeters. The tissue image uses its own principal plane and display scale. For the twelve-coordinate comparison, each absolute difference uses the original analysis normalization. Euclidean distance is the square root of the sum of squared differences.</p></details>
-          <figure class="report-comparison report-neighbors" aria-labelledby="neighbor-title">
-            <h3 id="neighbor-title">One pattern, two very different neighbors</h3>
-            <p class="report-chart-note">Return to flow-map-elite-53. Its distance to the yellow bullhead above is 3.03; even its nearest tissue neighbor is farther away, at 9.16.</p>
-            <div class="report-neighbor-grid report-neighbor-pair">
-              <div><span class="evidence-label">Flow Lenia</span><video class="report-neighbor-replay" controls loop muted playsinline preload="metadata" poster="/assets/blog/lenia-morphospace-report/fish-near/library-0-flow-map-elite-53.png" src="/assets/blog/lenia-morphospace-report/fish-near/library-0-flow-map-elite-53.mp4" aria-label="Original replay of flow-map-elite-53"></video><strong>flow-map-elite-53</strong><p>Original 128 × 128 replay. The bright elongated structure persists while the surrounding field changes.</p></div>
-              <div><span class="evidence-label">EmbryoMaker · distance 9.16</span><img src="/assets/blog/lenia-morphospace-report/fig-neighbor-embryomaker.svg" alt="Projected positions of 12,975 nodes in the nearest EmbryoMaker snapshot." loading="lazy"><strong>Simulated tissue · IC2</strong><p>12,975 model nodes from a developmental snapshot.</p></div>
-            </div>
-            <figcaption>The same Lenia specimen in motion, beside its nearest tissue neighbor. The distances use the stored shape measurements; they are not recalculated for each replay frame. Display sizes are fitted independently.</figcaption>
-          </figure>
-          <details class="report-method report-fingerprint-detail" open><summary>The stored field used for the distance calculation</summary><img src="/assets/blog/lenia-morphospace-report/fig-neighbor-lenia.svg" alt="32 by 32 mass fingerprint of flow-map-elite-53" loading="lazy"><p>This 32 × 32 mass fingerprint is the measurement record for flow-map-elite-53. The replay above shows the specimen’s dynamics at the original export resolution.</p></details>
-          <figure class="report-coordinate-comparison" aria-labelledby="coordinate-title"><div class="report-fish-intro"><div><h3 id="coordinate-title">Elongation makes the biggest difference</h3></div><p>For flow-map-elite-53, the fish is close on elongation; the tissue snapshot is much farther away. The other measurements add to the distance, but this coordinate accounts for the largest part of the gap.</p></div><p class="report-chart-note">Absolute difference from the Lenia specimen · shorter means a closer match<br><span class="fish-difference-key">Blue: fish</span> · <span class="tissue-difference-key">Coral: tissue</span> · common scale from 0 to 8</p><label class="coordinate-order">Order by <select id="coordinate-order"><option value="original">Measurement order</option><option value="embryomaker">Tissue difference</option><option value="fish">Fish difference</option></select></label><div class="report-coordinate-bars"><div class="report-coordinate-row report-coordinate-header"><span>Measurement</span><span>Difference · 0–8</span><span>Fish / tissue</span></div><div class="report-coordinate-row report-coordinate-lead"><span>Elongation</span><div><i class="fish-difference" style="width:2.49485%"></i><i class="tissue-difference" style="width:88.98033%"></i></div><span>0.20 / 7.12</span></div>
-<div class="report-coordinate-row"><span>Directional bias</span><div><i class="fish-difference" style="width:0.12206%"></i><i class="tissue-difference" style="width:28.73121%"></i></div><span>0.01 / 2.30</span></div>
-<div class="report-coordinate-row"><span>Compactness</span><div><i class="fish-difference" style="width:3.03713%"></i><i class="tissue-difference" style="width:14.16975%"></i></div><span>0.24 / 1.13</span></div>
-<div class="report-coordinate-row"><span>Polarity</span><div><i class="fish-difference" style="width:9.42596%"></i><i class="tissue-difference" style="width:1.19868%"></i></div><span>0.75 / 0.10</span></div>
-<div class="report-coordinate-row"><span>Reflection symmetry</span><div><i class="fish-difference" style="width:0.75000%"></i><i class="tissue-difference" style="width:3.38455%"></i></div><span>0.06 / 0.27</span></div>
-<div class="report-coordinate-row"><span>Radial evenness</span><div><i class="fish-difference" style="width:2.30740%"></i><i class="tissue-difference" style="width:31.20885%"></i></div><span>0.18 / 2.50</span></div>
-<div class="report-coordinate-row"><span>Component count</span><div><i class="fish-difference" style="width:33.83744%"></i><i class="tissue-difference" style="width:33.83744%"></i></div><span>2.71 / 2.71</span></div>
-<div class="report-coordinate-row"><span>Largest component fraction</span><div><i class="fish-difference" style="width:0.85859%"></i><i class="tissue-difference" style="width:0.85859%"></i></div><span>0.07 / 0.07</span></div>
-<div class="report-coordinate-row"><span>Largest component anisotropy</span><div><i class="fish-difference" style="width:1.02932%"></i><i class="tissue-difference" style="width:29.69598%"></i></div><span>0.08 / 2.38</span></div>
-<div class="report-coordinate-row"><span>Raster coverage</span><div><i class="fish-difference" style="width:3.63007%"></i><i class="tissue-difference" style="width:25.00066%"></i></div><span>0.29 / 2.00</span></div>
-<div class="report-coordinate-row"><span>Boundary complexity</span><div><i class="fish-difference" style="width:10.50898%"></i><i class="tissue-difference" style="width:22.06179%"></i></div><span>0.84 / 1.76</span></div>
-<div class="report-coordinate-row"><span>Enclosure</span><div><i class="fish-difference" style="width:7.31403%"></i><i class="tissue-difference" style="width:7.31403%"></i></div><span>0.59 / 0.59</span></div>
-</div><figcaption>Together, these differences give distances of 3.03 to the fish and 9.16 to the tissue snapshot. This explains one example, not the whole selected region.</figcaption></figure>
-          <figure class="report-comparison" aria-labelledby="distance-title">
-            <h3 id="distance-title">The same region moves closer to fish and farther from EmbryoMaker</h3>
-            <p class="report-chart-note">Median nearest-neighbor distance · normalized shape coordinates · shorter is closer</p>
-            <div class="report-comparison-grid">
-              <div class="report-bar-panel">
-                <h4>Distance to fish landmark shapes</h4><div class="report-bar-axis" aria-hidden="true"><span>0</span><span>6</span><span>12</span></div>
-                <div class="report-bar-row"><span>Broad Lenia sample</span><div class="report-bar-track"><i style="--bar:49.17%" aria-hidden="true"></i></div><strong>5.90</strong></div>
-                <div class="report-bar-row report-bar-row--accent"><span>Selected region</span><div class="report-bar-track"><i style="--bar:27.5%" aria-hidden="true"></i></div><strong>3.30</strong></div>
-              </div>
-              <div class="report-bar-panel">
-                <h4>Distance to EmbryoMaker</h4><div class="report-bar-axis" aria-hidden="true"><span>0</span><span>6</span><span>12</span></div>
-                <div class="report-bar-row"><span>Broad Lenia sample</span><div class="report-bar-track"><i style="--bar:37.17%" aria-hidden="true"></i></div><strong>4.46</strong></div>
-                <div class="report-bar-row report-bar-row--accent"><span>Selected region</span><div class="report-bar-track"><i style="--bar:99.83%" aria-hidden="true"></i></div><strong>11.98</strong></div>
-              </div>
-            </div>
-            <figcaption>Both panels use the same 0–12 scale. The broad sample contains 25,167 specimens; the selected region contains 256. These are medians, not distributions or uncertainty intervals.</figcaption>
-          </figure>
-          <div class="report-prose">
-            <p>All 256 members are closer to fish than to EmbryoMaker under this metric. The reported permutation comparison puts a shift this large at about one in a thousand random selections. Fish landmark shapes played no part in selecting the region, yet the selected forms concentrate nearer to them.</p>
-            <p>The resemblance is specific to the representation. Elongation, symmetry, and connectedness can place a simulated streak near a fish landmark configuration without making their anatomy or movement equivalent. Elongation drives much of the difference in the example above. Whether that explanation holds across the selected region, and under other representations of shape, remains to be tested.</p>
-            <a class="report-figure-link" href="/assets/blog/lenia-morphospace-report/fig-fish-near-witnesses.html">Watch all six published replays</a>
-          </div>
-          <div class="publication-measurement"><div id="live-plate"><p>Loading the measured comparison…</p></div></div>
-        </section>
+        <figure class="report-motion-intro"><div class="report-motion-pair"><div class="report-motion-frame publication-motion"><img class="report-transparent-motion" src="/assets/blog/lenia-morphospace-report/motion/870da94a.png?v=3600" data-motion="/assets/blog/lenia-morphospace-report/motion/870da94a-transparent.webp" data-still="/assets/blog/lenia-morphospace-report/motion/870da94a.png?v=3600" alt="Flow Lenia specimen 870da94a moving across the field"><button type="button" class="report-motion-toggle publication-motion-toggle" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div><div class="report-motion-frame publication-motion"><img class="report-transparent-motion" src="/assets/blog/lenia-morphospace-report/motion/781d0200.png?v=3600" data-motion="/assets/blog/lenia-morphospace-report/motion/781d0200-transparent.webp" data-still="/assets/blog/lenia-morphospace-report/motion/781d0200.png?v=3600" alt="Flow Lenia specimen 781d0200 moving across the field"><button type="button" class="report-motion-toggle publication-motion-toggle" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div></div><figcaption id="motion-caption"><p class="report-motion-observation">The matter moves, yet the body remains recognizable, its outline continually renewed by the same local interactions that carry it across the field.</p><p>3,600 steps · fixed camera · bodies enlarged independently. <a href="/dossiers/lenia-swarm/morphospace/#result-response">See how they respond to an obstacle →</a></p></figcaption></figure>
 
         <section class="report-result report-tone-violet" id="result-map" aria-labelledby="map-title">
           <div class="report-result-copy report-chapter-head">
-            <div class="report-chapter-title"><div class="report-kicker">02 / Building the comparison</div>
-            <h2 id="map-title">Twelve measurements put three datasets in one space</h2></div>
-            <p>Flow Lenia redistributes matter on a grid under local rules. Different rules produce different patterns. We reduce each resulting form to twelve coordinates, then apply the same measurements to 859 EmbryoMaker snapshots and 232 fish landmark configurations. Nearby points have similar measured shapes.</p>
-            <p>The coordinates describe elongation, directional bias, compactness, symmetry, connected components, coverage, boundary complexity, and enclosed gaps. They describe a shape’s geometry; they do not record its velocity, internal flow, or full generating rule. Fish landmarks and simulated mass distributions also represent bodies differently, so a shared coordinate system does not remove every difference between the datasets.</p>
+            <div class="report-chapter-title"><div class="report-kicker">01 / Describing form</div>
+            <h2 id="map-title">A geography of possible forms</h2></div>
+            <p>To put these bodies on a map, we give each one an address made from twelve measurements of its shape, so that forms with similar proportions become neighbors even when they come from very different systems. This is a <em>morphospace</em>. Alongside 25,167 Flow Lenia patterns, we place 859 snapshots of tissue developing in <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">EmbryoMaker</a>, a simulation of interacting cells, and measurements of 232 real fish. The map lets us look for shapes that recur across these different ways of making a body.</p>
+            
+            <p>A cloud of matter, a set of anatomical landmarks, and a developing tissue have no obvious point-for-point correspondence. The twelve measurements below give them a common description, preserving some aspects of their organization while discarding others. The first six describe the distribution of points or matter; the remaining six describe its footprint in a 32 × 32 grid on the principal plane. Neither motion nor the generating rule enters the map.</p>
           </div>
+<div class="report-measures" aria-label="The twelve shape measurements"><div><strong>01 / Elongation</strong><p>Relative spread along the longest and second-longest axes.</p></div><div><strong>02 / Directional bias</strong><p>How strongly the longest axis dominates the second.</p></div><div><strong>03 / Compactness</strong><p>How closely matter or points gather around their center.</p></div><div><strong>04 / Polarity</strong><p>Imbalance between the two ends of the longest axis.</p></div><div><strong>05 / Reflection symmetry</strong><p>How closely the distribution matches its reflection across a principal axis.</p></div><div><strong>06 / Radial evenness</strong><p>How similar the distances from the center are.</p></div><div><strong>07 / Component count</strong><p>Number of separate connected pieces in the footprint.</p></div><div><strong>08 / Largest component fraction</strong><p>Share of the total mass in the largest piece.</p></div><div><strong>09 / Largest component anisotropy</strong><p>Directional bias within that largest piece.</p></div><div><strong>10 / Coverage</strong><p>Fraction of grid cells occupied by the footprint.</p></div><div><strong>11 / Boundary complexity</strong><p>Exposed boundary relative to the square root of occupied area.</p></div><div><strong>12 / Enclosure</strong><p>Number of enclosed gaps, capped at four and scaled to 0–1.</p></div></div><details class="report-method"><summary>How the measurements are constructed</summary><p>Distances use robustly normalized coordinates. Sparse fish landmarks are rasterized as a filled convex hull, while the Lenia fields carry mass weights; these choices affect the component and boundary measurements. Elongation and directional bias are related measurements, not independent properties. <a href="https://github.com/Specter-Research-Labs/research-registry/blob/6a889d1d/dossiers/lenia-swarm/lenia_swarm_analysis/morphospace/common_morphology.py">Read the coordinate definitions</a>.</p></details>
           <figure class="report-comparison report-map" aria-labelledby="measured-map-title">
-            <h3 id="measured-map-title">The selected forms occupy one part of a much larger shape map</h3>
+            <h3 id="measured-map-title">The sampled forms in a two-dimensional projection</h3>
             <ul class="report-map-legend" aria-label="Map legend"><li><i class="map-lenia"></i>Lenia · 25,167</li><li><i class="map-selected"></i>Selected · 256</li><li><i class="map-fish"></i>Fish · 232</li><li><i class="map-embryo"></i>EmbryoMaker · 859</li></ul>
             <a href="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" aria-label="Open the measured shape map at full size"><picture><source media="(max-width: 700px)" srcset="/assets/blog/lenia-morphospace-report/fig-measured-map-mobile.svg"><img src="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" alt="Principal-component projection of the original shape measurements, with the 256-member region highlighted in green. A full-range overview accompanies a closer view of the populated area." loading="lazy"></picture></a>
-            <figcaption>Each point is an observation in the original analysis. Principal component analysis (PCA), fitted to the normalized Lenia coordinates, retains 70.2% of Lenia variance in this view. Fish and EmbryoMaker are projected into the same axes. The region was selected in twelve dimensions; overlap or separation here does not reproduce the full distances or establish a loop. Repeated observations can overlap. <a href="/assets/blog/lenia-morphospace-report/visual-data.json">Figure data and provenance</a>.</figcaption>
+            <figcaption>Each point represents an observation projected from twelve coordinates into two principal components fitted to the Lenia data, retaining 70.2% of its variance. Fish and EmbryoMaker use the same projection. The highlighted region was selected in the original twelve-dimensional space, where distances and loops are computed; this two-dimensional view can place distinct observations on top of one another. <a href="/assets/blog/lenia-morphospace-report/visual-data.json">Figure data and provenance</a>.</figcaption>
           </figure>
-          <details class="report-method">
-            <summary>The twelve coordinates</summary>
-            <p>Principal elongation; principal anisotropy; radial compactness; axial polarity; principal reflection symmetry; radial evenness; raster component count; largest component fraction; largest component anisotropy; raster coverage; boundary complexity; enclosure score.</p>
-            <p>Definitions are implemented in <a href="https://github.com/Specter-Research-Labs/research-registry/blob/6a889d1d/dossiers/lenia-swarm/lenia_swarm_analysis/morphospace/common_morphology.py">the common-morphology extractor</a>. A separate 8,192-specimen Lenia cohort supplies a single-rule-family control.</p>
-          </details>
-          <div class="report-prose">
-            <h3 id="result-loops">Where the samples leave gaps</h3>
-            <p>To find loops, we connect nearby forms and gradually widen the distance that counts as nearby. Some gaps fill quickly; others remain surrounded by connected forms over a wider range of distances. Persistent homology measures how long each loop lasts. The strongest loops in these samples have the following persistence lengths:</p>
+        </section>
+
+
+
+<section class="report-result report-tone-violet" id="result-topology" aria-labelledby="result-loops">          <div class="report-prose">
+            <div class="report-kicker">02 / The topology of the map</div><h2 id="result-loops">The shapes around the gaps</h2>
+            <p>The distribution of points also lets us ask whether the sampled forms surround gaps in the morphospace. This is the question addressed by topological data analysis (TDA), which studies how a dataset is connected as the scale of observation changes. To detect these loops, we connect nearby observations and gradually increase the distance over which connections are allowed; some gaps fill quickly, while others remain enclosed across a wider range of distances. Whenever three observations are mutually connected, we fill their triangle; a loop disappears once these filled triangles span its interior. Persistent homology records the distance at which each loop appears and the distance at which it fills, and calls the difference its persistence. In this terminology, H₀ tracks connected components and H₁ tracks loops.</p><p>These are loops among sampled shapes, rather than trajectories traced by a body over time.</p>
           </div>
+<figure class="report-comparison"><img src="/assets/blog/lenia-morphospace-report/fig-filtration.svg" alt="Six points first stand apart, then connect into a ring, then form filled triangles spanning the interior."><figcaption>A schematic filtration. As the connection distance grows, isolated observations join into a ring; at a larger distance, the interior fills. The measured intervals below record these two thresholds in the twelve-dimensional data.</figcaption></figure><figure class="report-comparison"><h3>How long does a gap survive?</h3><img src="/assets/blog/lenia-morphospace-report/fig-persistence-intervals.svg" alt="The eight longest H1 persistence intervals in each cohort, plotted on a common distance scale."><figcaption>Each line follows one H₁ feature from its birth to its death as the connection distance increases. These are the eight longest intervals per cohort from the recorded calculations, on the same normalized-distance scale. The broad Lenia calculation uses 4,096 landmarks.</figcaption></figure>
           <div class="report-table-wrap">
             <table class="report-table report-table--compact">
               <caption>Largest loop persistence in each sampled cohort</caption>
@@ -197,27 +122,23 @@
               </tbody>
             </table>
           </div>
-          <p class="report-prose">All three datasets contain persistent loops. Their lengths depend on the sampled forms, sample size, and computation; the table does not isolate a biological or synthetic cause for the differences. A gap is an unoccupied region in this sample and representation, not proof that a form is impossible.</p>
-        </section>
-
+          <p>The gaps suggest a question about construction: can we fill a missing region by finding more rules, or do intermediate shapes fail to sustain themselves? Those possibilities would give the same empty patch very different meanings. Persistent loops occur in all three datasets, but their lengths also depend on sampling and computation—the broad Lenia result uses a landmark approximation—so the numbers above do not rank the systems by biological complexity. They locate absences worth explaining.</p>
+</section>
         <section class="report-result report-tone-peach" id="result-transport" aria-labelledby="transport-title">
           <div class="report-result-copy report-chapter-head">
-            <div class="report-chapter-title"><div class="report-kicker">03 / Returning to the same measured shape</div>
-            <h2 id="transport-title">When a shape returns, must its rule return too?</h2></div>
-            <p>The shape map contains loops, but their geometry alone does not tell us whether the generating rules have a corresponding structure. An apparent change in rule after a round trip through nearby shapes mostly disappears when the calculation is refined. One candidate remains in the broader collection; none of the five checked near fish passes both controls.</p>
-            <p>The test adjusts a rule to follow successive target shapes around a loop, then compares its final and initial states. Retracing an out-and-back path gives a baseline for numerical error. A difference beyond that baseline could mean that the route through shape space matters to the rule recovered at the end.</p>
+            <div class="report-chapter-title"><div class="report-kicker">03 / Testing a round trip</div>
+            <h2 id="transport-title">When the rule returns, does the body?</h2></div>
+            <p>A loop in the morphospace is a relation among observed shapes, but it does not tell us how to move a body from one of those shapes to another. To investigate whether a round trip can leave a lasting difference, we turn to the parameters of the rule itself: change them in small steps around a closed path, let the body evolve at each step, and carry its resulting state into the next. The parameters eventually return to their starting values; the body has a history that they do not record.</p>
+            <p>This is a transport experiment. The word <em>holonomy</em> names the possibility that something carried around a closed path returns changed, even though the path ends where it began. Here the transported object is the simulated state, and the path lies in rule-parameter space. A nonzero change alone is insufficient evidence of such an effect, because the body also evolves while the parameters are changing. We therefore compare the loop with paths that retrace their steps and repeat the calculation with finer subdivisions.</p>
           </div>
-          <figure class="report-figure report-figure--diagram">
-              <div class="report-figure-scroll" tabindex="0" aria-label="Rule transport schematic"><img src="/assets/blog/lenia-morphospace-report/fig-holonomy-schematic.svg?v=transport-20260909" alt="Schematic: a closed path in measured shape space can end at a different point in generating-rule space." loading="lazy"></div>
-              <figcaption>Explanatory schematic. The displacement illustrates the quantity tested against the out-and-back control; it is not a measured trajectory. <a href="/assets/blog/lenia-morphospace-report/fig-holonomy-schematic.svg">Open full-size</a></figcaption>
-            </figure>
+          <figure class="report-comparison"><h3>A closed parameter path leaves an open question</h3><picture><source media="(max-width: 700px)" srcset="/assets/blog/lenia-morphospace-report/fig-measured-transport-mobile.svg"><img src="/assets/blog/lenia-morphospace-report/fig-measured-transport.svg" alt="Measured square and retraced control paths for flow-map-elite-53, alongside their state distances from the starting state."></picture><figcaption>Recorded dense continuations of flow-map-elite-53. Left: successive values of two rule parameters, m₀ and s₀, starting at the circled corner. The square runs right, up, left, down; the control runs up and right, then retraces the same two edges. Right: the saved state’s distance from its first recorded state at each step. Both paths return to their initial parameter values, but the retraced control finishes with a larger state difference (0.001772) than the square loop (0.001577). The residual left by the square therefore does not establish an additional state effect beyond this control. <a href="/assets/blog/lenia-morphospace-report/topology-transport-data.json">Plot data and source hashes</a>.</figcaption></figure>
           <div class="report-prose">
-            <h3>Most apparent rule changes disappear at finer resolution</h3>
-            <p>This changes how we should read the loops. They describe the arrangement of sampled shapes, but most of the tested routes do not support an additional claim about the rules underneath. In particular, the resemblance to fish supplies no evidence of a shared rule structure. The remaining candidate is worth testing at finer resolution before treating it as a reproducible effect.</p>
-            <p>The obstacle experiment asks about behavior directly. Tracking how a body slows, turns, or breaks apart lets us test what its measured shape predicts.</p>
+            <h3>Most candidates fail the finer test</h3>
+            <p>The distinction matters across the experiment. Only one of five selected candidates from the broader collection passes both numerical criteria in the dense rerun, and none of the five checked in a separately selected 256-pattern region does. The surviving candidate warrants further refinement, but the current tests give little reproducible evidence of a path-dependent effect beyond the controls. They also do not establish that the gaps found by persistent homology have a corresponding dynamical consequence: the measured shape loops and the imposed parameter loops are different objects.</p>
+            <p>An obstacle gives us another way to ask what the shape description leaves out. Instead of changing the rule, we disturb the body’s surroundings and compare its response with an undisturbed continuation under the same rule.</p>
           </div>
           <details class="report-method"><summary>Screening counts and numerical controls</summary>
-            <div class="report-table-wrap"><table class="report-table report-table--compact"><caption>Groups passing both measures</caption><thead><tr><th scope="col">Calculation</th><th scope="col">Passing / tested</th></tr></thead><tbody><tr><th scope="row">Initial screen, all three scales</th><td>109 / 4,802</td></tr><tr><th scope="row">Dense rerun · broader collection</th><td>1 / 5</td></tr><tr><th scope="row">Dense rerun · group near fish</th><td>0 / 5</td></tr></tbody></table></div>
+            <div class="report-table-wrap"><table class="report-table report-table--compact"><caption>Groups passing both measures</caption><thead><tr><th scope="col">Calculation</th><th scope="col">Passing / tested</th></tr></thead><tbody><tr><th scope="row">Initial screen, all three scales</th><td>109 / 4,802</td></tr><tr><th scope="row">Dense rerun · broader collection</th><td>1 / 5</td></tr><tr><th scope="row">Dense rerun · selected region</th><td>0 / 5</td></tr></tbody></table></div>
             <p>The dense reruns use selected candidates, not random samples of all 4,802 groups. The joint screen is marginal under permutation (<i>p</i> ≈ 0.094). Tests using either measure alone give stronger tails (<i>p</i> ≈ 0.008 for state closure and ≈ 0.0002 for the closure ratio), but most candidates do not pass the denser calculation.</p>
           </details>
         </section>
@@ -227,8 +148,8 @@
             <div class="report-feature-grid">
               <div class="report-feature-intro">
                 <div class="report-kicker">04 / From shape to behavior</div>
-                <h2 id="response-title">One body.<br>Four possible encounters.</h2>
-                <p>To study behavior, we turn to a separate cohort from later campaigns: five bodies that stayed coherent and moved. Each starts from the same saved state in four branches. Leave the path clear, or place an obstacle ahead, left, or right.</p>
+                <h2 id="response-title">How bodies respond<br>to an obstacle</h2>
+                <p>For this experiment we use a separate cohort from later campaigns: five bodies selected for remaining coherent while moving, including the two shown at the beginning of this article. Each body is continued from the same saved state in four branches, with its path left clear in the control branch and an obstacle placed ahead, to the left, or to the right in the others. The paired continuations allow each response to be compared with what that same body would have done without the obstacle.</p>
               </div>
               <figure class="report-branching" aria-labelledby="branch-caption">
                 <div class="report-checkpoint">Same saved state <span>↓</span></div>
@@ -246,10 +167,10 @@
               <li><strong>5</strong><span>could be tested</span></li>
             </ol>
           </div>
-          <div class="report-prose"><p>The 3,600-step replays screened for a persistent individual, then movement of at least half a body diameter. Five specimens qualified for clean paired encounters. All fifteen obstacle branches made contact; the chart compares each body’s median response across the three placements with its unobstructed continuation, or sham.</p></div>
+          <div class="report-prose"><p>Selection began with 626 specimens replayed for 3,600 steps: 184 retained a coherent body, nine also moved at least half a body diameter, and five qualified for clean paired encounters. All fifteen obstacle branches made contact. The chart compares each body’s median response across the three placements with its unobstructed continuation, called the sham, so that 100% would mean matching its undisturbed net displacement.</p></div>
           <figure class="report-comparison" aria-labelledby="response-chart-title">
             <h3 id="response-chart-title">Contact reduces progress, with different amounts of turning</h3>
-            <p class="report-chart-note">Forward progress relative to each body’s sham · 100% would match unobstructed progress</p>
+            <p class="report-chart-note">Net displacement relative to each body’s sham · 100% would match unobstructed progress</p>
             <div class="report-response-bars">
               <div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-870da94a.png" alt="Initial mass pattern of specimen 870DA94A" loading="lazy"><span>870DA94A</span></div><div class="report-bar-track"><i style="--bar:30%" aria-hidden="true"></i></div><strong>30%</strong><span>13° turn</span></div>
 <div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-781d0200.png" alt="Initial mass pattern of specimen 781D0200" loading="lazy"><span>781D0200</span></div><div class="report-bar-track"><i style="--bar:29%" aria-hidden="true"></i></div><strong>29%</strong><span>12° turn</span></div>
@@ -257,12 +178,12 @@
 <div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-ae9700f0.png" alt="Initial mass pattern of specimen AE9700F0" loading="lazy"><span>AE9700F0</span></div><div class="report-bar-track"><i style="--bar:9%" aria-hidden="true"></i></div><strong>9%</strong><span>61° turn</span></div>
 <div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-ff41daf6.png" alt="Initial mass pattern of specimen FF41DAF6" loading="lazy"><span>FF41DAF6</span></div><div class="report-bar-track"><i style="--bar:17%" aria-hidden="true"></i></div><strong>17%</strong><span>57° turn</span></div>
             </div>
-            <figcaption>Portraits show the exact initial mass patches used to start the assay, before the 1,200-step checkpoint; both matter channels are summed on the same color scale. They are enlarged to equal display size, not shown at equal physical scale. Identifiers refer to individual specimens. Heading difference is measured against the sham; a larger value does not imply turning away from the obstacle. Across the ten side placements, four responses went away from the obstacle side and six went toward it.</figcaption>
+            <figcaption>Portraits show the exact initial mass patches used to start the assay, before the 1,200-step checkpoint; both matter channels are summed on the same color scale. They are enlarged to equal display size, not shown at equal physical scale. Identifiers refer to individual specimens. Displacement is the straight-line distance from checkpoint to final body center; direction differences compare that displacement with the sham. A large turn need not be avoidance: across the ten side placements, four responses went away from the obstacle side and six went toward it.</figcaption>
           </figure>
           <div class="report-prose">
-            <p>The two highest-scoring individuals retained about 30% of sham progress and turned 12–13°. The other three retained 9–17% and turned more sharply. That suggests a testable connection between temporal coherence and resistance to perturbation, though five bodies from two related rule families cannot establish it.</p>
-            <p>Total matter was conserved in every branch, as Flow Lenia’s dynamics require. Organization could still change: one specimen lost substantial connected-body coherence and nearly reversed in one placement. Progress, turning, and the persistence of the same body therefore need separate measurements.</p>
-            <p>Shape has already proved more informative about some aspects of Lenia behavior than others. In a separate <a href="/dossiers/lenia-swarm/anatomical-compiler/">analysis of 8,174 creatures</a>, shape measurements explained much of the variation along an activity axis (R² = 0.725), but very little along a locomotion axis (R² = 0.038). These descriptive regressions motivate a more demanding test: predicting how a new body responds to an obstacle.</p><p>We expect internal dynamics to matter most where appearances are misleading. Two nearby shapes may be sustained by different flows, and the same disturbance may expose that difference. Pairing similar bodies from different rule families would let us test whether knowing the rule improves our prediction beyond what we can infer from shape.</p>
+            <p>The two bodies retaining the most progress also turn least, while the others travel less and change direction more sharply. These encounters give us several outcomes to explain, even within just two related rule families. A body can lose forward motion while remaining together, or reorganize enough that following its center no longer tells the whole story.</p>
+            <p>In one placement, the body nearly reverses direction as a substantial share of its matter leaves the largest connected piece. Its material survives—the dynamics conserve it—but its organization changes. For a map meant to describe possible bodies, that raises a question of identity: should we count this as the same body moving differently, a transformed body, or the beginning of several? The answer depends on which continuing capacities we want the map to distinguish.</p>
+            <p>There is reason to expect the predictive value of shape to differ between kinds of behavior. In a separate <a href="/dossiers/lenia-swarm/anatomical-compiler/">analysis of 8,174 creatures</a>, shape measurements explained much of the variation along an activity axis (R² = 0.725), but very little along a locomotion axis (R² = 0.038). Those descriptive regressions make it worth asking whether shape will also be unevenly informative about obstacle responses, particularly when predictions must generalize to bodies from unfamiliar rule families.</p><p>The five-body assay has not tested that relationship. It records the responses a predictive description would have to account for.</p>
             <a class="report-figure-link" href="obstacle-response/">Read the protocol and all response measurements</a>
           </div>
         </section>
@@ -271,38 +192,37 @@
           <div class="report-feature-grid">
             <div class="report-feature-intro">
               <h2 id="next-title">Similar bodies may<br>react differently</h2>
-              <p>Our prediction is that the rule will help most with turning and recovery: similar outlines can be maintained by different internal flows. A model given both shape and rule should then predict these responses more accurately than one given shape alone.</p>
+              <p>A long body might travel, turn in place, or remain nearly still, depending on how its matter moves. Our working hypothesis is that shape captures some constraints on behavior, while the organization of flow helps determine which movements the body can sustain. That could help explain why the same shape measurements describe activity much better than locomotion. If this is right, a useful map of bodies would also tell us something about the changes each body can undergo: which disturbances it absorbs, which set it travelling, and which reorganize it into something else. Bodies that look alike could occupy different places in that map, while visibly different bodies might share a way of responding.</p>
             </div>
+
             <figure class="report-prediction" aria-labelledby="prediction-caption">
               <div class="report-prediction-label">Two models · the same held-out bodies</div>
               <div class="report-model-row"><div class="report-model-input"><strong>Shape</strong><span>12 measurements</span></div><span class="report-model-arrow" aria-hidden="true">→</span><div class="report-model-output"><strong>Predicted response</strong></div></div>
               <div class="report-model-row"><div class="report-model-input report-model-input--rule"><strong>Shape + rule</strong><span>measurements + parameters</span></div><span class="report-model-arrow" aria-hidden="true">→</span><div class="report-model-output"><strong>Predicted response</strong></div></div>
-              <div class="report-observed-response"><strong>Compare both with the same observed response</strong><span>Progress · turning · coherence loss · recovery</span></div><figcaption id="prediction-caption">Proposed comparison on unseen rule families. Neither model has been fitted yet.</figcaption>
+              <div class="report-observed-response"><strong>Compare both with the same observed response</strong><span>Progress · turning · coherence loss · recovery</span></div><figcaption id="prediction-caption">Proposed test: does knowing the rule improve response predictions for bodies from unfamiliar rule families?</figcaption>
             </figure>
           </div>
-          <details class="report-method">
-            <summary>Experiment design and controls</summary>
-            <p>Expand the coherent-mover cohort and expose each body to the same perturbations. Hold out entire rule lineages when comparing the predictions, so a model must generalize beyond familiar families. Mirror the starting bodies to separate handedness from obstacle placement, then remove the obstacle to measure whether the same individual recovers.</p>
-            <p>This is the proposed next experiment. The current five-body assay has measured responses; neither prediction model has been fitted.</p>
-          </details>
+<p>In <a href="https://arxiv.org/abs/1211.4707">active-droplet models</a>, internal flows can stir the surrounding fluid without propelling the droplet; a change in the alignment of its active material can break the symmetry and produce motion. Flow Lenia has different equations, but this suggests a more specific question for our bodies: which arrangements of flow produce travel, and which keep matter moving without carrying the body anywhere?</p>
+
           <div class="report-actions"><a class="report-button report-button--primary" href="obstacle-response/">Explore the obstacle experiment</a><a class="report-button" href="/dossiers/lenia-swarm/compendium/">Browse the compendium</a></div>
         </section>
 
         <details class="report-method" id="sources">
           <summary>Sources and analysis dates</summary>
-          <p>The morphology and transport results come from the May 2026 analysis summarized in <a href="https://github.com/Specter-Research-Labs/research-registry/blob/6a889d1d/site/blog/lenia-morphospace-report/index.md">The Geometry of a Synthetic Morphospace</a>. The coherent-organism obstacle assay was completed on 2 September 2026. This overview separates the two cohorts and retains the stricter transport checks.</p>
+          <p>The map and comparisons use the 19 May 2026 analysis snapshot: 25,167 Lenia observations with a common set of shape measurements. The wider collection continued to grow; a <a href="/research-notes/2026-07-19-making-one-morphospace-database-trustworthy/">July–August database investigation</a> records 1,363,395 creature entries. That later archive total is not the number analyzed here, nor a count of distinct body forms. The results below describe the May cohort; whether its gaps persist in the expanded collection remains an open question.</p>
+          <p>The morphology and rule-transport results come from the May 2026 analysis summarized in <a href="https://github.com/Specter-Research-Labs/research-registry/blob/6a889d1d/site/blog/lenia-morphospace-report/index.md">The Geometry of a Synthetic Morphospace</a>, while the separate coherent-body obstacle assay was completed on 2 September 2026. This overview retains the stricter transport checks and distinguishes those earlier shape comparisons from the later response measurements.</p>
           <dl class="report-source-list">
             <div><dt>Morphology analysis SHA-256</dt><dd><code>6ca1b7ce43382f0f0904e15e99d7623d9dff5f9050dfe7e4d79c7ae46855a5ec</code></dd></div>
             <div><dt>Obstacle outcome rows SHA-256</dt><dd><code>a9e3af18abce9d13efb6f7f4308ffecb550fe8d693ae43c3529399c17785d7ac</code></dd></div>
           </dl>
         </details>
-      </main>
+      <p class="report-prose">Two bodies can even look identical and develop differently when their internal composition changes. <a href="/dossiers/lenia-swarm/causal-emergence/articles/hidden-composition/">See what the visible shape leaves out →</a></p>
+</main>
       <footer class="report-footer">
         <a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a>
         <a href="/sitemap/">Sitemap</a>
       </footer>
     </div>
-    <script src="/assets/blog/lenia-morphospace-report/fish-explorer.js?v=2" defer></script>
   <script type="module" src="/assets/report-transparent-motion.js?v=2"></script>
-<script src="/assets/morphospace-plate.js"></script></body>
+</body>
 </html>

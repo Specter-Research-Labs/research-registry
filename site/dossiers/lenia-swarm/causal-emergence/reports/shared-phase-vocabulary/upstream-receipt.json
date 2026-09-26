@@ -6,14 +6,16 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "cross-family transfer study",
-  "sourceReportSha256": "44e28630154b7fc5eb44eb5bf16b50190df5a8c38416b0de7e7aaac1f72dca30",
-  "publicReportSha256": "44e28630154b7fc5eb44eb5bf16b50190df5a8c38416b0de7e7aaac1f72dca30",
+  "sourceReportSha256": "7ddf71c0a9f05005c561a3129fb5744d0a63717212cb87478ed483906905c0fa",
+  "publicReportSha256": "77465d0306a3f3df75c22182ba3d2e94e1ea11c4ebe946969f469aefb09475bb",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "9c68504f9e171446716ad5e2d3d3d9d2da6237146b33871d5e969659f7668bed",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "91bbdc2063cdc79c2f4eb178df6b5e313e5491ab799f51887dc40e2e1000960d"
+  "contextSha256": "7d1426523fdda631661b3235bcd40ce14bbf724cdca231f6033a2576f8b24758",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "9e4610e3323366cd6d8eb6d527ac508092f8eff97792f6266061d155bd5f37cb"
 }

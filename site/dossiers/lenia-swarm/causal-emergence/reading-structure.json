@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "scope": "Editorial organization of existing reports, not a new experiment registry. Group membership does not certify a finding.",
+  "articles": [
+    {
+      "id": "developmental-sensitivity",
+      "title": "What makes a developing body harder to change?",
+      "dek": "The same disturbance loses influence as development proceeds, even while related bodies become more different. Separating the disturbance delivered from the response it produces is essential to understanding why.",
+      "reports": [
+        "organism-hardens-without-narrowing",
+        "causal-repertoire-contraction",
+        "developmental-basin-atlas",
+        "developmental-causal-plasticity-window",
+        "developmental-causal-susceptibility-map",
+        "developmental-commitment-aperture",
+        "fresh-organic-q40-replication",
+        "tangent-future-aperture",
+        "developmental-alignment-window",
+        "developmental-tangent-controller",
+        "canalization-rescue",
+        "delayed-canalization-rescue",
+        "commitment-window",
+        "commitment-branching-intervention",
+        "spatial-scale-action-world"
+      ]
+    },
+    {
+      "id": "hidden-composition",
+      "title": "The same shape can contain different possibilities",
+      "dek": "Internal composition can redirect development while leaving the visible body initially unchanged. Transplanting that composition reveals a second constraint: what the receiving body can do with it.",
+      "reports": [
+        "fresh-phase-operator",
+        "developmental-aperture-map",
+        "developmental-arrow-birth",
+        "prediction-falls-direction-appears",
+        "developmental-ignition-transplant",
+        "developmental-counterweight-dose",
+        "developmental-counterweight-clamp",
+        "native-tangent-intervention",
+        "developmental-causal-address",
+        "developmental-susceptibility-transplant",
+        "developmental-topology-dose-transition",
+        "developmental-fission-lineage",
+        "latent-composition-transplant",
+        "composition-control-surface",
+        "latent-composition-code",
+        "spatial-code-resolution",
+        "spatial-code-syntax",
+        "coherent-phase-path",
+        "phase-direction-atlas",
+        "shared-phase-vocabulary",
+        "shared-phase-field-orbit"
+      ]
+    },
+    {
+      "id": "organization-prediction-control",
+      "title": "Does measuring the whole help us change it?",
+      "dek": "An organization score may anticipate development without predicting recovery or selecting a better intervention. Prediction, target achievement, and an advantage over simpler controllers need separate tests.",
+      "reports": [
+        "organism-birth-signal",
+        "geometry-turn-causal-atlas",
+        "commitment-gate-controller",
+        "organism-birth-causal-exploration",
+        "prospective-geometry-clock",
+        "prospective-transition-sign-flip",
+        "commitment-fixed-age-dose",
+        "adaptive-commitment-controller",
+        "adaptive-rescue-cycle",
+        "commitment-gate-repertoire",
+        "gate-conditioned-morphology-navigation",
+        "gate-conditioned-morphology-reversal",
+        "goal-state-tomography",
+        "orthogonal-pulse-release-pilot",
+        "preinjury-recovery-confirmation",
+        "reservoir-causal-steering",
+        "reservoir-recurrence-census",
+        "reservoir-temporal-precursor",
+        "causal-compass-peak"
+      ]
+    }
+  ],
+  "historical_syntheses": [
+    "start-here",
+    "synthesis-v1",
+    "synthesis-v2",
+    "synthesis-v3",
+    "synthesis-v4",
+    "synthesis-v5",
+    "synthesis-v6",
+    "synthesis-v7"
+  ],
+  "draft_articles": [
+    {
+      "id": "history-and-response",
+      "title": "When does a body retain a history?",
+      "dek": "Returning to an information score does not restore the state or its future. The stronger question is which traces of history affect later responses, and whether we can identify what carries them.",
+      "reports": [
+        "initial-action-world",
+        "developmental-fold-onset",
+        "early-action-world-onset",
+        "commitment-gate-formation",
+        "developmental-causal-grammar",
+        "morphology-information-return",
+        "information-body-return",
+        "commitment-rewrite",
+        "causal-history-order",
+        "causal-return-loop",
+        "causal-score-sheets",
+        "developmental-causal-order",
+        "developmental-causal-order-age-map",
+        "developmental-decoder-memory",
+        "developmental-depth-memory-timescale",
+        "developmental-causal-echo-tomography",
+        "tangent-memory-dose-response",
+        "tangent-induced-causal-grammar"
+      ]
+    }
+  ]
+}

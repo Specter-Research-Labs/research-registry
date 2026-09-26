@@ -6,15 +6,15 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "fresh-cohort causal atlas",
-  "sourceReportSha256": "03692e1168ab187210927bb7a25f084d3cfc255042a6b90bacacb39fb166be1a",
-  "publicReportSha256": "873d59f96fb58530a5d3778ffa3fc6b3923c370e2831bc74b28f654d94b9cbd4",
+  "sourceReportSha256": "487ce5498d38ad27d37a37137be03737564d6c75a120b359d61c172846d9884d",
+  "publicReportSha256": "487ce5498d38ad27d37a37137be03737564d6c75a120b359d61c172846d9884d",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "08798322c01e2c504bea4543b02623b1eab06c3d7c6106a52058b97b23f59e75",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "f080f140497a73fcf9de06f5c57c794e5ba3da686ff721d96e3a7480f08d7374"
+  "contextSha256": "9b5de92b5a034c060cb79442cc89c6edcc0baf29db84bd745369cc108e55e2fe",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "83f8f0ae07673f196c7308075f9f10e7550a86dab7aa6dce00db6fa7fb4d70c9"
 }

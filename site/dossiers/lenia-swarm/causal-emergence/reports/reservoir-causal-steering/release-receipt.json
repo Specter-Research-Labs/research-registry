@@ -6,15 +6,15 @@
   "date": "2026-08-14",
   "status": "archive",
   "evidenceClass": "mixed causal-steering experiment",
-  "sourceReportSha256": "a5b71b11986ec880d0e5fde7281099fc11246476cd3f2a1daa71875b6980f64c",
-  "publicReportSha256": "660cdbaf3c2fe090e26d9ae91927f57f9f6baa907a2c925659033ec9c119f592",
+  "sourceReportSha256": "5bae4dc711a9d84d500cc0e6383e5e755a1cc2243c7a9d9111cd0a9e79e13890",
+  "publicReportSha256": "5bae4dc711a9d84d500cc0e6383e5e755a1cc2243c7a9d9111cd0a9e79e13890",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "8a0b7c7c82949bcd87628506ca9bceb3790baa4b4386fdc41791e8c4891e5c12",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "79fa67d4319c61215ee364302743cf7a87dba280683791c4a04429f9a82bba0b"
+  "contextSha256": "a5d019575516bf9150fd136b4099f46a6289737654f8815520a016a9040c4b85",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "c968b329daf43162e1d6fd50c9c71ec66903a69ee35dd93c9e3982814fea0d21"
 }

@@ -15,9 +15,9 @@
       "sha256": "b4585abb7a10ac3bfa5b1bf5889d6e8e72773d43892107ca76ae18621b4f22ea"
     },
     {
-      "bytes": 4027,
+      "bytes": 4029,
       "path": "assets/basin-map.svg",
-      "sha256": "0ead7c272d0064a9725ed11d1d42b396e943d4e56041bef159f5722021616442"
+      "sha256": "e89ff8e919730d8c2e703b2fad6bfdad9352943b7324d9ca7da8a7d047ca004b"
     },
     {
       "bytes": 139541,
@@ -25,14 +25,14 @@
       "sha256": "55b2a1b2466e1bab910dbe451c6681c0afd4b881a086d3d7e8df819dd076c2b4"
     },
     {
-      "bytes": 4055,
+      "bytes": 4051,
       "path": "assets/canalization.svg",
-      "sha256": "85dab4ccdd3a2acfcd0427876c91530e088e8028ec378707d2212c4f59daebc0"
+      "sha256": "d1b8e121e3ab8ad333378c460cc0b6b2a348b631a345a3bfca0a156d7ba8d32f"
     },
     {
-      "bytes": 8477,
+      "bytes": 8479,
       "path": "assets/complexity-drift.svg",
-      "sha256": "fd0559e35cc47ea5cc0fd74679af641f31cc4703690a5a781fc00caf0f5de0dd"
+      "sha256": "32d00703ea19a4419892c3e86e07bf94cb049368fc3a25755b1d7dc204b716e6"
     },
     {
       "bytes": 15957,
@@ -50,9 +50,9 @@
       "sha256": "de6ebc2862bb8589f5448648e6531990db3b48294b412820abba23aee63e9d5a"
     },
     {
-      "bytes": 1765,
+      "bytes": 1827,
       "path": "assets/dimension-decomposition.svg",
-      "sha256": "a0f552d74464d11bfcc13d7e6739895e3d8fa1d8445bed0aca1117a695e5d5c8"
+      "sha256": "af74e954c04f6fa518f53a21a9be1a356d25b2005b5f4c5e67a161ec75166899"
     },
     {
       "bytes": 4621,
@@ -75,9 +75,9 @@
       "sha256": "52f66e8726ea151a56a5562ae9d0efcd4752ab56debd70b78348b405e1909823"
     },
     {
-      "bytes": 3035,
+      "bytes": 3030,
       "path": "assets/genotype-phenotype-bridge.svg",
-      "sha256": "363d5905c657c2e84468e57307dd435a91b854ffa8aab37bc2b66bf402070367"
+      "sha256": "02cad239216722c9488b6d89469470ac1941d47cf3b57641d39c4712e7bdcfb1"
     },
     {
       "bytes": 2432,
@@ -185,9 +185,9 @@
       "sha256": "b136b78fcb83bd47d3ac80f061418c824ff1039c9a589a7c06132733f0b11330"
     },
     {
-      "bytes": 2921,
+      "bytes": 2807,
       "path": "assets/organic-search-trace.svg",
-      "sha256": "07e7e59cf607c01d5f5766f6efaedc1a6838a4c8dcc582e12a4aed89ce6ee76c"
+      "sha256": "ed0b3ab2d5a13752da2dbb55465caa54d3a6d74cf8e7c5d61ddbdab16c9e1436"
     },
     {
       "bytes": 122830,
@@ -237,7 +237,7 @@
     {
       "bytes": 4182,
       "path": "assets/sections.svg",
-      "sha256": "569fec81d4c9dd71f045259d6a438f21fd4fb4ce3b0bc9ec37eddf39b227b204"
+      "sha256": "f6a159945bb8a53500e2bb9f66cb5011ab5e6ed4d24134341b20c0d1495e6ed5"
     },
     {
       "bytes": 13462,
