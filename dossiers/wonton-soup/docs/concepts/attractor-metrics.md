@@ -1,8 +1,6 @@
 # Attractor Metrics for Proof Search
 
-These metrics treat proofs as attractors in stochastic search and quantify
-robustness, convergence, rerouting, and collapse under perturbed MCTS theorem
-proving.
+These metrics let us group recurring proof structures and follow how searches change after a tactic or scheduling intervention, using occurrence frequencies, structural distances, and outcomes under specified search conditions. The implementation calls some of these quantities “attractors” and “basins”, but finding a frequent proof cluster does not by itself establish the restoring dynamics that an attractor interpretation would require.
 
 Centralized MCTS supplies the structural baseline: proof families, basin mass,
 reroute versus collapse, and recovery after intervention. Distributed MCTS
@@ -109,7 +107,7 @@ After running wild-type and intervention experiments, we have multiple proof gra
 - **Representatives**: The most central member of each cluster (minimizes total distance to other members)
 - **Inter-cluster distances**: How different the proof "families" are from each other
 
-A theorem with one dominant cluster suggests a robust proof structure. Multiple well-separated clusters indicate genuinely different proof strategies.
+A dominant cluster tells us that the search repeatedly reaches one recorded proof structure under the chosen configuration, while separated clusters show variation according to the structural signature. Neither result alone tells us how the search will respond to losing a tactic, because structurally different proofs can still rely on the same resource.
 
 ### 3. Basin Analysis (Multi-Seed)
 

@@ -6,15 +6,15 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "phase-preserving spatial intervention",
-  "sourceReportSha256": "6442440759c9dc5a80f544e4afb478a5fca0b1fbb0897e2ad1b222e1078f475c",
-  "publicReportSha256": "b1622bf5b56219b24e422da86630f371c1e67ee435911a9a8aa12f5e6f7e9ee0",
+  "sourceReportSha256": "6a177722b33dfdb7ead21cb1e2268b9d05be64774463c6d4123647659450d8d8",
+  "publicReportSha256": "6a177722b33dfdb7ead21cb1e2268b9d05be64774463c6d4123647659450d8d8",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "e36c8b8d460aacdb7de22cdfa8b7167acf39a271a5091e527864465241f4f9ef",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "a7ad76ad449f4fea14f9633fec0dac4783d46bc12e5cb05ed5742da6bfcbd2e6"
+  "contextSha256": "a53f7727604ea04726ec0b5eb061e43ea71e9d14f34513380f42041c7d791760",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "bd0ef0756dec2d42c1f973c4f85af45c2edef0a9cdff14f24ce8b34ca7b222de"
 }

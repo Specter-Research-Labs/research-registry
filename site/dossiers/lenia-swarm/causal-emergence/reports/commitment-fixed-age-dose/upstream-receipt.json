@@ -6,14 +6,15 @@
   "date": "2026-08-22",
   "status": "archive",
   "evidenceClass": "fixed-action dose study",
-  "sourceReportSha256": "35916b632cf5d3df9b70f9a6675ca7dcb8dd5c2190e5542e4e594dbb07bdf2a8",
-  "publicReportSha256": "35916b632cf5d3df9b70f9a6675ca7dcb8dd5c2190e5542e4e594dbb07bdf2a8",
+  "sourceReportSha256": "29026305a2c8e50cc44d93dbb3adc63735d47c1bb425900f3c7cda708f123aff",
+  "publicReportSha256": "29026305a2c8e50cc44d93dbb3adc63735d47c1bb425900f3c7cda708f123aff",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "c09079396c06db933b7da6f9316456c95d0748d32bd81dd1b2b1a48f45b19121",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "9bb69593a577644a8a3b3e6f0c074dd5a46279588a824577f7feaf2e5aded869"
+  "contextSha256": "cf4d7e61f23006971ce8b7effcbc598524537047f948f9834d75c2065c24f27e",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "0f33c384073f5224e19507c8e13ed00403a1628961a3b00cec08d5feed004706"
 }

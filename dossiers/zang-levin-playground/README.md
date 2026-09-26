@@ -1,3 +1,5 @@
+# Sorting cells: experiments and reproduction
+
 Audits and extends the Zang & Levin sorting-cell model from [arXiv:2401.05375](https://arxiv.org/abs/2401.05375). The current paper-facing path is organized around explicit semantics, operator classes, and reproducible archives under `paper/results/`.
 
 ## Original Surfaces

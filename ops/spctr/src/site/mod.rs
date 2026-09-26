@@ -229,7 +229,14 @@ fn build_from_projection(
             (
                 causal_emergence::LIBRARY_OUTPUT,
                 "Flow Lenia Causal Emergence Report Library",
-                "Seven selected reports on development, interventions, hidden composition, and the failed recovery prediction.",
+                "Four articles connecting development, composition, history, prediction and control.",
+                "/dossiers/lenia-swarm/causal-emergence/library/",
+                causal_emergence::render_library(catalog),
+            ),
+            (
+                causal_emergence::REPORTS_OUTPUT,
+                "Flow Lenia Selected Reports",
+                "Selected experiments on developmental rigidity, hidden composition, and recovery prediction.",
                 "/dossiers/lenia-swarm/causal-emergence/library/",
                 causal_emergence::render_library(catalog),
             ),
@@ -253,6 +260,20 @@ fn build_from_projection(
                         "CAUSAL_EMERGENCE_PAGE_META",
                         causal_emergence::render_page_meta(title, description, canonical_path),
                     ),
+                    ("CAUSAL_EMERGENCE_PAGE_CONTENT", content),
+                ],
+            });
+        }
+    }
+
+    if let Some(catalog) = causal_emergence_catalog.as_ref() {
+        for (output_path, title, description, route, content) in causal_emergence::article_pages(catalog) {
+            pages.push(PageRegion {
+                template_path: "site/templates/dossiers/lenia-swarm/causal-emergence/page.html".into(),
+                output_path: output_path.into(),
+                regions: vec![
+                    ("CAUSAL_EMERGENCE_PAGE_TITLE", causal_emergence::render_page_title(&title)),
+                    ("CAUSAL_EMERGENCE_PAGE_META", causal_emergence::render_page_meta(&title, &description, &route)),
                     ("CAUSAL_EMERGENCE_PAGE_CONTENT", content),
                 ],
             });

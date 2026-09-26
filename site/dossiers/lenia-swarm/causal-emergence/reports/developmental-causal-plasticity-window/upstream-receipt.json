@@ -6,14 +6,16 @@
   "date": "2026-08-24",
   "status": "archive",
   "evidenceClass": "reused-cohort developmental profile",
-  "sourceReportSha256": "ab36c1978229c8a5f2f53803c00f5d644a2b5722da2469b099910c225a00c202",
-  "publicReportSha256": "ab36c1978229c8a5f2f53803c00f5d644a2b5722da2469b099910c225a00c202",
+  "sourceReportSha256": "1e8f5010dbd42c3627c3a87f349faca50b7f2c73e0715b74991a49605f35ba67",
+  "publicReportSha256": "ffd5eb8beabbc9241ae2a51aaccdb69ff61a1cadcc1ae8d6f2941dc0b206ed55",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "277ce855f999734d35975b4b3b484c275dd18e50f15a3ac220fba1ccd8efc059",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "5208ce23686c4d9b81be24562e71256510fda361a26a8cf56a91ff084186b7af"
+  "contextSha256": "1f6aec683a1b5ebc95c25ea3ac36f06c06fc6c70b00f9eea1fd21f635ee52283",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "2e47fc17ff615c9ecf21152ea931db8bd15157c72173243e9f562acd08d8f74a"
 }

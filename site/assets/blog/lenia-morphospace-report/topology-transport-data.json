@@ -1,0 +1,816 @@
+{
+  "cohorts": [
+    {
+      "label": "Broad Lenia \u00b7 4,096 landmarks",
+      "intervals": [
+        {
+          "birth": 11.802477836608887,
+          "death": 14.58713150024414,
+          "persistence": 2.784653663635254
+        },
+        {
+          "birth": 4.047342300415039,
+          "death": 6.0745062828063965,
+          "persistence": 2.0271639823913574
+        },
+        {
+          "birth": 2.7401835918426514,
+          "death": 4.066093444824219,
+          "persistence": 1.3259098529815674
+        },
+        {
+          "birth": 3.3223581314086914,
+          "death": 4.599057674407959,
+          "persistence": 1.2766995429992676
+        },
+        {
+          "birth": 3.2796669006347656,
+          "death": 4.481626987457275,
+          "persistence": 1.2019600868225098
+        },
+        {
+          "birth": 3.2516870498657227,
+          "death": 4.221814155578613,
+          "persistence": 0.9701271057128906
+        },
+        {
+          "birth": 3.3571183681488037,
+          "death": 4.247788906097412,
+          "persistence": 0.8906705379486084
+        },
+        {
+          "birth": 3.4834327697753906,
+          "death": 4.293099403381348,
+          "persistence": 0.809666633605957
+        }
+      ]
+    },
+    {
+      "label": "Single-family Lenia \u00b7 8,192",
+      "intervals": [
+        {
+          "birth": 3.048024892807007,
+          "death": 3.8437609672546387,
+          "persistence": 0.7957360744476318
+        },
+        {
+          "birth": 1.8462536334991455,
+          "death": 2.6016764640808105,
+          "persistence": 0.755422830581665
+        },
+        {
+          "birth": 1.6790353059768677,
+          "death": 2.373173475265503,
+          "persistence": 0.6941381692886353
+        },
+        {
+          "birth": 1.8292537927627563,
+          "death": 2.4905660152435303,
+          "persistence": 0.6613122224807739
+        },
+        {
+          "birth": 1.0086675882339478,
+          "death": 1.5890154838562012,
+          "persistence": 0.5803478956222534
+        },
+        {
+          "birth": 0.9832531213760376,
+          "death": 1.5609747171401978,
+          "persistence": 0.5777215957641602
+        },
+        {
+          "birth": 1.078054428100586,
+          "death": 1.6300989389419556,
+          "persistence": 0.5520445108413696
+        },
+        {
+          "birth": 1.2058427333831787,
+          "death": 1.735040545463562,
+          "persistence": 0.5291978120803833
+        }
+      ]
+    },
+    {
+      "label": "Fish \u00b7 232",
+      "intervals": [
+        {
+          "birth": 5.797230243682861,
+          "death": 6.4331254959106445,
+          "persistence": 0.6358952522277832
+        },
+        {
+          "birth": 5.992859363555908,
+          "death": 6.38885498046875,
+          "persistence": 0.3959956169128418
+        },
+        {
+          "birth": 1.681316614151001,
+          "death": 1.9589263200759888,
+          "persistence": 0.2776097059249878
+        },
+        {
+          "birth": 0.9553723931312561,
+          "death": 1.2146133184432983,
+          "persistence": 0.25924092531204224
+        },
+        {
+          "birth": 2.6790499687194824,
+          "death": 2.927018642425537,
+          "persistence": 0.2479686737060547
+        },
+        {
+          "birth": 0.5225744843482971,
+          "death": 0.7677319049835205,
+          "persistence": 0.2451574206352234
+        },
+        {
+          "birth": 0.4940336048603058,
+          "death": 0.7384344935417175,
+          "persistence": 0.24440088868141174
+        },
+        {
+          "birth": 1.0792402029037476,
+          "death": 1.2890970706939697,
+          "persistence": 0.20985686779022217
+        }
+      ]
+    },
+    {
+      "label": "EmbryoMaker \u00b7 859",
+      "intervals": [
+        {
+          "birth": 0.5773710608482361,
+          "death": 0.8681477308273315,
+          "persistence": 0.29077666997909546
+        },
+        {
+          "birth": 0.8839731812477112,
+          "death": 1.1593378782272339,
+          "persistence": 0.2753646969795227
+        },
+        {
+          "birth": 0.6620846390724182,
+          "death": 0.918947696685791,
+          "persistence": 0.2568630576133728
+        },
+        {
+          "birth": 0.5484635233879089,
+          "death": 0.7735945582389832,
+          "persistence": 0.22513103485107422
+        },
+        {
+          "birth": 0.4639763832092285,
+          "death": 0.6438186764717102,
+          "persistence": 0.1798422932624817
+        },
+        {
+          "birth": 0.40847834944725037,
+          "death": 0.5823323130607605,
+          "persistence": 0.17385396361351013
+        },
+        {
+          "birth": 0.6327561140060425,
+          "death": 0.8022496700286865,
+          "persistence": 0.16949355602264404
+        },
+        {
+          "birth": 0.34818488359451294,
+          "death": 0.5174539089202881,
+          "persistence": 0.16926902532577515
+        }
+      ]
+    }
+  ],
+  "transport": [
+    {
+      "label": "Square loop",
+      "rows": [
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 0,
+          "transportedStateDistanceFromStart": 0.0,
+          "phenotypeDistanceFromStart": 0.0
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16725671,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 1,
+          "transportedStateDistanceFromStart": 0.0014597482266326092,
+          "phenotypeDistanceFromStart": 0.00014742935474050366
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17125672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 2,
+          "transportedStateDistanceFromStart": 0.0015070760898109959,
+          "phenotypeDistanceFromStart": 0.00013138569851722153
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17525673,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 3,
+          "transportedStateDistanceFromStart": 0.0014924001225174743,
+          "phenotypeDistanceFromStart": 0.00012284784721465565
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17925672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 4,
+          "transportedStateDistanceFromStart": 0.0016503524067137318,
+          "phenotypeDistanceFromStart": 0.00014797548319823574
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18325672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 5,
+          "transportedStateDistanceFromStart": 0.0016120975964286181,
+          "phenotypeDistanceFromStart": 0.0001535687626820115
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18725672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 6,
+          "transportedStateDistanceFromStart": 0.0016252160163993518,
+          "phenotypeDistanceFromStart": 0.00014247147087728456
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19125673,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 7,
+          "transportedStateDistanceFromStart": 0.001681527227047029,
+          "phenotypeDistanceFromStart": 0.00015831821850945455
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 8,
+          "transportedStateDistanceFromStart": 0.0016615237797127109,
+          "phenotypeDistanceFromStart": 0.00015636072045491423
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.16597994
+          },
+          "sequenceIndex": 9,
+          "transportedStateDistanceFromStart": 0.0017735684973003438,
+          "phenotypeDistanceFromStart": 0.00016220755656056504
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.16747993
+          },
+          "sequenceIndex": 10,
+          "transportedStateDistanceFromStart": 0.0017446501098167062,
+          "phenotypeDistanceFromStart": 0.00016494221405758295
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.16897994
+          },
+          "sequenceIndex": 11,
+          "transportedStateDistanceFromStart": 0.0017648024850027636,
+          "phenotypeDistanceFromStart": 0.0001604347431499189
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.17047994
+          },
+          "sequenceIndex": 12,
+          "transportedStateDistanceFromStart": 0.0017631244631547151,
+          "phenotypeDistanceFromStart": 0.00016306425288023719
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.17197993
+          },
+          "sequenceIndex": 13,
+          "transportedStateDistanceFromStart": 0.0017459124517420896,
+          "phenotypeDistanceFromStart": 0.00016070875657442775
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.17347994
+          },
+          "sequenceIndex": 14,
+          "transportedStateDistanceFromStart": 0.0017130825201562595,
+          "phenotypeDistanceFromStart": 0.0001565013537201482
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.17497994
+          },
+          "sequenceIndex": 15,
+          "transportedStateDistanceFromStart": 0.0017148660225095986,
+          "phenotypeDistanceFromStart": 0.00015475794539810623
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 16,
+          "transportedStateDistanceFromStart": 0.00173624692840119,
+          "phenotypeDistanceFromStart": 0.00016445243990183739
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19125673,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 17,
+          "transportedStateDistanceFromStart": 0.001753327521828235,
+          "phenotypeDistanceFromStart": 0.00016591742511055813
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18725672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 18,
+          "transportedStateDistanceFromStart": 0.0017713439348726633,
+          "phenotypeDistanceFromStart": 0.00016640288742647387
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18325672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 19,
+          "transportedStateDistanceFromStart": 0.0017967644702179205,
+          "phenotypeDistanceFromStart": 0.00016671108195219757
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17925672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 20,
+          "transportedStateDistanceFromStart": 0.0017769428181492804,
+          "phenotypeDistanceFromStart": 0.0001664028874264739
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17525673,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 21,
+          "transportedStateDistanceFromStart": 0.00175246515940133,
+          "phenotypeDistanceFromStart": 0.00016489774924640768
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17125672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 22,
+          "transportedStateDistanceFromStart": 0.0016409206661092473,
+          "phenotypeDistanceFromStart": 0.00014507273992705124
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16725671,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 23,
+          "transportedStateDistanceFromStart": 0.0015847606079352696,
+          "phenotypeDistanceFromStart": 0.0001344204103460803
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 24,
+          "transportedStateDistanceFromStart": 0.0015122526209945854,
+          "phenotypeDistanceFromStart": 0.0001384514972619885
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17497994
+          },
+          "sequenceIndex": 25,
+          "transportedStateDistanceFromStart": 0.0016506456229741753,
+          "phenotypeDistanceFromStart": 0.00013604717883219678
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17347994
+          },
+          "sequenceIndex": 26,
+          "transportedStateDistanceFromStart": 0.0016160887226484941,
+          "phenotypeDistanceFromStart": 0.00015004241746445872
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17197993
+          },
+          "sequenceIndex": 27,
+          "transportedStateDistanceFromStart": 0.001660055686810092,
+          "phenotypeDistanceFromStart": 0.00013818641661051407
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17047994
+          },
+          "sequenceIndex": 28,
+          "transportedStateDistanceFromStart": 0.00172677058254855,
+          "phenotypeDistanceFromStart": 0.00014762818066326887
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16897994
+          },
+          "sequenceIndex": 29,
+          "transportedStateDistanceFromStart": 0.0016679610456544918,
+          "phenotypeDistanceFromStart": 0.00013409268841920645
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16747993
+          },
+          "sequenceIndex": 30,
+          "transportedStateDistanceFromStart": 0.0016253969814269738,
+          "phenotypeDistanceFromStart": 0.0001557498422768287
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16597994
+          },
+          "sequenceIndex": 31,
+          "transportedStateDistanceFromStart": 0.0016080659612978014,
+          "phenotypeDistanceFromStart": 0.00014658133585328308
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 32,
+          "transportedStateDistanceFromStart": 0.0015770054516850087,
+          "phenotypeDistanceFromStart": 0.00014149014400973627
+        }
+      ]
+    },
+    {
+      "label": "Retraced control",
+      "rows": [
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 0,
+          "transportedStateDistanceFromStart": 0.0,
+          "phenotypeDistanceFromStart": 0.0
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16597994
+          },
+          "sequenceIndex": 1,
+          "transportedStateDistanceFromStart": 0.0015962336130195686,
+          "phenotypeDistanceFromStart": 0.00015004241746445875
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16747993
+          },
+          "sequenceIndex": 2,
+          "transportedStateDistanceFromStart": 0.001559500441554926,
+          "phenotypeDistanceFromStart": 0.00014190416140968828
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16897994
+          },
+          "sequenceIndex": 3,
+          "transportedStateDistanceFromStart": 0.0015661244329440048,
+          "phenotypeDistanceFromStart": 0.00013132987285142652
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17047994
+          },
+          "sequenceIndex": 4,
+          "transportedStateDistanceFromStart": 0.0015608051767802096,
+          "phenotypeDistanceFromStart": 0.0001320537656982741
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17197993
+          },
+          "sequenceIndex": 5,
+          "transportedStateDistanceFromStart": 0.0015975181251874342,
+          "phenotypeDistanceFromStart": 0.00013512774788891965
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17347994
+          },
+          "sequenceIndex": 6,
+          "transportedStateDistanceFromStart": 0.0016604155123188234,
+          "phenotypeDistanceFromStart": 0.00014974888783714118
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17497994
+          },
+          "sequenceIndex": 7,
+          "transportedStateDistanceFromStart": 0.0017052751570822578,
+          "phenotypeDistanceFromStart": 0.0001560790737769212
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 8,
+          "transportedStateDistanceFromStart": 0.0017020896821452755,
+          "phenotypeDistanceFromStart": 0.00015836453069956597
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16725671,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 9,
+          "transportedStateDistanceFromStart": 0.0016556712136999664,
+          "phenotypeDistanceFromStart": 0.00015466314726032989
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17125672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 10,
+          "transportedStateDistanceFromStart": 0.001636881268427307,
+          "phenotypeDistanceFromStart": 0.00014123076680902093
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17525673,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 11,
+          "transportedStateDistanceFromStart": 0.0015587931374148808,
+          "phenotypeDistanceFromStart": 0.0001198260404960326
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17925672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 12,
+          "transportedStateDistanceFromStart": 0.001530389351009325,
+          "phenotypeDistanceFromStart": 0.0001317758159779814
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18325672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 13,
+          "transportedStateDistanceFromStart": 0.0015799402112487598,
+          "phenotypeDistanceFromStart": 0.000123086386948439
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18725672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 14,
+          "transportedStateDistanceFromStart": 0.0015867029572225332,
+          "phenotypeDistanceFromStart": 0.0001442108638462219
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19125673,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 15,
+          "transportedStateDistanceFromStart": 0.0016446435933576515,
+          "phenotypeDistanceFromStart": 0.00014154196241250252
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19525672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 16,
+          "transportedStateDistanceFromStart": 0.0016160315719466927,
+          "phenotypeDistanceFromStart": 0.0001351820051679135
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.19125673,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 17,
+          "transportedStateDistanceFromStart": 0.0015906165604298015,
+          "phenotypeDistanceFromStart": 0.00013850445251244734
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18725672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 18,
+          "transportedStateDistanceFromStart": 0.001597353381328867,
+          "phenotypeDistanceFromStart": 0.00013447495301837804
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.18325672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 19,
+          "transportedStateDistanceFromStart": 0.0015636552654201686,
+          "phenotypeDistanceFromStart": 0.0001373881059639407
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17925672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 20,
+          "transportedStateDistanceFromStart": 0.001493126053411925,
+          "phenotypeDistanceFromStart": 0.00013924371141772244
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17525673,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 21,
+          "transportedStateDistanceFromStart": 0.0015065743014881254,
+          "phenotypeDistanceFromStart": 0.00013199822257670103
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.17125672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 22,
+          "transportedStateDistanceFromStart": 0.0015231511496906335,
+          "phenotypeDistanceFromStart": 0.00013491050056532275
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16725671,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 23,
+          "transportedStateDistanceFromStart": 0.0015687020511011612,
+          "phenotypeDistanceFromStart": 0.000114698063203676
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17647994
+          },
+          "sequenceIndex": 24,
+          "transportedStateDistanceFromStart": 0.0015804394586963224,
+          "phenotypeDistanceFromStart": 0.0001387689256433321
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17497994
+          },
+          "sequenceIndex": 25,
+          "transportedStateDistanceFromStart": 0.0016384209089444469,
+          "phenotypeDistanceFromStart": 0.00014034529872708864
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17347994
+          },
+          "sequenceIndex": 26,
+          "transportedStateDistanceFromStart": 0.001688054178090444,
+          "phenotypeDistanceFromStart": 0.00015246652295798394
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17197993
+          },
+          "sequenceIndex": 27,
+          "transportedStateDistanceFromStart": 0.001755961181820316,
+          "phenotypeDistanceFromStart": 0.00015145312448901034
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.17047994
+          },
+          "sequenceIndex": 28,
+          "transportedStateDistanceFromStart": 0.001690474862884511,
+          "phenotypeDistanceFromStart": 0.00015864211992346798
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16897994
+          },
+          "sequenceIndex": 29,
+          "transportedStateDistanceFromStart": 0.001697303674335381,
+          "phenotypeDistanceFromStart": 0.00015762190278229685
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16747993
+          },
+          "sequenceIndex": 30,
+          "transportedStateDistanceFromStart": 0.001699742215670665,
+          "phenotypeDistanceFromStart": 0.0001581792005825933
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16597994
+          },
+          "sequenceIndex": 31,
+          "transportedStateDistanceFromStart": 0.0017227526191623975,
+          "phenotypeDistanceFromStart": 0.000159609880393495
+        },
+        {
+          "coordinateValues": {
+            "m.0": 0.16325672,
+            "s.0": 0.16447994
+          },
+          "sequenceIndex": 32,
+          "transportedStateDistanceFromStart": 0.0017724412341038884,
+          "phenotypeDistanceFromStart": 0.00016180016983974882
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "file": "tda_profile_common_lenia_all_current.json",
+      "sha256": "2bb459a41d75bff827fdafe5cc0f506568d7f8d8437b4553bd6d9958529772ff"
+    },
+    {
+      "file": "tda_profile_common_lenia_nofood8192_current.json",
+      "sha256": "bcbbef91a956e00c9fe0cdcebad622cc43e2e29ec1066258adb5c8930521382d"
+    },
+    {
+      "file": "tda_profile_common_dryad_fish_current.json",
+      "sha256": "1e09ab7d2aecb3bf4e9b36cf675bf982f9d8d01d567f7012456ab2c8464a54e3"
+    },
+    {
+      "file": "tda_profile_common_embryomaker_current.json",
+      "sha256": "48f8e5cf0791b467c492af0fe8e10403d9b8ef4fad88e230d3bbe738557e0fa7"
+    },
+    {
+      "file": "localized-loop-validation-fish/runs/00049-flow-map-elite-53-7d70ce0c-square-ms0-medium-dense/stateful-continuation-packet.json",
+      "sha256": "cdb8a2ca0cddb7973290edee0562e5bff1dd1f32b5a139d1ad7bb07255eff2f1"
+    },
+    {
+      "file": "localized-loop-validation-fish/runs/flow-map-elite-53-7d70ce0c-medium-zeroarea-sm-dense/stateful-continuation-packet.json",
+      "sha256": "3744d4aee05ca25ea34dba944e40cb311782572baa14061709a8cb0f9dafd26a"
+    }
+  ]
+}

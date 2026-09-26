@@ -6,15 +6,15 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "paired information-and-intervention study",
-  "sourceReportSha256": "d0ae2a5d87d48c6c6a47d30d5343efea201b3ee33ac517ab524ba6f4f95fa453",
-  "publicReportSha256": "aa0ebbf21a7956f414e0808962209edd68009f7ac17e0d8a13a5399e9d07b1cb",
+  "sourceReportSha256": "482001582fca692f87efa7202b43e25dc062aa9196f173663a4ee1d82a1c853b",
+  "publicReportSha256": "482001582fca692f87efa7202b43e25dc062aa9196f173663a4ee1d82a1c853b",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "3adb47373e73e5d4068108c2b6cecabdef42ba595dee1b99f7fb83c37f3f6863",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "f820f7ac868b80a00318e65aa691033a439f69f4e714fb8e0ff69545d21e7cf1"
+  "contextSha256": "34751f185e2134ba7256e699b2530ba7d786cc3ed43ecdd2cf88ccb02820946d",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "9b0bb9968bc5d24d72a7f0fddd229dd182646ec9d20fb7b2eebb7d086119d438"
 }

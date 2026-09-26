@@ -2,18 +2,19 @@
   "schema": "specter_flow_lenia_report_release_v3",
   "id": "organism-hardens-without-narrowing",
   "releaseId": "flce-organism-hardens-without-narrowing-0523893c4c4f",
-  "title": "Commitment Increases Rigidity Without Convergence",
+  "title": "The Same Swap Has Less Effect as Forms Grow More Varied",
   "date": "2026-08-28",
   "status": "feature",
   "evidenceClass": "predeclared four-experiment series",
-  "sourceReportSha256": "06f6876bca1249c319abb19756048bb0c386c51457350ea95c6056019ee7f41b",
-  "publicReportSha256": "06f6876bca1249c319abb19756048bb0c386c51457350ea95c6056019ee7f41b",
+  "sourceReportSha256": "d4683a9361f3fa156a03c7dd2cf269a753729535d6d5066ea63a8362bb058792",
+  "publicReportSha256": "d4683a9361f3fa156a03c7dd2cf269a753729535d6d5066ea63a8362bb058792",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "88e2ac12f9d6e2df4bf365ce035d9e969f5e1a283ee8a2cbaf916301e9d61895",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "62347a73f5bb47f9caf82c1e2f7e3792bbdb1416b2d9b89438b19611b6fe0ca8"
+  "contextSha256": "2830e958a5d079301d8d9fb4aeaec9f72ebc6ec20774f50f917f96e3f5436ea1",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "a97758dfe7d448e731c7f31a51a369701e31e4bc6ad9b823b025a2eef38f8866"
 }

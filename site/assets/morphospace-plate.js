@@ -1,7 +1,7 @@
 (async()=>{
  const host=document.querySelector('#live-plate');
  const data=await fetch('/assets/blog/lenia-morphospace-report/fish-explainer.json').then(r=>{if(!r.ok)throw Error('Figure data unavailable');return r.json()});
- host.innerHTML=`<h3>Four fish, eleven landmarks each</h3><p>Same x–y projection and coordinate scale; points mark measured anatomy, not body outlines.</p><label>Landmark <select id="landmark-choice"><option value="-1">All landmarks</option>${data.landmarks.map((l,i)=>`<option value="${i}">${l}</option>`).join('')}</select></label><div class="live-fish"></div><p class="landmark-status" role="status"></p><a href="/assets/blog/lenia-morphospace-report/comparison-plate.svg" target="_blank">Export comparison SVG ↗</a>`;
+ host.innerHTML=`<h3>Four fish, eleven landmarks each</h3><label>Landmark <select id="landmark-choice"><option value="-1">All landmarks</option>${data.landmarks.map((l,i)=>`<option value="${i}">${l}</option>`).join('')}</select></label><div class="live-fish"></div><p class="landmark-status" role="status"></p><a href="/assets/blog/lenia-morphospace-report/comparison-plate.svg" target="_blank">Export comparison SVG ↗</a>`;
  const bars=document.querySelector('.report-coordinate-bars');
  const rows=[...bars.querySelectorAll('.report-coordinate-row:not(.report-coordinate-header)')];
  document.querySelector('#coordinate-order').addEventListener('change',event=>{

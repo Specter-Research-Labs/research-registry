@@ -1,0 +1,360 @@
+{
+  "cohort": {
+    "assayed_specimens": 5,
+    "calibration_exclusions": 4,
+    "failure_counts": {
+      "body_r99_exceeds_grid_fraction": 1,
+      "insufficient_pre_checkpoint_motion": 1,
+      "no_valid_sham_predicted_intercept": 2
+    },
+    "long_horizon_screened": 626,
+    "persistent_individuals": 184,
+    "qualified_movers": 9
+  },
+  "exposures": {
+    "absolute_turn_delta_range_radians": [
+      0.18067384199999997,
+      3.137205955864
+    ],
+    "completed": 15,
+    "contacts": 15,
+    "median_absolute_turn_delta_radians": 0.454852875864,
+    "median_progress_ratio_to_sham": 0.18066894485005083,
+    "minimum_retained_mass": 1.00009,
+    "progress_ratio_range": [
+      0.06723968111430366,
+      0.8974637435691147
+    ],
+    "side_trials_away": 4,
+    "side_trials_toward": 6
+  },
+  "interpretive_limits": [
+    "The wall-potential perturbation establishes causal sensitivity, not sensing or cognition.",
+    "Five assayed specimens are enough to identify response modes, not a connected predictive region.",
+    "Absolute coherence thresholds are not interpreted as death when the matched sham changes similarly."
+  ],
+  "receipts": {
+    "candidates_sha256": "4455ea5edd5b5754d601069fcaf8770c77b28e88a9f029beed8e8b36de00dcda",
+    "protocol_sha256": "217b7d7c838849970bdf9f47ec21161f4210d309436b98ced01c9b148e9dfdaa",
+    "results_sha256": "a9e3af18abce9d13efb6f7f4308ffecb550fe8d693ae43c3529399c17785d7ac"
+  },
+  "schema_version": "qualified-obstacle-response-analysis-v1",
+  "specimens": [
+    {
+      "candidate_id": "0581-flow-map-elite-2-151e7c06",
+      "completed": false,
+      "failure_reason": "no_valid_sham_predicted_intercept",
+      "family": "shape-preserving-locomotion-balanced-2c-128-8gen-20260509T1540Z",
+      "net_body_diameters": 0.6712236175754318,
+      "specimen_id": "151E7C06-7EE2-5E89-92A5-C996B30BBE1C",
+      "temporal_individuality_score": 0.7679259715495003
+    },
+    {
+      "candidate_id": "0541-flow-map-elite-10-5edf8c7e",
+      "completed": false,
+      "failure_reason": "insufficient_pre_checkpoint_motion",
+      "family": "shape-preserving-canonical-plus-compact-2c-256-r12-relaxed-10gen-20260509T173014Z",
+      "net_body_diameters": 0.6184311106273652,
+      "specimen_id": "5EDF8C7E-448B-55A9-A20D-44F6F54B9389",
+      "temporal_individuality_score": 0.7502916815471138
+    },
+    {
+      "branches": [
+        {
+          "absolute_turn_delta_radians": 0.35532277069999996,
+          "branch": "ahead",
+          "coherence_delta_to_sham": -0.04805645000000003,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.27146125064057186,
+          "progress_ratio_to_sham": 0.28732991122589946,
+          "retained_mass": 1.00009,
+          "side_relation": null,
+          "time_to_contact": 501,
+          "turn_delta_radians": -0.35532277069999996
+        },
+        {
+          "absolute_turn_delta_radians": 0.2154683707,
+          "branch": "left",
+          "coherence_delta_to_sham": -0.050620099999999946,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.18379130304911245,
+          "progress_ratio_to_sham": 0.31298002960613946,
+          "retained_mass": 1.000095,
+          "side_relation": "away",
+          "time_to_contact": 318,
+          "turn_delta_radians": -0.2154683707
+        },
+        {
+          "absolute_turn_delta_radians": 0.2118686193,
+          "branch": "right",
+          "coherence_delta_to_sham": 0.03637000000000001,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.11663669609029084,
+          "progress_ratio_to_sham": 0.22408222038826206,
+          "retained_mass": 1.0000921,
+          "side_relation": "away",
+          "time_to_contact": 394,
+          "turn_delta_radians": 0.2118686193
+        }
+      ],
+      "candidate_id": "0542-flow-map-elite-11-781d0200",
+      "completed": true,
+      "failure_reason": null,
+      "family": "shape-preserving-canonical-plus-compact-2c-256-r12-relaxed-10gen-20260509T173014Z",
+      "median_absolute_turn_delta_radians": 0.2154683707,
+      "median_coherence_delta_to_sham": -0.04805645000000003,
+      "median_progress_ratio_to_sham": 0.28732991122589946,
+      "net_body_diameters": 1.5772643472446313,
+      "sham": {
+        "final_largest_component_mass_fraction": 0.7705476,
+        "post_displacement": 68.143974,
+        "retained_mass": 1.000069,
+        "turn_angle": 0.0038110707
+      },
+      "specimen_id": "781D0200-9B22-5498-87C8-D94F30D70BC0",
+      "temporal_individuality_score": 0.8599565612977162
+    },
+    {
+      "branches": [
+        {
+          "absolute_turn_delta_radians": 0.23415434799999996,
+          "branch": "ahead",
+          "coherence_delta_to_sham": 0.006048700000000018,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.11105926696210666,
+          "progress_ratio_to_sham": 0.30156072877026613,
+          "retained_mass": 1.0000972,
+          "side_relation": null,
+          "time_to_contact": 570,
+          "turn_delta_radians": -0.23415434799999996
+        },
+        {
+          "absolute_turn_delta_radians": 0.355342772,
+          "branch": "left",
+          "coherence_delta_to_sham": 0.015024100000000096,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.29972319428011274,
+          "progress_ratio_to_sham": 0.3232017682662063,
+          "retained_mass": 1.0000951,
+          "side_relation": "toward",
+          "time_to_contact": 539,
+          "turn_delta_radians": 0.355342772
+        },
+        {
+          "absolute_turn_delta_radians": 0.18067384199999997,
+          "branch": "right",
+          "coherence_delta_to_sham": 0.07879770000000008,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.1623841504793621,
+          "progress_ratio_to_sham": 0.28285541548038234,
+          "retained_mass": 1.0000917,
+          "side_relation": "away",
+          "time_to_contact": 697,
+          "turn_delta_radians": 0.18067384199999997
+        }
+      ],
+      "candidate_id": "0543-flow-map-elite-12-870da94a",
+      "completed": true,
+      "failure_reason": null,
+      "family": "shape-preserving-canonical-plus-compact-2c-256-r12-relaxed-10gen-20260509T173014Z",
+      "median_absolute_turn_delta_radians": 0.23415434799999996,
+      "median_coherence_delta_to_sham": 0.015024100000000096,
+      "median_progress_ratio_to_sham": 0.30156072877026613,
+      "net_body_diameters": 1.3952227528650973,
+      "sham": {
+        "final_largest_component_mass_fraction": 0.691313,
+        "post_displacement": 62.982372,
+        "retained_mass": 1.0000796,
+        "turn_angle": -0.029322922
+      },
+      "specimen_id": "870DA94A-3659-50FA-9C9D-97B99AC7F98A",
+      "temporal_individuality_score": 0.9164689920444348
+    },
+    {
+      "branches": [
+        {
+          "absolute_turn_delta_radians": 1.067279184,
+          "branch": "ahead",
+          "coherence_delta_to_sham": 0.04471171000000007,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.17780213916203438,
+          "progress_ratio_to_sham": 0.091964343146535,
+          "retained_mass": 1.0000918,
+          "side_relation": null,
+          "time_to_contact": 185,
+          "turn_delta_radians": 1.067279184
+        },
+        {
+          "absolute_turn_delta_radians": 0.9145777759999998,
+          "branch": "left",
+          "coherence_delta_to_sham": 0.04963907000000001,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.23009421596572735,
+          "progress_ratio_to_sham": 0.06723968111430366,
+          "retained_mass": 1.0000961,
+          "side_relation": "away",
+          "time_to_contact": 272,
+          "turn_delta_radians": -0.9145777759999998
+        },
+        {
+          "absolute_turn_delta_radians": 1.309986816,
+          "branch": "right",
+          "coherence_delta_to_sham": 0.06486447000000006,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.4369642557729094,
+          "progress_ratio_to_sham": 0.1252167940229249,
+          "retained_mass": 1.0000917,
+          "side_relation": "toward",
+          "time_to_contact": 251,
+          "turn_delta_radians": -1.309986816
+        }
+      ],
+      "candidate_id": "0555-flow-map-elite-0-ae9700f0",
+      "completed": true,
+      "failure_reason": null,
+      "family": "shape-preserving-fixedRseed-2c-256-r12-relaxed-8gen-20260509T1710Z",
+      "median_absolute_turn_delta_radians": 1.067279184,
+      "median_coherence_delta_to_sham": 0.04963907000000001,
+      "median_progress_ratio_to_sham": 0.091964343146535,
+      "net_body_diameters": 2.088029306477961,
+      "sham": {
+        "final_largest_component_mass_fraction": 0.66106373,
+        "post_displacement": 66.69349,
+        "retained_mass": 1.0000726,
+        "turn_angle": 0.023208316
+      },
+      "specimen_id": "AE9700F0-230B-5C6D-8A51-8B87CF2BC721",
+      "temporal_individuality_score": 0.7304277700277606
+    },
+    {
+      "branches": [
+        {
+          "absolute_turn_delta_radians": 3.137205955864,
+          "branch": "ahead",
+          "coherence_delta_to_sham": -0.24464935999999998,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.008991622752658635,
+          "progress_ratio_to_sham": 0.8974637435691147,
+          "retained_mass": 1.0001068,
+          "side_relation": null,
+          "time_to_contact": 503,
+          "turn_delta_radians": -3.137205955864
+        },
+        {
+          "absolute_turn_delta_radians": 0.40493589413600006,
+          "branch": "left",
+          "coherence_delta_to_sham": -0.24328210999999994,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.10878945122244521,
+          "progress_ratio_to_sham": 0.11893725961368817,
+          "retained_mass": 1.0001086,
+          "side_relation": "toward",
+          "time_to_contact": 248,
+          "turn_delta_radians": 0.40493589413600006
+        },
+        {
+          "absolute_turn_delta_radians": 0.454852875864,
+          "branch": "right",
+          "coherence_delta_to_sham": -0.24457120999999998,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.09150004247266653,
+          "progress_ratio_to_sham": 0.08982795397285795,
+          "retained_mass": 1.0001049,
+          "side_relation": "toward",
+          "time_to_contact": 471,
+          "turn_delta_radians": -0.454852875864
+        }
+      ],
+      "candidate_id": "0574-flow-map-elite-19-b26adef3",
+      "completed": true,
+      "failure_reason": null,
+      "family": "shape-preserving-fixedRseed-2c-256-r12-relaxed-8gen-20260509T1710Z",
+      "median_absolute_turn_delta_radians": 0.454852875864,
+      "median_coherence_delta_to_sham": -0.24457120999999998,
+      "median_progress_ratio_to_sham": 0.11893725961368817,
+      "net_body_diameters": 1.6846567719464571,
+      "sham": {
+        "final_largest_component_mass_fraction": 0.58263046,
+        "post_displacement": 56.6796,
+        "retained_mass": 1.0000879,
+        "turn_angle": -3.2544136e-05
+      },
+      "specimen_id": "B26ADEF3-86EB-5F83-83C2-629C7E0490CD",
+      "temporal_individuality_score": 0.749715125496445
+    },
+    {
+      "candidate_id": "0553-flow-map-elite-22-cd45ca00",
+      "completed": false,
+      "failure_reason": "no_valid_sham_predicted_intercept",
+      "family": "shape-preserving-canonical-plus-compact-2c-256-r12-relaxed-10gen-20260509T173014Z",
+      "net_body_diameters": 1.0934591164858438,
+      "specimen_id": "CD45CA00-90DA-5267-A680-C7EC928DB84D",
+      "temporal_individuality_score": 0.7294347913021124
+    },
+    {
+      "candidate_id": "0405-flow-map-elite-2-ece1a16e",
+      "completed": false,
+      "failure_reason": "body_r99_exceeds_grid_fraction",
+      "family": "individual-persistence-floworbitseed-kernel-warm500-2c-128-30gen-20260508T1424Z",
+      "net_body_diameters": 0.5876670172627279,
+      "specimen_id": "ECE1A16E-45F1-5DE1-853D-A1BE1E3A880F",
+      "temporal_individuality_score": 0.7268654141134837
+    },
+    {
+      "branches": [
+        {
+          "absolute_turn_delta_radians": 1.0425866395,
+          "branch": "ahead",
+          "coherence_delta_to_sham": 0.12422637000000003,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.2570498829663804,
+          "progress_ratio_to_sham": 0.1099887230781351,
+          "retained_mass": 1.0000985,
+          "side_relation": null,
+          "time_to_contact": 272,
+          "turn_delta_radians": 1.0425866395
+        },
+        {
+          "absolute_turn_delta_radians": 0.9926698095,
+          "branch": "left",
+          "coherence_delta_to_sham": 0.1273354,
+          "contact": true,
+          "lateral_displacement_body_radii": 0.4013149426621795,
+          "progress_ratio_to_sham": 0.172827404536363,
+          "retained_mass": 1.0000972,
+          "side_relation": "toward",
+          "time_to_contact": 358,
+          "turn_delta_radians": 0.9926698095
+        },
+        {
+          "absolute_turn_delta_radians": 0.9283936605000002,
+          "branch": "right",
+          "coherence_delta_to_sham": 0.13042346000000005,
+          "contact": true,
+          "lateral_displacement_body_radii": -0.43363678187111016,
+          "progress_ratio_to_sham": 0.18066894485005083,
+          "retained_mass": 1.0000954,
+          "side_relation": "toward",
+          "time_to_contact": 202,
+          "turn_delta_radians": -0.9283936605000002
+        }
+      ],
+      "candidate_id": "0531-flow-map-elite-0-ff41daf6",
+      "completed": true,
+      "failure_reason": null,
+      "family": "shape-preserving-canonical-plus-compact-2c-256-r12-relaxed-10gen-20260509T173014Z",
+      "median_absolute_turn_delta_radians": 0.9926698095,
+      "median_coherence_delta_to_sham": 0.1273354,
+      "median_progress_ratio_to_sham": 0.172827404536363,
+      "net_body_diameters": 1.9018125786965636,
+      "sham": {
+        "final_largest_component_mass_fraction": 0.5836794,
+        "post_displacement": 64.037865,
+        "retained_mass": 1.0000714,
+        "turn_angle": 0.0062793605
+      },
+      "specimen_id": "FF41DAF6-3437-5AB3-90D4-E132FF4D8D7B",
+      "temporal_individuality_score": 0.7136744305384087
+    }
+  ]
+}

@@ -6,14 +6,16 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "nested exact-repair dose study",
-  "sourceReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
-  "publicReportSha256": "3be12b0a468bd1c7e868351be8c38aa2d187b46deb43fb0cea615500750a0ff6",
+  "sourceReportSha256": "a87bc9250dd85877e9ab5b23c223188b3a34e08a03b583d627e2a08929428565",
+  "publicReportSha256": "1a4a42aef4b0af2d930de51943ad4d7d554024563b95a423a237a77c2eafb5dd",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "08ce410919ea14aa2eba1c84e02c85c23508c1417e9ff156c3b27ffe7f7fae15",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "9e3110572693f4904fefbcf9254d319f7183b3bd89cc55578e4e5aa054981f1b"
+  "contextSha256": "7caf744a33fb88bfabd646a994f2a7abeccec48210ceb7b1abff0a06e1761be7",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "2eb62b7832d350d714754393e2f4e7d3d3c5b30d5f92d78f86435b8c8a493270"
 }

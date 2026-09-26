@@ -6,15 +6,15 @@
   "date": "2026-08-23",
   "status": "archive",
   "evidenceClass": "age-mapped causal-order intervention",
-  "sourceReportSha256": "affbabab1479cd89315f9cd54e27a6ade85650372790e89bcc8c8919a036c459",
-  "publicReportSha256": "fb5468d5c079e9a40c39512a824a28f8fcc01b75de82f19c69707768eaab3241",
+  "sourceReportSha256": "6a0256d06eb6b235767bbe9649aa89b93a988f4aa82fbf3de5c7fc316af179dc",
+  "publicReportSha256": "64a3ae94543f090d60aece01fde10449d0126e0021a32851f8207a8d08a20928",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
-    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "2d765f12d6ccb5b50c5e59d8a35193b62bda4b8ff37a6011f15f9981a982162b",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "da5454130d8ed80257a7ca0829e9c6faa4e04ea76c47b40d6dc99d72a5b2ef0c"
+  "contextSha256": "71fb2090ce572af70c3fbb993f015c526a3f4014612da5cbca84595fd11a6248",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "4ba97551a72f5e50174c3a98c607fbc8c9bc5574c1172d6ee20deeb5a9f4889d"
 }

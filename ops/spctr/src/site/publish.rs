@@ -139,7 +139,7 @@ fn site_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
     let research_notes = research_note_publish_plan(repo_root)?;
     excludes.extend(research_notes.excludes);
     excludes.push("dashboards/wonton-soup/node_modules/".to_owned());
-    excludes.extend(["review/".to_owned(), "style-study/".to_owned()]);
+    excludes.extend(["review/".to_owned(), "_review/".to_owned(), "style-study/".to_owned()]);
     excludes.sort();
     excludes.dedup();
 
@@ -1120,7 +1120,7 @@ mod tests {
         let root = tempdir().unwrap();
         let root = Utf8Path::from_path(root.path()).unwrap();
         let plan = site_publish_plan(root).unwrap();
-        for surface in ["review/", "style-study/"] {
+        for surface in ["review/", "_review/", "style-study/"] {
             assert!(plan.excludes.iter().any(|path| path == surface));
         }
     }

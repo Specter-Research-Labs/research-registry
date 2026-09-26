@@ -6,14 +6,16 @@
   "date": "2026-08-12",
   "status": "archive",
   "evidenceClass": "behavioral census without signal test",
-  "sourceReportSha256": "2a6c54b025cd5694bd92d1a59a5ab570904e7cab65753be0d9d7f9c402ebec83",
-  "publicReportSha256": "2a6c54b025cd5694bd92d1a59a5ab570904e7cab65753be0d9d7f9c402ebec83",
+  "sourceReportSha256": "bb1c325ba6899f0069f26c4d276bbddd54d8bbd878cc4a5b32a5cd5b4f6ece22",
+  "publicReportSha256": "127bc08626ddc05dc5bab17fc9b4b1b1246048c326237311069412121e6153b8",
   "transformations": [
     "import_verified_public_projection_v1",
     "apply_shared_report_polish_v1",
+    "normalize_public_editorial_language_v1",
+    "connect_consolidated_reading_v1",
     "move_reports_to_website_v1"
   ],
-  "contextSha256": "506cf26e97d9de3bab4b781f41943e76d855e7d1dcbc99d17774a70256fcc740",
-  "catalogSha256": "4a1564a2a68f978a914f86044d9de752147d6692344776db547368699c09cdd3",
-  "upstreamReceiptSha256": "d5231602fc894e1c05a3f44b5fba2da851b5a6393bce18b73c92b574246ac113"
+  "contextSha256": "d5d404dac1a97bbc029faa0a6895f9992fa572f5ade271d1ba7015b1aaa964bb",
+  "catalogSha256": "5959ce96024b49927f4cc7d871734abf165bdd3d88b8ad2d6e61852ae6186ca6",
+  "upstreamReceiptSha256": "fb39e47504a1bb02f855162de536d8783a5405dd036b0536c25f6c4f6b0ef35c"
 }
