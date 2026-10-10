@@ -239,9 +239,14 @@ def _run_threaded_cellview_trial(
         probe=probe,
     )
     thread_lock = cells[0].lock
+    # Frozen cells never get a thread, as in the original
+    # multithread_cell_sorting_with_frozen_steps.py,
+    # because a spinning frozen Selection thread records a compare on every loop without ever
+    # acting, which would count dead cells as substrate work.
+    active_cells = [cell for i, cell in enumerate(cells) if i not in frozen_indices]
 
     with thread_lock:
-        for cell in cells:
+        for cell in active_cells:
             cell.start()
         cell_group.start()
 
@@ -279,7 +284,7 @@ def _run_threaded_cellview_trial(
         }
         _kill_all(cells, [cell_group])
 
-    for cell in cells:
+    for cell in active_cells:
         cell.join(timeout=1)
     cell_group.join(timeout=1)
 
@@ -317,7 +322,7 @@ def _run_sequential_cellview_trial(
         if probe.stop_requested:
             termination = "compare_budget"
             break
-        schedule = list(cells)
+        schedule = [cell for i, cell in enumerate(cells) if i not in frozen_indices]
         schedule_rng.shuffle(schedule)
         for cell in schedule:
             cell.move()

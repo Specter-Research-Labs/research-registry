@@ -1,0 +1,25 @@
+{
+  "2d_bubble": {
+    "forward": 1835,
+    "backward": 967,
+    "ratio": 1.8976215098241986,
+    "success_rate": 0.0
+  },
+  "2d_selection": {
+    "forward": 8741,
+    "backward": 0,
+    "ratio": 8741.0,
+    "success_rate": 1.0
+  },
+  "provenance": {
+    "generator": "paper/compute_directed_flow.py",
+    "n_trials": 30,
+    "base_seed": 20260306,
+    "grid_size": 6,
+    "connectivity": 4,
+    "max_steps": 1080,
+    "ordering": "shell ordering by squared distance from origin",
+    "n_frozen": 0,
+    "distance_metric": "initiator Manhattan distance to ideal position"
+  }
+}

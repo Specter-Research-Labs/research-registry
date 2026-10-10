@@ -1,0 +1,98 @@
+{
+  "source": "exp28_2d_canonical.py raw trial archive",
+  "raw_trials": "paper/results/exp28_2d_canonical_trials.json",
+  "success_2d": {
+    "grid6_conn4": {
+      "frozen": [
+        0,
+        3,
+        6,
+        9
+      ],
+      "Bubble2D": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Selection2D": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grid6_conn8": {
+      "frozen": [
+        0,
+        3,
+        6,
+        9
+      ],
+      "Bubble2D": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Selection2D": [
+        1.0,
+        0.04,
+        0.0,
+        0.0
+      ]
+    },
+    "grid8_conn4": {
+      "frozen": [
+        0,
+        5,
+        11,
+        16
+      ],
+      "Bubble2D": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Selection2D": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grid8_conn8": {
+      "frozen": [
+        0,
+        5,
+        11,
+        16
+      ],
+      "Bubble2D": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Selection2D": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "provenance": {
+    "generator": "paper/aggregate_fig3_2d.py",
+    "shell_trials": 100,
+    "grid_sizes": [
+      6,
+      8
+    ],
+    "connectivities": [
+      4,
+      8
+    ]
+  }
+}

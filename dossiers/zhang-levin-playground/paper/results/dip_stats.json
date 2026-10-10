@@ -1,0 +1,55 @@
+{
+  "1d_bubble": {
+    "n_trials": 50,
+    "dip_rate": 1.0,
+    "mean_dip_count": 34.78,
+    "mean_dip_depth": 0.9114433582518688,
+    "mean_recovery_steps": 2.010350776308223
+  },
+  "1d_selection": {
+    "n_trials": 50,
+    "dip_rate": 0.98,
+    "mean_dip_count": 3.72,
+    "mean_dip_depth": 0.45698924731182794,
+    "mean_recovery_steps": 0.6989247311827957
+  },
+  "2d_bubble": {
+    "n_trials": 50,
+    "dip_rate": 0.0,
+    "mean_dip_count": 0.0,
+    "mean_dip_depth": 0.0,
+    "mean_recovery_steps": 0.0
+  },
+  "2d_selection": {
+    "n_trials": 50,
+    "dip_rate": 1.0,
+    "mean_dip_count": 308.74,
+    "mean_dip_depth": 3.604651162790698,
+    "mean_recovery_steps": 7.199585411673253
+  },
+  "provenance": {
+    "generator": "paper/compute_dip_stats.py",
+    "n_trials": 50,
+    "base_seed": 20260306,
+    "conditions": [
+      "1d_bubble",
+      "1d_selection",
+      "2d_bubble",
+      "2d_selection"
+    ],
+    "one_d": {
+      "n_cells": 30,
+      "n_frozen": 3,
+      "timeout": 20.0,
+      "semantics": "movable frozen cells"
+    },
+    "two_d": {
+      "grid_size": 6,
+      "n_frozen": 3,
+      "connectivity": 4,
+      "max_steps": 1080,
+      "ordering": "shell ordering by squared distance from origin",
+      "semantics": "immovable frozen cells"
+    }
+  }
+}

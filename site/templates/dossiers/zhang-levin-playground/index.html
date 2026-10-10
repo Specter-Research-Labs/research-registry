@@ -269,7 +269,7 @@
 <p class="story-deck">Each cell holds a value and follows a sorting rule, and together their local swaps bring the array into order. By freezing some cells, mixing different rules, or changing which moves are allowed, we can watch how that ordering proceeds when the usual route is disrupted and ask what the collective behavior depends on.</p>
 <nav class="story-jumps" aria-label="Experiments"><a href="#zl-dip-fig">Recovering from disorder</a><a href="#zl-cluster-fig">Why like cells cluster</a><a href="#zl-gate-fig">Transplanting the waiting rule</a></nav>
 <h2 class="story-heading">Order returns through temporary setbacks</h2>
-<p>In this replay, three cells cannot initiate a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials, every run contained at least one such dip.</p>
+<p>In this replay, three cells cannot initiate a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials, every run contained at least one such dip. We have not yet compared these dips with a random walk at the same number of swaps, or tested whether they become more frequent as more cells are frozen, which is how Zhang and colleagues argue that they are more than noise.</p>
 <figure class="zl-figure" id="zl-dip-fig">
                         <div class="zl-fig-head">
                             <span class="zl-fig-name">Figure A — Dip replay</span>
@@ -302,7 +302,7 @@
                             </div>
                             <div class="zl-chip">
                                 <span class="zl-chip-k">Mean dips per run</span>
-                                <span class="zl-chip-v">34.2</span>
+                                <span class="zl-chip-v">34.8</span>
                             </div>
                             <div class="zl-chip">
                                 <span class="zl-chip-k">Mean dip depth</span>
@@ -310,14 +310,35 @@
                             </div>
                             <div class="zl-chip">
                                 <span class="zl-chip-k">Mean recovery</span>
-                                <span class="zl-chip-v">2.4 swaps</span>
+                                <span class="zl-chip-v">2.0 swaps</span>
                             </div>
                         </div>
                     </figure>
 
                     <h2 class="story-heading">Cells cluster when they move at different times</h2>
-                    <p>When cells using different algorithms sort the same array, cells of the same kind tend to end up beside one another, even though nothing in their rules tells them to seek each other. What differs is when they act: Selection cells finish early, while Insertion cells wait until the portion to their left is ordered, leaving bursts in which one class is still rearranging the array while another has fallen quiet.</p>
-                    <p>If this separation in activity helps produce the clusters, removing Insertion’s waiting gate should reduce them, and that is what we found. The paired replay below starts from the same array with and without the gate, letting us follow how changing the timing changes the arrangement that forms.</p>
+                    <p>
+                        The maximum of a noisy clustering curve sits above the
+                        random-mixing baseline even when both halves of the
+                        array run the same rule, so we score each run against
+                        its own trajectory with the algotype labels shuffled
+                        across cells and report the excess over that null.
+                        Pairs that contain Insertion cluster above it, because
+                        Insertion's sorted-prefix gate holds its cells back
+                        until the left part of the array is ordered, and the
+                        late swap bursts then involve mostly one class, whose
+                        cells end up adjacent without attraction, type-aware
+                        communication or explicit coordination. Zhang and
+                        colleagues proposed this timing account as an
+                        efficiency hypothesis, in which efficient types move
+                        first and slower ones catch up. Removing the gate
+                        (<code>InsertionNoWait</code>) returns clustering to
+                        the null, where mixtures of ungated adjacent rules such
+                        as Bubble and Gnome also sit. Bubble mixed with
+                        Selection clusters weakly (+0.026 over the null) at
+                        almost no temporal separation, so timing does not
+                        account for all of the clustering in the original set.
+                    </p>
+                    <p>The paired replay below starts from the same array with and without the gate, letting us follow how changing the timing changes the arrangement that forms.</p>
 
                     <figure class="zl-figure" id="zl-cluster-fig">
                         <div class="zl-fig-head">
@@ -345,7 +366,7 @@
                                 </div>
                             </div>
                             <svg id="zl-cluster-svg" viewBox="0 0 780 300" role="img"
-                                aria-label="Activity raster and clustering curve for both runs. In the gated run, Insertion activity concentrates late and clustering rises well above the random-mixing baseline; in the ablated run activity is spread evenly and clustering stays near baseline.">
+                                aria-label="Activity raster and clustering curve for both runs. In the gated run, Insertion activity concentrates late; in the ablated run activity is spread evenly. Both curves wander above random mixing, and each peak is compared with the peak expected from shuffled labels.">
                             </svg>
                         </div>
                         <div class="zl-controls">
@@ -360,11 +381,11 @@
                         </div>
                         <div class="zl-chips">
                             <div class="zl-chip">
-                                <span class="zl-chip-k">&Delta;C, gate intact (exemplar)</span>
+                                <span class="zl-chip-k">Excess over shuffle null, gate intact (exemplar)</span>
                                 <span class="zl-chip-v" data-chip="ins-dc">&mdash;</span>
                             </div>
                             <div class="zl-chip">
-                                <span class="zl-chip-k">&Delta;C, gate ablated (exemplar)</span>
+                                <span class="zl-chip-k">Excess over shuffle null, gate ablated (exemplar)</span>
                                 <span class="zl-chip-v" data-chip="nw-dc">&mdash;</span>
                             </div>
                             <div class="zl-chip">
@@ -372,17 +393,29 @@
                                 <span class="zl-chip-v" data-chip="ins-t">&mdash;</span>
                             </div>
                             <div class="zl-chip">
-                                <span class="zl-chip-k">Archived &Delta;C (20 trials)</span>
-                                <span class="zl-chip-v">0.166 vs 0.091</span>
+                                <span class="zl-chip-k">Excess over null, 20 trials</span>
+                                <span class="zl-chip-v">+0.079 vs &minus;0.007</span>
                             </div>
                         </div>
                     </figure>
 
-                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2><p>The more demanding test is to move the waiting rule into another algorithm and see whether the explanation travels with it. Giving Bubble and Gnome clones an Insertion-style gate increased both temporal separation and clustering, as the chart shows by comparing each gated pair with its gate-free counterpart.</p>
+                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
+                    <p>
+                        Transplanting Insertion's gate onto clones of Bubble
+                        and Gnome, with the swap rule left unchanged, gives the
+                        efficiency hypothesis its first causal test. Across 30
+                        trials per pair the delayed clones cluster as far above
+                        the null as native Insertion (+0.064 and +0.052 against
+                        +0.061), while the same clones without the gate sit at
+                        the null with <code>InsertionNoWait</code>. The
+                        permutation test clears the 1-in-20 level in only 6 of
+                        30 single runs of each gated pair, so the transfer is a
+                        population effect that single runs mostly do not show.
+                    </p>
 <figure class="zl-figure" id="zl-gate-fig">
                         <div class="zl-fig-head">
                             <span class="zl-fig-name">Figure C — The gate, not the algotype</span>
-                            <span class="zl-fig-meta">clustering increase &Delta;C &middot; 30 archived trials per pair</span>
+                            <span class="zl-fig-meta">peak clustering above the label-shuffle null &middot; 30 trials per pair</span>
                         </div>
                         <div class="zl-legend">
                             <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>no waiting gate</span>
@@ -390,19 +423,65 @@
                         </div>
                         <div class="zl-stage">
                             <svg id="zl-gate-svg" viewBox="0 0 780 250" role="img"
-                                aria-label="Bar chart of clustering increase across six paired conditions. All three gated pairs sit high; all three gate-free pairs sit low.">
+                                aria-label="Bar chart of peak clustering above the label-shuffle null across six paired conditions. The three gated pairs sit near +0.05 to +0.06; the three gate-free pairs sit near zero.">
                             </svg>
                         </div>
                     </figure>
 
                     <h2 class="story-heading">Getting past a cell that cannot move</h2>
-                    <p>In the opening replay, a cell that cannot initiate a swap can still be moved by its neighbors, but fixing its position creates a harder obstacle because it cannot participate in any swap at all. We separated two ways a Selection algorithm might get past that barrier, reaching beyond adjacent cells and choosing another target when its first choice is blocked, and found that sorting required both in the tested conditions.</p>
-                    <p>Comparing distributed cells with a centralized implementation under the same immovable-cell rules gave the same pattern of successes, while switching between threaded and sequential schedules mainly changed the number of comparisons. In this experiment, the explanation for getting past the barrier lay in the allowed moves and the response to a blocked target, with no additional advantage in the outcome established by distributing the computation.</p>
-                    <h2 class="story-heading">A blocked route or an unreachable order?</h2>
-                    <p>Before we score a failed search, we need to know whether the goal was still reachable: long-range swaps may leave a route to a sorted state that a stubborn policy never finds, whereas adjacent swaps with an immovable barrier may leave no route at all from the starting array. The two failures can look identical at the endpoint, but only one can be repaired by making better choices among the same allowed moves.</p>
-                    <p>Our <a href="/cabinet/k-semantics-reference/k-equations/">K comparison</a> therefore recalculates its null over reachable states for each frozen-cell pattern, so that a barrier shrinking the space of possibilities also changes the blind comparison. Otherwise, we could mistake a smaller space for an improvement in the sorting policy; the paper details the exact state-proposal calculation and its comparison with blind operator walks.</p>
-                    <p>These experiments give us two ways to pursue an explanation of collective behavior by changing the rules underneath it: we can move a waiting rule between algorithms and watch a spatial pattern follow, or separate the moves and choices needed to reach an ordered state around an obstacle. In each case, the intervention tells us which part of the apparent collective competence the proposed mechanism can account for.</p>
-                    <p>The paper and its TeX source are in <code>paper/</code> in the repository. Figures can be regenerated from the committed result JSON.</p>
+                    <p>
+                        Robustness depends on operator class and obstacle
+                        semantics, and under immovable frozen indices most of
+                        that dependence follows from the rules themselves.
+                        Adjacent moves cannot carry a value across an
+                        immovable frozen index, so adjacent sorts stop in a
+                        segment-sorted state, and a long-range Selection cell
+                        that keeps pointing at a frozen target waits forever,
+                        which leaves long-range Selection with frozen-target
+                        rerouting as the only rule in a 2x2 factorization that
+                        can reach the sorted state. Traditional sorts given the
+                        same skip-frozen rerouting agree with the cell-view
+                        versions in every paired trial, so the cell-view
+                        advantage in the original comparison most likely came
+                        from traditional baselines without that rerouting, and
+                        the competency worth studying is the rerouting rule
+                        itself.
+                    </p>
+                    <p>
+                        Every cell thread waits on one shared lock, so the
+                        threaded implementation is a serialized random
+                        scheduler, and once frozen cells run no thread, as in
+                        the original code, threaded and sequential schedules of
+                        the same cells agree in outcome and do the same work
+                        (ratios between 0.97 and 1.02). An earlier version of
+                        this page reported a large work cost for the threaded
+                        substrate, which came from frozen Selection threads
+                        that spun without acting.
+                    </p>
+                    <p>
+                        The <a href="/cabinet/k-semantics-reference/k-equations/">K-computation framework</a> of Chis-Ciure and Levin
+                        gives a worked example with explicit operators,
+                        constraints and costs. Our reachable-state proposal
+                        null makes K set mostly by the size of the reachable
+                        state space, sitting 1.7 to 2.6 units below the
+                        logarithm of the number of active-value permutations
+                        for every algorithm that finishes, so its decline with
+                        frozen count and the failure modes it separates
+                        restate the reachability result.
+                    </p>
+                    <p>
+                        The TeX source lives under <code>paper/</code> in the
+                        repository, and <code>paper/make_figures.py</code>
+                        regenerates every figure from the compact result files
+                        in <code>paper/results/</code>. The tables for the
+                        rerouting ablation and the centralized comparison come
+                        from an earlier archive that was not retained. We have
+                        not yet revisited the original duplicate-value runs, in
+                        which aggregation persists into the final state, the
+                        opposite-direction chimeras, the three-type mixture, the
+                        efficiency comparisons, or the rise of dips with frozen
+                        count.
+                    </p>
                     <span class="path-note"
                         >Repository path: dossiers/zhang-levin-playground</span
                     >
@@ -420,10 +499,10 @@
                 // ----------------------------------------------------------
                 // Faithful sequential port of the published cell-view model
                 // (dossiers/zhang-levin-playground/modules/multithread/*).
-                // Sequential random scheduler = matched-substrate equivalent
-                // of the threaded substrate (Exp 26: schedules agree on
-                // outcomes). Frozen cells never initiate; actives may swap
-                // with them (movable semantics), as in compute_dip_stats.py.
+                // A sequential random scheduler stands in for the threaded
+                // substrate, whose shared lock already serializes the cells.
+                // Frozen cells never initiate; actives may swap with them
+                // (movable semantics), as in compute_dip_stats.py.
                 // ----------------------------------------------------------
 
                 function mulberry32(seed) {
@@ -925,18 +1004,40 @@
                     const n = 50;
                     const nSwaps = pair.ins.states.length - 1;
 
-                    // exemplar chips
-                    const dc = (clust) => Math.max(...clust) - 0.5;
-                    const insDC = dc(pair.ins.clust);
-                    const nwDC = dc(pair.nw.clust);
+                    // The max of a noisy C(t) sits well above random mixing even for
+                    // identical rules, so each run is scored against the mean peak of
+                    // the same trajectory with algotype labels shuffled across values.
+                    function shuffleNullPeak(states, seed, nPerm) {
+                        const rng = mulberry32(seed);
+                        const labelOfValue = [];
+                        states[0].order.forEach(([v, t]) => { labelOfValue[v] = t; });
+                        const rows = states.map((st) => st.order.map(([v]) => v));
+                        let total = 0;
+                        for (let p = 0; p < nPerm; p++) {
+                            const lab = shuffled(labelOfValue.slice(), rng);
+                            let peak = 0;
+                            for (const row of rows) {
+                                let m = 0;
+                                for (let i = 0; i + 1 < row.length; i++) {
+                                    if (lab[row[i]] === lab[row[i + 1]]) m++;
+                                }
+                                peak = Math.max(peak, m / (row.length - 1));
+                            }
+                            total += peak;
+                        }
+                        return total / nPerm;
+                    }
+                    const signed = (v) => (v >= 0 ? "+" : "\u2212") + Math.abs(v).toFixed(2);
+                    const insDC = Math.max(...pair.ins.clust) - shuffleNullPeak(pair.ins.states, 1, 200);
+                    const nwDC = Math.max(...pair.nw.clust) - shuffleNullPeak(pair.nw.states, 2, 200);
                     const insEvents = pair.ins.events;
                     const lateIdx = insEvents
                         .map((t, k) => (t === 1 ? k : null))
                         .filter((x) => x !== null);
                     const meanMove =
                         lateIdx.reduce((s, x) => s + x, 0) / lateIdx.length / (insEvents.length - 1);
-                    fig.querySelector('[data-chip="ins-dc"]').textContent = "+" + insDC.toFixed(2);
-                    fig.querySelector('[data-chip="nw-dc"]').textContent = "+" + nwDC.toFixed(2);
+                    fig.querySelector('[data-chip="ins-dc"]').textContent = signed(insDC);
+                    fig.querySelector('[data-chip="nw-dc"]').textContent = signed(nwDC);
                     fig.querySelector('[data-chip="ins-t"]').textContent =
                         meanMove.toFixed(2) + " (0 = early, 1 = late)";
 
@@ -1043,10 +1144,10 @@
                         const label = el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
                         label.textContent = v.toFixed(1);
                     });
-                    // random-mixing baseline
-                    el("line", { x1: chartL, y1: yPos(0.5), x2: chartR, y2: yPos(0.5), stroke: "#616873", "stroke-width": 1, "stroke-dasharray": "4 4" }, svg);
-                    el("text", { x: chartR, y: yPos(0.5) - 5, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
-                        .textContent = "random mixing \u03a3p\u00b2 = 0.5";
+                    const mixing = 24 / 49;
+                    el("line", { x1: chartL, y1: yPos(mixing), x2: chartR, y2: yPos(mixing), stroke: "#616873", "stroke-width": 1, "stroke-dasharray": "4 4" }, svg);
+                    el("text", { x: chartR, y: yPos(mixing) - 5, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
+                        .textContent = "random mixing 24/49";
 
                     const curveLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
                     function curvePoints(clust) {
@@ -1070,7 +1171,7 @@
                             class: "zl-chart-label",
                             fill: color,
                         }, g);
-                        label.textContent = "peak " + peak.toFixed(2) + " \u00b7 \u0394C +" + dcVal.toFixed(2);
+                        label.textContent = "peak " + peak.toFixed(2) + " \u00b7 " + signed(dcVal) + " over null";
                         return { g, k };
                     }
                     const insPeak = peakMarker(pair.ins.clust, ROSE, insDC, -8);
@@ -1110,28 +1211,28 @@
                 // ----------------------------------------------------------
                 (function buildGateFigure() {
                     const svg = document.getElementById("zl-gate-svg");
-                    // Archived timing-transfer aggregate (exp27, seeds 40-42,
-                    // 10 trials each, 50 cells). s = temporal separation.
+                    // paper/results/exp27_timing_interventions_aggregate.json (seeds 40-42,
+                    // 10 trials each, 50 cells): excess_max_mean and temporal_separation_mean.
                     const groups = [
                         {
                             label: "Bubble family",
                             bars: [
-                                { name: "BubbleClone", dc: 0.155, s: 0.027, gate: false },
-                                { name: "DelayedBubble", dc: 0.176, s: 0.111, gate: true },
+                                { name: "BubbleClone", dc: 0.017, s: 0.024, gate: false },
+                                { name: "DelayedBubble", dc: 0.064, s: 0.114, gate: true },
                             ],
                         },
                         {
                             label: "Gnome family",
                             bars: [
-                                { name: "GnomeClone", dc: 0.126, s: 0.043, gate: false },
-                                { name: "DelayedGnome", dc: 0.167, s: 0.106, gate: true },
+                                { name: "GnomeClone", dc: 0.006, s: 0.025, gate: false },
+                                { name: "DelayedGnome", dc: 0.052, s: 0.107, gate: true },
                             ],
                         },
                         {
                             label: "Native Insertion",
                             bars: [
-                                { name: "InsertionNoWait", dc: 0.134, s: 0.033, gate: false },
-                                { name: "Insertion", dc: 0.170, s: 0.105, gate: true },
+                                { name: "InsertionNoWait", dc: 0.001, s: 0.025, gate: false },
+                                { name: "Insertion", dc: 0.061, s: 0.103, gate: true },
                             ],
                         },
                     ];
@@ -1139,10 +1240,10 @@
                     const chartR = 772;
                     const chartTop = 26;
                     const chartBottom = 196;
-                    const yMax = 0.2;
+                    const yMax = 0.08;
                     const yPos = (v) => chartBottom - (v / yMax) * (chartBottom - chartTop);
 
-                    [0, 0.05, 0.1, 0.15, 0.2].forEach((v) => {
+                    [0, 0.02, 0.04, 0.06, 0.08].forEach((v) => {
                         const y = yPos(v);
                         el("line", { x1: chartL, y1: y, x2: chartR, y2: y, stroke: v === 0 ? INK : "#e4e8ef", "stroke-width": 1 }, svg);
                         const label = el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
@@ -1169,7 +1270,7 @@
                                 rect.setAttribute("stroke-width", "1");
                             }
                             const val = el("text", { x: x + barW / 2, y: y - 16, class: "zl-chart-label", "text-anchor": "middle", fill: INK }, svg);
-                            val.textContent = "\u0394C " + bar.dc.toFixed(3);
+                            val.textContent = "+" + bar.dc.toFixed(3);
                             const sep = el("text", { x: x + barW / 2, y: y - 5, class: "zl-chart-label-sm", "text-anchor": "middle" }, svg);
                             sep.textContent = "s = " + bar.s.toFixed(3);
                             const name = el("text", {

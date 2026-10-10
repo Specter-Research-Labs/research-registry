@@ -8,17 +8,9 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-
-def _ci_95(values: list[float]) -> tuple[float, float]:
-    if len(values) == 1:
-        return values[0], values[0]
-    arr = np.array(values, dtype=np.float64)
-    mean = float(np.mean(arr))
-    std = float(np.std(arr, ddof=1))
-    radius = 1.96 * std / np.sqrt(len(arr))
-    return mean - radius, mean + radius
+from exp27_timing_interventions import METRIC_DEFINITION, summarize_pair
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -36,74 +28,35 @@ def main(argv: list[str]) -> int:
     args = _parse_args(argv)
 
     pair_trials: dict[str, list[dict]] = defaultdict(list)
-    trial_rows = []
     input_paths = []
     base_seeds = []
-    n_cells = None
-    timeout = None
+    provenances = []
 
     for path in args.inputs:
         obj = json.loads(path.read_text())
         input_paths.append(str(path))
         base_seeds.append(obj["provenance"]["base_seed"])
-        n_cells = obj["provenance"]["n_cells"]
-        timeout = obj["provenance"]["timeout"]
+        provenances.append(
+            {key: obj["provenance"][key] for key in ("n_cells", "timeout", "n_trials")}
+        )
         for trial in obj["trial_rows"]:
             pair_trials[trial["pair"]].append(trial)
-            trial_rows.append(trial)
 
-    rows = []
-    for pair, trials in pair_trials.items():
-        clustering_values = [float(trial["clustering_increase"]) for trial in trials]
-        separation_trials = [trial for trial in trials if trial["usable"]]
-        separation_values = [float(trial["temporal_separation"]) for trial in separation_trials]
-        left_move_times = [float(trial["mean_move_time_left"]) for trial in separation_trials]
-        right_move_times = [float(trial["mean_move_time_right"]) for trial in separation_trials]
-        ci_lo, ci_hi = _ci_95(clustering_values)
-        sep_ci_lo, sep_ci_hi = _ci_95(separation_values)
-        left_name, right_name = pair.split("+", maxsplit=1)
-        rows.append(
-            {
-                "pair": pair,
-                "left_algotype": left_name,
-                "right_algotype": right_name,
-                "intervention": "synthetic_delay" if "Delayed" in pair else "reference",
-                "temporal_separation": round(float(np.mean(separation_values)), 6),
-                "temporal_separation_std": round(
-                    float(np.std(separation_values, ddof=1)) if len(separation_values) > 1 else 0.0,
-                    6,
-                ),
-                "temporal_separation_ci_lo": round(sep_ci_lo, 6),
-                "temporal_separation_ci_hi": round(sep_ci_hi, 6),
-                "clustering_increase_mean": round(float(np.mean(clustering_values)), 6),
-                "clustering_increase_std": round(
-                    float(np.std(clustering_values, ddof=1)) if len(clustering_values) > 1 else 0.0,
-                    6,
-                ),
-                "clustering_increase_ci_lo": round(ci_lo, 6),
-                "clustering_increase_ci_hi": round(ci_hi, 6),
-                "left_mean_move_time": round(float(np.mean(left_move_times)), 6),
-                "right_mean_move_time": round(float(np.mean(right_move_times)), 6),
-                "success_rate": round(
-                    sum(1 for trial in trials if trial["success"]) / len(trials),
-                    6,
-                ),
-                "usable_trials": len(separation_trials),
-            }
-        )
+    if any(p != provenances[0] for p in provenances):
+        raise ValueError(f"inputs disagree on n_cells/timeout/n_trials: {provenances}")
 
-    rows.sort(key=lambda row: row["clustering_increase_mean"], reverse=True)
+    rows = [summarize_pair(pair, trials) for pair, trials in pair_trials.items()]
+    rows.sort(key=lambda row: row["excess_max_mean"], reverse=True)
 
     out_obj = {
         "inputs": input_paths,
-        "n_trials_total_per_pair": len(next(iter(pair_trials.values()))) if pair_trials else 0,
         "rows": rows,
-        "trial_rows": trial_rows,
         "provenance": {
             "generator": "paper/aggregate_exp27_timing_interventions.py",
             "base_seeds": base_seeds,
-            "n_cells": n_cells,
-            "timeout": timeout,
+            "n_cells": provenances[0]["n_cells"],
+            "timeout": provenances[0]["timeout"],
+            "metric_definition": METRIC_DEFINITION,
         },
     }
 

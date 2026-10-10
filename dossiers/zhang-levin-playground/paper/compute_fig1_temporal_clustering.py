@@ -13,6 +13,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from exp27_timing_interventions import METRIC_DEFINITION, summarize_pair
 from modules.multithread.BubbleSortCell import BubbleSortCell
 from modules.multithread.CellGroup import CellGroup, GroupStatus
 from modules.multithread.GnomeSortCell import GnomeSortCell
@@ -21,6 +22,7 @@ from modules.multithread.MultiThreadCell import CellStatus
 from modules.multithread.SelectionSortCell import SelectionSortCell
 from modules.multithread.ShakerSortCell import ShakerSortCell
 from modules.multithread.StatusProbe import ExtendedStatusProbe
+from paper.clustering_null import adjacent_match_fraction, score_trajectory
 
 CELL_CLASSES = {
     "Bubble": BubbleSortCell,
@@ -33,19 +35,12 @@ CELL_CLASSES = {
 DEFAULT_PAIRS = [f"{left}+{right}" for left, right in combinations(CELL_CLASSES, 2)]
 
 
-def _adjacent_match_fraction(labels: list[object]) -> float:
-    if len(labels) < 2:
-        return 0.0
-    matches = sum(1 for i in range(len(labels) - 1) if labels[i] == labels[i + 1])
-    return matches / (len(labels) - 1)
-
-
 def _trial_setup(
     pair_label: str,
     *,
     n_cells: int,
     trial_seed: int,
-) -> tuple[list, list[str], ExtendedStatusProbe, threading.Lock, CellGroup]:
+) -> tuple[list, list[str], list[int], ExtendedStatusProbe, threading.Lock, CellGroup]:
     left_name, right_name = pair_label.split("+", maxsplit=1)
     left_class = CELL_CLASSES[left_name]
     right_class = CELL_CLASSES[right_name]
@@ -93,7 +88,7 @@ def _trial_setup(
     for cell in cells:
         cell.group = cell_group
 
-    return cells, algotypes, probe, lock, cell_group
+    return cells, algotypes, values, probe, lock, cell_group
 
 
 def _is_sorted(cells: list) -> bool:
@@ -120,14 +115,14 @@ def run_trial(
     timeout: float,
     trial_seed: int,
 ) -> dict:
-    cells, algotypes, probe, lock, cell_group = _trial_setup(
+    cells, algotypes, values, probe, lock, cell_group = _trial_setup(
         pair_label,
         n_cells=n_cells,
         trial_seed=trial_seed,
     )
 
     baseline = sum((algotypes.count(name) / n_cells) ** 2 for name in set(algotypes))
-    clustering_trajectory = [_adjacent_match_fraction(algotypes)]
+    value_trajectory = [list(values)]
 
     with lock:
         for cell in cells:
@@ -145,24 +140,27 @@ def run_trial(
 
     with lock:
         for snapshot in probe.cell_types:
-            clustering_trajectory.append(_adjacent_match_fraction([cell[1] for cell in snapshot]))
-        final_labels = [cell.cell_type for cell in cells]
-        clustering_trajectory.append(_adjacent_match_fraction(final_labels))
+            value_trajectory.append([cell[2] for cell in snapshot])
+        value_trajectory.append([cell.value for cell in cells])
         _kill_all(cells, cell_group)
 
     for cell in cells:
         cell.join(timeout=1)
     cell_group.join(timeout=1)
 
+    value_labels = dict(zip(values, algotypes))
+    scores = score_trajectory(value_trajectory, value_labels, permutation_seed=trial_seed)
     n_swaps = len(probe.swap_events)
     trial_result = {
         "success": success,
         "n_swaps": n_swaps,
-        "initial_clustering": clustering_trajectory[0],
-        "final_clustering": clustering_trajectory[-1],
-        "max_clustering": max(clustering_trajectory),
+        "initial_clustering": adjacent_match_fraction(algotypes),
+        "final_clustering": adjacent_match_fraction(
+            [value_labels[v] for v in value_trajectory[-1]]
+        ),
         "baseline_clustering": baseline,
-        "clustering_increase": max(clustering_trajectory) - baseline,
+        "clustering_increase": scores["max_clustering"] - baseline,
+        **scores,
     }
     if n_swaps == 0:
         return {**trial_result, "usable": False}
@@ -189,16 +187,6 @@ def run_trial(
         "mean_move_time_left": left_mean,
         "mean_move_time_right": right_mean,
     }
-
-
-def _ci_95(values: list[float]) -> tuple[float, float]:
-    if len(values) == 1:
-        return values[0], values[0]
-    arr = np.array(values, dtype=np.float64)
-    mean = float(np.mean(arr))
-    std = float(np.std(arr, ddof=1))
-    radius = 1.96 * std / np.sqrt(len(arr))
-    return mean - radius, mean + radius
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -230,13 +218,7 @@ def main(argv: list[str]) -> int:
         left_name, right_name = pair_label.split("+", maxsplit=1)
 
         print(f"Running {pair_label} ({args.n_trials} trials)...")
-        clustering_values: list[float] = []
-        separation_values: list[float] = []
-        left_move_times: list[float] = []
-        right_move_times: list[float] = []
-        success_count = 0
-        usable_trials = 0
-
+        pair_trials = []
         for trial_index in range(args.n_trials):
             trial_seed = rng.randrange(2**32)
             result = run_trial(
@@ -245,7 +227,7 @@ def main(argv: list[str]) -> int:
                 timeout=args.timeout,
                 trial_seed=trial_seed,
             )
-            trial_rows.append(
+            pair_trials.append(
                 {
                     "pair": pair_label,
                     "left_algotype": left_name,
@@ -255,56 +237,36 @@ def main(argv: list[str]) -> int:
                     **result,
                 }
             )
-            if result["success"]:
-                success_count += 1
-            clustering_values.append(float(result["clustering_increase"]))
-            if result["usable"]:
-                usable_trials += 1
-                separation_values.append(float(result["temporal_separation"]))
-                left_move_times.append(float(result["mean_move_time_left"]))
-                right_move_times.append(float(result["mean_move_time_right"]))
-
-        if not separation_values:
-            raise RuntimeError(f"{pair_label} produced no usable temporal-separation trials")
-
-        ci_lo, ci_hi = _ci_95(clustering_values)
-        row = {
-            "pair": pair_label,
-            "left_algotype": left_name,
-            "right_algotype": right_name,
-            "temporal_separation": round(float(np.mean(separation_values)), 6),
-            "temporal_separation_std": round(
-                float(np.std(separation_values, ddof=1)) if len(separation_values) > 1 else 0.0,
-                6,
-            ),
-            "clustering_increase_mean": round(float(np.mean(clustering_values)), 6),
-            "clustering_increase_std": round(
-                float(np.std(clustering_values, ddof=1)) if len(clustering_values) > 1 else 0.0,
-                6,
-            ),
-            "clustering_increase_ci_lo": round(ci_lo, 6),
-            "clustering_increase_ci_hi": round(ci_hi, 6),
-            "left_mean_move_time": round(float(np.mean(left_move_times)), 6),
-            "right_mean_move_time": round(float(np.mean(right_move_times)), 6),
-            "success_rate": round(success_count / args.n_trials, 6),
-            "usable_trials": usable_trials,
-        }
+        trial_rows.extend(pair_trials)
+        row = summarize_pair(pair_label, pair_trials)
         rows.append(row)
         print(
-            f"  separation={row['temporal_separation']:.3f}, "
-            f"clustering={row['clustering_increase_mean']:.3f}, "
-            f"success={row['success_rate']:.0%}"
+            f"  separation={row['temporal_separation_mean']:.3f}, "
+            f"excess={row['excess_max_mean']:+.3f}, "
+            f"raw dC={row['clustering_increase_mean']:.3f}"
         )
 
-    rows.sort(key=lambda row: row["clustering_increase_mean"], reverse=True)
+    rows.sort(key=lambda row: row["excess_max_mean"], reverse=True)
 
-    x = np.array([row["temporal_separation"] for row in rows], dtype=np.float64)
-    y = np.array([row["clustering_increase_mean"] for row in rows], dtype=np.float64)
-    pearson_r = float(np.corrcoef(x, y)[0, 1]) if len(rows) > 1 else float("nan")
+    def pearson(subset: list[dict], y_key: str) -> float:
+        x = np.array([row["temporal_separation_mean"] for row in subset], dtype=np.float64)
+        y = np.array([row[y_key] for row in subset], dtype=np.float64)
+        return round(float(np.corrcoef(x, y)[0, 1]), 6)
+
+    with_insertion = [row for row in rows if "Insertion" in row["pair"]]
+    without_insertion = [row for row in rows if "Insertion" not in row["pair"]]
+    correlations = {
+        y_key: {
+            "all_pairs": pearson(rows, y_key),
+            "insertion_pairs": pearson(with_insertion, y_key),
+            "non_insertion_pairs": pearson(without_insertion, y_key),
+        }
+        for y_key in ("excess_max_mean", "clustering_increase_mean")
+    }
 
     out_obj = {
         "n_trials_per_pair": args.n_trials,
-        "pearson_r": round(pearson_r, 6),
+        "pearson_r": correlations,
         "rows": rows,
         "trial_rows": trial_rows,
         "provenance": {
@@ -314,12 +276,7 @@ def main(argv: list[str]) -> int:
             "timeout": args.timeout,
             "base_seed": args.base_seed,
             "pairs": args.pairs,
-            "metric_definition": {
-                "clustering_increase": "max adjacent-match fraction minus random-mixing baseline",
-                "temporal_separation": (
-                    "absolute difference in per-algotype normalized mean swap index"
-                ),
-            },
+            "metric_definition": METRIC_DEFINITION,
         },
     }
 

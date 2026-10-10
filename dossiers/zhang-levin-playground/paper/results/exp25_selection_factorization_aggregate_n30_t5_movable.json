@@ -1,0 +1,273 @@
+{
+  "inputs": [
+    "paper/results/exp25_seed40_n30_t5_movable.json",
+    "paper/results/exp25_seed41_n30_t5_movable.json",
+    "paper/results/exp25_seed42_n30_t5_movable.json"
+  ],
+  "seeds": [
+    40,
+    41,
+    42
+  ],
+  "n_cells": 30,
+  "timeout": 5.0,
+  "semantics": [
+    "movable"
+  ],
+  "variants": [
+    "long_range_rerouting",
+    "long_range_stubborn",
+    "adjacent_rerouting",
+    "adjacent_stubborn"
+  ],
+  "frozen_counts": {
+    "immovable": [
+      0,
+      3,
+      6,
+      9
+    ],
+    "movable": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "summary": {
+    "movable": {
+      "long_range_rerouting": {
+        "0": {
+          "n_trials": 15,
+          "success_count": 15,
+          "success_rate": 1.0,
+          "avg_time": 0.447666,
+          "avg_error": 0.0,
+          "avg_swaps": 111.133333,
+          "avg_compare_and_swap_count": 546.133333,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1984.133333,
+          "avg_mean_move_distance": 8.82781,
+          "avg_mean_swap_span": 8.82781,
+          "weighted_mean_swap_span": 8.926815
+        },
+        "1": {
+          "n_trials": 15,
+          "success_count": 3,
+          "success_rate": 0.2,
+          "avg_time": 4.099405,
+          "avg_error": 0.8,
+          "avg_swaps": 98.066667,
+          "avg_compare_and_swap_count": 511.4,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1673.866667,
+          "avg_mean_move_distance": 8.38965,
+          "avg_mean_swap_span": 8.38965,
+          "weighted_mean_swap_span": 8.53433
+        },
+        "2": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.025803,
+          "avg_error": 1.933333,
+          "avg_swaps": 103.133333,
+          "avg_compare_and_swap_count": 489.133333,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1978.133333,
+          "avg_mean_move_distance": 9.489249,
+          "avg_mean_swap_span": 9.489249,
+          "weighted_mean_swap_span": 9.590175
+        },
+        "3": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.027812,
+          "avg_error": 3.0,
+          "avg_swaps": 105.2,
+          "avg_compare_and_swap_count": 478.0,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1889.333333,
+          "avg_mean_move_distance": 8.967336,
+          "avg_mean_swap_span": 8.967336,
+          "weighted_mean_swap_span": 8.979721
+        }
+      },
+      "long_range_stubborn": {
+        "0": {
+          "n_trials": 15,
+          "success_count": 15,
+          "success_rate": 1.0,
+          "avg_time": 0.461881,
+          "avg_error": 0.0,
+          "avg_swaps": 110.2,
+          "avg_compare_and_swap_count": 545.2,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1952.533333,
+          "avg_mean_move_distance": 8.811178,
+          "avg_mean_swap_span": 8.811178,
+          "weighted_mean_swap_span": 8.859044
+        },
+        "1": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.030473,
+          "avg_error": 3.8,
+          "avg_swaps": 80.333333,
+          "avg_compare_and_swap_count": 2019984.2,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1500.666667,
+          "avg_mean_move_distance": 9.542648,
+          "avg_mean_swap_span": 9.542648,
+          "weighted_mean_swap_span": 9.340249
+        },
+        "2": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.024718,
+          "avg_error": 4.533333,
+          "avg_swaps": 85.066667,
+          "avg_compare_and_swap_count": 2205418.6,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1806.133333,
+          "avg_mean_move_distance": 10.70901,
+          "avg_mean_swap_span": 10.70901,
+          "weighted_mean_swap_span": 10.615987
+        },
+        "3": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.030793,
+          "avg_error": 6.2,
+          "avg_swaps": 65.933333,
+          "avg_compare_and_swap_count": 3218775.866667,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 1321.066667,
+          "avg_mean_move_distance": 9.837445,
+          "avg_mean_swap_span": 9.837445,
+          "weighted_mean_swap_span": 10.0182
+        }
+      },
+      "adjacent_rerouting": {
+        "0": {
+          "n_trials": 15,
+          "success_count": 15,
+          "success_rate": 1.0,
+          "avg_time": 0.368046,
+          "avg_error": 0.0,
+          "avg_swaps": 420.066667,
+          "avg_compare_and_swap_count": 854.733333,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 840.133333,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        },
+        "1": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.021583,
+          "avg_error": 6.066667,
+          "avg_swaps": 7447.866667,
+          "avg_compare_and_swap_count": 1264121.333333,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 14895.733333,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        },
+        "2": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.019434,
+          "avg_error": 8.6,
+          "avg_swaps": 10711.533333,
+          "avg_compare_and_swap_count": 1728128.4,
+          "avg_frozen_swap_attempts": 3.466667,
+          "avg_total_move_distance": 21423.066667,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        },
+        "3": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.039277,
+          "avg_error": 9.666667,
+          "avg_swaps": 12081.466667,
+          "avg_compare_and_swap_count": 1904501.6,
+          "avg_frozen_swap_attempts": 2.666667,
+          "avg_total_move_distance": 24162.933333,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        }
+      },
+      "adjacent_stubborn": {
+        "0": {
+          "n_trials": 15,
+          "success_count": 15,
+          "success_rate": 1.0,
+          "avg_time": 0.344906,
+          "avg_error": 0.0,
+          "avg_swaps": 451.533333,
+          "avg_compare_and_swap_count": 886.466667,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 903.066667,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        },
+        "1": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.027833,
+          "avg_error": 6.933333,
+          "avg_swaps": 7859.666667,
+          "avg_compare_and_swap_count": 2064212.466667,
+          "avg_frozen_swap_attempts": 0.0,
+          "avg_total_move_distance": 15719.333333,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        },
+        "2": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.023992,
+          "avg_error": 11.133333,
+          "avg_swaps": 9502.933333,
+          "avg_compare_and_swap_count": 2778988.333333,
+          "avg_frozen_swap_attempts": 6.866667,
+          "avg_total_move_distance": 19005.866667,
+          "avg_mean_move_distance": 1.0,
+          "avg_mean_swap_span": 1.0,
+          "weighted_mean_swap_span": 1.0
+        },
+        "3": {
+          "n_trials": 15,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_time": 5.026448,
+          "avg_error": 10.866667,
+          "avg_swaps": 5504.333333,
+          "avg_compare_and_swap_count": 3206992.466667,
+          "avg_frozen_swap_attempts": 2.666667,
+          "avg_total_move_distance": 11008.666667,
+          "avg_mean_move_distance": 0.733333,
+          "avg_mean_swap_span": 0.733333,
+          "weighted_mean_swap_span": 1.0
+        }
+      }
+    }
+  }
+}

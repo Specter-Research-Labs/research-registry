@@ -122,21 +122,25 @@ def _save(fig: plt.Figure, out_base: Path) -> None:
     plt.close(fig)
 
 
+def _null_line(ax: plt.Axes) -> None:
+    ax.axhline(0.0, color=MUTED, linewidth=1.0, linestyle="--")
+
+
 def make_fig1(results_dir: Path, figures_dir: Path) -> None:
     obj = _load_json(results_dir / "fig1_temporal_vs_clustering.json")
     rows = obj["rows"]
-    r = float(obj["pearson_r"])
+    r_all = float(obj["pearson_r"]["excess_max_mean"]["all_pairs"])
+    r_non_insertion = float(obj["pearson_r"]["excess_max_mean"]["non_insertion_pairs"])
 
-    x = np.array([row["temporal_separation"] for row in rows], dtype=float)
-    y = np.array([row["clustering_increase_mean"] for row in rows], dtype=float)
-    ci_lo = np.array([row["clustering_increase_ci_lo"] for row in rows], dtype=float)
-    ci_hi = np.array([row["clustering_increase_ci_hi"] for row in rows], dtype=float)
+    x = np.array([row["temporal_separation_mean"] for row in rows], dtype=float)
+    y = np.array([row["excess_max_mean"] for row in rows], dtype=float)
+    ci_lo = np.array([row["excess_max_ci_lo"] for row in rows], dtype=float)
+    ci_hi = np.array([row["excess_max_ci_hi"] for row in rows], dtype=float)
     yerr = np.array([y - ci_lo, ci_hi - y])
     labels = [row["pair"] for row in rows]
 
-    fig, ax = plt.subplots(
-        figsize=(8.0, 5.8)
-    )  # Increased from 7.2x5.2 for more breathing room
+    fig, ax = plt.subplots(figsize=(8.0, 5.8))
+    _null_line(ax)
     ax.errorbar(
         x,
         y,
@@ -152,29 +156,22 @@ def make_fig1(results_dir: Path, figures_dir: Path) -> None:
         elinewidth=1.2,
     )
 
-    if len(x) >= 2:
-        std_err = (yerr[0] + yerr[1]) / 2.0
-        weights = 1.0 / (std_err**2 + 1e-8)
-        m, b = np.polyfit(x, y, 1, w=weights)
-        xs = np.linspace(float(x.min()), float(x.max()), 100)
-        ax.plot(xs, m * xs + b, linewidth=2, color=ACCENT_WARM, label="Weighted fit")
-        ax.legend()
-
     texts = []
     for xi, yi, lab in zip(x, y, labels, strict=True):
         texts.append(ax.text(xi, yi, lab, fontsize=8.5, color=INK))
     adjust_text(texts, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.5))
 
-    ax.set_title("Temporal separation vs. clustering", loc="left")
-    _note(ax, f"Pearson r = {r:.3f}", x=0.66)
-    ax.set_xlabel("Temporal separation (|mean move time_a - mean move time_b|)")
-    ax.set_ylabel("Clustering increase (max clustering - baseline)")
+    ax.set_title("Temporal separation vs. clustering above the label-shuffle null", loc="left")
+    _note(
+        ax,
+        f"Pearson r = {r_all:.2f} (all pairs), {r_non_insertion:.2f} (without Insertion)",
+        x=0.02,
+    )
+    ax.set_xlabel("Temporal separation (|mean move time_a - mean move time_b|, s)")
+    ax.set_ylabel("Clustering excess over label-shuffle null (max C)")
     ax.grid(True, alpha=0.45)
-
-    # Expand y-limits slightly to prevent tight cutoff
-    ax.set_ylim(bottom=float(y.min() - 0.04), top=float(y.max() + 0.04))
-    # Expand x-limits to give text room to spread out
-    ax.set_xlim(left=float(x.min() - 0.05), right=float(x.max() + 0.05))
+    ax.set_ylim(bottom=float(min(ci_lo.min(), 0.0) - 0.02), top=float(ci_hi.max() + 0.03))
+    ax.set_xlim(left=float(x.min() - 0.02), right=float(x.max() + 0.02))
 
     _save(fig, figures_dir / "fig1_temporal_vs_clustering")
 
@@ -183,45 +180,37 @@ def make_fig2(results_dir: Path, figures_dir: Path) -> None:
     obj = _load_json(results_dir / "fig2_clustering_ablation.json")
     rows = obj["rows"]
 
-    labels = [r["label"] for r in rows]
-    clustering = [float(r["clustering"]) for r in rows]
-    type2_time = [float(r["type2_avg_time"]) for r in rows]
+    labels = [r["pair"] for r in rows]
+    excess = np.array([float(r["excess_max_mean"]) for r in rows])
+    ci_lo = np.array([float(r["excess_max_ci_lo"]) for r in rows])
+    ci_hi = np.array([float(r["excess_max_ci_hi"]) for r in rows])
+    type2_time = [float(r["right_mean_move_time"]) for r in rows]
 
-    has_std = all("clustering_std" in r for r in rows)
-    yerr = [float(r["clustering_std"]) for r in rows] if has_std else None
-
-    # Slightly taller figure to accommodate the tall error bars + text
     fig, ax = plt.subplots(figsize=(8.0, 5.2))
+    _null_line(ax)
     bars = ax.bar(
         range(len(labels)),
-        clustering,
-        yerr=yerr,
-        capsize=4 if yerr else 0,
+        excess,
+        yerr=np.array([excess - ci_lo, ci_hi - excess]),
+        capsize=4,
         color=_palette(len(labels)),
         edgecolor=INK,
         linewidth=1.2,
     )
-
-    text_offset = 0.015  # Increased offset to prevent overlapping the error bar line
-    for i, (bar, t) in enumerate(zip(bars, type2_time, strict=True)):
-        # place text ABOVE the top of the error bar if it exists, not just above the bar
-        y_pos = bar.get_height() + (yerr[i] if yerr else 0) + text_offset
+    for bar, hi, t in zip(bars, ci_hi, type2_time, strict=True):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
-            y_pos,
-            f"type2 time={t:.3f}",
+            max(hi, 0.0) + 0.006,
+            f"type-2 move time {t:.3f} s",
             ha="center",
             va="bottom",
             fontsize=9,
             color=MUTED,
         )
+    ax.set_ylim(bottom=float(min(ci_lo.min(), 0.0) - 0.02), top=float(ci_hi.max() + 0.04))
 
-    # Adjust y-limit to ensure the highest text annotation is fully visible
-    max_height = max(bar.get_height() + (yerr[i] if yerr else 0) for i, bar in enumerate(bars))
-    ax.set_ylim(top=max_height + 0.04)
-
-    ax.set_title("Clustering ablation", loc="left")
-    ax.set_ylabel("Clustering increase (max - baseline)")
+    ax.set_title("Insertion waiting-gate ablation", loc="left")
+    ax.set_ylabel("Clustering excess over label-shuffle null (max C, 95% CI)")
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=25, ha="right")
     ax.grid(True, axis="y", alpha=0.45)
@@ -702,17 +691,18 @@ def make_fig8(results_dir: Path, figures_dir: Path) -> None:
     axs[0].set_ylabel("Compare-and-swap ratio")
     axs[0].set_xticks(x)
     axs[0].set_xticklabels(trio_labels)
-    axs[0].set_yscale("log")
+    axs[0].axhline(1.0, color=MUTED, linestyle="--", linewidth=1.0)
+    axs[0].set_ylim(0.0, 1.25)
     axs[0].grid(True, axis="y", alpha=0.45)
-    axs[0].legend(fontsize=9)
+    axs[0].legend(fontsize=9, loc="lower right")
 
     for idx, frozen in enumerate(frozen_counts_trio):
         xs = x - width / 2 if frozen == "1" else x + width / 2
         for xi, ratio in zip(xs, trio_ratios[frozen], strict=True):
             axs[0].text(
                 xi,
-                ratio * 1.12,
-                f"{ratio:.1f}x",
+                ratio + 0.02,
+                f"{ratio:.2f}x",
                 ha="center",
                 va="bottom",
                 fontsize=8.5,
@@ -792,12 +782,12 @@ def make_fig9(results_dir: Path, figures_dir: Path) -> None:
     ]
     x = np.arange(len(pair_order))
 
-    clustering = np.array([float(row_map[pair]["clustering_increase_mean"]) for pair in pair_order])
-    ci_lo = np.array([float(row_map[pair]["clustering_increase_ci_lo"]) for pair in pair_order])
-    ci_hi = np.array([float(row_map[pair]["clustering_increase_ci_hi"]) for pair in pair_order])
+    clustering = np.array([float(row_map[pair]["excess_max_mean"]) for pair in pair_order])
+    ci_lo = np.array([float(row_map[pair]["excess_max_ci_lo"]) for pair in pair_order])
+    ci_hi = np.array([float(row_map[pair]["excess_max_ci_hi"]) for pair in pair_order])
     clustering_yerr = np.vstack([clustering - ci_lo, ci_hi - clustering])
 
-    separation = np.array([float(row_map[pair]["temporal_separation"]) for pair in pair_order])
+    separation = np.array([float(row_map[pair]["temporal_separation_mean"]) for pair in pair_order])
     separation_ci_lo = np.array(
         [float(row_map[pair]["temporal_separation_ci_lo"]) for pair in pair_order]
     )
@@ -808,6 +798,7 @@ def make_fig9(results_dir: Path, figures_dir: Path) -> None:
 
     fig, axs = plt.subplots(1, 2, figsize=(12.6, 4.8), constrained_layout=True)
 
+    _null_line(axs[0])
     axs[0].bar(
         x,
         clustering,
@@ -817,17 +808,17 @@ def make_fig9(results_dir: Path, figures_dir: Path) -> None:
         yerr=clustering_yerr,
         capsize=4,
     )
-    axs[0].set_title("Clustering increase", loc="left")
-    axs[0].set_ylabel(r"$\Delta C$")
+    axs[0].set_title("Clustering above the label-shuffle null", loc="left")
+    axs[0].set_ylabel("Excess max C over null (95% CI)")
     axs[0].set_xticks(x)
     axs[0].set_xticklabels(pair_labels)
     axs[0].grid(True, axis="y", alpha=0.45)
 
-    for xi, value in zip(x, clustering, strict=True):
+    for xi, value, hi in zip(x, clustering, ci_hi, strict=True):
         axs[0].text(
             xi,
-            value + 0.008,
-            f"{value:.3f}",
+            max(hi, 0.0) + 0.004,
+            f"{value:+.3f}",
             ha="center",
             va="bottom",
             fontsize=8.5,
@@ -860,8 +851,11 @@ def make_fig9(results_dir: Path, figures_dir: Path) -> None:
             color=MUTED,
         )
 
-    _note(axs[0], "Synthetic waiting gates are highlighted", x=0.02, y=1.06)
-    _note(axs[1], f"n={obj['n_trials_total_per_pair']} trials per pair", x=0.02, y=1.06)
+    _note(axs[0], "Synthetic waiting gates are highlighted", x=0.02, y=0.98)
+    n_trials = {row["n_trials"] for row in obj["rows"]}
+    if len(n_trials) != 1:
+        raise ValueError(f"Exp27 pairs have unequal trial counts: {sorted(n_trials)}")
+    _note(axs[1], f"n={n_trials.pop()} trials per pair", x=0.02, y=0.98)
 
     _save(fig, figures_dir / "fig9_timing_interventions")
 

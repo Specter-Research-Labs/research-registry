@@ -80,7 +80,7 @@
   {\small\color{spectermuted}Specter Labs} & {\small\color{spectermuted}Specter Labs}
   \end{tabular}
 }
-\date{February 2026}
+\date{February 2026, revised October 2026}
 
 \begin{document}
 \maketitle
@@ -88,33 +88,32 @@
 \begin{abstract}
 Zhang et al.\ (2024) propose a minimal morphogenesis model in which individual ``cells'' execute
 classical sorting rules from a local cell-view state and nonetheless achieve global organization.
-In these implementations, however, the operator class is not uniform: Bubble, Insertion,
-Gnome, and Shaker use adjacent swaps, whereas 1D Selection performs direct transpositions toward an
-ideal position. We revisit the model with a semantics-first analysis that separates action range,
-blocked-target policy, and execution substrate.
+In these implementations the operator class is not uniform, since Bubble, Insertion, Gnome, and
+Shaker use adjacent swaps whereas 1D Selection performs direct transpositions toward an ideal
+position. We revisit the model by separating action range, blocked-target policy, and execution
+substrate, and by scoring algotype clustering against a label-permutation null computed on each
+run's own trajectory.
 
-We report four main results. First, a new $2\times2$ factorization of 1D Selection shows that under
-immovable frozen indices only the combination of long-range action and frozen-target rerouting is
-robust; adjacent-only variants remain strictly local but fail once barriers are introduced, even
-after expending far more work. Second, the rerouting ablation remains decisive within the
-published long-range Selection operator class: it yields adaptive Selection success in $270/270$ archived
-trials at frozen counts $\{3,6,9\}$ whereas the stubborn variant succeeds in $0/270$. Third, under
-matched immovable-index semantics, robustness differences are not attributable to distributed
-execution alone: the matched centralized comparison shows exact success/error agreement between
-archived cell-view and centralized baselines, while a new matched-substrate comparison shows that
-threaded and sequential cell-view schedules also agree on outcomes, with the main substrate effect
-appearing in compare-count work rather than in which conditions succeed. Fourth, temporal
-separation is positively associated with algotype clustering, and both the \texttt{InsertionNoWait}
-ablation and a new transfer experiment
-support a timing-based account: exporting the Insertion-style waiting gate to Bubble and Gnome
-clones reproduces the predicted rise in temporal separation and clustering.
+Scored against that null, algotype clustering appears only in mixtures where one class moves late.
+Pairs that contain Insertion, whose sorted-prefix gate delays its cells, cluster above the null,
+and removing the gate (\texttt{InsertionNoWait}) returns clustering to the null, where the ungated
+Bubble, Gnome and Shaker mixtures also sit. Transplanting the same gate onto Bubble and Gnome
+clones raises both temporal separation and clustering to the level of native Insertion while the
+ungated clones stay at the null, which gives the efficiency hypothesis of Zhang et al.\ a first
+causal test. Selection mixtures without Insertion cluster weakly without temporal separation, so
+timing does not account for all of the clustering in the original set.
 
-We retain the 2D section and Directed Flow diagnostic as narrower, secondary results rather than
-the paper's main evidential core. By contrast, we frame the K-computation surface as
-$K_{\mathrm{state}}$: an exact reachable-state proposal null that preserves the state-space scale
-and matched-cost contract, while omitting operator-graph traversal geometry. Across the paper, the main lesson is that claims about robustness
-or ``basal intelligence'' in sorting-cell systems depend on explicit operator semantics, obstacle
-semantics, and matched baselines.
+The robustness experiments mostly confirm consequences of the rule definitions. Under immovable
+frozen indices only long-range Selection with frozen-target rerouting can complete, because
+adjacent moves cannot carry values across a frozen index and a stubborn cell waits forever on one;
+cell-view and centralized implementations that share the skip-frozen rule agree in every paired
+trial; and threaded and sequential schedules of the same cells agree in outcome and do the same
+work (ratios $0.97\times$ to $1.02\times$) once frozen cells, as in the original code, run no
+thread. We report $K_{\mathrm{state}}$, an exact reachable-state proposal null, and find it set
+mostly by the size of the reachable state space, $1.7$ to $2.6$ units below
+$\log_{10}(n_{\text{active}}!)$ for every algorithm that finishes, and we keep the 2D and Directed
+Flow results as narrower diagnostics.
+
 \end{abstract}
 
 \section{Introduction}
@@ -143,8 +142,9 @@ We focus on seven questions:
   and which come from frozen-target rerouting?
   \item \textbf{Ablation:} within the published Selection operator class, which specific rule is
   responsible for robustness and ``navigation'' in the presence of obstacles?
-  \item \textbf{Central claim test:} is the distributed cell-view implementation more robust than a
-  centralized baseline when both face identical frozen-index constraints?
+  \item \textbf{Robustness comparison:} does the cell-view advantage over traditional algorithms
+  survive when both handle frozen indices the same way, and does the threaded execution substrate
+  add anything to it?
   \item \textbf{Dimensionality:} which behaviors generalize to 2D ordering targets, and what fails?
   \item \textbf{Structure in dynamics:} do swap-interaction graphs expose algorithmic signatures that
   align with (or fail to predict) task success?
@@ -154,16 +154,15 @@ We focus on seven questions:
 \end{enumerate}
 
 \paragraph{Summary of findings.}
-Temporal separation between algorithm classes is positively associated with clustering, with the
-strongest signal concentrated in Insertion-containing mixtures, and a targeted ablation strongly
-supports a timing-based mechanism. Under immovable obstacles, a new factorization experiment shows
-that the published 1D Selection behavior depends jointly on long-range transpositions and
-frozen-target rerouting. The rerouting ablation then isolates that half of the result within the
-original Selection operator class. The centralized and matched-substrate comparisons then show that
-distributed execution itself is not the
-source of the robustness difference: matched baselines reproduce the same paired outcomes, although
-the threaded substrate can require dramatically more work for published Selection. The 2D section
-and Directed Flow remain secondary and more limited in scope than the 1D core, and the K section
+Clustering excess over the label-permutation null tracks temporal separation in mixtures with a
+waiting gate, and the gate ablation and the gate transplant both move clustering in the direction
+the timing account predicts, with ungated mixtures sitting at the null. Selection mixtures cluster
+weakly without separation, which leaves part of the original clustering unexplained. Under
+immovable obstacles the factorization, rerouting ablation, centralized comparison and
+matched-substrate comparison all come out the way the rule definitions require, so we present them
+as consistency checks on the implementation: only long-range rerouting Selection can reach the
+sorted state, matched baselines reproduce the same paired outcomes, and threaded and sequential
+schedules do the same work. The 2D section and Directed Flow remain secondary, and the K section
 is presented as $K_{\mathrm{state}}$, a scalable exact state-proposal surrogate for the
 intractable full operator-walk K at $n=30$.
 
@@ -210,12 +209,22 @@ Appendix~\ref{sec:appendix-repro} so the main text can stay focused on the argum
 
 \subsection{Clustering}
 For a 1D array of length $n$ with algotypes assigned to positions, define instantaneous clustering
-as the fraction of adjacent pairs that share the same algotype.
-Let $p_t$ be the fraction of cells of type $t$; under random mixing, the baseline adjacent-match
-probability is $\sum_t p_t^2$. We report \emph{clustering increase} as:
+$C(t)$ as the fraction of adjacent pairs that share the same algotype, recorded after every swap.
+Let $p_t$ be the fraction of cells of type $t$. Earlier versions of this paper reported
+$\Delta C = \max_t C(t) - \sum_t p_t^2$, but the maximum of a noisy curve over several hundred
+states sits well above $\sum_t p_t^2$ even when both halves of the array run the same rule (about
+$0.14$ above it at $n=50$), and the exact random-mixing expectation for adjacent matches at a
+$25/25$ split is $24/49$ rather than $0.5$. We therefore score each run against a label-permutation
+null on its own trajectory: the algotype labels are shuffled across cell values $200$ times,
+$\max_t C(t)$ is recomputed for each shuffle on the same sequence of value arrangements, and the
+reported \emph{clustering excess} is
 \[
-\Delta C \;=\; \max_{\text{time}} C(t) \;-\; \sum_t p_t^2.
+E \;=\; \max_t C(t) \;-\; \mathbb{E}_{\pi}\!\left[\max_t C_{\pi}(t)\right].
 \]
+The null holds trajectory length and sorting dynamics fixed and asks only whether the cells that
+become adjacent depend on their type. The result files also carry the same excess for the
+time-averaged $C(t)$, a per-trial permutation $p$-value, and the raw $\Delta C$ for comparison with
+the original figures.
 
 \subsection{Temporal separation}
 We define an algorithm's \emph{normalized mean move time} as the average time index (normalized to
@@ -233,89 +242,95 @@ detection logic across 1D and 2D trajectories.
 \section{Results}
 \label{sec:results}
 
-\subsection{Temporal separation predicts clustering}
-Figure~\ref{fig:temporal-clustering} shows a positive association between temporal separation and
-clustering across the ten pairwise mixtures of five algotypes (Bubble, Selection, Insertion,
-Gnome, Shaker). The strongest signal comes from Insertion-containing combinations; non-Insertion
-pairs cluster much more weakly. We therefore interpret temporal separation as a major contributor to
-clustering, especially for Insertion mixtures, rather than as a universal complete explanation.
-The later transfer experiment strengthens that claim by showing that the same timing logic can be transferred to
-other local algorithms under same-family controls.
+\subsection{Temporal separation and clustering}
+Figure~\ref{fig:temporal-clustering} plots clustering excess against temporal separation for the
+ten pairwise mixtures of five algotypes (Bubble, Selection, Insertion, Gnome, Shaker; $n=30$, $50$
+trials per pair). The four Insertion pairs have the largest separations ($0.12$ to $0.21$) and all
+cluster above the null ($E$ between $+0.051$ and $+0.090$), while the three pairs of ungated
+adjacent-swap rules (Bubble, Gnome, Shaker) sit at the null. The three Selection pairs without
+Insertion cluster weakly ($+0.026$ to $+0.031$) at separations of $0.04$ to $0.05$, so the
+correlation across all ten pairs ($r = 0.94$) is carried by the Insertion family and falls to
+$r = 0.43$ across the six pairs without Insertion. Temporal separation accounts for the clustering
+in gated mixtures, and Selection mixtures cluster by some other route that we have not identified.
+One candidate is that Selection's long-range transpositions carry runs of same-type cells into the
+sorted prefix together, which a chimera of Bubble with an adjacent-only Selection variant would
+test.
 
-The proposed mechanism is temporal. Selection cells tend to finish early and become quiescent,
-whereas Insertion cells activate late because their sorted-prefix gate delays participation until
-the left portion of the array is already ordered. This timing mismatch produces temporally
-correlated swap bursts where only one algorithm class is still exchanging positions. Cells that move
-during the same burst are then more likely to end up adjacent simply because they are the only
-cells still rearranging.
-The effect is analogous to heterochrony in developmental biology, where shifts in the relative
-timing of developmental processes generate spatial structure without explicit coordination or
-type-recognition signals.
+The timing account goes back to Zhang et al., who proposed as an efficiency hypothesis that
+efficient algotypes move first and slower ones catch up. Insertion cells activate late because
+their sorted-prefix gate delays participation until the left portion of the array is already
+ordered, so the late swap bursts involve mostly one class, and cells that move during the same
+burst are more likely to end up adjacent because they are the only cells still rearranging. The
+effect resembles heterochrony in developmental biology, where shifts in the relative timing of
+developmental processes generate spatial structure without type-recognition signals.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\linewidth]{figures/fig1_temporal_vs_clustering.pdf}
-  \caption{\textbf{Temporal separation predicts clustering.}
+  \caption{\textbf{Temporal separation and clustering excess.}
   Each point is an algorithm pair; $x$ is temporal separation computed from per-algotype normalized
-  mean move times; $y$ is clustering increase $\Delta C$ (max clustering minus baseline).
-  Error bars show 95\% confidence intervals ($\text{mean} \pm 1.96 \cdot \sigma / \sqrt{n}$,
-  $n=50$ trials per pair, $30$ cells).}
+  mean move times, and $y$ is the clustering excess $E$ over the label-permutation null (dashed
+  line at zero). Error bars show 95\% confidence intervals
+  ($\text{mean} \pm 1.96 \cdot \sigma / \sqrt{n}$, $n=50$ trials per pair, $30$ cells).}
   \label{fig:temporal-clustering}
 \end{figure}
 
-\subsection{Ablation: removing Insertion's waiting collapses clustering}
-If temporal separation is the cause of clustering, then removing the waiting mechanism that makes
-Insertion ``late'' should reduce clustering. We implement \texttt{InsertionNoWait} by removing the
-enable-to-move gating check, making Insertion behave like other local algorithms (move early).
-Figure~\ref{fig:clustering-ablation} shows the expected collapse in clustering, alongside the shift
-in the type-2 timing statistic.
-This is strong mechanistic evidence for a timing-based account, but we stop short of treating it as
-exhaustive causal proof. Seeded per-trial rows are available, but the intervention still
-targets one manipulated pair and one weak-clustering control, so the safest claim is that removing
-the waiting gate sharply reduces clustering and moves the Bubble+Insertion pair toward a
-weak-clustering control.
+\subsection{Ablation: removing Insertion's waiting gate returns clustering to the null}
+If temporal separation causes the clustering in Insertion mixtures, removing the gate that makes
+Insertion late should remove it. We implement \texttt{InsertionNoWait} by deleting the
+enable-to-move check, so that Insertion cells move from the start like the other local rules. Over
+$20$ trials with $50$ cells, Bubble+Insertion clusters above the null ($E = +0.079$, 95\% CI
+$+0.054$ to $+0.105$), while Bubble+InsertionNoWait returns to the null ($E = -0.007$, CI $-0.020$
+to $+0.007$) beside the ungated control Bubble+Gnome ($E = +0.011$, CI $-0.004$ to $+0.026$), as
+Figure~\ref{fig:clustering-ablation} shows. An earlier version of this figure sampled $C(t)$ every
+$0.02$\,s of wall-clock time, which gave the slower gated condition more samples and therefore a
+higher maximum, and reported raw $\Delta C$ values of $0.166$, $0.091$ and $0.073$. With $C(t)$
+recorded after every swap the raw values are $0.190$, $0.131$ and $0.149$, and the two ungated
+conditions sit exactly where their own label-shuffled trajectories put them.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\linewidth]{figures/fig2_clustering_ablation.pdf}
-  \caption{\textbf{Clustering ablation.}
-  Bubble+Insertion clusters strongly; Bubble+InsertionNoWait clusters weakly and resembles a
-  non-separated control (Bubble+Gnome). Annotated values show the mean move time for the second
-  algotype, consistent with the proposed timing-to-clustering mechanism.
-  Summary statistics are computed over $20$ trials with $50$ cells.
-  Error bars indicate $\pm 1$ standard deviation.}
+  \caption{\textbf{Insertion waiting-gate ablation.}
+  Clustering excess $E$ over the label-permutation null (dashed line at zero) with 95\% confidence
+  intervals, over $20$ trials with $50$ cells and $C(t)$ recorded after every swap.
+  Bubble+Insertion clusters above the null, while Bubble+InsertionNoWait and the ungated control
+  Bubble+Gnome sit at it. Annotations give the mean move time of the second algotype.}
   \label{fig:clustering-ablation}
 \end{figure}
 
 \subsection{Synthetic waiting gates transfer clustering beyond Insertion}
-If the timing account is broader than native Insertion dynamics, then exporting the same
-sorted-prefix waiting gate to another local algorithm should increase temporal separation and
-clustering even when operator family is held fixed. We test this by pairing each base
-algorithm with a labeled no-delay clone and with a delayed clone that preserves the same local swap
-rule but adds the Insertion-style waiting gate.
+If the gate carries the effect, exporting the same sorted-prefix wait to another local rule should
+raise both temporal separation and clustering while the swap rule stays fixed. We pair each base
+algorithm with a labelled clone that has no gate and with a delayed clone that keeps the same swap
+rule and adds the Insertion-style wait.
 
-Across $30$ aggregated trials per pair ($3$ seeds $\times$ $10$ trials, $50$ cells),
-Bubble+DelayedBubble yields $\Delta C = 0.176$ and temporal separation $0.111$, compared with the
-matched no-delay control Bubble+BubbleClone at $\Delta C = 0.155$ and separation $0.027$.
-Gnome+DelayedGnome yields $\Delta C = 0.167$ and separation $0.106$, compared with
-Gnome+GnomeClone at $\Delta C = 0.126$ and separation $0.043$. Both delayed-clone pairs move into
-the same high-separation regime as Bubble+Insertion ($\Delta C = 0.170$, separation $0.105$),
-whereas Bubble+InsertionNoWait remains low ($\Delta C = 0.134$, separation $0.033$).
+Across $30$ trials per pair ($3$ seeds $\times$ $10$ trials, $50$ cells), Bubble+DelayedBubble
+reaches separation $0.114$ and excess $E = +0.064$ (CI $+0.050$ to $+0.078$), against $0.024$ and
+$+0.017$ (CI $0.000$ to $+0.034$) for Bubble+BubbleClone, and Gnome+DelayedGnome reaches $0.107$
+and $+0.052$ (CI $+0.034$ to $+0.069$), against $0.025$ and $+0.006$ (CI $-0.011$ to $+0.023$) for
+Gnome+GnomeClone. Both delayed pairs land beside native Bubble+Insertion (separation $0.103$,
+$E = +0.061$), while Bubble+InsertionNoWait sits at the null (separation $0.025$, $E = +0.001$).
+The excess of the time-averaged $C(t)$ gives the same ordering ($+0.058$, $+0.047$ and $+0.056$ for
+the three gated pairs, $+0.016$ or less for the three ungated ones). The per-trial permutation test
+clears the 1-in-20 level in only $6$ of $30$ trials for each gated pair, so the transfer is a
+population effect that $30$ trials resolve and single runs mostly do not.
 
-This materially closes the mechanistic gap left by the original clustering analysis. The waiting
-gate is not just an Insertion-specific quirk: when the same timing intervention is transferred to
-other local algorithms, clustering rises in the predicted direction under matched same-family
-controls. We still avoid the strongest possible universality claim, but the timing account now
-generalizes beyond one native algotype.
+This gives the efficiency hypothesis of Zhang et al.\ its first causal test, in which a wait
+transplanted onto an otherwise unchanged rule reproduces the clustering of native Insertion while
+the same rule without the wait sits at the null. The raw $\Delta C$ values ($0.173$ against $0.156$
+for the Bubble family) made the transfer look marginal in the earlier version of this paper,
+because $0.11$ to $0.14$ of every raw value is the peak that a label-shuffled trajectory also
+reaches.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig9_timing_interventions.pdf}
   \caption{\textbf{Synthetic waiting gates transfer clustering beyond Insertion.}
-  Left: clustering increase $\Delta C$ with 95\% confidence intervals. Right: temporal separation
-  with 95\% confidence intervals. Same-family clone controls without the waiting gate stay in the
-  low-separation regime, whereas delayed Bubble and delayed Gnome clones move toward the
-  Bubble+Insertion reference condition.}
+  Left: clustering excess $E$ over the label-permutation null with 95\% confidence intervals.
+  Right: temporal separation with 95\% confidence intervals. Same-family clones without the
+  waiting gate sit at the null and in the low-separation regime, while delayed Bubble and delayed
+  Gnome clones match the Bubble+Insertion reference condition.}
   \label{fig:timing-transfer}
 \end{figure}
 
@@ -331,23 +346,23 @@ condition (30 trials total). The movable control uses the same seeds with $5$ pa
 condition (15 trials total), tying the factorization back to the original paper's damaged-cell
 semantics.
 
-Figure~\ref{fig:exp25} and Table~\ref{tab:exp25} show a clean decomposition under immovable
-barriers: only the
-long-range+routing quadrant succeeds once frozen indices are introduced. Long-range+stubborn fails
-immediately when barriers appear, showing that rerouting is necessary within the published operator
-class. Adjacent+routing also fails immediately, showing that frozen-target rerouting is not
-sufficient under adjacent-only execution. The reason is structural:
-under immovable 1D barriers, adjacent active-active moves cannot exchange values across frozen
-indices, so many paired trials are unreachable for any such policy. The adjacent variants remain
-genuinely local in every condition (weighted mean swap span $= 1.00$), but they fail after
-expending far more work. At frozen$=3$, adjacent+routing averages $14{,}917$ swaps and
-adjacent+stubborn averages $8{,}238$, versus $91$ for long-range+routing. Under the smaller movable
-control, long-range+routing retains limited success at one frozen cell ($3/15$), while the other
-three variants are $0/15$ as soon as any frozen cells are introduced.
+Figure~\ref{fig:exp25} and Table~\ref{tab:exp25} show that under immovable barriers only the
+long-range+routing quadrant succeeds once frozen indices are introduced, and each failure follows
+from the rule definitions. A long-range stubborn cell whose target index is frozen keeps pointing
+at it and can never complete its swap. Adjacent active-active moves cannot exchange values across
+an immovable frozen index, so for both adjacent variants every sampled trial at frozen counts
+$\{3,6,9\}$ is unreachable for any adjacent policy, and these arms fail by reachability rather than
+by policy. The adjacent variants stay strictly local (weighted mean swap span $1.00$) and keep
+swapping inside their segments until the timeout, so at frozen$=3$ adjacent+routing averages
+$14{,}077$ swaps and adjacent+stubborn $6{,}831$, against $91$ for long-range+routing. Under the
+movable control ($15$ trials per condition) long-range+routing succeeds in $3/15$ trials at one
+frozen cell and the other three variants in none once any frozen cell is present.
 
-The main implication is that published 1D Selection's robustness is a joint property of operator
-reach and blocked-target adaptation. Published 1D Selection should therefore not be treated as just
-another local adjacent-swap rule.
+We read the factorization as a consistency check on the implementation, confirming that the
+published 1D Selection behaves as a long-range rule with a frozen-target branch and should not be
+treated as another local adjacent-swap rule. The rerun leaves frozen cells without threads, as the
+original code does; the success counts are unchanged from the earlier archive, and the swap counts
+of the failing adjacent arms are somewhat lower.
 
 \begin{table}[t]
   \centering
@@ -365,8 +380,8 @@ another local adjacent-swap rule.
   \caption{\textbf{Selection factorization under immovable semantics.}
   Success counts across the $2\times2$ factorization of action range and blocked-target policy.
   Each condition aggregates $30$ paired trials ($3$ seeds $\times$ $10$ trials). Only the
-  published long-range+routing combination remains robust once immovable frozen indices are
-  introduced.}
+  published long-range+routing combination can reach the sorted state once immovable frozen
+  indices are introduced; the adjacent arms have no reachable trial instances there.}
   \label{tab:exp25}
 \end{table}
 
@@ -376,24 +391,25 @@ another local adjacent-swap rule.
   \caption{\textbf{Selection factorization across obstacle semantics.}
   Left: immovable frozen indices. Right: movable frozen cells. Under immovable barriers, only the
   published long-range+routing variant remains successful once obstacles are introduced. Under the
-  original movable-damage regime, even that quadrant degrades quickly, showing that obstacle
-  semantics materially change the robustness story.}
+  original movable-damage regime ($15$ trials per condition) even that quadrant succeeds in only
+  $3/15$ trials at one frozen cell, so obstacle semantics change which variants can succeed.}
   \label{fig:exp25}
 \end{figure}
 
 \subsection{Frozen-target rerouting within the published Selection operator class}
-The factorization result shows that both action range and rerouting matter. The rerouting ablation remains useful because it isolates
-the rerouting half of that story within the original long-range Selection operator class.
-The ablation is narrower than the phrase ``goal adjustment'' suggests:
-\texttt{StubbornSelectionCell} keeps the same direct-target transposition operator and still updates
-its active target in some cases, but it removes the specific reroute that occurs when the desired
-target index is frozen.
+The rerouting ablation isolates the rerouting half of the factorization within the original
+long-range Selection operator class. \texttt{StubbornSelectionCell} keeps the same direct-target
+transposition operator and still updates its active target in some cases, but it removes the
+specific reroute that occurs when the desired target index is frozen.
 
-We ran the rerouting ablation with $n=30$ cells, $30$ trials per condition, timeout $10$s, and immovable
+We ran the ablation with $n=30$ cells, $30$ trials per condition, timeout $10$s, and immovable
 frozen-index semantics, aggregated across seeds $\{40,41,42\}$ (90 trials per frozen-count
-condition). Within the published long-range Selection operator class, frozen-target rerouting
-provides a large and seed-stable benefit: across frozen counts $\{3,6,9\}$, adaptive Selection
-achieves $270/270$ success versus $0/270$ for the stubborn ablation.
+condition). Across frozen counts $\{3,6,9\}$, adaptive Selection succeeds in $270/270$ trials and
+the stubborn ablation in $0/270$. The result is close to definitional: under immovable semantics a
+Selection cell that keeps pointing at a frozen index can never complete its swap, so the stubborn
+failures follow from the rule, and the trial counts confirm that the implementation behaves as
+written. These counts come from the earlier archive, which also started threads for frozen cells
+and whose per-seed files were not retained (Appendix~\ref{sec:appendix-repro}).
 
 \begin{table}[t]
   \centering
@@ -417,26 +433,27 @@ achieves $270/270$ success versus $0/270$ for the stubborn ablation.
 \end{table}
 
 \subsection{Cell-view vs.\ centralized robustness under matched frozen-index semantics}
-The original paper motivates cell-view sorting partly through robustness and ``basal intelligence''
-arguments. After the factorization and rerouting results, the central remaining question is whether the
-\emph{distributed implementation} itself confers robustness beyond the underlying policy and
-operator semantics.
+The original paper compares cell-view sorting with traditional sorting under frozen cells and
+reports lower final error for the cell-view versions. That comparison sets cell-view algorithms
+against traditional algorithms that also differ in how they handle a frozen cell, so it leaves open
+whether the gap comes from the cell-view implementation or from the frozen-cell handling.
 
-The matched centralized comparison evaluates:
-(i) traditional centralized Python implementations of Bubble, Insertion, and Selection, and
-(ii) the multithreaded cell-view implementations,
-under \emph{identical frozen-index constraints} where frozen indices are immovable (cannot participate
-in swaps). We paired initial permutations and frozen index sets across implementations.
-The traditional baselines were modified to enforce the same frozen-index constraint, rather than
-using unmodified textbook code.
+The matched centralized comparison evaluates traditional centralized Python implementations of
+Bubble, Insertion, and Selection and the multithreaded cell-view implementations under identical
+immovable frozen-index constraints, with paired initial permutations and frozen index sets. The
+traditional baselines were modified to skip frozen indices in the same way as the cells. With
+$n=30$ cells, $12$ trials, timeout $10$s, and seeds $\{40,41,42\}$ (36 trials per condition),
+archived success rates and mean errors match exactly between the two implementations in every
+seed-condition pair. Bubble fails once any immovable barrier is present ($3/36$ at one frozen
+index, then $0/36$), Insertion retains limited success at one frozen index ($4/36$) and then fails,
+and Selection succeeds at all tested frozen counts.
 
-With $n=30$ cells, $12$ trials, timeout $10$s, and seeds $\{40,41,42\}$ (36 trials per condition),
-we find \textbf{no measurable advantage} of cell-view over centralized baselines in this regime:
-for all three algorithms and all tested frozen counts, archived success rates and mean error match
-exactly in every seed-condition pair.
-Bubble fails once any immovable barrier is present (8.3\% at one frozen index, then 0\%);
-Insertion retains limited success at one frozen index (11.1\%), then fails at higher frozen counts;
-Selection succeeds at all tested frozen counts.
+This agreement follows from the construction. Once the baselines skip frozen indices like the
+cells, any adjacent sort that terminates under immovable barriers reaches the same forced
+segment-sorted state, so the comparison could not have come out differently and we read it as a
+diagnostic. The cell-view advantage reported in the original comparison most likely came from
+traditional baselines that had no frozen-aware rerouting, which points to the rerouting rule as
+the competency worth studying.
 
 \begin{table}[t]
   \centering
@@ -453,51 +470,41 @@ Selection succeeds at all tested frozen counts.
   \end{tabular}
   \caption{\textbf{Cell-view vs.\ traditional baseline, 3-seed aggregate.}
   Success counts out of $36$, pooled across seeds $\{40,41,42\}$ ($3$ seeds $\times$ $12$ trials).
-  The counts shown are identical for cell-view and traditional implementations in every archived
-  seed-condition aggregate.
-  Without variance between the cohorts, empirical confidence intervals are degenerate.
-  The small per-condition sample ($n=36$) limits power to detect small effects;
-  a difference smaller than ${\sim}8\%$ (one-sided 95\% boundary for $0/36$ vs.\ $0/36$)
-  cannot be ruled out. In this setting, robustness is dominated by the algorithmic
-  rule and obstacle semantics; distributed cell-view execution does not outperform a centralized
-  baseline. The archive here is seed-condition aggregate only; the matched-substrate analysis below provides the deeper
-  trial-level audit by holding the cell policy fixed and changing only the execution substrate.}
+  The counts are identical for cell-view and traditional implementations in every archived
+  seed-condition aggregate, as the shared skip-frozen rule and the forced segment-sorted end state
+  require.}
   \label{tab:exp14}
 \end{table}
 
-\subsection{Matched cell-view substrates isolate work cost rather than robustness}
-The matched centralized comparison above compares cell-view implementations to textbook centralized algorithms, but its archive stores
-seed-condition aggregates rather than paired trial rows, and the comparison still changes
-both substrate and implementation style. The matched-substrate analysis isolates the substrate question more narrowly by
-running the same cell policies under two execution modes:
-(i) the original multithreaded cell-view substrate and
-(ii) a single-thread scheduler that steps the same cell objects with the same obstacle semantics.
-We use a matched compare-and-swap budget of $200{,}000$ and treat textbook centralized algorithms as
-a reference surface rather than as part of the matched substrate claim.
+\subsection{Matched cell-view substrates}
+The centralized comparison changes both substrate and implementation style, so the
+matched-substrate analysis holds the cell policy fixed and changes only the execution mode,
+comparing (i) the original multithreaded cell-view substrate with (ii) a single-thread scheduler
+that steps the same cell objects in random order under the same obstacle semantics. As in the
+original code, frozen cells get no thread and no turn in the sequential schedule. We use a
+compare-and-swap budget of $200{,}000$ and treat textbook centralized algorithms as a reference
+surface.
 
 In the original-trio panel (Bubble, Insertion, Selection; frozen counts $\{1,3\}$; seeds
-$\{40,41,42\}$; $9$ paired trials per condition), threaded, sequential, and textbook runs agree
-perfectly on both success and final error in every paired trial. Bubble and Insertion show only
-modest threaded/sequential work differences under this metric: the average compare-count ratios are
-$1.18\times$ and $1.00\times$ for Bubble at frozen $1$ and $3$, and $1.04\times$ and
-$1.11\times$ for Insertion. Published Selection behaves differently: outcomes still match exactly,
-but threaded execution consumes far more compare-and-swap events. At frozen $1$, threaded Selection
-averages $20{,}116$ compare-and-swap events versus $561$ for the sequential scheduler; at frozen
-$3$, the gap is $58{,}423$ versus $597$. These are $35.9\times$ and $97.8\times$ work ratios,
-respectively, despite identical paired outcomes. Figure~\ref{fig:exp26} visualizes both the
-original-trio work-ratio comparison and the broader Selection-family workload split.
+$\{40,41,42\}$; $9$ paired trials per condition), threaded, sequential and textbook runs agree on
+success and final error in every paired trial, and the threaded and sequential schedules do about
+the same work (compare-count ratios between $0.97\times$ and $1.02\times$,
+Table~\ref{tab:exp26}). Bubble and Insertion reach the forced segment-sorted state and then sit
+there until the $5$\,s timeout, so their counts measure the work needed to reach that state.
+Across the Selection family (Selection, StubbornSelection, AdjacentSelection,
+AdjacentStubbornSelection; frozen counts $\{0,1,3,6,9\}$; $45$ paired trials per variant) the two
+schedules agree on success in every case, published Selection matches on error and stays within
+$1\%$ on work at every frozen count, and the failing variants run until the budget or the timeout
+in either schedule.
 
-We then extend the same matched-substrate comparison to the broader Selection family
-(Selection, StubbornSelection, AdjacentSelection, AdjacentStubbornSelection) across frozen counts
-$\{0,1,3,6,9\}$. Across all $45$ paired trials per variant, threaded and sequential substrates
-agree on success in every case. For published Selection, paired error also matches perfectly at
-every frozen count. The failing variants still agree on success/failure everywhere, but residual
-error values diverge more often, indicating that the substrate changes the path through the failure
-basin without changing which quadrant succeeds.
-
-Taken together, the centralized and matched-substrate comparisons show that distributed execution is
-not what makes the robust conditions robust. In the tested 1D regimes, substrate mainly affects
-futile local work before the same outcome is reached.
+An earlier version of this analysis started threads for frozen cells, and because
+\texttt{SelectionSortCell.should\_move} does not check the frozen status, each frozen Selection
+thread recorded a compare on every loop without ever acting. Those dead-cell compares produced the
+$35.9\times$ and $97.8\times$ threaded/sequential work ratios we reported for Selection
+($20{,}116$ against $561$ compares at one frozen index), and they disappear once frozen cells run
+no thread. Agreement in both outcome and work is what the implementation leads one to expect,
+since every cell thread waits on one shared lock and the threaded substrate is therefore a
+serialized random scheduler with bursty time slices.
 
 \begin{table}[t]
   \centering
@@ -506,27 +513,26 @@ futile local work before the same outcome is reached.
     \toprule
     Algorithm & Frozen=1 ratio & Frozen=3 ratio & Paired outcome match \\
     \midrule
-    Bubble & $1.18\times$ & $1.00\times$ & $9/9$ \\
-    Insertion & $1.04\times$ & $1.11\times$ & $9/9$ \\
-    Selection & $35.86\times$ & $97.84\times$ & $9/9$ \\
+    Bubble & $0.97\times$ & $0.98\times$ & $9/9$ \\
+    Insertion & $1.00\times$ & $1.00\times$ & $9/9$ \\
+    Selection & $1.02\times$ & $1.01\times$ & $9/9$ \\
     \bottomrule
   \end{tabular}
   \caption{\textbf{Original-trio work ratios (threaded / sequential).}
-  Each cell reports the ratio of mean compare-and-swap counts under the matched-substrate pilot
-  (3 seeds $\times$ 3 paired trials). Bubble and Insertion show near-parity, whereas published
-  Selection incurs far larger substrate-dependent work costs despite perfect paired agreement on
-  success and final error.}
+  Each cell reports the ratio of mean compare-and-swap counts (3 seeds $\times$ 3 paired trials),
+  with frozen cells left without threads as in the original code. All three algorithms sit at
+  parity and agree on success and final error in every paired trial.}
   \label{tab:exp26}
 \end{table}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig8_substrate_work.pdf}
-  \caption{\textbf{Substrate effects appear mainly in compare-count work, not which conditions succeed.}
+  \caption{\textbf{Threaded and sequential cell-view schedules do the same work.}
   Left: threaded/sequential compare-count ratios for the original trio under frozen counts $1$ and
   $3$. Right: Selection-family compare counts by substrate across frozen counts. Published
-  Selection shows the strongest substrate-dependent work inflation, whereas Bubble and Insertion
-  remain near parity and the failing Selection variants continue to fail under either substrate.}
+  Selection does the same work under either schedule, and the failing Selection variants run to
+  the compare budget or the timeout under both.}
   \label{fig:exp26}
 \end{figure}
 
@@ -584,12 +590,16 @@ The paper's ``delayed gratification'' claim is that cells may temporarily worsen
 metric to achieve later improvement. We quantify this across $50$ trials per condition.
 
 In 1D with $n=30$ and 3 movable frozen cells, $100\%$ of Bubble runs exhibit at least one dip
-(mean $34.2$ dips per trial, mean depth $0.9$ monotonicity errors, mean recovery $2.4$ steps),
-while $98\%$ of Selection runs do (mean $3.6$ dips, mean depth $0.4$, mean recovery $0.6$ steps).
+(mean $34.8$ dips per trial, mean depth $0.9$ monotonicity errors, mean recovery $2.0$ steps),
+while $98\%$ of Selection runs do (mean $3.7$ dips, mean depth $0.5$, mean recovery $0.7$ steps).
 In 1D, Bubble is substantially more dip-prone: its local dynamics generate many small oscillations
 around movable obstacles, whereas Selection's temporary regressions are rare, shallow, and quickly
 resolved. On this metric, 1D dip statistics do not cleanly track goal-directedness; they mostly
-capture local thrashing.
+capture local thrashing. We have not compared these counts with a random-walk null at matched swap
+counts, nor tested the rise of dips with frozen count that Zhang et al.\ use to argue that the
+dips are not a random walk, so the statistics describe the trajectories without testing that
+argument. The script that produces them still starts threads for frozen cells, which adds
+contention but no swaps, since a frozen cell never initiates one.
 
 In 2D ($6{\times}6$ grid, 3 immovable frozen cells), $100\%$ of Selection2D runs exhibit dips
 (mean $308.7$ per trial, mean depth $3.6$ shell inversions, mean recovery $7.2$ steps), while
@@ -701,12 +711,14 @@ This null is exact for the stated state-proposal process, not for a maximal-entr
 
 Under this definition, all four Selection-family variants show large positive
 $K_{\mathrm{state}}$ at frozen$=0$: published long-range Selection and its stubborn no-frozen control both achieve
-$K_{\text{state}} \approx 30.44$, while the adjacent variants achieve
-$K_{\text{state}} \approx 29.80$ and $29.79$. Under immovable frozen indices, the matched long-range
-rerouting curve declines monotonically as the reachable state space shrinks from $30!$ to $21!$,
-but remains strongly supra-random:
-$30.44 \rightarrow 26.14 \rightarrow 22.01 \rightarrow 18.01$ for frozen counts
-$0,3,6,9$. By contrast, long-range stubborn Selection has $K_{\text{state}}$ only at frozen$=0$; it
+$K_{\text{state}} \approx 30.45$ and $30.44$, while the adjacent variants achieve
+$K_{\text{state}} \approx 29.81$ and $29.82$. Under immovable frozen indices, the matched long-range
+rerouting curve declines monotonically as the reachable state space shrinks from $30!$ to $21!$:
+$30.45 \rightarrow 26.14 \rightarrow 22.00 \rightarrow 18.01$ for frozen counts
+$0,3,6,9$. These values sit $1.97$, $1.90$, $1.79$ and $1.70$ units below
+$\log_{10}(n_{\text{active}}!)$ ($32.42$, $28.04$, $23.79$, $19.71$), and the adjacent values at
+frozen$=0$ sit about $2.6$ units below it, so the size of the reachable state space sets almost all
+of $K_{\mathrm{state}}$ and the agent's cost moves it by about two units. By contrast, long-range stubborn Selection has $K_{\text{state}}$ only at frozen$=0$; it
 becomes undefined as soon as any frozen indices are introduced because success drops to $0/30$.
 
 The adjacent family exposes a different K-based failure mode. At frozen$=0$, both adjacent variants
@@ -730,36 +742,38 @@ This is precisely the operator-and-constraint point the previous mixed K surface
 \end{figure}
 
 \paragraph{Interpretation.}
-This $K_{\mathrm{state}}$ surface is exact for an explicit state-space null while remaining tied to
-explicit operator families, explicit frozen constraints, and a distance-weighted cost model.
-It should be read as a scalable state-space proxy for the formal K target, not as a direct
-operator-walk hitting-time calculation. Within the long-range operator class, rerouting preserves
-search efficiency under frozen barriers; within the adjacent class, the barrier semantics can
-eliminate reachability altogether.
+This $K_{\mathrm{state}}$ surface is exact for an explicit state-space null tied to explicit
+operator families, frozen constraints, and a distance-weighted cost model, and it should be read as
+a scalable state-space proxy for the formal K target rather than as an operator-walk hitting-time
+calculation. Because the null's size dominates it, the decline with frozen count and the
+separation between a reachable-but-failing stubborn policy and an unreachable adjacent problem
+restate the factorization, and any competency signal beyond reachability lives in the two units
+that the agent's realized cost contributes.
 
 \section{Discussion}
 \label{sec:discussion}
 \paragraph{Mechanism-first interpretation.}
-Clustering in this model does not require attraction, communication of type, or explicit
-coordination. Temporal separation appears to be a major contributor: when one type is active early
-and another late, swaps occur in temporally correlated bursts that amplify adjacency among
-currently-active types.
-This interpretation preserves the morphogenetic analogy but shifts emphasis from ``intelligence'' to
-heterochronic dynamics. In developmental biology, heterochrony (shifts in the relative timing of
-developmental events) is a primary mechanism for generating morphological diversity
-\cite{gould1977ontogeny}. The clustering result instantiates this at a computational level: the
-``developmental events'' are sorting phases, and timing shifts between them produce spatial pattern
-(clustering) without any explicit patterning instruction. The ablation result (Section~3.2)
-strengthens this reading, especially for Insertion-containing mixtures: removing the timing shift
-reduces the pattern sharply, just as eliminating a heterochronic gene shift can collapse an evolved
-morphological distinction.
+Clustering in the gated mixtures does not require attraction, communication of type, or explicit
+coordination. When one type is active early and the other late, swaps occur in temporally
+correlated bursts that leave the currently active type adjacent to itself, which is the efficiency
+hypothesis of Zhang et al.\ in mechanistic form. The reading has a developmental counterpart in
+heterochrony, where shifts in the relative timing of developmental events generate morphological
+diversity \cite{gould1977ontogeny}; here the ``developmental events'' are sorting phases, and a
+timing shift between them produces spatial pattern without a patterning instruction. Removing the
+gate returns clustering to the null, and transplanting it onto Bubble and Gnome clones raises
+clustering to the level of native Insertion, so for these mixtures the timing shift is both
+necessary and sufficient within the conditions we tested. Timing does not explain the weak
+clustering of Selection mixtures, which arises at separations close to those of the ungated
+controls, nor the aggregation that Zhang et al.\ report in the final state of their
+duplicate-value runs, where a transient timing effect should have washed out; both point to a
+second mechanism that we have not tested.
 
 \paragraph{Active-matter framing (MIPS).}
 The clustering mechanism has a MIPS-like mobility-separation analogy: algorithmic rules define
-effective motility profiles, with Selection exhibiting sustained early motion and Insertion remaining
-quiescent until its enable-to-move condition is met. Temporal separation then creates regions of
-kinematic arrest that accumulate like-typed agents. The InsertionNoWait ablation equalizes motility
-profiles and removes clustering, consistent with this interpretation.
+effective motility profiles, and Insertion remains quiescent until its enable-to-move condition is
+met, so that the late-moving type rearranges among itself while the early type has settled. The
+InsertionNoWait ablation equalizes the motility profiles and returns clustering to the null,
+consistent with this interpretation.
 
 \paragraph{Exclusion-process framing (inhomogeneous TASEP).}
 The 1D lattice with hard-core exclusion suggests an exclusion-process analogy for the adjacent
@@ -769,25 +783,24 @@ immovable constraints, local algorithms fail in ways consistent with persistent 
 Selection’s non-local target assignment effectively bypasses local exclusion constraints.
 
 \paragraph{Robustness is semantic and algorithmic.}
-Our ablations and matched baselines emphasize a simple point: robustness depends strongly on
-operator class, blocked-target policy, and obstacle semantics (movable vs.\ immovable).
-The factorization result is the cleanest result here. Under immovable barriers, long-range reach
-without frozen-target rerouting is not enough, and frozen-target rerouting is not sufficient under
-adjacent-only execution; only the combination survives. The structural reason for the adjacent
-failure is that adjacent active-active moves cannot exchange values across immovable frozen
-indices. The rerouting ablation then isolates the policy half of the story within the published
-long-range Selection operator class.
-Bubble and Insertion fail for combinatorial reasons once adjacent transpositions are blocked by
-hard barriers.
-In the same immovable regime, distributed execution does not out-perform centralized baselines
-(in the archived centralized comparison).
-Zhang et al.\ motivate the cell-view model partly through analogy to basal cognition in living
-systems. That centralized-baseline result does not undermine this analogy but sharpens it: whatever
-``intelligence'' the sorting cells display comes from the algorithm (the decision rule for when and
-how to swap) and is independent of the distributed vs.\ centralized substrate. This is consistent
-with Levin's framework \cite{levin2022technological}, which locates competency in the policy (the
-mapping from sensory state to action) independent of the particular implementation of that policy.
-While multithreaded execution adds strictly computational overhead in an \emph{in-silico} simulation, it remains an essential architectural constraint when modeling physically embodied systems (like biological cells or robotic swarms) where a global ``centralized loop'' is physically impossible.
+Robustness in this model depends on operator class, blocked-target policy, and obstacle semantics
+(movable vs.\ immovable), and under immovable barriers most of the dependence is fixed by the rule
+definitions. Adjacent active-active moves cannot exchange values across an immovable frozen index,
+so the adjacent Selection variants, Bubble and Insertion all stop in a segment-sorted state; a
+long-range Selection cell that keeps its frozen target waits forever; and only long-range Selection
+with frozen-target rerouting can reach the sorted state. Cell-view and centralized implementations
+that share the skip-frozen rule must then agree, and they do. The cell-view advantage in the
+original comparison of cell-view and traditional algorithms most likely came from traditional
+baselines without frozen-aware rerouting, so the competency worth studying is the rerouting rule
+itself, Selection's frozen-target branch, rather than the cell-view framing.
+
+The substrate comparison is narrower than it first appears. Every cell thread acquires one shared
+lock before acting, so the threaded implementation is a serialized random scheduler with bursty
+time slices, and once frozen cells run no thread it does the same work as a sequential random
+schedule of the same cells. In this code there is no distributed substrate whose contribution could
+be separated from the policy, and the agreement between substrates tells us that the
+implementation behaves as its rules say rather than that competency is independent of substrate in
+general. A physically embodied system without a global lock would be a separate test.
 
 \paragraph{2D reveals limits of purely local information.}
 The 2D shell-ordering target exposes non-adjacent inversions that local neighbor rules cannot resolve
@@ -801,33 +814,36 @@ canonical raw-trial archive, but it remains narrower in scope than the 1D factor
 baseline results.
 
 \paragraph{Search efficiency as a graded metric.}
-The $K_{\mathrm{state}}$ analysis translates the operator-and-constraint story into a graded efficiency metric without
-hiding behind a fixed blind
-baseline. Because the state-space null is recomputed under each frozen pattern, long-range
-Selection's $K_{\mathrm{state}}$ now falls from $30.44$ to $18.01$ as the reachable state space contracts, rather than
-artificially rising under harder conditions. The same framework also clarifies two distinct
-failure modes: long-range stubborn Selection retains a reachable problem space but loses all
-successful trajectories, whereas the adjacent family under immovable barriers loses reachability in
-the sampled factorization instances altogether.
-This is the paper's clearest worked state-space proxy for the Diverse Intelligence program's graded
-view of competency \cite{levin2022technological,fields2022competency}. It provides a concrete
-example of Chis-Ciure and Levin's formalism \cite{chisciure2025cognition} with explicit $O$, $C$,
-and $w$. Because the blind numerator is computed under a reachable-state proposal null rather than
-an exact maximal-entropy operator walk, we interpret it as an exact $K_{\mathrm{state}}$ analysis
-and leave full operator-walk K to small-$n$ or separately bounded analyses.
+The $K_{\mathrm{state}}$ analysis gives Chis-Ciure and Levin's formalism \cite{chisciure2025cognition}
+a worked example with explicit $O$, $C$, and $w$, and the example shows how much of the value the
+null carries. For every algorithm that finishes, $K_{\mathrm{state}}$ sits $1.7$ to $2.6$ units
+below $\log_{10}(n_{\text{active}}!)$, so its decline with frozen count follows from the shrinking
+reachable state space, and the two failure modes it separates (stubborn Selection keeps a reachable
+space but never succeeds, the adjacent family loses reachability) restate the factorization. The
+span-weighted agent cost enters only through those few units, which is where any
+competency information beyond reachability would have to show. Because the blind numerator is
+computed under a reachable-state proposal null rather than an exact maximal-entropy operator walk,
+full operator-walk K remains for small-$n$ or separately bounded analyses, where the traversal
+geometry that the proposal null omits would contribute.
 
 \section{Related Work}
 \label{sec:related}
 
 \paragraph{The claims we test.}
-Zhang et al.\ \cite{zhang2024classical} make three core claims about their sorting-cell model:
-that algotype clustering emerges without explicit coordination, that the
-distributed cell-view implementation confers robustness akin to ``basal intelligence,'' and that
-cells ``navigate'' around damage. In the published implementation, however, those claims sit on top
-of specific operator semantics: 1D Selection is not an adjacent-swap rule. Our contribution is to
-convert the claims into testable hypotheses and apply causal interventions: ablation of the timing
-mechanism (clustering), factorization of action range vs.\ rerouting (navigation), and matched
-centralized baselines (cell-view advantage).
+Zhang et al.\ \cite{zhang2024classical} report that algotype clustering emerges in chimeric arrays
+without explicit coordination and propose an efficiency hypothesis for it, in which efficient
+algotypes move first and slower ones catch up; that cell-view versions of the algorithms reach
+lower final error than traditional versions when some cells are frozen; and that the cells show
+delayed gratification, a transient loss of sortedness that is recovered later, which rises with
+the number of frozen cells. Their robustness comparison sets cell-view algorithms against
+traditional algorithms, so it is a claim about the algorithms with their frozen-cell handling
+rather than about distributed versus centralized execution. In the published implementation these
+claims rest on specific operator semantics, since 1D Selection is not an adjacent-swap rule. We
+test the clustering account by intervention, removing the waiting gate and transplanting it, and
+we test the robustness comparison by giving the traditional baselines the same skip-frozen
+rerouting and by changing only the execution schedule of the same cells. Their aggregation control
+with identical algorithms reports values (0.57 to 0.65) well above the random-mixing baseline,
+which the maximum-statistic bias described in Section~\ref{sec:methods} explains.
 
 \paragraph{Morphogenesis and self-organization.}
 Classic accounts of morphogenesis include reaction--diffusion pattern formation
@@ -856,9 +872,29 @@ ground their framework in a system small enough that every parameter is inspecta
 \section{Limitations}
 \label{sec:limits}
 \paragraph{Concurrency and nondeterminism.}
-The multithreaded cell-view implementation can exhibit run-to-run variation due to thread scheduling,
-even when RNG seeds are fixed. Where this matters, we recommend reporting multi-seed aggregates and
-archiving raw run artifacts used to produce figures and tables.
+Bubble cells choose their swap direction at random, and the order in which threads acquire the
+shared lock is set by the operating system, so fixing \texttt{random.seed} fixes the initial
+arrays and frozen sets but does not make threaded runs reproducible; the original paper describes
+the algorithms as deterministic, which holds for the textbook versions only. The reruns for this
+revision ran several experiments concurrently on one machine, which changes thread timing and can
+shift timeout-limited outcomes slightly. We report multi-seed aggregates and archive the compact
+result files that feed every figure in \texttt{paper/results/}.
+
+\paragraph{Frozen cells in the remaining scripts.}
+The frozen-thread correction is applied in the factorization and matched-substrate experiments,
+whose results we reran. The rerouting ablation, the centralized comparison and the dip statistics
+still start threads for frozen cells. For the rerouting ablation and the centralized comparison
+this affects work counts but not success, and their tables come from an earlier archive whose
+per-seed files were not retained; the dip statistics were rerun with the same scripts.
+
+\paragraph{Experiments of the original paper not followed up.}
+We did not revisit the duplicate-value runs, in which Zhang et al.\ report that aggregation
+persists into the final state, the opposite-direction chimeras and their incompletely sorted
+equilibrium, the three-type mixture, the efficiency comparisons between algotypes, or the rise of
+delayed gratification with frozen count. The duplicate-value result matters most for the timing
+account, because clustering that survives to the final state cannot come from a transient timing
+effect alone, and the frozen-count trend carries the original argument that the dips are not a
+random walk, which our dip statistics do not test.
 
 \paragraph{2D scope.}
 The 2D archive now regenerates from a single canonical raw-trial pipeline, but the 2D evidence
@@ -874,31 +910,26 @@ used in 2D. Claims about robustness or ``navigation'' should be interpreted only
 explicitly stated semantics.
 
 \section{Conclusion}
-We extend Zhang et al.'s sorting-cell model by isolating mechanisms and making the operator
-semantics explicit. The strongest archival result is now a factorization result: under immovable
-obstacles, published 1D Selection is robust only when long-range action and frozen-target rerouting
-are both present. The rerouting ablation then shows that rerouting is necessary within that
-original long-range operator class. Under matched frozen-index semantics, cell-view execution does
-not provide an additional robustness advantage over centralized baselines, and the matched-substrate
-analysis further shows that changing only the cell-view substrate mostly changes compare-count work
-rather than which conditions succeed.
-The main explanatory
-weight therefore lies in algorithmic rules, operator classes, and obstacle semantics rather than in
-distributed execution itself.
+Scored against a label-permutation null on each run's own trajectory, algotype clustering in the
+sorting-cell model appears where one class moves late. Removing Insertion's waiting gate returns
+clustering to the null, and transplanting the same gate onto Bubble and Gnome clones reproduces the
+clustering of native Insertion while the ungated clones stay at the null, which gives the
+efficiency hypothesis of Zhang et al.\ a causal test it passes for gated mixtures. Selection
+mixtures cluster weakly without temporal separation, and the original duplicate-value runs report
+aggregation in the final state, so a second, non-timing mechanism remains open.
 
-Temporal separation has substantially stronger mechanistic support. The original
-InsertionNoWait ablation still matters, but the transfer experiment shows that exporting the same waiting gate to
-Bubble and Gnome clones reproduces the predicted rise in separation and clustering under matched
-same-family controls. We still do not claim a fully closed universal account, but the mechanism
-extends beyond one native algotype. The 2D section is regenerated from a canonical raw-trial
-archive, but it remains narrower in scope than the 1D core. Directed Flow remains a useful but
-policy-aligned exploratory diagnostic. K-computation, by contrast, is framed as
-$K_{\mathrm{state}}$, a matched state-space analysis rather than a descriptive fixed-baseline curve.
+The robustness experiments come out the way the rule definitions require. Under immovable
+obstacles only long-range Selection with frozen-target rerouting can reach the sorted state,
+cell-view and centralized implementations that share the skip-frozen rule agree, and threaded and
+sequential schedules of the same cells agree in outcome and work once frozen cells run no thread,
+which removes the large work ratios of the earlier version. These results place the competency in
+the rerouting rule and suggest that the original cell-view advantage came from baselines without
+it. $K_{\mathrm{state}}$ is set mostly by the size of the reachable state space, and the 2D section
+and Directed Flow remain narrower diagnostics.
 
-The sorting-cell model remains valuable precisely because its components are inspectable. Once the
-operator set, obstacle semantics, and baselines are stated explicitly, it becomes a cleaner test bed
-for operationalizing graded competence in distributed systems and for separating genuine mechanism
-from metaphor in the Diverse Intelligence program.
+The sorting-cell model remains useful because its components are inspectable, and once operator
+set, obstacle semantics, baselines and nulls are stated explicitly it becomes a clean test bed for
+separating mechanism from metaphor in the Diverse Intelligence program.
 
 \appendix
 
@@ -1060,8 +1091,14 @@ script ids for archival continuity; the main text refers to the same surfaces de
   \end{quote}
 \end{itemize}
 
-Thread scheduling introduces nondeterminism even with fixed RNG seeds. We therefore archive JSON
-outputs for the paper and report multi-seed aggregates for central claims.
+Thread scheduling introduces nondeterminism even with fixed RNG seeds. We therefore archive compact
+JSON outputs (per-trial measurements and summaries, without state trajectories) in
+\texttt{paper/results/} and report multi-seed aggregates. Every figure regenerates from those files.
+The raw 2D trial archive (12.6\,MB) is regenerated by the seeded sequential 2D engine and kept out
+of version control, with its Figure~3 aggregates tracked instead. The rerouting-ablation and
+centralized-comparison tables (Table~\ref{tab:exp14} and the rerouting counts) come from an earlier
+archive whose per-seed files were not retained, and both scripts still start threads for frozen
+cells; rerunning them with the commands above regenerates comparable files.
 
 \bibliographystyle{unsrt}
 \bibliography{references}

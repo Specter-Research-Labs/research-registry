@@ -14,6 +14,7 @@ dependencies = [
     "seaborn>=0.13.0",
     "statsmodels>=0.14.0",
     "tabulate>=0.9.0",
+    "adjusttext>=1.4.0",
 ]
 
 [tool.uv]
@@ -73,6 +74,7 @@ include = [
     "paper/aggregate_exp26_substrate_matched_baselines.py",
     "paper/aggregate_exp27_timing_interventions.py",
     "paper/aggregate_fig3_2d.py",
+    "paper/clustering_null.py",
 ]
 
 [tool.ruff]

@@ -53,6 +53,7 @@ ops/zulip/.env*
 !dossiers/lenia-swarm/docs/universe/assets/**/*.jpeg
 *.csv
 results/
+!dossiers/zhang-levin-playground/paper/results/
 outputs/
 visual_gifs/
 
