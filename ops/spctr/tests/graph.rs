@@ -341,10 +341,10 @@ Graph-native article.
         .nodes
         .iter()
         .any(|node| node.id == "site_output:site/status/index.html"));
-    assert!(graph
+    assert!(!graph
         .nodes
         .iter()
-        .any(|node| node.id == "archive_surface:site:root" && node.kind == "archive_surface"));
+        .any(|node| node.id == "archive_surface:site:root"));
     assert!(graph
         .nodes
         .iter()
@@ -386,17 +386,6 @@ Graph-native article.
     let exec_card = node_attrs(&graph, "evidence_card:exec:dossier:alpha:check");
     assert_eq!(exec_card.get("scope").unwrap(), "exec");
     assert_eq!(exec_card.get("status").unwrap(), "ok");
-
-    let archive_surface = node_attrs(&graph, "archive_surface:site:root");
-    assert_eq!(archive_surface.get("namespace").unwrap(), "site");
-    assert_eq!(
-        archive_surface.get("current_url").unwrap(),
-        "https://specterlab.org/"
-    );
-    assert_eq!(
-        archive_surface.get("metadata_path").unwrap(),
-        ".spctr/portal-surfaces.json"
-    );
 
     assert!(graph.edges.iter().any(|edge| {
         edge.src == "project:dossier:alpha"

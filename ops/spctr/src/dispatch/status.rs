@@ -50,8 +50,7 @@ pub fn job_status_message(job: &JobRecord) -> String {
     }
     if let Some(publish) = publish {
         lines.push(format!("- release: `{}`", publish.release_id));
-        lines.push(format!("- archive: {}", publish.public_url));
-        lines.push(format!("- current: {}", publish.current_url));
+        lines.push(format!("- site: {}", publish.public_url));
         if let Some(manifest_path) = publish.manifest_path {
             lines.push(format!("- manifest: `{manifest_path}`"));
         }

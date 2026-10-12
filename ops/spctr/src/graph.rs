@@ -1339,12 +1339,9 @@ fn add_archive_surface_subgraph(builder: &mut GraphBuilder) {
         .collect::<BTreeMap<_, _>>();
 
     for surface in archive::canonical_archive_surfaces() {
-        let project_ref = match surface.project.as_str() {
-            "site" => None,
-            slug => match projects_by_slug.get(slug) {
-                Some(project_ref) => Some(project_ref.clone()),
-                None => continue,
-            },
+        let Some((project_kind, project_id)) = projects_by_slug.get(&surface.project).cloned()
+        else {
+            continue;
         };
 
         let namespace = surface.namespace_relative();
@@ -1369,21 +1366,17 @@ fn add_archive_surface_subgraph(builder: &mut GraphBuilder) {
             "metadata_path".to_owned(),
             json!(archive::PORTAL_MANIFEST_RELATIVE_PATH),
         );
-        if let Some((kind, _project_id)) = project_ref.as_ref().map(|(kind, id)| (kind, id)) {
-            attrs.insert("project_kind".to_owned(), json!(kind));
-        }
+        attrs.insert("project_kind".to_owned(), json!(project_kind));
 
         let node_id = archive_surface_node_id(&surface.project, &surface.surface);
         builder.upsert_node(node_id.clone(), "archive_surface", attrs);
 
-        if let Some((_, project_id)) = project_ref {
-            builder.add_edge(
-                node_id,
-                "archive_surface_tracks_project",
-                project_id,
-                BTreeMap::new(),
-            );
-        }
+        builder.add_edge(
+            node_id,
+            "archive_surface_tracks_project",
+            project_id,
+            BTreeMap::new(),
+        );
     }
 }
 

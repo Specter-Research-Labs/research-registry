@@ -125,24 +125,21 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
         &site_publish_plan.excludes,
         &site_publish_plan.remote_prunes,
     )?;
-    let archive = archive_public_release(
-        "site",
-        "root",
-        &release_id,
-        &stage_root,
-        true,
-        &site_publish_plan.excludes,
-    )?;
 
     let current_url = format!("{}/", site_public_url().trim_end_matches('/'));
-    let mut result = PublishResult::archived(&release_id, "site", &archive, current_url.clone());
-    result.site_path = Some(stage_root.to_string());
+    let result = PublishResult {
+        release_id: release_id.clone(),
+        surface: "site".to_owned(),
+        public_url: current_url.clone(),
+        current_url: current_url.clone(),
+        artifacts: Vec::new(),
+        manifest_path: None,
+        site_path: Some(stage_root.to_string()),
+        provenance: None,
+    };
 
-    emit_archived_publish_result(
-        "Site publish",
-        &release_id,
-        &current_url,
-        &result.public_url,
+    emit_publish_result(
+        &format!("Site publish: release={release_id} current={current_url}"),
         &result,
     )
 }

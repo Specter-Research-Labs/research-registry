@@ -157,14 +157,7 @@ pub fn format_job_update(job: &JobRecord) -> String {
     if let Some(publish) = as_publish_result(&job.result) {
         if matches!(job.state, crate::dispatch::types::JobState::Succeeded) {
             lines.push(format!("- release: `{}`", publish.release_id));
-            lines.push(format!(
-                "- archive: [immutable release]({})",
-                publish.public_url
-            ));
-            lines.push(format!(
-                "- current: [current surface]({})",
-                publish.current_url
-            ));
+            lines.push(format!("- site: [live site]({})", publish.public_url));
             if let Some(manifest_path) = publish.manifest_path {
                 lines.push(format!("- manifest: `{manifest_path}`"));
             }
@@ -241,7 +234,7 @@ mod tests {
                 "durationSeconds": 3,
                 "releaseId": "abc123",
                 "surface": "site",
-                "publicUrl": "https://releases.specterlab.org/site/releases/abc123/",
+                "publicUrl": "https://specterlab.org/",
                 "currentUrl": "https://specterlab.org/",
                 "sitePath": "site",
                 "artifacts": []
@@ -259,10 +252,8 @@ mod tests {
         assert!(message.contains("- runner: `runner-macos-1`"));
         assert!(message.contains("- duration: `3.0s`"));
         assert!(message.contains("- release: `abc123`"));
-        assert!(message.contains(
-            "- archive: [immutable release](https://releases.specterlab.org/site/releases/abc123/)"
-        ));
-        assert!(message.contains("- current: [current surface](https://specterlab.org/)"));
+        assert!(message.contains("- site: [live site](https://specterlab.org/)"));
+        assert!(!message.contains("- current:"));
     }
 
     #[test]

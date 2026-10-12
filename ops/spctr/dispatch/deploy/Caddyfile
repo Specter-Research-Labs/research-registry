@@ -32,6 +32,8 @@ dispatch.specterlab.org {
 releases.specterlab.org {
     root * /srv/www/releases
     encode zstd gzip
+    @withdrawn path /site /site/* /lenia-swarm/causal-emergence /lenia-swarm/causal-emergence/*
+    respond @withdrawn 404
     file_server browse
 }
 

@@ -11,8 +11,11 @@ pub fn list_surfaces() -> Vec<SurfaceDefinition> {
         project: "site".to_owned(),
         action: "publish".to_owned(),
         synopsis: "publish site [--release-id <id>]".to_owned(),
-        description: "Build the canonical site, publish the current surface, and archive the immutable release bundle.".to_owned(),
-        required_capabilities: SITE_PUBLISH_CAPABILITIES.iter().map(|value| (*value).to_owned()).collect(),
+        description: "Build the canonical site and publish it as the current surface.".to_owned(),
+        required_capabilities: SITE_PUBLISH_CAPABILITIES
+            .iter()
+            .map(|value| (*value).to_owned())
+            .collect(),
     }]
 }
 
