@@ -7,7 +7,7 @@ toc: true
 
 # The Geometry of a Synthetic Morphospace
 
-*Earlier draft. The current account is [How much does shape explain?](/dossiers/lenia-swarm/morphospace/). This draft preserves the earlier theoretical framing and is not a separate set of findings.*
+*Earlier draft. The current account is [Where Flow Lenia bodies go in shape space, and where they do not](/dossiers/lenia-swarm/morphospace/). This draft preserves the earlier theoretical framing and is not a separate set of findings.*
 
 
 A shape measurement omits most of the process that produced the shape. For a Flow Lenia specimen, we can inspect those omitted variables: its rule parameters, initial field and subsequent dynamics. This makes a concrete question possible. If we return to the same measured shape after a sequence of small rule changes, do we also return to the starting rule?

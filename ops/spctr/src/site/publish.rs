@@ -97,9 +97,11 @@ pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
     "templates",
 ];
 
-// Build inputs, orphans, and assets of the unpublished causal-emergence
-// library that sit next to published pages. Only the built dashboard ships.
+// Build inputs, orphans, withdrawn figures, and assets of the unpublished
+// causal-emergence library that sit next to published pages. Only the built
+// dashboard ships.
 pub(crate) const UNPUBLISHED_SITE_FILES: &[&str] = &[
+    "assets/blog/lenia-morphospace-report/fig-fish-near-witnesses.html",
     "assets/causal-emergence.css",
     "assets/wonton-soup/dossier-evidence.json",
     "assets/writing-causal-response.svg",
