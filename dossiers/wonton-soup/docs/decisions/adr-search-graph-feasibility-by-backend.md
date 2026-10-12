@@ -1,3 +1,7 @@
+---
+summary: "Decision record: graph edit distance is computed per artifact family according to what each proof backend can provide."
+---
+
 # ADR: Search-Graph Feasibility by Backend
 
 ## Context

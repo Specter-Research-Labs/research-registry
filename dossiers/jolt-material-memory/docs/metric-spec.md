@@ -1,3 +1,7 @@
+---
+summary: "Definitions of the material-memory measurements: search efficiency K against a blind baseline, memory retention, hysteresis, recovery, and the damping-only control."
+---
+
 # Metric Spec
 
 ## Primary Metrics

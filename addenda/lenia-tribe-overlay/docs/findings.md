@@ -1,3 +1,7 @@
+---
+publish: false
+---
+
 # Lenia TRIBE Overlay Findings
 
 Status as of 2026-05-04: pipeline wired through correlation; sanity gate

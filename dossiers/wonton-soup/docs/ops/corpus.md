@@ -1,3 +1,7 @@
+---
+summary: "How Wonton Soup theorem corpora are built, selected, validated and stored reproducibly."
+---
+
 # Corpus
 
 Corpus artifacts keep theorem selections reproducible without committing large

@@ -15,7 +15,7 @@
       "lenia-swarm: changed the project into dossier form; added compendium indexing, morphometrics, ecology export, thresholding, paper-aligned configs, and smoke/docs surfaces.",
       "wonton-soup: added leantree integration, corpus/list/build tooling, postprocess metrics, external statement similarity, and dashboard/lake datasets.",
       "wonton-soup: added ATP surfaces for Coq, TPTP, and Z3, plus docs/tests for the expanded backend stack.",
-      "zang-levin-playground: added the paper draft and reproducible figure pipeline."
+      "zhang-levin-playground: added the paper draft and reproducible figure pipeline."
     ],
     "addenda": [
       "paper-k: added the reference implementation, demos, tests, and README/pyproject surface.",

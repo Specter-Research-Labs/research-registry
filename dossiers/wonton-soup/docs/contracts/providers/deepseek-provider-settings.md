@@ -1,3 +1,7 @@
+---
+summary: "Model, loading and runtime settings for the DeepSeek tactic provider, and the constraints that keep its runs reproducible."
+---
+
 # DeepSeek Provider Settings
 
 Runtime settings and reproducibility constraints for `DeepSeekTacticProvider`.

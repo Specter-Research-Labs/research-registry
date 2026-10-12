@@ -13,7 +13,7 @@ Inspected rendered pages at 1440 × 1000 and 390 × 1000, using actual browser s
 - `/dossiers/`
 - `/dossiers/lenia-swarm/`
 - `/dossiers/wonton-soup/`
-- `/dossiers/zang-levin-playground/`
+- `/dossiers/zhang-levin-playground/`
 - `/dossiers/lenia-swarm/morphospace/`
 - `/dossiers/lenia-swarm/anatomical-compiler/`
 - `/dossiers/lenia-swarm/morphospace/obstacle-response/`

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-DOSSIER_NAME = "zang-levin-playground"
+DOSSIER_NAME = "zhang-levin-playground"
 ARTIFACT_ENV = "SPECTER_ARTIFACT_ROOT"
 
 

@@ -1,3 +1,7 @@
+---
+summary: "Decision record: lake jobs that build reference outcomes must select the reference population explicitly, to avoid in-sample leakage."
+---
+
 # ADR: Explicit Reference Selection for Lake Jobs
 
 ## Context

@@ -1,9 +1,11 @@
 ---
 title: "Proof search with a missing tactic"
 release: "published"
-summary: Intervention studies in proof search, with structural comparison across runs.
+summary: We block one tactic from a successful Lean proof search and rerun it to see which proofs survive.
 series: B-001
 pdf: wonton-soup.pdf
+cover: /assets/blog/wonton-soup/fig1-mcts-tree.png
+cover_alt: A proof search tree in which two rewrites of a * (b + c) lead to proofs by ring.
 ---
 
 # Proof search with a missing tactic
@@ -12,7 +14,7 @@ In one Wonton search, the prover found a proof using `contrapose!`. When we bloc
 
 A theorem may have many valid proofs while a particular search depends heavily on one tactic. Even visibly different proof terms can share that dependency. Wonton records the attempted tactics and intermediate goals so we can compare the route as well as the final success or failure. Blocking a tactic turns a collection of observed proofs into a test of which alternatives remain usable under the same search budget.
 
-This article follows the early experiments and the machinery built to make those comparisons. The later [controlled tactic-blocking study](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/) tests the question across a larger cohort. Along the way, an [unused-tactic control](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) exposed a problem with inference reproducibility that a fixed search seed had concealed.
+This article follows the early experiments and the machinery built to make those comparisons. Along the way, an [unused-tactic control](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) exposed a problem with inference reproducibility that a fixed search seed had concealed.
 
 ![MCTS Proof Search Tree](../../assets/blog/wonton-soup/fig1-mcts-tree.png)
 
@@ -294,4 +296,4 @@ Next steps: cross-backend basin agreement tests, calibrated $K$ estimation with 
 
 ---
 
-*This article records the early experimental framework. For the later controlled results, read [Which proofs survive a blocked tactic?](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/). Selected runs are available in the [Wonton Soup Dashboard](/dashboards/wonton-soup/).*
+*This article records the early experimental framework, and the counts from the later controlled tactic-blocking cohort are being re-audited before we publish them again. Selected runs are available in the [Wonton Soup Dashboard](/dashboards/wonton-soup/).*

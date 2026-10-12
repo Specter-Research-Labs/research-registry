@@ -1,3 +1,7 @@
+---
+summary: "ProofGraphIR, the graph abstraction that makes Lean search traces and Coq proof-term graphs comparable across proof assistants."
+---
+
 # ProofGraphIR
 
 `ProofGraphIR` is the cross-assistant graph abstraction used by

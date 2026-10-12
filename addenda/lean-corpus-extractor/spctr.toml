@@ -1,6 +1,6 @@
 version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
-title = "lean-corpus-extractor"
+title = "Lean Corpus Extractor"
 series = "A-007"
 summary = "Lean-native extractor for deterministic theorem-item JSONL used in Wonton Soup corpus workflows."
 status = "operational"

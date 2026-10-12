@@ -1,3 +1,7 @@
+---
+summary: "Plan for a local browser workbench to start, observe and inspect Wonton Soup runs."
+---
+
 # Local Workbench UI Plan
 
 Purpose: make the local browser UI the main operator surface for Wonton runs.

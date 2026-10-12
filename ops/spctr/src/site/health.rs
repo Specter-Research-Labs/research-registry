@@ -475,7 +475,7 @@ fn render_project_card(project: &ProjectHealthEntry, page_path: &str) -> Markup 
                             @if let Some(ref href) = hub_href {
                                 span class="project-chip" { (project.hub_mode) }
                                 " "
-                                a href=(href) { "Open Hub" }
+                                a href=(href) { "Open hub" }
                             } @else if let Some(ref title) = project.related_dossier_title {
                                 @if let Some(ref href) = related_dossier_href {
                                     a href=(href) { (title) }
@@ -508,7 +508,7 @@ fn render_project_card(project: &ProjectHealthEntry, page_path: &str) -> Markup 
                     }
                     (markup::link(&project.repo_url, "Repository"))
                     @if let Some(ref href) = cabinet_href {
-                        a href=(href) { "Cabinet Docs" }
+                        a href=(href) { "Cabinet docs" }
                     }
                     @for surface in &project.published_surfaces {
                         @if let Some(ref href) = surface.href {

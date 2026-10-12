@@ -1,3 +1,7 @@
+---
+summary: "The ecology export command, which writes a deterministic parameter-space dataset from the compendium for analysis and plotting without assigning labels."
+---
+
 # Ecology Export
 
 ## Purpose

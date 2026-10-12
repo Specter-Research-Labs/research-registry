@@ -1,3 +1,7 @@
+---
+summary: "Decision record: Lean and Coq proof graphs are aligned through ProofGraphIR before their distances are compared."
+---
+
 # ADR: ProofGraphIR for Cross-Assistant Alignment
 
 ## Context

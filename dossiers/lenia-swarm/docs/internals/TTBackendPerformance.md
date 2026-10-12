@@ -1,3 +1,7 @@
+---
+summary: "The current state of Tenstorrent backend performance for each execution mode, and the structural work that remains for mesh runs."
+---
+
 # TT Backend Performance Record
 
 This record keeps the Tenstorrent backend optimization state in the dossier

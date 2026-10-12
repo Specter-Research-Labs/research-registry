@@ -1,5 +1,6 @@
 ---
 title: "Moving a proof-search model to Tenstorrent"
+summary: "Moving DeepSeek from MLX to one Tenstorrent QuietBox with four dual-Wormhole N300 cards, and finding the attention-sharding assumption that initially prevented it."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-002"

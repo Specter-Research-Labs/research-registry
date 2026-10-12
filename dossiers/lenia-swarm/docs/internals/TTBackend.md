@@ -1,3 +1,7 @@
+---
+summary: "Running Flow Lenia on Tenstorrent hardware in single, fleet and mesh modes, and how remote runs are configured."
+---
+
 # TT Backend
 
 Tenstorrent execution for Flow Lenia. The user-facing entrypoint is

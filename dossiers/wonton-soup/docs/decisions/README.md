@@ -1,3 +1,7 @@
+---
+summary: "Index of Wonton Soup decision records."
+---
+
 # ADR Index
 
 Canonical index for decision records in `dossiers/wonton-soup/docs/decisions`.

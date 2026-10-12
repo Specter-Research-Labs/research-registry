@@ -7,6 +7,7 @@ pub mod causal_emergence;
 pub mod causal_emergence_release;
 pub mod data;
 pub mod discover;
+pub mod finalize;
 pub mod health;
 pub mod inject;
 pub mod markup;
@@ -108,10 +109,6 @@ fn build_from_projection(
     let record_slices = records::slice_records(&records);
     let causal_emergence_catalog = causal_emergence::load_catalog(repo_root)?;
     causal_emergence_release::validate_website_library(repo_root)?;
-    let causal_emergence_sitemap_pages = causal_emergence_catalog
-        .as_ref()
-        .map(causal_emergence::sitemap_pages)
-        .unwrap_or_default();
 
     let mut pages: Vec<PageRegion> = vec![
         PageRegion {
@@ -140,13 +137,16 @@ fn build_from_projection(
             output_path: "site/blog/index.html".into(),
             regions: vec![(
                 "BLOG_INDEX_POSTS",
-                regions::render_blog_index_posts(&blog_posts, "blog/index.html"),
+                regions::render_blog_index_posts(&blog_posts, "blog/index.html")?,
             )],
         },
         PageRegion {
             template_path: "site/templates/research-notes/index.html".into(),
             output_path: "site/research-notes/index.html".into(),
-            regions: vec![],
+            regions: vec![(
+                "RESEARCH_NOTES_PROVENANCE",
+                blog::render_research_notes_provenance(repo_root)?,
+            )],
         },
         PageRegion {
             template_path: "site/templates/sitemap/index.html".into(),
@@ -154,7 +154,7 @@ fn build_from_projection(
             regions: vec![
                 (
                     "SITEMAP_SECTIONS",
-                    regions::render_sitemap_sections(repo_root, &causal_emergence_sitemap_pages)?,
+                    regions::render_sitemap_sections(repo_root)?,
                 ),
                 (
                     "SITEMAP_REGISTRY",
@@ -183,6 +183,10 @@ fn build_from_projection(
                 regions: vec![
                     ("DOSSIER_HUB_TITLE", record.title.clone()),
                     (
+                        "DOSSIER_HUB_DESCRIPTION",
+                        regions::render_dossier_hub_description(record),
+                    ),
+                    (
                         "DOSSIER_HUB_CONTENT",
                         regions::render_generated_dossier_hub(record, &records),
                     ),
@@ -207,6 +211,10 @@ fn build_from_projection(
                 output_path: hub_path.clone(),
                 regions: vec![
                     ("DOSSIER_HUB_HEADER", header),
+                    (
+                        "DOSSIER_HUB_DESCRIPTION",
+                        regions::render_dossier_hub_description(record),
+                    ),
                     (
                         "DOSSIER_HUB_FOOTER",
                         regions::render_dossier_hub_footer(record),

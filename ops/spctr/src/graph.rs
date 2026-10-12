@@ -458,9 +458,16 @@ fn add_project_subgraph(
         "site_publish_docs".to_owned(),
         json!(manifest.site.publish_docs),
     );
+    project_attrs.insert(
+        "publishes_cabinet_docs".to_owned(),
+        json!(manifest.site.publishes_cabinet_docs()),
+    );
     project_attrs.insert("has_docs_dir".to_owned(), json!(docs_root.is_dir()));
     project_attrs.insert("has_docs_readme".to_owned(), json!(docs_landing.is_file()));
-    let cabinet_href = if manifest.site.publish_docs && docs_landing.is_file() {
+    let cabinet_href = if manifest.site.publishes_cabinet_docs()
+        && docs_landing.is_file()
+        && docs::is_published(&docs_landing)?
+    {
         docs_landing
             .strip_prefix(&docs_root)
             .ok()
@@ -899,6 +906,14 @@ fn add_article_subgraph(
         attrs.insert("summary".to_owned(), json!(post.summary));
         attrs.insert("series_id".to_owned(), optional_value(series_id.as_ref()));
         attrs.insert("release".to_owned(), json!(post.release));
+        attrs.insert(
+            "cover".to_owned(),
+            optional_value(post.cover.as_ref().map(|cover| &cover.src)),
+        );
+        attrs.insert(
+            "cover_alt".to_owned(),
+            optional_value(post.cover.as_ref().map(|cover| &cover.alt)),
+        );
         builder.upsert_node(article_id.clone(), "article", attrs);
         if let Some(series_id) = series_id.as_deref() {
             ensure_article_series_node(repo_root, builder, registry, series_id, &source_path)?;
@@ -1167,7 +1182,9 @@ fn add_site_output_subgraph(
     let cabinet_project_ids = builder
         .nodes
         .values()
-        .filter(|node| node.kind == "project" && attr_bool(node, "site_publish_docs") == Some(true))
+        .filter(|node| {
+            node.kind == "project" && attr_bool(node, "publishes_cabinet_docs") == Some(true)
+        })
         .map(|node| node.id.clone())
         .collect::<BTreeSet<_>>();
     let cabinet_doc_ids = collect_edge_targets(builder, &cabinet_project_ids, "project_has_doc")

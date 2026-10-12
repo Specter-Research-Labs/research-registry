@@ -1,3 +1,7 @@
+---
+summary: "How Wonton Soup treats proofs as attractors of stochastic search, and the basin, convergence, rerouting and collapse measures built on that idea."
+---
+
 # Attractor Metrics for Proof Search
 
 These metrics treat proofs as attractors in stochastic search and quantify

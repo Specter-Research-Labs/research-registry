@@ -1,3 +1,7 @@
+---
+summary: "The ecology vocabulary for how discovered patterns distribute across parameter and behavior space, with the state of the quality-gated corpus."
+---
+
 # Ecology
 
 ## Purpose

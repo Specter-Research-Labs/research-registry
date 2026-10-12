@@ -1,3 +1,7 @@
+---
+summary: "The intended species, genus and family classification for Lenia patterns, and why taxonomy is stored but not yet assigned."
+---
+
 # Taxonomy
 
 ## Purpose

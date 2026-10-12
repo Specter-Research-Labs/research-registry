@@ -1,3 +1,7 @@
+---
+publish: false
+---
+
 # Same-sized cuts, different patterns
 
 *Editorial draft · September 2026. Based on the existing paper and an inspection of the implementation. Numerical sweep results below are inherited from the paper, not newly reproduced.*

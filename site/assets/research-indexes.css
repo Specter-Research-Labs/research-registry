@@ -19,19 +19,16 @@ body.research-index .dossier-preview{display:block;aspect-ratio:1.68;overflow:hi
 body.research-index .dossier-preview img{display:block;width:100%;height:100%;object-fit:contain;transition:transform .3s}
 body.research-index .dossier-preview:hover img{transform:scale(1.025)}
 body.research-index #lenia-swarm{grid-column:1/-1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:52px;order:-1;align-items:center;padding-bottom:42px;border-bottom:1px solid var(--sl-color-rule)}
-body.research-index #lenia-swarm .dossier-preview{grid-row:1/3;aspect-ratio:1.4;background:none}
-body.research-index #lenia-swarm .dossier-preview img{mix-blend-mode:normal}
+body.research-index #lenia-swarm .dossier-preview{grid-row:1/3;aspect-ratio:1.4}
+body.research-index #lenia-swarm .dossier-preview img{object-fit:cover}
 body.research-index .dossier-card-header,body.research-index .dossier-card-body{padding:0;background:none;border:0}
 body.research-index .dossier-card-tab{font:700 clamp(27px,3vw,39px)/1.1 var(--sl-font-display);letter-spacing:-.035em}
 body.research-index .series-badge{display:block;font:11px var(--sl-font-mono);margin-bottom:12px;letter-spacing:0;color:var(--sl-color-muted)}
 body.research-index .dossier-card-body p{font:17px/1.6 var(--sl-font-prose);margin-top:0}
 body.research-index .card-meta{display:none}
-body.research-index #jolt-material-memory .card-meta{display:flex}
 body.research-index #lenia-swarm .dossier-card-header{align-self:end}
 body.research-index #lenia-swarm .dossier-card-body{align-self:start}
-body.research-index #jolt-material-memory{grid-column:1/-1;border-top:1px solid var(--sl-color-rule);padding-top:28px;grid-template-columns:1fr 1fr;gap:52px}
-body.research-index #jolt-material-memory .dossier-card-tab{font-size:26px}
-@media(max-width:700px){.writing-index .writing-reports,.writing-index .writing-report-lead,body.research-index .card-stack,body.research-index #lenia-swarm,body.research-index #jolt-material-memory{grid-template-columns:1fr;gap:28px}.writing-index .writing-report-lead{padding-bottom:32px}body.research-index #lenia-swarm .dossier-preview{grid-row:auto}body.research-index .dossier-card{gap:18px}.publication-footer a:last-child{margin-left:0}.writing-index .writing-report{padding-bottom:32px;border-bottom:1px solid var(--sl-color-rule)}}
+@media(max-width:700px){.writing-index .writing-reports,.writing-index .writing-report-lead,body.research-index .card-stack,body.research-index #lenia-swarm{grid-template-columns:1fr;gap:28px}.writing-index .writing-report-lead{padding-bottom:32px}body.research-index #lenia-swarm .dossier-preview{grid-row:auto}body.research-index .dossier-card{gap:18px}.publication-footer a:last-child{margin-left:0}.writing-index .writing-report{padding-bottom:32px;border-bottom:1px solid var(--sl-color-rule)}}
 @media(prefers-reduced-motion:reduce){body.research-index .dossier-preview img{transition:none}}
 
 .writing-index #published-writing .resource-grid { grid-column: 1 / -1; grid-template-columns: 1fr; }

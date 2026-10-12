@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Wonton Soup"
 series = "D-002"
-summary = "Proof searches in Lean: remove a tactic, change the search, and test which routes to a theorem remain available."
+summary = "Lean proof searches rerun with one tactic removed, testing which routes to a theorem remain available."
 status = "active"
 
 [site]

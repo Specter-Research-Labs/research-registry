@@ -1,3 +1,7 @@
+---
+summary: "Decision record: the compendium keeps taxonomy columns but writes no taxonomy assignments until a deterministic method is validated."
+---
+
 # ADR-001: Taxonomy Columns Exist, Assignment Deferred
 
 ## Status

@@ -1,3 +1,7 @@
+---
+summary: "The compute, sweep, report and benchmark commands of the K semantics reference, and the JSON schema for requests and results."
+---
+
 # CLI And Reporting
 
 The CLI now supports four compute-facing entry points:

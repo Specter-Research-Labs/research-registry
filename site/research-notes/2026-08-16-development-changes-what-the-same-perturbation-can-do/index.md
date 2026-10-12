@@ -1,5 +1,6 @@
 ---
 title: "Older Lenia organisms resist the same disturbance"
+summary: "Separating simple growth from a measured change in developmental susceptibility."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"

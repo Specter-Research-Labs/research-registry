@@ -30,7 +30,7 @@ The prospect of finding such relationships motivates our interest in a structure
 
 [Wonton Soup](/dossiers/wonton-soup/) blocks tactics in Lean proof search and records the new search paths. The theorem remains fixed; the prover has the same budget but fewer available actions. Some runs still solve, sometimes with a different proof structure. Others fail within the budget.
 
-The [controlled study](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/) tested an appealing prediction: theorems with more observed proof structures should be easier to solve after a tactic is blocked. The observed correlation was only 0.03. Counting proof variants did not reveal which dependencies they shared. The next useful description should distinguish alternative routes that use different resources from cosmetic variants of one route.
+A controlled comparison tested an appealing prediction, that theorems with more observed proof structures should be easier to solve after a tactic is blocked, and found no useful relationship, although the counts behind it are being re-audited and we do not quote them here. Counting proof variants did not reveal which dependencies they shared. The next useful description should distinguish alternative routes that use different resources from cosmetic variants of one route.
 
 ### What does a shape conceal?
 

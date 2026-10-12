@@ -35,7 +35,7 @@ pub(crate) fn find_docs_for_manifests(manifests: &[ProjectManifest]) -> Result<V
                 .strip_prefix(&project.docs_root)
                 .expect("md is under docs_root");
             let slug = rel.with_extension("").as_str().replace('\\', "/");
-            let doc = scan_doc(&md_path);
+            let doc = scan_doc(&md_path)?;
             let category = if rel.components().count() > 1 {
                 rel.components()
                     .next()
@@ -68,30 +68,16 @@ pub fn find_published_docs_from_graph(
     repo_root: &Utf8Path,
     graph: &RegistryGraph,
 ) -> Result<Vec<DocEntry>> {
-    let series_titles = graph
-        .nodes_of_kind("series")
-        .filter_map(|node| {
-            graph::attr_str(node, "series_id")
-                .map(|series_id| (series_id.to_owned(), graph::attr_str(node, "title")))
-        })
-        .map(|(series_id, title)| (series_id.clone(), title.unwrap_or(&series_id).to_owned()))
-        .collect::<HashMap<_, _>>();
-
     let project_meta = graph
         .nodes_of_kind("project")
         .map(|node| {
             let slug = required_attr(node, "slug")?.to_owned();
-            let title = required_attr(node, "title")?.to_owned();
+            let project_display = required_attr(node, "title")?.to_owned();
             let series_id = graph::attr_str(node, "series_id").map(ToOwned::to_owned);
-            let project_display = series_id
-                .as_deref()
-                .and_then(|series_id| series_titles.get(series_id))
-                .cloned()
-                .unwrap_or(title);
             Ok((
                 node.id.clone(),
                 ProjectMeta {
-                    publish_docs: graph::attr_bool(node, "site_publish_docs") == Some(true),
+                    publish_docs: graph::attr_bool(node, "publishes_cabinet_docs") == Some(true),
                     project_display,
                     series_id,
                     slug,
@@ -172,7 +158,7 @@ fn project_docs_from_manifests(manifests: &[ProjectManifest]) -> Vec<ProjectDocs
                 kind: manifest.kind.clone(),
                 slug: manifest.slug.clone(),
                 docs_root,
-                publish_docs: manifest.site.publish_docs,
+                publish_docs: manifest.site.publishes_cabinet_docs(),
             })
         })
         .collect::<Vec<_>>();
@@ -246,52 +232,26 @@ fn is_generated_root_doc_dir(docs_root: &Utf8Path, path: &Utf8Path) -> bool {
     )
 }
 
-fn scan_doc(md_path: &Utf8Path) -> DocScan {
-    let Ok(text) = std::fs::read_to_string(md_path) else {
-        return DocScan {
-            title: title_from_filename(md_path),
-            published: true,
-        };
-    };
+pub fn is_published(md_path: &Utf8Path) -> Result<bool> {
+    Ok(scan_doc(md_path)?.published)
+}
+
+fn scan_doc(md_path: &Utf8Path) -> Result<DocScan> {
+    let text = std::fs::read_to_string(md_path)
+        .map_err(|error| anyhow::anyhow!("failed to read cabinet doc {md_path}: {error}"))?;
     let front_matter = markdown::parse_front_matter(&text);
     let published = !matches!(
         front_matter.get("publish").map(String::as_str),
         Some("false")
     );
-    let title = {
-        let title = markdown::extract_title(&text);
-        if title.is_empty() {
-            fallback_title_from_text(&text)
-        } else {
-            Some(title)
-        }
+    let title = match front_matter.get("title").filter(|title| !title.is_empty()) {
+        Some(title) => title.clone(),
+        None => markdown::extract_title(&text),
+    };
+    if title.is_empty() {
+        anyhow::bail!("{md_path}: cabinet doc needs a frontmatter `title` or a `# ` heading");
     }
-    .unwrap_or_else(|| title_from_filename(md_path));
-    DocScan { title, published }
-}
-
-fn fallback_title_from_text(text: &str) -> Option<String> {
-    let mut lines = text.lines();
-    if matches!(lines.next(), Some(line) if line.trim() == "---") {
-        for line in lines.by_ref() {
-            if line.trim() == "---" {
-                break;
-            }
-        }
-    }
-    for line in lines.take(3) {
-        let trimmed = line.trim();
-        if !trimmed.is_empty() {
-            return Some(trimmed.to_owned());
-        }
-    }
-    None
-}
-
-fn title_from_filename(path: &Utf8Path) -> String {
-    path.file_stem()
-        .map(|s| s.replace('-', " ").replace('_', " "))
-        .unwrap_or_default()
+    Ok(DocScan { title, published })
 }
 
 pub fn group_by_project(entries: &[DocEntry]) -> Vec<(&str, Vec<usize>)> {

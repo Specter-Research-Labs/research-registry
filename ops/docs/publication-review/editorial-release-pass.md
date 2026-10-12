@@ -227,7 +227,7 @@ The following inventory records each authored Markdown piece and report landing 
 | How much does shape explain? / SPECTER Labs — `site/dossiers/lenia-swarm/morphospace/index.html` | Landing copy inspected; underlying research not independently replicated |
 | Coherent Movers Meet an Unseen Obstacle / SPECTER Labs — `site/dossiers/lenia-swarm/morphospace/obstacle-response/index.html` | Landing copy inspected; underlying research not independently replicated |
 | Wonton Soup Dossier / SPECTER Labs — `site/dossiers/wonton-soup/index.html` | Landing copy inspected; underlying research not independently replicated |
-| Morphogenetic Signatures in Sorting Algorithms / SPECTER Labs — `site/dossiers/zang-levin-playground/index.html` | Landing copy inspected; underlying research not independently replicated |
+| Morphogenetic Signatures in Sorting Algorithms / SPECTER Labs — `site/dossiers/zhang-levin-playground/index.html` | Landing copy inspected; underlying research not independently replicated |
 | Moving a proof-search model to Tenstorrent — `site/research-notes/2026-03-27-moving-a-theorem-prover-onto-new-hardware/index.md` | published |
 | An unused tactic changed the proof result — `site/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/index.md` | published |
 | Can a brain-response model measure lifelikeness? — `site/research-notes/2026-05-08-a-brain-model-could-not-measure-lifelikeness/index.md` | published |

@@ -199,9 +199,7 @@ href="/assets/wonton-soup/dossier-evidence.json">Cohort selection and recorded e
 to solve after a tactic was blocked. Across {len(diversity_rows)} theorem–prover groups,
 the correlation between the number of observed structures and the fraction of successful
 tactic-removal reruns was {diversity_correlation:.2f}.</p>
-<div class="story-jumps"><a
-href="../../research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/">
-Follow the experiment →</a><a href="../../dashboards/wonton-soup/">
+<div class="story-jumps"><a href="../../dashboards/wonton-soup/">
 Inspect individual searches →</a></div>
 </section>
 '''

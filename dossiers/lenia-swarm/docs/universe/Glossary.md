@@ -1,3 +1,7 @@
+---
+summary: "Definitions for the Lenia Swarm parameter pipeline, creature anatomy and evaluation tiers."
+---
+
 # Glossary
 
 ## Params Pipeline

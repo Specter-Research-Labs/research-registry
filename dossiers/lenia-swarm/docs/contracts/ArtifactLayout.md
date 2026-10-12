@@ -1,3 +1,7 @@
+---
+summary: "The on-disk layout that local Lenia runs write and that the indexer reads: configs, results, summaries, frames and media."
+---
+
 # Artifact Layout Contract
 
 ## Purpose

@@ -1,3 +1,7 @@
+---
+summary: "Definitions of the Wonton Soup metric families, including graph edit distances, path and basin measures, and search efficiency."
+---
+
 # Analysis Metrics Reference
 
 Canonical semantics for metric families used in wonton-soup.

@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Material Memory in Physical Collectives"
 series = "D-004"
-summary = "Jolt simulations that compare local material-memory updates against memory-free and damping-only controls."
+summary = "Jolt simulations in which materials update a local memory, compared against memory-free and damping-only controls."
 status = "concept"
 
 [site]

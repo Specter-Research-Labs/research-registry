@@ -1,3 +1,7 @@
+---
+summary: "Map of the Wonton Soup documentation on perturbed proof search: concepts, contracts, decisions and operations."
+---
+
 # Wonton Soup Docs
 
 Documentation map for `dossiers/wonton-soup`.
