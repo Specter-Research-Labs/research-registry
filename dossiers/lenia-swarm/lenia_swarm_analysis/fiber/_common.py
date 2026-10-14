@@ -395,7 +395,7 @@ def synthetic_export_record(
     creature_uuid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{run_id}|{name}")).upper()
     owner_id = creature.get("ownerId")
     if not isinstance(owner_id, str):
-        owner_id = "codex-fiber-local"
+        owner_id = "fiber-local"
     return {
         "bundleKind": "qd24_paper_replay_bundle_v1",
         "creatureId": creature_uuid,
@@ -434,7 +434,7 @@ def write_synthetic_qd_input(
         creature = meta["creature"]
     creature["id"] = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{source_run_id}|{variant_slug}")).upper()
     creature["name"] = variant_slug
-    creature["ownerId"] = creature.get("ownerId", "codex-fiber-local")
+    creature["ownerId"] = creature.get("ownerId", "fiber-local")
     meta["reason"] = reason
     meta["bundleKind"] = "qd24_paper_replay_bundle_v1"
     meta["runId"] = source_run_id
