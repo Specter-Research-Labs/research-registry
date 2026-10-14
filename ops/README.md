@@ -193,5 +193,3 @@ The Storage Box is for off-VM backups only. `sync_storage_box.sh` mirrors:
 The site release directories and the releases tree are not backed up off the VM.
 
 The current sync entrypoint is `ops/spctr/dispatch/deploy/sync_storage_box.sh`.
-
-Publication review records: [editorial ledger](docs/publication-review/editorial-release-pass.md), [source handoff](docs/publication-review/report-reanalysis-handoff.md), and [specimen replay selection](docs/publication-review/coherent-body-pilot.md). These internal records are outside the website Cabinet.
