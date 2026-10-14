@@ -1,3 +1,7 @@
+---
+summary: "How distributed MCTS coordinates several agents over one AND/OR proof search tree, and how it relates to the centralized search."
+---
+
 # Distributed MCTS
 
 Active when `--mcts-mode distributed`. Centralized semantics remain in

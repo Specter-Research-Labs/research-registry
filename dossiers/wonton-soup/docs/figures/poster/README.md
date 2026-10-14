@@ -1,3 +1,7 @@
+---
+summary: "How the Wonton Soup poster is rendered deterministically from block-exact MCTS logs."
+---
+
 # Wonton Soup Poster
 Deterministic SVG/PNG poster renders anchored to the `hf00795` block-exact MCTS logs.
 Run commands from this directory; Berkeley Mono is preferred, with monospace fallback.

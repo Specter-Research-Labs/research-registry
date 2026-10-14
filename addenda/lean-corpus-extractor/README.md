@@ -1,4 +1,8 @@
-# lean-corpus-extractor
+---
+summary: "A Lean-native extractor that builds deterministic theorem corpora as JSONL for Wonton Soup, with its environment and output format."
+---
+
+# Lean Corpus Extractor
 Lean-native corpus extraction for building deterministic `items.jsonl` inputs for `dossiers/wonton-soup` corpus artifacts.
 
 Imports requested modules at runtime without depending on Mathlib at build time. Must run under a project environment providing the required `.olean` files (e.g., via `lake env ...`).

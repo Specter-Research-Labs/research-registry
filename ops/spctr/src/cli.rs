@@ -278,6 +278,11 @@ enum SiteCommand {
         #[arg(long, default_value = "/srv/www/releases")]
         release_root: String,
     },
+    #[command(about = "Build the site and write the exact public file set that publish uploads")]
+    Stage {
+        #[arg(long, help = "New or existing directory to receive the staged site")]
+        output: camino::Utf8PathBuf,
+    },
     Publish {
         #[arg(long, help = "Release identifier; defaults to git HEAD")]
         release_id: Option<String>,
@@ -987,6 +992,15 @@ fn dispatch_site(command: SiteCommand) -> anyhow::Result<()> {
         }
         SiteCommand::Portal { release_root } => {
             crate::site::portal::render_portal(std::path::Path::new(&release_root))
+        }
+        SiteCommand::Stage { output } => {
+            let repo_root = crate::manifest::repo_root()?;
+            let output = if output.is_absolute() {
+                output
+            } else {
+                repo_root.join(output)
+            };
+            crate::site::publish::stage_site(&repo_root, &output).map(|_| ())
         }
         SiteCommand::Publish { release_id } => {
             let repo_root = crate::manifest::repo_root()?;

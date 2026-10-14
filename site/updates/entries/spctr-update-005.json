@@ -12,11 +12,11 @@
   "series_number": 5,
   "sections": {
     "dossiers": [
-      "zang-levin-playground: added plan-file campaign runner support for deterministic runs.",
+      "zhang-levin-playground: added plan-file campaign runner support for deterministic runs.",
       "wonton-soup: added the 1000-plus corpus build pipeline and coverage for the ingest path.",
-      "zang-levin-playground: added random-baseline, dip-statistic, and K-analysis scripts; refreshed paper figures, references, and benchmark tooling.",
+      "zhang-levin-playground: added random-baseline, dip-statistic, and K-analysis scripts; refreshed paper figures, references, and benchmark tooling.",
       "lenia-swarm: changed Lenia Studio into shared comparison, metric, render-mode, thumbnail, and compendium/live-view surfaces.",
-      "zang-levin-playground: changed the follow-up paper wording and rigor."
+      "zhang-levin-playground: changed the follow-up paper wording and rigor."
     ],
     "addenda": [
       "specter-viz: changed line-chart and chart-type support.",

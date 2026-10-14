@@ -1,5 +1,5 @@
 {
-  description = "Zang-Levin Playground dev shell";
+  description = "Zhang-Levin Playground dev shell";
 
   outputs = { self }:
     let

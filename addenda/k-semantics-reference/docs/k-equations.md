@@ -1,3 +1,7 @@
+---
+summary: "The P and K search-efficiency equations from Chis-Ciure and Levin's Cognition All the Way Down 2.0, and how this addendum implements them as a small reference calculus with toy domains."
+---
+
 # K Equations From CATWD 2.0
 
 Explains the `P` and `K` equations used in this addendum, grounded in

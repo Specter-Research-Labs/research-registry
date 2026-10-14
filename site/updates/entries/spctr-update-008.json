@@ -24,7 +24,7 @@
       "wonton-soup: added abstract program and DeepSeek throughput work; fixed deterministic inference failure propagation and batch seeding.",
       "wonton-soup: simplified lake export and proof plumbing; refined dashboard and removed checked-in data; fixed postprocess dry-run and stale tree pruning.",
       "wonton-soup: resumed saved theorem selections in Lean corpus runs; hardened graph and controller data.",
-      "zang-levin-playground: revised paper and experiments."
+      "zhang-levin-playground: revised paper and experiments."
     ],
     "addenda": [
       "embryomaker-v2: added parity scaffold with C++ kernel port, Python comparison CLI, and legacy baseline snapshot tooling.",

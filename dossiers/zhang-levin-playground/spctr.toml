@@ -2,14 +2,14 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Morphogenetic Signatures in Sorting Algorithms"
 series = "D-001"
-summary = "Sorting cells under perturbation: how local moves, waiting rules, and obstacles shape the order that emerges."
+summary = "Cells sort themselves under perturbation, while local moves, waiting rules, and obstacles shape the order that emerges."
 status = "active-writing"
 
 [site]
 visible = true
 featured = true
 featured_order = 1
-hub_path = "site/dossiers/zang-levin-playground/index.html"
+hub_path = "site/dossiers/zhang-levin-playground/index.html"
 
 [release]
 stage = "candidate"
@@ -29,7 +29,7 @@ registry = "pypi"
 publish_mode = "subdir"
 
 [spctr]
-project = "zang-levin-playground"
+project = "zhang-levin-playground"
 
 [spctr.exec.check]
 description = "Fast public test lane"

@@ -190,6 +190,8 @@ fn minimal_templates(root: &Utf8Path) {
         "\
 <html>
 <body>
+<!-- GENERATED:RESEARCH_NOTES_PROVENANCE START -->
+<!-- GENERATED:RESEARCH_NOTES_PROVENANCE END -->
 </body>
 </html>
 ",
@@ -229,6 +231,8 @@ fn minimal_templates(root: &Utf8Path) {
 <title>
 <!-- GENERATED:DOSSIER_HUB_TITLE START -->
 <!-- GENERATED:DOSSIER_HUB_TITLE END --> | SPECTER Labs</title>
+<!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->
+<!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->
 </head>
 <body>
 <!-- GENERATED:DOSSIER_HUB_CONTENT START -->
@@ -385,6 +389,8 @@ title: Hello World
 release: published
 series: B-001
 summary: Graph-native article.
+cover: /assets/blog/hello-world/cover.png
+cover_alt: A placeholder cover.
 ---
 
 # Hello World
@@ -408,7 +414,9 @@ Graph-native article.
         "blog index should contain article title"
     );
     assert!(
-        sitemap.contains("SPCTR B-001") && sitemap.contains("Hello World"),
+        sitemap.contains("B-001")
+            && !sitemap.contains("SPCTR B-001")
+            && sitemap.contains("Hello World"),
         "sitemap registry should contain graph-backed article entry"
     );
 }
@@ -479,6 +487,8 @@ fn spctr_table_is_ignored_for_site_metadata() {
         "<html><body>\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
+         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
          </body></html>\n",
@@ -541,6 +551,8 @@ fn hub_header_is_injected_into_output() {
         "<html><body>\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
+         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
          </body></html>\n",
@@ -602,6 +614,8 @@ fn hub_footer_is_injected_into_output() {
         "<html><body>\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
+         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
+         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
          </body></html>\n",
@@ -694,7 +708,7 @@ fn visible_dossier_without_declared_hub_gets_generated_public_hub() {
         "dossier index should link to the generated hub"
     );
     assert!(
-        addenda.contains("Linked Dossier"),
+        addenda.contains("Linked dossier"),
         "addenda index should link back to the generated hub"
     );
     assert_eq!(
@@ -1317,13 +1331,9 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
     assert!(landing.contains("property=\"og:title\""));
     assert!(library.contains("Report library"));
     assert!(archive.contains("No reports are currently archived"));
-    assert!(sitemap.contains("Causal Emergence in Flow Lenia"));
-    assert!(sitemap.contains("Flow Lenia Causal Emergence Report Library"));
-    assert!(sitemap.contains("Flow Lenia Causal Emergence Archive"));
-    assert_eq!(
-        sitemap.matches("Causal Emergence in Flow Lenia").count(),
-        1,
-        "explicit sitemap routes should not duplicate discovered output pages"
+    assert!(
+        !sitemap.contains("Causal Emergence"),
+        "causal-emergence pages are withheld from the public sitemap"
     );
     write(
         root,
@@ -1429,7 +1439,7 @@ fn cabinet_index_requires_drawers_marker() {
 }
 
 #[test]
-fn cabinet_docs_from_graph_use_series_titles_and_doc_ids() {
+fn cabinet_docs_from_graph_use_project_titles_and_doc_ids() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
     minimal_design_tokens(root);
@@ -1500,6 +1510,6 @@ publish = true
 
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].doc_id, "D-001.001");
-    assert_eq!(entries[0].project_display, "Alpha Series");
+    assert_eq!(entries[0].project_display, "Alpha Project");
     assert_eq!(entries[0].series_id.as_deref(), Some("D-001"));
 }

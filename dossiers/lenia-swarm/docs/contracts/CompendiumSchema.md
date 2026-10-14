@@ -1,3 +1,7 @@
+---
+summary: "The SQLite schema of the Lenia compendium, its producer and consumers, and the exact schema-version rule for commands that read it."
+---
+
 # Compendium SQLite Schema
 
 ## Purpose

@@ -1,3 +1,7 @@
+---
+summary: "Selection goals and inclusion criteria for the history-mined tinygrad benchmark tasks."
+---
+
 # Task Selection
 
 Phase-0 rules for history-mined tinygrad tasks.

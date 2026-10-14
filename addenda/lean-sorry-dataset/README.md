@@ -1,4 +1,8 @@
-# lean-sorry-dataset
+---
+summary: "Ingests SorryDB-compatible snapshots of Lean sorry statements and writes a deterministic, normalized benchmark index with a reproducibility manifest."
+---
+
+# Lean Sorry Dataset
 
 Ingests Lean `sorry` data for benchmarking.
 

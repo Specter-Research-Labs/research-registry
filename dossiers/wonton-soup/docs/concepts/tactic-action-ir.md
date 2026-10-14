@@ -1,3 +1,7 @@
+---
+summary: "TacticActionIR, a typed summary of what each proof step did, sitting between raw tactic strings and downstream proof analysis."
+---
+
 # TacticActionIR
 
 `TacticActionIR` is a `wonton-soup` typed step-summary between raw tactic strings and downstream

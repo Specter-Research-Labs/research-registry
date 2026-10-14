@@ -97,7 +97,19 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
     let slug = discover::blog_slug_from_href(&post.href)?;
     let md = discover::blog_markdown_path(repo_root, slug);
     let site_root = repo_root.join("site");
-    let result = Command::new("pandoc")
+    let text = fs::read_to_string(&md).with_context(|| format!("failed to read {md}"))?;
+    let mut command = Command::new("pandoc");
+    if let Some(summary) = markdown::parse_front_matter(&text).get("summary") {
+        command
+            .arg("--metadata")
+            .arg(format!("description={summary}"));
+    }
+    if let Some(cover) = &post.cover {
+        command
+            .arg("--metadata")
+            .arg(format!("image={}", cover.src));
+    }
+    let result = command
         .arg(&md)
         .args([
             "--from=markdown+autolink_bare_uris",
@@ -123,7 +135,7 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
             "--metadata",
             "lang=en",
             "--metadata",
-            &format!("pagetitle={} | SPECTER Labs", post.title),
+            &format!("pagetitle={} | Specter Labs", post.title),
             "--metadata",
             &format!("slug={slug}"),
             "--metadata",
@@ -147,9 +159,10 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
 struct ResearchNoteRecord {
     slug: String,
     title: String,
+    summary: Option<String>,
     spctr_id: Option<String>,
     release_label: String,
-    provenance: Option<String>,
+    provenance: String,
     source_id: Option<String>,
     source_href: Option<String>,
 }
@@ -174,7 +187,7 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
     notes.par_iter().try_for_each(|note| -> Result<()> {
         let md_path = notes_root.join(&note.slug).join("index.md");
         let out_path = notes_root.join(&note.slug).join("index.html");
-        let pagetitle = format!("{} | SPECTER Labs", note.title);
+        let pagetitle = format!("{} | Specter Labs", note.title);
         let dest = if write {
             out_path.to_string()
         } else {
@@ -200,6 +213,11 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
             .arg("--metadata")
             .arg(format!("slug={}", note.slug));
 
+        if let Some(summary) = &note.summary {
+            command
+                .arg("--metadata")
+                .arg(format!("description={summary}"));
+        }
         if let Some(spctr_id) = &note.spctr_id {
             command
                 .arg("--metadata")
@@ -208,11 +226,14 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
         command
             .arg("--metadata")
             .arg(format!("release={}", note.release_label));
-        if let Some(provenance) = &note.provenance {
-            command
-                .arg("--metadata")
-                .arg(format!("provenance={provenance}"));
-        }
+        command
+            .arg("--metadata")
+            .arg(format!("provenance={}", note.provenance))
+            .arg("--metadata")
+            .arg(format!(
+                "provenance_label={}",
+                research_note_provenance_label(&note.provenance).0
+            ));
         if let Some(source_id) = &note.source_id {
             command
                 .arg("--metadata")
@@ -340,6 +361,10 @@ pub(crate) fn load_published_posts_from_graph(
                 release: graph::attr_str(node, "release")
                     .unwrap_or(discover::RELEASE_PUBLISHED)
                     .to_owned(),
+                cover: Some(discover::BlogCover {
+                    src: required_attr(node, "cover")?,
+                    alt: required_attr(node, "cover_alt")?,
+                }),
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -388,7 +413,7 @@ fn load_research_notes(
         }
         let registry = loaded_registry.as_ref().expect("registry loaded");
         let spctr_id = registry::series_for_slug(registry, "N", &slug)
-            .map(|series_id| format!("SPCTR {series_id}"))
+            .map(str::to_owned)
             .with_context(|| {
                 format!("research-notes/{slug}/index.md: missing registry N-series assignment")
             })?;
@@ -397,9 +422,14 @@ fn load_research_notes(
         let source_href = source_id
             .as_deref()
             .and_then(|source_id| research_note_source_href(notes_root, registry, source_id));
+        let summary = front_matter
+            .get("summary")
+            .filter(|summary| !summary.is_empty())
+            .cloned();
         notes.push(ResearchNoteRecord {
             slug,
             title,
+            summary,
             spctr_id: Some(spctr_id),
             release_label,
             provenance,
@@ -423,9 +453,9 @@ fn optional_front_matter(
 
 fn research_note_provenance(
     front_matter: &std::collections::HashMap<String, String>,
-) -> Result<Option<String>> {
+) -> Result<String> {
     let Some(provenance) = optional_front_matter(front_matter, "provenance") else {
-        return Ok(None);
+        bail!("missing research note provenance");
     };
     if !matches!(
         provenance.as_str(),
@@ -435,7 +465,45 @@ fn research_note_provenance(
             "unknown research note provenance '{provenance}' (expected human-written, assistant-drafted, generated-analysis, or human-reviewed)"
         );
     }
-    Ok(Some(provenance))
+    Ok(provenance)
+}
+
+/// Singular and plural reader-facing labels for a validated provenance value.
+fn research_note_provenance_label(provenance: &str) -> (&'static str, &'static str) {
+    match provenance {
+        "human-written" => ("Human-written lab note", "Human-written lab notes"),
+        "assistant-drafted" => ("Assistant-drafted lab note", "Assistant-drafted lab notes"),
+        "generated-analysis" => (
+            "Generated-analysis lab note",
+            "Generated-analysis lab notes",
+        ),
+        "human-reviewed" => ("Human-reviewed lab note", "Human-reviewed lab notes"),
+        other => unreachable!("provenance '{other}' was validated on load"),
+    }
+}
+
+/// Provenance line for the research-notes index. Every published note must
+/// share one provenance, since the index states it once for the whole list.
+pub(crate) fn render_research_notes_provenance(repo_root: &Utf8Path) -> Result<String> {
+    let notes_root = repo_root.join("site/research-notes");
+    if !notes_root.is_dir() {
+        return Ok(String::new());
+    }
+    let notes = load_research_notes(repo_root, &notes_root)?;
+    let provenances: std::collections::BTreeSet<&str> = notes
+        .iter()
+        .filter(|note| note.release_label == discover::RELEASE_PUBLISHED)
+        .map(|note| note.provenance.as_str())
+        .collect();
+    let provenance = match provenances.into_iter().collect::<Vec<_>>()[..] {
+        [] => return Ok(String::new()),
+        [provenance] => provenance,
+        _ => bail!("published research notes do not share one provenance; the index line cannot state it once"),
+    };
+    Ok(format!(
+        "<p class=\"note-provenance\">{}</p>",
+        research_note_provenance_label(provenance).1
+    ))
 }
 
 fn research_note_source_id(
@@ -473,7 +541,9 @@ fn research_note_source_href(
         "B" if is_published_md(&site_root.join("blog").join(slug).join("index.md")) => {
             Some(format!("../../blog/{slug}/"))
         }
-        "N" if notes_root.join(slug).join("index.md").is_file() => Some(format!("../{slug}/")),
+        "N" if is_published_md(&notes_root.join(slug).join("index.md")) => {
+            Some(format!("../{slug}/"))
+        }
         _ => None,
     }
 }

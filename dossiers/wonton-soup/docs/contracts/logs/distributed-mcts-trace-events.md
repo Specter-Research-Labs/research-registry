@@ -1,3 +1,7 @@
+---
+summary: "Field-level reference for the event lines in distributed MCTS trace logs."
+---
+
 # Distributed MCTS Trace Event Dictionary
 
 Field-level contract for distributed MCTS trace lines (`*_mcts_trace.jsonl`).

@@ -1,3 +1,7 @@
+---
+summary: "The vocabulary for describing the form and behavior of discovered Lenia patterns, illustrated with examples from the corpus."
+---
+
 # Morphology
 
 ## Purpose

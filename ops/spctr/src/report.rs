@@ -585,7 +585,9 @@ pub fn format_html(data: &ReportData) -> String {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Specter Labs -- Systems Status</title>
+<title>Systems Status | Specter Labs</title>
+<meta name="description" content="Machine, hardware, and research repository status for the Specter Labs site host.">
+<link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml">
 <style>
 body {{ margin: 0; min-height: 100vh; padding: 2rem; background: #0a0a0a; color: #d4d4d4; font-family: "IBM Plex Mono", "Menlo", monospace; display: flex; justify-content: center; }}
 pre {{ width: fit-content; max-width: 100%; margin: 0; font-size: 13px; line-height: 1.5; white-space: pre; overflow-x: auto; }}

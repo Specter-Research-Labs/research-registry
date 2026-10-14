@@ -1,3 +1,7 @@
+---
+summary: "What persistence, invariance, perturbation and regime mean for patterns under the Flow Lenia update, and what is measured today."
+---
+
 # Physics
 
 ## Purpose

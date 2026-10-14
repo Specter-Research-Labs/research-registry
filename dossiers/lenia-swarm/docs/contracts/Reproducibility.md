@@ -1,3 +1,7 @@
+---
+summary: "The inputs and captures required for a Lenia run, and for each indexed record, to be reproduced later."
+---
+
 # Reproducibility Contract
 
 ## Purpose

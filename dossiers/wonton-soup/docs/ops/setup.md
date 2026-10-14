@@ -1,3 +1,7 @@
+---
+summary: "Setting up the pinned Lean runtime and Python environment for Wonton Soup."
+---
+
 # Setup
 
 Setup for the Lean runtime used by `wonton-soup`.

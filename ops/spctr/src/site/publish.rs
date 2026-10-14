@@ -8,7 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::Serialize;
 use tempfile::Builder;
 
-use crate::site::{archive, blog, cabinet, pdf};
+use crate::site::{archive, blog, cabinet, finalize, pdf};
 use crate::{lake, registry_sync, report, site, tokens};
 
 const REMOTE_PORTAL_BIN: &str = "/tmp/spctr-portal";
@@ -58,11 +58,6 @@ impl PublishResult {
     }
 }
 
-struct SitePublishPlan {
-    excludes: Vec<String>,
-    remote_prunes: Vec<String>,
-}
-
 fn publish_artifact(label: &str, url: String, path: String) -> PublishArtifact {
     PublishArtifact {
         label: label.to_owned(),
@@ -87,8 +82,71 @@ fn emit_archived_publish_result(
     )
 }
 
+// Site paths that hold sources, local studies, or withdrawn surfaces. They stay
+// in the repository but never reach the public site or its sitemaps.
+pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
+    "assets/blog/wonton-soup-follow-up",
+    "assets/causal-emergence",
+    "atlas",
+    "dashboards/wonton-soup/dist",
+    "dashboards/wonton-soup/node_modules",
+    "dashboards/wonton-soup/src",
+    "dossiers/lenia-swarm/causal-emergence",
+    "review",
+    "style-study",
+    "templates",
+];
+
+// Build inputs, orphans, and assets of the unpublished causal-emergence
+// library that sit next to published pages. Only the built dashboard ships.
+pub(crate) const UNPUBLISHED_SITE_FILES: &[&str] = &[
+    "assets/causal-emergence.css",
+    "assets/wonton-soup/dossier-evidence.json",
+    "assets/writing-causal-response.svg",
+    "dashboards/wonton-soup/package-lock.json",
+    "dashboards/wonton-soup/package.json",
+    "dashboards/wonton-soup/tsconfig.json",
+    "dashboards/wonton-soup/validate_manifest.py",
+    "dashboards/wonton-soup/vite.config.ts",
+    "dossiers/wonton-soup/paper.pdf",
+];
+
 pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()> {
     let release_id = resolve_release_id(repo_root, release_id)?;
+    let stage_root = runtime_root(repo_root)?
+        .join("site-publish")
+        .join(&release_id);
+    let site_publish_plan = stage_site(repo_root, &stage_root)?;
+
+    publish_current_site(
+        repo_root,
+        &stage_root,
+        &release_id,
+        &site_publish_plan.excludes,
+        &site_publish_plan.remote_prunes,
+    )?;
+
+    let current_url = format!("{}/", site_public_url().trim_end_matches('/'));
+    let result = PublishResult {
+        release_id: release_id.clone(),
+        surface: "site".to_owned(),
+        public_url: current_url.clone(),
+        current_url: current_url.clone(),
+        artifacts: Vec::new(),
+        manifest_path: None,
+        site_path: Some(stage_root.to_string()),
+        provenance: None,
+    };
+
+    emit_publish_result(
+        &format!("Site publish: release={release_id} current={current_url}"),
+        &result,
+    )
+}
+
+/// Build the site and copy exactly the public file set into `stage_root`, where
+/// it is finalized and minified. Publishing uploads this directory unchanged.
+pub fn stage_site(repo_root: &Utf8Path, stage_root: &Utf8Path) -> Result<SitePublishPlan> {
     let site_root = repo_root.join("site");
 
     registry_sync::ensure_clean(repo_root)?;
@@ -101,50 +159,68 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
     pdf::build_all_pdfs_for_posts(repo_root, &blog_posts)?;
     cabinet::build_cabinet(repo_root, true)?;
     build_wonton_dashboard(repo_root)?;
-    minify_site_tree(&site_root)?;
     render_status_page(&site_root)?;
 
     let site_publish_plan = site_publish_plan(repo_root)?;
-    publish_current_site(
-        repo_root,
-        &site_root,
-        &release_id,
-        &site_publish_plan.excludes,
-        &site_publish_plan.remote_prunes,
-    )?;
-    let archive = archive_public_release(
-        "site",
-        "root",
-        &release_id,
-        &site_root,
-        true,
-        &site_publish_plan.excludes,
-    )?;
+    copy_public_site(&site_root, stage_root, &site_publish_plan.excludes)?;
+    let report = finalize::finalize_site(stage_root, &site_public_url())?;
+    minify_site_tree(stage_root)?;
 
-    let current_url = format!("{}/", site_public_url().trim_end_matches('/'));
-    let mut result = PublishResult::archived(&release_id, "site", &archive, current_url.clone());
-    result.site_path = Some("site".to_owned());
+    eprintln!(
+        "site stage: {} canonical pages in {stage_root}",
+        report.canonical_urls.len()
+    );
+    for page in &report.missing_description {
+        eprintln!("site stage: no meta description: {page}");
+    }
+    for page in &report.missing_image {
+        eprintln!("site stage: no og:image: {page}");
+    }
+    Ok(site_publish_plan)
+}
 
-    emit_archived_publish_result(
-        "Site publish",
-        &release_id,
-        &current_url,
-        &result.public_url,
-        &result,
-    )
+fn copy_public_site(
+    site_root: &Utf8Path,
+    stage_root: &Utf8Path,
+    excludes: &[String],
+) -> Result<()> {
+    fs::create_dir_all(stage_root).with_context(|| format!("failed to create {stage_root}"))?;
+    let mut rsync = Command::new("rsync");
+    rsync.arg("-a").arg("--delete").arg("--delete-excluded");
+    for exclude in excludes {
+        rsync.arg("--exclude").arg(exclude);
+    }
+    rsync
+        .arg(format!("{site_root}/"))
+        .arg(format!("{stage_root}/"));
+    run_command(&mut rsync, "failed to stage public site")
+}
+
+pub struct SitePublishPlan {
+    excludes: Vec<String>,
+    remote_prunes: Vec<String>,
 }
 
 fn site_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
     let mut excludes = crate::site::data::rsync_excludes(repo_root)?;
-    let research_notes = research_note_publish_plan(repo_root)?;
-    excludes.extend(research_notes.excludes);
-    excludes.push("dashboards/wonton-soup/node_modules/".to_owned());
-    excludes.extend(["review/".to_owned(), "style-study/".to_owned()]);
+    let mut remote_prunes = Vec::new();
+    for dir in UNPUBLISHED_SITE_DIRS {
+        excludes.push(format!("/{dir}/"));
+        remote_prunes.push(format!("{dir}/"));
+    }
+    for file in UNPUBLISHED_SITE_FILES {
+        excludes.push(format!("/{file}"));
+        remote_prunes.push((*file).to_owned());
+    }
+    excludes.push("*-template.html".to_owned());
+    excludes.push("*.md".to_owned());
+    for section in ["blog", "research-notes"] {
+        let drafts = draft_article_publish_plan(repo_root, section)?;
+        excludes.extend(drafts.excludes);
+        remote_prunes.extend(drafts.remote_prunes);
+    }
     excludes.sort();
     excludes.dedup();
-
-    let mut remote_prunes = research_notes.remote_prunes;
-    remote_prunes.push("dashboards/wonton-soup/node_modules/".to_owned());
     remote_prunes.sort();
     remote_prunes.dedup();
     Ok(SitePublishPlan {
@@ -153,9 +229,9 @@ fn site_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
     })
 }
 
-fn research_note_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
-    let notes_root = repo_root.join("site/research-notes");
-    if !notes_root.is_dir() {
+fn draft_article_publish_plan(repo_root: &Utf8Path, section: &str) -> Result<SitePublishPlan> {
+    let section_root = repo_root.join("site").join(section);
+    if !section_root.is_dir() {
         return Ok(SitePublishPlan {
             excludes: Vec::new(),
             remote_prunes: Vec::new(),
@@ -165,14 +241,14 @@ fn research_note_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
     let mut draft_slugs = Vec::new();
     let mut has_published = false;
     for entry in
-        fs::read_dir(&notes_root).with_context(|| format!("failed to read {notes_root}"))?
+        fs::read_dir(&section_root).with_context(|| format!("failed to read {section_root}"))?
     {
         let entry = entry?;
         if !entry.path().is_dir() {
             continue;
         }
         let slug = entry.file_name().to_string_lossy().to_string();
-        let md_path = notes_root.join(&slug).join("index.md");
+        let md_path = section_root.join(&slug).join("index.md");
         if !md_path.is_file() {
             continue;
         }
@@ -180,7 +256,7 @@ fn research_note_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
             fs::read_to_string(&md_path).with_context(|| format!("failed to read {md_path}"))?;
         let front_matter = crate::markdown::parse_front_matter(&text);
         match crate::site::discover::article_release(&front_matter)
-            .with_context(|| format!("research-notes/{slug}/index.md"))?
+            .with_context(|| format!("{section}/{slug}/index.md"))?
             .as_str()
         {
             crate::site::discover::RELEASE_PUBLISHED => has_published = true,
@@ -188,25 +264,23 @@ fn research_note_publish_plan(repo_root: &Utf8Path) -> Result<SitePublishPlan> {
         }
     }
 
-    if !has_published {
+    if section == "research-notes" && !has_published {
         return Ok(SitePublishPlan {
-            excludes: vec!["research-notes/".to_owned()],
+            excludes: vec!["/research-notes/".to_owned()],
             remote_prunes: vec!["research-notes/".to_owned()],
         });
     }
 
-    let mut excludes = vec!["research-notes/pandoc-template.html".to_owned()];
-    let mut remote_prunes = Vec::new();
-    for slug in draft_slugs {
-        let relative = format!("research-notes/{slug}/");
-        excludes.push(relative.clone());
-        remote_prunes.push(relative);
-    }
-    excludes.sort();
-    remote_prunes.sort();
+    draft_slugs.sort();
     Ok(SitePublishPlan {
-        excludes,
-        remote_prunes,
+        excludes: draft_slugs
+            .iter()
+            .map(|slug| format!("/{section}/{slug}/"))
+            .collect(),
+        remote_prunes: draft_slugs
+            .iter()
+            .map(|slug| format!("{section}/{slug}/"))
+            .collect(),
     })
 }
 
@@ -607,14 +681,11 @@ fn minify_site_tree(site_root: &Utf8Path) -> Result<()> {
             let entry = entry?;
             let path = entry.path();
             if entry.file_type()?.is_dir() {
-                if should_prune_dir(&path) {
-                    continue;
-                }
                 stack.push(path);
                 continue;
             }
-            if should_minify_css(&path) {
-                run_command(
+            match path.extension().and_then(OsStr::to_str) {
+                Some("css") => run_command(
                     Command::new("lightningcss")
                         .arg("--minify")
                         .arg("--targets")
@@ -623,9 +694,8 @@ fn minify_site_tree(site_root: &Utf8Path) -> Result<()> {
                         .arg("-o")
                         .arg(&path),
                     &format!("failed to minify CSS {}", path.display()),
-                )?;
-            } else if should_minify_html(&path) {
-                run_command(
+                )?,
+                Some("html") => run_command(
                     Command::new("minhtml")
                         .arg("--keep-closing-tags")
                         .arg("--keep-html-and-head-opening-tags")
@@ -635,33 +705,13 @@ fn minify_site_tree(site_root: &Utf8Path) -> Result<()> {
                         .arg(&path)
                         .arg(&path),
                     &format!("failed to minify HTML {}", path.display()),
-                )?;
+                )?,
+                _ => {}
             }
         }
     }
 
     Ok(())
-}
-
-fn should_prune_dir(path: &Path) -> bool {
-    // Report bytes are sealed by the library manifest and release receipts.
-    path.ends_with("causal-emergence/reports")
-        || matches!(
-            path.file_name().and_then(OsStr::to_str),
-            Some("atlas" | "templates" | "node_modules")
-        )
-}
-
-fn should_minify_css(path: &Path) -> bool {
-    path.extension().and_then(OsStr::to_str) == Some("css")
-}
-
-fn should_minify_html(path: &Path) -> bool {
-    path.extension().and_then(OsStr::to_str) == Some("html")
-        && !path
-            .file_name()
-            .and_then(OsStr::to_str)
-            .is_some_and(|name| name.ends_with("-template.html"))
 }
 
 fn publish_current_site(
@@ -1072,11 +1122,10 @@ pub(crate) fn shell_quote(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        join_remote_path, namespace_parts, research_note_publish_plan, rsync_source_arg,
-        should_minify_css, should_minify_html, should_prune_dir, site_publish_plan,
+        draft_article_publish_plan, join_remote_path, namespace_parts, rsync_source_arg,
+        site_publish_plan,
     };
     use camino::Utf8Path;
-    use std::path::Path;
     use tempfile::tempdir;
 
     fn write(root: &Utf8Path, rel: &str, content: &str) {
@@ -1086,43 +1135,38 @@ mod tests {
     }
 
     #[test]
-    fn minify_filters_skip_templates_and_atlas_inputs() {
-        assert!(should_prune_dir(Path::new("site/templates")));
-        assert!(should_prune_dir(Path::new(
-            "site/dossiers/lenia-swarm/causal-emergence/reports"
-        )));
-        assert!(!should_prune_dir(Path::new(
-            "site/dossiers/lenia-swarm/morphospace"
-        )));
-        assert!(should_prune_dir(Path::new("site/atlas")));
-        assert!(should_prune_dir(Path::new(
-            "site/dashboards/wonton-soup/node_modules"
-        )));
-        assert!(should_minify_css(Path::new("site/style.css")));
-        assert!(should_minify_html(Path::new("site/index.html")));
-        assert!(!should_minify_html(Path::new(
-            "site/cabinet/index-template.html"
-        )));
-    }
-
-    #[test]
-    fn site_publish_excludes_dashboard_dependencies() {
+    fn site_publish_excludes_unpublished_surfaces_and_templates() {
         let root = tempdir().unwrap();
         let root = Utf8Path::from_path(root.path()).unwrap();
         let plan = site_publish_plan(root).unwrap();
-        let build_only = "dashboards/wonton-soup/node_modules/".to_owned();
-        assert!(plan.excludes.contains(&build_only));
-        assert!(plan.remote_prunes.contains(&build_only));
-    }
-
-    #[test]
-    fn site_publish_excludes_local_design_studies() {
-        let root = tempdir().unwrap();
-        let root = Utf8Path::from_path(root.path()).unwrap();
-        let plan = site_publish_plan(root).unwrap();
-        for surface in ["review/", "style-study/"] {
-            assert!(plan.excludes.iter().any(|path| path == surface));
+        for path in [
+            "/atlas/",
+            "/assets/blog/wonton-soup-follow-up/",
+            "/assets/causal-emergence/",
+            "/assets/causal-emergence.css",
+            "/assets/writing-causal-response.svg",
+            "/dashboards/wonton-soup/dist/",
+            "/dashboards/wonton-soup/node_modules/",
+            "/dashboards/wonton-soup/src/",
+            "/dashboards/wonton-soup/package.json",
+            "/dashboards/wonton-soup/tsconfig.json",
+            "/dashboards/wonton-soup/validate_manifest.py",
+            "/dashboards/wonton-soup/vite.config.ts",
+            "/dossiers/wonton-soup/paper.pdf",
+            "/dossiers/lenia-swarm/causal-emergence/",
+            "/review/",
+            "/style-study/",
+            "/templates/",
+            "*-template.html",
+        ] {
+            assert!(
+                plan.excludes.iter().any(|exclude| exclude == path),
+                "{path}"
+            );
         }
+        assert!(plan
+            .remote_prunes
+            .contains(&"dossiers/lenia-swarm/causal-emergence/".to_owned()));
     }
 
     #[test]
@@ -1167,49 +1211,47 @@ release: "draft"
 "#,
         );
 
-        let plan = research_note_publish_plan(root).unwrap();
-        assert_eq!(plan.excludes, vec!["research-notes/".to_owned()]);
+        let plan = draft_article_publish_plan(root, "research-notes").unwrap();
+        assert_eq!(plan.excludes, vec!["/research-notes/".to_owned()]);
         assert_eq!(plan.remote_prunes, vec!["research-notes/".to_owned()]);
     }
 
     #[test]
-    fn mixed_research_notes_exclude_only_drafts_and_template() {
+    fn mixed_articles_exclude_only_drafts() {
         let root = tempdir().unwrap();
         let root = Utf8Path::from_path(root.path()).unwrap();
-        write(
-            root,
-            "site/research-notes/draft-note/index.md",
-            r#"---
+        for section in ["blog", "research-notes"] {
+            write(
+                root,
+                &format!("site/{section}/draft-note/index.md"),
+                r#"---
 title: "Draft Note"
 release: "draft"
 ---
 
 # Draft Note
 "#,
-        );
-        write(
-            root,
-            "site/research-notes/public-note/index.md",
-            r#"---
+            );
+            write(
+                root,
+                &format!("site/{section}/public-note/index.md"),
+                r#"---
 title: "Public Note"
 release: "published"
 ---
 
 # Public Note
 "#,
-        );
+            );
+        }
 
-        let plan = research_note_publish_plan(root).unwrap();
-        assert_eq!(
-            plan.excludes,
-            vec![
-                "research-notes/draft-note/".to_owned(),
-                "research-notes/pandoc-template.html".to_owned(),
-            ]
-        );
-        assert_eq!(
-            plan.remote_prunes,
-            vec!["research-notes/draft-note/".to_owned()]
-        );
+        let plan = site_publish_plan(root).unwrap();
+        for section in ["blog", "research-notes"] {
+            assert!(plan.excludes.contains(&format!("/{section}/draft-note/")));
+            assert!(!plan.excludes.contains(&format!("/{section}/public-note/")));
+            assert!(plan
+                .remote_prunes
+                .contains(&format!("{section}/draft-note/")));
+        }
     }
 }

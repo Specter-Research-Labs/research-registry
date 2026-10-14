@@ -9,6 +9,8 @@ use std::fs;
 const ENTRY_SOURCE_DIR: &str = "site/updates/entries";
 const INDEX_OUTPUT_PATH: &str = "site/updates/index.html";
 const FEED_OUTPUT_PATH: &str = "site/updates/index.json";
+const INDEX_DESCRIPTION: &str =
+    "Approved rollups and notebook-style windows promoted into stable public artifacts.";
 const SECTION_ORDER: [&str; 4] = ["dossiers", "addenda", "ops", "lab"];
 
 fn section_title(key: &str) -> &'static str {
@@ -473,7 +475,7 @@ fn render_entry_section(entry: &UpdateEntry, key: &str) -> Markup {
     }
 }
 
-fn page_shell(title: &str, root_prefix: &str, body: Markup) -> String {
+fn page_shell(title: &str, description: &str, root_prefix: &str, body: Markup) -> String {
     let mut rendered = html! {
         (DOCTYPE)
         html lang="en" {
@@ -481,7 +483,8 @@ fn page_shell(title: &str, root_prefix: &str, body: Markup) -> String {
                 meta charset="UTF-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
                 meta name="color-scheme" content="light";
-                title { (title) " | SPECTER Labs" }
+                title { (title) " | Specter Labs" }
+                meta name="description" content=(description);
                 link rel="icon" href=(format!("{root_prefix}/assets/logo-black.svg")) type="image/svg+xml";
                 link rel="stylesheet" href=(format!("{root_prefix}/style.css"));
                 link rel="stylesheet" href=(format!("{root_prefix}/assets/editorial.css?v=20260909-3"));
@@ -491,7 +494,7 @@ fn page_shell(title: &str, root_prefix: &str, body: Markup) -> String {
                 div class="site-shell" {
                     header class="site-topnav" {
                         a class="site-brand" href=(format!("{root_prefix}/")) {
-                            img src=(format!("{root_prefix}/assets/logo-black.svg")) alt="SPECTER Labs logo" class="logo";
+                            img src=(format!("{root_prefix}/assets/logo-black.svg")) alt="Specter Labs logo" class="logo";
                             span class="site-brand-name" { "SPECTER LABS" }
                         }
                         nav class="site-topnav-links" aria-label="Site navigation" {
@@ -521,9 +524,7 @@ fn render_index_page(entries: &[UpdateEntry]) -> String {
     let body = html! {
         section class="section-block" id="overview" {
             div class="site-page-title" { "Update Archive" }
-            p class="section-lead" {
-                "Approved rollups and notebook-style windows promoted into stable public artifacts."
-            }
+            p class="section-lead" { (INDEX_DESCRIPTION) }
             p class="section-lead" {
                 "Internal dispatch ledger traffic stays separate; only curated entries land here."
             }
@@ -543,16 +544,18 @@ fn render_index_page(entries: &[UpdateEntry]) -> String {
             }
         }
     };
-    page_shell("Updates", "..", body)
+    page_shell("Updates", INDEX_DESCRIPTION, "..", body)
 }
 
 fn render_entry_page(entry: &UpdateEntry) -> String {
+    let description = format!(
+        "Canonical archive entry for {} to {}.",
+        entry.window.start, entry.window.end
+    );
     let body = html! {
         section class="section-block" id="overview" {
             div class="site-page-title" { (&entry.label) }
-            p class="section-lead" {
-                "Canonical archive entry for " (&entry.window.start) " to " (&entry.window.end) "."
-            }
+            p class="section-lead" { (description) }
             (render_meta_list(entry))
         }
         @for key in SECTION_ORDER {
@@ -561,7 +564,7 @@ fn render_entry_page(entry: &UpdateEntry) -> String {
             }
         }
     };
-    page_shell(&entry.label, "../..", body)
+    page_shell(&entry.label, &description, "../..", body)
 }
 
 fn feed_item(entry: &UpdateEntry) -> Value {

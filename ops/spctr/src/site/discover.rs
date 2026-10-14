@@ -12,6 +12,12 @@ pub struct BlogPostRecord {
     pub summary: String,
     pub series: Option<String>,
     pub release: String,
+    pub cover: Option<BlogCover>,
+}
+
+pub struct BlogCover {
+    pub src: String,
+    pub alt: String,
 }
 
 pub struct SitePageRecord {
@@ -19,7 +25,6 @@ pub struct SitePageRecord {
     pub href: String,
 }
 
-const TITLE_SUFFIX: &str = " | SPECTER Labs";
 pub const RELEASE_PUBLISHED: &str = "published";
 pub const RELEASE_DRAFT: &str = "draft";
 
@@ -99,12 +104,21 @@ fn discover_blog_posts(repo_root: &Utf8Path, include_drafts: bool) -> Result<Vec
         };
         let series = fm.get("series").cloned();
         let summary = markdown::extract_summary(&text, &fm);
+        let cover = match (fm.get("cover"), fm.get("cover_alt")) {
+            (Some(src), Some(alt)) if !src.is_empty() && !alt.is_empty() => Some(BlogCover {
+                src: src.clone(),
+                alt: alt.clone(),
+            }),
+            (None, None) if release != RELEASE_PUBLISHED => None,
+            _ => bail!("blog/{slug}/index.md: published posts need both `cover` and `cover_alt`"),
+        };
         posts.push(BlogPostRecord {
             title,
             href: format!("blog/{slug}/"),
             summary,
             series,
             release,
+            cover,
         });
     }
     Ok(posts)
@@ -212,7 +226,7 @@ fn extract_html_title(path: &Path, fallback: &str) -> String {
 }
 
 fn strip_title_suffix(title: &str) -> String {
-    if let Some(stripped) = title.strip_suffix(TITLE_SUFFIX) {
+    if let Some(stripped) = title.strip_suffix(crate::site::finalize::TITLE_SUFFIX) {
         stripped.trim().to_owned()
     } else {
         title.trim().to_owned()
@@ -258,13 +272,7 @@ pub struct SitemapGroup {
     pub children: Vec<SitePageRecord>,
 }
 
-const SITEMAP_SKIP: &[&str] = &[
-    "templates",
-    "sitemap",
-    "research-notes",
-    "review",
-    "style-study",
-];
+const SITEMAP_SKIP: &[&str] = &["sitemap", "research-notes"];
 const SITEMAP_SHALLOW: &[&str] = &["cabinet"];
 
 pub fn discover_sitemap_pages(repo_root: &Utf8Path) -> Vec<SitemapGroup> {
@@ -302,7 +310,7 @@ pub fn discover_sitemap_pages(repo_root: &Utf8Path) -> Vec<SitemapGroup> {
 
     for dir_entry in top_dirs {
         let section = dir_entry.file_name().to_string_lossy().to_string();
-        if SITEMAP_SKIP.contains(&section.as_str()) {
+        if SITEMAP_SKIP.contains(&section.as_str()) || is_unpublished_dir(&section) {
             continue;
         }
 
@@ -351,6 +359,10 @@ pub fn discover_sitemap_pages(repo_root: &Utf8Path) -> Vec<SitemapGroup> {
     groups.into_values().collect()
 }
 
+fn is_unpublished_dir(relative: &str) -> bool {
+    crate::site::publish::UNPUBLISHED_SITE_DIRS.contains(&relative)
+}
+
 fn collect_index_html_recursive_skip_root(
     dir: &Path,
     site_root: &Path,
@@ -367,6 +379,14 @@ fn collect_index_html_recursive_skip_root(
     for entry in entries {
         let path = entry.path();
         if path.is_dir() {
+            let relative = path
+                .strip_prefix(site_root)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
+            if is_unpublished_dir(&relative) {
+                continue;
+            }
             collect_index_html_recursive_skip_root(&path, site_root, root_index, out);
         } else if path.file_name().and_then(|n| n.to_str()) == Some("index.html")
             && path != root_index

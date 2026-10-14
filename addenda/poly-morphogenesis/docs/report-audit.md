@@ -1,3 +1,7 @@
+---
+publish: false
+---
+
 # Report evidence audit
 
 September 2026. Code and draft inspection; no simulation rerun.

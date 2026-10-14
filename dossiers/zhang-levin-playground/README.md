@@ -1,4 +1,10 @@
-Audits and extends the Zang & Levin sorting-cell model from [arXiv:2401.05375](https://arxiv.org/abs/2401.05375). The current paper-facing path is organized around explicit semantics, operator classes, and reproducible archives under `paper/results/`.
+---
+summary: "Audits and extends the Zhang and Levin sorting-cell model, with the copied original sources, the paper-facing scripts and the current findings."
+---
+
+# Zhang-Levin Playground
+
+Audits and extends the Zhang & Levin sorting-cell model from [arXiv:2401.05375](https://arxiv.org/abs/2401.05375). The current paper-facing path is organized around explicit semantics, operator classes, and reproducible archives under `paper/results/`.
 
 ## Original Surfaces
 
@@ -79,7 +85,7 @@ If a result does not state these semantics explicitly, treat it as underspecifie
 
 ## Key Commands
 
-From `dossiers/zang-levin-playground/`:
+From `dossiers/zhang-levin-playground/`:
 
 ### Figure 1
 ```bash
@@ -200,12 +206,12 @@ analysis/persistent_homology.py
 
 ## Data
 
-The original experimental data from Zang & Levin is not tracked in this repository. It can be regenerated from their published codebase at [github.com/gzangs/sorting-network](https://github.com/gzangs/sorting-network) (companion to [arXiv:2401.05375](https://arxiv.org/abs/2401.05375)). To populate a local `data/` directory:
+The original experimental data from Zhang & Levin is not tracked in this repository. It can be regenerated from their published codebase at [github.com/Zhangtaining/cell_research](https://github.com/Zhangtaining/cell_research) (companion to [arXiv:2401.05375](https://arxiv.org/abs/2401.05375)). To populate a local `data/` directory:
 
 ```bash
 # Clone the original repo and run their generation scripts,
 # or symlink an existing copy:
-ln -s /path/to/your/zang-levin-data data
+ln -s /path/to/your/zhang-levin-data data
 ```
 
 The generation scripts in this dossier (`generate_baseline_data.py`, `generate_frozen_data.py`, etc.) can also reproduce the data given sufficient compute.

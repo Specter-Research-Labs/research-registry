@@ -1,3 +1,7 @@
+---
+summary: "The question, row format and public and private artifacts of a benchmark of small history-mined tinygrad tasks."
+---
+
 # Benchmark Card
 
 ## Identity

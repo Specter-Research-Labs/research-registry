@@ -1,3 +1,7 @@
+---
+summary: "Typst templates for Specter field manuals and papers that share the site's fonts, colors, rules and scale."
+---
+
 # Typst Field Manual
 
 Typst files for Specter field manuals and papers.

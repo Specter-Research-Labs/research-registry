@@ -1,3 +1,7 @@
+---
+summary: "Which morphology measurements compendium indexing computes and stores for each creature, and which trait policies remain planned."
+---
+
 # Morphometrics and Trait Policy
 
 ## Purpose

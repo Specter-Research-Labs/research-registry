@@ -267,6 +267,8 @@ local_source = "artifacts/site-data"
 title: Hello World
 release: published
 series: B-001
+cover: /assets/blog/hello-world/cover.png
+cover_alt: A placeholder cover.
 ---
 
 # Hello World
@@ -339,10 +341,10 @@ Graph-native article.
         .nodes
         .iter()
         .any(|node| node.id == "site_output:site/status/index.html"));
-    assert!(graph
+    assert!(!graph
         .nodes
         .iter()
-        .any(|node| node.id == "archive_surface:site:root" && node.kind == "archive_surface"));
+        .any(|node| node.id == "archive_surface:site:root"));
     assert!(graph
         .nodes
         .iter()
@@ -384,17 +386,6 @@ Graph-native article.
     let exec_card = node_attrs(&graph, "evidence_card:exec:dossier:alpha:check");
     assert_eq!(exec_card.get("scope").unwrap(), "exec");
     assert_eq!(exec_card.get("status").unwrap(), "ok");
-
-    let archive_surface = node_attrs(&graph, "archive_surface:site:root");
-    assert_eq!(archive_surface.get("namespace").unwrap(), "site");
-    assert_eq!(
-        archive_surface.get("current_url").unwrap(),
-        "https://specterlab.org/"
-    );
-    assert_eq!(
-        archive_surface.get("metadata_path").unwrap(),
-        ".spctr/portal-surfaces.json"
-    );
 
     assert!(graph.edges.iter().any(|edge| {
         edge.src == "project:dossier:alpha"
@@ -576,6 +567,8 @@ publish = true
         r#"---
 title: Hello World
 release: published
+cover: /assets/blog/hello-world/cover.png
+cover_alt: A placeholder cover.
 ---
 
 # Hello World
@@ -659,4 +652,104 @@ publish = true
         .nodes
         .iter()
         .any(|node| node.id == "doc:dossier:alpha:README"));
+}
+
+#[test]
+fn hidden_project_publishes_no_cabinet_docs() {
+    let temp = TempDir::new().unwrap();
+    let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
+    minimal_design_tokens(root);
+
+    write(
+        &root.join("spctr-registry.json"),
+        r#"{
+  "version": 1,
+  "counters": { "D": 2, "A": 2, "B": 1 },
+  "series": {
+    "D-001": { "slug": "alpha", "title": "Alpha" },
+    "A-001": { "slug": "hidden", "title": "Hidden" }
+  },
+  "docs": {
+    "D-001": { "next_counter": 2, "entries": { "README": "D-001.001" } },
+    "A-001": { "next_counter": 2, "entries": { "README": "A-001.001" } }
+  }
+}
+"#,
+    );
+    write(
+        &root.join("dossiers/alpha/spctr.toml"),
+        r#"version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Alpha"
+summary = "Alpha summary."
+status = "active"
+series = "D-001"
+
+[site]
+visible = true
+featured = false
+
+[release]
+stage = "promoted"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = true
+"#,
+    );
+    write(&root.join("dossiers/alpha/docs/README.md"), "# Alpha\n");
+    write(
+        &root.join("addenda/hidden/spctr.toml"),
+        r#"version = 1
+license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
+title = "Hidden"
+summary = "Hidden summary."
+status = "concept"
+series = "A-001"
+
+[site]
+visible = false
+
+[release]
+stage = "wip"
+
+[[release.surfaces]]
+name = "source"
+kind = "source_bundle"
+publish = false
+"#,
+    );
+    write(&root.join("addenda/hidden/docs/README.md"), "# Hidden\n");
+
+    let graph = build_with_options(
+        root,
+        None,
+        GraphBuildOptions {
+            include_docs: true,
+            include_evidence: false,
+            include_updates: false,
+        },
+    )
+    .unwrap();
+
+    let hidden = node_attrs(&graph, "project:addendum:hidden");
+    assert_eq!(hidden["site_publish_docs"], serde_json::json!(true));
+    assert_eq!(hidden["publishes_cabinet_docs"], serde_json::json!(false));
+    assert_eq!(hidden["cabinet_href"], serde_json::Value::Null);
+    assert_eq!(
+        node_attrs(&graph, "doc:addendum:hidden:README")["published"],
+        serde_json::json!(false)
+    );
+    assert!(!graph
+        .nodes
+        .iter()
+        .any(|node| node.id.contains("site/cabinet/hidden/")));
+
+    let published = spctr::site::cabinet::docs::find_published_docs_from_graph(root, &graph)
+        .unwrap()
+        .into_iter()
+        .map(|entry| entry.project_slug)
+        .collect::<Vec<_>>();
+    assert_eq!(published, vec!["alpha".to_owned()]);
 }

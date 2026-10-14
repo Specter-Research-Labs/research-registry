@@ -1,3 +1,7 @@
+---
+summary: "The minimum conceptual frame for reading the Lenia Swarm documentation: physics, morphology, ecology and the core objects they describe."
+---
+
 # Primer
 
 ## Purpose

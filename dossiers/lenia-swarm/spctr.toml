@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Lenia Swarm"
 series = "D-003"
-summary = "Artificial-life experiments on how bodies form, persist, and respond to change, alongside a map of their possible shapes."
+summary = "Artificial-life experiments in which Lenia bodies form, persist, and respond to change, with a map of the shapes they can take."
 status = "active"
 
 [site]

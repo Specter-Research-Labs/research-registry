@@ -1,3 +1,7 @@
+---
+summary: "How the Wonton Soup paper figures and PDF are rebuilt from the shared lake."
+---
+
 # Paper
 
 Workflow for rebuilding the Wonton paper figures and PDF.

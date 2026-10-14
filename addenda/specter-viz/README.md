@@ -1,4 +1,8 @@
-# specter-viz
+---
+summary: "WASM-first egui components for research visualization dashboards, with setup and usage."
+---
+
+# Specter Viz
 
 WASM-first `egui` dashboard components for research visualization.
 

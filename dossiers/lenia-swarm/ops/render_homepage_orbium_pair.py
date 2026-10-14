@@ -22,7 +22,7 @@ from render_homepage_creature import KNOTS, PALETTE, ROOT
 
 
 def render_pair(native: Path, recovered: Path) -> None:
-    output = ROOT / "site/home-prototype/assets"
+    output = ROOT / "site/assets/home"
     output.mkdir(parents=True, exist_ok=True)
     manifest = {
         "title": "Native and recovered Orbium, original experiment recordings",

@@ -111,10 +111,7 @@ There are two public publishing surfaces:
 - canonical current site at `specterlab.org`
 - immutable archives at `releases.specterlab.org`
 
-The publish path preserves that split:
-
-- current/canonical surface stays on the main site or active origin
-- immutable archived bundle is copied into the releases host
+The site itself is not archived on the releases host. `spctr site publish` uploads each build to `/srv/www/site/releases/<git-sha>` and switches `/srv/www/site/current`; the older release directories there are the rollback set and are not web-reachable. The project surfaces below publish a current surface and also copy an immutable bundle into the releases host.
 
 The site publish entrypoint is `spctr site publish`.
 Internal stylesheet ownership, spacing conventions, and report regeneration are documented in [Report layout maintenance](docs/report-layout.md). These maintainer notes stay under `ops/docs/`, outside the site and Cabinet sources.
@@ -130,12 +127,13 @@ The release host is intentionally archive-first:
 
 - the main site is the canonical "current" surface
 - `releases.specterlab.org` stores immutable published bundles
-- `spctr site publish` refreshes the release portal after each archive update
+- every archive publish refreshes the release portal
+
+Caddy returns 404 for the withdrawn `site/` and `lenia-swarm/causal-emergence/` namespaces on the releases host.
 
 Current release host namespaces:
 
 - `records/`
-- `site/`
 - `typst-field-manual/`
 - `lenia-swarm/compendium/`
 - `wonton-soup/site-dashboard/`
@@ -173,7 +171,6 @@ main checkout when the project contract defines a canonical local surface. Use
   - builds and deploys the static site on site-relevant pushes to `main`
   - publishes `/srv/www/site/releases/<git-sha>`
   - switches `/srv/www/site/current`
-  - archives the exact built snapshot under the releases host
   - purges Cloudflare cache when credentials are present
 
 Manual and chat-driven publishes use the same repo-owned CLI entrypoints as CI so there is one deploy path per surface.
@@ -188,11 +185,12 @@ Hot state stays on the VM local SSD:
 - current site
 - current releases tree
 
-The Storage Box is for off-VM backups only:
+The Storage Box is for off-VM backups only. `sync_storage_box.sh` mirrors:
 
-- Postgres dumps
-- release snapshots
-- selected site snapshots
+- `/srv/backups/`, which holds the Postgres dumps and any other backup placed there
+- the lake data under `/srv/specterlab/data/`
+
+The site release directories and the releases tree are not backed up off the VM.
 
 The current sync entrypoint is `ops/spctr/dispatch/deploy/sync_storage_box.sh`.
 

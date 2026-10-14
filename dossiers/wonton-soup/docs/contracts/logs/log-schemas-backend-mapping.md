@@ -1,3 +1,7 @@
+---
+summary: "Which search, proof and trace graph artifacts each proof backend can produce."
+---
+
 # Log Schemas: Backend Artifact Mapping
 
 Canonical mapping from backend capabilities to artifact families.

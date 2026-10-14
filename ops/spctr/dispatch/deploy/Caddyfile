@@ -8,9 +8,20 @@ specterlab.org, www.specterlab.org {
         encode zstd gzip
         file_server
     }
+    @index_html path_regexp index_html ^(.*/)index\.html$
+    redir @index_html {re.index_html.1} 301
+    @zang_levin path_regexp zang_levin ^/(dossiers|cabinet)/zang-levin-playground(/.*)?$
+    redir @zang_levin /{re.zang_levin.1}/zhang-levin-playground{re.zang_levin.2} 301
     root * /srv/www/site/current
     encode zstd gzip
     file_server
+    handle_errors 404 {
+        root * /srv/www/site/current
+        rewrite * /404.html
+        file_server {
+            status 404
+        }
+    }
 }
 
 dispatch.specterlab.org {
@@ -21,6 +32,8 @@ dispatch.specterlab.org {
 releases.specterlab.org {
     root * /srv/www/releases
     encode zstd gzip
+    @withdrawn path /site /site/* /lenia-swarm/causal-emergence /lenia-swarm/causal-emergence/*
+    respond @withdrawn 404
     file_server browse
 }
 

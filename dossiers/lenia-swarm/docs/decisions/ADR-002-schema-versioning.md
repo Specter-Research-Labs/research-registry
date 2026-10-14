@@ -1,3 +1,7 @@
+---
+summary: "Decision record: commands that read structured compendium data require an exact schema version, with explicit migrations instead of silent compatibility."
+---
+
 # ADR-002: Exact Compendium Schema Version Enforcement
 
 ## Status

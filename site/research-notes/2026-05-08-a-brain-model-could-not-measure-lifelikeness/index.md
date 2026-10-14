@@ -1,5 +1,6 @@
 ---
 title: "Can a brain-response model measure lifelikeness?"
+summary: "Why a failed biological-motion control made us abandon an appealing interpretation before running the full comparison."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "A-014"

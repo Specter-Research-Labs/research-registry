@@ -1,3 +1,7 @@
+---
+summary: "How Lenia Studio reads compendium data and which schema assumptions it depends on."
+---
+
 # Studio Compendium Internals
 
 ## Scope

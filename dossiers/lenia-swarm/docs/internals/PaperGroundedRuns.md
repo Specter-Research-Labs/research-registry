@@ -1,3 +1,7 @@
+---
+summary: "Why each paper reproduction is its own run family, and the entry points, search spaces and success measures for each one."
+---
+
 # Paper-Grounded Runs
 
 Paper reproductions are separate run families, not ad hoc sweeps.

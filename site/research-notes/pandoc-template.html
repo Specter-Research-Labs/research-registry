@@ -5,13 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="color-scheme" content="light" />
         <title>$pagetitle$</title>
+        $if(description)$<meta name="description" content="$description$" />$endif$
         <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
         <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="stylesheet" href="../../style.css" />
         <link rel="stylesheet" href="../../blog/blog.css" />
         <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
-<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">$if(publication)$<link rel="stylesheet" href="/assets/publication-formats.css">$endif$</head>
+<link rel="stylesheet" href="/assets/publication-layout.css?v=20260927-notes">$if(publication)$<link rel="stylesheet" href="/assets/publication-formats.css">$endif$</head>
     <body class="blog-page"$if(publication)$ data-publication="note"$endif$>
         <div class="blog-shell">
             <div class="doc-paper">
@@ -20,7 +21,7 @@
                         <a class="site-brand" href="../../">
                             <img
                                 src="../../assets/logo-black.svg"
-                                alt="SPECTER Labs logo"
+                                alt="Specter Labs logo"
                                 class="logo"
                             />
                             <span class="site-brand-name">SPECTER LABS</span>
@@ -48,7 +49,7 @@
                         $endif$
                     </aside>
 
-                    <article class="doc-content">$if(publication)$<div class="publication-journal-masthead">$if(publication_pdf)$<a href="$publication_pdf$" download>Download PDF ↓</a>$endif$</div>$endif$$body$</article>
+                    <article class="doc-content"><p class="note-provenance">$provenance_label$</p>$if(publication)$<div class="publication-journal-masthead">$if(publication_pdf)$<a href="$publication_pdf$" download>Download PDF ↓</a>$endif$</div>$endif$$body$</article>
                 </main>
 
                 <footer class="doc-footer">

@@ -1,6 +1,7 @@
 ---
 title: "Which proofs survive a blocked tactic?"
-release: "published"
+summary: "Blocking a tactic tests whether the prover can still find an alternative within its search budget."
+release: "draft"
 provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true

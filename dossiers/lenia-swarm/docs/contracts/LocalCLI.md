@@ -1,3 +1,7 @@
+---
+summary: "How to build and run a local Flow Lenia parameter sweep from a base and a search config, and what the resulting run directory contains."
+---
+
 # Local CLI Harness (`LeniaCLI discover local`)
 
 ## Purpose

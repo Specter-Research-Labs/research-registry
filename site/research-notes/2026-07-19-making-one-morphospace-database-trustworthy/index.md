@@ -1,5 +1,6 @@
 ---
 title: "A faster database query was not enough to retire the archive"
+summary: "Separating missing lineage from empty data, then making the replacement database fast, checkable, and incapable of authorizing deletion by accident."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"

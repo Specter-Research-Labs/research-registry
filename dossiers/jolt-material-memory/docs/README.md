@@ -1,3 +1,7 @@
+---
+summary: "Map of the material-memory experiments, which compare history-dependent material updates with memory-free and damping-only controls under imprint, reversal and disturbance drives."
+---
+
 # Material Memory: Experiments and Measurements
 
 The experiments compare local, history-dependent material updates with memory-free and damping-only controls. A temporary drive, a reversing drive, and a disturbance test different ways an assembly can retain or respond to its history.

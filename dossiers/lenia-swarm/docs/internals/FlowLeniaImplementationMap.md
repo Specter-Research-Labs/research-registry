@@ -1,3 +1,7 @@
+---
+summary: "How the parameters in the Flow Lenia Swift implementation map onto the equations of the Flow-Lenia paper, with page and line references."
+---
+
 # FlowLenia.swift Parameter Mapping
 
 Struct and function mapping from `Sources/LeniaCore/Core/FlowLenia.swift` to the Flow Lenia paper.

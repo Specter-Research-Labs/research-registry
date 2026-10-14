@@ -1,6 +1,7 @@
 use crate::site::discover::{self, BlogPostRecord};
 use crate::site::markup;
 use crate::site::records::{self, SiteRecord};
+use anyhow::Result;
 use camino::Utf8Path;
 use maud::{html, Markup, PreEscaped};
 use std::collections::HashMap;
@@ -12,7 +13,7 @@ fn escape_html_text(text: &str) -> String {
         .replace('"', "&quot;")
 }
 
-fn inline_markdown(text: &str) -> Markup {
+pub(crate) fn inline_markdown(text: &str) -> Markup {
     let mut html = String::new();
     let mut parts = text.split('`');
     if let Some(first) = parts.next() {
@@ -45,14 +46,14 @@ fn license_short(license: &str) -> &str {
 fn render_dossier_links(record: &SiteRecord, page_path: &str) -> Markup {
     let mut links: Vec<Markup> = Vec::new();
     if let Some(href) = record.relative_hub_href(page_path) {
-        links.push(html! { a href=(href) { "Open Dossier" } });
+        links.push(html! { a href=(href) { "Open dossier" } });
     }
     links.push(markup::link(&record.repo_url, "Repository"));
     for (label, href) in record.published_surface_links() {
         links.push(markup::link(href, label));
     }
     if let Some(cabinet_href) = record.relative_cabinet_href(page_path) {
-        links.push(html! { a href=(cabinet_href) { "Cabinet Docs" } });
+        links.push(html! { a href=(cabinet_href) { "Cabinet docs" } });
     }
     html! {
         @for link_markup in &links {
@@ -69,9 +70,10 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
             article class="dossier-card" id=(record.slug) {
                 @if let Some(href) = record.relative_hub_href("dossiers/index.html") {
                     @match record.slug.as_str() {
-                        "lenia-swarm" => { a class="dossier-preview" href=(href) { img src="/home-prototype/assets/quadrium-poster.webp?v=2" alt="A Quadrium-derived Lenia pattern." loading="lazy"; } }
+                        "lenia-swarm" => { a class="dossier-preview" href=(href) { img src="/assets/home/quadrium-poster.webp?v=2" alt="A Quadrium-derived Lenia pattern." loading="lazy"; } }
                         "wonton-soup" => { a class="dossier-preview" href=(href) { img src="/assets/research-proof.svg" alt="Two routes to an algebraic proof, shown schematically." loading="lazy"; } }
-                        "zang-levin-playground" => { a class="dossier-preview" href=(href) { img src="/assets/research-sorting.svg" alt="A schematic of local exchanges producing a sorted sequence." loading="lazy"; } }
+                        "jolt-material-memory" => { a class="dossier-preview" href=(href) { img src="/assets/research-material.svg" alt="Six connected bodies under a driving force and a disturbance, shown schematically." loading="lazy"; } }
+                        "zhang-levin-playground" => { a class="dossier-preview" href=(href) { img src="/assets/research-sorting.svg" alt="A schematic of local exchanges producing a sorted sequence." loading="lazy"; } }
                         _ => {}
                     }
                 }
@@ -132,7 +134,7 @@ fn render_addenda_links(
     }
     if let Some(dossier) = records::related_visible_dossier(record, dossiers_by_slug) {
         if let Some(href) = dossier.relative_hub_href(page_path) {
-            links.push(html! { a href=(href) { "Linked Dossier" } });
+            links.push(html! { a href=(href) { "Linked dossier" } });
         }
     }
     html! {
@@ -172,24 +174,28 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     blocks.join("\n")
 }
 
-pub fn render_blog_index_posts(posts: &[BlogPostRecord], page_path: &str) -> String {
+pub fn render_blog_index_posts(posts: &[BlogPostRecord], page_path: &str) -> Result<String> {
     let mut blocks: Vec<String> = Vec::new();
     for post in posts {
         let href = discover::relative_href(page_path, &post.href);
+        let cover = post
+            .cover
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("{}: published post has no cover", post.href))?;
         let block = html! {
-            article class="resource-card" {
-                div class="resource-title" { (post.title) }
-                @if !post.summary.is_empty() {
-                    p { (post.summary) }
+            article class="writing-report" {
+                a class="writing-cover" href=(href) aria-label=(format!("Read {}", post.title)) {
+                    img src=(cover.src) alt=(cover.alt);
                 }
-                div class="link-row" {
-                    a href=(href) { "Read Article" }
+                div {
+                    h2 { a href=(href) { (post.title) } }
+                    p { (post.summary) }
                 }
             }
         };
         blocks.push(block.into_string());
     }
-    blocks.join("\n")
+    Ok(blocks.join("\n"))
 }
 
 pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
@@ -201,7 +207,7 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
             div class="dossier-hub-metabar" {
                 @if let Some(ref sid) = record.series {
                     span class="dossier-hub-metabar-item" {
-                        "SPCTR " span class="dossier-hub-metabar-value" { (sid) }
+                        span class="dossier-hub-metabar-value" { (sid) }
                     }
                 }
                 span class="dossier-hub-metabar-item" {
@@ -226,6 +232,10 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
         }
     };
     markup.into_string()
+}
+
+pub fn render_dossier_hub_description(record: &SiteRecord) -> String {
+    html! { meta name="description" content=(record.summary); }.into_string()
 }
 
 pub fn render_dossier_hub_footer(record: &SiteRecord) -> String {
@@ -303,13 +313,9 @@ fn render_sitemap_tree(nodes: &[SitemapNode], indent: &str) -> String {
     lines.join("\n")
 }
 
-pub fn render_sitemap_sections(
-    repo_root: &Utf8Path,
-    additional_pages: &[discover::SitePageRecord],
-) -> anyhow::Result<String> {
+pub fn render_sitemap_sections(repo_root: &Utf8Path) -> anyhow::Result<String> {
     let page_path = "sitemap/index.html";
-    let mut groups = discover::discover_sitemap_pages(repo_root);
-    merge_sitemap_pages(&mut groups, additional_pages);
+    let groups = discover::discover_sitemap_pages(repo_root);
 
     const KNOWN_ORDER: &[&str] = &[
         "",
@@ -395,41 +401,6 @@ pub fn render_sitemap_sections(
     Ok(render_sitemap_tree(&nodes, indent))
 }
 
-fn merge_sitemap_pages(
-    groups: &mut Vec<discover::SitemapGroup>,
-    additional_pages: &[discover::SitePageRecord],
-) {
-    for page in additional_pages {
-        let section = page.href.split('/').next().unwrap_or_default();
-        if let Some(group) = groups.iter_mut().find(|group| group.section == section) {
-            if group
-                .index
-                .as_ref()
-                .is_some_and(|index| index.href == page.href)
-                || group.children.iter().any(|child| child.href == page.href)
-            {
-                continue;
-            }
-            group.children.push(discover::SitePageRecord {
-                title: page.title.clone(),
-                href: page.href.clone(),
-            });
-            group
-                .children
-                .sort_by(|left, right| left.href.cmp(&right.href));
-        } else {
-            groups.push(discover::SitemapGroup {
-                section: section.to_owned(),
-                index: None,
-                children: vec![discover::SitePageRecord {
-                    title: page.title.clone(),
-                    href: page.href.clone(),
-                }],
-            });
-        }
-    }
-}
-
 pub fn render_sitemap_registry(records: &[SiteRecord], blog_posts: &[BlogPostRecord]) -> String {
     struct Entry {
         series_id: String,
@@ -489,7 +460,7 @@ pub fn render_sitemap_registry(records: &[SiteRecord], blog_posts: &[BlogPostRec
                     @for entry in entries {
                         (PreEscaped("                                "))
                         li class="registry-entry" {
-                            span class="registry-id" { "SPCTR " (entry.series_id) }
+                            span class="registry-id" { (entry.series_id) }
                             span class="registry-title" {
                                 @if let Some(ref href) = entry.href {
                                     a href=(href) { (entry.title) }

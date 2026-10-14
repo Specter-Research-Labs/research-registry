@@ -35,16 +35,20 @@ pub fn parse_front_matter(text: &str) -> HashMap<String, String> {
 #[must_use]
 pub fn extract_title(text: &str) -> String {
     let mut in_front_matter = text.starts_with("---\n") || text.starts_with("---\r");
-    let mut past_fm = !in_front_matter;
+    let mut in_code_fence = false;
     for line in text.lines().skip(usize::from(in_front_matter)) {
         if in_front_matter {
             if line.trim() == "---" {
                 in_front_matter = false;
-                past_fm = true;
             }
             continue;
         }
-        if !past_fm {
+        let stripped = line.trim();
+        if stripped.starts_with("```") || stripped.starts_with("~~~") {
+            in_code_fence = !in_code_fence;
+            continue;
+        }
+        if in_code_fence {
             continue;
         }
         if let Some(title) = line.strip_prefix("# ") {
@@ -126,4 +130,16 @@ fn strip_markdown_inline(text: &str) -> String {
     s = code_re.replace_all(&s, "$1").to_string();
     s = s.replace(['*', '_'], "");
     s.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_title_ignores_shell_comments_in_code_fences() {
+        let text = "Intro.\n\n```bash\n# clone the repo\n```\n\n# Real Title\n";
+        assert_eq!(extract_title(text), "Real Title");
+        assert_eq!(extract_title("Intro.\n\n```bash\n# clone\n```\n"), "");
+    }
 }

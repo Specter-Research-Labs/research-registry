@@ -1,4 +1,8 @@
-# lenia-swarm docs
+---
+summary: "Map of the Lenia Swarm documentation: research framing, contracts, configs, implementation internals and decision records."
+---
+
+# Lenia Swarm Docs
 
 Use this map to navigate Lenia Swarm research framing, contracts, configs, internals, and decisions.
 
@@ -79,25 +83,3 @@ Implement and debug:
 4. `internals/StudioCompendiumInternals.md`
 5. `internals/TTBackend.md`
 6. `internals/TTBackendPerformance.md`
-
-## Website reports
-
-The causal-emergence reading library lives under
-`/dossiers/lenia-swarm/causal-emergence/reports/<report-id>/` on the main website.
-Each directory contains the report, `about.html`, and its publication receipt;
-migrated pages also retain the upstream receipt. Source release identifiers and
-hashes remain in the catalog and receipts.
-
-To rebuild from the frozen sources or migrate an authenticated public release
-bundle, run `spctr site stage-lenia-causal-reports --input-root INPUT --output OUTPUT`.
-Install `OUTPUT/reports/` in `site/dossiers/lenia-swarm/causal-emergence/reports/`
-and place `OUTPUT/manifest.json` inside that directory. The site build checks
-every report, context page, and receipt against the manifest before publishing.
-Shared website geometry is in `site/assets/publication-layout.css`; the report
-exporter reads `site/templates/publication-header.html` for the site navigation.
-
-The Writing index uses `python3 dossiers/lenia-swarm/ops/build_publication_covers.py`
-to draw the causal cover from the report's stored age-response values.
-The editorial selection and per-record disposition are recorded in
-`site/dossiers/lenia-swarm/causal-emergence/editorial-review.json`; selection does
-not delete experimental evidence or imply every supporting page is publication-ready.

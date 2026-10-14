@@ -80,15 +80,6 @@ fn surface(
 pub(crate) fn canonical_archive_surfaces() -> Vec<ArchiveSurfaceRecord> {
     vec![
         surface(
-            "site",
-            "root",
-            "Canonical Site Snapshots",
-            "Archived snapshots of the public site.",
-            "Site snapshots",
-            "Current site",
-            "https://specterlab.org/",
-        ),
-        surface(
             "typst-field-manual",
             "root",
             "Typst Field Manual Releases",
@@ -105,15 +96,6 @@ pub(crate) fn canonical_archive_surfaces() -> Vec<ArchiveSurfaceRecord> {
             "Lenia compendium",
             "Current compendium",
             "https://specterlab.org/dossiers/lenia-swarm/compendium/",
-        ),
-        surface(
-            "lenia-swarm",
-            "causal-emergence",
-            "Flow Lenia Causal Emergence Reports",
-            "Immutable releases of the Flow Lenia causal-emergence synthesis and experiment reports.",
-            "Causal-emergence reports",
-            "Current synthesis",
-            "https://releases.specterlab.org/lenia-swarm/causal-emergence/current/",
         ),
         surface(
             "wonton-soup",

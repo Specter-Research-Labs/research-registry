@@ -1,3 +1,7 @@
+---
+summary: "How the compendium indexer manages schema migrations, incremental ingestion and its transactional writes."
+---
+
 # Indexer Internals
 
 ## Scope

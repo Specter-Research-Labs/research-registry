@@ -1,5 +1,6 @@
 ---
 title: "What a shape map leaves out"
+summary: "What a shared map of Lenia, embryo and fish forms preserved, what it erased, and why the strongest fish-like lead remained unconfirmed."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"

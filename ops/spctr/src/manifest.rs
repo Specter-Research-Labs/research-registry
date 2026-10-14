@@ -52,6 +52,13 @@ pub struct SiteMetadata {
     pub publish_docs: bool,
 }
 
+impl SiteMetadata {
+    /// A project hidden from the site publishes no cabinet docs, whatever `publish_docs` says.
+    pub fn publishes_cabinet_docs(&self) -> bool {
+        self.visible && self.publish_docs
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RawRootConfig {
     pub path: String,

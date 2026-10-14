@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SOURCE = Path(
     "dossiers/lenia-swarm/Sources/LeniaStudio/Resources/Organisms/track1_quadrium_gyrans.json"
 )
-OUTPUT = Path("site/home-prototype/assets")
+OUTPUT = Path("site/assets/home")
 PALETTE = np.array(
     [
         [244, 241, 232],

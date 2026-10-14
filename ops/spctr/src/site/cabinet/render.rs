@@ -1,4 +1,6 @@
+use crate::markdown;
 use crate::site::cabinet::docs::{self, DocEntry};
+use crate::site::regions::inline_markdown;
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use std::collections::HashMap;
@@ -53,7 +55,7 @@ pub fn render_doc(
         .args(["--metadata", "lang=en"])
         .args([
             "--metadata",
-            &format!("pagetitle={} | SPECTER Labs", entry.title),
+            &format!("pagetitle={} | Specter Labs", entry.title),
         ])
         .args(["--metadata", &format!("slug={}", entry.slug)])
         .args(["--metadata", &format!("doc_id={}", entry.doc_id)])
@@ -64,6 +66,12 @@ pub fn render_doc(
 
     if !entry.category.is_empty() {
         cmd.args(["--metadata", &format!("category={}", entry.category)]);
+    }
+
+    let source = std::fs::read_to_string(&entry.path)
+        .with_context(|| format!("failed to read {}", entry.path))?;
+    if let Some(summary) = markdown::parse_front_matter(&source).get("summary") {
+        cmd.args(["--metadata", &format!("description={summary}")]);
     }
 
     let output = cmd.output().context("failed to run pandoc")?;
@@ -251,17 +259,10 @@ pub fn build_index(entries: &[DocEntry], site_root: &Utf8Path) -> Result<()> {
     let mut drawers_html = String::new();
 
     for (project_slug, indices) in &groups {
-        let display = indices
-            .first()
-            .map(|&idx| {
-                let project_display = entries[idx].project_display.as_str();
-                if project_display.is_empty() {
-                    *project_slug
-                } else {
-                    project_display
-                }
-            })
-            .unwrap_or(project_slug);
+        let display = entries[indices[0]].project_display.as_str();
+        if display.is_empty() {
+            bail!("cabinet project {project_slug} has no display title");
+        }
 
         let series_id = indices
             .first()
@@ -269,21 +270,14 @@ pub fn build_index(entries: &[DocEntry], site_root: &Utf8Path) -> Result<()> {
             .unwrap_or("");
 
         let mut sorted_indices = indices.clone();
-        sorted_indices.sort_by(|&a, &b| {
-            let ea = &entries[a];
-            let eb = &entries[b];
-            category_sort_key(&ea.category)
-                .cmp(&category_sort_key(&eb.category))
-                .then_with(|| ea.title.to_lowercase().cmp(&eb.title.to_lowercase()))
-                .then_with(|| ea.slug.cmp(&eb.slug))
-        });
+        sorted_indices.sort_by(|&a, &b| entries[a].doc_id.cmp(&entries[b].doc_id));
 
         let mut items_html = String::new();
         for &idx in &sorted_indices {
             let entry = &entries[idx];
             let href = format!("{}/{}/", entry.project_slug, entry.slug);
             let doc_id = html_escape(&entry.doc_id);
-            let title = html_escape(&entry.title);
+            let title = inline_markdown(&entry.title).into_string();
             let cat_span = if entry.category.is_empty() {
                 String::new()
             } else {
@@ -304,7 +298,7 @@ pub fn build_index(entries: &[DocEntry], site_root: &Utf8Path) -> Result<()> {
         let series_badge = if series_id.is_empty() {
             String::new()
         } else {
-            format!("<span class=\"drawer-tab-series\">SPCTR {series_id}</span>")
+            format!("<span class=\"drawer-tab-series\">{series_id}</span>")
         };
 
         drawers_html.push_str(&format!(
@@ -332,14 +326,6 @@ pub fn build_index(entries: &[DocEntry], site_root: &Utf8Path) -> Result<()> {
     eprintln!("  {rel}");
 
     Ok(())
-}
-
-fn category_sort_key(category: &str) -> (u8, String) {
-    if category.is_empty() {
-        (1, String::new())
-    } else {
-        (0, category.to_lowercase())
-    }
 }
 
 #[cfg(test)]

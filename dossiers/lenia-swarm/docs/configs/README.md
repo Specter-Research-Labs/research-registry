@@ -1,3 +1,7 @@
+---
+summary: "How Lenia Swarm config families are organized by use case, from base runtimes and searches to presets, sweeps, campaigns, evolution strategies and IMGEP."
+---
+
 # Config Map
 
 Config families are organized by use-case, not by entrypoint. The filenames below are the canonical inputs used by the CLI, Studio resources, and smoke scripts.

@@ -14,7 +14,7 @@ const RELEASE_SCHEMA: &str = "specter_flow_lenia_report_release_v3";
 const BUNDLE_SCHEMA: &str = "specter_flow_lenia_report_library_bundle_v3";
 const EDITORIAL_REPLACEMENTS_PATH: &str =
     "site/dossiers/lenia-swarm/causal-emergence/editorial-replacements.json";
-const REPORT_POLISH_PATH: &str = "site/dossiers/lenia-swarm/causal-emergence/report-polish.css";
+const REPORT_POLISH_PATH: &str = "site/assets/report-polish.css";
 const REDACT_SOURCE_PREFIX: &str = "redact_internal_source_prefix_v1";
 const NEUTRALIZE_LOCAL_LINKS: &str = "neutralize_unpublished_relative_links_v1";
 const NORMALIZE_PUBLIC_EDITORIAL: &str = "normalize_public_editorial_language_v1";
@@ -1205,11 +1205,9 @@ mod tests {
             "replacements": replacements,
         });
         fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
-        fs::write(
-            root.join(REPORT_POLISH_PATH),
-            "html.specter-report{color-scheme:light}\n",
-        )
-        .unwrap();
+        let polish_path = root.join(REPORT_POLISH_PATH);
+        fs::create_dir_all(polish_path.parent().unwrap()).unwrap();
+        fs::write(polish_path, "html.specter-report{color-scheme:light}\n").unwrap();
     }
 
     #[test]

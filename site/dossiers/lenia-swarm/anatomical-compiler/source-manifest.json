@@ -2,17 +2,12 @@
   "artifactProducingRevision": null,
   "artifactSourceRootLabel": "dossiers/lenia-swarm/outputs/anatomical-compiler",
   "artifactWindow": "historical June 2026 corpus plus 2026-09-01 compiler reruns and the 2026-09-02 two-stage within-family Orbium inverse",
-  "caseStudyNote": "The organic descriptor compilation was rerun locally on 2026-09-01. The two-stage Orbium inverse was run on 2026-09-02 inside the qd24_additive_v1 family, with R, m, and s hidden from both search stages. The earlier cross-runtime Flow Lenia comparison was removed.",
+  "caseStudyNote": "The two-stage Orbium inverse was run on 2026-09-02 inside the qd24_additive_v1 family, with R, m, and s hidden from both search stages. The 2026-09-01 organic descriptor rerun and the warm-start archive map were withdrawn because the batched initializer grew each candidate from a different random starting field. The earlier cross-runtime Flow Lenia comparison was removed.",
   "generatedAssets": [
     {
       "bytes": 2321,
       "path": "assets/archive-coverage.png",
       "sha256": "a6ed57c87e3625065e78163ef0ba63c880c7607b218ef1d152b564292c2e0a19"
-    },
-    {
-      "bytes": 36803,
-      "path": "assets/archive-map.svg",
-      "sha256": "b4585abb7a10ac3bfa5b1bf5889d6e8e72773d43892107ca76ae18621b4f22ea"
     },
     {
       "bytes": 4027,
@@ -153,76 +148,6 @@
       "bytes": 834738,
       "path": "assets/orbium-target-zoom.mp4",
       "sha256": "12c499769fe12ce6b8eda98ff8ddf758dd058f8a3704c6d6116a5011b58828fe"
-    },
-    {
-      "bytes": 11834,
-      "path": "assets/organic-fixed-result.png",
-      "sha256": "2eb60b71e7951b21adf165fc1657042eca738aac6a7675036858bf9ffee72b97"
-    },
-    {
-      "bytes": 13121,
-      "path": "assets/organic-fixed-target.png",
-      "sha256": "47aac3a2842dedcf3566d8ccf8188f49df646ac8b071307c9289a189a453d0f1"
-    },
-    {
-      "bytes": 11013,
-      "path": "assets/organic-genotype.svg",
-      "sha256": "f2b571af57ac93461ee74f618c6f041052db6d390c381cc682e27112f67bd9f9"
-    },
-    {
-      "bytes": 121202,
-      "path": "assets/organic-recovered-late.png",
-      "sha256": "da36d4748bdf8ecb64d8a632df3deacaa0765bd9eef468160e98564a11ab9e9a"
-    },
-    {
-      "bytes": 957390,
-      "path": "assets/organic-recovered.mp4",
-      "sha256": "9b42766440cf423b6e873863cc299a7b7a2edc124c5a6b6d91be807458b3d3d9"
-    },
-    {
-      "bytes": 174617,
-      "path": "assets/organic-recovered.png",
-      "sha256": "b136b78fcb83bd47d3ac80f061418c824ff1039c9a589a7c06132733f0b11330"
-    },
-    {
-      "bytes": 2921,
-      "path": "assets/organic-search-trace.svg",
-      "sha256": "07e7e59cf607c01d5f5766f6efaedc1a6838a4c8dcc582e12a4aed89ce6ee76c"
-    },
-    {
-      "bytes": 122830,
-      "path": "assets/organic-target-late.png",
-      "sha256": "676f2be888b9ae5839b97a23914ec1432f6aec17cd845251b795f951c4e4f851"
-    },
-    {
-      "bytes": 561891,
-      "path": "assets/organic-target.mp4",
-      "sha256": "e70259f567a5b091a7413871dc4ddc7b41930f4e8b84bb2737d1bb701fb2be6d"
-    },
-    {
-      "bytes": 108733,
-      "path": "assets/organic-target.png",
-      "sha256": "7396b4565167a62f1498f4cb92dc5a82a528b6607dd2ec353401be1a65a6735d"
-    },
-    {
-      "bytes": 17882,
-      "path": "assets/organic-trace-00.png",
-      "sha256": "fa03595c4170e155474bda0e505dec4052604b4ff25a983c8f2e073f133dfded"
-    },
-    {
-      "bytes": 15293,
-      "path": "assets/organic-trace-01.png",
-      "sha256": "1c4156380fc3ec663edf0e1e36319e20490f9463aee52e9fc54279fc7ac91d8b"
-    },
-    {
-      "bytes": 14439,
-      "path": "assets/organic-trace-02.png",
-      "sha256": "8a31ce5df13ad3bb3b61cbe83acc6417d6074eb90e8fd4da2c00251790ba5663"
-    },
-    {
-      "bytes": 14818,
-      "path": "assets/organic-trace-06.png",
-      "sha256": "67ef9c151f42f916d10d5038722798998f0ebc42f0fb683aa287a87cf0351fdf"
     },
     {
       "bytes": 3669,
@@ -399,108 +324,6 @@
       "kind": "reused explanatory schematic",
       "path": "site/assets/blog/lenia-morphospace-report/fig-bridge-genotype-phenotype.svg",
       "sha256": "363d5905c657c2e84468e57307dd435a91b854ffa8aab37bc2b66bf402070367"
-    },
-    {
-      "bytes": 15065,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/descriptor-organic-2876-final/result.json",
-      "sha256": "b5076bb598eb5baab69a2fa04f780d80619eb0fccbb07fca963a9ef924b781d0"
-    },
-    {
-      "bytes": 7625,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/organic-2876-trial/result.json",
-      "sha256": "c1193ac52130e294264b04482333c9c4b98944f2762f3d071130ce5d64126d47"
-    },
-    {
-      "bytes": 1890,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/target-base.json",
-      "sha256": "96712d27919bb1b92c83f4b08d4600a0bb488c9718fb36ce90dd6d8fd03762b8"
-    },
-    {
-      "bytes": 2145,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/recovered-base.json",
-      "sha256": "7e61c204d374891b40c15ca328f4638d117c8770d8699c9673a2f4704c02e625"
-    },
-    {
-      "bytes": 1051,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/search.json",
-      "sha256": "8b5d8113be1a7d28f80176278187172ede1b1c977ba4fd75d8c496c2813a3188"
-    },
-    {
-      "bytes": 561891,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/target-body.mp4",
-      "sha256": "e70259f567a5b091a7413871dc4ddc7b41930f4e8b84bb2737d1bb701fb2be6d"
-    },
-    {
-      "bytes": 957390,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/recovered-body.mp4",
-      "sha256": "9b42766440cf423b6e873863cc299a7b7a2edc124c5a6b6d91be807458b3d3d9"
-    },
-    {
-      "bytes": 108733,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/target-run/anatomical-target-2876/frames_color/frame_000600.png",
-      "sha256": "7396b4565167a62f1498f4cb92dc5a82a528b6607dd2ec353401be1a65a6735d"
-    },
-    {
-      "bytes": 122830,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/target-run/anatomical-target-2876/frames_color/frame_001190.png",
-      "sha256": "676f2be888b9ae5839b97a23914ec1432f6aec17cd845251b795f951c4e4f851"
-    },
-    {
-      "bytes": 174617,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/recovered-run/anatomical-recovered-2876/frames_color/frame_000600.png",
-      "sha256": "b136b78fcb83bd47d3ac80f061418c824ff1039c9a589a7c06132733f0b11330"
-    },
-    {
-      "bytes": 121202,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "media/organic-2876/recovered-run/anatomical-recovered-2876/frames_color/frame_001190.png",
-      "sha256": "da36d4748bdf8ecb64d8a632df3deacaa0765bd9eef468160e98564a11ab9e9a"
-    },
-    {
-      "bytes": 17882,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/descriptor-organic-2876-final/trace-00.png",
-      "sha256": "fa03595c4170e155474bda0e505dec4052604b4ff25a983c8f2e073f133dfded"
-    },
-    {
-      "bytes": 15293,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/descriptor-organic-2876-final/trace-01.png",
-      "sha256": "1c4156380fc3ec663edf0e1e36319e20490f9463aee52e9fc54279fc7ac91d8b"
-    },
-    {
-      "bytes": 14439,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/descriptor-organic-2876-final/trace-02.png",
-      "sha256": "8a31ce5df13ad3bb3b61cbe83acc6417d6074eb90e8fd4da2c00251790ba5663"
-    },
-    {
-      "bytes": 14818,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/descriptor-organic-2876-final/trace-06.png",
-      "sha256": "67ef9c151f42f916d10d5038722798998f0ebc42f0fb683aa287a87cf0351fdf"
-    },
-    {
-      "bytes": 13121,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/organic-2876-trial/target.png",
-      "sha256": "47aac3a2842dedcf3566d8ccf8188f49df646ac8b071307c9289a189a453d0f1"
-    },
-    {
-      "bytes": 11834,
-      "kind": "2026-09-01 case-study rerun",
-      "path": "compiled/organic-2876-trial/creature_swift.png",
-      "sha256": "2eb60b71e7951b21adf165fc1657042eca738aac6a7675036858bf9ffee72b97"
     },
     {
       "bytes": 1284,

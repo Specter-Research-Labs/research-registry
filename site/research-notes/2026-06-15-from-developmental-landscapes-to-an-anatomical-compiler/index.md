@@ -1,5 +1,6 @@
 ---
 title: "Running morphogenesis in reverse"
+summary: "Searching for rules that produce a requested body, using recorded developmental trajectories."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"

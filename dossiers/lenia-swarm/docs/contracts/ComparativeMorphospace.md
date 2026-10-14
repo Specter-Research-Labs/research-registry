@@ -1,3 +1,7 @@
+---
+summary: "The comparative morphospace warehouse, which records sources, specimens, observations and feature spaces so generated and observed forms can be compared without forcing them into Lenia-native descriptors."
+---
+
 # Comparative Morphospace Warehouse
 
 ## Purpose

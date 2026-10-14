@@ -1,3 +1,7 @@
+---
+summary: "How centralized Wonton Soup search uses UCB1 and a blind-uniform baseline to choose nodes and order tactics."
+---
+
 # UCB1 and Blind-Uniform Search in Wonton-Soup
 
 Canonical semantics for centralized MCTS search policy and its basin-mode blind baselines.

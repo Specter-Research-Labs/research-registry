@@ -188,7 +188,7 @@ fn page_shell(title: &str, body: &Markup) -> String {
                 meta charset="UTF-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
                 meta name="color-scheme" content="light";
-                title { (title) " | SPECTER Labs" }
+                title { (title) " | Specter Labs" }
                 link rel="icon" href="https://specterlab.org/assets/logo-black.svg" type="image/svg+xml";
                 style { (PreEscaped(INLINE_CSS)) }
             }
@@ -196,8 +196,8 @@ fn page_shell(title: &str, body: &Markup) -> String {
                 div class="registry-shell" {
                     header class="registry-masthead" {
                         a class="registry-brand" href="https://specterlab.org/" {
-                            img src="https://specterlab.org/assets/logo-black.svg" alt="SPECTER Labs logo" class="logo";
-                            span class="registry-brand-name" { "SPECTER Labs" }
+                            img src="https://specterlab.org/assets/logo-black.svg" alt="Specter Labs logo" class="logo";
+                            span class="registry-brand-name" { "Specter Labs" }
                         }
                         div class="registry-markings" {
                             span class="registry-marking" { "Immutable Release Registry" }
@@ -545,8 +545,10 @@ mod tests {
         render_portal(root.path()).unwrap();
 
         let root_page = fs::read_to_string(root.path().join("index.html")).unwrap();
-        assert!(root_page.contains("Site snapshots"));
+        assert!(root_page.contains("Field manual"));
         assert!(root_page.contains("Current dashboard"));
+        assert!(!root_page.contains("Site snapshots"));
+        assert!(!root_page.contains("Causal-emergence reports"));
     }
 
     #[test]

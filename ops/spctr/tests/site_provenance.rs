@@ -90,6 +90,8 @@ fn published_blog_post() -> &'static str {
 title: Hello World
 release: published
 series: B-001
+cover: /assets/blog/hello-world/cover.png
+cover_alt: A placeholder cover.
 ---
 
 # Hello World

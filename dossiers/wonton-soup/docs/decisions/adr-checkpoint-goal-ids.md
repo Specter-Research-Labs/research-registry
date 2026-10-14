@@ -1,3 +1,7 @@
+---
+summary: "Decision record: goal identifiers are scoped to checkpoints because Lean can reuse metavariable IDs after rollback."
+---
+
 # ADR: Checkpoint-Scoped Goal IDs
 
 ## Context

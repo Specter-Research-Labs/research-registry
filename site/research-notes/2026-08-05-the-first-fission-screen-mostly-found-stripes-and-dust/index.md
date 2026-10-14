@@ -1,5 +1,6 @@
 ---
 title: "Stripes, dust, and false fission"
+summary: "How stripes, dust, and mutation artifacts forced a change in experimental design."
 release: "published"
 provenance: "assistant-drafted"
 source_id: "D-003"
@@ -20,4 +21,4 @@ We repaired that part of the assay by judging components relative to the parent 
 
 So the pilot answered a question we had not originally intended to ask: under these conditions, fragmentation, striping and dust were much easier to produce than a clean physical division. Calling those artifacts “fission” would have contaminated everything measured afterward. We therefore left the predictive-information outputs unopened, abandoned spontaneous fission as the entry point for this campaign, and moved to imposed growth-and-division cycles whose events could be identified without guesswork.
 
-The [developmental-fission record](/dossiers/lenia-swarm/causal-emergence/reports/developmental-fission-lineage/) follows the distinction between low-density fraying and physical division in later experiments.
+The developmental-fission record follows the distinction between low-density fraying and physical division in later experiments.

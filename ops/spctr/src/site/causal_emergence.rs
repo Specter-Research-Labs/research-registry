@@ -6,8 +6,6 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::fs;
 
-use super::discover::SitePageRecord;
-
 pub(crate) const CATALOG_PATH: &str = "site/dossiers/lenia-swarm/causal-emergence/catalog.json";
 const RELEASE_ROUTE: &str = "/dossiers/lenia-swarm/causal-emergence/reports";
 
@@ -250,31 +248,6 @@ fn contains_internal_checkpoint_notation(value: &str) -> bool {
 }
 
 #[must_use]
-pub fn sitemap_pages(catalog: &Catalog) -> Vec<SitePageRecord> {
-    let mut pages = vec![
-        SitePageRecord {
-            title: "Causal Emergence in Flow Lenia".into(),
-            href: "dossiers/lenia-swarm/causal-emergence/".into(),
-        },
-        SitePageRecord {
-            title: "Flow Lenia Causal Emergence Report Library".into(),
-            href: "dossiers/lenia-swarm/causal-emergence/library/".into(),
-        },
-        SitePageRecord {
-            title: "Flow Lenia Causal Emergence Archive".into(),
-            href: "dossiers/lenia-swarm/causal-emergence/archive/".into(),
-        },
-    ];
-    pages.extend(catalog.reports.iter().map(|report| SitePageRecord {
-        title: report.title.clone(),
-        href: format!(
-            "dossiers/lenia-swarm/causal-emergence/reports/{}/",
-            report.id
-        ),
-    }));
-    pages
-}
-
 fn release_href(report: &Report) -> String {
     format!("{RELEASE_ROUTE}/{}/", report.id)
 }
