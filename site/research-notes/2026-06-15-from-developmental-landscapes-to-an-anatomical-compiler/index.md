@@ -11,7 +11,7 @@ toc: true
 
 _15–20 June 2026 · Research design and first prototype._
 
-Here, “genotype” means the numerical specification of a Flow Lenia rule, rather than a biological genome. Our forward experiments begin with that rule and an initial field, then run time forward. The simulation turns that compact specification into a moving body, and we measure whatever body and behaviour emerge. This gives us a powerful generator, but only one direction of travel: genotype in, organism out.
+Here, “genotype” is the numerical specification of a Flow Lenia rule, which we combine with an initial field and run forward to see what body and behavior develop. That gives us a way to generate forms from compact specifications, but the reverse question is much harder: when we start with the body we want, what in its appearance or development tells us which rule could make it?
 
 The developmental-landscape work began by looking more closely at everything that happens between those endpoints. Instead of reducing each organism to one final row in a descriptor table, we started preserving the fields and trajectories through which it developed. Those records make different questions possible. Do nearby starting points settle into the same kind of body? Where do two developmental paths branch? How large a disturbance is needed to push an organism from one region of the landscape into another?
 

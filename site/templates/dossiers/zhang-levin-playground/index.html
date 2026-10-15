@@ -266,7 +266,7 @@
 
                 <section class="section-block">
 <h2 class="story-question">Can order survive when some cells stop acting?</h2>
-<p class="story-deck">Each cell holds a value and follows a sorting rule. Together they put themselves in order. Freeze some cells, mix different rules, or change which moves are allowed: the way order returns reveals what the collective depends on.</p>
+<p class="story-deck">Each cell holds a value and follows a sorting rule, and together their local swaps bring the array into order. By freezing some cells, mixing different rules, or changing which moves are allowed, we can watch how that ordering proceeds when the usual route is disrupted and ask what the collective behavior depends on.</p>
 <nav class="story-jumps" aria-label="Experiments"><a href="#zl-dip-fig">Recovering from disorder</a><a href="#zl-cluster-fig">Why like cells cluster</a><a href="#zl-gate-fig">Transplanting the waiting rule</a></nav>
 <h2 class="story-heading">Order returns through temporary setbacks</h2>
 <p>In this replay, three cells cannot initiate a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials, every run contained at least one such dip.</p>
@@ -316,24 +316,8 @@
                     </figure>
 
                     <h2 class="story-heading">Cells cluster when they move at different times</h2>
-                    <p>
-                        Algotype clustering turns out not to require attraction,
-                        type-aware communication, or explicit coordination.
-                        Temporal separation between algorithm classes is the
-                        dominant contributor. Selection cells finish early
-                        and fall quiescent. Insertion cells activate late
-                        because their sorted-prefix gate delays
-                        participation until the left portion of the array
-                        is already ordered. The mismatch produces
-                        temporally correlated swap bursts in which only one
-                        class is still rearranging, and cells active during
-                        the same burst end up adjacent. Two ablations support
-                        this reading. Removing Insertion's waiting gate
-                        (<code>InsertionNoWait</code>) sharply reduces
-                        clustering, and exporting the same gate to Bubble and
-                        Gnome clones reproduces the predicted rise in temporal
-                        separation and clustering. Timing differences can produce spatial pattern without an explicit instruction to group by type.
-                    </p>
+                    <p>When cells using different algorithms sort the same array, cells of the same kind tend to end up beside one another, even though nothing in their rules tells them to seek each other. What differs is when they act: Selection cells finish early, while Insertion cells wait until the portion to their left is ordered, leaving bursts in which one class is still rearranging the array while another has fallen quiet.</p>
+                    <p>If this separation in activity helps produce the clusters, removing Insertion’s waiting gate should reduce them, and that is what we found. The paired replay below starts from the same array with and without the gate, letting us follow how changing the timing changes the arrangement that forms.</p>
 
                     <figure class="zl-figure" id="zl-cluster-fig">
                         <div class="zl-fig-head">
@@ -394,7 +378,7 @@
                         </div>
                     </figure>
 
-                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
+                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2><p>The more demanding test is to move the waiting rule into another algorithm and see whether the explanation travels with it. Giving Bubble and Gnome clones an Insertion-style gate increased both temporal separation and clustering, as the chart shows by comparing each gated pair with its gate-free counterpart.</p>
 <figure class="zl-figure" id="zl-gate-fig">
                         <div class="zl-fig-head">
                             <span class="zl-fig-name">Figure C — The gate, not the algotype</span>
@@ -411,55 +395,14 @@
                         </div>
                     </figure>
 
-                    <p>
-                        Robustness depends on operator class and obstacle
-                        semantics. Movable frozen cells can be displaced;
-                        immovable frozen indices cannot participate in
-                        swaps at all. A 2x2 factorization of 1D Selection
-                        crosses action range (adjacent vs long-range)
-                        against blocked-target policy (stubborn vs
-                        rerouting). Under immovable barriers, neither
-                        long-range reach alone nor rerouting alone
-                        survives; only the combination does. Within the
-                        published long-range Selection operator class, the
-                        rerouting ablation is decisive on its own.
-                    </p>
-                    <p>
-                        Under matched immovable-index semantics, the
-                        distributed cell-view substrate does not out-perform
-                        a centralized baseline. Threaded and sequential
-                        cell-view schedules agree on which conditions
-                        succeed, with the main substrate effect appearing
-                        in compare-count work rather than in outcomes.
-                        Whatever competency the sorting cells show comes from
-                        the policy, not the distributed substrate. The policy
-                        is the rule mapping each cell's local view to its next
-                        move. The distributed architecture only matters for
-                        embodied systems that cannot run a centralized loop. In
-                        silico it is not what produces the navigation behavior.
-                    </p>
-                    <p>
-                        The K-computation framework of Chis-Ciure and Levin
-                        translates the operator-and-constraint story into
-                        a graded efficiency metric. We treat the analysis
-                        as matched and exact for an explicit reachable-state
-                        proposal null, and conservative relative to blind
-                        operator-walk search. Because the state-space null
-                        is recomputed under each frozen pattern, long-range
-                        Selection's K falls as the reachable space contracts,
-                        rather than rising artificially under harder
-                        conditions. The same framework separates two
-                        failure modes: stubborn long-range Selection
-                        retains a reachable problem space but loses all
-                        successful trajectories, while adjacent operators
-                        under immovable barriers lose reachability outright
-                        in the sampled instances.
-                    </p>
-                    <p>
-                        The paper PDF and TeX source live under
-                        <code>paper/</code> in the repository, with every
-                        figure regenerable from committed result JSON.
-                    </p>
+                    <h2 class="story-heading">Getting past a cell that cannot move</h2>
+                    <p>In the opening replay, a cell that cannot initiate a swap can still be moved by its neighbors, but fixing its position creates a harder obstacle because it cannot participate in any swap at all. We separated two ways a Selection algorithm might get past that barrier, reaching beyond adjacent cells and choosing another target when its first choice is blocked, and found that sorting required both in the tested conditions.</p>
+                    <p>Comparing distributed cells with a centralized implementation under the same immovable-cell rules gave the same pattern of successes, while switching between threaded and sequential schedules mainly changed the number of comparisons. In this experiment, the explanation for getting past the barrier lay in the allowed moves and the response to a blocked target, with no additional advantage in the outcome established by distributing the computation.</p>
+                    <h2 class="story-heading">A blocked route or an unreachable order?</h2>
+                    <p>Before we score a failed search, we need to know whether the goal was still reachable: long-range swaps may leave a route to a sorted state that a stubborn policy never finds, whereas adjacent swaps with an immovable barrier may leave no route at all from the starting array. The two failures can look identical at the endpoint, but only one can be repaired by making better choices among the same allowed moves.</p>
+                    <p>Our <a href="/cabinet/k-semantics-reference/k-equations/">K comparison</a> therefore recalculates its null over reachable states for each frozen-cell pattern, so that a barrier shrinking the space of possibilities also changes the blind comparison. Otherwise, we could mistake a smaller space for an improvement in the sorting policy; the paper details the exact state-proposal calculation and its comparison with blind operator walks.</p>
+                    <p>These experiments give us two ways to pursue an explanation of collective behavior by changing the rules underneath it: we can move a waiting rule between algorithms and watch a spatial pattern follow, or separate the moves and choices needed to reach an ordered state around an obstacle. In each case, the intervention tells us which part of the apparent collective competence the proposed mechanism can account for.</p>
+                    <p>The paper and its TeX source are in <code>paper/</code> in the repository. Figures can be regenerated from the committed result JSON.</p>
                     <span class="path-note"
                         >Repository path: dossiers/zhang-levin-playground</span
                     >

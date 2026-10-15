@@ -1,5 +1,5 @@
 #import "../../../addenda/typst-field-manual/tokens.typ": tokens
-#set document(title: "Older Lenia organisms resist the same disturbance", author: "Specter Labs")
+#set document(title: "Development changes the effect of a disturbance", author: "Specter Labs")
 #set page(paper: "a4", margin: (x: 25mm, y: 22mm), fill: rgb("f8f4ea"), footer: context align(right, text(size: 8pt)[Specter Labs · Research notes · #counter(page).display()]))
 #set text(font: tokens.fonts.body, size: 10.5pt, fill: rgb("20212b"))
 #set par(leading: .5em, spacing: 1em)
@@ -7,21 +7,21 @@
 #v(5mm)
 #text(font: tokens.fonts.mono, size: 8pt)[RESEARCH NOTE / DEVELOPMENT / JOURNAL EDITION]
 #v(6mm)
-#text(size: 27pt, style: "italic")[Older Lenia organisms resist the same disturbance]
+#text(size: 27pt, style: "italic")[Development changes the effect of a disturbance]
 #v(5mm)
-#text("16–29 August 2026 · Developmental perturbation study.")
+#text("16–29 August 2026 · Interpretation revised September 2026.")
 
-#text("We often describe an organism as becoming more stable as it develops, but size alone can create the same appearance. A fixed disturbance spread across a larger body may simply be more dilute. To distinguish growth from a deeper change in organization, we fixed the experiment before opening the outcomes and applied matched disturbances to younger and older members of 16 Flow Lenia families.")
+#text("We often describe an organism as becoming more stable as it develops, but a smaller response can have several causes. An intervention may rearrange less material in an older body, or the body may respond differently to the change it receives. Flow Lenia lets us separate these questions by making copies of a saved state and comparing an intervention with its untouched continuation.")
 
-#text("The disturbance touched about 12 per cent of the organism’s matter at both ages. Even with that proportion held steady, its effect after four simulation steps was 91 per cent smaller in the older organisms.")
+#text("The initial age comparison used the same local swap fraction at each age and found smaller downstream differences in later bodies. Meanwhile, sibling shapes grown from varied initial conditions became more different from one another. Reduced sensitivity to this disturbance therefore coexisted with increasing variation in form.")
 
-#text("We then increased the dose until the younger and older bodies showed a comparable initial disruption. The older bodies required 7.7 times as much. Development had changed the body’s susceptibility: the matched intervention no longer had the same power to alter its state.")
+#text("A later experiment followed 64 specimens at 19 ages, recording the actual matter rearranged and adjusting the swap fraction to try to match the early response. The matching was incomplete: only 1,880 of 3,648 selected interventions came within 25 per cent of their target. Later bodies still showed smaller downstream differences in the adjusted comparison, with the age contrast pointing the same way in all 16 groups. This strengthens the evidence for changing susceptibility, but it does not cleanly separate the disturbance delivered from the dynamics that follow it.")
 
-#text("A companion experiment asked whether a controller could exploit a view of the whole organism to steer it better than a local strategy could. While control was active, the whole-body controller outperformed leaving the organism alone. Once “do nothing” was included among the strategies available for each individual case, however, whole-body control was not reliably better than the safest local alternative. At 128 steps after control ended, its advantage had reversed. The controller could force a stronger short-term correction without leaving behind the most durable recovery.")
+#text("The proposed information peak did not identify a special onset of resistance. A gradual developmental change and a distinctive transition at that peak are different hypotheses, and the evidence supports the former more clearly.")
 
-#text("Separate experiments asked whether a response could identify its source and whether hidden channel composition could transfer that response between bodies. Both an aligned donor transplant and a spatially scrambled version moved the recipient toward the donor’s response. The difference between those treatments was unresolved at both tested ages. Changing hidden composition affected the outcome, but these controls did not establish transfer of a response specific to the donor’s arrangement.")
+#text("A companion controller comparison made another useful distinction. Whole-state feedback moved bodies toward a target relative to leaving them alone. Once the strongest comparator correctly included doing nothing, its comparative advantage remained unresolved; at the held-out endpoint 128 steps after release, that advantage was negative. Achieving a target while control is active does not establish superiority over simpler alternatives, or a change that maintains itself after control stops.")
 
-#text("Taken together, the results show that development changed more than body size. Older organisms responded less to the matched disturbance at the measured early horizon. Whole-body control improved short-term correction relative to leaving the body alone, but its advantage did not survive the strongest local comparison and release test. Recognizing a body by its response and transferring that response to another body remain different experimental questions.")
+#text("The useful lesson is that a body needs to be described in relation to the changes we can make to it. Susceptibility, diversity of form, target achievement, and persistence after release are separate measurements. Keeping them separate makes the developmental result more informative, and gives the next experiment a clearer question.")
 
 #v(4mm)
 #text(size: 9pt)[Source: Specter research note N-014, 16–29 August 2026. Journal edition of the web research note.]
