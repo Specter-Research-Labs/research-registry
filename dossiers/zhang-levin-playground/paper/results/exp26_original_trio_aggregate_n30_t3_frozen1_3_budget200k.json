@@ -1,0 +1,393 @@
+{
+  "inputs": [
+    "paper/results/exp26_original_trio_seed40_n30_t3_frozen1_3_budget200k.json",
+    "paper/results/exp26_original_trio_seed41_n30_t3_frozen1_3_budget200k.json",
+    "paper/results/exp26_original_trio_seed42_n30_t3_frozen1_3_budget200k.json"
+  ],
+  "seeds": [
+    40,
+    41,
+    42
+  ],
+  "n_cells": 30,
+  "n_trials_per_seed": 3,
+  "timeout": 5.0,
+  "max_compare_and_swap": 200000,
+  "semantics": "immovable",
+  "matched_substrates": [
+    "threaded_cellview",
+    "sequential_cellview"
+  ],
+  "textbook_centralized_is_reference_only": true,
+  "algorithm_order": [
+    "Bubble",
+    "Insertion",
+    "Selection"
+  ],
+  "frozen_counts": [
+    1,
+    3
+  ],
+  "algorithms": {
+    "Bubble": {
+      "threaded_cellview": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.011927,
+          "avg_swaps": 142.555556,
+          "avg_compare_and_swap_count": 265.222222,
+          "avg_frozen_swap_attempts": 2.777778,
+          "avg_total_move_distance": 285.111111,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 2.666667,
+          "avg_time": 5.017905,
+          "avg_swaps": 67.777778,
+          "avg_compare_and_swap_count": 128.888889,
+          "avg_frozen_swap_attempts": 6.444444,
+          "avg_total_move_distance": 135.555556,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        }
+      },
+      "sequential_cellview": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.00001,
+          "avg_swaps": 142.555556,
+          "avg_compare_and_swap_count": 273.777778,
+          "avg_frozen_swap_attempts": 3.444444,
+          "avg_total_move_distance": 285.111111,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 210590.222222,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 2.666667,
+          "avg_time": 5.000012,
+          "avg_swaps": 67.777778,
+          "avg_compare_and_swap_count": 131.555556,
+          "avg_frozen_swap_attempts": 7.555556,
+          "avg_total_move_distance": 135.555556,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 222147.777778,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        }
+      },
+      "textbook_centralized": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 3.8e-05,
+          "avg_swaps": 142.555556,
+          "avg_compare_and_swap_count": 507.0,
+          "avg_total_move_distance": 285.111111,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "completed": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 2.666667,
+          "avg_time": 2.2e-05,
+          "avg_swaps": 67.777778,
+          "avg_compare_and_swap_count": 246.0,
+          "avg_total_move_distance": 135.555556,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "completed": 9
+          }
+        }
+      },
+      "pairwise_matches": {
+        "1": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        },
+        "3": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        }
+      }
+    },
+    "Insertion": {
+      "threaded_cellview": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.013746,
+          "avg_swaps": 142.555556,
+          "avg_compare_and_swap_count": 142.555556,
+          "avg_frozen_swap_attempts": 1.666667,
+          "avg_total_move_distance": 285.111111,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 2.666667,
+          "avg_time": 5.012437,
+          "avg_swaps": 67.777778,
+          "avg_compare_and_swap_count": 67.777778,
+          "avg_frozen_swap_attempts": 4.111111,
+          "avg_total_move_distance": 135.555556,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        }
+      },
+      "sequential_cellview": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.000047,
+          "avg_swaps": 142.555556,
+          "avg_compare_and_swap_count": 142.555556,
+          "avg_frozen_swap_attempts": 1.666667,
+          "avg_total_move_distance": 285.111111,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 47911.444444,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 2.666667,
+          "avg_time": 5.00005,
+          "avg_swaps": 67.777778,
+          "avg_compare_and_swap_count": 67.777778,
+          "avg_frozen_swap_attempts": 4.0,
+          "avg_total_move_distance": 135.555556,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 49308.222222,
+          "termination_counts": {
+            "wall_timeout": 9
+          }
+        }
+      },
+      "textbook_centralized": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 2.7e-05,
+          "avg_swaps": 170.555556,
+          "avg_compare_and_swap_count": 165.666667,
+          "avg_total_move_distance": 570.222222,
+          "avg_weighted_mean_swap_span": 1.654188,
+          "termination_counts": {
+            "completed": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "avg_error": 2.666667,
+          "avg_time": 1.7e-05,
+          "avg_swaps": 93.888889,
+          "avg_compare_and_swap_count": 86.333333,
+          "avg_total_move_distance": 271.111111,
+          "avg_weighted_mean_swap_span": 1.408523,
+          "termination_counts": {
+            "completed": 9
+          }
+        }
+      },
+      "pairwise_matches": {
+        "1": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        },
+        "3": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        }
+      }
+    },
+    "Selection": {
+      "threaded_cellview": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 9,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.422101,
+          "avg_swaps": 110.444444,
+          "avg_compare_and_swap_count": 531.555556,
+          "avg_frozen_swap_attempts": 2.777778,
+          "avg_total_move_distance": 2097.333333,
+          "avg_mean_move_distance": 9.457506,
+          "avg_weighted_mean_swap_span": 9.457506,
+          "termination_counts": {
+            "success": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 9,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.394309,
+          "avg_swaps": 93.333333,
+          "avg_compare_and_swap_count": 490.222222,
+          "avg_frozen_swap_attempts": 14.666667,
+          "avg_total_move_distance": 1690.888889,
+          "avg_mean_move_distance": 8.996908,
+          "avg_weighted_mean_swap_span": 8.996908,
+          "termination_counts": {
+            "success": 9
+          }
+        }
+      },
+      "sequential_cellview": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 9,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.001893,
+          "avg_swaps": 99.777778,
+          "avg_compare_and_swap_count": 520.111111,
+          "avg_frozen_swap_attempts": 2.777778,
+          "avg_total_move_distance": 1785.555556,
+          "avg_mean_move_distance": 8.81733,
+          "avg_weighted_mean_swap_span": 8.81733,
+          "avg_scheduler_sweeps": 36.0,
+          "termination_counts": {
+            "success": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 9,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.001758,
+          "avg_swaps": 90.444444,
+          "avg_compare_and_swap_count": 486.444444,
+          "avg_frozen_swap_attempts": 14.666667,
+          "avg_total_move_distance": 1633.555556,
+          "avg_mean_move_distance": 8.942259,
+          "avg_weighted_mean_swap_span": 8.942259,
+          "avg_scheduler_sweeps": 36.111111,
+          "termination_counts": {
+            "success": 9
+          }
+        }
+      },
+      "textbook_centralized": {
+        "1": {
+          "n_trials": 9,
+          "success_count": 9,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 2.5e-05,
+          "avg_swaps": 24.0,
+          "avg_compare_and_swap_count": 406.0,
+          "avg_total_move_distance": 433.111111,
+          "avg_weighted_mean_swap_span": 9.056213,
+          "termination_counts": {
+            "completed": 9
+          }
+        },
+        "3": {
+          "n_trials": 9,
+          "success_count": 9,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 2.6e-05,
+          "avg_swaps": 23.111111,
+          "avg_compare_and_swap_count": 351.0,
+          "avg_total_move_distance": 390.222222,
+          "avg_weighted_mean_swap_span": 8.437354,
+          "termination_counts": {
+            "completed": 9
+          }
+        }
+      },
+      "pairwise_matches": {
+        "1": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        },
+        "3": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        }
+      }
+    }
+  }
+}

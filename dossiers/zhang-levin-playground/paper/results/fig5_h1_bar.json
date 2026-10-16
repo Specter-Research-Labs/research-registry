@@ -1,0 +1,64 @@
+{
+  "h1_1d": [
+    {
+      "label": "Pure Bubble",
+      "mean": 0.566667,
+      "std": 0.935261,
+      "n_trials": 30
+    },
+    {
+      "label": "Pure Selection",
+      "mean": 9.9,
+      "std": 2.682639,
+      "n_trials": 30
+    },
+    {
+      "label": "Pure Insertion",
+      "mean": 1.1,
+      "std": 1.647359,
+      "n_trials": 30
+    },
+    {
+      "label": "Pure Gnome",
+      "mean": 0.833333,
+      "std": 1.147211,
+      "n_trials": 30
+    },
+    {
+      "label": "Bubble+Selection",
+      "mean": 5.5,
+      "std": 3.037127,
+      "n_trials": 30
+    }
+  ],
+  "h1_2d": [
+    {
+      "label": "Bubble2D",
+      "mean": 25.566667,
+      "std": 5.203999,
+      "success": 0.0,
+      "n_trials": 30
+    },
+    {
+      "label": "Selection2D",
+      "mean": 19.866667,
+      "std": 3.775907,
+      "success": 1.0,
+      "n_trials": 30
+    }
+  ],
+  "provenance": {
+    "generator": "paper/compute_fig5_h1.py",
+    "n_cells": 30,
+    "n_trials_1d": 30,
+    "timeout_1d": 3.0,
+    "grid_size": 6,
+    "connectivity": 4,
+    "n_trials_2d": 30,
+    "max_steps_2d": 1080,
+    "base_seed": 20260306,
+    "distance_metric": "1 / (1 + swap_count)",
+    "homology": "H1 count from ripser with maxdim=1",
+    "two_d_target": "shell ordering by squared distance from origin"
+  }
+}

@@ -176,8 +176,12 @@ def _run_trial(
     for cell in cells:
         cell.group = cell_group
 
+    # Frozen cells never get a thread, as in the original
+    # multithread_cell_sorting_with_frozen_steps.py,
+    # because a spinning frozen Selection thread competes for the interpreter lock without acting.
+    active_cells = [cell for i, cell in enumerate(cells) if i not in frozen_indices]
     with thread_lock:
-        for cell in cells:
+        for cell in active_cells:
             cell.start()
         cell_group.start()
 
@@ -199,7 +203,7 @@ def _run_trial(
         compare_and_swap_count = probe.compare_and_swap_count
         _kill_all(cells, [cell_group])
 
-    for cell in cells:
+    for cell in active_cells:
         cell.join(timeout=1)
     cell_group.join(timeout=1)
 

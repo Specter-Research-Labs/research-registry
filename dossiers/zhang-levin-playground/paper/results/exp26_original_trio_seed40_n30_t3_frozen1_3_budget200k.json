@@ -1,0 +1,1752 @@
+{
+  "seed": 40,
+  "n_cells": 30,
+  "n_trials": 3,
+  "timeout": 5.0,
+  "max_compare_and_swap": 200000,
+  "semantics": "immovable",
+  "matched_substrates": [
+    "threaded_cellview",
+    "sequential_cellview"
+  ],
+  "textbook_centralized_is_reference_only": true,
+  "algorithm_order": [
+    "Bubble",
+    "Insertion",
+    "Selection"
+  ],
+  "frozen_counts": [
+    1,
+    3
+  ],
+  "algorithms": {
+    "Bubble": {
+      "threaded_cellview": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.009168783823649,
+          "avg_swaps": 121.33333333333333,
+          "avg_compare_and_swap_count": 221.66666666666666,
+          "avg_frozen_swap_attempts": 3.3333333333333335,
+          "avg_total_move_distance": 242.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 2.6666666666666665,
+          "avg_time": 5.013332764307658,
+          "avg_swaps": 76.33333333333333,
+          "avg_compare_and_swap_count": 151.66666666666666,
+          "avg_frozen_swap_attempts": 6.666666666666667,
+          "avg_total_move_distance": 152.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        }
+      },
+      "sequential_cellview": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.0000081062316895,
+          "avg_swaps": 121.33333333333333,
+          "avg_compare_and_swap_count": 236.0,
+          "avg_frozen_swap_attempts": 4.0,
+          "avg_total_move_distance": 242.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 210363.66666666666,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 2.6666666666666665,
+          "avg_time": 5.000013589859009,
+          "avg_swaps": 76.33333333333333,
+          "avg_compare_and_swap_count": 146.33333333333334,
+          "avg_frozen_swap_attempts": 8.666666666666666,
+          "avg_total_move_distance": 152.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 222379.66666666666,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        }
+      },
+      "textbook_centralized": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 3.24249267578125e-05,
+          "avg_swaps": 121.33333333333333,
+          "avg_compare_and_swap_count": 432.0,
+          "avg_total_move_distance": 242.66666666666666,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "completed": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 2.6666666666666665,
+          "avg_time": 2.376238505045573e-05,
+          "avg_swaps": 76.33333333333333,
+          "avg_compare_and_swap_count": 282.0,
+          "avg_total_move_distance": 152.66666666666666,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "completed": 3
+          }
+        }
+      },
+      "paired_trials": {
+        "1": [
+          {
+            "trial_id": 0,
+            "trial_seed": 209521795,
+            "initial_values": [
+              24,
+              5,
+              22,
+              27,
+              12,
+              19,
+              26,
+              13,
+              25,
+              3,
+              10,
+              15,
+              2,
+              28,
+              17,
+              0,
+              29,
+              8,
+              11,
+              4,
+              6,
+              23,
+              20,
+              21,
+              9,
+              7,
+              1,
+              16,
+              18,
+              14
+            ],
+            "frozen_indices": [
+              4
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.004498243331909,
+              "swaps": 167,
+              "compare_and_swap_count": 286,
+              "frozen_swap_attempts": 4,
+              "total_move_distance": 334.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.000006914138794,
+              "swaps": 167,
+              "compare_and_swap_count": 318,
+              "frozen_swap_attempts": 4,
+              "total_move_distance": 334.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 213678,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 1,
+              "time": 4.506111145019531e-05,
+              "swaps": 167,
+              "compare_and_swap_count": 567,
+              "total_move_distance": 334.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 1,
+            "trial_seed": 651165719,
+            "initial_values": [
+              29,
+              19,
+              11,
+              0,
+              15,
+              21,
+              24,
+              27,
+              8,
+              6,
+              22,
+              3,
+              18,
+              2,
+              12,
+              14,
+              17,
+              20,
+              16,
+              5,
+              9,
+              4,
+              7,
+              25,
+              23,
+              10,
+              26,
+              1,
+              28,
+              13
+            ],
+            "frozen_indices": [
+              19
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.003640174865723,
+              "swaps": 110,
+              "compare_and_swap_count": 206,
+              "frozen_swap_attempts": 3,
+              "total_move_distance": 220.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.000012159347534,
+              "swaps": 110,
+              "compare_and_swap_count": 224,
+              "frozen_swap_attempts": 5,
+              "total_move_distance": 220.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 207216,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 1,
+              "time": 2.7179718017578125e-05,
+              "swaps": 110,
+              "compare_and_swap_count": 351,
+              "total_move_distance": 220.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 2,
+            "trial_seed": 1029112401,
+            "initial_values": [
+              4,
+              18,
+              11,
+              8,
+              23,
+              5,
+              21,
+              1,
+              16,
+              13,
+              28,
+              17,
+              22,
+              12,
+              0,
+              2,
+              27,
+              9,
+              24,
+              19,
+              10,
+              20,
+              15,
+              29,
+              25,
+              14,
+              7,
+              26,
+              6,
+              3
+            ],
+            "frozen_indices": [
+              13
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.019367933273315,
+              "swaps": 87,
+              "compare_and_swap_count": 173,
+              "frozen_swap_attempts": 3,
+              "total_move_distance": 174.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.00000524520874,
+              "swaps": 87,
+              "compare_and_swap_count": 166,
+              "frozen_swap_attempts": 3,
+              "total_move_distance": 174.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 210197,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 1,
+              "time": 2.5033950805664062e-05,
+              "swaps": 87,
+              "compare_and_swap_count": 378,
+              "total_move_distance": 174.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "completed"
+            }
+          }
+        ],
+        "3": [
+          {
+            "trial_id": 0,
+            "trial_seed": 857621968,
+            "initial_values": [
+              20,
+              29,
+              24,
+              4,
+              15,
+              27,
+              1,
+              11,
+              19,
+              26,
+              18,
+              13,
+              0,
+              3,
+              12,
+              17,
+              10,
+              21,
+              2,
+              8,
+              9,
+              22,
+              5,
+              6,
+              23,
+              25,
+              14,
+              28,
+              7,
+              16
+            ],
+            "frozen_indices": [
+              1,
+              7,
+              16
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.0127551555633545,
+              "swaps": 54,
+              "compare_and_swap_count": 108,
+              "frozen_swap_attempts": 7,
+              "total_move_distance": 108.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.0000081062316895,
+              "swaps": 54,
+              "compare_and_swap_count": 96,
+              "frozen_swap_attempts": 8,
+              "total_move_distance": 108.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 221335,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 3,
+              "time": 1.6927719116210938e-05,
+              "swaps": 54,
+              "compare_and_swap_count": 207,
+              "total_move_distance": 108.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 1,
+            "trial_seed": 605663322,
+            "initial_values": [
+              15,
+              3,
+              2,
+              22,
+              25,
+              6,
+              29,
+              17,
+              7,
+              19,
+              4,
+              14,
+              21,
+              18,
+              8,
+              28,
+              16,
+              10,
+              13,
+              12,
+              11,
+              23,
+              0,
+              9,
+              27,
+              20,
+              5,
+              26,
+              1,
+              24
+            ],
+            "frozen_indices": [
+              1,
+              11,
+              18
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.01143217086792,
+              "swaps": 55,
+              "compare_and_swap_count": 121,
+              "frozen_swap_attempts": 7,
+              "total_move_distance": 110.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.0000159740448,
+              "swaps": 55,
+              "compare_and_swap_count": 103,
+              "frozen_swap_attempts": 9,
+              "total_move_distance": 110.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 221851,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 3,
+              "time": 1.811981201171875e-05,
+              "swaps": 55,
+              "compare_and_swap_count": 207,
+              "total_move_distance": 110.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 2,
+            "trial_seed": 957551650,
+            "initial_values": [
+              7,
+              4,
+              22,
+              2,
+              26,
+              11,
+              13,
+              6,
+              10,
+              29,
+              15,
+              12,
+              19,
+              14,
+              20,
+              28,
+              5,
+              27,
+              8,
+              21,
+              9,
+              0,
+              25,
+              17,
+              16,
+              18,
+              1,
+              3,
+              24,
+              23
+            ],
+            "frozen_indices": [
+              3,
+              7,
+              29
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 2,
+              "time": 5.015810966491699,
+              "swaps": 120,
+              "compare_and_swap_count": 226,
+              "frozen_swap_attempts": 6,
+              "total_move_distance": 240.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 2,
+              "time": 5.000016689300537,
+              "swaps": 120,
+              "compare_and_swap_count": 240,
+              "frozen_swap_attempts": 9,
+              "total_move_distance": 240.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 223953,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 2,
+              "time": 3.62396240234375e-05,
+              "swaps": 120,
+              "compare_and_swap_count": 432,
+              "total_move_distance": 240.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "completed"
+            }
+          }
+        ]
+      },
+      "pairwise_matches": {
+        "1": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        },
+        "3": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        }
+      }
+    },
+    "Insertion": {
+      "threaded_cellview": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.0113920370737715,
+          "avg_swaps": 121.33333333333333,
+          "avg_compare_and_swap_count": 121.33333333333333,
+          "avg_frozen_swap_attempts": 2.0,
+          "avg_total_move_distance": 242.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 2.6666666666666665,
+          "avg_time": 5.009607791900635,
+          "avg_swaps": 76.33333333333333,
+          "avg_compare_and_swap_count": 76.33333333333333,
+          "avg_frozen_swap_attempts": 4.0,
+          "avg_total_move_distance": 152.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        }
+      },
+      "sequential_cellview": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 5.000045379002889,
+          "avg_swaps": 121.33333333333333,
+          "avg_compare_and_swap_count": 121.33333333333333,
+          "avg_frozen_swap_attempts": 2.0,
+          "avg_total_move_distance": 242.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 47643.666666666664,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 2.6666666666666665,
+          "avg_time": 5.000048637390137,
+          "avg_swaps": 76.33333333333333,
+          "avg_compare_and_swap_count": 76.33333333333333,
+          "avg_frozen_swap_attempts": 4.0,
+          "avg_total_move_distance": 152.66666666666666,
+          "avg_mean_move_distance": 1.0,
+          "avg_weighted_mean_swap_span": 1.0,
+          "avg_scheduler_sweeps": 48918.666666666664,
+          "termination_counts": {
+            "wall_timeout": 3
+          }
+        }
+      },
+      "textbook_centralized": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 1.0,
+          "avg_time": 2.4954477945963543e-05,
+          "avg_swaps": 149.33333333333334,
+          "avg_compare_and_swap_count": 144.66666666666666,
+          "avg_total_move_distance": 485.3333333333333,
+          "avg_weighted_mean_swap_span": 1.606689,
+          "termination_counts": {
+            "completed": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 0.0,
+          "success_rate": 0.0,
+          "avg_error": 2.6666666666666665,
+          "avg_time": 1.629193623860677e-05,
+          "avg_swaps": 102.33333333333333,
+          "avg_compare_and_swap_count": 95.0,
+          "avg_total_move_distance": 305.3333333333333,
+          "avg_weighted_mean_swap_span": 1.4506203333333334,
+          "termination_counts": {
+            "completed": 3
+          }
+        }
+      },
+      "paired_trials": {
+        "1": [
+          {
+            "trial_id": 0,
+            "trial_seed": 209521795,
+            "initial_values": [
+              24,
+              5,
+              22,
+              27,
+              12,
+              19,
+              26,
+              13,
+              25,
+              3,
+              10,
+              15,
+              2,
+              28,
+              17,
+              0,
+              29,
+              8,
+              11,
+              4,
+              6,
+              23,
+              20,
+              21,
+              9,
+              7,
+              1,
+              16,
+              18,
+              14
+            ],
+            "frozen_indices": [
+              4
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.003910064697266,
+              "swaps": 167,
+              "compare_and_swap_count": 167,
+              "frozen_swap_attempts": 3,
+              "total_move_distance": 334.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.000032901763916,
+              "swaps": 167,
+              "compare_and_swap_count": 167,
+              "frozen_swap_attempts": 3,
+              "total_move_distance": 334.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 51152,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 1,
+              "time": 3.2901763916015625e-05,
+              "swaps": 195,
+              "compare_and_swap_count": 189,
+              "total_move_distance": 668.0,
+              "weighted_mean_swap_span": 1.712821,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 1,
+            "trial_seed": 651165719,
+            "initial_values": [
+              29,
+              19,
+              11,
+              0,
+              15,
+              21,
+              24,
+              27,
+              8,
+              6,
+              22,
+              3,
+              18,
+              2,
+              12,
+              14,
+              17,
+              20,
+              16,
+              5,
+              9,
+              4,
+              7,
+              25,
+              23,
+              10,
+              26,
+              1,
+              28,
+              13
+            ],
+            "frozen_indices": [
+              19
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.0214269161224365,
+              "swaps": 110,
+              "compare_and_swap_count": 110,
+              "frozen_swap_attempts": 2,
+              "total_move_distance": 220.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.000049114227295,
+              "swaps": 110,
+              "compare_and_swap_count": 110,
+              "frozen_swap_attempts": 2,
+              "total_move_distance": 220.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 46337,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 1,
+              "time": 2.193450927734375e-05,
+              "swaps": 138,
+              "compare_and_swap_count": 132,
+              "total_move_distance": 440.0,
+              "weighted_mean_swap_span": 1.594203,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 2,
+            "trial_seed": 1029112401,
+            "initial_values": [
+              4,
+              18,
+              11,
+              8,
+              23,
+              5,
+              21,
+              1,
+              16,
+              13,
+              28,
+              17,
+              22,
+              12,
+              0,
+              2,
+              27,
+              9,
+              24,
+              19,
+              10,
+              20,
+              15,
+              29,
+              25,
+              14,
+              7,
+              26,
+              6,
+              3
+            ],
+            "frozen_indices": [
+              13
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.008839130401611,
+              "swaps": 87,
+              "compare_and_swap_count": 87,
+              "frozen_swap_attempts": 1,
+              "total_move_distance": 174.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 1,
+              "time": 5.000054121017456,
+              "swaps": 87,
+              "compare_and_swap_count": 87,
+              "frozen_swap_attempts": 1,
+              "total_move_distance": 174.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 45442,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 1,
+              "time": 2.002716064453125e-05,
+              "swaps": 115,
+              "compare_and_swap_count": 113,
+              "total_move_distance": 348.0,
+              "weighted_mean_swap_span": 1.513043,
+              "termination": "completed"
+            }
+          }
+        ],
+        "3": [
+          {
+            "trial_id": 0,
+            "trial_seed": 857621968,
+            "initial_values": [
+              20,
+              29,
+              24,
+              4,
+              15,
+              27,
+              1,
+              11,
+              19,
+              26,
+              18,
+              13,
+              0,
+              3,
+              12,
+              17,
+              10,
+              21,
+              2,
+              8,
+              9,
+              22,
+              5,
+              6,
+              23,
+              25,
+              14,
+              28,
+              7,
+              16
+            ],
+            "frozen_indices": [
+              1,
+              7,
+              16
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.008977174758911,
+              "swaps": 54,
+              "compare_and_swap_count": 54,
+              "frozen_swap_attempts": 5,
+              "total_move_distance": 108.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.000025749206543,
+              "swaps": 54,
+              "compare_and_swap_count": 54,
+              "frozen_swap_attempts": 5,
+              "total_move_distance": 108.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 49139,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 3,
+              "time": 1.3113021850585938e-05,
+              "swaps": 80,
+              "compare_and_swap_count": 71,
+              "total_move_distance": 216.0,
+              "weighted_mean_swap_span": 1.35,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 1,
+            "trial_seed": 605663322,
+            "initial_values": [
+              15,
+              3,
+              2,
+              22,
+              25,
+              6,
+              29,
+              17,
+              7,
+              19,
+              4,
+              14,
+              21,
+              18,
+              8,
+              28,
+              16,
+              10,
+              13,
+              12,
+              11,
+              23,
+              0,
+              9,
+              27,
+              20,
+              5,
+              26,
+              1,
+              24
+            ],
+            "frozen_indices": [
+              1,
+              11,
+              18
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.017301082611084,
+              "swaps": 55,
+              "compare_and_swap_count": 55,
+              "frozen_swap_attempts": 5,
+              "total_move_distance": 110.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 3,
+              "time": 5.000044107437134,
+              "swaps": 55,
+              "compare_and_swap_count": 55,
+              "frozen_swap_attempts": 5,
+              "total_move_distance": 110.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 48808,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 3,
+              "time": 1.4781951904296875e-05,
+              "swaps": 81,
+              "compare_and_swap_count": 74,
+              "total_move_distance": 220.0,
+              "weighted_mean_swap_span": 1.358025,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 2,
+            "trial_seed": 957551650,
+            "initial_values": [
+              7,
+              4,
+              22,
+              2,
+              26,
+              11,
+              13,
+              6,
+              10,
+              29,
+              15,
+              12,
+              19,
+              14,
+              20,
+              28,
+              5,
+              27,
+              8,
+              21,
+              9,
+              0,
+              25,
+              17,
+              16,
+              18,
+              1,
+              3,
+              24,
+              23
+            ],
+            "frozen_indices": [
+              3,
+              7,
+              29
+            ],
+            "threaded_cellview": {
+              "success": false,
+              "error": 2,
+              "time": 5.002545118331909,
+              "swaps": 120,
+              "compare_and_swap_count": 120,
+              "frozen_swap_attempts": 2,
+              "total_move_distance": 240.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "termination": "wall_timeout"
+            },
+            "sequential_cellview": {
+              "success": false,
+              "error": 2,
+              "time": 5.000076055526733,
+              "swaps": 120,
+              "compare_and_swap_count": 120,
+              "frozen_swap_attempts": 2,
+              "total_move_distance": 240.0,
+              "mean_move_distance": 1.0,
+              "weighted_mean_swap_span": 1.0,
+              "scheduler_sweeps": 48809,
+              "termination": "wall_timeout"
+            },
+            "textbook_centralized": {
+              "success": false,
+              "error": 2,
+              "time": 2.09808349609375e-05,
+              "swaps": 146,
+              "compare_and_swap_count": 140,
+              "total_move_distance": 480.0,
+              "weighted_mean_swap_span": 1.643836,
+              "termination": "completed"
+            }
+          }
+        ]
+      },
+      "pairwise_matches": {
+        "1": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        },
+        "3": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        }
+      }
+    },
+    "Selection": {
+      "threaded_cellview": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 3.0,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.3650871117909749,
+          "avg_swaps": 105.0,
+          "avg_compare_and_swap_count": 528.0,
+          "avg_frozen_swap_attempts": 2.6666666666666665,
+          "avg_total_move_distance": 1908.6666666666667,
+          "avg_mean_move_distance": 9.068826666666666,
+          "avg_weighted_mean_swap_span": 9.068826666666666,
+          "termination_counts": {
+            "success": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 3.0,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.321774164835612,
+          "avg_swaps": 90.66666666666667,
+          "avg_compare_and_swap_count": 494.3333333333333,
+          "avg_frozen_swap_attempts": 11.333333333333334,
+          "avg_total_move_distance": 1673.3333333333333,
+          "avg_mean_move_distance": 9.232289666666667,
+          "avg_weighted_mean_swap_span": 9.232289666666667,
+          "termination_counts": {
+            "success": 3
+          }
+        }
+      },
+      "sequential_cellview": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 3.0,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.001805702845255534,
+          "avg_swaps": 86.33333333333333,
+          "avg_compare_and_swap_count": 509.0,
+          "avg_frozen_swap_attempts": 2.6666666666666665,
+          "avg_total_move_distance": 1368.6666666666667,
+          "avg_mean_move_distance": 7.750525,
+          "avg_weighted_mean_swap_span": 7.750525,
+          "avg_scheduler_sweeps": 35.666666666666664,
+          "termination_counts": {
+            "success": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 3.0,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 0.0017876625061035156,
+          "avg_swaps": 91.33333333333333,
+          "avg_compare_and_swap_count": 494.3333333333333,
+          "avg_frozen_swap_attempts": 11.333333333333334,
+          "avg_total_move_distance": 1692.0,
+          "avg_mean_move_distance": 9.284358666666668,
+          "avg_weighted_mean_swap_span": 9.284358666666668,
+          "avg_scheduler_sweeps": 37.0,
+          "termination_counts": {
+            "success": 3
+          }
+        }
+      },
+      "textbook_centralized": {
+        "1": {
+          "n_trials": 3.0,
+          "success_count": 3.0,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 2.5033950805664062e-05,
+          "avg_swaps": 23.666666666666668,
+          "avg_compare_and_swap_count": 406.0,
+          "avg_total_move_distance": 434.0,
+          "avg_weighted_mean_swap_span": 9.23202,
+          "termination_counts": {
+            "completed": 3
+          }
+        },
+        "3": {
+          "n_trials": 3.0,
+          "success_count": 3.0,
+          "success_rate": 1.0,
+          "avg_error": 0.0,
+          "avg_time": 2.296765645345052e-05,
+          "avg_swaps": 24.666666666666668,
+          "avg_compare_and_swap_count": 351.0,
+          "avg_total_move_distance": 412.0,
+          "avg_weighted_mean_swap_span": 8.346154,
+          "termination_counts": {
+            "completed": 3
+          }
+        }
+      },
+      "paired_trials": {
+        "1": [
+          {
+            "trial_id": 0,
+            "trial_seed": 209521795,
+            "initial_values": [
+              24,
+              5,
+              22,
+              27,
+              12,
+              19,
+              26,
+              13,
+              25,
+              3,
+              10,
+              15,
+              2,
+              28,
+              17,
+              0,
+              29,
+              8,
+              11,
+              4,
+              6,
+              23,
+              20,
+              21,
+              9,
+              7,
+              1,
+              16,
+              18,
+              14
+            ],
+            "frozen_indices": [
+              4
+            ],
+            "threaded_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.20858025550842285,
+              "swaps": 96,
+              "compare_and_swap_count": 527,
+              "frozen_swap_attempts": 8,
+              "total_move_distance": 1716.0,
+              "mean_move_distance": 8.9375,
+              "weighted_mean_swap_span": 8.9375,
+              "termination": "success"
+            },
+            "sequential_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.0017769336700439453,
+              "swaps": 102,
+              "compare_and_swap_count": 533,
+              "frozen_swap_attempts": 8,
+              "total_move_distance": 1762.0,
+              "mean_move_distance": 8.637255,
+              "weighted_mean_swap_span": 8.637255,
+              "scheduler_sweeps": 34,
+              "termination": "success"
+            },
+            "textbook_centralized": {
+              "success": true,
+              "error": 0,
+              "time": 2.5987625122070312e-05,
+              "swaps": 22,
+              "compare_and_swap_count": 406,
+              "total_move_distance": 474.0,
+              "weighted_mean_swap_span": 10.772727,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 1,
+            "trial_seed": 651165719,
+            "initial_values": [
+              29,
+              19,
+              11,
+              0,
+              15,
+              21,
+              24,
+              27,
+              8,
+              6,
+              22,
+              3,
+              18,
+              2,
+              12,
+              14,
+              17,
+              20,
+              16,
+              5,
+              9,
+              4,
+              7,
+              25,
+              23,
+              10,
+              26,
+              1,
+              28,
+              13
+            ],
+            "frozen_indices": [
+              19
+            ],
+            "threaded_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.4407169818878174,
+              "swaps": 115,
+              "compare_and_swap_count": 531,
+              "frozen_swap_attempts": 0,
+              "total_move_distance": 2196.0,
+              "mean_move_distance": 9.547826,
+              "weighted_mean_swap_span": 9.547826,
+              "termination": "success"
+            },
+            "sequential_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.0015408992767333984,
+              "swaps": 63,
+              "compare_and_swap_count": 479,
+              "frozen_swap_attempts": 0,
+              "total_move_distance": 820.0,
+              "mean_move_distance": 6.507937,
+              "weighted_mean_swap_span": 6.507937,
+              "scheduler_sweeps": 35,
+              "termination": "success"
+            },
+            "textbook_centralized": {
+              "success": true,
+              "error": 0,
+              "time": 2.4080276489257812e-05,
+              "swaps": 25,
+              "compare_and_swap_count": 406,
+              "total_move_distance": 392.0,
+              "weighted_mean_swap_span": 7.84,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 2,
+            "trial_seed": 1029112401,
+            "initial_values": [
+              4,
+              18,
+              11,
+              8,
+              23,
+              5,
+              21,
+              1,
+              16,
+              13,
+              28,
+              17,
+              22,
+              12,
+              0,
+              2,
+              27,
+              9,
+              24,
+              19,
+              10,
+              20,
+              15,
+              29,
+              25,
+              14,
+              7,
+              26,
+              6,
+              3
+            ],
+            "frozen_indices": [
+              13
+            ],
+            "threaded_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.44596409797668457,
+              "swaps": 104,
+              "compare_and_swap_count": 526,
+              "frozen_swap_attempts": 0,
+              "total_move_distance": 1814.0,
+              "mean_move_distance": 8.721154,
+              "weighted_mean_swap_span": 8.721154,
+              "termination": "success"
+            },
+            "sequential_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.002099275588989258,
+              "swaps": 94,
+              "compare_and_swap_count": 515,
+              "frozen_swap_attempts": 0,
+              "total_move_distance": 1524.0,
+              "mean_move_distance": 8.106383,
+              "weighted_mean_swap_span": 8.106383,
+              "scheduler_sweeps": 38,
+              "termination": "success"
+            },
+            "textbook_centralized": {
+              "success": true,
+              "error": 0,
+              "time": 2.5033950805664062e-05,
+              "swaps": 24,
+              "compare_and_swap_count": 406,
+              "total_move_distance": 436.0,
+              "weighted_mean_swap_span": 9.083333,
+              "termination": "completed"
+            }
+          }
+        ],
+        "3": [
+          {
+            "trial_id": 0,
+            "trial_seed": 857621968,
+            "initial_values": [
+              20,
+              29,
+              24,
+              4,
+              15,
+              27,
+              1,
+              11,
+              19,
+              26,
+              18,
+              13,
+              0,
+              3,
+              12,
+              17,
+              10,
+              21,
+              2,
+              8,
+              9,
+              22,
+              5,
+              6,
+              23,
+              25,
+              14,
+              28,
+              7,
+              16
+            ],
+            "frozen_indices": [
+              1,
+              7,
+              16
+            ],
+            "threaded_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.27234387397766113,
+              "swaps": 94,
+              "compare_and_swap_count": 505,
+              "frozen_swap_attempts": 30,
+              "total_move_distance": 1544.0,
+              "mean_move_distance": 8.212766,
+              "weighted_mean_swap_span": 8.212766,
+              "termination": "success"
+            },
+            "sequential_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.0017070770263671875,
+              "swaps": 92,
+              "compare_and_swap_count": 502,
+              "frozen_swap_attempts": 30,
+              "total_move_distance": 1470.0,
+              "mean_move_distance": 7.98913,
+              "weighted_mean_swap_span": 7.98913,
+              "scheduler_sweeps": 35,
+              "termination": "success"
+            },
+            "textbook_centralized": {
+              "success": true,
+              "error": 0,
+              "time": 2.288818359375e-05,
+              "swaps": 24,
+              "compare_and_swap_count": 351,
+              "total_move_distance": 376.0,
+              "weighted_mean_swap_span": 7.833333,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 1,
+            "trial_seed": 605663322,
+            "initial_values": [
+              15,
+              3,
+              2,
+              22,
+              25,
+              6,
+              29,
+              17,
+              7,
+              19,
+              4,
+              14,
+              21,
+              18,
+              8,
+              28,
+              16,
+              10,
+              13,
+              12,
+              11,
+              23,
+              0,
+              9,
+              27,
+              20,
+              5,
+              26,
+              1,
+              24
+            ],
+            "frozen_indices": [
+              1,
+              11,
+              18
+            ],
+            "threaded_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.39492082595825195,
+              "swaps": 78,
+              "compare_and_swap_count": 482,
+              "frozen_swap_attempts": 4,
+              "total_move_distance": 1492.0,
+              "mean_move_distance": 9.564103,
+              "weighted_mean_swap_span": 9.564103,
+              "termination": "success"
+            },
+            "sequential_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.001953125,
+              "swaps": 98,
+              "compare_and_swap_count": 502,
+              "frozen_swap_attempts": 4,
+              "total_move_distance": 1882.0,
+              "mean_move_distance": 9.602041,
+              "weighted_mean_swap_span": 9.602041,
+              "scheduler_sweeps": 40,
+              "termination": "success"
+            },
+            "textbook_centralized": {
+              "success": true,
+              "error": 0,
+              "time": 2.288818359375e-05,
+              "swaps": 24,
+              "compare_and_swap_count": 351,
+              "total_move_distance": 416.0,
+              "weighted_mean_swap_span": 8.666667,
+              "termination": "completed"
+            }
+          },
+          {
+            "trial_id": 2,
+            "trial_seed": 957551650,
+            "initial_values": [
+              7,
+              4,
+              22,
+              2,
+              26,
+              11,
+              13,
+              6,
+              10,
+              29,
+              15,
+              12,
+              19,
+              14,
+              20,
+              28,
+              5,
+              27,
+              8,
+              21,
+              9,
+              0,
+              25,
+              17,
+              16,
+              18,
+              1,
+              3,
+              24,
+              23
+            ],
+            "frozen_indices": [
+              3,
+              7,
+              29
+            ],
+            "threaded_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.29805779457092285,
+              "swaps": 100,
+              "compare_and_swap_count": 496,
+              "frozen_swap_attempts": 0,
+              "total_move_distance": 1984.0,
+              "mean_move_distance": 9.92,
+              "weighted_mean_swap_span": 9.92,
+              "termination": "success"
+            },
+            "sequential_cellview": {
+              "success": true,
+              "error": 0,
+              "time": 0.0017027854919433594,
+              "swaps": 84,
+              "compare_and_swap_count": 479,
+              "frozen_swap_attempts": 0,
+              "total_move_distance": 1724.0,
+              "mean_move_distance": 10.261905,
+              "weighted_mean_swap_span": 10.261905,
+              "scheduler_sweeps": 36,
+              "termination": "success"
+            },
+            "textbook_centralized": {
+              "success": true,
+              "error": 0,
+              "time": 2.3126602172851562e-05,
+              "swaps": 26,
+              "compare_and_swap_count": 351,
+              "total_move_distance": 444.0,
+              "weighted_mean_swap_span": 8.538462,
+              "termination": "completed"
+            }
+          }
+        ]
+      },
+      "pairwise_matches": {
+        "1": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        },
+        "3": {
+          "threaded_vs_sequential_success_match_rate": 1.0,
+          "threaded_vs_sequential_error_match_rate": 1.0,
+          "threaded_vs_textbook_success_match_rate": 1.0,
+          "threaded_vs_textbook_error_match_rate": 1.0,
+          "sequential_vs_textbook_success_match_rate": 1.0,
+          "sequential_vs_textbook_error_match_rate": 1.0
+        }
+      }
+    }
+  }
+}

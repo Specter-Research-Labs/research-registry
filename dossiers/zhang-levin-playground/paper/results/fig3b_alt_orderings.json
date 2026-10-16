@@ -1,0 +1,262 @@
+{
+  "source": "exp28_2d_canonical.py raw trial archive",
+  "raw_trials": "paper/results/exp28_2d_canonical_trials.json",
+  "conditions": {
+    "6x6_4_row_major": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 0.0,
+          "3": 0.0,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "3": 0.02,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 1.0,
+          "avg_dips": 187.94,
+          "success": 0.02
+        }
+      }
+    },
+    "6x6_4_serpentine": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "3": 0.0,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "3": 0.0,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 1.0,
+          "avg_dips": 173.92,
+          "success": 0.0
+        }
+      }
+    },
+    "6x6_8_row_major": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 0.0,
+          "3": 0.0,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "3": 0.0,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 1.0,
+          "avg_dips": 161.34,
+          "success": 0.0
+        }
+      }
+    },
+    "6x6_8_serpentine": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "3": 0.06,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.06
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "3": 0.02,
+          "6": 0.0,
+          "9": 0.0
+        },
+        "delay": {
+          "frozen": 3,
+          "dip_rate": 1.0,
+          "avg_dips": 156.84,
+          "success": 0.02
+        }
+      }
+    },
+    "8x8_4_row_major": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 0.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 1.0,
+          "avg_dips": 268.5,
+          "success": 0.0
+        }
+      }
+    },
+    "8x8_4_serpentine": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 1.0,
+          "avg_dips": 274.28,
+          "success": 0.0
+        }
+      }
+    },
+    "8x8_8_row_major": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 0.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 1.0,
+          "avg_dips": 255.08,
+          "success": 0.0
+        }
+      }
+    },
+    "8x8_8_serpentine": {
+      "LocalOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 0.0,
+          "avg_dips": 0.0,
+          "success": 0.0
+        }
+      },
+      "SelectionOrder2D": {
+        "navigation": {
+          "0": 1.0,
+          "5": 0.0,
+          "11": 0.0,
+          "16": 0.0
+        },
+        "delay": {
+          "frozen": 5,
+          "dip_rate": 1.0,
+          "avg_dips": 254.84,
+          "success": 0.0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generator": "paper/aggregate_fig3_2d.py",
+    "alt_trials": 50,
+    "grid_sizes": [
+      6,
+      8
+    ],
+    "connectivities": [
+      4,
+      8
+    ],
+    "alt_modes": [
+      "row_major",
+      "serpentine"
+    ]
+  }
+}

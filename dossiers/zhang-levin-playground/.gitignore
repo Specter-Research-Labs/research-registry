@@ -11,3 +11,6 @@ wheels/
 
 # Generated data and local data-volume links. Rebuild via the dossier generators.
 data
+
+# 12.6 MB of seeded 2D trial rows; regenerate with exp28_2d_canonical.py. The tracked Figure 3 inputs are its aggregates.
+paper/results/exp28_2d_canonical_trials.json

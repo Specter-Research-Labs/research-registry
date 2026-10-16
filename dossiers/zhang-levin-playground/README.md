@@ -54,22 +54,27 @@ The paper now leans on a smaller set of reproducible, audited surfaces:
   Writes the canonical raw-trial archive for the paper's 2D section.
 - `paper/aggregate_fig3_2d.py`
   Regenerates `fig3_2d_success_heatmaps.json` and `fig3b_alt_orderings.json` from that raw 2D archive.
+- `paper/clustering_null.py`
+  Scores a per-swap clustering trajectory against a label-permutation null; every clustering figure reports the excess over it.
 - `paper/make_figures.py`
-  Regenerates all paper figures from committed result JSON files.
+  Regenerates all paper figures from the compact result files in `paper/results/`. The Exp10 and Exp14 tables in `main.tex` come from an earlier archive that was not retained.
 
 Legacy 2D scripts such as `exp19_2d_sorting.py`, `exp22_2d_deeper.py`, and `exp23_2d_alt_ordering.py` remain in the repo as exploratory or historical surfaces. They are no longer the intended provenance path for Figure 3.
 
 ## Current Findings
 
-The current paper is narrower and more defensible than the earlier draft.
+Clustering is reported as the excess of the trajectory maximum of C(t) over a 200-shuffle label-permutation null on the same per-swap trajectory, because the raw maximum sits about 0.11 to 0.14 above the random-mixing baseline even for identical rules.
 
 1. Semantics and operator classes matter. Published 1D Selection is not an adjacent-only local rule; it performs direct transpositions toward an ideal target.
-2. Temporal separation is positively associated with clustering, but the signal is concentrated in Insertion-containing mixtures. In the archived Figure 1 rerun, `r = 0.781722` across all ten pairs, about `0.054` after removing Insertion pairs, and about `0.975` within Insertion pairs.
-3. Removing Insertion's waiting gate sharply reduces clustering without eliminating it. The current seeded Figure 2 archive gives mean clustering increases of `0.166` for Bubble+Insertion, `0.091` for Bubble+InsertionNoWait, and `0.073` for Bubble+Gnome.
-4. The timing mechanism now transfers beyond native Insertion. In the Exp27 aggregate, Bubble+DelayedBubble reaches `ΔC = 0.175510` with separation `0.111468`, versus Bubble+BubbleClone at `ΔC = 0.155102` and `0.027056`; Gnome+DelayedGnome reaches `ΔC = 0.166667` with separation `0.105616`, versus Gnome+GnomeClone at `ΔC = 0.125850` and `0.042849`.
-5. Under immovable frozen-index semantics, Selection robustness depends on both long-range action and frozen-target rerouting. Exp25 makes that decomposition explicit.
-6. Under matched frozen semantics, cell-view execution does not add robustness relative to centralized baselines. Exp14 gives the negative result against traditional baselines, and Exp26 shows that matched threaded vs sequential cell-view runs agree on success while differing mainly in work cost.
-7. The 2D section is still narrower than the 1D story, but the intended paper path is now a canonical raw-trial archive plus aggregation step rather than mixed summary files with unclear provenance.
+2. Mixtures with a waiting gate cluster above the null and ungated adjacent mixtures sit at it. In Figure 1 (n=30, 50 trials per pair) the four Insertion pairs have excess `+0.051` to `+0.090`, the three Selection pairs without Insertion `+0.026` to `+0.031` at separations of only `0.04` to `0.05`, and Bubble/Gnome/Shaker pairs about zero. Pearson r between separation and excess is `0.94` across all ten pairs and `0.43` without Insertion pairs, so the correlation is carried by the Insertion family.
+3. Removing Insertion's waiting gate returns clustering to the null. Figure 2 (n=50, 20 trials, C(t) recorded after every swap) gives excess `+0.079` for Bubble+Insertion, `-0.007` for Bubble+InsertionNoWait and `+0.011` for Bubble+Gnome. The earlier version sampled C(t) on wall-clock time, which inflated the gated condition.
+4. Transplanting the gate reproduces the clustering of native Insertion. In the Exp27 aggregate (30 trials per pair) Bubble+DelayedBubble reaches excess `+0.064` at separation `0.114` against `+0.017` and `0.024` for Bubble+BubbleClone, and Gnome+DelayedGnome reaches `+0.052` at `0.107` against `+0.006` and `0.025` for Gnome+GnomeClone, beside Bubble+Insertion at `+0.061`. This is a causal test of the efficiency hypothesis in Zhang et al.
+5. Under immovable frozen indices only long-range Selection with frozen-target rerouting can reach the sorted state (Exp25). Adjacent moves cannot carry values across a frozen index and a stubborn cell waits forever on a frozen target, so this, the Exp10 rerouting ablation and the Exp14 cell-view/traditional agreement follow from the rule definitions and serve as consistency checks.
+6. With frozen cells left without threads, as in the original code, threaded and sequential cell-view schedules agree in outcome and do the same work (Exp26 compare-count ratios `0.97` to `1.02`). The earlier `35.9x`/`97.8x` Selection work ratios came from frozen Selection threads spinning without acting. All cell threads share one lock, so the threaded substrate is a serialized random scheduler.
+7. K_state sits 1.7 to 2.6 units below log10(n_active!) for every algorithm that finishes (long-range rerouting `30.45`, `26.14`, `22.00`, `18.01` at frozen 0/3/6/9 against `32.42`, `28.04`, `23.79`, `19.71`), so it is set mostly by reachable state-space size.
+8. The 2D section is still narrower than the 1D story, but the intended paper path is now a canonical raw-trial archive plus aggregation step rather than mixed summary files with unclear provenance.
+
+Not yet followed up from the original paper: duplicate values (`exp17_duplicate_values.py`, final-state aggregation), opposite-direction chimeras, the three-type mix, the efficiency comparisons, and the rise of delayed gratification with frozen count. Exp10, Exp14, `paper/compute_dip_stats.py`, `exp1_frozen_cells.py` and `exp16_movable_frozen.py` still start threads for frozen cells.
 
 ## Semantics Notes
 
@@ -113,6 +118,23 @@ uv run python paper/aggregate_exp25_selection_factorization.py --inputs \
   paper/results/exp25_seed41_n30_t5_immovable.json \
   paper/results/exp25_seed42_n30_t5_immovable.json \
   --out paper/results/exp25_selection_factorization_aggregate_n30_t5_immovable.json
+
+for s in 40 41 42; do
+  uv run python exp25_selection_factorization.py \
+    --seed "$s" \
+    --n-trials 5 \
+    --timeout 5 \
+    --semantics movable \
+    --out "paper/results/exp25_seed${s}_n30_t5_movable.json"
+done
+
+uv run python paper/aggregate_exp25_selection_factorization.py --inputs \
+  paper/results/exp25_seed40_n30_t5_movable.json \
+  paper/results/exp25_seed41_n30_t5_movable.json \
+  paper/results/exp25_seed42_n30_t5_movable.json \
+  --out paper/results/exp25_selection_factorization_aggregate_n30_t5_movable.json
+
+uv run python paper/compute_k.py
 ```
 
 ### Exp26: matched substrate baselines
@@ -221,7 +243,7 @@ The generation scripts in this dossier (`generate_baseline_data.py`, `generate_f
 Paper-facing outputs live in `paper/results/` and `paper/figures/`. For the central claims, prefer committed JSON archives over stdout logs.
 
 - Figure and table inputs: `paper/results/*.json`
-- Rendered figures: `paper/figures/*.pdf` and `paper/figures/*.png`
-- Rendered manuscript: build locally from `paper/main.tex`
+- Rendered figures: `paper/figures/*.pdf` (tracked) and `paper/figures/*.png` (ignored)
+- Rendered manuscript: build locally from `paper/main.tex`; `paper/main.pdf` is ignored
 
-Some exploratory scripts still print summaries to stdout, but if a result matters for the paper it should have a committed JSON artifact under `paper/results/`.
+Result files keep per-trial measurements and summaries only, without full state trajectories. Some exploratory scripts still print summaries to stdout, but if a result matters for the paper it should have a JSON artifact under `paper/results/`.
