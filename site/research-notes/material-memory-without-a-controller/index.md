@@ -10,10 +10,7 @@ toc: true
 
 *Paused exploratory draft. Retained for the experimental record; this project is not part of the current release work. The damage-recovery failures and layout dependence below remain essential to its interpretation.*
 
-A minimal Jolt rigid-body assembly with local, history-dependent updates and no centralized
-controller. Each body receives local updates to friction, stiffness, and plasticity from
-interaction history. The question: what does the substrate retain after perturbation, and
-what gets in the way?
+We built a small Jolt rigid-body assembly whose friction, stiffness, and plasticity change through local updates driven by interaction history, without a centralized controller choosing the body’s response. The question was what such a material could retain after a disturbance, and whether the changes that help it retain one arrangement would also prevent it from reorganizing.
 
 ## Setup
 

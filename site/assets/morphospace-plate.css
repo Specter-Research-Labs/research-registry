@@ -6,3 +6,25 @@
 .coordinate-order select { font:inherit; padding:6px; background:transparent; color:inherit; border:0; border-bottom:1px solid currentColor; }
 #live-plate p { font:15px/1.6 PublicationSerif,Georgia,serif; }
 #live-plate > label, #live-plate > a { font:12px/1.6 PublicationMono,monospace; }
+
+.report-morphospace .report-motion-intro .report-motion-observation {
+  font: 19px/1.6 var(--sl-font-prose);
+  color: var(--publication-ink);
+}
+
+@media (max-width: 620px) {
+  .report-morphospace .report-motion-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .report-morphospace .report-motion-intro .report-motion-observation {
+    font-size: 17px;
+  }
+}
+
+.report-morphospace .report-measures {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 32px;margin:24px 0}
+.report-morphospace .report-measures>div {border-top:1px solid var(--publication-ink);padding-top:12px}
+.report-morphospace .report-measures strong {font-size:15px}
+.report-morphospace .report-measures p {font:16px/1.5 var(--sl-font-prose);margin:8px 0 0}
+@media(max-width:800px){.report-morphospace .report-measures{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.report-morphospace .report-measures{grid-template-columns:1fr}}
