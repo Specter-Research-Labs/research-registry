@@ -586,6 +586,7 @@ pub fn format_html(data: &ReportData) -> String {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Systems Status | Specter Labs</title>
+<meta name="spctr:card" content="none">
 <meta name="description" content="Machine, hardware, and research repository status for the Specter Labs site host.">
 <link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml">
 <style>

@@ -6,7 +6,7 @@
         <meta name="color-scheme" content="light" />
         <title>$pagetitle$</title>
         $if(description)$<meta name="description" content="$description$" />$endif$
-        $if(image)$<meta property="og:image" content="$image$" />$endif$
+        $if(image)$<meta property="og:image" content="$image$" />$else$<meta name="spctr:card" content="Writing" />$endif$
         <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
         <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="../../fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin />

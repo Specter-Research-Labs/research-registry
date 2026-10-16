@@ -163,7 +163,11 @@ pub fn stage_site(repo_root: &Utf8Path, stage_root: &Utf8Path) -> Result<SitePub
 
     let site_publish_plan = site_publish_plan(repo_root)?;
     copy_public_site(&site_root, stage_root, &site_publish_plan.excludes)?;
-    let report = finalize::finalize_site(stage_root, &site_public_url())?;
+    let report = finalize::finalize_site(
+        stage_root,
+        &repo_root.join("addenda/typst-field-manual/assets/fonts"),
+        &site_public_url(),
+    )?;
     minify_site_tree(stage_root)?;
 
     eprintln!(

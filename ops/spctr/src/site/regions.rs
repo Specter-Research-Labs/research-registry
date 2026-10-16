@@ -234,8 +234,12 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
     markup.into_string()
 }
 
-pub fn render_dossier_hub_description(record: &SiteRecord) -> String {
-    html! { meta name="description" content=(record.summary); }.into_string()
+pub fn render_dossier_hub_meta(record: &SiteRecord) -> String {
+    html! {
+        meta name="description" content=(record.summary);
+        meta name="spctr:card" content="Dossier";
+    }
+    .into_string()
 }
 
 pub fn render_dossier_hub_footer(record: &SiteRecord) -> String {
