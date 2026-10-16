@@ -622,13 +622,17 @@ public final class FlowLeniaInteractiveSimulator {
     private var metalResidencyGeneration: UInt64 = 0
     private var metalResidentStep: Int?
 
-    public init(runtimeConfig: LeniaRuntimeConfig) {
+    public init(runtimeConfig: LeniaRuntimeConfig, phantom: FlowLeniaPhantomSpec? = nil) {
         self.runtimeConfig = runtimeConfig
         let context = FlowLeniaRuntimeContext(runtimeConfig: runtimeConfig)
         self.batchedConfig = context.batchedConfig
         self.runtimeOperators = context.runtimeOperators
         self.kernels = context.kernels
         let environmentPotential = context.preparedFields.environmentPotential
+        precondition(
+            phantom == nil || (runtimeConfig.backend == .metalFull && !runtimeConfig.parameterEmbedding.enabled),
+            "Phantom fields require the metal-full backend with fixed parameters."
+        )
         if runtimeConfig.backend == .metalFull {
             precondition(
                 Self.supportsResidentMetal(runtimeConfig),
@@ -669,7 +673,8 @@ public final class FlowLeniaInteractiveSimulator {
                 reintegrateParams: runtimeConfig.parameterEmbedding.enabled,
                 parameterFieldMode: .kernelGain,
                 parameterMix: runtimeConfig.parameterEmbedding.mix,
-                mixSeed: runtimeConfig.parameterEmbedding.mix_seed
+                mixSeed: runtimeConfig.parameterEmbedding.mix_seed,
+                phantom: phantom
             )
             self.metalRunner = runner
             self.metalStaticParams = runtimeConfig.parameterEmbedding.enabled
@@ -748,6 +753,16 @@ public final class FlowLeniaInteractiveSimulator {
     func capacityPilotLastFlow() -> [Float] {
         guard let metalRunner else { preconditionFailure("Transport tracing requires resident Metal") }
         return metalRunner.materializeLastFlow()
+    }
+
+    func capacityPilotLastPotential() -> [Float] {
+        guard let metalRunner else { preconditionFailure("Potential tracing requires resident Metal") }
+        return metalRunner.materializeLastPotential()
+    }
+
+    func phantomField() -> [Float] {
+        guard let metalRunner else { preconditionFailure("Phantom fields require resident Metal") }
+        return metalRunner.materializePhantomField()
     }
 
     public func step(_ state: FlowLeniaInteractiveState) -> FlowLeniaInteractiveState {

@@ -1,6 +1,14 @@
 import ArgumentParser
+import CryptoKit
 import Foundation
 import LeniaCore
+
+private struct PhantomFile: Decodable {
+    let source: String
+    let pressure: Bool
+    let field: String
+    let field_sha256: String
+}
 
 struct CapacityPilotCommand: ParsableCommand {
     static let configuration = CommandConfiguration(commandName: "capacity-pilot",
@@ -22,6 +30,10 @@ struct CapacityPilotCommand: ParsableCommand {
     @Option var challengeSign: Int = 1
     @Option var challengeAxis: String = "x"
     @Option var writeField: String?
+    @Option(help: "Phantom spec JSON: source static|replay, pressure true|false, field path (relative to the spec), field_sha256.")
+    var phantom: String?
+    @Flag(name: .long, help: "In the state-flow study, also save the pre-step growth potential at each sampled step.")
+    var savePotential = false
 
     func run() throws {
         guard (checkpointSteps > 0 || (["state-continuation", "state-flow"].contains(study) && checkpointSteps == 0)), horizon >= 128, (study == "development" || horizon % 32 == 0) else {
@@ -51,6 +63,13 @@ struct CapacityPilotCommand: ParsableCommand {
         if ["state-continuation", "state-flow"].contains(study) && (writeMode != "field" || checkpointSteps != 0) {
             throw ValidationError("state-continuation requires an explicit mass field and checkpoint-steps zero")
         }
+        if phantom != nil && !["development", "state-flow"].contains(study) {
+            throw ValidationError("phantom fields are supported only in the development and state-flow studies")
+        }
+        if savePotential && study != "state-flow" {
+            throw ValidationError("save-potential is supported only in the state-flow study")
+        }
+        let phantomSpec = try phantom.map { try loadPhantom($0) }
         let source = try Data(contentsOf: URL(fileURLWithPath: config))
         let rows = try String(contentsOfFile: corpus, encoding: .utf8).split(separator: "\n").map {
             try JSONDecoder().decode(CorpusRow.self, from: Data($0.utf8))
@@ -86,7 +105,14 @@ struct CapacityPilotCommand: ParsableCommand {
             if ["state-continuation", "state-flow"].contains(study) && runtime.parameterEmbedding.enabled {
                 throw ValidationError("mass-only restart requires fixed parameters without embedding")
             }
-            let harness = CapacityPilotHarness(config: runtime)
+            if let phantomSpec {
+                guard runtime.backend == .metalFull,
+                      phantomSpec.spec.field.count == runtime.sx * runtime.sy * runtime.channels else {
+                    throw ValidationError("phantom fields require metal-full and a field matching runtime Float32 dimensions")
+                }
+                try phantomSpec.json.write(to: directory.appendingPathComponent("phantom-spec.json"))
+            }
+            let harness = CapacityPilotHarness(config: runtime, phantom: phantomSpec?.spec)
             let emit: (CapacityPilotBranch) throws -> Void = { branch in
                 try JSONEncoder().encode(branch).write(to: directory.appendingPathComponent("\(branch.name).json"))
                 print("\(id.prefix(8)) \(branch.name) completed", terminator: "\n")
@@ -103,7 +129,7 @@ struct CapacityPilotCommand: ParsableCommand {
                     stride(from: 0, to: bytes.count, by: 4).map { raw.loadUnaligned(fromByteOffset: $0, as: Float.self) }
                 }
                 if study == "state-flow" {
-                    try harness.runStateFlow(values: values, steps: horizon, output: directory)
+                    try harness.runStateFlow(values: values, steps: horizon, output: directory, savePotential: savePotential)
                 } else {
                     try harness.runStateContinuation(values: values, steps: horizon, output: directory, emit: emit)
                 }
@@ -128,5 +154,23 @@ struct CapacityPilotCommand: ParsableCommand {
             default: try harness.run(checkpointSteps: checkpointSteps, horizon: horizon, output: directory, emit: emit)
             }
         }
+    }
+
+    private func loadPhantom(_ path: String) throws -> (spec: FlowLeniaPhantomSpec, json: Data) {
+        let url = URL(fileURLWithPath: path)
+        let json = try Data(contentsOf: url)
+        let file = try JSONDecoder().decode(PhantomFile.self, from: json)
+        guard let source = FlowLeniaPhantomSpec.Source(rawValue: file.source) else {
+            throw ValidationError("phantom source must be static or replay")
+        }
+        let bytes = try Data(contentsOf: URL(fileURLWithPath: file.field, relativeTo: url.deletingLastPathComponent()))
+        let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+        guard digest == file.field_sha256 else {
+            throw ValidationError("phantom field sha256 \(digest) does not match \(file.field_sha256)")
+        }
+        let values = bytes.withUnsafeBytes { raw in
+            stride(from: 0, to: bytes.count, by: 4).map { raw.loadUnaligned(fromByteOffset: $0, as: Float.self) }
+        }
+        return (FlowLeniaPhantomSpec(source: source, pressure: file.pressure, field: values), json)
     }
 }

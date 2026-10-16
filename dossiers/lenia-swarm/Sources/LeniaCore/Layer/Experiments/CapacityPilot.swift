@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import MLX
 import MLXFFT
@@ -73,13 +74,28 @@ public final class CapacityPilotHarness {
     private let width: Int
     private let height: Int
     private let channelCount: Int
+    private let hasPhantom: Bool
+    private var phantomFrames: [[String: Any]] = []
 
-    public init(config: LeniaRuntimeConfig) {
+    public init(config: LeniaRuntimeConfig, phantom: FlowLeniaPhantomSpec? = nil) {
         precondition(config.channels >= 1)
-        simulator = FlowLeniaInteractiveSimulator(runtimeConfig: config)
+        simulator = FlowLeniaInteractiveSimulator(runtimeConfig: config, phantom: phantom)
         width = config.sx
         height = config.sy
         channelCount = config.channels
+        hasPhantom = phantom != nil
+    }
+
+    private func recordPhantom(step: Int) {
+        guard hasPhantom else { return }
+        let digest = simulator.phantomField().withUnsafeBytes { SHA256.hash(data: $0) }
+        phantomFrames.append(["step": step, "sha256": digest.map { String(format: "%02x", $0) }.joined()])
+    }
+
+    private func writePhantomFrames(output: URL) throws {
+        guard hasPhantom else { return }
+        try JSONSerialization.data(withJSONObject: phantomFrames, options: [.sortedKeys, .prettyPrinted])
+            .write(to: output.appendingPathComponent("phantom-frames.json"))
     }
 
     private func frame(_ state: FlowLeniaInteractiveState, relativeStep: Int) -> CapacityPilotFrame {
@@ -224,6 +240,7 @@ extension CapacityPilotHarness {
         var state = simulator.makeInitialState()
         var frames = [frame(state, relativeStep: 0)]
         try saveField(state, name: "development-step-0", output: output)
+        recordPhantom(step: 0)
         while state.step < horizon {
             state = simulator.step(state, count: min(32, horizon - state.step))
             let values = state.mass.asArray(Float.self)
@@ -233,7 +250,9 @@ extension CapacityPilotHarness {
             }
             frames.append(frame(state, relativeStep: state.step))
             try saveField(state, name: "development-step-\(state.step)", output: output)
+            recordPhantom(step: state.step)
         }
+        try writePhantomFrames(output: output)
         try emit(CapacityPilotBranch(name: "development", visibleEditL1: 0,
                                     channelEditL1: 0, channelInventoryError: 0, frames: frames))
     }
@@ -311,7 +330,7 @@ extension CapacityPilotHarness {
                            output: output, saveFrames: true, emit: emit)
     }
 
-    public func runStateFlow(values: [Float], steps: Int, output: URL) throws {
+    public func runStateFlow(values: [Float], steps: Int, output: URL, savePotential: Bool) throws {
         precondition(!simulator.runtimeConfig.parameterEmbedding.enabled)
         guard values.count == width * height * channelCount,
               values.allSatisfy({ $0.isFinite && $0 >= 0 }), values.contains(where: { $0 > 0 }) else {
@@ -327,20 +346,32 @@ extension CapacityPilotHarness {
         let samples = Set([0, 1, 2, 4, 8, 16, 32, 64, 128, steps])
         var state = copied(simulator.makeInitialState(), values: values)
         for t in 0...steps {
-            if samples.contains(t) { try save(state.mass.asArray(Float.self), "mass-\(t)") }
+            if samples.contains(t) {
+                try save(state.mass.asArray(Float.self), "mass-\(t)")
+                recordPhantom(step: t)
+            }
             state = simulator.step(state, count: 1)
             if samples.contains(t) {
+                if savePotential {
+                    try save(simulator.capacityPilotLastPotential(), "potential-\(t)")
+                }
                 try save(simulator.capacityPilotLastFlow(), "flow-\(t)")
                 try save(state.mass.asArray(Float.self), "next-\(t)")
             }
         }
-        try JSONSerialization.data(withJSONObject: [
+        try writePhantomFrames(output: output)
+        var metadata: [String: Any] = [
             "shape": [width, height, channelCount], "kernelShape": spatial.shape,
             "samples": samples.sorted(), "flowOrder": "x,y per channel; pre-step flow",
             "c0": k.c0Idxs.asArray(Int32.self).map { Int($0) },
             "c1Mask": k.c1Mask.asArray(Float.self), "m": k.m.asArray(Float.self),
             "s": k.s.asArray(Float.self), "h": k.h.asArray(Float.self)
-        ], options: [.sortedKeys, .prettyPrinted]).write(to: output.appendingPathComponent("state-flow.json"))
+        ]
+        if savePotential {
+            metadata["potentialOrder"] = "channel; pre-step growth potential including wall potential"
+        }
+        try JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys, .prettyPrinted])
+            .write(to: output.appendingPathComponent("state-flow.json"))
     }
 
     public func runTransport(checkpointSteps: Int, releaseSteps: Int, horizon: Int, output: URL) throws {

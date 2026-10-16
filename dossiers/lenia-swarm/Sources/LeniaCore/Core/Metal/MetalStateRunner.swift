@@ -49,6 +49,7 @@ final class FlowLeniaMetalFullStateRunner {
     private var currentMixStep = 0
     private var staticChannelFields: [FlowLeniaMetalChannelFieldBuffer] = []
     private var foodState: FlowLeniaMetalFoodStateBuffer?
+    private let phantom: FlowLeniaMetalPhantom?
     private(set) var massObservationSynchronizationCount = 0
 
     init(
@@ -60,7 +61,8 @@ final class FlowLeniaMetalFullStateRunner {
         reintegrateParams: Bool = true,
         parameterFieldMode: FlowLeniaParameterFieldMode = .kernelGain,
         parameterMix: String = "avg",
-        mixSeed: Int? = nil
+        mixSeed: Int? = nil,
+        phantom: FlowLeniaPhantomSpec? = nil
     ) {
         self.config = config
         let kernelCount = FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
@@ -201,6 +203,23 @@ final class FlowLeniaMetalFullStateRunner {
             length: channelCount * MemoryLayout<Float>.stride,
             label: "flow-metal.state.mass-map-weights"
         )
+        if let phantom {
+            guard batchCount == 1, !reintegrateParams, parameterFieldMode == .kernelGain,
+                  !pipeline.requiresSegmentedStepEncoding else {
+                preconditionFailure("Phantom fields require one batch element, fixed kernel-gain parameters, and single-buffer step encoding.")
+            }
+            self.phantom = FlowLeniaMetalPhantom(
+                spec: phantom,
+                config: config,
+                kernels: kernels,
+                device: device,
+                commandQueue: commandQueue,
+                wallPotential: wallPotential,
+                matterWeights: resolvedMatterWeights
+            )
+        } else {
+            self.phantom = nil
+        }
     }
 
     func setState(mass: MLXArray, params: MLXArray, mixStep: Int = 0) {
@@ -220,6 +239,11 @@ final class FlowLeniaMetalFullStateRunner {
         food: FlowLeniaMetalFoodState?,
         mixStep: Int = 0
     ) {
+        if phantom != nil {
+            guard wallMask == nil, staticChannelFields.isEmpty, food == nil else {
+                preconditionFailure("Phantom fields require a runtime without wall masks, static channel fields, or food.")
+            }
+        }
         if wallMask == nil, staticChannelFields.isEmpty, food == nil {
             wallMaskEnabled = false
             self.staticChannelFields = []
@@ -324,10 +348,16 @@ final class FlowLeniaMetalFullStateRunner {
     }
 
     func setWallPotential(_ wallPotential: MLXArray?) {
+        guard phantom == nil else {
+            preconditionFailure("Phantom fields fix the wall potential at construction.")
+        }
         pipeline.updateWallPotential(wallPotential)
     }
 
     func setMatterWeights(_ weights: [Float]?) {
+        guard phantom == nil else {
+            preconditionFailure("Phantom fields fix the matter weights at construction.")
+        }
         let resolved = Self.resolvedMatterWeights(
             weights: weights,
             channelCount: channelCount
@@ -447,6 +477,17 @@ final class FlowLeniaMetalFullStateRunner {
 
     func materializeLastFlow() -> [Float] {
         pipeline.readFlow(batchCount: batchCount, allChannels: true)
+    }
+
+    func materializeLastPotential() -> [Float] {
+        pipeline.readScalarField(batchCount: batchCount, allChannels: true)
+    }
+
+    func materializePhantomField() -> [Float] {
+        guard let phantom else {
+            preconditionFailure("No phantom field is configured.")
+        }
+        return phantom.materializeField()
     }
 
     func materializeState() -> (mass: MLXArray, params: MLXArray) {
@@ -593,6 +634,9 @@ final class FlowLeniaMetalFullStateRunner {
     }
 
     func profileCurrentStep() -> FlowSandboxMetalStageTimings {
+        guard phantom == nil else {
+            preconditionFailure("Stage profiling does not encode phantom fields.")
+        }
         var wallMaskMs = 0.0
         let stageProfile = pipeline.profileStep(
             preparedMassBuffer: currentMassBuffer,
@@ -639,6 +683,15 @@ final class FlowLeniaMetalFullStateRunner {
             return
         }
 
+        if let phantom {
+            // The phantom clock advances only with real steps, so a restart from
+            // another step would pair the real state with the wrong phantom frame.
+            guard phantom.step == currentMixStep,
+                  preStepParameterPatches.isEmpty, postStepParameterPatches.isEmpty,
+                  postStepScalarPatches.isEmpty, postStepDissipationPatches.isEmpty else {
+                preconditionFailure("Phantom step \(phantom.step) does not match real step \(currentMixStep), or patches were scheduled.")
+            }
+        }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
             preconditionFailure("Failed to create Flow Metal state runner command buffer.")
         }
@@ -676,8 +729,10 @@ final class FlowLeniaMetalFullStateRunner {
                 paramsBuffer: readParamsBuffer,
                 nextMassBuffer: writeMassBuffer,
                 nextParamsBuffer: writeParamsBuffer,
-                mixStep: currentMixStep + stepIndex - 1
+                mixStep: currentMixStep + stepIndex - 1,
+                sensing: phantom?.encodeSensing(on: commandBuffer, massBuffer: readMassBuffer)
             )
+            phantom?.encodeAdvance(on: commandBuffer)
             if let patches = postStepParameterPatches[stepIndex] {
                 for patch in patches {
                     encodeParameterPatch(
