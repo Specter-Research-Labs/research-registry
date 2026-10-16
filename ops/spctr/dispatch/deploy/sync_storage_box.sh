@@ -19,10 +19,10 @@ fi
 
 ssh_port="${STORAGE_BOX_SSH_PORT:-23}"
 
-rsync -az --delete \
+rsync -az \
   -e "ssh -p ${ssh_port} -i ${STORAGE_BOX_SSH_KEY_PATH} -o IdentitiesOnly=yes" \
   /srv/backups/ "${STORAGE_BOX_TARGET}"
 
-rsync -az --delete \
+rsync -az \
   -e "ssh -p ${ssh_port} -i ${STORAGE_BOX_SSH_KEY_PATH} -o IdentitiesOnly=yes" \
   /srv/specterlab/data/ "${STORAGE_BOX_TARGET}data/"
