@@ -1169,16 +1169,15 @@ final class FlowLeniaMetalFullPipeline {
             """
         } else {
             """
-                                float murY = metal::fmin(
-                                    metal::fmax(float(srcY) + 0.5f + clippedY, kSigma),
-                                    float(kSY) - kSigma
-                                );
-                                float murX = metal::fmin(
-                                    metal::fmax(float(srcX) + 0.5f + clippedX, kSigma),
-                                    float(kSX) - kSigma
-                                );
-                                float dY = metal::fabs(targetY - murY);
-                                float dX = metal::fabs(targetX - murX);
+                                // Compute wall-constrained displacement locally to avoid rounding at absolute cell coordinates.
+                                float localY = metal::fmin(metal::fmax(clippedY,
+                                    (kSigma - 0.5f) - float(srcY)),
+                                    float(kSY - 1 - srcY) + (0.5f - kSigma));
+                                float localX = metal::fmin(metal::fmax(clippedX,
+                                    (kSigma - 0.5f) - float(srcX)),
+                                    float(kSX - 1 - srcX) + (0.5f - kSigma));
+                                float dY = metal::fabs(float(y - srcY) - localY);
+                                float dX = metal::fabs(float(x - srcX) - localX);
             """
         }
         let flowChannelBodies = channelIndices.map { channel in
