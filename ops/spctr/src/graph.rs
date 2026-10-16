@@ -894,8 +894,12 @@ fn add_article_subgraph(
     registry: Option<&registry::Registry>,
 ) -> Result<Vec<String>> {
     let mut article_ids = Vec::new();
-    for post in discover::discover_published_blog_posts(repo_root)? {
+    for post in discover::discover_all_blog_posts(repo_root)? {
         let slug = discover::blog_slug_from_href(&post.href)?;
+        if post.release != discover::RELEASE_PUBLISHED {
+            reject_draft_article_series(registry, &post, slug)?;
+            continue;
+        }
         let source_path = discover::blog_markdown_relpath(slug);
         let series_id = published_article_series_id(registry, &post, &slug)?;
         let article_id = article_node_id(&slug);
@@ -1801,6 +1805,26 @@ fn project_series_id(
             .and_then(|loaded| registry::series_for_slug(loaded, type_prefix, &manifest.slug))
             .map(str::to_owned)
     })
+}
+
+fn reject_draft_article_series(
+    registry: Option<&registry::Registry>,
+    post: &discover::BlogPostRecord,
+    slug: &str,
+) -> Result<()> {
+    if let Some(series_id) = post.series.as_deref() {
+        anyhow::bail!(
+            "blog/{slug}/index.md: draft post declares series '{series_id}'; series IDs are assigned only on publication, remove it from the frontmatter"
+        );
+    }
+    if let Some(series_id) =
+        registry.and_then(|loaded| registry::series_for_slug(loaded, "B", slug))
+    {
+        anyhow::bail!(
+            "blog/{slug}/index.md: draft post holds registry B-series assignment '{series_id}'; series IDs are assigned only on publication, remove it from spctr-registry.json"
+        );
+    }
+    Ok(())
 }
 
 fn published_article_series_id(
