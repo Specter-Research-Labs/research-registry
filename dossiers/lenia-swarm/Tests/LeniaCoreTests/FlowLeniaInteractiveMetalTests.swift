@@ -286,6 +286,94 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
         }
     }
 
+    func testAncestryTracerIsPassiveAndConservesFounderMass() throws {
+        for authorReference in [false, true] {
+            let runtime = interactiveRuntimeConfig(backend: .metalFull, authorReference: authorReference)
+            let plain = FlowLeniaInteractiveSimulator(runtimeConfig: runtime)
+            let expected = plain.step(plain.makeInitialState(), count: 64).mass.asArray(Float.self)
+
+            let traced = FlowLeniaInteractiveSimulator(runtimeConfig: runtime)
+            var state = traced.makeInitialState()
+            let mass = state.mass.asArray(Float.self)
+            let labels = (0..<(runtime.sx * runtime.sy)).map { Int32($0 / runtime.sy < runtime.sx / 2 ? 0 : 1) }
+            let founders = try capacityPilotFounderMass(mass, labels: labels, channels: runtime.channels, founderCount: 2)
+            traced.setAncestry(founders, founderCount: 2, for: state)
+            for count in [1, 31, 32] {
+                state = traced.step(state, count: count)
+            }
+            let actual = state.mass.asArray(Float.self)
+            XCTAssertEqual(actual, expected, "authorReference=\(authorReference)")
+
+            let initialTotals = founderTotals(founders, channels: runtime.channels, founderCount: 2)
+            let finalFounders = traced.ancestryFounderMass(for: state)
+            let finalTotals = founderTotals(finalFounders, channels: runtime.channels, founderCount: 2)
+            for (initial, final) in zip(initialTotals, finalTotals) {
+                XCTAssertGreaterThan(initial, 0)
+                XCTAssertEqual(final, initial, accuracy: initial * 1e-5, "authorReference=\(authorReference)")
+            }
+            for cell in actual.indices {
+                XCTAssertEqual(finalFounders[cell * 2] + finalFounders[cell * 2 + 1], actual[cell],
+                               accuracy: 1e-6 + actual[cell] * 1e-5)
+            }
+            XCTAssertGreaterThan(zip(stride(from: 0, to: finalFounders.count, by: 2), actual).filter {
+                finalFounders[$0.0] > 0.05 * $0.1 && finalFounders[$0.0 + 1] > 0.05 * $0.1
+            }.count, 0, "founders should mix somewhere for the test to exercise mixing")
+        }
+    }
+
+    func testSingleFounderAncestryEqualsMass() {
+        for authorReference in [false, true] {
+            let runtime = interactiveRuntimeConfig(backend: .metalFull, authorReference: authorReference)
+            let simulator = FlowLeniaInteractiveSimulator(runtimeConfig: runtime)
+            var state = simulator.makeInitialState()
+            simulator.setAncestry(state.mass.asArray(Float.self), founderCount: 1, for: state)
+            state = simulator.step(state, count: 48)
+            XCTAssertEqual(simulator.ancestryFounderMass(for: state), state.mass.asArray(Float.self),
+                           "authorReference=\(authorReference)")
+        }
+    }
+
+    func testTwoFounderSplitMatchesFloat64Reintegration() {
+        let runtime = interactiveRuntimeConfig(backend: .metalFull)
+        let (sx, sy, channels, dd) = (runtime.sx, runtime.sy, runtime.channels, runtime.dd)
+        let simulator = FlowLeniaInteractiveSimulator(runtimeConfig: runtime)
+        var state = simulator.step(simulator.makeInitialState(), count: 8)
+        let mass = state.mass.asArray(Float.self)
+        var founders = [Float](repeating: 0, count: mass.count * 2)
+        for i in mass.indices {
+            let x = i / channels / sy
+            let share = Float(x) / Float(sx - 1)
+            founders[i * 2] = mass[i] * share
+            founders[i * 2 + 1] = mass[i] - founders[i * 2]
+        }
+        simulator.setAncestry(founders, founderCount: 2, for: state)
+        state = simulator.step(state, count: 1)
+        let flow = simulator.capacityPilotLastFlow()
+        let actual = simulator.ancestryFounderMass(for: state)
+
+        let sigma = Double(runtime.sigma)
+        let maxAdvection = Double(dd) - sigma
+        let clipMax = min(1, 2 * sigma)
+        var expected = [Double](repeating: 0, count: founders.count)
+        for x in 0..<sx { for y in 0..<sy { for dx in -dd...dd { for dy in -dd...dd {
+            let source = ((x - dx + sx) % sx) * sy + (y - dy + sy) % sy
+            for c in 0..<channels where mass[source * channels + c] > 0 {
+                let f = (source * channels + c) * 2
+                let clippedX = min(max(Double(flow[f]) * Double(runtime.dt), -maxAdvection), maxAdvection)
+                let clippedY = min(max(Double(flow[f + 1]) * Double(runtime.dt), -maxAdvection), maxAdvection)
+                let szX = min(max(0.5 - abs(Double(dx) - clippedX) + sigma, 0), clipMax)
+                let szY = min(max(0.5 - abs(Double(dy) - clippedY) + sigma, 0), clipMax)
+                for j in 0..<2 {
+                    expected[((x * sy + y) * channels + c) * 2 + j] +=
+                        Double(founders[(source * channels + c) * 2 + j]) * szX * szY / (4 * sigma * sigma)
+                }
+            }
+        } } } }
+        let scale = expected.max()!
+        XCTAssertGreaterThan(scale, 0)
+        XCTAssertLessThan(zip(actual, expected).map { abs(Double($0) - $1) }.max()!, scale * 1e-5)
+    }
+
     func testDynamicCircularWallPotentialAffectsNonEmbeddedMLXPath() {
         let simulator = FlowLeniaInteractiveSimulator(
             runtimeConfig: interactiveRuntimeConfig(backend: .mlx)
@@ -377,6 +465,14 @@ private func interactiveRuntimeConfig(
         environment: environment,
         interventions: []
     )
+}
+
+private func founderTotals(_ founders: [Float], channels: Int, founderCount: Int) -> [Double] {
+    var totals = [Double](repeating: 0, count: channels * founderCount)
+    for (i, value) in founders.enumerated() {
+        totals[i % (channels * founderCount)] += Double(value)
+    }
+    return totals
 }
 
 private func maxAbsDifference(_ lhs: MLXArray, _ rhs: MLXArray) -> Float {
