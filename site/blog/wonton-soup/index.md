@@ -120,7 +120,7 @@ The gallery records early examples from February 2026. Its graph distances descr
 
 Before attributing a changed proof to the tactic block, we needed to know how much the search could change when its available choices stayed the same. We repeated it with a tactic disabled that was already unavailable to the original run (an inert intervention), and although ReProver repeated consistently, some DeepSeek results changed under this control too.
 
-We had fixed the search seed, but the model server was still sampling new tactic suggestions, and difficult theorems made more calls to that server, giving small differences more opportunities to redirect the search. Without the inert rerun, we could have mistaken those differences for an effect of the tactic we intended to study. The [control investigation](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) follows how we found the problem.
+We had fixed the search seed, but the model server was still sampling new tactic suggestions, and difficult theorems made more calls to that server, giving small differences more opportunities to redirect the search. Without the inert rerun, we could have mistaken those differences for an effect of the tactic we intended to study. A configuration flag named `deterministic_inference` made the problem easy to miss because it fixed only the search seed, and earlier DeepSeek campaigns had mostly run without the paired controls that would have exposed it.
 
 The controlled comparison therefore requires both the original search and its inert rerun to solve the theorem before we ask what happens when a tactic used by the successful search is actually blocked.
 
