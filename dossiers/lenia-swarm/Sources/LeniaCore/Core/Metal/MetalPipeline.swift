@@ -381,12 +381,17 @@ final class FlowLeniaMetalFullPipeline {
         paramsBuffer: MTLBuffer,
         nextMassBuffer: MTLBuffer,
         nextParamsBuffer: MTLBuffer,
-        mixStep: Int = 0
+        mixStep: Int = 0,
+        sensing: FlowLeniaMetalSensing? = nil
     ) {
-        encodeFFT(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeGrowthReduce(on: commandBuffer, preparedMassBuffer: preparedMassBuffer, paramsBuffer: paramsBuffer)
+        // Sensing replaces the mass seen by the convolution and, with pressure,
+        // the matter term; transport always moves the prepared mass alone.
+        let fieldMassBuffer = sensing?.fieldMassBuffer ?? preparedMassBuffer
+        let pressureMassBuffer = sensing?.pressureMassBuffer ?? preparedMassBuffer
+        encodeFFT(on: commandBuffer, preparedMassBuffer: fieldMassBuffer)
+        encodeGrowthReduce(on: commandBuffer, preparedMassBuffer: pressureMassBuffer, paramsBuffer: paramsBuffer)
         encodeWallPotential(on: commandBuffer)
-        encodeFlow(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
+        encodeFlow(on: commandBuffer, preparedMassBuffer: pressureMassBuffer)
         encodeReintegrate(
             on: commandBuffer,
             preparedMassBuffer: preparedMassBuffer,
@@ -593,7 +598,7 @@ final class FlowLeniaMetalFullPipeline {
         )
     }
 
-    func readScalarField(batchCount: Int) -> [Float] {
+    func readScalarField(batchCount: Int, allChannels: Bool = false) -> [Float] {
         let values = Self.copyFloatsFromGPUBuffer(
             uBuffer,
             count: batchCount * config.sx * config.sy * channelCount,
@@ -601,6 +606,9 @@ final class FlowLeniaMetalFullPipeline {
             commandQueue: commandQueue,
             label: "flow-metal.u"
         )
+        if allChannels {
+            return values
+        }
         guard channelCount > 0 else {
             return []
         }
