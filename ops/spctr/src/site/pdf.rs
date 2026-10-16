@@ -43,10 +43,9 @@ pub fn build_pdf(repo_root: &Utf8Path, slug: &str) -> Result<Utf8PathBuf> {
         .arg(format!("--font-path={}", font_path))
         .arg(&typ_path)
         .arg(&pdf_path)
-        .status()
-        .context("failed to run typst")?;
-
-    fs::remove_file(&typ_path).ok();
+        .status();
+    fs::remove_file(&typ_path).with_context(|| format!("failed to remove {}", typ_path))?;
+    let status = status.context("failed to run typst")?;
 
     if !status.success() {
         bail!("typst compile failed for blog/{slug}");

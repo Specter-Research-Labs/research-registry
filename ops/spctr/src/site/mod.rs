@@ -184,7 +184,7 @@ fn build_from_projection(
                     ("DOSSIER_HUB_TITLE", record.title.clone()),
                     (
                         "DOSSIER_HUB_DESCRIPTION",
-                        regions::render_dossier_hub_description(record),
+                        regions::render_dossier_hub_meta(record),
                     ),
                     (
                         "DOSSIER_HUB_CONTENT",
@@ -213,7 +213,7 @@ fn build_from_projection(
                     ("DOSSIER_HUB_HEADER", header),
                     (
                         "DOSSIER_HUB_DESCRIPTION",
-                        regions::render_dossier_hub_description(record),
+                        regions::render_dossier_hub_meta(record),
                     ),
                     (
                         "DOSSIER_HUB_FOOTER",

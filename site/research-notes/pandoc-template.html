@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="color-scheme" content="light" />
         <title>$pagetitle$</title>
+        $if(image)$<meta property="og:image" content="$image$" />$else$<meta name="spctr:card" content="Research note" />$endif$
         $if(description)$<meta name="description" content="$description$" />$endif$
         <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
         <link rel="preload" href="../../fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin />

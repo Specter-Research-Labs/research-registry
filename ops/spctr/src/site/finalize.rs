@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 use std::fs;
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -8,6 +10,9 @@ use regex_lite::Regex;
 pub const SITE_NAME: &str = "Specter Labs";
 pub const TITLE_SUFFIX: &str = " | Specter Labs";
 const NOT_FOUND_PAGE: &str = "404.html";
+const CARD_META: &str = "spctr:card";
+const NO_CARD: &str = "none";
+const CARD_TEMPLATE: &str = include_str!("og-card.typ");
 
 // Keys finalize derives from the page title, description, and path. A page that
 // declares one itself would ship a second, possibly conflicting, value.
@@ -35,7 +40,11 @@ struct PageHead {
     has_canonical: bool,
 }
 
-pub fn finalize_site(stage_root: &Utf8Path, public_url: &str) -> Result<FinalizeReport> {
+pub fn finalize_site(
+    stage_root: &Utf8Path,
+    font_path: &Utf8Path,
+    public_url: &str,
+) -> Result<FinalizeReport> {
     let public_url = public_url.trim_end_matches('/');
     let mut pages = Vec::new();
     collect_html(stage_root, stage_root, &mut pages)?;
@@ -48,6 +57,7 @@ pub fn finalize_site(stage_root: &Utf8Path, public_url: &str) -> Result<Finalize
         let text = fs::read_to_string(&path).with_context(|| format!("failed to read {path}"))?;
         match finalize_page(
             stage_root,
+            font_path,
             relative.as_str(),
             &text,
             public_url,
@@ -91,6 +101,7 @@ fn collect_html(root: &Utf8Path, dir: &Utf8Path, out: &mut Vec<Utf8PathBuf>) -> 
 
 fn finalize_page(
     stage_root: &Utf8Path,
+    font_path: &Utf8Path,
     relative: &str,
     text: &str,
     public_url: &str,
@@ -127,27 +138,38 @@ fn finalize_page(
         Some(description) => tags.push(meta_property("og:description", description)),
         None => report.missing_description.push(relative.to_owned()),
     }
-    let card = match head.meta.get("og:image") {
-        Some(image) => {
+    let declared_image = head.meta.get("og:image");
+    let kicker = head.meta.get(CARD_META).map(String::as_str);
+    let head_text = strip_card_meta(&text[..head_end]);
+    let head_text = match (declared_image, kicker) {
+        (Some(_), Some(kicker)) => {
+            bail!("page declares both og:image and {CARD_META} {kicker:?}")
+        }
+        (Some(image), None) => {
             check_image(stage_root, image)?;
-            "summary_large_image"
+            replace_og_image(&head_text, image, &format!("{public_url}{image}"))?
         }
-        None => {
+        (None, Some(NO_CARD)) => head_text,
+        (None, Some(kicker)) => {
+            let image = card_path(relative)?;
+            render_card(stage_root, font_path, &image, page_title, kicker)?;
+            tags.push(meta_property("og:image", &format!("{public_url}/{image}")));
+            head_text
+        }
+        (None, None) => {
             report.missing_image.push(relative.to_owned());
-            "summary"
+            head_text
         }
+    };
+    let card = match (declared_image, kicker) {
+        (Some(_), _) => "summary_large_image",
+        (None, Some(NO_CARD) | None) => "summary",
+        (None, Some(_)) => "summary_large_image",
     };
     tags.push(format!(r#"<meta name="twitter:card" content="{card}">"#));
 
     let mut rewritten = String::with_capacity(text.len() + 512);
-    let head_text = &text[..head_end];
-    match head.meta.get("og:image") {
-        Some(image) => {
-            let absolute = format!("{public_url}{image}");
-            rewritten.push_str(&replace_og_image(head_text, image, &absolute)?);
-        }
-        None => rewritten.push_str(head_text),
-    }
+    rewritten.push_str(&head_text);
     rewritten.push_str(&tags.join(""));
     rewritten.push_str(&text[head_end..]);
     Ok(rewritten)
@@ -283,6 +305,76 @@ fn replace_og_image(head: &str, image: &str, absolute: &str) -> Result<String> {
     Ok(rewritten.into_owned())
 }
 
+fn strip_card_meta(head: &str) -> String {
+    let tag_re = Regex::new(r"(?is)<meta\s[^>]*>\s*").expect("valid regex");
+    tag_re
+        .replace_all(head, |captures: &regex_lite::Captures<'_>| {
+            let attrs = parse_attrs(&captures[0]);
+            if attrs.get("name").is_some_and(|key| key == CARD_META) {
+                String::new()
+            } else {
+                captures[0].to_owned()
+            }
+        })
+        .into_owned()
+}
+
+fn card_path(relative: &str) -> Result<String> {
+    let page = match relative.strip_suffix("/index.html") {
+        Some(dir) => dir,
+        None => relative
+            .strip_suffix(".html")
+            .with_context(|| format!("{relative} is not an html page"))?,
+    };
+    Ok(format!("assets/og/{page}.png"))
+}
+
+fn render_card(
+    stage_root: &Utf8Path,
+    font_path: &Utf8Path,
+    image: &str,
+    title: &str,
+    kicker: &str,
+) -> Result<()> {
+    let output = stage_root.join(image);
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("failed to create {parent}"))?;
+    }
+    let mut child = Command::new("typst")
+        .arg("compile")
+        .arg(format!("--root={stage_root}"))
+        .arg(format!("--font-path={font_path}"))
+        .args(["--format", "png", "--ppi", "144"])
+        .arg("--input")
+        .arg(format!("title={}", decode_entities(title)))
+        .arg("--input")
+        .arg(format!("kicker={kicker}"))
+        .arg("-")
+        .arg(&output)
+        .stdin(Stdio::piped())
+        .spawn()
+        .context("failed to run typst")?;
+    child
+        .stdin
+        .take()
+        .context("typst stdin unavailable")?
+        .write_all(CARD_TEMPLATE.as_bytes())
+        .context("failed to send card template to typst")?;
+    let status = child.wait().context("failed to wait for typst")?;
+    if !status.success() {
+        bail!("typst failed to render the {image} card");
+    }
+    Ok(())
+}
+
+fn decode_entities(text: &str) -> String {
+    text.replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
+}
+
 fn meta_property(property: &str, content: &str) -> String {
     format!(
         r#"<meta property="{property}" content="{}">"#,
@@ -329,7 +421,8 @@ mod tests {
             ("blog/index.html", "<html><head><title>Writing | Specter Labs</title></head><body><a href=\"/blog/x/\">x</a></body></html>"),
             ("404.html", "<html><head><title>Page not found | Specter Labs</title></head><body></body></html>"),
         ]);
-        let report = finalize_site(root(&temp), "https://example.org/").unwrap();
+        let report =
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org/").unwrap();
 
         let home = fs::read_to_string(temp.path().join("index.html")).unwrap();
         assert!(home.contains(r#"<link rel="canonical" href="https://example.org/">"#));
@@ -365,7 +458,8 @@ mod tests {
             "blog/index.html",
             "<html><head><title>Writing | SPECTER Labs</title></head></html>",
         )]);
-        let error = finalize_site(root(&temp), "https://example.org").unwrap_err();
+        let error =
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org").unwrap_err();
         assert!(format!("{error:#}").contains("blog/index.html: title must end with"));
     }
 
@@ -383,7 +477,7 @@ mod tests {
         ]);
         let message = format!(
             "{:#}",
-            finalize_site(root(&temp), "https://example.org").unwrap_err()
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org").unwrap_err()
         );
         assert!(message.contains("a/index.html: page declares rel=canonical"));
         assert!(message.contains("b/index.html: internal links must use the directory URL"));
@@ -397,8 +491,52 @@ mod tests {
         )]);
         let message = format!(
             "{:#}",
-            finalize_site(root(&temp), "https://example.org").unwrap_err()
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org").unwrap_err()
         );
         assert!(message.contains("is not part of the published site"));
+    }
+
+    #[test]
+    fn strips_no_card_marker_and_reports_only_undeclared_pages() {
+        let temp = stage_with(&[
+            (
+                "a/index.html",
+                "<html><head><title>A | Specter Labs</title><meta name=\"spctr:card\" content=\"none\"></head></html>",
+            ),
+            ("b/index.html", "<html><head><title>B | Specter Labs</title></head></html>"),
+        ]);
+        let report =
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org").unwrap();
+
+        let a = fs::read_to_string(temp.path().join("a/index.html")).unwrap();
+        assert!(!a.contains("spctr:card"));
+        assert!(!a.contains("og:image"));
+        assert!(a.contains(r#"<meta name="twitter:card" content="summary">"#));
+        assert_eq!(report.missing_image, vec!["b/index.html"]);
+    }
+
+    #[test]
+    fn rejects_og_image_together_with_card() {
+        let temp = stage_with(&[
+            (
+                "a/index.html",
+                "<html><head><title>A | Specter Labs</title><meta property=\"og:image\" content=\"/a.png\"><meta name=\"spctr:card\" content=\"Dossier\"></head></html>",
+            ),
+            ("a.png", ""),
+        ]);
+        let message = format!(
+            "{:#}",
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org").unwrap_err()
+        );
+        assert!(message.contains("page declares both og:image and spctr:card"));
+    }
+
+    #[test]
+    fn card_paths_follow_page_urls() {
+        assert_eq!(
+            card_path("research-notes/x/index.html").unwrap(),
+            "assets/og/research-notes/x.png"
+        );
+        assert_eq!(card_path("404.html").unwrap(), "assets/og/404.png");
     }
 }
