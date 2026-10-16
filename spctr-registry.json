@@ -131,33 +131,9 @@
       "slug": "fly-competency-atlas",
       "title": "Fly Competency Atlas"
     },
-    "N-001": {
-      "slug": "material-memory-without-a-controller",
-      "title": "Material Memory Without a Controller"
-    },
-    "N-002": {
-      "slug": "wonton-soup-follow-up",
-      "title": "Wonton Soup Follow-Up"
-    },
-    "N-003": {
-      "slug": "where-tissues-break",
-      "title": "Critical Fragment Size and Morphogenetic Vulnerability"
-    },
-    "N-004": {
-      "slug": "from-structural-realism-to-platonic-space",
-      "title": "Structural Realism Is The Guardrail"
-    },
     "N-005": {
       "slug": "2026-03-27-moving-a-theorem-prover-onto-new-hardware",
       "title": "Moving a proof-search model to Tenstorrent"
-    },
-    "N-008": {
-      "slug": "2026-05-25-the-same-theorem-does-not-imply-the-same-proof",
-      "title": "One theorem, several proofs"
-    },
-    "N-010": {
-      "slug": "2026-06-10-taking-away-one-move-revealed-proof-alternatives",
-      "title": "Taking away one move revealed which proofs had alternatives"
     },
     "N-013": {
       "slug": "2026-08-05-the-first-fission-screen-mostly-found-stripes-and-dust",

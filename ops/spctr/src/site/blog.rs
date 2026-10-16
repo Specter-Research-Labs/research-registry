@@ -401,11 +401,19 @@ fn load_research_notes(
             loaded_registry = Some(registry::load_registry(repo_root)?);
         }
         let registry = loaded_registry.as_ref().expect("registry loaded");
-        let spctr_id = registry::series_for_slug(registry, "N", &slug)
-            .map(str::to_owned)
-            .with_context(|| {
-                format!("research-notes/{slug}/index.md: missing registry N-series assignment")
-            })?;
+        let spctr_id = match (
+            release_label.as_str(),
+            registry::series_for_slug(registry, "N", &slug),
+        ) {
+            (discover::RELEASE_PUBLISHED, Some(series_id)) => Some(series_id.to_owned()),
+            (discover::RELEASE_PUBLISHED, None) => bail!(
+                "research-notes/{slug}/index.md: published note is missing a registry N-series assignment; run `spctr registry sync`"
+            ),
+            (_, Some(series_id)) => bail!(
+                "research-notes/{slug}/index.md: draft note holds registry N-series assignment '{series_id}'; series IDs are assigned only on publication, remove it from spctr-registry.json"
+            ),
+            (_, None) => None,
+        };
         let source_id = research_note_source_id(&front_matter, registry)
             .with_context(|| format!("research-notes/{slug}/index.md"))?;
         let source_href = source_id
@@ -419,7 +427,7 @@ fn load_research_notes(
             slug,
             title,
             summary,
-            spctr_id: Some(spctr_id),
+            spctr_id,
             release_label,
             source_id,
             source_href,
@@ -541,6 +549,65 @@ mod tests {
         assert!(preview.contains(r#"src="https://example.org/figure.png""#));
         assert!(preview.contains(r#"data-trace-src="/blog/lenia-explainer/trace.json""#));
         assert!(preview.contains("noindex, nofollow"));
+    }
+
+    fn write_notes_fixture(root: &Utf8Path, registry_series: &str, release: &str) {
+        write(
+            root,
+            "spctr-registry.json",
+            &format!(
+                r#"{{"version": 1, "counters": {{"A": 1, "B": 1, "D": 1, "N": 2}}, "series": {{{registry_series}}}, "docs": {{}}}}"#
+            ),
+        );
+        write(
+            root,
+            "site/research-notes/field-note/index.md",
+            &format!("---\ntitle: Field Note\nrelease: {release}\n---\n\n# Field Note\n"),
+        );
+    }
+
+    const FIELD_NOTE_SERIES: &str = r#""N-001": {"slug": "field-note", "title": "Field Note"}"#;
+
+    #[test]
+    fn research_notes_carry_series_only_when_published() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+        let notes_root = root.join("site/research-notes");
+
+        write_notes_fixture(root, FIELD_NOTE_SERIES, "published");
+        let notes = load_research_notes(root, &notes_root).unwrap();
+        assert_eq!(notes[0].spctr_id.as_deref(), Some("N-001"));
+
+        write_notes_fixture(root, "", "draft");
+        let notes = load_research_notes(root, &notes_root).unwrap();
+        assert_eq!(notes[0].spctr_id, None);
+    }
+
+    #[test]
+    fn research_note_loader_rejects_series_mismatched_with_release() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+        let notes_root = root.join("site/research-notes");
+
+        write_notes_fixture(root, "", "published");
+        let message = format!(
+            "{:#}",
+            load_research_notes(root, &notes_root).err().unwrap()
+        );
+        assert!(
+            message.contains("published note is missing a registry N-series assignment"),
+            "got: {message}"
+        );
+
+        write_notes_fixture(root, FIELD_NOTE_SERIES, "draft");
+        let message = format!(
+            "{:#}",
+            load_research_notes(root, &notes_root).err().unwrap()
+        );
+        assert!(
+            message.contains("draft note holds registry N-series assignment 'N-001'"),
+            "got: {message}"
+        );
     }
 
     #[test]

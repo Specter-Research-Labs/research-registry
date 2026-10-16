@@ -7,7 +7,7 @@ toc: true
 
 # How proof search responds to blocked tactics
 
-*Historical April analysis draft. Its cohorts and controls differ from the later [controlled tactic-blocking study](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/). Preserve these numbers as an earlier analysis, not as an additional estimate of the June result. The [inert-control investigation](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) limits causal interpretation of the DeepSeek comparisons.*
+*Historical April analysis draft. Its cohorts and controls differ from the later [controlled tactic-blocking study](/research-notes/2026-06-10-taking-away-one-move-revealed-proof-alternatives/). Preserve these numbers as an earlier analysis, not as an additional estimate of the June result. The later inert-control investigation limits causal interpretation of the DeepSeek comparisons.*
 
 This draft separates provider differences, blocked-tactic outcomes and scheduling interventions. A changed search trace can arise from the intended intervention or from variation between inference calls; both must be measured.
 

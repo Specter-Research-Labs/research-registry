@@ -223,11 +223,22 @@ fn sync_assigns_research_note_series_without_patching_frontmatter() {
         "site/research-notes/field-note/index.md",
         r#"---
 title: "Field Note"
-release: "draft"
+release: "published"
 toc: true
 ---
 
 # Field Note
+"#,
+    );
+    write(
+        root,
+        "site/research-notes/draft-note/index.md",
+        r#"---
+title: "Draft Note"
+release: "draft"
+---
+
+# Draft Note
 "#,
     );
 
@@ -264,10 +275,9 @@ fn research_note_addendum_source_does_not_render_missing_href() {
         "spctr-registry.json",
         r#"{
   "version": 1,
-  "counters": { "A": 2, "B": 2, "D": 1, "N": 2 },
+  "counters": { "A": 2, "B": 2, "D": 1, "N": 1 },
   "series": {
-    "A-001": { "slug": "tooling", "title": "Tooling" },
-    "N-001": { "slug": "field-note", "title": "Field Note" }
+    "A-001": { "slug": "tooling", "title": "Tooling" }
   },
   "docs": {}
 }
