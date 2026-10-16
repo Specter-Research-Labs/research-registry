@@ -5,10 +5,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light" />
-    <title>How much does shape explain? | Specter Labs</title>
+    <title>Where Flow Lenia bodies go in shape space, and where they do not | Specter Labs</title>
     <meta
       name="description"
-      content="Mapping Flow Lenia forms, testing closed paths through their generating rules, and observing how moving bodies respond to obstacles."
+      content="Twelve shape measurements place 25,167 Flow Lenia bodies in a low-dimensional cloud. Most of its empty regions come from the measurement or from undersampling, and one band of centrally peaked, footprint-filling bodies stays empty across 1.35 million archived bodies."
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/assets/blog/lenia-morphospace-report/motion/870da94a.png" />
@@ -29,9 +29,10 @@
     />
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="/assets/report.css?v=20260910-transparent-1" />
-      <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
-<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated">
-<link rel="stylesheet" href="/assets/publication-formats.css"><link rel="stylesheet" href="/assets/morphospace-plate.css?v=20260924-topology"></head>
+    <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
+    <link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated" />
+    <link rel="stylesheet" href="/assets/publication-formats.css" />
+  </head>
   <body class="report-page report-theme-morphospace report-layout-editorial report-morphospace" data-publication="report">
     <div class="site-shell report-shell">
       <header class="site-topnav">
@@ -44,11 +45,11 @@
           <span class="site-brand-name">SPECTER LABS</span>
         </a>
         <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="/dossiers/" aria-current="page">Research</a>
-                    <a class="nav-link" href="/blog/">Writing</a>
-                    <a class="nav-link" href="/addenda/">Addenda</a>
-                    <a class="nav-link" href="/cabinet/">Cabinet</a>
-                </nav>
+          <a class="nav-link" href="/dossiers/" aria-current="page">Research</a>
+          <a class="nav-link" href="/blog/">Writing</a>
+          <a class="nav-link" href="/addenda/">Addenda</a>
+          <a class="nav-link" href="/cabinet/">Cabinet</a>
+        </nav>
       </header>
 
       <div class="site-rules" aria-hidden="true">
@@ -58,158 +59,169 @@
 
       <main class="site-main report-main">
         <nav class="report-nav" aria-label="Report sections">
-          <a href="#result-map">A geography of form</a>
-          <a href="#result-topology">Gaps in the map</a>
-          <a href="#result-transport">Testing a round trip</a>
-          <a href="#result-response">Meeting an obstacle</a>
+          <a href="#occupied-cloud">The occupied cloud</a>
+          <a href="#empty-regions">Empty regions</a>
+          <a href="#gap-search">The gap search</a>
+          <a href="#loops-equal-n">Loops at equal size</a>
+          <a href="#shape-and-behaviour">Shape and behaviour</a>
+          <a href="#fish-methods">Selection lesson</a>
         </nav>
 
         <header class="report-hero">
-          
-          <h1>How much does <br><span>shape explain?</span></h1>
-          
-          <div class="report-hero-dek" aria-label="Abstract"><p>What is the shape of a space of possible bodies? Flow Lenia produces patterns whose forms emerge from the continual redistribution of simulated matter. We construct a synthetic morphospace from their measured geometry and use topological data analysis to investigate how the sampled forms connect and which gaps persist as we broaden the scale of comparison.</p><p>The deeper question is whether this geography tells us anything about how bodies can change. A missing form might mark a difficulty in constructing a viable body, and a route around it might offer a way to reach another organization. We test one part of that idea by taking generating rules around closed paths, then use obstacle encounters to examine changes under a fixed rule. Most apparent round-trip effects disappear under stricter controls, leaving us with a map of sampled forms whose routes still need a dynamical explanation.</p></div>
+          <h1>Where Flow Lenia bodies go in shape space, and where they do not</h1>
+          <div class="report-hero-dek">
+            <p>Twelve measurements of form place 25,167 Flow Lenia bodies in a cloud whose variance runs along about three effective directions, dominated by elongation, with a local structure closer to four or five. Most of the pairwise gaps in that cloud turn out to be consequences of the measurement itself or of undersampling, and they close when 1.35 million archived bodies are added.</p>
+            <p>One region survives both tests, made of bodies whose mass is concentrated near the centre while still filling their footprint, a combination that smooth synthetic fields reach easily and that no archived Flow Lenia body occupies. At equal sample size the persistent loops that earlier made Lenia look topologically richer than fish outlines or EmbryoMaker tissue fall within a marginal-shuffle null.</p>
+          </div>
         </header>
 
-        <figure class="report-motion-intro"><div class="report-motion-pair"><div class="report-motion-frame publication-motion"><img class="report-transparent-motion" src="/assets/blog/lenia-morphospace-report/motion/870da94a.png?v=3600" data-motion="/assets/blog/lenia-morphospace-report/motion/870da94a-transparent.webp" data-still="/assets/blog/lenia-morphospace-report/motion/870da94a.png?v=3600" alt="Flow Lenia specimen 870da94a moving across the field"><button type="button" class="report-motion-toggle publication-motion-toggle" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div><div class="report-motion-frame publication-motion"><img class="report-transparent-motion" src="/assets/blog/lenia-morphospace-report/motion/781d0200.png?v=3600" data-motion="/assets/blog/lenia-morphospace-report/motion/781d0200-transparent.webp" data-still="/assets/blog/lenia-morphospace-report/motion/781d0200.png?v=3600" alt="Flow Lenia specimen 781d0200 moving across the field"><button type="button" class="report-motion-toggle publication-motion-toggle" aria-label="Pause replay" aria-pressed="true" data-playing="true"></button></div></div><figcaption id="motion-caption"><p class="report-motion-observation">The matter moves, yet the body remains recognizable, its outline continually renewed by the same local interactions that carry it across the field.</p><p>3,600 steps · fixed camera · bodies enlarged independently. <a href="/dossiers/lenia-swarm/morphospace/#result-response">See how they respond to an obstacle →</a></p></figcaption></figure>
-
-        <section class="report-result report-tone-violet" id="result-map" aria-labelledby="map-title">
-          <div class="report-result-copy report-chapter-head">
-            <div class="report-chapter-title"><div class="report-kicker">01 / Describing form</div>
-            <h2 id="map-title">A geography of possible forms</h2></div>
-            <p>To put these bodies on a map, we give each one an address made from twelve measurements of its shape, so that forms with similar proportions become neighbors even when they come from very different systems. This is a <em>morphospace</em>. Alongside 25,167 Flow Lenia patterns, we place 859 snapshots of tissue developing in <a href="https://github.com/HugoCanoFernandez/Morphospace_exploration_EMaker">EmbryoMaker</a>, a simulation of interacting cells, and measurements of 232 real fish. The map lets us look for shapes that recur across these different ways of making a body.</p>
-            
-            <p>A cloud of matter, a set of anatomical landmarks, and a developing tissue have no obvious point-for-point correspondence. The twelve measurements below give them a common description, preserving some aspects of their organization while discarding others. The first six describe the distribution of points or matter; the remaining six describe its footprint in a 32 × 32 grid on the principal plane. Neither motion nor the generating rule enters the map.</p>
-          </div>
-<div class="report-measures" aria-label="The twelve shape measurements"><div><strong>01 / Elongation</strong><p>Relative spread along the longest and second-longest axes.</p></div><div><strong>02 / Directional bias</strong><p>How strongly the longest axis dominates the second.</p></div><div><strong>03 / Compactness</strong><p>How closely matter or points gather around their center.</p></div><div><strong>04 / Polarity</strong><p>Imbalance between the two ends of the longest axis.</p></div><div><strong>05 / Reflection symmetry</strong><p>How closely the distribution matches its reflection across a principal axis.</p></div><div><strong>06 / Radial evenness</strong><p>How similar the distances from the center are.</p></div><div><strong>07 / Component count</strong><p>Number of separate connected pieces in the footprint.</p></div><div><strong>08 / Largest component fraction</strong><p>Share of the total mass in the largest piece.</p></div><div><strong>09 / Largest component anisotropy</strong><p>Directional bias within that largest piece.</p></div><div><strong>10 / Coverage</strong><p>Fraction of grid cells occupied by the footprint.</p></div><div><strong>11 / Boundary complexity</strong><p>Exposed boundary relative to the square root of occupied area.</p></div><div><strong>12 / Enclosure</strong><p>Number of enclosed gaps, capped at four and scaled to 0–1.</p></div></div><details class="report-method"><summary>How the measurements are constructed</summary><p>Distances use robustly normalized coordinates. Sparse fish landmarks are rasterized as a filled convex hull, while the Lenia fields carry mass weights; these choices affect the component and boundary measurements. Elongation and directional bias are related measurements, not independent properties. <a href="https://github.com/Specter-Research-Labs/research-registry/blob/6a889d1d/dossiers/lenia-swarm/lenia_swarm_analysis/morphospace/common_morphology.py">Read the coordinate definitions</a>.</p></details>
-          <figure class="report-comparison report-map" aria-labelledby="measured-map-title">
-            <h3 id="measured-map-title">The sampled forms in a two-dimensional projection</h3>
-            <ul class="report-map-legend" aria-label="Map legend"><li><i class="map-lenia"></i>Lenia · 25,167</li><li><i class="map-selected"></i>Selected · 256</li><li><i class="map-fish"></i>Fish · 232</li><li><i class="map-embryo"></i>EmbryoMaker · 859</li></ul>
-            <a href="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" aria-label="Open the measured shape map at full size"><picture><source media="(max-width: 700px)" srcset="/assets/blog/lenia-morphospace-report/fig-measured-map-mobile.svg"><img src="/assets/blog/lenia-morphospace-report/fig-measured-map.svg" alt="Principal-component projection of the original shape measurements, with the 256-member region highlighted in green. A full-range overview accompanies a closer view of the populated area." loading="lazy"></picture></a>
-            <figcaption>Each point represents an observation projected from twelve coordinates into two principal components fitted to the Lenia data, retaining 70.2% of its variance. Fish and EmbryoMaker use the same projection. The highlighted region was selected in the original twelve-dimensional space, where distances and loops are computed; this two-dimensional view can place distinct observations on top of one another. <a href="/assets/blog/lenia-morphospace-report/visual-data.json">Figure data and provenance</a>.</figcaption>
-          </figure>
+        <section class="report-prose">
+          <h2 id="occupied-cloud">The shape of the occupied cloud</h2>
+          <p>Every body in the atlas is reduced to the same twelve numbers from its terminal mass fingerprint, things like elongation, compactness, polarity, bilateral and radial symmetry, component count, coverage, boundary complexity and enclosure, and each axis is scaled by the robust centre and spread of the May 2026 atlas so that a unit means roughly one typical deviation. In that space the 25,167 Lenia bodies spread their variance over about 2.9 effective directions out of twelve (the participation ratio of the covariance spectrum), with the first principal direction loading almost entirely on elongation (&minus;0.92) because a thin tail of long, streaked bodies stretches far beyond the rest. The same measure gives 2.1 for the 232 fish outlines and 1.5 for 826 EmbryoMaker snapshots, so the synthetic cloud is the broadest of the three, although it is still a low-dimensional object in a twelve-dimensional frame.</p>
+          <p>Among the 50 nearest neighbours of a typical Lenia body the participation ratio rises to 4.5, and the direction of greatest local spread is most often polarity (31% of bodies), followed by elongation (16%), enclosure (14%), bilateral symmetry (12%) and boundary complexity (10%). Locally the variance is spread more evenly over four or five directions, and the low global figure comes from the long elongated arm dominating the total, while nearby bodies in the core mostly differ in how lopsided, enclosed or mirror-symmetric they are.</p>
+          <p>We measured occupancy against a marginal-shuffle null, drawing each axis independently from the real values and asking how often such a recombined body lands farther from every real body than the data's own 95th-percentile nearest-neighbour distance. At 200 bodies per replicate, 31% of recombined Lenia bodies fall in empty space, close to the 33% for fish and well below the 55% for EmbryoMaker, whose axes are more tightly coupled. The figure depends on sample size (70% for Lenia at 800 bodies), which is why every comparison here is made at equal size. The Hopkins clustering statistic sits between 0.86 and 0.91 for all four clouds at both sizes, which says more about the emptiness of a twelve-dimensional bounding box than about any particular cloud, and we do not use it to separate them.</p>
         </section>
 
+        <section class="report-prose">
+          <h2 id="empty-regions">Sorting the empty regions</h2>
+          <p>Raup's coiling space made the empty parts of a morphospace into objects of study, since the 405 ammonoids he placed in it crowd into a narrow ridge beside the whorl-overlap boundary and leave most of the conceivable shells unbuilt (<a href="https://pubs.geoscienceworld.org/paleosoc/jpaleontol/article/40/5/1178/80136">Raup 1966</a>; the ammonoid distribution from Raup 1967 is redrawn in McGhee 2006). McGhee later sorted the possible reasons for such emptiness into geometric constraints that follow from the construction of the space, functional constraints where a form could be built but would not work, developmental constraints where the generating process cannot build it, and phylogenetic or historical ones where the forms are possible and simply have not arisen yet (<a href="https://doi.org/10.1017/CBO9780511618369">McGhee 2006</a>; <a href="https://doi.org/10.1098/rsfs.2015.0034">McGhee 2015</a>). Flow Lenia lets us test those categories directly, because we can compute what the measurement can express, run the generating dynamics, and search for missing forms, while Foote's warning that the apparent fullness of a morphospace depends on the traits chosen (<a href="https://doi.org/10.1146/annurev.ecolsys.28.1.129">Foote 1997</a>) and Gerber's point that distance and spacing only mean something in a space with suitable metric structure (<a href="https://doi.org/10.1111/brv.12276">Gerber 2017</a>) apply to our twelve robust-scaled axes as much as to Raup's parameters.</p>
+          <p>We divided every pair of axes into a ten-by-ten grid of quantile bins, so that under independence each cell expects the same number of bodies, and found 195 cells that would hold between 155 and 255 bodies under independence yet contain none. Ninety of them lie in the elongation by anisotropy plane, where anisotropy is an exact function of elongation, so every cell off that curve is empty for every conceivable shape. To separate the remaining 195 &minus; 90 = 105 cells we passed 17,991 synthetic mass fields from six families (single Gaussian blobs, clusters of blobs, ring arcs, tapered rods, thresholded noise disks and chains of blobs) through exactly the fingerprint pipeline that measures a Flow Lenia terminal state, and we checked each cell against all 1,353,965 distinct vectors in the expanded Lenia archive.</p>
+        </section>
 
-
-<section class="report-result report-tone-violet" id="result-topology" aria-labelledby="result-loops">          <div class="report-prose">
-            <div class="report-kicker">02 / The topology of the map</div><h2 id="result-loops">The shapes around the gaps</h2>
-            <p>The distribution of points also lets us ask whether the sampled forms surround gaps in the morphospace. This is the question addressed by topological data analysis (TDA), which studies how a dataset is connected as the scale of observation changes. To detect these loops, we connect nearby observations and gradually increase the distance over which connections are allowed; some gaps fill quickly, while others remain enclosed across a wider range of distances. Whenever three observations are mutually connected, we fill their triangle; a loop disappears once these filled triangles span its interior. Persistent homology records the distance at which each loop appears and the distance at which it fills, and calls the difference its persistence. In this terminology, H₀ tracks connected components and H₁ tracks loops.</p><p>These are loops among sampled shapes, rather than trajectories traced by a body over time.</p>
-          </div>
-<figure class="report-comparison"><img src="/assets/blog/lenia-morphospace-report/fig-filtration.svg" alt="Six points first stand apart, then connect into a ring, then form filled triangles spanning the interior."><figcaption>A schematic filtration. As the connection distance grows, isolated observations join into a ring; at a larger distance, the interior fills. The measured intervals below record these two thresholds in the twelve-dimensional data.</figcaption></figure><figure class="report-comparison"><h3>How long does a gap survive?</h3><img src="/assets/blog/lenia-morphospace-report/fig-persistence-intervals.svg" alt="The eight longest H1 persistence intervals in each cohort, plotted on a common distance scale."><figcaption>Each line follows one H₁ feature from its birth to its death as the connection distance increases. These are the eight longest intervals per cohort from the recorded calculations, on the same normalized-distance scale. The broad Lenia calculation uses 4,096 landmarks.</figcaption></figure>
+        <figure class="report-comparison">
           <div class="report-table-wrap">
             <table class="report-table report-table--compact">
-              <caption>Largest loop persistence in each sampled cohort</caption>
-              <thead><tr><th scope="col">Cohort</th><th scope="col">Calculation</th><th scope="col">Persistence</th></tr></thead>
+              <thead><tr><th>Empty pairwise cells in the May atlas</th><th>Cells</th></tr></thead>
               <tbody>
-                <tr><th scope="row">Broad Flow Lenia · 25,167</th><td>4,096-landmark approximation</td><td>2.78</td></tr>
-                <tr><th scope="row">Single-family Lenia · 8,192</th><td>Exact dense</td><td>0.80</td></tr>
-                <tr><th scope="row">Fish landmark shapes · 232</th><td>Exact dense</td><td>0.64</td></tr>
-                <tr><th scope="row">EmbryoMaker · 859</th><td>Exact dense</td><td>0.29</td></tr>
+                <tr><td>Elongation by anisotropy, unreachable because one axis determines the other</td><td>90</td></tr>
+                <tr><td>Other cells no synthetic field reaches, and empty in the expanded archive</td><td>33</td></tr>
+                <tr><td>Cells no synthetic field reaches, occupied in the expanded archive</td><td>16</td></tr>
+                <tr><td>Cells synthetic fields reach, occupied in the expanded archive</td><td>43</td></tr>
+                <tr><td>Cells synthetic fields reach, empty in the expanded archive</td><td>13</td></tr>
               </tbody>
             </table>
           </div>
-          <p>The gaps suggest a question about construction: can we fill a missing region by finding more rules, or do intermediate shapes fail to sustain themselves? Those possibilities would give the same empty patch very different meanings. Persistent loops occur in all three datasets, but their lengths also depend on sampling and computation—the broad Lenia result uses a landmark approximation—so the numbers above do not rank the systems by biological complexity. They locate absences worth explaining.</p>
-</section>
-        <section class="report-result report-tone-peach" id="result-transport" aria-labelledby="transport-title">
-          <div class="report-result-copy report-chapter-head">
-            <div class="report-chapter-title"><div class="report-kicker">03 / Testing a round trip</div>
-            <h2 id="transport-title">When the rule returns, does the body?</h2></div>
-            <p>A loop in the morphospace is a relation among observed shapes, but it does not tell us how to move a body from one of those shapes to another. To investigate whether a round trip can leave a lasting difference, we turn to the parameters of the rule itself: change them in small steps around a closed path, let the body evolve at each step, and carry its resulting state into the next. The parameters eventually return to their starting values; the body has a history that they do not record.</p>
-            <p>This is a transport experiment. The word <em>holonomy</em> names the possibility that something carried around a closed path returns changed, even though the path ends where it began. Here the transported object is the simulated state, and the path lies in rule-parameter space. A nonzero change alone is insufficient evidence of such an effect, because the body also evolves while the parameters are changing. We therefore compare the loop with paths that retrace their steps and repeat the calculation with finer subdivisions.</p>
-          </div>
-          <figure class="report-comparison"><h3>A closed parameter path leaves an open question</h3><picture><source media="(max-width: 700px)" srcset="/assets/blog/lenia-morphospace-report/fig-measured-transport-mobile.svg"><img src="/assets/blog/lenia-morphospace-report/fig-measured-transport.svg" alt="Measured square and retraced control paths for flow-map-elite-53, alongside their state distances from the starting state."></picture><figcaption>Recorded dense continuations of flow-map-elite-53. Left: successive values of two rule parameters, m₀ and s₀, starting at the circled corner. The square runs right, up, left, down; the control runs up and right, then retraces the same two edges. Right: the saved state’s distance from its first recorded state at each step. Both paths return to their initial parameter values, but the retraced control finishes with a larger state difference (0.001772) than the square loop (0.001577). The residual left by the square therefore does not establish an additional state effect beyond this control. <a href="/assets/blog/lenia-morphospace-report/topology-transport-data.json">Plot data and source hashes</a>.</figcaption></figure>
-          <div class="report-prose">
-            <h3>Most candidates fail the finer test</h3>
-            <p>The distinction matters across the experiment. Only one of five selected candidates from the broader collection passes both numerical criteria in the dense rerun, and none of the five checked in a separately selected 256-pattern region does. The surviving candidate warrants further refinement, but the current tests give little reproducible evidence of a path-dependent effect beyond the controls. They also do not establish that the gaps found by persistent homology have a corresponding dynamical consequence: the measured shape loops and the imposed parameter loops are different objects.</p>
-            <p>An obstacle gives us another way to ask what the shape description leaves out. Instead of changing the rule, we disturb the body’s surroundings and compare its response with an undisturbed continuation under the same rule.</p>
-          </div>
-          <details class="report-method"><summary>Screening counts and numerical controls</summary>
-            <div class="report-table-wrap"><table class="report-table report-table--compact"><caption>Groups passing both measures</caption><thead><tr><th scope="col">Calculation</th><th scope="col">Passing / tested</th></tr></thead><tbody><tr><th scope="row">Initial screen, all three scales</th><td>109 / 4,802</td></tr><tr><th scope="row">Dense rerun · broader collection</th><td>1 / 5</td></tr><tr><th scope="row">Dense rerun · selected region</th><td>0 / 5</td></tr></tbody></table></div>
-            <p>The dense reruns use selected candidates, not random samples of all 4,802 groups. The joint screen is marginal under permutation (<i>p</i> ≈ 0.094). Tests using either measure alone give stronger tails (<i>p</i> ≈ 0.008 for state closure and ≈ 0.0002 for the closure ratio), but most candidates do not pass the denser calculation.</p>
-          </details>
+          <figcaption><p>A cell counts as reached when at least five synthetic fields land inside it. The 16 cells that Lenia reaches and our synthetic families miss show that the six families are not exhaustive, so the 33 cells reached by neither remain unexplained and are not shown to be impossible.</p><a class="report-figure-link" href="receipts/gap-classes.json">Every cell with its ranges and counts</a></figcaption>
+        </figure>
+
+        <section class="report-prose">
+          <p>Forty-three of the 43 + 13 = 56 cells that synthetic fields reach turn out to be occupied once the expanded archive is included, so their absence from the May atlas was a matter of sampling. Thirteen remain empty among 1.35 million archived bodies, and ten of those thirteen lie in a single band of the compactness by coverage plane, with the other three (one coverage by boundary-complexity cell and the same coverage band seen through elongation and anisotropy) describing the same kind of body from other angles. Compactness here is one minus the ratio of mean to maximum radius, so it is high when mass gathers near the centre, and coverage is the fraction of the disk out to the maximum radius that the footprint fills. The archive shows a clear trade-off between the two, and the empty band is the region where both are high at once.</p>
         </section>
 
-        <section class="report-result report-tone-blue" id="result-response" aria-labelledby="response-title">
-          <div class="report-result-copy report-feature">
-            <div class="report-feature-grid">
-              <div class="report-feature-intro">
-                <div class="report-kicker">04 / From shape to behavior</div>
-                <h2 id="response-title">How bodies respond<br>to an obstacle</h2>
-                <p>For this experiment we use a separate cohort from later campaigns: five bodies selected for remaining coherent while moving, including the two shown at the beginning of this article. Each body is continued from the same saved state in four branches, with its path left clear in the control branch and an obstacle placed ahead, to the left, or to the right in the others. The paired continuations allow each response to be compared with what that same body would have done without the obstacle.</p>
-              </div>
-              <figure class="report-branching" aria-labelledby="branch-caption">
-                <div class="report-checkpoint">Same saved state <span>↓</span></div>
-                <div class="report-branch-grid"><div class="report-branch"><span>Sham</span><svg viewBox="0 0 160 94" aria-hidden="true"><path d="M55 47H144" stroke="#8b99b9" stroke-width="1.5" stroke-dasharray="4 4"/><path d="M29 48C25 29 42 27 54 34C71 35 72 51 54 59C41 70 28 64 29 48Z" fill="#526bcc"/><path d="M36 48C36 38 48 36 54 43C59 49 49 57 42 55" fill="none" stroke="#c9dafb" stroke-width="3"/><path d="M71 47H88M83 42L89 47L83 52" fill="none" stroke="#253c80" stroke-width="2"/></svg></div>
-<div class="report-branch"><span>Ahead</span><svg viewBox="0 0 160 94" aria-hidden="true"><path d="M55 47H144" stroke="#8b99b9" stroke-width="1.5" stroke-dasharray="4 4"/><circle cx="119" cy="47" r="13" fill="#f6b071" stroke="#9a472d" stroke-width="1.5"/><path d="M29 48C25 29 42 27 54 34C71 35 72 51 54 59C41 70 28 64 29 48Z" fill="#526bcc"/><path d="M36 48C36 38 48 36 54 43C59 49 49 57 42 55" fill="none" stroke="#c9dafb" stroke-width="3"/><path d="M71 47H88M83 42L89 47L83 52" fill="none" stroke="#253c80" stroke-width="2"/></svg></div>
-<div class="report-branch"><span>Left</span><svg viewBox="0 0 160 94" aria-hidden="true"><path d="M55 47H144" stroke="#8b99b9" stroke-width="1.5" stroke-dasharray="4 4"/><circle cx="111" cy="23" r="13" fill="#f6b071" stroke="#9a472d" stroke-width="1.5"/><path d="M29 48C25 29 42 27 54 34C71 35 72 51 54 59C41 70 28 64 29 48Z" fill="#526bcc"/><path d="M36 48C36 38 48 36 54 43C59 49 49 57 42 55" fill="none" stroke="#c9dafb" stroke-width="3"/><path d="M71 47H88M83 42L89 47L83 52" fill="none" stroke="#253c80" stroke-width="2"/></svg></div>
-<div class="report-branch"><span>Right</span><svg viewBox="0 0 160 94" aria-hidden="true"><path d="M55 47H144" stroke="#8b99b9" stroke-width="1.5" stroke-dasharray="4 4"/><circle cx="111" cy="71" r="13" fill="#f6b071" stroke="#9a472d" stroke-width="1.5"/><path d="M29 48C25 29 42 27 54 34C71 35 72 51 54 59C41 70 28 64 29 48Z" fill="#526bcc"/><path d="M36 48C36 38 48 36 54 43C59 49 49 57 42 55" fill="none" stroke="#c9dafb" stroke-width="3"/><path d="M71 47H88M83 42L89 47L83 52" fill="none" stroke="#253c80" stroke-width="2"/></svg></div></div>
-                <figcaption id="branch-caption">Experiment schematic · blue: body; orange: obstacle. Arrows show the initial heading, not the measured response.</figcaption>
-              </figure>
-            </div>
-            <ol class="report-selection" aria-label="Selection of bodies for the obstacle experiment">
-              <li><strong>626</strong><span>specimens replayed</span></li>
-              <li><strong>184</strong><span>remained coherent</span></li>
-              <li><strong>9</strong><span>also moved</span></li>
-              <li><strong>5</strong><span>could be tested</span></li>
-            </ol>
-          </div>
-          <div class="report-prose"><p>Selection began with 626 specimens replayed for 3,600 steps: 184 retained a coherent body, nine also moved at least half a body diameter, and five qualified for clean paired encounters. All fifteen obstacle branches made contact. The chart compares each body’s median response across the three placements with its unobstructed continuation, called the sham, so that 100% would mean matching its undisturbed net displacement.</p></div>
-          <figure class="report-comparison" aria-labelledby="response-chart-title">
-            <h3 id="response-chart-title">Contact reduces progress, with different amounts of turning</h3>
-            <p class="report-chart-note">Net displacement relative to each body’s sham · 100% would match unobstructed progress</p>
-            <div class="report-response-bars">
-              <div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-870da94a.png" alt="Initial mass pattern of specimen 870DA94A" loading="lazy"><span>870DA94A</span></div><div class="report-bar-track"><i style="--bar:30%" aria-hidden="true"></i></div><strong>30%</strong><span>13° turn</span></div>
-<div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-781d0200.png" alt="Initial mass pattern of specimen 781D0200" loading="lazy"><span>781D0200</span></div><div class="report-bar-track"><i style="--bar:29%" aria-hidden="true"></i></div><strong>29%</strong><span>12° turn</span></div>
-<div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-b26adef3.png" alt="Initial mass pattern of specimen B26ADEF3" loading="lazy"><span>B26ADEF3</span></div><div class="report-bar-track"><i style="--bar:12%" aria-hidden="true"></i></div><strong>12%</strong><span>26° turn</span></div>
-<div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-ae9700f0.png" alt="Initial mass pattern of specimen AE9700F0" loading="lazy"><span>AE9700F0</span></div><div class="report-bar-track"><i style="--bar:9%" aria-hidden="true"></i></div><strong>9%</strong><span>61° turn</span></div>
-<div class="report-response-row"><div class="report-specimen-label"><img src="/assets/blog/lenia-morphospace-report/specimen-ff41daf6.png" alt="Initial mass pattern of specimen FF41DAF6" loading="lazy"><span>FF41DAF6</span></div><div class="report-bar-track"><i style="--bar:17%" aria-hidden="true"></i></div><strong>17%</strong><span>57° turn</span></div>
-            </div>
-            <figcaption>Portraits show the exact initial mass patches used to start the assay, before the 1,200-step checkpoint; both matter channels are summed on the same color scale. They are enlarged to equal display size, not shown at equal physical scale. Identifiers refer to individual specimens. Displacement is the straight-line distance from checkpoint to final body center; direction differences compare that displacement with the sham. A large turn need not be avoidance: across the ten side placements, four responses went away from the obstacle side and six went toward it.</figcaption>
-          </figure>
-          <div class="report-prose">
-            <p>The two bodies retaining the most progress also turn least, while the others travel less and change direction more sharply. These encounters give us several outcomes to explain, even within just two related rule families. A body can lose forward motion while remaining together, or reorganize enough that following its center no longer tells the whole story.</p>
-            <p>In one placement, the body nearly reverses direction as a substantial share of its matter leaves the largest connected piece. Its material survives—the dynamics conserve it—but its organization changes. For a map meant to describe possible bodies, that raises a question of identity: should we count this as the same body moving differently, a transformed body, or the beginning of several? The answer depends on which continuing capacities we want the map to distinguish.</p>
-            <p>There is reason to expect the predictive value of shape to differ between kinds of behavior. In a separate <a href="/dossiers/lenia-swarm/anatomical-compiler/">analysis of 8,174 creatures</a>, shape measurements explained much of the variation along an activity axis (R² = 0.725), but very little along a locomotion axis (R² = 0.038). Those descriptive regressions make it worth asking whether shape will also be unevenly informative about obstacle responses, particularly when predictions must generalize to bodies from unfamiliar rule families.</p><p>The five-body assay has not tested that relationship. It records the responses a predictive description would have to account for.</p>
-            <a class="report-figure-link" href="obstacle-response/">Read the protocol and all response measurements</a>
-          </div>
+        <figure class="report-figure">
+          <img src="assets/gap-map.svg" alt="Density of 1.35 million archived Flow Lenia vectors in compactness and coverage, with the empty band outlined at high values of both and synthetic fields filling it." loading="lazy" />
+          <figcaption><p>Grey hexagons show the log density of every distinct vector in the expanded archive, measured on the May atlas scale. Orange outlines mark the ten compactness by coverage cells that no archived body occupies and that synthetic fields reach; orange points are the synthetic fields inside them.</p><a class="report-figure-link" href="receipts/reachability.json">Synthetic reach by family</a></figcaption>
+        </figure>
+
+        <section class="report-prose">
+          <p>The synthetic fields that reach the band are mostly chains of Gaussian blobs and single blobs, whose mass tapers smoothly from one or more peaks so that the quantised footprint picks up a faint, wide halo around a concentrated core. Two probes tested what puts a field there. Padding the same synthetic body into a larger arena before fingerprinting raises the in-band fraction for single blobs from 7.9% at 256 cells to 26% at 512 and 42% at 1,024, since a body that spans fewer fingerprint pixels is represented by a coarser, more peaked footprint, while chains move the other way and fall out of the band as they shrink. Flat-topped ellipses almost never reach it (0.7% to 1.0%), and softening their edge from a sharp step to a ramp spanning 40% of the radius leaves that fraction essentially unchanged, so a gentle rim on a plateau is not enough and the band belongs to bodies whose density keeps falling from the centre outward.</p>
         </section>
 
-        <section class="report-synthesis report-feature report-next-experiment" aria-labelledby="next-title">
-          <div class="report-feature-grid">
-            <div class="report-feature-intro">
-              <h2 id="next-title">Similar bodies may<br>react differently</h2>
-              <p>A long body might travel, turn in place, or remain nearly still, depending on how its matter moves. Our working hypothesis is that shape captures some constraints on behavior, while the organization of flow helps determine which movements the body can sustain. That could help explain why the same shape measurements describe activity much better than locomotion. If this is right, a useful map of bodies would also tell us something about the changes each body can undergo: which disturbances it absorbs, which set it travelling, and which reorganize it into something else. Bodies that look alike could occupy different places in that map, while visibly different bodies might share a way of responding.</p>
-            </div>
+        <figure class="report-figure">
+          <img src="assets/gap-probe.svg" alt="Left: fraction of synthetic fields in the gap as arena width grows for four families. Right: flat-topped ellipses stay near one percent for every edge width." loading="lazy" />
+          <figcaption><p>Left: 1,000 fields per family, each padded to three arena widths before the fixed 32 by 32 fingerprint. Right: 600 flat-topped ellipses per edge width in a 256-cell arena, compared with Gaussian blobs in the same arena.</p><a class="report-figure-link" href="receipts/gap-probe.json">Probe outputs</a></figcaption>
+        </figure>
 
-            <figure class="report-prediction" aria-labelledby="prediction-caption">
-              <div class="report-prediction-label">Two models · the same held-out bodies</div>
-              <div class="report-model-row"><div class="report-model-input"><strong>Shape</strong><span>12 measurements</span></div><span class="report-model-arrow" aria-hidden="true">→</span><div class="report-model-output"><strong>Predicted response</strong></div></div>
-              <div class="report-model-row"><div class="report-model-input report-model-input--rule"><strong>Shape + rule</strong><span>measurements + parameters</span></div><span class="report-model-arrow" aria-hidden="true">→</span><div class="report-model-output"><strong>Predicted response</strong></div></div>
-              <div class="report-observed-response"><strong>Compare both with the same observed response</strong><span>Progress · turning · coherence loss · recovery</span></div><figcaption id="prediction-caption">Proposed test: does knowing the rule improve response predictions for bodies from unfamiliar rule families?</figcaption>
-            </figure>
-          </div>
-<p>In <a href="https://arxiv.org/abs/1211.4707">active-droplet models</a>, internal flows can stir the surrounding fluid without propelling the droplet; a change in the alignment of its active material can break the symmetry and produce motion. Flow Lenia has different equations, but this suggests a more specific question for our bodies: which arrangements of flow produce travel, and which keep matter moving without carrying the body anywhere?</p>
-
-          <div class="report-actions"><a class="report-button report-button--primary" href="obstacle-response/">Explore the obstacle experiment</a><a class="report-button" href="/dossiers/lenia-swarm/compendium/">Browse the compendium</a></div>
+        <section class="report-prose">
+          <p>This is the first region of the Flow Lenia morphospace that we can call a candidate constraint on the generating dynamics, since the measurement reaches it, a smooth mass field reaches it, and more than a million archived bodies from bulk sweeps, parameter loops, MAP-Elites archives and canonical replays do not. Flow Lenia bodies instead look like plateaus with steep fronts, which is what the growth function would produce if it saturates local density, although that mechanism is our conjecture and nothing here tests it. McGhee's categories also leave a historical reading open, because none of the searches that built the archive aimed at compactness or coverage, and an earlier random sweep for compact gliders in orbium-like classic Lenia returned no qualifying body at all, since the bodies it produced were stable but fell short of both the displacement and the velocity thresholds, which is a reminder that a targeted phenotype can be absent from a large random archive without being unbuildable.</p>
+          <p>Two caveats limit how far the archive can carry the claim. The arena probe shows that body-to-frame scale moves bodies into and out of the band, and the archive does not record grid size, so a Lenia body that happened to be small in a large arena would be measured with the coarse footprint that most easily reaches the band, and this cannot be corrected after the fact. The archive was also built before the Flow Lenia engine correction of 15 September 2026, so it describes the dynamics of a superseded simulator, and whether the band stays empty under the corrected engine is part of what the search below has to establish.</p>
         </section>
 
-        <details class="report-method" id="sources">
-          <summary>Sources and analysis dates</summary>
-          <p>The map and comparisons use the 19 May 2026 analysis snapshot: 25,167 Lenia observations with a common set of shape measurements. The wider collection continued to grow; a <a href="/research-notes/2026-07-19-making-one-morphospace-database-trustworthy/">July–August database investigation</a> records 1,363,395 creature entries. That later archive total is not the number analyzed here, nor a count of distinct body forms. The results below describe the May cohort; whether its gaps persist in the expanded collection remains an open question.</p>
-          <p>The morphology and rule-transport results come from the May 2026 analysis summarized in <a href="https://github.com/Specter-Research-Labs/research-registry/blob/6a889d1d/site/blog/lenia-morphospace-report/index.md">The Geometry of a Synthetic Morphospace</a>, while the separate coherent-body obstacle assay was completed on 2 September 2026. This overview retains the stricter transport checks and distinguishes those earlier shape comparisons from the later response measurements.</p>
-          <dl class="report-source-list">
-            <div><dt>Morphology analysis SHA-256</dt><dd><code>6ca1b7ce43382f0f0904e15e99d7623d9dff5f9050dfe7e4d79c7ae46855a5ec</code></dd></div>
-            <div><dt>Obstacle outcome rows SHA-256</dt><dd><code>a9e3af18abce9d13efb6f7f4308ffecb550fe8d693ae43c3529399c17785d7ac</code></dd></div>
-          </dl>
-        </details>
-      <p class="report-prose">Two bodies can even look identical and develop differently when their internal composition changes.</p>
-</main>
+        <section class="report-prose">
+          <h2 id="gap-search">A registered search at the gap</h2>
+          <p>Telling a constraint of the dynamics apart from a region nobody has searched means aiming a search at the band and seeing whether a coherent body can be made to sit there, so we registered the target and the criteria below before any run.</p>
+          <ul>
+            <li>Target: the thirteen cells that synthetic fields reach and that contain none of the 1,353,965 archived vectors.</li>
+            <li>Missing evidence: whether any coherent Flow Lenia body under the corrected engine can hold a centrally peaked, smoothly decaying footprint. No existing run targeted these descriptors and no archived vector lies in the region, so re-reading existing runs cannot answer the question.</li>
+            <li>Success: at least one body whose time-median twelve-axis vector over the established post-burn-in window lies in a target cell, that passes the corrected-engine qualification (80% of mass in the largest connected component, with the persistence and localisation criteria of the September pilot), and that lands in a target cell again when re-evaluated independently from its saved configuration.</li>
+            <li>Failure: no qualifying body in any target cell within the stated evaluation budget. We would then report the closest qualifying approach and the archive coverage reached, and treat the band as a candidate constraint of the dynamics, which falls short of an established impossibility.</li>
+          </ul>
+          <p><a href="receipts/preregistration.json">Registered criteria</a>.</p>
+          <p>The run plan fixes the budget at 80 generations of 256 bodies, or 80 &times; 256 = 20,480 evaluations of 900 steps each, with the fitness gates, parameter ranges, mutation widths and warm starts of the May individual-persistence archive left unchanged and only the two archive descriptors swapped for compactness (18 bins from 0.35 to 0.80) and coverage (20 bins from 0 to 1). The search proposes candidates from the final mass map of each evaluation, and only a 3,600-step replay through the full September pipeline decides whether a candidate counts. Before the search, its compactness and coverage descriptors were checked against the Python extractor on 3,533 fingerprints, and they agree everywhere except at exactly equal covariance eigenvalues, where the principal axis depends on how rounding ties are broken, a case no real or synthetic fingerprint comes within a relative eigengap of 0.0019 of.</p>
+          <p>The search has not been run. Its warm starts come from the May 8 archive, and on 10 October 2026 the current engine failed to reproduce that archive, with a median relative fitness difference of 0.41 against a tolerance of 0.001, 6 of 16 fitness gates changing outcome, and only 33 of 256 elites keeping their exact scores, while the May 8 engine still reproduces the archive bit for bit. The cause is not yet confirmed. The search therefore waits on a choice between the May 8 engine, which matches the archive but predates the September correction, and the current engine with an amended registration that re-qualifies the warm starts first, and this section will report the result once the search has run under the chosen engine.</p>
+        </section>
+
+        <section class="report-prose">
+          <h2 id="loops-equal-n">Persistent loops at equal sample size</h2>
+          <p>Persistent homology finds loops in a point cloud by growing a ball around every point and recording how long each enclosed hole survives, and <a href="https://doi.org/10.1111/ele.70320">Chia and colleagues (2026)</a> have used exactly this construction to find a gap in the bill and body morphospace of passeroid birds that stays empty through their diversification. The earlier version of our comparison gave the broad Lenia sample a strongest loop of 2.78, a single-family Lenia control 0.80, fish 0.64 and EmbryoMaker 0.29, but those figures came from clouds of 25,167, 8,192, 232 and 859 points, and persistence summaries depend on sample size (<a href="https://proceedings.mlr.press/v37/chazal15.html">Chazal et al. 2015</a>) as well as on the scale of each cloud. We therefore drew 100 replicates of 200 and of 800 bodies from each cloud, divided the largest loop persistence by the replicate's median pairwise distance, and compared each cloud with a Gaussian of matched covariance and with a marginal shuffle that keeps every axis distribution and breaks their joint structure.</p>
+        </section>
+
+        <figure class="report-figure">
+          <img src="assets/topology-equal-n.svg" alt="Largest loop persistence with 5 to 95 percent intervals for four clouds and two nulls at n equal to 200 and 800." loading="lazy" />
+          <figcaption><p>Points are medians and bars span the 5th to 95th percentiles over 100 replicates. Persistence is divided by the replicate's median pairwise distance so that clouds of different spread can be compared. The fish set has only 232 specimens and appears only at 200.</p><a class="report-figure-link" href="receipts/topology-equal-n.json">All replicates, with the two anisotropy axes removed as well</a></figcaption>
+        </figure>
+
+        <section class="report-prose">
+          <p>At equal size both Lenia clouds still carry longer loops than a Gaussian of the same covariance (0.19 against 0.13 at 800 bodies), and they sit on top of the marginal-shuffle null (0.18), so the heavy-tailed distributions of the individual axes already account for how loop-rich Lenia looks, with no sign of bodies arranged jointly around a hole. EmbryoMaker falls between the Gaussian and the shuffle, and the fish outlines have shorter loops (0.08 at 200) than either null, which fits a small set of specimens packed around a few body plans. Removing anisotropy, or anisotropy together with the largest-component anisotropy, leaves every one of these medians within 0.01, so the redundant elongation axes do not create the loops.</p>
+          <p>The individual loops in the full cloud are also less stable than a single persistence value suggests. Reseeding the landmark selection returns the two strongest loops unchanged every time, but each is spanned by only three bodies in the sparse tail of many-component records, where a loop can form between a handful of distant points, which is the behaviour Chia and colleagues found for high-persistence gaps in their Brownian null datasets. Bootstrap resamples of the whole cloud recover the strongest loop in 46% of replicates and the second in 92%, their largest persistence spans 1.21 to 2.78 with a median of 2.10, and none of twelve Gaussian or twelve marginal-shuffle nulls reaches the full-cloud 2.78 (the shuffle maximum is 2.64). The expanded archive then fills the strongest loop with a verified filling certificate at scale 13.19, before its May death at 14.59, and the expanded cloud's own strongest loop reaches only 1.38. None of these loops offers a gap that a search could target, which is why the registered search aims at the compactness by coverage band instead.</p>
+        </section>
+
+        <figure class="report-figure">
+          <img src="assets/loop-bootstrap.svg" alt="Largest loop persistence in bootstrap resamples, marginal shuffles and Gaussian nulls, with the full atlas value at 2.78." loading="lazy" />
+          <figcaption><p>Bars span the 5th to 95th percentiles and points mark medians: 24 bootstrap resamples, 12 marginal shuffles and 12 Gaussian clouds, each with 25,167 points and 2,048 landmarks.</p><a class="report-figure-link" href="receipts/loop-bootstrap.json">Loop identities, vertices and recovery rates</a></figcaption>
+        </figure>
+
+        <section class="report-prose">
+          <h2 id="shape-and-behaviour">What shape predicts about behaviour</h2>
+          <p>Three earlier results concern what the shape coordinates leave out. In a separate analysis of 8,174 creatures, the twelve measurements explained most of the variation along an activity axis (R&sup2; = 0.725) but almost none along a locomotion axis (R&sup2; = 0.038), so knowing a body's shape says a good deal about how much it churns and very little about whether it travels (<a href="../anatomical-compiler/">anatomical compiler</a>).</p>
+          <p>A May experiment, which this page earlier described as holonomy, walked closed rectangles in rule-parameter space and measured the residue left in the evolved state against matched out-and-back retrace controls, so it measured state transport around parameter loops and carries no information about the set of rules that grow one shape. Among 4,802 such loops, 109 left a residue larger than the retrace controls at every tested scale and under both closure measures, a joint count that would arise about one time in eleven under permutation (p &asymp; 0.094), while the state-only and ratio-only tails are rarer, about one in 125 and one in 5,000. Dense reruns kept one joint survivor among the ten candidates rechecked, and on flow-map-elite-53, one of the rechecked bodies, the retrace control's own residual (0.001772) exceeded the loop's (0.001577), so the experiment does not establish transport beyond what the controls produce.</p>
+          <p>The obstacle assay asks how coherent bodies respond when shape alone cannot say. Of 626 exact long replays, 184 stayed coherent and nine also travelled at least half a body diameter, five of which qualified for paired encounters, and across fifteen contacts median forward progress was 18% of the matched sham with a median heading change of 26&deg;, while every branch conserved its matter (<a href="obstacle-response/">obstacle response</a>). The two bodies with the highest temporal-individuality scores kept about 30% of their sham progress and turned 12 to 13&deg;, which is a hypothesis about five organisms that a lineage-held-out assay would need to confirm.</p>
+        </section>
+
+        <section class="report-prose">
+          <h2 id="comparison">How the synthetic morphospace compares</h2>
+          <p>Biological morphospaces range from Raup's mostly empty coiling space to the skeleton space of Thomas and Reif, whose designs have been used almost exhaustively by living and extinct animals (<a href="https://doi.org/10.1111/j.1558-5646.1993.tb02098.x">Thomas and Reif 1993</a>), and Foote showed that where a space falls on that range depends heavily on how its features are decomposed. With twelve derived measurements our Lenia space sits toward the full end once the measurement identity and sampling are accounted for, since only thirteen of the 56 pairwise cells that our synthetic fields reach stay empty across 1.35 million bodies, although twelve axes of a two-dimensional footprint are a coarse decomposition and a finer one would almost certainly open more room.</p>
+          <p>On clustering against continuity, Foote contrasted the discrete clusters of Ordovician forms with <em>Globorotalia</em>, whose named taxa spread continuously through morphospace without matching clusters. The Lenia cloud is closer to the continuous case, with a dense core, one long elongated arm and a sparse tail of fragmented records, and its loop structure at equal size is what heavy-tailed independent axes would already produce. EmbryoMaker is the closest analogue we have, since it is also a generative model whose parameters we control. Exhaustive simulations of early animal development in it found that most morphologies arise from combining a few transformations (elongation, invagination, evagination, condensation and anisotropic growth), that many different cell behaviours converge on the same transformation, and that elongation appears only when planar cell contraction is active (<a href="https://doi.org/10.1002/jez.b.23279">Cano-Fern&aacute;ndez et al. 2025</a>), while random regulatory networks in the same model make complex morphologies rare, finely tuned and clustered near each other in parameter space (<a href="https://doi.org/10.1371/journal.pcbi.1008570">Hagolani et al. 2021</a>). Elongation is also the dominant global direction of the Lenia cloud, and polarity and enclosure dominate locally, which invites a direct comparison between Lenia's preferred directions and EmbryoMaker's small set of transformations on shared footprints.</p>
+          <p>Preferred directions are where the analogy needs most care, because developmental bias in real organisms is often weaker than the architecture suggests; Beldade and colleagues found great potential for independent change between developmentally coupled butterfly eyespots (<a href="https://doi.org/10.1038/416844a">Beldade et al. 2002</a>). A direction that dominates a cloud of outcomes can reflect what the sampling process favoured as much as what the dynamics permit, which is the same distinction the gap search is designed to draw.</p>
+        </section>
+
+        <section class="report-prose">
+          <h2 id="interpretation">Interpretation</h2>
+          <p>Levin's framing treats morphogenesis as navigation through an anatomical morphospace by collectives that pursue target forms (<a href="https://doi.org/10.3389/fnsys.2022.768201">Levin 2022</a>), and a synthetic system in which we control the rules, the measurement and the search gives that picture an empty map to work against. The compactness by coverage band is the first place in Flow Lenia where we can ask whether the collective cannot get somewhere, which would be a constraint in McGhee's developmental sense, or simply has not been sent there. If the registered search places a coherent body in the band, the empty region was historical and the archive records where our searches have been; if it fails within the budget, the plateau-and-front character of Flow Lenia bodies becomes a concrete candidate for what the dynamics impose on form, while the measurements above stand whichever of these readings the search supports.</p>
+        </section>
+
+        <section class="report-prose">
+          <h2 id="biofilm-prediction">A prediction for bacterial colonies</h2>
+          <p>Bacterial colonies and biofilms are grown bodies that we can image as two-dimensional footprints, which makes them the natural next substrate for the same twelve measurements. The shared descriptors are compactness, coverage, boundary complexity, radial and bilateral symmetry, enclosure and component count, measured through the same 32 by 32 fingerprint with each colony scaled to occupy a matched fraction of the frame, since the arena probe showed that body-to-frame scale moves bodies into and out of the band. We predict that colonies with a spreading front and a dense interior behave like Flow Lenia plateaus and avoid the high-compactness, high-coverage band, with fewer than 1% of footprints landing in its thirteen cells (the rate for flat-topped ellipses), and that the few that enter it are colonies with a raised centre and a thin spreading margin.</p>
+          <p>The prediction fails if, at matched scale, 7.9% or more of the colony footprints land in the band (the rate for Gaussian blobs in a 256-cell arena), or if the colonies that do enter it are flat-topped, and a rate between 1% and 7.9% counts as inconclusive. The dataset, the scaling rule and the colony segmentation will be fixed in the protocol before any colony is measured.</p>
+        </section>
+
+        <section class="report-prose">
+          <h2 id="fish-methods">What the fish-near comparison taught us about selection</h2>
+          <p>An earlier version of this page described a patch of 256 Lenia bodies, selected from loop geometry without fish data, whose median distance to fish outlines was 3.30 against 5.90 for the whole cloud, and it put the chance of so large a shift at about one in a thousand. Although no fish data entered the choice, the patch was still the best of about 24 candidates drawn from the forty most persistent loops at four neighbourhood sizes and ranked by their transport p-value, and 22 of those 24 candidates showed the same tilt toward fish, so the tilt is common to the neighbourhoods that procedure could have picked. The comparison null then drew whole-cloud random subsets and compared means while the page reported medians. Against the fair null of every 256-body neighbourhood in the cloud, about one in fourteen (7.2%) has a fish median at or below 3.30 and about one in seven (14.5%) has every member reversed in its fish-versus-tissue ordering, and neighbourhoods around the strongest loops are no more fish-near than random ones.</p>
+        </section>
+
+        <figure class="report-figure">
+          <img src="assets/fish-null.svg" alt="Histograms of median nearest-fish distance over all 256-body neighbourhoods, with the selected region at the 7th percentile using all axes and the 28th percentile without the elongation axes." loading="lazy" />
+          <figcaption><p>One neighbourhood per Lenia body, each its 256 nearest bodies. The red line marks the selected region.</p><a class="report-figure-link" href="receipts/fish-audit.json">Reconstruction of the region and every null</a></figcaption>
+        </figure>
+
+        <section class="report-prose">
+          <p>Much of the remaining closeness comes from the elongation axes. The region's mean elongation is 9.5 robust units against a Lenia median of 0.04 and a fish mean of 7.0, and when elongation and both anisotropy axes are removed the region falls to the 28th percentile of neighbourhoods, while 161 of its 256 bodies have the same paddlefish specimen as their nearest outline. A wider comparison on bodies from the pre-correction engine had also found most persistent historical bodies nearer to a fish outline than to EmbryoMaker tissue, and the corrected engine reverses it, since in a stratified pilot of 24 paired configurations 16 moved from fish-nearer to tissue-nearer and none moved the other way, and 14 of the 15 bodies that currently qualify are tissue-nearer, which ties the earlier resemblance to diagonal anisotropy that the engine fault introduced.</p>
+          <p>The general lesson is that a region chosen by any criterion, even one blind to the comparison, has to be compared with the other regions the same procedure could have chosen, using the same summary statistic in the null as in the report, with the direction of every one-sided test stated before the result.</p>
+          <h3 id="corrections">Corrections to the earlier fish-near claim</h3>
+          <ul>
+            <li>The 256-body region was the top-ranked of about 24 candidates (the forty most persistent loops at k = 256, 512, 1,024 and 2,048, ranked by transport p), and 22 of the 24 showed the same fish tilt.</li>
+            <li>The reported one in a thousand came from whole-cloud random subsets compared by the mean, while the page reported the median. Against all 256-body neighbourhoods, 7.2% have a fish median at or below 3.30 and 14.5% have every member reversed.</li>
+            <li>The bridge test was one-sided in the wrong direction.</li>
+            <li>The transport p of about one in 2,000 was the permutation floor, maximised over about 24 candidates.</li>
+            <li>Neighbourhoods around the strongest loops are no more fish-near than random neighbourhoods (5% of the top 40 against 7.2% of all).</li>
+            <li>Without elongation and both anisotropy axes the region sits at the 28th percentile, and 161 of its 256 bodies map to one paddlefish specimen.</li>
+            <li>The general fish-nearness of persistent bodies came from the pre-correction engine and reverses under the corrected engine.</li>
+          </ul>
+        </section>
+
+        <section class="report-prose">
+          <h2 id="receipts">Methods and receipts</h2>
+          <p>All analyses use the May 2026 atlas of 25,167 Lenia observations, the 232 dryad fish outlines and 826 EmbryoMaker snapshots of the September expansion, the 1,353,965 distinct Lenia vectors of the expanded archive, and the robust centre and scale of the May atlas profile. The atlas and the expanded archive were generated before the engine correction of 15 September 2026, and the obstacle assay ran on the engine of 2 September 2026. Synthetic fields go through centre-of-mass alignment, box resampling to 32 by 32, normalisation by total mass and 8-bit quantisation before the same point-cloud shape features, so they are measured exactly as a terminal Flow Lenia state is. Loops use Vietoris&ndash;Rips persistence with 2,048 greedy landmarks for the full cloud and exact persistence for equal-size replicates.</p>
+          <p><a href="receipts/occupancy.json">Occupancy, participation ratios and local directions</a> &middot; <a href="receipts/gap-classes.json">Empty cells</a> &middot; <a href="receipts/reachability.json">Synthetic reach</a> &middot; <a href="receipts/gap-probe.json">Arena and edge probes</a> &middot; <a href="receipts/topology-equal-n.json">Equal-size topology</a> &middot; <a href="receipts/loop-bootstrap.json">Loop stability</a> &middot; <a href="receipts/fish-audit.json">Fish-near audit</a> &middot; <a href="receipts/preregistration.json">Registered gap search</a></p>
+          <p><a class="report-figure-link" href="obstacle-response/">Read the obstacle protocol and all response measurements</a></p>
+        </section>
+      </main>
       <footer class="report-footer">
         <a href="/dossiers/lenia-swarm/">Lenia Swarm dossier</a>
         <a href="/sitemap/">Sitemap</a>
       </footer>
     </div>
-  <script type="module" src="/assets/report-transparent-motion.js?v=2"></script>
-</body>
+  </body>
 </html>

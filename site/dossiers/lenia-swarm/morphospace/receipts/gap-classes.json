@@ -1,0 +1,4848 @@
+{
+ "min_synthetic": 5,
+ "n_expanded_unique": 1353965,
+ "n_empty_cells": 195,
+ "n_reachable": 56,
+ "n_reachable_empty_in_expanded": 13,
+ "n_unreachable_empty_in_expanded": 123,
+ "reachable_axis_pairs": [
+  [
+   [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   12
+  ],
+  [
+   [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   12
+  ],
+  [
+   [
+    "compactness",
+    "coverage"
+   ],
+   11
+  ],
+  [
+   [
+    "compactness",
+    "radial_symmetry"
+   ],
+   7
+  ],
+  [
+   [
+    "radial_symmetry",
+    "boundary_complexity"
+   ],
+   3
+  ],
+  [
+   [
+    "coverage",
+    "boundary_complexity"
+   ],
+   2
+  ],
+  [
+   [
+    "radial_symmetry",
+    "coverage"
+   ],
+   2
+  ],
+  [
+   [
+    "elongation",
+    "coverage"
+   ],
+   2
+  ],
+  [
+   [
+    "anisotropy",
+    "coverage"
+   ],
+   2
+  ],
+  [
+   [
+    "compactness",
+    "bilateral_symmetry"
+   ],
+   1
+  ],
+  [
+   [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   1
+  ],
+  [
+   [
+    "compactness",
+    "boundary_complexity"
+   ],
+   1
+  ]
+ ],
+ "cells": [
+  {
+   "axes": [
+    "radial_symmetry",
+    "boundary_complexity"
+   ],
+   "bin": [
+    4,
+    0
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    -0.2462917845790952,
+    -0.028418486073394613
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 314,
+   "expanded_inside": 34,
+   "synthetic_families": {
+    "blob": 181,
+    "chain": 99,
+    "multi_blob": 28,
+    "rod": 5,
+    "noise_disk": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.7901291826450462,
+    1.1558526973917311
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 168,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 101,
+    "blob": 42,
+    "rod": 12,
+    "multi_blob": 10,
+    "noise_disk": 2,
+    "ring_arc": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    6,
+    8
+   ],
+   "expected": 252.72968569952715,
+   "range_a": [
+    0.26771560161025515,
+    0.5040879382154018
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 145,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 91,
+    "blob": 24,
+    "rod": 14,
+    "multi_blob": 12,
+    "noise_disk": 3,
+    "ring_arc": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    4
+   ],
+   "expected": 253.7302419835499,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    -0.25293403480372323,
+    -0.03747170885981085
+   ],
+   "synthetic_inside": 138,
+   "expanded_inside": 12,
+   "synthetic_families": {
+    "blob": 60,
+    "multi_blob": 42,
+    "noise_disk": 22,
+    "chain": 13,
+    "rod": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    5
+   ],
+   "expected": 252.5300989390869,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    -0.03278774525233449,
+    0.31382556170091586
+   ],
+   "synthetic_inside": 134,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "multi_blob": 42,
+    "chain": 33,
+    "blob": 31,
+    "rod": 16,
+    "noise_disk": 12
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    7,
+    8
+   ],
+   "expected": 252.83013470020265,
+   "range_a": [
+    0.5042510649216543,
+    0.7899357847259528
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 132,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 94,
+    "blob": 32,
+    "multi_blob": 5,
+    "rod": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    5,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    0.05033755090075263,
+    0.2676816035915256
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 103,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 71,
+    "blob": 27,
+    "multi_blob": 5
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "boundary_complexity"
+   ],
+   "bin": [
+    3,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.46133979801342034,
+    -0.2466211607606213
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 94,
+   "expanded_inside": 88,
+   "synthetic_families": {
+    "blob": 66,
+    "chain": 22,
+    "multi_blob": 5,
+    "rod": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "coverage",
+    "boundary_complexity"
+   ],
+   "bin": [
+    5,
+    0
+   ],
+   "expected": 252.2291095482179,
+   "range_a": [
+    -0.03278774525233449,
+    0.31382556170091586
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 77,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "blob": 32,
+    "ring_arc": 29,
+    "chain": 8,
+    "multi_blob": 4,
+    "rod": 3,
+    "noise_disk": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    6
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    0.31850952530839216,
+    0.7119624683364061
+   ],
+   "synthetic_inside": 76,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 36,
+    "blob": 19,
+    "multi_blob": 13,
+    "rod": 4,
+    "noise_disk": 4
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    6,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    0.26771560161025515,
+    0.5040879382154018
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 66,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 43,
+    "blob": 17,
+    "multi_blob": 6
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "bilateral_symmetry"
+   ],
+   "bin": [
+    9,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    -7.359774682442685,
+    -2.095095312314104
+   ],
+   "synthetic_inside": 62,
+   "expanded_inside": 161,
+   "synthetic_families": {
+    "noise_disk": 28,
+    "chain": 12,
+    "blob": 9,
+    "multi_blob": 9,
+    "rod": 4
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    0
+   ],
+   "expected": 249.72976516867325,
+   "range_a": [
+    0.9776898736483677,
+    1.2610676337891502
+   ],
+   "range_b": [
+    -1.3630334097756196,
+    -0.8243775949158386
+   ],
+   "synthetic_inside": 40,
+   "expanded_inside": 4,
+   "synthetic_families": {
+    "multi_blob": 20,
+    "noise_disk": 12,
+    "ring_arc": 7,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    8
+   ],
+   "expected": 252.83013470020265,
+   "range_a": [
+    0.7901291826450462,
+    1.1558526973917311
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 37,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 30,
+    "blob": 5,
+    "multi_blob": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "boundary_complexity"
+   ],
+   "bin": [
+    9,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 34,
+   "expanded_inside": 57,
+   "synthetic_families": {
+    "blob": 15,
+    "chain": 12,
+    "rod": 4,
+    "multi_blob": 2,
+    "noise_disk": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "boundary_complexity"
+   ],
+   "bin": [
+    2,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.6946806287162957,
+    -0.46139661421655104
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 34,
+   "expanded_inside": 191,
+   "synthetic_families": {
+    "blob": 26,
+    "multi_blob": 4,
+    "rod": 2,
+    "chain": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    7
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 33,
+   "expanded_inside": 2,
+   "synthetic_families": {
+    "rod": 20,
+    "chain": 8,
+    "noise_disk": 3,
+    "ring_arc": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    7
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 33,
+   "expanded_inside": 2,
+   "synthetic_families": {
+    "rod": 20,
+    "chain": 8,
+    "noise_disk": 3,
+    "ring_arc": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    1,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    0.6784437963548475,
+    1.088868896514169
+   ],
+   "synthetic_inside": 26,
+   "expanded_inside": 1754,
+   "synthetic_families": {
+    "noise_disk": 20,
+    "multi_blob": 6
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    1,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "range_b": [
+    0.6784437963548475,
+    1.088868896514169
+   ],
+   "synthetic_inside": 26,
+   "expanded_inside": 1754,
+   "synthetic_families": {
+    "noise_disk": 20,
+    "multi_blob": 6
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    7,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    0.5042510649216543,
+    0.7899357847259528
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 25,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 20,
+    "blob": 5
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    3
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.43971617500183824,
+    -0.21645651249871778
+   ],
+   "synthetic_inside": 25,
+   "expanded_inside": 49,
+   "synthetic_families": {
+    "multi_blob": 21,
+    "noise_disk": 4
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    3
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "range_b": [
+    -0.43971617500183824,
+    -0.21645651249871778
+   ],
+   "synthetic_inside": 25,
+   "expanded_inside": 49,
+   "synthetic_families": {
+    "multi_blob": 21,
+    "noise_disk": 4
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    2
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.6333718390469746,
+    -0.43974075927055445
+   ],
+   "synthetic_inside": 23,
+   "expanded_inside": 32,
+   "synthetic_families": {
+    "multi_blob": 20,
+    "noise_disk": 3
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    2
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "range_b": [
+    -0.6333718390469746,
+    -0.43974075927055445
+   ],
+   "synthetic_inside": 23,
+   "expanded_inside": 32,
+   "synthetic_families": {
+    "multi_blob": 20,
+    "noise_disk": 3
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 22,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "chain": 16,
+    "blob": 6
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    6,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 20,
+   "expanded_inside": 93,
+   "synthetic_families": {
+    "noise_disk": 7,
+    "multi_blob": 6,
+    "ring_arc": 5,
+    "rod": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    6,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 20,
+   "expanded_inside": 93,
+   "synthetic_families": {
+    "noise_disk": 7,
+    "multi_blob": 6,
+    "ring_arc": 5,
+    "rod": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 18,
+   "expanded_inside": 8,
+   "synthetic_families": {
+    "multi_blob": 9,
+    "rod": 5,
+    "ring_arc": 3,
+    "noise_disk": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    1
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.8040520928493329,
+    -0.633388029110174
+   ],
+   "synthetic_inside": 18,
+   "expanded_inside": 23,
+   "synthetic_families": {
+    "multi_blob": 15,
+    "noise_disk": 2,
+    "ring_arc": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 18,
+   "expanded_inside": 8,
+   "synthetic_families": {
+    "multi_blob": 9,
+    "rod": 5,
+    "ring_arc": 3,
+    "noise_disk": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    7,
+    1
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "range_b": [
+    -0.8040520928493329,
+    -0.633388029110174
+   ],
+   "synthetic_inside": 18,
+   "expanded_inside": 22,
+   "synthetic_families": {
+    "multi_blob": 15,
+    "noise_disk": 2,
+    "ring_arc": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    5,
+    3
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    -0.43971617500183824,
+    -0.21645651249871778
+   ],
+   "synthetic_inside": 17,
+   "expanded_inside": 485,
+   "synthetic_families": {
+    "multi_blob": 8,
+    "noise_disk": 7,
+    "rod": 1,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    5,
+    3
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "range_b": [
+    -0.43971617500183824,
+    -0.21645651249871778
+   ],
+   "synthetic_inside": 17,
+   "expanded_inside": 485,
+   "synthetic_families": {
+    "multi_blob": 8,
+    "noise_disk": 7,
+    "rod": 1,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    8,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.7901291826450462,
+    1.1558526973917311
+   ],
+   "range_b": [
+    0.5314541214671762,
+    0.9775681082765694
+   ],
+   "synthetic_inside": 16,
+   "expanded_inside": 356,
+   "synthetic_families": {
+    "noise_disk": 10,
+    "blob": 2,
+    "rod": 2,
+    "multi_blob": 1,
+    "ring_arc": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    5
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    0.03341271007262335,
+    0.3336958783773084
+   ],
+   "synthetic_inside": 13,
+   "expanded_inside": 1560,
+   "synthetic_families": {
+    "noise_disk": 12,
+    "multi_blob": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    5
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "range_b": [
+    0.03341271007262335,
+    0.3336958783773084
+   ],
+   "synthetic_inside": 13,
+   "expanded_inside": 1560,
+   "synthetic_families": {
+    "noise_disk": 12,
+    "multi_blob": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    2,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 13,
+   "expanded_inside": 910,
+   "synthetic_families": {
+    "noise_disk": 9,
+    "multi_blob": 2,
+    "rod": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    2,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 13,
+   "expanded_inside": 910,
+   "synthetic_families": {
+    "noise_disk": 9,
+    "multi_blob": 2,
+    "rod": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    6
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    0.3338301883810379,
+    0.6783430176124512
+   ],
+   "synthetic_inside": 11,
+   "expanded_inside": 1786,
+   "synthetic_families": {
+    "noise_disk": 8,
+    "multi_blob": 3
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    6
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "range_b": [
+    0.3338301883810379,
+    0.6783430176124512
+   ],
+   "synthetic_inside": 11,
+   "expanded_inside": 1786,
+   "synthetic_families": {
+    "noise_disk": 8,
+    "multi_blob": 3
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    0,
+    5
+   ],
+   "expected": 252.5300989390869,
+   "range_a": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "range_b": [
+    -0.03278774525233449,
+    0.31382556170091586
+   ],
+   "synthetic_inside": 10,
+   "expanded_inside": 7,
+   "synthetic_families": {
+    "noise_disk": 8,
+    "multi_blob": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    6,
+    9
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.26771560161025515,
+    0.5040879382154018
+   ],
+   "range_b": [
+    1.261111994393471,
+    4.496992315238356
+   ],
+   "synthetic_inside": 9,
+   "expanded_inside": 29,
+   "synthetic_families": {
+    "noise_disk": 5,
+    "multi_blob": 4
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.0889672754358957,
+    1.5096346192818058
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 9,
+   "expanded_inside": 1,
+   "synthetic_families": {
+    "rod": 4,
+    "chain": 4,
+    "noise_disk": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "coverage",
+    "boundary_complexity"
+   ],
+   "bin": [
+    4,
+    0
+   ],
+   "expected": 253.427822148051,
+   "range_a": [
+    -0.25293403480372323,
+    -0.03747170885981085
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 8,
+   "expanded_inside": 5,
+   "synthetic_families": {
+    "ring_arc": 6,
+    "blob": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    3
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    -0.43971617500183824,
+    -0.21645651249871778
+   ],
+   "synthetic_inside": 8,
+   "expanded_inside": 1786,
+   "synthetic_families": {
+    "noise_disk": 7,
+    "multi_blob": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    3
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "range_b": [
+    -0.43971617500183824,
+    -0.21645651249871778
+   ],
+   "synthetic_inside": 8,
+   "expanded_inside": 1786,
+   "synthetic_families": {
+    "noise_disk": 7,
+    "multi_blob": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    4
+   ],
+   "expected": 251.52997973536773,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    -0.21637062789917952,
+    0.03317028569356346
+   ],
+   "synthetic_inside": 8,
+   "expanded_inside": 1381,
+   "synthetic_families": {
+    "noise_disk": 6,
+    "multi_blob": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    0,
+    4
+   ],
+   "expected": 251.52997973536773,
+   "range_a": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "range_b": [
+    -0.21637062789917952,
+    0.03317028569356346
+   ],
+   "synthetic_inside": 8,
+   "expanded_inside": 1381,
+   "synthetic_families": {
+    "noise_disk": 6,
+    "multi_blob": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    7,
+    8
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.5042510649216543,
+    0.7899357847259528
+   ],
+   "range_b": [
+    0.9776898736483677,
+    1.2610676337891502
+   ],
+   "synthetic_inside": 7,
+   "expanded_inside": 64,
+   "synthetic_families": {
+    "multi_blob": 3,
+    "blob": 2,
+    "ring_arc": 1,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    9,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    0.5314541214671762,
+    0.9775681082765694
+   ],
+   "synthetic_inside": 7,
+   "expanded_inside": 50,
+   "synthetic_families": {
+    "noise_disk": 4,
+    "blob": 1,
+    "multi_blob": 1,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    6
+   ],
+   "expected": 251.93006715142846,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    0.31850952530839216,
+    0.7119624683364061
+   ],
+   "synthetic_inside": 6,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "rod": 5,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    6
+   ],
+   "expected": 251.93006715142846,
+   "range_a": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "range_b": [
+    0.31850952530839216,
+    0.7119624683364061
+   ],
+   "synthetic_inside": 6,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "rod": 5,
+    "chain": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    7,
+    9
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.5042510649216543,
+    0.7899357847259528
+   ],
+   "range_b": [
+    1.261111994393471,
+    4.496992315238356
+   ],
+   "synthetic_inside": 6,
+   "expanded_inside": 17,
+   "synthetic_families": {
+    "multi_blob": 4,
+    "noise_disk": 2
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    8,
+    8
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.7901291826450462,
+    1.1558526973917311
+   ],
+   "range_b": [
+    0.9776898736483677,
+    1.2610676337891502
+   ],
+   "synthetic_inside": 6,
+   "expanded_inside": 11,
+   "synthetic_families": {
+    "noise_disk": 3,
+    "blob": 1,
+    "multi_blob": 1,
+    "ring_arc": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    8,
+    9
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.7901291826450462,
+    1.1558526973917311
+   ],
+   "range_b": [
+    1.261111994393471,
+    4.496992315238356
+   ],
+   "synthetic_inside": 6,
+   "expanded_inside": 4,
+   "synthetic_families": {
+    "noise_disk": 2,
+    "blob": 1,
+    "multi_blob": 1,
+    "ring_arc": 1,
+    "rod": 1
+   },
+   "reachable": true
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    4,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 4,
+   "expanded_inside": 307,
+   "synthetic_families": {
+    "multi_blob": 2,
+    "noise_disk": 2
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    4,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "range_b": [
+    -1.012635902124059,
+    -0.8041503936798752
+   ],
+   "synthetic_inside": 4,
+   "expanded_inside": 307,
+   "synthetic_families": {
+    "multi_blob": 2,
+    "noise_disk": 2
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "coverage",
+    "boundary_complexity"
+   ],
+   "bin": [
+    0,
+    0
+   ],
+   "expected": 249.43211348194063,
+   "range_a": [
+    -1.3630334097756196,
+    -0.8243775949158386
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 4,
+   "expanded_inside": 143,
+   "synthetic_families": {
+    "rod": 4
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    1,
+    2
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -1.227694583312217,
+    -0.8495994047503119
+   ],
+   "range_b": [
+    -0.6946806287162957,
+    -0.46139661421655104
+   ],
+   "synthetic_inside": 3,
+   "expanded_inside": 690,
+   "synthetic_families": {
+    "noise_disk": 3
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    7,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 2,
+   "expanded_inside": 3,
+   "synthetic_families": {
+    "rod": 2
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    7,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 2,
+   "expanded_inside": 3,
+   "synthetic_families": {
+    "rod": 2
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    1,
+    7
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    -1.0013916472353104,
+    -0.6947911848395729
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 2,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "noise_disk": 1,
+    "chain": 1
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    8
+   ],
+   "expected": 252.83013470020265,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 1,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "multi_blob": 1
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    0,
+    2
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -4.06421344246033,
+    -1.2277048387903458
+   ],
+   "range_b": [
+    -0.6946806287162957,
+    -0.46139661421655104
+   ],
+   "synthetic_inside": 1,
+   "expanded_inside": 16,
+   "synthetic_families": {
+    "noise_disk": 1
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    9,
+    8
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    0.9776898736483677,
+    1.2610676337891502
+   ],
+   "synthetic_inside": 1,
+   "expanded_inside": 1,
+   "synthetic_families": {
+    "noise_disk": 1
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    9,
+    9
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    1.261111994393471,
+    4.496992315238356
+   ],
+   "synthetic_inside": 1,
+   "expanded_inside": 0,
+   "synthetic_families": {
+    "noise_disk": 1
+   },
+   "reachable": false
+  },
+  {
+   "axes": [
+    "coverage",
+    "boundary_complexity"
+   ],
+   "bin": [
+    2,
+    0
+   ],
+   "expected": 254.92621289784242,
+   "range_a": [
+    -0.6229671597943554,
+    -0.44966050631773014
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 158,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    8
+   ],
+   "expected": 252.93058370087815,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    8
+   ],
+   "expected": 252.93058370087815,
+   "range_a": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    0,
+    8
+   ],
+   "expected": 252.83013470020265,
+   "range_a": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    8
+   ],
+   "expected": 252.83013470020265,
+   "range_a": [
+    1.0889672754358957,
+    1.5096346192818058
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    8
+   ],
+   "expected": 252.83013470020265,
+   "range_a": [
+    1.509993281783026,
+    1.9406478209615656
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    8
+   ],
+   "expected": 252.72968569952715,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    8
+   ],
+   "expected": 252.72968569952715,
+   "range_a": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    1,
+    8
+   ],
+   "expected": 252.72968569952715,
+   "range_a": [
+    -1.0013916472353104,
+    -0.6947911848395729
+   ],
+   "range_b": [
+    1.1944107199064706,
+    1.6393872626167245
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    9
+   ],
+   "expected": 252.03011880637342,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    5
+   ],
+   "expected": 252.03011880637342,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    9
+   ],
+   "expected": 251.93006715142846,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    9
+   ],
+   "expected": 251.93006715142846,
+   "range_a": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    5
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    5
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    5
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    0
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    1
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    3
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    6
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    5
+   ],
+   "expected": 251.9300274168554,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    0
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    1
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    3
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    6
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    0.7901291826450462,
+    1.1558526973917311
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    1.155932792213999,
+    2.5351892185273797
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    0,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    2,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -0.6946806287162957,
+    -0.46139661421655104
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    3,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    -0.46133979801342034,
+    -0.2466211607606213
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    1.0889672754358957,
+    1.5096346192818058
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    6
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    1.509993281783026,
+    1.9406478209615656
+   ],
+   "range_b": [
+    0.31850952530839216,
+    0.7119624683364061
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 7,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    1.509993281783026,
+    1.9406478209615656
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "coverage",
+    "boundary_complexity"
+   ],
+   "bin": [
+    9,
+    9
+   ],
+   "expected": 251.8300154964835,
+   "range_a": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "range_b": [
+    1.7384338325687816,
+    3.790523218889857
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    5
+   ],
+   "expected": 251.8299360273374,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    2
+   ],
+   "expected": 251.8299360273374,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    7
+   ],
+   "expected": 251.8299360273374,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    8
+   ],
+   "expected": 251.8299360273374,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    5
+   ],
+   "expected": 251.8299360273374,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    5
+   ],
+   "expected": 251.8299360273374,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    1
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    3
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    6
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    3
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    6
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    1
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    6
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    1
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    3
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    1,
+    9
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    1.509993281783026,
+    1.9406478209615656
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 2245,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "largest_component_anisotropy"
+   ],
+   "bin": [
+    1,
+    9
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "range_b": [
+    1.509993281783026,
+    1.9406478209615656
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 2245,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    0,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -4.06421344246033,
+    -1.2277048387903458
+   ],
+   "range_b": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    0,
+    3
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -4.06421344246033,
+    -1.2277048387903458
+   ],
+   "range_b": [
+    -0.46133979801342034,
+    -0.2466211607606213
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 290,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    1,
+    0
+   ],
+   "expected": 251.73000357611159,
+   "range_a": [
+    -1.227694583312217,
+    -0.8495994047503119
+   ],
+   "range_b": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    2
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    7
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    8
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    7
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    8,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    7
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    1,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    -1.0013916472353104,
+    -0.6947911848395729
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    7,
+    9
+   ],
+   "expected": 251.72996384153853,
+   "range_a": [
+    0.6784437963548475,
+    1.088868896514169
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    2
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    8
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    2
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    8
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    1
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    3
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    6
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    2
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    8
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    2
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    8
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    1
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    3
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    6
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    0
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    1
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    3
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    6
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "compactness",
+    "radial_symmetry"
+   ],
+   "bin": [
+    0,
+    1
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -4.06421344246033,
+    -1.2277048387903458
+   ],
+   "range_b": [
+    -1.0013916472353104,
+    -0.6947911848395729
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "coverage"
+   ],
+   "bin": [
+    0,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_anisotropy",
+    "coverage"
+   ],
+   "bin": [
+    9,
+    7
+   ],
+   "expected": 251.62999165573967,
+   "range_a": [
+    1.509993281783026,
+    1.9406478209615656
+   ],
+   "range_b": [
+    0.7166464319438824,
+    1.1897267562989944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    5
+   ],
+   "expected": 251.62975324830134,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    0.03445499940457297,
+    0.3390076551008359
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    5,
+    4
+   ],
+   "expected": 251.62975324830134,
+   "range_a": [
+    0.03810868343800333,
+    0.42159862219551597
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    7
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    8
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    2
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    8
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    2
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    7
+   ],
+   "expected": 251.53001946994078,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    9
+   ],
+   "expected": 251.52986053164858,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    1.4590710844594752,
+    1.8367837489032726
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    9,
+    4
+   ],
+   "expected": 251.52986053164858,
+   "range_a": [
+    4.2983180215917605,
+    60.892899764181486
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    0,
+    4
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.8574149117641037,
+    -0.7111473742402641
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    1,
+    4
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.7111191691397117,
+    -0.5785972501313642
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    3,
+    4
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.41931050958891347,
+    -0.21378490458447796
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    -1.0325944655075494,
+    -0.817445023795613
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    1
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    -0.8174042644428164,
+    -0.6372799968228355
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    3
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    -0.43866145169074555,
+    -0.2093416802352348
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    6
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    0.33939948932072084,
+    0.6685093018757267
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    6,
+    4
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    0.4221589297434738,
+    0.9736665079961904
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "radial_symmetry",
+    "boundary_complexity"
+   ],
+   "bin": [
+    0,
+    0
+   ],
+   "expected": 251.42996781499582,
+   "range_a": [
+    -2.956565726242049,
+    -1.0015724743104655
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 70,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    2,
+    4
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    -0.5784941983871409,
+    -0.4194067218907416
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    2
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    -0.6371456904813009,
+    -0.4387747812678799
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    7
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    0.6685942520576547,
+    1.056213761951616
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    4,
+    8
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    -0.21375214587945648,
+    0.038041595360293785
+   ],
+   "range_b": [
+    1.0562944864371744,
+    1.4589948000110944
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    7,
+    4
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    0.9738359305360469,
+    1.9858213870915407
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "elongation",
+    "anisotropy"
+   ],
+   "bin": [
+    8,
+    4
+   ],
+   "expected": 251.33007509834306,
+   "range_a": [
+    1.9860881445863392,
+    4.297558378351824
+   ],
+   "range_b": [
+    -0.20930806695306597,
+    0.03440087925739297
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "coverage",
+    "boundary_complexity"
+   ],
+   "bin": [
+    3,
+    0
+   ],
+   "expected": 247.73393729884373,
+   "range_a": [
+    -0.4449765427102538,
+    -0.2576179984111996
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 52,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_fraction",
+    "coverage"
+   ],
+   "bin": [
+    0,
+    9
+   ],
+   "expected": 155.3802201295347,
+   "range_a": [
+    -10.514636074494087,
+    -0.043005997181634066
+   ],
+   "range_b": [
+    1.6440712262242008,
+    2.71201492872881
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 0,
+   "synthetic_families": {},
+   "reachable": false
+  },
+  {
+   "axes": [
+    "largest_component_fraction",
+    "boundary_complexity"
+   ],
+   "bin": [
+    0,
+    0
+   ],
+   "expected": 155.13338896173562,
+   "range_a": [
+    -10.514636074494087,
+    -0.043005997181634066
+   ],
+   "range_b": [
+    -1.2781092314464015,
+    -0.8761770773956723
+   ],
+   "synthetic_inside": 0,
+   "expanded_inside": 4,
+   "synthetic_families": {},
+   "reachable": false
+  }
+ ]
+}

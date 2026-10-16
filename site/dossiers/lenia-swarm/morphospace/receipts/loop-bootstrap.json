@@ -1,0 +1,969 @@
+{
+ "n_perm": 2048,
+ "reps": 24,
+ "k": 256,
+ "seconds": 146.0945737361908,
+ "summary": {
+  "all12": {
+   "base": [
+    {
+     "birth": 11.802477836608887,
+     "death": 14.58713150024414,
+     "persistence": 2.784653663635254,
+     "n_vertices": 3,
+     "vertex_median_norm": 19.83052157934983,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": -0.639,
+      "anisotropy": -0.725,
+      "compactness": -0.993,
+      "polarity": 0.18,
+      "bilateral_symmetry": -5.295,
+      "radial_symmetry": 0.969,
+      "component_count": 18.949,
+      "largest_component_fraction": -7.786,
+      "largest_component_anisotropy": 0.155,
+      "coverage": 0.748,
+      "boundary_complexity": 1.767,
+      "enclosure": -0.78
+     },
+     "vertex_source_algorithms": [
+      "me"
+     ]
+    },
+    {
+     "birth": 4.047342300415039,
+     "death": 6.0745062828063965,
+     "persistence": 2.0271639823913574,
+     "n_vertices": 3,
+     "vertex_median_norm": 13.587027742262782,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": -0.111,
+      "anisotropy": -0.188,
+      "compactness": -2.576,
+      "polarity": 5.629,
+      "bilateral_symmetry": -3.434,
+      "radial_symmetry": 3.065,
+      "component_count": 5.414,
+      "largest_component_fraction": -9.586,
+      "largest_component_anisotropy": 0.216,
+      "coverage": -0.52,
+      "boundary_complexity": 0.21,
+      "enclosure": -2.34
+     },
+     "vertex_source_algorithms": [
+      "me",
+      "paper-replay"
+     ]
+    },
+    {
+     "birth": 2.747225761413574,
+     "death": 4.066093444824219,
+     "persistence": 1.3188676834106445,
+     "n_vertices": 307,
+     "vertex_median_norm": 5.588433256272155,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 1.952,
+      "anisotropy": 0.527,
+      "compactness": 0.388,
+      "polarity": 0.587,
+      "bilateral_symmetry": -0.172,
+      "radial_symmetry": -0.618,
+      "component_count": 3.421,
+      "largest_component_fraction": -0.622,
+      "largest_component_anisotropy": 0.778,
+      "coverage": -0.628,
+      "boundary_complexity": 0.819,
+      "enclosure": -1.121
+     },
+     "vertex_source_algorithms": [
+      "None",
+      "canonical-replay",
+      "fl-256x2c-bulk",
+      "fl-256x2c-corpus1024",
+      "fl-256x2c-nofood-scout",
+      "fl-256x2c-scout",
+      "map-elites",
+      "me",
+      "openes",
+      "paper-replay",
+      "parameter_loop_v1"
+     ]
+    },
+    {
+     "birth": 3.3223581314086914,
+     "death": 4.599057674407959,
+     "persistence": 1.2766995429992676,
+     "n_vertices": 67,
+     "vertex_median_norm": 5.805905931519934,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": -0.044,
+      "anisotropy": -0.156,
+      "compactness": -0.426,
+      "polarity": 4.407,
+      "bilateral_symmetry": -0.908,
+      "radial_symmetry": 0.511,
+      "component_count": 1.172,
+      "largest_component_fraction": -0.982,
+      "largest_component_anisotropy": 0.134,
+      "coverage": 0.206,
+      "boundary_complexity": -0.008,
+      "enclosure": -1.336
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "fl-256x2c-corpus1024",
+      "map-elites",
+      "me",
+      "paper-replay"
+     ]
+    },
+    {
+     "birth": 3.2796669006347656,
+     "death": 4.481626987457275,
+     "persistence": 1.2019600868225098,
+     "n_vertices": 5,
+     "vertex_median_norm": 10.638161098170082,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.404,
+      "anisotropy": 0.265,
+      "compactness": -2.24,
+      "polarity": 1.609,
+      "bilateral_symmetry": -0.392,
+      "radial_symmetry": 2.773,
+      "component_count": 5.414,
+      "largest_component_fraction": -7.31,
+      "largest_component_anisotropy": 1.417,
+      "coverage": -0.481,
+      "boundary_complexity": 0.56,
+      "enclosure": -1.989
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "paper-replay",
+      "parameter_loop_v1"
+     ]
+    }
+   ],
+   "landmark": {
+    "max_persistence_quantiles": [
+     2.784653663635254,
+     2.784653663635254,
+     2.784653663635254
+    ],
+    "rank_quantiles": {
+     "rank1": [
+      2.784653663635254,
+      2.784653663635254,
+      2.784653663635254
+     ],
+     "rank2": [
+      2.0271639823913574,
+      2.0271639823913574,
+      2.0271639823913574
+     ],
+     "rank3": [
+      1.2766995429992676,
+      1.2889875173568726,
+      1.3259098529815674
+     ],
+     "rank4": [
+      1.2019600868225098,
+      1.2708485126495361,
+      1.2766995429992676
+     ],
+     "rank5": [
+      1.1156249046325684,
+      1.2019600868225098,
+      1.2019600868225098
+     ]
+    },
+    "base_loop_recovery": [
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       2.784653663635254,
+       2.784653663635254,
+       2.784653663635254
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       2.0271639823913574,
+       2.0271639823913574,
+       2.0271639823913574
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.125,
+      "median_best_overlap": 0.09765625,
+      "matched_persistence_quantiles": [
+       1.3188676834106445,
+       2.784653663635254,
+       2.784653663635254
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.7916666666666666,
+      "median_best_overlap": 0.833984375,
+      "matched_persistence_quantiles": [
+       1.1156249046325684,
+       1.2766995429992676,
+       1.2766995429992676
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       1.2019600868225098,
+       1.2019600868225098,
+       1.2019600868225098
+      ]
+     }
+    ]
+   },
+   "bootstrap": {
+    "max_persistence_quantiles": [
+     1.2061186671257018,
+     2.0958471298217773,
+     2.784653663635254
+    ],
+    "rank_quantiles": {
+     "rank1": [
+      1.2061186671257018,
+      2.0958471298217773,
+      2.784653663635254
+     ],
+     "rank2": [
+      1.120744228363037,
+      1.3261762857437134,
+      1.9822227478027337
+     ],
+     "rank3": [
+      0.9980541944503785,
+      1.1786699295043945,
+      1.4286044478416442
+     ],
+     "rank4": [
+      0.8837875366210938,
+      1.0412993431091309,
+      1.2512162446975708
+     ],
+     "rank5": [
+      0.850010335445404,
+      0.9701271057128906,
+      1.176806366443634
+     ]
+    },
+    "base_loop_recovery": [
+     {
+      "frac_reps_overlap_ge_0.5": 0.4583333333333333,
+      "median_best_overlap": 0.34765625,
+      "matched_persistence_quantiles": [
+       0.9742903232574462,
+       2.0958471298217773,
+       2.784653663635254
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.9166666666666666,
+      "median_best_overlap": 0.873046875,
+      "matched_persistence_quantiles": [
+       0.9701271057128906,
+       1.1901051998138428,
+       2.143925333023071
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.16666666666666666,
+      "median_best_overlap": 0.146484375,
+      "matched_persistence_quantiles": [
+       0.930604612827301,
+       1.2000019550323486,
+       2.784653663635254
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.4583333333333333,
+      "median_best_overlap": 0.44140625,
+      "matched_persistence_quantiles": [
+       0.9462207317352295,
+       1.1790895462036133,
+       1.5809597969055171
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.9583333333333334,
+      "median_best_overlap": 0.86328125,
+      "matched_persistence_quantiles": [
+       0.9701271057128906,
+       1.1657085418701172,
+       2.0271639823913574
+      ]
+     }
+    ]
+   },
+   "shuffle": {
+    "max_persistence_quantiles": [
+     1.1221677303314208,
+     1.52183198928833,
+     2.4195350885391234
+    ],
+    "max_persistence_max": 2.642827033996582,
+    "frac_null_max_ge_base": 0.0
+   },
+   "gaussian": {
+    "max_persistence_quantiles": [
+     0.7908856987953186,
+     0.8330913782119751,
+     0.9610332012176513
+    ],
+    "max_persistence_max": 0.9943602085113525,
+    "frac_null_max_ge_base": 0.0
+   }
+  },
+  "drop_anisotropy": {
+   "base": [
+    {
+     "birth": 11.794355392456055,
+     "death": 14.464177131652832,
+     "persistence": 2.6698217391967773,
+     "n_vertices": 4,
+     "vertex_median_norm": 18.386676050487814,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.176,
+      "anisotropy": -0.241,
+      "compactness": -0.666,
+      "polarity": -0.074,
+      "bilateral_symmetry": -3.757,
+      "radial_symmetry": 0.503,
+      "component_count": 18.272,
+      "largest_component_fraction": -6.129,
+      "largest_component_anisotropy": 0.549,
+      "coverage": 0.349,
+      "boundary_complexity": 1.681,
+      "enclosure": -1.17
+     },
+     "vertex_source_algorithms": [
+      "canonical-replay",
+      "me"
+     ]
+    },
+    {
+     "birth": 4.044546604156494,
+     "death": 6.071743011474609,
+     "persistence": 2.0271964073181152,
+     "n_vertices": 15,
+     "vertex_median_norm": 10.79447336470632,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.181,
+      "anisotropy": 0.049,
+      "compactness": -1.939,
+      "polarity": 1.3,
+      "bilateral_symmetry": -4.251,
+      "radial_symmetry": 2.243,
+      "component_count": 4.692,
+      "largest_component_fraction": -7.429,
+      "largest_component_anisotropy": 0.688,
+      "coverage": -0.234,
+      "boundary_complexity": 0.19,
+      "enclosure": -2.067
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "me",
+      "paper-replay"
+     ]
+    },
+    {
+     "birth": 2.7401821613311768,
+     "death": 4.065979480743408,
+     "persistence": 1.3257973194122314,
+     "n_vertices": 14,
+     "vertex_median_norm": 16.046587956628805,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 15.223,
+      "anisotropy": 1.776,
+      "compactness": -0.217,
+      "polarity": -0.67,
+      "bilateral_symmetry": 1.146,
+      "radial_symmetry": -0.818,
+      "component_count": 3.48,
+      "largest_component_fraction": -0.107,
+      "largest_component_anisotropy": 1.888,
+      "coverage": -1.049,
+      "boundary_complexity": 0.643,
+      "enclosure": -1.17
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "fl-256x2c-corpus1024",
+      "map-elites",
+      "parameter_loop_v1"
+     ]
+    },
+    {
+     "birth": 3.279500722885132,
+     "death": 4.445813179016113,
+     "persistence": 1.1663124561309814,
+     "n_vertices": 7,
+     "vertex_median_norm": 10.79447336470632,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.163,
+      "anisotropy": 0.057,
+      "compactness": -2.164,
+      "polarity": 2.085,
+      "bilateral_symmetry": -0.203,
+      "radial_symmetry": 2.583,
+      "component_count": 5.414,
+      "largest_component_fraction": -7.813,
+      "largest_component_anisotropy": 1.463,
+      "coverage": -0.374,
+      "boundary_complexity": 0.607,
+      "enclosure": -1.923
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "paper-replay",
+      "parameter_loop_v1"
+     ]
+    },
+    {
+     "birth": 2.0261895656585693,
+     "death": 2.963939666748047,
+     "persistence": 0.9377501010894775,
+     "n_vertices": 4,
+     "vertex_median_norm": 11.727910886776538,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 11.048,
+      "anisotropy": 1.735,
+      "compactness": 0.139,
+      "polarity": -0.063,
+      "bilateral_symmetry": 1.207,
+      "radial_symmetry": -0.951,
+      "component_count": 0.0,
+      "largest_component_fraction": 0.0,
+      "largest_component_anisotropy": 1.809,
+      "coverage": -0.965,
+      "boundary_complexity": 1.299,
+      "enclosure": -0.293
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-corpus1024"
+     ]
+    }
+   ],
+   "landmark": {
+    "max_persistence_quantiles": [
+     2.6698217391967773,
+     2.6698217391967773,
+     2.6698217391967773
+    ],
+    "rank_quantiles": {
+     "rank1": [
+      2.6698217391967773,
+      2.6698217391967773,
+      2.6698217391967773
+     ],
+     "rank2": [
+      2.0271964073181152,
+      2.0271964073181152,
+      2.0271964073181152
+     ],
+     "rank3": [
+      1.2707386016845703,
+      1.299346923828125,
+      1.3257973194122314
+     ],
+     "rank4": [
+      1.1663124561309814,
+      1.1663124561309814,
+      1.1663124561309814
+     ],
+     "rank5": [
+      0.9202792644500732,
+      1.0550026893615723,
+      1.0550026893615723
+     ]
+    },
+    "base_loop_recovery": [
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       2.6698217391967773,
+       2.6698217391967773,
+       2.6698217391967773
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       2.0271964073181152,
+       2.0271964073181152,
+       2.0271964073181152
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.8333333333333334,
+      "median_best_overlap": 0.642578125,
+      "matched_persistence_quantiles": [
+       1.2707386016845703,
+       1.299346923828125,
+       1.3257973194122314
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       1.1663124561309814,
+       1.1663124561309814,
+       1.1663124561309814
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.0,
+      "median_best_overlap": 0.109375,
+      "matched_persistence_quantiles": [
+       1.2707386016845703,
+       1.299346923828125,
+       2.6698217391967773
+      ]
+     }
+    ]
+   },
+   "bootstrap": {
+    "max_persistence_quantiles": [
+     1.3246890783309937,
+     2.4310832023620605,
+     2.6698217391967773
+    ],
+    "rank_quantiles": {
+     "rank1": [
+      1.3246890783309937,
+      2.4310832023620605,
+      2.6698217391967773
+     ],
+     "rank2": [
+      1.0143505454063415,
+      1.309258222579956,
+      1.919436740875244
+     ],
+     "rank3": [
+      0.928587818145752,
+      1.1378862857818604,
+      1.4313814640045166
+     ],
+     "rank4": [
+      0.854830265045166,
+      1.023707389831543,
+      1.284864509105682
+     ],
+     "rank5": [
+      0.8129162192344666,
+      0.9294126629829407,
+      1.095984148979187
+     ]
+    },
+    "base_loop_recovery": [
+     {
+      "frac_reps_overlap_ge_0.5": 0.625,
+      "median_best_overlap": 0.798828125,
+      "matched_persistence_quantiles": [
+       0.823849868774414,
+       2.4310832023620605,
+       2.6698217391967773
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.9166666666666666,
+      "median_best_overlap": 0.87109375,
+      "matched_persistence_quantiles": [
+       0.9364711880683899,
+       1.702246069908142,
+       2.1732815980911253
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.5,
+      "median_best_overlap": 0.37890625,
+      "matched_persistence_quantiles": [
+       0.8713127732276916,
+       1.2364012002944946,
+       2.487632262706754
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.9166666666666666,
+      "median_best_overlap": 0.869140625,
+      "matched_persistence_quantiles": [
+       0.9252257227897644,
+       1.6143555641174316,
+       2.169420289993286
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.16666666666666666,
+      "median_best_overlap": 0.28515625,
+      "matched_persistence_quantiles": [
+       0.8593139529228211,
+       1.251111388206482,
+       2.6698217391967773
+      ]
+     }
+    ]
+   },
+   "shuffle": {
+    "max_persistence_quantiles": [
+     1.0294169664382935,
+     1.3688673973083496,
+     2.3160899400711057
+    ],
+    "max_persistence_max": 2.5650477409362793,
+    "frac_null_max_ge_base": 0.0
+   },
+   "gaussian": {
+    "max_persistence_quantiles": [
+     0.7367509245872498,
+     0.8393478393554688,
+     1.035081112384796
+    ],
+    "max_persistence_max": 1.0866641998291016,
+    "frac_null_max_ge_base": 0.0
+   }
+  },
+  "drop_anisotropy_lc_anisotropy": {
+   "base": [
+    {
+     "birth": 11.719247817993164,
+     "death": 14.395238876342773,
+     "persistence": 2.6759910583496094,
+     "n_vertices": 3,
+     "vertex_median_norm": 19.83052157934983,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": -0.639,
+      "anisotropy": -0.725,
+      "compactness": -0.993,
+      "polarity": 0.18,
+      "bilateral_symmetry": -5.295,
+      "radial_symmetry": 0.969,
+      "component_count": 18.949,
+      "largest_component_fraction": -7.786,
+      "largest_component_anisotropy": 0.155,
+      "coverage": 0.748,
+      "boundary_complexity": 1.767,
+      "enclosure": -0.78
+     },
+     "vertex_source_algorithms": [
+      "me"
+     ]
+    },
+    {
+     "birth": 4.010956764221191,
+     "death": 5.855980396270752,
+     "persistence": 1.8450236320495605,
+     "n_vertices": 12,
+     "vertex_median_norm": 10.27298277936984,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.169,
+      "anisotropy": 0.037,
+      "compactness": -2.036,
+      "polarity": 1.5,
+      "bilateral_symmetry": -4.57,
+      "radial_symmetry": 2.353,
+      "component_count": 4.286,
+      "largest_component_fraction": -7.182,
+      "largest_component_anisotropy": 0.743,
+      "coverage": -0.208,
+      "boundary_complexity": 0.154,
+      "enclosure": -2.194
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "me",
+      "paper-replay"
+     ]
+    },
+    {
+     "birth": 2.7400875091552734,
+     "death": 4.065590858459473,
+     "persistence": 1.3255033493041992,
+     "n_vertices": 13,
+     "vertex_median_norm": 16.17135882795342,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 15.625,
+      "anisotropy": 1.78,
+      "compactness": -0.254,
+      "polarity": -0.714,
+      "bilateral_symmetry": 1.164,
+      "radial_symmetry": -0.812,
+      "component_count": 3.54,
+      "largest_component_fraction": -0.106,
+      "largest_component_anisotropy": 1.892,
+      "coverage": -1.054,
+      "boundary_complexity": 0.638,
+      "enclosure": -1.08
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "fl-256x2c-corpus1024",
+      "map-elites",
+      "parameter_loop_v1"
+     ]
+    },
+    {
+     "birth": 3.204308032989502,
+     "death": 4.358778476715088,
+     "persistence": 1.154470443725586,
+     "n_vertices": 6,
+     "vertex_median_norm": 10.7163172314382,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.262,
+      "anisotropy": 0.142,
+      "compactness": -2.129,
+      "polarity": 1.622,
+      "bilateral_symmetry": -0.339,
+      "radial_symmetry": 2.476,
+      "component_count": 5.414,
+      "largest_component_fraction": -7.677,
+      "largest_component_anisotropy": 1.483,
+      "coverage": -0.469,
+      "boundary_complexity": 0.636,
+      "enclosure": -2.048
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "paper-replay",
+      "parameter_loop_v1"
+     ]
+    },
+    {
+     "birth": 5.807076930999756,
+     "death": 6.782013416290283,
+     "persistence": 0.9749364852905273,
+     "n_vertices": 4,
+     "vertex_median_norm": 14.814711342713572,
+     "cloud_median_norm": 3.1935377144083708,
+     "vertex_axis_means": {
+      "elongation": 0.084,
+      "anisotropy": -0.12,
+      "compactness": 0.083,
+      "polarity": 14.31,
+      "bilateral_symmetry": 0.651,
+      "radial_symmetry": -0.276,
+      "component_count": 1.353,
+      "largest_component_fraction": -1.751,
+      "largest_component_anisotropy": 0.322,
+      "coverage": -0.917,
+      "boundary_complexity": 0.423,
+      "enclosure": -1.317
+     },
+     "vertex_source_algorithms": [
+      "fl-256x2c-bulk",
+      "me",
+      "parameter_loop_v1"
+     ]
+    }
+   ],
+   "landmark": {
+    "max_persistence_quantiles": [
+     2.6759910583496094,
+     2.6759910583496094,
+     2.6759910583496094
+    ],
+    "rank_quantiles": {
+     "rank1": [
+      2.6759910583496094,
+      2.6759910583496094,
+      2.6759910583496094
+     ],
+     "rank2": [
+      1.8450236320495605,
+      1.8450236320495605,
+      1.8450236320495605
+     ],
+     "rank3": [
+      1.1931538343429566,
+      1.2704501152038574,
+      1.3255033493041992
+     ],
+     "rank4": [
+      1.154470443725586,
+      1.154470443725586,
+      1.1607351303100586
+     ],
+     "rank5": [
+      0.9749364852905273,
+      0.9749364852905273,
+      1.0476323366165161
+     ]
+    },
+    "base_loop_recovery": [
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       2.6759910583496094,
+       2.6759910583496094,
+       2.6759910583496094
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       1.8450236320495605,
+       1.8450236320495605,
+       1.8450236320495605
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 0.767578125,
+      "matched_persistence_quantiles": [
+       1.1931538343429566,
+       1.2704501152038574,
+       1.3255033493041992
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       1.154470443725586,
+       1.154470443725586,
+       1.1607351303100586
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 1.0,
+      "median_best_overlap": 1.0,
+      "matched_persistence_quantiles": [
+       0.9749364852905273,
+       0.9749364852905273,
+       1.0476323366165161
+      ]
+     }
+    ]
+   },
+   "bootstrap": {
+    "max_persistence_quantiles": [
+     1.2997428178787231,
+     1.9427101612091064,
+     2.6759910583496094
+    ],
+    "rank_quantiles": {
+     "rank1": [
+      1.2997428178787231,
+      1.9427101612091064,
+      2.6759910583496094
+     ],
+     "rank2": [
+      1.1038752794265747,
+      1.2415039539337158,
+      1.8090429782867425
+     ],
+     "rank3": [
+      0.9262638330459595,
+      1.1457109451293945,
+      1.3527850031852722
+     ],
+     "rank4": [
+      0.7884433627128601,
+      1.0366685390472412,
+      1.2119000554084776
+     ],
+     "rank5": [
+      0.7626726508140564,
+      0.9486067295074463,
+      1.1444594383239746
+     ]
+    },
+    "base_loop_recovery": [
+     {
+      "frac_reps_overlap_ge_0.5": 0.4166666666666667,
+      "median_best_overlap": 0.271484375,
+      "matched_persistence_quantiles": [
+       1.155410146713257,
+       1.9427101612091064,
+       2.6759910583496094
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.9583333333333334,
+      "median_best_overlap": 0.8515625,
+      "matched_persistence_quantiles": [
+       0.9136574625968933,
+       1.2937707901000977,
+       2.006157040596008
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.5416666666666666,
+      "median_best_overlap": 0.646484375,
+      "matched_persistence_quantiles": [
+       0.888766086101532,
+       1.2704998254776,
+       2.589650750160216
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.9583333333333334,
+      "median_best_overlap": 0.876953125,
+      "matched_persistence_quantiles": [
+       0.9136574625968933,
+       1.244457721710205,
+       2.006157040596008
+      ]
+     },
+     {
+      "frac_reps_overlap_ge_0.5": 0.6666666666666666,
+      "median_best_overlap": 0.626953125,
+      "matched_persistence_quantiles": [
+       0.9316070795059204,
+       1.1060256958007812,
+       1.2879917383193968
+      ]
+     }
+    ]
+   },
+   "shuffle": {
+    "max_persistence_quantiles": [
+     1.108584451675415,
+     1.528876543045044,
+     2.432089471817016
+    ],
+    "max_persistence_max": 2.9441723823547363,
+    "frac_null_max_ge_base": 0.08333333333333333
+   },
+   "gaussian": {
+    "max_persistence_quantiles": [
+     0.8088830709457397,
+     0.8587987422943115,
+     0.9589766144752502
+    ],
+    "max_persistence_max": 0.984227180480957,
+    "frac_null_max_ge_base": 0.0
+   }
+  }
+ }
+}
