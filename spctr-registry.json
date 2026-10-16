@@ -149,7 +149,7 @@
     },
     "N-005": {
       "slug": "2026-03-27-moving-a-theorem-prover-onto-new-hardware",
-      "title": "What it took to move a theorem prover off the Mac"
+      "title": "Moving a proof-search model to Tenstorrent"
     },
     "N-006": {
       "slug": "2026-04-02-wonton-controls-exposed-a-reproducibility-problem",
@@ -181,11 +181,11 @@
     },
     "N-013": {
       "slug": "2026-08-05-the-first-fission-screen-mostly-found-stripes-and-dust",
-      "title": "Before studying fission, we had to learn what was not fission"
+      "title": "Stripes, dust, and false fission"
     },
     "N-014": {
       "slug": "2026-08-16-development-changes-what-the-same-perturbation-can-do",
-      "title": "Why the same disturbance matters less later in development"
+      "title": "Development changes the effect of a disturbance"
     }
   },
   "docs": {

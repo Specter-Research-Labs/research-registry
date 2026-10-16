@@ -224,7 +224,6 @@ fn sync_assigns_research_note_series_without_patching_frontmatter() {
         r#"---
 title: "Field Note"
 release: "draft"
-provenance: "assistant-drafted"
 toc: true
 ---
 
@@ -265,11 +264,10 @@ fn research_note_addendum_source_does_not_render_missing_href() {
         "spctr-registry.json",
         r#"{
   "version": 1,
-  "counters": { "A": 2, "B": 2, "D": 1, "N": 3 },
+  "counters": { "A": 2, "B": 2, "D": 1, "N": 2 },
   "series": {
     "A-001": { "slug": "tooling", "title": "Tooling" },
-    "N-001": { "slug": "field-note", "title": "Field Note" },
-    "N-002": { "slug": "published-note", "title": "Published Note" }
+    "N-001": { "slug": "field-note", "title": "Field Note" }
   },
   "docs": {}
 }
@@ -298,7 +296,7 @@ fn research_note_addendum_source_does_not_render_missing_href() {
     write(
         root,
         "site/templates/research-notes/index.html",
-        "<html><body>\n<!-- GENERATED:RESEARCH_NOTES_PROVENANCE START -->\n<!-- GENERATED:RESEARCH_NOTES_PROVENANCE END -->\n</body></html>",
+        "<html><body>\n</body></html>",
     );
     write(
         root,
@@ -329,7 +327,6 @@ $body$"#,
         r#"---
 title: "Field Note"
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "A-001"
 ---
 
@@ -337,25 +334,10 @@ source_id: "A-001"
 "#,
     );
 
-    write(
-        root,
-        "site/research-notes/published-note/index.md",
-        r#"---
-title: "Published Note"
-release: "published"
-provenance: "assistant-drafted"
----
-
-# Published Note
-"#,
-    );
-
     spctr::site::build(root, true).unwrap();
     let html = fs::read_to_string(root.join("site/research-notes/field-note/index.html")).unwrap();
     assert!(html.contains("<span>A-001</span>"));
     assert!(!html.contains("../../addenda/tooling/"));
-    let index = fs::read_to_string(root.join("site/research-notes/index.html")).unwrap();
-    assert!(index.contains("<p class=\"note-provenance\">Assistant-drafted lab notes</p>"));
 }
 
 #[test]
@@ -421,8 +403,6 @@ fn site_build_no_longer_assigns_series_implicitly() {
         root,
         "site/templates/research-notes/index.html",
         "<html><body>\n\
-         <!-- GENERATED:RESEARCH_NOTES_PROVENANCE START -->\n\
-         <!-- GENERATED:RESEARCH_NOTES_PROVENANCE END -->\n\
          </body></html>\n",
     );
     write(
@@ -485,7 +465,6 @@ publish = true
         r#"---
 title: "Field Note"
 release: "published"
-provenance: "assistant-drafted"
 ---
 
 # Field Note

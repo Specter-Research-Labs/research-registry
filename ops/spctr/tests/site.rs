@@ -190,8 +190,6 @@ fn minimal_templates(root: &Utf8Path) {
         "\
 <html>
 <body>
-<!-- GENERATED:RESEARCH_NOTES_PROVENANCE START -->
-<!-- GENERATED:RESEARCH_NOTES_PROVENANCE END -->
 </body>
 </html>
 ",

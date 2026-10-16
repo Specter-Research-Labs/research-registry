@@ -1,7 +1,6 @@
 ---
 title: "How proof search responds to blocked tactics"
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---

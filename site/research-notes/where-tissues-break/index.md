@@ -1,7 +1,6 @@
 ---
 title: "When a fragment becomes too small to sustain a pattern"
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "A-013"
 toc: true
 ---

@@ -691,11 +691,3 @@ html.specter-report .section-head .section-no,
   text-transform: none;
 }
 
-body:not(.report-page) .section-block > p.note-provenance,
-body.blog-page .doc-content p.note-provenance {
-  max-width: none;
-  margin: 0 0 1.2em;
-  color: var(--sl-color-muted);
-  font: 400 11px/1.4 var(--sl-font-mono);
-  letter-spacing: .04em;
-}

@@ -2,7 +2,6 @@
 title: "An unused tactic changed the proof result"
 summary: "Why an apparently controlled theorem-proving experiment could not yet support a causal interpretation."
 release: "published"
-provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---
