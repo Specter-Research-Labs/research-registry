@@ -3,7 +3,7 @@
 #paper(
   title: "The Geometry of a Synthetic Morphospace",
   subtitle: "Flow Lenia, common morphology, and localized topology",
-  note: "SPECTER LABS FIELD NOTE • B-002",
+  note: "SPECTER LABS FIELD NOTE",
   authors: (
     author("Ludwig Pouey", affiliation: "Specter Labs"),
   ),

@@ -583,6 +583,67 @@ cover_alt: A placeholder cover.
     );
 }
 
+fn write_draft_article_fixture(root: &Utf8Path, registry_series: &str, frontmatter_series: &str) {
+    minimal_design_tokens(root);
+    write(
+        &root.join("spctr-registry.json"),
+        &format!(
+            r#"{{
+  "version": 1,
+  "counters": {{ "D": 0, "A": 0, "B": 2 }},
+  "series": {{ {registry_series} }},
+  "docs": {{}}
+}}
+"#
+        ),
+    );
+    write(
+        &root.join("site/blog/draft-post/index.md"),
+        &format!(
+            r#"---
+title: Draft Post
+release: draft
+{frontmatter_series}---
+
+# Draft Post
+"#
+        ),
+    );
+}
+
+#[test]
+fn build_skips_draft_article_without_series() {
+    let temp = TempDir::new().unwrap();
+    let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
+    write_draft_article_fixture(root, "", "");
+
+    let graph = build(root, None).unwrap();
+    assert!(!graph
+        .nodes
+        .iter()
+        .any(|node| node.id == "article:draft-post"));
+}
+
+#[test]
+fn build_rejects_draft_article_holding_series() {
+    for (registry_series, frontmatter_series, expected) in [
+        (
+            r#""B-001": { "slug": "draft-post", "title": "Draft Post" }"#,
+            "",
+            "draft post holds registry B-series assignment 'B-001'",
+        ),
+        ("", "series: B-001\n", "draft post declares series 'B-001'"),
+    ] {
+        let temp = TempDir::new().unwrap();
+        let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
+        write_draft_article_fixture(root, registry_series, frontmatter_series);
+
+        let err = build(root, None).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(msg.contains(expected), "expected '{expected}', got: {msg}");
+    }
+}
+
 #[test]
 fn targeted_build_reuses_selected_manifests_for_docs() {
     let temp = TempDir::new().unwrap();
