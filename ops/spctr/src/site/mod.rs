@@ -143,10 +143,7 @@ fn build_from_projection(
         PageRegion {
             template_path: "site/templates/research-notes/index.html".into(),
             output_path: "site/research-notes/index.html".into(),
-            regions: vec![(
-                "RESEARCH_NOTES_PROVENANCE",
-                blog::render_research_notes_provenance(repo_root)?,
-            )],
+            regions: vec![],
         },
         PageRegion {
             template_path: "site/templates/sitemap/index.html".into(),

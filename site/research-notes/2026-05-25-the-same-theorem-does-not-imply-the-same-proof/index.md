@@ -2,7 +2,6 @@
 title: "One theorem, several proofs"
 summary: "What repeated Wonton searches revealed about different routes to the same formal result."
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "D-002"
 toc: true
 ---

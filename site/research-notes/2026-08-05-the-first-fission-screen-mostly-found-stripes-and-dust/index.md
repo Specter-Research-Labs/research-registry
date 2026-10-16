@@ -2,7 +2,6 @@
 title: "Stripes, dust, and false fission"
 summary: "How stripes, dust, and mutation artifacts forced a change in experimental design."
 release: "published"
-provenance: "assistant-drafted"
 source_id: "D-003"
 toc: true
 ---
@@ -19,6 +18,6 @@ A different failure appeared on striped organisms. A fixed activity threshold sl
 
 We repaired that part of the assay by judging components relative to the parent body. Counts that had ranged from 25 to 232 raw fragments fell to a median of one relevant component and a maximum of four. Raising the mutation rate did not reveal hidden fission events. Between mutation rates of 0.1 and 1.0, 62–83 per cent of snapshots instead hit the detector’s 256-component ceiling, usually because mutation had dissolved the organism into speckle.
 
-So the pilot answered a question we had not originally intended to ask: under these conditions, fragmentation, striping and dust were much easier to produce than a clean physical division. Calling those artifacts “fission” would have contaminated everything measured afterward. We therefore left the predictive-information outputs unopened, abandoned spontaneous fission as the entry point for this campaign, and moved to imposed growth-and-division cycles whose events could be identified without guesswork.
+Under these conditions, fragmentation, striping and dust were much easier to produce than a clean physical division, and calling those artifacts “fission” would have contaminated everything measured afterward. We therefore left the predictive-information outputs unopened, abandoned spontaneous fission as the entry point for this campaign, and moved to imposed growth-and-division cycles whose events could be identified without guesswork.
 
-The developmental-fission record follows the distinction between low-density fraying and physical division in later experiments.
+Later experiments kept the distinction between low-density fraying and physical division.

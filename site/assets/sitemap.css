@@ -23,30 +23,9 @@
 }
 
 .taxonomy-chip-list .project-status,
-.taxonomy-chip-list .addenda-chip,
-.taxonomy-chip-list .research-note-tag {
+.taxonomy-chip-list .addenda-chip {
     margin: 0;
     white-space: nowrap;
-}
-
-.research-note-tag {
-    border: 1px solid var(--site-rule);
-    color: var(--site-muted);
-    background: var(--sl-color-paper);
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    padding: 1px 5px;
-    font-family: var(--sl-font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: .04em;
-    line-height: 1.15;
-    text-transform: uppercase;
-}
-
-.provenance-tag-list {
-    gap: 5px;
 }
 
 @media (max-width: 900px) {

@@ -162,7 +162,6 @@ struct ResearchNoteRecord {
     summary: Option<String>,
     spctr_id: Option<String>,
     release_label: String,
-    provenance: String,
     source_id: Option<String>,
     source_href: Option<String>,
 }
@@ -226,14 +225,6 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
         command
             .arg("--metadata")
             .arg(format!("release={}", note.release_label));
-        command
-            .arg("--metadata")
-            .arg(format!("provenance={}", note.provenance))
-            .arg("--metadata")
-            .arg(format!(
-                "provenance_label={}",
-                research_note_provenance_label(&note.provenance).0
-            ));
         if let Some(source_id) = &note.source_id {
             command
                 .arg("--metadata")
@@ -406,8 +397,6 @@ fn load_research_notes(
 
         let release_label = discover::article_release(&front_matter)
             .with_context(|| format!("research-notes/{slug}/index.md"))?;
-        let provenance = research_note_provenance(&front_matter)
-            .with_context(|| format!("research-notes/{slug}/index.md"))?;
         if loaded_registry.is_none() {
             loaded_registry = Some(registry::load_registry(repo_root)?);
         }
@@ -432,7 +421,6 @@ fn load_research_notes(
             summary,
             spctr_id: Some(spctr_id),
             release_label,
-            provenance,
             source_id,
             source_href,
         });
@@ -449,61 +437,6 @@ fn optional_front_matter(
         .get(key)
         .filter(|value| !value.is_empty())
         .cloned()
-}
-
-fn research_note_provenance(
-    front_matter: &std::collections::HashMap<String, String>,
-) -> Result<String> {
-    let Some(provenance) = optional_front_matter(front_matter, "provenance") else {
-        bail!("missing research note provenance");
-    };
-    if !matches!(
-        provenance.as_str(),
-        "human-written" | "assistant-drafted" | "generated-analysis" | "human-reviewed"
-    ) {
-        bail!(
-            "unknown research note provenance '{provenance}' (expected human-written, assistant-drafted, generated-analysis, or human-reviewed)"
-        );
-    }
-    Ok(provenance)
-}
-
-/// Singular and plural reader-facing labels for a validated provenance value.
-fn research_note_provenance_label(provenance: &str) -> (&'static str, &'static str) {
-    match provenance {
-        "human-written" => ("Human-written lab note", "Human-written lab notes"),
-        "assistant-drafted" => ("Assistant-drafted lab note", "Assistant-drafted lab notes"),
-        "generated-analysis" => (
-            "Generated-analysis lab note",
-            "Generated-analysis lab notes",
-        ),
-        "human-reviewed" => ("Human-reviewed lab note", "Human-reviewed lab notes"),
-        other => unreachable!("provenance '{other}' was validated on load"),
-    }
-}
-
-/// Provenance line for the research-notes index. Every published note must
-/// share one provenance, since the index states it once for the whole list.
-pub(crate) fn render_research_notes_provenance(repo_root: &Utf8Path) -> Result<String> {
-    let notes_root = repo_root.join("site/research-notes");
-    if !notes_root.is_dir() {
-        return Ok(String::new());
-    }
-    let notes = load_research_notes(repo_root, &notes_root)?;
-    let provenances: std::collections::BTreeSet<&str> = notes
-        .iter()
-        .filter(|note| note.release_label == discover::RELEASE_PUBLISHED)
-        .map(|note| note.provenance.as_str())
-        .collect();
-    let provenance = match provenances.into_iter().collect::<Vec<_>>()[..] {
-        [] => return Ok(String::new()),
-        [provenance] => provenance,
-        _ => bail!("published research notes do not share one provenance; the index line cannot state it once"),
-    };
-    Ok(format!(
-        "<p class=\"note-provenance\">{}</p>",
-        research_note_provenance_label(provenance).1
-    ))
 }
 
 fn research_note_source_id(

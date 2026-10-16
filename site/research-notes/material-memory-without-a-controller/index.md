@@ -1,7 +1,6 @@
 ---
 title: "Material memory without a controller"
 release: "draft"
-provenance: "assistant-drafted"
 source_id: "D-004"
 toc: true
 ---

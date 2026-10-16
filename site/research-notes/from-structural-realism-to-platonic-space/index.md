@@ -1,7 +1,6 @@
 ---
 title: "When does a recurring pattern deserve an explanation?"
 release: "draft"
-provenance: "assistant-drafted"
 toc: true
 ---
 

@@ -357,7 +357,6 @@ fn repo_aware_research_note_page_accepts_markdown_change() {
             r#"---
 title: "Field Note"
 release: "draft"
-provenance: "assistant-drafted"
 toc: true
 ---
 
