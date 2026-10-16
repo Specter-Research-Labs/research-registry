@@ -765,6 +765,20 @@ public final class FlowLeniaInteractiveSimulator {
         return metalRunner.materializePhantomField()
     }
 
+    /// Attaches founder masses [sx, sy, channels, founders] to the resident state; they are carried passively
+    /// by later resident steps and discarded whenever a different state is uploaded.
+    public func setAncestry(_ founderMass: [Float], founderCount: Int, for state: FlowLeniaInteractiveState) {
+        guard let metalRunner else { preconditionFailure("Ancestry tracing requires resident Metal.") }
+        precondition(isCurrentMetalResident(state), "Ancestry must be attached to the current resident state.")
+        metalRunner.setAncestry(founderMass: founderMass, founderCount: founderCount)
+    }
+
+    public func ancestryFounderMass(for state: FlowLeniaInteractiveState) -> [Float] {
+        guard let metalRunner else { preconditionFailure("Ancestry tracing requires resident Metal.") }
+        precondition(isCurrentMetalResident(state), "Founder mass is only defined for the current resident state.")
+        return metalRunner.materializeAncestry()
+    }
+
     public func step(_ state: FlowLeniaInteractiveState) -> FlowLeniaInteractiveState {
         step(state, count: 1)
     }

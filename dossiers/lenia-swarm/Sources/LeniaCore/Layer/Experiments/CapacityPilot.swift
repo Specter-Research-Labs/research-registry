@@ -22,6 +22,77 @@ public struct CapacityPilotBranch: Codable {
     public let frames: [CapacityPilotFrame]
 }
 
+public struct CapacityPilotAncestry {
+    public enum Seed {
+        /// Founder index per cell in mass layout (x-major); -1 marks cells that must hold no matter.
+        case labels([Int32])
+        /// Founder mass [sx, sy, channels, founders]; per cell and channel the founders must sum exactly, in float32, to the initial mass.
+        case founderMass([Float])
+    }
+
+    public let seed: Seed
+    public let founderCount: Int
+    public let exportSteps: Set<Int>
+
+    public init(seed: Seed, founderCount: Int, exportSteps: Set<Int>) {
+        self.seed = seed
+        self.founderCount = founderCount
+        self.exportSteps = exportSteps
+    }
+}
+
+public struct CapacityPilotAncestryRecord: Codable {
+    public let founders: Int
+    public let channels: Int
+    public let fieldShape: [Int]
+    public let steps: [Int]
+    /// Per step, per channel, per founder: total founder mass.
+    public let founderMass: [[[Double]]]
+    /// Per step, per channel: total matter, the quantity founder masses must sum to.
+    public let channelMass: [[Double]]
+    /// Per step: sum over cells and channels of |sum_j B[c, j] - A[c]| divided by total matter.
+    public let founderSumResidual: [Double]
+    public let exportSteps: [Int]
+}
+
+public func capacityPilotFounderMass(_ mass: [Float], labels: [Int32], channels: Int,
+                                     founderCount: Int) throws -> [Float] {
+    guard labels.count * channels == mass.count else {
+        throw NSError(domain: "CapacityPilot", code: 9,
+                      userInfo: [NSLocalizedDescriptionKey: "Ancestry labels must have one entry per cell"])
+    }
+    var founderMass = [Float](repeating: 0, count: mass.count * founderCount)
+    for cell in labels.indices {
+        let label = Int(labels[cell])
+        let matter = (0..<channels).contains { mass[cell * channels + $0] > 0 }
+        guard label >= -1, label < founderCount, label >= 0 || !matter else {
+            throw NSError(domain: "CapacityPilot", code: 9, userInfo: [NSLocalizedDescriptionKey:
+                "Ancestry label \(label) at cell \(cell) is out of range or leaves matter unlabeled"])
+        }
+        guard label >= 0 else { continue }
+        for c in 0..<channels {
+            founderMass[(cell * channels + c) * founderCount + label] = mass[cell * channels + c]
+        }
+    }
+    return founderMass
+}
+
+public func capacityPilotCheckedFounderMass(_ mass: [Float], founderMass: [Float], channels: Int,
+                                            founderCount: Int) throws -> [Float] {
+    guard founderMass.count == mass.count * founderCount else {
+        throw NSError(domain: "CapacityPilot", code: 9,
+                      userInfo: [NSLocalizedDescriptionKey: "Founder mass must have shape [sx, sy, channels, founders]"])
+    }
+    for index in mass.indices {
+        let parts = founderMass[(index * founderCount)..<((index + 1) * founderCount)]
+        guard parts.allSatisfy({ $0.isFinite && $0 >= 0 }), parts.reduce(Float(0), +) == mass[index] else {
+            throw NSError(domain: "CapacityPilot", code: 9, userInfo: [NSLocalizedDescriptionKey:
+                "Founder mass at entry \(index) is negative, non-finite, or does not sum to the initial mass"])
+        }
+    }
+    return founderMass
+}
+
 // Pair equal and opposite transfers so every cell retains its total matter and
 // channel inventories stay fixed. Only channels 0 and 1 exchange matter. The dose counts both channel edits.
 public func capacityPilotWrite(_ values: [Float], width: Int, height: Int, channels: Int,
@@ -235,14 +306,34 @@ extension CapacityPilotHarness {
                                     channelInventoryError: edits.2, frames: frames))
     }
 
-    public func runDevelopment(horizon: Int, output: URL,
+    public func runDevelopment(horizon: Int, output: URL, ancestry: CapacityPilotAncestry? = nil,
                                emit: (CapacityPilotBranch) throws -> Void) throws {
         var state = simulator.makeInitialState()
         var frames = [frame(state, relativeStep: 0)]
         try saveField(state, name: "development-step-0", output: output)
         recordPhantom(step: 0)
+        var tracer: CapacityPilotAncestryTracer?
+        if let ancestry {
+            let mass = state.mass.asArray(Float.self)
+            let founderMass: [Float]
+            switch ancestry.seed {
+            case .labels(let labels):
+                founderMass = try capacityPilotFounderMass(mass, labels: labels, channels: channelCount,
+                                                           founderCount: ancestry.founderCount)
+            case .founderMass(let seeded):
+                founderMass = try capacityPilotCheckedFounderMass(mass, founderMass: seeded, channels: channelCount,
+                                                                  founderCount: ancestry.founderCount)
+            }
+            simulator.setAncestry(founderMass, founderCount: ancestry.founderCount, for: state)
+            tracer = CapacityPilotAncestryTracer(ancestry: ancestry, width: width, height: height, channels: channelCount)
+            try tracer!.record(state, simulator: simulator, output: output)
+        }
         while state.step < horizon {
-            state = simulator.step(state, count: min(32, horizon - state.step))
+            // Founder totals are recorded every step; mass checkpoints keep the 32-step cadence.
+            let advance = tracer == nil ? min(32, horizon - state.step) : 1
+            state = simulator.step(state, count: advance)
+            try tracer?.record(state, simulator: simulator, output: output)
+            guard state.step % 32 == 0 || state.step == horizon else { continue }
             let values = state.mass.asArray(Float.self)
             guard values.allSatisfy({ $0.isFinite && $0 >= 0 }) else {
                 throw NSError(domain: "CapacityPilot", code: 4,
@@ -253,6 +344,9 @@ extension CapacityPilotHarness {
             recordPhantom(step: state.step)
         }
         try writePhantomFrames(output: output)
+        if let tracer {
+            try JSONEncoder().encode(tracer.finish()).write(to: output.appendingPathComponent("ancestry.json"))
+        }
         try emit(CapacityPilotBranch(name: "development", visibleEditL1: 0,
                                     channelEditL1: 0, channelInventoryError: 0, frames: frames))
     }
@@ -542,5 +636,64 @@ extension CapacityPilotHarness {
         }
         try JSONSerialization.data(withJSONObject: events, options: [.sortedKeys, .prettyPrinted])
             .write(to: output.appendingPathComponent("write-events.json"))
+    }
+}
+
+private struct CapacityPilotAncestryTracer {
+    let ancestry: CapacityPilotAncestry
+    let width: Int
+    let height: Int
+    let channels: Int
+    var steps: [Int] = []
+    var founderMass: [[[Double]]] = []
+    var channelMass: [[Double]] = []
+    var residual: [Double] = []
+
+    init(ancestry: CapacityPilotAncestry, width: Int, height: Int, channels: Int) {
+        self.ancestry = ancestry
+        self.width = width
+        self.height = height
+        self.channels = channels
+    }
+
+    mutating func record(_ state: FlowLeniaInteractiveState, simulator: FlowLeniaInteractiveSimulator,
+                         output: URL) throws {
+        let k = ancestry.founderCount
+        let mass = state.mass.asArray(Float.self)
+        let founders = simulator.ancestryFounderMass(for: state)
+        var totals = [[Double]](repeating: [Double](repeating: 0, count: k), count: channels)
+        var matter = [Double](repeating: 0, count: channels)
+        var mismatch = 0.0
+        for i in mass.indices {
+            let c = i % channels
+            var sum = 0.0
+            for j in 0..<k {
+                let value = Double(founders[i * k + j])
+                totals[c][j] += value
+                sum += value
+            }
+            matter[c] += Double(mass[i])
+            mismatch += abs(sum - Double(mass[i]))
+        }
+        guard founders.allSatisfy({ $0.isFinite && $0 >= 0 }) else {
+            throw NSError(domain: "CapacityPilot", code: 10,
+                          userInfo: [NSLocalizedDescriptionKey: "Invalid founder mass at step \(state.step)"])
+        }
+        steps.append(state.step)
+        founderMass.append(totals)
+        channelMass.append(matter)
+        residual.append(mismatch / matter.reduce(0, +))
+        if ancestry.exportSteps.contains(state.step) {
+            try founders.withUnsafeBytes {
+                try Data($0).write(to: output.appendingPathComponent("ancestry-step-\(state.step).f32"))
+            }
+        }
+    }
+
+    func finish() -> CapacityPilotAncestryRecord {
+        CapacityPilotAncestryRecord(founders: ancestry.founderCount, channels: channels,
+                                    fieldShape: [width, height, channels, ancestry.founderCount], steps: steps,
+                                    founderMass: founderMass, channelMass: channelMass,
+                                    founderSumResidual: residual, exportSteps: ancestry.exportSteps.sorted())
     }
 }

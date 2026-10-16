@@ -34,6 +34,13 @@ struct CapacityPilotCommand: ParsableCommand {
     var phantom: String?
     @Flag(name: .long, help: "In the state-flow study, also save the pre-step growth potential at each sampled step.")
     var savePotential = false
+    @Option(help: "Int32 founder label per cell in mass layout (x-major); -1 marks cells without matter. Development study, one corpus row.")
+    var ancestryLabels: String?
+    @Option(help: "Float32 founder mass [sx, sy, channels, founders] summing exactly to the initial field; replaces --ancestry-labels.")
+    var ancestryFounderMass: String?
+    @Option var ancestryFounders: Int?
+    @Option(help: "Comma-separated steps at which founder mass [sx, sy, channels, founders] is exported.")
+    var ancestryExportSteps: String?
 
     func run() throws {
         guard (checkpointSteps > 0 || (["state-continuation", "state-flow"].contains(study) && checkpointSteps == 0)), horizon >= 128, (study == "development" || horizon % 32 == 0) else {
@@ -73,6 +80,22 @@ struct CapacityPilotCommand: ParsableCommand {
         let source = try Data(contentsOf: URL(fileURLWithPath: config))
         let rows = try String(contentsOfFile: corpus, encoding: .utf8).split(separator: "\n").map {
             try JSONDecoder().decode(CorpusRow.self, from: Data($0.utf8))
+        }
+        guard ancestryLabels == nil || ancestryFounderMass == nil else {
+            throw ValidationError("ancestry labels and founder mass are alternatives")
+        }
+        let ancestrySeed = ancestryLabels ?? ancestryFounderMass
+        let ancestryOptions = [ancestrySeed != nil, ancestryFounders != nil, ancestryExportSteps != nil]
+        guard ancestryOptions.allSatisfy({ $0 }) || ancestryOptions.allSatisfy({ !$0 }) else {
+            throw ValidationError("ancestry labels or founder mass, founders, and export steps must be given together")
+        }
+        let exportParts = ancestryExportSteps?.split(separator: ",") ?? []
+        let exportSteps = Set(exportParts.compactMap { Int($0) })
+        if ancestrySeed != nil {
+            guard study == "development", rows.count == 1, ancestryFounders! > 0,
+                  exportSteps.count == exportParts.count, exportSteps.allSatisfy({ (0...horizon).contains($0) }) else {
+                throw ValidationError("ancestry requires the development study, one corpus row, positive founders, and export steps within the horizon")
+            }
         }
         let root = URL(fileURLWithPath: output)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -147,7 +170,31 @@ struct CapacityPilotCommand: ParsableCommand {
                         stride(from: 0, to: bytes.count, by: 4).map { raw.loadUnaligned(fromByteOffset: $0, as: Float.self) }
                     }
                 }, emit: emit)
-            case "development": try harness.runDevelopment(horizon: horizon, output: directory, emit: emit)
+            case "development":
+                let ancestry = try ancestrySeed.map { path in
+                    let bytes = try Data(contentsOf: URL(fileURLWithPath: path))
+                    guard runtime.backend == .metalFull else { throw ValidationError("ancestry requires metal-full") }
+                    let seed: CapacityPilotAncestry.Seed
+                    if ancestryLabels != nil {
+                        guard bytes.count == runtime.sx * runtime.sy * MemoryLayout<Int32>.size else {
+                            throw ValidationError("ancestry labels need one Int32 per cell")
+                        }
+                        try bytes.write(to: directory.appendingPathComponent("ancestry-labels.i32"))
+                        seed = .labels(bytes.withUnsafeBytes { raw in
+                            stride(from: 0, to: bytes.count, by: 4).map { raw.loadUnaligned(fromByteOffset: $0, as: Int32.self) }
+                        })
+                    } else {
+                        guard bytes.count == runtime.sx * runtime.sy * runtime.channels * ancestryFounders! * MemoryLayout<Float>.size else {
+                            throw ValidationError("ancestry founder mass needs [sx, sy, channels, founders] float32 values")
+                        }
+                        try bytes.write(to: directory.appendingPathComponent("ancestry-founder-mass.f32"))
+                        seed = .founderMass(bytes.withUnsafeBytes { raw in
+                            stride(from: 0, to: bytes.count, by: 4).map { raw.loadUnaligned(fromByteOffset: $0, as: Float.self) }
+                        })
+                    }
+                    return CapacityPilotAncestry(seed: seed, founderCount: ancestryFounders!, exportSteps: exportSteps)
+                }
+                try harness.runDevelopment(horizon: horizon, output: directory, ancestry: ancestry, emit: emit)
             case "response": try harness.runResponse(checkpointSteps: checkpointSteps, horizon: horizon, output: directory, offsets: offsets, probeHorizon: probeHorizon, emit: emit)
             case "symmetry": try harness.runSymmetry(checkpointSteps: checkpointSteps, output: directory)
             case "followup": try harness.runFollowup(checkpointSteps: checkpointSteps, horizon: horizon, output: directory, emit: emit)
