@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 
 use crate::markdown;
@@ -76,6 +76,12 @@ pub(crate) fn missing_research_note_series_records(
         }
         let text = std::fs::read_to_string(&path)?;
         let frontmatter = markdown::parse_front_matter(&text);
+        if discover::article_release(&frontmatter)
+            .with_context(|| format!("site/research-notes/{slug}/index.md"))?
+            != discover::RELEASE_PUBLISHED
+        {
+            continue;
+        }
         let title = frontmatter
             .get("title")
             .filter(|title| !title.is_empty())

@@ -24,4 +24,4 @@ We had expected theorems with many observed proof shapes to survive damage more 
 
 Taking away a tactic made us look again at what the observed variety meant, because a different proof term was only useful here if the prover could find it within the same budget after the block. The next description therefore needs to tell us what the proofs depend on, so that we can distinguish visible variety from alternatives that remain available when one resource disappears.
 
-The [Wonton report](/blog/wonton-soup/) describes the protocol. The earlier [inert-control investigation](/research-notes/2026-04-02-wonton-controls-exposed-a-reproducibility-problem/) explains the need to check inference variation alongside the tactic block.
+The [Wonton report](/blog/wonton-soup/) describes the protocol. An earlier inert-control investigation, in which an unused tactic changed the proof result, showed that inference variation has to be checked alongside the tactic block.
