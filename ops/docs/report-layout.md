@@ -65,8 +65,8 @@ Refresh the dossier counts with `uv run --with duckdb python dossiers/wonton-sou
 
 Repeated-seed trial counts, guided/blind tactic-attempt totals, and intervention survival have different denominators. Keep their labels attached. The featured `encode_inl` reroute is checked against original history hashes and recorded proof closure; its unchanged control blocks `decide`, already excluded by the baseline provider. The older full showcase and preprint retain their frozen figures; they are separate snapshots, not sources for a current-lake headline.
 
-## Addenda emblems
+## Addenda specimens
 
-`site/assets/addenda-symbols.svg` contains the original editorial emblems; symbol IDs match addendum slugs. Add a corresponding symbol when adding an addendum. These are schematic illustrations of the subjects, not measured results. Their engraved linework takes its visual cue from the recursive book illustration in the [SPECTER reference board](https://www.are.na/block/49421548).
+`site/assets/addenda-specimens/` contains source-backed artwork for the addenda index. Rebuild it with `python3 ops/render_addenda_specimens.py` in the repository development shell. Its manifest records the source files, their hashes, specimen kinds, and reproduction commands. Keep fixture, toy-interpreter, source-excerpt, and executable-demo labels visible in the page captions; they distinguish the artifacts from research results.
 
-The index renderer places each emblem beside its entry using the shared layout in `site/assets/addenda.css`. Keep the SVG sprite as the artwork source, use the existing 160-unit viewBox, and check both the 144px desktop and 80px phone treatments. No drawing library or client-side generation is required.
+The index gives Poly Morphogenesis, K Semantics, and Equational Theories larger feature space, with the remaining projects in compact rows. The renderer reads the specimen manifest for image paths, alternative text, specimen kinds, source links, and optional output links. Check the actual artwork and its captions at desktop and phone widths; SVGs embed the bundled fonts because images cannot rely on the parent page’s font loading.

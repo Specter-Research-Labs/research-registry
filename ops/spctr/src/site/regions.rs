@@ -145,12 +145,34 @@ fn render_addenda_links(
 
 pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     let slices = records::slice_records(records);
+    let specimens: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../site/assets/addenda-specimens/manifest.json"
+    ))
+    .expect("addenda specimen manifest must be valid JSON");
     let mut blocks: Vec<String> = Vec::new();
     for record in &slices.visible_addenda {
+        if matches!(
+            record.slug.as_str(),
+            "poly-morphogenesis" | "k-semantics-reference" | "equational-theories-distillation"
+        ) {
+            continue;
+        }
         let block = html! {
-            article class="dossier-card" id=(record.slug) {
-                svg class="addendum-symbol" aria-hidden="true" {
-                    use href=(format!("/assets/addenda-symbols.svg?v=20260911#{}", record.slug)) {}
+            article class="dossier-card addendum-specimen-card" id=(record.slug) {
+                @if let Some(specimen) = specimens.get(&record.slug) {
+                    figure class="addendum-specimen" {
+                        a href=(specimen["sourceHref"].as_str().expect("specimen source URL")) {
+                            img src=(specimen["src"].as_str().expect("specimen image")) alt=(specimen["alt"].as_str().expect("specimen alternative text")) width="1000" height="600" loading="lazy";
+                        }
+                        figcaption {
+                            span { (specimen["kind"].as_str().expect("specimen kind")) }
+                            @if let Some(output) = specimen["dataHref"].as_str() {
+                                a href=(output) { "Output ↗" }
+                            } @else {
+                                a href=(specimen["sourceHref"].as_str().expect("specimen source URL")) { "Source ↗" }
+                            }
+                        }
+                    }
                 }
                 div class="dossier-card-header" {
                     div class="dossier-card-tab" {
