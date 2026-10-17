@@ -76,7 +76,7 @@ fn build(body: &str) -> anyhow::Result<String> {
     let dir = Utf8Path::from_path(temp.path()).unwrap();
     write(dir, "report.md", &report(body));
     write(dir, "refs.bib", BIB);
-    spctr::doc::build(&repo_root(), dir, Target::Lab, None)?;
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None)?;
     Ok(fs::read_to_string(dir.join("report.html")).unwrap())
 }
 
@@ -154,7 +154,7 @@ fn build_with_terms(terms: &str, body: &str) -> anyhow::Result<String> {
     write(dir, "report.md", &source);
     write(dir, "refs.bib", BIB);
     write(dir, "assets/strip.png", "png");
-    spctr::doc::build(&repo_root(), dir, Target::Lab, None)?;
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None)?;
     Ok(fs::read_to_string(dir.join("report.html")).unwrap())
 }
 
@@ -197,7 +197,7 @@ fn terms_work_in_footnotes_and_the_abstract() {
         ),
     );
     write(dir, "refs.bib", BIB);
-    spctr::doc::build(&repo_root(), dir, Target::Lab, None).unwrap();
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap();
     let html = fs::read_to_string(dir.join("report.html")).unwrap();
     let abstract_start = html.find(r#"<section class="rk-abstract""#).unwrap();
     assert!(html[abstract_start..].contains(r#"<span class="rk-term" tabindex="0">arrested"#));
@@ -289,6 +289,7 @@ struct Site {
     _temp: tempfile::TempDir,
     root: Utf8PathBuf,
     report: Utf8PathBuf,
+    siblings: Utf8PathBuf,
 }
 
 /// A repository root that shares the real templates, fonts and design tokens
@@ -304,16 +305,21 @@ fn site(publications: &str) -> Site {
     }
     write(&root, "site/publications.json", publications);
     let report = root.join("source");
-    copy_dir(&fixture(), &report);
+    copy_dir(&fixture("report"), &report);
+    let siblings = root.join("siblings");
+    copy_dir(&fixture("siblings"), &siblings);
     Site {
         _temp: temp,
         root,
         report,
+        siblings,
     }
 }
 
-fn fixture() -> Utf8PathBuf {
-    Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/report")
+fn fixture(name: &str) -> Utf8PathBuf {
+    Utf8Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
 }
 
 fn copy_dir(from: &Utf8Path, to: &Utf8Path) {
@@ -331,16 +337,26 @@ fn copy_dir(from: &Utf8Path, to: &Utf8Path) {
 }
 
 fn edit_report(site: &Site, from: &str, to: &str) {
-    let path = site.report.join("report.md");
+    edit(&site.report, from, to);
+}
+
+fn edit(dir: &Utf8Path, from: &str, to: &str) {
+    let path = dir.join("report.md");
     let text = fs::read_to_string(&path).unwrap();
     assert!(text.contains(from), "fixture lacks {from:?}");
     fs::write(&path, text.replacen(from, to, 1)).unwrap();
 }
 
+fn site_build(site: &Site, dirs: &[&Utf8PathBuf]) -> anyhow::Result<Vec<Utf8PathBuf>> {
+    let dirs: Vec<Utf8PathBuf> = dirs.iter().map(|dir| (*dir).clone()).collect();
+    spctr::doc::build(&site.root, &dirs, Target::Site, None)
+}
+
+/// Builds the fixture together with the companion report it links to.
 fn site_error(site: &Site) -> String {
     format!(
         "{:#}",
-        spctr::doc::build(&site.root, &site.report, Target::Site, None).unwrap_err()
+        site_build(site, &[&site.report, &site.siblings]).unwrap_err()
     )
 }
 
@@ -348,9 +364,10 @@ fn site_error(site: &Site) -> String {
 fn fixture_renders_for_the_lab() {
     let temp = tempfile::tempdir().unwrap();
     let dir = Utf8Path::from_path(temp.path()).unwrap();
-    copy_dir(&fixture(), dir);
-    let out = spctr::doc::build(&repo_root(), dir, Target::Lab, None).unwrap();
-    assert_eq!(out, dir.join("report.html"));
+    copy_dir(&fixture("report"), dir);
+    let out = spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap();
+    assert_eq!(out, vec![dir.join("report.html")]);
+    let out = &out[0];
     let html = fs::read_to_string(out).unwrap();
     assert!(html.contains(
         r#"<a href="https://lab.specterlab.org/#/p/rpt-002?revision=005&amp;section=siblings">companion report</a>"#
@@ -366,10 +383,18 @@ fn fixture_renders_for_the_lab() {
 #[test]
 fn fixture_renders_for_the_site() {
     let site = site(PUBLISHED);
-    let out = spctr::doc::build(&site.root, &site.report, Target::Site, None).unwrap();
+    let out = site_build(&site, &[&site.report, &site.siblings]).unwrap();
     let page_dir = site.root.join("site/dossiers/lenia-swarm/arrest");
-    assert_eq!(out, page_dir.join("index.html"));
-    let html = fs::read_to_string(&out).unwrap();
+    assert_eq!(
+        out,
+        vec![
+            page_dir.join("index.html"),
+            site.root
+                .join("site/dossiers/lenia-swarm/siblings/index.html")
+        ]
+    );
+    let out = &out[0];
+    let html = fs::read_to_string(out).unwrap();
     assert!(html.contains("<title>Arrest after release | Specter Labs</title>"));
     assert!(html.contains(r#"<meta name="description" content="A temporary obstacle leaves a gliding pair arrested after release.">"#));
     assert!(html.contains(
@@ -403,9 +428,12 @@ fn fixture_renders_for_the_site() {
     .unwrap();
     assert_eq!(
         report.canonical_urls,
-        vec!["https://specterlab.org/dossiers/lenia-swarm/arrest/".to_owned()]
+        vec![
+            "https://specterlab.org/dossiers/lenia-swarm/arrest/".to_owned(),
+            "https://specterlab.org/dossiers/lenia-swarm/siblings/".to_owned()
+        ]
     );
-    let finalized = fs::read_to_string(&out).unwrap();
+    let finalized = fs::read_to_string(out).unwrap();
     assert_eq!(finalized.matches(r#"rel="canonical""#).count(), 1);
     assert!(finalized.contains(r#"<meta property="og:description" content="A temporary obstacle"#));
 }
@@ -428,11 +456,14 @@ fn site_refuses_unpublished_or_stale_documents() {
 fn site_refuses_review_links_it_cannot_resolve() {
     let unpublished =
         site(r#"{"rpt-001": {"revision": "003", "path": "/dossiers/lenia-swarm/arrest/"}}"#);
-    let error = site_error(&unpublished);
+    let error = format!(
+        "{:#}",
+        site_build(&unpublished, &[&unpublished.report]).unwrap_err()
+    );
     assert!(error.contains("rpt-002 is not published"), "{error}");
 
     let stale = site(&PUBLISHED.replace(r#""revision": "005""#, r#""revision": "006""#));
-    let error = site_error(&stale);
+    let error = format!("{:#}", site_build(&stale, &[&stale.report]).unwrap_err());
     assert!(
         error.contains("cites revision 005, but rpt-002 is published at revision 006"),
         "{error}"
@@ -465,8 +496,8 @@ fn site_refuses_review_links_it_cannot_resolve() {
         "https://lab.specterlab.org/#/p/rpt-002",
         "https://review.specterlab.org/#/p/rpt-002",
     );
-    let out = spctr::doc::build(&legacy.root, &legacy.report, Target::Site, None).unwrap();
-    assert!(fs::read_to_string(out)
+    let out = site_build(&legacy, &[&legacy.report, &legacy.siblings]).unwrap();
+    assert!(fs::read_to_string(&out[0])
         .unwrap()
         .contains(r#"href="/dossiers/lenia-swarm/siblings/#siblings""#));
 }
@@ -533,11 +564,112 @@ fn site_needs_description_image_and_no_out() {
         "{:#}",
         spctr::doc::build(
             &with_out.root,
-            &with_out.report,
+            std::slice::from_ref(&with_out.report),
             Target::Site,
             Some(Utf8Path::new("x.html"))
         )
         .unwrap_err()
     );
     assert!(error.contains("drop --out"), "{error}");
+}
+
+#[test]
+fn review_links_must_name_an_existing_section() {
+    let published = site(PUBLISHED);
+    site_build(&published, &[&published.siblings]).unwrap();
+    let out = site_build(&published, &[&published.report]).unwrap();
+    assert!(fs::read_to_string(&out[0])
+        .unwrap()
+        .contains(r#"href="/dossiers/lenia-swarm/siblings/#siblings""#));
+
+    let missing_section = site(PUBLISHED);
+    edit_report(&missing_section, "section=siblings", "section=cousins");
+    let error = site_error(&missing_section);
+    assert!(error.contains("rpt-002 has no section cousins"), "{error}");
+    assert!(!missing_section
+        .root
+        .join("site/dossiers/lenia-swarm/siblings")
+        .exists());
+
+    let unbuilt = site(PUBLISHED);
+    let error = format!(
+        "{:#}",
+        site_build(&unbuilt, &[&unbuilt.report]).unwrap_err()
+    );
+    assert!(
+        error.contains("rpt-002 has no page at")
+            && error.contains("build it first or in the same batch"),
+        "{error}"
+    );
+}
+
+#[test]
+fn documents_that_link_to_each_other_build_as_one_batch() {
+    let cycle = site(PUBLISHED);
+    edit(
+        &cycle.siblings,
+        "Siblings respond alike.",
+        "Siblings respond alike, as [the arrested pair](https://lab.specterlab.org/#/p/rpt-001?revision=003&section=the-arrest) does.",
+    );
+    let error = format!("{:#}", site_build(&cycle, &[&cycle.siblings]).unwrap_err());
+    assert!(error.contains("rpt-001 has no page at"), "{error}");
+    let out = site_build(&cycle, &[&cycle.report, &cycle.siblings]).unwrap();
+    assert!(fs::read_to_string(&out[1])
+        .unwrap()
+        .contains(r#"href="/dossiers/lenia-swarm/arrest/#the-arrest""#));
+
+    let twice = site(PUBLISHED);
+    let error = format!(
+        "{:#}",
+        site_build(&twice, &[&twice.report, &twice.siblings, &twice.report]).unwrap_err()
+    );
+    assert!(error.contains("rpt-001 is in the batch twice"), "{error}");
+}
+
+#[test]
+fn site_refuses_to_leave_files_it_did_not_write() {
+    let nested = PUBLISHED.replace(
+        "/dossiers/lenia-swarm/siblings/",
+        "/dossiers/lenia-swarm/arrest/siblings/",
+    );
+    let site = site(&nested);
+    site_build(&site, &[&site.report, &site.siblings]).unwrap();
+    site_build(&site, &[&site.report, &site.siblings]).unwrap();
+
+    let page_dir = site.root.join("site/dossiers/lenia-swarm/arrest");
+    write(&page_dir, "old.html", "old");
+    write(&page_dir, "assets/old.png", "old");
+    let before = fs::read_to_string(page_dir.join("index.html")).unwrap();
+    edit_report(&site, "Engine details.", "Engine details, revised.");
+    let error = site_error(&site);
+    assert!(
+        error.contains("holds files this build would not write")
+            && error.contains("\n  assets/old.png\n  old.html"),
+        "{error}"
+    );
+    assert!(page_dir.join("old.html").is_file());
+    assert_eq!(
+        fs::read_to_string(page_dir.join("index.html")).unwrap(),
+        before
+    );
+}
+
+#[test]
+fn each_document_has_one_public_url() {
+    let shared = site(&PUBLISHED.replace(
+        "/dossiers/lenia-swarm/siblings/",
+        "/dossiers/lenia-swarm/arrest/",
+    ));
+    let error = site_error(&shared);
+    assert!(
+        error.contains("rpt-001 and rpt-002 are both published at /dossiers/lenia-swarm/arrest/"),
+        "{error}"
+    );
+
+    let experiments = site(&PUBLISHED.replace(
+        "/dossiers/lenia-swarm/arrest/",
+        "/experiments/exp-001/rpt-001/",
+    ));
+    let error = site_error(&experiments);
+    assert!(error.contains("which the review app serves"), "{error}");
 }

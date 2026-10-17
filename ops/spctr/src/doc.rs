@@ -26,6 +26,9 @@ const PRIVATE_SITE_PATHS: &[&str] = &[
     "/home-prototype/",
 ];
 
+/// Where the review app serves its own publications on the public site.
+const REVIEW_APP_SITE_PATH: &str = "/experiments/";
+
 const FONTS: &[(&str, &str, u16, &str)] = &[
     ("Berkeley Mono", "BerkeleyMono-Regular.woff2", 400, "normal"),
     ("Berkeley Mono", "BerkeleyMono-Bold.woff2", 700, "normal"),
@@ -62,44 +65,120 @@ struct SiteFrontMatter {
 }
 
 struct SitePage {
+    dir: Utf8PathBuf,
+    document_id: String,
     path: String,
     url: String,
     description: String,
     image: String,
-    publications: BTreeMap<String, Publication>,
 }
 
-/// Renders `<dir>/report.md` and returns the path of the written page.
+/// Renders `<dir>/report.md` for each dir and returns the paths of the written pages.
+///
+/// The site target builds its documents as one batch, so that documents linking
+/// to each other's sections can be published together; nothing is written unless
+/// every page in the batch passes its checks.
 pub fn build(
     repo_root: &Utf8Path,
-    dir: &Utf8Path,
+    dirs: &[Utf8PathBuf],
     target: Target,
     out: Option<&Utf8Path>,
-) -> Result<Utf8PathBuf> {
-    let dir = absolute(dir)?;
-    let source = dir.join("report.md");
-    if !source.is_file() {
-        bail!("missing report source: {source}");
-    }
-    let site = match target {
-        Target::Lab => None,
+) -> Result<Vec<Utf8PathBuf>> {
+    match target {
+        Target::Lab => {
+            if out.is_some() && dirs.len() > 1 {
+                bail!("--out needs exactly one report directory");
+            }
+            dirs.iter()
+                .map(|dir| {
+                    let dir = absolute(dir)?;
+                    report_source(&dir)?;
+                    let html = render(repo_root, &dir, Target::Lab, None)?;
+                    let out = match out {
+                        Some(path) => absolute(path)?,
+                        None => dir.join("report.html"),
+                    };
+                    write_page(&out, &html)?;
+                    Ok(out)
+                })
+                .collect()
+        }
         Target::Site => {
             if out.is_some() {
                 bail!("the site target writes to the document's published path; drop --out");
             }
-            Some(site_page(repo_root, &source)?)
+            build_site(repo_root, dirs)
         }
-    };
-    let out = match (out, &site) {
-        (Some(path), _) => absolute(path)?,
-        (None, Some(page)) => repo_root
-            .join("site")
-            .join(page.path.trim_start_matches('/'))
-            .join("index.html"),
-        (None, None) => dir.join("report.html"),
-    };
-    let templates = repo_root.join(TEMPLATE_DIR);
+    }
+}
 
+fn build_site(repo_root: &Utf8Path, dirs: &[Utf8PathBuf]) -> Result<Vec<Utf8PathBuf>> {
+    let publications = load_publications(repo_root)?;
+    let mut rendered: Vec<(SitePage, String)> = Vec::new();
+    for dir in dirs {
+        let dir = absolute(dir)?;
+        let page = site_page(&report_source(&dir)?, dir.clone(), &publications)?;
+        if let Some((other, _)) = rendered
+            .iter()
+            .find(|(other, _)| other.document_id == page.document_id)
+        {
+            bail!(
+                "{} is in the batch twice: {} and {}",
+                page.document_id,
+                other.dir,
+                page.dir
+            );
+        }
+        let html = render(repo_root, &dir, Target::Site, Some(&page))?;
+        rendered.push((page, html));
+    }
+    let sections = Sections {
+        site_root: repo_root.join("site"),
+        batch: rendered
+            .iter()
+            .map(|(page, html)| (page.document_id.clone(), anchor_ids(html)))
+            .collect(),
+    };
+    let mut pages = Vec::new();
+    for (page, html) in &rendered {
+        let html = resolve_review_links(html, &publications, &sections)
+            .with_context(|| format!("{}", page.dir.join("report.md")))?;
+        check_site_page(&html)?;
+        let assets = referenced_assets(&page.dir, &html, &page.image)?;
+        let page_dir = sections.site_root.join(page.path.trim_start_matches('/'));
+        check_stale_files(&page_dir, &page.path, &assets, &publications)?;
+        pages.push((page, page_dir, html, assets));
+    }
+    let mut written = Vec::new();
+    for (page, page_dir, html, assets) in pages {
+        for file in assets {
+            let from = page.dir.join(&file);
+            let to = page_dir.join(&file);
+            fs::create_dir_all(to.parent().expect("asset has a parent"))?;
+            fs::copy(&from, &to).with_context(|| format!("failed to copy {from} to {to}"))?;
+        }
+        let out = page_dir.join("index.html");
+        write_page(&out, &html)?;
+        written.push(out);
+    }
+    Ok(written)
+}
+
+fn report_source(dir: &Utf8Path) -> Result<Utf8PathBuf> {
+    let source = dir.join("report.md");
+    if !source.is_file() {
+        bail!("missing report source: {source}");
+    }
+    Ok(source)
+}
+
+fn render(
+    repo_root: &Utf8Path,
+    dir: &Utf8Path,
+    target: Target,
+    site: Option<&SitePage>,
+) -> Result<String> {
+    let templates = repo_root.join(TEMPLATE_DIR);
     let mut header = tempfile::Builder::new().suffix(".html").tempfile()?;
     header.write_all(inline_style(repo_root, target)?.as_bytes())?;
 
@@ -122,11 +201,11 @@ pub fn build(
         .arg(format!("--csl={}", templates.join("ieee.csl")))
         .arg(format!("--lua-filter={}", templates.join("report.lua")))
         .arg(format!("--include-in-header={}", header.path().display()))
-        .current_dir(&dir);
+        .current_dir(dir);
     for host in REVIEW_HOSTS {
         command.arg(format!("--metadata=rk-review-host:{host}"));
     }
-    if let Some(page) = &site {
+    if let Some(page) = site {
         command
             .arg(format!("--metadata=url:{}", page.url))
             .arg("--variable=rk-site:true")
@@ -153,26 +232,28 @@ pub fn build(
         .context("failed to run pandoc; install pandoc 3.7 or newer")?;
     if !output.status.success() {
         bail!(
-            "pandoc failed for {source}:\n{}",
+            "pandoc failed for {}:\n{}",
+            dir.join("report.md"),
             String::from_utf8_lossy(&output.stderr).trim()
         );
     }
-    let mut html = String::from_utf8(output.stdout).context("pandoc produced invalid UTF-8")?;
-    if let Some(page) = &site {
-        html = resolve_review_links(&html, &page.publications)?;
-        check_site_page(&html)?;
-        let site_dir = out.parent().context("site page has no parent")?;
-        copy_assets(&dir, site_dir, &html, &page.image)?;
-    }
+    String::from_utf8(output.stdout).context("pandoc produced invalid UTF-8")
+}
+
+fn write_page(out: &Utf8Path, html: &str) -> Result<()> {
     if let Some(parent) = out.parent() {
         fs::create_dir_all(parent).with_context(|| format!("failed to create {parent}"))?;
     }
-    fs::write(&out, html).with_context(|| format!("failed to write {out}"))?;
+    fs::write(out, html).with_context(|| format!("failed to write {out}"))?;
     eprintln!("wrote {out}");
-    Ok(out)
+    Ok(())
 }
 
-fn site_page(repo_root: &Utf8Path, source: &Utf8Path) -> Result<SitePage> {
+fn site_page(
+    source: &Utf8Path,
+    dir: Utf8PathBuf,
+    publications: &BTreeMap<String, Publication>,
+) -> Result<SitePage> {
     let text = read(source)?;
     let front = gray_matter::Matter::<gray_matter::engine::YAML>::new()
         .parse(&text)
@@ -188,7 +269,6 @@ fn site_page(repo_root: &Utf8Path, source: &Utf8Path) -> Result<SitePage> {
             front.image
         );
     }
-    let publications = load_publications(repo_root)?;
     let Some(publication) = publications.get(&front.document_id) else {
         bail!(
             "{} is not published: {PUBLICATIONS} has no entry for it",
@@ -209,20 +289,32 @@ fn site_page(repo_root: &Utf8Path, source: &Utf8Path) -> Result<SitePage> {
         crate::site::publish::site_public_url().trim_end_matches('/')
     );
     Ok(SitePage {
+        dir,
+        document_id: front.document_id,
         path,
         url,
         description: front.description,
         image: front.image,
-        publications,
     })
 }
 
+/// Loads the publication manifest and enforces its invariants. Invariant: every
+/// document has exactly one public URL. Two entries never share a path, and no
+/// path lies under the review app's /experiments/ namespace; the review app in
+/// turn must not serve a document that this manifest publishes.
 fn load_publications(repo_root: &Utf8Path) -> Result<BTreeMap<String, Publication>> {
     let path = repo_root.join(PUBLICATIONS);
     let publications: BTreeMap<String, Publication> = serde_json::from_str(&read(&path)?)
         .with_context(|| format!("{path}: expected {{document_id: {{revision, path}}}}"))?;
+    let mut owners = BTreeMap::new();
     for (document, publication) in &publications {
         check_site_path(&publication.path).with_context(|| format!("{path}: entry {document}"))?;
+        if let Some(other) = owners.insert(publication.path.as_str(), document) {
+            bail!(
+                "{path}: {other} and {document} are both published at {}",
+                publication.path
+            );
+        }
     }
     Ok(publications)
 }
@@ -244,15 +336,19 @@ fn check_site_path(path: &str) -> Result<()> {
     {
         bail!("refusing to write {path}: everything under {private} stays private");
     }
+    if path.starts_with(REVIEW_APP_SITE_PATH) {
+        bail!("{path} is under {REVIEW_APP_SITE_PATH}, which the review app serves");
+    }
     Ok(())
 }
 
 /// Rewrites exact review revision links (`https://<review host>/#/p/DOC?revision=N[&section=ID]`)
 /// to the public page of DOC, as the review app does when it publishes. The link must
-/// cite the published revision.
+/// cite the published revision, and its section must exist in DOC's page.
 fn resolve_review_links(
     html: &str,
     publications: &BTreeMap<String, Publication>,
+    sections: &Sections,
 ) -> Result<String> {
     let href = Regex::new(r##"href="(https?://([^/"#?]+)[^"]*)""##).expect("valid regex");
     let target = Regex::new(r"^https?://[^/#?]+/?#/p/([a-z0-9-]+)\?(.*)$").expect("valid regex");
@@ -294,10 +390,13 @@ fn resolve_review_links(
                     publication.revision
                 );
             }
-            Ok(match section {
-                Some(section) => format!("{}#{section}", publication.path),
-                None => publication.path.clone(),
-            })
+            let Some(section) = section else {
+                return Ok(publication.path.clone());
+            };
+            if !sections.of(document, publication)?.contains(section) {
+                bail!("{link}: {document} has no section {section}");
+            }
+            Ok(format!("{}#{section}", publication.path))
         })();
         match resolved {
             Ok(path) => format!(r#"href="{path}""#),
@@ -326,27 +425,101 @@ fn check_site_page(html: &str) -> Result<()> {
     Ok(())
 }
 
-/// Copies every relative `assets/` file the page references next to it, so that
-/// the site directory holds exactly what the page needs and nothing else from the
-/// report directory.
-fn copy_assets(dir: &Utf8Path, site_dir: &Utf8Path, html: &str, image: &str) -> Result<()> {
-    let reference = Regex::new(r##"(?:src|href)="(assets/[^"#?]+)""##).expect("valid regex");
-    let files: BTreeSet<&str> = reference
+/// Anchor ids of the documents a link may point into. Documents in the batch
+/// are checked against their new render; the others against their page as it is
+/// published under site/, so the manifest stays the only record of what is public.
+struct Sections {
+    site_root: Utf8PathBuf,
+    batch: BTreeMap<String, BTreeSet<String>>,
+}
+
+impl Sections {
+    fn of(&self, document: &str, publication: &Publication) -> Result<BTreeSet<String>> {
+        if let Some(ids) = self.batch.get(document) {
+            return Ok(ids.clone());
+        }
+        let page = self
+            .site_root
+            .join(publication.path.trim_start_matches('/'))
+            .join("index.html");
+        if !page.is_file() {
+            bail!("{document} has no page at {page}; build it first or in the same batch");
+        }
+        Ok(anchor_ids(&read(&page)?))
+    }
+}
+
+fn anchor_ids(html: &str) -> BTreeSet<String> {
+    Regex::new(r#"\sid="([^"]+)""#)
+        .expect("valid regex")
         .captures_iter(html)
-        .map(|captures| captures.get(1).expect("group").as_str())
-        .chain([image])
+        .map(|captures| captures[1].to_owned())
+        .collect()
+}
+
+/// Lists every relative `assets/` file the page references, so that the site
+/// directory receives exactly what the page needs and nothing else from the
+/// report directory.
+fn referenced_assets(dir: &Utf8Path, html: &str, image: &str) -> Result<BTreeSet<String>> {
+    let reference = Regex::new(r##"(?:src|href)="(assets/[^"#?]+)""##).expect("valid regex");
+    let files: BTreeSet<String> = reference
+        .captures_iter(html)
+        .map(|captures| captures[1].to_owned())
+        .chain([image.to_owned()])
         .collect();
-    for file in files {
+    for file in &files {
         if file.split('/').any(|part| part == "..") {
             bail!("asset path leaves assets/: {file}");
         }
-        let from = dir.join(file);
-        let to = site_dir.join(file);
-        if !from.is_file() {
+        if !dir.join(file).is_file() {
             bail!("the page references {file}, which is missing from {dir}");
         }
-        fs::create_dir_all(to.parent().expect("asset has a parent"))?;
-        fs::copy(&from, &to).with_context(|| format!("failed to copy {from} to {to}"))?;
+    }
+    Ok(files)
+}
+
+/// Refuses to write a page into a directory that holds files the build would not
+/// write, because those would stay public without a source. Directories of other
+/// published documents nested below this one belong to those documents.
+fn check_stale_files(
+    page_dir: &Utf8Path,
+    path: &str,
+    assets: &BTreeSet<String>,
+    publications: &BTreeMap<String, Publication>,
+) -> Result<()> {
+    let nested: BTreeSet<&str> = publications
+        .values()
+        .filter_map(|other| other.path.strip_prefix(path))
+        .filter(|rest| !rest.is_empty())
+        .collect();
+    let mut stale = Vec::new();
+    let mut pending = vec![Utf8PathBuf::new()];
+    while let Some(rel) = pending.pop() {
+        let dir = page_dir.join(&rel);
+        if !dir.exists() {
+            continue;
+        }
+        for entry in fs::read_dir(&dir).with_context(|| format!("failed to list {dir}"))? {
+            let entry = entry?;
+            let name = entry.file_name().into_string().map_err(|name| {
+                anyhow::anyhow!("non-UTF-8 file name in {dir}: {}", name.display())
+            })?;
+            let rel = rel.join(name);
+            if entry.file_type()?.is_dir() {
+                if !nested.contains(format!("{rel}/").as_str()) {
+                    pending.push(rel);
+                }
+            } else if rel != "index.html" && !assets.contains(rel.as_str()) {
+                stale.push(rel.into_string());
+            }
+        }
+    }
+    if !stale.is_empty() {
+        stale.sort();
+        bail!(
+            "{page_dir} holds files this build would not write; remove them or reference them from the report:\n  {}",
+            stale.join("\n  ")
+        );
     }
     Ok(())
 }
