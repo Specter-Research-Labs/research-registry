@@ -216,7 +216,7 @@ fn minimal_templates(root: &Utf8Path) {
 <head>
 <title>
 <!-- GENERATED:DOSSIER_HUB_TITLE START -->
-<!-- GENERATED:DOSSIER_HUB_TITLE END --> | SPECTER Labs</title>
+<!-- GENERATED:DOSSIER_HUB_TITLE END --> | Specter Labs</title>
 <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->
 <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->
 </head>
@@ -1148,7 +1148,7 @@ fn sitemap_auto_discovers_new_section() {
 <title>
 <!-- GENERATED:FOO_TITLE START -->
 Foo Section
-<!-- GENERATED:FOO_TITLE END --> | SPECTER Labs
+<!-- GENERATED:FOO_TITLE END --> | Specter Labs
 </title>
 </head>
 <body></body>
@@ -1272,7 +1272,7 @@ fn causal_emergence_catalog_builds_public_indexes_and_sitemap_entries() {
     let sitemap = fs::read_to_string(root.join("site/sitemap/index.html")).unwrap();
 
     assert!(landing.contains("Current synthesis"));
-    assert!(landing.contains("<title>Causal Emergence in Flow Lenia | SPECTER Labs</title>"));
+    assert!(landing.contains("<title>Causal Emergence in Flow Lenia | Specter Labs</title>"));
     assert!(
         landing.contains("/dossiers/lenia-swarm/causal-emergence/reports/organism-appears-first/")
     );
@@ -1335,12 +1335,12 @@ fn sitemap_shallow_excludes_cabinet_children() {
     write(
         root,
         "site/cabinet/index.html",
-        "<html><head><title>Cabinet | SPECTER Labs</title></head><body></body></html>\n",
+        "<html><head><title>Cabinet | Specter Labs</title></head><body></body></html>\n",
     );
     write(
         root,
         "site/cabinet/some-project/README/index.html",
-        "<html><head><title>Some Doc | SPECTER Labs</title></head><body></body></html>\n",
+        "<html><head><title>Some Doc | Specter Labs</title></head><body></body></html>\n",
     );
 
     spctr::site::build(root, true).unwrap();

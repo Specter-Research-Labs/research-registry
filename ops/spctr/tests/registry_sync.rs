@@ -425,7 +425,7 @@ fn site_build_no_longer_assigns_series_implicitly() {
         "site/templates/dossiers/default-hub.html",
         "<html><head><title>\n\
          <!-- GENERATED:DOSSIER_HUB_TITLE START -->\n\
-         <!-- GENERATED:DOSSIER_HUB_TITLE END --> | SPECTER Labs</title>\n\
+         <!-- GENERATED:DOSSIER_HUB_TITLE END --> | Specter Labs</title>\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END --></head><body>\n\
          <!-- GENERATED:DOSSIER_HUB_CONTENT START -->\n\

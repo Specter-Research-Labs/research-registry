@@ -1,8 +1,8 @@
-<img src="site/assets/logo.svg" alt="SPECTER Labs" width="84" align="right">
+<img src="site/assets/logo.svg" alt="Specter Labs" width="84" align="right">
 
-# SPECTER Labs
+# Specter Labs
 
-Canonical research monorepo for SPECTER Labs.
+Canonical research monorepo for Specter Labs.
 
 ## Structure
 

@@ -262,7 +262,7 @@ fn exact_report_href(report: &Report) -> String {
 
 #[must_use]
 pub fn render_page_title(title: &str) -> String {
-    html! { title { (title) " | SPECTER Labs" } }.into_string()
+    html! { title { (title) " | Specter Labs" } }.into_string()
 }
 
 #[must_use]
@@ -271,7 +271,7 @@ pub fn render_page_meta(title: &str, description: &str, canonical_path: &str) ->
     html! {
         meta name="description" content=(description);
         meta property="og:type" content="website";
-        meta property="og:site_name" content="SPECTER Labs";
+        meta property="og:site_name" content="Specter Labs";
         meta property="og:title" content=(title);
         meta property="og:description" content=(description);
         meta property="og:url" content=(&canonical);
