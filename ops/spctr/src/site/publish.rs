@@ -85,12 +85,15 @@ fn emit_archived_publish_result(
 // Site paths that hold sources, local studies, or withdrawn surfaces. They stay
 // in the repository but never reach the public site or its sitemaps.
 pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
+    "assets/blog/jolt-material-memory",
     "assets/blog/wonton-soup-follow-up",
     "assets/causal-emergence",
     "atlas",
     "dashboards/wonton-soup/dist",
     "dashboards/wonton-soup/node_modules",
     "dashboards/wonton-soup/src",
+    "cabinet/jolt-material-memory",
+    "dossiers/jolt-material-memory",
     "dossiers/lenia-swarm/causal-emergence",
     "review",
     "style-study",
@@ -103,6 +106,7 @@ pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
 pub(crate) const UNPUBLISHED_SITE_FILES: &[&str] = &[
     "assets/blog/lenia-morphospace-report/fig-fish-near-witnesses.html",
     "assets/causal-emergence.css",
+    "assets/research-material.svg",
     "assets/wonton-soup/dossier-evidence.json",
     "assets/writing-causal-response.svg",
     "dashboards/wonton-soup/package-lock.json",
@@ -1136,6 +1140,7 @@ mod tests {
         let plan = site_publish_plan(root).unwrap();
         for path in [
             "/atlas/",
+            "/assets/blog/jolt-material-memory/",
             "/assets/blog/wonton-soup-follow-up/",
             "/assets/causal-emergence/",
             "/assets/causal-emergence.css",
@@ -1147,6 +1152,9 @@ mod tests {
             "/dashboards/wonton-soup/tsconfig.json",
             "/dashboards/wonton-soup/validate_manifest.py",
             "/dashboards/wonton-soup/vite.config.ts",
+            "/cabinet/jolt-material-memory/",
+            "/dossiers/jolt-material-memory/",
+            "/assets/research-material.svg",
             "/dossiers/wonton-soup/paper.pdf",
             "/dossiers/lenia-swarm/causal-emergence/",
             "/review/",

@@ -28,6 +28,9 @@ The intent is one obvious operational path, not a grab bag of parallel wrappers.
   - backup/archive target only
   - not part of the request path
 
+Dossier index artwork is rebuilt from the sorting replay and recorded Lean trees with
+`python3 ops/render_dossier_previews.py` (requires Node.js).
+
 ## Public Surfaces
 
 - `specterlab.org`

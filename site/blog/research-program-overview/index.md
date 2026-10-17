@@ -48,10 +48,6 @@ The earlier tissue drafts blurred those tasks. The implementation audit distingu
 
 A useful test for the compositional method is whether it computes the same outcome as the full coupled simulation with less work, and whether a ranking formed before the outcomes are opened predicts them. Category theory supplies a language for the construction; the experiments must establish its practical benefit.
 
-### A paused material-memory pilot
-
-The [Jolt pilot](/dossiers/jolt-material-memory/) tested history-dependent updates in rigid-body assemblies. Some configurations retained a displacement, but the tested memory rules impaired damage recovery, and a positive comparison changed sign under a different layout. It remains a small, paused investigation. It does not establish adaptive recovery or a common mechanism with the other systems.
-
 ## What would count as a shared pattern?
 
 A morphospace describes forms through selected coordinates. A dynamical state space contains the variables needed to evolve the system. A parameter space describes the rules or configurations we vary. These spaces are related, but a point in one is not automatically a point in another. Collapsing them would conceal exactly the differences we want to investigate.
@@ -65,7 +61,7 @@ We can make progress without settling the ontology. Choose a candidate relations
 
 One candidate is **the dependence of recovery on distinct available routes**. Wonton's negative result warns us that counting alternatives is insufficient: they may all depend on the same tactic. In Lenia, a variety of visible forms may likewise conceal a narrow set of sustaining dynamics. That analogy suggests a test, not a result: does a description of independent dynamical possibilities predict response better than the diversity of observed outcomes?
 
-A second candidate concerns **the difference between retention and recoverability**. A state can become harder to disturb without becoming better at returning after a large disturbance. The Lenia developmental experiments and the Jolt pilot make that distinction worth measuring separately. They do not yet establish one law governing both.
+A second candidate concerns **the difference between retention and recoverability**. A state can become harder to disturb without becoming better at returning after a large disturbance. The Lenia developmental experiments make that distinction worth measuring separately.
 
 ## Finding relationships we can use
 

@@ -279,7 +279,8 @@ fn hidden_project_excluded_from_output() {
     write(
         root,
         "dossiers/hidden/spctr.toml",
-        &dossier_manifest("HiddenDossier", "hold", false, false, None, None),
+        &dossier_manifest("HiddenDossier", "hold", false, false, None, None)
+            .replace("version = 1", "version = 1\nseries = \"D-999\""),
     );
     write(
         root,
@@ -305,6 +306,8 @@ fn hidden_project_excluded_from_output() {
     let home = fs::read_to_string(root.join("site/index.html")).unwrap();
     let dossier_idx = fs::read_to_string(root.join("site/dossiers/index.html")).unwrap();
     let addenda_idx = fs::read_to_string(root.join("site/addenda/index.html")).unwrap();
+    let sitemap = fs::read_to_string(root.join("site/sitemap/index.html")).unwrap();
+    assert!(!sitemap.contains("HiddenDossier"));
     let catalog = fs::read_to_string(root.join("site/projects/catalog.json")).unwrap();
 
     assert!(
