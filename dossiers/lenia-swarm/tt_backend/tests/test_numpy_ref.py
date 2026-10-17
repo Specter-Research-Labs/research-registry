@@ -46,7 +46,7 @@ class TestSobel:
         assert np.allclose(grad, 0.0, atol=1e-6)
 
     def test_linear_ramp_x(self):
-        """Linear ramp in x (axis 1) produces nonzero gy (dim3=0), near-zero gx (dim3=1)."""
+        """A ramp rising along axis 1 gives a positive gx (dim3=1) and zero gy (dim3=0)."""
         N = 32
         A = np.zeros((1, N, N, 1), dtype=np.float32)
         for i in range(N):
@@ -54,9 +54,20 @@ class TestSobel:
         grad = stages.sobel_periodic(A)
         gy = grad[0, :, :, 0, 0]
         gx = grad[0, :, :, 1, 0]
-        interior_gy = gy[2:-2, 2:-2]
-        assert np.all(np.abs(interior_gy) > 0.01)
-        assert np.max(np.abs(gx[2:-2, 2:-2])) < np.mean(np.abs(interior_gy)) * 0.5
+        assert np.allclose(gx[2:-2, 2:-2], 8.0 / N, atol=1e-5)
+        assert np.allclose(gy, 0.0, atol=1e-6)
+
+    def test_linear_ramp_y(self):
+        """A ramp rising along axis 2 gives a positive gy (dim3=0) and zero gx (dim3=1)."""
+        N = 32
+        A = np.zeros((1, N, N, 1), dtype=np.float32)
+        for j in range(N):
+            A[0, :, j, 0] = float(j) / N
+        grad = stages.sobel_periodic(A)
+        gy = grad[0, :, :, 0, 0]
+        gx = grad[0, :, :, 1, 0]
+        assert np.allclose(gy[2:-2, 2:-2], 8.0 / N, atol=1e-5)
+        assert np.allclose(gx, 0.0, atol=1e-6)
 
 
 class TestReintegration:

@@ -1637,7 +1637,8 @@ private func flowLeniaBuildCircularWallPotential(
                 dy = min(dy, Float(sy) - dy)
             }
             if dx * dx + dy * dy <= radiusSquared {
-                values[x * sy + y] = height
+                // Mass flows up the growth potential, so a wall of this height is a sunken disk.
+                values[x * sy + y] = -height
             }
         }
     }

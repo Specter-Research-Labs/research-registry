@@ -199,8 +199,8 @@ def _sobel_periodic(a: mx.array) -> mx.array:
     a20 = _roll(a, (-1, 1), (1, 2))
     a21 = _roll(a, (-1, 0), (1, 2))
     a22 = _roll(a, (-1, -1), (1, 2))
-    gx = (a00 + 2.0 * a10 + a20) - (a02 + 2.0 * a12 + a22)
-    gy = (a00 + 2.0 * a01 + a02) - (a20 + 2.0 * a21 + a22)
+    gy = (a02 + 2.0 * a12 + a22) - (a00 + 2.0 * a10 + a20)
+    gx = (a20 + 2.0 * a21 + a22) - (a00 + 2.0 * a01 + a02)
     return mx.stack([gy, gx], axis=3)
 
 

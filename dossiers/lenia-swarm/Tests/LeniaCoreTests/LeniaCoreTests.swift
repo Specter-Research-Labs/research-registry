@@ -8562,8 +8562,8 @@ private func flowSandboxReferenceSobel(_ A: MLXArray, gradientBoundary: String) 
         let a22 = rollMultiAxis(A, shifts: [-1, -1], axes: [1, 2])
 
         let two = MLXArray(Float(2.0))
-        let gx = (a00 + two * a10 + a20) - (a02 + two * a12 + a22)
-        let gy = (a00 + two * a01 + a02) - (a20 + two * a21 + a22)
+        let gy = (a02 + two * a12 + a22) - (a00 + two * a10 + a20)
+        let gx = (a20 + two * a21 + a22) - (a00 + two * a01 + a02)
         return MLX.stacked([gy, gx], axis: 3)
     default:
         fatalError("Test helper only supports periodic Sobel gradients.")

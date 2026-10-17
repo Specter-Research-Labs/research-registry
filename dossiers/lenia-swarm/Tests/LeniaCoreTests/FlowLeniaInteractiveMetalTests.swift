@@ -36,6 +36,30 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
         XCTAssertLessThan(maxAbsDifference(resynchronized.mass, expected.mass), 1e-3)
     }
 
+    // Flow Lenia kernels are radial and the Sobel flow is a true gradient, so one step must commute
+    // with every symmetry of the square torus. A transposed or sign-flipped flow breaks the diagonal ones.
+    func testStepCommutesWithSquareSymmetries() {
+        for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
+            let config = interactiveRuntimeConfig(backend: backend)
+            let simulator = FlowLeniaInteractiveSimulator(runtimeConfig: config)
+            let mass = MLXRandom.uniform(
+                low: Float(0), high: Float(1), [config.sx, config.sy, config.channels], key: MLXRandom.key(3)
+            )
+            let symmetries: [(String, (MLXArray) -> MLXArray)] = [
+                ("flip axis 0", { $0[.stride(by: -1), 0..., 0...] }),
+                ("flip axis 1", { $0[0..., .stride(by: -1), 0...] }),
+                ("transpose", { $0.transposed(1, 0, 2) }),
+                ("anti-transpose", { $0[.stride(by: -1), .stride(by: -1), 0...].transposed(1, 0, 2) }),
+            ]
+            let stepped = oneStep(simulator, mass)
+            XCTAssertGreaterThan(maxAbsDifference(stepped, mass), 1e-2)
+            for (name, symmetry) in symmetries {
+                let difference = maxAbsDifference(oneStep(simulator, symmetry(mass)), symmetry(stepped))
+                XCTAssertLessThan(difference, 1e-4, "\(backend) \(name)")
+            }
+        }
+    }
+
     func testResidentMetalBatchesEmbeddedParamsFoodAndWalls() {
         let config = interactiveRuntimeConfig(
             backend: .metalFull,
@@ -300,6 +324,10 @@ private func interactiveRuntimeConfig(
         environment: environment,
         interventions: []
     )
+}
+
+private func oneStep(_ simulator: FlowLeniaInteractiveSimulator, _ mass: MLXArray) -> MLXArray {
+    simulator.step(FlowLeniaInteractiveState(step: 0, mass: mass, params: nil, food: nil)).mass
 }
 
 private func maxAbsDifference(_ lhs: MLXArray, _ rhs: MLXArray) -> Float {

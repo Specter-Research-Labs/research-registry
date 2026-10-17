@@ -79,7 +79,8 @@ func flowSensorimotorKernelStack(
     return fK.expandedDimensions(axis: 0)
 }
 
-// Reintegration position grid [1, sx, sy, 2, 1] in (row, col) order, cell-centered.
+// Reintegration position grid [1, sx, sy, 2, 1] in (col, row) order, the component order of the
+// Sobel flow, cell-centered.
 func flowSensorimotorPosGrid(sx: Int, sy: Int) -> MLXArray {
     let coordsX = MLXArray((0..<sx).map { Float($0) })
     let coordsY = MLXArray((0..<sy).map { Float($0) })
@@ -90,7 +91,7 @@ func flowSensorimotorPosGrid(sx: Int, sy: Int) -> MLXArray {
 }
 
 // One differentiable, mass-conserving Flow-Lenia rollout. `initial` is
-// [1, sx, sy, channels]; `wallPotential` (positive inside obstacles) is added to
+// [1, sx, sy, channels]; `wallPotential` (negative inside obstacles) is added to
 // the growth potential so advection steers mass away from it. Returns the final
 // state [1, sx, sy, channels].
 func flowSensorimotorRollout(
@@ -564,8 +565,8 @@ func flowSensorimotorInitialState(initialization: MLXArray, config: FlowSensorim
     return full.reshaped([1, sx, sy, 1])
 }
 
-// Positive wall potential [1, sx, sy, 1] from random obstacle disks. Mass flows
-// down the growth potential, so positive disks repel. Disks avoid a clear radius
+// Wall potential [1, sx, sy, 1] of depth -potentialHeight in random obstacle disks. Mass
+// flows up the growth potential, so the sunken disks repel. Disks avoid a clear radius
 // around the seed origin so the body is not born inside a wall, and optionally
 // keep the left half clear (a corridor for directed locomotion).
 func flowSensorimotorObstaclePotential(config: FlowSensorimotorConfig, rng: inout SeededRandomNumberGenerator) -> MLXArray {
@@ -597,7 +598,7 @@ func flowSensorimotorObstaclePotential(config: FlowSensorimotorConfig, rng: inou
                 let dr = row - cr
                 let dc = col - cc
                 if dr * dr + dc * dc <= radius * radius {
-                    field[row * sy + col] = height
+                    field[row * sy + col] = -height
                 }
             }
         }

@@ -117,7 +117,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         }
     }
 
-    func testPositiveWallPotentialProducesRepulsiveFlow() {
+    func testNegativeWallPotentialProducesRepulsiveFlow() {
         let cfg = config()
         let p = ruleParams()
         let maps = channelMaps()
@@ -128,21 +128,20 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         // mass gradient.
         let field = MLXArray([Float](repeating: 0.02, count: sx * sy)).reshaped([1, sx, sy, 1])
 
-        // Positive Gaussian hill at the center. Mass flows down the potential (a
-        // negative well attracts), so an obstacle must be a positive potential
-        // hill: flow near it points outward, away from the obstacle. This is the
-        // repulsion the runner relies on.
+        // Gaussian well at the center. Mass flows up the potential, so an obstacle
+        // is a negative well: flow near it points outward, away from the obstacle.
+        // This is the repulsion the runner relies on.
         let cx = Float(sx / 2)
         let cy = Float(sy / 2)
-        var hill = [Float](repeating: 0.0, count: sx * sy)
+        var well = [Float](repeating: 0.0, count: sx * sy)
         for row in 0..<sx {
             for col in 0..<sy {
                 let dr = Float(row) - cx
                 let dc = Float(col) - cy
-                hill[row * sy + col] = 30.0 * exp(-(dr * dr + dc * dc) / (2.0 * 8.0 * 8.0))
+                well[row * sy + col] = -30.0 * exp(-(dr * dr + dc * dc) / (2.0 * 8.0 * 8.0))
             }
         }
-        let wallPotential = MLXArray(hill).reshaped([1, sx, sy, 1])
+        let wallPotential = MLXArray(well).reshaped([1, sx, sy, 1])
 
         let flow = computeFlow(
             field,
@@ -158,19 +157,19 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
             wallPotential: wallPotential,
             gatherBeforeFFT: true
         )
-        // Flow axis 3 is [dy, dx]; channel axis is last.
-        let dx = flow[0, 0..., 0..., 1, 0]
-        let dy = flow[0, 0..., 0..., 0, 0]
+        // Flow axis 3 is [along columns, along rows], the order of posGrid; channel axis is last.
+        let alongCols = flow[0, 0..., 0..., 0, 0]
+        let alongRows = flow[0, 0..., 0..., 1, 0]
         let offset = 10
-        let rightDx = dx[sx / 2, sy / 2 + offset].item(Float.self)
-        let leftDx = dx[sx / 2, sy / 2 - offset].item(Float.self)
-        let belowDy = dy[sx / 2 + offset, sy / 2].item(Float.self)
-        let aboveDy = dy[sx / 2 - offset, sy / 2].item(Float.self)
+        let right = alongCols[sx / 2, sy / 2 + offset].item(Float.self)
+        let left = alongCols[sx / 2, sy / 2 - offset].item(Float.self)
+        let below = alongRows[sx / 2 + offset, sy / 2].item(Float.self)
+        let above = alongRows[sx / 2 - offset, sy / 2].item(Float.self)
 
-        XCTAssertGreaterThan(rightDx, 0.0, "flow right of a positive obstacle must point right (outward)")
-        XCTAssertLessThan(leftDx, 0.0, "flow left of a positive obstacle must point left (outward)")
-        XCTAssertGreaterThan(belowDy, 0.0, "flow below a positive obstacle must point down (outward)")
-        XCTAssertLessThan(aboveDy, 0.0, "flow above a positive obstacle must point up (outward)")
+        XCTAssertGreaterThan(right, 0.0, "flow right of an obstacle must point right (outward)")
+        XCTAssertLessThan(left, 0.0, "flow left of an obstacle must point left (outward)")
+        XCTAssertGreaterThan(below, 0.0, "flow below an obstacle must point down (outward)")
+        XCTAssertLessThan(above, 0.0, "flow above an obstacle must point up (outward)")
     }
 
     private func blob(value: Float, centerRow: Int, centerCol: Int, half: Int) -> MLXArray {

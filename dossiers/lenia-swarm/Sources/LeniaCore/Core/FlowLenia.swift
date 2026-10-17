@@ -392,6 +392,19 @@ private func reshapeKernelParams(_ values: MLXArray) -> MLXArray {
     }
 }
 
+// aij holds A[x + i - 1, y + j - 1]. Returns the ascending gradient (d/dy, d/dx) on axis 3, the
+// component order of posGrid, so that F = (1 - alpha) * grad U - alpha * grad A moves mass up the
+// growth field and down its own density, isotropically, as in the reference Flow Lenia code.
+private func sobelStencil(
+    a00: MLXArray, a01: MLXArray, a02: MLXArray, a10: MLXArray,
+    a12: MLXArray, a20: MLXArray, a21: MLXArray, a22: MLXArray
+) -> MLXArray {
+    let two = MLXArray(Float(2.0))
+    let gy = (a02 + two * a12 + a22) - (a00 + two * a10 + a20)
+    let gx = (a20 + two * a21 + a22) - (a00 + two * a01 + a02)
+    return MLX.stacked([gy, gx], axis: 3)
+}
+
 private func sobelBatchedPeriodic(_ A: MLXArray) -> MLXArray {
     let a00 = rollMultiAxis(A, shifts: [1, 1], axes: [1, 2])
     let a01 = rollMultiAxis(A, shifts: [1, 0], axes: [1, 2])
@@ -402,25 +415,7 @@ private func sobelBatchedPeriodic(_ A: MLXArray) -> MLXArray {
     let a21 = rollMultiAxis(A, shifts: [-1, 0], axes: [1, 2])
     let a22 = rollMultiAxis(A, shifts: [-1, -1], axes: [1, 2])
 
-    let two = MLXArray(Float(2.0))
-    let a10Scaled = two * a10
-    let a12Scaled = two * a12
-    let a01Scaled = two * a01
-    let a21Scaled = two * a21
-
-    let gxLeft = a00 + a10Scaled
-    let gxLeft2 = gxLeft + a20
-    let gxRight = a02 + a12Scaled
-    let gxRight2 = gxRight + a22
-    let gx = gxLeft2 - gxRight2
-
-    let gyLeft = a00 + a01Scaled
-    let gyLeft2 = gyLeft + a02
-    let gyRight = a20 + a21Scaled
-    let gyRight2 = gyRight + a22
-    let gy = gyLeft2 - gyRight2
-
-    return MLX.stacked([gy, gx], axis: 3)
+    return sobelStencil(a00: a00, a01: a01, a02: a02, a10: a10, a12: a12, a20: a20, a21: a21, a22: a22)
 }
 
 private func sobelBatched(_ A: MLXArray, useTorus: Bool) -> MLXArray {
@@ -448,25 +443,7 @@ private func sobelBatched(_ A: MLXArray, useTorus: Bool) -> MLXArray {
     let a21 = padded[0..., x2, y1, 0...]
     let a22 = padded[0..., x2, y2, 0...]
 
-    let two = MLXArray(Float(2.0))
-    let a10Scaled = two * a10
-    let a12Scaled = two * a12
-    let a01Scaled = two * a01
-    let a21Scaled = two * a21
-
-    let gxLeft = a00 + a10Scaled
-    let gxLeft2 = gxLeft + a20
-    let gxRight = a02 + a12Scaled
-    let gxRight2 = gxRight + a22
-    let gx = gxLeft2 - gxRight2
-
-    let gyLeft = a00 + a01Scaled
-    let gyLeft2 = gyLeft + a02
-    let gyRight = a20 + a21Scaled
-    let gyRight2 = gyRight + a22
-    let gy = gyLeft2 - gyRight2
-
-    return MLX.stacked([gy, gx], axis: 3)
+    return sobelStencil(a00: a00, a01: a01, a02: a02, a10: a10, a12: a12, a20: a20, a21: a21, a22: a22)
 }
 
 private func sobelBatched(_ A: MLXArray, gradientBoundary: String) -> MLXArray {
