@@ -35,6 +35,7 @@ public struct BatchedConfig: Sendable {
     public let implementation: ImplementationSettings
     public let chemChannel: Int?
     public let chemIncludeInMass: Bool
+    public let matterWeights: [Float]?
 
     public init(
         sx: Int,
@@ -49,7 +50,8 @@ public struct BatchedConfig: Sendable {
         border: String,
         implementation: ImplementationSettings,
         chemChannel: Int?,
-        chemIncludeInMass: Bool
+        chemIncludeInMass: Bool,
+        matterWeights: [Float]? = nil
     ) {
         self.sx = sx
         self.sy = sy
@@ -64,6 +66,7 @@ public struct BatchedConfig: Sendable {
         self.implementation = implementation
         self.chemChannel = chemChannel
         self.chemIncludeInMass = chemIncludeInMass
+        self.matterWeights = matterWeights
     }
 }
 
@@ -83,7 +86,9 @@ public func batchedConfigFromRuntime(_ config: LeniaRuntimeConfig) -> BatchedCon
         border: config.border,
         implementation: config.implementation,
         chemChannel: chemChannel,
-        chemIncludeInMass: chemInclude
+        chemIncludeInMass: chemInclude,
+        matterWeights: flowMatterWeights(channels: config.channels, excludedChannels: flowExcludedMassChannels(
+            channels: config.channels, chemotaxis: config.chemotaxis, food: config.food))
     )
 }
 
@@ -392,6 +397,8 @@ private func reshapeKernelParams(_ values: MLXArray) -> MLXArray {
     }
 }
 
+// Sobel uses the positive derivative (convolution, not correlation), with
+// components ordered by spatial array axis: [axis 1, axis 2] for batched fields.
 private func sobelBatchedPeriodic(_ A: MLXArray) -> MLXArray {
     let a00 = rollMultiAxis(A, shifts: [1, 1], axes: [1, 2])
     let a01 = rollMultiAxis(A, shifts: [1, 0], axes: [1, 2])
@@ -412,13 +419,13 @@ private func sobelBatchedPeriodic(_ A: MLXArray) -> MLXArray {
     let gxLeft2 = gxLeft + a20
     let gxRight = a02 + a12Scaled
     let gxRight2 = gxRight + a22
-    let gx = gxLeft2 - gxRight2
+    let gx = gxRight2 - gxLeft2
 
     let gyLeft = a00 + a01Scaled
     let gyLeft2 = gyLeft + a02
     let gyRight = a20 + a21Scaled
     let gyRight2 = gyRight + a22
-    let gy = gyLeft2 - gyRight2
+    let gy = gyRight2 - gyLeft2
 
     return MLX.stacked([gy, gx], axis: 3)
 }
@@ -458,18 +465,18 @@ private func sobelBatched(_ A: MLXArray, useTorus: Bool) -> MLXArray {
     let gxLeft2 = gxLeft + a20
     let gxRight = a02 + a12Scaled
     let gxRight2 = gxRight + a22
-    let gx = gxLeft2 - gxRight2
+    let gx = gxRight2 - gxLeft2
 
     let gyLeft = a00 + a01Scaled
     let gyLeft2 = gyLeft + a02
     let gyRight = a20 + a21Scaled
     let gyRight2 = gyRight + a22
-    let gy = gyLeft2 - gyRight2
+    let gy = gyRight2 - gyLeft2
 
     return MLX.stacked([gy, gx], axis: 3)
 }
 
-private func sobelBatched(_ A: MLXArray, gradientBoundary: String) -> MLXArray {
+func sobelBatched(_ A: MLXArray, gradientBoundary: String) -> MLXArray {
     switch gradientBoundary {
     case "periodic":
         return sobelBatchedPeriodic(A)
@@ -480,7 +487,11 @@ private func sobelBatched(_ A: MLXArray, gradientBoundary: String) -> MLXArray {
     }
 }
 
-private func massField(_ A: MLXArray, chemChannel: Int?, includeInMass: Bool) -> MLXArray {
+private func massField(_ A: MLXArray, chemChannel: Int?, includeInMass: Bool, matterWeights: [Float]? = nil) -> MLXArray {
+    if let matterWeights {
+        precondition(matterWeights.count == A.shape[3])
+        return (A * MLXArray(matterWeights).reshaped([1, 1, 1, -1])).sum(axis: -1, keepDims: true)
+    }
     let total = A.sum(axis: -1, keepDims: true)
     guard let channel = chemChannel, !includeInMass else {
         return total
@@ -511,6 +522,7 @@ func computeFlow(
     growthProfile: String = "gaussian",
     chemChannel: Int?,
     chemIncludeInMass: Bool,
+    matterWeights: [Float]? = nil,
     dd: Int,
     sigma: Float,
     wallPotential: MLXArray? = nil,
@@ -522,10 +534,18 @@ func computeFlow(
         thetaA: thetaA, n: n,
         gradientBoundary: gradientBoundary, alphaMode: alphaMode, flowClip: flowClip,
         growthProfile: growthProfile,
-        chemChannel: chemChannel, chemIncludeInMass: chemIncludeInMass,
+        chemChannel: chemChannel, chemIncludeInMass: chemIncludeInMass, matterWeights: matterWeights,
         dd: dd, sigma: sigma, wallPotential: wallPotential,
         gatherBeforeFFT: gatherBeforeFFT
     ).flow
+}
+
+// A channel mask is a sum over selected kernels. Matmul can silently use TF32
+// on supported GPUs even with Float32 arrays, introducing error before Sobel.
+private func sumFlowGrowthChannels(_ growth: MLXArray, mask: MLXArray) -> MLXArray {
+    MLX.stacked((0..<mask.shape[0]).map { channel in
+        (growth * mask[channel]).sum(axis: -1)
+    }, axis: -1)
 }
 
 // Same math as the step's flow stage, but also returns the per-channel growth
@@ -547,6 +567,7 @@ func computeFlowAndGrowth(
     growthProfile: String = "gaussian",
     chemChannel: Int?,
     chemIncludeInMass: Bool,
+    matterWeights: [Float]? = nil,
     dd: Int,
     sigma: Float,
     wallPotential: MLXArray? = nil,
@@ -567,14 +588,14 @@ func computeFlowAndGrowth(
     let UK = MLXFFT.ifft2(fAKfK, axes: [1, 2]).realPart()
 
     let G = growth(UK, m: m, s: s, h: h, profile: growthProfile)
-    let growthField = MLX.matmul(G, c1Mask.T)
+    let growthField = sumFlowGrowthChannels(G, mask: c1Mask)
     var U = growthField
     if let wp = wallPotential {
         U = U + wp
     }
 
     let nablaU = sobelBatched(U, gradientBoundary: gradientBoundary)
-    let mass = massField(A, chemChannel: chemChannel, includeInMass: chemIncludeInMass)
+    let mass = massField(A, chemChannel: chemChannel, includeInMass: chemIncludeInMass, matterWeights: matterWeights)
     let nablaA = sobelBatched(mass, gradientBoundary: gradientBoundary)
 
     let thetaArr = MLXArray(thetaA)
@@ -631,7 +652,7 @@ public func flowGrowthVizFields(
         alphaMode: config.implementation.alphaMode,
         flowClip: config.implementation.flowClip,
         growthProfile: config.implementation.growthProfile,
-        chemChannel: config.chemChannel, chemIncludeInMass: config.chemIncludeInMass,
+        chemChannel: config.chemChannel, chemIncludeInMass: config.chemIncludeInMass, matterWeights: config.matterWeights,
         dd: config.dd, sigma: config.sigma, wallPotential: wallPotential
     )
 
@@ -652,7 +673,7 @@ public func flowGrowthVizFields(
     )
 }
 
-private func reintegrationBatched(
+func reintegrationBatched(
     _ X: MLXArray,
     F: MLXArray,
     posGrid: MLXArray,
@@ -676,7 +697,7 @@ private func reintegrationBatched(
     let zeroArr = MLXArray(Float(0.0))
     let halfArr = MLXArray(Float(0.5))
     let minArr = MLXArray([Float(sigma), Float(sigma)]).reshaped([1, 1, 1, 2, 1])
-    let maxArr = MLXArray([Float(sy) - sigma, Float(sx) - sigma]).reshaped([1, 1, 1, 2, 1])
+    let maxArr = MLXArray([Float(sx) - sigma, Float(sy) - sigma]).reshaped([1, 1, 1, 2, 1])
 
     for dx in -dd...dd {
         for dy in -dd...dd {
@@ -697,7 +718,7 @@ private func reintegrationBatched(
                 for ix in [-sx, 0, sx] {
                     for iy in [-sy, 0, sy] {
                         if ix == 0 && iy == 0 { continue }
-                        let shiftArr = MLXArray([Float(iy), Float(ix)]).reshaped([1, 1, 1, 2, 1])
+                        let shiftArr = MLXArray([Float(ix), Float(iy)]).reshaped([1, 1, 1, 2, 1])
                         let murShifted = mur + shiftArr
                         let dCandidate = MLX.abs(posGrid - murShifted)
                         dMin = MLX.minimum(dMin, dCandidate)
@@ -709,8 +730,8 @@ private func reintegrationBatched(
             let sz2 = sz1 + sigmaArr
             let sz = MLX.clip(sz2, min: zeroArr, max: clipMaxArr)
 
-            let szY = sz[0..., 0..., 0..., 0, 0...]
-            let szX = sz[0..., 0..., 0..., 1, 0...]
+            let szX = sz[0..., 0..., 0..., 0, 0...]
+            let szY = sz[0..., 0..., 0..., 1, 0...]
             let area = szY * szX
 
             let contribution = Xr * area
@@ -743,6 +764,7 @@ public func leniaStepBatched(
     useTorus: Bool,
     chemChannel: Int?,
     chemIncludeInMass: Bool,
+    matterWeights: [Float]? = nil,
     sx: Int,
     sy: Int,
     wallPotential: MLXArray? = nil,
@@ -763,7 +785,7 @@ public func leniaStepBatched(
         flowClip: flowClip,
         growthProfile: growthProfile,
         chemChannel: chemChannel,
-        chemIncludeInMass: chemIncludeInMass,
+        chemIncludeInMass: chemIncludeInMass, matterWeights: matterWeights,
         dd: dd,
         sigma: sigma,
         wallPotential: wallPotential,
@@ -826,7 +848,8 @@ public final class FlowLeniaBatched: @unchecked Sendable {
         let coordsY = MLXArray(Array(0..<config.sy).map { Float($0) })
         let (X, Y) = meshgrid(coordsX, coordsY)
         let halfArr = MLXArray(Float(0.5))
-        var pos = MLX.stacked([Y, X], axis: -1) + halfArr
+        // Our meshgrid uses ij indexing; JAX defaults to xy, so its [Y, X] must not be copied here.
+        var pos = MLX.stacked([X, Y], axis: -1) + halfArr
         pos = pos.expandedDimensions(axis: 0)
         self.posGrid = pos.expandedDimensions(axis: -1)
 
@@ -849,6 +872,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
         let growthProfile = config.implementation.growthProfile
         let chemChannel = config.chemChannel
         let chemIncludeInMass = config.chemIncludeInMass
+        let matterWeights = config.matterWeights
 
         if config.implementation.mode == "qd24_additive_v1" {
             self.flowFn = compile { (inputs: [MLXArray]) -> [MLXArray] in
@@ -904,7 +928,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
                     flowClip: flowClip,
                     growthProfile: growthProfile,
                     chemChannel: chemChannel,
-                    chemIncludeInMass: chemIncludeInMass,
+                    chemIncludeInMass: chemIncludeInMass, matterWeights: matterWeights,
                     dd: dd,
                     sigma: sigma,
                     wallPotential: wallPotential
@@ -935,7 +959,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
                     flowClip: flowClip,
                     growthProfile: growthProfile,
                     chemChannel: chemChannel,
-                    chemIncludeInMass: chemIncludeInMass,
+                    chemIncludeInMass: chemIncludeInMass, matterWeights: matterWeights,
                     dd: dd,
                     sigma: sigma
                 )
@@ -1017,7 +1041,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
             growthProfile: config.implementation.growthProfile,
             useTorus: useTorus,
             chemChannel: config.chemChannel,
-            chemIncludeInMass: config.chemIncludeInMass,
+            chemIncludeInMass: config.chemIncludeInMass, matterWeights: config.matterWeights,
             sx: config.sx,
             sy: config.sy,
             wallPotential: wallPotential
@@ -1097,6 +1121,7 @@ func computeFlowWithParams(
     flowClip: String,
     chemChannel: Int?,
     chemIncludeInMass: Bool,
+    matterWeights: [Float]? = nil,
     dd: Int,
     sigma: Float,
     wallPotential: MLXArray? = nil
@@ -1134,14 +1159,14 @@ func computeFlowWithParams(
     let bellShifted = bellScaled - MLXArray(1.0)
 
     let G = bellShifted * localH
-    var U = MLX.matmul(G, c1Mask.T)
+    var U = sumFlowGrowthChannels(G, mask: c1Mask)
 
     if let wp = wallPotential {
         U = U + wp
     }
 
     let nablaU = sobelBatched(U, gradientBoundary: gradientBoundary)
-    let mass = massField(A, chemChannel: chemChannel, includeInMass: chemIncludeInMass)
+    let mass = massField(A, chemChannel: chemChannel, includeInMass: chemIncludeInMass, matterWeights: matterWeights)
     let nablaA = sobelBatched(mass, gradientBoundary: gradientBoundary)
 
     let thetaArr = MLXArray(thetaA)
@@ -1214,7 +1239,7 @@ private func reintegrationParamsBatched(
     let halfArr = MLXArray(Float(0.5))
     let eps = MLXArray(Float(1e-10))
     let minArr = MLXArray([Float(sigma), Float(sigma)]).reshaped([1, 1, 1, 2, 1])
-    let maxArr = MLXArray([Float(sy) - sigma, Float(sx) - sigma]).reshaped([1, 1, 1, 2, 1])
+    let maxArr = MLXArray([Float(sx) - sigma, Float(sy) - sigma]).reshaped([1, 1, 1, 2, 1])
 
     for dx in -dd...dd {
         for dy in -dd...dd {
@@ -1236,7 +1261,7 @@ private func reintegrationParamsBatched(
                 for ix in [-sx, 0, sx] {
                     for iy in [-sy, 0, sy] {
                         if ix == 0 && iy == 0 { continue }
-                        let shiftArr = MLXArray([Float(iy), Float(ix)]).reshaped([1, 1, 1, 2, 1])
+                        let shiftArr = MLXArray([Float(ix), Float(iy)]).reshaped([1, 1, 1, 2, 1])
                         let murShifted = mur + shiftArr
                         let dCandidate = MLX.abs(posGrid - murShifted)
                         dMin = MLX.minimum(dMin, dCandidate)
@@ -1248,8 +1273,8 @@ private func reintegrationParamsBatched(
             let sz2 = sz1 + sigmaArr
             let sz = MLX.clip(sz2, min: zeroArr, max: clipMaxArr)
 
-            let szY = sz[0..., 0..., 0..., 0, 0...]
-            let szX = sz[0..., 0..., 0..., 1, 0...]
+            let szX = sz[0..., 0..., 0..., 0, 0...]
+            let szY = sz[0..., 0..., 0..., 1, 0...]
             let area = szY * szX
 
             let nX = Ar * area
@@ -1409,6 +1434,7 @@ public func leniaStepParamsBatched(
     implementationMode: String,
     chemChannel: Int?,
     chemIncludeInMass: Bool,
+    matterWeights: [Float]? = nil,
     sx: Int,
     sy: Int,
     wallPotential: MLXArray? = nil
@@ -1429,7 +1455,7 @@ public func leniaStepParamsBatched(
                                    alphaMode: alphaMode,
                                    flowClip: flowClip,
                                    chemChannel: chemChannel,
-                                   chemIncludeInMass: chemIncludeInMass,
+                                   chemIncludeInMass: chemIncludeInMass, matterWeights: matterWeights,
                                    dd: dd, sigma: sigma,
                                    wallPotential: wallPotential)
     return reintegrationParamsBatched(A, P, F: F, posGrid: posGrid,
@@ -1482,7 +1508,8 @@ public final class FlowLeniaParamsBatched: @unchecked Sendable {
         let coordsY = MLXArray(Array(0..<config.sy).map { Float($0) })
         let (X, Y) = meshgrid(coordsX, coordsY)
         let halfArr = MLXArray(Float(0.5))
-        var pos = MLX.stacked([Y, X], axis: -1) + halfArr
+        // Our meshgrid uses ij indexing; JAX defaults to xy, so its [Y, X] must not be copied here.
+        var pos = MLX.stacked([X, Y], axis: -1) + halfArr
         pos = pos.expandedDimensions(axis: 0)
         self.posGrid = pos.expandedDimensions(axis: -1)
     }
@@ -1511,7 +1538,7 @@ public final class FlowLeniaParamsBatched: @unchecked Sendable {
             useTorus: useTorus,
             implementationMode: implementationMode,
             chemChannel: config.chemChannel,
-            chemIncludeInMass: config.chemIncludeInMass,
+            chemIncludeInMass: config.chemIncludeInMass, matterWeights: config.matterWeights,
             sx: config.sx,
             sy: config.sy,
             wallPotential: wallPotential

@@ -48,7 +48,7 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
         let coordsX = MLXArray((0..<sx).map { Float($0) })
         let coordsY = MLXArray((0..<sy).map { Float($0) })
         let (X, Y) = meshgrid(coordsX, coordsY)
-        var pos = MLX.stacked([Y, X], axis: -1) + MLXArray(Float(0.5))
+        var pos = MLX.stacked([X, Y], axis: -1) + MLXArray(Float(0.5))
         pos = pos.expandedDimensions(axis: 0)
         return pos.expandedDimensions(axis: -1)
     }
