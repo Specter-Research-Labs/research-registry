@@ -38,6 +38,20 @@ releases.specterlab.org {
     file_server browse
 }
 
+lab.specterlab.org {
+    tls /etc/caddy/certs/lab.specterlab.org.pem /etc/caddy/certs/lab.specterlab.org.key
+    encode zstd gzip
+    @push path /api/push/*
+    request_body @push {
+        max_size 100MB
+    }
+    @interactive not path /api/push/*
+    request_body @interactive {
+        max_size 40KB
+    }
+    reverse_proxy 127.0.0.1:8921
+}
+
 review.specterlab.org {
     tls /etc/caddy/certs/review.specterlab.org.pem /etc/caddy/certs/review.specterlab.org.key
     encode zstd gzip
