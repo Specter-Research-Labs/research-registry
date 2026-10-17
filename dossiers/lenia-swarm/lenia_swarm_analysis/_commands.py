@@ -144,6 +144,19 @@ ANALYSIS_GROUPS = (
         ),
     ),
     CommandGroup(
+        name="observer",
+        module="observer._cli",
+        help="Prequential observer measurements on replay states",
+        prog="lenia-swarm-observer",
+        description="Epiplexity, transfer geometry and conditional codelength of replayed creatures",
+        package="lenia_swarm_analysis.observer",
+        commands=(
+            Subcommand("measure", "measure", "S and H per creature and observer"),
+            Subcommand("transfer", "transfer", "Cross-creature transfer matrix"),
+            Subcommand("conditional", "conditional", "Conditional codelength for creature pairs"),
+        ),
+    ),
+    CommandGroup(
         name="agda",
         module="agda._cli",
         help="Agda proof generation tools",

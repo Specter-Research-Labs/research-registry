@@ -71,6 +71,10 @@ struct ReplaySpecimenManifest: Codable {
     let capturedSteps: [Int]?
     let sampleCount: Int?
     let recordEvery: Int?
+    /// Little-endian Float32 [samples, height, width, channels] in trace-row order; each row's
+    /// stateSha256 hashes its frame of this file.
+    let developmentStatePath: String?
+    let developmentStateShape: [Int]?
 }
 
 struct ReplayBatchSummary: Codable {
@@ -89,13 +93,21 @@ struct ReplayExecutionOutcome {
     let resultData: SimulationResultData
     let replayCreature: SavedCreature
     let activityRecord: ActivitySummaryRecord?
-    let developmentTrace: [MorphospaceDevelopmentSample]?
+    let developmentTrace: DevelopmentTraceCollector?
+}
+
+struct DevelopmentTraceOptions {
+    let interval: Int
+    let fieldResolution: Int
+    let recordState: Bool
 }
 
 /// Reference collector so the @escaping FrameCapture stateHandler can accumulate per-step samples
 /// during the synchronous rollout without mutable-capture friction.
 final class DevelopmentTraceCollector {
     var samples: [MorphospaceDevelopmentSample] = []
+    var state = Data()
+    var stateShape: [Int] = []
 }
 
 func developmentTraceStride(interval: Int, steps: Int) -> Int {
@@ -174,8 +186,7 @@ private func replayExportProjection(
 func executeReplayResolvedInput(
     _ resolvedInput: ReplayResolvedInput,
     runID: String,
-    developmentTraceInterval: Int? = nil,
-    developmentFieldResolution: Int = 0
+    developmentTrace: DevelopmentTraceOptions? = nil
 ) throws -> ReplayExecutionOutcome {
     switch resolvedInput.executionPlan {
     case let .flow(baseConfig, searchConfig):
@@ -212,14 +223,14 @@ func executeReplayResolvedInput(
         ])
         let runtimeConfig = try loadRuntimeConfig(from: researchEncodedJSON(replayBaseConfig))
         let engine = SearchEngine(runtimeConfig: runtimeConfig)
-        let developmentCollector = developmentTraceInterval != nil ? DevelopmentTraceCollector() : nil
+        let developmentCollector = developmentTrace != nil ? DevelopmentTraceCollector() : nil
         var developmentCapture: FrameCapture?
-        if let interval = developmentTraceInterval, let collector = developmentCollector {
+        if let options = developmentTrace, let collector = developmentCollector {
             let useTorus = runtimeConfig.border == "torus"
             let borderMode = runtimeConfig.border
             let massChannel = replaySearchConfig.massChannel
             let occupancyThreshold = replaySearchConfig.occupancyThreshold
-            let traceStride = developmentTraceStride(interval: interval, steps: replaySearchConfig.steps)
+            let traceStride = developmentTraceStride(interval: options.interval, steps: replaySearchConfig.steps)
             developmentCapture = FrameCapture(
                 stride: traceStride,
                 includeWarmup: true,
@@ -236,8 +247,12 @@ func executeReplayResolvedInput(
                         occupancyThreshold: occupancyThreshold,
                         useTorus: useTorus,
                         borderMode: borderMode,
-                        fieldResolution: developmentFieldResolution
+                        fieldResolution: options.fieldResolution
                     ))
+                    if options.recordState {
+                        values.withUnsafeBytes { collector.state.append(contentsOf: $0) }
+                        collector.stateShape = [collector.samples.count, height, width, channels]
+                    }
                 }
             )
         }
@@ -276,7 +291,7 @@ func executeReplayResolvedInput(
             resultData: resultData,
             replayCreature: replayCreature,
             activityRecord: activityRecord,
-            developmentTrace: developmentCollector?.samples
+            developmentTrace: developmentCollector
         )
     case let .qd24(payload):
         let configHash = try researchConfigHash([
@@ -323,8 +338,7 @@ func materializeReplayBatch(
     outputURL: URL,
     runID: String,
     exportEnabled: Bool,
-    developmentTraceInterval: Int? = nil,
-    developmentFieldResolution: Int = 0,
+    developmentTrace: DevelopmentTraceOptions? = nil,
     logger: Logger
 ) throws -> ReplayBatchSummary {
     guard !inputs.isEmpty else {
@@ -360,8 +374,7 @@ func materializeReplayBatch(
         let execution = try executeReplayResolvedInput(
             resolvedInput,
             runID: runID,
-            developmentTraceInterval: developmentTraceInterval,
-            developmentFieldResolution: developmentFieldResolution
+            developmentTrace: developmentTrace
         )
         let configHash = execution.configHash
         let replayCreature = execution.replayCreature
@@ -429,7 +442,10 @@ func materializeReplayBatch(
         var developmentTracePath: String?
         var capturedSteps: [Int]?
         var developmentSampleCount: Int?
-        if let trace = execution.developmentTrace, !trace.isEmpty {
+        var developmentStatePath: String?
+        var developmentStateShape: [Int]?
+        if let collector = execution.developmentTrace, !collector.samples.isEmpty {
+            let trace = collector.samples
             let traceURL = campaignDir.appendingPathComponent("development-trace.jsonl")
             let sampleEncoder = JSONEncoder()
             var traceData = Data()
@@ -441,6 +457,12 @@ func materializeReplayBatch(
             developmentTracePath = traceURL.path
             capturedSteps = trace.map { $0.step }
             developmentSampleCount = trace.count
+            if !collector.state.isEmpty {
+                let stateURL = campaignDir.appendingPathComponent("development-state.f32")
+                try collector.state.write(to: stateURL)
+                developmentStatePath = stateURL.path
+                developmentStateShape = collector.stateShape
+            }
         }
 
         let manifest = ReplaySpecimenManifest(
@@ -464,7 +486,9 @@ func materializeReplayBatch(
             developmentTracePath: developmentTracePath,
             capturedSteps: capturedSteps,
             sampleCount: developmentSampleCount,
-            recordEvery: developmentTracePath != nil ? developmentTraceInterval : nil
+            recordEvery: developmentTracePath != nil ? developmentTrace?.interval : nil,
+            developmentStatePath: developmentStatePath,
+            developmentStateShape: developmentStateShape
         )
         try replayEncoder().encode(manifest).write(to: campaignDir.appendingPathComponent("replay-manifest.json"))
         manifests.append(manifest)
