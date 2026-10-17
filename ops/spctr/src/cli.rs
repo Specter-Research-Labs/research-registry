@@ -372,9 +372,11 @@ pub enum TokenTarget {
 #[derive(Debug, Subcommand)]
 enum DocCommand {
     /// Render <dir>/report.md for the review app (<dir>/report.html) or for the
-    /// site (site/<published path>/index.html).
+    /// site (site/<published path>/index.html). Site documents that link to each
+    /// other's sections can be built together in one batch.
     Build {
-        dir: camino::Utf8PathBuf,
+        #[arg(required = true)]
+        dirs: Vec<camino::Utf8PathBuf>,
         #[arg(long, value_enum, default_value_t = doc::Target::Lab)]
         target: doc::Target,
         #[arg(long)]
@@ -1109,8 +1111,8 @@ fn dispatch_tokens(command: TokensCommand) -> anyhow::Result<()> {
 fn dispatch_doc(command: DocCommand) -> anyhow::Result<()> {
     let repo_root = crate::manifest::repo_root()?;
     match command {
-        DocCommand::Build { dir, target, out } => {
-            doc::build(&repo_root, &dir, target, out.as_deref()).map(|_| ())
+        DocCommand::Build { dirs, target, out } => {
+            doc::build(&repo_root, &dirs, target, out.as_deref()).map(|_| ())
         }
     }
 }
