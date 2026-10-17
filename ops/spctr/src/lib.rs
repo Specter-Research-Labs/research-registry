@@ -7,6 +7,7 @@ pub mod design_tokens_css;
 pub mod design_tokens_email;
 pub mod design_tokens_typst;
 pub mod dispatch;
+pub mod doc;
 pub mod drivers;
 pub mod exec;
 pub mod graph;

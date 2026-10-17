@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$pagetitle$</title>
+$for(header-includes)$
+$header-includes$
+$endfor$
+</head>
+<body>
+<div class="rk-shell">
+<div class="rk-layout">
+<header class="rk-hero">
+<p class="rk-kicker">$kicker$</p>
+<h1>$title$</h1>
+<p class="rk-subtitle">$subtitle$</p>
+<p class="rk-byline">$authors$</p>
+<p class="rk-meta">Report · revision $revision$ · $rk-minutes$ min read</p>
+</header>
+$rk-toc$
+<main class="rk-article">
+<section class="rk-abstract" aria-label="Abstract">
+$abstract$
+</section>
+$body$
+$rk-endmatter$
+</main>
+</div>
+</div>
+</body>
+</html>

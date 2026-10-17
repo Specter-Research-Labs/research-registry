@@ -2,7 +2,7 @@ use clap::{Args, CommandFactory, FromArgMatches, Parser, Subcommand, ValueEnum};
 use serde::Serialize;
 
 use crate::{
-    brand, ci, dispatch, exec, graph, registry, registry_sync, release, report, site, surface,
+    brand, ci, dispatch, doc, exec, graph, registry, registry_sync, release, report, site, surface,
     sync, tokens, updates, workspace,
 };
 
@@ -53,6 +53,11 @@ enum CommandGroup {
     Tokens {
         #[command(subcommand)]
         command: TokensCommand,
+    },
+    #[command(about = "Render report sources to self-contained HTML pages")]
+    Doc {
+        #[command(subcommand)]
+        command: DocCommand,
     },
     Updates {
         #[command(subcommand)]
@@ -365,6 +370,16 @@ pub enum TokenTarget {
 }
 
 #[derive(Debug, Subcommand)]
+enum DocCommand {
+    /// Render <dir>/report.md to <dir>/report.html.
+    Build {
+        dir: camino::Utf8PathBuf,
+        #[arg(long)]
+        out: Option<camino::Utf8PathBuf>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
 pub enum TokensCommand {
     Generate {
         #[arg(long)]
@@ -622,6 +637,7 @@ pub fn run() -> anyhow::Result<()> {
         CommandGroup::Series { command } => dispatch_series(command, cli.json),
         CommandGroup::Site { command } => dispatch_site(command),
         CommandGroup::Tokens { command } => dispatch_tokens(command),
+        CommandGroup::Doc { command } => dispatch_doc(command),
         CommandGroup::Updates { command } => dispatch_updates(*command, cli.json),
         CommandGroup::Dispatch { command } => dispatch_dispatch(command),
         CommandGroup::Release { command } => dispatch_release(command, cli.json),
@@ -1085,6 +1101,13 @@ fn dispatch_site(command: SiteCommand) -> anyhow::Result<()> {
 fn dispatch_tokens(command: TokensCommand) -> anyhow::Result<()> {
     let repo_root = crate::manifest::repo_root()?;
     tokens::dispatch(&repo_root, command)
+}
+
+fn dispatch_doc(command: DocCommand) -> anyhow::Result<()> {
+    let repo_root = crate::manifest::repo_root()?;
+    match command {
+        DocCommand::Build { dir, out } => doc::build(&repo_root, &dir, out.as_deref()),
+    }
 }
 
 fn dispatch_updates(command: UpdatesCommand, json: bool) -> anyhow::Result<()> {
