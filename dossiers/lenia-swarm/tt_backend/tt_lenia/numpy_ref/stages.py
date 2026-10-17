@@ -1,7 +1,9 @@
 """Pure-NumPy implementations of all 7 Flow Lenia pipeline stages.
 
-Each function matches the corresponding Swift code in FlowLenia.swift
-and the paper equations in docs/internals/FlowLeniaImplementationMap.md.
+Each function follows the paper equations in docs/internals/FlowLeniaImplementationMap.md.
+Flow and position components are ordered (axis 2, axis 1), the reverse of the native
+integrator's array-axis order (docs/flow-spatial-conventions.md); only mass and kernels
+cross that boundary, and the transport is identical.
 
 Tensor layout: [batch, sx, sy, ...] with float32 throughout.
 """
@@ -77,8 +79,8 @@ def mass_field(
 def sobel_periodic(A: np.ndarray) -> np.ndarray:
     """Sobel gradient on [batch, sx, sy, C] with periodic boundary.
 
-    Returns [batch, sx, sy, 2, C] where dim 3 is (gy, gx).
-    Matches sobelBatchedPeriodic in FlowLenia.swift: stacked([gy, gx], axis: 3).
+    Returns [batch, sx, sy, 2, C] where dim 3 is the ascending gradient
+    (gy = d/d axis 2, gx = d/d axis 1), the component order of build_pos_grid.
     """
     a00 = np.roll(np.roll(A, 1, axis=1), 1, axis=2)
     a01 = np.roll(A, 1, axis=1)
@@ -89,8 +91,8 @@ def sobel_periodic(A: np.ndarray) -> np.ndarray:
     a21 = np.roll(A, -1, axis=1)
     a22 = np.roll(np.roll(A, -1, axis=1), -1, axis=2)
 
-    gx = (a00 + 2.0 * a10 + a20) - (a02 + 2.0 * a12 + a22)
-    gy = (a00 + 2.0 * a01 + a02) - (a20 + 2.0 * a21 + a22)
+    gy = (a02 + 2.0 * a12 + a22) - (a00 + 2.0 * a10 + a20)
+    gx = (a20 + 2.0 * a21 + a22) - (a00 + 2.0 * a01 + a02)
 
     return np.stack([gy, gx], axis=3)
 
@@ -215,9 +217,9 @@ def mass_summary(A: np.ndarray) -> dict[str, np.ndarray]:
 
 
 def build_pos_grid(sx: int, sy: int) -> np.ndarray:
-    """Build position grid matching FlowLenia.swift posGrid construction.
+    """Build the transport position grid.
 
-    Returns [1, sx, sy, 2, 1] where dim 3 is (y, x) and values are cell centers (i+0.5).
+    Returns [1, sx, sy, 2, 1] where dim 3 is (y = axis 2, x = axis 1) and values are cell centers (i+0.5).
     """
     coords_x = np.arange(sx, dtype=np.float32)
     coords_y = np.arange(sy, dtype=np.float32)
