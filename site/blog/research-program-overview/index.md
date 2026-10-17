@@ -36,7 +36,7 @@ A controlled comparison tested an appealing prediction, that theorems with more 
 
 [Flow Lenia](/dossiers/lenia-swarm/) lets us inspect the fields, initial conditions and update rules behind each simulated body. We can measure its shape, replay its development and change one part of the experiment while retaining the rest.
 
-The [morphospace comparison](/dossiers/lenia-swarm/morphospace/) puts Lenia patterns, EmbryoMaker snapshots and fish landmark configurations into twelve shared shape measurements. It also shows the cost of that common description: closeness in the shared measurements need not mean closeness in a system's native description. The fish-near group gave us a concrete lead, but its five densely checked cases did not survive both loop-transport controls.
+The morphospace comparison puts Lenia patterns, EmbryoMaker snapshots and fish landmark configurations into twelve shared shape measurements. It also shows the cost of that common description: closeness in the shared measurements need not mean closeness in a system's native description. The fish-near group gave us a concrete lead, but its five densely checked cases did not survive both loop-transport controls.
 
 The next question is whether a body's shape helps predict its response to an obstacle. Existing shape/activity and shape/locomotion comparisons provide a starting point. The new test should compare predictions based on shape alone with predictions that also use rule parameters, on the same held-out bodies. A particularly informative failure would be similar-looking bodies responding differently in a way that their generating rules explain.
 
