@@ -1,10 +1,9 @@
 """Render the addenda index specimens from public source, examples, and fixtures.
 
 Run in the repository's development shell: python3 ops/render_addenda_specimens.py.
-Requires Python 3.12+, Graphviz, and Typst. No research sweeps are run.
+Requires Python 3.12+, Graphviz, Typst, and Lean 4.30.0. No research sweeps are run.
 """
 
-import ast
 import base64
 import hashlib
 import html
@@ -85,7 +84,7 @@ def save(slug, elements, *, alt, caption, sources, kind, recipe):
     pending.write_text(artifact)
     pending.replace(OUT / f"{slug}.svg")
     CATALOG[slug] = {
-        "src": f"/assets/addenda-specimens/{slug}.svg?v=20261017",
+        "src": f"/assets/addenda-specimens/{slug}.svg?v=20261017-clean",
         "alt": alt,
         "caption": caption,
         "kind": kind,
@@ -492,74 +491,172 @@ print(json.dumps(render_program(get_example('nested_constructor_apply').program)
     )
 
 
-def tools():
-    scoring = ast.parse(
-        source("addenda/lean-sorry-repos-benchmark/tests/test_scoring.py")
-    )
-    test = next(
-        node
-        for node in scoring.body
-        if isinstance(node, ast.FunctionDef)
-        and node.name.endswith("uses_item_level_any_success")
-    )
-    call = next(
-        node
-        for node in ast.walk(test)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "aggregate_verification_pass_at_k"
-    )
-    matrix = ast.literal_eval(
-        next(
-            kw.value for kw in call.keywords if kw.arg == "verification_success_by_item"
+def proof_demo():
+    receipt = json.loads(
+        python(
+            "addenda/lean-sorry-repos-benchmark",
+            r"""
+import json
+from lean_sorry_repos_benchmark.verification import SyntheticLeanVerifier, SyntheticVerificationConfig, build_synthetic_script
+verifier = SyntheticLeanVerifier(SyntheticVerificationConfig(
+    lean_cmd='lean +leanprover/lean4:v4.30.0', timeout_seconds=20,
+    imports=(), error_kind='warning', workdir=None))
+goal = 'P Q : Prop\nh : P ∧ Q\n⊢ Q ∧ P'
+attempts=[]
+for tactic in ['exact h', 'exact ⟨h.2, h.1⟩']:
+    result=verifier.verify(goal_text=goal,tactic=tactic)
+    attempts.append({'tactic':tactic,'success':result.success,
+        'exit_code':result.exit_code,'error_kind':result.error_kind,
+        'script':build_synthetic_script(goal_text=goal,tactic=tactic,imports=())})
+print(json.dumps({'lean':'4.30.0','mode':'synthetic','goal':goal,'attempts':attempts},ensure_ascii=False))
+""",
         )
     )
-    elements = []
-    for col in range(3):
-        elements.append(
-            text(370 + col * 200, 125, f"try {col + 1}", 24, text_anchor="middle")
-        )
-    for row, outcomes in enumerate(matrix):
-        elements.append(text(48, 240 + row * 115, f"item {row + 1}", 24))
-        for col, ok in enumerate(outcomes):
-            x, y = 290 + col * 200, 175 + row * 115
-            elements += [
-                rect(x, y, 160, 90, "#e0e8de" if ok else "#e4ded3"),
-                text(
-                    x + 80,
-                    y + 58,
-                    "PASS" if ok else "FAIL",
-                    25,
-                    TEAL if ok else RUST,
-                    text_anchor="middle",
-                ),
-            ]
+    bad, good = receipt["attempts"]
+    assert not bad["success"] and bad["error_kind"] == "type_mismatch"
+    assert good["success"] and good["exit_code"] == 0
+    (OUT / "proof-demo.json").write_text(
+        json.dumps(receipt, ensure_ascii=False, indent=2) + "\n"
+    )
+    gold = "#a78142"
+    elements = [
+        text(155, 95, "P ∧ Q", 46, family="serif", text_anchor="middle"),
+        text(845, 95, "Q ∧ P", 46, family="serif", text_anchor="middle"),
+    ]
+    for x, y, value, color in [
+        (155, 190, "P", TEAL),
+        (155, 390, "Q", gold),
+        (845, 190, "Q", gold),
+        (845, 390, "P", TEAL),
+    ]:
+        elements += [
+            f'<circle cx="{x}" cy="{y}" r="43" fill="{color}" opacity=".12"/>',
+            text(x, y + 16, value, 48, color, family="serif", text_anchor="middle"),
+        ]
+    for path, color in [
+        ("M210,190 C430,190 570,390 790,390", TEAL),
+        ("M210,390 C430,390 570,190 790,190", gold),
+    ]:
+        elements += [
+            f'<path d="{path}" fill="none" stroke="{PAPER}" stroke-width="18"/>',
+            f'<path d="{path}" fill="none" stroke="{color}" stroke-width="7"/>',
+        ]
+    elements += [
+        text(280, 164, "h.1", 28, TEAL),
+        text(280, 438, "h.2", 28, gold),
+        text(70, 520, "×", 38, RUST),
+        text(115, 520, bad["tactic"], 30, RUST),
+        text(115, 558, bad["error_kind"], 28, RUST),
+        text(430, 520, "✓", 38, TEAL),
+        text(480, 520, good["tactic"], 32, TEAL),
+        text(480, 558, f"exit {good['exit_code']}", 28, TEAL),
+    ]
     save(
         "lean-sorry-repos-benchmark",
         elements,
-        alt="The scoring unit test’s three-by-three verification outcome matrix",
-        caption="The actual pass-at-k scoring test fixture. These are test inputs, not benchmark performance.",
-        sources=["addenda/lean-sorry-repos-benchmark/tests/test_scoring.py"],
-        kind="Scoring fixture",
-        recipe="Read verification_success_by_item from the named scoring test via Python’s AST.",
+        alt="A checked Lean proof swaps the two components of a conjunction, with crossing proof wires; exact h is rejected and the reordered pair closes the goal",
+        caption="An executed synthetic verification demo on P ∧ Q ⊢ Q ∧ P. Lean rejects exact h with a type mismatch and accepts exact ⟨h.2, h.1⟩ through the harness. Demonstration, not a benchmark result.",
+        sources=[
+            "addenda/lean-sorry-repos-benchmark/lean_sorry_repos_benchmark/verification.py",
+            "ops/render_addenda_specimens.py",
+        ],
+        kind="Executed verifier demo",
+        recipe="Run the actual SyntheticLeanVerifier with Lean 4.30.0 on the two displayed tactics; draw the projections in the accepted proof term.",
     )
-    test = source("addenda/tinygrad-benchmarks/tests/test_compare.py")
-    assert "-VALUE = 'old'" in test and "+VALUE = 'new'" in test
+    CATALOG["lean-sorry-repos-benchmark"]["src"] = (
+        "/assets/addenda-specimens/lean-sorry-repos-benchmark.svg?v=20261017-proof"
+    )
+    CATALOG["lean-sorry-repos-benchmark"]["dataHref"] = (
+        "/assets/addenda-specimens/proof-demo.json"
+    )
+
+
+def tinygrad_evaluation():
+    prompt = source("addenda/tinygrad-benchmarks/tinygrad_benchmarks/prompts.py")
+    runner = source("addenda/tinygrad-benchmarks/tinygrad_benchmarks/runner.py")
+    comparison = source("addenda/tinygrad-benchmarks/tinygrad_benchmarks/compare.py")
+    assert "Do not rely on git history or network access." in prompt
+    assert '["git", "archive"' in runner
+    assert 'env["TGBENCH_NO_GIT"] = "1"' in runner
+    assert "patch_line_jaccard" in comparison and "success_nonexact" in comparison
+    gold = "#a78142"
+    elements = [
+        '<path d="M65,100H930 M180,100C240,100 245,45 305,45H540C600,45 600,100 660,100" fill="none" stroke="#c8c1b2" stroke-width="6"/>',
+        f'<path d="M180,100C240,100 245,45 305,45H540C600,45 600,100 660,100" fill="none" stroke="{gold}" stroke-width="6"/>',
+        f'<path d="M180,110V175H350V220" fill="none" stroke="{INK}" stroke-width="3"/>',
+        f'<path d="M660,110V155H835V190" fill="none" stroke="{gold}" stroke-width="4"/>',
+        f'<path d="M225,335H300 M650,360H710V440H760" fill="none" stroke="{TEAL}" stroke-width="5"/>',
+        f'<path d="M835,325V385" fill="none" stroke="{gold}" stroke-width="5"/>',
+        f'<path d="M475,490V535" fill="none" stroke="{TEAL}" stroke-width="4"/>',
+    ]
+    for x in [65, 180, 660, 790, 930]:
+        elements.append(
+            f'<circle cx="{x}" cy="100" r="12" fill="{PAPER}" stroke="{gold if x == 660 else INK}" stroke-width="4"/>'
+        )
+    for x in [305, 420, 540]:
+        elements.append(
+            f'<circle cx="{x}" cy="45" r="9" fill="{PAPER}" stroke="{gold}" stroke-width="4"/>'
+        )
+    elements += [
+        text(180, 150, "base", 28, text_anchor="middle"),
+        text(660, 150, "merged PR", 28, gold, text_anchor="middle"),
+        rect(65, 235, 160, 190, "#e4e4d9", stroke="#c8c1b2", stroke_width="2"),
+        text(88, 278, "issue", 34),
+        rect(88, 302, 108, 7, "#bcb8aa"),
+        rect(88, 326, 93, 7, "#bcb8aa"),
+        rect(88, 350, 102, 7, "#bcb8aa"),
+        rect(88, 374, 67, 7, "#bcb8aa"),
+        rect(
+            300,
+            220,
+            350,
+            270,
+            "#e2e8de",
+            stroke=TEAL,
+            stroke_width="3",
+            stroke_dasharray="9 7",
+        ),
+        text(475, 278, "LLM", 43, TEAL, text_anchor="middle"),
+        rect(390, 305, 170, 107, PAPER, stroke="#a4bbb1", stroke_width="2"),
+        text(410, 338, "patch", 30, TEAL),
+        rect(410, 354, 126, 10, "#d8b8a5"),
+        rect(410, 376, 110, 10, "#9bbdb0"),
+        text(358, 461, ".git", 30, RUST),
+        text(520, 461, "network", 30, RUST),
+        line(349, 443, 427, 469, RUST, 3),
+        line(511, 443, 638, 469, RUST, 3),
+        rect(755, 190, 160, 135, "#e8e0ce", stroke=gold, stroke_width="2"),
+        text(778, 234, "human", 32, gold),
+        rect(778, 252, 112, 10, "#d8b8a5"),
+        rect(778, 275, 98, 10, "#9bbdb0"),
+        f'<circle cx="{835}" cy="440" r="55" fill="{PAPER}" stroke="{INK}" stroke-width="3"/>',
+        f'<path d="M805,425L815,415L825,425 M805,425V456 M825,425V456 M845,425H870 M845,442H870 M845,459H861" fill="none" stroke="{TEAL}" stroke-width="4"/>',
+        text(475, 575, "tests", 32, TEAL, text_anchor="middle"),
+        text(835, 550, "compare", 32, text_anchor="middle"),
+    ]
     save(
         "tinygrad-benchmarks",
-        [
-            text(48, 133, "tinygrad/demo.py", 27),
-            rect(40, 192, 920, 85, "#ecd9cf"),
-            text(65, 247, "-VALUE = 'old'", 37, RUST),
-            rect(40, 288, 920, 85, "#dfe7da"),
-            text(65, 343, "+VALUE = 'new'", 37, TEAL),
+        elements,
+        alt="The LLM evaluation protocol: a historical issue and pre-PR code enter an isolated, git-free offline workspace; the model patch is tested and compared with the human patch from the merged PR, held outside the workspace",
+        caption="Source-backed diagram of the coding-evaluation protocol. Prompts omit historical answers; the runner materializes a git-free tree and evaluates candidate patches; compare-gold compares them with the private historical solution. Offline containment is a runtime requirement, not a security mechanism implemented by this drawing.",
+        sources=[
+            "addenda/tinygrad-benchmarks/README.md",
+            "addenda/tinygrad-benchmarks/docs/benchmark-card.md",
+            "addenda/tinygrad-benchmarks/tinygrad_benchmarks/prompts.py",
+            "addenda/tinygrad-benchmarks/tinygrad_benchmarks/runner.py",
+            "addenda/tinygrad-benchmarks/tinygrad_benchmarks/compare.py",
         ],
-        alt="The exact old/new diff from the tinygrad patch-comparison test fixture",
-        caption="The patch-comparison test’s diff fixture. It demonstrates matching machinery, not a real tinygrad task or a speed result.",
-        sources=["addenda/tinygrad-benchmarks/tests/test_compare.py"],
-        kind="Patch fixture",
-        recipe="Typeset the unchanged old/new lines used by test_compare_attempts_to_gold_detects_close_match.",
+        kind="Coding-evaluation protocol",
+        recipe="Draw the historical-PR split, isolated model workspace, acceptance tests and retrospective human-patch comparison from the committed prompt, runner and compare-gold code.",
     )
+    CATALOG["tinygrad-benchmarks"]["src"] = (
+        "/assets/addenda-specimens/tinygrad-benchmarks.svg?v=20261017-evaluation"
+    )
+
+
+def tools():
+    proof_demo()
+    tinygrad_evaluation()
     readme = source("addenda/specter-viz/README.md")
     assert "vec![1.0, 0.82, 0.71, 0.64]" in readme
     values = [1.0, 0.82, 0.71, 0.64]

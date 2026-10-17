@@ -1,0 +1,21 @@
+{
+  "lean": "4.30.0",
+  "mode": "synthetic",
+  "goal": "P Q : Prop\nh : P ∧ Q\n⊢ Q ∧ P",
+  "attempts": [
+    {
+      "tactic": "exact h",
+      "success": false,
+      "exit_code": 1,
+      "error_kind": "type_mismatch",
+      "script": "set_option autoImplicit false\n\nexample\n  (P Q : Prop)\n  (h : P ∧ Q)\n  : Q ∧ P := by\n  exact h\n"
+    },
+    {
+      "tactic": "exact ⟨h.2, h.1⟩",
+      "success": true,
+      "exit_code": 0,
+      "error_kind": null,
+      "script": "set_option autoImplicit false\n\nexample\n  (P Q : Prop)\n  (h : P ∧ Q)\n  : Q ∧ P := by\n  exact ⟨h.2, h.1⟩\n"
+    }
+  ]
+}
