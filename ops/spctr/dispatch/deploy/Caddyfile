@@ -54,9 +54,5 @@ lab.specterlab.org {
 
 review.specterlab.org {
     tls /etc/caddy/certs/review.specterlab.org.pem /etc/caddy/certs/review.specterlab.org.key
-    encode zstd gzip
-    request_body {
-        max_size 40KB
-    }
-    reverse_proxy 127.0.0.1:8921
+    redir https://lab.specterlab.org{uri} 301
 }
