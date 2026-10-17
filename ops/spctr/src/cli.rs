@@ -72,8 +72,6 @@ enum CommandGroup {
     },
     #[command(about = "Print systems status report for Specter infrastructure")]
     Report {
-        #[arg(long, help = "Output HTML <pre> page instead of ASCII")]
-        html: bool,
         #[arg(
             long,
             help = "Render from a cached JSON file instead of collecting live data"
@@ -243,7 +241,7 @@ enum SiteCommand {
         #[arg(long)]
         write: bool,
     },
-    #[command(about = "Materialize canonical project catalog, artifact, and health feeds")]
+    #[command(about = "Materialize canonical project catalog and artifact feeds")]
     ProjectFeeds {
         #[arg(long)]
         write: bool,
@@ -282,6 +280,8 @@ enum SiteCommand {
     Stage {
         #[arg(long, help = "New or existing directory to receive the staged site")]
         output: camino::Utf8PathBuf,
+        #[arg(long, help = "Release identifier; defaults to git HEAD")]
+        release_id: Option<String>,
     },
     Publish {
         #[arg(long, help = "Release identifier; defaults to git HEAD")]
@@ -626,7 +626,7 @@ pub fn run() -> anyhow::Result<()> {
         CommandGroup::Dispatch { command } => dispatch_dispatch(command),
         CommandGroup::Release { command } => dispatch_release(command, cli.json),
         CommandGroup::Workspace { command } => dispatch_workspace(command, cli.json),
-        CommandGroup::Report { html, from_cache } => dispatch_report(html, from_cache, cli.json),
+        CommandGroup::Report { from_cache } => dispatch_report(from_cache, cli.json),
         CommandGroup::Completions { shell } => {
             let mut cmd = cli_command();
             clap_complete::generate(shell, &mut cmd, "spctr", &mut std::io::stdout());
@@ -993,14 +993,16 @@ fn dispatch_site(command: SiteCommand) -> anyhow::Result<()> {
         SiteCommand::Portal { release_root } => {
             crate::site::portal::render_portal(std::path::Path::new(&release_root))
         }
-        SiteCommand::Stage { output } => {
+        SiteCommand::Stage { output, release_id } => {
             let repo_root = crate::manifest::repo_root()?;
             let output = if output.is_absolute() {
                 output
             } else {
                 repo_root.join(output)
             };
-            crate::site::publish::stage_site(&repo_root, &output).map(|_| ())
+            let release_id =
+                crate::site::publish::resolve_release_id(&repo_root, release_id.as_deref())?;
+            crate::site::publish::stage_site(&repo_root, &output, &release_id).map(|_| ())
         }
         SiteCommand::Publish { release_id } => {
             let repo_root = crate::manifest::repo_root()?;
@@ -1273,7 +1275,7 @@ fn dispatch_release(command: ReleaseCommand, json: bool) -> anyhow::Result<()> {
     }
 }
 
-fn dispatch_report(html: bool, from_cache: Option<String>, json: bool) -> anyhow::Result<()> {
+fn dispatch_report(from_cache: Option<String>, json: bool) -> anyhow::Result<()> {
     let data = match from_cache {
         Some(path) => report::collect_from_cache(&path)?,
         None => {
@@ -1283,8 +1285,6 @@ fn dispatch_report(html: bool, from_cache: Option<String>, json: bool) -> anyhow
     };
     if json {
         println!("{}", serde_json::to_string_pretty(&data)?);
-    } else if html {
-        print!("{}", report::format_html(&data));
     } else {
         print!("{}", report::format_ascii(&data));
     }

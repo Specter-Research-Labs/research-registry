@@ -273,28 +273,6 @@ fn repo_aware_sitemap_accepts_visible_hub_page_changes() {
 }
 
 #[test]
-fn repo_aware_health_accepts_exec_evidence_changes() {
-    with_repo(|root| {
-        write(
-            root,
-            "dossiers/alpha/spctr.toml",
-            &dossier_manifest("Alpha", true, true, None),
-        );
-        let violations = spctr::site::provenance::find_provenance_violations_for_repo(
-            root,
-            [
-                "site/projects/health/index.html",
-                "site/projects/health.json",
-                "dossiers/alpha/artifacts/evidence/check.json",
-            ],
-        )
-        .unwrap();
-
-        assert!(violations.is_empty());
-    });
-}
-
-#[test]
 fn repo_aware_artifacts_accept_manifest_changes() {
     with_repo(|root| {
         write(
@@ -426,11 +404,11 @@ fn repo_aware_cabinet_page_accepts_doc_change() {
 }
 
 #[test]
-fn repo_aware_status_page_accepts_report_source_change() {
+fn repo_aware_status_page_accepts_status_source_change() {
     with_repo(|root| {
         let violations = spctr::site::provenance::find_provenance_violations_for_repo(
             root,
-            ["site/status/index.html", "ops/spctr/src/report.rs"],
+            ["site/status/index.html", "ops/spctr/src/site/status.rs"],
         )
         .unwrap();
 

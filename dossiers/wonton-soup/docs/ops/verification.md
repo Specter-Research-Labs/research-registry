@@ -1,4 +1,5 @@
 ---
+publish: false
 summary: "Release checks, representative commands and run-inspection workflows for Wonton Soup."
 ---
 

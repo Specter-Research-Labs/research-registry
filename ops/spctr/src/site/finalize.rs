@@ -10,6 +10,7 @@ use regex_lite::Regex;
 pub const SITE_NAME: &str = "Specter Labs";
 pub const TITLE_SUFFIX: &str = " | Specter Labs";
 const NOT_FOUND_PAGE: &str = "404.html";
+const ASSETS_DIR: &str = "assets/";
 const CARD_META: &str = "spctr:card";
 const NO_CARD: &str = "none";
 const CARD_TEMPLATE: &str = include_str!("og-card.typ");
@@ -243,7 +244,9 @@ fn page_title<'a>(relative: &str, title: &'a str) -> Result<&'a str> {
 }
 
 fn url_path(relative: &str) -> Option<String> {
-    if relative == NOT_FOUND_PAGE {
+    // HTML under assets/ is embedded in other pages (interactive figures), so it
+    // gets no canonical URL and stays out of sitemap.xml.
+    if relative == NOT_FOUND_PAGE || relative.starts_with(ASSETS_DIR) {
         return None;
     }
     if relative == "index.html" {
@@ -420,6 +423,7 @@ mod tests {
             ("a.webp", ""),
             ("blog/index.html", "<html><head><title>Writing | Specter Labs</title></head><body><a href=\"/blog/x/\">x</a></body></html>"),
             ("404.html", "<html><head><title>Page not found | Specter Labs</title></head><body></body></html>"),
+            ("assets/blog/fig.html", "<html><head><title>Figure | Specter Labs</title></head><body></body></html>"),
         ]);
         let report =
             finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org/").unwrap();
@@ -438,6 +442,8 @@ mod tests {
 
         let not_found = fs::read_to_string(temp.path().join("404.html")).unwrap();
         assert!(!not_found.contains("canonical"));
+        let figure = fs::read_to_string(temp.path().join("assets/blog/fig.html")).unwrap();
+        assert!(!figure.contains("canonical"));
 
         assert_eq!(
             report.canonical_urls,
@@ -445,11 +451,12 @@ mod tests {
         );
         assert_eq!(
             report.missing_description,
-            vec!["404.html", "blog/index.html"]
+            vec!["404.html", "assets/blog/fig.html", "blog/index.html"]
         );
         let sitemap = fs::read_to_string(temp.path().join("sitemap.xml")).unwrap();
         assert!(sitemap.contains("<loc>https://example.org/blog/</loc>"));
         assert!(!sitemap.contains("404"));
+        assert!(!sitemap.contains("assets"));
     }
 
     #[test]

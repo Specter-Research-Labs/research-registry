@@ -1,4 +1,5 @@
 ---
+publish: false
 summary: "Setting up the pinned Lean runtime and Python environment for Wonton Soup."
 ---
 

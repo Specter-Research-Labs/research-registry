@@ -8,7 +8,6 @@ pub mod causal_emergence_release;
 pub mod data;
 pub mod discover;
 pub mod finalize;
-pub mod health;
 pub mod inject;
 pub mod markup;
 pub mod pdf;
@@ -17,6 +16,7 @@ pub mod provenance;
 pub mod publish;
 pub mod records;
 pub mod regions;
+pub mod status;
 pub mod tokens;
 
 use anyhow::{bail, Context, Result};
@@ -35,7 +35,6 @@ struct PageRegion {
 
 struct ProjectFeeds {
     artifacts_report: artifacts::ProjectArtifactReport,
-    health_report: health::ProjectHealthReport,
 }
 
 struct SiteProjection {
@@ -158,14 +157,6 @@ fn build_from_projection(
                     regions::render_sitemap_registry(&records, &blog_posts),
                 ),
             ],
-        },
-        PageRegion {
-            template_path: "site/templates/projects/health/index.html".into(),
-            output_path: "site/projects/health/index.html".into(),
-            regions: vec![(
-                "PROJECT_HEALTH_CONTENT",
-                health::render_html(&project_feeds.health_report),
-            )],
         },
     ];
 
@@ -293,7 +284,7 @@ fn build_from_projection(
         build_updates_archive_if_present(repo_root, write)?;
         eprintln!(
             "site build: wrote {} files",
-            pages.len() + 3 + research_notes
+            pages.len() + 2 + research_notes
         );
     } else {
         let research_notes = blog::build_research_notes(repo_root, write)?;
@@ -318,9 +309,9 @@ pub fn export_project_feeds(repo_root: &Utf8Path, write: bool) -> Result<()> {
     let projection = load_site_projection(repo_root)?;
     if write {
         write_project_feeds(repo_root, &projection.records, &projection.project_feeds)?;
-        eprintln!("site project-feeds: wrote 3 files");
+        eprintln!("site project-feeds: wrote 2 files");
     } else {
-        eprintln!("site project-feeds: validated 3 feeds");
+        eprintln!("site project-feeds: validated 2 feeds");
     }
     Ok(())
 }
@@ -332,12 +323,7 @@ fn build_project_feeds(
     let _ = catalog::build_catalog_json(records);
     let artifacts_report = artifacts::build_report_from_graph(graph, records)?;
     let _ = artifacts::render_json(&artifacts_report)?;
-    let health_report = health::build_report_from_graph(graph, records)?;
-    let _ = health::render_json(&health_report)?;
-    Ok(ProjectFeeds {
-        artifacts_report,
-        health_report,
-    })
+    Ok(ProjectFeeds { artifacts_report })
 }
 
 fn load_site_projection(repo_root: &Utf8Path) -> Result<SiteProjection> {
@@ -377,16 +363,6 @@ fn write_project_feeds(
         artifacts::render_json(&project_feeds.artifacts_report)?,
     )
     .with_context(|| format!("failed to write {artifacts_path}"))?;
-
-    let health_path = repo_root.join("site/projects/health.json");
-    if let Some(parent) = health_path.parent() {
-        fs::create_dir_all(parent).with_context(|| format!("failed to create {}", parent))?;
-    }
-    fs::write(
-        &health_path,
-        health::render_json(&project_feeds.health_report)?,
-    )
-    .with_context(|| format!("failed to write {health_path}"))?;
 
     Ok(())
 }

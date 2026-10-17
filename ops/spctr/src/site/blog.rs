@@ -363,6 +363,15 @@ pub(crate) fn load_published_posts_from_graph(
     Ok(posts)
 }
 
+/// Published research notes as (N-series id, title).
+pub(crate) fn published_research_notes(repo_root: &Utf8Path) -> Result<Vec<(String, String)>> {
+    let notes_root = repo_root.join("site/research-notes");
+    Ok(load_research_notes(repo_root, &notes_root)?
+        .into_iter()
+        .filter_map(|note| note.spctr_id.map(|series| (series, note.title)))
+        .collect())
+}
+
 fn load_research_notes(
     repo_root: &Utf8Path,
     notes_root: &Utf8Path,

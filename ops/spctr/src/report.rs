@@ -1,4 +1,3 @@
-use std::fmt::Write as _;
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
@@ -6,6 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{ReportConfig, SshConfig};
 use crate::dispatch::client::get_health_blocking;
+use crate::panel::{
+    bar_graph, centered, divider_bot, divider_mid, divider_top, header_top, row, DATA_W,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReportData {
@@ -392,91 +394,6 @@ pub fn collect_from_cache(path: &str) -> Result<ReportData> {
     serde_json::from_str(&text).with_context(|| "failed to parse cached report JSON")
 }
 
-const NAME_W: usize = 16;
-const DATA_W: usize = 42;
-// total inner = NAME_W + 3 (` | `) + DATA_W = 61; outer = 61 + 4 (`| ` + ` |`) = 65
-
-fn bar_graph(pct: u8, width: usize) -> String {
-    let filled = (usize::from(pct) * width) / 100;
-    let mut bar = String::with_capacity(width * 3);
-    for _ in 0..filled {
-        bar.push('\u{2588}');
-    }
-    for _ in filled..width {
-        bar.push('\u{2591}');
-    }
-    bar
-}
-
-fn header_top(buf: &mut String) {
-    let inner = NAME_W + 3 + DATA_W;
-    let _ = write!(buf, "\u{250c}");
-    for _ in 0..inner + 2 {
-        let _ = write!(buf, "\u{252c}");
-    }
-    let _ = writeln!(buf, "\u{2510}");
-    let _ = write!(buf, "\u{251c}");
-    for _ in 0..inner + 2 {
-        let _ = write!(buf, "\u{2534}");
-    }
-    let _ = writeln!(buf, "\u{2524}");
-}
-
-fn centered(buf: &mut String, text: &str) {
-    let inner = NAME_W + 3 + DATA_W + 2;
-    let pad_left = (inner.saturating_sub(text.len())) / 2;
-    let pad_right = inner.saturating_sub(text.len()).saturating_sub(pad_left);
-    let _ = writeln!(
-        buf,
-        "\u{2502}{:pad_left$}{text}{:pad_right$}\u{2502}",
-        "", "",
-    );
-}
-
-fn divider(buf: &mut String, left: char, mid: char, right: char) {
-    let _ = write!(buf, "{left}");
-    for _ in 0..NAME_W + 2 {
-        let _ = write!(buf, "\u{2500}");
-    }
-    let _ = write!(buf, "{mid}");
-    for _ in 0..DATA_W + 2 {
-        let _ = write!(buf, "\u{2500}");
-    }
-    let _ = writeln!(buf, "{right}");
-}
-
-fn divider_top(buf: &mut String) {
-    divider(buf, '\u{251c}', '\u{252c}', '\u{2524}');
-}
-
-fn divider_mid(buf: &mut String) {
-    divider(buf, '\u{251c}', '\u{253c}', '\u{2524}');
-}
-
-fn divider_bot(buf: &mut String) {
-    divider(buf, '\u{2514}', '\u{2534}', '\u{2518}');
-}
-
-fn truncate_chars(s: &str, max: usize) -> String {
-    let char_count = s.chars().count();
-    if char_count <= max {
-        return s.to_owned();
-    }
-    let mut out: String = s.chars().take(max - 3).collect();
-    out.push_str("...");
-    out
-}
-
-fn row(buf: &mut String, name: &str, data: &str) {
-    let display_name = truncate_chars(name, NAME_W);
-    let display_data = truncate_chars(data, DATA_W);
-    let _ = writeln!(
-        buf,
-        "\u{2502} {:<NAME_W$} \u{2502} {:<DATA_W$} \u{2502}",
-        display_name, display_data
-    );
-}
-
 #[must_use]
 #[allow(clippy::too_many_lines)]
 pub fn format_ascii(data: &ReportData) -> String {
@@ -570,35 +487,6 @@ pub fn format_ascii(data: &ReportData) -> String {
     divider_bot(&mut buf);
 
     buf
-}
-
-#[must_use]
-pub fn format_html(data: &ReportData) -> String {
-    let ascii = format_ascii(data);
-    let escaped = ascii
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;");
-    format!(
-        r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Systems Status | Specter Labs</title>
-<meta name="spctr:card" content="none">
-<meta name="description" content="Machine, hardware, and research repository status for the Specter Labs site host.">
-<link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml">
-<style>
-body {{ margin: 0; min-height: 100vh; padding: 2rem; background: #0a0a0a; color: #d4d4d4; font-family: "IBM Plex Mono", "Menlo", monospace; display: flex; justify-content: center; }}
-pre {{ width: fit-content; max-width: 100%; margin: 0; font-size: 13px; line-height: 1.5; white-space: pre; overflow-x: auto; }}
-</style>
-</head>
-<body>
-<pre>{escaped}</pre>
-</body>
-</html>"#
-    )
 }
 
 fn rayon_join5<RA, RB, RC, RD, RE, FA, FB, FC, FD, FE>(

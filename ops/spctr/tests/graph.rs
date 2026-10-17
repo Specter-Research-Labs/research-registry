@@ -320,10 +320,6 @@ Graph-native article.
     assert!(graph
         .nodes
         .iter()
-        .any(|node| node.id == "site_output:site/projects/health.json"));
-    assert!(graph
-        .nodes
-        .iter()
         .any(|node| node.id == "site_output:site/blog/hello-world/index.html"));
     assert!(graph
         .nodes
@@ -443,14 +439,9 @@ Graph-native article.
             && edge.dst == "durable_surface:dossier:alpha:lake"
     }));
     assert!(graph.edges.iter().any(|edge| {
-        edge.src == "site_output:site/projects/health.json"
-            && edge.kind == "output_depends_on"
-            && edge.dst == "source_pattern:dossiers/alpha/artifacts/evidence/*.json"
-    }));
-    assert!(graph.edges.iter().any(|edge| {
         edge.src == "site_output:site/status/index.html"
             && edge.kind == "output_depends_on"
-            && edge.dst == "source_file:ops/spctr/src/report.rs"
+            && edge.dst == "source_file:ops/spctr/src/site/status.rs"
     }));
     assert!(graph.edges.iter().any(|edge| {
         edge.src

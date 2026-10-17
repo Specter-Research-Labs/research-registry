@@ -142,8 +142,6 @@ site/addenda/index.html
 site/sitemap/index.html
 site/projects/catalog.json
 site/projects/artifacts.json
-site/projects/health.json
-site/projects/health/
 site/blog/index.html
 site/blog/*/index.html
 site/blog/*/*.pdf
