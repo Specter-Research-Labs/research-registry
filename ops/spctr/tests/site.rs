@@ -210,18 +210,6 @@ fn minimal_templates(root: &Utf8Path) {
     );
     write(
         root,
-        "site/templates/projects/health/index.html",
-        "\
-<html>
-<body>
-<!-- GENERATED:PROJECT_HEALTH_CONTENT START -->
-<!-- GENERATED:PROJECT_HEALTH_CONTENT END -->
-</body>
-</html>
-",
-    );
-    write(
-        root,
         "site/templates/dossiers/default-hub.html",
         "\
 <html>
@@ -721,7 +709,7 @@ fn visible_dossier_without_declared_hub_gets_generated_public_hub() {
 }
 
 #[test]
-fn site_build_writes_project_health_page_and_json() {
+fn site_build_writes_project_artifacts_json() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
     minimal_templates(root);
@@ -886,46 +874,12 @@ local_source = "artifacts/site-data"
 
     spctr::site::build(root, true).unwrap();
 
-    let page = fs::read_to_string(root.join("site/projects/health/index.html")).unwrap();
-    let json_text = fs::read_to_string(root.join("site/projects/health.json")).unwrap();
     let artifact_json_text = fs::read_to_string(root.join("site/projects/artifacts.json")).unwrap();
-    let health: serde_json::Value = serde_json::from_str(&json_text).unwrap();
     let artifacts: serde_json::Value = serde_json::from_str(&artifact_json_text).unwrap();
 
-    assert!(page.contains("Project Health"), "page should contain title");
-    assert!(
-        page.contains("Alpha Project") && page.contains("Docs Maps Ready"),
-        "page should contain project and summary"
-    );
-    assert!(
-        !page.contains("Proof Paths Ready")
-            && !page.contains("Last Exec")
-            && !page.contains("check: ok")
-            && !page.contains("smoke: ok")
-            && !page.contains("build: ok")
-            && !page.contains("publish: ok"),
-        "page should omit proof and exec presentation state"
-    );
     assert!(
         !root.join("site/projects/artifacts/index.html").exists(),
         "artifact inventory should not be published on the main site"
-    );
-    assert_eq!(health["summary"]["visible_projects"], 1);
-    assert_eq!(health["summary"]["proof_ready_projects"], 1);
-    assert_eq!(health["summary"]["release_tracked_projects"], 1);
-    assert_eq!(health["dossiers"][0]["gate_state"], "ready");
-    assert_eq!(health["dossiers"][0]["hub_mode"], "generated");
-    assert_eq!(health["dossiers"][0]["check"]["status"], "ok");
-    assert_eq!(health["dossiers"][0]["smoke"]["status"], "ok");
-    assert_eq!(health["dossiers"][0]["build"]["status"], "ok");
-    assert_eq!(health["dossiers"][0]["release_coverage_state"], "tracked");
-    assert_eq!(
-        health["dossiers"][0]["published_surfaces"][0]["name"],
-        "python"
-    );
-    assert_eq!(
-        health["dossiers"][0]["published_surfaces"][0]["kind"],
-        "package"
     );
     assert_eq!(artifacts["summary"]["durable_surfaces"], 1);
     assert_eq!(artifacts["summary"]["site_data_mounts"], 1);
@@ -940,7 +894,7 @@ local_source = "artifacts/site-data"
 }
 
 #[test]
-fn export_project_feeds_writes_catalog_health_and_artifacts_without_templates() {
+fn export_project_feeds_writes_catalog_and_artifacts_without_templates() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
     minimal_design_tokens(root);
@@ -1046,16 +1000,12 @@ local_source = "artifacts/site-data"
 
     let catalog_text = fs::read_to_string(root.join("site/projects/catalog.json")).unwrap();
     let artifacts_text = fs::read_to_string(root.join("site/projects/artifacts.json")).unwrap();
-    let health_text = fs::read_to_string(root.join("site/projects/health.json")).unwrap();
     let catalog: serde_json::Value = serde_json::from_str(&catalog_text).unwrap();
     let artifacts: serde_json::Value = serde_json::from_str(&artifacts_text).unwrap();
-    let health: serde_json::Value = serde_json::from_str(&health_text).unwrap();
 
     assert_eq!(catalog["dossiers"][0]["slug"], "alpha");
     assert_eq!(artifacts["dossiers"][0]["slug"], "alpha");
     assert_eq!(artifacts["summary"]["durable_surfaces"], 1);
-    assert_eq!(health["summary"]["visible_projects"], 1);
-    assert_eq!(health["dossiers"][0]["slug"], "alpha");
 }
 
 #[test]

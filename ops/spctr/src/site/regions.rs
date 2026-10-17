@@ -321,16 +321,7 @@ pub fn render_sitemap_sections(repo_root: &Utf8Path) -> anyhow::Result<String> {
     let page_path = "sitemap/index.html";
     let groups = discover::discover_sitemap_pages(repo_root);
 
-    const KNOWN_ORDER: &[&str] = &[
-        "",
-        "dossiers",
-        "blog",
-        "addenda",
-        "projects",
-        "updates",
-        "cabinet",
-        "dashboards",
-    ];
+    const KNOWN_ORDER: &[&str] = &["", "dossiers", "blog", "addenda", "cabinet", "dashboards"];
 
     fn section_sort_key(section: &str) -> (usize, String) {
         let pos = KNOWN_ORDER.iter().position(|&s| s == section);

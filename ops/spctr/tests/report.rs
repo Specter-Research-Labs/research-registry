@@ -82,15 +82,6 @@ fn ascii_contains_bar_graphs() {
 }
 
 #[test]
-fn html_wraps_ascii_in_pre() {
-    let output = spctr::report::format_html(&sample_data());
-    assert!(output.contains("<!DOCTYPE html>"));
-    assert!(output.contains("<pre>"));
-    assert!(output.contains("SPECTER LABS"));
-    assert!(output.contains("</pre>"));
-}
-
-#[test]
 fn json_roundtrip_preserves_data() {
     let data = sample_data();
     let json = serde_json::to_string(&data).unwrap();

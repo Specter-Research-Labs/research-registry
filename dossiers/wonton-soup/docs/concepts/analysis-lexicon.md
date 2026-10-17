@@ -17,8 +17,6 @@ Use this page to find the canonical definition source for a term. Detailed defin
 ## Canonical References
 
 - Log schemas: [Log File Schemas](../contracts/logs/log-file-schemas.md)
-- Run inspection workflows: [Verification](../ops/verification.md)
-- Cross-run lake operations and jobs: [Lake](../ops/lake.md)
 
 ## Artifact Lexicon (Where/What)
 

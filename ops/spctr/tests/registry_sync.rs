@@ -315,11 +315,6 @@ fn research_note_addendum_source_does_not_render_missing_href() {
     );
     write(
         root,
-        "site/templates/projects/health/index.html",
-        "<html><body>\n<!-- GENERATED:PROJECT_HEALTH_CONTENT START -->\n<!-- GENERATED:PROJECT_HEALTH_CONTENT END -->\n</body></html>",
-    );
-    write(
-        root,
         "site/templates/projects/artifacts/index.html",
         "<html><body>\n<!-- GENERATED:PROJECT_ARTIFACTS_CONTENT START -->\n<!-- GENERATED:PROJECT_ARTIFACTS_CONTENT END -->\n</body></html>",
     );
@@ -423,14 +418,6 @@ fn site_build_no_longer_assigns_series_implicitly() {
          <!-- GENERATED:SITEMAP_SECTIONS END -->\n\
          <!-- GENERATED:SITEMAP_REGISTRY START -->\n\
          <!-- GENERATED:SITEMAP_REGISTRY END -->\n\
-         </body></html>\n",
-    );
-    write(
-        root,
-        "site/templates/projects/health/index.html",
-        "<html><body>\n\
-         <!-- GENERATED:PROJECT_HEALTH_CONTENT START -->\n\
-         <!-- GENERATED:PROJECT_HEALTH_CONTENT END -->\n\
          </body></html>\n",
     );
     write(

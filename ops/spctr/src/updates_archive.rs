@@ -9,8 +9,6 @@ use std::fs;
 const ENTRY_SOURCE_DIR: &str = "site/updates/entries";
 const INDEX_OUTPUT_PATH: &str = "site/updates/index.html";
 const FEED_OUTPUT_PATH: &str = "site/updates/index.json";
-const INDEX_DESCRIPTION: &str =
-    "Approved rollups and notebook-style windows promoted into stable public artifacts.";
 const SECTION_ORDER: [&str; 4] = ["dossiers", "addenda", "ops", "lab"];
 
 fn section_title(key: &str) -> &'static str {
@@ -384,6 +382,12 @@ fn load_update_entries(repo_root: &Utf8Path) -> Result<Vec<UpdateEntry>> {
     Ok(entries)
 }
 
+pub(crate) fn latest_update(repo_root: &Utf8Path) -> Result<(String, String)> {
+    let entries = load_update_entries(repo_root)?;
+    let latest = &entries[0];
+    Ok((latest.label.clone(), latest.date.clone()))
+}
+
 fn section_count_labels(entry: &UpdateEntry) -> String {
     SECTION_ORDER
         .iter()
@@ -521,14 +525,36 @@ fn page_shell(title: &str, description: &str, root_prefix: &str, body: Markup) -
     rendered
 }
 
+fn index_description(entries: &[UpdateEntry]) -> String {
+    let month = |date: &str| {
+        NaiveDate::parse_from_str(date, "%Y-%m-%d")
+            .expect("window dates are validated on load")
+            .format("%B %Y")
+            .to_string()
+    };
+    let start = entries
+        .iter()
+        .map(|entry| entry.window.start.as_str())
+        .min()
+        .expect("load_update_entries rejects an empty archive");
+    let end = entries
+        .iter()
+        .map(|entry| entry.window.end.as_str())
+        .max()
+        .expect("load_update_entries rejects an empty archive");
+    format!(
+        "Changelog of the lab's repositories, {} to {}.",
+        month(start),
+        month(end)
+    )
+}
+
 fn render_index_page(entries: &[UpdateEntry]) -> String {
+    let description = index_description(entries);
     let body = html! {
         section class="section-block" id="overview" {
             div class="site-page-title" { "Update Archive" }
-            p class="section-lead" { (INDEX_DESCRIPTION) }
-            p class="section-lead" {
-                "Internal dispatch ledger traffic stays separate; only curated entries land here."
-            }
+            p class="section-lead" { (description) }
         }
         section class="section-block" id="entries" {
             div class="update-list" {
@@ -545,7 +571,7 @@ fn render_index_page(entries: &[UpdateEntry]) -> String {
             }
         }
     };
-    page_shell("Updates", INDEX_DESCRIPTION, "..", body)
+    page_shell("Updates", &description, "..", body)
 }
 
 fn render_entry_page(entry: &UpdateEntry) -> String {

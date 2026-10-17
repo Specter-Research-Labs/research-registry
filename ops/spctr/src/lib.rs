@@ -13,6 +13,7 @@ pub mod graph;
 pub mod lake;
 pub mod manifest;
 pub mod markdown;
+mod panel;
 pub mod registry;
 pub mod registry_sync;
 pub mod release;

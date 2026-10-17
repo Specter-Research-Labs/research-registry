@@ -939,7 +939,6 @@ struct SiteProjectRecord {
     id: String,
     slug: String,
     kind: String,
-    root: String,
     featured: bool,
     hub_path: Option<String>,
     related_dossier: Option<String>,
@@ -959,7 +958,6 @@ fn add_site_output_subgraph(
             id: node.id.clone(),
             slug: attr_str(node, "slug").unwrap_or_default().to_owned(),
             kind: attr_str(node, "kind").unwrap_or_default().to_owned(),
-            root: attr_str(node, "root").unwrap_or_default().to_owned(),
             featured: attr_bool(node, "site_featured") == Some(true),
             hub_path: attr_str(node, "site_effective_hub_path").map(str::to_owned),
             related_dossier: attr_str(node, "related_dossier").map(str::to_owned),
@@ -1020,7 +1018,6 @@ fn add_site_output_subgraph(
         );
     }
     let doc_ids = collect_edge_targets(builder, &visible_project_ids, "project_has_doc");
-    let evidence_ids = collect_edge_targets(builder, &visible_project_ids, "project_has_evidence");
     let durable_surface_ids = collect_edge_targets(
         builder,
         &visible_project_ids,
@@ -1028,20 +1025,6 @@ fn add_site_output_subgraph(
     );
     let site_data_mount_ids =
         collect_edge_targets(builder, &visible_project_ids, "project_mounts_site_data");
-    let evidence_source_ids = visible_projects
-        .iter()
-        .flat_map(|project| {
-            [
-                ensure_source_pattern_node(
-                    builder,
-                    &format!("{}/artifacts/evidence/*.json", project.root),
-                ),
-                ensure_source_pattern_node(builder, &format!("{}/**/*evidence.json", project.root)),
-            ]
-        })
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
     let sitemap_source_ids = generated_sitemap_page_paths(repo_root)
         .into_iter()
         .map(|path| {
@@ -1280,29 +1263,6 @@ fn add_site_output_subgraph(
             .chain(hub_output_ids.iter().cloned()),
     );
 
-    let health_template_id =
-        ensure_source_file_node(builder, "site/templates/projects/health/index.html");
-    let health_data_ids = visible_project_ids
-        .iter()
-        .cloned()
-        .chain(doc_ids.iter().cloned())
-        .chain(evidence_ids.iter().cloned())
-        .chain(evidence_source_ids.iter().cloned())
-        .collect::<Vec<_>>();
-    let health_page_id = upsert_site_output(
-        builder,
-        "site/projects/health/index.html",
-        "project_health_page",
-    );
-    add_output_dependencies(
-        builder,
-        &health_page_id,
-        health_data_ids.iter().cloned().chain([health_template_id]),
-    );
-    let health_json_id =
-        upsert_site_output(builder, "site/projects/health.json", "project_health_json");
-    add_output_dependencies(builder, &health_json_id, health_data_ids.iter().cloned());
-
     let artifact_data_ids = visible_project_ids
         .iter()
         .cloned()
@@ -1317,13 +1277,17 @@ fn add_site_output_subgraph(
     add_output_dependencies(builder, &artifacts_json_id, artifact_data_ids);
 
     let status_page_id = upsert_site_output(builder, "site/status/index.html", "status_page");
-    let site_publish_source_id = ensure_source_file_node(builder, "ops/spctr/src/site/publish.rs");
-    let report_source_id = ensure_source_file_node(builder, "ops/spctr/src/report.rs");
-    let config_source_id = ensure_source_file_node(builder, "ops/spctr/src/config.rs");
+    let status_source_id = ensure_source_file_node(builder, "ops/spctr/src/site/status.rs");
+    let panel_source_id = ensure_source_file_node(builder, "ops/spctr/src/panel.rs");
     add_output_dependencies(
         builder,
         &status_page_id,
-        [site_publish_source_id, report_source_id, config_source_id],
+        visible_project_ids
+            .iter()
+            .cloned()
+            .chain(article_ids.iter().cloned())
+            .chain(doc_ids)
+            .chain([research_notes_id, status_source_id, panel_source_id]),
     );
 
     Ok(())

@@ -1,4 +1,5 @@
 ---
+publish: false
 summary: "How the Wonton Soup paper figures and PDF are rebuilt from the shared lake."
 ---
 

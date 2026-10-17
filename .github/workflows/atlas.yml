@@ -11,7 +11,6 @@ on:
       - "ops/spctr/src/graph.rs"
       - "ops/spctr/src/manifest.rs"
       - "ops/spctr/src/site/catalog.rs"
-      - "ops/spctr/src/site/health.rs"
       - "ops/spctr/src/site/mod.rs"
       - "ops/spctr/src/site/records.rs"
   pull_request:
@@ -23,7 +22,6 @@ on:
       - "ops/spctr/src/graph.rs"
       - "ops/spctr/src/manifest.rs"
       - "ops/spctr/src/site/catalog.rs"
-      - "ops/spctr/src/site/health.rs"
       - "ops/spctr/src/site/mod.rs"
       - "ops/spctr/src/site/records.rs"
 
@@ -70,7 +68,7 @@ jobs:
           set -euo pipefail
           ./ops/spctr/target/release/spctr site project-feeds --write
           mkdir -p site/atlas/public/projects
-          cp site/projects/catalog.json site/projects/health.json site/atlas/public/projects/
+          cp site/projects/catalog.json site/atlas/public/projects/
 
       - name: Setup Node
         uses: actions/setup-node@v6.4.0

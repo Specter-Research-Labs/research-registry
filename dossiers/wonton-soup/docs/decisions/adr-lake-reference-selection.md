@@ -98,4 +98,3 @@ When publishing K-style results from lake jobs, report:
 ## References
 
 - `analysis/lake/job.py`
-- [Lake](../ops/lake.md)

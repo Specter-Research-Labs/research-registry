@@ -35,11 +35,3 @@ Documentation map for `dossiers/wonton-soup`.
 ## Decisions
 
 - ADR index: [ADR Index](decisions/README.md)
-
-## Operations
-
-- Setup: [Setup](ops/setup.md)
-- Corpus artifacts: [Corpus](ops/corpus.md)
-- Lake, jobs, exports, and preservation: [Lake](ops/lake.md)
-- Verification, cross-assistant gates, and run inspection: [Verification](ops/verification.md)
-- Paper rebuild workflow: [Paper](ops/paper.md)

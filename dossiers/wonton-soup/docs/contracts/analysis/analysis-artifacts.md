@@ -120,7 +120,6 @@ Pairwise variant distances per theorem and optional cross-theorem aggregations.
 Cross-run lake extraction consumes run artifacts into normalized tables.
 
 - Implementations: `analysis/lake/reconcile.py`, `analysis/lake/db.py`, `analysis/lake/extract_basin.py`
-- See operational reference: [Lake](../../ops/lake.md)
 
 ## Artifact Integrity Invariants
 

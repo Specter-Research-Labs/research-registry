@@ -8,8 +8,8 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::Serialize;
 use tempfile::Builder;
 
-use crate::site::{archive, blog, cabinet, finalize, pdf};
-use crate::{lake, registry_sync, report, site, tokens};
+use crate::site::{archive, blog, cabinet, finalize, pdf, status};
+use crate::{lake, registry_sync, site, tokens};
 
 const REMOTE_PORTAL_BIN: &str = "/tmp/spctr-portal";
 
@@ -118,7 +118,7 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
     let stage_root = runtime_root(repo_root)?
         .join("site-publish")
         .join(&release_id);
-    let site_publish_plan = stage_site(repo_root, &stage_root)?;
+    let site_publish_plan = stage_site(repo_root, &stage_root, &release_id)?;
 
     publish_current_site(
         repo_root,
@@ -148,7 +148,11 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
 
 /// Build the site and copy exactly the public file set into `stage_root`, where
 /// it is finalized and minified. Publishing uploads this directory unchanged.
-pub fn stage_site(repo_root: &Utf8Path, stage_root: &Utf8Path) -> Result<SitePublishPlan> {
+pub fn stage_site(
+    repo_root: &Utf8Path,
+    stage_root: &Utf8Path,
+    release_id: &str,
+) -> Result<SitePublishPlan> {
     let site_root = repo_root.join("site");
 
     registry_sync::ensure_clean(repo_root)?;
@@ -161,7 +165,7 @@ pub fn stage_site(repo_root: &Utf8Path, stage_root: &Utf8Path) -> Result<SitePub
     pdf::build_all_pdfs_for_posts(repo_root, &blog_posts)?;
     cabinet::build_cabinet(repo_root, true)?;
     build_wonton_dashboard(repo_root)?;
-    render_status_page(&site_root)?;
+    status::write_status_page(repo_root, release_id)?;
 
     let site_publish_plan = site_publish_plan(repo_root)?;
     copy_public_site(&site_root, stage_root, &site_publish_plan.excludes)?;
@@ -652,21 +656,6 @@ pub fn push_records(source: &Path) -> Result<()> {
         "SPECTER_RESULT_JSON={}",
         serde_json::to_string(&result).context("failed to serialize records push result")?
     );
-
-    Ok(())
-}
-
-fn render_status_page(site_root: &Utf8Path) -> Result<()> {
-    let status_dir = site_root.join("status");
-    fs::create_dir_all(&status_dir).with_context(|| format!("failed to create {status_dir}"))?;
-    let path = status_dir.join("index.html");
-
-    let config = crate::config::load_report_config()
-        .context("failed to load status report config for site/status/index.html")?;
-    let data = report::collect(&config)
-        .context("failed to collect status report for site/status/index.html")?;
-    fs::write(&path, report::format_html(&data))
-        .with_context(|| format!("failed to write {path}"))?;
 
     Ok(())
 }

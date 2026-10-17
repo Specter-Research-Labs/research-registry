@@ -56,6 +56,9 @@ export default async function AtlasLandingPage() {
             <span className="detail-kicker">Registry Context</span>
             <h2>{project.title}</h2>
             <p>{project.summary}</p>
+            <p>
+              Release: {project.releaseStage}. Last activity: {project.lastActivity}.
+            </p>
             <div className="cta-row">
               {project.links.map((link) => (
                 <Link key={link.href} href={link.href} className="atlas-pill atlas-pill-passive">
@@ -63,13 +66,6 @@ export default async function AtlasLandingPage() {
                 </Link>
               ))}
             </div>
-          </article>
-          <article className="taxon-card">
-            <span className="detail-kicker">Proof Path</span>
-            <h2>{project.gateState ?? "Informational"}</h2>
-            <p>
-              {project.proofSummary} Release: {project.releaseStage}. Last activity: {project.lastActivity}.
-            </p>
           </article>
         </section>
       ) : null}
