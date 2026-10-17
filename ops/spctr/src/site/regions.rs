@@ -187,6 +187,34 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     blocks.join("\n")
 }
 
+pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
+    let slices = records::slice_records(records);
+    html! {
+        ul class="lab-tree" {
+            li {
+                a class="tree-root" href="/dossiers/" { "Research" }
+                ul {
+                    @for record in &slices.visible_dossiers {
+                        @if let Some(href) = record.relative_hub_href("index.html") {
+                            li { a href=(href) { (record.title) } }
+                        }
+                    }
+                }
+            }
+            li {
+                a class="tree-root" href="/blog/" { "Writing" }
+                ul {
+                    li { a href="/blog/#published-writing" { "Articles & reports" } }
+                    li { a href="/research-notes/" { "Lab notes" } }
+                }
+            }
+            li { a class="tree-root" href="/addenda/" { "Addenda" } }
+            li { a class="tree-root" href="/cabinet/" { "Cabinet" } }
+        }
+    }
+    .into_string()
+}
+
 pub fn render_blog_index_posts(posts: &[BlogPostRecord], page_path: &str) -> Result<String> {
     let mut blocks: Vec<String> = Vec::new();
     for post in posts {
@@ -196,13 +224,16 @@ pub fn render_blog_index_posts(posts: &[BlogPostRecord], page_path: &str) -> Res
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("{}: published post has no cover", post.href))?;
         let block = html! {
-            article class="writing-report" {
-                a class="writing-cover" href=(href) aria-label=(format!("Read {}", post.title)) {
-                    img src=(cover.src) alt=(cover.alt);
-                }
-                div {
-                    h2 { a href=(href) { (post.title) } }
-                    p { (post.summary) }
+            article class="editorial-entry" {
+                a class="entry-link" href=(href) aria-label=(format!("Read {}", post.title)) {
+                    div class="entry-copy" {
+                        h2 { (post.title) }
+                        p { (post.summary) }
+                    }
+                    // Keep the annotated proof tree in the article, where its labels remain readable.
+                    @if post.href != "blog/wonton-soup/" {
+                        img class="entry-art" src=(cover.src) alt=(cover.alt) loading="lazy";
+                    }
                 }
             }
         };

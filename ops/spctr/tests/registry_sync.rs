@@ -286,7 +286,7 @@ fn research_note_addendum_source_does_not_render_missing_href() {
     write(
         root,
         "site/templates/index.html",
-        "<html><body>\n<!-- GENERATED:HOME_ACTIVE_PROJECTS START -->\n<!-- GENERATED:HOME_ACTIVE_PROJECTS END -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA START -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA END -->\n<!-- GENERATED:HOME_BLOG_POSTS START -->\n<!-- GENERATED:HOME_BLOG_POSTS END -->\n</body></html>",
+        "<html><body>\n<!-- GENERATED:HOME_ACTIVE_PROJECTS START -->\n<!-- GENERATED:HOME_ACTIVE_PROJECTS END -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA START -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA END -->\n<!-- GENERATED:HOME_BLOG_POSTS START -->\n<!-- GENERATED:HOME_BLOG_POSTS END -->\n<!-- GENERATED:HOME_SITE_TREE START -->\n<!-- GENERATED:HOME_SITE_TREE END -->\n</body></html>",
     );
     write(
         root,
@@ -378,6 +378,8 @@ fn site_build_no_longer_assigns_series_implicitly() {
          <!-- GENERATED:HOME_FEATURED_ADDENDA END -->\n\
          <!-- GENERATED:HOME_BLOG_POSTS START -->\n\
          <!-- GENERATED:HOME_BLOG_POSTS END -->\n\
+         <!-- GENERATED:HOME_SITE_TREE START -->\n\
+         <!-- GENERATED:HOME_SITE_TREE END -->\n\
          </body></html>\n",
     );
     write(
