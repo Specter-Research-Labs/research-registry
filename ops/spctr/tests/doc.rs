@@ -83,6 +83,7 @@ fn build(body: &str) -> anyhow::Result<String> {
 fn numbers_sections_appendix_and_citations() {
     let html = build(BODY).unwrap();
     assert!(html.contains("<title>Arrest after release | Specter Labs</title>"));
+    assert!(!html.contains(r#"<meta name="description""#));
     assert!(html.contains(r#"<span class="rk-num">1</span>The arrest"#));
     assert!(html.contains(r#"<span class="rk-num">1.1</span>Lobe directions"#));
     assert!(html.contains(r#"<span class="rk-num">1.1</span><span>Lobe directions</span>"#));

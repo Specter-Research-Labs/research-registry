@@ -218,7 +218,6 @@ function Pandoc(doc)
   meta["rk-endmatter"] = pandoc.RawInline("html", table.concat(parts))
   meta["rk-minutes"] = tostring(minutes)
   meta["pagetitle"] = title .. " | Specter Labs"
-  meta["description"] = pandoc.utils.stringify(meta.abstract)
   doc.blocks = body
   return doc
 end
