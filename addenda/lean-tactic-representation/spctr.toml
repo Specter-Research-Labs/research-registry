@@ -35,30 +35,32 @@ project = "lean-tactic-representation"
 [spctr.exec.check]
 description = "Canonical candidate verification lane"
 commands = [
+    ["lake", "build"],
     ["uv", "run", "ruff", "check", "."],
     ["uv", "run", "ty", "check", "."],
     ["uv", "run", "python", "-m", "pytest"],
 ]
 timeout_sec = 1800
 network = "off"
-requires = ["python", "uv"]
+requires = ["python", "uv", "lean"]
 
 [spctr.exec.smoke]
-description = "Invariant check for the nested constructor apply example"
+description = "Compile, execute, and kernel-check one structured program"
 command = ["bash", "-lc", '''set -euo pipefail
 mkdir -p artifacts/smoke
-uv run python cli.py check nested_constructor_apply --format json > artifacts/smoke/nested_constructor_apply.json
+uv run python cli.py compile-run scenarios/source/constructor.json \
+  > artifacts/smoke/compiler-receipt.json
 ''']
-expected_outputs = ["nested-constructor-apply-check"]
+expected_outputs = ["compiler-receipt"]
 timeout_sec = 600
 network = "off"
-requires = ["python", "uv"]
+requires = ["python", "uv", "lean"]
 
 [spctr.runtime]
 platforms = ["linux", "macos"]
-requires = ["python", "uv"]
+requires = ["python", "uv", "lean"]
 network = "off"
-cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
+cache_paths = [".lake", ".venv", ".ruff_cache", ".pytest_cache"]
 
 [spctr.ci]
 runner = "ubuntu-latest"
@@ -70,8 +72,8 @@ nightly = []
 card_path = "artifacts/evidence/latest.json"
 
 [[spctr.expected_outputs]]
-name = "nested-constructor-apply-check"
-path = "artifacts/smoke/nested_constructor_apply.json"
+name = "compiler-receipt"
+path = "artifacts/smoke/compiler-receipt.json"
 kind = "json"
 required = true
 
