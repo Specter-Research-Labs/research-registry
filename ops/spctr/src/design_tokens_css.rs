@@ -5,7 +5,7 @@ use std::fmt::Write;
 pub fn generate_css(tokens: &DesignTokens) -> Result<String> {
     let mut out = String::from(
         "\
-/* Generated from addenda/design-tokens/ — do not edit by hand.
+/* Generated from addenda/design-tokens/. Do not edit by hand.
    Source: base.toml (colors, symbols, badges, fonts), web.toml (layout, type scale)
    Regenerate: spctr tokens generate --target css */
 :root {\n",
