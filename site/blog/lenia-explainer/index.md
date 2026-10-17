@@ -281,7 +281,7 @@ Reproducibility requires more than a fixed seed. The rule, initial condition, ru
 
 The archive lets us compare observed forms with the rules and histories that produced them. Do neighbouring rules make neighbouring bodies? Can similar-looking bodies respond differently to the same obstacle? Can we find a rule that produces and maintains a requested shape?
 
-A sampled map can suggest connected regions or persistent gaps, but those features depend on sampling, descriptors and distance. It does not establish a smooth manifold of all viable creatures, or prove that unobserved forms cannot exist. The [current morphospace report](/dossiers/lenia-swarm/morphospace/) examines that distinction using 25,167 Flow Lenia observations and two external shape collections.
+A sampled map can suggest connected regions or persistent gaps, but those features depend on sampling, descriptors and distance. It does not establish a smooth manifold of all viable creatures, or prove that unobserved forms cannot exist. The current morphospace report examines that distinction using 25,167 Flow Lenia observations and two external shape collections.
 
 
 <script src="lenia-gpu.js"></script>

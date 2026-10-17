@@ -7,7 +7,7 @@ toc: true
 
 # The Geometry of a Synthetic Morphospace
 
-*Earlier draft. The current account is [Where Flow Lenia bodies go in shape space, and where they do not](/dossiers/lenia-swarm/morphospace/). This draft preserves the earlier theoretical framing and is not a separate set of findings.*
+*Earlier draft. The current account is Where Flow Lenia bodies go in shape space, and where they do not. This draft preserves the earlier theoretical framing and is not a separate set of findings.*
 
 
 A shape measurement omits most of the process that produced the shape. For a Flow Lenia specimen, we can inspect those omitted variables: its rule parameters, initial field and subsequent dynamics. This makes a concrete question possible. If we return to the same measured shape after a sequence of small rule changes, do we also return to the starting rule?
@@ -103,7 +103,7 @@ Discovery and measurement serve different purposes. A gallery can select coheren
 
 The next comparison asks whether shape predicts response. A body can retain matter while losing organization, and a heading change need not mean turning away from an obstacle. Progress, turning, connected-body coherence and recovery therefore need separate measurements.
 
-The [current report](/dossiers/lenia-swarm/morphospace/) links the [five-body obstacle assay](/dossiers/lenia-swarm/morphospace/obstacle-response/) and states what it has not yet tested. The broader experiment would fit predictions from shape alone and from shape plus rule parameters, then compare both on the same held-out bodies. Existing shape/activity and shape/locomotion comparisons belong in that argument; obstacle response is an additional target, not the first attempt to connect shape with behaviour.
+The current report links the five-body obstacle assay and states what it has not yet tested. The broader experiment would fit predictions from shape alone and from shape plus rule parameters, then compare both on the same held-out bodies. Existing shape/activity and shape/locomotion comparisons belong in that argument; obstacle response is an additional target, not the first attempt to connect shape with behaviour.
 
 A relation that transfers to another system would be more interesting still, but it requires a specified correspondence and a new prediction. Rule-transport residue in Flow Lenia is not already a measurement of bioelectric memory in living tissue.
 
