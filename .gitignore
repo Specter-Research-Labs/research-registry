@@ -51,6 +51,7 @@ ops/zulip/.env*
 !dossiers/lenia-swarm/docs/universe/assets/**/*.png
 !dossiers/lenia-swarm/docs/universe/assets/**/*.jpg
 !dossiers/lenia-swarm/docs/universe/assets/**/*.jpeg
+!ops/spctr/tests/fixtures/**/*.png
 *.csv
 results/
 !dossiers/zhang-levin-playground/paper/results/

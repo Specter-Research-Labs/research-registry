@@ -957,7 +957,7 @@ fn join_remote_path(base: &str, parts: &[String]) -> String {
     path
 }
 
-fn site_public_url() -> String {
+pub(crate) fn site_public_url() -> String {
     optional_env("SPECTER_SITE_PUBLIC_URL").unwrap_or_else(|| "https://specterlab.org".to_owned())
 }
 
