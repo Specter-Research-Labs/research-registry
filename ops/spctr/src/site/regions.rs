@@ -71,9 +71,8 @@ pub fn render_dossier_index_grid(records: &[SiteRecord]) -> String {
                 @if let Some(href) = record.relative_hub_href("dossiers/index.html") {
                     @match record.slug.as_str() {
                         "lenia-swarm" => { a class="dossier-preview" href=(href) { img src="/assets/home/quadrium-poster.webp?v=2" alt="A Quadrium-derived Lenia pattern." loading="lazy"; } }
-                        "wonton-soup" => { a class="dossier-preview" href=(href) { img src="/assets/research-proof.svg" alt="Two routes to an algebraic proof, shown schematically." loading="lazy"; } }
-                        "jolt-material-memory" => { a class="dossier-preview" href=(href) { img src="/assets/research-material.svg" alt="Six connected bodies under a driving force and a disturbance, shown schematically." loading="lazy"; } }
-                        "zhang-levin-playground" => { a class="dossier-preview" href=(href) { img src="/assets/research-sorting.svg" alt="A schematic of local exchanges producing a sorted sequence." loading="lazy"; } }
+                        "wonton-soup" => { a class="dossier-preview" href=(href) { img src="/assets/research-proof.svg?v=20261017" alt="Recorded Lean proof-search trees before and after removing exact; winning routes in teal and blocked tactics in rust." loading="lazy"; } }
+                        "zhang-levin-playground" => { a class="dossier-preview" href=(href) { img src="/assets/research-sorting.svg?v=20261017" alt="Fifty colored sorting-cell trajectories braid from a shuffled arrangement into order in the dossier’s Bubble–Insertion replay." loading="lazy"; } }
                         _ => {}
                     }
                 }
@@ -406,7 +405,7 @@ pub fn render_sitemap_registry(records: &[SiteRecord], blog_posts: &[BlogPostRec
     let page_path = "sitemap/index.html";
     let mut dossiers = records
         .iter()
-        .filter(|record| record.kind == "dossier")
+        .filter(|record| record.kind == "dossier" && record.visible)
         .filter_map(|record| {
             record.series.as_ref().map(|series_id| Entry {
                 series_id: series_id.clone(),

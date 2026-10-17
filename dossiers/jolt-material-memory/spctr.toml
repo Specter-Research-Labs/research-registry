@@ -7,16 +7,16 @@ status = "concept"
 
 [site]
 hub_path = "site/dossiers/jolt-material-memory/index.html"
-visible = true
+visible = false
 featured = false
 
 [release]
-stage = "promoted"
+stage = "wip"
 
 [[release.surfaces]]
 name = "source"
 kind = "source_bundle"
-publish = true
+publish = false
 
 [[release.surfaces]]
 name = "python"

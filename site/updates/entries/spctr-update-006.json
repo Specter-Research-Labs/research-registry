@@ -18,7 +18,6 @@
       "lenia-swarm: added paper-grounded lanes, MAP-Elites, AURORA diagnostics, elite curation, and research-mode creature export.",
       "wonton-soup: added the cross-assistant benchmark pipeline, proof-graph IR, Coq tooling updates, DeepSeek dashboard cohort, and lake-driven dashboard release flow.",
       "wonton-soup: changed Lean startup/cache handling, replay isolation, runtime-path routing, docs taxonomy, and dashboard layout.",
-      "jolt-material-memory: added the dossier scaffold, then changed campaign configs, metrics, plots, engine scenarios, and article/media tooling.",
       "fly-competency-atlas: added the dossier package, backend probing, local execution, and site manifest wiring.",
       "zhang-levin-playground: changed paper analysis, figures, and layout; added MIPS/TASEP discussion."
     ],
