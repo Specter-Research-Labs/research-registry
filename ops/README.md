@@ -30,6 +30,8 @@ The intent is one obvious operational path, not a grab bag of parallel wrappers.
 
 Dossier index artwork is rebuilt from the sorting replay and recorded Lean trees with
 `python3 ops/render_dossier_previews.py` (requires Node.js).
+Addenda specimens are rebuilt with `python3 ops/render_addenda_specimens.py` in the development shell;
+the generated manifest records their public sources, checksums, and reproduction recipes.
 
 ## Public Surfaces
 

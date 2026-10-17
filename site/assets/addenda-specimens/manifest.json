@@ -1,0 +1,217 @@
+{
+  "poly-morphogenesis": {
+    "src": "/assets/addenda-specimens/poly-morphogenesis.svg?v=20261017",
+    "alt": "The actual Catlab wiring diagram for the ten-cell reaction–diffusion phase",
+    "caption": "Catlab’s ten-cell RD wiring export, restyled for this page. This is the implemented composition, not a result from the unreproduced numerical sweep.",
+    "kind": "Wiring export",
+    "recipe": "Graphviz renders the committed rd_styled.dot; only colors and framing change.",
+    "sources": [
+      {
+        "path": "addenda/poly-morphogenesis/docs/diagrams/rd_styled.dot",
+        "sha256": "67d7dda94eb9da9225158802268d144b5ba0efda3156ae4d6f6fda240f428574"
+      },
+      {
+        "path": "addenda/poly-morphogenesis/src/diagrams.jl",
+        "sha256": "592e393bb7f261bc12b34192e5464f003a6e297f58baf3e800db99aa183a1b54"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/poly-morphogenesis/docs/diagrams/rd_styled.dot"
+  },
+  "k-semantics-reference": {
+    "src": "/assets/addenda-specimens/k-semantics-reference.svg?v=20261017",
+    "alt": "Two source-generated paths on a seven-by-seven grid: random walk and shortest-path policy",
+    "caption": "Two seed-7 replays. K = log₁₀(τ_blind/τ_agent) = 1.22, about 16.6× expected-cost savings. The exact calculation caps costs at 500 steps, giving a lower bound for this grid; it is not the ratio of the pictured paths.",
+    "kind": "Executable demo",
+    "recipe": "run_grid_demo(size=7, trials=32, H=500, seed=7); paths instrument the same policy closures with Random(7).",
+    "sources": [
+      {
+        "path": "addenda/k-semantics-reference/demos/grid.py",
+        "sha256": "1fdf759c53ff4f35c53a6287b602da9c474458c8e40fde997e5eb493837f7c09"
+      },
+      {
+        "path": "addenda/k-semantics-reference/core.py",
+        "sha256": "4fbc23cba27da16068053c7020e7d8aa94056ba64ef2b57af2852a0093b008c7"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/k-semantics-reference/demos/grid.py"
+  },
+  "equational-theories-distillation": {
+    "src": "/assets/addenda-specimens/equational-theories-distillation.svg?v=20261017",
+    "alt": "XOR’s two-element Cayley table: commutativity holds, while idempotence fails at one",
+    "caption": "An exact finite countermodel checked by the project’s evaluator. XOR is commutative, but 1 ◇ 1 = 0 refutes idempotence.",
+    "kind": "Checked countermodel",
+    "recipe": "Enumerate all assignments with equation_holds_universally for the shipped xor operation.",
+    "sources": [
+      {
+        "path": "addenda/equational-theories-distillation/small_models.py",
+        "sha256": "7d26ea997c8eb10942e06f3392a68edf46519ccd482bb36dada30782b36b6152"
+      },
+      {
+        "path": "addenda/equational-theories-distillation/tests/test_small_models.py",
+        "sha256": "c4d7fcc48c56a63763af28de587aea7debd457d161e1c4916943993543f3e95e"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/equational-theories-distillation/small_models.py"
+  },
+  "equational-sheet": {
+    "src": "/assets/addenda-specimens/equational-sheet.svg?v=20261017",
+    "alt": "An exact kernel rule excerpted from the shipped equational decision sheet",
+    "caption": "Source excerpt from cheatsheet-v0.txt; not a new theorem or a hidden-benchmark score.",
+    "kind": "Source excerpt",
+    "recipe": "Typeset the first source-triggered kernel rule verbatim.",
+    "sources": [
+      {
+        "path": "addenda/equational-theories-distillation/docs/cheatsheet-v0.txt",
+        "sha256": "668774c965a3388ecb058332ae384935b044ae5b2ca6e0e6378f7c99c8d0068f"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/equational-theories-distillation/docs/cheatsheet-v0.txt"
+  },
+  "design-tokens": {
+    "src": "/assets/addenda-specimens/design-tokens.svg?v=20261017",
+    "alt": "The real web color palette with IBM Plex Serif and Berkeley Mono type specimens",
+    "caption": "The site’s actual web palette, typefaces, and token names.",
+    "kind": "Token specimen",
+    "recipe": "Read web.toml colors and use the site’s bundled fonts.",
+    "sources": [
+      {
+        "path": "addenda/design-tokens/web.toml",
+        "sha256": "83a2c73e8d3f9adf6d9e9086d0e0aa039d9278c43d5a7d11f989f4c76007698f"
+      },
+      {
+        "path": "addenda/design-tokens/base.toml",
+        "sha256": "8ad58fa94787c16e709289ff2af707971fc700d91c5fe760c87246ce29111f58"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/design-tokens/web.toml"
+  },
+  "typst-field-manual": {
+    "src": "/assets/addenda-specimens/typst-field-manual.svg?v=20261017",
+    "alt": "The title and abstract of the actual Typst paper example, rendered by Typst",
+    "caption": "A crop of paper-example.typ rendered with the bundled publication fonts. Template content, not a research report.",
+    "kind": "Typeset output",
+    "recipe": "typst compile --pages 1 --font-path addenda/typst-field-manual/assets/fonts; crop the title and abstract.",
+    "sources": [
+      {
+        "path": "addenda/typst-field-manual/paper-example.typ",
+        "sha256": "fb92cae0dcf6221f7ab0b3798f0812df5e95db1b741449064cf9e1991a52fdd4"
+      },
+      {
+        "path": "addenda/typst-field-manual/specter-paper.typ",
+        "sha256": "a5111244d2c4f9cfa085fc41cd413b955d1ff6f87b935d5680e04a3fe3496765"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/typst-field-manual/paper-example.typ"
+  },
+  "lean-corpus-extractor": {
+    "src": "/assets/addenda-specimens/lean-corpus-extractor.svg?v=20261017",
+    "alt": "Nat.add_comm and the extractor’s documented corpus record",
+    "caption": "The declaration template from the extractor’s README example, reflowed for display, with its unchanged record identifiers.",
+    "kind": "Documented output",
+    "recipe": "Read the documented JSON example; reflow its declaration template and typeset its identifiers.",
+    "sources": [
+      {
+        "path": "addenda/lean-corpus-extractor/README.md",
+        "sha256": "f2e915bf271299d376157f4b17e4455dd5b049e4971030556fdc92c85ad358fe"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-corpus-extractor/README.md"
+  },
+  "lean-sorry-dataset": {
+    "src": "/assets/addenda-specimens/lean-sorry-dataset.svg?v=20261017",
+    "alt": "A real dataset test fixture: x : Nat, goal x = x, and its index metadata",
+    "caption": "The committed index.min.jsonl test fixture. This is a format specimen, not a sampled production record.",
+    "kind": "Index fixture",
+    "recipe": "Read the first committed fixture record without changing its values.",
+    "sources": [
+      {
+        "path": "addenda/lean-sorry-dataset/tests/fixtures/index.min.jsonl",
+        "sha256": "4f7eaa879768253e3eb8d1f102670a60781bfcc91a166b8ee3f895baa24e3391"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-sorry-dataset/tests/fixtures/index.min.jsonl"
+  },
+  "lean-tactic-representation": {
+    "src": "/assets/addenda-specimens/lean-tactic-representation.svg?v=20261017",
+    "alt": "The toy interpreter’s actual nested constructor/apply program",
+    "caption": "An executed toy-interpreter example: constructor, apply proveP, exact ha, and exact hq.",
+    "kind": "Toy interpreter output",
+    "recipe": "show nested_constructor_apply --format json; render_program on that same example.",
+    "sources": [
+      {
+        "path": "addenda/lean-tactic-representation/examples/catalog.py",
+        "sha256": "0e4eab151d1203d0d2dcbf9451e3697cf6d60fdc563a8792a6fe05f88b46f545"
+      },
+      {
+        "path": "addenda/lean-tactic-representation/render.py",
+        "sha256": "ef67074d50e459af10c387a50ee6f787c12997ac437561dcf0692afdb108f7dd"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-tactic-representation/examples/catalog.py",
+    "dataHref": "/assets/addenda-specimens/tactic-example.json"
+  },
+  "lean-mcts-learning": {
+    "src": "/assets/addenda-specimens/lean-mcts-learning.svg?v=20261017",
+    "alt": "A recorded Wonton goal and its next tactic in the training-pair format",
+    "caption": "The training-pair format applied to the first committed step of the public hf00795 trace. No training or evaluation score is implied.",
+    "kind": "Recorded step / data format",
+    "recipe": "Use the recorded root goal and its first committed tactic; typeset the builder’s STATE/TAC fields.",
+    "sources": [
+      {
+        "path": "addenda/lean-mcts-learning/data/tactic_sft.py",
+        "sha256": "f7916e97fd3e42d7606820da0b075422117d1ce082bb9b9357e719e391b9be5f"
+      },
+      {
+        "path": "dossiers/wonton-soup/docs/figures/poster/data/hf00795-block-exact/wild_type_mcts_tree.json",
+        "sha256": "67a9e8de158499b3fc1c1c5a324f0746baeb75496f16733b40df6eabbe8aa25b"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-mcts-learning/data/tactic_sft.py"
+  },
+  "lean-sorry-repos-benchmark": {
+    "src": "/assets/addenda-specimens/lean-sorry-repos-benchmark.svg?v=20261017",
+    "alt": "The scoring unit test’s three-by-three verification outcome matrix",
+    "caption": "The actual pass-at-k scoring test fixture. These are test inputs, not benchmark performance.",
+    "kind": "Scoring fixture",
+    "recipe": "Read verification_success_by_item from the named scoring test via Python’s AST.",
+    "sources": [
+      {
+        "path": "addenda/lean-sorry-repos-benchmark/tests/test_scoring.py",
+        "sha256": "5b8649e62aaf9653fb54a61331739454e4ed95fe735b847dabb013c5d96e2e6e"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-sorry-repos-benchmark/tests/test_scoring.py"
+  },
+  "tinygrad-benchmarks": {
+    "src": "/assets/addenda-specimens/tinygrad-benchmarks.svg?v=20261017",
+    "alt": "The exact old/new diff from the tinygrad patch-comparison test fixture",
+    "caption": "The patch-comparison test’s diff fixture. It demonstrates matching machinery, not a real tinygrad task or a speed result.",
+    "kind": "Patch fixture",
+    "recipe": "Typeset the unchanged old/new lines used by test_compare_attempts_to_gold_detects_close_match.",
+    "sources": [
+      {
+        "path": "addenda/tinygrad-benchmarks/tests/test_compare.py",
+        "sha256": "f08967b0c5010a41f698c77e164b549b63ce2b3932e7b4e433945c63d849ee23"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/tinygrad-benchmarks/tests/test_compare.py"
+  },
+  "specter-viz": {
+    "src": "/assets/addenda-specimens/specter-viz.svg?v=20261017",
+    "alt": "The actual Panel and LineChart API alongside the four-point example series and interval from its README",
+    "caption": "The native component API and a plot of its documented sample values. Example data, not measured training loss or a screenshot of the egui widget.",
+    "kind": "Component API / example data",
+    "recipe": "Typeset the Panel/LineChart calls and plot exactly the series and interval values in the README.",
+    "sources": [
+      {
+        "path": "addenda/specter-viz/README.md",
+        "sha256": "cc25951ef953cbb2328f42ba5eb3dc12ece872deccb8b7052b3a86238b1af04f"
+      },
+      {
+        "path": "addenda/specter-viz/src/charts/line.rs",
+        "sha256": "159cdf54c8a67b67c55efebd0547cca1e655e1a5afef507479ed25946f7bdd7d"
+      }
+    ],
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/specter-viz/README.md"
+  }
+}

@@ -1,0 +1,767 @@
+{
+  "description": "Two-step tree program with constructor at the root and apply on one branch.",
+  "example": "nested_constructor_apply",
+  "execution": {
+    "child_nodes": [
+      {
+        "child_nodes": [
+          {
+            "child_nodes": [],
+            "final_type": {
+              "args": [],
+              "name": "A"
+            },
+            "final_witness": {
+              "name": "ha"
+            },
+            "invariants": [
+              {
+                "detail": "parent_ids=['g0.1.1']",
+                "name": "optic_parent_interface_is_singleton",
+                "passed": true
+              },
+              {
+                "detail": "child_ids=[]",
+                "name": "optic_child_ids_unique",
+                "passed": true
+              },
+              {
+                "detail": "holes=[] children=[]",
+                "name": "residue_holes_match_child_interface",
+                "passed": true
+              },
+              {
+                "detail": "coupling_child_ids=[] children=[]",
+                "name": "coupling_child_ids_match_interface",
+                "passed": true
+              },
+              {
+                "detail": "kind=none shared=[] edges=[]",
+                "name": "coupling_kind_matches_structure",
+                "passed": true
+              },
+              {
+                "detail": "exact_children=0",
+                "name": "optic_arity_matches_primitive",
+                "passed": true
+              },
+              {
+                "detail": "inferred=Atom(name='A', args=()) target=Atom(name='A', args=()) subst={}",
+                "name": "optic_reassembles_parent_target",
+                "passed": true
+              }
+            ],
+            "obligation": {
+              "context": [
+                {
+                  "name": "ha",
+                  "proposition": {
+                    "args": [],
+                    "name": "A"
+                  }
+                },
+                {
+                  "name": "hq",
+                  "proposition": {
+                    "args": [],
+                    "name": "Q"
+                  }
+                }
+              ],
+              "goal_id": "g0.1.1",
+              "target": {
+                "args": [],
+                "name": "A"
+              }
+            },
+            "optic_step": {
+              "certificates": [
+                "hypothesis_target_match"
+              ],
+              "decomposition": {
+                "child_interface": {
+                  "obligations": []
+                },
+                "coupling": {
+                  "child_ids": [],
+                  "dependency_edges": [],
+                  "kind": "none",
+                  "shared_metavars": []
+                },
+                "parent_interface": {
+                  "obligations": [
+                    {
+                      "context": [
+                        {
+                          "name": "ha",
+                          "proposition": {
+                            "args": [],
+                            "name": "A"
+                          }
+                        },
+                        {
+                          "name": "hq",
+                          "proposition": {
+                            "args": [],
+                            "name": "Q"
+                          }
+                        }
+                      ],
+                      "goal_id": "g0.1.1",
+                      "target": {
+                        "args": [],
+                        "name": "A"
+                      }
+                    }
+                  ]
+                },
+                "partial_term_after": {
+                  "name": "ha"
+                },
+                "partial_term_before": {
+                  "goal_id": "g0.1.1"
+                }
+              },
+              "residue": {
+                "child_order": [],
+                "template": {
+                  "name": "ha"
+                }
+              },
+              "step": {
+                "hypothesis_name": "ha"
+              }
+            },
+            "program": {
+              "children": [],
+              "step": {
+                "hypothesis_name": "ha"
+              }
+            }
+          }
+        ],
+        "final_type": {
+          "args": [],
+          "name": "P"
+        },
+        "final_witness": {
+          "args": [
+            {
+              "name": "ha"
+            }
+          ],
+          "rule_name": "proveP"
+        },
+        "invariants": [
+          {
+            "detail": "parent_ids=['g0.1']",
+            "name": "optic_parent_interface_is_singleton",
+            "passed": true
+          },
+          {
+            "detail": "child_ids=['g0.1.1']",
+            "name": "optic_child_ids_unique",
+            "passed": true
+          },
+          {
+            "detail": "holes=['g0.1.1'] children=['g0.1.1']",
+            "name": "residue_holes_match_child_interface",
+            "passed": true
+          },
+          {
+            "detail": "coupling_child_ids=['g0.1.1'] children=['g0.1.1']",
+            "name": "coupling_child_ids_match_interface",
+            "passed": true
+          },
+          {
+            "detail": "kind=none shared=[] edges=[]",
+            "name": "coupling_kind_matches_structure",
+            "passed": true
+          },
+          {
+            "detail": "apply_children=1 expected=1",
+            "name": "optic_arity_matches_primitive",
+            "passed": true
+          },
+          {
+            "detail": "inferred=Atom(name='P', args=()) target=Atom(name='P', args=()) subst={}",
+            "name": "optic_reassembles_parent_target",
+            "passed": true
+          }
+        ],
+        "obligation": {
+          "context": [
+            {
+              "name": "ha",
+              "proposition": {
+                "args": [],
+                "name": "A"
+              }
+            },
+            {
+              "name": "hq",
+              "proposition": {
+                "args": [],
+                "name": "Q"
+              }
+            }
+          ],
+          "goal_id": "g0.1",
+          "target": {
+            "args": [],
+            "name": "P"
+          }
+        },
+        "optic_step": {
+          "certificates": [
+            "rule_conclusion_unified"
+          ],
+          "decomposition": {
+            "child_interface": {
+              "obligations": [
+                {
+                  "context": [
+                    {
+                      "name": "ha",
+                      "proposition": {
+                        "args": [],
+                        "name": "A"
+                      }
+                    },
+                    {
+                      "name": "hq",
+                      "proposition": {
+                        "args": [],
+                        "name": "Q"
+                      }
+                    }
+                  ],
+                  "goal_id": "g0.1.1",
+                  "target": {
+                    "args": [],
+                    "name": "A"
+                  }
+                }
+              ]
+            },
+            "coupling": {
+              "child_ids": [
+                "g0.1.1"
+              ],
+              "dependency_edges": [],
+              "kind": "none",
+              "shared_metavars": []
+            },
+            "parent_interface": {
+              "obligations": [
+                {
+                  "context": [
+                    {
+                      "name": "ha",
+                      "proposition": {
+                        "args": [],
+                        "name": "A"
+                      }
+                    },
+                    {
+                      "name": "hq",
+                      "proposition": {
+                        "args": [],
+                        "name": "Q"
+                      }
+                    }
+                  ],
+                  "goal_id": "g0.1",
+                  "target": {
+                    "args": [],
+                    "name": "P"
+                  }
+                }
+              ]
+            },
+            "partial_term_after": {
+              "args": [
+                {
+                  "goal_id": "g0.1.1"
+                }
+              ],
+              "rule_name": "proveP"
+            },
+            "partial_term_before": {
+              "goal_id": "g0.1"
+            }
+          },
+          "residue": {
+            "child_order": [
+              "g0.1.1"
+            ],
+            "template": {
+              "args": [
+                {
+                  "goal_id": "g0.1.1"
+                }
+              ],
+              "rule_name": "proveP"
+            }
+          },
+          "step": {
+            "rule_name": "proveP"
+          }
+        },
+        "program": {
+          "children": [
+            {
+              "children": [],
+              "step": {
+                "hypothesis_name": "ha"
+              }
+            }
+          ],
+          "step": {
+            "rule_name": "proveP"
+          }
+        }
+      },
+      {
+        "child_nodes": [],
+        "final_type": {
+          "args": [],
+          "name": "Q"
+        },
+        "final_witness": {
+          "name": "hq"
+        },
+        "invariants": [
+          {
+            "detail": "parent_ids=['g0.2']",
+            "name": "optic_parent_interface_is_singleton",
+            "passed": true
+          },
+          {
+            "detail": "child_ids=[]",
+            "name": "optic_child_ids_unique",
+            "passed": true
+          },
+          {
+            "detail": "holes=[] children=[]",
+            "name": "residue_holes_match_child_interface",
+            "passed": true
+          },
+          {
+            "detail": "coupling_child_ids=[] children=[]",
+            "name": "coupling_child_ids_match_interface",
+            "passed": true
+          },
+          {
+            "detail": "kind=none shared=[] edges=[]",
+            "name": "coupling_kind_matches_structure",
+            "passed": true
+          },
+          {
+            "detail": "exact_children=0",
+            "name": "optic_arity_matches_primitive",
+            "passed": true
+          },
+          {
+            "detail": "inferred=Atom(name='Q', args=()) target=Atom(name='Q', args=()) subst={}",
+            "name": "optic_reassembles_parent_target",
+            "passed": true
+          }
+        ],
+        "obligation": {
+          "context": [
+            {
+              "name": "ha",
+              "proposition": {
+                "args": [],
+                "name": "A"
+              }
+            },
+            {
+              "name": "hq",
+              "proposition": {
+                "args": [],
+                "name": "Q"
+              }
+            }
+          ],
+          "goal_id": "g0.2",
+          "target": {
+            "args": [],
+            "name": "Q"
+          }
+        },
+        "optic_step": {
+          "certificates": [
+            "hypothesis_target_match"
+          ],
+          "decomposition": {
+            "child_interface": {
+              "obligations": []
+            },
+            "coupling": {
+              "child_ids": [],
+              "dependency_edges": [],
+              "kind": "none",
+              "shared_metavars": []
+            },
+            "parent_interface": {
+              "obligations": [
+                {
+                  "context": [
+                    {
+                      "name": "ha",
+                      "proposition": {
+                        "args": [],
+                        "name": "A"
+                      }
+                    },
+                    {
+                      "name": "hq",
+                      "proposition": {
+                        "args": [],
+                        "name": "Q"
+                      }
+                    }
+                  ],
+                  "goal_id": "g0.2",
+                  "target": {
+                    "args": [],
+                    "name": "Q"
+                  }
+                }
+              ]
+            },
+            "partial_term_after": {
+              "name": "hq"
+            },
+            "partial_term_before": {
+              "goal_id": "g0.2"
+            }
+          },
+          "residue": {
+            "child_order": [],
+            "template": {
+              "name": "hq"
+            }
+          },
+          "step": {
+            "hypothesis_name": "hq"
+          }
+        },
+        "program": {
+          "children": [],
+          "step": {
+            "hypothesis_name": "hq"
+          }
+        }
+      }
+    ],
+    "final_type": {
+      "left": {
+        "args": [],
+        "name": "P"
+      },
+      "right": {
+        "args": [],
+        "name": "Q"
+      }
+    },
+    "final_witness": {
+      "left": {
+        "args": [
+          {
+            "name": "ha"
+          }
+        ],
+        "rule_name": "proveP"
+      },
+      "right": {
+        "name": "hq"
+      }
+    },
+    "invariants": [
+      {
+        "detail": "parent_ids=['g0']",
+        "name": "optic_parent_interface_is_singleton",
+        "passed": true
+      },
+      {
+        "detail": "child_ids=['g0.1', 'g0.2']",
+        "name": "optic_child_ids_unique",
+        "passed": true
+      },
+      {
+        "detail": "holes=['g0.1', 'g0.2'] children=['g0.1', 'g0.2']",
+        "name": "residue_holes_match_child_interface",
+        "passed": true
+      },
+      {
+        "detail": "coupling_child_ids=['g0.1', 'g0.2'] children=['g0.1', 'g0.2']",
+        "name": "coupling_child_ids_match_interface",
+        "passed": true
+      },
+      {
+        "detail": "kind=independent shared=[] edges=[]",
+        "name": "coupling_kind_matches_structure",
+        "passed": true
+      },
+      {
+        "detail": "constructor_children=2",
+        "name": "optic_arity_matches_primitive",
+        "passed": true
+      },
+      {
+        "detail": "inferred=And(left=Atom(name='P', args=()), right=Atom(name='Q', args=())) target=And(left=Atom(name='P', args=()), right=Atom(name='Q', args=())) subst={}",
+        "name": "optic_reassembles_parent_target",
+        "passed": true
+      }
+    ],
+    "obligation": {
+      "context": [
+        {
+          "name": "ha",
+          "proposition": {
+            "args": [],
+            "name": "A"
+          }
+        },
+        {
+          "name": "hq",
+          "proposition": {
+            "args": [],
+            "name": "Q"
+          }
+        }
+      ],
+      "goal_id": "g0",
+      "target": {
+        "left": {
+          "args": [],
+          "name": "P"
+        },
+        "right": {
+          "args": [],
+          "name": "Q"
+        }
+      }
+    },
+    "optic_step": {
+      "certificates": [
+        "conjunction_split"
+      ],
+      "decomposition": {
+        "child_interface": {
+          "obligations": [
+            {
+              "context": [
+                {
+                  "name": "ha",
+                  "proposition": {
+                    "args": [],
+                    "name": "A"
+                  }
+                },
+                {
+                  "name": "hq",
+                  "proposition": {
+                    "args": [],
+                    "name": "Q"
+                  }
+                }
+              ],
+              "goal_id": "g0.1",
+              "target": {
+                "args": [],
+                "name": "P"
+              }
+            },
+            {
+              "context": [
+                {
+                  "name": "ha",
+                  "proposition": {
+                    "args": [],
+                    "name": "A"
+                  }
+                },
+                {
+                  "name": "hq",
+                  "proposition": {
+                    "args": [],
+                    "name": "Q"
+                  }
+                }
+              ],
+              "goal_id": "g0.2",
+              "target": {
+                "args": [],
+                "name": "Q"
+              }
+            }
+          ]
+        },
+        "coupling": {
+          "child_ids": [
+            "g0.1",
+            "g0.2"
+          ],
+          "dependency_edges": [],
+          "kind": "independent",
+          "shared_metavars": []
+        },
+        "parent_interface": {
+          "obligations": [
+            {
+              "context": [
+                {
+                  "name": "ha",
+                  "proposition": {
+                    "args": [],
+                    "name": "A"
+                  }
+                },
+                {
+                  "name": "hq",
+                  "proposition": {
+                    "args": [],
+                    "name": "Q"
+                  }
+                }
+              ],
+              "goal_id": "g0",
+              "target": {
+                "left": {
+                  "args": [],
+                  "name": "P"
+                },
+                "right": {
+                  "args": [],
+                  "name": "Q"
+                }
+              }
+            }
+          ]
+        },
+        "partial_term_after": {
+          "left": {
+            "goal_id": "g0.1"
+          },
+          "right": {
+            "goal_id": "g0.2"
+          }
+        },
+        "partial_term_before": {
+          "goal_id": "g0"
+        }
+      },
+      "residue": {
+        "child_order": [
+          "g0.1",
+          "g0.2"
+        ],
+        "template": {
+          "left": {
+            "goal_id": "g0.1"
+          },
+          "right": {
+            "goal_id": "g0.2"
+          }
+        }
+      },
+      "step": {}
+    },
+    "program": {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "step": {
+                "hypothesis_name": "ha"
+              }
+            }
+          ],
+          "step": {
+            "rule_name": "proveP"
+          }
+        },
+        {
+          "children": [],
+          "step": {
+            "hypothesis_name": "hq"
+          }
+        }
+      ],
+      "step": {}
+    }
+  },
+  "program": {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [],
+            "step": {
+              "hypothesis_name": "ha"
+            }
+          }
+        ],
+        "step": {
+          "rule_name": "proveP"
+        }
+      },
+      {
+        "children": [],
+        "step": {
+          "hypothesis_name": "hq"
+        }
+      }
+    ],
+    "step": {}
+  },
+  "root": {
+    "context": [
+      {
+        "name": "ha",
+        "proposition": {
+          "args": [],
+          "name": "A"
+        }
+      },
+      {
+        "name": "hq",
+        "proposition": {
+          "args": [],
+          "name": "Q"
+        }
+      }
+    ],
+    "goal_id": "g0",
+    "target": {
+      "left": {
+        "args": [],
+        "name": "P"
+      },
+      "right": {
+        "args": [],
+        "name": "Q"
+      }
+    }
+  },
+  "rules": [
+    {
+      "conclusion": {
+        "args": [],
+        "name": "P"
+      },
+      "name": "proveP",
+      "premises": [
+        {
+          "args": [],
+          "name": "A"
+        }
+      ]
+    }
+  ]
+}
