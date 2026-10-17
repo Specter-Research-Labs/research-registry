@@ -4,8 +4,6 @@
 .addendum-feature figure{margin-bottom:25px}
 .addendum-feature img,.equational-feature img,.addendum-specimen img{display:block;width:100%;height:auto;background:#f1eee5}
 .addendum-feature figure>a,.equational-feature figure>a,.addendum-specimen>a{display:block;text-decoration:none}
-.addendum-feature figcaption,.equational-feature figcaption,.addendum-specimen figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;padding:12px 0;font:11px/1.5 var(--sl-font-mono);color:var(--sl-color-muted)}
-.addendum-feature figcaption a,.equational-feature figcaption a,.addendum-specimen figcaption a{white-space:nowrap}
 .addendum-series{display:block;margin-bottom:12px;font:11px/1.5 var(--sl-font-mono);color:var(--sl-color-muted)}
 .addendum-feature h2,.equational-feature h2{font:700 clamp(27px,3vw,36px)/1.08 var(--sl-font-display);letter-spacing:-.04em;margin:0 0 19px}
 .addendum-feature h2 a,.equational-feature h2 a{font-weight:inherit;text-decoration:none}

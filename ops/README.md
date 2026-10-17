@@ -32,6 +32,7 @@ Dossier index artwork is rebuilt from the sorting replay and recorded Lean trees
 `python3 ops/render_dossier_previews.py` (requires Node.js).
 Addenda specimens are rebuilt with `python3 ops/render_addenda_specimens.py` in the development shell;
 the generated manifest records their public sources, checksums, and reproduction recipes.
+The executed Lean verification demo also needs Lean 4.30.0.
 
 ## Public Surfaces
 

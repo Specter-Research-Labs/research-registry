@@ -1,6 +1,6 @@
 {
   "poly-morphogenesis": {
-    "src": "/assets/addenda-specimens/poly-morphogenesis.svg?v=20261017",
+    "src": "/assets/addenda-specimens/poly-morphogenesis.svg?v=20261017-clean",
     "alt": "The actual Catlab wiring diagram for the ten-cell reaction–diffusion phase",
     "caption": "Catlab’s ten-cell RD wiring export, restyled for this page. This is the implemented composition, not a result from the unreproduced numerical sweep.",
     "kind": "Wiring export",
@@ -18,7 +18,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/poly-morphogenesis/docs/diagrams/rd_styled.dot"
   },
   "k-semantics-reference": {
-    "src": "/assets/addenda-specimens/k-semantics-reference.svg?v=20261017",
+    "src": "/assets/addenda-specimens/k-semantics-reference.svg?v=20261017-clean",
     "alt": "Two source-generated paths on a seven-by-seven grid: random walk and shortest-path policy",
     "caption": "Two seed-7 replays. K = log₁₀(τ_blind/τ_agent) = 1.22, about 16.6× expected-cost savings. The exact calculation caps costs at 500 steps, giving a lower bound for this grid; it is not the ratio of the pictured paths.",
     "kind": "Executable demo",
@@ -36,7 +36,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/k-semantics-reference/demos/grid.py"
   },
   "equational-theories-distillation": {
-    "src": "/assets/addenda-specimens/equational-theories-distillation.svg?v=20261017",
+    "src": "/assets/addenda-specimens/equational-theories-distillation.svg?v=20261017-clean",
     "alt": "XOR’s two-element Cayley table: commutativity holds, while idempotence fails at one",
     "caption": "An exact finite countermodel checked by the project’s evaluator. XOR is commutative, but 1 ◇ 1 = 0 refutes idempotence.",
     "kind": "Checked countermodel",
@@ -54,7 +54,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/equational-theories-distillation/small_models.py"
   },
   "equational-sheet": {
-    "src": "/assets/addenda-specimens/equational-sheet.svg?v=20261017",
+    "src": "/assets/addenda-specimens/equational-sheet.svg?v=20261017-clean",
     "alt": "An exact kernel rule excerpted from the shipped equational decision sheet",
     "caption": "Source excerpt from cheatsheet-v0.txt; not a new theorem or a hidden-benchmark score.",
     "kind": "Source excerpt",
@@ -68,7 +68,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/equational-theories-distillation/docs/cheatsheet-v0.txt"
   },
   "design-tokens": {
-    "src": "/assets/addenda-specimens/design-tokens.svg?v=20261017",
+    "src": "/assets/addenda-specimens/design-tokens.svg?v=20261017-clean",
     "alt": "The real web color palette with IBM Plex Serif and Berkeley Mono type specimens",
     "caption": "The site’s actual web palette, typefaces, and token names.",
     "kind": "Token specimen",
@@ -86,7 +86,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/design-tokens/web.toml"
   },
   "typst-field-manual": {
-    "src": "/assets/addenda-specimens/typst-field-manual.svg?v=20261017",
+    "src": "/assets/addenda-specimens/typst-field-manual.svg?v=20261017-clean",
     "alt": "The title and abstract of the actual Typst paper example, rendered by Typst",
     "caption": "A crop of paper-example.typ rendered with the bundled publication fonts. Template content, not a research report.",
     "kind": "Typeset output",
@@ -104,7 +104,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/typst-field-manual/paper-example.typ"
   },
   "lean-corpus-extractor": {
-    "src": "/assets/addenda-specimens/lean-corpus-extractor.svg?v=20261017",
+    "src": "/assets/addenda-specimens/lean-corpus-extractor.svg?v=20261017-clean",
     "alt": "Nat.add_comm and the extractor’s documented corpus record",
     "caption": "The declaration template from the extractor’s README example, reflowed for display, with its unchanged record identifiers.",
     "kind": "Documented output",
@@ -118,7 +118,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-corpus-extractor/README.md"
   },
   "lean-sorry-dataset": {
-    "src": "/assets/addenda-specimens/lean-sorry-dataset.svg?v=20261017",
+    "src": "/assets/addenda-specimens/lean-sorry-dataset.svg?v=20261017-clean",
     "alt": "A real dataset test fixture: x : Nat, goal x = x, and its index metadata",
     "caption": "The committed index.min.jsonl test fixture. This is a format specimen, not a sampled production record.",
     "kind": "Index fixture",
@@ -132,7 +132,7 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-sorry-dataset/tests/fixtures/index.min.jsonl"
   },
   "lean-tactic-representation": {
-    "src": "/assets/addenda-specimens/lean-tactic-representation.svg?v=20261017",
+    "src": "/assets/addenda-specimens/lean-tactic-representation.svg?v=20261017-clean",
     "alt": "The toy interpreter’s actual nested constructor/apply program",
     "caption": "An executed toy-interpreter example: constructor, apply proveP, exact ha, and exact hq.",
     "kind": "Toy interpreter output",
@@ -151,7 +151,7 @@
     "dataHref": "/assets/addenda-specimens/tactic-example.json"
   },
   "lean-mcts-learning": {
-    "src": "/assets/addenda-specimens/lean-mcts-learning.svg?v=20261017",
+    "src": "/assets/addenda-specimens/lean-mcts-learning.svg?v=20261017-clean",
     "alt": "A recorded Wonton goal and its next tactic in the training-pair format",
     "caption": "The training-pair format applied to the first committed step of the public hf00795 trace. No training or evaluation score is implied.",
     "kind": "Recorded step / data format",
@@ -169,35 +169,56 @@
     "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-mcts-learning/data/tactic_sft.py"
   },
   "lean-sorry-repos-benchmark": {
-    "src": "/assets/addenda-specimens/lean-sorry-repos-benchmark.svg?v=20261017",
-    "alt": "The scoring unit test’s three-by-three verification outcome matrix",
-    "caption": "The actual pass-at-k scoring test fixture. These are test inputs, not benchmark performance.",
-    "kind": "Scoring fixture",
-    "recipe": "Read verification_success_by_item from the named scoring test via Python’s AST.",
+    "src": "/assets/addenda-specimens/lean-sorry-repos-benchmark.svg?v=20261017-proof",
+    "alt": "A checked Lean proof swaps the two components of a conjunction, with crossing proof wires; exact h is rejected and the reordered pair closes the goal",
+    "caption": "An executed synthetic verification demo on P ∧ Q ⊢ Q ∧ P. Lean rejects exact h with a type mismatch and accepts exact ⟨h.2, h.1⟩ through the harness. Demonstration, not a benchmark result.",
+    "kind": "Executed verifier demo",
+    "recipe": "Run the actual SyntheticLeanVerifier with Lean 4.30.0 on the two displayed tactics; draw the projections in the accepted proof term.",
     "sources": [
       {
-        "path": "addenda/lean-sorry-repos-benchmark/tests/test_scoring.py",
-        "sha256": "5b8649e62aaf9653fb54a61331739454e4ed95fe735b847dabb013c5d96e2e6e"
+        "path": "addenda/lean-sorry-repos-benchmark/lean_sorry_repos_benchmark/verification.py",
+        "sha256": "6e4208ce4db0aebf45eac7dded66299d0af946c8578b21046844a5ab5df4a49d"
+      },
+      {
+        "path": "ops/render_addenda_specimens.py",
+        "sha256": "d29a9c2801a82704c3b9fa6fb39434138c13b5e061d48d65c1f826671ea6aa77"
       }
     ],
-    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-sorry-repos-benchmark/tests/test_scoring.py"
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/lean-sorry-repos-benchmark/lean_sorry_repos_benchmark/verification.py",
+    "dataHref": "/assets/addenda-specimens/proof-demo.json"
   },
   "tinygrad-benchmarks": {
-    "src": "/assets/addenda-specimens/tinygrad-benchmarks.svg?v=20261017",
-    "alt": "The exact old/new diff from the tinygrad patch-comparison test fixture",
-    "caption": "The patch-comparison test’s diff fixture. It demonstrates matching machinery, not a real tinygrad task or a speed result.",
-    "kind": "Patch fixture",
-    "recipe": "Typeset the unchanged old/new lines used by test_compare_attempts_to_gold_detects_close_match.",
+    "src": "/assets/addenda-specimens/tinygrad-benchmarks.svg?v=20261017-evaluation",
+    "alt": "The LLM evaluation protocol: a historical issue and pre-PR code enter an isolated, git-free offline workspace; the model patch is tested and compared with the human patch from the merged PR, held outside the workspace",
+    "caption": "Source-backed diagram of the coding-evaluation protocol. Prompts omit historical answers; the runner materializes a git-free tree and evaluates candidate patches; compare-gold compares them with the private historical solution. Offline containment is a runtime requirement, not a security mechanism implemented by this drawing.",
+    "kind": "Coding-evaluation protocol",
+    "recipe": "Draw the historical-PR split, isolated model workspace, acceptance tests and retrospective human-patch comparison from the committed prompt, runner and compare-gold code.",
     "sources": [
       {
-        "path": "addenda/tinygrad-benchmarks/tests/test_compare.py",
-        "sha256": "f08967b0c5010a41f698c77e164b549b63ce2b3932e7b4e433945c63d849ee23"
+        "path": "addenda/tinygrad-benchmarks/README.md",
+        "sha256": "f5593bbf380b8944ea3ae49193ce101c8988355ee8f76754842c0bb429376402"
+      },
+      {
+        "path": "addenda/tinygrad-benchmarks/docs/benchmark-card.md",
+        "sha256": "8db211c447f911d2ccb1b8551bf02890a926cd0586d8a02defc84362c2c6bff8"
+      },
+      {
+        "path": "addenda/tinygrad-benchmarks/tinygrad_benchmarks/prompts.py",
+        "sha256": "f54a6febf8de3efa60b363aad64a2c8cfea9a827a26e5ce4b638682e8b6c5a00"
+      },
+      {
+        "path": "addenda/tinygrad-benchmarks/tinygrad_benchmarks/runner.py",
+        "sha256": "122ce7fd7840ce2955272524c3763cb332f9aec9e940f0668039361befbc8009"
+      },
+      {
+        "path": "addenda/tinygrad-benchmarks/tinygrad_benchmarks/compare.py",
+        "sha256": "d7f791d91d1cad1e0bdd1fb9a03848db653c7db8e2ee53aed19309e80ddca2a5"
       }
     ],
-    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/tinygrad-benchmarks/tests/test_compare.py"
+    "sourceHref": "https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/tinygrad-benchmarks/README.md"
   },
   "specter-viz": {
-    "src": "/assets/addenda-specimens/specter-viz.svg?v=20261017",
+    "src": "/assets/addenda-specimens/specter-viz.svg?v=20261017-clean",
     "alt": "The actual Panel and LineChart API alongside the four-point example series and interval from its README",
     "caption": "The native component API and a plot of its documented sample values. Example data, not measured training loss or a screenshot of the egui widget.",
     "kind": "Component API / example data",

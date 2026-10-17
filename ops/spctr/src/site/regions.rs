@@ -161,16 +161,8 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
             article class="dossier-card addendum-specimen-card" id=(record.slug) {
                 @if let Some(specimen) = specimens.get(&record.slug) {
                     figure class="addendum-specimen" {
-                        a href=(specimen["sourceHref"].as_str().expect("specimen source URL")) {
+                        a href=(specimen["dataHref"].as_str().or_else(|| specimen["sourceHref"].as_str()).expect("specimen destination")) {
                             img src=(specimen["src"].as_str().expect("specimen image")) alt=(specimen["alt"].as_str().expect("specimen alternative text")) width="1000" height="600" loading="lazy";
-                        }
-                        figcaption {
-                            span { (specimen["kind"].as_str().expect("specimen kind")) }
-                            @if let Some(output) = specimen["dataHref"].as_str() {
-                                a href=(output) { "Output ↗" }
-                            } @else {
-                                a href=(specimen["sourceHref"].as_str().expect("specimen source URL")) { "Source ↗" }
-                            }
                         }
                     }
                 }
