@@ -566,7 +566,7 @@ fn render_context(
                 meta property="og:title" content=(&report.title);
                 meta property="og:description" content=(&report.dek);
                 meta property="og:url" content=(&release_url);
-                title { (&report.title) " | SPECTER Labs" }
+                title { (&report.title) " | Specter Labs" }
                 style { (maud::PreEscaped(CONTEXT_CSS)) }
                 link rel="stylesheet" href="/assets/publication-layout.css?v=20260914-logo";
             }
