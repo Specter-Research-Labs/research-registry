@@ -1,7 +1,8 @@
 -- Report apparatus for `spctr doc build`. Runs after citeproc.
 -- Numbers sections and appendix entries, builds the contents column, turns
--- footnotes into margin notes and endnotes, collects asset links, refuses
--- external links outside the reference list, and assembles the endmatter.
+-- footnotes into margin notes and endnotes, expands term notes, collects asset
+-- links, refuses external links outside the reference list, and assembles the
+-- endmatter.
 
 local function html(content)
   local blocks = content
@@ -30,6 +31,89 @@ local function inline_note_html(blocks)
   return rendered
 end
 
+local TERM_FIELDS = { note = true, image = true, caption = true }
+
+-- Builds the inline filter that replaces each `[text]{term=KEY}` span with a
+-- pure-CSS hover and focus note from the `terms` front matter. Every glossary
+-- entry must be used, because an unused note is usually a renamed key.
+local function term_expander(meta)
+  local glossary = {}
+  local keys = {}
+  for key, entry in pairs(meta.terms or {}) do
+    if pandoc.utils.type(entry) ~= "table" or entry.note == nil then
+      error("report.md: term '" .. key .. "' needs a note")
+    end
+    for field in pairs(entry) do
+      if not TERM_FIELDS[field] then
+        error("report.md: term '" .. key .. "' has unknown field '" .. field .. "'")
+      end
+    end
+    if (entry.image == nil) ~= (entry.caption == nil) then
+      error("report.md: term '" .. key .. "' needs both image and caption, or neither")
+    end
+    local image = nil
+    if entry.image ~= nil then
+      image = pandoc.utils.stringify(entry.image)
+      if not image:match("^assets/") then
+        error("report.md: term '" .. key .. "' image must be under assets/: " .. image)
+      end
+      local file = io.open(image, "rb")
+      if file == nil then
+        error("report.md: term '" .. key .. "' image is missing: " .. image)
+      end
+      file:close()
+    end
+    glossary[key] = { note = entry.note, image = image, caption = entry.caption }
+    table.insert(keys, key)
+  end
+
+  local used = {}
+  local filter = { traverse = "topdown" }
+  filter.Span = function(span)
+    local key = span.attributes.term
+    if key == nil then return nil end
+    local entry = glossary[key]
+    if entry == nil then
+      error("report.md: unknown term '" .. key .. "' in: " .. pandoc.utils.stringify(span.content))
+    end
+    span.content:walk({
+      Span = function(inner)
+        if inner.attributes.term then
+          error("report.md: term '" .. inner.attributes.term .. "' is nested inside term '" .. key .. "'")
+        end
+      end,
+    })
+    used[key] = true
+    local figure = ""
+    if entry.image then
+      figure = string.format('<img src="%s" alt=""><span class="rk-term-caption">%s</span>',
+        escape(entry.image), inline_note_html(entry.caption))
+    end
+    local result = pandoc.Inlines({ pandoc.RawInline("html", '<span class="rk-term" tabindex="0">') })
+    result:extend(span.content)
+    result:insert(pandoc.RawInline("html",
+      '<span class="rk-term-note" role="tooltip">' .. figure .. inline_note_html(entry.note) .. "</span></span>"))
+    return result
+  end
+
+  local function check_all_used()
+    local unused = {}
+    for _, key in ipairs(keys) do
+      if not used[key] then table.insert(unused, key) end
+    end
+    if #unused > 0 then
+      table.sort(unused)
+      error("report.md: terms defined but never used: " .. table.concat(unused, ", "))
+    end
+  end
+  return filter, check_all_used
+end
+
+local function is_review_link(target, review_hosts)
+  local host = target:match("^https?://([^/#?]+)")
+  return host ~= nil and review_hosts[host] == true
+end
+
 function Pandoc(doc)
   local meta = doc.meta
   for _, key in ipairs({ "title", "subtitle", "kicker", "authors", "document_id", "revision", "year", "url", "abstract" }) do
@@ -46,6 +130,27 @@ function Pandoc(doc)
     end
   end
 
+  local review_hosts = {}
+  for _, host in ipairs(meta["rk-review-host"] or {}) do
+    review_hosts[pandoc.utils.stringify(host)] = true
+  end
+
+  for _, block in ipairs(body) do
+    if block.t == "Header" then
+      block.content:walk({
+        Span = function(span)
+          if span.attributes.term then
+            error("report.md: terms are not allowed in headings: " .. pandoc.utils.stringify(block.content))
+          end
+        end,
+      })
+    end
+  end
+  local expand_terms, check_all_used = term_expander(meta)
+  body = body:walk(expand_terms)
+  meta.abstract = pandoc.MetaBlocks(pandoc.Blocks(meta.abstract):walk(expand_terms))
+  check_all_used()
+
   local external = {}
   local assets = {}
   local seen_assets = {}
@@ -57,7 +162,7 @@ function Pandoc(doc)
   end
   local function scan_raw(text)
     for href in text:gmatch('href="(https?://[^"]+)"') do
-      table.insert(external, href)
+      if not is_review_link(href, review_hosts) then table.insert(external, href) end
     end
     for href, label in text:gmatch('<a[^>]-href="(assets/[^"#]+)"[^>]*>(.-)</a>') do
       note_asset(href, (label:gsub("<[^>]+>", "")))
@@ -68,7 +173,7 @@ function Pandoc(doc)
   body = body:walk({
     Link = function(link)
       if link.target:match("^https?://") then
-        table.insert(external, link.target)
+        if not is_review_link(link.target, review_hosts) then table.insert(external, link.target) end
       elseif link.target:match("^assets/") then
         note_asset((link.target:gsub("#.*$", "")), pandoc.utils.stringify(link.content))
       end

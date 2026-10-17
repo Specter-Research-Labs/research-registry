@@ -4,11 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>$pagetitle$</title>
+$if(rk-site)$
+<meta name="color-scheme" content="light">
+<meta name="description" content="$rk-description$">
+<meta property="og:type" content="article">
+<meta property="og:image" content="$rk-image$">
+<link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml">
+$endif$
 $for(header-includes)$
 $header-includes$
 $endfor$
 </head>
 <body>
+$if(rk-site)$
+$rk-site-header$
+$endif$
 <div class="rk-shell">
 <div class="rk-layout">
 <header class="rk-hero">
@@ -28,5 +38,8 @@ $rk-endmatter$
 </main>
 </div>
 </div>
+$if(rk-site)$
+$rk-site-footer$
+$endif$
 </body>
 </html>
