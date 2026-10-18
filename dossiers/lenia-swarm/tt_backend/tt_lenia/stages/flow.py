@@ -8,7 +8,8 @@ def sobel_periodic(A: np.ndarray) -> np.ndarray:
     """Sobel gradient with periodic boundary.
 
     A: [batch, sx, sy, C]
-    Returns: [batch, sx, sy, 2, C] where dim 3 is (gy, gx).
+    Returns: [batch, sx, sy, 2, C] where dim 3 is the ascending gradient
+    (gy = d/d axis 2, gx = d/d axis 1).
     """
     a00 = np.roll(np.roll(A, 1, axis=1), 1, axis=2)
     a01 = np.roll(A, 1, axis=1)
@@ -19,8 +20,8 @@ def sobel_periodic(A: np.ndarray) -> np.ndarray:
     a21 = np.roll(A, -1, axis=1)
     a22 = np.roll(np.roll(A, -1, axis=1), -1, axis=2)
 
-    gx = (a00 + 2.0 * a10 + a20) - (a02 + 2.0 * a12 + a22)
-    gy = (a00 + 2.0 * a01 + a02) - (a20 + 2.0 * a21 + a22)
+    gy = (a02 + 2.0 * a12 + a22) - (a00 + 2.0 * a10 + a20)
+    gx = (a20 + 2.0 * a21 + a22) - (a00 + 2.0 * a01 + a02)
 
     return np.stack([gy, gx], axis=3)
 
@@ -77,11 +78,11 @@ def ttnn_sobel_periodic_split(tensor):
     a21 = ttnn_roll_periodic(tensor, -1, 0)
     a22 = ttnn_roll_periodic(tensor, -1, -1)
 
-    gx_left = ttnn.add(ttnn.add(a00, ttnn.multiply(a10, 2.0)), a20)
-    gx_right = ttnn.add(ttnn.add(a02, ttnn.multiply(a12, 2.0)), a22)
-    gy_top = ttnn.add(ttnn.add(a00, ttnn.multiply(a01, 2.0)), a02)
-    gy_bottom = ttnn.add(ttnn.add(a20, ttnn.multiply(a21, 2.0)), a22)
-    return ttnn.subtract(gy_top, gy_bottom), ttnn.subtract(gx_left, gx_right)
+    gy_low = ttnn.add(ttnn.add(a00, ttnn.multiply(a10, 2.0)), a20)
+    gy_high = ttnn.add(ttnn.add(a02, ttnn.multiply(a12, 2.0)), a22)
+    gx_low = ttnn.add(ttnn.add(a00, ttnn.multiply(a01, 2.0)), a02)
+    gx_high = ttnn.add(ttnn.add(a20, ttnn.multiply(a21, 2.0)), a22)
+    return ttnn.subtract(gy_high, gy_low), ttnn.subtract(gx_high, gx_low)
 
 
 def ttnn_mass_field(A, chem_channel: int | None, include_in_mass: bool):
@@ -113,8 +114,8 @@ def _ttnn_alpha(tensor, *, theta_a: float, n: int):
 
 
 def _sobel_weight_tensor(channels: int) -> np.ndarray:
-    gy = np.array([[1.0, 2.0, 1.0], [0.0, 0.0, 0.0], [-1.0, -2.0, -1.0]], dtype=np.float32)
-    gx = np.array([[1.0, 0.0, -1.0], [2.0, 0.0, -2.0], [1.0, 0.0, -1.0]], dtype=np.float32)
+    gy = np.array([[-1.0, 0.0, 1.0], [-2.0, 0.0, 2.0], [-1.0, 0.0, 1.0]], dtype=np.float32)
+    gx = np.array([[-1.0, -2.0, -1.0], [0.0, 0.0, 0.0], [1.0, 2.0, 1.0]], dtype=np.float32)
     weights = np.zeros((2 * channels, channels, 3, 3), dtype=np.float32)
     for channel in range(channels):
         weights[channel, channel, :, :] = gy

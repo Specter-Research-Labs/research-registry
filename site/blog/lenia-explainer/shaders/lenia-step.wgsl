@@ -121,6 +121,8 @@ fn compute_mass(x: u32, y: u32) -> f32 {
   return total;
 }
 
+// aRC is the cell at (x + C - 1, y + R - 1). Returns the ascending gradient (d/dx, d/dy) so that the flow
+// moves mass up the growth field and down its own density, as in the reference Flow Lenia code.
 fn sobel_at(x: u32, y: u32, ch: u32, use_growth: bool) -> vec2<f32> {
   let ix = i32(x);
   let iy = i32(y);
@@ -148,9 +150,9 @@ fn sobel_at(x: u32, y: u32, ch: u32, use_growth: bool) -> vec2<f32> {
     a22 = read_state(ix + 1, iy + 1, ch);
   }
 
-  let gx = (a00 + 2.0 * a10 + a20) - (a02 + 2.0 * a12 + a22);
-  let gy = (a00 + 2.0 * a01 + a02) - (a20 + 2.0 * a21 + a22);
-  return vec2<f32>(gy, gx);
+  let gx = (a02 + 2.0 * a12 + a22) - (a00 + 2.0 * a10 + a20);
+  let gy = (a20 + 2.0 * a21 + a22) - (a00 + 2.0 * a01 + a02);
+  return vec2<f32>(gx, gy);
 }
 
 fn read_growth(x: i32, y: i32, ch: u32) -> f32 {
@@ -172,9 +174,9 @@ fn sobel_mass_at(x: u32, y: u32) -> vec2<f32> {
   let a21 = read_mass(ix, iy + 1);
   let a22 = read_mass(ix + 1, iy + 1);
 
-  let gx = (a00 + 2.0 * a10 + a20) - (a02 + 2.0 * a12 + a22);
-  let gy = (a00 + 2.0 * a01 + a02) - (a20 + 2.0 * a21 + a22);
-  return vec2<f32>(gy, gx);
+  let gx = (a02 + 2.0 * a12 + a22) - (a00 + 2.0 * a10 + a20);
+  let gy = (a20 + 2.0 * a21 + a22) - (a00 + 2.0 * a01 + a02);
+  return vec2<f32>(gx, gy);
 }
 
 fn read_mass(x: i32, y: i32) -> f32 {
