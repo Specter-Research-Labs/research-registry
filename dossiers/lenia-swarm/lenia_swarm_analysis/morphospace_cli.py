@@ -51,6 +51,7 @@ from lenia_swarm_analysis.morphospace.track1_raw_summary import (
     write_track1_candidate_manifest,
     write_track1_raw_summary_packet,
 )
+from lenia_swarm_analysis.morphospace.track1_verify import verify_track1_runs
 from lenia_swarm_analysis.morphospace.warehouse import (
     connect_database,
     connect_read_only_database,
@@ -1067,6 +1068,36 @@ def _build_parser() -> argparse.ArgumentParser:
             run_root=args.run_root.resolve(),
             output_path=args.output.resolve(),
             candidate_manifest_path=_resolve_optional_path(args.candidate_manifest),
+        )
+    )
+
+    track1_verify = subparsers.add_parser(
+        "verify-track1-runs",
+        help="Check Track 1 run completeness and replay sampled seeds on a pinned engine",
+    )
+    track1_verify.add_argument("--run-root", required=True, type=Path)
+    track1_verify.add_argument("--archive-dir", required=True, type=Path)
+    track1_verify.add_argument("--run-id", required=True, action="append", dest="run_ids")
+    track1_verify.add_argument("--engine", required=True, type=Path)
+    track1_verify.add_argument(
+        "--replay-offset", required=True, action="append", type=int, dest="replay_offsets"
+    )
+    track1_verify.add_argument("--replay-count", required=True, type=int)
+    track1_verify.add_argument("--scratch", required=True, type=Path)
+    track1_verify.add_argument("--output", required=True, type=Path)
+    track1_verify.add_argument("--jobs", required=True, type=int)
+    _add_json(track1_verify)
+    track1_verify.set_defaults(
+        handler=lambda args: verify_track1_runs(
+            run_root=args.run_root.resolve(),
+            archive_dir=args.archive_dir.resolve(),
+            run_ids=args.run_ids,
+            engine=args.engine.resolve(),
+            replay_offsets=args.replay_offsets,
+            replay_count=args.replay_count,
+            scratch_root=args.scratch.resolve(),
+            output_path=args.output.resolve(),
+            jobs=args.jobs,
         )
     )
 
