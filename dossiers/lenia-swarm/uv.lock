@@ -516,11 +516,15 @@ inverse = [
 mlx = [
     { name = "mlx" },
 ]
+observer = [
+    { name = "torch" },
+]
 
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
+    { name = "torch" },
     { name = "ty" },
 ]
 
@@ -535,13 +539,15 @@ requires-dist = [
     { name = "ripser", specifier = ">=0.6.10" },
     { name = "scipy", specifier = ">=1.13.0" },
     { name = "torch", marker = "extra == 'inverse'", specifier = ">=2.2" },
+    { name = "torch", marker = "extra == 'observer'", specifier = ">=2.2" },
 ]
-provides-extras = ["inverse", "mlx"]
+provides-extras = ["inverse", "mlx", "observer"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=8.3.0" },
     { name = "ruff", specifier = ">=0.11.0" },
+    { name = "torch", specifier = ">=2.2" },
     { name = "ty", specifier = ">=0.0.1a14" },
 ]
 

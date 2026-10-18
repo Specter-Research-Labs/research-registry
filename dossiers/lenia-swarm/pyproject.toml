@@ -20,10 +20,14 @@ inverse = [
 mlx = [
     "mlx>=0.31",
 ]
+observer = [
+    "torch>=2.2",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.0",
+    "torch>=2.2",
     "ruff>=0.11.0",
     "ty>=0.0.1a14",
 ]
@@ -40,6 +44,7 @@ lenia-swarm-imgep = "lenia_swarm_analysis.imgep._cli:main"
 lenia-swarm-transform = "lenia_swarm_analysis.transform._cli:main"
 lenia-swarm-morphospace = "lenia_swarm_analysis.morphospace_cli:main"
 lenia-swarm-waddington = "lenia_swarm_analysis.waddington._cli:main"
+lenia-swarm-observer = "lenia_swarm_analysis.observer._cli:main"
 lenia-swarm-attractor-packet = "lenia_swarm_analysis.attractor_packet:main"
 lenia-swarm-arrangement-packet = "lenia_swarm_analysis.arrangement_packet:main"
 lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibration_packet:main"

@@ -33,6 +33,9 @@ struct ReplayCommand: AsyncParsableCommand {
     @Option(name: .long, help: "If > 0, also capture a centered NxN Float16 field per trace sample")
     var developmentFieldResolution: Int = 0
 
+    @Flag(name: .long, help: "Also write the raw per-channel Float32 state of every trace sample to development-state.f32")
+    var developmentState: Bool = false
+
     @OptionGroup
     var logOptions: LogOptions
 
@@ -56,6 +59,9 @@ struct ReplayCommand: AsyncParsableCommand {
         )
         let logger = logging.logger
 
+        if developmentState && !developmentTrace {
+            throw ValidationError("--development-state requires --development-trace.")
+        }
         let inputURL = URL(fileURLWithPath: resolvedInput)
         let inputs = try loadReplayResolvedInputs(from: inputURL)
         if validateOnly {
@@ -74,8 +80,13 @@ struct ReplayCommand: AsyncParsableCommand {
             outputURL: outputURL,
             runID: resolvedRunId,
             exportEnabled: exportEnabled,
-            developmentTraceInterval: developmentTrace ? max(1, traceInterval) : nil,
-            developmentFieldResolution: developmentTrace ? max(0, developmentFieldResolution) : 0,
+            developmentTrace: developmentTrace
+                ? DevelopmentTraceOptions(
+                    interval: max(1, traceInterval),
+                    fieldResolution: max(0, developmentFieldResolution),
+                    recordState: developmentState
+                )
+                : nil,
             logger: logger
         )
 

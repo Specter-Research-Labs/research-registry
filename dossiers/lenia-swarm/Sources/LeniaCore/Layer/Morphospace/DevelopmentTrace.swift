@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// One per-step developmental sample: the same terminal morphology descriptor used at end-of-run,
@@ -14,6 +15,9 @@ public struct MorphospaceDevelopmentSample: Codable, Sendable {
     /// base64 payload). nil unless development-field capture was requested; old traces decode as nil.
     public let fieldResolution: Int?
     public let fieldF16Base64: String?
+    /// SHA-256 of the raw state as little-endian Float32 [height, width, channels], so a run keeps
+    /// verifiable provenance of every sampled state even when the state itself is not retained.
+    public let stateSha256: String?
 
     public init(
         step: Int,
@@ -23,7 +27,8 @@ public struct MorphospaceDevelopmentSample: Codable, Sendable {
         height: Int,
         terminal: MorphospaceTerminalDescriptor,
         fieldResolution: Int? = nil,
-        fieldF16Base64: String? = nil
+        fieldF16Base64: String? = nil,
+        stateSha256: String? = nil
     ) {
         self.step = step
         self.centerX = centerX
@@ -33,6 +38,7 @@ public struct MorphospaceDevelopmentSample: Codable, Sendable {
         self.terminal = terminal
         self.fieldResolution = fieldResolution
         self.fieldF16Base64 = fieldF16Base64
+        self.stateSha256 = stateSha256
     }
 }
 
@@ -155,6 +161,7 @@ public func morphospaceDevelopmentSample(
         height: height,
         terminal: terminal,
         fieldResolution: field != nil ? fieldResolution : nil,
-        fieldF16Base64: field.map(encodeFloat16Base64)
+        fieldF16Base64: field.map(encodeFloat16Base64),
+        stateSha256: values.withUnsafeBytes { SHA256.hash(data: $0) }.map { String(format: "%02x", $0) }.joined()
     )
 }
