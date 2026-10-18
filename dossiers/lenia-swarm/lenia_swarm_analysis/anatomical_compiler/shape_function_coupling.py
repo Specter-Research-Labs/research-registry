@@ -104,7 +104,11 @@ def main(argv: list[str] | None = None) -> int:
     pred = np.column_stack([np.ones(len(shape)), shape]) @ np.linalg.lstsq(
         np.column_stack([np.ones(len(shape)), shape]), func_scores[:, 0], rcond=None)[0]
     _scatter(func_scores[:, 0], pred, r2_loco, out_dir / "shape_predicts_function.png")
-    report = {"n": int(shape.shape[0]), "shapeMetrics": list(_SHAPE_METRICS), "axes": results}
+    # Per-metric fits do not depend on how the functional PCs rotate between harvests.
+    metric_r2 = {key: round(_regress(shape, func_raw[:, i])[0], 3)
+                 for i, key in enumerate(_FUNC_LOG + _FUNC_LIN)}
+    report = {"n": int(shape.shape[0]), "shapeMetrics": list(_SHAPE_METRICS), "axes": results,
+              "metricR2FromShape": metric_r2}
     (out_dir / "shape_function_coupling.json").write_text(
         json.dumps(report, indent=2), encoding="utf-8")
 
@@ -113,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
         top = ", ".join(f"{p['metric']}{p['coef']:+.2f}" for p in r["topShapePredictors"])
         print(f"  {r['axis']:11s} ({r['funcVarianceShare']:.0%} of function): "
               f"R2={r['r2FromShape']:.2f}   [{top}]")
+    print("  per metric: " + "  ".join(f"{k}={v:.2f}" for k, v in metric_r2.items()))
     print(f"wrote {out_dir}/shape_predicts_function.png")
     return 0
 
