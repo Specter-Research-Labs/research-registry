@@ -14,8 +14,9 @@ $endif$
 $for(header-includes)$
 $header-includes$
 $endfor$
+<style>$rk-timelines$</style>
 </head>
-<body>
+<body$if(rk-layout)$ class="rk-$rk-layout$"$endif$>
 $if(rk-site)$
 $rk-site-header$
 $endif$
@@ -24,15 +25,38 @@ $endif$
 <header class="rk-hero">
 <p class="rk-kicker">$kicker$</p>
 <h1>$title$</h1>
+$if(subtitle)$
 <p class="rk-subtitle">$subtitle$</p>
+$endif$
+$if(rk-layout)$
 <p class="rk-byline">$authors$</p>
-<p class="rk-meta">Report · revision $revision$ · $rk-minutes$ min read</p>
-</header>
-$rk-toc$
-<main class="rk-article">
+<p class="rk-meta">$rk-kind$ · revision $revision$ · $rk-minutes$ min read</p>
 <section class="rk-abstract" aria-label="Abstract">
 $abstract$
 </section>
+$if(rk-hero)$
+$rk-hero$
+$endif$
+$else$
+$if(rk-hero)$
+$rk-hero$
+$endif$
+<p class="rk-byline">$authors$</p>
+<p class="rk-meta">$rk-kind$ · revision $revision$ · $rk-minutes$ min read</p>
+$endif$
+</header>
+$rk-toc$
+<main class="rk-article">
+$rk-tocbar$
+$if(rk-layout)$
+$else$
+<section class="rk-abstract" aria-label="Abstract">
+$abstract$
+</section>
+$endif$
+$if(rk-hub)$
+$rk-hub$
+$endif$
 $body$
 $rk-endmatter$
 </main>
@@ -41,5 +65,8 @@ $rk-endmatter$
 $if(rk-site)$
 $rk-site-footer$
 $endif$
+$for(include-after)$
+$include-after$
+$endfor$
 </body>
 </html>

@@ -39,7 +39,14 @@ const FONTS: &[(&str, &str, u16, &str)] = &[
         "normal",
     ),
     ("IBM Plex Serif", "IBMPlexSerif-Italic.woff2", 400, "italic"),
+    ("IBM Plex Serif", "IBMPlexSerif-Medium.woff2", 500, "normal"),
     ("IBM Plex Serif", "IBMPlexSerif-Bold.woff2", 700, "normal"),
+];
+
+const PRELOAD_FONTS: &[&str] = &[
+    "IBMPlexSerif-Regular.woff2",
+    "IBMPlexSerif-Medium.woff2",
+    "BerkeleyMono-Regular.woff2",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
@@ -48,6 +55,19 @@ pub enum Target {
     Lab,
     /// A specterlab.org page, written to the document's published site path.
     Site,
+}
+
+/// The page shell a report renders into, from the `layout` front matter field.
+/// Essays carry no scripts; explorer pages add explorer.css and the widget library.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Layout {
+    Essay,
+    Explorer,
+}
+
+#[derive(Debug, Deserialize)]
+struct LayoutFrontMatter {
+    layout: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -94,6 +114,7 @@ pub fn build(
                     let dir = absolute(dir)?;
                     report_source(&dir)?;
                     let html = render(repo_root, &dir, Target::Lab, None)?;
+                    let html = inline_widget_data(&dir, &html)?;
                     let out = match out {
                         Some(path) => absolute(path)?,
                         None => dir.join("report.html"),
@@ -143,7 +164,7 @@ fn build_site(repo_root: &Utf8Path, dirs: &[Utf8PathBuf]) -> Result<Vec<Utf8Path
     for (page, html) in &rendered {
         let html = resolve_review_links(html, &publications, &sections)
             .with_context(|| format!("{}", page.dir.join("report.md")))?;
-        check_site_page(&html)?;
+        check_site_page(repo_root, &html, read_layout(&report_source(&page.dir)?)?)?;
         let assets = referenced_assets(&page.dir, &html, &page.image)?;
         let page_dir = sections.site_root.join(page.path.trim_start_matches('/'));
         check_stale_files(&page_dir, &page.path, &assets, &publications)?;
@@ -179,8 +200,10 @@ fn render(
     site: Option<&SitePage>,
 ) -> Result<String> {
     let templates = repo_root.join(TEMPLATE_DIR);
+    let layout = read_layout(&report_source(dir)?)?;
     let mut header = tempfile::Builder::new().suffix(".html").tempfile()?;
-    header.write_all(inline_style(repo_root, target)?.as_bytes())?;
+    header.write_all(inline_style(repo_root, target, layout)?.as_bytes())?;
+    let mut after_body = tempfile::Builder::new().suffix(".html").tempfile()?;
 
     let mut command = Command::new("pandoc");
     command
@@ -202,6 +225,13 @@ fn render(
         .arg(format!("--lua-filter={}", templates.join("report.lua")))
         .arg(format!("--include-in-header={}", header.path().display()))
         .current_dir(dir);
+    if layout == Layout::Explorer {
+        after_body.write_all(widget_script(repo_root)?.as_bytes())?;
+        command.arg(format!(
+            "--include-after-body={}",
+            after_body.path().display()
+        ));
+    }
     for host in REVIEW_HOSTS {
         command.arg(format!("--metadata=rk-review-host:{host}"));
     }
@@ -415,14 +445,72 @@ fn resolve_review_links(
     Ok(rewritten.into_owned())
 }
 
-fn check_site_page(html: &str) -> Result<()> {
+fn check_site_page(repo_root: &Utf8Path, html: &str, layout: Layout) -> Result<()> {
     if let Some(host) = REVIEW_HOSTS.iter().find(|host| html.contains(**host)) {
         bail!("site page still mentions the review host {host}");
     }
-    if html.to_ascii_lowercase().contains("<script") {
-        bail!("site page carries a script");
+    let scripts = html.to_ascii_lowercase().matches("<script").count();
+    let allowed = match layout {
+        Layout::Essay => 0,
+        Layout::Explorer => {
+            if !html.contains(&widget_script(repo_root)?) {
+                bail!("explorer page lacks the widget library");
+            }
+            1
+        }
+    };
+    if scripts != allowed {
+        bail!("site page carries a script other than the widget library");
     }
     Ok(())
+}
+
+fn read_layout(source: &Utf8Path) -> Result<Layout> {
+    let text = read(source)?;
+    let front = gray_matter::Matter::<gray_matter::engine::YAML>::new()
+        .parse(&text)
+        .data
+        .with_context(|| format!("{source}: missing YAML front matter"))?
+        .deserialize::<LayoutFrontMatter>()
+        .with_context(|| format!("{source}: layout must be a string"))?;
+    match front.layout.as_deref() {
+        None | Some("essay") => Ok(Layout::Essay),
+        Some("explorer") => Ok(Layout::Explorer),
+        Some(other) => bail!("{source}: layout must be essay or explorer, found {other:?}"),
+    }
+}
+
+/// The widget library as the one script an explorer page carries.
+fn widget_script(repo_root: &Utf8Path) -> Result<String> {
+    let js = read(&repo_root.join(TEMPLATE_DIR).join("widgets.js"))?;
+    if js.to_ascii_lowercase().contains("</script") {
+        bail!("widgets.js must not contain a closing script tag");
+    }
+    Ok(format!("<script type=\"module\">\n{js}</script>\n"))
+}
+
+/// Lab pages are single files, so each widget's data file is inlined into its
+/// `data-src` as a data URI; the widget fetches it the same way either way.
+fn inline_widget_data(dir: &Utf8Path, html: &str) -> Result<String> {
+    let reference = Regex::new(r#"data-src="(assets/[^"]+\.json)""#).expect("valid regex");
+    let mut error = None;
+    let inlined = reference.replace_all(html, |captures: &regex_lite::Captures<'_>| {
+        let path = dir.join(&captures[1]);
+        match fs::read(&path) {
+            Ok(bytes) => format!(
+                r#"data-src="data:application/json;base64,{}""#,
+                base64::engine::general_purpose::STANDARD.encode(bytes)
+            ),
+            Err(err) => {
+                error.get_or_insert(anyhow::anyhow!("failed to read widget data {path}: {err}"));
+                captures[0].to_owned()
+            }
+        }
+    });
+    if let Some(error) = error {
+        return Err(error);
+    }
+    Ok(inlined.into_owned())
 }
 
 /// Anchor ids of the documents a link may point into. Documents in the batch
@@ -554,7 +642,16 @@ fn absolute(path: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(cwd.join(path))
 }
 
-fn inline_style(repo_root: &Utf8Path, target: Target) -> Result<String> {
+fn inline_style(repo_root: &Utf8Path, target: Target, layout: Layout) -> Result<String> {
+    let mut head = String::new();
+    if target == Target::Site {
+        for file in PRELOAD_FONTS {
+            writeln!(
+                head,
+                "<link rel=\"preload\" href=\"/fonts/{file}\" as=\"font\" type=\"font/woff2\" crossorigin>"
+            )?;
+        }
+    }
     let mut css = String::new();
     for (family, file, weight, style) in FONTS {
         // Lab pages are single files, so their fonts are inlined; site pages share
@@ -577,5 +674,8 @@ fn inline_style(repo_root: &Utf8Path, target: Target) -> Result<String> {
     let tokens = design_tokens::load_spec(&design_tokens::spec_dir(repo_root), "web")?;
     css.push_str(&design_tokens_css::generate_css(&tokens)?);
     css.push_str(&read(&repo_root.join(TEMPLATE_DIR).join("report.css"))?);
-    Ok(format!("<style>\n{css}</style>\n"))
+    if layout == Layout::Explorer {
+        css.push_str(&read(&repo_root.join(TEMPLATE_DIR).join("explorer.css"))?);
+    }
+    Ok(format!("{head}<style>\n{css}</style>\n"))
 }
