@@ -11,6 +11,7 @@ from lenia_swarm_analysis.morphospace.atlas_evidence import (
 )
 from lenia_swarm_analysis.morphospace.catalog_qc import apply_shape_behavior_qc
 from lenia_swarm_analysis.morphospace.common_morphology import derive_common_morphology
+from lenia_swarm_analysis.morphospace.creature_definition import assess_replay, classify_ensemble
 from lenia_swarm_analysis.morphospace.derive_anatomy import derive_anatomy
 from lenia_swarm_analysis.morphospace.derive_axes import derive_axes
 from lenia_swarm_analysis.morphospace.derive_lenia_features import (
@@ -1018,6 +1019,38 @@ def _build_parser() -> argparse.ArgumentParser:
             seed=int(args.seed),
             min_region_count=int(args.min_region_count),
             output_path=_resolve_optional_path(args.output),
+        )
+    )
+
+    creatures = subparsers.add_parser(
+        "assess-creatures",
+        help="Apply the provisional adult-creature definition to every campaign of a replay run",
+    )
+    creatures.add_argument("--replay-root", required=True, type=Path)
+    creatures.add_argument("--output", required=True, type=Path)
+    creatures.add_argument("--horizon", required=True, type=int)
+    creatures.add_argument("--workers", required=True, type=int)
+    _add_json(creatures)
+    creatures.set_defaults(
+        handler=lambda args: assess_replay(
+            replay_root=args.replay_root.resolve(),
+            output_path=args.output.resolve(),
+            horizon=int(args.horizon),
+            workers=int(args.workers),
+        )
+    )
+
+    ensemble = subparsers.add_parser(
+        "classify-creatures",
+        help="Classify bodies as creature, unstable or not_creature from torus assessments at several arena sizes",
+    )
+    ensemble.add_argument("--assessment", required=True, type=Path, action="append")
+    ensemble.add_argument("--output", required=True, type=Path)
+    _add_json(ensemble)
+    ensemble.set_defaults(
+        handler=lambda args: classify_ensemble(
+            assessments=[p.resolve() for p in args.assessment],
+            output_path=args.output.resolve(),
         )
     )
 
