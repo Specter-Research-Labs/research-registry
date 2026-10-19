@@ -491,6 +491,7 @@ source = { editable = "." }
 dependencies = [
     { name = "duckdb" },
     { name = "gudhi" },
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "pillow" },
     { name = "ripser" },
@@ -514,6 +515,7 @@ dev = [
 requires-dist = [
     { name = "duckdb", specifier = ">=1.2.1" },
     { name = "gudhi", specifier = ">=3.9.0" },
+    { name = "matplotlib", specifier = ">=3.9.0" },
     { name = "numpy", specifier = ">=2.1.0" },
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "ripser", specifier = ">=0.6.10" },

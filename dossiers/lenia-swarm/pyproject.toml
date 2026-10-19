@@ -10,6 +10,7 @@ dependencies = [
     "gudhi>=3.9.0",
     "scipy>=1.13.0",
     "pillow>=10.0.0",
+    "matplotlib>=3.9.0",
 ]
 
 [project.optional-dependencies]
