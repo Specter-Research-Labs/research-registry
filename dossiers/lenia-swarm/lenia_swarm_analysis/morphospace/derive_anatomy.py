@@ -69,24 +69,6 @@ def _state_rows_for_study(
     return [tuple(row) for row in connection.execute(query, [study_id]).fetchall()]
 
 
-def _raw_specimen_axes(
-    connection: DuckDBPyConnection,
-    *,
-    specimen_id: str,
-) -> dict[str, float]:
-    return {
-        str(axis_id): float(value)
-        for axis_id, value in connection.execute(
-            """
-            SELECT axis_id, raw_value
-            FROM specimen_axes
-            WHERE specimen_id = ? AND raw_value IS NOT NULL
-            """,
-            [specimen_id],
-        ).fetchall()
-    }
-
-
 def _raw_context_trial_axes(
     connection: DuckDBPyConnection,
     *,

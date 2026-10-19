@@ -165,16 +165,6 @@ def _region_indices(
     return {region: np.asarray(indices, dtype=np.int64) for region, indices in rows.items()}
 
 
-def _terminal_examples(
-    *,
-    indices: np.ndarray,
-    specimen_ids: list[str],
-    terminal: np.ndarray,
-) -> dict[str, str]:
-    ranks = _terminal_example_ranks(indices=indices, specimen_ids=specimen_ids, terminal=terminal)
-    return _terminal_examples_from_ranks(ranks)
-
-
 def _terminal_examples_from_ranks(ranks: dict[str, list[dict[str, Any]]]) -> dict[str, str]:
     return {
         "nearestTerminalCentroidSpecimenId": ranks["nearestTerminalCentroid"][0]["specimenId"],

@@ -17,7 +17,6 @@ SOURCE_ID = "lenia_swarm"
 FEATURE_SPACE_ID = "lenia_terminal_v1"
 FEATURE_SPACE_LABEL = "Lenia terminal descriptor axes"
 AXIS_IDS = tuple(spec["id"] for spec in TERMINAL_AXIS_SPECS)
-AXIS_ORDER = {axis_id: index for index, axis_id in enumerate(AXIS_IDS)}
 
 
 def _study_ids(connection: DuckDBPyConnection, study_id: str | None) -> list[str]:
@@ -116,58 +115,6 @@ def _specimen_rows(connection: DuckDBPyConnection, *, study_id: str) -> list[tup
         ORDER BY specimens.specimen_id
         """,
         [study_id],
-    ).fetchall()
-
-
-def _feature_value_rows(
-    connection: DuckDBPyConnection,
-    *,
-    specimen_id: str,
-) -> list[dict[str, Any]]:
-    rows = connection.execute(
-        """
-        SELECT axis_id, raw_value, transformed_value
-        FROM specimen_axes
-        WHERE specimen_id = ?
-          AND axis_family = 'terminal'
-        """,
-        [specimen_id],
-    ).fetchall()
-    value_rows = [
-        {
-            "axis_id": str(axis_id),
-            "raw_value": raw_value,
-            "normalized_value": transformed_value,
-            "metadata_json": {"sourceTable": "specimen_axes"},
-        }
-        for axis_id, raw_value, transformed_value in rows
-        if str(axis_id) in AXIS_ORDER
-    ]
-    return sorted(value_rows, key=lambda row: AXIS_ORDER[str(row["axis_id"])])
-
-
-def _feature_axis_rows_for_study(
-    connection: DuckDBPyConnection,
-    *,
-    study_id: str,
-) -> list[tuple[Any, ...]]:
-    return connection.execute(
-        """
-        SELECT
-            specimen_axes.specimen_id,
-            specimen_axes.axis_id,
-            specimen_axes.raw_value,
-            specimen_axes.transformed_value
-        FROM study_specimens
-        JOIN specimen_axes USING (specimen_id)
-        WHERE study_specimens.study_id = ?
-          AND specimen_axes.axis_family = 'terminal'
-          AND specimen_axes.axis_id IN (
-              SELECT unnest(?)
-          )
-        ORDER BY specimen_axes.specimen_id, specimen_axes.axis_id
-        """,
-        [study_id, list(AXIS_IDS)],
     ).fetchall()
 
 

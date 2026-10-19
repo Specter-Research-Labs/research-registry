@@ -33,7 +33,6 @@ CONFIGS: tuple[RuleConfig, ...] = (
 )
 
 SPECIMENS_PER_CONFIG = 8000
-TRACE_INTERVAL = 25
 
 INPUTS_DIR = STUDY_ROOT / "inputs"
 REPLAY_DIR = STUDY_ROOT / "replay"
