@@ -2385,6 +2385,7 @@ def _write_dryad_fish_fixture(root: Path) -> None:
             ),
             "doi": "10.5061/dryad.n2z34tn2t",
             "url": "https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t",
+            "api_version_id": 273375,
             "publication_date": "2024-01-12",
             "license": "CC0-1.0",
             "authors": ["Kevin Torgersen"],
@@ -2532,6 +2533,22 @@ def _write_embryomaker_snapshot_fixture(path: Path, *, offset: float = 0.0) -> N
         + "\n",
         encoding="utf-8",
     )
+
+
+def test_morphospace_import_dryad_fish_requires_manifest_provenance(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dryad-fish"
+    _write_dryad_fish_fixture(dataset_root)
+    manifest_path = dataset_root / "provenance" / "source.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    del manifest["license"]
+    _write_json(manifest_path, manifest)
+
+    with pytest.raises(ValueError, match=r"missing required fields \['license'\]"):
+        import_dryad_fish_dataset(
+            warehouse_path=tmp_path / "warehouse.duckdb",
+            dataset_root=dataset_root,
+            label="fish-fixture",
+        )
 
 
 def test_morphospace_import_dryad_fish_populates_comparison_layer(

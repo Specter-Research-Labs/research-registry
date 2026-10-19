@@ -28,6 +28,16 @@ from .warehouse import (
 SOURCE_ID = "dryad_fish_body_shape_20240112"
 FEATURE_SPACE_ID = "fish_gpa_pc_v1"
 FEATURE_SPACE_LABEL = "Fish SlicerMorph GPA principal components"
+REQUIRED_MANIFEST_FIELDS = (
+    "dataset_id",
+    "title",
+    "doi",
+    "url",
+    "publication_date",
+    "license",
+    "authors",
+    "api_version_id",
+)
 
 
 def _axis_id(label: str) -> str:
@@ -99,6 +109,14 @@ def _species_label(sample_name: str) -> str | None:
     return None
 
 
+def _read_source_manifest(path: Path) -> dict[str, Any]:
+    manifest = read_json(path)
+    missing = [field for field in REQUIRED_MANIFEST_FIELDS if manifest.get(field) is None]
+    if missing:
+        raise ValueError(f"{path}: missing required fields {missing}")
+    return manifest
+
+
 def _register_dataset_artifacts(
     connection: DuckDBPyConnection,
     *,
@@ -132,7 +150,7 @@ def _register_dataset_artifacts(
             study_id=study_id,
             artifact_kind=artifact_kind,
             path=path,
-            metadata_json={"datasetId": source_manifest.get("dataset_id")},
+            metadata_json={"datasetId": source_manifest["dataset_id"]},
         )
         if artifact_kind == "dryad_source_manifest":
             ingest_json_object_artifact(
@@ -150,7 +168,7 @@ def ingest_dryad_fish_body_shape(
     label: str | None = None,
 ) -> dict[str, Any]:
     root = dataset_root.resolve()
-    source_manifest = read_json(root / "provenance/source.json")
+    source_manifest = _read_source_manifest(root / "provenance/source.json")
     pc_scores_path = root / "extracted/gpa/Slicer_GPA_output/pcScores.csv"
     eigenvalues_path = root / "extracted/gpa/Slicer_GPA_output/eigenvalues.csv"
     if not pc_scores_path.exists():
@@ -174,7 +192,7 @@ def ingest_dryad_fish_body_shape(
         metadata_json={
             "sourceId": SOURCE_ID,
             "datasetRoot": str(root),
-            "doi": source_manifest.get("doi", "10.5061/dryad.n2z34tn2t"),
+            "doi": source_manifest["doi"],
             "featureSpaceId": FEATURE_SPACE_ID,
         },
     )
@@ -182,25 +200,15 @@ def ingest_dryad_fish_body_shape(
         connection,
         source_id=SOURCE_ID,
         source_kind="biological_landmark_dataset",
-        label=str(
-            source_manifest.get(
-                "title",
-                "Phylogenetic structure of body shape in a diverse inland ichthyofauna",
-            )
-        ),
-        version_label=str(source_manifest.get("publication_date", "2024-01-12")),
-        doi=str(source_manifest.get("doi", "10.5061/dryad.n2z34tn2t")),
-        url=str(
-            source_manifest.get(
-                "url",
-                "https://datadryad.org/dataset/doi:10.5061/dryad.n2z34tn2t",
-            )
-        ),
-        license=str(source_manifest.get("license", "CC0-1.0")),
+        label=source_manifest["title"],
+        version_label=source_manifest["publication_date"],
+        doi=source_manifest["doi"],
+        url=source_manifest["url"],
+        license=source_manifest["license"],
         metadata_json={
-            "authors": source_manifest.get("authors", []),
-            "apiVersionId": source_manifest.get("api_version_id"),
-            "datasetId": source_manifest.get("dataset_id"),
+            "authors": source_manifest["authors"],
+            "apiVersionId": source_manifest["api_version_id"],
+            "datasetId": source_manifest["dataset_id"],
         },
     )
     _register_dataset_artifacts(
@@ -281,12 +289,12 @@ def ingest_dryad_fish_body_shape(
                 "regime_family": "adult_body_shape",
                 "geometry_family": "3d_landmark_gpa",
                 "canonical_family": _species_label(sample_name),
-                "recorded_at": source_manifest.get("publication_date", "2024-01-12"),
+                "recorded_at": source_manifest["publication_date"],
                 "results_path": str(pc_scores_path),
                 "provenance_json": {
                     "sourceId": SOURCE_ID,
                     "sampleName": sample_name,
-                    "doi": source_manifest.get("doi", "10.5061/dryad.n2z34tn2t"),
+                    "doi": source_manifest["doi"],
                     "featureSpaceId": FEATURE_SPACE_ID,
                     "sourceRowIndex": row["source_row_index"],
                 },
@@ -301,7 +309,7 @@ def ingest_dryad_fish_body_shape(
             source_id=SOURCE_ID,
             context_id=context_id,
             observation_kind="geometric_morphometric_embedding",
-            observed_at=source_manifest.get("publication_date", "2024-01-12"),
+            observed_at=source_manifest["publication_date"],
             source_ref=f"{pc_scores_path}#{row['source_row_index'] + 2}",
             payload_json={
                 "sampleName": sample_name,
