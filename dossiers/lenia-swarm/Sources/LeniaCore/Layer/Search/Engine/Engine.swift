@@ -443,16 +443,20 @@ public final class SearchEngine {
                         massState = ABatch
                     }
                     if let stateHandler = capture.stateHandler {
-                        let sampleState = massState[capture.sampleIndex, 0..., 0..., 0...]
-                        let flatState = sampleState.flattened()
+                        let flatState = massState.flattened()
                         eval(flatState)
-                        stateHandler(
-                            step,
-                            runtimeConfig.sx,
-                            runtimeConfig.sy,
-                            runtimeConfig.channels,
-                            flatState.asArray(Float.self)
-                        )
+                        let values = flatState.asArray(Float.self)
+                        let sampleSize = values.count / batchSize
+                        for sample in 0..<batchSize {
+                            stateHandler(
+                                sample,
+                                step,
+                                runtimeConfig.sx,
+                                runtimeConfig.sy,
+                                runtimeConfig.channels,
+                                Array(values[(sample * sampleSize)..<((sample + 1) * sampleSize)])
+                            )
+                        }
                     }
                     if let flowHandler = capture.flowHandler {
                         let vizKernels: CompiledKernels?

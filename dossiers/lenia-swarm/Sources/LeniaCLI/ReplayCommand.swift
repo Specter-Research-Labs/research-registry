@@ -39,6 +39,9 @@ struct ReplayCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Trace steps that keep fields and raw state: \"all\" or comma-separated steps. Required with --development-field-resolution or --development-state")
     var developmentRawSteps: String?
 
+    @Option(name: .long, help: "Flow bodies per engine batch. Above 1, every body in a batch must share its config except rule parameters and init seed")
+    var batchSize: Int = 1
+
     @OptionGroup
     var logOptions: LogOptions
 
@@ -99,6 +102,7 @@ struct ReplayCommand: AsyncParsableCommand {
                     rawSteps: rawSteps
                 )
                 : nil,
+            batchSize: batchSize,
             logger: logger
         )
 
