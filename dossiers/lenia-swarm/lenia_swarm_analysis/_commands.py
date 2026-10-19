@@ -25,19 +25,6 @@ ANALYSIS_GROUPS = (
             Subcommand("conditional", "conditional", "Conditional codelength for creature pairs"),
         ),
     ),
-    CommandGroup(
-        name="agda",
-        module="agda._cli",
-        help="Agda proof generation tools",
-        prog="lenia-swarm-agda",
-        description="Agda proof generation tools",
-        package="lenia_swarm_analysis.agda",
-        commands=(
-            Subcommand("facing-packet", "facing_packet", "Build Agda-facing packet"),
-            Subcommand("codegen", "codegen", "Generate Agda module from facing packet"),
-            Subcommand("package", "package", "Build complete Agda package"),
-        ),
-    ),
 )
 
 GROUPS_BY_NAME = {group.name: group for group in ANALYSIS_GROUPS}

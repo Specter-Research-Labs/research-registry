@@ -34,7 +34,6 @@ dev = [
 
 [project.scripts]
 lenia-swarm-analysis = "lenia_swarm_analysis._cli:main"
-lenia-swarm-agda = "lenia_swarm_analysis.agda._cli:main"
 lenia-swarm-morphospace = "lenia_swarm_analysis.morphospace_cli:main"
 lenia-swarm-waddington = "lenia_swarm_analysis.waddington._cli:main"
 lenia-swarm-observer = "lenia_swarm_analysis.observer._cli:main"
