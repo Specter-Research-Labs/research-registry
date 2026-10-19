@@ -82,9 +82,6 @@ from lenia_swarm_analysis.transform.atlas import (
 from lenia_swarm_analysis.transform.focal import (
     build_transformation_focal_packet,
 )
-from lenia_swarm_analysis.transform.replay import (
-    build_transformation_replay_packet,
-)
 from lenia_swarm_analysis.transformation_metrics import (
     DEVELOPMENTAL_AXIS_IDS,
     TERMINAL_AXIS_IDS,
@@ -1165,7 +1162,6 @@ def test_morphospace_library_ingest_prefers_specimen_manifest_contract(tmp_path:
 
 def test_morphospace_replay_ingest_and_atlas_export_roundtrip(tmp_path: Path) -> None:
     traces_path, _fixture = _make_replay_fixture(tmp_path)
-    legacy_replay = build_transformation_replay_packet(development_traces_path=traces_path)
 
     connection = connect_database(tmp_path / "morphospace.duckdb")
     try:
@@ -1175,29 +1171,20 @@ def test_morphospace_replay_ingest_and_atlas_export_roundtrip(tmp_path: Path) ->
         assert derive_status(connection, study_id=study_id) == 2
 
         exported_replay = export_replay_packet(connection, study_id=study_id)
-        assert exported_replay["summary"] == legacy_replay["summary"]
-        assert exported_replay["groupCounts"] == legacy_replay["groupCounts"]
         assert [axis["id"] for axis in exported_replay["terminalAxes"]] == list(TERMINAL_AXIS_IDS)
         assert [axis["id"] for axis in exported_replay["developmentalAxes"]] == list(
             DEVELOPMENTAL_AXIS_IDS
         )
         exported_by_id = {row["specimenId"]: row for row in exported_replay["specimens"]}
-        legacy_by_id = {row["specimenId"]: row for row in legacy_replay["specimens"]}
-        assert set(exported_by_id) == set(legacy_by_id) == {"specimen-a", "specimen-b"}
+        assert set(exported_by_id) == {"specimen-a", "specimen-b"}
         assert exported_by_id["specimen-b"]["familyKind"] == "r3_multikernel_1c__single_offset_40"
-        assert (
-            exported_by_id["specimen-a"]["developmentalAxes"]
-            == legacy_by_id["specimen-a"]["developmentalAxes"]
-        )
-
     finally:
         connection.close()
 
-    # Build the legacy atlas from the legacy replay packet after closing the DB.
-    legacy_replay_path = traces_path.parent / "legacy-replay.json"
-    _write_json(legacy_replay_path, legacy_replay)
-    legacy_atlas = build_transformation_atlas_packet(
-        replay_packet_path=legacy_replay_path,
+    replay_packet_path = traces_path.parent / "exported-replay.json"
+    _write_json(replay_packet_path, exported_replay)
+    packet_atlas = build_transformation_atlas_packet(
+        replay_packet_path=replay_packet_path,
         top_exemplars_per_axis=3,
     )
 
@@ -1208,7 +1195,7 @@ def test_morphospace_replay_ingest_and_atlas_export_roundtrip(tmp_path: Path) ->
             study_id=study_id,
             top_exemplars_per_axis=3,
         )
-        assert exported_atlas["summary"] == legacy_atlas["summary"]
+        assert exported_atlas["summary"] == packet_atlas["summary"]
         assert {specimen["specimenId"] for specimen in exported_atlas["specimens"]} == {
             "specimen-a",
             "specimen-b",
@@ -1241,7 +1228,13 @@ def test_morphospace_replay_ingest_and_atlas_export_roundtrip(tmp_path: Path) ->
 
 def test_morphospace_replay_root_ingest_matches_trace_summary_ingest(tmp_path: Path) -> None:
     replay_root, traces_path = _make_replay_root_fixture(tmp_path)
-    legacy_replay = build_transformation_replay_packet(development_traces_path=traces_path)
+
+    connection = connect_database(tmp_path / "trace-summary.duckdb")
+    try:
+        trace_study_id = ingest_replay_batch(connection, development_traces_path=traces_path)
+        trace_replay = export_replay_packet(connection, study_id=trace_study_id)
+    finally:
+        connection.close()
 
     connection = connect_database(tmp_path / "replay-root.duckdb")
     try:
@@ -1249,8 +1242,8 @@ def test_morphospace_replay_root_ingest_matches_trace_summary_ingest(tmp_path: P
         assert _scalar_int(connection, "SELECT COUNT(*) FROM raw_json_objects") == 2
         assert _scalar_int(connection, "SELECT COUNT(*) FROM raw_jsonl_rows") == 6
         exported_replay = export_replay_packet(connection, study_id=study_id)
-        assert exported_replay["summary"] == legacy_replay["summary"]
-        assert exported_replay["groupCounts"] == legacy_replay["groupCounts"]
+        assert exported_replay["summary"] == trace_replay["summary"]
+        assert exported_replay["groupCounts"] == trace_replay["groupCounts"]
         assert {specimen["specimenId"] for specimen in exported_replay["specimens"]} == {
             "specimen-a",
             "specimen-b",

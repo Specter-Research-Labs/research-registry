@@ -52,11 +52,11 @@ def test_root_cli_routes_analysis_family_and_forwards_args(monkeypatch) -> None:
 
     monkeypatch.setattr(_dispatch, "import_module", fake_import_module)
 
-    assert _cli.main(["fiber", "continuation", "--run-dir", "runs/a"]) == 0
+    assert _cli.main(["observer", "measure", "--states", "runs/a"]) == 0
     assert calls == [
         (
-            "lenia_swarm_analysis.fiber._cli",
-            ["continuation", "--run-dir", "runs/a"],
+            "lenia_swarm_analysis.observer._cli",
+            ["measure", "--states", "runs/a"],
         )
     ]
 
@@ -75,14 +75,14 @@ def test_group_cli_uses_shared_registry_and_forwards_args(monkeypatch) -> None:
 
     assert (
         _dispatch.dispatch_command_group(
-            ["continuation", "--run-dir", "runs/a"],
-            GROUPS_BY_NAME["fiber"],
+            ["measure", "--states", "runs/a"],
+            GROUPS_BY_NAME["observer"],
         )
         == 0
     )
     assert calls == [
         (
-            "lenia_swarm_analysis.fiber.continuation",
-            ["--run-dir", "runs/a"],
+            "lenia_swarm_analysis.observer.measure",
+            ["--states", "runs/a"],
         )
     ]
