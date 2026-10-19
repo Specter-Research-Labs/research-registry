@@ -1,8 +1,8 @@
 import ArgumentParser
+import DistributedCluster
 import Foundation
 import LeniaCore
 import Logging
-import Metal
 import SQLite3
 
 struct CampaignCommand: AsyncParsableCommand {
@@ -23,11 +23,38 @@ struct CampaignCommand: AsyncParsableCommand {
     @OptionGroup
     var promotion: ArchivePromotionOptions
 
+    @Flag(name: .long, help: "Run campaign jobs on workers that join this process via `orchestrate worker --controller <host> --controller-port <port>`")
+    var distributed: Bool = false
+
+    @Option(name: .long, help: "Host IP to bind to when --distributed (default: 0.0.0.0)")
+    var host: String?
+
+    @Option(name: .long, help: "Port to bind to when --distributed (default: 7337)")
+    var port: Int?
+
+    @Option(name: .long, help: "Minimum connected workers required when --distributed (default: 1)")
+    var minWorkers: Int?
+
     @Flag(name: .long, help: "Parse and validate the campaign config without running")
     var validateOnly: Bool = false
 
     @OptionGroup
     var logOptions: LogOptions
+
+    func validate() throws {
+        guard distributed else {
+            if host != nil || port != nil || minWorkers != nil {
+                throw ValidationError("--host, --port and --min-workers require --distributed.")
+            }
+            return
+        }
+        if let port, !(1...65535).contains(port) {
+            throw ValidationError("--port must be in 1...65535.")
+        }
+        if let minWorkers, minWorkers < 1 {
+            throw ValidationError("--min-workers must be >= 1.")
+        }
+    }
 
     mutating func run() async throws {
         try await runDeclarativeCampaign(campaignPath: campaign)
@@ -54,6 +81,9 @@ struct CampaignCommand: AsyncParsableCommand {
             from: Data(contentsOf: campaignConfigURL)
         )
         logger.info("Loaded campaign '\(campaignConfig.name)' with \(campaignConfig.phases.count) phases")
+        if distributed {
+            try validateDistributedCampaignPhases(campaignConfig.phases)
+        }
 
         let outputURL = URL(fileURLWithPath: resolvedOutput, isDirectory: true)
         let defaultCompendiumPath = outputURL.appendingPathComponent("compendium.sqlite").path
@@ -78,6 +108,64 @@ struct CampaignCommand: AsyncParsableCommand {
 
         try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
 
+        guard distributed else {
+            try await runPhases(
+                campaignConfig: campaignConfig,
+                campaignConfigURL: campaignConfigURL,
+                outputURL: outputURL,
+                resolvedPromotion: resolvedPromotion,
+                runID: resolvedRunId,
+                executionMode: .local,
+                logger: logger
+            )
+            return
+        }
+
+        let bindHost = host ?? "0.0.0.0"
+        let bindPort = port ?? 7337
+        let requiredWorkers = minWorkers ?? 1
+        let system = await ClusterSystem("LeniaHive") { settings in
+            settings.bindHost = bindHost
+            settings.bindPort = bindPort
+            settings.swim.probeInterval = .seconds(1)
+            settings.swim.pingTimeout = .milliseconds(500)
+            settings.remoteCall.defaultTimeout = .seconds(1800)
+        }
+        let pool = CampaignWorkerPool(
+            system: system,
+            logger: logger,
+            runContext: RunContext(runId: resolvedRunId, controllerId: "\(ProcessInfo.processInfo.hostName):\(bindPort)")
+        )
+        logger.info("Campaign controller listening on \(bindHost):\(bindPort); waiting for \(requiredWorkers) worker(s)")
+        do {
+            try await pool.start(minWorkers: requiredWorkers)
+            try await runPhases(
+                campaignConfig: campaignConfig,
+                campaignConfigURL: campaignConfigURL,
+                outputURL: outputURL,
+                resolvedPromotion: resolvedPromotion,
+                runID: resolvedRunId,
+                executionMode: .distributed(pool),
+                logger: logger
+            )
+        } catch {
+            await pool.stop()
+            try system.shutdown()
+            throw error
+        }
+        await pool.stop()
+        try system.shutdown()
+    }
+
+    private func runPhases(
+        campaignConfig: LeniaCampaignConfig,
+        campaignConfigURL: URL,
+        outputURL: URL,
+        resolvedPromotion: ArchivePromotionConfig,
+        runID resolvedRunId: String,
+        executionMode: CampaignExecutionMode,
+        logger: Logger
+    ) async throws {
         let dossierRoot = campaignDossierRoot()
         let campaignConfigDirectory = campaignConfigURL.deletingLastPathComponent()
         let phaseIsolation = campaignConfig.phaseIsolation ?? true
@@ -95,13 +183,14 @@ struct CampaignCommand: AsyncParsableCommand {
 
             do {
                 let resolvedPhase = resolvePhaseReferences(phase, completedPhaseOutputs: completedPhaseOutputs)
-                let result = try executeDeclarativePhase(
+                let result = try await executeDeclarativePhase(
                     phase: resolvedPhase,
                     phaseOutputURL: phaseOutputURL,
                     dossierRoot: dossierRoot,
                     campaignConfigDirectory: campaignConfigDirectory,
                     runID: resolvedRunId,
                     backendRequest: backend,
+                    executionMode: executionMode,
                     logger: logger
                 )
                 phaseResults.append(result)
@@ -186,30 +275,7 @@ struct CampaignExecutionRequest {
     let backendRequest: String
     let exportBest: Int?
     let promotion: ArchivePromotionConfig
-}
-
-struct CampaignSummaryFile: Codable {
-    let schemaVersion: Int
-    let runID: String
-    let preset: LeniaCampaignPreset
-    let totalJobs: Int
-    let completedRuns: Int
-    let failedRuns: Int
-    let metricRows: Int
-    let eventRows: Int
-    let exportedCreatures: Int
-    let backends: [String: Int]
-}
-
-struct CampaignExecutionResult {
-    let jobs: [LeniaCampaignJob]
-    let runs: [LeniaCampaignRunRecord]
-    let metrics: [LeniaCampaignMetricRecord]
-    let events: [LeniaCampaignEventRecord]
-    let results: [SimulationResultData]
-    let ecologyArtifacts: [LeniaCampaignEcologyArtifact]
-    let exportCandidates: [LeniaCampaignExportCandidate]
-    let summary: CampaignSummaryFile
+    let executionMode: CampaignExecutionMode
 }
 
 private struct CampaignResolvedConfigFile: Codable {
@@ -242,26 +308,24 @@ private func aggregateCampaignExecutions(
     )
 }
 
-private func executeLocalCampaignJobs(
-    _ jobs: [LeniaCampaignJob],
-    logger: Logger,
-    metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil
-) throws -> LeniaCampaignJobExecution {
-    let capabilities = localCampaignCapabilities()
-    let executions = try jobs.map { job in
-        try executeLeniaCampaignJob(job, logger: logger, capabilities: capabilities)
-    }
-    return aggregateCampaignExecutions(executions, metricsTransform: metricsTransform)
-}
-
-func executeLocalCampaignPhase(
+func executeCampaignPhase(
     request: CampaignExecutionRequest,
     jobs: [LeniaCampaignJob],
     logger: Logger,
     metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil,
     postCompendiumIngest: ((LeniaCampaignJobExecution, String) throws -> Void)? = nil
-) throws -> LeniaCampaignJobExecution {
-    let execution = try executeLocalCampaignJobs(jobs, logger: logger, metricsTransform: metricsTransform)
+) async throws -> LeniaCampaignJobExecution {
+    let executions: [LeniaCampaignJobExecution]
+    switch request.executionMode {
+    case .local:
+        let capabilities = LeniaWorker.detectBackendCapabilities()
+        executions = try jobs.map { job in
+            try executeLeniaCampaignJob(job, logger: logger, capabilities: capabilities, workerID: nil)
+        }
+    case .distributed(let pool):
+        executions = try await pool.execute(jobs: jobs)
+    }
+    let execution = aggregateCampaignExecutions(executions, metricsTransform: metricsTransform)
     try writeCampaignBundle(
         request: request,
         jobs: jobs,
@@ -269,6 +333,13 @@ func executeLocalCampaignPhase(
         outputURL: request.outputURL,
         logger: logger
     )
+    let failed = execution.runs.filter { $0.status == .failed }
+    guard failed.isEmpty else {
+        let details = failed.map { "\($0.runID) on \($0.workerID ?? "no worker"): \($0.errorMessage ?? "")" }
+        throw ValidationError(
+            "\(failed.count)/\(execution.runs.count) campaign runs failed; bundle written to \(request.outputURL.path) without compendium indexing. \(details.joined(separator: "; "))"
+        )
+    }
     try runCampaignCompendiumIndex(
         outputURL: request.outputURL,
         postCompendiumIngest: postCompendiumIngest.map { hook in
@@ -276,108 +347,6 @@ func executeLocalCampaignPhase(
         }
     )
     return execution
-}
-
-func runCampaign(
-    request: CampaignExecutionRequest,
-    logger: Logger
-) throws -> CampaignExecutionResult {
-    let dossierRoot = campaignDossierRoot()
-    let configDirectory = request.configURL.deletingLastPathComponent()
-    let outputURL = request.outputURL.standardizedFileURL
-    try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
-
-    let jobs = try buildCampaignJobs(
-        request: request,
-        dossierRoot: dossierRoot,
-        configDirectory: configDirectory,
-        logger: logger
-    )
-    let metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? =
-        request.preset == .interventionBattery
-        ? { metrics in applyBaselineComparisons(to: &metrics) }
-        : nil
-
-    let execution = try executeLocalCampaignJobs(jobs, logger: logger, metricsTransform: metricsTransform)
-
-    try writeCampaignBundle(
-        request: request,
-        jobs: jobs,
-        execution: execution,
-        outputURL: outputURL,
-        logger: logger
-    )
-
-    let summary = summarizeCampaign(
-        runID: request.runID,
-        preset: request.preset,
-        jobs: jobs,
-        runs: execution.runs,
-        metrics: execution.metrics,
-        events: execution.events,
-        exportedCreatures: request.exportBest == nil ? 0 : min(execution.exportCandidates.count, request.exportBest ?? 0)
-    )
-    try writeResearchJSON(summary, to: outputURL.appendingPathComponent("summary.json"), prettyPrinted: true)
-    try applyPromotionIfEnabled(
-        config: request.promotion,
-        runDir: outputURL.path,
-        includeResults: true
-    )
-
-    return CampaignExecutionResult(
-        jobs: jobs,
-        runs: execution.runs,
-        metrics: execution.metrics,
-        events: execution.events,
-        results: execution.results,
-        ecologyArtifacts: execution.ecologyArtifacts,
-        exportCandidates: execution.exportCandidates,
-        summary: summary
-    )
-}
-
-private func localCampaignCapabilities() -> WorkerBackendCapabilities {
-    if MTLCreateSystemDefaultDevice() != nil {
-        return WorkerBackendCapabilities(
-            canonicalSearchBackends: [.mlx, .metalFull],
-            canonicalFlowLeniaBackends: [.mlx, .metalFull],
-            canonicalSearchPreferredBackend: .metalFull,
-            canonicalFlowLeniaPreferredBackend: .metalFull
-        )
-    }
-    return WorkerBackendCapabilities(
-        canonicalSearchBackends: [.mlx],
-        canonicalFlowLeniaBackends: [.mlx],
-        canonicalSearchPreferredBackend: .mlx,
-        canonicalFlowLeniaPreferredBackend: .mlx
-    )
-}
-
-func summarizeCampaign(
-    runID: String,
-    preset: LeniaCampaignPreset,
-    jobs: [LeniaCampaignJob],
-    runs: [LeniaCampaignRunRecord],
-    metrics: [LeniaCampaignMetricRecord],
-    events: [LeniaCampaignEventRecord],
-    exportedCreatures: Int
-) -> CampaignSummaryFile {
-    let backends = runs.reduce(into: [String: Int]()) { partial, run in
-        guard let actualBackend = run.actualBackend else { return }
-        partial[actualBackend, default: 0] += 1
-    }
-    return CampaignSummaryFile(
-        schemaVersion: 1,
-        runID: runID,
-        preset: preset,
-        totalJobs: jobs.count,
-        completedRuns: runs.filter { $0.status == .completed }.count,
-        failedRuns: runs.filter { $0.status == .failed }.count,
-        metricRows: metrics.count,
-        eventRows: events.count,
-        exportedCreatures: exportedCreatures,
-        backends: backends
-    )
 }
 
 func writeCampaignBundle(

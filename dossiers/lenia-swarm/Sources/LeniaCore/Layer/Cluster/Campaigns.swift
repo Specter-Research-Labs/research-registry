@@ -121,7 +121,6 @@ public struct LeniaCampaignPhaseResult: Sendable {
 
 public enum LeniaCampaignPreset: String, Codable, CaseIterable, Sendable {
     case discovery
-    case foodDiscovery = "food-discovery"
     case seededEcology = "seeded-ecology"
     case interventionBattery = "intervention-battery"
 }
@@ -275,6 +274,8 @@ public struct LeniaCampaignRunRecord: Codable, Sendable {
     public let perturbationLabel: String?
     public let comparisonGroup: String?
     public let seedReference: LeniaCampaignSeedReference?
+    public let workerID: String?
+    public let errorMessage: String?
 
     public init(
         campaignID: String,
@@ -289,6 +290,8 @@ public struct LeniaCampaignRunRecord: Codable, Sendable {
         perturbationLabel: String?,
         comparisonGroup: String?,
         seedReference: LeniaCampaignSeedReference?,
+        workerID: String?,
+        errorMessage: String?
     ) {
         self.campaignID = campaignID
         self.runID = runID
@@ -302,6 +305,8 @@ public struct LeniaCampaignRunRecord: Codable, Sendable {
         self.perturbationLabel = perturbationLabel
         self.comparisonGroup = comparisonGroup
         self.seedReference = seedReference
+        self.workerID = workerID
+        self.errorMessage = errorMessage
     }
 }
 
@@ -508,7 +513,9 @@ private extension LeniaCampaignJob {
     func runRecord(
         runID overrideRunID: String? = nil,
         status: LeniaCampaignRunStatus,
-        actualBackend: String
+        actualBackend: String?,
+        workerID: String?,
+        errorMessage: String? = nil
     ) -> LeniaCampaignRunRecord {
         LeniaCampaignRunRecord(
             campaignID: campaignID,
@@ -522,7 +529,9 @@ private extension LeniaCampaignJob {
             environmentLabel: environmentLabel,
             perturbationLabel: perturbationLabel,
             comparisonGroup: comparisonGroup,
-            seedReference: seedReference
+            seedReference: seedReference,
+            workerID: workerID,
+            errorMessage: errorMessage
         )
     }
 
@@ -624,10 +633,33 @@ public func materializeCampaignJob(
     }
 }
 
+public func workerSupportsCampaignJob(
+    _ status: WorkerStatus,
+    job: LeniaCampaignJob
+) -> Bool {
+    materializeCampaignJob(job, for: status.capabilities) != nil
+}
+
+public func failedLeniaCampaignJobExecution(
+    _ job: LeniaCampaignJob,
+    workerID: String?,
+    errorMessage: String
+) -> LeniaCampaignJobExecution {
+    LeniaCampaignJobExecution(
+        runs: [job.runRecord(status: .failed, actualBackend: nil, workerID: workerID, errorMessage: errorMessage)],
+        metrics: [],
+        events: [],
+        results: [],
+        ecologyArtifacts: [],
+        exportCandidates: []
+    )
+}
+
 public func executeLeniaCampaignJob(
     _ job: LeniaCampaignJob,
     logger: Logger,
-    capabilities: WorkerBackendCapabilities
+    capabilities: WorkerBackendCapabilities,
+    workerID: String?
 ) throws -> LeniaCampaignJobExecution {
     try LeniaMetalLibrarySupport.ensureAvailable()
     guard let materializedJob = materializeCampaignJob(job, for: capabilities) else {
@@ -638,19 +670,20 @@ public func executeLeniaCampaignJob(
         guard let payload = materializedJob.search else {
             throw WorkerError.invalidConfig("Search campaign job \(materializedJob.runID) is missing its payload.")
         }
-        return try executeLeniaSearchCampaignJob(materializedJob, payload: payload, logger: logger)
+        return try executeLeniaSearchCampaignJob(materializedJob, payload: payload, logger: logger, workerID: workerID)
     case .ecology2025:
         guard let payload = materializedJob.ecology else {
             throw WorkerError.invalidConfig("Ecology campaign job \(materializedJob.runID) is missing its payload.")
         }
-        return try executeLeniaEcologyCampaignJob(materializedJob, payload: payload, logger: logger)
+        return try executeLeniaEcologyCampaignJob(materializedJob, payload: payload, logger: logger, workerID: workerID)
     }
 }
 
 private func executeLeniaSearchCampaignJob(
     _ job: LeniaCampaignJob,
     payload: LeniaCampaignSearchJobPayload,
-    logger: Logger
+    logger: Logger,
+    workerID: String?
 ) throws -> LeniaCampaignJobExecution {
     let simulationJob = payload.simulationJob
     let searchConfig = simulationJob.searchConfig
@@ -730,7 +763,8 @@ private func executeLeniaSearchCampaignJob(
         runs.append(job.runRecord(
             runID: runID,
             status: .completed,
-            actualBackend: runtimeConfig.backend.rawValue
+            actualBackend: runtimeConfig.backend.rawValue,
+            workerID: workerID
         ))
         metrics.append(campaignMetricRecord(
             job: job,
@@ -775,7 +809,8 @@ private func executeLeniaSearchCampaignJob(
 private func executeLeniaEcologyCampaignJob(
     _ job: LeniaCampaignJob,
     payload: LeniaCampaignEcologyJobPayload,
-    logger: Logger
+    logger: Logger,
+    workerID: String?
 ) throws -> LeniaCampaignJobExecution {
     let baseConfigData = try JSONEncoder().encode(payload.baseConfig)
     let trial = try runFlowLeniaEcology2025Trial(
@@ -791,7 +826,8 @@ private func executeLeniaEcologyCampaignJob(
     let actualBackend = payload.baseConfig.backend
     let runRecord = job.runRecord(
         status: .completed,
-        actualBackend: actualBackend
+        actualBackend: actualBackend,
+        workerID: workerID
     )
     let metricRecord = campaignMetricRecord(
         job: job,

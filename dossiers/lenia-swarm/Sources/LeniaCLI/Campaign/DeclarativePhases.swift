@@ -27,6 +27,7 @@ private struct CampaignPhaseExecutionContext {
     let campaignConfigDirectory: URL
     let runID: String
     let backendRequest: String
+    let executionMode: CampaignExecutionMode
     let logger: Logger
     let startTime: Date
 
@@ -45,7 +46,7 @@ private struct CampaignPhaseExecutionContext {
         return resolve(path)
     }
 
-    func localRequest(
+    func request(
         phase: LeniaCampaignPhaseConfig,
         preset: LeniaCampaignPreset,
         configURL: URL,
@@ -54,16 +55,18 @@ private struct CampaignPhaseExecutionContext {
         seedSelection: ResearchSeedSelection? = nil,
         exportBest: Int? = nil
     ) -> CampaignExecutionRequest {
-        makeLocalCampaignRequest(
+        CampaignExecutionRequest(
             runID: "\(runID)-\(phase.name)",
             preset: preset,
             configURL: configURL,
             outputURL: phaseOutputURL,
-            backendRequest: backendRequest,
             seedLibraryURL: seedLibraryURL,
             seedQDConfigDirURL: seedQDConfigDirURL,
             seedSelection: seedSelection,
-            exportBest: exportBest
+            backendRequest: backendRequest,
+            exportBest: exportBest,
+            promotion: phasePromotionConfig(outputURL: phaseOutputURL),
+            executionMode: executionMode
         )
     }
 
@@ -92,14 +95,19 @@ func executeDeclarativePhase(
     campaignConfigDirectory: URL,
     runID: String,
     backendRequest: String,
+    executionMode: CampaignExecutionMode,
     logger: Logger
-) throws -> LeniaCampaignPhaseResult {
+) async throws -> LeniaCampaignPhaseResult {
+    if case .distributed = executionMode, !phase.type.runsOnCampaignWorkers {
+        throw ValidationError("Phase '\(phase.name)' (type=\(phase.type.rawValue)) cannot run on campaign workers.")
+    }
     let context = CampaignPhaseExecutionContext(
         phaseOutputURL: phaseOutputURL,
         dossierRoot: dossierRoot,
         campaignConfigDirectory: campaignConfigDirectory,
         runID: runID,
         backendRequest: backendRequest,
+        executionMode: executionMode,
         logger: logger,
         startTime: Date()
     )
@@ -110,17 +118,17 @@ func executeDeclarativePhase(
     case .imgep:
         return try executeIMGEPPhase(phase: phase, context: context)
     case .sweep:
-        return try executeSweepPhase(phase: phase, context: context)
+        return try await executeSweepPhase(phase: phase, context: context)
     case .interventionBattery:
-        return try executeInterventionBatteryPhase(phase: phase, context: context)
+        return try await executeInterventionBatteryPhase(phase: phase, context: context)
     case .ecology:
-        return try executeEcologyPhase(phase: phase, context: context)
+        return try await executeEcologyPhase(phase: phase, context: context)
     case .curiosity:
         return try executeCuriosityPhase(phase: phase, context: context)
     }
 }
 
-private func executeLocalPlannedPhase(
+private func executePlannedPhase(
     phase: LeniaCampaignPhaseConfig,
     type: LeniaCampaignPhaseType,
     context: CampaignPhaseExecutionContext,
@@ -129,8 +137,8 @@ private func executeLocalPlannedPhase(
     metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil,
     creaturesFound: (LeniaCampaignJobExecution) -> Int,
     postCompendiumIngest: ((LeniaCampaignJobExecution, String) throws -> Void)? = nil
-) throws -> LeniaCampaignPhaseResult {
-    let execution = try executeLocalCampaignPhase(
+) async throws -> LeniaCampaignPhaseResult {
+    let execution = try await executeCampaignPhase(
         request: request,
         jobs: jobs,
         logger: context.logger,
@@ -349,7 +357,7 @@ private func executeIMGEPPhase(
 private func executeSweepPhase(
     phase: LeniaCampaignPhaseConfig,
     context: CampaignPhaseExecutionContext
-) throws -> LeniaCampaignPhaseResult {
+) async throws -> LeniaCampaignPhaseResult {
     guard let manifestPath = phase.manifest else {
         throw ValidationError("Sweep phase '\(phase.name)' requires manifest.")
     }
@@ -365,7 +373,7 @@ private func executeSweepPhase(
         rankBy: sweepConfig.rankBy
     )
 
-    let request = context.localRequest(
+    let request = context.request(
         phase: phase,
         preset: .discovery,
         configURL: manifestURL,
@@ -377,7 +385,7 @@ private func executeSweepPhase(
         dossierRoot: context.dossierRoot,
         configDirectory: manifestURL.deletingLastPathComponent()
     )
-    return try executeLocalPlannedPhase(
+    return try await executePlannedPhase(
         phase: phase,
         type: .sweep,
         context: context,
@@ -391,14 +399,14 @@ private func executeSweepPhase(
 private func executeInterventionBatteryPhase(
     phase: LeniaCampaignPhaseConfig,
     context: CampaignPhaseExecutionContext
-) throws -> LeniaCampaignPhaseResult {
+) async throws -> LeniaCampaignPhaseResult {
     guard let configPath = phase.config ?? phase.manifest else {
         throw ValidationError("Intervention-battery phase '\(phase.name)' requires config.")
     }
     let configURL = context.resolve(configPath)
     let interventionConfig = try JSONDecoder().decode(InterventionBatteryCampaignConfig.self, from: Data(contentsOf: configURL))
 
-    let request = context.localRequest(
+    let request = context.request(
         phase: phase,
         preset: .interventionBattery,
         configURL: configURL,
@@ -415,7 +423,7 @@ private func executeInterventionBatteryPhase(
     let perturbationFamilies = Dictionary(
         uniqueKeysWithValues: interventionConfig.perturbations.map { ($0.id, $0.family) }
     )
-    return try executeLocalPlannedPhase(
+    return try await executePlannedPhase(
         phase: phase,
         type: .interventionBattery,
         context: context,
@@ -439,14 +447,14 @@ private func executeInterventionBatteryPhase(
 private func executeEcologyPhase(
     phase: LeniaCampaignPhaseConfig,
     context: CampaignPhaseExecutionContext
-) throws -> LeniaCampaignPhaseResult {
+) async throws -> LeniaCampaignPhaseResult {
     guard let configPath = phase.config ?? phase.configDir else {
         throw ValidationError("Ecology phase '\(phase.name)' requires config or config_dir.")
     }
     let configURL = context.resolve(configPath)
     let ecologyConfig = try JSONDecoder().decode(SeededEcologyCampaignConfig.self, from: Data(contentsOf: configURL))
 
-    let request = context.localRequest(
+    let request = context.request(
         phase: phase,
         preset: .seededEcology,
         configURL: configURL,
@@ -458,7 +466,7 @@ private func executeEcologyPhase(
         dossierRoot: context.dossierRoot,
         configDirectory: configURL.deletingLastPathComponent()
     )
-    return try executeLocalPlannedPhase(
+    return try await executePlannedPhase(
         phase: phase,
         type: .ecology,
         context: context,
@@ -495,29 +503,4 @@ private func resolvedPhaseSeedSelection(from phase: LeniaCampaignPhaseConfig) ->
     }
     let rankBy = phase.seedRankBy.flatMap { ResearchSeedRankMetric(rawValue: $0) } ?? .score
     return ResearchSeedSelection(top: top, rankBy: rankBy)
-}
-
-private func makeLocalCampaignRequest(
-    runID: String,
-    preset: LeniaCampaignPreset,
-    configURL: URL,
-    outputURL: URL,
-    backendRequest: String,
-    seedLibraryURL: URL? = nil,
-    seedQDConfigDirURL: URL? = nil,
-    seedSelection: ResearchSeedSelection? = nil,
-    exportBest: Int? = nil
-) -> CampaignExecutionRequest {
-    CampaignExecutionRequest(
-        runID: runID,
-        preset: preset,
-        configURL: configURL,
-        outputURL: outputURL,
-        seedLibraryURL: seedLibraryURL,
-        seedQDConfigDirURL: seedQDConfigDirURL,
-        seedSelection: seedSelection,
-        backendRequest: backendRequest,
-        exportBest: exportBest,
-        promotion: phasePromotionConfig(outputURL: outputURL)
-    )
 }
