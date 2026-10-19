@@ -33,8 +33,11 @@ struct ReplayCommand: AsyncParsableCommand {
     @Option(name: .long, help: "If > 0, also capture a centered NxN Float16 field per trace sample")
     var developmentFieldResolution: Int = 0
 
-    @Flag(name: .long, help: "Also write the raw per-channel Float32 state of every trace sample to development-state.f32")
+    @Flag(name: .long, help: "Also write the raw per-channel Float32 state of the raw steps to development-state.f32")
     var developmentState: Bool = false
+
+    @Option(name: .long, help: "Trace steps that keep fields and raw state: \"all\" or comma-separated steps. Required with --development-field-resolution or --development-state")
+    var developmentRawSteps: String?
 
     @OptionGroup
     var logOptions: LogOptions
@@ -62,6 +65,14 @@ struct ReplayCommand: AsyncParsableCommand {
         if developmentState && !developmentTrace {
             throw ValidationError("--development-state requires --development-trace.")
         }
+        let capturesRaw = developmentState || developmentFieldResolution > 0
+        if capturesRaw && developmentRawSteps == nil {
+            throw ValidationError("--development-field-resolution and --development-state require --development-raw-steps (\"all\" or the restart and exemplar steps to keep).")
+        }
+        if !capturesRaw && developmentRawSteps != nil {
+            throw ValidationError("--development-raw-steps needs --development-field-resolution or --development-state.")
+        }
+        let rawSteps = try developmentRawSteps.map(parseDevelopmentRawSteps)
         let inputURL = URL(fileURLWithPath: resolvedInput)
         let inputs = try loadReplayResolvedInputs(from: inputURL)
         if validateOnly {
@@ -84,7 +95,8 @@ struct ReplayCommand: AsyncParsableCommand {
                 ? DevelopmentTraceOptions(
                     interval: max(1, traceInterval),
                     fieldResolution: max(0, developmentFieldResolution),
-                    recordState: developmentState
+                    recordState: developmentState,
+                    rawSteps: rawSteps
                 )
                 : nil,
             logger: logger

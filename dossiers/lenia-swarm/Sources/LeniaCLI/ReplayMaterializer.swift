@@ -71,10 +71,11 @@ struct ReplaySpecimenManifest: Codable {
     let capturedSteps: [Int]?
     let sampleCount: Int?
     let recordEvery: Int?
-    /// Little-endian Float32 [samples, height, width, channels] in trace-row order; each row's
-    /// stateSha256 hashes its frame of this file.
+    /// Little-endian Float32 [frames, height, width, channels], one frame per step of
+    /// developmentStateSteps in that order; the trace row of each step holds its stateSha256.
     let developmentStatePath: String?
     let developmentStateShape: [Int]?
+    let developmentStateSteps: [Int]?
 }
 
 struct ReplayBatchSummary: Codable {
@@ -100,6 +101,43 @@ struct DevelopmentTraceOptions {
     let interval: Int
     let fieldResolution: Int
     let recordState: Bool
+    /// Trace steps that also keep raw data (centered fields and raw state). Required whenever
+    /// either is requested, so a run declares which raw grids it retains.
+    let rawSteps: DevelopmentRawSteps?
+}
+
+enum DevelopmentRawSteps: Equatable {
+    case all
+    case steps(Set<Int>)
+
+    func contains(_ step: Int) -> Bool {
+        switch self {
+        case .all: return true
+        case let .steps(steps): return steps.contains(step)
+        }
+    }
+}
+
+func parseDevelopmentRawSteps(_ text: String) throws -> DevelopmentRawSteps {
+    if text == "all" { return .all }
+    let parts = text.split(separator: ",", omittingEmptySubsequences: false)
+    let steps = try parts.map { part -> Int in
+        guard let step = Int(part.trimmingCharacters(in: .whitespaces)), step >= 0 else {
+            throw ValidationError("--development-raw-steps takes \"all\" or comma-separated steps >= 0, got \"\(text)\".")
+        }
+        return step
+    }
+    return .steps(Set(steps))
+}
+
+/// Every declared raw step must be a sampled trace step, otherwise the run would silently keep
+/// fewer raw grids than it declared.
+func checkDevelopmentRawSteps(_ rawSteps: DevelopmentRawSteps?, sampledSteps: [Int]) throws {
+    guard case let .steps(steps)? = rawSteps else { return }
+    let missing = steps.subtracting(sampledSteps).sorted()
+    if !missing.isEmpty {
+        throw ValidationError("Declared raw steps \(missing) are not sampled trace steps; the trace sampled \(sampledSteps.first ?? 0) to \(sampledSteps.last ?? 0) every --trace-interval steps.")
+    }
 }
 
 /// Reference collector so the @escaping FrameCapture stateHandler can accumulate per-step samples
@@ -108,6 +146,7 @@ final class DevelopmentTraceCollector {
     var samples: [MorphospaceDevelopmentSample] = []
     var state = Data()
     var stateShape: [Int] = []
+    var stateSteps: [Int] = []
 }
 
 func developmentTraceStride(interval: Int, steps: Int) -> Int {
@@ -237,6 +276,7 @@ func executeReplayResolvedInput(
                 sampleIndex: 0,
                 handler: { _, _, _, _ in },
                 stateHandler: { step, width, height, channels, values in
+                    let raw = options.rawSteps?.contains(step) ?? false
                     collector.samples.append(morphospaceDevelopmentSample(
                         step: step,
                         channels: channels,
@@ -247,11 +287,12 @@ func executeReplayResolvedInput(
                         occupancyThreshold: occupancyThreshold,
                         useTorus: useTorus,
                         borderMode: borderMode,
-                        fieldResolution: options.fieldResolution
+                        fieldResolution: raw ? options.fieldResolution : 0
                     ))
-                    if options.recordState {
+                    if options.recordState && raw {
                         values.withUnsafeBytes { collector.state.append(contentsOf: $0) }
-                        collector.stateShape = [collector.samples.count, height, width, channels]
+                        collector.stateSteps.append(step)
+                        collector.stateShape = [collector.stateSteps.count, height, width, channels]
                     }
                 }
             )
@@ -444,8 +485,10 @@ func materializeReplayBatch(
         var developmentSampleCount: Int?
         var developmentStatePath: String?
         var developmentStateShape: [Int]?
+        var developmentStateSteps: [Int]?
         if let collector = execution.developmentTrace, !collector.samples.isEmpty {
             let trace = collector.samples
+            try checkDevelopmentRawSteps(developmentTrace?.rawSteps, sampledSteps: trace.map { $0.step })
             let traceURL = campaignDir.appendingPathComponent("development-trace.jsonl")
             let sampleEncoder = JSONEncoder()
             var traceData = Data()
@@ -462,6 +505,7 @@ func materializeReplayBatch(
                 try collector.state.write(to: stateURL)
                 developmentStatePath = stateURL.path
                 developmentStateShape = collector.stateShape
+                developmentStateSteps = collector.stateSteps
             }
         }
 
@@ -488,7 +532,8 @@ func materializeReplayBatch(
             sampleCount: developmentSampleCount,
             recordEvery: developmentTracePath != nil ? developmentTrace?.interval : nil,
             developmentStatePath: developmentStatePath,
-            developmentStateShape: developmentStateShape
+            developmentStateShape: developmentStateShape,
+            developmentStateSteps: developmentStateSteps
         )
         try replayEncoder().encode(manifest).write(to: campaignDir.appendingPathComponent("replay-manifest.json"))
         manifests.append(manifest)

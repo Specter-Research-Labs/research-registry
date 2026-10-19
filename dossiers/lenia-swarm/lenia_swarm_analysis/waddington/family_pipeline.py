@@ -163,7 +163,7 @@ def replay() -> None:
     r = subprocess.run(
         [str(CLI), "publish", "replay", "--input", str(MERGED_INDEX), "--output", str(REPLAY_DIR),
          "--no-promotion", "--development-trace", "--trace-interval", str(RECORD_INTERVAL),
-         "--development-field-resolution", str(FIELD_RESOLUTION)],
+         "--development-field-resolution", str(FIELD_RESOLUTION), "--development-raw-steps", "all"],
         text=True,
     )
     if r.returncode != 0:
