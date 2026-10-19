@@ -12,6 +12,7 @@ from lenia_swarm_analysis.morphospace.track1_verify import (
     BUGGY_SHADER,
     CORRECTED_DENOMINATOR,
     CORRECTED_SHADER,
+    compare_records,
     engine_signature,
     inspect_run,
     orientation_signature,
@@ -98,3 +99,18 @@ def test_engine_signature_classifies_static_shader(tmp_path: Path) -> None:
     assert engine_signature(buggy)["class"] == "buggy"
     with pytest.raises(SystemExit):
         engine_signature(neither)
+
+
+def test_compare_records_handles_filter_failed_rows_without_score() -> None:
+    passed = {"seed": 1, "filters_passed": True, "score": 7.801856}
+    failed = {"seed": 2, "filters_passed": False}
+    result = compare_records(
+        {1: {**passed, "score": 7.8018556}, 2: dict(failed)},
+        {1: passed, 2: failed},
+    )
+    assert result["exact"]
+    assert 0 < result["scoreMaxRelativeDifference"] < 1e-6
+
+    mismatch = compare_records({2: {**failed, "score": 1.0}}, {2: failed})
+    assert mismatch["mismatchedKeys"] == {"score": 1}
+    assert not mismatch["exact"]

@@ -223,29 +223,39 @@ def replay_run(
     if set(archived) != set(wanted):
         raise SystemExit(f"{run_dir.name}: replayed seeds missing from results.jsonl")
 
+    return {"batches": batches, **compare_records(wanted, archived)}
+
+
+def compare_records(
+    replayed_rows: dict[int, dict[str, Any]], archived_rows: dict[int, dict[str, Any]]
+) -> dict[str, Any]:
     mismatched_keys: dict[str, int] = {}
     tolerant_max_rel = 0.0
     exact_seeds = 0
-    for seed, replayed in wanted.items():
-        original = archived[seed]
+    for seed, replayed in replayed_rows.items():
+        original = archived_rows[seed]
         differing = [
             key for key in sorted(set(replayed) | set(original))
             if key not in FLOAT_TOLERANT_KEYS and replayed.get(key) != original.get(key)
         ]
+        # invariant: the engine omits score exactly when filters fail, so a presence
+        # mismatch is a real difference and only shared scores are compared with tolerance
+        for key in FLOAT_TOLERANT_KEYS:
+            if (key in replayed) != (key in original):
+                differing.append(key)
+            elif key in original:
+                a, b = float(replayed[key]), float(original[key])
+                tolerant_max_rel = max(tolerant_max_rel, abs(a - b) / max(abs(b), 1e-12))
         for key in differing:
             mismatched_keys[key] = mismatched_keys.get(key, 0) + 1
         if not differing:
             exact_seeds += 1
-        for key in FLOAT_TOLERANT_KEYS:
-            a, b = float(replayed[key]), float(original[key])
-            tolerant_max_rel = max(tolerant_max_rel, abs(a - b) / max(abs(b), 1e-12))
     return {
-        "batches": batches,
-        "seeds": len(wanted),
+        "seeds": len(replayed_rows),
         "exactSeeds": exact_seeds,
         "mismatchedKeys": mismatched_keys,
         "scoreMaxRelativeDifference": tolerant_max_rel,
-        "exact": exact_seeds == len(wanted),
+        "exact": exact_seeds == len(replayed_rows),
     }
 
 
