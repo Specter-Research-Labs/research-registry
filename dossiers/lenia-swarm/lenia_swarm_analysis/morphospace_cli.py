@@ -46,6 +46,13 @@ from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
 )
 from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
+from lenia_swarm_analysis.morphospace.requalification import (
+    collect_members,
+    compare_trace_digests,
+    compare_verdicts,
+    retire_trace_fields,
+    write_torus_inputs,
+)
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
 from lenia_swarm_analysis.morphospace.track1_raw_summary import (
     write_track1_candidate_manifest,
@@ -1052,6 +1059,109 @@ def _build_parser() -> argparse.ArgumentParser:
         handler=lambda args: classify_ensemble(
             assessments=[p.resolve() for p in args.assessment],
             output_path=args.output.resolve(),
+        )
+    )
+
+    members = subparsers.add_parser(
+        "collect-requalification-members",
+        help="Join historical selections with the replay inputs they were run from",
+    )
+    members.add_argument(
+        "--screen",
+        nargs=3,
+        action="append",
+        default=[],
+        metavar=("COHORT", "INPUT_INDEX", "SCREENED_JSONL"),
+    )
+    members.add_argument(
+        "--requal",
+        nargs=3,
+        action="append",
+        default=[],
+        metavar=("COHORT", "INPUT_INDEX", "REQUAL_JSON"),
+    )
+    members.add_argument("--output", required=True, type=Path)
+    _add_json(members)
+    members.set_defaults(
+        handler=lambda args: collect_members(
+            sources=[
+                (cohort, kind, Path(index).resolve(), Path(selection).resolve())
+                for kind, given in (("screen", args.screen), ("requal", args.requal))
+                for cohort, index, selection in given
+            ],
+            output_path=args.output.resolve(),
+        )
+    )
+
+    requal_inputs = subparsers.add_parser(
+        "write-requalification-inputs",
+        help="Write torus replay inputs for requalification members at scaled arena sizes",
+    )
+    requal_inputs.add_argument("--members", required=True, type=Path)
+    requal_inputs.add_argument("--scale", required=True, type=int, action="append", dest="scales")
+    requal_inputs.add_argument("--steps", required=True, type=int)
+    requal_inputs.add_argument("--output", required=True, type=Path)
+    _add_json(requal_inputs)
+    requal_inputs.set_defaults(
+        handler=lambda args: write_torus_inputs(
+            members_path=args.members.resolve(),
+            scales=args.scales,
+            steps=int(args.steps),
+            output_root=args.output.resolve(),
+        )
+    )
+
+    requal_compare = subparsers.add_parser(
+        "compare-requalification",
+        help="Tabulate requalification verdicts per member against any prior verdicts",
+    )
+    requal_compare.add_argument("--members", required=True, type=Path)
+    requal_compare.add_argument("--assessment", required=True, type=Path, action="append")
+    requal_compare.add_argument("--ensemble", required=True, type=Path, action="append")
+    requal_compare.add_argument("--prior-ensemble", type=Path, action="append", default=[])
+    requal_compare.add_argument("--output", required=True, type=Path)
+    _add_json(requal_compare)
+    requal_compare.set_defaults(
+        handler=lambda args: compare_verdicts(
+            members_path=args.members.resolve(),
+            assessments=[p.resolve() for p in args.assessment],
+            ensembles=[p.resolve() for p in args.ensemble],
+            prior_ensembles=[p.resolve() for p in args.prior_ensemble],
+            output_path=args.output.resolve(),
+        )
+    )
+
+    retire = subparsers.add_parser(
+        "retire-trace-fields",
+        help="Strip raw fields from assessed development traces, keeping per-frame hashes",
+    )
+    retire.add_argument("--replay-root", required=True, type=Path, action="append")
+    retire.add_argument("--assessment", required=True, type=Path, action="append")
+    retire.add_argument("--keep-body", action="append", default=[])
+    retire.add_argument("--manifest", required=True, type=Path)
+    retire.add_argument("--apply", action="store_true")
+    _add_json(retire)
+    retire.set_defaults(
+        handler=lambda args: retire_trace_fields(
+            replay_roots=[p.resolve() for p in args.replay_root],
+            assessments=[p.resolve() for p in args.assessment],
+            keep_bodies=args.keep_body,
+            manifest_path=args.manifest.resolve(),
+            apply=bool(args.apply),
+        )
+    )
+
+    digests = subparsers.add_parser(
+        "compare-trace-digests",
+        help="Match whole-trace digests by torus arena size and body between two runs",
+    )
+    digests.add_argument("--manifest", required=True, type=Path, action="append")
+    digests.add_argument("--prior-manifest", required=True, type=Path, action="append")
+    _add_json(digests)
+    digests.set_defaults(
+        handler=lambda args: compare_trace_digests(
+            manifests=[p.resolve() for p in args.manifest],
+            prior_manifests=[p.resolve() for p in args.prior_manifest],
         )
     )
 
