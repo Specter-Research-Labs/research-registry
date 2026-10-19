@@ -168,11 +168,10 @@ public distributed actor SwarmController {
         }
     }
 
-    public distributed func start() async {
+    public distributed func start() async throws {
         logger.info("Waiting for workers...")
 
-        // Load existing library from disk
-        loadLibrary()
+        try loadLibrary()
 
         // Capture system reference for Tasks
         let clusterSystem = self.system
@@ -333,7 +332,13 @@ public distributed actor SwarmController {
                         scoreWeights: obj.scoreWeights ?? searchConfig.scoreWeights
                     )
                     Task {
-                        let added = await self.addToLibrary(creature, campaignId: campaignId)
+                        let added: Bool
+                        do {
+                            added = try await self.addToLibrary(creature, campaignId: campaignId)
+                        } catch {
+                            self.logger.error("Failed to save creature library: \(error)")
+                            return
+                        }
                         if added && self.collectionConfig.exportEnabled {
                             do {
                                 _ = try self.exportCreatureInternal(
@@ -389,12 +394,12 @@ public distributed actor SwarmController {
         }
     }
 
-    private func addToLibrary(_ creature: SavedCreature, campaignId: UUID?) async -> Bool {
+    private func addToLibrary(_ creature: SavedCreature, campaignId: UUID?) async throws -> Bool {
         // Deduplicate by checking if similar creature exists (same genotype seed)
         guard !creatureLibrary.contains(where: { $0.id == creature.id }) else { return false }
 
         creatureLibrary.append(creature)
-        saveLibrary()
+        try saveLibrary()
         recordLibraryEntry(creature, campaignId: campaignId)
 
         logger.info("Creature discovered: \(creature.name) (gyration: \(String(format: "%.1f", creature.metrics.gyration)), velocity: \(String(format: "%.2f", creature.metrics.centerVelocity)))")
@@ -526,21 +531,18 @@ public distributed actor SwarmController {
 
     // MARK: - Creature Library Management
 
-    private func loadLibrary() {
+    private func loadLibrary() throws {
         let url = libraryOutputDir.appendingPathComponent("library.json")
-        if let data = try? Data(contentsOf: url),
-           let saved = try? JSONDecoder().decode([SavedCreature].self, from: data) {
-            self.creatureLibrary = saved
-            logger.info("Loaded \(saved.count) creatures from library")
-            rebuildLibraryIndexIfMissing()
-        }
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        let saved = try JSONDecoder().decode([SavedCreature].self, from: Data(contentsOf: url))
+        self.creatureLibrary = saved
+        logger.info("Loaded \(saved.count) creatures from library")
+        rebuildLibraryIndexIfMissing()
     }
 
-    private func saveLibrary() {
+    private func saveLibrary() throws {
         let url = libraryOutputDir.appendingPathComponent("library.json")
-        if let data = try? JSONEncoder().encode(creatureLibrary) {
-            try? data.write(to: url)
-        }
+        try JSONEncoder().encode(creatureLibrary).write(to: url)
     }
 
     private func recordLibraryEntry(_ creature: SavedCreature, campaignId: UUID?) {
@@ -568,15 +570,6 @@ public distributed actor SwarmController {
         logger.info("Library index missing; rebuilding with campaign_id=null")
         for creature in creatureLibrary {
             recordLibraryEntry(creature, campaignId: nil)
-        }
-    }
-
-    public distributed func submitCreature(_ creature: SavedCreature) async {
-        let added = await addToLibrary(creature, campaignId: nil)
-        if added {
-            logger.info("New creature added: \(creature.name) by \(creature.ownerId)")
-        } else {
-            logger.debug("Creature \(creature.name) already in library")
         }
     }
 
@@ -1053,28 +1046,24 @@ public distributed actor SwarmController {
     }
 
     private func appendJSONL<T: Encodable>(_ value: T, to url: URL) {
-        guard let handle = appendJSONLHandle(for: url) else { return }
         do {
-            handle.write(try researchJSONLine(value))
+            try appendJSONLHandle(for: url).write(researchJSONLine(value))
         } catch {
             logger.error("Failed to append JSONL to \(url.lastPathComponent): \(error)")
         }
     }
 
-    private func appendJSONLHandle(for url: URL) -> FileHandle? {
+    private func appendJSONLHandle(for url: URL) throws -> FileHandle {
         if let handle = appendJSONLHandles[url] {
             return handle
         }
         if !FileManager.default.fileExists(atPath: url.path) {
-            FileManager.default.createFile(atPath: url.path, contents: nil)
+            guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+                throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path])
+            }
         }
-        guard let handle = try? FileHandle(forWritingTo: url) else { return nil }
-        do {
-            try handle.seekToEnd()
-        } catch {
-            try? handle.close()
-            return nil
-        }
+        let handle = try FileHandle(forWritingTo: url)
+        try handle.seekToEnd()
         appendJSONLHandles[url] = handle
         return handle
     }
@@ -1114,9 +1103,8 @@ public distributed actor SwarmController {
 
     private func appendSimulationResults(_ results: [SimulationResultData], to url: URL) {
         guard !results.isEmpty else { return }
-        guard let handle = appendJSONLHandle(for: url) else { return }
         do {
-            try appendResearchJSONLines(results, to: handle)
+            try appendResearchJSONLines(results, to: appendJSONLHandle(for: url))
         } catch {
             logger.error("Failed to append simulation results to \(url.lastPathComponent): \(error)")
         }
@@ -1127,9 +1115,9 @@ public distributed actor SwarmController {
         ensureActivityArtifact(in: outputDir)
         let activityURL = outputDir.appendingPathComponent("activity.jsonl")
         let records = activitySummaryRecords(from: results, config: activityConfig)
-        guard !records.isEmpty, let handle = appendJSONLHandle(for: activityURL) else { return }
+        guard !records.isEmpty else { return }
         do {
-            try appendResearchJSONLines(records, to: handle)
+            try appendResearchJSONLines(records, to: appendJSONLHandle(for: activityURL))
         } catch {
             logger.error("Failed to append activity summaries to \(activityURL.lastPathComponent): \(error)")
         }

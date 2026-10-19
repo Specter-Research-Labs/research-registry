@@ -15,7 +15,7 @@ func resolveArtifactPath(_ path: String, dossier: String) throws -> String {
     try resolveRuntimeAwareArtifactPath(path, dossier: dossier)
 }
 
-func resolveLogBase(explicit: String?, dossier: String, output: String? = nil) throws -> String? {
+func resolveLogBase(explicit: String?, dossier: String, output: String? = nil) throws -> String {
     try resolveRuntimeAwareLogBase(explicit: explicit, dossier: dossier, output: output)
 }
 
@@ -32,7 +32,7 @@ struct LogOptions: ParsableArguments {
     @Option(name: .long, help: "Run id for log/metrics correlation")
     var runId: String?
 
-    @Option(name: .long, help: "Directory for JSONL logs/metrics")
+    @Option(name: .long, help: "Directory for JSONL logs/metrics (default: <output>/logs, else the configured log root)")
     var logDir: String?
 
     @Flag(name: .long, help: "Disable console logging")
