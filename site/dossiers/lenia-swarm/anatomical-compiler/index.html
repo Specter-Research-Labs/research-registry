@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="One mature frame of Orbium is enough to recover its Lenia rule close to the native values. Across Flow Lenia creatures, body size and elongation predict movement about as well as activity does, and complexity says little about recovery from damage.">
+  <meta name="description" content="One mature frame of Orbium is enough to recover its Lenia rule close to the native values. Across Flow Lenia creatures, body size and elongation predict how a body moves nearly as well as how active it is, and complexity says little about recovery from damage.">
   <title>Recovering the rule behind a Lenia body | Specter Labs</title><meta name="spctr:card" content="Lenia Swarm">
 <link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml">
   <style>
@@ -1483,12 +1483,12 @@ html.anatomical-editorial .chapter-head {
       <figure class="hero-specimens"><div><div><img src="/assets/home/orbium-native-1200.webp" alt="Orbium at step 1,200 under the native rule."><span>Native rule</span></div><div><img src="/assets/home/orbium-recovered-1200.webp" alt="Orbium at step 1,200 under the recovered rule."><span>Recovered rule</span></div></div><figcaption><strong>The same starting cells under two rules</strong> The search scored only the step-600 field, and both bodies are shown at step 1,200. <a href="#orbium-diagnostic">Follow this search →</a></figcaption></figure>
     </div>
 
-    <div class="shell investigation-intro"><p>The desired body keeps its form through a continuous process of local change, so recovering it means finding dynamics that sustain the anatomy as well as an image that resembles it. We first fix a known rule family and ask how much of its hidden parameters one observed frame gives back. We then turn to a corpus of Flow Lenia creatures and ask what a body’s shape says about how it moves and whether it recovers from damage, since a compiler that targets a shape inherits whatever comes with it.</p><p>An earlier version of this report led with a search scored on four trajectory measurements of corpus specimen 2876 that appeared to cut its cost from 6.99 to 5.26 and grew a segmented body. We have withdrawn that result, because the batched initializer behind the search grew every candidate rule from a different random starting field, so almost all of the reported improvement belonged to the starting fields, and the warm-start archive built with the same initializer is withdrawn with it.</p><p><strong>Methods note.</strong> Earlier versions also reported a search that maintained a supplied body, estimates of how many rules are compatible with one measured form, a conditional proposal model with simulation-guided refinement, and an endpoint landscape. Those results came from Flow Lenia simulations with a faulty spatial-derivative step: a Python port of the simulator, and our main engine before it was fixed, both computed the gradient with its sign flipped and its axes swapped. We have removed them. The shape and damage results below were recomputed on the corrected engine. The Orbium case uses additive Lenia, which has no derivative step, and replaying it on the corrected engine reproduced every recorded frame exactly.</p></div>
+    <div class="shell investigation-intro"><p>The desired body keeps its form through a continuous process of local change, so recovering it means finding dynamics that sustain the anatomy as well as an image that resembles it. We first fix a known rule family and ask how much of its hidden parameters one observed frame gives back. We then turn to a corpus of Flow Lenia creatures and ask what a body’s shape says about how it moves and whether it recovers from damage, since a compiler that targets a shape inherits whatever comes with it.</p></div>
 
     <section id="forms" class="shell">
       <div id="orbium-diagnostic" class="chapter-head">
         <div class="chapter-no">01</div>
-        <div><h2>One mature frame was enough to recover nearby Orbium parameters.</h2></div>
+        <div><h2>One mature frame was enough to recover nearby Orbium parameters</h2></div>
         <p>This case uses Orbium, an additive Lenia system. It lets us ask how much a mature body reveals when we already know the kind of rule that made it. We supplied its update law, kernel, growth function, and starting cells, then hid three numerical parameters: the interaction radius <code>R</code>, growth center <code>m</code>, and growth width <code>s</code>. Each candidate develops from those same starting cells and is compared with the reference body at step 600.</p>
       </div>
 
@@ -1504,7 +1504,7 @@ html.anatomical-editorial .chapter-head {
         <figure class="attempt"><img src="assets/orbium-target-600.png" alt="Native Orbium target at step 600."><figcaption><strong>Observed body</strong><span>This single step-600 field is the image used by the final-frame search.</span></figcaption></figure>
         <figure class="attempt"><img src="assets/orbium-still-600.png" alt="Compiled Orbium at step 600."><figcaption><strong>Compiled result</strong><span>The recovered parameters grow one localized body with the target's structure.</span></figcaption></figure>
       </div>
-      <p class="attempt-reading"><strong>The initial parameters fail. The fitted parameters produce a close reconstruction.</strong> Each candidate is simulated for 600 steps, then its complete field is compared with the reference field.</p>
+      <p class="attempt-reading"><strong>A wrong rule scatters the seed, and the fitted rule grows the same localized body.</strong> Each candidate is simulated for 600 steps, then its complete field is compared with the reference field.</p>
 
       <div class="media-grid">
         <figure class="media-figure">
@@ -1551,7 +1551,7 @@ html.anatomical-editorial .chapter-head {
     <section id="function" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">02</div>
-        <div><h2>Shape predicted movement about as well as activity.</h2></div>
+        <div><h2>Shape predicted locomotion nearly as well as it predicted activity</h2></div>
         <p>Even a body that matches the requested shape may move differently, so we measured six behaviors in 8,155 Flow Lenia creatures from one 8,192-seed screen and reduced them to principal axes. Path length, displacement, and center velocity dominate the first axis, which we call locomotion; temporal variance and energy dominate the second, which we call activity. Together these axes account for 90% of the behavioral variation.</p>
       </div>
       <figure class="figure"><img src="assets/functional-morphospace.png" alt="Scatterplot of 8,155 creatures in the first two functional principal axes, colored by speed."><figcaption class="caption"><span class="figure-no">02</span><p>Most creatures occupy a dense low-speed region, while fast locomotion forms a sparse tail along the first axis. Any model trained on this distribution will see many more slow examples than fast ones.</p><span class="tag">8,155 creatures</span></figcaption></figure>
@@ -1566,24 +1566,24 @@ html.anatomical-editorial .chapter-head {
         </div>
         <figure class="figure"><img src="assets/shape-predicts-function.png" alt="Locomotion predicted from shape against the measured locomotion score for 8,155 creatures."><figcaption class="caption"><span class="figure-no">03</span><p>Locomotion predicted from shape follows the diagonal with wide scatter. The fastest creatures are underpredicted.</p></figcaption></figure>
       </div>
-      <p class="reading">The earlier version of this section reported the opposite, shape explaining 72.5% of activity and 3.8% of locomotion, and that gap came from the derivative error. Under it the median creature broke into 12 pieces, the largest holding 84% of the body; on the corrected engine it has two pieces and the largest holds nearly all of it. Restricting the old harvest to its coherent bodies did not bring the coupling back, so the faulty gradient set how bodies traveled independently of their shape rather than hiding a relationship under debris.</p>
+      <p class="reading">So a compiler that asks for a body of a given size and elongation is also, to a large degree, asking for how it travels. A target written only as a shape will drag a movement profile along with it, and a target that wants a shape with an unusual gait is asking for something the corpus rarely produces.</p>
     </section>
 
     <section id="recovery" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">03</div>
-        <div><h2>Complexity said little about recovery from damage.</h2></div>
+        <div><h2>Complexity said little about recovery from damage</h2></div>
         <p>A body we can specify also has to survive disturbance. We ran 40 coherent creatures and 120 random rules from the same starting patch, cleared a 40-by-40 square at the center of each at step 400, and measured how far occupancy, spread, and the largest piece’s share of mass ended from an undamaged copy by step 1,000. Complexity is the multiscale structural measure from the same runs.</p>
       </div>
-      <figure class="figure"><img src="assets/complexity-drift.svg" alt="Scatterplot of complexity against form drift after a lesion for 40 coherent and 120 random creatures."><figcaption class="caption"><span class="figure-no">04</span><p>Across 160 creatures, complexity and form drift after the lesion correlated at r = 0.16. On the 80 rules used in the earlier version of this figure, r = 0.06.</p><span class="tag">160 creatures</span></figcaption></figure>
-      <p class="reading">Coherent creatures were more complex than random rules and drifted further after the lesion, 0.34 against 0.25 on average, and 31 of the 160 fell in the high-complexity, low-drift corner. The earlier version reported r = 0.045 from a different assay in the Python port, which damaged bodies grown from several seeds. The corrected run uses a single damaged rollout, so it repeats the question rather than the measurement; both find that complexity alone does not pick out a body that repairs itself.</p>
+      <figure class="figure"><img src="assets/complexity-drift.svg" alt="Scatterplot of complexity against form drift after a lesion for 40 coherent and 120 random creatures."><figcaption class="caption"><span class="figure-no">04</span><p>Across 160 creatures, complexity and form drift after the lesion correlated at r = 0.16.</p><span class="tag">160 creatures</span></figcaption></figure>
+      <p class="reading">Coherent creatures were more complex than random rules and drifted further after the lesion, 0.34 against 0.25 on average, and 31 of the 160 fell in the high-complexity, low-drift corner. Complexity alone does not pick out a body that repairs itself, so a target that should survive damage has to say so directly, with the lesion in the objective.</p>
     </section>
 
     <section id="outlook" class="shell" aria-labelledby="boundary-title">
       <div class="chapter-head">
         <div class="chapter-no">04</div>
         <div><h2 id="boundary-title">Can the search discover how to grow the body?</h2></div>
-        <p>We would like to specify a body whose organization can be reached and then sustained, so a compiler has to find both a route into that organization and dynamics that keep it going. The Orbium reconstruction shows how much a single mature frame constrains when the starting cells and rule family are already known. The corpus adds two facts about any target we write down: on the corrected engine a body’s size and elongation carry much of how it moves, and its complexity does not tell us whether it will repair damage.</p>
+        <p>We would like to specify a body whose organization can be reached and then sustained, so a compiler has to find both a route into that organization and dynamics that keep it going. The Orbium reconstruction shows how much a single mature frame constrains when the starting cells and rule family are already known. The corpus adds two facts about any target we write down: a body’s size and elongation carry much of how it moves, and its complexity does not tell us whether it will repair damage.</p>
       </div>
       <p class="reading">The next test should require the search to discover a developmental route: start from a compact seed, grow a withheld target body, and maintain its anatomy. Searching for the seed and rule together would make the starting cells part of what is recovered rather than what is given. Changed starting conditions and damage would then test whether the fitted dynamics keep producing and sustaining the requested body beyond the trajectory used to select them.</p>
 <details class="experiment-method" open><summary>How to picture the family of compatible rules</summary>      <div class="visual-pair">
@@ -1610,6 +1610,7 @@ html.anatomical-editorial .chapter-head {
         <div><h2>Each chart points back to a specific file.</h2></div>
         <p>The ledger records the source for every number, replay, and reused schematic. SHA-256 identifies the exact bytes. The corrected-engine entries record their engine build, code revision, and frozen plan; the September Orbium entries include their exact configs and media.</p>
       </div>
+      <p class="reading"><strong>Methods note.</strong> Earlier versions of this page reported results from Flow Lenia simulations whose spatial-derivative step computed the gradient with its sign flipped and its axes swapped, in a Python port of the simulator and in our main engine before it was fixed. Under that step the median creature broke into twelve pieces, which decoupled how bodies traveled from their shape; those results are removed, and the shape and damage measurements here were rerun on the corrected engine. A search on corpus specimen 2876 is also withdrawn, because its batched initializer grew each candidate from a different random field, so the apparent improvement belonged to the starting fields. Orbium uses additive Lenia, which has no derivative step, and its replay on the corrected engine reproduced every recorded frame exactly.</p>
       <details class="receipt">
         <summary>Show source ledger</summary>
         <div class="receipt-inner">
