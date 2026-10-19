@@ -54,6 +54,9 @@ from lenia_swarm_analysis.morphospace.requalification import (
     write_torus_inputs,
 )
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
+from lenia_swarm_analysis.morphospace.track1_common_morphology import (
+    derive_track1_common_morphology,
+)
 from lenia_swarm_analysis.morphospace.track1_raw_summary import (
     write_track1_candidate_manifest,
     write_track1_raw_summary_packet,
@@ -1207,6 +1210,32 @@ def _build_parser() -> argparse.ArgumentParser:
             replay_count=args.replay_count,
             scratch_root=args.scratch.resolve(),
             output_path=args.output.resolve(),
+            jobs=args.jobs,
+        )
+    )
+
+    track1_common = subparsers.add_parser(
+        "derive-track1-common-morphology",
+        help="Pair common_morphology_v1 observations of current and archived Track 1 results",
+    )
+    track1_common.add_argument("--run-root", required=True, type=Path)
+    track1_common.add_argument("--archive-dir", required=True, type=Path)
+    track1_common.add_argument("--run-id", required=True, action="append", dest="run_ids")
+    track1_common.add_argument("--frame-profile", required=True, type=Path)
+    track1_common.add_argument("--v8-metadata", required=True, type=Path)
+    track1_common.add_argument("--v8-shapes", required=True, type=Path)
+    track1_common.add_argument("--output", required=True, type=Path)
+    track1_common.add_argument("--jobs", required=True, type=int)
+    _add_json(track1_common)
+    track1_common.set_defaults(
+        handler=lambda args: derive_track1_common_morphology(
+            run_root=args.run_root.resolve(),
+            archive_dir=args.archive_dir.resolve(),
+            run_ids=args.run_ids,
+            frame_profile=args.frame_profile.resolve(),
+            v8_metadata=args.v8_metadata.resolve(),
+            v8_shapes=args.v8_shapes.resolve(),
+            output_dir=args.output.resolve(),
             jobs=args.jobs,
         )
     )
