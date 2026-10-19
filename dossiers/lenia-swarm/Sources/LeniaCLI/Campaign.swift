@@ -1,6 +1,4 @@
 import ArgumentParser
-import DistributedCluster
-import Darwin
 import Foundation
 import LeniaCore
 import Logging
@@ -186,11 +184,6 @@ struct CampaignExecutionRequest {
     let seedQDConfigDirURL: URL?
     let seedSelection: ResearchSeedSelection?
     let backendRequest: String
-    let executionMode: LeniaCampaignExecutionMode
-    let distributedControllerHost: String?
-    let distributedControllerPort: Int
-    let distributedBindHost: String
-    let distributedBindPort: Int
     let exportBest: Int?
     let promotion: ArchivePromotionConfig
 }
@@ -199,7 +192,6 @@ struct CampaignSummaryFile: Codable {
     let schemaVersion: Int
     let runID: String
     let preset: LeniaCampaignPreset
-    let executionMode: LeniaCampaignExecutionMode
     let totalJobs: Int
     let completedRuns: Int
     let failedRuns: Int
@@ -224,7 +216,6 @@ private struct CampaignResolvedConfigFile: Codable {
     let schemaVersion: Int
     let runID: String
     let preset: LeniaCampaignPreset
-    let executionMode: LeniaCampaignExecutionMode
     let backendRequest: String
     let configPath: String
     let seedLibraryPath: String?
@@ -258,7 +249,7 @@ private func executeLocalCampaignJobs(
 ) throws -> LeniaCampaignJobExecution {
     let capabilities = localCampaignCapabilities()
     let executions = try jobs.map { job in
-        try executeLeniaCampaignJob(job, logger: logger, localCapabilities: capabilities)
+        try executeLeniaCampaignJob(job, logger: logger, capabilities: capabilities)
     }
     return aggregateCampaignExecutions(executions, metricsTransform: metricsTransform)
 }
@@ -290,7 +281,7 @@ func executeLocalCampaignPhase(
 func runCampaign(
     request: CampaignExecutionRequest,
     logger: Logger
-) async throws -> CampaignExecutionResult {
+) throws -> CampaignExecutionResult {
     let dossierRoot = campaignDossierRoot()
     let configDirectory = request.configURL.deletingLastPathComponent()
     let outputURL = request.outputURL.standardizedFileURL
@@ -307,26 +298,7 @@ func runCampaign(
         ? { metrics in applyBaselineComparisons(to: &metrics) }
         : nil
 
-    let execution: LeniaCampaignJobExecution
-    switch request.executionMode {
-    case .local:
-        execution = try executeLocalCampaignJobs(jobs, logger: logger, metricsTransform: metricsTransform)
-    case .distributed:
-        guard let controllerHost = request.distributedControllerHost, !controllerHost.isEmpty else {
-            throw ValidationError("--controller is required with --distributed.")
-        }
-        execution = aggregateCampaignExecutions(
-            try await executeDistributedCampaignJobs(
-                jobs: jobs,
-                controllerHost: controllerHost,
-                controllerPort: request.distributedControllerPort,
-                bindHost: request.distributedBindHost,
-                bindPort: request.distributedBindPort,
-                logger: logger
-            ),
-            metricsTransform: metricsTransform
-        )
-    }
+    let execution = try executeLocalCampaignJobs(jobs, logger: logger, metricsTransform: metricsTransform)
 
     try writeCampaignBundle(
         request: request,
@@ -339,7 +311,6 @@ func runCampaign(
     let summary = summarizeCampaign(
         runID: request.runID,
         preset: request.preset,
-        executionMode: request.executionMode,
         jobs: jobs,
         runs: execution.runs,
         metrics: execution.metrics,
@@ -365,118 +336,6 @@ func runCampaign(
     )
 }
 
-private func executeDistributedCampaignJobs(
-    jobs: [LeniaCampaignJob],
-    controllerHost: String,
-    controllerPort: Int,
-    bindHost: String,
-    bindPort: Int,
-    logger: Logger
-) async throws -> [LeniaCampaignJobExecution] {
-    let clientPort = try campaignBindPort(bindPort)
-    let system = await ClusterSystem("LeniaHive") { settings in
-        settings.bindHost = bindHost
-        settings.bindPort = clientPort
-        settings.swim.probeInterval = .seconds(1)
-        settings.swim.pingTimeout = .milliseconds(500)
-        settings.remoteCall.defaultTimeout = .seconds(600)
-        settings.autoLeaderElection = .lowestReachable(minNumberOfMembers: 1)
-    }
-    system.cluster.join(endpoint: Cluster.Endpoint(host: controllerHost, port: controllerPort))
-
-    let workers = try await discoverCampaignWorkers(system: system)
-    guard !workers.isEmpty else {
-        try system.shutdown()
-        throw ValidationError("No workers discovered from controller \(controllerHost):\(controllerPort).")
-    }
-    let statuses = try await workers.asyncMap { try await $0.getStatus() }
-
-    var executions: [LeniaCampaignJobExecution] = []
-    for (index, job) in jobs.enumerated() {
-        guard let selected = zip(workers, statuses).first(where: { workerSupportsCampaignJob($0.1, job: job) }) else {
-            executions.append(failedCampaignExecution(job: job, message: "No worker supports requested backend \(job.backendRequest)."))
-            continue
-        }
-        let worker = selected.0
-        let status = selected.1
-        guard let materialized = materializeCampaignJob(job, for: status.capabilities) else {
-            executions.append(failedCampaignExecution(job: job, message: "Failed to materialize campaign backend \(job.backendRequest)."))
-            continue
-        }
-        logger.info("Dispatching campaign job \(index + 1)/\(jobs.count) \(job.runID) to \(status.workerId)")
-        do {
-            let execution = try await worker.processCampaignJob(materialized)
-            executions.append(execution)
-        } catch {
-            executions.append(failedCampaignExecution(job: materialized, message: String(describing: error), workerID: status.workerId))
-        }
-    }
-    try system.shutdown()
-    return executions
-}
-
-private func failedCampaignExecution(
-    job: LeniaCampaignJob,
-    message: String,
-    workerID: String? = nil
-) -> LeniaCampaignJobExecution {
-    LeniaCampaignJobExecution(
-        runs: [
-            LeniaCampaignRunRecord(
-                campaignID: job.campaignID,
-                runID: job.runID,
-                preset: job.preset,
-                executor: job.executor,
-                status: .failed,
-                requestedBackend: job.backendRequest,
-                actualBackend: nil,
-                executionMode: job.executionMode,
-                repeatIndex: job.repeatIndex,
-                environmentLabel: job.environmentLabel,
-                perturbationLabel: job.perturbationLabel,
-                comparisonGroup: job.comparisonGroup,
-                seedReference: job.seedReference,
-                workerID: workerID,
-                errorMessage: message
-            )
-        ],
-        metrics: [],
-        events: [],
-        results: [],
-        ecologyArtifacts: [],
-        exportCandidates: []
-    )
-}
-
-private func discoverCampaignWorkers(system: ClusterSystem) async throws -> [LeniaWorker] {
-    actor WorkerCollector {
-        var workers: [LeniaWorker] = []
-        func add(_ worker: LeniaWorker) {
-            workers.append(worker)
-        }
-
-        func snapshot() -> [LeniaWorker] {
-            workers
-        }
-    }
-
-    let collector = WorkerCollector()
-    let task = Task {
-        for await worker in await system.receptionist.listing(of: .leniaWorkers) {
-            await collector.add(worker)
-        }
-    }
-    defer { task.cancel() }
-    for _ in 0..<30 {
-        let discovered = await collector.snapshot()
-        if !discovered.isEmpty {
-            return discovered
-        }
-        try? await Task.sleep(for: .milliseconds(200))
-    }
-    return await collector.snapshot()
-}
-
 private func localCampaignCapabilities() -> WorkerBackendCapabilities {
     if MTLCreateSystemDefaultDevice() != nil {
         return WorkerBackendCapabilities(
@@ -494,48 +353,9 @@ private func localCampaignCapabilities() -> WorkerBackendCapabilities {
     )
 }
 
-private func campaignBindPort(_ requestedPort: Int) throws -> Int {
-    if requestedPort != 0 {
-        return requestedPort
-    }
-    let socketFD = socket(AF_INET, SOCK_STREAM, 0)
-    guard socketFD >= 0 else {
-        throw ValidationError("Failed to allocate an ephemeral campaign client port.")
-    }
-    defer { close(socketFD) }
-
-    var address = sockaddr_in()
-    address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
-    address.sin_family = sa_family_t(AF_INET)
-    address.sin_port = in_port_t(0).bigEndian
-    address.sin_addr = in_addr(s_addr: INADDR_ANY.bigEndian)
-
-    let bindResult = withUnsafePointer(to: &address) { pointer -> Int32 in
-        pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPointer in
-            bind(socketFD, sockaddrPointer, socklen_t(MemoryLayout<sockaddr_in>.size))
-        }
-    }
-    guard bindResult == 0 else {
-        throw ValidationError("Failed to bind an ephemeral campaign client port.")
-    }
-
-    var boundAddress = sockaddr_in()
-    var length = socklen_t(MemoryLayout<sockaddr_in>.size)
-    let nameResult = withUnsafeMutablePointer(to: &boundAddress) { pointer -> Int32 in
-        pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPointer in
-            getsockname(socketFD, sockaddrPointer, &length)
-        }
-    }
-    guard nameResult == 0 else {
-        throw ValidationError("Failed to read the ephemeral campaign client port.")
-    }
-    return Int(UInt16(bigEndian: boundAddress.sin_port))
-}
-
 func summarizeCampaign(
     runID: String,
     preset: LeniaCampaignPreset,
-    executionMode: LeniaCampaignExecutionMode,
     jobs: [LeniaCampaignJob],
     runs: [LeniaCampaignRunRecord],
     metrics: [LeniaCampaignMetricRecord],
@@ -550,7 +370,6 @@ func summarizeCampaign(
         schemaVersion: 1,
         runID: runID,
         preset: preset,
-        executionMode: executionMode,
         totalJobs: jobs.count,
         completedRuns: runs.filter { $0.status == .completed }.count,
         failedRuns: runs.filter { $0.status == .failed }.count,
@@ -572,7 +391,6 @@ func writeCampaignBundle(
         schemaVersion: 1,
         runID: request.runID,
         preset: request.preset,
-        executionMode: request.executionMode,
         backendRequest: request.backendRequest,
         configPath: request.configURL.path,
         seedLibraryPath: request.seedLibraryURL?.path,
@@ -801,15 +619,4 @@ private func campaignEncoder() -> JSONEncoder {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]
     return encoder
-}
-
-private extension Array {
-    func asyncMap<T>(_ transform: @escaping (Element) async throws -> T) async rethrows -> [T] {
-        var values: [T] = []
-        values.reserveCapacity(count)
-        for element in self {
-            values.append(try await transform(element))
-        }
-        return values
-    }
 }
