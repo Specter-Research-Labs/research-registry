@@ -353,11 +353,6 @@ h3 {
   gap: 22px;
 }
 
-.visual-stack {
-  display: grid;
-  gap: 22px;
-}
-
 .schematic-note {
   padding: 16px 18px;
   margin: 18px 0 0;
@@ -482,28 +477,6 @@ h3 {
 
 .stage .tag.small {
   background: #fff0db;
-}
-
-.sample-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
-  margin: 18px 0 8px;
-}
-
-.sample-grid span {
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  background: var(--teal);
-  border: 1px solid var(--ink);
-  font: 800 11px/1 ui-monospace, monospace;
-}
-
-.sample-note {
-  font-size: 14px;
-  color: var(--muted);
-  margin: 0;
 }
 
 .attempt-grid {
@@ -806,44 +779,6 @@ h3 {
   border-top: 1px solid #394051;
   color: #e9e7df;
   font-size: 12px;
-}
-
-.triptych-labels {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  color: white;
-  background: var(--night);
-  border-top: 1px solid #394051;
-}
-
-.triptych-labels span {
-  padding: 10px;
-  text-align: center;
-  font: 700 10px/1.2 ui-monospace, monospace;
-  text-transform: uppercase;
-}
-
-.triptych-labels span + span {
-  border-left: 1px solid #394051;
-}
-
-.fact-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.fact-strip div {
-  border-left: 5px solid var(--coral);
-  background: var(--panel);
-  padding: 17px;
-}
-
-.fact-strip strong {
-  display: block;
-  font: 800 27px/1 ui-monospace, monospace;
-  margin-bottom: 8px;
 }
 
 .raw-inset {
@@ -1331,9 +1266,6 @@ html.anatomical-editorial main > section.shell > .chapter-head + :is(figure, .me
     grid-template-columns: 1fr;
   }
 
-  .sample-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 @media (max-width:800px) {
@@ -1448,7 +1380,7 @@ html.anatomical-editorial .chapter-head {
     grid-column: auto;
   }
 
-  .question-grid, .metrics, .pipeline, .fact-strip, .boundary, .media-grid, .case-metrics, .case-step-grid, .evidence-window {
+  .question-grid, .metrics, .pipeline, .boundary, .media-grid, .case-metrics, .case-step-grid, .evidence-window {
     grid-template-columns: 1fr;
   }
 
@@ -1493,11 +1425,6 @@ html.anatomical-editorial .chapter-head {
 
   .trace-strip figure:nth-child(n/**/+3), .failure-grid figure:nth-child(n/**/+3) {
     border-top: 1px solid #394051;
-  }
-
-  .triptych-labels span {
-    padding: 8px 4px;
-    font-size: 8px;
   }
 
   .raw-inset {
