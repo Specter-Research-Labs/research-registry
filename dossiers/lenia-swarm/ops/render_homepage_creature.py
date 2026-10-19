@@ -1,8 +1,8 @@
 """Render the homepage's Quadrium study or package a selected native replay.
 
 Run from the repository root:
-  python dossiers/lenia-swarm/ops/render_homepage_creature.py
-Requires NumPy, SciPy, Pillow and ffmpeg. This illustrative higher-grid run is
+  uv run --project dossiers/lenia-swarm python dossiers/lenia-swarm/ops/render_homepage_creature.py
+Requires ffmpeg. This illustrative higher-grid run is
 separate from the measured report cohorts; its spatial refinement changes the
 simulation discretization. It is not an upscaled recording of a report result.
 
@@ -13,7 +13,6 @@ CLI's full-world density frames without rerunning or refining the simulation.
 from __future__ import annotations
 
 import argparse
-import base64
 import hashlib
 import json
 import subprocess
@@ -23,6 +22,8 @@ import numpy as np
 from PIL import Image
 from scipy import fft
 from scipy.ndimage import label, sum_labels, zoom
+
+from lenia_swarm_analysis.trace_codec import state_patch_values
 
 ROOT = Path(__file__).resolve().parents[3]
 SOURCE = Path(
@@ -93,7 +94,7 @@ def render() -> None:
     n = config["grid"]["sx"]
     state = np.zeros((n, n), dtype=np.float64)
     h, w = patch["height"], patch["width"]
-    seed = np.frombuffer(base64.b64decode(patch["data"]), "<f4").reshape(h, w)
+    seed = state_patch_values(patch).reshape(h, w)
     state[n // 2 - h // 2 : n // 2 - h // 2 + h, n // 2 - w // 2 : n // 2 - w // 2 + w] = seed
     state = zoom(state, 4, order=1)
     n *= 4
