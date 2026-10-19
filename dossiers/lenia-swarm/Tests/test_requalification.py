@@ -91,6 +91,8 @@ def sources(tmp_path: Path) -> list[tuple[str, str, Path, Path]]:
         "campaign": "0002-c",
         "source_creature_id": "CCCC0003",
         "qualified": True,
+        "individuality_pass": True,
+        "locality_pass": True,
         "config_sha256": hashlib.sha256(config.read_bytes()).hexdigest(),
         "individuality_class": "persistent_individual",
         "coherence_min_1e-6": 0.99,
@@ -102,12 +104,20 @@ def sources(tmp_path: Path) -> list[tuple[str, str, Path, Path]]:
 
 def test_collect_members_keeps_selected_bodies_with_motion_class(tmp_path, sources):
     out = tmp_path / "members.json"
-    summary = rq.collect_members(sources=sources, output_path=out)
+    summary = rq.collect_members(sources=sources, qualified=True, output_path=out)
     assert summary["by_cohort_and_native_arena"] == {"004/256": 1, "135/128": 1}
     members = {m["body"]: m for m in json.loads(out.read_text())["members"]}
     assert set(members) == {"AAAA0001", "CCCC0003"}
     assert members["AAAA0001"]["original"]["motion_class"] == "translating"
     assert members["AAAA0001"]["state_patch_shape"] == [2, 4, 4]
+
+
+def test_collect_members_can_take_the_rejected_bodies(tmp_path, sources):
+    out = tmp_path / "members.json"
+    rq.collect_members(sources=sources[:1], qualified=False, output_path=out)
+    (member,) = json.loads(out.read_text())["members"]
+    assert member["body"] == "BBBB0002"
+    assert member["original"]["gates"] == {"individuality": False, "locality": True}
 
 
 def test_collect_members_rejects_a_replay_that_differs_from_its_input(tmp_path, sources):
@@ -120,12 +130,12 @@ def test_collect_members_rejects_a_replay_that_differs_from_its_input(tmp_path, 
     changed["params"]["R"] = 13.0
     config.write_text(json.dumps(changed))
     with pytest.raises(ValueError, match="params_sha256"):
-        rq.collect_members(sources=sources, output_path=tmp_path / "members.json")
+        rq.collect_members(sources=sources, qualified=True, output_path=tmp_path / "members.json")
 
 
 def test_torus_inputs_scale_grid_and_recentre_patch(tmp_path, sources):
     members = tmp_path / "members.json"
-    rq.collect_members(sources=sources, output_path=members)
+    rq.collect_members(sources=sources, qualified=True, output_path=members)
     summary = rq.write_torus_inputs(
         members_path=members, scales=[1, 2], steps=40000, output_root=tmp_path / "in"
     )
@@ -166,7 +176,7 @@ def assessment(path: Path, arena: int, passes: dict[str, bool]) -> Path:
 
 def test_compare_verdicts_reports_prior_transitions(tmp_path, sources):
     members = tmp_path / "members.json"
-    rq.collect_members(sources=sources, output_path=members)
+    rq.collect_members(sources=sources, qualified=True, output_path=members)
     small = assessment(tmp_path / "a128.json", 128, {"AAAA0001": True, "CCCC0003": False})
     large = assessment(tmp_path / "a256.json", 256, {"AAAA0001": True, "CCCC0003": True})
     ensemble = tmp_path / "ensemble.json"
@@ -187,6 +197,10 @@ def test_compare_verdicts_reports_prior_transitions(tmp_path, sources):
     )
     assert summary["verdicts"] == {"004": {"unstable": 1}, "135": {"creature": 1}}
     assert summary["prior_transitions"] == {"not_creature->unstable": 1}
+    assert summary["verdicts_by_failed_gates"] == {
+        "004/none": {"unstable": 1},
+        "135/none": {"creature": 1},
+    }
     row = next(r for r in json.loads(out.read_text())["members"] if r["body"] == "CCCC0003")
     assert row["arenas"]["128"]["failed"] == ["long_lived"]
 

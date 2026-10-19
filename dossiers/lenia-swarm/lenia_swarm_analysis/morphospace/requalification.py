@@ -53,15 +53,19 @@ def _body_spec(base: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _screen_selection(path: Path) -> dict[str, dict[str, Any]]:
-    """Members of a long-horizon screen: rows passing individuality and locality."""
+REQUAL_COHERENCE_MIN = 0.8
+
+
+def _screen_selection(path: Path, qualified: bool) -> dict[str, dict[str, Any]]:
+    """Rows of a long-horizon screen whose individuality-and-locality qualification equals `qualified`."""
     selected = {}
     for raw in _read_jsonl(path):
         row = {
             k: ast.literal_eval(v) if k in SCREEN_LITERALS and isinstance(v, str) else v
             for k, v in raw.items()
         }
-        if not (row["individuality_pass"] and row["locality_pass"]):
+        gates = {"individuality": row["individuality_pass"], "locality": row["locality_pass"]}
+        if all(gates.values()) != qualified:
             continue
         if row["translation_pass"]:
             motion = "translating"
@@ -72,6 +76,7 @@ def _screen_selection(path: Path) -> dict[str, dict[str, Any]]:
         selected[row["source_creature_id"]] = {
             "selection": row["screen_id"],
             "campaign": row["candidate_id"],
+            "gates": gates,
             "individuality_class": row["individuality_class"],
             "temporal_individuality": row["individuality_axes"]["temporal_individuality_score"],
             "motion_class": motion,
@@ -80,13 +85,20 @@ def _screen_selection(path: Path) -> dict[str, dict[str, Any]]:
     return selected
 
 
-def _requal_selection(path: Path) -> dict[str, dict[str, Any]]:
-    """Members of a gap-search requalification: records marked qualified."""
+def _requal_selection(path: Path, qualified: bool) -> dict[str, dict[str, Any]]:
+    """Records of a gap-search requalification whose qualification equals `qualified`."""
     requal = json.loads(path.read_text())
     configs = {p.parent.name: p for p in path.parent.glob("replay/*/campaigns/*/config.json")}
     selected = {}
     for r in requal["records"]:
-        if not r["qualified"]:
+        gates = {
+            "individuality": r["individuality_pass"],
+            "locality": r["locality_pass"],
+            "coherence": r["coherence_min_1e-6"] >= REQUAL_COHERENCE_MIN,
+        }
+        if all(gates.values()) != r["qualified"]:
+            raise ValueError(f"{path}: {r['campaign']} gates disagree with its qualification")
+        if r["qualified"] != qualified:
             continue
         config = configs[r["campaign"]]
         if _sha(config.read_bytes()) != r["config_sha256"]:
@@ -94,6 +106,7 @@ def _requal_selection(path: Path) -> dict[str, dict[str, Any]]:
         selected[r["source_creature_id"]] = {
             "selection": str(path),
             "campaign": r["campaign"],
+            "gates": gates,
             "individuality_class": r["individuality_class"],
             "coherence_min_1e-6": r["coherence_min_1e-6"],
             "in_target_cells": r["in_target_cells"],
@@ -103,9 +116,11 @@ def _requal_selection(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def collect_members(
-    *, sources: list[tuple[str, str, Path, Path]], output_path: Path
+    *, sources: list[tuple[str, str, Path, Path]], qualified: bool, output_path: Path
 ) -> dict[str, Any]:
     """Join each selection with the replay inputs it was run from.
+
+    `qualified` picks the bodies that passed the historical gates, or, when false, those that failed.
 
     A source is (cohort, kind, input index.jsonl, selection), kind "screen" for a screened.jsonl of a
     long-horizon screen and "requal" for a gap-search requal.json. The replayed configuration must
@@ -114,7 +129,7 @@ def collect_members(
     readers = {"screen": _screen_selection, "requal": _requal_selection}
     members, provenance = [], []
     for cohort, kind, index_path, selection_path in sources:
-        selected = readers[kind](selection_path)
+        selected = readers[kind](selection_path, qualified)
         inputs = {r["creatureId"]: r for r in _read_jsonl(index_path)}
         missing = sorted(set(selected) - set(inputs))
         if missing:
@@ -144,7 +159,9 @@ def collect_members(
     repeated = sorted(b for b, n in bodies.items() if n > 1)
     if repeated:
         raise ValueError(f"bodies selected by more than one source: {repeated}")
-    output_path.write_text(json.dumps({"sources": provenance, "members": members}, indent=1))
+    output_path.write_text(
+        json.dumps({"qualified": qualified, "sources": provenance, "members": members}, indent=1)
+    )
     return {
         "output": str(output_path),
         "members": len(members),
@@ -253,6 +270,7 @@ def compare_verdicts(
                 "body": m["body"],
                 "native_arena": m["native_arena"],
                 "motion_class": m["original"].get("motion_class"),
+                "failed_gates": sorted(g for g, ok in m["original"]["gates"].items() if not ok),
                 "verdict": verdicts[m["body"]]["verdict"],
                 "prior_verdict": prior.get(m["body"]),
                 "arenas": per_arena[m["body"]],
@@ -265,12 +283,28 @@ def compare_verdicts(
     transitions = Counter(
         f"{r['prior_verdict']}->{r['verdict']}" for r in rows if r["prior_verdict"] is not None
     )
+    tally: dict[str, Counter[str]] = {}
+    for r in rows:
+        key = f"{r['cohort']}/{'+'.join(r['failed_gates']) or 'none'}"
+        tally.setdefault(key, Counter())[r["verdict"]] += 1
+    by_gates = {k: dict(v) for k, v in sorted(tally.items())}
     output_path.write_text(
         json.dumps(
-            {"verdicts": summary, "prior_transitions": dict(transitions), "members": rows}, indent=1
+            {
+                "verdicts": summary,
+                "verdicts_by_failed_gates": by_gates,
+                "prior_transitions": dict(transitions),
+                "members": rows,
+            },
+            indent=1,
         )
     )
-    return {"output": str(output_path), "verdicts": summary, "prior_transitions": dict(transitions)}
+    return {
+        "output": str(output_path),
+        "verdicts": summary,
+        "verdicts_by_failed_gates": by_gates,
+        "prior_transitions": dict(transitions),
+    }
 
 
 def _trace_key(path: Path) -> tuple[int, str]:
