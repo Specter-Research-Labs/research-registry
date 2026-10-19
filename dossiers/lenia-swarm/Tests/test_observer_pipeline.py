@@ -58,6 +58,7 @@ def write_campaign(root: Path, name: str, values: np.ndarray) -> Path:
     (campaign / "replay-manifest.json").write_text(json.dumps({
         "developmentStatePath": "development-state.f32",
         "developmentStateShape": list(values.shape),
+        "developmentStateSteps": [r["step"] for r in rows],
     }))
     return campaign
 
@@ -76,6 +77,21 @@ def test_load_states_rejects_a_frame_that_does_not_match_its_hash(replay: Path) 
     values = np.fromfile(campaign / "development-state.f32", dtype="<f4")
     values[-1] += 1.0
     values.tofile(campaign / "development-state.f32")
+    with pytest.raises(ValueError, match="does not match its hash"):
+        load_states(campaign)
+
+
+def test_load_states_pairs_frames_with_the_declared_raw_steps(tmp_path: Path) -> None:
+    values = blob_frames((1, 0))
+    campaign = write_campaign(tmp_path, "subset", values[[0, 3]])
+    rows = [{"step": 10 * t, "stateSha256": hashlib.sha256(frame.tobytes()).hexdigest()} for t, frame in enumerate(values)]
+    (campaign / "development-trace.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    manifest = json.loads((campaign / "replay-manifest.json").read_text()) | {"developmentStateSteps": [0, 30]}
+    (campaign / "replay-manifest.json").write_text(json.dumps(manifest))
+    states = load_states(campaign)
+    assert states.steps.tolist() == [0, 30]
+    np.testing.assert_array_equal(states.values[1], values[3])
+    (campaign / "replay-manifest.json").write_text(json.dumps(manifest | {"developmentStateSteps": [0, 20]}))
     with pytest.raises(ValueError, match="does not match its hash"):
         load_states(campaign)
 
