@@ -472,7 +472,7 @@ private func loadHolonomyBundle(from bundleURL: URL) throws -> HolonomyBundle {
             "meta.json in holonomy bundle has no bundleKind: \(metaURL.path). Re-export the bundle as \(LeniaArtifactBundleKind.strictReplayBundleV1.rawValue)."
         )
     }
-    let metadata = try decodeCreatureExportMetadata(metaData, decoder: decoder)
+    let metadata = try decodeCreatureExportMetadata(metaData, decoder: decoder, indexBundleKind: nil)
     guard metadata.bundleKind == .strictReplayBundleV1 else {
         throw ValidationError("holonomy only supports strict Flow Lenia replay bundles in v1.")
     }

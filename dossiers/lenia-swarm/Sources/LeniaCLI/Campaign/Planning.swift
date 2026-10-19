@@ -236,41 +236,6 @@ private func forEachInterventionScenario(
     }
 }
 
-func buildCampaignJobs(
-    request: CampaignExecutionRequest,
-    dossierRoot: URL,
-    configDirectory: URL,
-    logger: Logger
-) throws -> [LeniaCampaignJob] {
-    switch request.preset {
-    case .discovery, .foodDiscovery:
-        let config = try JSONDecoder().decode(DiscoveryCampaignConfig.self, from: Data(contentsOf: request.configURL))
-        return try buildDiscoveryCampaignJobs(
-            request: request,
-            config: config,
-            dossierRoot: dossierRoot,
-            configDirectory: configDirectory
-        )
-    case .seededEcology:
-        let config = try JSONDecoder().decode(SeededEcologyCampaignConfig.self, from: Data(contentsOf: request.configURL))
-        return try buildSeededEcologyJobs(
-            request: request,
-            config: config,
-            dossierRoot: dossierRoot,
-            configDirectory: configDirectory
-        )
-    case .interventionBattery:
-        let config = try JSONDecoder().decode(InterventionBatteryCampaignConfig.self, from: Data(contentsOf: request.configURL))
-        return try buildInterventionBatteryJobs(
-            request: request,
-            config: config,
-            dossierRoot: dossierRoot,
-            configDirectory: configDirectory,
-            logger: logger
-        )
-    }
-}
-
 func buildDiscoveryCampaignJobs(
     request: CampaignExecutionRequest,
     config: DiscoveryCampaignConfig,
@@ -359,8 +324,8 @@ func buildSeededEcologyJobs(
         let baseConfigData = try Data(contentsOf: baseConfigURL)
         let baseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: baseConfigData)
         let configHash = researchConfigHash([
-            ("simulation", try JSONEncoder().encode(bundle.simulation)),
-            ("variant", try JSONEncoder().encode(variant)),
+            ("simulation", try researchJSONEncoder().encode(bundle.simulation)),
+            ("variant", try researchJSONEncoder().encode(variant)),
             ("base", baseConfigData),
         ])
         for mutationProbability in mutationProbabilities {
@@ -455,7 +420,7 @@ private func buildSearchInterventionJobs(
     )
     let baseHash = researchConfigHash([
         ("base", baseConfigData),
-        ("search", try JSONEncoder().encode(baseSearchConfig)),
+        ("search", try researchJSONEncoder().encode(baseSearchConfig)),
     ])
 
     var jobs: [LeniaCampaignJob] = []
@@ -535,8 +500,8 @@ private func buildEcologyInterventionJobs(
     let cohorts = try resolveEcologyCohorts(request: request, maxSeedsPerRun: 1, mode: "mixed")
     let mutationProbability = bundle.simulation.mutationProbabilities.first ?? 0.0
     let baseHash = researchConfigHash([
-        ("simulation", try JSONEncoder().encode(bundle.simulation)),
-        ("variant", try JSONEncoder().encode(baseVariant)),
+        ("simulation", try researchJSONEncoder().encode(bundle.simulation)),
+        ("variant", try researchJSONEncoder().encode(baseVariant)),
         ("base", baseConfigData),
     ])
 

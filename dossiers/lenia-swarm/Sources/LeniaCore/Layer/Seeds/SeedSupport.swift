@@ -413,7 +413,7 @@ private func loadResearchSeedPatchesFromExportIndex(
         let metadata = try decodeCreatureExportMetadata(
             Data(contentsOf: metaURL),
             decoder: decoder,
-            fallbackBundleKind: record.bundleKind
+            indexBundleKind: record.bundleKind
         )
         let projection = resolveSpecimenProjection(
             id: researchSeedProjectionID(

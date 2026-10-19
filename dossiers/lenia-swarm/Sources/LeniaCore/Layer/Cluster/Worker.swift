@@ -386,6 +386,25 @@ public distributed actor LeniaWorker {
         }
     }
 
+    public distributed func processCampaignJob(_ job: LeniaCampaignJob) async throws -> LeniaCampaignJobExecution {
+        currentJobId = job.runID
+        defer { currentJobId = nil }
+        logger.info("Received campaign job \(job.runID) (backend \(job.backendRequest))")
+        do {
+            let execution = try executeLeniaCampaignJob(
+                job,
+                logger: logger,
+                capabilities: backendCapabilities,
+                workerID: workerId
+            )
+            jobsCompleted += 1
+            return execution
+        } catch {
+            logger.error("Failed campaign job \(job.runID): \(String(describing: error))")
+            throw error
+        }
+    }
+
     public distributed func getStatus() async -> WorkerStatus {
         return WorkerStatus(
             capabilities: backendCapabilities,
@@ -398,7 +417,7 @@ public distributed actor LeniaWorker {
         )
     }
 
-    private static func detectBackendCapabilities() -> WorkerBackendCapabilities {
+    public static func detectBackendCapabilities() -> WorkerBackendCapabilities {
         let hasMetal = MTLCreateSystemDefaultDevice() != nil
         if hasMetal {
             return WorkerBackendCapabilities(

@@ -617,7 +617,7 @@ final class SQLiteIndexer {
         let metadata = try decodeCreatureExportMetadata(
             Data(contentsOf: metadataURL),
             decoder: decoder,
-            fallbackBundleKind: exportRecord.bundleKind
+            indexBundleKind: exportRecord.bundleKind
         )
         return try upsertSpecimenFromExportMetadata(
             metadata: metadata,
