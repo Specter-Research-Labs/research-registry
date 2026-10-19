@@ -109,7 +109,8 @@ Useful individual targets:
 - `LeniaCLI orchestrate controller|worker|campaign`: distributed sweep, worker, and campaign dispatch.
 - `LeniaCLI index ingest|sanity|backfill`: compendium ingest and repair.
 - `LeniaCLI analyze warehouse|topology|biological|discovery|ecology|taxonomy`: warehouse refresh and derived analysis.
-- `LeniaCLI intervene battery|holonomy`: intervention batteries and transport experiments.
+- `LeniaCLI intervene holonomy`: transport experiments.
+- `LeniaCLI orchestrate campaign --campaign configs/campaigns/intervention-battery.json --output RUN`: the intervention battery as a declarative campaign phase.
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
 - `LeniaCLI tt run`: Tenstorrent backend trajectory execution with optional quietbox SSH/container orchestration and Studio frame export.
 - `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.

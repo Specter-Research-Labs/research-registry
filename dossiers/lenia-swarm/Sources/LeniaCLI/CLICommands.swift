@@ -225,9 +225,8 @@ struct AnalyzeCommands: AsyncParsableCommand {
 struct InterveneCommands: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "intervene",
-        abstract: "Intervention batteries and transport experiments",
+        abstract: "Transport experiments",
         subcommands: [
-            InterventionBatteryCommand.self,
             HolonomyCommand.self,
         ]
     )
