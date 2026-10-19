@@ -7,6 +7,7 @@ from typing import Any, Literal
 import numpy as np
 from duckdb import DuckDBPyConnection
 from ripser import ripser
+from scipy.spatial import KDTree
 
 from lenia_swarm_analysis.topology.analysis import (
     _diagram_summary,
@@ -94,44 +95,9 @@ def _nearest_neighbors(
 ) -> tuple[np.ndarray, np.ndarray]:
     if source_matrix.shape[0] == 0 or target_matrix.shape[0] == 0:
         return np.empty((0,), dtype=np.float64), np.empty((0,), dtype=np.int64)
-    try:
-        from scipy.spatial import cKDTree  # type: ignore[import-not-found]
-    except ImportError:
-        return _nearest_neighbors_chunked(
-            source_matrix=source_matrix,
-            target_matrix=target_matrix,
-        )
-    tree = cKDTree(target_matrix)
+    tree = KDTree(target_matrix)
     distances, indices = tree.query(source_matrix, k=1, workers=-1)
     return np.asarray(distances, dtype=np.float64), np.asarray(indices, dtype=np.int64)
-
-
-def _nearest_neighbors_chunked(
-    *,
-    source_matrix: np.ndarray,
-    target_matrix: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
-    max_distance_elements = 8_000_000
-    chunk_size = max(
-        1,
-        min(source_matrix.shape[0], max_distance_elements // target_matrix.shape[0]),
-    )
-    target_norms = np.sum(target_matrix * target_matrix, axis=1)
-    distances = np.empty((source_matrix.shape[0],), dtype=np.float64)
-    indices = np.empty((source_matrix.shape[0],), dtype=np.int64)
-    for start in range(0, source_matrix.shape[0], chunk_size):
-        stop = min(source_matrix.shape[0], start + chunk_size)
-        chunk = source_matrix[start:stop]
-        distances_sq = (
-            np.sum(chunk * chunk, axis=1)[:, None]
-            + target_norms[None, :]
-            - 2.0 * (chunk @ target_matrix.T)
-        )
-        np.maximum(distances_sq, 0.0, out=distances_sq)
-        nearest = np.argmin(distances_sq, axis=1)
-        indices[start:stop] = nearest
-        distances[start:stop] = np.sqrt(distances_sq[np.arange(stop - start), nearest])
-    return distances, indices
 
 
 def _feature_space_payload(

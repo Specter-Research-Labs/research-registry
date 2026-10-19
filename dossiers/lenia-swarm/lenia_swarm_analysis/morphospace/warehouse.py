@@ -14,7 +14,6 @@ from lenia_swarm_analysis._io import sha256_file
 
 from .schema import create_schema
 
-TOOL_VERSION = "morphospace-warehouse-v1"
 APPLE_REFERENCE_EPOCH = datetime(2001, 1, 1, tzinfo=UTC)
 
 
@@ -172,41 +171,6 @@ def register_artifact(
         ],
     )
     return artifact_id
-
-
-def register_ingest_run(
-    connection: DuckDBPyConnection,
-    *,
-    notes: str | None = None,
-    ingest_id: str | None = None,
-) -> str:
-    resolved_ingest_id = ingest_id or stable_id("ingest", utc_now().isoformat(), notes or "")
-    connection.execute(
-        """
-        INSERT OR REPLACE INTO ingest_runs (
-            ingest_id, started_at, completed_at, status, tool_version, notes
-        )
-        VALUES (?, ?, NULL, 'running', ?, ?)
-        """,
-        [resolved_ingest_id, utc_now(), TOOL_VERSION, notes],
-    )
-    return resolved_ingest_id
-
-
-def complete_ingest_run(
-    connection: DuckDBPyConnection,
-    *,
-    ingest_id: str,
-    status: str = "completed",
-) -> None:
-    connection.execute(
-        """
-        UPDATE ingest_runs
-        SET completed_at = ?, status = ?
-        WHERE ingest_id = ?
-        """,
-        [utc_now(), status, ingest_id],
-    )
 
 
 def ingest_json_object_artifact(

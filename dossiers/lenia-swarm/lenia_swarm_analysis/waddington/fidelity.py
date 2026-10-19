@@ -88,7 +88,7 @@ def _records(family_map: dict, kind_map: dict) -> list[dict]:
             "degenerate": False,
             "coherent": is_coherent(axes),
             "settledness": _settledness(axes),
-            "drift": _drift(np.array(centers), float(rows[0].get("width", 192)), len(axes)),
+            "drift": _drift(np.array(centers), float(rows[0]["width"]), len(axes)),
         })
     return out
 

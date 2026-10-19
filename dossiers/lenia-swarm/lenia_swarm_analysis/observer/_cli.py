@@ -4,7 +4,6 @@ from lenia_swarm_analysis._commands import GROUPS_BY_NAME
 from lenia_swarm_analysis._dispatch import dispatch_command_group
 
 GROUP = GROUPS_BY_NAME["observer"]
-COMMANDS = GROUP.commands
 
 
 def main(argv: list[str] | None = None) -> int:

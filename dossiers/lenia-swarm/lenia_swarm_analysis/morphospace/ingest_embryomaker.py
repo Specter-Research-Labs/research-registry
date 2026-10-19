@@ -175,10 +175,6 @@ def _cheap_summary(module: ModuleType, path: Path) -> EmbryoMakerSnapshotRecord:
     )
 
 
-def load_embryomaker_snapshot_record(path: Path) -> EmbryoMakerSnapshotRecord:
-    return _cheap_summary(_load_legacy_snapshot_module(), path.resolve())
-
-
 def load_embryomaker_node_points(path: Path) -> list[tuple[float, float, float]]:
     module = _load_legacy_snapshot_module()
     snapshot = module.parse_legacy_snapshot(path.resolve())

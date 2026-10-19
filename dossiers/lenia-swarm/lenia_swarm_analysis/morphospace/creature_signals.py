@@ -19,24 +19,6 @@ from .derive_anatomy import (
     _symmetry_class,
 )
 
-CREATURE_SIGNAL_AXIS_IDS: tuple[str, ...] = (
-    "largest_component_share_final",
-    "coherence_mean",
-    "coherence_min",
-    "fragmentation_peak",
-    "fragmentation_variability",
-    "part_persistence_score",
-    "shape_persistence_score",
-    "symmetry_stability_score",
-    "polarity_stability_score",
-    "enclosure_persistence_score",
-    "whole_body_motion_score",
-    "deformation_without_dissolution_score",
-    "localization_score",
-    "extent_stability_score",
-    "temporal_individuality_score",
-)
-
 BODY_PLAN_ERROR_AXIS_IDS: tuple[str, ...] = (
     "largest_component_share_final",
     "fragmentation",

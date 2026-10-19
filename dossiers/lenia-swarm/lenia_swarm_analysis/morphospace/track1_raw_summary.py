@@ -199,10 +199,7 @@ def write_track1_candidate_manifest(
 def _completed_summary_rows(run_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
     rows = []
     for summary_path in sorted(run_root.glob("track1b-*-8192-s*/summary.json")):
-        try:
-            summary = json.loads(summary_path.read_text(encoding="utf-8"))
-        except Exception:
-            continue
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
         if int(summary.get("count") or 0) != 8192:
             continue
         if int(summary.get("resultsCount") or 0) != 8192:

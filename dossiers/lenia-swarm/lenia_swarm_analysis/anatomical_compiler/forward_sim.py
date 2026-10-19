@@ -26,12 +26,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from PIL import Image
 
 from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
-from lenia_swarm_analysis.morphospace.common_morphology import (
-    point_cloud_shape_features,
-)
 
 GENOTYPE_KEYS: tuple[str, ...] = ("r", "b", "w", "a", "m", "s", "h", "R")
 
@@ -171,7 +167,6 @@ class ForwardSimulator:
         *,
         count: int,
         seed: int,
-        extra_args: list[str] | None = None,
     ) -> subprocess.CompletedProcess[str]:
         environment = {"SPECTER_ARTIFACT_ROOT": str(output_dir.parent / "artifacts")}
         command = [
@@ -183,8 +178,6 @@ class ForwardSimulator:
             "--seed", str(seed),
             "--no-promotion",
         ]
-        if extra_args is not None:
-            command += extra_args
         if self.backend is not None:
             command += ["--backend", self.backend]
         completed = subprocess.run(
@@ -231,53 +224,6 @@ class ForwardSimulator:
                 raise RuntimeError("No results.jsonl produced for evaluation")
             record = json.loads(results[0].read_text(encoding="utf-8").splitlines()[0])
         return self._phenotype(record)
-
-    def developmental_trajectory(
-        self, genotype: dict[str, Any], *, init_seed: int | None = None, stride: int = 50
-    ) -> dict[str, Any]:
-        """Run one genotype and return its path through morphospace, the sequence of
-        12 common-morphology shape axes at every `stride` steps, plus the terminal
-        phenotype. This is the per-step developmental trajectory that the warehouse
-        does not store; it makes the basins-and-fibers duality measurable, the
-        forward flow toward an attractor that the inverse fiber lands in.
-        """
-        seed = self.init_seed if init_seed is None else init_seed
-        config = self._explicit_config(genotype, seed)
-        with tempfile.TemporaryDirectory() as raw_workdir:
-            workdir = Path(raw_workdir)
-            base_path = workdir / "base.json"
-            base_path.write_text(json.dumps(config), encoding="utf-8")
-            search_path = workdir / "search.json"
-            search_path.write_text(json.dumps(self._search_config()), encoding="utf-8")
-            output_dir = workdir / "out"
-            self._run(
-                base_path, search_path, output_dir, count=1, seed=seed,
-                extra_args=["--frames", "--frame-stride", str(stride)],
-            )
-            results = list(output_dir.rglob("results.jsonl"))
-            if not results:
-                raise RuntimeError("No results.jsonl produced for trajectory")
-            record = json.loads(results[0].read_text(encoding="utf-8").splitlines()[0])
-            path: list[dict[str, Any]] = []
-            for frame_path in sorted(output_dir.rglob("frame_*.png")):
-                step = int(frame_path.stem.split("_")[1])
-                axes = field_to_axes(np.asarray(Image.open(frame_path), dtype=np.float64))
-                if axes is not None:
-                    path.append({"step": step, "axes": axes})
-        return {"terminal": self._phenotype(record), "path": path}
-
-
-def field_to_axes(field: np.ndarray) -> dict[str, float] | None:
-    """Map one density field (a frame) to the 12 common-morphology shape axes, the
-    same basis the morphospace warehouse uses, by treating occupied cells as a
-    weighted point cloud.
-    """
-    ys, xs = np.nonzero(field > 0.0)
-    if xs.size < 2:
-        return None
-    points = np.column_stack([xs.astype(np.float64), ys.astype(np.float64)])
-    weights = field[ys, xs].astype(np.float64)
-    return point_cloud_shape_features(points, weights=weights)
 
 
 def _merged_env(extra: dict[str, str]) -> dict[str, str]:

@@ -1,6 +1,6 @@
 """Recolor the original paired Orbium experiment's scalar frame exports.
 
-python dossiers/lenia-swarm/ops/render_homepage_orbium_pair.py \
+uv run --project dossiers/lenia-swarm python dossiers/lenia-swarm/ops/render_homepage_orbium_pair.py \
   --native-frames PATH/target-dense/frames \
   --recovered-frames PATH/refined-dense/frames
 
