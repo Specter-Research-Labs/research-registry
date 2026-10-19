@@ -21,6 +21,7 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageDraw
 
+from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
 from lenia_swarm_analysis.anatomical_compiler._codec import GenotypeCodec
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import DEFAULT_BINARY, _merged_env
 
@@ -116,32 +117,38 @@ def _scatter(complexity: np.ndarray, drift: np.ndarray, is_coherent: np.ndarray,
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", default="configs/base/paper_random_3c_15k_128.json")
-    parser.add_argument("--search", default="configs/search/search_track1_coherent_128.json")
-    parser.add_argument("--seeds", default="outputs/anatomical-compiler/3c15/coherent_seeds.jsonl")
+    parser.add_argument(
+        "--base", type=Path, default=DOSSIER_ROOT / "configs/base/paper_random_3c_15k_128.json"
+    )
+    parser.add_argument(
+        "--search", type=Path, default=DOSSIER_ROOT / "configs/search/search_track1_coherent_128.json"
+    )
+    parser.add_argument(
+        "--seeds", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/3c15/coherent_seeds.jsonl"
+    )
     parser.add_argument("--n-random", type=int, default=150)
     parser.add_argument("--ablate-step", type=int, default=400)
     parser.add_argument("--steps", type=int, default=1000)
     parser.add_argument("--ablate-size", type=int, default=40)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--output", default="outputs/anatomical-compiler/3c15/functional_map")
+    parser.add_argument(
+        "--output", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/3c15/functional_map"
+    )
     args = parser.parse_args(argv)
 
-    root = Path.cwd()
-    base = json.loads((root / args.base).read_text(encoding="utf-8"))
+    base = json.loads(args.base.read_text(encoding="utf-8"))
     ranges = base["params"]["ranges"]
     patch = base["init"]["patches"][0]
-    search = json.loads((root / args.search).read_text(encoding="utf-8"))
+    search = json.loads(args.search.read_text(encoding="utf-8"))
     search = deepcopy(search)
     search["steps"] = args.steps
     search["warmup_steps"] = args.ablate_step          # record only the post-ablation window
     search["complexity"] = {"enabled": True, "scales": [0, 1, 2, 3], "target": None,
                             "polar": True, "backend": "png"}
-    out_dir = (root / args.output).resolve()
+    out_dir = args.output.resolve()
 
     corpus, is_coherent = _build_corpus(
-        (root / args.seeds).resolve(), args.n_random, ranges, args.seed)
-    binary = root / DEFAULT_BINARY
+        args.seeds.resolve(), args.n_random, ranges, args.seed)
 
     baseline_config = deepcopy(base)
     ablation_config = deepcopy(base)
@@ -155,10 +162,10 @@ def main(argv: list[str] | None = None) -> int:
           f"({int(is_coherent.sum())} coherent + {int((~is_coherent).sum())} random)")
     print("running baseline ...")
     base_metrics = _run_eval(
-        binary, baseline_config, search, corpus, out_dir, root=root, name="baseline")
+        DEFAULT_BINARY, baseline_config, search, corpus, out_dir, root=DOSSIER_ROOT, name="baseline")
     print("running ablation ...")
     abl_metrics = _run_eval(
-        binary, ablation_config, search, corpus, out_dir, root=root, name="ablation")
+        DEFAULT_BINARY, ablation_config, search, corpus, out_dir, root=DOSSIER_ROOT, name="ablation")
 
     n = min(len(base_metrics), len(abl_metrics), len(corpus))
     complexity = np.array([float(base_metrics[i].get("complexity_mean") or 0.0) for i in range(n)])
