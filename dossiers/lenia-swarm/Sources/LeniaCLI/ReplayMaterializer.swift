@@ -783,7 +783,7 @@ func replayResolvedInput(
         metadata = try decodeCreatureExportMetadata(
             Data(contentsOf: metaURL),
             decoder: decoder,
-            fallbackBundleKind: record.bundleKind
+            indexBundleKind: record.bundleKind
         )
     } else {
         metadata = nil

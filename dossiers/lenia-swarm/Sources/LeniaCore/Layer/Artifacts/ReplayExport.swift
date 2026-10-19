@@ -260,7 +260,7 @@ public struct CreatureExportMetadata: Codable {
 public func decodeCreatureExportMetadata(
     _ data: Data,
     decoder: JSONDecoder,
-    fallbackBundleKind: LeniaArtifactBundleKind? = nil
+    indexBundleKind: LeniaArtifactBundleKind?
 ) throws -> CreatureExportMetadata {
     do {
         return try decoder.decode(CreatureExportMetadata.self, from: data)
@@ -269,22 +269,30 @@ public func decodeCreatureExportMetadata(
             || (context.codingPath.isEmpty && key.stringValue == "bundleKind") {
         let normalized = try normalizeLegacyCreatureExportMetadataData(
             data,
-            fallbackBundleKind: fallbackBundleKind
+            indexBundleKind: indexBundleKind
         )
         return try decoder.decode(CreatureExportMetadata.self, from: normalized)
     }
 }
 
+// Exports written before meta.json carried bundleKind still record it in exports/index.jsonl,
+// so readers that come through the index supply it; readers holding only meta.json cannot.
 private func normalizeLegacyCreatureExportMetadataData(
     _ data: Data,
-    fallbackBundleKind: LeniaArtifactBundleKind?
+    indexBundleKind: LeniaArtifactBundleKind?
 ) throws -> Data {
     guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
           var creature = root["creature"] as? [String: Any] else {
         return data
     }
-    if root["bundleKind"] == nil, let fallbackBundleKind {
-        root["bundleKind"] = fallbackBundleKind.rawValue
+    if root["bundleKind"] == nil {
+        guard let indexBundleKind else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(
+                codingPath: [],
+                debugDescription: "Export meta.json has no bundleKind and no export index record supplies one; read it through its exports/index.jsonl record or re-export it."
+            ))
+        }
+        root["bundleKind"] = indexBundleKind.rawValue
     }
     if creature["initialCondition"] == nil, let legacy = creature["phenotype"] {
         creature["initialCondition"] = legacy

@@ -215,9 +215,11 @@ public distributed actor SwarmController {
         }
 
         // Send existing arenas to new worker
-        for (_, host) in activeArenas {
-            if let state = try? await host.getState() {
-                try? await worker.receiveArenaInvite(state.config)
+        for (arenaId, host) in activeArenas {
+            do {
+                try await worker.receiveArenaInvite(host.getState().config)
+            } catch {
+                logger.error("Failed to invite joining worker to arena \(arenaId): \(error)")
             }
         }
 
@@ -717,39 +719,42 @@ public distributed actor SwarmController {
         return config.id
     }
 
-    public distributed func startArena(id: UUID) async {
+    public distributed func startArena(id: UUID) async throws {
         guard let host = activeArenas[id] else {
-            logger.warning("Arena \(id) not found")
-            return
+            throw ControllerError.arenaNotFound(id.uuidString)
         }
         logger.info("Starting arena \(id)")
-        try? await host.start()
+        try await host.start()
     }
 
-    public distributed func stopArena(id: UUID) async {
-        guard let host = activeArenas[id] else { return }
-        let config = try? await host.getState().config
-        try? await host.stop()
+    public distributed func stopArena(id: UUID) async throws {
+        guard let host = activeArenas[id] else {
+            throw ControllerError.arenaNotFound(id.uuidString)
+        }
+        let config = try await host.getState().config
+        try await host.stop()
         activeArenas.removeValue(forKey: id)
         logger.info("Stopped arena \(id)")
 
-        if let config = config {
-            let endedState = ArenaState(config: config, status: .ended, participants: [])
-            for worker in workers {
-                Task {
-                    try? await worker.receiveArenaState(endedState)
+        let endedState = ArenaState(config: config, status: .ended, participants: [])
+        let logger = self.logger
+        for worker in workers {
+            Task {
+                do {
+                    try await worker.receiveArenaState(endedState)
+                } catch {
+                    logger.error("Failed to notify worker that arena \(id) ended: \(error)")
                 }
             }
         }
     }
 
-    public distributed func triggerMutationInArena(id: UUID, strength: Float = 0.05) async {
+    public distributed func triggerMutationInArena(id: UUID, strength: Float = 0.05) async throws {
         guard let host = activeArenas[id] else {
-            logger.warning("Arena \(id) not found for mutation event")
-            return
+            throw ControllerError.arenaNotFound(id.uuidString)
         }
         logger.info("Triggering mutation in arena \(id)")
-        try? await host.triggerMutationEvent(strength: strength)
+        try await host.triggerMutationEvent(strength: strength)
     }
 
     public distributed func requestJoinArena(workerId: String, arenaId: UUID, creature: SavedCreature) async -> Bool {
@@ -772,11 +777,6 @@ public distributed actor SwarmController {
             logger.error("Failed to join arena: \(error)")
             return false
         }
-    }
-
-    public func getArenaState(id: UUID) async -> ArenaState? {
-        guard let host = activeArenas[id] else { return nil }
-        return try? await host.getState()
     }
 
     public func getActiveArenas() -> [UUID] {
@@ -1287,4 +1287,5 @@ public enum ControllerError: Error, Codable {
     case invalidBaseConfig
     case outputDirFailed(String)
     case exportFailed(String)
+    case arenaNotFound(String)
 }

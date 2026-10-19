@@ -588,5 +588,5 @@ public final class AppState: ObservableObject {
 private func loadReplayRuntimeFamily(from metaURL: URL) -> String? {
     guard let data = try? Data(contentsOf: metaURL) else { return nil }
     let decoder = JSONDecoder()
-    return try? decodeCreatureExportMetadata(data, decoder: decoder).runtimeFamily
+    return try? decodeCreatureExportMetadata(data, decoder: decoder, indexBundleKind: nil).runtimeFamily
 }
