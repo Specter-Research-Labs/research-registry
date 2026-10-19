@@ -23,7 +23,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-subtitle{font-family:var(--rk-font-heading);font-style:italic;font-size:clamp(21px,2.3vw,27px);line-height:1.35;color:var(--rk-muted);margin:14px 0 56px;text-wrap:balance}
 .rk-byline{font:700 12px/1.85 var(--sl-font-mono);margin:0}
 .rk-meta{font:12px/1.85 var(--sl-font-mono);color:var(--rk-muted);margin:0}
-.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;padding:4px 0 32px;font-size:13px;line-height:1.35;opacity:.6;transition:opacity .3s ease}
+.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:none;padding:4px 0 32px;font-size:13px;line-height:1.35;opacity:.6;transition:opacity .3s ease}
+.rk-toc::-webkit-scrollbar{display:none}
 .rk-toc:hover,.rk-toc:focus-within{opacity:1}
 .rk-toc ul{list-style:none;margin:0 0 20px;padding:0}
 .rk-toc li{margin:0 0 7px}
