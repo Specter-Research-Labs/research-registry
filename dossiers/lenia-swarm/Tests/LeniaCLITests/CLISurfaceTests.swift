@@ -65,7 +65,6 @@ final class CLISurfaceTests: XCTestCase {
                 "controller",
                 "worker",
                 "campaign",
-                "portfolio",
             ])
         )
     }

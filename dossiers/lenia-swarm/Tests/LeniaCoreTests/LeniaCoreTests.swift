@@ -4247,7 +4247,7 @@ final class LeniaCoreTests: XCTestCase {
             data: Array(repeating: Float(0.25), count: 192 * 192),
             score: 1.25
         )
-        let indexURL = tempRoot.appendingPathComponent("portfolio-seeds.jsonl")
+        let indexURL = tempRoot.appendingPathComponent("large-patch-seeds.jsonl")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         try Data(("\n  \n" + String(decoding: encoder.encode(patch), as: UTF8.self) + "\n").utf8).write(to: indexURL)

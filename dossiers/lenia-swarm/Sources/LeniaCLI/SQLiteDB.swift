@@ -64,10 +64,6 @@ final class SQLiteDB {
         return 0
     }
 
-    func changes() -> Int {
-        Int(sqlite3_changes(db))
-    }
-
     func tableExists(_ name: String) throws -> Bool {
         let stmt = try prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=? LIMIT 1")
         defer { sqlite3_finalize(stmt) }

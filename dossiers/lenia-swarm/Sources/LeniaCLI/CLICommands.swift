@@ -188,7 +188,6 @@ struct OrchestrateCommands: AsyncParsableCommand {
             ControllerCommand.self,
             WorkerCommand.self,
             CampaignCommand.self,
-            PortfolioCommand.self,
         ]
     )
 }
