@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import math
 from collections import defaultdict
 from pathlib import Path
@@ -8,6 +7,8 @@ from typing import Any
 
 import numpy as np
 from duckdb import DuckDBPyConnection
+
+from lenia_swarm_analysis._io import read_json
 
 TRACK1_FAMILY_ALGORITHMS: dict[str, str] = {
     "2c10_r17_20": "fl-2c10-r17-20-initshift-harvest",
@@ -22,13 +23,6 @@ DEFAULT_COMMON_REGION_AXES: tuple[str, ...] = (
     "coverage",
     "compactness",
 )
-
-
-def _read_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return value
 
 
 def _finite_or_none(value: float) -> float | None:
@@ -355,7 +349,7 @@ def build_high_fiber_null_validation_packet(
     min_region_count: int = 128,
     family_algorithms: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    source_packet = _read_json(source_packet_path)
+    source_packet = read_json(source_packet_path)
     family_map = family_algorithms or TRACK1_FAMILY_ALGORITHMS
     common_axes = _axis_ids(connection, "common_morphology_v1")
     terminal_axes = _axis_ids(connection, "lenia_terminal_v1")

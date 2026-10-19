@@ -18,12 +18,12 @@ far better than the broad families. Runs on the existing family traces, no re-si
 
 from __future__ import annotations
 
-import base64
 import json
 import math
 
 import numpy as np
 
+from ..trace_codec import trace_field
 from ..transformation_metrics import (
     extract_terminal_raw_axes_from_descriptors,
     transform_axes,
@@ -44,17 +44,16 @@ MIN_SPECIES = 3  # a species needs >= this many coherent creatures to enter the 
 SUMMARY = STUDY_ROOT / "family_tda.json"
 
 
-def _field(row: dict) -> np.ndarray | None:
+def _field(row: dict) -> np.ndarray:
     """The opt-in centered Float16 native field (peak-normalized to 1), full dynamic range -- not
-    the 8-bit fingerprint. None if the trace predates field capture."""
-    b = row.get("fieldF16Base64")
-    res = row.get("fieldResolution")
-    if not b or res != FIELD_RESOLUTION:
-        return None
-    a = np.frombuffer(base64.b64decode(b), dtype="<f2").astype(np.float32)
-    if a.size != FIELD_RESOLUTION * FIELD_RESOLUTION:
-        return None
-    return a.reshape(FIELD_RESOLUTION, FIELD_RESOLUTION)
+    the 8-bit fingerprint."""
+    field = trace_field(row)
+    if field.shape != (FIELD_RESOLUTION, FIELD_RESOLUTION):
+        raise SystemExit(
+            f"trace row step {row.get('step')}: field is {field.shape}, "
+            f"expected {FIELD_RESOLUTION}x{FIELD_RESOLUTION}"
+        )
+    return field.astype(np.float32)
 
 
 def _scale_normalize(field: np.ndarray, out: int, thresh: float = 0.02) -> np.ndarray | None:
@@ -174,23 +173,25 @@ def descriptor(rows: list[dict], src: str, theta: np.ndarray,
                radial: dict[tuple[int, int], np.ndarray]) -> dict | None:
     """Per-creature TDA descriptor from its trace rows: per-frame-median PH + Zernike + harmonics,
     plus the settled axes and the representative (median settled) field. None if degenerate or
-    incoherent. Per-frame-then-median because a rotator averaged across frames blurs into a ring,
-    which would both wash out its N-fold Zernike signature and fake an H1 hole."""
+    incoherent, or if the trace predates native-field capture. Per-frame-then-median because a
+    rotator averaged across frames blurs into a ring, which would both wash out its N-fold Zernike
+    signature and fake an H1 hole."""
     settled = rows[len(rows) * 2 // 3:] or rows
-    fields, axvecs, harms = [], [], []
+    if any("fieldF16Base64" not in r for r in settled):
+        return None
+    fields = [_field(r) for r in settled]
+    axvecs, harms = [], []
     try:
         for r in settled:
             t = r["terminal"]
-            fld = _field(r)
             h = (t.get("angularSymmetry") or {}).get("harmonics") or []
-            if fld is None or len(h) < HARM_ORDERS:
+            if len(h) < HARM_ORDERS:
                 raise ValueError
             raw = extract_terminal_raw_axes_from_descriptors(
                 terminal=t,
                 trajectory={"centerVelocity": 0.0, "pathTortuosity": 0.0}, specimen_id=src,
             )
             axvecs.append([float(transform_axes(raw)[a]) for a in AXIS])
-            fields.append(fld)
             harms.append(np.asarray(h[:HARM_ORDERS], dtype=float))
     except (SystemExit, ValueError, KeyError, TypeError):
         return None

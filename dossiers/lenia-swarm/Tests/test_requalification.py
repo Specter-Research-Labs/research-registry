@@ -213,7 +213,12 @@ def replay_campaign(root: Path, campaign: str, body: str, arena: int) -> Path:
     for step in (400, 800):
         field = np.full(arena * arena, step, dtype="<f2").tobytes()
         frames.append(
-            {"step": step, "width": arena, "fieldF16Base64": base64.b64encode(field).decode()}
+            {
+                "step": step,
+                "width": arena,
+                "fieldResolution": arena,
+                "fieldF16Base64": base64.b64encode(field).decode(),
+            }
         )
     trace = d / "development-trace.jsonl"
     write_jsonl(trace, frames)

@@ -9,30 +9,8 @@ from typing import Any
 import numpy as np
 from ripser import ripser
 
-
-def _read_json(path: Path) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as handle:
-        data = json.load(handle)
-    if not isinstance(data, dict):
-        raise SystemExit(f"{path}: expected a JSON object")
-    return data
-
-
-def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    with path.open("r", encoding="utf-8") as handle:
-        for line_no, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            try:
-                row = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                raise SystemExit(f"{path}:{line_no}: invalid JSON: {exc}") from exc
-            if not isinstance(row, dict):
-                raise SystemExit(f"{path}:{line_no}: expected a JSON object per row")
-            rows.append(row)
-    return rows
+from lenia_swarm_analysis._io import read_json, read_jsonl
+from lenia_swarm_analysis.trace_codec import fingerprint_u8
 
 
 def _default_output_dir(manifest_path: Path) -> Path:
@@ -95,17 +73,7 @@ def _extract_phenotype_matrix(rows: list[dict[str, Any]]) -> np.ndarray:
         terminal = row.get("terminal")
         if not isinstance(terminal, dict):
             raise SystemExit(f"Row {index} is missing terminal")
-        values = terminal.get("fingerprintU8")
-        resolution = terminal.get("fingerprintResolution")
-        if not isinstance(values, list) or not isinstance(resolution, int):
-            raise SystemExit(f"Row {index} is missing terminal fingerprint payload")
-        expected = resolution * resolution
-        if len(values) != expected:
-            raise SystemExit(
-                "Row "
-                f"{index} fingerprint length {len(values)} does not match resolution {resolution}"
-            )
-        vector = np.asarray(values, dtype=np.float64) / 255.0
+        vector = fingerprint_u8(terminal, specimen_id=f"row {index}").reshape(-1).astype(np.float64) / 255.0
         total = float(vector.sum())
         if total > 1e-12:
             vector /= total
@@ -289,9 +257,9 @@ def run_analysis(
     maxdim: int,
     neighbor_k: int,
 ) -> dict[str, Any]:
-    manifest = _read_json(manifest_path)
+    manifest = read_json(manifest_path)
     rows_path = _resolve_rows_path(manifest_path, manifest)
-    rows = _read_jsonl(rows_path)
+    rows = read_jsonl(rows_path)
     if len(rows) < 2:
         raise SystemExit("Topology analysis requires at least 2 specimens.")
 

@@ -10,6 +10,8 @@ from typing import Any, Iterable, Sequence
 import duckdb
 from duckdb import DuckDBPyConnection
 
+from lenia_swarm_analysis._io import sha256_file
+
 from .schema import create_schema
 
 TOOL_VERSION = "morphospace-warehouse-v1"
@@ -87,14 +89,6 @@ def connect_read_only_database(path: Path) -> DuckDBPyConnection:
     return duckdb.connect(str(path), read_only=True)
 
 
-def file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def row_sha256(payload: Any) -> str:
     return hashlib.sha256(json_text(payload).encode("utf-8")).hexdigest()
 
@@ -148,7 +142,7 @@ def register_artifact(
 ) -> str:
     stat = path.stat()
     content_fingerprint = (
-        file_sha256(path)
+        sha256_file(path)
         if hash_content
         else f"stat:{stat.st_size}:{stat.st_mtime_ns}"
     )

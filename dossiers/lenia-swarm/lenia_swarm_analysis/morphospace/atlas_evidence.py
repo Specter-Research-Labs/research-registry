@@ -1,16 +1,10 @@
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-
-def read_json_object(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return value
+from lenia_swarm_analysis._io import read_json
 
 
 def _dist(value: dict[str, Any], key: str) -> dict[str, Any] | None:
@@ -291,10 +285,10 @@ def build_atlas_evidence_packet_from_files(
     generated_at: str | None = None,
 ) -> dict[str, Any]:
     return build_atlas_evidence_packet(
-        atlas_findings=read_json_object(atlas_findings_path),
-        common_tda=read_json_object(common_tda_path),
-        h1_regions=read_json_object(h1_regions_path) if h1_regions_path else None,
-        validation256=read_json_object(validation256_path) if validation256_path else None,
-        terminal_tda=read_json_object(terminal_tda_path) if terminal_tda_path else None,
+        atlas_findings=read_json(atlas_findings_path),
+        common_tda=read_json(common_tda_path),
+        h1_regions=read_json(h1_regions_path) if h1_regions_path else None,
+        validation256=read_json(validation256_path) if validation256_path else None,
+        terminal_tda=read_json(terminal_tda_path) if terminal_tda_path else None,
         generated_at=generated_at,
     )

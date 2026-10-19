@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from lenia_swarm_analysis._io import read_json, sha256_bytes, sha256_file
 from lenia_swarm_analysis.morphospace.track1_spec import track1_family_metadata
 
 CORRECTED_SHADER = b"float gxU = (u20 + 2.0f * u21 + u22) - (u00 + 2.0f * u01 + u02)"
@@ -30,7 +31,7 @@ def engine_signature(engine: Path) -> dict[str, Any]:
         raise SystemExit(f"{engine}: static shader signature is ambiguous")
     return {
         "path": str(engine),
-        "sha256": hashlib.sha256(data).hexdigest(),
+        "sha256": sha256_bytes(data),
         "class": "corrected" if corrected else "buggy",
     }
 
@@ -81,8 +82,8 @@ def verify_track1_runs(
 
 def inspect_run(run_dir: Path, *, archive_dir: Path) -> dict[str, Any]:
     run_id = run_dir.name
-    summary = _read_json(run_dir / "summary.json")
-    checkpoint = _read_json(run_dir / "checkpoint.json")
+    summary = read_json(run_dir / "summary.json")
+    checkpoint = read_json(run_dir / "checkpoint.json")
     seed_start = int(summary["seedStart"])
     count = int(summary["count"])
     results_path = run_dir / "results.jsonl"
@@ -147,8 +148,8 @@ def inspect_run(run_dir: Path, *, archive_dir: Path) -> dict[str, Any]:
             "archivedMarker": (run_dir / "ARCHIVED.json").exists(),
             "archivedResultsSha256": archived_sha,
             "resultsDifferFromArchive": archived_sha != results_sha,
-            "configSha256": _sha256(run_dir / "config.json"),
-            "searchSha256": _sha256(run_dir / "search.json"),
+            "configSha256": sha256_file(run_dir / "config.json"),
+            "searchSha256": sha256_file(run_dir / "search.json"),
             "inputHash": checkpoint["inputHash"],
         },
         "orientation": orientation_signature(headings),
@@ -178,7 +179,7 @@ def replay_run(
     count: int,
     scratch_root: Path,
 ) -> dict[str, Any]:
-    summary = _read_json(run_dir / "summary.json")
+    summary = read_json(run_dir / "summary.json")
     seed_start = int(summary["seedStart"])
     wanted: dict[int, dict[str, Any]] = {}
     batches = []
@@ -264,14 +265,6 @@ def _archived_results_sha(archive_dir: Path, run_id: str) -> str:
     with gzip.open(manifest_path, "rt", encoding="utf-8") as handle:
         manifest = json.load(handle)
     return manifest[f"{run_id}/results.jsonl"]["sha256"]
-
-
-def _read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _mtime(path: Path) -> str:

@@ -10,12 +10,12 @@ Run with: uv run --with matplotlib --with scipy python -m lenia_swarm_analysis.w
 
 from __future__ import annotations
 
-import base64
 import json
 
 import duckdb
 import numpy as np
 
+from ..trace_codec import fingerprint_u8
 from ..transformation_metrics import (
     TERMINAL_AXIS_IDS,
     extract_terminal_raw_axes_from_descriptors,
@@ -69,9 +69,7 @@ def load_terminals(conn, study_id, mean, std, comps):
         transformed = transform_axes(raw)
         vec = np.array([float(transformed[a]) for a in TERMINAL_AXIS_IDS])
         coords.append(((vec - mean) / std) @ comps.T)
-        res = int(terminal["fingerprintResolution"])
-        raw_fp = base64.b64decode(terminal["fingerprintU8"])
-        fingerprints.append(np.frombuffer(raw_fp, dtype=np.uint8).reshape(res, res))
+        fingerprints.append(fingerprint_u8(terminal, specimen_id=sid))
     return np.array(coords), fingerprints
 
 

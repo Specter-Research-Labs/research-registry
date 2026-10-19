@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import csv
-import json
 import math
 import re
 from pathlib import Path
 from typing import Any
 
 from duckdb import DuckDBPyConnection
+
+from lenia_swarm_analysis._io import read_json
 
 from .warehouse import (
     ingest_json_object_artifact,
@@ -27,15 +28,6 @@ from .warehouse import (
 SOURCE_ID = "dryad_fish_body_shape_20240112"
 FEATURE_SPACE_ID = "fish_gpa_pc_v1"
 FEATURE_SPACE_LABEL = "Fish SlicerMorph GPA principal components"
-
-
-def _read_json(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError(f"{path} must contain a JSON object")
-    return value
 
 
 def _axis_id(label: str) -> str:
@@ -158,7 +150,7 @@ def ingest_dryad_fish_body_shape(
     label: str | None = None,
 ) -> dict[str, Any]:
     root = dataset_root.resolve()
-    source_manifest = _read_json(root / "provenance/source.json")
+    source_manifest = read_json(root / "provenance/source.json")
     pc_scores_path = root / "extracted/gpa/Slicer_GPA_output/pcScores.csv"
     eigenvalues_path = root / "extracted/gpa/Slicer_GPA_output/eigenvalues.csv"
     if not pc_scores_path.exists():

@@ -5,9 +5,7 @@ The original causal-emergence cohorts are never modified.
 """
 
 import argparse
-import base64
 import gzip
-import hashlib
 import json
 import subprocess
 from copy import deepcopy
@@ -16,14 +14,13 @@ from pathlib import Path
 import numpy as np
 from scipy import ndimage
 
+from lenia_swarm_analysis._io import sha256_file
+from lenia_swarm_analysis.trace_codec import state_patch_values, trace_field
+
 AGES = (900, 2700)
 SWAP_SEEDS = (17, 31, 47)
 STEPS = 240
 DOSE = 0.12
-
-
-def digest(p):
-    return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
 def write(p, obj):
@@ -48,11 +45,7 @@ def analyze(root):
         return [json.loads(x) for x in gzip.open(p, "rt")]
 
     def field(t):
-        return (
-            np.frombuffer(base64.b64decode(t["fieldF16Base64"]), dtype="<f2")
-            .astype(float)
-            .reshape(t["fieldResolution"], t["fieldResolution"])
-        )
+        return trace_field(t).astype(float)
 
     def component(t):
         v = field(t)
@@ -93,8 +86,8 @@ def analyze(root):
                     "arm": arm.name,
                     "intervention_relative_mass_delta": e["total_mass_absolute_delta"]
                     / e["pre_total_mass"],
-                    "event_sha256": hashlib.sha256(event_path.read_bytes()).hexdigest(),
-                    "field_sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+                    "event_sha256": sha256_file(event_path),
+                    "field_sha256": sha256_file(p),
                     "realized_affected_matter_fraction": e["realized_affected_matter_fraction"],
                     "mass_relative_drift": (fs[-1]["totalMass"] - e["pre_total_mass"])
                     / e["pre_total_mass"],
@@ -149,8 +142,8 @@ def main():
             {
                 "candidate": candidate,
                 "creature_id": creature["id"],
-                "source_config_sha256": digest(source / "config.json"),
-                "source_library_sha256": digest(source / "library/index.jsonl"),
+                "source_config_sha256": sha256_file(source / "config.json"),
+                "source_library_sha256": sha256_file(source / "library/index.jsonl"),
             }
         )
     # This plan is written before any perturbed outcomes exist.
@@ -159,7 +152,7 @@ def main():
         {
             "schema": "coherent_body_cell_swap_pilot_v1",
             "selection": "Visual body persistence in an independent 3600-step replay; not intervention response",
-            "runner_sha256": digest(runner),
+            "runner_sha256": sha256_file(runner),
             "ages": AGES,
             "future_steps": STEPS,
             "swap_fraction": DOSE,
@@ -213,7 +206,7 @@ def main():
             n = base["grid"]["sx"]
             if (patch["width"], patch["height"], patch["channels"]) != (n, n, 2):
                 raise ValueError("Expected a full native-grid checkpoint")
-            values = np.frombuffer(base64.b64decode(patch["data"]), dtype="<f4")
+            values = state_patch_values(patch)
             sources, targets = [], []
             for s, counts in enumerate(base["connectivity"]):
                 for t, count in enumerate(counts):
@@ -325,7 +318,7 @@ def main():
     write(
         out / "completion.json",
         {
-            "plan_sha256": digest(out / "plan.json"),
+            "plan_sha256": sha256_file(out / "plan.json"),
             "trials": len(roster) * len(AGES) * (len(SWAP_SEEDS) + 1),
         },
     )

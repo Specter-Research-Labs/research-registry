@@ -6,7 +6,7 @@ from typing import Any
 
 from duckdb import DuckDBPyConnection
 
-from lenia_swarm_analysis._io import read_jsonl
+from lenia_swarm_analysis._io import read_json, read_jsonl
 from lenia_swarm_analysis.transformation_metrics import (
     DEVELOPMENTAL_AXIS_IDS,
     TERMINAL_AXIS_IDS,
@@ -31,13 +31,6 @@ from .warehouse import (
 def _load_trace_samples(trace_path: Path) -> list[dict[str, Any]]:
     rows = read_jsonl(trace_path)
     return sorted(rows, key=lambda row: int(row["step"]))
-
-
-def _load_json(path: Path) -> dict[str, Any]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise SystemExit(f"{path}: expected JSON object")
-    return payload
 
 
 def _load_single_jsonl_row(path: Path) -> dict[str, Any]:
@@ -85,7 +78,7 @@ def _load_terminal_and_trajectory(
 
 
 def _summary_row_from_manifest(manifest_path: Path) -> dict[str, Any]:
-    manifest = _load_json(manifest_path)
+    manifest = read_json(manifest_path)
     campaign_dir = manifest_path.parent
     library_path = Path(
         str(manifest.get("libraryPath", campaign_dir / "library/index.jsonl"))
@@ -103,7 +96,7 @@ def _summary_row_from_manifest(manifest_path: Path) -> dict[str, Any]:
     search_path_raw = manifest.get("searchPath")
     search_payload: dict[str, Any] = {}
     if isinstance(search_path_raw, str) and search_path_raw:
-        search_payload = _load_json(Path(search_path_raw).expanduser().resolve())
+        search_payload = read_json(Path(search_path_raw).expanduser().resolve())
     results_path = Path(str(manifest["resultsPath"])).expanduser().resolve()
     specimen_id = str(creature["id"])
     terminal, trajectory = _load_terminal_and_trajectory(
