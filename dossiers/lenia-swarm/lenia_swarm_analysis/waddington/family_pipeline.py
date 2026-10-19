@@ -204,11 +204,11 @@ def _axes_from_trace(rows: list[dict], sid: str):
                 trajectory={"centerVelocity": 0.0, "pathTortuosity": 0.0}, specimen_id=sid,
             )
             t = transform_axes(raw)
-            axes.append([float(t[a]) for a in TERMINAL_AXIS_IDS])
-            centers.append([float(r["centerX"]), float(r["centerY"])])
-            grid_n = float(r.get("width", grid_n or 192))
         except (SystemExit, ValueError, KeyError, TypeError):
             return None
+        axes.append([float(t[a]) for a in TERMINAL_AXIS_IDS])
+        centers.append([float(r["centerX"]), float(r["centerY"])])
+        grid_n = float(r["width"])
     if len(axes) < 3:
         return None
     return np.array(axes), np.array(centers), grid_n

@@ -159,15 +159,12 @@ def unzip_cells(cell_text: str) -> list[list[float]]:
     return doubled
 
 
-def unsimplified_fraction(text: str | None) -> int:
-    if not text:
-        return 0
+def unsimplified_fraction(text: str) -> int:
     if text.endswith("/12"):
         return int(text.split("/")[0])
-    try:
-        return B_SIMP.index(text)
-    except ValueError:
-        return 0
+    if text not in B_SIMP:
+        raise SystemExit(f"unsupported kernel weight: {text!r}")
+    return B_SIMP.index(text)
 
 
 def parse_rule(rule: str) -> dict[str, Any]:

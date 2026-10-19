@@ -51,7 +51,7 @@ def build() -> None:
         if d is None:
             continue
         centers = np.array([[float(r["centerX"]), float(r["centerY"])] for r in rows])
-        grid_n = float(rows[0].get("width", 192))
+        grid_n = float(rows[0]["width"])
         net_frac = _drift(centers, grid_n, 1) / grid_n  # net displacement (translation)
         seg = np.abs(np.diff(centers, axis=0))
         seg = np.minimum(seg, grid_n - seg)  # torus-aware per-step COM step
