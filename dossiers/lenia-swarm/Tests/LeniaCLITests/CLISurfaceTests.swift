@@ -54,6 +54,7 @@ final class CLISurfaceTests: XCTestCase {
                 "sensorimotor-flowlenia",
                 "evaluate",
                 "obstacle-response",
+                "capacity-pilot",
             ])
         )
     }

@@ -80,7 +80,7 @@ final class FlowLeniaMetalFullPipeline {
     private let ukBuffer: MTLBuffer
     private let matterBuffer: MTLBuffer
     private let uBuffer: MTLBuffer
-    private let flowBuffer: MTLBuffer
+    let flowBuffer: MTLBuffer
     private var wallPotentialBuffers: UploadBuffers?
 
     private let c0IdxTransferBuffer: MTLBuffer
@@ -381,12 +381,17 @@ final class FlowLeniaMetalFullPipeline {
         paramsBuffer: MTLBuffer,
         nextMassBuffer: MTLBuffer,
         nextParamsBuffer: MTLBuffer,
-        mixStep: Int = 0
+        mixStep: Int = 0,
+        sensing: FlowLeniaMetalSensing? = nil
     ) {
-        encodeFFT(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
-        encodeGrowthReduce(on: commandBuffer, preparedMassBuffer: preparedMassBuffer, paramsBuffer: paramsBuffer)
+        // Sensing replaces the mass seen by the convolution and, with pressure,
+        // the matter term; transport always moves the prepared mass alone.
+        let fieldMassBuffer = sensing?.fieldMassBuffer ?? preparedMassBuffer
+        let pressureMassBuffer = sensing?.pressureMassBuffer ?? preparedMassBuffer
+        encodeFFT(on: commandBuffer, preparedMassBuffer: fieldMassBuffer)
+        encodeGrowthReduce(on: commandBuffer, preparedMassBuffer: pressureMassBuffer, paramsBuffer: paramsBuffer)
         encodeWallPotential(on: commandBuffer)
-        encodeFlow(on: commandBuffer, preparedMassBuffer: preparedMassBuffer)
+        encodeFlow(on: commandBuffer, preparedMassBuffer: pressureMassBuffer)
         encodeReintegrate(
             on: commandBuffer,
             preparedMassBuffer: preparedMassBuffer,
@@ -593,7 +598,7 @@ final class FlowLeniaMetalFullPipeline {
         )
     }
 
-    func readScalarField(batchCount: Int) -> [Float] {
+    func readScalarField(batchCount: Int, allChannels: Bool = false) -> [Float] {
         let values = Self.copyFloatsFromGPUBuffer(
             uBuffer,
             count: batchCount * config.sx * config.sy * channelCount,
@@ -601,6 +606,9 @@ final class FlowLeniaMetalFullPipeline {
             commandQueue: commandQueue,
             label: "flow-metal.u"
         )
+        if allChannels {
+            return values
+        }
         guard channelCount > 0 else {
             return []
         }
@@ -619,7 +627,7 @@ final class FlowLeniaMetalFullPipeline {
         return firstChannel
     }
 
-    func readFlow(batchCount: Int) -> [Float] {
+    func readFlow(batchCount: Int, allChannels: Bool = false) -> [Float] {
         let values = Self.copyFloatsFromGPUBuffer(
             flowBuffer,
             count: batchCount * config.sx * config.sy * channelCount * 2,
@@ -627,7 +635,7 @@ final class FlowLeniaMetalFullPipeline {
             commandQueue: commandQueue,
             label: "flow-metal.flow"
         )
-        if channelCount == 1 {
+        if allChannels || channelCount == 1 {
             return values
         }
         var firstChannel = [Float](repeating: 0, count: batchCount * config.sx * config.sy * 2)
@@ -1085,6 +1093,40 @@ final class FlowLeniaMetalFullPipeline {
         return (executable, inputShape, outputShape)
     }
 
+    static func reintegrateDistanceBody(sx: Int, sy: Int, dd: Int, maxAdvection: Float, useTorus: Bool) -> String {
+        let usesLocalTorusDistance = useTorus && maxAdvection >= 0
+            && Float(min(sx, sy)) * 0.5 > Float(dd) + maxAdvection
+        return if usesLocalTorusDistance {
+            """
+                                float dY = metal::fabs(float(dy) - clippedY);
+                                float dX = metal::fabs(float(dx) - clippedX);
+            """
+        } else if useTorus {
+            """
+                                float murY = float(srcY) + 0.5f + clippedY;
+                                float murX = float(srcX) + 0.5f + clippedX;
+                                float dY = metal::fabs(targetY - murY);
+                                float dX = metal::fabs(targetX - murX);
+                                dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
+                                dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
+                                dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
+                                dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
+            """
+        } else {
+            """
+                                // Compute wall-constrained displacement locally to avoid rounding at absolute cell coordinates.
+                                float localY = metal::fmin(metal::fmax(clippedY,
+                                    (kSigma - 0.5f) - float(srcY)),
+                                    float(kSY - 1 - srcY) + (0.5f - kSigma));
+                                float localX = metal::fmin(metal::fmax(clippedX,
+                                    (kSigma - 0.5f) - float(srcX)),
+                                    float(kSX - 1 - srcX) + (0.5f - kSigma));
+                                float dY = metal::fabs(float(y - srcY) - localY);
+                                float dX = metal::fabs(float(x - srcX) - localX);
+            """
+        }
+    }
+
     static func kernelSource(
         kernelCount: Int,
         parameterCount: Int,
@@ -1149,38 +1191,8 @@ final class FlowLeniaMetalFullPipeline {
         let reintegrateMassWrites = channelIndices.map { channel in
             "            nextMass[outputMassBase + \(channel)] = totalMass\(channel) * kAreaScale;"
         }.joined(separator: "\n")
-        let usesLocalTorusDistance = useTorus && maxAdvection >= 0
-            && Float(min(sx, sy)) * 0.5 > Float(dd) + maxAdvection
-        let reintegrateDistanceBody = if usesLocalTorusDistance {
-            """
-                                float dY = metal::fabs(float(dy) - clippedY);
-                                float dX = metal::fabs(float(dx) - clippedX);
-            """
-        } else if useTorus {
-            """
-                                float murY = float(srcY) + 0.5f + clippedY;
-                                float murX = float(srcX) + 0.5f + clippedX;
-                                float dY = metal::fabs(targetY - murY);
-                                float dX = metal::fabs(targetX - murX);
-                                dY = metal::fmin(dY, metal::fabs(targetY - (murY - float(kSY))));
-                                dY = metal::fmin(dY, metal::fabs(targetY - (murY + float(kSY))));
-                                dX = metal::fmin(dX, metal::fabs(targetX - (murX - float(kSX))));
-                                dX = metal::fmin(dX, metal::fabs(targetX - (murX + float(kSX))));
-            """
-        } else {
-            """
-                                float murY = metal::fmin(
-                                    metal::fmax(float(srcY) + 0.5f + clippedY, kSigma),
-                                    float(kSY) - kSigma
-                                );
-                                float murX = metal::fmin(
-                                    metal::fmax(float(srcX) + 0.5f + clippedX, kSigma),
-                                    float(kSX) - kSigma
-                                );
-                                float dY = metal::fabs(targetY - murY);
-                                float dX = metal::fabs(targetX - murX);
-            """
-        }
+        let reintegrateDistanceBody = Self.reintegrateDistanceBody(
+            sx: sx, sy: sy, dd: dd, maxAdvection: maxAdvection, useTorus: useTorus)
         let flowChannelBodies = channelIndices.map { channel in
             """
             {

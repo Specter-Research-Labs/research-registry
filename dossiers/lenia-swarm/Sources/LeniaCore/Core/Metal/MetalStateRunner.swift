@@ -5,6 +5,17 @@ import MLX
 final class FlowLeniaMetalFullStateRunner {
     private typealias BufferCopy = (source: MTLBuffer, destination: MTLBuffer, length: Int)
 
+    private struct AncestryBuffers {
+        let tracer: FlowLeniaMetalAncestryTracer
+        var current: MTLBuffer
+        var next: MTLBuffer
+        let transfer: MTLBuffer
+
+        mutating func advance() {
+            swap(&current, &next)
+        }
+    }
+
     let config: BatchedConfig
     let parameterCount: Int
     let batchCount: Int
@@ -49,6 +60,9 @@ final class FlowLeniaMetalFullStateRunner {
     private var currentMixStep = 0
     private var staticChannelFields: [FlowLeniaMetalChannelFieldBuffer] = []
     private var foodState: FlowLeniaMetalFoodStateBuffer?
+    private let phantom: FlowLeniaMetalPhantom?
+    // invariant: founder mass belongs to the resident mass; any mass upload discards it.
+    private var ancestry: AncestryBuffers?
     private(set) var massObservationSynchronizationCount = 0
 
     init(
@@ -60,7 +74,8 @@ final class FlowLeniaMetalFullStateRunner {
         reintegrateParams: Bool = true,
         parameterFieldMode: FlowLeniaParameterFieldMode = .kernelGain,
         parameterMix: String = "avg",
-        mixSeed: Int? = nil
+        mixSeed: Int? = nil,
+        phantom: FlowLeniaPhantomSpec? = nil
     ) {
         self.config = config
         let kernelCount = FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
@@ -201,6 +216,23 @@ final class FlowLeniaMetalFullStateRunner {
             length: channelCount * MemoryLayout<Float>.stride,
             label: "flow-metal.state.mass-map-weights"
         )
+        if let phantom {
+            guard batchCount == 1, !reintegrateParams, parameterFieldMode == .kernelGain,
+                  !pipeline.requiresSegmentedStepEncoding else {
+                preconditionFailure("Phantom fields require one batch element, fixed kernel-gain parameters, and single-buffer step encoding.")
+            }
+            self.phantom = FlowLeniaMetalPhantom(
+                spec: phantom,
+                config: config,
+                kernels: kernels,
+                device: device,
+                commandQueue: commandQueue,
+                wallPotential: wallPotential,
+                matterWeights: resolvedMatterWeights
+            )
+        } else {
+            self.phantom = nil
+        }
     }
 
     func setState(mass: MLXArray, params: MLXArray, mixStep: Int = 0) {
@@ -220,6 +252,11 @@ final class FlowLeniaMetalFullStateRunner {
         food: FlowLeniaMetalFoodState?,
         mixStep: Int = 0
     ) {
+        if phantom != nil {
+            guard wallMask == nil, staticChannelFields.isEmpty, food == nil else {
+                preconditionFailure("Phantom fields require a runtime without wall masks, static channel fields, or food.")
+            }
+        }
         if wallMask == nil, staticChannelFields.isEmpty, food == nil {
             wallMaskEnabled = false
             self.staticChannelFields = []
@@ -317,6 +354,40 @@ final class FlowLeniaMetalFullStateRunner {
             }
         }
         currentMixStep = max(0, mixStep)
+        ancestry = nil
+    }
+
+    /// Founder masses are laid out [batch, x, y, channel, founder] and must sum over founders to the resident mass.
+    func setAncestry(founderMass: [Float], founderCount: Int) {
+        precondition(!wallMaskEnabled && staticChannelFields.isEmpty && foodState == nil,
+                     "Ancestry tracing requires transport-only dynamics: no wall mask, static channel fields, or food.")
+        let count = batchCount * config.sx * config.sy * channelCount * founderCount
+        precondition(founderMass.count == count, "Founder mass must have shape [batch, sx, sy, channels, founders].")
+        let tracer = FlowLeniaMetalAncestryTracer(device: device, config: config, batchCount: batchCount, founderCount: founderCount)
+        let bytes = count * MemoryLayout<Float>.stride
+        let buffers = AncestryBuffers(
+            tracer: tracer,
+            current: FlowLeniaMetalFullPipeline.makePrivateBuffer(device: device, length: bytes, label: "flow-metal.state.ancestry"),
+            next: FlowLeniaMetalFullPipeline.makePrivateBuffer(device: device, length: bytes, label: "flow-metal.state.nextAncestry"),
+            transfer: FlowLeniaMetalFullPipeline.makeSharedBuffer(device: device, length: bytes, label: "flow-metal.state.ancestry-transfer")
+        )
+        FlowLeniaMetalFullPipeline.writeFloats(founderMass, to: buffers.transfer)
+        submitAndWait(label: "flow-metal.state.ancestry.upload") { commandBuffer in
+            encodeCopies([(buffers.transfer, buffers.current, bytes)], on: commandBuffer)
+        }
+        ancestry = buffers
+    }
+
+    func materializeAncestry() -> [Float] {
+        guard let ancestry else {
+            preconditionFailure("No founder mass is resident; set ancestry after the last mass upload.")
+        }
+        return readFloats(
+            from: ancestry.current,
+            into: ancestry.transfer,
+            count: ancestry.transfer.length / MemoryLayout<Float>.stride,
+            label: "flow-metal.state.ancestry"
+        )
     }
 
     func updateKernels(_ kernels: CompiledKernels) {
@@ -324,10 +395,16 @@ final class FlowLeniaMetalFullStateRunner {
     }
 
     func setWallPotential(_ wallPotential: MLXArray?) {
+        guard phantom == nil else {
+            preconditionFailure("Phantom fields fix the wall potential at construction.")
+        }
         pipeline.updateWallPotential(wallPotential)
     }
 
     func setMatterWeights(_ weights: [Float]?) {
+        guard phantom == nil else {
+            preconditionFailure("Phantom fields fix the matter weights at construction.")
+        }
         let resolved = Self.resolvedMatterWeights(
             weights: weights,
             channelCount: channelCount
@@ -405,6 +482,7 @@ final class FlowLeniaMetalFullStateRunner {
         guard patch.size > 0 else {
             return
         }
+        precondition(ancestry == nil, "Dissipation patches would remove matter without its founder mass.")
         submitAndWait(label: "flow-metal.state.dissipationPatch") { commandBuffer in
             encodeDissipationPatch(
                 on: commandBuffer,
@@ -436,6 +514,8 @@ final class FlowLeniaMetalFullStateRunner {
         guard stepCount > 0 else {
             return
         }
+        precondition(ancestry == nil || postStepDissipationPatches.isEmpty,
+                     "Dissipation patches would remove matter without its founder mass.")
         stepChunk(
             count: stepCount,
             preStepParameterPatches: preStepParameterPatches,
@@ -443,6 +523,21 @@ final class FlowLeniaMetalFullStateRunner {
             postStepScalarPatches: postStepScalarPatches,
             postStepDissipationPatches: postStepDissipationPatches
         )
+    }
+
+    func materializeLastFlow() -> [Float] {
+        pipeline.readFlow(batchCount: batchCount, allChannels: true)
+    }
+
+    func materializeLastPotential() -> [Float] {
+        pipeline.readScalarField(batchCount: batchCount, allChannels: true)
+    }
+
+    func materializePhantomField() -> [Float] {
+        guard let phantom else {
+            preconditionFailure("No phantom field is configured.")
+        }
+        return phantom.materializeField()
     }
 
     func materializeState() -> (mass: MLXArray, params: MLXArray) {
@@ -589,6 +684,9 @@ final class FlowLeniaMetalFullStateRunner {
     }
 
     func profileCurrentStep() -> FlowSandboxMetalStageTimings {
+        guard phantom == nil else {
+            preconditionFailure("Stage profiling does not encode phantom fields.")
+        }
         var wallMaskMs = 0.0
         let stageProfile = pipeline.profileStep(
             preparedMassBuffer: currentMassBuffer,
@@ -635,6 +733,15 @@ final class FlowLeniaMetalFullStateRunner {
             return
         }
 
+        if let phantom {
+            // The phantom clock advances only with real steps, so a restart from
+            // another step would pair the real state with the wrong phantom frame.
+            guard phantom.step == currentMixStep,
+                  preStepParameterPatches.isEmpty, postStepParameterPatches.isEmpty,
+                  postStepScalarPatches.isEmpty, postStepDissipationPatches.isEmpty else {
+                preconditionFailure("Phantom step \(phantom.step) does not match real step \(currentMixStep), or patches were scheduled.")
+            }
+        }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
             preconditionFailure("Failed to create Flow Metal state runner command buffer.")
         }
@@ -643,6 +750,7 @@ final class FlowLeniaMetalFullStateRunner {
         var readParamsBuffer = currentParamsBuffer
         var writeMassBuffer = nextMassBuffer
         var writeParamsBuffer = nextParamsBuffer
+        var ancestryBuffers = ancestry
         for stepIndex in 1...count {
             for field in staticChannelFields {
                 encodeChannelFieldOverwrite(
@@ -672,8 +780,20 @@ final class FlowLeniaMetalFullStateRunner {
                 paramsBuffer: readParamsBuffer,
                 nextMassBuffer: writeMassBuffer,
                 nextParamsBuffer: writeParamsBuffer,
-                mixStep: currentMixStep + stepIndex - 1
+                mixStep: currentMixStep + stepIndex - 1,
+                sensing: phantom?.encodeSensing(on: commandBuffer, massBuffer: readMassBuffer)
             )
+            phantom?.encodeAdvance(on: commandBuffer)
+            if let buffers = ancestryBuffers {
+                buffers.tracer.encode(
+                    on: commandBuffer,
+                    massBuffer: readMassBuffer,
+                    flowBuffer: pipeline.flowBuffer,
+                    ancestryBuffer: buffers.current,
+                    nextAncestryBuffer: buffers.next
+                )
+                ancestryBuffers!.advance()
+            }
             if let patches = postStepParameterPatches[stepIndex] {
                 for patch in patches {
                     encodeParameterPatch(
@@ -731,6 +851,7 @@ final class FlowLeniaMetalFullStateRunner {
             }
         }
         FlowLeniaMetalFullPipeline.commitAndWait(commandBuffer, label: "flow-metal.state.step.\(count)")
+        ancestry = ancestryBuffers
         currentMassBuffer = readMassBuffer
         currentParamsBuffer = readParamsBuffer
         nextMassBuffer = writeMassBuffer
@@ -785,6 +906,18 @@ final class FlowLeniaMetalFullStateRunner {
                 nextParamsBuffer: writeParamsBuffer,
                 mixStep: currentMixStep + stepIndex - 1
             )
+            if let buffers = ancestry {
+                submitAndWait(label: "flow-metal.state.segmented.ancestry.\(stepIndex)") { commandBuffer in
+                    buffers.tracer.encode(
+                        on: commandBuffer,
+                        massBuffer: readMassBuffer,
+                        flowBuffer: pipeline.flowBuffer,
+                        ancestryBuffer: buffers.current,
+                        nextAncestryBuffer: buffers.next
+                    )
+                }
+                ancestry!.advance()
+            }
 
             let postPatches = postStepParameterPatches[stepIndex] ?? []
             let dissipationPatches = postStepDissipationPatches[stepIndex] ?? []
