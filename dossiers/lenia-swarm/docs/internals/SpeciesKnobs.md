@@ -110,21 +110,21 @@ If the target is "something like the Chakazul glider", those features must stay 
 
 `params.mode = "random"` samples `b`, `w`, and `a` independently across all three stored lobes. That means random mode cannot express a clean "single dominant lobe plus two suppressed lobes" family except by luck.
 
-That is why the glider search now uses explicit fixed-rule configs in `configs/orbium_like_*.json` and searches seeds, not broad random rules.
+That is why the glider search now uses explicit fixed-rule configs in `configs/presets/orbium_like_*.json` and searches seeds, not broad random rules.
 
 ## Recommended glider-search policy
 
 Use:
 
-- `configs/glider_sweeps.json`
-- `configs/search_orbium_glider.json`
-- one of the explicit single-kernel configs in `configs/orbium_like_*.json` or the explicit seed-search families in `configs/glider_family_*.json`
+- `configs/sweeps/glider_sweeps.json`
+- `configs/search/search_orbium_glider.json`
+- one of the explicit single-kernel configs in `configs/presets/orbium_like_*.json` or the explicit seed-search families in `configs/presets/glider_family_*.json`
 
 Command:
 
 ```bash
 ./dossiers/lenia-swarm/ops/sweep.sh \
-  --manifest dossiers/lenia-swarm/configs/glider_sweeps.json \
+  --manifest dossiers/lenia-swarm/configs/sweeps/glider_sweeps.json \
   --output dossiers/lenia-swarm/artifacts/orbium-like-sweep \
   --target-creatures 32
 ```

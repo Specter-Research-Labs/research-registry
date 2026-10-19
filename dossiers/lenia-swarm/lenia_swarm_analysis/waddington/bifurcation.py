@@ -16,7 +16,6 @@ Lenia: every point is the real engine via `discover local`.
 
 from __future__ import annotations
 
-import base64
 import json
 import shutil
 import subprocess
@@ -25,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 
+from ..trace_codec import encode_state_patch_values, state_patch_values
 from .family_pipeline import CLI, CONFIG_ROOT
 from .study import FIGURES_DIR, STUDY_ROOT
 
@@ -60,9 +60,8 @@ def _search_cfg(path: Path) -> None:
 def _scale_patch(state_patch: dict, amp: float) -> dict:
     if amp == 1.0:
         return state_patch
-    raw = np.frombuffer(base64.b64decode(state_patch["data"]), dtype="<f4") * amp
     out = dict(state_patch)
-    out["data"] = base64.b64encode(raw.astype("<f4").tobytes()).decode("ascii")
+    out["data"] = encode_state_patch_values(state_patch_values(state_patch) * amp)
     return out
 
 

@@ -11,14 +11,15 @@ reconstruction is kept.
 from __future__ import annotations
 
 import argparse
-import base64
 import gzip
-import hashlib
 import json
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
+
+from lenia_swarm_analysis._io import sha256_bytes
+from lenia_swarm_analysis.trace_codec import trace_field
 
 RESOLUTION = 32
 ARENA = 128
@@ -35,7 +36,7 @@ def blocks(field: np.ndarray) -> np.ndarray:
 def measure_run(task: tuple[Path, str]) -> tuple[np.ndarray, list[str]]:
     path, expected = task
     raw = path.read_bytes()
-    if hashlib.sha256(raw).hexdigest() != expected:
+    if sha256_bytes(raw) != expected:
         raise ValueError(f"{path}: field observations digest does not match the receipt")
     records = [json.loads(line) for line in gzip.decompress(raw).splitlines()]
     if len(records) != RECORDS:
@@ -44,11 +45,11 @@ def measure_run(task: tuple[Path, str]) -> tuple[np.ndarray, list[str]]:
     for record in records:
         if record["fieldResolution"] != RESOLUTION or record["windowSize"] != ARENA:
             raise ValueError(f"{path}: unexpected field geometry")
-        payload = base64.b64decode(record["fieldF16Base64"])
-        field = np.frombuffer(payload, dtype="<f2").astype(np.float64).reshape(RESOLUTION, RESOLUTION)
+        stored = trace_field(record)
+        field = stored.astype(np.float64)
         rows.append(np.concatenate([blocks(field), [float(record["centerY"]), float(record["centerX"]),
                                                     float(record["totalMass"]), float(record["step"])]]))
-        digests.append(hashlib.sha256(payload).hexdigest())
+        digests.append(sha256_bytes(stored.tobytes()))
     return np.stack(rows), digests
 
 

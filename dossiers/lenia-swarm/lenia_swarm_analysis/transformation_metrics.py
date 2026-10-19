@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import base64
 import math
 from statistics import mean, median
 from typing import Any
 
 import numpy as np
+
+from .trace_codec import fingerprint_u8
 
 TERMINAL_AXIS_SPECS: tuple[dict[str, str], ...] = (
     {
@@ -585,32 +586,8 @@ def extract_terminal_raw_axes_from_descriptors(
         name="terminal.angularSymmetry.normalizedEntropy",
         specimen_id=specimen_id,
     )
-    fingerprint_resolution = int(
-        require_float(
-            terminal.get("fingerprintResolution"),
-            name="terminal.fingerprintResolution",
-            specimen_id=specimen_id,
-        )
-    )
-    fingerprint_payload = terminal.get("fingerprintU8")
-    if isinstance(fingerprint_payload, list):
-        if len(fingerprint_payload) != fingerprint_resolution * fingerprint_resolution or any(
-            not isinstance(value, int) for value in fingerprint_payload
-        ):
-            raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
-        fingerprint = np.asarray(fingerprint_payload, dtype=np.float32)
-    elif isinstance(fingerprint_payload, str):
-        fingerprint = np.frombuffer(base64.b64decode(fingerprint_payload), dtype=np.uint8).astype(
-            np.float32
-        )
-        if fingerprint.size != fingerprint_resolution * fingerprint_resolution:
-            raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
-    else:
-        raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
     metrics = fingerprint_metrics(
-        fingerprint.reshape(
-            fingerprint_resolution, fingerprint_resolution
-        )
+        fingerprint_u8(terminal, specimen_id=specimen_id).astype(np.float32)
     )
     return {
         "spread": gyration,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -9,13 +10,6 @@ def read_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise SystemExit(f"{path}: expected a JSON object")
-    return value
-
-
-def read_json_array(path: Path) -> list[dict[str, Any]]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, list) or any(not isinstance(row, dict) for row in value):
-        raise SystemExit(f"{path}: expected a JSON array of objects")
     return value
 
 
@@ -49,3 +43,15 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             handle.write(json.dumps(row, sort_keys=True))
             handle.write("\n")
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()

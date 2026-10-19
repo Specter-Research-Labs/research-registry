@@ -8,13 +8,14 @@ and is replayed on the torus at multiple arena sizes, as `classify-creatures` re
 from __future__ import annotations
 
 import ast
-import base64
-import hashlib
 import json
 import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
+
+from lenia_swarm_analysis._io import read_jsonl, sha256_bytes
+from lenia_swarm_analysis.trace_codec import state_patch_values, trace_field
 
 SCREEN_LITERALS = (
     "individuality_pass",
@@ -25,16 +26,8 @@ SCREEN_LITERALS = (
 )
 
 
-def _sha(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
 def _canonical_sha(value: Any) -> str:
-    return _sha(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
-
-
-def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return sha256_bytes(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
 
 
 def _body_spec(base: dict[str, Any]) -> dict[str, Any]:
@@ -46,7 +39,7 @@ def _body_spec(base: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("expected a state patch as the only initial condition")
     return {
         "params_sha256": _canonical_sha(base["params"]),
-        "state_patch_sha256": _sha(base64.b64decode(patch["data"])),
+        "state_patch_sha256": sha256_bytes(state_patch_values(patch).tobytes()),
         "state_patch_shape": [patch["channels"], patch["height"], patch["width"]],
         "native_arena": native,
         "native_border": base["reintegration"]["border"],
@@ -59,7 +52,7 @@ REQUAL_COHERENCE_MIN = 0.8
 def _screen_selection(path: Path, qualified: bool) -> dict[str, dict[str, Any]]:
     """Rows of a long-horizon screen whose individuality-and-locality qualification equals `qualified`."""
     selected = {}
-    for raw in _read_jsonl(path):
+    for raw in read_jsonl(path):
         row = {
             k: ast.literal_eval(v) if k in SCREEN_LITERALS and isinstance(v, str) else v
             for k, v in raw.items()
@@ -101,7 +94,7 @@ def _requal_selection(path: Path, qualified: bool) -> dict[str, dict[str, Any]]:
         if r["qualified"] != qualified:
             continue
         config = configs[r["campaign"]]
-        if _sha(config.read_bytes()) != r["config_sha256"]:
+        if sha256_bytes(config.read_bytes()) != r["config_sha256"]:
             raise ValueError(f"{config}: config changed since the requalification")
         selected[r["source_creature_id"]] = {
             "selection": str(path),
@@ -130,7 +123,7 @@ def collect_members(
     members, provenance = [], []
     for cohort, kind, index_path, selection_path in sources:
         selected = readers[kind](selection_path, qualified)
-        inputs = {r["creatureId"]: r for r in _read_jsonl(index_path)}
+        inputs = {r["creatureId"]: r for r in read_jsonl(index_path)}
         missing = sorted(set(selected) - set(inputs))
         if missing:
             raise ValueError(f"{cohort}: selected bodies absent from {index_path}: {missing}")
@@ -149,9 +142,9 @@ def collect_members(
                 "cohort": cohort,
                 "kind": kind,
                 "input_index": str(index_path),
-                "input_index_sha256": _sha(index_path.read_bytes()),
+                "input_index_sha256": sha256_bytes(index_path.read_bytes()),
                 "selection": str(selection_path),
-                "selection_sha256": _sha(selection_path.read_bytes()),
+                "selection_sha256": sha256_bytes(selection_path.read_bytes()),
                 "members": len(selected),
             }
         )
@@ -184,7 +177,7 @@ def write_torus_inputs(
     """
     members = json.loads(members_path.read_text())["members"]
     output_root.mkdir()
-    receipt: dict[str, Any] = {"members_sha256": _sha(members_path.read_bytes()), "cells": {}}
+    receipt: dict[str, Any] = {"members_sha256": sha256_bytes(members_path.read_bytes()), "cells": {}}
     for native in sorted({m["native_arena"] for m in members}):
         group = [m for m in members if m["native_arena"] == native]
         for scale in scales:
@@ -214,7 +207,7 @@ def write_torus_inputs(
                         "searchConfigPath": str(d / "search.json"),
                     }
                 )
-                bases[m["body"]] = _sha((d / "base.json").read_bytes())
+                bases[m["body"]] = sha256_bytes((d / "base.json").read_bytes())
             (cell / "index.jsonl").write_text(
                 "".join(json.dumps(r, sort_keys=True) + "\n" for r in written)
             )
@@ -344,14 +337,13 @@ def retire_trace_fields(
             if (arena, trace.parent.name) not in assessed:
                 raise ValueError(f"{trace}: not covered by the given assessments")
             if body.lower() in keep:
-                kept.append({"path": str(trace), "sha256": _sha(raw), "bytes": len(raw)})
+                kept.append({"path": str(trace), "sha256": sha256_bytes(raw), "bytes": len(raw)})
                 continue
             stripped = []
             for i, f in enumerate(frames):
-                field = f.get("fieldF16Base64")
-                if field is None:
+                if "fieldF16Base64" not in f:
                     raise ValueError(f"{trace}: already stripped")
-                f["fieldF16Sha256"] = _sha(base64.b64decode(field))
+                f["fieldF16Sha256"] = sha256_bytes(trace_field(f).tobytes())
                 if i != len(frames) - 1:
                     del f["fieldF16Base64"]
                 stripped.append(json.dumps(f, sort_keys=True))
@@ -359,9 +351,9 @@ def retire_trace_fields(
             rows.append(
                 {
                     "path": str(trace),
-                    "sha256": _sha(raw),
+                    "sha256": sha256_bytes(raw),
                     "bytes": len(raw),
-                    "stripped_sha256": _sha(text),
+                    "stripped_sha256": sha256_bytes(text),
                     "stripped_bytes": len(text),
                 }
             )

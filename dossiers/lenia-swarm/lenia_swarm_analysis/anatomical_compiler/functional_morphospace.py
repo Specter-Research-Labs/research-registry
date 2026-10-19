@@ -17,8 +17,10 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-_HARVEST = ("artifacts/flow-universe-runs/track1-20260520/"
-           "track1b-2c10-r7-10-initshift-8192-s4090112/results.jsonl")
+from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
+
+_HARVEST = DOSSIER_ROOT / ("artifacts/flow-universe-runs/track1-20260520/"
+                          "track1b-2c10-r7-10-initshift-8192-s4090112/results.jsonl")
 _LOG_METRICS = ("speed_mean", "path_length", "displacement", "center_velocity")
 _LIN_METRICS = ("variance_mean", "energy_mean")
 _METRICS = _LOG_METRICS + _LIN_METRICS
@@ -73,14 +75,15 @@ def _scatter(scores: np.ndarray, color_by: np.ndarray, out_png: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--harvest", default=_HARVEST)
-    parser.add_argument("--output", default="outputs/anatomical-compiler/functional-morphospace")
+    parser.add_argument("--harvest", type=Path, default=_HARVEST)
+    parser.add_argument(
+        "--output", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/functional-morphospace"
+    )
     args = parser.parse_args(argv)
 
-    root = Path.cwd()
-    matrix = _load((root / args.harvest).resolve())
+    matrix = _load(args.harvest.resolve())
     scores, components, explained = _pca(matrix)
-    out_dir = (root / args.output).resolve()
+    out_dir = args.output.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     _scatter(scores, matrix[:, 0], out_dir / "functional_morphospace.png")
 

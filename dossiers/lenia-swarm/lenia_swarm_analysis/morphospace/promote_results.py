@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from lenia_swarm_analysis._io import read_json
+
 RUNTIME_CAPABILITIES = ["archive", "topology", "warehouse_ingest"]
 LOCAL_PROJECTION_OWNER = "local"
 
@@ -22,13 +24,6 @@ def _optional_json(value: Any) -> str | None:
     if value == {}:
         return None
     return _json(value)
-
-
-def _read_json_object(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return value
 
 
 def _config_hash(config_path: Path, search_path: Path) -> str:
@@ -524,8 +519,8 @@ def promote_results_jsonl(
     search_path = run_dir / "search.json"
     if not results_path.exists():
         raise FileNotFoundError(results_path)
-    config = _read_json_object(config_path)
-    search = _read_json_object(search_path)
+    config = read_json(config_path)
+    search = read_json(search_path)
     config_hash = _config_hash(config_path, search_path)
     recorded_at = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     research_metadata = {

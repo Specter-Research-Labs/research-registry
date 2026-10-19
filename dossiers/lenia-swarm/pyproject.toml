@@ -13,13 +13,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-inverse = [
-    "torch>=2.2",
-    "FrEIA>=0.2",
-]
-mlx = [
-    "mlx>=0.31",
-]
 observer = [
     "torch>=2.2",
 ]
@@ -34,22 +27,9 @@ dev = [
 
 [project.scripts]
 lenia-swarm-analysis = "lenia_swarm_analysis._cli:main"
-lenia-swarm-topology = "lenia_swarm_analysis.topology._cli:main"
-lenia-swarm-generators = "lenia_swarm_analysis.generators._cli:main"
-lenia-swarm-fiber = "lenia_swarm_analysis.fiber._cli:main"
-lenia-swarm-transport = "lenia_swarm_analysis.transport._cli:main"
-lenia-swarm-hotspot = "lenia_swarm_analysis.hotspot._cli:main"
-lenia-swarm-agda = "lenia_swarm_analysis.agda._cli:main"
-lenia-swarm-imgep = "lenia_swarm_analysis.imgep._cli:main"
-lenia-swarm-transform = "lenia_swarm_analysis.transform._cli:main"
 lenia-swarm-morphospace = "lenia_swarm_analysis.morphospace_cli:main"
 lenia-swarm-waddington = "lenia_swarm_analysis.waddington._cli:main"
 lenia-swarm-observer = "lenia_swarm_analysis.observer._cli:main"
-lenia-swarm-attractor-packet = "lenia_swarm_analysis.attractor_packet:main"
-lenia-swarm-arrangement-packet = "lenia_swarm_analysis.arrangement_packet:main"
-lenia-swarm-empirical-fibration-packet = "lenia_swarm_analysis.empirical_fibration_packet:main"
-lenia-swarm-local-results-library = "lenia_swarm_analysis.local_results_library:main"
-lenia-swarm-loop-variant-report = "lenia_swarm_analysis.loop_variant_report:main"
 lenia-swarm-chakazul-presets = "lenia_swarm_analysis.chakazul_presets:main"
 lenia-swarm-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.trajectory_inverse:main"
 lenia-swarm-refine-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.trajectory_inverse:refinement_main"

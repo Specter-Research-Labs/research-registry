@@ -17,6 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
+from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
 from lenia_swarm_analysis.anatomical_compiler.functional_morphospace import _HARVEST, _pca
 
 _SHAPE_METRICS = (
@@ -76,12 +77,13 @@ def _scatter(actual: np.ndarray, pred: np.ndarray, r2: float, out_png: Path) -> 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--harvest", default=_HARVEST)
-    parser.add_argument("--output", default="outputs/anatomical-compiler/functional-morphospace")
+    parser.add_argument("--harvest", type=Path, default=_HARVEST)
+    parser.add_argument(
+        "--output", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/functional-morphospace"
+    )
     args = parser.parse_args(argv)
 
-    root = Path.cwd()
-    shape_raw, func_raw = _load_blocks((root / args.harvest).resolve())
+    shape_raw, func_raw = _load_blocks(args.harvest.resolve())
     shape = _standardize(shape_raw)
     func_scores, _, func_explained = _pca(func_raw)
 
@@ -98,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
                                    for m, c in ranked[:3]],
         })
 
-    out_dir = (root / args.output).resolve()
+    out_dir = args.output.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     r2_loco, _ = _regress(shape, func_scores[:, 0])
     pred = np.column_stack([np.ones(len(shape)), shape]) @ np.linalg.lstsq(

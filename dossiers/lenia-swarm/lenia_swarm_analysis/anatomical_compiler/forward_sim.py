@@ -28,6 +28,7 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
+from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
 from lenia_swarm_analysis.morphospace.common_morphology import (
     point_cloud_shape_features,
 )
@@ -51,7 +52,7 @@ METRIC_KEYS: tuple[str, ...] = (
     "is_stable",
 )
 
-DEFAULT_BINARY = ".build/arm64-apple-macosx/release/LeniaCLI"
+DEFAULT_BINARY = DOSSIER_ROOT / ".build/arm64-apple-macosx/release/LeniaCLI"
 
 
 def state_patch_config(
@@ -96,7 +97,7 @@ class ForwardSimulator:
         search_config_path: Path,
         *,
         dossier_root: Path,
-        binary: Path | None = None,
+        binary: Path = DEFAULT_BINARY,
         init_seed: int = 0,
         steps: int | None = None,
         backend: str | None = None,
@@ -104,7 +105,7 @@ class ForwardSimulator:
     ) -> None:
         self.dossier_root = dossier_root
         self.backend = backend
-        self.binary = binary or (dossier_root / DEFAULT_BINARY)
+        self.binary = binary
         if not self.binary.is_file():
             raise FileNotFoundError(f"LeniaCLI binary not found: {self.binary}")
         self.base_config = json.loads(base_config_path.read_text(encoding="utf-8"))
@@ -292,27 +293,31 @@ def main(argv: list[str] | None = None) -> int:
         description="Generate a fresh (genotype, phenotype) dataset by sampling the "
         "forward map of one fully-specified regime."
     )
-    parser.add_argument("--base", default="configs/base/paper_base_3k_1c_128.json")
-    parser.add_argument("--search", default="configs/search/search_crossmap_motion.json")
+    parser.add_argument(
+        "--base", type=Path, default=DOSSIER_ROOT / "configs/base/paper_base_3k_1c_128.json"
+    )
+    parser.add_argument(
+        "--search", type=Path, default=DOSSIER_ROOT / "configs/search/search_crossmap_motion.json"
+    )
     parser.add_argument("--count", type=int, default=5000)
     parser.add_argument("--steps", type=int, default=1200)
     parser.add_argument("--seed-start", type=int, default=1)
     parser.add_argument(
         "--output",
-        default="outputs/anatomical-compiler/forward_dataset_3k_1c_128.jsonl",
+        type=Path,
+        default=DOSSIER_ROOT / "outputs/anatomical-compiler/forward_dataset_3k_1c_128.jsonl",
     )
     args = parser.parse_args(argv)
 
-    root = Path.cwd()
     simulator = ForwardSimulator(
-        root / args.base,
-        root / args.search,
-        dossier_root=root,
+        args.base,
+        args.search,
+        dossier_root=DOSSIER_ROOT,
         steps=args.steps,
         timeout_seconds=3600.0,
     )
     rows = simulator.generate_dataset(args.count, seed_start=args.seed_start)
-    output_path = (root / args.output).resolve()
+    output_path = args.output.resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as handle:
         for row in rows:

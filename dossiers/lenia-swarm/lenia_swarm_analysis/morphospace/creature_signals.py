@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import base64
 from statistics import mean, pstdev
 from typing import Any
 
 import numpy as np
 from scipy import ndimage
 
+from lenia_swarm_analysis.trace_codec import fingerprint_u8
 from lenia_swarm_analysis.transformation_metrics import (
     compute_center_velocity_trace,
     extract_terminal_raw_axes_from_descriptors,
@@ -60,27 +60,6 @@ TEMPORAL_INDIVIDUALITY_MIN_SCORE = 0.70
 def temporal_individuality_score(*, creature_axes: dict[str, float]) -> float:
     """Return the weakest temporal persistence measurement on a 0-1 scale."""
     return min(float(creature_axes[axis_id]) for axis_id in TEMPORAL_INDIVIDUALITY_COMPONENT_AXES)
-
-
-def _fingerprint_array(terminal: dict[str, Any], *, specimen_id: str) -> np.ndarray:
-    resolution_value = terminal.get("fingerprintResolution")
-    if not isinstance(resolution_value, (int, float)):
-        raise SystemExit(f"{specimen_id}: missing fingerprintResolution")
-    resolution = int(resolution_value)
-    payload = terminal.get("fingerprintU8")
-    if isinstance(payload, list):
-        if len(payload) != resolution * resolution or any(
-            not isinstance(value, int) for value in payload
-        ):
-            raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
-        values = np.asarray(payload, dtype=np.float32)
-    elif isinstance(payload, str):
-        values = np.frombuffer(base64.b64decode(payload), dtype=np.uint8).astype(np.float32)
-        if values.size != resolution * resolution:
-            raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
-    else:
-        raise SystemExit(f"{specimen_id}: invalid fingerprintU8 payload")
-    return values.reshape(resolution, resolution)
 
 
 def _component_masks(mask: np.ndarray) -> list[np.ndarray]:
@@ -238,7 +217,7 @@ def _fingerprint_snapshot(sample: dict[str, Any], *, specimen_id: str) -> dict[s
     terminal = sample.get("terminal")
     if not isinstance(terminal, dict):
         raise SystemExit(f"{specimen_id}: developmental sample missing terminal descriptor")
-    fingerprint = _fingerprint_array(terminal, specimen_id=specimen_id)
+    fingerprint = fingerprint_u8(terminal, specimen_id=specimen_id).astype(np.float32)
     occupancy_value = terminal.get("finalOccupancy")
     if not isinstance(occupancy_value, (int, float)):
         raise SystemExit(f"{specimen_id}: missing terminal.finalOccupancy")
@@ -416,7 +395,7 @@ def endpoint_creature_axes(
         trajectory=trajectory_descriptor,
         specimen_id=specimen_id,
     )
-    mask = _fingerprint_array(terminal_descriptor, specimen_id=specimen_id) > 0
+    mask = fingerprint_u8(terminal_descriptor, specimen_id=specimen_id) > 0
     largest_component_share, _dominant_component = _largest_component_share(mask)
     creature_axes = {
         "largest_component_share_final": largest_component_share,
