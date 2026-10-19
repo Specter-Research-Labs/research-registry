@@ -1080,6 +1080,11 @@ def _build_parser() -> argparse.ArgumentParser:
         default=[],
         metavar=("COHORT", "INPUT_INDEX", "REQUAL_JSON"),
     )
+    members.add_argument(
+        "--rejected",
+        action="store_true",
+        help="collect the bodies that failed the historical gates instead of those that passed",
+    )
     members.add_argument("--output", required=True, type=Path)
     _add_json(members)
     members.set_defaults(
@@ -1089,6 +1094,7 @@ def _build_parser() -> argparse.ArgumentParser:
                 for kind, given in (("screen", args.screen), ("requal", args.requal))
                 for cohort, index, selection in given
             ],
+            qualified=not args.rejected,
             output_path=args.output.resolve(),
         )
     )
