@@ -233,7 +233,7 @@
       }
     },
     "D-003": {
-      "next_counter": 26,
+      "next_counter": 27,
       "entries": {
         "README": "D-003.001",
         "configs/README": "D-003.022",
@@ -247,6 +247,7 @@
         "contracts/ResearchModes": "D-003.020",
         "decisions/ADR-001-taxonomy-status": "D-003.008",
         "decisions/ADR-002-schema-versioning": "D-003.009",
+        "flow-spatial-conventions": "D-003.026",
         "internals/FlowLeniaImplementationMap": "D-003.010",
         "internals/IndexerInternals": "D-003.011",
         "internals/PaperGroundedRuns": "D-003.021",
