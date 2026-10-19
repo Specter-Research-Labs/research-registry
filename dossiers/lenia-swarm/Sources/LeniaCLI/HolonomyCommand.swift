@@ -5,7 +5,7 @@ import Logging
 
 private struct HolonomyLoopSpec: Codable {
     let version: Int
-    let name: String?
+    let name: String
     let closed: Bool
     let coordinates: [String]
     let vertices: [[Float]]
@@ -71,7 +71,7 @@ private struct HolonomySummary: Codable {
     let runId: String
     let bundlePath: String
     let loopPath: String
-    let loopName: String?
+    let loopName: String
     let loopClosed: Bool
     let coordinatePaths: [String]
     let pointCount: Int
@@ -106,7 +106,7 @@ private struct HolonomyRunManifest: Codable {
     let runId: String
     let bundlePath: String
     let loopPath: String
-    let loopName: String?
+    let loopName: String
     let loopClosed: Bool
     let coordinatePaths: [String]
     let configTopologyHash: String
@@ -393,10 +393,10 @@ struct HolonomyCommand: AsyncParsableCommand {
             )
         }
 
-        let phenotypeClosureDistance = loopSpec.closed
+        let phenotypeClosureDistance = try loopSpec.closed
             ? holonomyFingerprintDistance(firstFingerprint, lastFingerprint)
             : nil
-        let transportedStateClosureDistance = loopSpec.closed
+        let transportedStateClosureDistance = try loopSpec.closed
             ? holonomyStatePatchDistance(firstStatePatch, lastStatePatch)
             : nil
 
@@ -463,11 +463,16 @@ private func loadHolonomyBundle(from bundleURL: URL) throws -> HolonomyBundle {
     guard FileManager.default.fileExists(atPath: metaURL.path) else {
         throw ValidationError("Missing meta.json in holonomy bundle: \(bundleURL.path)")
     }
-    let metadata = try decodeCreatureExportMetadata(
-        Data(contentsOf: metaURL),
-        decoder: decoder,
-        fallbackBundleKind: .strictReplayBundleV1
-    )
+    let metaData = try Data(contentsOf: metaURL)
+    guard let metaRoot = try JSONSerialization.jsonObject(with: metaData) as? [String: Any] else {
+        throw ValidationError("meta.json in holonomy bundle is not a JSON object: \(metaURL.path)")
+    }
+    guard metaRoot["bundleKind"] != nil else {
+        throw ValidationError(
+            "meta.json in holonomy bundle has no bundleKind: \(metaURL.path). Re-export the bundle as \(LeniaArtifactBundleKind.strictReplayBundleV1.rawValue)."
+        )
+    }
+    let metadata = try decodeCreatureExportMetadata(metaData, decoder: decoder)
     guard metadata.bundleKind == .strictReplayBundleV1 else {
         throw ValidationError("holonomy only supports strict Flow Lenia replay bundles in v1.")
     }
@@ -483,6 +488,9 @@ private func loadHolonomyLoopSpec(from url: URL) throws -> HolonomyLoopSpec {
     let spec = try JSONDecoder().decode(HolonomyLoopSpec.self, from: Data(contentsOf: url))
     guard spec.version == 1 else {
         throw ValidationError("Unsupported holonomy loop spec version \(spec.version); expected 1.")
+    }
+    guard !spec.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw ValidationError("Holonomy loop spec name must be non-empty: \(url.path)")
     }
     return spec
 }
@@ -698,10 +706,12 @@ private func holonomyCampaignID(_ sequenceIndex: Int) -> String {
     String(format: "%04d", sequenceIndex + 1)
 }
 
-private func holonomyFingerprintDistance(_ lhs: [UInt8]?, _ rhs: [UInt8]?) -> Float? {
+private func holonomyFingerprintDistance(_ lhs: [UInt8]?, _ rhs: [UInt8]?) throws -> Float? {
     guard let lhs, let rhs else { return nil }
     guard lhs.count == rhs.count else {
-        fatalError("Holonomy fingerprint closure requires equal-length fingerprints.")
+        throw ValidationError(
+            "Holonomy fingerprint closure requires equal-length fingerprints, got \(lhs.count) at the loop start and \(rhs.count) at the end. Check that every loop point keeps the grid size and channel count of the source bundle."
+        )
     }
     let sum = zip(lhs, rhs).reduce(Float.zero) { acc, pair in
         let delta = Float(pair.0) - Float(pair.1)
@@ -713,12 +723,14 @@ private func holonomyFingerprintDistance(_ lhs: [UInt8]?, _ rhs: [UInt8]?) -> Fl
 private func holonomyStatePatchDistance(
     _ lhs: InitStatePatchConfig?,
     _ rhs: InitStatePatchConfig?
-) -> Float? {
+) throws -> Float? {
     guard let lhs, let rhs else { return nil }
     let lhsValues = lhs.decodedValues()
     let rhsValues = rhs.decodedValues()
     guard lhsValues.count == rhsValues.count else {
-        fatalError("Holonomy state closure requires equal-length state patches.")
+        throw ValidationError(
+            "Holonomy state closure requires equal-length state patches, got \(lhsValues.count) values (\(lhs.width)x\(lhs.height)x\(lhs.channels)) at the loop start and \(rhsValues.count) (\(rhs.width)x\(rhs.height)x\(rhs.channels)) at the end. Check that every loop point keeps the grid size and channel count of the source bundle."
+        )
     }
     let sum = zip(lhsValues, rhsValues).reduce(Float.zero) { acc, pair in
         let delta = pair.0 - pair.1
@@ -737,7 +749,7 @@ private func holonomyResearchMetadata(
         "version": researchMetadataValue(1),
         "mode": researchMetadataValue("holonomy"),
         "source_bundle_dir": researchMetadataValue(sourceBundle.path),
-        "loop_name": researchMetadataValue(loopSpec.name ?? "unnamed"),
+        "loop_name": researchMetadataValue(loopSpec.name),
         "loop_closed": researchMetadataValue(loopSpec.closed),
         "coordinates": researchMetadataValue(loopSpec.coordinates),
         "values": researchMetadataValue(point.values),

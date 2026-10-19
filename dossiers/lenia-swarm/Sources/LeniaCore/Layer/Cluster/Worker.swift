@@ -386,21 +386,6 @@ public distributed actor LeniaWorker {
         }
     }
 
-    public distributed func processCampaignJob(_ job: LeniaCampaignJob) async throws -> LeniaCampaignJobExecution {
-        currentJobId = job.runID
-        defer { currentJobId = nil }
-        guard let materializedJob = materializeCampaignJob(job, for: backendCapabilities) else {
-            throw WorkerError.invalidConfig(
-                "Worker \(workerId) does not support requested campaign backend '\(job.backendRequest)' for \(job.runID)."
-            )
-        }
-        return try executeLeniaCampaignJob(
-            materializedJob,
-            logger: logger,
-            workerID: workerId
-        )
-    }
-
     public distributed func getStatus() async -> WorkerStatus {
         return WorkerStatus(
             capabilities: backendCapabilities,

@@ -50,7 +50,6 @@ struct ControllerCommand: AsyncParsableCommand {
             outputForLogs: resolvedOutput,
             logOptions: logOptions,
             dossier: dossierName,
-            fallbackOutputLogDir: true,
             nodeID: nodeId,
             metricsFileName: "metrics.jsonl"
         )

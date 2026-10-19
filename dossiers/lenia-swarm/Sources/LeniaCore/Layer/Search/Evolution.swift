@@ -345,7 +345,7 @@ public struct FitnessConfig: Codable {
         self.morphologyThreshold = morphologyThreshold
     }
 
-    var usesMorphologyMetrics: Bool {
+    public var usesMorphologyMetrics: Bool {
             usesMorphologyGuard ||
             componentCountPenalty != nil ||
             componentCountTargetPenalty != nil ||
@@ -581,10 +581,11 @@ public struct FlowMAPElitesConfig: Codable {
     public let seed: Int
     public let steps: Int
     public let fitness: FitnessConfig
-    public let includeParent: Bool?
+    public let includeParent: Bool
     public let descriptors: [FlowMAPElitesDescriptorConfig]
-    public let exportTop: Int?
+    public let exportTop: Int
     public let exportReplayPoolLimit: Int?
+    public let exportTranslatedShapeOverlapMin: Float?
     public let initPatch: InitPatchConfig?
     public let initialInitPatchValues: [Float]?
     public let initialKernelParams: KernelParams?
@@ -604,6 +605,7 @@ public struct FlowMAPElitesConfig: Codable {
         case descriptors
         case exportTop = "export_top"
         case exportReplayPoolLimit = "export_replay_pool_limit"
+        case exportTranslatedShapeOverlapMin = "export_translated_shape_overlap_min"
         case initPatch = "init_patch"
         case initialInitPatchValues = "initial_init_patch_values"
         case initialKernelParams = "initial_kernel_params"
@@ -620,10 +622,11 @@ public struct FlowMAPElitesConfig: Codable {
         seed: Int,
         steps: Int,
         fitness: FitnessConfig,
-        includeParent: Bool? = nil,
+        includeParent: Bool,
         descriptors: [FlowMAPElitesDescriptorConfig],
-        exportTop: Int? = nil,
-        exportReplayPoolLimit: Int? = nil,
+        exportTop: Int,
+        exportReplayPoolLimit: Int?,
+        exportTranslatedShapeOverlapMin: Float?,
         initPatch: InitPatchConfig?,
         initialInitPatchValues: [Float]?,
         initialKernelParams: KernelParams? = nil,
@@ -642,6 +645,7 @@ public struct FlowMAPElitesConfig: Codable {
         self.descriptors = descriptors
         self.exportTop = exportTop
         self.exportReplayPoolLimit = exportReplayPoolLimit
+        self.exportTranslatedShapeOverlapMin = exportTranslatedShapeOverlapMin
         self.initPatch = initPatch
         self.initialInitPatchValues = initialInitPatchValues
         self.initialKernelParams = initialKernelParams

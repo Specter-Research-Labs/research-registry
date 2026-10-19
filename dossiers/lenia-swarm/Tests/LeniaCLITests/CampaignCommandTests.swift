@@ -55,7 +55,7 @@ final class CampaignCommandTests: XCTestCase {
         )
     }
 
-    func testDiscoveryCampaignWritesBundleAndExportsBest() async throws {
+    func testDiscoveryCampaignWritesBundleAndExportsBest() throws {
         let root = try makeTempDirectory(prefix: "lenia-campaign-discovery")
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -101,7 +101,7 @@ final class CampaignCommandTests: XCTestCase {
         )
 
         let outputURL = root.appendingPathComponent("discovery-output", isDirectory: true)
-        let result = try await runCampaign(
+        let result = try runCampaign(
             request: CampaignExecutionRequest(
                 runID: "campaign-discovery-test",
                 preset: .discovery,
@@ -111,11 +111,6 @@ final class CampaignCommandTests: XCTestCase {
                 seedQDConfigDirURL: nil,
                 seedSelection: nil,
                 backendRequest: "mlx",
-                executionMode: .local,
-                distributedControllerHost: nil,
-                distributedControllerPort: 7337,
-                distributedBindHost: "0.0.0.0",
-                distributedBindPort: 0,
                 exportBest: 1,
                 promotion: ArchivePromotionConfig(compendiumPath: nil, warehousePath: nil, warehouseTopology: false)
             ),
@@ -133,14 +128,14 @@ final class CampaignCommandTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.appendingPathComponent("exports/index.jsonl").path))
     }
 
-    func testSeededEcologyCampaignUsesExportedDiscoverySeeds() async throws {
+    func testSeededEcologyCampaignUsesExportedDiscoverySeeds() throws {
         let root = try makeTempDirectory(prefix: "lenia-campaign-ecology")
         defer { try? FileManager.default.removeItem(at: root) }
 
         let ecologyConfigDirectory = try makeTinyEcologyConfigDirectory(at: root.appendingPathComponent("ecology-config", isDirectory: true))
         // Seed from the same base config the ecology runtime uses so the exported
         // creature's kernel routes match the runtime kernel routes; embedding is strict.
-        let discoveryOutputURL = try await runTinyDiscoveryCampaign(
+        let discoveryOutputURL = try runTinyDiscoveryCampaign(
             at: root,
             baseConfigURL: ecologyConfigDirectory.appendingPathComponent("vanilla-base.json")
         )
@@ -158,7 +153,7 @@ final class CampaignCommandTests: XCTestCase {
         )
 
         let outputURL = root.appendingPathComponent("ecology-output", isDirectory: true)
-        let result = try await runCampaign(
+        let result = try runCampaign(
             request: CampaignExecutionRequest(
                 runID: "campaign-ecology-test",
                 preset: .seededEcology,
@@ -168,11 +163,6 @@ final class CampaignCommandTests: XCTestCase {
                 seedQDConfigDirURL: nil,
                 seedSelection: ResearchSeedSelection(top: 1, rankBy: .score),
                 backendRequest: "mlx",
-                executionMode: .local,
-                distributedControllerHost: nil,
-                distributedControllerPort: 7337,
-                distributedBindHost: "0.0.0.0",
-                distributedBindPort: 0,
                 exportBest: nil,
                 promotion: ArchivePromotionConfig(compendiumPath: nil, warehousePath: nil, warehouseTopology: false)
             ),
@@ -203,11 +193,11 @@ final class CampaignCommandTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: record.payloadPath))
     }
 
-    func testSeededEcologyCampaignRejectsUnknownVariantNames() async throws {
+    func testSeededEcologyCampaignRejectsUnknownVariantNames() throws {
         let root = try makeTempDirectory(prefix: "lenia-campaign-variant-validation")
         defer { try? FileManager.default.removeItem(at: root) }
 
-        let discoveryOutputURL = try await runTinyDiscoveryCampaign(at: root)
+        let discoveryOutputURL = try runTinyDiscoveryCampaign(at: root)
         let ecologyConfigDirectory = try makeTinyEcologyConfigDirectory(at: root.appendingPathComponent("ecology-config", isDirectory: true))
         let ecologyConfigURL = root.appendingPathComponent("invalid-seeded-ecology.json")
         try writeJSON(
@@ -222,8 +212,8 @@ final class CampaignCommandTests: XCTestCase {
             to: ecologyConfigURL
         )
 
-        await XCTAssertThrowsErrorAsync(
-            try await runCampaign(
+        XCTAssertThrowsError(
+            try runCampaign(
                 request: CampaignExecutionRequest(
                     runID: "campaign-invalid-variant-test",
                     preset: .seededEcology,
@@ -233,11 +223,6 @@ final class CampaignCommandTests: XCTestCase {
                     seedQDConfigDirURL: nil,
                     seedSelection: ResearchSeedSelection(top: 1, rankBy: .score),
                     backendRequest: "mlx",
-                    executionMode: .local,
-                    distributedControllerHost: nil,
-                    distributedControllerPort: 7337,
-                    distributedBindHost: "0.0.0.0",
-                    distributedBindPort: 0,
                     exportBest: nil,
                     promotion: ArchivePromotionConfig(compendiumPath: nil, warehousePath: nil, warehouseTopology: false)
                 ),
@@ -248,7 +233,7 @@ final class CampaignCommandTests: XCTestCase {
         }
     }
 
-    func testInterventionBatteryWritesBaselineComparisons() async throws {
+    func testInterventionBatteryWritesBaselineComparisons() throws {
         let root = try makeTempDirectory(prefix: "lenia-campaign-intervention")
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -303,7 +288,7 @@ final class CampaignCommandTests: XCTestCase {
         )
 
         let outputURL = root.appendingPathComponent("intervention-output", isDirectory: true)
-        let result = try await runCampaign(
+        let result = try runCampaign(
             request: CampaignExecutionRequest(
                 runID: "campaign-intervention-test",
                 preset: .interventionBattery,
@@ -313,11 +298,6 @@ final class CampaignCommandTests: XCTestCase {
                 seedQDConfigDirURL: nil,
                 seedSelection: nil,
                 backendRequest: "mlx",
-                executionMode: .local,
-                distributedControllerHost: nil,
-                distributedControllerPort: 7337,
-                distributedBindHost: "0.0.0.0",
-                distributedBindPort: 0,
                 exportBest: nil,
                 promotion: ArchivePromotionConfig(compendiumPath: nil, warehousePath: nil, warehouseTopology: false)
             ),
@@ -342,7 +322,7 @@ final class CampaignCommandTests: XCTestCase {
 private func runTinyDiscoveryCampaign(
     at root: URL,
     baseConfigURL: URL = dossierConfigsRoot().appendingPathComponent("base/paper_base_1c_128.json")
-) async throws -> URL {
+) throws -> URL {
     let searchConfigURL = root.appendingPathComponent("search-discovery.json")
     try writeJSON(
         [
@@ -385,7 +365,7 @@ private func runTinyDiscoveryCampaign(
     )
 
     let outputURL = root.appendingPathComponent("seed-source-output", isDirectory: true)
-    _ = try await runCampaign(
+    _ = try runCampaign(
         request: CampaignExecutionRequest(
             runID: "campaign-seed-source",
             preset: .discovery,
@@ -395,11 +375,6 @@ private func runTinyDiscoveryCampaign(
             seedQDConfigDirURL: nil,
             seedSelection: nil,
             backendRequest: "mlx",
-            executionMode: .local,
-            distributedControllerHost: nil,
-            distributedControllerPort: 7337,
-            distributedBindHost: "0.0.0.0",
-            distributedBindPort: 0,
             exportBest: 1,
             promotion: ArchivePromotionConfig(compendiumPath: nil, warehousePath: nil, warehouseTopology: false)
         ),
@@ -644,18 +619,4 @@ final class DeclarativeCampaignTests: XCTestCase {
 
 private func sanitizeSeedComponent(_ value: String) -> String {
     value.lowercased().replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
-}
-
-private func XCTAssertThrowsErrorAsync<T>(
-    _ expression: @autoclosure () async throws -> T,
-    _ verify: (Error) -> Void,
-    file: StaticString = #filePath,
-    line: UInt = #line
-) async {
-    do {
-        _ = try await expression()
-        XCTFail("Expected error to be thrown", file: file, line: line)
-    } catch {
-        verify(error)
-    }
 }

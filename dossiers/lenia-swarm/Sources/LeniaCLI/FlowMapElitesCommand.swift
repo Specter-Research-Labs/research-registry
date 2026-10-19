@@ -108,26 +108,8 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory (overrides MAP-Elites config)")
     var output: String?
 
-    @Option(name: .long, help: "Path to library/index.jsonl or exports/index.jsonl used to seed the initial patch")
-    var seedLibrary: String?
-
-    @Option(name: .long, help: "Optional qd-2024 config directory when the seed library comes from qd-2024 and pattern assets are missing")
-    var seedQDConfigDir: String?
-
-    @Option(name: .long, parsing: .upToNextOption, help: "QD cell ids to use for warm starts when the seed library comes from qd-2024")
-    var seedCell: [Int] = []
-
     @OptionGroup
-    var seedSelection: ResearchSeedSelectionOptions
-
-    @Flag(name: .long, help: "Also warm-start kernel parameters from the selected research seed when available")
-    var seedKernelParams: Bool = false
-
-    @Option(name: .long, help: "When using --seed-kernel-params, replace non-positive seed kernel weights with this explicit value")
-    var seedKernelZeroWeight: Float?
-
-    @Option(name: .long, help: "Warmup steps used when expressing a research seed patch; use 0 to preserve the original initialization")
-    var seedWarmupSteps: Int?
+    var seedWarmStart: ResearchSeedWarmStartOptions
 
     @Flag(name: .long, help: "Validate configs and exit without running")
     var validateOnly: Bool = false
@@ -152,13 +134,6 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
         let logger = logging.logger
         logLoggingInitialized(logger, runID: resolvedRunId, logging: logging)
 
-        if seedKernelZeroWeight != nil && !seedKernelParams {
-            throw ValidationError("--seed-kernel-zero-weight requires --seed-kernel-params.")
-        }
-        if let seedWarmupSteps, seedWarmupSteps < 0 {
-            throw ValidationError("--seed-warmup-steps must be >= 0.")
-        }
-
         let baseConfigURL = URL(fileURLWithPath: config)
         let sourceBaseConfigData = try Data(contentsOf: baseConfigURL)
         var mapConfig = try loadFlowMAPElitesConfig(path: mapElites)
@@ -181,6 +156,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
                 descriptors: mapConfig.descriptors,
                 exportTop: mapConfig.exportTop,
                 exportReplayPoolLimit: mapConfig.exportReplayPoolLimit,
+                exportTranslatedShapeOverlapMin: mapConfig.exportTranslatedShapeOverlapMin,
                 initPatch: mapConfig.initPatch,
                 initialInitPatchValues: initialInitPatchValues,
                 initialKernelParams: initialKernelParams,
@@ -194,7 +170,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
             mapConfig = withOutput(try resolvePath(output, dossier: dossierName))
         }
 
-        try validateFlowMapElitesConfig(mapConfig)
+        let exportRule = try validateFlowMapElitesConfig(mapConfig)
 
         let sourceRuntimeConfig = try loadRuntimeConfig(from: sourceBaseConfigData)
         let esCompatibilityConfig = mapConfig.asESConfig()
@@ -208,24 +184,17 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
         let runtimeConfig = try loadRuntimeConfig(from: baseConfigData)
         var seedWarmStarts: [FlowMapElitesSeedWarmStart] = []
 
-        if let seedLibrary {
+        if let seedLibrary = seedWarmStart.seedLibrary {
             let canSeedInitPatch = mapConfig.initPatch?.enabled == true
-            if !canSeedInitPatch && !seedKernelParams {
+            if !canSeedInitPatch && !seedWarmStart.seedKernelParams {
                 throw ValidationError("--seed-library without --seed-kernel-params requires init_patch.enabled in the MAP-Elites config.")
             }
             let resolvedSeedLibrary = try resolveArtifactPath(seedLibrary, dossier: dossierName)
-            let resolvedQDConfigDir = try seedQDConfigDir.map { try resolvePath($0, dossier: dossierName) }
             let selection = try flowMapElitesEffectiveSeedSelection(
-                requested: seedSelection.resolvedSelection(),
-                hasExplicitSeedCells: !seedCell.isEmpty
+                requested: seedWarmStart.seedSelection.resolvedSelection(),
+                hasExplicitSeedCells: !seedWarmStart.seedCell.isEmpty
             )
-            let patches = try loadResearchSeedPatches(
-                libraryURL: URL(fileURLWithPath: resolvedSeedLibrary),
-                qdConfigDirectoryOverride: resolvedQDConfigDir.map { URL(fileURLWithPath: $0, isDirectory: true) },
-                cells: seedCell.isEmpty ? nil : seedCell,
-                warmupSteps: seedWarmupSteps,
-                selection: selection
-            )
+            let patches = try seedWarmStart.loadPatches(libraryPath: resolvedSeedLibrary, selection: selection)
             guard !patches.isEmpty else {
                 throw ValidationError("No research seeds resolved from \(resolvedSeedLibrary).")
             }
@@ -247,13 +216,8 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
                     patchValues = nil
                 }
                 let kernelParams: KernelParams?
-                if seedKernelParams {
-                    guard let selectedKernelParams = patch.kernelParams else {
-                        throw ValidationError("--seed-kernel-params requested, but selected seed '\(patch.name)' has no kernel parameters.")
-                    }
-                    kernelParams = try seedKernelZeroWeight.map {
-                        try replacingNonPositiveKernelWeights(in: selectedKernelParams, with: $0)
-                    } ?? selectedKernelParams
+                if seedWarmStart.seedKernelParams {
+                    kernelParams = try seedWarmStart.kernelParams(from: patch)
                 } else {
                     kernelParams = nil
                 }
@@ -270,9 +234,15 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
             guard let firstSeed = seedWarmStarts.first else {
                 throw ValidationError("No research seeds resolved from \(resolvedSeedLibrary).")
             }
+            if firstSeed.patchValues != nil, mapConfig.initialInitPatchValues != nil {
+                throw ValidationError("--seed-library supplies the initial init patch; remove initial_init_patch_values from the MAP-Elites config.")
+            }
+            if firstSeed.kernelParams != nil, mapConfig.initialKernelParams != nil {
+                throw ValidationError("--seed-kernel-params supplies the initial kernel parameters; remove initial_kernel_params from the MAP-Elites config.")
+            }
             mapConfig = withOutput(
                 mapConfig.outputDir,
-                initialInitPatchValues: firstSeed.patchValues ?? mapConfig.initialInitPatchValues,
+                initialInitPatchValues: firstSeed.patchValues,
                 initialKernelParams: firstSeed.kernelParams ?? mapConfig.initialKernelParams
             )
             let seedPreview = seedWarmStarts.prefix(4).map(\.name).joined(separator: ", ")
@@ -361,7 +331,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
                     anchors: seedInitialCandidates,
                     count: mapConfig.population,
                     sigma: mapConfig.sigma,
-                    includeParent: mapConfig.includeParent ?? true
+                    includeParent: mapConfig.includeParent
                 )
             } else {
                 candidates = engine.sampleMAPElitesChildren(
@@ -434,11 +404,8 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
         )
         try writeResearchJSON(summary, to: outputDir.appendingPathComponent("summary.json"), prettyPrinted: true)
 
-        let exportTop = max(0, min(mapConfig.exportTop ?? 16, occupied.count))
-        let defaultExportPoolLimit = max(exportTop * 4, exportTop)
-        let configuredExportPoolLimit = mapConfig.exportReplayPoolLimit
-            .map { max(exportTop, $0) } ?? defaultExportPoolLimit
-        let exportPoolLimit = min(occupied.count, min(defaultExportPoolLimit, configuredExportPoolLimit))
+        let exportTop = min(mapConfig.exportTop, occupied.count)
+        let exportPoolLimit = min(occupied.count, mapConfig.exportReplayPoolLimit ?? exportTop * 4)
         let selectedPool = flowMapElitesDiverseSelection(
             occupied,
             limit: exportPoolLimit,
@@ -458,7 +425,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
         var bestReplayFitness = -Float.infinity
         var bestReplayExportScore = -Float.infinity
         for (offset, elite) in selectedPool.enumerated() {
-            let exportCandidate = FlowMapElitesReplayExportCandidate(
+            let exportCandidate = try FlowMapElitesReplayExportCandidate(
                 elite: elite,
                 evaluation: engine.evaluateCandidateForResearchExport(
                     elite.candidate,
@@ -469,7 +436,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
             bestReplayFitness = max(bestReplayFitness, exportCandidate.evaluation.fitness)
             bestReplayExportScore = max(
                 bestReplayExportScore,
-                flowMapElitesReplayExportScore(exportCandidate, fitness: mapConfig.fitness)
+                flowMapElitesReplayExportScore(exportCandidate, rule: exportRule)
             )
             let evaluated = offset + 1
             if evaluated == selectedPool.count || evaluated % 32 == 0 {
@@ -482,11 +449,11 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
             evaluatedExportPool,
             limit: exportTop,
             descriptors: mapConfig.descriptors,
-            fitness: mapConfig.fitness
+            rule: exportRule
         )
         let rawReplayPositiveCount = selected.filter { $0.evaluation.fitness > 0 }.count
         let replayGatePassedCount = selected.filter {
-            flowMapElitesReplayExportGatePassed($0, fitness: mapConfig.fitness)
+            flowMapElitesReplayExportGatePassed($0, rule: exportRule)
         }.count
         logger.info(
             "Replay-verified export selection: selected=\(selected.count) raw_replay_positive=\(rawReplayPositiveCount) replay_gate_passed=\(replayGatePassedCount)"
@@ -507,11 +474,10 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
             let entry = try flowMapElitesLibraryEntry(
                 runId: resolvedRunId,
                 rank: rank,
-                elite: elite,
                 configHash: configHash,
-                evaluation: evaluation,
+                exportCandidate: exportCandidate,
                 creature: creature,
-                fitness: mapConfig.fitness
+                rule: exportRule
             )
             return (creature, entry)
         }
@@ -551,7 +517,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
     }
 }
 
-private func validateFlowMapElitesConfig(_ config: FlowMAPElitesConfig) throws {
+private func validateFlowMapElitesConfig(_ config: FlowMAPElitesConfig) throws -> FlowMapElitesExportRule {
     guard config.generations > 0 else {
         throw ValidationError("MAP-Elites generations must be > 0.")
     }
@@ -570,19 +536,19 @@ private func validateFlowMapElitesConfig(_ config: FlowMAPElitesConfig) throws {
     guard config.steps > 0 else {
         throw ValidationError("MAP-Elites steps must be > 0.")
     }
-    if let exportTop = config.exportTop {
-        guard exportTop >= 0 else {
-            throw ValidationError("MAP-Elites export_top must be >= 0.")
-        }
+    guard config.exportTop >= 0 else {
+        throw ValidationError("MAP-Elites export_top must be >= 0.")
     }
     if let exportReplayPoolLimit = config.exportReplayPoolLimit {
         guard exportReplayPoolLimit > 0 else {
             throw ValidationError("MAP-Elites export_replay_pool_limit must be > 0 when set.")
         }
-        let requestedExportTop = config.exportTop ?? 16
-        guard exportReplayPoolLimit >= requestedExportTop else {
+        guard exportReplayPoolLimit >= config.exportTop else {
             throw ValidationError("MAP-Elites export_replay_pool_limit must be >= export_top.")
         }
+    }
+    if config.initialInitPatchValues != nil, config.initPatch?.enabled != true {
+        throw ValidationError("MAP-Elites initial_init_patch_values requires init_patch.enabled.")
     }
     guard !config.descriptors.isEmpty else {
         throw ValidationError("MAP-Elites descriptors must not be empty.")
@@ -594,6 +560,41 @@ private func validateFlowMapElitesConfig(_ config: FlowMAPElitesConfig) throws {
         guard descriptor.max > descriptor.min else {
             throw ValidationError("Descriptor \(descriptor.name) max must be greater than min.")
         }
+    }
+    return try flowMapElitesExportRule(config)
+}
+
+private enum FlowMapElitesExportGate {
+    case bodyLocomotion(translatedShapeOverlapMin: Float)
+    case coherentTransport
+}
+
+private struct FlowMapElitesExportRule {
+    let fitness: FitnessConfig
+    let gate: FlowMapElitesExportGate
+}
+
+private func flowMapElitesExportRule(_ config: FlowMAPElitesConfig) throws -> FlowMapElitesExportRule {
+    let fitness = config.fitness
+    guard fitness.usesMorphologyMetrics else {
+        throw ValidationError("MAP-Elites replay export scores component morphology; enable a morphology term in fitness (for example component_count_penalty).")
+    }
+    guard fitness.targetStep >= 2, fitness.targetStep <= config.steps else {
+        throw ValidationError("MAP-Elites replay export measures transport between target_step / 2 and target_step; fitness.target_step must be in 2...steps (\(config.steps)), got \(fitness.targetStep).")
+    }
+    switch fitness.objective {
+    case "body_locomotion":
+        guard let minimum = config.exportTranslatedShapeOverlapMin else {
+            throw ValidationError("MAP-Elites with objective body_locomotion requires export_translated_shape_overlap_min for the replay export gate.")
+        }
+        return FlowMapElitesExportRule(fitness: fitness, gate: .bodyLocomotion(translatedShapeOverlapMin: minimum))
+    case "coherent_transport":
+        guard config.exportTranslatedShapeOverlapMin == nil else {
+            throw ValidationError("MAP-Elites export_translated_shape_overlap_min only applies to objective body_locomotion.")
+        }
+        return FlowMapElitesExportRule(fitness: fitness, gate: .coherentTransport)
+    default:
+        throw ValidationError("MAP-Elites replay export scores transport; fitness.objective must be coherent_transport or body_locomotion, got \(fitness.objective).")
     }
 }
 
@@ -652,35 +653,61 @@ private func flowMapElitesDiverseSelection(
 private struct FlowMapElitesReplayExportCandidate {
     let elite: FlowMapElitesEliteSummary
     let evaluation: ESEvaluatedCreatureExport
+    let coherentTransport: Float
+    let transportDisplacement: Float
+    let translatedShapeOverlap: Float
+    let largestComponentFraction: Float
+    let largestComponentSolidity: Float
+    let largestComponentMeanThickness: Float
+    let largestComponentFilamentarity: Float
+
+    init(elite: FlowMapElitesEliteSummary, evaluation: ESEvaluatedCreatureExport) throws {
+        let metrics = evaluation.resultData.metrics
+        func required(_ value: Float?, _ name: String) throws -> Float {
+            guard let value else {
+                throw ValidationError("Replay evaluation of MAP-Elites elite \(elite.key) did not measure \(name).")
+            }
+            return value
+        }
+        self.elite = elite
+        self.evaluation = evaluation
+        coherentTransport = try required(metrics.coherentTransport, "coherent_transport")
+        transportDisplacement = try required(metrics.transportDisplacement, "transport_displacement")
+        translatedShapeOverlap = try required(metrics.translatedShapeOverlap, "translated_shape_overlap")
+        largestComponentFraction = try required(metrics.largestComponentFraction, "largest_component_fraction")
+        largestComponentSolidity = try required(metrics.largestComponentSolidity, "largest_component_solidity")
+        largestComponentMeanThickness = try required(metrics.largestComponentMeanThickness, "largest_component_mean_thickness")
+        largestComponentFilamentarity = try required(metrics.largestComponentFilamentarity, "largest_component_filamentarity")
+    }
 }
 
 private func flowMapElitesReplayVerifiedSelection(
     _ candidates: [FlowMapElitesReplayExportCandidate],
     limit: Int,
     descriptors: [FlowMAPElitesDescriptorConfig],
-    fitness: FitnessConfig
+    rule: FlowMapElitesExportRule
 ) -> [FlowMapElitesReplayExportCandidate] {
     guard limit > 0, !candidates.isEmpty else { return [] }
     let finite = candidates.filter { $0.evaluation.fitness.isFinite }
     let finitePool = finite.isEmpty ? candidates : finite
-    let replayPassed = finitePool.filter { flowMapElitesReplayExportGatePassed($0, fitness: fitness) }
+    let replayPassed = finitePool.filter { flowMapElitesReplayExportGatePassed($0, rule: rule) }
     var selected = flowMapElitesReplayDiverseSelection(
         replayPassed.isEmpty ? finitePool : replayPassed,
         limit: limit,
         descriptors: descriptors,
-        fitness: fitness
+        rule: rule
     )
     guard selected.count < limit else { return selected }
 
     let selectedKeys = Set(selected.map(\.elite.key))
     let fallback = finitePool
         .filter { !selectedKeys.contains($0.elite.key) }
-        .sorted { flowMapElitesReplayExportIsBetter($0, than: $1, fitness: fitness) }
+        .sorted { flowMapElitesReplayExportIsBetter($0, than: $1, rule: rule) }
     selected.append(contentsOf: flowMapElitesReplayDiverseSelection(
         fallback,
         limit: limit - selected.count,
         descriptors: descriptors,
-        fitness: fitness
+        rule: rule
     ))
     return selected
 }
@@ -689,20 +716,20 @@ private func flowMapElitesReplayDiverseSelection(
     _ candidates: [FlowMapElitesReplayExportCandidate],
     limit: Int,
     descriptors: [FlowMAPElitesDescriptorConfig],
-    fitness: FitnessConfig
+    rule: FlowMapElitesExportRule
 ) -> [FlowMapElitesReplayExportCandidate] {
     guard limit > 0, !candidates.isEmpty else { return [] }
     guard !descriptors.isEmpty else {
         return Array(candidates
-            .sorted { flowMapElitesReplayExportIsBetter($0, than: $1, fitness: fitness) }
+            .sorted { flowMapElitesReplayExportIsBetter($0, than: $1, rule: rule) }
             .prefix(limit))
     }
 
-    let ranked = candidates.sorted { flowMapElitesReplayExportIsBetter($0, than: $1, fitness: fitness) }
+    let ranked = candidates.sorted { flowMapElitesReplayExportIsBetter($0, than: $1, rule: rule) }
     var selected = [ranked[0]]
     var selectedPoints = [flowMapElitesReplayDescriptorPoint(ranked[0], descriptors: descriptors)]
     var remaining = Array(ranked.dropFirst())
-    let bestScore = ranked.first.map { flowMapElitesReplayExportScore($0, fitness: fitness) } ?? 0
+    let bestScore = ranked.first.map { flowMapElitesReplayExportScore($0, rule: rule) } ?? 0
     let scoreScale = max(abs(bestScore), 1.0)
 
     while selected.count < limit, !remaining.isEmpty {
@@ -713,7 +740,7 @@ private func flowMapElitesReplayDiverseSelection(
             let nearestDistance = selectedPoints
                 .map { flowMapElitesSquaredDistance(point, $0) }
                 .min() ?? 0
-            let exportScore = flowMapElitesReplayExportScore(candidate, fitness: fitness)
+            let exportScore = flowMapElitesReplayExportScore(candidate, rule: rule)
             let fitnessBias = max(-1.0, min(1.0, exportScore / scoreScale)) * 1e-4
             let score = nearestDistance + fitnessBias
             if score > bestScore || (score == bestScore && candidate.elite.key < remaining[bestIndex].elite.key) {
@@ -732,10 +759,10 @@ private func flowMapElitesReplayDiverseSelection(
 private func flowMapElitesReplayExportIsBetter(
     _ lhs: FlowMapElitesReplayExportCandidate,
     than rhs: FlowMapElitesReplayExportCandidate,
-    fitness: FitnessConfig
+    rule: FlowMapElitesExportRule
 ) -> Bool {
-    let lhsScore = flowMapElitesReplayExportScore(lhs, fitness: fitness)
-    let rhsScore = flowMapElitesReplayExportScore(rhs, fitness: fitness)
+    let lhsScore = flowMapElitesReplayExportScore(lhs, rule: rule)
+    let rhsScore = flowMapElitesReplayExportScore(rhs, rule: rule)
     if lhsScore == rhsScore {
         if lhs.evaluation.fitness == rhs.evaluation.fitness {
             if lhs.elite.fitness == rhs.elite.fitness {
@@ -750,45 +777,46 @@ private func flowMapElitesReplayExportIsBetter(
 
 private func flowMapElitesReplayExportGatePassed(
     _ candidate: FlowMapElitesReplayExportCandidate,
-    fitness: FitnessConfig
+    rule: FlowMapElitesExportRule
 ) -> Bool {
-    if fitness.objective == "body_locomotion" {
-        let metrics = candidate.evaluation.resultData.metrics
+    let metrics = candidate.evaluation.resultData.metrics
+    switch rule.gate {
+    case .bodyLocomotion(let translatedShapeOverlapMin):
         guard bodyLocomotion(for: metrics) > 0,
-              (metrics.transportDisplacement ?? 0) > 1,
-              (metrics.translatedShapeOverlap ?? 0) >= (fitness.translatedShapeOverlapMin ?? 0.5) else {
+              candidate.transportDisplacement > 1,
+              candidate.translatedShapeOverlap >= translatedShapeOverlapMin else {
             return false
         }
-        return flowMapElitesReplayExportViolation(metrics, fitness: fitness) <= 0.35 &&
-            flowMapElitesReplayExportScore(candidate, fitness: fitness) > 0
+        return flowMapElitesReplayExportViolation(metrics, fitness: rule.fitness) <= 0.35 &&
+            flowMapElitesReplayExportScore(candidate, rule: rule) > 0
+    case .coherentTransport:
+        if candidate.evaluation.fitness > 0 {
+            return true
+        }
+        guard candidate.coherentTransport > 0 else {
+            return false
+        }
+        return flowMapElitesReplayExportViolation(metrics, fitness: rule.fitness) <= 0.75 &&
+            flowMapElitesReplayExportScore(candidate, rule: rule) > 0
     }
-    if candidate.evaluation.fitness > 0 {
-        return true
-    }
-    let metrics = candidate.evaluation.resultData.metrics
-    guard (metrics.coherentTransport ?? 0) > 0 else {
-        return false
-    }
-    return flowMapElitesReplayExportViolation(metrics, fitness: fitness) <= 0.75 &&
-        flowMapElitesReplayExportScore(candidate, fitness: fitness) > 0
 }
 
 private func flowMapElitesReplayExportScore(
     _ candidate: FlowMapElitesReplayExportCandidate,
-    fitness: FitnessConfig
+    rule: FlowMapElitesExportRule
 ) -> Float {
     let metrics = candidate.evaluation.resultData.metrics
     let bodyScore = bodyLocomotion(for: metrics)
     let bodyScoreUnit = bodyScore / (1 + bodyScore)
-    let transport = max(metrics.coherentTransport ?? 0, 0)
+    let transport = max(candidate.coherentTransport, 0)
     let transportScore = transport / (1 + transport)
-    let overlap = flowMapElitesUnitMetric(metrics.translatedShapeOverlap)
-    let solidity = flowMapElitesUnitMetric(metrics.largestComponentSolidity)
-    let thickness = min(max(metrics.largestComponentMeanThickness ?? 0, 0), 4) / 4
-    let largestComponentFraction = flowMapElitesUnitMetric(metrics.largestComponentFraction)
-    let filamentarity = flowMapElitesUnitMetric(metrics.largestComponentFilamentarity ?? 1)
+    let overlap = flowMapElitesUnitMetric(candidate.translatedShapeOverlap)
+    let solidity = flowMapElitesUnitMetric(candidate.largestComponentSolidity)
+    let thickness = min(max(candidate.largestComponentMeanThickness, 0), 4) / 4
+    let largestComponentFraction = flowMapElitesUnitMetric(candidate.largestComponentFraction)
+    let filamentarity = flowMapElitesUnitMetric(candidate.largestComponentFilamentarity)
     let replayFitness = candidate.evaluation.fitness.isFinite ? candidate.evaluation.fitness : -1
-    let violation = flowMapElitesReplayExportViolation(metrics, fitness: fitness)
+    let violation = flowMapElitesReplayExportViolation(metrics, fitness: rule.fitness)
 
     return 0.25 * replayFitness +
         0.90 * bodyScoreUnit +
@@ -838,8 +866,8 @@ private func flowMapElitesMaximumViolation(_ value: Float?, maximum: Float?) -> 
     return (value - maximum) / max(abs(maximum), 1)
 }
 
-private func flowMapElitesUnitMetric(_ value: Float?) -> Float {
-    guard let value, value.isFinite else { return 0 }
+private func flowMapElitesUnitMetric(_ value: Float) -> Float {
+    guard value.isFinite else { return 0 }
     return max(0, min(1, value))
 }
 
@@ -975,13 +1003,13 @@ private func flowMapElitesCreature(
 private func flowMapElitesLibraryEntry(
     runId: String,
     rank: Int,
-    elite: FlowMapElitesEliteSummary,
     configHash: String,
-    evaluation: ESEvaluatedCreatureExport,
+    exportCandidate: FlowMapElitesReplayExportCandidate,
     creature: SavedCreature,
-    fitness: FitnessConfig
+    rule: FlowMapElitesExportRule
 ) throws -> ResearchLibraryEntry {
-    let exportCandidate = FlowMapElitesReplayExportCandidate(elite: elite, evaluation: evaluation)
+    let elite = exportCandidate.elite
+    let evaluation = exportCandidate.evaluation
     let metadata: [String: AnyCodable] = try [
         "version": researchMetadataValue(1),
         "mode": researchMetadataValue("flow-map-elites"),
@@ -997,13 +1025,13 @@ private func flowMapElitesLibraryEntry(
         "archive_fitness": researchMetadataValue(elite.fitness),
         "replay_fitness": researchMetadataValue(evaluation.fitness),
         "replay_export_score": researchMetadataValue(
-            flowMapElitesReplayExportScore(exportCandidate, fitness: fitness)
+            flowMapElitesReplayExportScore(exportCandidate, rule: rule)
         ),
         "replay_export_violation": researchMetadataValue(
-            flowMapElitesReplayExportViolation(evaluation.resultData.metrics, fitness: fitness)
+            flowMapElitesReplayExportViolation(evaluation.resultData.metrics, fitness: rule.fitness)
         ),
         "replay_export_gate_passed": researchMetadataValue(
-            flowMapElitesReplayExportGatePassed(exportCandidate, fitness: fitness)
+            flowMapElitesReplayExportGatePassed(exportCandidate, rule: rule)
         ),
         "descriptors": researchMetadataValue(elite.descriptors),
         "init_patch_values": researchMetadataValue(evaluation.initPatchValues ?? NSNull()),

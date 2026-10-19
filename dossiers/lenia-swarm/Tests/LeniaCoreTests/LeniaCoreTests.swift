@@ -4247,7 +4247,7 @@ final class LeniaCoreTests: XCTestCase {
             data: Array(repeating: Float(0.25), count: 192 * 192),
             score: 1.25
         )
-        let indexURL = tempRoot.appendingPathComponent("portfolio-seeds.jsonl")
+        let indexURL = tempRoot.appendingPathComponent("large-patch-seeds.jsonl")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         try Data(("\n  \n" + String(decoding: encoder.encode(patch), as: UTF8.self) + "\n").utf8).write(to: indexURL)
@@ -7376,44 +7376,26 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(queue.map(\.baseConfig.backend), ["mlx"])
     }
 
-    func testWorkerSupportsEcologyCampaignAutoBackendRequiresMetalWorker() {
-        let mlxOnlyStatus = WorkerStatus(
-            capabilities: WorkerBackendCapabilities(
-                canonicalSearchBackends: [.mlx],
-                canonicalFlowLeniaBackends: [.mlx],
-                canonicalSearchPreferredBackend: .mlx,
-                canonicalFlowLeniaPreferredBackend: .mlx
-            ),
-            workerId: "mlx-only",
-            hostname: "node-a",
-            currentJob: nil,
-            jobsCompleted: 0,
-            totalSeedsProcessed: 0,
-            isAvailable: true
+    func testEcologyCampaignAutoBackendRequiresMetalCapability() {
+        let mlxOnly = WorkerBackendCapabilities(
+            canonicalSearchBackends: [.mlx],
+            canonicalFlowLeniaBackends: [.mlx],
+            canonicalSearchPreferredBackend: .mlx,
+            canonicalFlowLeniaPreferredBackend: .mlx
         )
-        let job = makeEcologyCampaignJob(backend: "auto")
 
-        XCTAssertFalse(workerSupportsCampaignJob(mlxOnlyStatus, job: job))
-        XCTAssertNil(materializeCampaignJob(job, for: mlxOnlyStatus.capabilities))
+        XCTAssertNil(materializeCampaignJob(makeEcologyCampaignJob(backend: "auto"), for: mlxOnly))
     }
 
-    func testMaterializedEcologyCampaignAutoBackendUsesMetalWorker() throws {
-        let fullStatus = WorkerStatus(
-            capabilities: WorkerBackendCapabilities(
-                canonicalSearchBackends: [.mlx, .metalFull],
-                canonicalFlowLeniaBackends: [.mlx, .metalFull],
-                canonicalSearchPreferredBackend: .metalFull,
-                canonicalFlowLeniaPreferredBackend: .metalFull
-            ),
-            workerId: "full",
-            hostname: "node-b",
-            currentJob: nil,
-            jobsCompleted: 0,
-            totalSeedsProcessed: 0,
-            isAvailable: true
+    func testMaterializedEcologyCampaignAutoBackendUsesMetalFull() throws {
+        let full = WorkerBackendCapabilities(
+            canonicalSearchBackends: [.mlx, .metalFull],
+            canonicalFlowLeniaBackends: [.mlx, .metalFull],
+            canonicalSearchPreferredBackend: .metalFull,
+            canonicalFlowLeniaPreferredBackend: .metalFull
         )
 
-        let materialized = try XCTUnwrap(materializeCampaignJob(makeEcologyCampaignJob(backend: "auto"), for: fullStatus.capabilities))
+        let materialized = try XCTUnwrap(materializeCampaignJob(makeEcologyCampaignJob(backend: "auto"), for: full))
         XCTAssertEqual(materialized.ecology?.baseConfig.backend, "metal-full")
         XCTAssertEqual(materialized.backendRequest, "auto")
     }
@@ -8476,7 +8458,6 @@ private func makeEcologyCampaignJob(backend: String) -> LeniaCampaignJob {
         preset: .seededEcology,
         executor: .ecology2025,
         backendRequest: backend,
-        executionMode: .distributed,
         repeatIndex: 0,
         ecology: payload
     )

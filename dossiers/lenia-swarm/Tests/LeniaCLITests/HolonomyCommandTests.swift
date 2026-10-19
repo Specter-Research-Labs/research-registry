@@ -9,6 +9,90 @@ final class HolonomyCommandTests: XCTestCase {
         let root = try makeTempDirectory(prefix: "lenia-holonomy")
         defer { try? FileManager.default.removeItem(at: root) }
 
+        let (exportDir, loopURL) = try makeHolonomyFixture(root: root)
+
+        let outputURL = root.appendingPathComponent("output", isDirectory: true)
+        let dbURL = root.appendingPathComponent("compendium.sqlite")
+        _ = try runLeniaCLI(arguments: [
+            "intervene",
+            "holonomy",
+            "--run-id", "holonomy-test-run",
+            "--bundle", exportDir.path,
+            "--loop", loopURL.path,
+            "--output", outputURL.path,
+            "--db", dbURL.path,
+            "--export-enabled",
+        ])
+
+        let manifestURL = outputURL.appendingPathComponent("holonomy-manifest.json")
+        let summaryURL = outputURL.appendingPathComponent("summary.json")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: manifestURL.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: summaryURL.path))
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .deferredToDate
+        let manifest = try decoder.decode(HolonomyManifestFixture.self, from: Data(contentsOf: manifestURL))
+        let summary = try decoder.decode(HolonomySummaryFixture.self, from: Data(contentsOf: summaryURL))
+
+        XCTAssertEqual(manifest.version, 1)
+        XCTAssertTrue(manifest.loopClosed)
+        XCTAssertEqual(manifest.coordinatePaths, ["m.0"])
+        XCTAssertEqual(manifest.stepManifestPaths.count, 3)
+        XCTAssertEqual(manifest.campaignDirs.count, 3)
+        XCTAssertTrue(manifest.exportEnabled)
+        XCTAssertEqual(summary.loopName, "m-loop")
+        XCTAssertTrue(summary.loopClosed)
+        XCTAssertEqual(summary.coordinatePaths, ["m.0"])
+        XCTAssertEqual(summary.pointCount, 3)
+        XCTAssertEqual(summary.campaignCount, 3)
+        XCTAssertEqual(summary.exportCount, 3)
+        XCTAssertNotNil(summary.phenotypeClosureDistance)
+        XCTAssertNotNil(summary.transportedStateClosureDistance)
+
+        let firstCampaignDir = URL(fileURLWithPath: manifest.campaignDirs[0], isDirectory: true)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("config.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("search.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("results.jsonl").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("library/index.jsonl").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("holonomy-step.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("terminal-state.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.appendingPathComponent("loop-spec.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("exports/index.jsonl").path))
+
+        let db = try SQLiteDB(path: dbURL.path)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM runs WHERE run_id = 'holonomy-test-run'"), 1)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'holonomy-test-run'"), 6)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'holonomy-test-run' AND source_kind = 'result'"), 3)
+        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'holonomy-test-run' AND source_kind = 'library'"), 3)
+    }
+
+    func testHolonomyCommandRejectsBundleWithoutBundleKind() throws {
+        let root = try makeTempDirectory(prefix: "lenia-holonomy-kind")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let (exportDir, loopURL) = try makeHolonomyFixture(root: root)
+        try rewriteJSONFile(at: exportDir.appendingPathComponent("meta.json")) { meta in
+            XCTAssertNotNil(meta.removeValue(forKey: "bundleKind"))
+        }
+
+        XCTAssertThrowsError(
+            try runLeniaCLI(arguments: [
+                "intervene",
+                "holonomy",
+                "--bundle", exportDir.path,
+                "--loop", loopURL.path,
+                "--output", root.appendingPathComponent("output", isDirectory: true).path,
+                "--validate-only",
+            ])
+        ) { error in
+            guard case let TestCLIProcessError.failed(_, _, _, stderr) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssertTrue(stderr.contains("has no bundleKind"), stderr)
+        }
+    }
+
+    private func makeHolonomyFixture(root: URL) throws -> (exportDir: URL, loopURL: URL) {
         let bundleDir = root.appendingPathComponent("bundle", isDirectory: true)
         try FileManager.default.createDirectory(at: bundleDir, withIntermediateDirectories: true)
 
@@ -91,7 +175,7 @@ final class HolonomyCommandTests: XCTestCase {
             configHash: "seed"
         )
 
-        guard let artifact = try writeReplayExportArtifacts(
+        let artifact = try XCTUnwrap(writeReplayExportArtifacts(
             exportRoot: bundleDir,
             baseConfig: baseConfig,
             searchConfig: searchConfig,
@@ -101,10 +185,7 @@ final class HolonomyCommandTests: XCTestCase {
             score: creature.score,
             filtersPassed: true,
             reason: "test"
-        ) else {
-            XCTFail("Expected strict replay bundle artifacts to be written.")
-            return
-        }
+        ), "Expected strict replay bundle artifacts to be written.")
         try writeJSONL([artifact.record], to: bundleDir.appendingPathComponent("index.jsonl"))
 
         let loopURL = root.appendingPathComponent("loop.json")
@@ -119,60 +200,7 @@ final class HolonomyCommandTests: XCTestCase {
             ],
             to: loopURL
         )
-
-        let outputURL = root.appendingPathComponent("output", isDirectory: true)
-        let dbURL = root.appendingPathComponent("compendium.sqlite")
-        _ = try runLeniaCLI(arguments: [
-            "intervene",
-            "holonomy",
-            "--run-id", "holonomy-test-run",
-            "--bundle", artifact.exportDir.path,
-            "--loop", loopURL.path,
-            "--output", outputURL.path,
-            "--db", dbURL.path,
-            "--export-enabled",
-        ])
-
-        let manifestURL = outputURL.appendingPathComponent("holonomy-manifest.json")
-        let summaryURL = outputURL.appendingPathComponent("summary.json")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: manifestURL.path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: summaryURL.path))
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .deferredToDate
-        let manifest = try decoder.decode(HolonomyManifestFixture.self, from: Data(contentsOf: manifestURL))
-        let summary = try decoder.decode(HolonomySummaryFixture.self, from: Data(contentsOf: summaryURL))
-
-        XCTAssertEqual(manifest.version, 1)
-        XCTAssertTrue(manifest.loopClosed)
-        XCTAssertEqual(manifest.coordinatePaths, ["m.0"])
-        XCTAssertEqual(manifest.stepManifestPaths.count, 3)
-        XCTAssertEqual(manifest.campaignDirs.count, 3)
-        XCTAssertTrue(manifest.exportEnabled)
-        XCTAssertEqual(summary.loopName, "m-loop")
-        XCTAssertTrue(summary.loopClosed)
-        XCTAssertEqual(summary.coordinatePaths, ["m.0"])
-        XCTAssertEqual(summary.pointCount, 3)
-        XCTAssertEqual(summary.campaignCount, 3)
-        XCTAssertEqual(summary.exportCount, 3)
-        XCTAssertNotNil(summary.phenotypeClosureDistance)
-        XCTAssertNotNil(summary.transportedStateClosureDistance)
-
-        let firstCampaignDir = URL(fileURLWithPath: manifest.campaignDirs[0], isDirectory: true)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("config.json").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("search.json").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("results.jsonl").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("library/index.jsonl").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("holonomy-step.json").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("terminal-state.json").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.appendingPathComponent("loop-spec.json").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: firstCampaignDir.appendingPathComponent("exports/index.jsonl").path))
-
-        let db = try SQLiteDB(path: dbURL.path)
-        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM runs WHERE run_id = 'holonomy-test-run'"), 1)
-        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'holonomy-test-run'"), 6)
-        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'holonomy-test-run' AND source_kind = 'result'"), 3)
-        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM specimens WHERE run_id = 'holonomy-test-run' AND source_kind = 'library'"), 3)
+        return (artifact.exportDir, loopURL)
     }
 }
 

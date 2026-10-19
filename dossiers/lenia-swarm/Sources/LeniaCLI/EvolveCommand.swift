@@ -17,25 +17,6 @@ func evolveCreatureChannelCount(
     ).count
 }
 
-func replacingNonPositiveKernelWeights(
-    in params: KernelParams,
-    with replacement: Float
-) throws -> KernelParams {
-    guard replacement > 0 else {
-        throw ValidationError("--seed-kernel-zero-weight must be > 0.")
-    }
-    return KernelParams(
-        r: params.r,
-        b: params.b,
-        w: params.w.map { row in row.map { $0 <= 0 ? replacement : $0 } },
-        a: params.a,
-        m: params.m,
-        s: params.s,
-        h: params.h,
-        R: params.R
-    )
-}
-
 private func validateEvolutionSequenceMetricConfig(_ esConfig: ESConfig) throws {
     let fitness = esConfig.fitness
     let usesTrajectoryMetrics = fitness.trajectoryPathLengthPenalty != nil ||
@@ -89,26 +70,8 @@ struct EvolveCommand: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory (overrides es config)")
     var output: String?
 
-    @Option(name: .long, help: "Path to library/index.jsonl or exports/index.jsonl used to seed the initial patch")
-    var seedLibrary: String?
-
-    @Option(name: .long, help: "Optional qd-2024 config directory when the seed library comes from qd-2024 and pattern assets are missing")
-    var seedQDConfigDir: String?
-
-    @Option(name: .long, parsing: .upToNextOption, help: "QD cell ids to use for warm starts when the seed library comes from qd-2024")
-    var seedCell: [Int] = []
-
     @OptionGroup
-    var seedSelection: ResearchSeedSelectionOptions
-
-    @Flag(name: .long, help: "Also warm-start ES kernel parameters from the selected research seed when available")
-    var seedKernelParams: Bool = false
-
-    @Option(name: .long, help: "When using --seed-kernel-params, replace non-positive seed kernel weights with this explicit value")
-    var seedKernelZeroWeight: Float?
-
-    @Option(name: .long, help: "Warmup steps used when expressing a research seed patch; use 0 to preserve the original initialization")
-    var seedWarmupSteps: Int?
+    var seedWarmStart: ResearchSeedWarmStartOptions
 
     @Flag(name: .long, help: "Validate configs and exit without running")
     var validateOnly: Bool = false
@@ -133,13 +96,6 @@ struct EvolveCommand: AsyncParsableCommand {
         let logger = logging.logger
 
         logLoggingInitialized(logger, runID: resolvedRunId, logging: logging)
-
-        if seedKernelZeroWeight != nil && !seedKernelParams {
-            throw ValidationError("--seed-kernel-zero-weight requires --seed-kernel-params.")
-        }
-        if let seedWarmupSteps, seedWarmupSteps < 0 {
-            throw ValidationError("--seed-warmup-steps must be >= 0.")
-        }
 
         logger.info("Loading configs...")
 
@@ -189,21 +145,14 @@ struct EvolveCommand: AsyncParsableCommand {
         let baseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: baseConfigData)
         let runtimeConfig = try loadRuntimeConfig(from: baseConfigData)
 
-        if let seedLibrary {
+        if let seedLibrary = seedWarmStart.seedLibrary {
             let canSeedInitPatch = esConfig.initPatch?.enabled == true
-            if !canSeedInitPatch && !seedKernelParams {
+            if !canSeedInitPatch && !seedWarmStart.seedKernelParams {
                 throw ValidationError("--seed-library without --seed-kernel-params requires init_patch.enabled in the ES config.")
             }
             let resolvedSeedLibrary = try resolveArtifactPath(seedLibrary, dossier: dossierName)
-            let resolvedQDConfigDir = try seedQDConfigDir.map { try resolvePath($0, dossier: dossierName) }
-            let selection = try seedSelection.resolvedSelection()
-            let patches = try loadResearchSeedPatches(
-                libraryURL: URL(fileURLWithPath: resolvedSeedLibrary),
-                qdConfigDirectoryOverride: resolvedQDConfigDir.map { URL(fileURLWithPath: $0, isDirectory: true) },
-                cells: seedCell.isEmpty ? nil : seedCell,
-                warmupSteps: seedWarmupSteps,
-                selection: selection
-            )
+            let selection = try seedWarmStart.seedSelection.resolvedSelection()
+            let patches = try seedWarmStart.loadPatches(libraryPath: resolvedSeedLibrary, selection: selection)
             let patch = try resolveSingleResearchSeedPatch(
                 patches: patches,
                 libraryPath: resolvedSeedLibrary,
@@ -227,13 +176,8 @@ struct EvolveCommand: AsyncParsableCommand {
                 patchValues = esConfig.initialInitPatchValues
             }
             let kernelParams: KernelParams?
-            if seedKernelParams {
-                guard let seedKernelParams = patch.kernelParams else {
-                    throw ValidationError("--seed-kernel-params requested, but selected seed '\(patch.name)' has no kernel parameters.")
-                }
-                kernelParams = try seedKernelZeroWeight.map {
-                    try replacingNonPositiveKernelWeights(in: seedKernelParams, with: $0)
-                } ?? seedKernelParams
+            if seedWarmStart.seedKernelParams {
+                kernelParams = try seedWarmStart.kernelParams(from: patch)
             } else {
                 kernelParams = esConfig.initialKernelParams
             }
@@ -245,7 +189,7 @@ struct EvolveCommand: AsyncParsableCommand {
             if canSeedInitPatch {
                 logger.info("Using research seed warm start '\(patch.name)' for evolve init patch")
             }
-            if seedKernelParams {
+            if seedWarmStart.seedKernelParams {
                 logger.info("Using research seed warm start '\(patch.name)' for evolve kernel parameters")
             }
         }

@@ -91,8 +91,7 @@ struct ObstacleResponseCommand: AsyncParsableCommand {
             logStem: "obstacle-response",
             outputForLogs: outputRoot,
             logOptions: logOptions,
-            dossier: dossierName,
-            fallbackOutputLogDir: true
+            dossier: dossierName
         )
         let logger = logging.logger
 

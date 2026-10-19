@@ -209,21 +209,6 @@ private func renderMedia(
         }
     }
 
-    let portfolioBundles = try discoverPortfolioCandidateBundles(from: inputURL, top: limit ?? top)
-    if !portfolioBundles.isEmpty {
-        return try portfolioBundles.map {
-            try renderPortfolioCandidateMediaBundle(
-                $0,
-                outputRoot: outputURL,
-                frameBudget: frameBudget,
-                steps: steps,
-                fps: fps,
-                renderMode: renderMode,
-                ffmpeg: ffmpeg
-            )
-        }
-    }
-
     let libraryReplayBundles = try discoverLibraryReplayBundles(from: inputURL)
     if !libraryReplayBundles.isEmpty {
         let selectedBundles = limit.map { Array(libraryReplayBundles.prefix($0)) } ?? libraryReplayBundles

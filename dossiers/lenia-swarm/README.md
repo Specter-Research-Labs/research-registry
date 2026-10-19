@@ -98,7 +98,7 @@ Useful individual targets:
 ### Grouped CLI Tree
 
 - `LeniaCLI discover local`: deterministic local runs and auto-indexing.
-- `LeniaCLI discover evolve|mutate|rd-2023|sensorimotor-2024|qd-2024|ecology-2025|curiosity-2025|atlas-2026`: paper-grounded discovery commands.
+- `LeniaCLI discover evolve|rd-2023|sensorimotor-2024|qd-2024|ecology-2025|curiosity-2025|atlas-2026`: paper-grounded discovery commands.
 - `LeniaCLI discover obstacle-response`: paired sham and heading-relative obstacle continuations for a fixed Flow Lenia corpus.
 - `LeniaCLI discover capacity-pilot --config BASE.json --corpus CORPUS.jsonl --output RUN`: paired small/large deformations and balanced internal-channel edits of a fixed multi-channel corpus. Saves the step-1,200 checkpoint, eight branch trajectories, final Float32 fields, configuration inputs, and a repeat-continuation check. The channel write exchanges matter only between channels 0 and 1, leaves additional channels unchanged, and checks every channel inventory. Its dose is measured against total matter across all channels. The default horizon is 1,024 steps; this is a sensitivity and prediction pilot, not an assay of a rewritten restoration target.
 - Add `--study development --horizon 3600` for an unperturbed world-coordinate trajectory, or `--study response --horizon 512` for paired deformations at three ages with full fields saved every 32 steps. These modes preserve the configured backend and boundaries and support single-channel additive Lenia. Periodic shears use the shortest displacement from the body centre; additive trajectories may gain or lose matter. Balanced channel writes remain restricted to the existing multichannel Flow studies.
@@ -109,7 +109,8 @@ Useful individual targets:
 - `LeniaCLI orchestrate controller|worker|campaign`: distributed sweep, worker, and campaign dispatch.
 - `LeniaCLI index ingest|sanity|backfill`: compendium ingest and repair.
 - `LeniaCLI analyze warehouse|topology|biological|discovery|ecology|taxonomy`: warehouse refresh and derived analysis.
-- `LeniaCLI intervene battery|holonomy`: intervention batteries and transport experiments.
+- `LeniaCLI intervene holonomy`: transport experiments.
+- `LeniaCLI orchestrate campaign --campaign configs/campaigns/intervention-battery.json --output RUN`: the intervention battery as a declarative campaign phase.
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
 - `LeniaCLI tt run`: Tenstorrent backend trajectory execution with optional quietbox SSH/container orchestration and Studio frame export.
 - `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.
@@ -241,21 +242,6 @@ LeniaCLI discover evolve \
 
 Run `LeniaCLI discover evolve --help` for all flags.
 
-### Mutate
-
-Apply mutations to parameters from search results:
-
-```bash
-LeniaCLI discover mutate \
-  --config configs/base/paper_base_1c_128.json \
-  --params ./results/top.json \
-  --rank 0 \
-  --param-jitter-std 0.05 \
-  --clip
-```
-
-Run `LeniaCLI discover mutate --help` for all flags.
-
 ## Output
 
 **Controller** writes under `<output>/overall/`:
@@ -269,11 +255,6 @@ Run `LeniaCLI discover mutate --help` for all flags.
 - `best_config.json`: Full config with best parameters
 - `history.jsonl`: Per-generation fitness statistics
 - `config.json`, `es_config.json`: Input configs (copied)
-
-**Mutate** writes to output directory:
-- `config.json`: Mutated config
-- `params.json`: Extracted parameters
-- `mutation.json`: Mutation record
 
 Flow integrator conventions and the pinned author regression are documented in
 [Flow coordinates and the reference regression](docs/flow-spatial-conventions.md).

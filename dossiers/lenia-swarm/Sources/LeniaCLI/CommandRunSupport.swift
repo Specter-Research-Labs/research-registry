@@ -4,7 +4,7 @@ import LeniaCore
 import Logging
 
 struct CommandLoggingContext {
-    let logDirURL: URL?
+    let logDirURL: URL
     let nodeID: String
     let logger: Logger
 }
@@ -38,27 +38,15 @@ func bootstrapRunLogging(
     outputForLogs: String?,
     logOptions: LogOptions,
     dossier: String,
-    fallbackOutputLogDir: Bool = false,
     nodeID: String? = nil,
     logFileName: String? = nil,
     metricsFileName: String? = nil,
     extraMetadata: Logger.Metadata = [:]
 ) throws -> CommandLoggingContext {
-    let resolvedLogBase = try resolveLogBase(
-        explicit: logOptions.logDir,
-        dossier: dossier,
-        output: outputForLogs
-    ) ?? {
-        guard fallbackOutputLogDir, let outputForLogs else { return nil }
-        return URL(fileURLWithPath: outputForLogs, isDirectory: true)
-            .appendingPathComponent("logs", isDirectory: true)
-            .path
-    }()
-
-    let logDirURL = resolvedLogBase.map { resolvedLogBase in
-        URL(fileURLWithPath: resolvedLogBase, isDirectory: true)
-            .appendingPathComponent(runID, isDirectory: true)
-    }
+    let logDirURL = URL(
+        fileURLWithPath: try resolveLogBase(explicit: logOptions.logDir, dossier: dossier, output: outputForLogs),
+        isDirectory: true
+    ).appendingPathComponent(runID, isDirectory: true)
     let resolvedNodeID = nodeID ?? ProcessInfo.processInfo.hostName
     let resolvedLogFileName = logFileName ?? "\(logStem).log.jsonl"
     let resolvedMetricsFileName = metricsFileName ?? "\(logStem).metrics.jsonl"
@@ -69,8 +57,8 @@ func bootstrapRunLogging(
         role: role,
         logLevel: try logOptions.resolvedLogLevel(),
         logToConsole: !logOptions.noLogConsole,
-        logFileURL: logDirURL?.appendingPathComponent(resolvedLogFileName),
-        metricsFileURL: logDirURL?.appendingPathComponent(resolvedMetricsFileName),
+        logFileURL: logDirURL.appendingPathComponent(resolvedLogFileName),
+        metricsFileURL: logDirURL.appendingPathComponent(resolvedMetricsFileName),
         extraMetadata: extraMetadata
     ))
 
@@ -82,11 +70,7 @@ func bootstrapRunLogging(
 }
 
 func logLoggingInitialized(_ logger: Logger, runID: String, logging: CommandLoggingContext) {
-    if let logDirURL = logging.logDirURL {
-        logger.info("Logging initialized (run_id=\(runID), log_dir=\(logDirURL.path))")
-    } else {
-        logger.info("Logging initialized (run_id=\(runID), console_only=true)")
-    }
+    logger.info("Logging initialized (run_id=\(runID), log_dir=\(logging.logDirURL.path))")
 }
 
 @discardableResult

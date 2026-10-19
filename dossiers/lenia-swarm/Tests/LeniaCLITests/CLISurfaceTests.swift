@@ -43,7 +43,6 @@ final class CLISurfaceTests: XCTestCase {
             Set([
                 "local",
                 "evolve",
-                "mutate",
                 "sensorimotor-2024",
                 "atlas-2026",
                 "rd-2023",
@@ -66,7 +65,6 @@ final class CLISurfaceTests: XCTestCase {
                 "controller",
                 "worker",
                 "campaign",
-                "portfolio",
             ])
         )
     }
@@ -77,12 +75,10 @@ final class CLISurfaceTests: XCTestCase {
         XCTAssertTrue(readme.contains("LeniaCLI orchestrate controller"))
         XCTAssertTrue(readme.contains("LeniaCLI orchestrate worker"))
         XCTAssertTrue(readme.contains("LeniaCLI discover evolve"))
-        XCTAssertTrue(readme.contains("LeniaCLI discover mutate"))
 
         XCTAssertFalse(readme.contains("LeniaCLI controller \\"))
         XCTAssertFalse(readme.contains("LeniaCLI worker \\"))
         XCTAssertFalse(readme.contains("LeniaCLI evolve \\"))
-        XCTAssertFalse(readme.contains("LeniaCLI mutate \\"))
     }
 
     func testResearchModesUseGroupedCLIExamples() throws {

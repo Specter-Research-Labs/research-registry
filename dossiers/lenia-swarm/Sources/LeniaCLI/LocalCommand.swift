@@ -68,8 +68,7 @@ struct LocalCommand: AsyncParsableCommand {
             logStem: "local",
             outputForLogs: resolvedOutputRoot,
             logOptions: logOptions,
-            dossier: dossierName,
-            fallbackOutputLogDir: true
+            dossier: dossierName
         )
 
         let nodeId = logging.nodeID

@@ -39,7 +39,7 @@ struct EvaluateCommand: AsyncParsableCommand {
         let logging = try bootstrapRunLogging(
             runID: runId, role: "evaluate", loggerLabel: "LeniaSwarm.Evaluate",
             logStem: "evaluate", outputForLogs: outputRoot, logOptions: logOptions,
-            dossier: dossierName, fallbackOutputLogDir: true
+            dossier: dossierName
         )
         let logger = logging.logger
         logger.info("Output: \(runDir.path)")

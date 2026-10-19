@@ -15,7 +15,7 @@ func resolveArtifactPath(_ path: String, dossier: String) throws -> String {
     try resolveRuntimeAwareArtifactPath(path, dossier: dossier)
 }
 
-func resolveLogBase(explicit: String?, dossier: String, output: String? = nil) throws -> String? {
+func resolveLogBase(explicit: String?, dossier: String, output: String? = nil) throws -> String {
     try resolveRuntimeAwareLogBase(explicit: explicit, dossier: dossier, output: output)
 }
 
@@ -32,7 +32,7 @@ struct LogOptions: ParsableArguments {
     @Option(name: .long, help: "Run id for log/metrics correlation")
     var runId: String?
 
-    @Option(name: .long, help: "Directory for JSONL logs/metrics")
+    @Option(name: .long, help: "Directory for JSONL logs/metrics (default: <output>/logs, else the configured log root)")
     var logDir: String?
 
     @Flag(name: .long, help: "Disable console logging")
@@ -116,6 +116,71 @@ struct ResearchSeedSelectionOptions: ParsableArguments {
     }
 }
 
+struct ResearchSeedWarmStartOptions: ParsableArguments {
+    @Option(name: .long, help: "Path to library/index.jsonl or exports/index.jsonl used to seed the initial patch")
+    var seedLibrary: String?
+
+    @Option(name: .long, help: "Optional qd-2024 config directory when the seed library comes from qd-2024 and pattern assets are missing")
+    var seedQDConfigDir: String?
+
+    @Option(name: .long, parsing: .upToNextOption, help: "QD cell ids to use for warm starts when the seed library comes from qd-2024")
+    var seedCell: [Int] = []
+
+    @OptionGroup
+    var seedSelection: ResearchSeedSelectionOptions
+
+    @Flag(name: .long, help: "Also warm-start kernel parameters from the selected research seed when available")
+    var seedKernelParams: Bool = false
+
+    @Option(name: .long, help: "When using --seed-kernel-params, replace non-positive seed kernel weights with this explicit value")
+    var seedKernelZeroWeight: Float?
+
+    @Option(name: .long, help: "Warmup steps used when expressing a research seed patch; use 0 to preserve the original initialization")
+    var seedWarmupSteps: Int?
+
+    func validate() throws {
+        if let seedKernelZeroWeight {
+            guard seedKernelParams else {
+                throw ValidationError("--seed-kernel-zero-weight requires --seed-kernel-params.")
+            }
+            guard seedKernelZeroWeight > 0 else {
+                throw ValidationError("--seed-kernel-zero-weight must be > 0.")
+            }
+        }
+        if let seedWarmupSteps, seedWarmupSteps < 0 {
+            throw ValidationError("--seed-warmup-steps must be >= 0.")
+        }
+    }
+
+    func loadPatches(libraryPath: String, selection: ResearchSeedSelection?) throws -> [ResearchSeedPatch] {
+        let qdConfigDir = try seedQDConfigDir.map { try resolvePath($0, dossier: dossierName) }
+        return try loadResearchSeedPatches(
+            libraryURL: URL(fileURLWithPath: libraryPath),
+            qdConfigDirectoryOverride: qdConfigDir.map { URL(fileURLWithPath: $0, isDirectory: true) },
+            cells: seedCell.isEmpty ? nil : seedCell,
+            warmupSteps: seedWarmupSteps,
+            selection: selection
+        )
+    }
+
+    func kernelParams(from patch: ResearchSeedPatch) throws -> KernelParams {
+        guard let params = patch.kernelParams else {
+            throw ValidationError("--seed-kernel-params requested, but selected seed '\(patch.name)' has no kernel parameters.")
+        }
+        guard let seedKernelZeroWeight else { return params }
+        return KernelParams(
+            r: params.r,
+            b: params.b,
+            w: params.w.map { row in row.map { $0 <= 0 ? seedKernelZeroWeight : $0 } },
+            a: params.a,
+            m: params.m,
+            s: params.s,
+            h: params.h,
+            R: params.R
+        )
+    }
+}
+
 func resolveSingleResearchSeedPatch(
     patches: [ResearchSeedPatch],
     libraryPath: String,
@@ -169,7 +234,6 @@ struct DiscoverCommands: AsyncParsableCommand {
             CapacityPilotCommand.self,
             EvolveCommand.self,
             FlowMapElitesCommand.self,
-            MutateCommand.self,
             Sensorimotor24Command.self,
             SensorimotorFlowLeniaCommand.self,
             Atlas26Command.self,
@@ -189,7 +253,6 @@ struct OrchestrateCommands: AsyncParsableCommand {
             ControllerCommand.self,
             WorkerCommand.self,
             CampaignCommand.self,
-            PortfolioCommand.self,
         ]
     )
 }
@@ -225,9 +288,8 @@ struct AnalyzeCommands: AsyncParsableCommand {
 struct InterveneCommands: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "intervene",
-        abstract: "Intervention batteries and transport experiments",
+        abstract: "Transport experiments",
         subcommands: [
-            InterventionBatteryCommand.self,
             HolonomyCommand.self,
         ]
     )

@@ -517,11 +517,6 @@ private func makeLocalCampaignRequest(
         seedQDConfigDirURL: seedQDConfigDirURL,
         seedSelection: seedSelection,
         backendRequest: backendRequest,
-        executionMode: .local,
-        distributedControllerHost: nil,
-        distributedControllerPort: 7337,
-        distributedBindHost: "0.0.0.0",
-        distributedBindPort: 0,
         exportBest: exportBest,
         promotion: phasePromotionConfig(outputURL: outputURL)
     )

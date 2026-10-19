@@ -24,6 +24,7 @@
   ],
   "export_top": 48,
   "export_replay_pool_limit": 128,
+  "export_translated_shape_overlap_min": 0.5,
   "init_patch": {
     "enabled": true,
     "size": 32,
