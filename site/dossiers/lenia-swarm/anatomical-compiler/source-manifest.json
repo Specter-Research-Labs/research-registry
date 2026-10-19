@@ -1,53 +1,21 @@
 {
-  "artifactProducingRevision": null,
-  "artifactSourceRootLabel": "dossiers/lenia-swarm/outputs/anatomical-compiler",
-  "artifactWindow": "historical June 2026 corpus plus 2026-09-01 compiler reruns and the 2026-09-02 two-stage within-family Orbium inverse",
+  "schemaVersion": 2,
+  "reportId": "anatomical-compiler-synthesis-v4",
+  "reportDate": "2026-10-19",
+  "artifactWindow": "2026-09-02 two-stage within-family Orbium inverse, 2026-10-18 corrected-engine regeneration of the shape and movement analysis, 2026-10-19 corrected-engine damage assay and Orbium replay",
+  "engine": "Corrected-engine entries ran on LeniaCLI build 060e90a71ec1, which contains the fixed Flow Lenia spatial-derivative stencil. The Orbium inverse uses additive Lenia, which has no derivative step; its replay on that build reproduced all 900 recorded frames byte for byte.",
+  "correctionNote": "Version 3 of this report also reported a supplied-body maintenance search, intrinsic-dimension and local-sensitivity estimates of rule fibers, a conditional proposal model with refinement, a runtime cross-check, an endpoint landscape and canalization test, and a shape and movement result that was later reversed. They were computed with a Python port of Flow Lenia and with the main engine before its spatial-derivative stencil was fixed; both computed the gradient negated and with its axes swapped. Those results and their sources were removed.",
   "caseStudyNote": "The two-stage Orbium inverse was run on 2026-09-02 inside the qd24_additive_v1 family, with R, m, and s hidden from both search stages. The 2026-09-01 organic descriptor rerun and the warm-start archive map were withdrawn because the batched initializer grew each candidate from a different random starting field. The earlier cross-runtime Flow Lenia comparison was removed.",
+  "sourceRootLabels": {
+    "orbium-system-id-*": "dossiers/lenia-swarm/outputs/anatomical-compiler",
+    "functional-morphospace-regen-001, anatomical-compiler-corrected-001": "private run records",
+    "site/": "repository root"
+  },
   "generatedAssets": [
     {
-      "bytes": 2321,
-      "path": "assets/archive-coverage.png",
-      "sha256": "a6ed57c87e3625065e78163ef0ba63c880c7607b218ef1d152b564292c2e0a19"
-    },
-    {
-      "bytes": 4029,
-      "path": "assets/basin-map.svg",
-      "sha256": "e89ff8e919730d8c2e703b2fad6bfdad9352943b7324d9ca7da8a7d047ca004b"
-    },
-    {
-      "bytes": 139541,
-      "path": "assets/bodies-montage.png",
-      "sha256": "55b2a1b2466e1bab910dbe451c6681c0afd4b881a086d3d7e8df819dd076c2b4"
-    },
-    {
-      "bytes": 4051,
-      "path": "assets/canalization.svg",
-      "sha256": "d1b8e121e3ab8ad333378c460cc0b6b2a348b631a345a3bfca0a156d7ba8d32f"
-    },
-    {
-      "bytes": 8479,
+      "bytes": 14796,
       "path": "assets/complexity-drift.svg",
-      "sha256": "32d00703ea19a4419892c3e86e07bf94cb049368fc3a25755b1d7dc204b716e6"
-    },
-    {
-      "bytes": 15957,
-      "path": "assets/descriptor-conditional.png",
-      "sha256": "58e787e1bf2451f260785914eea964444966217c7dedaaf710010cf4fd65e5d8"
-    },
-    {
-      "bytes": 16356,
-      "path": "assets/descriptor-nearest.png",
-      "sha256": "53dcf3f8d11f758adffd82edfbdd8730036e91019d58887a2899a3c5b3b7456b"
-    },
-    {
-      "bytes": 18649,
-      "path": "assets/descriptor-target.png",
-      "sha256": "de6ebc2862bb8589f5448648e6531990db3b48294b412820abba23aee63e9d5a"
-    },
-    {
-      "bytes": 1827,
-      "path": "assets/dimension-decomposition.svg",
-      "sha256": "af74e954c04f6fa518f53a21a9be1a356d25b2005b5f4c5e67a161ec75166899"
+      "sha256": "2e28ea6fa87502091d7dd0528e82b80e1c486c7258ab11b5d49c891d16a64304"
     },
     {
       "bytes": 4621,
@@ -55,34 +23,14 @@
       "sha256": "43000b7e7db2b7c0dd6857deb3eb4e7263b1b33e94bb939d8aedd251051c65be"
     },
     {
-      "bytes": 66658,
-      "path": "assets/form-compile.png",
-      "sha256": "b3b03d35b8af0ba253976ff1f87ae17e39d92a74e94809541a600dd601f6e3d4"
-    },
-    {
-      "bytes": 3690,
-      "path": "assets/form-history.svg",
-      "sha256": "879d7dd020ad87edfee0f5b6cb89eccd61d93d456442d56a1e7c2c24c2a9baeb"
-    },
-    {
-      "bytes": 65958,
+      "bytes": 50299,
       "path": "assets/functional-morphospace.png",
-      "sha256": "52f66e8726ea151a56a5562ae9d0efcd4752ab56debd70b78348b405e1909823"
+      "sha256": "26b849d40112e9fba0f0618473f73bb85ee80c8f6a4c07c8433ced9e666946fc"
     },
     {
       "bytes": 3030,
       "path": "assets/genotype-phenotype-bridge.svg",
       "sha256": "02cad239216722c9488b6d89469470ac1941d47cf3b57641d39c4712e7bdcfb1"
-    },
-    {
-      "bytes": 2432,
-      "path": "assets/inverse-locality.svg",
-      "sha256": "073eb3cd4e29cdbbad1c4495992e9874cc8d59067a30cff0cda493897c3d50db"
-    },
-    {
-      "bytes": 8612,
-      "path": "assets/jacobian-spectrum.svg",
-      "sha256": "5205a7bb96b0ad50202b119aaa2da84510d68a013ab6b49d98ec695122c5b5fe"
     },
     {
       "bytes": 255120,
@@ -150,14 +98,9 @@
       "sha256": "12c499769fe12ce6b8eda98ff8ddf758dd058f8a3704c6d6116a5011b58828fe"
     },
     {
-      "bytes": 3669,
-      "path": "assets/refinement.svg",
-      "sha256": "daec0a18c21066e898168620a5ef91d0539111586ee8945906559fef2e7f373e"
-    },
-    {
-      "bytes": 3102,
-      "path": "assets/runtime-validation.svg",
-      "sha256": "7b613697ae05edbe8b69e42955bdb6fd3190726911eb8ae681b7a4e908598bac"
+      "bytes": 790,
+      "path": "assets/report-explorers.js",
+      "sha256": "ee76425bec15c21b7cfefc5ef9241795cdc4d725a59a9b6595c81679da45b6fd"
     },
     {
       "bytes": 4182,
@@ -165,147 +108,95 @@
       "sha256": "f6a159945bb8a53500e2bb9f66cb5011ab5e6ed4d24134341b20c0d1495e6ed5"
     },
     {
-      "bytes": 13462,
+      "bytes": 19216,
       "path": "assets/shape-predicts-function.png",
-      "sha256": "101f3f6ed749b0812095e89d324a3fb6d64b862f23b31b9690f79cfb1f5af6a5"
+      "sha256": "dd189a3d249a74df4bbe24ed95712c7af4bcbd6e50a53e90b1c1f69401af07da"
     }
   ],
-  "reportDate": "2026-09-02",
-  "reportId": "anatomical-compiler-synthesis-v3",
-  "revisionNote": "The frozen artifact JSON files do not record the code revision that produced them. Repository history provides context, while the exact run binding remains unknown.",
-  "schemaVersion": 2,
   "sources": [
     {
-      "bytes": 1424,
-      "kind": "frozen artifact",
-      "path": "stage1_fresh_fiber.json",
-      "sha256": "1fcae1ea8b1613f70f22309f1941f68e294200f5c274fe7c89188b833e12abd1"
+      "bytes": 5099,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/plan.json",
+      "sha256": "a8ea746d202cb180ade0ab32d5458043997acd32816c74a2ae40473c4f107a69"
     },
     {
-      "bytes": 4632,
-      "kind": "frozen artifact",
-      "path": "stage1_jacobian_fiber.json",
-      "sha256": "9e5e975176e314011a4b29e72f81249a196c67e5310629f68f72614ed2d3c6f7"
+      "bytes": 5454,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/receipt.json",
+      "sha256": "e7b1243ce9c3c7ee30e4e45969ddb424401118532bf6991c4b3de61da7aebe74"
     },
     {
-      "bytes": 1244,
-      "kind": "frozen artifact",
-      "path": "stage2_cinn.json",
-      "sha256": "d5ecd3b9f31ca5b6e0c6893f305730c87884fe16f0c69fe17c9cd43341eebd8c"
+      "bytes": 1242,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/composition.json",
+      "sha256": "fcc9e24304ef9ae8d2e615e63e87dfcbba6456a20f8fbbc68637c1770e52292d"
     },
     {
-      "bytes": 551,
-      "kind": "frozen artifact",
-      "path": "stage3_refine.json",
-      "sha256": "be159631b5f0097f545cbcd3b9290d509b38baf867c9db7792da6a2f9820cea7"
+      "bytes": 72592,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/survey-summary.json",
+      "sha256": "795347c0e01f1eb54a9a56240bb332e2ac642655b8e74fa09edb1890c165bd89"
     },
     {
-      "bytes": 1930,
-      "kind": "frozen artifact",
-      "path": "compiled/demo1/result.json",
-      "sha256": "cf085fb32904ed5fc2f06f71ca9401e917d723b21207b49eb450a7a4099db3bc"
+      "bytes": 1687,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/regenerated/functional_morphospace.json",
+      "sha256": "94dc1e8324c7272bc1c802f5b6484b388d992ff659b87ae6853b4d20ce268023"
     },
     {
-      "bytes": 18649,
-      "kind": "frozen artifact",
-      "path": "compiled/demo1/target.png",
-      "sha256": "de6ebc2862bb8589f5448648e6531990db3b48294b412820abba23aee63e9d5a"
+      "bytes": 1607,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/regenerated/shape_function_coupling.json",
+      "sha256": "b59963f0f916976ac509b296d3079e028b42f6b614ce1055cd4e1412dbe244a2"
     },
     {
-      "bytes": 16356,
-      "kind": "frozen artifact",
-      "path": "compiled/demo1/creature.png",
-      "sha256": "53dcf3f8d11f758adffd82edfbdd8730036e91019d58887a2899a3c5b3b7456b"
+      "bytes": 50299,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/regenerated/functional_morphospace.png",
+      "sha256": "26b849d40112e9fba0f0618473f73bb85ee80c8f6a4c07c8433ced9e666946fc"
     },
     {
-      "bytes": 1889,
-      "kind": "frozen artifact",
-      "path": "compiled/demo1_cinn/result.json",
-      "sha256": "a9f5988e1fa3c754048764eacdab417ba74e06e70ac95af34b8f373a4270ec60"
+      "bytes": 19216,
+      "kind": "2026-10-18 corrected-engine shape and movement",
+      "path": "functional-morphospace-regen-001/regenerated/shape_predicts_function.png",
+      "sha256": "dd189a3d249a74df4bbe24ed95712c7af4bcbd6e50a53e90b1c1f69401af07da"
     },
     {
-      "bytes": 15957,
-      "kind": "frozen artifact",
-      "path": "compiled/demo1_cinn/creature.png",
-      "sha256": "58e787e1bf2451f260785914eea964444966217c7dedaaf710010cf4fd65e5d8"
+      "bytes": 3015,
+      "kind": "2026-10-19 corrected-engine damage assay and Orbium replay",
+      "path": "anatomical-compiler-corrected-001/plan.json",
+      "sha256": "9f0b94e23d353184af42f558c07d5eea4ed50d1b4f34fa9ea0344cefdd6483c1"
     },
     {
-      "bytes": 6826,
-      "kind": "frozen artifact",
-      "path": "compiled/form_demo/result.json",
-      "sha256": "044567fdf4ea014c22b0d904f71ef1729453c74e6370510aa2428a33974133c6"
+      "bytes": 2312,
+      "kind": "2026-10-19 corrected-engine damage assay and Orbium replay",
+      "path": "anatomical-compiler-corrected-001/receipt.json",
+      "sha256": "c950d29a2027a71fadf9ac827e7c59161788073114db2fd6b70c863318a55dc3"
     },
     {
-      "bytes": 66658,
-      "kind": "frozen artifact",
-      "path": "compiled/form_demo/form_compile.png",
-      "sha256": "b3b03d35b8af0ba253976ff1f87ae17e39d92a74e94809541a600dd601f6e3d4"
+      "bytes": 16827,
+      "kind": "2026-10-19 corrected-engine damage assay and Orbium replay",
+      "path": "anatomical-compiler-corrected-001/complexity-drift/functional_map.json",
+      "sha256": "a1ab9b0811d97bc8fa601dd609bab920c5598f902544f3d938f134145a4ca32a"
     },
     {
-      "bytes": 1039,
-      "kind": "frozen artifact",
-      "path": "mlx_validation.json",
-      "sha256": "79316f3cb993eef92ef4fbfa5beb8f717b8c0d5f6ede9dfa7b7b94acb6c71c31"
+      "bytes": 759,
+      "kind": "2026-10-19 corrected-engine damage assay and Orbium replay",
+      "path": "anatomical-compiler-corrected-001/complexity-drift/summary.json",
+      "sha256": "5a0d7ca9143815b28635ef043c982f65e5c7536468014fa98e93a58a50366200"
     },
     {
-      "bytes": 350936,
-      "kind": "frozen artifact",
-      "path": "qd_archive/archive.json",
-      "sha256": "614a1919941427fd705f6f9cf9f5312095e5c0cc081616fb2c50c6993b038c13"
+      "bytes": 2728,
+      "kind": "2026-10-19 corrected-engine damage assay and Orbium replay",
+      "path": "anatomical-compiler-corrected-001/render_complexity_drift.py",
+      "sha256": "e829be66f9567fa28f35b07b4586816d72ded21a2cac2c383dcf869bb4447623"
     },
     {
-      "bytes": 2321,
-      "kind": "frozen artifact",
-      "path": "qd_archive/coverage.png",
-      "sha256": "a6ed57c87e3625065e78163ef0ba63c880c7607b218ef1d152b564292c2e0a19"
-    },
-    {
-      "bytes": 2141,
-      "kind": "frozen artifact",
-      "path": "waddington_flow.json",
-      "sha256": "6537452489f02b52e21f445f2dd2aeace424014d8c6b6bd1034a5503af17e53e"
-    },
-    {
-      "bytes": 2357,
-      "kind": "frozen artifact",
-      "path": "canalization.json",
-      "sha256": "c5a5924d1ae5c9468cdab63844a52ea54df6214bb6f316e34fcd24ea65453451"
-    },
-    {
-      "bytes": 1685,
-      "kind": "frozen artifact",
-      "path": "functional-morphospace/functional_morphospace.json",
-      "sha256": "e8f6e4b61b319865d71d7c501662bcf2a51d0128b8e6934e43654bb40db974be"
-    },
-    {
-      "bytes": 1398,
-      "kind": "frozen artifact",
-      "path": "functional-morphospace/shape_function_coupling.json",
-      "sha256": "b9923f08f942351a254a1e0e52b83b01edc4acc8d870513141e2be09e2dbdd4a"
-    },
-    {
-      "bytes": 65958,
-      "kind": "frozen artifact",
-      "path": "functional-morphospace/functional_morphospace.png",
-      "sha256": "52f66e8726ea151a56a5562ae9d0efcd4752ab56debd70b78348b405e1909823"
-    },
-    {
-      "bytes": 13462,
-      "kind": "frozen artifact",
-      "path": "functional-morphospace/shape_predicts_function.png",
-      "sha256": "101f3f6ed749b0812095e89d324a3fb6d64b862f23b31b9690f79cfb1f5af6a5"
-    },
-    {
-      "bytes": 9209,
-      "kind": "frozen artifact",
-      "path": "3c15/functional_map_mlx/functional_map.json",
-      "sha256": "e69a9cec67faaa3425701d8547dc2392ef93338a89cad11b99d17f0c7e4c26fd"
-    },
-    {
-      "bytes": 139541,
-      "kind": "frozen artifact",
-      "path": "3c15/functional_map_mlx/bodies_montage.png",
-      "sha256": "55b2a1b2466e1bab910dbe451c6681c0afd4b881a086d3d7e8df819dd076c2b4"
+      "bytes": 458,
+      "kind": "2026-10-19 corrected-engine damage assay and Orbium replay",
+      "path": "anatomical-compiler-corrected-001/orbium-replay/comparison.json",
+      "sha256": "ecfeea600ba8fd2a6caac513ea56e048d2d4ced91df8b8aea87d70e40e932548"
     },
     {
       "bytes": 4621,
