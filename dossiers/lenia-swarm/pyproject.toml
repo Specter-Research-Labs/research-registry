@@ -13,10 +13,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-inverse = [
-    "torch>=2.2",
-    "FrEIA>=0.2",
-]
 observer = [
     "torch>=2.2",
 ]
