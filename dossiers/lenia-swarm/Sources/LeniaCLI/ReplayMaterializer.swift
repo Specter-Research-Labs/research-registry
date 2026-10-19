@@ -222,6 +222,231 @@ private func replayExportProjection(
     )
 }
 
+private struct PreparedFlowReplay {
+    let input: ReplayResolvedInput
+    let sourceCreature: SavedCreature
+    let baseConfig: LeniaBaseConfig
+    let searchConfig: ParsedSearchConfig
+    let configHash: String
+    let runtimeConfig: LeniaRuntimeConfig
+}
+
+private func prepareFlowReplay(
+    _ resolvedInput: ReplayResolvedInput,
+    baseConfig: LeniaBaseConfig,
+    searchConfig: ParsedSearchConfig
+) throws -> PreparedFlowReplay {
+    let sourceCreature = replayCreatureWithExplicitInitPatch(
+        resolvedInput.sourceCreature,
+        baseConfig: baseConfig,
+        researchMetadata: resolvedInput.sourceResearchMetadata
+    )
+    let sourceReplayBaseConfig: LeniaBaseConfig
+    let replaySearchConfig: ParsedSearchConfig
+    switch resolvedInput.inputKind {
+    case .exportIndex, .canonicalization:
+        sourceReplayBaseConfig = baseConfig
+        replaySearchConfig = searchConfig
+    case .libraryIndex:
+        sourceReplayBaseConfig = try buildReplayBaseConfig(
+            baseConfig: baseConfig,
+            searchConfig: searchConfig,
+            creature: sourceCreature
+        )
+        replaySearchConfig = buildReplaySearchConfig(
+            from: searchConfig,
+            initSeedOffset: sourceCreature.initialCondition.seed,
+            enableMorphospaceSignals: true,
+            supportsActivity: replaySupportsReplayActivity(baseConfig: sourceReplayBaseConfig)
+        )
+    }
+    let resolvedBackend = try resolveReplaySearchBackend(baseConfig: sourceReplayBaseConfig)
+    let replayBaseConfig = baseConfigBySettingBackend(sourceReplayBaseConfig, backend: resolvedBackend)
+    let configHash = try researchConfigHash([
+        ("base", researchEncodedJSON(replayBaseConfig)),
+        ("search", researchEncodedJSON(replaySearchConfig)),
+    ])
+    return PreparedFlowReplay(
+        input: resolvedInput,
+        sourceCreature: sourceCreature,
+        baseConfig: replayBaseConfig,
+        searchConfig: replaySearchConfig,
+        configHash: configHash,
+        runtimeConfig: try loadRuntimeConfig(from: researchEncodedJSON(replayBaseConfig))
+    )
+}
+
+private func developmentTraceCapture(
+    options: DevelopmentTraceOptions,
+    collectors: [DevelopmentTraceCollector],
+    runtimeConfig: LeniaRuntimeConfig,
+    searchConfig: ParsedSearchConfig
+) -> FrameCapture {
+    let useTorus = runtimeConfig.border == "torus"
+    let borderMode = runtimeConfig.border
+    let massChannel = searchConfig.massChannel
+    let occupancyThreshold = searchConfig.occupancyThreshold
+    return FrameCapture(
+        stride: developmentTraceStride(interval: options.interval, steps: searchConfig.steps),
+        includeWarmup: true,
+        sampleIndex: 0,
+        handler: { _, _, _, _ in },
+        stateHandler: { sample, step, width, height, channels, values in
+            let collector = collectors[sample]
+            let raw = options.rawSteps?.contains(step) ?? false
+            collector.samples.append(morphospaceDevelopmentSample(
+                step: step,
+                channels: channels,
+                width: width,
+                height: height,
+                values: values,
+                massChannel: massChannel,
+                occupancyThreshold: occupancyThreshold,
+                useTorus: useTorus,
+                borderMode: borderMode,
+                fieldResolution: raw ? options.fieldResolution : 0
+            ))
+            if options.recordState && raw {
+                values.withUnsafeBytes { collector.state.append(contentsOf: $0) }
+                collector.stateSteps.append(step)
+                collector.stateShape = [collector.stateSteps.count, height, width, channels]
+            }
+        }
+    )
+}
+
+private func finishFlowReplay(
+    _ prepared: PreparedFlowReplay,
+    batchResult: BatchSimulationResult,
+    runID: String,
+    developmentTrace: DevelopmentTraceCollector?
+) -> ReplayExecutionOutcome {
+    let replayBaseConfig = prepared.baseConfig
+    let replaySearchConfig = prepared.searchConfig
+    let sourceCreature = prepared.sourceCreature
+    let resultData = materializeReplayResultData(
+        batchResult,
+        backend: replayBaseConfig.backend,
+        implementation: prepared.runtimeConfig.implementation,
+        scoreWeights: replaySearchConfig.scoreWeights,
+        filters: replaySearchConfig.filters,
+        sweep: [:]
+    )
+    let replayCreature = archivedCreatureFromResult(
+        stableKey: "\(runID)|\(sourceCreature.id.uuidString)",
+        name: sourceCreature.name,
+        ownerId: sourceCreature.ownerId,
+        result: resultData,
+        // Export configs can relocate or replace the archived patch. Media must
+        // replay the executed initialization, including the batch's actual seed.
+        initialCondition: InitConfig(
+            seed: replaySearchConfig.seedStart + (replaySearchConfig.initSeedOffset ?? 0),
+            patches: replayBaseConfig.`init`.patches,
+            a_uniform: replayBaseConfig.`init`.a_uniform,
+            p_uniform: replayBaseConfig.`init`.p_uniform,
+            state_patch: replayBaseConfig.`init`.state_patch,
+            p_state_patch: replayBaseConfig.`init`.p_state_patch
+        ),
+        configHash: prepared.configHash,
+        score: sourceCreature.score,
+        scoreWeights: sourceCreature.scoreWeights
+    )
+    return ReplayExecutionOutcome(
+        configHash: prepared.configHash,
+        baseConfig: replayBaseConfig,
+        searchConfig: replaySearchConfig,
+        resultData: resultData,
+        replayCreature: replayCreature,
+        activityRecord: activitySummaryRecord(for: resultData, config: replaySearchConfig.activity),
+        developmentTrace: developmentTrace
+    )
+}
+
+/// Runs flow bodies that share one simulation config, differing only in rule parameters and
+/// initial seed, as a single engine batch with per-sample rules. Each body's seed and init
+/// seed are restored to what its own batch-1 replay records, so results and traces match it.
+func executeFlowReplayBatch(
+    _ resolvedInputs: [ReplayResolvedInput],
+    runID: String,
+    developmentTrace: DevelopmentTraceOptions? = nil
+) throws -> [ReplayExecutionOutcome] {
+    let prepared = try resolvedInputs.map { resolvedInput in
+        guard case let .flow(baseConfig, searchConfig) = resolvedInput.executionPlan else {
+            throw ValidationError("Batched replay only runs Flow Lenia bundles; \(resolvedInput.sourceCreature.name) is not one.")
+        }
+        return try prepareFlowReplay(resolvedInput, baseConfig: baseConfig, searchConfig: searchConfig)
+    }
+    guard let first = prepared.first else {
+        throw ValidationError("Batched replay needs at least one body.")
+    }
+    let sharedKey = try flowReplaySharedConfig(first)
+    for body in prepared.dropFirst() where try flowReplaySharedConfig(body) != sharedKey {
+        throw ValidationError("\(body.sourceCreature.name) and \(first.sourceCreature.name) differ beyond rule parameters and init seed, so they cannot share a replay batch.")
+    }
+    let runtimeConfig = first.runtimeConfig
+    guard runtimeConfig.backend == .metalFull, !runtimeConfig.parameterEmbedding.enabled, runtimeConfig.randomParamRanges == nil else {
+        throw ValidationError("Batched replay needs the metal-full backend with fixed rule parameters and no parameter embedding.")
+    }
+    guard first.searchConfig.kSurvival == nil else {
+        throw ValidationError("Batched replay cannot run k-survival, which re-simulates from the batch's shared config.")
+    }
+
+    let collectors = developmentTrace != nil ? prepared.map { _ in DevelopmentTraceCollector() } : nil
+    var capture: FrameCapture?
+    if let developmentTrace, let collectors {
+        capture = developmentTraceCapture(
+            options: developmentTrace,
+            collectors: collectors,
+            runtimeConfig: runtimeConfig,
+            searchConfig: first.searchConfig
+        )
+    }
+    let results = SearchEngine(runtimeConfig: runtimeConfig).runBatch(
+        seeds: prepared.map { $0.searchConfig.seedStart + ($0.searchConfig.initSeedOffset ?? 0) },
+        initSeedOffset: 0,
+        searchConfig: first.searchConfig.toSearchConfig(),
+        frameCapture: capture,
+        explicitParamsBatch: prepared.map { $0.runtimeConfig.params }
+    )
+    guard results.count == prepared.count else {
+        throw ValidationError("Replay batch returned \(results.count) results for \(prepared.count) bodies.")
+    }
+    return prepared.indices.map { index in
+        let body = prepared[index]
+        let result = results[index]
+        return finishFlowReplay(
+            body,
+            batchResult: BatchSimulationResult(
+                seed: body.searchConfig.seedStart,
+                initSeed: result.initSeed,
+                metrics: result.metrics,
+                params: result.params,
+                activity: result.activity,
+                initialConditionFamily: result.initialConditionFamily,
+                descriptorBundle: result.descriptorBundle,
+                terminalStatePatch: result.terminalStatePatch,
+                terminalParamPatch: result.terminalParamPatch
+            ),
+            runID: runID,
+            developmentTrace: collectors?[index]
+        )
+    }
+}
+
+private func flowReplaySharedConfig(_ body: PreparedFlowReplay) throws -> Data {
+    guard var base = try JSONSerialization.jsonObject(with: researchEncodedJSON(body.baseConfig)) as? [String: Any],
+          var initConfig = base["init"] as? [String: Any],
+          var search = try JSONSerialization.jsonObject(with: researchEncodedJSON(body.searchConfig)) as? [String: Any] else {
+        throw ValidationError("Could not decode the replay config of \(body.sourceCreature.name) as JSON objects.")
+    }
+    base["params"] = nil
+    initConfig["seed"] = nil
+    base["init"] = initConfig
+    search["seed_start"] = nil
+    search["init_seed_offset"] = nil
+    return try JSONSerialization.data(withJSONObject: ["base": base, "search": search], options: [.sortedKeys])
+}
+
 func executeReplayResolvedInput(
     _ resolvedInput: ReplayResolvedInput,
     runID: String,
@@ -229,120 +454,27 @@ func executeReplayResolvedInput(
 ) throws -> ReplayExecutionOutcome {
     switch resolvedInput.executionPlan {
     case let .flow(baseConfig, searchConfig):
-        let sourceCreature = replayCreatureWithExplicitInitPatch(
-            resolvedInput.sourceCreature,
-            baseConfig: baseConfig,
-            researchMetadata: resolvedInput.sourceResearchMetadata
-        )
-        let sourceReplayBaseConfig: LeniaBaseConfig
-        let replaySearchConfig: ParsedSearchConfig
-        switch resolvedInput.inputKind {
-        case .exportIndex, .canonicalization:
-            sourceReplayBaseConfig = baseConfig
-            replaySearchConfig = searchConfig
-        case .libraryIndex:
-            sourceReplayBaseConfig = try buildReplayBaseConfig(
-                baseConfig: baseConfig,
-                searchConfig: searchConfig,
-                creature: sourceCreature
-            )
-            replaySearchConfig = buildReplaySearchConfig(
-                from: searchConfig,
-                initSeedOffset: sourceCreature.initialCondition.seed,
-                enableMorphospaceSignals: true,
-                supportsActivity: replaySupportsReplayActivity(baseConfig: sourceReplayBaseConfig)
-            )
-        }
-        let resolvedBackend = try resolveReplaySearchBackend(baseConfig: sourceReplayBaseConfig)
-        let replayBaseConfig = baseConfigBySettingBackend(sourceReplayBaseConfig, backend: resolvedBackend)
-
-        let configHash = try researchConfigHash([
-            ("base", researchEncodedJSON(replayBaseConfig)),
-            ("search", researchEncodedJSON(replaySearchConfig)),
-        ])
-        let runtimeConfig = try loadRuntimeConfig(from: researchEncodedJSON(replayBaseConfig))
-        let engine = SearchEngine(runtimeConfig: runtimeConfig)
-        let developmentCollector = developmentTrace != nil ? DevelopmentTraceCollector() : nil
-        var developmentCapture: FrameCapture?
-        if let options = developmentTrace, let collector = developmentCollector {
-            let useTorus = runtimeConfig.border == "torus"
-            let borderMode = runtimeConfig.border
-            let massChannel = replaySearchConfig.massChannel
-            let occupancyThreshold = replaySearchConfig.occupancyThreshold
-            let traceStride = developmentTraceStride(interval: options.interval, steps: replaySearchConfig.steps)
-            developmentCapture = FrameCapture(
-                stride: traceStride,
-                includeWarmup: true,
-                sampleIndex: 0,
-                handler: { _, _, _, _ in },
-                stateHandler: { step, width, height, channels, values in
-                    let raw = options.rawSteps?.contains(step) ?? false
-                    collector.samples.append(morphospaceDevelopmentSample(
-                        step: step,
-                        channels: channels,
-                        width: width,
-                        height: height,
-                        values: values,
-                        massChannel: massChannel,
-                        occupancyThreshold: occupancyThreshold,
-                        useTorus: useTorus,
-                        borderMode: borderMode,
-                        fieldResolution: raw ? options.fieldResolution : 0
-                    ))
-                    if options.recordState && raw {
-                        values.withUnsafeBytes { collector.state.append(contentsOf: $0) }
-                        collector.stateSteps.append(step)
-                        collector.stateShape = [collector.stateSteps.count, height, width, channels]
-                    }
-                }
+        let prepared = try prepareFlowReplay(resolvedInput, baseConfig: baseConfig, searchConfig: searchConfig)
+        let collector = developmentTrace != nil ? DevelopmentTraceCollector() : nil
+        var capture: FrameCapture?
+        if let developmentTrace, let collector {
+            capture = developmentTraceCapture(
+                options: developmentTrace,
+                collectors: [collector],
+                runtimeConfig: prepared.runtimeConfig,
+                searchConfig: prepared.searchConfig
             )
         }
         let batchResult = try unwrapReplayValue(
-            engine.runBatch(
-                seeds: [replaySearchConfig.seedStart],
-                initSeedOffset: replaySearchConfig.initSeedOffset ?? 0,
-                searchConfig: replaySearchConfig.toSearchConfig(),
-                frameCapture: developmentCapture
+            SearchEngine(runtimeConfig: prepared.runtimeConfig).runBatch(
+                seeds: [prepared.searchConfig.seedStart],
+                initSeedOffset: prepared.searchConfig.initSeedOffset ?? 0,
+                searchConfig: prepared.searchConfig.toSearchConfig(),
+                frameCapture: capture
             ).first,
             message: "Replay batch produced no result for \(resolvedInput.sourceCreature.name)."
         )
-        let resultData = materializeReplayResultData(
-            batchResult,
-            backend: replayBaseConfig.backend,
-            implementation: runtimeConfig.implementation,
-            scoreWeights: replaySearchConfig.scoreWeights,
-            filters: replaySearchConfig.filters,
-            sweep: [:]
-        )
-        let replayCreature = archivedCreatureFromResult(
-            stableKey: "\(runID)|\(sourceCreature.id.uuidString)",
-            name: sourceCreature.name,
-            ownerId: sourceCreature.ownerId,
-            result: resultData,
-            // Export configs can relocate or replace the archived patch. Media must
-            // replay the executed initialization, including the batch's actual seed.
-            initialCondition: InitConfig(
-                seed: replaySearchConfig.seedStart + (replaySearchConfig.initSeedOffset ?? 0),
-                patches: replayBaseConfig.`init`.patches,
-                a_uniform: replayBaseConfig.`init`.a_uniform,
-                p_uniform: replayBaseConfig.`init`.p_uniform,
-                state_patch: replayBaseConfig.`init`.state_patch,
-                p_state_patch: replayBaseConfig.`init`.p_state_patch
-            ),
-            configHash: configHash,
-            score: sourceCreature.score,
-            scoreWeights: sourceCreature.scoreWeights
-        )
-        let activityRecord = activitySummaryRecord(for: resultData, config: replaySearchConfig.activity)
-        return ReplayExecutionOutcome(
-            configHash: configHash,
-            baseConfig: replayBaseConfig,
-            searchConfig: replaySearchConfig,
-            resultData: resultData,
-            replayCreature: replayCreature,
-            activityRecord: activityRecord,
-            developmentTrace: developmentCollector
-        )
+        return finishFlowReplay(prepared, batchResult: batchResult, runID: runID, developmentTrace: collector)
     case let .qd24(payload):
         let configHash = try researchConfigHash([
             ("qd24-replay", researchEncodedJSON(payload)),
@@ -389,8 +521,12 @@ func materializeReplayBatch(
     runID: String,
     exportEnabled: Bool,
     developmentTrace: DevelopmentTraceOptions? = nil,
+    batchSize: Int = 1,
     logger: Logger
 ) throws -> ReplayBatchSummary {
+    guard batchSize >= 1 else {
+        throw ValidationError("Replay batch size must be at least 1, got \(batchSize).")
+    }
     guard !inputs.isEmpty else {
         throw ValidationError("No replayable specimens found in \(inputPath).")
     }
@@ -417,15 +553,25 @@ func materializeReplayBatch(
     var manifests: [ReplaySpecimenManifest] = []
     manifests.reserveCapacity(inputs.count)
 
+    var groupExecutions: [ReplayExecutionOutcome] = []
     for (index, resolvedInput) in inputs.enumerated() {
         let campaignId = replayCampaignID(index: index, creature: resolvedInput.sourceCreature)
         let campaignDir = campaignsDir.appendingPathComponent(campaignId, isDirectory: true)
         try FileManager.default.createDirectory(at: campaignDir, withIntermediateDirectories: true)
-        let execution = try executeReplayResolvedInput(
-            resolvedInput,
-            runID: runID,
-            developmentTrace: developmentTrace
-        )
+        if batchSize == 1 {
+            groupExecutions = [try executeReplayResolvedInput(
+                resolvedInput,
+                runID: runID,
+                developmentTrace: developmentTrace
+            )]
+        } else if index % batchSize == 0 {
+            groupExecutions = try executeFlowReplayBatch(
+                Array(inputs[index..<min(index + batchSize, inputs.count)]),
+                runID: runID,
+                developmentTrace: developmentTrace
+            )
+        }
+        let execution = groupExecutions[index % batchSize]
         let configHash = execution.configHash
         let replayCreature = execution.replayCreature
         let resultData = execution.resultData

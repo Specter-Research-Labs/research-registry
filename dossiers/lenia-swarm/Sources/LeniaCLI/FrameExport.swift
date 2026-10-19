@@ -265,7 +265,7 @@ func captureReplayStateFrames(
         handler: { _, _, _, data in
             grayscaleFrames.append(data)
         },
-        stateHandler: { step, width, height, channels, values in
+        stateHandler: { _, step, width, height, channels, values in
             stateFrames.append(CapturedStateFrame(
                 step: step,
                 width: width,
