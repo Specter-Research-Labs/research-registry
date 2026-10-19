@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Render the local explainer with Pandoc citations and a template-owned bibliography."""
-from pathlib import Path
 import re
 import subprocess
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 STUDY = ROOT / 'site/review/explainer'
@@ -17,7 +17,7 @@ def main():
     prose, bibliography = rendered.stdout.split('<div id="refs"', 1)
     slots = re.split(r'<!-- SLOT:(\w+) -->', prose)
     template = (STUDY / 'template.html').read_text()
-    for name, content in zip(slots[1::2], slots[2::2]):
+    for name, content in zip(slots[1::2], slots[2::2], strict=True):
         template = template.replace(f'${name}$', content)
     template = template.replace('$references$', '<div id="refs"' + bibliography)
     if re.search(r'\$\w+\$', template):

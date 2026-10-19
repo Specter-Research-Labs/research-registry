@@ -1,8 +1,8 @@
 """Build the Writing cover from the synthesis report's stored heatmap values.
 Run from the registry root: python3 dossiers/lenia-swarm/ops/build_publication_covers.py
 """
-from pathlib import Path
 import re
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 source = ROOT / "site/dossiers/lenia-swarm/causal-emergence/reports/synthesis-v7/index.html"
