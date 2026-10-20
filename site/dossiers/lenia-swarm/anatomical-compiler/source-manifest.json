@@ -8,8 +8,7 @@
   "caseStudyNote": "The two-stage Orbium inverse was run on 2026-09-02 inside the qd24_additive_v1 family, with R, m, and s hidden from both search stages. The 2026-09-01 organic descriptor rerun and the warm-start archive map were withdrawn because the batched initializer grew each candidate from a different random starting field. The earlier cross-runtime Flow Lenia comparison was removed.",
   "sourceRootLabels": {
     "orbium-system-id-*": "dossiers/lenia-swarm/outputs/anatomical-compiler",
-    "functional-morphospace-regen-001, anatomical-compiler-corrected-001": "private run records",
-    "site/": "repository root"
+    "functional-morphospace-regen-001, anatomical-compiler-corrected-001": "private run records"
   },
   "generatedAssets": [
     {
@@ -18,19 +17,9 @@
       "sha256": "2e28ea6fa87502091d7dd0528e82b80e1c486c7258ab11b5d49c891d16a64304"
     },
     {
-      "bytes": 4621,
-      "path": "assets/fiber-bundle.svg",
-      "sha256": "43000b7e7db2b7c0dd6857deb3eb4e7263b1b33e94bb939d8aedd251051c65be"
-    },
-    {
       "bytes": 50299,
       "path": "assets/functional-morphospace.png",
       "sha256": "26b849d40112e9fba0f0618473f73bb85ee80c8f6a4c07c8433ced9e666946fc"
-    },
-    {
-      "bytes": 3030,
-      "path": "assets/genotype-phenotype-bridge.svg",
-      "sha256": "02cad239216722c9488b6d89469470ac1941d47cf3b57641d39c4712e7bdcfb1"
     },
     {
       "bytes": 255120,
@@ -48,21 +37,6 @@
       "sha256": "a0125a9a26e7e89bff8d71a025f0c1bff268b7f8fe23f5c735f756504b687fec"
     },
     {
-      "bytes": 187493,
-      "path": "assets/orbium-still-100.png",
-      "sha256": "88843f7bf482404130b0a60ffa2c65bcfc62dd666e19de67ade2bed4aaeaa072"
-    },
-    {
-      "bytes": 189664,
-      "path": "assets/orbium-still-1200.png",
-      "sha256": "4c4cdf26049b32a0ab01195ec5715177fff8257dad0a501dd743e3f4d798d4fc"
-    },
-    {
-      "bytes": 186697,
-      "path": "assets/orbium-still-300.png",
-      "sha256": "b7b91bc0d08bd62f4853321e9993ff8dfbd28688589ee7b560fcac2104677260"
-    },
-    {
       "bytes": 185894,
       "path": "assets/orbium-still-600.png",
       "sha256": "e7eab62cced8191515273071e7bb9871c990ab4ea5a36623afe66b3ae8cdb8f7"
@@ -73,21 +47,6 @@
       "sha256": "37933bf5d5c5bb09c627f7be192a20b4f9ac522b863e6c15842bbbd3c9b85f78"
     },
     {
-      "bytes": 186009,
-      "path": "assets/orbium-target-100.png",
-      "sha256": "2befab83732f67c49d92832bc3a204d7a858ef18721d64aa81564518bae8b690"
-    },
-    {
-      "bytes": 186735,
-      "path": "assets/orbium-target-1200.png",
-      "sha256": "2d39c4a8ffcb94ed69ee022559b49bc735383fd3323434ed8b3b85d36caaa26e"
-    },
-    {
-      "bytes": 187779,
-      "path": "assets/orbium-target-300.png",
-      "sha256": "2aacf01203662f322acc0da71913afc7ca1bc7724cec23c6bd710c9b50e27cfc"
-    },
-    {
       "bytes": 186927,
       "path": "assets/orbium-target-600.png",
       "sha256": "e0ca77a833258f14edce5a5c308342eab666f045209f5c340e45153e728c8524"
@@ -96,16 +55,6 @@
       "bytes": 834738,
       "path": "assets/orbium-target-zoom.mp4",
       "sha256": "12c499769fe12ce6b8eda98ff8ddf758dd058f8a3704c6d6116a5011b58828fe"
-    },
-    {
-      "bytes": 790,
-      "path": "assets/report-explorers.js",
-      "sha256": "ee76425bec15c21b7cfefc5ef9241795cdc4d725a59a9b6595c81679da45b6fd"
-    },
-    {
-      "bytes": 4182,
-      "path": "assets/sections.svg",
-      "sha256": "f6a159945bb8a53500e2bb9f66cb5011ab5e6ed4d24134341b20c0d1495e6ed5"
     },
     {
       "bytes": 19216,
@@ -199,24 +148,6 @@
       "sha256": "ecfeea600ba8fd2a6caac513ea56e048d2d4ced91df8b8aea87d70e40e932548"
     },
     {
-      "bytes": 4621,
-      "kind": "reused explanatory schematic",
-      "path": "site/assets/blog/lenia-morphospace-report/fig-fiber-bundle.svg",
-      "sha256": "43000b7e7db2b7c0dd6857deb3eb4e7263b1b33e94bb939d8aedd251051c65be"
-    },
-    {
-      "bytes": 4182,
-      "kind": "reused explanatory schematic",
-      "path": "site/assets/blog/lenia-morphospace-report/fig-sections.svg",
-      "sha256": "569fec81d4c9dd71f045259d6a438f21fd4fb4ce3b0bc9ec37eddf39b227b204"
-    },
-    {
-      "bytes": 3035,
-      "kind": "reused explanatory schematic",
-      "path": "site/assets/blog/lenia-morphospace-report/fig-bridge-genotype-phenotype.svg",
-      "sha256": "363d5905c657c2e84468e57307dd435a91b854ffa8aab37bc2b66bf402070367"
-    },
-    {
       "bytes": 1284,
       "kind": "2026-09-02 within-family Orbium inverse",
       "path": "orbium-system-id-v5/experiment.json",
@@ -277,28 +208,10 @@
       "sha256": "a0125a9a26e7e89bff8d71a025f0c1bff268b7f8fe23f5c735f756504b687fec"
     },
     {
-      "bytes": 187493,
-      "kind": "2026-09-02 within-family Orbium inverse",
-      "path": "orbium-system-id-v5/report-assets/orbium-still-100.png",
-      "sha256": "88843f7bf482404130b0a60ffa2c65bcfc62dd666e19de67ade2bed4aaeaa072"
-    },
-    {
-      "bytes": 186697,
-      "kind": "2026-09-02 within-family Orbium inverse",
-      "path": "orbium-system-id-v5/report-assets/orbium-still-300.png",
-      "sha256": "b7b91bc0d08bd62f4853321e9993ff8dfbd28688589ee7b560fcac2104677260"
-    },
-    {
       "bytes": 185894,
       "kind": "2026-09-02 within-family Orbium inverse",
       "path": "orbium-system-id-v5/report-assets/orbium-still-600.png",
       "sha256": "e7eab62cced8191515273071e7bb9871c990ab4ea5a36623afe66b3ae8cdb8f7"
-    },
-    {
-      "bytes": 189664,
-      "kind": "2026-09-02 within-family Orbium inverse",
-      "path": "orbium-system-id-v5/report-assets/orbium-still-1200.png",
-      "sha256": "4c4cdf26049b32a0ab01195ec5715177fff8257dad0a501dd743e3f4d798d4fc"
     },
     {
       "bytes": 812518,
@@ -307,28 +220,10 @@
       "sha256": "37933bf5d5c5bb09c627f7be192a20b4f9ac522b863e6c15842bbbd3c9b85f78"
     },
     {
-      "bytes": 186009,
-      "kind": "2026-09-02 within-family Orbium inverse",
-      "path": "orbium-system-id-v5/report-assets/orbium-target-100.png",
-      "sha256": "2befab83732f67c49d92832bc3a204d7a858ef18721d64aa81564518bae8b690"
-    },
-    {
-      "bytes": 187779,
-      "kind": "2026-09-02 within-family Orbium inverse",
-      "path": "orbium-system-id-v5/report-assets/orbium-target-300.png",
-      "sha256": "2aacf01203662f322acc0da71913afc7ca1bc7724cec23c6bd710c9b50e27cfc"
-    },
-    {
       "bytes": 186927,
       "kind": "2026-09-02 within-family Orbium inverse",
       "path": "orbium-system-id-v5/report-assets/orbium-target-600.png",
       "sha256": "e0ca77a833258f14edce5a5c308342eab666f045209f5c340e45153e728c8524"
-    },
-    {
-      "bytes": 186735,
-      "kind": "2026-09-02 within-family Orbium inverse",
-      "path": "orbium-system-id-v5/report-assets/orbium-target-1200.png",
-      "sha256": "2d39c4a8ffcb94ed69ee022559b49bc735383fd3323434ed8b3b85d36caaa26e"
     },
     {
       "bytes": 834738,

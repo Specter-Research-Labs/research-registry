@@ -51,17 +51,12 @@ img {
   max-width: 100%;
 }
 
-code, .mono, h1, h2, h3, .eyebrow, .tag, .status, .metric, summary, th, .chapter-no, .figure-no {
+code, h1, h2, h3, .tag, summary, th, .chapter-no, .figure-no {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .shell {
   width: min(1220px, calc(100% - 40px));
-  margin: 0 auto;
-}
-
-.wide-shell {
-  width: min(1440px, calc(100% - 40px));
   margin: 0 auto;
 }
 
@@ -112,22 +107,6 @@ main {
   padding: 62px 0 110px;
 }
 
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(310px, .82fr);
-  gap: 46px;
-  align-items: end;
-  margin-bottom: 62px;
-}
-
-.eyebrow {
-  color: var(--blue);
-  text-transform: uppercase;
-  letter-spacing: .13em;
-  font-size: 11px;
-  font-weight: 800;
-}
-
 h1 {
   font-size: clamp(48px, 7vw, 90px);
   line-height: .94;
@@ -140,28 +119,6 @@ h1 {
   line-height: 1.43;
   max-width: 840px;
   margin: 0;
-}
-
-.status {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: 26px;
-  padding: 9px 11px;
-  border: 1px solid var(--ink);
-  background: var(--panel);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.status::before {
-  content: "";
-  width: 9px;
-  height: 9px;
-  background: var(--coral);
-  border: 1px solid var(--ink);
 }
 
 section {
@@ -205,83 +162,6 @@ h3 {
   margin: 0 0 12px;
 }
 
-.synthesis {
-  border-top: 10px solid var(--coral);
-  background: var(--night);
-  color: #f7f4ec;
-  padding: clamp(28px, 5vw, 58px);
-  box-shadow: var(--shadow);
-}
-
-.synthesis .eyebrow {
-  color: var(--acid);
-}
-
-.synthesis h2 {
-  max-width: 980px;
-  margin: 12px 0 20px;
-}
-
-.synthesis > p {
-  max-width: 880px;
-  font-size: 20px;
-}
-
-.question-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid #353b4c;
-  margin-top: 32px;
-}
-
-.question-grid article {
-  padding: 22px;
-  min-height: 195px;
-  border-right: 1px solid #353b4c;
-}
-
-.question-grid article:last-child {
-  border-right: 0;
-}
-
-.question-grid article:nth-child(2) {
-  background: #252d27;
-}
-
-.question-grid .tag {
-  color: var(--acid);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  font-weight: 800;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-top: 24px;
-}
-
-.metric {
-  border: 1px solid #353b4c;
-  background: var(--night-2);
-  padding: 18px;
-}
-
-.metric strong {
-  display: block;
-  color: var(--acid);
-  font-size: 31px;
-  line-height: 1;
-  margin-bottom: 9px;
-}
-
-.metric span {
-  color: #c6cbd4;
-  font-size: 11px;
-}
-
 .figure {
   margin: 0;
   border: 1px solid var(--ink);
@@ -303,16 +183,6 @@ h3 {
   display: block;
   width: 100%;
   height: auto;
-}
-
-.figure.light {
-  background: #fff;
-}
-
-.figure.light .caption {
-  color: var(--ink);
-  border-color: var(--line);
-  background: var(--panel);
 }
 
 .caption {
@@ -343,140 +213,10 @@ h3 {
   white-space: nowrap;
 }
 
-.figure.light .caption .tag, .figure.light .figure-no {
-  color: var(--blue);
-}
-
 .visual-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 22px;
-}
-
-.schematic-note {
-  padding: 16px 18px;
-  margin: 18px 0 0;
-  background: #fff4d9;
-  border-left: 5px solid var(--coral);
-}
-
-.approach-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--ink);
-  margin-bottom: 30px;
-  box-shadow: var(--shadow);
-}
-
-.approach-card {
-  padding: 24px;
-  background: var(--panel);
-  border-top: 7px solid var(--teal);
-}
-
-.approach-card + .approach-card {
-  border-left: 1px solid var(--ink);
-}
-
-.approach-card:nth-child(2) {
-  border-top-color: var(--coral);
-}
-
-.approach-card:nth-child(3) {
-  border-top-color: var(--blue);
-}
-
-.approach-card .eyebrow {
-  margin-bottom: 20px;
-}
-
-.approach-card h3 {
-  min-height: 52px;
-}
-
-.approach-card p {
-  margin: 0 0 18px;
-}
-
-.approach-card dl {
-  margin: 0;
-  border-top: 1px solid var(--line);
-}
-
-.approach-card dl div {
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.approach-card dt {
-  color: var(--muted);
-  font: 800 9px/1.3 ui-monospace, monospace;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.approach-card dd {
-  margin: 3px 0 0;
-  font-size: 14px;
-}
-
-.approach-card a {
-  display: inline-block;
-  margin-top: 18px;
-  font: 800 10px/1 ui-monospace, monospace;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-
-.approach-loop-label {
-  margin: 0 0 12px;
-}
-
-.pipeline {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-  counter-reset: stage;
-}
-
-.stage {
-  counter-increment: stage;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--ink);
-  background: var(--panel);
-  padding: 22px;
-  min-height: 270px;
-  position: relative;
-}
-
-.stage::before {
-  content: "0" counter(stage);
-  display: block;
-  color: var(--blue);
-  font: 800 12px/1 ui-monospace, monospace;
-  margin-bottom: 35px;
-}
-
-.stage p {
-  margin: 0;
-}
-
-.stage .tag {
-  display: inline-block;
-  align-self: flex-start;
-  margin-top: auto;
-  padding: 5px 7px;
-  border: 1px solid var(--ink);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  background: white;
-}
-
-.stage .tag.small {
-  background: #fff0db;
 }
 
 .attempt-grid {
@@ -590,218 +330,6 @@ h3 {
   font-size: 12px;
 }
 
-.orbium-strip {
-  display: grid;
-  grid-template-columns: 105px repeat(4, minmax(150px, 1fr));
-  border: 1px solid var(--ink);
-  background: var(--night);
-  box-shadow: var(--shadow);
-  margin-top: 22px;
-  overflow-x: auto;
-}
-
-.orbium-strip > * {
-  min-width: 0;
-  border-right: 1px solid #394051;
-}
-
-.orbium-strip > *:nth-child(5n) {
-  border-right: 0;
-}
-
-.orbium-strip .strip-head {
-  padding: 10px 8px;
-  color: #aeb4c2;
-  text-align: center;
-  font: 800 9px/1.2 ui-monospace, monospace;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-}
-
-.orbium-strip .strip-label {
-  display: grid;
-  place-items: center;
-  color: var(--acid);
-  padding: 12px;
-  font: 800 10px/1.3 ui-monospace, monospace;
-  text-transform: uppercase;
-  text-align: center;
-  border-top: 1px solid #394051;
-}
-
-.orbium-strip figure {
-  margin: 0;
-  border-top: 1px solid #394051;
-}
-
-.orbium-strip img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-}
-
-.orbium-strip figcaption {
-  padding: 8px;
-  color: #c6cbd4;
-  font: 9px/1.3 ui-monospace, monospace;
-  text-align: center;
-  border-top: 1px solid #394051;
-}
-
-.evidence-window {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--ink);
-  margin-top: 22px;
-  box-shadow: var(--shadow);
-}
-
-.evidence-window article {
-  padding: 22px;
-  background: var(--panel);
-}
-
-.evidence-window article + article {
-  border-left: 1px solid var(--ink);
-  background: #e8e9ff;
-}
-
-.evidence-window p {
-  margin: 0;
-}
-
-.case-step-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-  margin-top: 28px;
-  counter-reset: case-step;
-}
-
-.case-step {
-  counter-increment: case-step;
-  display: grid;
-  grid-template-columns: minmax(180px, .78fr) 1fr;
-  border: 1px solid var(--ink);
-  background: var(--panel);
-  min-width: 0;
-}
-
-.case-step img {
-  width: 100%;
-  height: 100%;
-  min-height: 245px;
-  object-fit: cover;
-  background: var(--night);
-}
-
-.case-step-copy {
-  padding: 20px;
-}
-
-.case-step-copy::before {
-  content: "0" counter(case-step);
-  display: block;
-  color: var(--coral);
-  font: 800 12px/1 ui-monospace, monospace;
-  margin-bottom: 22px;
-}
-
-.case-step-copy p {
-  margin: 0;
-}
-
-.compare-table {
-  width: 100%;
-  margin-top: 16px;
-  font: 11px/1.35 ui-monospace, monospace;
-}
-
-.compare-table td, .compare-table th {
-  padding: 6px 4px;
-}
-
-.trace-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border: 1px solid var(--ink);
-  background: var(--night);
-  margin-top: 22px;
-}
-
-.trace-strip figure {
-  margin: 0;
-  min-width: 0;
-}
-
-.trace-strip figure + figure {
-  border-left: 1px solid #394051;
-}
-
-.trace-strip img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-}
-
-.trace-strip figcaption {
-  padding: 9px;
-  color: #e9e7df;
-  border-top: 1px solid #394051;
-  font: 10px/1.3 ui-monospace, monospace;
-}
-
-.failure-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border: 1px solid var(--ink);
-  background: var(--night);
-}
-
-.failure-grid figure {
-  margin: 0;
-  min-width: 0;
-}
-
-.failure-grid figure + figure {
-  border-left: 1px solid #394051;
-}
-
-.failure-grid img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-}
-
-.failure-grid figcaption {
-  min-height: 76px;
-  padding: 10px;
-  border-top: 1px solid #394051;
-  color: #e9e7df;
-  font-size: 12px;
-}
-
-.raw-inset {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 20px;
-  align-items: center;
-  padding: 18px;
-  border: 1px solid var(--ink);
-  border-top: 0;
-  background: var(--panel);
-}
-
-.raw-inset img {
-  width: 160px;
-  image-rendering: pixelated;
-  border: 1px solid var(--ink);
-}
-
-.raw-inset p {
-  margin: 0;
-}
-
 .bars {
   border: 1px solid var(--ink);
   background: var(--panel);
@@ -846,36 +374,6 @@ h3 {
   padding: 18px;
   background: #e8e9ff;
   border-left: 5px solid var(--blue);
-}
-
-.boundary {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--ink);
-  box-shadow: var(--shadow);
-}
-
-.boundary article {
-  padding: clamp(24px, 4vw, 40px);
-  background: var(--panel);
-}
-
-.boundary article + article {
-  background: #ffe9e3;
-  border-left: 1px solid var(--ink);
-}
-
-.boundary h3 {
-  font-size: 26px;
-}
-
-.boundary ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.boundary li + li {
-  margin-top: 11px;
 }
 
 .receipt {
@@ -945,123 +443,14 @@ html.anatomical-editorial .dek {
   line-height: 1.6;
 }
 
-html.anatomical-editorial .hero-specimens {
-  margin: 0;
-}
-
-html.anatomical-editorial .hero-specimens > div {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .8rem;
-}
-
-html.anatomical-editorial .hero-specimens img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  background: #111521;
-}
-
-html.anatomical-editorial .hero-specimens span {
-  display: block;
-  padding: .65rem 0;
-  font: 700 .75rem/1.4 ui-monospace,monospace;
-}
-
-html.anatomical-editorial .hero-specimens figcaption {
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-top: 1rem;
-}
-
-html.anatomical-editorial .hero-specimens strong {
-  display: block;
-  font: 800 1.3rem/1.3 var(--editorial-display);
-  margin-bottom: .5rem;
-}
-
-html.anatomical-editorial .synthesis {
-  border: 0;
-  background: #dcefe5;
-  color: var(--ink);
-  padding: clamp(1.5rem,4vw,3rem);
-}
-
-html.anatomical-editorial .synthesis .eyebrow {
-  color: #14795c;
-}
-
-html.anatomical-editorial .synthesis p {
-  max-width: 74ch;
-  font-size: 1.1rem;
-  line-height: 1.7;
-}
-
-html.anatomical-editorial .synthesis .metric {
-  color: var(--ink);
-  border-color: #a9bdb2;
-}
-
-html.anatomical-editorial .synthesis .metric span {
-  color: #414c45;
-}
-
-html.anatomical-editorial .opening-method {
-  margin: 1rem 0;
-}
-
-html.anatomical-editorial .opening-method summary {
-  padding: .5rem 0;
-  font-size: .75rem;
-}
-
-html.anatomical-editorial :is(.figure.light,.media-figure,.case-step,.approach-card,.bars) {
+html.anatomical-editorial :is(.media-figure, .bars) {
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 
-html.anatomical-editorial .approach-grid {
-  border: 0;
-  gap: 1.2rem;
-}
-
-html.anatomical-editorial .approach-card {
-  padding: 1.3rem;
-  background: #e3e9fb;
-  border: 0;
-}
-
-html.anatomical-editorial .approach-card:nth-child(2) {
-  background: #dcefe5;
-}
-
-html.anatomical-editorial .approach-card:nth-child(3) {
-  background: #eee4f6;
-}
-
-html.anatomical-editorial .case-step-copy {
-  padding: 1.2rem 0;
-}
-
 html.anatomical-editorial .caption {
   border: 0;
-}
-
-html.anatomical-editorial .measurement-comparison,html.anatomical-editorial .orbium-reader {
-  margin: 32px 0;
-  padding: clamp(20px, 4vw, 48px);
-  background: #e0eeea;
-}
-
-html.anatomical-editorial .measurement-comparison h3,html.anatomical-editorial .orbium-reader h3 {
-  font-size: clamp(24px, 3vw, 36px);
-}
-
-html.anatomical-editorial .experiment-method {
-  margin: 30px 0;
-  padding: 20px 0;
-  border-block: 1px solid #13262c30;
 }
 
 html.anatomical-editorial .media-figure figcaption strong {
@@ -1081,25 +470,6 @@ html.anatomical-editorial .hero h1 {
   max-width: 20ch;
 }
 
-html.anatomical-editorial .hero {
-  align-items: center;
-  grid-template-columns: 1.1fr 1fr;
-}
-
-html.anatomical-editorial .status {
-  border: 0;
-  background: none;
-  padding: 0;
-  font-size: 12px;
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 400;
-}
-
-html.anatomical-editorial .status::before {
-  content: none;
-}
-
 html.anatomical-editorial .chapter-head > p {
   font-size: 1.1rem;
   line-height: 1.65;
@@ -1108,30 +478,6 @@ html.anatomical-editorial .chapter-head > p {
 
 html.anatomical-editorial .chapter-head h2 {
   margin-top: 0;
-}
-
-html.anatomical-editorial .stage {
-  border: 0;
-  border-top: 1px solid var(--sl-color-rule);
-  background: transparent;
-  padding: 20px 0;
-  min-height: 0;
-}
-
-html.anatomical-editorial .stage::before {
-  margin-bottom: 20px;
-}
-
-html.anatomical-editorial .pipeline {
-  gap: 28px;
-}
-
-html.anatomical-editorial .stage .tag {
-  border: 0;
-  padding: 18px 0 0;
-  background: transparent;
-  font-size: 12px;
-  text-transform: none;
 }
 
 html.anatomical-editorial :is(figcaption, .caption) {
@@ -1145,7 +491,6 @@ html.anatomical-editorial .masthead .nav a {
   padding: 0;
 }
 
-html.anatomical-editorial .hero-specimens figcaption,
 html.anatomical-editorial .media-figure figcaption {
   font-size: 15px;
   line-height: 1.6;
@@ -1233,10 +578,6 @@ html.anatomical-editorial main > section.shell > .chapter-head + :is(figure, .me
 }
 
 @media (max-width: 980px) {
-  .hero {
-    grid-template-columns: 1fr;
-  }
-
   .chapter-head {
     grid-template-columns: 84px 1fr;
   }
@@ -1245,34 +586,16 @@ html.anatomical-editorial main > section.shell > .chapter-head + :is(figure, .me
     grid-column: 2;
   }
 
-  .question-grid, .metrics, .pipeline, .case-metrics {
+  .case-metrics {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .approach-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .approach-card + .approach-card {
-    border-left: 0;
-    border-top-width: 7px;
   }
 
   .visual-pair {
     grid-template-columns: 1fr;
   }
-
-  .case-step {
-    grid-template-columns: 1fr;
-  }
-
 }
 
 @media (max-width:800px) {
-  html.anatomical-editorial .hero {
-    grid-template-columns: 1fr;
-  }
-
   html.anatomical-editorial .chapter-head {
     grid-template-columns: 1fr;
   }
@@ -1298,37 +621,12 @@ html.anatomical-editorial main > section.shell > .chapter-head + :is(figure, .me
     display: block;
     margin-top: .7rem;
     font: 400 .72rem/1.4 ui-monospace,monospace;
-    color: var(--specter-muted,#62645f);
-  }
-
-  html.anatomical-editorial .figure:has(> svg) {
-    max-width: 100%;
-    overflow-x: auto;
-  }
-
-  html.anatomical-editorial .figure > svg {
-    min-width: 640px;
-  }
-
-  html.anatomical-editorial .figure:has(> svg)::after {
-    content: "Scroll sideways to explore the figure →";
-    display: block;
-    margin-top: .7rem;
-    font: 400 .75rem/1.5 ui-monospace, monospace;
-  }
-
-  html.anatomical-editorial .figure:not(.light)::after {
     color: #c8cbd3;
   }
 
   html.anatomical-editorial .masthead .nav {
     display: flex;
     gap: 12px 20px;
-  }
-
-  html.anatomical-editorial .hero,
-html.anatomical-editorial .chapter-head {
-    grid-template-columns: 1fr;
   }
 
   html.anatomical-editorial .chapter-head {
@@ -1345,7 +643,7 @@ html.anatomical-editorial .chapter-head {
 }
 
 @media (max-width: 640px) {
-  .shell, .wide-shell {
+  .shell {
     width: min(100% - 24px, 1220px);
   }
 
@@ -1380,17 +678,8 @@ html.anatomical-editorial .chapter-head {
     grid-column: auto;
   }
 
-  .question-grid, .metrics, .pipeline, .boundary, .media-grid, .case-metrics, .case-step-grid, .evidence-window {
+  .media-grid, .case-metrics {
     grid-template-columns: 1fr;
-  }
-
-  .question-grid article {
-    border-right: 0;
-    border-bottom: 1px solid #353b4c;
-  }
-
-  .question-grid article:last-child {
-    border-bottom: 0;
   }
 
   .caption {
@@ -1415,32 +704,6 @@ html.anatomical-editorial .chapter-head {
     aspect-ratio: auto;
   }
 
-  .trace-strip, .failure-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .trace-strip figure:nth-child(3), .failure-grid figure:nth-child(3) {
-    border-left: 0;
-  }
-
-  .trace-strip figure:nth-child(n/**/+3), .failure-grid figure:nth-child(n/**/+3) {
-    border-top: 1px solid #394051;
-  }
-
-  .raw-inset {
-    grid-template-columns: 1fr;
-  }
-
-  .boundary article + article {
-    border-left: 0;
-    border-top: 1px solid var(--ink);
-  }
-
-  .evidence-window article + article {
-    border-left: 0;
-    border-top: 1px solid var(--ink);
-  }
-
   .rule-recovery-scroll img {
     width: 760px;
     max-width: none;
@@ -1456,7 +719,7 @@ html.anatomical-editorial .chapter-head {
     background: white;
   }
 
-  .figure, .synthesis {
+  .figure {
     break-inside: avoid;
     box-shadow: none;
   }
@@ -1469,52 +732,33 @@ html.anatomical-editorial .chapter-head {
     <div class="shell masthead">
       <a class="brand" href="#top">SPECTER LABS / ANATOMICAL COMPILER</a>
       <nav class="nav" aria-label="Report navigation">
-        <a href="#orbium-diagnostic">Recover a rule</a><a href="#function">Shape and movement</a><a href="#recovery">Damage</a><a href="#outlook">Next</a><a href="#evidence">Evidence</a>
+        <a href="#orbium-diagnostic">Recover a rule</a><a href="#function">Shape and movement</a><a href="#recovery">Damage</a><a href="#outlook">Next</a><a href="#evidence">Sources</a>
       </nav>
     </div>
   </header>
 
   <main id="top">
     <div class="shell hero">
-      <div>
-        <h1>Recovering the rule behind a Lenia body</h1>
-        <p class="dek">One mature frame of Orbium was enough for a search to recover its rule parameters close to the native values, once the rule family and the starting cells were known. Without that knowledge the problem is harder, and this report follows what a search needs to be given before it can find a rule that grows and keeps the body we actually want.</p>
-      </div>
-      <figure class="hero-specimens"><div><div><img src="/assets/home/orbium-native-1200.webp" alt="Orbium at step 1,200 under the native rule."><span>Native rule</span></div><div><img src="/assets/home/orbium-recovered-1200.webp" alt="Orbium at step 1,200 under the recovered rule."><span>Recovered rule</span></div></div><figcaption><strong>The same starting cells under two rules</strong> The search scored only the step-600 field, and both bodies are shown at step 1,200. <a href="#orbium-diagnostic">Follow this search →</a></figcaption></figure>
+      <h1>Recovering the rule behind a Lenia body</h1>
+      <p class="dek">The middle panel below is Orbium at step 600, a Lenia creature that glides across its grid while the values under it keep changing, so its shape lasts only as long as its rule keeps rebuilding it. If this one frame were all you had, could you read the rule back out of it? We handed a search the frame, the kind of rule and the starting cells, hid the three numbers that set Orbium&rsquo;s reach and growth, and started it from the rule on the left, which shatters the seed into scattered rings. It came back with the rule on the right, within six percent of the native value on each number, and the body that rule grows stays whole for another 600 steps the search never looked at.</p>
     </div>
 
-    <div class="shell investigation-intro"><p>The desired body keeps its form through a continuous process of local change, so recovering it means finding dynamics that sustain the anatomy as well as an image that resembles it. We first fix a known rule family and ask how much of its hidden parameters one observed frame gives back. We then turn to a corpus of Flow Lenia creatures and ask what a body’s shape says about how it moves and whether it recovers from damage, since a compiler that targets a shape inherits whatever comes with it.</p></div>
+    <figure class="shell">
+      <div class="attempt-grid" aria-label="Orbium at step 600 under three rules">
+        <figure class="attempt"><img src="assets/orbium-initial-600.png" alt="Orbium simulated to step 600 under the deliberately wrong starting rule, broken into scattered rings."><figcaption><strong>Starting rule</strong><span>The rule the search began from breaks the seed into scattered rings.</span></figcaption></figure>
+        <figure class="attempt"><img src="assets/orbium-target-600.png" alt="Native Orbium at step 600."><figcaption><strong>Native rule</strong><span>The only frame the search was scored against.</span></figcaption></figure>
+        <figure class="attempt"><img src="assets/orbium-still-600.png" alt="Orbium at step 600 under the recovered rule."><figcaption><strong>Recovered rule</strong><span>The search&rsquo;s answer grows the same localized body.</span></figcaption></figure>
+      </div>
+      <figcaption class="attempt-reading">All three grew from the same starting cells for 600 steps.</figcaption>
+    </figure>
+
+    <div class="shell investigation-intro"><p>Reading a rule out of one body is a simple case of something we actually want, which is to write down a body and have a search find a rule that grows it and keeps it alive. Orbium shows how much a single frame pins down when nearly everything else is handed over. The rest of the page asks what a target like that brings along with it: 8,155 Flow Lenia creatures show how much of a body&rsquo;s movement its shape already decides, and 160 cut creatures show whether complexity says anything about repair.</p></div>
 
     <section id="forms" class="shell">
       <div id="orbium-diagnostic" class="chapter-head">
         <div class="chapter-no">01</div>
-        <div><h2>One mature frame was enough to recover nearby Orbium parameters</h2></div>
-        <p>This case uses Orbium, an additive Lenia system. It lets us ask how much a mature body reveals when we already know the kind of rule that made it. We supplied its update law, kernel, growth function, and starting cells, then hid three numerical parameters: the interaction radius <code>R</code>, growth center <code>m</code>, and growth width <code>s</code>. Each candidate develops from those same starting cells and is compared with the reference body at step 600.</p>
-      </div>
-
-      <div class="pipeline">
-        <article class="stage"><h3>Fix the model</h3><p>We fixed Orbium’s update rule and one-kernel geometry, then searched for the three parameter values. Other update laws and kernel layouts are outside this comparison.</p></article>
-        <article class="stage"><h3>Set a wrong starting point</h3><p>The search starts from <code>R=10</code>, <code>m=0.12</code>, and <code>s=0.024</code>. These values disperse the initial cells into a ring and small fragments.</p></article>
-        <article class="stage"><h3>Search the full ranges</h3><p>The first stage evaluates 2,688 parameter combinations. Every candidate runs for 600 steps.</p><span class="tag">28 × 96 rollouts</span></article>
-        <article class="stage"><h3>Refine the best region</h3><p>The second stage evaluates 1,152 candidates near the broad-search winner. The selected rule is then run to step 1,200.</p><span class="tag">12 × 96 rollouts</span></article>
-      </div>
-
-      <div class="attempt-grid" aria-label="Orbium search at step 600">
-        <figure class="attempt"><img src="assets/orbium-initial-600.png" alt="Orbium simulated at step 600 with the deliberately incorrect starting parameters."><figcaption><strong>Initial proposal</strong><span>The starting rule breaks the seed into a diffuse ring and small fragments.</span></figcaption></figure>
-        <figure class="attempt"><img src="assets/orbium-target-600.png" alt="Native Orbium target at step 600."><figcaption><strong>Observed body</strong><span>This single step-600 field is the image used by the final-frame search.</span></figcaption></figure>
-        <figure class="attempt"><img src="assets/orbium-still-600.png" alt="Compiled Orbium at step 600."><figcaption><strong>Compiled result</strong><span>The recovered parameters grow one localized body with the target's structure.</span></figcaption></figure>
-      </div>
-      <p class="attempt-reading"><strong>A wrong rule scatters the seed, and the fitted rule grows the same localized body.</strong> Each candidate is simulated for 600 steps, then its complete field is compared with the reference field.</p>
-
-      <div class="media-grid">
-        <figure class="media-figure">
-          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-target-600.png"><source src="assets/orbium-target-zoom.mp4" type="video/mp4"></video>
-          <figcaption><strong>Hidden native rule</strong>The target is Chakazul O2(a). The search is scored against its step-600 field. The rule family and starting cells are supplied separately.</figcaption>
-        </figure>
-        <figure class="media-figure">
-          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-still-600.png"><source src="assets/orbium-still-zoom.mp4" type="video/mp4"></video>
-          <figcaption><strong>Fitted rule</strong>The body stays coherent through step 1,200, although the search was scored only at step 600.</figcaption>
-        </figure>
+        <div><h2>One frame was enough to recover Orbium&rsquo;s rule</h2></div>
+        <p>Orbium is an additive Lenia system, so its rule is a kernel, a growth function and three numbers: the interaction radius <code>R</code>, the growth center <code>m</code> and the growth width <code>s</code>. We supplied the update law, kernel shape, growth function and starting cells, hid those three numbers, and scored each candidate by growing it from the same cells for 600 steps and comparing its whole field with the reference at step 600. The search started from <code>R=10</code>, <code>m=0.12</code> and <code>s=0.024</code>, ran 2,688 candidates across the full ranges, then 1,152 more around the best region.</p>
       </div>
 
       <div class="case-metrics" aria-label="Orbium hidden parameter recovery">
@@ -1526,33 +770,27 @@ html.anatomical-editorial .chapter-head {
 
       <figure class="figure"><div class="rule-recovery-scroll"><img src="assets/orbium-rule-recovery.svg" alt="Initial, native, broad-search, refined still-frame, and refined trajectory parameter values for the Orbium inverse experiment."></div><figcaption class="caption"><span class="figure-no">01</span><p>The narrow second stage improved the field match from 0.878 to 0.969 and brought all three hidden values close to the native rule.</p></figcaption></figure>
 
-<figure class="orbium-reader" aria-labelledby="orbium-reader-title"><h3 id="orbium-reader-title">How the fitted body develops beyond the target frame</h3><div class="orbium-controls"><label for="orbium-time">Recorded step</label><select id="orbium-time"><option value="100">100 · not scored</option><option value="300">300 · not scored</option><option value="600" selected>600 · search target</option><option value="1200">1,200 · unscored continuation</option></select></div><div class="orbium-frames"><figure><img id="orbium-native-frame" src="assets/orbium-target-600.png" alt="Native Orbium at step 600"><figcaption>Native rule</figcaption></figure><figure><img id="orbium-fitted-frame" src="assets/orbium-still-600.png" alt="Recovered Orbium at step 600"><figcaption>Recovered rule</figcaption></figure></div><figcaption id="orbium-time-note" aria-live="polite">Step 600 is the only field scored by this search.</figcaption></figure><details class="experiment-method" open><summary>Compare all four recorded steps together</summary>      <div class="orbium-strip" aria-label="Native and compiled Orbium at observed and held-out steps">
-        <div></div><div class="strip-head">step 100 · unseen</div><div class="strip-head">step 300 · unseen</div><div class="strip-head">step 600 · target</div><div class="strip-head">step 1,200 · unseen</div>
-        <div class="strip-label">native rule</div>
-        <figure><img src="assets/orbium-target-100.png" alt="Native Orbium at step 100."><figcaption>early history</figcaption></figure>
-        <figure><img src="assets/orbium-target-300.png" alt="Native Orbium at step 300."><figcaption>early history</figcaption></figure>
-        <figure><img src="assets/orbium-target-600.png" alt="Native Orbium target at step 600."><figcaption>observed phenotype</figcaption></figure>
-        <figure><img src="assets/orbium-target-1200.png" alt="Native Orbium at step 1200."><figcaption>held-out future</figcaption></figure>
-        <div class="strip-label">compiled rule</div>
-        <figure><img src="assets/orbium-still-100.png" alt="Compiled Orbium at step 100."><figcaption>not scored</figcaption></figure>
-        <figure><img src="assets/orbium-still-300.png" alt="Compiled Orbium at step 300."><figcaption>not scored</figcaption></figure>
-        <figure><img src="assets/orbium-still-600.png" alt="Compiled Orbium at step 600."><figcaption>search target</figcaption></figure>
-        <figure><img src="assets/orbium-still-1200.png" alt="Compiled Orbium at step 1200."><figcaption>not scored</figcaption></figure>
-      </div></details>
-
-      <p class="reading"><strong>The fitted parameters also produced a coherent body at the unscored steps.</strong> This experiment isolates parameter recovery by supplying the update family, kernel geometry, growth function, starting cells, and elapsed time.</p>
-
-      <div class="evidence-window">
-        <article><h3>We repeated both stages with three frames</h3><p>A control search used steps 100, 300, and 600. It returned <code>R=12.80</code>, <code>m=0.1435</code>, and <code>s=0.0185</code>. Its replay also remained coherent through step 1,200.</p></article>
-        <article><h3>The single-frame run recovered closer values</h3><p>Both runs used the same broad and refinement budgets. The three-frame run ended farther from the hidden values than the run scored only at step 600. This is one organism, so it does not establish that single-frame targets are generally better.</p></article>
+      <div class="media-grid">
+        <figure class="media-figure">
+          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-target-600.png"><source src="assets/orbium-target-zoom.mp4" type="video/mp4"></video>
+          <figcaption><strong>Native rule</strong>Chakazul O2(a), the target. The search saw only its step-600 field.</figcaption>
+        </figure>
+        <figure class="media-figure">
+          <video controls loop muted playsinline preload="metadata" poster="assets/orbium-still-600.png"><source src="assets/orbium-still-zoom.mp4" type="video/mp4"></video>
+          <figcaption><strong>Recovered rule</strong>The body stays coherent through step 1,200, twice the horizon it was scored on.</figcaption>
+        </figure>
       </div>
+
+      <p class="reading"><strong>More of the history did not help.</strong> A control search scored on steps 100, 300 and 600, with the same two-stage budget, returned <code>R=12.80</code>, <code>m=0.1435</code> and <code>s=0.0185</code>, each farther from the native value than the single-frame fit, although its body also stayed coherent through step 1,200. This is one organism and one control, so it does not show that single frames are better targets in general, only that here the two earlier frames gave the search nothing it could use.</p>
+
+      <p class="reading">For someone trying to specify a body, this is the easy end of the problem. When the kind of rule and the starting cells are known, one picture of the mature body pins its rule down, and the body that rule grows keeps going on its own past the moment it was checked. The rule family, the seed and the elapsed time were all handed to the search here, and a body we invent will come with none of them.</p>
     </section>
 
     <section id="function" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">02</div>
-        <div><h2>Shape predicted locomotion nearly as well as it predicted activity</h2></div>
-        <p>Even a body that matches the requested shape may move differently, so we measured six behaviors in 8,155 Flow Lenia creatures from one 8,192-seed screen and reduced them to principal axes. Path length, displacement, and center velocity dominate the first axis, which we call locomotion; temporal variance and energy dominate the second, which we call activity. Together these axes account for 90% of the behavioral variation.</p>
+        <div><h2>Shape predicted how a body travels nearly as well as how active it is</h2></div>
+        <p>A body that matches the requested shape could still move in any number of ways, so we measured six behaviors in 8,155 Flow Lenia creatures from one 8,192-seed screen and reduced them to principal axes. Path length, displacement, and center velocity dominate the first axis, which we call locomotion; temporal variance and energy dominate the second, which we call activity. Together these axes account for 90% of the behavioral variation.</p>
       </div>
       <figure class="figure"><img src="assets/functional-morphospace.png" alt="Scatterplot of 8,155 creatures in the first two functional principal axes, colored by speed."><figcaption class="caption"><span class="figure-no">02</span><p>Most creatures occupy a dense low-speed region, while fast locomotion forms a sparse tail along the first axis. Any model trained on this distribution will see many more slow examples than fast ones.</p><span class="tag">8,155 creatures</span></figcaption></figure>
       <div class="visual-pair">
@@ -1562,53 +800,39 @@ html.anatomical-editorial .chapter-head {
             <div class="bar-row"><div class="bar-head"><span>Locomotion</span><span>R² 0.552</span></div><div class="track"><div class="fill locomotion" style="width:55.2%"></div></div></div>
             <div class="bar-row"><div class="bar-head"><span>Tortuosity</span><span>R² 0.157</span></div><div class="track"><div class="fill tortuosity" style="width:15.7%"></div></div></div>
           </div>
-          <p class="reading"><strong>Size and elongation carried movement.</strong> Fitted one behavior at a time, eight shape measurements explained 53% of the variation in speed and in path length, 45% in displacement, and 74% in temporal variance. Across all 112 screens of the same harvest, four rule families with 8,192 seeds each, the medians were 45% for path length, 40% for speed, 36% for displacement, and 73% for variance. Body size and elongation each explained about a third of path length on their own. These are in-sample regressions, not predictions on held-out bodies.</p>
+          <p class="reading"><strong>Size and elongation carried most of it.</strong> Each explained about a third of the variation in path length on its own, and the eight shape measurements together explained about half of speed and path length (53% each, 45% of displacement, 74% of temporal variance). Across all 112 screens of the same harvest, four rule families with 8,192 seeds each, the medians were somewhat lower in the same order (45% for path length, 40% for speed, 36% for displacement, 73% for variance). These are in-sample fits, not predictions on held-out bodies.</p>
         </div>
         <figure class="figure"><img src="assets/shape-predicts-function.png" alt="Locomotion predicted from shape against the measured locomotion score for 8,155 creatures."><figcaption class="caption"><span class="figure-no">03</span><p>Locomotion predicted from shape follows the diagonal with wide scatter. The fastest creatures are underpredicted.</p></figcaption></figure>
       </div>
-      <p class="reading">So a compiler that asks for a body of a given size and elongation is also, to a large degree, asking for how it travels. A target written only as a shape will drag a movement profile along with it, and a target that wants a shape with an unusual gait is asking for something the corpus rarely produces.</p>
+      <p class="reading">If you write down a body by its size and outline, you have already chosen much of how it will move. Shape leaves nearly half of the variation in travel unexplained, which is where an unusual gait would have to come from, and a search scored on shape alone has no reason to look there.</p>
     </section>
 
     <section id="recovery" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">03</div>
-        <div><h2>Complexity said little about recovery from damage</h2></div>
+        <div><h2>More complex bodies did not recover better from damage</h2></div>
         <p>A body we can specify also has to survive disturbance. We ran 40 coherent creatures and 120 random rules from the same starting patch, cleared a 40-by-40 square at the center of each at step 400, and measured how far occupancy, spread, and the largest piece’s share of mass ended from an undamaged copy by step 1,000. Complexity is the multiscale structural measure from the same runs.</p>
       </div>
       <figure class="figure"><img src="assets/complexity-drift.svg" alt="Scatterplot of complexity against form drift after a lesion for 40 coherent and 120 random creatures."><figcaption class="caption"><span class="figure-no">04</span><p>Across 160 creatures, complexity and form drift after the lesion correlated at r = 0.16.</p><span class="tag">160 creatures</span></figcaption></figure>
-      <p class="reading">Coherent creatures were more complex than random rules and drifted further after the lesion, 0.34 against 0.25 on average, and 31 of the 160 fell in the high-complexity, low-drift corner. Complexity alone does not pick out a body that repairs itself, so a target that should survive damage has to say so directly, with the lesion in the objective.</p>
+      <p class="reading">What little link there is points the wrong way: the more complex a body, the slightly further it drifted (r = 0.16). The 40 coherent creatures were more complex than the 120 random rules and drifted further after the cut (0.34 against 0.25 on average), and only 31 of the 160 landed in the high-complexity, low-drift corner.</p>
+      <p class="reading">An intricate body is no more likely to heal. If the thing you want has to survive being cut, the target has to say so, with the cut inside the test that scores it.</p>
     </section>
 
-    <section id="outlook" class="shell" aria-labelledby="boundary-title">
+    <section id="outlook" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">04</div>
-        <div><h2 id="boundary-title">Can the search discover how to grow the body?</h2></div>
-        <p>We would like to specify a body whose organization can be reached and then sustained, so a compiler has to find both a route into that organization and dynamics that keep it going. The Orbium reconstruction shows how much a single mature frame constrains when the starting cells and rule family are already known. The corpus adds two facts about any target we write down: a body’s size and elongation carry much of how it moves, and its complexity does not tell us whether it will repair damage.</p>
+        <div><h2>The next search has to find the seed as well as the rule</h2></div>
+        <p>Orbium was recovered with its starting cells handed over, and a body we invent arrives without them. The corpus adds two things any such target carries: its size and elongation already decide much of how it moves, and its complexity says little about whether it will repair damage.</p>
       </div>
-      <p class="reading">The next test should require the search to discover a developmental route: start from a compact seed, grow a withheld target body, and maintain its anatomy. Searching for the seed and rule together would make the starting cells part of what is recovered rather than what is given. Changed starting conditions and damage would then test whether the fitted dynamics keep producing and sustaining the requested body beyond the trajectory used to select them.</p>
-<details class="experiment-method" open><summary>How to picture the family of compatible rules</summary>      <div class="visual-pair">
-        <figure class="figure light">
-          <img src="assets/fiber-bundle.svg" alt="Schematic of a phenotype base space with genotype fibers above several phenotypes.">
-          <figcaption class="caption"><span class="figure-no">05A</span><p>Each point below represents a set of body measurements. The rules compatible with those measurements form the vertical set above it. The geometry is illustrative rather than measured.</p><span class="tag">schematic</span></figcaption>
-        </figure>
-        <figure class="figure light">
-          <img src="assets/sections.svg" alt="Two different sections through genotype fibers selecting different rules over the same phenotype positions.">
-          <figcaption class="caption"><span class="figure-no">05B</span><p>Because several rules can fit the same target, the system needs a policy for choosing among them. Different policies may select rules with different unmeasured dynamics.</p><span class="tag">schematic</span></figcaption>
-        </figure>
-      </div>
-      <figure class="figure light">
-        <img src="assets/genotype-phenotype-bridge.svg?v=2" alt="A path through genotype space projects to a phenotype path until it enters a failure band where no stable phenotype is produced.">
-        <figcaption class="caption"><span class="figure-no">05C</span><p>A smooth change in rule parameters can still pass through a region where no viable body develops. Search therefore has to preserve viability as well as reduce distance to the target.</p><span class="tag">schematic</span></figcaption>
-      </figure>
-      <p class="schematic-note"><strong>Figures 05A–05C are conceptual diagrams.</strong> They are not generated from measurements.</p>
-</details>
+      <p class="reading">Our bet is that a search over seed and rule together can start from a compact patch, grow a withheld target body, and keep it, so the route into the body is found along with the dynamics that hold it. The test hides a creature&rsquo;s rule and seed, searches both against one frame of the mature body, then changes the starting conditions and cuts the fitted body. The bet fails if the rules that match the frame reach it only from the one seed they were found with, or if the fitted body drifts away after the cut further than the native creature does, because then a frame pins down a picture and leaves the body that should keep it unspecified.</p>
+      <p class="reading">If it holds, specifying a body means handing over a picture of it and the damage it has to survive, and letting the search work out where to begin.</p>
     </section>
 
     <section id="evidence" class="shell">
       <div class="chapter-head">
         <div class="chapter-no">05</div>
-        <div><h2>Each chart points back to a specific file.</h2></div>
-        <p>The ledger records the source for every number, replay, and reused schematic. SHA-256 identifies the exact bytes. The corrected-engine entries record their engine build, code revision, and frozen plan; the September Orbium entries include their exact configs and media.</p>
+        <div><h2>Every number traces back to a source file</h2></div>
+        <p>The ledger records the source for every number and replay. SHA-256 identifies the exact bytes. The corrected-engine entries record their engine build, code revision, and frozen plan; the September Orbium entries include their exact configs and media.</p>
       </div>
       <p class="reading"><strong>Methods note.</strong> Earlier versions of this page reported results from Flow Lenia simulations whose spatial-derivative step computed the gradient with its sign flipped and its axes swapped, in a Python port of the simulator and in our main engine before it was fixed. Under that step the median creature broke into twelve pieces, which decoupled how bodies traveled from their shape; those results are removed, and the shape and damage measurements here were rerun on the corrected engine. A search on corpus specimen 2876 is also withdrawn, because its batched initializer grew each candidate from a different random field, so the apparent improvement belonged to the starting fields. Orbium uses additive Lenia, which has no derivative step, and its replay on the corrected engine reproduced every recorded frame exactly.</p>
       <details class="receipt">
@@ -1628,9 +852,6 @@ html.anatomical-editorial .chapter-head {
 <tr><td>2026-10-19 corrected-engine damage assay and Orbium replay</td><td><code>anatomical-compiler-corrected-001/complexity-drift/summary.json</code></td><td>759</td><td><code>5a0d7ca9143815b2…</code></td></tr>
 <tr><td>2026-10-19 corrected-engine damage assay and Orbium replay</td><td><code>anatomical-compiler-corrected-001/render_complexity_drift.py</code></td><td>2,728</td><td><code>e829be66f9567fa2…</code></td></tr>
 <tr><td>2026-10-19 corrected-engine damage assay and Orbium replay</td><td><code>anatomical-compiler-corrected-001/orbium-replay/comparison.json</code></td><td>458</td><td><code>ecfeea600ba8fd2a…</code></td></tr>
-<tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-fiber-bundle.svg</code></td><td>4,621</td><td><code>43000b7e7db2b7c0…</code></td></tr>
-<tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-sections.svg</code></td><td>4,182</td><td><code>569fec81d4c9dd71…</code></td></tr>
-<tr><td>reused explanatory schematic</td><td><code>site/assets/blog/lenia-morphospace-report/fig-bridge-genotype-phenotype.svg</code></td><td>3,035</td><td><code>363d5905c657c2e8…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/experiment.json</code></td><td>1,284</td><td><code>e7d17cd2fca63593…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/still-es.json</code></td><td>197,817</td><td><code>c8262451e333bf09…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/still-run/best.json</code></td><td>141</td><td><code>2e99f52c9591bc8c…</code></td></tr>
@@ -1641,15 +862,9 @@ html.anatomical-editorial .chapter-head {
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-initial-600.png</code></td><td>255,120</td><td><code>040ffb2271b6a55b…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-inverse-summary.json</code></td><td>1,271</td><td><code>904916197598ed88…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-rule-recovery.svg</code></td><td>6,418</td><td><code>a0125a9a26e7e89b…</code></td></tr>
-<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-100.png</code></td><td>187,493</td><td><code>88843f7bf4824041…</code></td></tr>
-<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-300.png</code></td><td>186,697</td><td><code>b7b91bc0d08bd62f…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-600.png</code></td><td>185,894</td><td><code>e7eab62cced81915…</code></td></tr>
-<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-1200.png</code></td><td>189,664</td><td><code>4c4cdf26049b32a0…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-still-zoom.mp4</code></td><td>812,518</td><td><code>37933bf5d5c5bb09…</code></td></tr>
-<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-100.png</code></td><td>186,009</td><td><code>2befab83732f67c4…</code></td></tr>
-<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-300.png</code></td><td>187,779</td><td><code>2aacf01203662f32…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-600.png</code></td><td>186,927</td><td><code>e0ca77a833258f14…</code></td></tr>
-<tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-1200.png</code></td><td>186,735</td><td><code>2d39c4a8ffcb94ed…</code></td></tr>
 <tr><td>2026-09-02 within-family Orbium inverse</td><td><code>orbium-system-id-v5/report-assets/orbium-target-zoom.mp4</code></td><td>834,738</td><td><code>12c499769fe12ce6…</code></td></tr>
 <tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/refine-es.json</code></td><td>197,819</td><td><code>7bcda98c84215935…</code></td></tr>
 <tr><td>2026-09-02 narrow Orbium refinement</td><td><code>orbium-system-id-v6-refine/refine-run/best.json</code></td><td>143</td><td><code>43c2f254196e5526…</code></td></tr>
@@ -1664,6 +879,5 @@ html.anatomical-editorial .chapter-head {
   </main>
 
   <footer><div class="shell"><a href="../">Lenia Swarm dossier</a><span>Anatomical compiler · experimental report v4 · 2026-10-19</span><span>Orbium inverse + corrected-engine reruns · source files and checksums</span></div></footer>
-<script src="assets/report-explorers.js"></script>
 </body>
 </html>
