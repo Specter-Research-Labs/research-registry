@@ -1,0 +1,79 @@
+{
+ "orbium_frames": {
+  "mean_abs_pixel_diff_native_recovered_600": 7.063589324618735e-05,
+  "centre_offset_native_recovered_600": 0.003415849067212071
+ },
+ "rule_recovery": {
+  "start": {
+   "R": 10.0,
+   "m": 0.12,
+   "s": 0.024
+  },
+  "native": {
+   "R": 13.0,
+   "m": 0.15,
+   "s": 0.017
+  },
+  "broad": {
+   "R": 13.075529,
+   "m": 0.1490386,
+   "s": 0.019421253
+  },
+  "single_frame": {
+   "R": 12.941404,
+   "m": 0.15260579,
+   "s": 0.017975096
+  },
+  "three_frames": {
+   "R": 12.802641,
+   "m": 0.143534,
+   "s": 0.018452615
+  },
+  "relative_error_single": {
+   "R": 0.0045073846153845885,
+   "m": 0.01737193333333331,
+   "s": 0.05735858823529401
+  },
+  "relative_error_three": {
+   "R": 0.015181461538461578,
+   "m": 0.04310666666666667,
+   "s": 0.08544794117647042
+  },
+  "field_match": {
+   "broad": 0.8782915,
+   "narrow": 0.9689245
+  },
+  "rollouts": 3840
+ },
+ "shape_and_movement": {
+  "n": 8155,
+  "explained": [
+   0.6184081869693445,
+   0.2819015867740848,
+   0.04549981720722374
+  ],
+  "r2_from_shape": {
+   "locomotion": 0.5522030275680575,
+   "activity": 0.609954861054375,
+   "tortuosity": 0.156876181419213
+  },
+  "metric_r2_from_shape": {
+   "speed_mean": 0.5325644826574266,
+   "path_length": 0.5340399587046678,
+   "displacement": 0.44479521721713644,
+   "center_velocity": 0.3949962639951745,
+   "variance_mean": 0.737174264312002,
+   "energy_mean": 0.5059585624411755
+  },
+  "fastest_percent_median_residual": -3.9537299343347154
+ },
+ "damage": {
+  "n": 160,
+  "pearson": 0.16230789352229721,
+  "mean_drift": {
+   "coherent": 0.33708146899249203,
+   "random": 0.25240568947857966
+  },
+  "high_complexity_low_drift": 31
+ }
+}

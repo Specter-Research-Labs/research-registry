@@ -462,11 +462,22 @@ fn anchor_ids(html: &str) -> BTreeSet<String> {
 /// report directory.
 fn referenced_assets(dir: &Utf8Path, html: &str, image: &str) -> Result<BTreeSet<String>> {
     let reference = Regex::new(r##"(?:src|href)="(assets/[^"#?]+)""##).expect("valid regex");
-    let files: BTreeSet<String> = reference
+    let candidates = Regex::new(r##"srcset="([^"]*)""##).expect("valid regex");
+    let single = Regex::new(r##"^assets/[^"#?\s,]+$"##).expect("valid regex");
+    let mut files: BTreeSet<String> = reference
         .captures_iter(html)
         .map(|captures| captures[1].to_owned())
         .chain([image.to_owned()])
         .collect();
+    // invariant: each srcset names exactly one local asset, so that the copy below
+    // and the review importer, which embeds quoted asset paths, see the same file.
+    for captures in candidates.captures_iter(html) {
+        let value = &captures[1];
+        if !single.is_match(value) {
+            bail!("srcset must name one file under assets/ without descriptors: {value}");
+        }
+        files.insert(value.to_owned());
+    }
     for file in &files {
         if file.split('/').any(|part| part == "..") {
             bail!("asset path leaves assets/: {file}");
