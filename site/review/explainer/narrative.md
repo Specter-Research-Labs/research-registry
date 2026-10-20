@@ -38,7 +38,7 @@ Likewise, an **attractor** means a dynamical regime approached from a range of i
 
 ## The prediction worth testing
 
-An earlier [shape-to-behaviour analysis](/dossiers/lenia-swarm/anatomical-compiler/) already found a pronounced difference: shape measurements predicted an activity axis with R² = 0.725, but a locomotion axis with R² = 0.038. These were descriptive regressions on 8,174 creatures, not a test of obstacle response. They give the next experiment a starting point: the usefulness of shape depends on which behaviour we ask it to explain.
+An earlier [shape-to-behaviour analysis](/dossiers/lenia-swarm/anatomical-compiler/) found that shape carries much of behaviour: on the corrected engine, shape measurements predicted a locomotion axis with R² = 0.55 and an activity axis with R² = 0.61. These were descriptive regressions on 8,155 creatures, not a test of obstacle response. They give the next experiment a starting point: shape already predicts ordinary movement, so the open question is whether it also predicts the response to an intervention.
 
 Our hypothesis is that morphology will predict some response differences, but **similar-looking bodies maintained by different dynamics will sometimes respond differently to the same intervention**. This is a proposed experiment, not a conclusion from the five-body assay.
 
