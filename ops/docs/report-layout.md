@@ -9,7 +9,6 @@ The publication styles are shared by the report family. Change the owning rule r
 | `site/assets/publication-layout.css` | Site shell, navigation, publication fonts, shared report conventions and spacing tokens. |
 | `site/assets/report.css` | Report components, Morphospace compositions and Fiber Theory layout. |
 | `site/assets/publication-formats.css` | Publication-format treatments: home, dossier, note and method report. |
-| `site/dossiers/lenia-swarm/anatomical-compiler/index.html` | Anatomy markup and its scoped page styles, including its chapter and specimen layouts. |
 | `site/templates/dossiers/lenia-swarm/causal-emergence/synthesis-publication.css` | Development report treatment. This is embedded by the Rust release renderer. |
 | `site/dossiers/lenia-swarm/causal-emergence/report-polish.css` | Shared rendering of imported causal reports and their instruments; do not put Anatomy layout overrides here. |
 

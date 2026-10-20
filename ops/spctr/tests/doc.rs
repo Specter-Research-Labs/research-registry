@@ -673,3 +673,37 @@ fn each_document_has_one_public_url() {
     let error = site_error(&experiments);
     assert!(error.contains("which the review app serves"), "{error}");
 }
+
+#[test]
+fn site_copies_a_narrow_picture_source() {
+    let site = site(PUBLISHED);
+    write(&site.report, "assets/pair-narrow.png", "narrow");
+    edit_report(
+        &site,
+        r#"<img src="assets/pair.png" alt="The pair at release">"#,
+        r#"<picture><source media="(max-width: 640px)" srcset="assets/pair-narrow.png"><img src="assets/pair.png" alt="The pair at release"></picture>"#,
+    );
+    site_build(&site, &[&site.report, &site.siblings]).unwrap();
+    let page_dir = site.root.join("site/dossiers/lenia-swarm/arrest");
+    let html = fs::read_to_string(page_dir.join("index.html")).unwrap();
+    assert!(
+        html.contains(r#"srcset="assets/pair-narrow.png""#),
+        "{html}"
+    );
+    assert!(page_dir.join("assets/pair-narrow.png").is_file());
+}
+
+#[test]
+fn site_refuses_srcset_with_several_candidates() {
+    let site = site(PUBLISHED);
+    edit_report(
+        &site,
+        r#"<img src="assets/pair.png" alt="The pair at release">"#,
+        r#"<img src="assets/pair.png" srcset="assets/pair.png 1x, assets/pair.png 2x" alt="The pair at release">"#,
+    );
+    let error = site_error(&site);
+    assert!(
+        error.contains("srcset must name one file under assets/"),
+        "{error}"
+    );
+}

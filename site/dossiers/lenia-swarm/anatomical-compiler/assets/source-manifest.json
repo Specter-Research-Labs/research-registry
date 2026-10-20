@@ -1,0 +1,340 @@
+{
+ "schemaVersion": 3,
+ "reportId": "anatomical-compiler",
+ "engine": "The corrected-engine entries ran on LeniaCLI build 060e90a71ec1, which contains the fixed Flow Lenia spatial-derivative stencil. The Orbium inverse uses additive Lenia, which has no derivative step; its replay on that build reproduced all 900 recorded frames byte for byte.",
+ "withdrawn": "Results computed with a Python port of Flow Lenia and with the main engine before its spatial-derivative stencil was fixed (gradient negated, axes swapped) were removed. The specimen-2876 search was withdrawn because its batched initializer grew each candidate from a different random starting field.",
+ "sources": [
+  {
+   "kind": "corrected-engine shape and movement, 2026-10-18",
+   "root": "functional-morphospace-regen-001",
+   "path": "plan.json",
+   "bytes": 5099,
+   "sha256": "a8ea746d202cb180ade0ab32d5458043997acd32816c74a2ae40473c4f107a69"
+  },
+  {
+   "kind": "corrected-engine shape and movement, 2026-10-18",
+   "root": "functional-morphospace-regen-001",
+   "path": "receipt.json",
+   "bytes": 5454,
+   "sha256": "e7b1243ce9c3c7ee30e4e45969ddb424401118532bf6991c4b3de61da7aebe74"
+  },
+  {
+   "kind": "corrected-engine shape and movement, 2026-10-18",
+   "root": "functional-morphospace-regen-001",
+   "path": "composition.json",
+   "bytes": 1242,
+   "sha256": "fcc9e24304ef9ae8d2e615e63e87dfcbba6456a20f8fbbc68637c1770e52292d"
+  },
+  {
+   "kind": "corrected-engine shape and movement, 2026-10-18",
+   "root": "functional-morphospace-regen-001",
+   "path": "survey-summary.json",
+   "bytes": 72592,
+   "sha256": "795347c0e01f1eb54a9a56240bb332e2ac642655b8e74fa09edb1890c165bd89"
+  },
+  {
+   "kind": "corrected-engine shape and movement, 2026-10-18",
+   "root": "functional-morphospace-regen-001",
+   "path": "regenerated/functional_morphospace.json",
+   "bytes": 1687,
+   "sha256": "94dc1e8324c7272bc1c802f5b6484b388d992ff659b87ae6853b4d20ce268023"
+  },
+  {
+   "kind": "corrected-engine shape and movement, 2026-10-18",
+   "root": "functional-morphospace-regen-001",
+   "path": "regenerated/shape_function_coupling.json",
+   "bytes": 1607,
+   "sha256": "b59963f0f916976ac509b296d3079e028b42f6b614ce1055cd4e1412dbe244a2"
+  },
+  {
+   "kind": "harvest read by the shape and movement analysis",
+   "root": "dossiers/lenia-swarm/artifacts/flow-universe-runs/track1-20260520/track1b-2c10-r7-10-initshift-8192-s4090112",
+   "path": "results.jsonl",
+   "bytes": 65473155,
+   "sha256": "478971595a373378664f5129a72591608269801ac1212ed58aef245cc5863da7"
+  },
+  {
+   "kind": "corrected-engine damage assay and Orbium replay, 2026-10-19",
+   "root": "anatomical-compiler-corrected-001",
+   "path": "plan.json",
+   "bytes": 3015,
+   "sha256": "9f0b94e23d353184af42f558c07d5eea4ed50d1b4f34fa9ea0344cefdd6483c1"
+  },
+  {
+   "kind": "corrected-engine damage assay and Orbium replay, 2026-10-19",
+   "root": "anatomical-compiler-corrected-001",
+   "path": "receipt.json",
+   "bytes": 2312,
+   "sha256": "c950d29a2027a71fadf9ac827e7c59161788073114db2fd6b70c863318a55dc3"
+  },
+  {
+   "kind": "corrected-engine damage assay and Orbium replay, 2026-10-19",
+   "root": "anatomical-compiler-corrected-001",
+   "path": "complexity-drift/functional_map.json",
+   "bytes": 16827,
+   "sha256": "a1ab9b0811d97bc8fa601dd609bab920c5598f902544f3d938f134145a4ca32a"
+  },
+  {
+   "kind": "corrected-engine damage assay and Orbium replay, 2026-10-19",
+   "root": "anatomical-compiler-corrected-001",
+   "path": "complexity-drift/summary.json",
+   "bytes": 759,
+   "sha256": "5a0d7ca9143815b28635ef043c982f65e5c7536468014fa98e93a58a50366200"
+  },
+  {
+   "kind": "corrected-engine damage assay and Orbium replay, 2026-10-19",
+   "root": "anatomical-compiler-corrected-001",
+   "path": "orbium-replay/comparison.json",
+   "bytes": 458,
+   "sha256": "ecfeea600ba8fd2a6caac513ea56e048d2d4ced91df8b8aea87d70e40e932548"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "experiment.json",
+   "bytes": 1284,
+   "sha256": "e7d17cd2fca635937aa716d03631ead5711b32aad916c0fd4376bd3cb4457818"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "still-es.json",
+   "bytes": 197817,
+   "sha256": "c8262451e333bf09be212017aab74d92e16631984ed7ce73c24a71ed86935235"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "still-run/best.json",
+   "bytes": 141,
+   "sha256": "2e99f52c9591bc8cb14151ae1011bb4e6cd737e2f13a4f594397baf6bc0014dc"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "still-run/history.jsonl",
+   "bytes": 12161,
+   "sha256": "540933e4038335185b5f3dfb40f116edbf1e720363ab7625400e75861c8a33cc"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "trajectory-es.json",
+   "bytes": 591583,
+   "sha256": "dbb42ebb131bbec6ec586c62110eecb32454d2771c67640f5bb8f59b796fac89"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "trajectory-run/best.json",
+   "bytes": 143,
+   "sha256": "97902a5fa38d9c4f5449e07b60a5d8ee486cc1092f9c5c5a55b906c7e3176d53"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "trajectory-run/history.jsonl",
+   "bytes": 12205,
+   "sha256": "b3d53ac97bb5e77ab6fcd89c84cddc8b35acfade78115b4a23365c433c56730d"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/initial-dense/frames/frame_000100.png",
+   "bytes": 7967,
+   "sha256": "8545d464d257e4aeb4001163e4039b19e6d2f701e62aa7311d354fcd385f19ff"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/initial-dense/frames/frame_000300.png",
+   "bytes": 8049,
+   "sha256": "a5b0b50f40504eba863812dcd71c095d381b3a716c41da614ef370970cf699a0"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/initial-dense/frames/frame_000600.png",
+   "bytes": 7742,
+   "sha256": "205cb4794a08db5b36c10fdbfef9c25ca04fdd2f48dc376fb90589525bcf740e"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/initial-dense/frames/frame_000900.png",
+   "bytes": 7625,
+   "sha256": "d4e19ffdec5638de8b5173a53fbc8494bb7ffe99d62faa5a36aba5b529554fd9"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/initial-dense/frames/frame_001200.png",
+   "bytes": 7559,
+   "sha256": "c09b50f5692424725e460bbf787ff29ccd84ccc3697ad1c27e4b53ea8e5fae5a"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/target-dense/frames/frame_000100.png",
+   "bytes": 728,
+   "sha256": "b1df0cea1e119de31cdf403bb79c762c63a53b2ed49bb325b64e523689c98bc9"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/target-dense/frames/frame_000300.png",
+   "bytes": 732,
+   "sha256": "768dc617147f964717f5701d3c6d745199905ef752e2cdc49618e8939255c6ae"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/target-dense/frames/frame_000600.png",
+   "bytes": 735,
+   "sha256": "f9b70496ddf893fac2cec891a117a40605121ac7e177f3e9c817971a43310681"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/target-dense/frames/frame_000900.png",
+   "bytes": 745,
+   "sha256": "edcf540feab96251c65381fed03515d12c0df1ac3cab46d9c8329bdeed728473"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
+   "path": "media/target-dense/frames/frame_001200.png",
+   "bytes": 735,
+   "sha256": "eeba121a9a23e3c2184b543dd6f5d9665b0a3f112e40adf7b7790d8d127bdcdc"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "refine-es.json",
+   "bytes": 197819,
+   "sha256": "7bcda98c842159355cf1403bea7cfe878debb96eabbd707f32b77a775128baf0"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "refine-run/best.json",
+   "bytes": 143,
+   "sha256": "43c2f254196e552603857049132df7de1459d746e894894323fcdc263d44a426"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "refine-run/history.jsonl",
+   "bytes": 5165,
+   "sha256": "e28679376dddcbf60628977378056184479d3b1a922bc71c1ebd281f1029c4bf"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "trajectory-refine-es.json",
+   "bytes": 591585,
+   "sha256": "840f48b9aab5b4bee2631c6c1b01a896cb71bb632e1e0a7c35106562de279ab3"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "trajectory-refine-run/best.json",
+   "bytes": 140,
+   "sha256": "93cfbf398087a085c3d420a6a8d4334c2ec3d367b240637fd7f415df82f7652a"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "trajectory-refine-run/history.jsonl",
+   "bytes": 5192,
+   "sha256": "7b2bca59b1f57f3b266cb6db22c8d9f40705f412a977f6b03c86e165859b7968"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "media/refined-dense/frames/frame_000100.png",
+   "bytes": 738,
+   "sha256": "2ac46d58ed41de038103f41c3acc373777f9cd135e0d09d892ed2ab7460cbcc1"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "media/refined-dense/frames/frame_000300.png",
+   "bytes": 739,
+   "sha256": "3dacaf2b9d61a9e25e63c8be9e41ed92ccf8eca66edf38d2912afa2f44a20236"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "media/refined-dense/frames/frame_000600.png",
+   "bytes": 733,
+   "sha256": "7f1bf441cde657bb98cccb4479afd7d6314792a71e642f1345cbb45b02570c85"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "media/refined-dense/frames/frame_000900.png",
+   "bytes": 757,
+   "sha256": "2bb23e95b34d7ca22ed479241148c45c46873df7be98731a9d13b2571b37176a"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
+   "path": "media/refined-dense/frames/frame_001200.png",
+   "bytes": 746,
+   "sha256": "5f03f3e79504e1ac88a62563dc9ea7b52ee33cabd674e7b6e66e621059432eca"
+  }
+ ],
+ "generatedAssets": [
+  {
+   "path": "assets/complexity-drift-narrow.svg",
+   "bytes": 25578,
+   "sha256": "5182b216ad3f2680785a3a6b940c98f12455a27a85b51d8a97cad3c1f19c2594"
+  },
+  {
+   "path": "assets/complexity-drift.svg",
+   "bytes": 28420,
+   "sha256": "1f9614cf610e2ef459e46bd549a7ee33a4e05f2b547331e9cfd529e00e96512c"
+  },
+  {
+   "path": "assets/figures-summary.json",
+   "bytes": 1651,
+   "sha256": "d9b357e9ac166d3ed991b3cd411eaf83c5d1410130465243f300f2e787bf0fc1"
+  },
+  {
+   "path": "assets/orbium-600.png",
+   "bytes": 16396,
+   "sha256": "b371cf6f2271d64507269e0974f3a3fe795d107553c692856e2b84120999bfb7"
+  },
+  {
+   "path": "assets/orbium-filmstrip.png",
+   "bytes": 27730,
+   "sha256": "32eaffd8e897f04114987f3c67f8ad54d5b7e6d4040103c6d018de72e62cb3b4"
+  },
+  {
+   "path": "assets/orbium-inverse-summary.json",
+   "bytes": 1271,
+   "sha256": "904916197598ed881537e72b0d2614e8ba3896a33b62e821d0d358d7a472ceb9"
+  },
+  {
+   "path": "assets/rule-recovery-narrow.svg",
+   "bytes": 27958,
+   "sha256": "1cbab3de429413fdd8a214ad7d1c4594fb82113267204ee1d288d8cf7fd04fba"
+  },
+  {
+   "path": "assets/rule-recovery.svg",
+   "bytes": 26834,
+   "sha256": "edf1259c2393b31695c955b1009fd6a8d93305f0eafde7f9682adf6840bc62ce"
+  },
+  {
+   "path": "assets/shape-and-movement-narrow.svg",
+   "bytes": 146103,
+   "sha256": "b4688b34e20e23ed8a0b7a43710872cbcb3b964e46ada3527d064231a0244f0f"
+  },
+  {
+   "path": "assets/shape-and-movement.svg",
+   "bytes": 147061,
+   "sha256": "ce16f8488610b60facb9b002552ed2b3c264468c15dc6d07bcabb45b5fef729c"
+  }
+ ]
+}
