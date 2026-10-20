@@ -15,6 +15,7 @@ the rules differ no more than reruns of the base from new init seeds.
 from __future__ import annotations
 
 import argparse
+import base64
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -40,6 +41,10 @@ CV_MOTION_KEYS = ("displacement", "speed_mean")
 # thresholded silhouette features in SHAPE_KEYS cannot see; R_base without it separates
 # hidden behavior from hidden interior shape.
 DENSITY_DOMAIN = "energy"
+FINGERPRINT_SIDE = 32
+RADIAL_EDGES = (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 16.0 * np.sqrt(2.0))
+MOMENT_KEYS = ("hu1", "hu2", "hu3", "hu4", "hu5", "hu6", "hu7", "flusser1", "flusser2", "flusser3",
+               "flusser4")
 RIDGE_ALPHAS = (0.01, 0.1, 1.0, 10.0, 100.0, 1000.0)
 ARMS = ("mates", "neighbours", "replicates")
 
@@ -56,6 +61,32 @@ def shape_matrix(metrics: list[dict[str, Any]]) -> np.ndarray:
         if key in SHAPE_LOG_KEYS:
             raw[:, j] = np.log(raw[:, j])
     return raw
+
+
+def interior_matrix(rows: list[dict[str, Any]]) -> np.ndarray:
+    """Rotation-invariant description of where the mass sits inside the terminal body, from
+    the centre-of-mass-centred 32x32 L1 fingerprint (one pixel is four cells): the mass
+    fraction in rings of one pixel out to eight and beyond, the log inverse participation
+    of the fingerprint, the angular harmonic amplitudes, the Hu and Flusser moments and the
+    moment density. Heading differs between init seeds, so nothing orientation-bound enters."""
+    centre = (FINGERPRINT_SIDE - 1) / 2.0
+    yy, xx = np.mgrid[:FINGERPRINT_SIDE, :FINGERPRINT_SIDE]
+    ring = np.digitize(np.hypot(yy - centre, xx - centre).ravel(), RADIAL_EDGES[1:-1])
+    out = []
+    for row in rows:
+        terminal = row["descriptor_bundle"]["terminal"]
+        if terminal["fingerprintResolution"] != FINGERPRINT_SIDE:
+            raise ValueError(f"fingerprint resolution {terminal['fingerprintResolution']}")
+        fp = np.frombuffer(base64.b64decode(terminal["fingerprintU8"]), dtype=np.uint8).astype(np.float64)
+        if fp.size != FINGERPRINT_SIDE ** 2 or fp.sum() == 0.0:
+            raise ValueError("fingerprint is not a non-empty 32x32 u8 grid")
+        fp /= fp.sum()
+        radial = np.bincount(ring, weights=fp, minlength=len(RADIAL_EDGES) - 1)
+        out.append(np.concatenate([radial, [np.log((fp ** 2).sum())],
+                                   terminal["angularSymmetry"]["harmonics"],
+                                   [float(row["metrics"][k]) for k in MOMENT_KEYS],
+                                   [terminal["momentDensity"]]]))
+    return np.asarray(out, dtype=np.float64)
 
 
 def behavior_matrix(sham: list[dict[str, Any]], lesion: list[dict[str, Any]]) -> np.ndarray:
@@ -97,11 +128,12 @@ def write_json(path: Path, payload: Any) -> None:
 
 @dataclass(frozen=True)
 class Arm:
-    """One measured arm, genotype-major over the arm's seeds: behavior and shape features
-    per (genotype, seed) and the raw sham shape and motion metrics."""
+    """One measured arm, genotype-major over the arm's seeds: behavior, shape and interior
+    features per (genotype, seed) and the raw sham shape and motion metrics."""
 
     behavior: np.ndarray
     shape: np.ndarray
+    interior: np.ndarray
     raw: np.ndarray
     seeds: tuple[int, ...]
 
@@ -139,6 +171,7 @@ def load_arm(rollouts: Path, base: int, arm: str, genotypes: int, seeds: tuple[i
     return Arm(
         behavior=behavior_matrix(sham_m, [r["metrics"] for r in lesion]).reshape(genotypes, k, -1),
         shape=shape_matrix(sham_m).reshape(genotypes, k, -1),
+        interior=interior_matrix(sham).reshape(genotypes, k, -1),
         raw=metric_matrix(sham_m, SHAPE_KEYS + CV_MOTION_KEYS).reshape(genotypes, k, -1),
         seeds=seeds,
     )
@@ -320,20 +353,54 @@ def rule_predictability(behavior: np.ndarray, units: np.ndarray, u0: np.ndarray)
     means = behavior.mean(axis=1)
     half = behavior.shape[1] // 2
     first, second = behavior[:, :half].mean(axis=1), behavior[:, half:].mean(axis=1)
-    n = means.shape[0]
     r2, reliability = {}, {}
     for f, key in enumerate(BEHAVIOR_KEYS):
-        pred = np.empty(n)
-        for i in range(n):
-            train = np.arange(n) != i
-            x, y = offsets[train], means[train, f]
-            xm, ym = x.mean(axis=0), y.mean()
-            alpha = _ridge_gcv_alpha(x - xm, y - ym)
-            coef = np.linalg.solve((x - xm).T @ (x - xm) + alpha * np.eye(x.shape[1]), (x - xm).T @ (y - ym))
-            pred[i] = ym + (offsets[i] - xm) @ coef
-        r2[key] = float(1.0 - np.sum((means[:, f] - pred) ** 2) / np.sum((means[:, f] - means[:, f].mean()) ** 2))
+        r2[key] = _r2(means[:, f], _loo_ridge(offsets, means[:, f]))
         reliability[key] = float(np.corrcoef(first[:, f], second[:, f])[0, 1])
     return {"loo_r2": r2, "split_half_r": reliability}
+
+
+def _loo_ridge(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """Leave-one-out ridge predictions of y from x, the penalty chosen by GCV in each fold."""
+    n = y.shape[0]
+    pred = np.empty(n)
+    for i in range(n):
+        train = np.arange(n) != i
+        xt, yt = x[train], y[train]
+        xm, ym = xt.mean(axis=0), yt.mean()
+        alpha = _ridge_gcv_alpha(xt - xm, yt - ym)
+        coef = np.linalg.solve((xt - xm).T @ (xt - xm) + alpha * np.eye(x.shape[1]), (xt - xm).T @ (yt - ym))
+        pred[i] = ym + (x[i] - xm) @ coef
+    return pred
+
+
+def _r2(y: np.ndarray, pred: np.ndarray) -> float:
+    return float(1.0 - np.sum((y - pred) ** 2) / np.sum((y - y.mean()) ** 2))
+
+
+def form_predictability(behavior: np.ndarray, forms: dict[str, np.ndarray]) -> dict[str, Any]:
+    """How much of each mate's behavior its grown form predicts, seed-split so that no
+    rollout supplies both sides: form means from one half of the seeds predict behavior
+    means from the other half (leave-one-mate-out ridge on standardized form features),
+    averaged over the two directions. The split-half correlation of behavior is the
+    reference, since a predictor that recovered each mate's true mean would reach about
+    that R^2. Form features constant across mates carry nothing and are dropped."""
+    half = behavior.shape[1] // 2
+    halves = (slice(None, half), slice(half, None))
+    out: dict[str, Any] = {}
+    for name, form in forms.items():
+        r2 = {}
+        for f, key in enumerate(BEHAVIOR_KEYS):
+            scores = []
+            for src, dst in (halves, halves[::-1]):
+                x = form[:, src].mean(axis=1)
+                sd = x.std(axis=0)
+                x = (x[:, sd > 0] - x[:, sd > 0].mean(axis=0)) / sd[sd > 0]
+                y = behavior[:, dst, f].mean(axis=1)
+                scores.append(_r2(y, _loo_ridge(x, y)))
+            r2[key] = float(np.mean(scores))
+        out[name] = r2
+    return out
 
 
 def canalization(replicates: Arm) -> dict[str, Any]:
@@ -372,6 +439,9 @@ def analyze_base(run_dir: Path, plan: dict[str, Any], base: int, scale: np.ndarr
                                          draws, ci, rng),
         "rule_distance": rule_distance_correlation(a, floors["replicates"], b.units, draws, rng),
         "rule_predictability": rule_predictability(a, b.units, b.u0),
+        "form_predictability": form_predictability(a, {
+            "shape": b.mates.shape, "interior": b.mates.interior,
+            "shape_interior": np.concatenate([b.mates.shape, b.mates.interior], axis=2)}),
         "canalization": canalization(b.replicates),
     }
 

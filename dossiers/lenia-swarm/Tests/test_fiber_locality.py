@@ -17,6 +17,7 @@ from lenia_swarm_analysis.anatomical_compiler.fiber_locality import (
     phenotype_neighbours,
     pinning,
     quotient_distance,
+    rule_floor,
     twonn,
 )
 
@@ -120,3 +121,17 @@ def test_intrinsic_dimension_of_a_flat_sheet() -> None:
     assert mle_dimension(sheet) == pytest.approx(3.0, abs=0.4)
     with pytest.raises(ValueError, match="duplicate"):
         twonn(np.zeros((20, 3)))
+
+
+def test_rule_floor_is_reached_when_the_body_is_the_rule() -> None:
+    rng = np.random.default_rng(4)
+    raw = rng.uniform(0.0, 1.0, (2000, 2 * KERNEL_WIDTH + 1))
+    symmetry = Symmetry.from_connectivity([[1, 0], [0, 1]])
+    mirror = _cohort(raw, raw)
+    anchors = np.arange(300)
+
+    near = locality(mirror, mirror.shape, anchors, ("raw",), symmetry, rng)
+    floor = rule_floor(mirror, anchors, "raw").mean(axis=0) / near["raw"]["random_pair_distance"]
+
+    assert floor[4] == pytest.approx(near["raw"]["ratio"]["5"], rel=1e-9)
+    assert floor[0] < near["raw"]["ratio"]["5"] < 1.0

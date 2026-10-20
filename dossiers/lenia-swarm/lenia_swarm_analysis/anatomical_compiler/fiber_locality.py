@@ -4,7 +4,8 @@ For a cohort of rules sampled at random, each with the body it grew, the inverse
 ratio at k is the mean rule distance between a rule and the k rules whose bodies are
 nearest to its own, divided by the mean rule distance between random pairs. A ratio of 1
 means bodies say nothing about rules; a ratio well below 1 means nearby bodies come from
-nearby rules. The same neighbour sets give the rule spread as a function of body radius,
+nearby rules. The rule floor, the same ratio for the k nearest rules themselves, is the
+lowest value a body could reach at the cohort's sampling density. The same neighbour sets give the rule spread as a function of body radius,
 the share of each rule invariant that the body predicts, and the local participation ratio
 of the rule scatter. TwoNN and MLE estimate the intrinsic dimensions of the two clouds.
 
@@ -183,6 +184,37 @@ def locality(cohort: Cohort, phenotype: np.ndarray, anchors: np.ndarray, metrics
     return out
 
 
+def rule_floor(cohort: Cohort, anchors: np.ndarray, metric: str, chunk: int = 128) -> np.ndarray:
+    """Cumulative mean rule distance from each anchor to its k nearest other rules, k up to
+    max(LOCALITY_KS). Divided by the random-pair distance it is the smallest inverse-locality
+    ratio any body could reach in this cohort, because no k rules lie closer to the anchor.
+    The quotient metric has no floor here because its nearest rules need all-pairs quotient
+    distances."""
+    kmax = max(LOCALITY_KS)
+    rules = (cohort.canonical if metric == "canonical" else cohort.raw).astype(np.float64)
+    squared = (rules ** 2).sum(axis=1)
+    nearest = np.empty((anchors.shape[0], kmax))
+    for start in range(0, anchors.shape[0], chunk):
+        a = anchors[start:start + chunk]
+        d2 = squared[a, None] + squared[None, :] - 2.0 * rules[a] @ rules.T
+        d2[np.arange(a.shape[0]), a] = np.inf
+        part = np.sort(np.partition(d2, kmax - 1, axis=1)[:, :kmax], axis=1)
+        nearest[start:start + a.shape[0]] = np.sqrt(np.maximum(part, 0.0))
+    return np.cumsum(nearest, axis=1) / np.arange(1, kmax + 1)
+
+
+def _floor_ratios(cohort: Cohort, anchors: np.ndarray, result: dict[str, Any]) -> dict[str, Any]:
+    """Rule floor per k on the anchors of a locality result, over that result's random-pair
+    distance so that the floor and the ratio share one denominator."""
+    out: dict[str, Any] = {}
+    for metric in ("raw", "canonical"):
+        if metric in result:
+            floor = rule_floor(cohort, anchors, metric).mean(axis=0)
+            out[metric] = {str(k): float(floor[k - 1] / result[metric]["random_pair_distance"])
+                           for k in LOCALITY_KS}
+    return out
+
+
 def density_deciles(per_anchor: np.ndarray, radius: np.ndarray, k: int) -> list[dict[str, float]]:
     """Ratio at k within each decile of local body density (radius to the DENSITY_K-th
     neighbour), so dense and sparse regions of the body space are compared separately."""
@@ -313,9 +345,12 @@ def analyze_cohort(cohort: Cohort, symmetry: Symmetry, scale: np.ndarray, *, quo
     out: dict[str, Any] = {"rows": len(cohort), "compact_rows": int(cohort.compact.sum())}
     for name, phenotype in phenotypes.items():
         full = locality(cohort, phenotype, everyone, ("raw", "canonical"), symmetry, rng)
+        subsample = locality(cohort, phenotype, sub, METRICS, symmetry, rng)
+        if name == "shape":
+            out["rule_floor"] = _floor_ratios(cohort, sub, subsample)
         out[name] = {
             "all_anchors": _strip(full),
-            "anchor_subsample": _strip(locality(cohort, phenotype, sub, METRICS, symmetry, rng)),
+            "anchor_subsample": _strip(subsample),
             "density_deciles_k5_raw": density_deciles(full["raw"]["per_anchor"],
                                                       full["radius_per_anchor"], 5),
             "pinning": pinning(cohort, phenotype, everyone),
@@ -360,8 +395,8 @@ def matched_size(cohorts: dict[str, Cohort], symmetry: Symmetry, n: int, compact
         if pool.shape[0] < n:
             raise ValueError(f"{era}: {pool.shape[0]} rows, fewer than the matched size {n}")
         sub = cohort.take(np.sort(rng.choice(pool, n, replace=False)))
-        out[era] = {**_strip(locality(sub, sub.shape, np.arange(n), ("raw", "quotient"),
-                                      symmetry, rng)),
+        result = locality(sub, sub.shape, np.arange(n), ("raw", "quotient"), symmetry, rng)
+        out[era] = {**_strip(result), "rule_floor": _floor_ratios(sub, np.arange(n), result),
                     "pinning": pinning(sub, sub.shape, np.arange(n))}
     return out
 
