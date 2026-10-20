@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import copy
 import json
 from pathlib import Path
 
@@ -11,6 +13,8 @@ from lenia_swarm_analysis.anatomical_compiler.behavior_spread import (
     analyze_run,
     behavior_matrix,
     chaos_floor,
+    form_predictability,
+    interior_matrix,
     paired_floor,
     pooled_floor,
     residual_shape,
@@ -25,7 +29,7 @@ DOMAINS = {"locomotion": ["log_displacement", "log_speed"], "energy": ["log_ener
 
 def _row(row: dict) -> dict:
     return {"init_seed": row["init_seed"], "metrics": row["metrics"],
-            "descriptor_bundle": {"genotype": {"hash12": row["hash12"]}}}
+            "descriptor_bundle": {"genotype": {"hash12": row["hash12"]}, "terminal": row["terminal"]}}
 
 
 def _write_run(root: Path, arms: dict[str, list[dict]]) -> Path:
@@ -70,6 +74,35 @@ def test_behavior_matrix_refuses_a_dead_sham_rollout() -> None:
     sham[0]["occupancy_mean"] = 0.0
     with pytest.raises(ValueError, match="zero occupancy"):
         behavior_matrix(sham, lesion)
+
+
+def test_interior_matrix_is_blind_to_heading() -> None:
+    row = _row(FIXTURE["arms"]["mates-sham"][0])
+    grid = np.frombuffer(base64.b64decode(row["descriptor_bundle"]["terminal"]["fingerprintU8"]),
+                         dtype=np.uint8).reshape(32, 32)
+    turned = copy.deepcopy(row)
+    turned["descriptor_bundle"]["terminal"]["fingerprintU8"] = base64.b64encode(
+        np.ascontiguousarray(np.rot90(grid)).tobytes()).decode()
+
+    out = interior_matrix([row, turned])
+
+    np.testing.assert_allclose(out[0], out[1])
+    assert out[0][:9].sum() == pytest.approx(1.0)
+
+
+def test_form_predictability_finds_behavior_written_in_the_form() -> None:
+    rng = np.random.default_rng(3)
+    n, k = 40, 8
+    hidden = rng.normal(0.0, 1.0, (n, 1, 1))
+    behavior = np.repeat(hidden, k, axis=1) + rng.normal(0.0, 0.1, (n, k, len(BEHAVIOR_KEYS)))
+    written = np.concatenate([hidden + rng.normal(0.0, 0.1, (n, k, 1)),
+                              rng.normal(0.0, 1.0, (n, k, 3)), np.ones((n, k, 1))], axis=2)
+    blind = rng.normal(0.0, 1.0, (n, k, 4))
+
+    out = form_predictability(behavior, {"written": written, "blind": blind})
+
+    assert all(v > 0.8 for v in out["written"].values())
+    assert all(v < 0.2 for v in out["blind"].values())
 
 
 def test_paired_floor_ignores_shared_seed_effects() -> None:
