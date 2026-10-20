@@ -1,3 +1,7 @@
+---
+summary: "How the Flow Lenia integrator orders array axes and signs its Sobel gradient, the reversed-sign and crossed-axis transport that earlier runs carried, and the tests that check the corrected engine against the reference implementation."
+---
+
 # Flow coordinates and the reference regression
 
 Flow uses array-axis order throughout the native integrator. For mass shaped
