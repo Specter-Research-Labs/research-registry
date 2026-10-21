@@ -5,6 +5,7 @@ kicker: Specter Labs · Flow Lenia
 authors: Ada Example
 document_id: rpt-001
 revision: "003"
+kind: report
 year: 2026
 url: https://lab.specterlab.org/#/p/rpt-001
 description: A temporary obstacle leaves a gliding pair arrested after release.

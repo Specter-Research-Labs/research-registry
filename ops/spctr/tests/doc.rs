@@ -30,6 +30,7 @@ kicker: Specter Labs · Flow Lenia
 authors: Ada Example
 document_id: RPT-001
 revision: 3
+kind: report
 year: 2026
 url: https://lab.specterlab.org/reports/rpt-001/
 abstract: |
@@ -96,18 +97,146 @@ fn numbers_sections_appendix_and_citations() {
     assert!(html.contains("<em>arrested</em>"));
     assert!(!html.contains("<script"));
     assert!(html.contains("data:font/woff2;base64,"));
+    assert!(!html.contains(r#"rel="preload""#));
     assert!(html.contains(r#"<img src="assets/pair.png""#));
+}
+
+#[test]
+fn kind_names_the_document_in_byline_and_citation() {
+    let temp = tempfile::tempdir().unwrap();
+    let dir = Utf8Path::from_path(temp.path()).unwrap();
+    write(dir, "refs.bib", BIB);
+    write(dir, "report.md", &report(BODY).replacen("kind: report", "kind: proposal", 1));
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap();
+    let html = fs::read_to_string(dir.join("report.html")).unwrap();
+    assert!(html.contains("Proposal · revision 3 · 1 min read"));
+    assert!(html.contains("<h2>Cite this proposal</h2>"));
+    assert!(html.contains("Specter Labs proposal, revision 3."));
+    assert!(!html.contains("Cite this report"));
+
+    for (front, message) in [
+        ("", "missing metadata field 'kind'"),
+        ("kind: memo\n", "kind must be report, proposal or synthesis, found 'memo'"),
+    ] {
+        write(dir, "report.md", &report(BODY).replacen("kind: report\n", front, 1));
+        let error = spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap_err();
+        assert!(format!("{error:#}").contains(message), "{error:#}");
+    }
 }
 
 #[test]
 fn footnotes_become_margin_notes_and_endnotes() {
     let html = build(BODY).unwrap();
-    assert!(
-        html.contains(r##"<sup class="rk-noteref" id="noteref-1"><a href="#note-1">1</a></sup>"##)
-    );
-    assert!(html.contains(r#"<span class="rk-sidenote" aria-hidden="true"><span class="rk-sidenote-num">1</span> The lobes decouple.</span>"#));
+    assert!(html.contains(r##"<sup class="rk-noteref" id="noteref-1"><a href="#note-1">1</a><span class="rk-pop" role="tooltip"><span class="rk-num">1</span> The lobes decouple.</span></sup>"##));
+    assert!(html.contains(r#"<span class="rk-sidenote" aria-hidden="true"><span class="rk-sidenote-body"><span class="rk-sidenote-num">1</span> The lobes decouple.</span></span>"#));
     assert!(html.contains(r#"<li id="note-1">The lobes decouple."#));
     assert!(!html.contains("footnotes"));
+}
+
+#[test]
+fn citations_carry_their_reference_entry() {
+    let html = build(BODY).unwrap();
+    let cite = html
+        .split(r#"<span class="rk-cite">"#)
+        .nth(1)
+        .expect("citation wrapper");
+    let pop = cite
+        .split(r#"<span class="rk-pop" role="tooltip">"#)
+        .nth(1)
+        .expect("citation preview");
+    assert!(pop.starts_with(r#"<span class="rk-pop-entry"><span class="rk-num">[1]</span>"#));
+    assert!(pop.contains("Mind everywhere"));
+}
+
+#[test]
+fn citation_without_a_reference_entry_is_an_error() {
+    let err = build("# A\n\nText [@missing2025].\n").unwrap_err();
+    assert!(format!("{err:#}").contains("missing2025"), "{err:#}");
+}
+
+#[test]
+fn contents_track_the_current_section_without_scripts() {
+    let html = build(BODY).unwrap();
+    assert!(html.contains(".rk-layout{timeline-scope:--rk-toc,--rk-s1,--rk-s2,--rk-s3,--rk-s4}"));
+    assert!(html.contains("section.rk-s1{view-timeline-name:--rk-s1}"));
+    assert!(html.contains(".rk-t1{animation-timeline:--rk-s1}"));
+    assert!(html.contains(r#"<div class="rk-tocbar"><details><summary>"#));
+    assert!(html.contains(r#"<section id="the-arrest" class="level2 rk-s1">"#));
+    assert!(!html.contains("<script"));
+}
+
+fn build_with_hero(hero: &str, files: &[&str]) -> anyhow::Result<String> {
+    let temp = tempfile::tempdir().unwrap();
+    let dir = Utf8Path::from_path(temp.path()).unwrap();
+    let source = report("# The arrest\n\nText.\n").replacen(
+        "bibliography: refs.bib\n",
+        &format!("bibliography: refs.bib\nhero:\n{hero}"),
+        1,
+    );
+    write(dir, "report.md", &source);
+    write(dir, "refs.bib", BIB);
+    for file in files {
+        write(dir, file, "x");
+    }
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None)?;
+    Ok(fs::read_to_string(dir.join("report.html")).unwrap())
+}
+
+#[test]
+fn hero_renders_between_subtitle_and_byline() {
+    let html = build_with_hero(
+        "  image: assets/hero.png\n  caption: The pair *before* release.\n",
+        &["assets/hero.png"],
+    )
+    .unwrap();
+    let hero = html
+        .find(r#"<figure class="rk-hero-figure"><img src="assets/hero.png" alt="">"#)
+        .expect("hero");
+    assert!(html.contains("<figcaption>The pair <em>before</em> release.</figcaption>"));
+    assert!(html.find("Why a freed pair stays put").unwrap() < hero);
+    assert!(hero < html.find("Ada Example").unwrap());
+    let video = build_with_hero(
+        "  image: assets/hero.mp4\n  caption: Release.\n",
+        &["assets/hero.mp4"],
+    )
+    .unwrap();
+    assert!(video.contains(r#"<video src="assets/hero.mp4" autoplay muted loop playsinline>"#));
+    assert!(!build(BODY).unwrap().contains(r#"class="rk-hero-figure""#));
+}
+
+#[test]
+fn malformed_hero_is_an_error() {
+    for (hero, files, expected) in [
+        (
+            "  image: assets/hero.png\n",
+            &["assets/hero.png"][..],
+            "caption",
+        ),
+        ("  caption: Release.\n", &[][..], "image"),
+        (
+            "  image: assets/gone.png\n  caption: Release.\n",
+            &[][..],
+            "assets/gone.png",
+        ),
+        (
+            "  image: hero.png\n  caption: Release.\n",
+            &["hero.png"][..],
+            "assets/",
+        ),
+        (
+            "  image: assets/hero.gif\n  caption: Release.\n",
+            &["assets/hero.gif"][..],
+            "gif",
+        ),
+        (
+            "  image: assets/hero.png\n  caption: Release.\n  alt: x\n",
+            &["assets/hero.png"][..],
+            "alt",
+        ),
+    ] {
+        let err = build_with_hero(hero, files).unwrap_err();
+        assert!(format!("{err:#}").contains(expected), "{hero}: {err:#}");
+    }
 }
 
 #[test]
@@ -407,6 +536,7 @@ fn fixture_renders_for_the_site() {
     );
     assert!(html.contains("https://specterlab.org/dossiers/lenia-swarm/arrest/"));
     assert!(html.contains("src:url(/fonts/IBMPlexSerif-Regular.woff2)"));
+    assert!(html.contains(r#"<link rel="preload" href="/fonts/IBMPlexSerif-Medium.woff2" as="font" type="font/woff2" crossorigin>"#));
     assert!(!html.contains("data:font/woff2"));
     assert!(!html.contains("specterlab.org/#/p/"));
     assert!(!html.contains("lab.specterlab.org"));
@@ -704,6 +834,240 @@ fn site_refuses_srcset_with_several_candidates() {
     let error = site_error(&site);
     assert!(
         error.contains("srcset must name one file under assets/"),
+        "{error}"
+    );
+}
+
+const MAP: &str = r#"::: {#map data-widget="route-map" data-src="assets/map.json" data-defaults='{"network":"a","budget":4,"breakLink":false}'}
+<figure><form>
+<label><input id="network-a" name="network" type="radio" value="a" checked> A</label>
+<label><input id="network-b" name="network" type="radio" value="b"> B</label>
+<input id="budget" name="budget" type="range" min="1" max="6" value="4">
+<input id="break-link" name="breakLink" type="checkbox">
+</form><figcaption>Routes.</figcaption></figure>
+:::"#;
+
+fn build_layout(front: &str, body: &str) -> anyhow::Result<String> {
+    let temp = tempfile::tempdir().unwrap();
+    let dir = Utf8Path::from_path(temp.path()).unwrap();
+    let source = report(body).replacen(
+        "bibliography: refs.bib\n",
+        &format!("bibliography: refs.bib\n{front}"),
+        1,
+    );
+    write(dir, "report.md", &source);
+    write(dir, "refs.bib", BIB);
+    write(dir, "assets/map.json", r#"{"nodes":[]}"#);
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None)?;
+    Ok(fs::read_to_string(dir.join("report.html")).unwrap())
+}
+
+fn explorer(body: &str) -> anyhow::Result<String> {
+    build_layout("layout: explorer\n", body)
+}
+
+fn layout_error(front: &str, body: &str) -> String {
+    format!("{:#}", build_layout(front, body).unwrap_err())
+}
+
+#[test]
+fn layout_defaults_to_essay_and_rejects_unknown_values() {
+    let essay = build_layout("layout: essay\n", BODY).unwrap();
+    assert_eq!(essay, build(BODY).unwrap());
+    assert!(!essay.contains("<script"));
+    assert!(!essay.contains("rk-explorer"));
+    assert!(layout_error("layout: magazine\n", BODY)
+        .contains(r#"layout must be essay or explorer, found "magazine""#));
+}
+
+#[test]
+fn explorer_embeds_the_widget_library_once() {
+    let html = explorer(&format!("# Routes\n\n{MAP}\n\n# Next\n\nText.\n")).unwrap();
+    assert!(html.contains(r#"<body class="rk-explorer">"#));
+    assert_eq!(html.matches("<script").count(), 1);
+    assert!(html.contains(r#"<script type="module">"#));
+    assert!(html.contains("IntersectionObserver"));
+    assert!(html.contains(".rk-hub"));
+    assert!(html.contains(r#"class="rk-widget""#));
+    assert!(html.contains(r#"data-src="data:application/json;base64,"#));
+}
+
+#[test]
+fn explorer_hub_links_chapters_and_marks_interactive_ones() {
+    let html = explorer(&format!(
+        "# Routes\n\n{MAP}\n\n# Next\n\nText.\n\n# Methods {{.appendix}}\n\nDetails.\n"
+    ))
+    .unwrap();
+    let hub = html
+        .split(r#"<nav class="rk-hub" aria-label="Chapters">"#)
+        .nth(1)
+        .expect("hub")
+        .split("</nav>")
+        .next()
+        .unwrap();
+    assert!(hub.contains(r##"<a href="#routes"><span class="rk-num">1</span><span class="rk-hub-title">Routes</span><span class="rk-hub-tag">Interactive</span></a>"##));
+    assert!(hub.contains(r##"<a href="#next"><span class="rk-num">2</span><span class="rk-hub-title">Next</span></a>"##));
+    assert!(!hub.contains("Methods"));
+}
+
+#[test]
+fn explorer_makes_subtitle_optional() {
+    let body = "# A\n\nText.\n";
+    let no_subtitle = |front: &str| {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = Utf8Path::from_path(temp.path()).unwrap();
+        let source = report(body)
+            .replacen("subtitle: Why a freed pair stays put\n", "", 1)
+            .replacen(
+                "bibliography: refs.bib\n",
+                &format!("bibliography: refs.bib\n{front}"),
+                1,
+            );
+        write(dir, "report.md", &source);
+        write(dir, "refs.bib", BIB);
+        spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).map(|_| ())
+    };
+    no_subtitle("layout: explorer\n").unwrap();
+    let err = format!("{:#}", no_subtitle("").unwrap_err());
+    assert!(err.contains("subtitle"), "{err}");
+}
+
+#[test]
+fn hero_can_hold_a_widget_on_explorer_pages() {
+    let html = build_layout(
+        "layout: explorer\nhero:\n  widget: map\n",
+        &format!("{MAP}\n\n# Routes\n\nText.\n"),
+    )
+    .unwrap();
+    let hero = html
+        .find(r#"<div class="rk-hero-widget"><div id="map" class="rk-widget""#)
+        .expect("hero widget");
+    let byline = html.find(r#"<p class="rk-byline">Ada Example"#).unwrap();
+    let abstract_start = html.find(r#"<section class="rk-abstract""#).unwrap();
+    assert!(byline < abstract_start && abstract_start < hero);
+    assert!(hero < html.find(r#"<main class="rk-article">"#).unwrap());
+    assert_eq!(html.matches(r#"<section class="rk-abstract""#).count(), 1);
+    assert_eq!(html.matches(r#"id="map""#).count(), 1);
+    assert!(!html.contains(r#"<span class="rk-hub-tag">"#));
+}
+
+#[test]
+fn malformed_widget_hero_is_an_error() {
+    let at_top = format!("{MAP}\n\n# Routes\n\nText.\n");
+    for (front, body, expected) in [
+        (
+            "hero:\n  widget: map\n",
+            at_top.as_str(),
+            "widget blocks need layout: explorer",
+        ),
+        (
+            "layout: explorer\nhero:\n  widget: gone\n",
+            at_top.as_str(),
+            "hero widget 'gone' is not a top-level block",
+        ),
+        (
+            "layout: explorer\nhero:\n  widget: map\n  caption: x\n",
+            at_top.as_str(),
+            "a widget hero takes no 'caption'",
+        ),
+        (
+            "layout: explorer\nhero:\n  widget: plain\n",
+            "::: {#plain}\nText.\n:::\n\n# A\n\nB.\n",
+            "hero widget 'plain' is not a widget block",
+        ),
+    ] {
+        let err = layout_error(front, body);
+        assert!(err.contains(expected), "{front}: {err}");
+    }
+}
+
+#[test]
+fn malformed_widget_blocks_are_errors() {
+    let in_chapter = |block: &str| format!("# Routes\n\n{block}\n");
+    for (block, expected) in [
+        (MAP.replace("route-map", "orbit"), "unknown widget 'orbit'"),
+        (MAP.replace("#map ", ""), "route-map widget needs an id"),
+        (
+            MAP.replace("assets/map.json", "assets/gone.json"),
+            "data file is missing: assets/gone.json",
+        ),
+        (
+            MAP.replace("assets/map.json", "../map.json"),
+            "data-src must name a .json file under assets/",
+        ),
+        (
+            MAP.replace(r#"'{"network""#, r#"'["network""#)
+                .replace("false}'", "false]'"),
+            "data-defaults must be a JSON object",
+        ),
+        (
+            MAP.replace(r#"id="budget" "#, ""),
+            "every control needs an id",
+        ),
+        (
+            MAP.replace(r#""budget":4,"#, ""),
+            "control 'budget' has no default",
+        ),
+        (
+            MAP.replace(r#""budget":4"#, r#""budget":4,"speed":2"#),
+            "default 'speed' has no control",
+        ),
+        (
+            MAP.replace(r#""budget":4"#, r#""budget":5"#),
+            "control 'budget' starts at 4, but data-defaults says 5",
+        ),
+        (
+            MAP.replace(
+                r#"data-widget="route-map""#,
+                r#"data-widget="route-map" data-mode="x""#,
+            ),
+            "unknown attribute 'data-mode'",
+        ),
+        (
+            r#"<figure data-widget="route-map" data-src="assets/map.json"></figure>"#.to_string(),
+            "declare widgets as fenced divs, not raw HTML",
+        ),
+    ] {
+        let err = format!("{:#}", explorer(&in_chapter(&block)).unwrap_err());
+        assert!(err.contains(expected), "{expected}: {err}");
+    }
+    let essay = format!("{:#}", build(&in_chapter(MAP)).unwrap_err());
+    assert!(
+        essay.contains("widget blocks need layout: explorer"),
+        "{essay}"
+    );
+}
+
+#[test]
+fn site_allows_only_the_widget_library_on_explorer_pages() {
+    let page = site(PUBLISHED);
+    edit_report(
+        &page,
+        "bibliography: refs.bib\n",
+        "bibliography: refs.bib\nlayout: explorer\n",
+    );
+    edit_report(
+        &page,
+        "Engine details.",
+        &format!("Engine details.\n\n{MAP}"),
+    );
+    write(&page.report, "assets/map.json", r#"{"nodes":[]}"#);
+    let out = site_build(&page, &[&page.report, &page.siblings]).unwrap();
+    let html = fs::read_to_string(&out[0]).unwrap();
+    assert_eq!(html.matches("<script").count(), 1);
+    assert!(html.contains(r#"data-src="assets/map.json""#));
+    assert!(out[0].parent().unwrap().join("assets/map.json").exists());
+
+    let extra = site(PUBLISHED);
+    edit_report(
+        &extra,
+        "bibliography: refs.bib\n",
+        "bibliography: refs.bib\nlayout: explorer\n",
+    );
+    edit_report(&extra, "Engine details.", "<script>alert(1)</script>");
+    let error = site_error(&extra);
+    assert!(
+        error.contains("site page carries a script other than the widget library"),
         "{error}"
     );
 }
