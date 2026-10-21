@@ -89,6 +89,76 @@
    "sha256": "ecfeea600ba8fd2a6caac513ea56e048d2d4ced91df8b8aea87d70e40e932548"
   },
   {
+   "kind": "shape-mate behaviour spread, 2026-09-30, analysed 2026-10-20",
+   "root": "fiber-behavior-spread-001",
+   "path": "plan.json",
+   "bytes": 8269,
+   "sha256": "0ea69c23d8d82b973bc5451e32dee537ad5fbed89088cc5dff494e12d6d1759c"
+  },
+  {
+   "kind": "shape-mate behaviour spread, 2026-09-30, analysed 2026-10-20",
+   "root": "fiber-behavior-spread-001",
+   "path": "receipt.json",
+   "bytes": 5670,
+   "sha256": "e500f15c509475c7972ae306692a09f7a3168ce792a76c558fde48035974fcc3"
+  },
+  {
+   "kind": "shape-mate behaviour spread, 2026-09-30, analysed 2026-10-20",
+   "root": "fiber-behavior-spread-001",
+   "path": "results/summary.json",
+   "bytes": 44806,
+   "sha256": "09d9966360a9bee8d4133837f53a474770ead84e1cba718eaab8780de28743a6"
+  },
+  {
+   "kind": "shape-mate behaviour spread, 2026-09-30, analysed 2026-10-20",
+   "root": "fiber-behavior-spread-001",
+   "path": "results/behavior-spread-controls.json",
+   "bytes": 52156,
+   "sha256": "888c2cd52ea95a67e222aa90030cbe3885721d064ac7369288f49c3abd80b746"
+  },
+  {
+   "kind": "rule distance between shape neighbours across four rule families, 2026-10-20",
+   "root": "fiber-locality-001",
+   "path": "plan.json",
+   "bytes": 3619,
+   "sha256": "6d1f4a3a57a1da43ccecb9db00dd474a9cff3a6868e907ac4d8c1a16a9f5e6cf"
+  },
+  {
+   "kind": "rule distance between shape neighbours across four rule families, 2026-10-20",
+   "root": "fiber-locality-001",
+   "path": "receipt.json",
+   "bytes": 4823,
+   "sha256": "b37d66157309192ff7d305beab69ae2debac12a581adb32ecda020bf28b14daf"
+  },
+  {
+   "kind": "rule distance between shape neighbours across four rule families, 2026-10-20",
+   "root": "fiber-locality-001",
+   "path": "results/2c10_r17_20_initshift.json",
+   "bytes": 130808,
+   "sha256": "a9a59a3b2286dc21dc4967ef0b4ebc6c86b7571f6bb3bea0ab4bc70f408e1a1f"
+  },
+  {
+   "kind": "rule distance between shape neighbours across four rule families, 2026-10-20",
+   "root": "fiber-locality-001",
+   "path": "results/2c10_r7_10_initshift.json",
+   "bytes": 130767,
+   "sha256": "95fc4cf1532dced88268816050dc1ec6a223f72d1574324307cbf03f7dd1cde1"
+  },
+  {
+   "kind": "rule distance between shape neighbours across four rule families, 2026-10-20",
+   "root": "fiber-locality-001",
+   "path": "results/2c20_paper_random.json",
+   "bytes": 130634,
+   "sha256": "af6b2d3b54ef26ebe1e9151f0bb212ba91585f5fb7d9f8660b72e6bf80acc9e5"
+  },
+  {
+   "kind": "rule distance between shape neighbours across four rule families, 2026-10-20",
+   "root": "fiber-locality-001",
+   "path": "results/3c15_paper_random.json",
+   "bytes": 130695,
+   "sha256": "aa12513283fbee9e9873f4910afa0a72ab5f9c573ffe9a16b43701c67625d8b0"
+  },
+  {
    "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
    "root": "orbium-system-id-v5",
    "path": "experiment.json",
@@ -288,18 +358,18 @@
  "generatedAssets": [
   {
    "path": "assets/complexity-drift-narrow.svg",
-   "bytes": 25578,
-   "sha256": "5182b216ad3f2680785a3a6b940c98f12455a27a85b51d8a97cad3c1f19c2594"
+   "bytes": 25528,
+   "sha256": "77c6f73ae1f8e500c5e054b5b857ed32542477f582bdbfe0eed77334ee9a8a2a"
   },
   {
    "path": "assets/complexity-drift.svg",
-   "bytes": 28420,
-   "sha256": "1f9614cf610e2ef459e46bd549a7ee33a4e05f2b547331e9cfd529e00e96512c"
+   "bytes": 28370,
+   "sha256": "01ea64676aba200df975e45ae75325a33819d2fa916f212d6abd73eb7f314990"
   },
   {
    "path": "assets/figures-summary.json",
-   "bytes": 1651,
-   "sha256": "d9b357e9ac166d3ed991b3cd411eaf83c5d1410130465243f300f2e787bf0fc1"
+   "bytes": 3985,
+   "sha256": "86e83ad63ffc1d12d1e9ec0e5261ba13c8f2ee3afaf0b3e0512d6e4be0f60f6c"
   },
   {
    "path": "assets/orbium-600.png",
@@ -318,23 +388,33 @@
   },
   {
    "path": "assets/rule-recovery-narrow.svg",
-   "bytes": 27958,
-   "sha256": "1cbab3de429413fdd8a214ad7d1c4594fb82113267204ee1d288d8cf7fd04fba"
+   "bytes": 27912,
+   "sha256": "758dd34dd47b5223fcfa167bb43bd8966afeb6dfd9959cedfa9bfbd379707cd8"
   },
   {
    "path": "assets/rule-recovery.svg",
-   "bytes": 26834,
-   "sha256": "edf1259c2393b31695c955b1009fd6a8d93305f0eafde7f9682adf6840bc62ce"
+   "bytes": 26786,
+   "sha256": "11b468c33baf9717cb9da12a271d9603aeae9c0adde4b3ea9101fb1307959266"
   },
   {
    "path": "assets/shape-and-movement-narrow.svg",
-   "bytes": 146103,
-   "sha256": "b4688b34e20e23ed8a0b7a43710872cbcb3b964e46ada3527d064231a0244f0f"
+   "bytes": 146053,
+   "sha256": "eaa9ae7709caa9153681c47de8d5633a4b395679127459b5b8701b8afec36758"
   },
   {
    "path": "assets/shape-and-movement.svg",
-   "bytes": 147061,
-   "sha256": "ce16f8488610b60facb9b002552ed2b3c264468c15dc6d07bcabb45b5fef729c"
+   "bytes": 147011,
+   "sha256": "a7e2d7bed6890d6b06196618860653c33e38e4bbfe19d5fa4337b3076c826dc8"
+  },
+  {
+   "path": "assets/shape-mates-narrow.svg",
+   "bytes": 34568,
+   "sha256": "938e8c2bb9e900a6bd8301fe9ae95568b84df66b8b4baded6f100739c12fe7d6"
+  },
+  {
+   "path": "assets/shape-mates.svg",
+   "bytes": 34564,
+   "sha256": "c8a4650e1d2f47149be94ba31f96d1e7afce179c83fc1b823c167d1e4939ae2e"
   }
  ]
 }
