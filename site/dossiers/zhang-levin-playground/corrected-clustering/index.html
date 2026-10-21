@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moving a waiting rule moves the clustering in self-sorting arrays | Specter Labs</title>
+<meta name="color-scheme" content="light">
+<meta name="description" content="In self-sorting arrays, giving Bubble sort Insertion's waiting gate produces nearly Insertion-level clustering with the same work, chimeric clustering reproduces against each run's own label shuffles, and only pairs with Selection keep it in the sorted array.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/dossiers/zhang-levin-playground/corrected-clustering/assets/clustering-n100.png">
+<link rel="icon" href="/assets/logo-black.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/IBMPlexSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/IBMPlexSerif-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/BerkeleyMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Berkeley Mono";src:url(/fonts/BerkeleyMono-Regular.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Berkeley Mono";src:url(/fonts/BerkeleyMono-Bold.woff2) format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Serif";src:url(/fonts/IBMPlexSerif-Regular.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Serif";src:url(/fonts/IBMPlexSerif-Italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"IBM Plex Serif";src:url(/fonts/IBMPlexSerif-Medium.woff2) format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Serif";src:url(/fonts/IBMPlexSerif-Bold.woff2) format("woff2");font-weight:700;font-style:normal;font-display:swap}
+/* Generated from addenda/design-tokens/. Do not edit by hand.
+   Source: base.toml (colors, symbols, badges, fonts), web.toml (layout, type scale)
+   Regenerate: spctr tokens generate --target css */
+:root {
+    --sl-font-body: "IBM Plex Serif", Georgia, serif;
+    --sl-font-display: Arial, Helvetica, sans-serif;
+    --sl-font-heading: Arial, Helvetica, sans-serif;
+    --sl-font-mono:
+        "Berkeley Mono", ui-monospace, SFMono-Regular, "SF Mono",
+        Menlo, Consolas, monospace;
+    --sl-font-prose: "IBM Plex Serif", Georgia, serif;
+
+    --sl-color-accent: #ae4a28;
+    --sl-color-accent-2: #344aa0;
+    --sl-color-bg: #f8f4ea;
+    --sl-color-ink: #20212b;
+    --sl-color-muted: #62616a;
+    --sl-color-panel: #fffdf7;
+    --sl-color-paper: #f8f4ea;
+    --sl-color-rule: #20212b33;
+    --sl-color-rule-strong: #20212b66;
+    --sl-color-surface: #f5e7d7;
+
+    --sl-color-addenda-type-benchmark: #425f7b;
+    --sl-color-addenda-type-competition: #7b5243;
+    --sl-color-addenda-type-dataset: #2f6f64;
+    --sl-color-addenda-type-research: #8b7142;
+    --sl-color-addenda-type-tooling: #556372;
+    --sl-color-cab-folder: #f5f3ed;
+    --sl-color-cab-tab: #e6e3db;
+    --sl-color-cab-tab-hover: #d9d5cb;
+    --sl-color-idea-active: rgba(32, 33, 43, 0.78);
+    --sl-color-idea-exploring: #5f6c7b;
+    --sl-color-idea-paused: #786b52;
+    --sl-color-series-id: rgba(32, 33, 43, 0.52);
+    --sl-color-status-archived: #7d8694;
+    --sl-color-status-exploratory: #5f6c7b;
+    --sl-color-status-paused: #9f6f00;
+    --sl-color-workflow-blocked-stroke: #b4573d;
+    --sl-color-workflow-blocked-fill: #fdf0eb;
+    --sl-color-workflow-continuation-stroke: #4f66bc;
+    --sl-color-workflow-continuation-fill: #eef2fa;
+    --sl-color-workflow-failure-stroke: #9d7b2a;
+    --sl-color-workflow-failure-fill: #fbf5e8;
+    --sl-color-workflow-intervention-stroke: #4a8a61;
+    --sl-color-workflow-intervention-fill: #edf4ef;
+    --sl-color-workflow-success-stroke: #3f8458;
+    --sl-color-workflow-success-fill: #edf4ef;
+    --sl-color-workflow-wild-stroke: #8694ad;
+    --sl-color-workflow-wild-fill: #f1f4f9;
+
+    --sl-overlay-ink-2: rgba(32, 33, 43, 0.02);
+    --sl-overlay-ink-2-5: rgba(32, 33, 43, 0.025);
+    --sl-overlay-ink-3: rgba(32, 33, 43, 0.03);
+    --sl-overlay-ink-6: rgba(32, 33, 43, 0.06);
+    --sl-overlay-ink-12: rgba(32, 33, 43, 0.12);
+    --sl-overlay-ink-32: rgba(32, 33, 43, 0.32);
+    --sl-overlay-ink-82: rgba(32, 33, 43, 0.82);
+
+    --sl-shadow-lightbox:
+        0 18px 46px var(--sl-overlay-ink-32),
+        0 2px 0 var(--sl-overlay-ink-12);
+    --sl-shadow-raised:
+        0 18px 46px var(--sl-overlay-ink-12),
+        0 2px 0 var(--sl-overlay-ink-6);
+
+    --sl-layout-brand-gap: 15px;
+    --sl-layout-brand-size: 51px;
+    --sl-layout-card-gap: 14px;
+    --sl-layout-card-gap-mobile: 10px;
+    --sl-layout-card-pad: 10px 12px 12px;
+    --sl-layout-header-bottom: 30px;
+    --sl-layout-header-bottom-mobile: 22px;
+    --sl-layout-header-gap: 24px;
+    --sl-layout-header-rule-gap: 38px;
+    --sl-layout-layout-gap: 24px;
+    --sl-layout-layout-gap-mobile: 16px;
+    --sl-layout-nav-gap: 27px;
+    --sl-layout-nav-gap-mobile: 22px;
+    --sl-layout-prose-measure: 75ch;
+    --sl-layout-shell-max-width: 1320px;
+    --sl-layout-shell-max-width-doc: 1320px;
+    --sl-layout-shell-pad-bottom: 64px;
+    --sl-layout-shell-pad-bottom-mobile: 38px;
+    --sl-layout-shell-pad-inline: 52px;
+    --sl-layout-shell-pad-inline-mobile: 22px;
+    --sl-layout-shell-pad-top: 30px;
+    --sl-layout-shell-pad-top-mobile: 22px;
+
+    --sl-type-scale-brand: 20px;
+    --sl-type-scale-brand-mobile: 16px;
+    --sl-type-scale-card-title: 25px;
+    --sl-type-scale-intro: 18px;
+    --sl-type-scale-nav: 13px;
+    --sl-type-scale-page-title: clamp(36px, 5vw, 66px);
+    --sl-type-scale-page-title-mobile: 36px;
+    --sl-type-scale-prose: 17px;
+    --sl-type-scale-section-title: 12px;
+    --sl-type-scale-section-title-mobile: 12px;
+
+    --sl-tracking-brand: .08em;
+    --sl-tracking-title: -.045em;
+
+    --sl-leading-prose: 1.65;
+    --sl-leading-title: 1.04;
+}
+:root{--rk-measure:660px;--rk-toc:200px;--rk-margin:210px;--rk-gap:52px;--rk-ink:var(--sl-color-ink);--rk-muted:var(--sl-color-muted);--rk-faint:color-mix(in srgb,var(--sl-color-muted) 72%,var(--sl-color-paper));--rk-rule:var(--sl-color-rule);--rk-tint:color-mix(in srgb,var(--sl-color-ink) 5%,transparent);--rk-accent:var(--sl-color-accent);--rk-bg:var(--sl-color-paper);--rk-font-heading:var(--sl-font-prose);--rk-heading-weight:500;--rk-speed:140ms;--rk-note-cap:15em}
+*{box-sizing:border-box}
+html{background:var(--rk-bg);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--rk-bg);color:var(--rk-ink);font-family:var(--sl-font-prose);font-size:16.5px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;counter-reset:rk-figure rk-table}
+a{color:inherit;text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{text-decoration-color:currentColor}
+img,canvas,svg,video{max-width:100%;height:auto}
+.publication-header,.publication-footer{max-width:var(--sl-layout-shell-max-width);margin:0 auto;padding-inline:var(--sl-layout-shell-pad-inline);display:flex;align-items:center;justify-content:space-between;gap:20px;font-family:var(--sl-font-mono)}
+.publication-header{padding-block:30px;border-bottom:1px solid var(--rk-ink)}
+.publication-brand{display:flex;align-items:center;gap:var(--sl-layout-brand-gap);font:700 var(--sl-type-scale-brand) var(--sl-font-mono);letter-spacing:var(--sl-tracking-brand);text-decoration:none}
+.publication-brand img{width:var(--sl-layout-brand-size);height:auto;flex:none}
+.publication-header nav{display:flex;gap:var(--sl-layout-nav-gap);font-size:var(--sl-type-scale-nav)}
+.publication-header nav a,.publication-footer a{text-decoration:none}
+.publication-header nav a:hover,.publication-footer a:hover{text-decoration-line:underline;text-decoration-style:solid}
+.publication-footer{border-top:1px solid var(--rk-ink);padding-block:25px 35px;font-size:11px;line-height:1.8}
+.publication-footer a{margin-right:20px}
+.publication-footer>span{color:var(--rk-muted)}
+.rk-shell{max-width:calc(var(--rk-toc) + var(--rk-measure) + var(--rk-margin) + 2*var(--rk-gap) + 48px);margin:0 auto;padding:0 24px 128px}
+.rk-layout{display:grid;grid-template-columns:var(--rk-toc) minmax(0,var(--rk-measure)) var(--rk-margin);column-gap:var(--rk-gap);justify-content:center;align-items:start}
+.rk-hero{grid-column:2;grid-row:1;padding:112px 0 72px}
+.rk-kicker{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0 0 20px}
+.rk-hero h1{font-family:var(--rk-font-heading);font-weight:400;font-size:clamp(38px,4.6vw,54px);line-height:1.12;letter-spacing:-.012em;margin:0;text-wrap:balance}
+.rk-subtitle{font-family:var(--rk-font-heading);font-style:italic;font-size:clamp(21px,2.3vw,27px);line-height:1.35;color:var(--rk-muted);margin:14px 0 56px;text-wrap:balance}
+.rk-byline{font:700 12px/1.85 var(--sl-font-mono);margin:0}
+.rk-meta{font:12px/1.85 var(--sl-font-mono);color:var(--rk-muted);margin:0}
+.rk-hero-figure{margin:0 0 48px}
+.rk-hero-figure img,.rk-hero-figure video{display:block;width:100%;height:auto}
+.rk-hero-figure figcaption{font-size:14px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
+.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:none;padding:4px 0 32px;font-size:13px;line-height:1.35;opacity:.6;transition:opacity var(--rk-speed) ease-out}
+.rk-toc::-webkit-scrollbar{display:none}
+.rk-toc:hover,.rk-toc:focus-within{opacity:1}
+.rk-toc ul{list-style:none;margin:0 0 20px;padding:0}
+.rk-toc li{margin:0 0 7px}
+.rk-toc ul ul{margin:5px 0 4px 14px}
+.rk-toc ul ul li{margin:0 0 4px}
+.rk-toc a{color:var(--rk-ink);text-decoration:none;display:flex;gap:7px}
+.rk-toc ul ul a{color:var(--rk-muted);font-size:12.5px}
+.rk-toc a:hover{color:var(--rk-ink);text-decoration-line:underline}
+.rk-toc .rk-num{font-size:.85em;padding-top:.08em;min-width:1.5em}
+.rk-toc-head{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-faint);margin:0 0 14px}
+.rk-toc-end{padding-top:6px!important}
+.rk-toc-end a{color:var(--rk-muted)}
+.rk-num{font-family:var(--sl-font-mono);font-weight:400;font-style:normal;letter-spacing:.02em;color:var(--rk-faint);flex:none}
+.rk-article{grid-column:2;grid-row:2;min-width:0}
+.rk-abstract{padding:0 0 32px}
+.rk-abstract p{font-size:17.5px;line-height:1.6;margin:0 0 14px}
+.rk-abstract p:last-child{margin:0}
+.rk-article h2,.rk-article h3,.rk-article h4{font-family:var(--rk-font-heading);font-weight:var(--rk-heading-weight);color:var(--rk-ink)}
+.rk-article h2{font-size:26px;line-height:1.18;letter-spacing:-.005em;margin:72px 0 20px}
+.rk-article h3{font-size:20px;line-height:1.25;margin:48px 0 14px}
+.rk-article h4{font-size:16.5px;font-style:italic;font-weight:400;line-height:1.4;margin:36px 0 10px}
+.rk-article h2 .rk-num,.rk-article h3 .rk-num{font-size:.8em;margin-right:.55em}
+.rk-article .rk-appendix-head{margin-top:120px}
+.rk-article .rk-appendix-head>h2{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0}
+.rk-article p{margin:0 0 18px}
+.rk-article ul,.rk-article ol{padding-left:1.35em;margin:0 0 18px}
+.rk-article li{margin:0 0 6px}
+.rk-article li>p{margin:0 0 6px}
+.rk-article code{font-family:var(--sl-font-mono);font-size:.82em;background:var(--rk-tint);padding:1px 4px;border-radius:3px}
+.rk-article pre{font:13px/1.5 var(--sl-font-mono);overflow:auto;background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:20px 0}
+.rk-article pre code{background:none;padding:0;font-size:inherit}
+.rk-article blockquote{margin:24px 0;padding:0 0 0 20px;border-left:2px solid var(--rk-rule);color:var(--rk-muted);font-style:italic}
+.rk-article table{width:100%;border-collapse:collapse;font:12.5px/1.5 var(--sl-font-mono);border-top:1px solid var(--rk-ink);border-bottom:1px solid var(--rk-ink)}
+.rk-article th{text-align:left;font-weight:700;border-bottom:1px solid var(--rk-rule)}
+.rk-article th,.rk-article td{padding:6px 10px;vertical-align:top}.rk-article thead th{padding-top:9px;padding-bottom:8px}.rk-article tbody tr:first-child td{padding-top:10px}.rk-article tbody tr:last-child td{padding-bottom:10px}
+.rk-article figure{margin:52px 0;padding:0;overflow-x:auto}
+.rk-article .table-wrap{margin:36px 0;overflow-x:auto}.rk-article figure .table-wrap{margin:0}
+.rk-article figure img,.rk-article figure canvas,.rk-article figure svg{display:block;width:100%}
+@media(min-width:1201px){.rk-article figure.wide{clear:right;margin-right:calc(-1*(var(--rk-margin) + var(--rk-gap)))}.rk-article figure.wide>figcaption{max-width:var(--rk-measure)}}
+.rk-article figcaption{font-size:15px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
+.rk-article figure:not(:has(img,canvas,svg,video))>figcaption{padding:0 0 12px}
+.rk-article figure:has(img,canvas,svg,video){counter-increment:rk-figure}
+.rk-article figure:not(:has(img,canvas,svg,video)){counter-increment:rk-table}
+.rk-article figure:has(img,canvas,svg,video)>figcaption::before{content:"Fig. " counter(rk-figure)}
+.rk-article figure:not(:has(img,canvas,svg,video))>figcaption::before{content:"Table " counter(rk-table)}
+.rk-article figcaption::before{font:.8em var(--sl-font-mono);letter-spacing:.02em;color:var(--rk-faint);margin-right:.6em}
+.rk-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:18px 24px;align-items:end}
+.rk-panel-label{display:block;font:11px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0 0 8px}
+.citation{font-size:.86em;color:var(--rk-muted);white-space:nowrap;transition:color var(--rk-speed) ease-out}
+.citation:hover,.rk-cite:focus-within>.citation{color:var(--rk-accent)}
+.rk-cite,.rk-noteref{position:relative}
+.citation a{color:inherit;text-decoration:none}
+.citation a:hover{text-decoration-line:underline;text-decoration-style:solid}
+.rk-noteref{font-size:.72em;line-height:0}
+.rk-noteref a{color:var(--rk-accent);text-decoration:none;padding:0 1px}
+.rk-sidenote{float:right;clear:right;width:var(--rk-margin);margin:5px calc(-1*(var(--rk-margin) + var(--rk-gap))) 16px 0;font-size:12.5px;line-height:1.5;color:var(--rk-muted)}
+.rk-sidenote{max-height:var(--rk-note-cap);transition:color var(--rk-speed) ease-out}
+.rk-sidenote-body{display:block;max-height:var(--rk-note-cap);overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap));mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap))}
+.rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
+.rk-sidenote:hover,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote{color:var(--rk-ink)}
+.rk-sidenote-num{font:10.5px var(--sl-font-mono);color:var(--rk-accent);margin-right:.35em}
+.rk-endmatter{margin-top:112px;border-top:1px solid var(--rk-rule)}
+.rk-endmatter section{padding:40px 0 0}
+.rk-article .rk-endmatter h2{font-family:var(--rk-font-heading);font-size:15px;font-weight:var(--rk-heading-weight);letter-spacing:0;color:var(--rk-muted);margin:0 0 14px}
+.rk-endmatter p,.rk-endmatter li,.rk-endmatter .csl-entry{font-size:14px;line-height:1.55;color:var(--rk-muted)}
+.rk-endmatter pre{-webkit-user-select:all;user-select:all;font:12px/1.5 var(--sl-font-mono);background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:14px 0 0;overflow:auto;white-space:pre}
+.rk-endmatter .csl-entry{display:flex;gap:10px;margin:0 0 9px}
+.rk-endmatter .csl-left-margin{font:11px/2 var(--sl-font-mono);color:var(--rk-faint);flex:none;min-width:2.6em}
+.rk-endmatter .csl-right-inline{min-width:0}
+.rk-endmatter .csl-entry a{overflow-wrap:anywhere}
+.rk-endmatter .rk-notes{padding-left:2.2em;margin:0}
+.rk-notes li{margin:0 0 9px;padding-left:4px}
+.rk-notes li::marker{font:11px var(--sl-font-mono);color:var(--rk-faint)}
+.rk-back{text-decoration:none;color:var(--rk-faint)}
+.rk-back:hover{color:var(--rk-ink)}
+.rk-endmatter .rk-data{list-style:none;padding:0;margin:0}
+.rk-data li{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:3px 0;margin:0}
+.rk-path{font:11px var(--sl-font-mono);color:var(--rk-faint);text-align:right;overflow-wrap:anywhere}
+.rk-term{position:relative;text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:var(--rk-accent);text-decoration-thickness:1px;text-underline-offset:3px;cursor:help}
+.rk-term:focus{outline:2px solid color-mix(in srgb,var(--rk-accent) 35%,transparent);outline-offset:2px}
+.rk-term-note,.rk-pop{display:none;position:absolute;left:0;top:100%;z-index:20;width:min(24rem,80vw);margin-top:6px;padding:11px 13px;background:var(--rk-bg);color:var(--rk-ink);border:1px solid var(--rk-rule);box-shadow:0 6px 24px color-mix(in srgb,var(--rk-ink) 12%,transparent);font:400 14px/1.5 var(--sl-font-prose);font-style:normal;text-align:left;text-indent:0;letter-spacing:0;white-space:normal}
+.rk-term:hover>.rk-term-note,.rk-term:focus>.rk-term-note,.rk-cite:hover>.rk-pop,.rk-cite:focus-within>.rk-pop{display:block}
+.rk-pop-entry{display:block;color:var(--rk-ink)}
+.rk-pop-entry+.rk-pop-entry{margin-top:8px}
+.rk-pop .rk-num{margin-right:.5em}
+.rk-pop a{overflow-wrap:anywhere}
+.rk-tocbar{display:none}
+.rk-term-note img{display:block;width:100%;height:auto;image-rendering:pixelated;margin:0 0 5px}
+.rk-term-caption{display:block;font-size:12px;color:var(--rk-muted);margin:0 0 8px}
+.rk-sidenote .rk-term-note{width:min(20rem,80vw);left:auto;right:0}
+:target{scroll-margin-top:24px}
+li:target,h2:target,h3:target,.csl-entry:target{background:color-mix(in srgb,var(--rk-accent) 10%,transparent)}
+@media(max-width:1200px){:root{--rk-margin:0px}.rk-layout{grid-template-columns:var(--rk-toc) minmax(0,var(--rk-measure))}.rk-sidenote{display:none}.rk-noteref:hover>.rk-pop,.rk-noteref:focus-within>.rk-pop{display:block}}
+@media(max-width:960px){.rk-layout{display:block;max-width:var(--rk-measure);margin:0 auto}.rk-toc{position:static;max-height:none;opacity:1;padding:0 0 40px}.rk-toc ul ul{display:none}.rk-hero{padding:64px 0 48px}}
+@media(max-width:700px){.publication-header,.publication-footer{padding-inline:var(--sl-layout-shell-pad-inline-mobile);flex-direction:column;align-items:flex-start}.publication-header{padding-block:20px}.publication-brand{font-size:var(--sl-type-scale-brand-mobile)}.publication-header nav{gap:var(--sl-layout-nav-gap-mobile)}.rk-term-note,.rk-sidenote .rk-term-note,.rk-pop{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;margin:0}.rk-shell{padding:0 20px 72px}body{font-size:16px}.rk-abstract p{font-size:16.5px}.rk-hero{padding:48px 0 40px}.rk-subtitle{margin-bottom:36px}.rk-article h2{font-size:23px;margin-top:56px}.rk-article h3{font-size:19px;margin-top:40px}.rk-article figure{margin:40px 0}.rk-data li{display:block}.rk-path{display:block;text-align:left}}
+@supports (animation-timeline:view()) and (timeline-scope:none){
+.rk-toc{view-timeline:--rk-toc}
+.rk-article section{view-timeline-inset:20% 0}
+.rk-toc a[class^="rk-t"],.rk-tocbar a[class^="rk-t"]{color:var(--rk-muted);animation-name:rk-current;animation-timing-function:linear;animation-fill-mode:none;animation-range:exit-crossing 0% exit-crossing 100%}
+@keyframes rk-current{from,to{color:var(--rk-ink)}}
+@media(max-width:960px){
+.rk-article section{scroll-margin-top:72px}
+.rk-tocbar{display:block;position:sticky;top:0;height:0;z-index:30;animation-name:rk-tocbar;animation-timeline:--rk-toc;animation-timing-function:linear;animation-fill-mode:both;animation-range:exit 80% exit 100%}
+@keyframes rk-tocbar{from{opacity:0;visibility:hidden}to{opacity:1;visibility:visible}}
+.rk-tocbar details{position:absolute;top:0;left:-24px;right:-24px;background:var(--rk-bg);border-bottom:1px solid var(--rk-rule);font-size:13px;line-height:1.35}
+.rk-tocbar summary{display:flex;align-items:baseline;gap:14px;padding:13px 24px;cursor:pointer;list-style:none}
+.rk-tocbar summary::-webkit-details-marker{display:none}
+.rk-tocbar-head{font:11px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-faint);flex:none}
+.rk-tocbar-current{display:grid;min-width:0}
+.rk-tocbar-current>span{grid-area:1/1;display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;animation-name:rk-on;animation-timing-function:linear;animation-fill-mode:none;animation-range:exit-crossing 0% exit-crossing 100%}
+.rk-tocbar-current .rk-num{margin-right:7px}
+@keyframes rk-on{from,to{opacity:1}}
+.rk-tocbar ul{list-style:none;margin:0;padding:2px 24px 16px;max-height:60vh;overflow:auto}
+.rk-tocbar ul ul{display:none}
+.rk-tocbar li{margin:0 0 8px}
+.rk-tocbar a{display:flex;gap:7px;text-decoration:none}
+.rk-tocbar .rk-num{min-width:2em}
+}
+}
+@media(max-width:700px){.rk-tocbar details{left:-20px;right:-20px}.rk-tocbar summary,.rk-tocbar ul{padding-inline:20px}}
+@media(prefers-reduced-motion:reduce){:root{--rk-speed:0ms}}
+@media print{.rk-toc,.rk-tocbar,.rk-pop,.rk-sidenote,.rk-term-note,.publication-header,.publication-footer{display:none}.rk-layout{display:block}}
+</style>
+<style>.rk-layout{timeline-scope:--rk-toc,--rk-s1,--rk-s2,--rk-s3,--rk-s4,--rk-s5,--rk-s6,--rk-s7,--rk-s8,--rk-s9,--rk-s10,--rk-s11,--rk-s12}section.rk-s1{view-timeline-name:--rk-s1}.rk-t1{animation-timeline:--rk-s1}section.rk-s2{view-timeline-name:--rk-s2}.rk-t2{animation-timeline:--rk-s2}section.rk-s3{view-timeline-name:--rk-s3}.rk-t3{animation-timeline:--rk-s3}section.rk-s4{view-timeline-name:--rk-s4}.rk-t4{animation-timeline:--rk-s4}section.rk-s5{view-timeline-name:--rk-s5}.rk-t5{animation-timeline:--rk-s5}section.rk-s6{view-timeline-name:--rk-s6}.rk-t6{animation-timeline:--rk-s6}section.rk-s7{view-timeline-name:--rk-s7}.rk-t7{animation-timeline:--rk-s7}section.rk-s8{view-timeline-name:--rk-s8}.rk-t8{animation-timeline:--rk-s8}section.rk-s9{view-timeline-name:--rk-s9}.rk-t9{animation-timeline:--rk-s9}section.rk-s10{view-timeline-name:--rk-s10}.rk-t10{animation-timeline:--rk-s10}section.rk-s11{view-timeline-name:--rk-s11}.rk-t11{animation-timeline:--rk-s11}section.rk-s12{view-timeline-name:--rk-s12}.rk-t12{animation-timeline:--rk-s12}</style>
+</head>
+<body>
+<header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<div class="rk-shell">
+<div class="rk-layout">
+<header class="rk-hero">
+<h1>Moving a waiting rule moves the clustering in self-sorting arrays</h1>
+<p class="rk-subtitle">Cells of one type gather while a mixed array sorts because they move later than the others, and giving another sorting rule Insertion’s waiting gate brings the same clustering with it.</p>
+<p class="rk-meta">Report · revision 007 · 20 min read</p>
+</header>
+<nav class="rk-toc" aria-label="Contents"><p class="rk-toc-head">Contents</p><ul><li><a href="#model" class="rk-t1"><span class="rk-num">1</span><span>The model and what the original paper claims</span></a></li><li><a href="#original-size" class="rk-t2"><span class="rk-num">2</span><span>Chimeric clustering reproduces at the original size when scored against shuffled labels</span></a></li><li><a href="#timing" class="rk-t3"><span class="rk-num">3</span><span>Clustering follows the timing of each type’s moves</span></a></li><li><a href="#duplicates" class="rk-t4"><span class="rk-num">4</span><span>With repeated values, clustering persists only in pairs that contain Selection</span></a></li><li><a href="#frozen" class="rk-t5"><span class="rk-num">5</span><span>Rerouting around a frozen target carries the robustness to damage</span></a></li><li><a href="#conjectures" class="rk-t6"><span class="rk-num">6</span><span>Four untested conjectures about mechanism</span></a><ul><li><a href="#conj-timing"><span class="rk-num">6.1</span><span>Transient clustering comes from types acting at different phases of the sort</span></a></li><li><a href="#conj-stability"><span class="rk-num">6.2</span><span>Persistent clustering needs a rule that reorders equivalent cells</span></a></li><li><a href="#conj-rerouting"><span class="rk-num">6.3</span><span>Frozen-cell robustness comes from rerouting, and the substrate question is open</span></a></li><li><a href="#conj-islands"><span class="rk-num">6.4</span><span>The islands prediction can be scored now</span></a></li></ul></li><li><a href="#not-retested" class="rk-t7"><span class="rk-num">7</span><span>Original claims not yet retested</span></a></li><li><a href="#recap" class="rk-t8"><span class="rk-num">8</span><span>Timing makes the islands and exchange keeps them</span></a></li></ul><p class="rk-toc-head">Appendix</p><ul><li><a href="#earlier" class="rk-t9"><span class="rk-num">A.1</span><span>What our earlier version got wrong</span></a></li><li><a href="#methods-data" class="rk-t10"><span class="rk-num">A.2</span><span>Follow-up results</span></a></li><li><a href="#methods-checks" class="rk-t11"><span class="rk-num">A.3</span><span>Independent checks</span></a></li><li><a href="#methods-receipts" class="rk-t12"><span class="rk-num">A.4</span><span>Receipts</span></a></li></ul><ul class="rk-toc-end"><li><a href="#cite-this">Cite this report</a></li><li><a href="#references">References</a></li><li><a href="#data">Data and receipts</a></li></ul></nav>
+<main class="rk-article">
+<div class="rk-tocbar"><details><summary><span class="rk-tocbar-head">Contents</span><span class="rk-tocbar-current"><span class="rk-t1"><span class="rk-num">1</span>The model and what the original paper claims</span><span class="rk-t2"><span class="rk-num">2</span>Chimeric clustering reproduces at the original size when scored against shuffled labels</span><span class="rk-t3"><span class="rk-num">3</span>Clustering follows the timing of each type’s moves</span><span class="rk-t4"><span class="rk-num">4</span>With repeated values, clustering persists only in pairs that contain Selection</span><span class="rk-t5"><span class="rk-num">5</span>Rerouting around a frozen target carries the robustness to damage</span><span class="rk-t6"><span class="rk-num">6</span>Four untested conjectures about mechanism</span><span class="rk-t7"><span class="rk-num">7</span>Original claims not yet retested</span><span class="rk-t8"><span class="rk-num">8</span>Timing makes the islands and exchange keeps them</span><span class="rk-t9"><span class="rk-num">A.1</span>What our earlier version got wrong</span><span class="rk-t10"><span class="rk-num">A.2</span>Follow-up results</span><span class="rk-t11"><span class="rk-num">A.3</span>Independent checks</span><span class="rk-t12"><span class="rk-num">A.4</span>Receipts</span></span></summary><ul><li><a href="#model" class="rk-t1"><span class="rk-num">1</span><span>The model and what the original paper claims</span></a></li><li><a href="#original-size" class="rk-t2"><span class="rk-num">2</span><span>Chimeric clustering reproduces at the original size when scored against shuffled labels</span></a></li><li><a href="#timing" class="rk-t3"><span class="rk-num">3</span><span>Clustering follows the timing of each type’s moves</span></a></li><li><a href="#duplicates" class="rk-t4"><span class="rk-num">4</span><span>With repeated values, clustering persists only in pairs that contain Selection</span></a></li><li><a href="#frozen" class="rk-t5"><span class="rk-num">5</span><span>Rerouting around a frozen target carries the robustness to damage</span></a></li><li><a href="#conjectures" class="rk-t6"><span class="rk-num">6</span><span>Four untested conjectures about mechanism</span></a><ul><li><a href="#conj-timing"><span class="rk-num">6.1</span><span>Transient clustering comes from types acting at different phases of the sort</span></a></li><li><a href="#conj-stability"><span class="rk-num">6.2</span><span>Persistent clustering needs a rule that reorders equivalent cells</span></a></li><li><a href="#conj-rerouting"><span class="rk-num">6.3</span><span>Frozen-cell robustness comes from rerouting, and the substrate question is open</span></a></li><li><a href="#conj-islands"><span class="rk-num">6.4</span><span>The islands prediction can be scored now</span></a></li></ul></li><li><a href="#not-retested" class="rk-t7"><span class="rk-num">7</span><span>Original claims not yet retested</span></a></li><li><a href="#recap" class="rk-t8"><span class="rk-num">8</span><span>Timing makes the islands and exchange keeps them</span></a></li><li><a href="#earlier" class="rk-t9"><span class="rk-num">A.1</span><span>What our earlier version got wrong</span></a></li><li><a href="#methods-data" class="rk-t10"><span class="rk-num">A.2</span><span>Follow-up results</span></a></li><li><a href="#methods-checks" class="rk-t11"><span class="rk-num">A.3</span><span>Independent checks</span></a></li><li><a href="#methods-receipts" class="rk-t12"><span class="rk-num">A.4</span><span>Receipts</span></a></li></ul></details></div>
+<section class="rk-abstract" aria-label="Abstract">
+<p>Zhang, Goldstein and Levin <span class="rk-cite"><span class="citation" data-cites="zhang2024sorting"><a href="#ref-zhang2024sorting" role="doc-biblioref">[1]</a></span><span class="rk-pop" role="tooltip"><span class="rk-pop-entry"><span class="rk-num">[1]</span>T. Zhang, A. Goldstein, and M. Levin, <span>“Classical sorting algorithms as a model of morphogenesis: Self-sorting arrays reveal unexpected competencies in a minimal model of basal intelligence,”</span> <em>Adaptive Behavior</em>, 2024, Available: <a href="https://arxiv.org/abs/2401.05375">https://arxiv.org/abs/2401.05375</a></span></span></span> let every element of an array run its own sorting rule and found that elements running the same rule gather into runs while the array sorts, which they explained by some rules moving into place earlier than others and turned into a prediction of tissue islands in chimeric organisms. We test that explanation by moving the part of Insertion sort that sets its timing, a gate that makes each cell wait until everything to its left is in order. Given that gate, Bubble sort clusters nearly as much as Insertion does with the same number of swaps, and Insertion without it clusters no more than chance. Scored against shuffles of each run’s own type labels, the clustering in the original chimeras reproduces at the original array size and sits 0.07 to 0.12 above that null. With repeated values, clustering survives into the sorted array only in pairs that contain Selection, because the adjacent-swap rules never reorder equal values. With frozen cells, the rule that reroutes around a frozen target carries the model’s robustness to damage, while threaded and sequential execution do the same work. Timing decides where transient islands form, and only cells that exchange places with equivalents keep them.</p>
+</section>
+<section id="model" class="level2 rk-s1">
+<h2 class="rk-s1"><span class="rk-num">1</span>The model and what the original paper claims</h2>
+<p>In the original model each of 100 cells holds a value and runs one of three rules, which the paper calls algotypes. A Bubble cell looks at a randomly chosen neighbour and swaps with it if the pair is out of order, an Insertion cell moves left past a larger neighbour only once every cell to its left is in order, and a Selection cell keeps a pointer to the position it believes it belongs in, starting at the left end, and swaps directly with whatever cell sits there if that cell holds a larger value, advancing the pointer otherwise. Every cell is a thread, all threads share a single lock, so one cell acts at a time and the operating system decides which. The paper measures clustering with an aggregation value, the fraction of cells whose neighbour runs the same rule (p. 10), which we write as C. The original code divides the count of matching right-hand neighbours by all 100 cells, so the last cell always scores zero and a random arrangement averages 0.49, while we divide by the 99 adjacent pairs, which puts the random level at 49/99, close to one half, and raises every value by a factor of 100/99.</p>
+<p>In chimeric arrays the paper reports that C rises while the array sorts and falls back as sorting completes, peaking at 0.72 for Bubble with Selection, 0.65 for Bubble with Insertion, 0.69 for Selection with Insertion and 0.62 for all three, at 42, 21, 19 and 22 percent of the way through the sort (p. 14). As a negative control it ran pairs of identical rules under two labels and found peaks of 0.61, 0.65 and 0.57 (p. 13), while the caption of Figure 8 describes the plotted control curves as showing no significant deviation from 50% chance and the plotted chimeric curves as peaking at 60% (pp. 33 to 34). To explain the chimeric peaks the authors proposed an efficiency hypothesis, in which cells with a more efficient rule reach their places first and the others catch up later (p. 14). With repeated values (each of ten values held by ten cells) clustering persisted to the end, with final values of 0.65 for Bubble with Selection and 0.7 for Insertion with Selection, which the authors took as support for the efficiency hypothesis because Selection is the more efficient rule (p. 14). Two further claims bear on this report: cell-view sorting accumulates less monotonicity error than the traditional algorithms when some cells are frozen (p. 11), and the clustering result suggests that a chimeric biological body will form tissue-level islands (p. 18).</p>
+<p>We test the efficiency hypothesis by changing when a rule moves while leaving how it moves alone. InsertionNoWait is Insertion without its waiting gate, DelayedBubble and DelayedGnome carry the same gate inside Bubble and inside Gnome (a deterministic adjacent-swap rule), and BubbleClone and GnomeClone are ungated copies that differ from their partner only by name, so that pairing a rule with its clone makes a chimera in label alone. Every clustering result is scored against a shuffle null. For each sorting run the sequence of arrangements is held fixed, the type labels are shuffled among the cells 200 times, and peak C is recomputed for each shuffle; the excess is the observed peak minus the mean shuffled peak, and it asks whether cells of the same type move together more than arbitrary sets of cells of the same size do in the same run. Clustering curves are sampled after every swap, and frozen cells run no thread.</p>
+<p>The original paper saw like cells gather while the array sorts and put the gathering down to timing. Our experiments ask whether changing a rule’s timing, and nothing else, moves the gathering with it.</p>
+</section>
+<section id="original-size" class="level2 rk-s2">
+<h2 class="rk-s2"><span class="rk-num">2</span>Chimeric clustering reproduces at the original size when scored against shuffled labels</h2>
+<p>At the original size of 100 distinct values, mixing two rules makes like cells gather more than chance, and two copies of one rule under different labels do not. We checked this with our own sequential reimplementation of the three rules, in which a uniformly chosen cell acts at each step, with 40 runs per pair and 200 label shuffles per run. Pairs of identical rules peak between 0.57 and 0.62, within the original control range of 0.57 to 0.65, and each peak lies within 0.01 of its own shuffle null, so the original control level is what the maximum of a noisy curve gives when type has no effect. The three chimeras peak at roughly the original heights and times and lie 0.07 to 0.12 above their nulls. The original comparison of chimeras with identical-rule controls was therefore the right comparison and its conclusion stands.</p>
+<p>The caption of the original Figure 8 is also right about what it plots, since a curve averaged over runs at each point of progress stays near one half whenever the labels carry no information (our identical-rule mean curves peak at 0.509 to 0.519, our chimeric mean curves at 0.604 to 0.666, against the caption’s 60%). The peaks quoted in the text behave like the mean over runs of each run’s own maximum, which is the statistic in the table below. We infer this from the match: our identical-rule values fall inside the original control range and our chimeric values sit near the text’s 0.65 to 0.72, while the maximum of a mean control curve, which is what the original plotting code prints, stays near 0.51 to 0.52 in our runs, well below 0.57. What needs correcting is the reference level, because a chimeric peak of this kind has to be read against a per-run-peak null of 0.56 to 0.62, as the text on pp. 13 and 14 does.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Pair, 100 distinct values</th>
+<th>Original peak</th>
+<th>Our peak</th>
+<th>Shuffle null</th>
+<th>Excess (95% interval)</th>
+<th>Peak position, original and ours</th>
+<th>Runs above 95% of shuffles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bubble with Bubble</td>
+<td>control, 0.57 to 0.65</td>
+<td>0.621</td>
+<td>0.619</td>
+<td>0.002 (−0.006 to 0.010)</td>
+<td>· and 42%</td>
+<td>1 of 40</td>
+</tr>
+<tr>
+<td>Insertion with Insertion</td>
+<td>control, 0.57 to 0.65</td>
+<td>0.567</td>
+<td>0.561</td>
+<td>0.006 (−0.006 to 0.018)</td>
+<td>· and 33%</td>
+<td>1 of 40</td>
+</tr>
+<tr>
+<td>Selection with Selection</td>
+<td>control, 0.57 to 0.65</td>
+<td>0.616</td>
+<td>0.611</td>
+<td>0.005 (−0.004 to 0.014)</td>
+<td>· and 37%</td>
+<td>2 of 40</td>
+</tr>
+<tr>
+<td>Bubble with Selection</td>
+<td>0.72</td>
+<td>0.686</td>
+<td>0.613</td>
+<td>0.073 (0.060 to 0.085)</td>
+<td>42% and 36%</td>
+<td>23 of 40</td>
+</tr>
+<tr>
+<td>Bubble with Insertion</td>
+<td>0.65</td>
+<td>0.666</td>
+<td>0.586</td>
+<td>0.080 (0.068 to 0.092)</td>
+<td>21% and 20%</td>
+<td>22 of 40</td>
+</tr>
+<tr>
+<td>Insertion with Selection</td>
+<td>0.69</td>
+<td>0.711</td>
+<td>0.588</td>
+<td>0.124 (0.105 to 0.142)</td>
+<td>19% and 23%</td>
+<td>33 of 40</td>
+</tr>
+</tbody>
+</table>
+<p>The original lists its control peaks per panel without naming which identical rule each panel used, so the control column gives their range. Each run carries its own shuffle test, and in Insertion with Selection the observed peak falls above 95% of the shuffled peaks in 33 of 40 runs, while for identical rules this happens in one or two runs of forty, about as often as chance allows.</p>
+<figure class="report-figure wide"><img src="assets/clustering-n100.png" alt="Three panels of mean aggregation value against percent of swaps completed, 100 cells, 40 runs each. Left, identical-rule pairs stay within about 0.02 of one half throughout. Middle, the three chimeras with distinct values rise to mean curve peaks of about 0.60 to 0.67 between 20 and 35 percent of the sort and fall back to one half at the end. Right, with values 1 to 10 repeated, Bubble with Insertion and Bubble with gated Bubble trace almost the same curve, peaking near 0.61 and returning to one half, while Insertion with Selection climbs to 0.70 and stays there and Bubble with Selection rises to about 0.60, drifts near 0.55 and then climbs to 0.69 in the last few percent of swaps."><figcaption>Mean C over 40 runs of our sequential reimplementation with 100 cells, on a common axis of swaps completed. Dotted lines are the mean shuffled-label curves, which sit at about 0.495 in every panel. The mean curve peaks lower than the mean of per-run peaks in the table because individual runs peak at different times.</figcaption></figure>
+<p>The original finding holds: like cells in a mixed array do gather while it sorts. What changes is the yardstick, which is the peak of a noisy curve run through the same moves with shuffled labels, not one half.</p>
+</section>
+<section id="timing" class="level2 rk-s3">
+<h2 class="rk-s3"><span class="rk-num">3</span>Clustering follows the timing of each type’s moves</h2>
+<p>Clustering tracks separation, a measure of when each type does its moving. Each swap gets its position in the run, scaled from 0 to 1, each type gets the mean position of its own cells’ swaps, and separation is the absolute difference between the two types’ means, which is near zero when the types act interleaved and grows when one type does its moving earlier. Across ten pairs at 30 cells, drawn from Bubble, Selection, Insertion, Gnome and Shaker (a rule that alternates between checking its right and its left neighbour), the four pairs containing Insertion separate by 0.12 to 0.21 and cluster 0.05 to 0.09 above their nulls, while the six other pairs separate by only 0.04 to 0.05 and cluster between 0.00 and 0.03 above theirs. The correlation of 0.94 across all ten pairs is therefore mostly the gap between those two families. Within the six pairs without Insertion it is 0.43, and the three Selection pairs among them cluster 0.026 to 0.031 above their nulls at separations of 0.04 to 0.05, about the same as Bubble with Gnome (0.043), which does not cluster at all.</p>
+<figure class="report-figure"><img src="assets/separation-vs-excess.png" alt="Scatter of excess clustering over the shuffle null against timing separation for ten pairs at 30 cells, with 95% interval bars. The four Insertion pairs lie at separation 0.12 to 0.21 and excess 0.05 to 0.09; the six other pairs cluster at separation 0.04 to 0.05 with excess from 0 to 0.03, the three Selection pairs highest among them."><figcaption>Excess clustering against timing separation, 30 cells, 50 runs per pair, seed 20260306. Vertical bars are 95% intervals over runs. Pearson r is 0.94 over all ten pairs, 0.97 within the four Insertion pairs and 0.43 within the other six.</figcaption></figure>
+<p>Moving the gate moves the clustering. Removing Insertion’s gate brings Bubble with InsertionNoWait from an excess of 0.079 down to −0.007, which is the null: its raw peak still sits 0.131 above one half, but the shuffle null for that pair already sits 0.137 above it. Moving the gate into Bubble raises the excess from 0.017 for an ungated clone to 0.064, close to the 0.061 that Bubble with Insertion reaches in the same experiment, and moving it into Gnome raises it from 0.006 to 0.052. Every adjacent-swap rule makes exactly one swap per out-of-order pair, so the gated and ungated Bubble runs do the same expected amount of work (612 and 616 swaps on average), and the gate changes only when each type does it. In each gated pair only one run in five clears its own shuffle test at the 5% level, so the excess is detectable in the mean over runs and weak in any single run.</p>
+<figure class="report-figure wide"><img src="assets/gate-ablation.png" alt="Two dot plots over seven conditions. Left, raw peak C minus one half: open circles for the earlier wall-clock values and filled circles for the corrected per-swap values; the earlier Bubble with InsertionNoWait and Bubble with Gnome values of 0.091 and 0.073 rise to 0.131 and 0.149, and all corrected values lie between 0.13 and 0.19. Right, excess over the shuffle null with 95% intervals; gated conditions lie at 0.05 to 0.08 and every ungated condition lies within about 0.02 of zero."><figcaption>Raw clustering (left) and excess over the shuffle null (right) for the gate ablation (50 cells, 20 runs, seed 20260324) and the gate transplant (50 cells, 30 runs pooled over seeds 40 to 42). Gated conditions are in orange and ungated ones in blue. The left panel shows how much of each raw value is null, about 0.11 to 0.14 at this size; its open circles are the values of our earlier version, which sampled C by wall-clock time (see the appendix).</figcaption></figure>
+<p>Delaying a type’s moves is enough to make it gather: a rule with Insertion’s wait added clusters, and Insertion with the wait removed does not. The effect shows in the average over many runs rather than in any one run, and the Selection pairs cluster a little without any delay, so in this set of rules timing is the main cause of clustering but not the only one.</p>
+</section>
+<section id="duplicates" class="level2 rk-s4">
+<h2 class="rk-s4"><span class="rk-num">4</span>With repeated values, clustering persists only in pairs that contain Selection</h2>
+<p>We repeated the original duplicate-value experiment at its own size, 100 cells holding the values 1 to 10 ten times each, with 40 runs per pair. Insertion with Selection ends at 0.703 and Bubble with Selection at 0.690, close to the original 0.7 for the first and above the original final 0.65 for the second and near the original’s 0.69 maximum, and both lie about 0.2 above the shuffle null for the final arrangement. Bubble with Insertion peaks at 0.659 after 17% of the sort, as the original’s 0.63 at 13% did, and then returns to the null. Bubble with DelayedBubble follows the same curve as Bubble with Insertion, and Bubble with InsertionNoWait does not rise above its null at any point.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Pair, values 1 to 10 repeated</th>
+<th>Original</th>
+<th>Peak (mean position)</th>
+<th>Final</th>
+<th>Final shuffle null</th>
+<th>Final excess (95% interval)</th>
+<th>Runs keeping equal values in order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Insertion with Selection</td>
+<td>final 0.7, maximum 0.71 at 100%</td>
+<td>0.719 (43%)</td>
+<td>0.703</td>
+<td>0.495</td>
+<td>0.207 (0.196 to 0.218)</td>
+<td>0 of 40</td>
+</tr>
+<tr>
+<td>Bubble with Selection</td>
+<td>final 0.65, maximum 0.69 at 100%</td>
+<td>0.706 (71%)</td>
+<td>0.690</td>
+<td>0.496</td>
+<td>0.195 (0.181 to 0.208)</td>
+<td>0 of 40</td>
+</tr>
+<tr>
+<td>Bubble with Insertion</td>
+<td>maximum 0.63 at 13%</td>
+<td>0.659 (17%)</td>
+<td>0.510</td>
+<td>0.495</td>
+<td>0.015 (−0.002 to 0.031)</td>
+<td>40 of 40</td>
+</tr>
+<tr>
+<td>Bubble with DelayedBubble</td>
+<td>·</td>
+<td>0.660 (15%)</td>
+<td>0.510</td>
+<td>0.495</td>
+<td>0.015 (−0.002 to 0.031)</td>
+<td>40 of 40</td>
+</tr>
+<tr>
+<td>Bubble with InsertionNoWait</td>
+<td>·</td>
+<td>0.603 (31%), null 0.613</td>
+<td>0.510</td>
+<td>0.495</td>
+<td>0.015 (−0.002 to 0.031)</td>
+<td>40 of 40</td>
+</tr>
+<tr>
+<td>Bubble with Bubble</td>
+<td>·</td>
+<td>0.627 (36%), null 0.616</td>
+<td>0.510</td>
+<td>0.495</td>
+<td>0.015 (−0.002 to 0.031)</td>
+<td>40 of 40</td>
+</tr>
+<tr>
+<td>Insertion with Insertion</td>
+<td>·</td>
+<td>0.565 (40%), null 0.557</td>
+<td>0.510</td>
+<td>0.495</td>
+<td>0.015 (−0.002 to 0.031)</td>
+<td>40 of 40</td>
+</tr>
+<tr>
+<td>Selection with Selection</td>
+<td>·</td>
+<td>0.583 (42%), null 0.582</td>
+<td>0.495</td>
+<td>0.496</td>
+<td>−0.000 (−0.016 to 0.015)</td>
+<td>0 of 40</td>
+</tr>
+</tbody>
+</table>
+<p>The final rows of the adjacent-swap pairs are identical because those runs end in identical arrangements. Bubble, Insertion and their variants only swap neighbours that are strictly out of order, so two cells holding the same value never pass each other, and in every one of their runs each group of equal values ends in the order it started in, after exactly as many swaps as the starting shuffle has out-of-order pairs (2,259 on average). The sorted arrangement is then fixed by the starting shuffle, which ignores type, and the final C of any pair of adjacent-swap rules lands at the null whatever the rules’ timing. Selection’s long-range swaps carry a cell past others holding its value, no Selection-containing run kept equal values in their starting order, and in both pairs that mix Selection with another rule the final share of cells beside a same-type neighbour ends about 0.2 above the shuffles.</p>
+<p>Timing makes islands that dissolve once the array is sorted. Only a rule that lets a cell jump past its equals can leave islands in the finished array, so the persistent clustering the original paper read as support for the efficiency hypothesis comes from Selection’s long jumps.</p>
+</section>
+<section id="frozen" class="level2 rk-s5">
+<h2 class="rk-s5"><span class="rk-num">5</span>Rerouting around a frozen target carries the robustness to damage</h2>
+<p>Threaded and sequential execution of the same rules do the same work once frozen cells run no thread, with active-cell comparison counts within about 3% of each other in every condition (ratios 0.97 to 1.02) and identical success counts, as expected from a single shared lock that makes the threaded version a random sequential scheduler. Neither Bubble nor Insertion reached a sorted array in any of the nine runs in either mode, so their ratios compare runs stopped at the time limit.</p>
+<p>The factorization experiment (30 cells) crosses the reach of Selection’s swaps, long-range or adjacent only, with its response to a frozen target, rerouting to the next position or waiting on it. When frozen cells cannot be moved at all, only long-range rerouting sorts the active cells, in all 30 runs at 3, 6 and 9 frozen cells, with fewer swaps as fewer cells take part (108 without frozen cells, 56 with nine). Long-range waiting stalls as soon as its target is frozen, and the adjacent variants can never carry a cell across a frozen one, so the target order is out of reach and they keep swapping until the 5 s time limit (on average 14,077 swaps for adjacent rerouting and 6,831 for adjacent waiting with three frozen cells, against 412 and 404 without). Under the original default, in which frozen cells cannot initiate swaps but can be moved by active neighbours, long-range rerouting sorts 3 of 15 runs with one frozen cell and none with two or three, and every other variant fails whenever a cell is frozen. Since these outcomes follow almost directly from the rules, they are best read as consistency checks of the implementation. The state-space measure K for long-range rerouting falls from 30.45 to 18.01 as frozen cells go from 0 to 9, staying 1.7 to 2.0 below the base-10 logarithm of the number of arrangements of the active cells, so its decline tracks the shrinking number of arrangements of the active cells. The dip statistics reproduce (Bubble dips in every run, 34.8 times on average, Selection in 98% of runs, 3.7 times), but they still lack a random-walk null.</p>
+<p>A cell whose target is frozen either waits, and the sort stalls, or moves on to the next position, and the sort finishes. That choice decides whether the array survives damage, and running the cells as threads changes nothing about it.</p>
+</section>
+<section id="conjectures" class="level2 rk-s6">
+<h2 class="rk-s6"><span class="rk-num">6</span>Four untested conjectures about mechanism</h2>
+<p>Everything in this section goes beyond the measurements above. Each conjecture names the result that would count against it, and none of the four has been tested yet.</p>
+<section id="conj-timing" class="level3">
+<h3><span class="rk-num">6.1</span>Transient clustering comes from types acting at different phases of the sort</h3>
+<p>The gate transplant turns the original efficiency hypothesis into an intervention result, since adding Insertion’s wait to Bubble produces nearly the full Insertion-level clustering with the same total work, while the ungated clone stays at the null. We read this as heterochrony in the developmental sense, where two cell populations following one global goal but working on different schedules leave temporary territories behind, and where the territory reflects when a population acts rather than how much it does. If that is right, clustering should rise smoothly with the strength of the gate (for instance a gate that waits for only the nearest k cells to its left to be sorted), and the size of the excess should be predictable from separation within a family of rules as well as between families. A graded gate that raises separation to the Insertion level without raising the excess, or one whose excess jumps without a matching change in separation, would show that timing alone does not carry the effect.</p>
+</section>
+<section id="conj-stability" class="level3">
+<h3><span class="rk-num">6.2</span>Persistent clustering needs a rule that reorders equivalent cells</h3>
+<p>The duplicate-value runs separate two things that the original reading kept together. Timing differences exist in Bubble with Insertion and leave no trace in the final arrangement, because both rules are stable sorts and the order among equal values is decided once, by the starting shuffle. Selection is unstable and decides that order dynamically, by which cell claims a position first. A chimeric body may face the same distinction: cells that share a positional target can either keep their neighbour relations while moving or exchange places with equivalents, and only the second kind of movement can let type-specific timing write itself into the final pattern. The conjecture predicts that Selection restricted to adjacent swaps (the adjacent-rerouting variant of the factorization experiment) leaves no final excess in a chimera with repeated values, and that a long-range rule made stable, one that never jumps past an equal value, also leaves none. Final clustering above the null in either case would break it. The Selection pairs also cluster more with size, with Bubble with Selection rising from 0.026 at 30 cells to 0.052 at 50 and 0.073 at 100 while Bubble with Insertion stays between 0.06 and 0.08, which fits a mechanism tied to the length of Selection’s jumps. Those three sizes come from two implementations, though, and a single implementation at 200 cells in which Bubble with Selection does not exceed its 100-cell excess would weaken that reading.</p>
+</section>
+<section id="conj-rerouting" class="level3">
+<h3><span class="rk-num">6.3</span>Frozen-cell robustness comes from rerouting, and the substrate question is open</h3>
+<p>With frozen cells running no thread, the threaded runs behave like a random sequential scheduler, which is what a single shared lock makes them, so the experiments so far cannot say whether a truly distributed substrate changes anything. What does change outcomes is the rule for a blocked target. Long-range rerouting is a small, explicit form of the problem-solving the Levin program studies, a cell that reaches the same goal by a different path when its usual path is blocked, and it is the one variant that keeps sorting as the frozen fraction grows. Our bet is that a lock-free implementation, in which cells read stale neighbour values and conflicting swaps can collide, will still let long-range rerouting sort while the adjacent variants degrade further, and that the original advantage of cell-view over traditional sorting with frozen cells comes from the traditional baselines lacking rerouting. A lock-free run in which adjacent rules recover, or one in which long-range rerouting loses its advantage, would count against it.</p>
+</section>
+<section id="conj-islands" class="level3">
+<h3><span class="rk-num">6.4</span>The islands prediction can be scored now</h3>
+<p>The prediction that a chimeric body will form tissue-level islands (p. 18) becomes testable in the model once each run is compared with shuffles of its own labels, and the results above give two versions of it. Islands that form during rearrangement and dissolve should appear whenever two cell types differ in when they move, and islands that persist should need the types to share positional targets and at least one of them to move past equivalent cells. In a chimeric worm or a mixed-cell aggregate, the second version predicts that persistent islands go with exchanges among cells of equivalent positional identity, and observing persistent islands where such exchanges can be ruled out would show that the sorting model is missing a mechanism the tissue uses.</p>
+<p>Taken together, the four conjectures say that the model’s islands come from schedules and from exchanges between equivalent cells, and each one names an experiment that could show otherwise.</p>
+</section>
+</section>
+<section id="not-retested" class="level2 rk-s7">
+<h2 class="rk-s7"><span class="rk-num">7</span>Original claims not yet retested</h2>
+<p>Several original experiments remain without a corrected counterpart: the opposite-direction chimeras and their incompletely sorted equilibrium, the three-type mixture, the efficiency comparisons between cell-view and traditional sorting, and the rise in delayed gratification with the number of frozen cells, which the original uses to argue that the behaviour is not a random walk. That last trend needs the same kind of null as the clustering, and the dip statistics need a random-walk null before they can support it. The original also describes the algorithms as deterministic (p. 16), while Bubble chooses its neighbour at random and the operating system orders the threads, so seeded threaded runs do not repeat exactly.</p>
+<p>Until these are redone, the original claims about efficiency and about dips rising with damage stand as the paper reports them, without an independent check.</p>
+</section>
+<section id="recap" class="level2 rk-s8">
+<h2 class="rk-s8"><span class="rk-num">8</span>Timing makes the islands and exchange keeps them</h2>
+<p>The self-sorting array is a small model organism with a rulebook we can read in full, and the principle of organization it shows here is a schedule. Cells of one type gather because they move at a different time from their neighbours, and moving the waiting rule from one sorting rule to another moves the gathering with it, which makes the gate an intervention handle on the pattern. What the finished array remembers of that history depends on whether cells can trade places with their equivalents: adjacent-swap rules erase it and Selection’s long jumps write it into the final pattern, so the hidden variation that decides the outcome is the order among equal cells. In the lesion test, whether the array keeps its future under damage comes down to one rule, rerouting around a frozen target, and not to the threaded substrate. The space of patterns this opens is small and structured: graded gates, stable long-range rules and lock-free schedules each predict where islands should form and whether they should last.</p>
+</section>
+<section id="appendix" class="level2 rk-appendix-head">
+<h2 class="rk-appendix-head">Appendix</h2>
+<section id="earlier" class="level3 rk-s9">
+<h3 class="rk-s9"><span class="rk-num">A.1</span>What our earlier version got wrong</h3>
+<p>The earlier follow-up by Pouey and Rohr reran the original rules from byte-identical copies of the upstream cell classes and introduced the gate ablation and transplant, the factorization of Selection’s frozen-cell robustness into the reach of its swaps and its rerouting, and the comparison of threaded with sequential execution. Rechecking it found four problems that changed numbers. Clustering was scored as peak C minus one half, and a maximum taken over hundreds of noisy snapshots sits well above one half even when type has no effect, so most of each reported increase was null; the earlier description of the InsertionNoWait drop as a sharp reduction understated it, because without a null the remaining raw value of 0.091 looked like residual clustering. Figure 2 sampled C every 0.02 seconds of wall-clock time, which gave the slower gated runs more samples and therefore higher maxima. The threaded runs in the work comparison started threads for frozen cells, which the original’s <code>multithread_cell_sorting_with_frozen_steps.py</code> does not do, although its <code>freezing_sorting_analysis.py</code> does, and a frozen Selection thread keeps counting comparisons without moving. The result files behind the figures had not been committed.</p>
+<p>The table sets the earlier numbers beside the corrected ones; raw clustering means peak C minus one half, and separation is defined in the section on timing.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Earlier follow-up</th>
+<th>Corrected</th>
+<th>Corrected source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Correlation of separation with clustering, ten pairs</td>
+<td>r = 0.78 (raw)</td>
+<td>r = 0.84 raw, 0.94 excess</td>
+<td>Figure 1</td>
+</tr>
+<tr>
+<td>Same, six pairs without Insertion</td>
+<td>r ≈ 0.05 (raw)</td>
+<td>r = 0.36 raw, 0.43 excess</td>
+<td>Figure 1</td>
+</tr>
+<tr>
+<td>Bubble with Insertion, raw clustering</td>
+<td>0.166</td>
+<td>0.190, excess 0.079 (0.054 to 0.105)</td>
+<td>Figure 2</td>
+</tr>
+<tr>
+<td>Bubble with InsertionNoWait, raw clustering</td>
+<td>0.091</td>
+<td>0.131, excess −0.007 (−0.020 to 0.007)</td>
+<td>Figure 2</td>
+</tr>
+<tr>
+<td>Bubble with Gnome, raw clustering</td>
+<td>0.073</td>
+<td>0.149, excess 0.011 (−0.004 to 0.026)</td>
+<td>Figure 2</td>
+</tr>
+<tr>
+<td>Bubble with DelayedBubble, raw and separation</td>
+<td>0.176, 0.111</td>
+<td>0.173, 0.114, excess 0.064 (0.050 to 0.078)</td>
+<td>Exp27</td>
+</tr>
+<tr>
+<td>Bubble with BubbleClone, raw and separation</td>
+<td>0.155, 0.027</td>
+<td>0.156, 0.024, excess 0.017 (0.000 to 0.034)</td>
+<td>Exp27</td>
+</tr>
+<tr>
+<td>Gnome with DelayedGnome, raw and separation</td>
+<td>0.167, 0.106</td>
+<td>0.160, 0.107, excess 0.052 (0.034 to 0.069)</td>
+<td>Exp27</td>
+</tr>
+<tr>
+<td>Gnome with GnomeClone, raw and separation</td>
+<td>0.126, 0.043</td>
+<td>0.144, 0.025, excess 0.006 (−0.011 to 0.023)</td>
+<td>Exp27</td>
+</tr>
+<tr>
+<td>Bubble with InsertionNoWait, raw and separation</td>
+<td>0.134, 0.033</td>
+<td>0.137, 0.025, excess 0.001 (−0.016 to 0.017)</td>
+<td>Exp27</td>
+</tr>
+<tr>
+<td>Selection, threaded over sequential comparisons, 1 and 3 frozen</td>
+<td>35.86 and 97.84</td>
+<td>1.02 and 1.01</td>
+<td>Exp26</td>
+</tr>
+<tr>
+<td>Bubble, same ratio</td>
+<td>1.18 and 1.00</td>
+<td>0.97 and 0.98</td>
+<td>Exp26</td>
+</tr>
+<tr>
+<td>Insertion, same ratio</td>
+<td>1.04 and 1.11</td>
+<td>1.00 and 1.00</td>
+<td>Exp26</td>
+</tr>
+<tr>
+<td>Long-range rerouting Selection, K at 0, 3, 6, 9 frozen</td>
+<td>30.44, 26.14, 22.01, 18.01</td>
+<td>30.45, 26.14, 22.00, 18.01</td>
+<td>K values</td>
+</tr>
+<tr>
+<td>Bubble dips per run, depth, recovery steps</td>
+<td>34.2, 0.9, 2.4</td>
+<td>34.8, 0.91, 2.0</td>
+<td>Dip statistics</td>
+</tr>
+</tbody>
+</table>
+<p>Intervals are 95% intervals over runs. Figure 1 uses 30 cells and 50 runs per pair, Figure 2 uses 50 cells and 20 runs, Exp27 uses 50 cells and 30 runs per pair, and the work comparison uses 30 cells and 9 runs per condition.</p>
+<p>The earlier work ratios of 36 and 98 for Selection came from frozen Selection threads, whose movement check never asks whether the cell is frozen, so each pass of a frozen thread recorded a comparison. In one instrumented run with a single frozen cell (seed 1), 8,678 of 9,196 comparisons came from that frozen thread, while the active cells made 519 comparisons threaded and 531 sequential.</p>
+<figure class="report-figure"><img src="assets/threaded-work.png" alt="Dot plot of threaded over sequential compare-and-swap counts on a log axis for Bubble, Insertion and Selection at one and three frozen cells. Open circles for the earlier runs, in which frozen cells had threads, lie near 1 for Bubble and Insertion and at about 36 and 98 for Selection; filled circles for the corrected runs all lie at 1."><figcaption>Exp26, 30 cells, nine runs per condition, threaded over sequential mean compare-and-swap count. Open circles are the earlier values quoted in the follow-up manuscript and filled circles the corrected runs without frozen-cell threads.</figcaption></figure>
+</section>
+<section id="methods-data" class="level3 rk-s10">
+<h3 class="rk-s10"><span class="rk-num">A.2</span>Follow-up results</h3>
+<p>The eight result files come from <code>dossiers/zhang-levin-playground/paper/results/</code> on the research-registry main branch <span class="rk-cite"><span class="citation" data-cites="specter2026zhangresults"><a href="#ref-specter2026zhangresults" role="doc-biblioref">[2]</a></span><span class="rk-pop" role="tooltip"><span class="rk-pop-entry"><span class="rk-num">[2]</span>Specter Labs, <span>“Self-sorting arrays follow-up: Result files.”</span> research-registry, dossiers/zhang-levin-playground/paper/results, 2026. Available: <a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/zhang-levin-playground/paper/results">https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/zhang-levin-playground/paper/results</a></span></span></span>, and their SHA-256 values are recorded in the receipts. Generators are <code>paper/compute_fig1_temporal_clustering.py</code> (Figure 1), <code>paper/run_clustering_ablation.py</code> (Figure 2, the gate ablation), <code>exp27_timing_interventions.py</code> (Exp27, the gate transplant), <code>exp26_substrate_matched_baselines.py</code> (Exp26, threaded and sequential work), <code>exp25_selection_factorization.py</code> (Exp25, the factorization), <code>paper/compute_k.py</code> and <code>paper/compute_dip_stats.py</code> in <code>dossiers/zhang-levin-playground</code>. Earlier follow-up values are quoted with file, line and SHA-256 from the dossier as it stood before the correction, and original-paper values with page numbers from arXiv:2401.05375; the original code is <code>Zhangtaining/cell_research</code> at <code>1fd2bd5</code>. The frozen-thread attribution (8,678 of 9,196 comparisons) comes from a separate instrumented run and is not part of the committed results. The dip runs, like the rule-ablation (Exp10) and cell-view versus traditional (Exp14) tables, which come from an archive that was not retained, still start threads for frozen cells.</p>
+</section>
+<section id="methods-checks" class="level3 rk-s11">
+<h3 class="rk-s11"><span class="rk-num">A.3</span>Independent checks</h3>
+<p><code>sim.py</code> reimplements Bubble, Insertion, Selection, InsertionNoWait, DelayedBubble and Gnome sequentially, with a uniformly chosen cell acting at each step and C recorded after every swap. <code>null_n100.py</code> runs 40 runs per pair at 100 distinct values (run seeds 5000 + t, shuffle seeds t) and <code>duplicates_n100.py</code> 40 runs per pair at values 1 to 10 repeated (run seeds 7000 + t); both use 200 label shuffles per run, and the duplicate check also scores the final arrangement against its shuffles and tests whether each group of equal values keeps its starting order. <code>run_cluster.py</code> is the earlier 50-cell check (excess 0.052 for Bubble with Selection, 0.075 for Bubble with Insertion). Intervals are mean ± 1.96 standard errors over runs. In the duplicate runs, Bubble with Bubble peaks 0.011 above its null (0.003 to 0.020), a small residual we have not explained. Run <code>null_n100.py</code> and <code>duplicates_n100.py</code> with <code>uv run --no-project --with numpy==2.1.3 python &lt;script&gt; &lt;out.json&gt;</code>, and <code>run_cluster.py</code> with <code>uv run --no-project --with numpy==2.1.3 --with scipy python run_cluster.py &lt;directory holding sim.py&gt; &lt;out.json&gt;</code>.</p>
+</section>
+<section id="methods-receipts" class="level3 rk-s12">
+<h3 class="rk-s12"><span class="rk-num">A.4</span>Receipts</h3>
+<p><code>receipts.json</code> lists every number used in this report with its file, key and value, except the comparison counts from the instrumented Exp26 run with one frozen cell, which come from that instrumented run and are not stored in a result file. No raw trajectories are retained beyond the compact JSON files linked here.</p>
+<p><a href="assets/receipts.json">Receipts</a> · <a href="assets/sim.py">sim.py</a> · <a href="assets/null_n100.py">null_n100.py</a> · <a href="assets/null_n100.json">100-cell null results</a> · <a href="assets/duplicates_n100.py">duplicates_n100.py</a> · <a href="assets/duplicates_n100.json">Duplicate-value results</a> · <a href="assets/run_cluster.py">run_cluster.py</a> · <a href="assets/run_cluster_n50.json">50-cell results</a></p>
+</section>
+</section>
+<footer class="rk-endmatter"><section id="cite-this"><h2>Cite this report</h2><p>Specter Labs. 2026. <em>Moving a waiting rule moves the clustering in self-sorting arrays</em>. Specter Labs report, revision 007. https://specterlab.org/dossiers/zhang-levin-playground/corrected-clustering/</p><pre>@techreport{specter-zhang-sorting-followup-007,
+  title = {Moving a waiting rule moves the clustering in self-sorting arrays},
+  author = {Specter Labs},
+  institution = {Specter Labs},
+  year = {2026},
+  note = {Revision 007},
+  url = {https://specterlab.org/dossiers/zhang-levin-playground/corrected-clustering/}
+}</pre></section><section id="references"><h2>References</h2><div id="ref-zhang2024sorting" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">T. Zhang, A. Goldstein, and M. Levin, <span>“Classical sorting algorithms as a model of morphogenesis: Self-sorting arrays reveal unexpected competencies in a minimal model of basal intelligence,”</span> <em>Adaptive Behavior</em>, 2024, Available: <a href="https://arxiv.org/abs/2401.05375">https://arxiv.org/abs/2401.05375</a></div>
+</div>
+<div id="ref-specter2026zhangresults" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Specter Labs, <span>“Self-sorting arrays follow-up: Result files.”</span> research-registry, dossiers/zhang-levin-playground/paper/results, 2026. Available: <a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/zhang-levin-playground/paper/results">https://github.com/Specter-Research-Labs/research-registry/tree/main/dossiers/zhang-levin-playground/paper/results</a></div>
+</div></section><section id="data"><h2>Data and receipts</h2><ul class="rk-data"><li><a href="assets/receipts.json">Receipts</a> <span class="rk-path">receipts.json</span></li><li><a href="assets/sim.py">sim.py</a> <span class="rk-path">sim.py</span></li><li><a href="assets/null_n100.py">null_n100.py</a> <span class="rk-path">null_n100.py</span></li><li><a href="assets/null_n100.json">100-cell null results</a> <span class="rk-path">null_n100.json</span></li><li><a href="assets/duplicates_n100.py">duplicates_n100.py</a> <span class="rk-path">duplicates_n100.py</span></li><li><a href="assets/duplicates_n100.json">Duplicate-value results</a> <span class="rk-path">duplicates_n100.json</span></li><li><a href="assets/run_cluster.py">run_cluster.py</a> <span class="rk-path">run_cluster.py</span></li><li><a href="assets/run_cluster_n50.json">50-cell results</a> <span class="rk-path">run_cluster_n50.json</span></li></ul></section></footer>
+</main>
+</div>
+</div>
+<footer class="publication-footer"><div><a href="mailto:contact@specterlab.org">contact@specterlab.org</a><a href="https://github.com/Specter-Research-Labs/research-registry">Research registry ↗</a></div><span>Specter Labs</span></footer>
+</body>
+</html>
