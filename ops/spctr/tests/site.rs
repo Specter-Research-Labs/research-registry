@@ -144,6 +144,8 @@ fn minimal_templates(root: &Utf8Path) {
 <html>
 <body>
 <h1>Curated research</h1>
+<!-- GENERATED:HOME_SITE_TREE START -->
+<!-- GENERATED:HOME_SITE_TREE END -->
 </body>
 </html>
 ",

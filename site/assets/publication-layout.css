@@ -691,3 +691,18 @@ html.specter-report .section-head .section-no,
   text-transform: none;
 }
 
+
+body:is(.publication-home, .writing-index) {
+  --publication-width: 1024px;
+  --sl-color-paper: #f4f1e8;
+  --sl-color-bg: #f4f1e8;
+  --publication-gutter: 40px;
+  --sl-layout-brand-size: 42px;
+  --sl-layout-brand-gap: 12px;
+  --sl-type-scale-brand: 17px;
+  --sl-type-scale-nav: 12px;
+  --sl-layout-nav-gap: 24px;
+}
+@media (max-width: 700px) {
+  body:is(.publication-home, .writing-index) { --publication-gutter: 22px; }
+}
