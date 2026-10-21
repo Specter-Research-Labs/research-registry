@@ -87,17 +87,9 @@
       "slug": "fly-competency-atlas",
       "title": "Fly Competency Atlas"
     },
-    "N-005": {
-      "slug": "2026-03-27-moving-a-theorem-prover-onto-new-hardware",
-      "title": "Moving a proof-search model to Tenstorrent"
-    },
     "N-013": {
       "slug": "2026-08-05-the-first-fission-screen-mostly-found-stripes-and-dust",
       "title": "Stripes, dust, and false fission"
-    },
-    "N-014": {
-      "slug": "2026-08-16-development-changes-what-the-same-perturbation-can-do",
-      "title": "Development changes the effect of a disturbance"
     }
   },
   "docs": {

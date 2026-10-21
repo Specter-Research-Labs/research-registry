@@ -85,8 +85,7 @@ fn emit_archived_publish_result(
 // Site paths that hold sources, local studies, or withdrawn surfaces. They stay
 // in the repository but never reach the public site or its sitemaps.
 pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
-    "assets/blog/jolt-material-memory",
-    "assets/blog/wonton-soup-follow-up",
+    "assets/blog/lenia-morphospace-obstacle-response",
     "assets/causal-emergence",
     "atlas",
     "dashboards/wonton-soup/dist",
@@ -95,16 +94,19 @@ pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
     "cabinet/jolt-material-memory",
     "dossiers/jolt-material-memory",
     "dossiers/lenia-swarm/causal-emergence",
+    "dossiers/lenia-swarm/compendium",
+    "dossiers/lenia-swarm/fiber-theory",
     "review",
+    "status",
     "style-study",
     "templates",
+    "updates",
 ];
 
 // Build inputs, orphans, withdrawn figures, and assets of the unpublished
 // causal-emergence library that sit next to published pages. Only the built
 // dashboard ships.
 pub(crate) const UNPUBLISHED_SITE_FILES: &[&str] = &[
-    "assets/blog/lenia-morphospace-report/fig-fish-near-witnesses.html",
     "assets/causal-emergence.css",
     "assets/research-material.svg",
     "assets/wonton-soup/dossier-evidence.json",
@@ -286,15 +288,21 @@ fn draft_article_publish_plan(repo_root: &Utf8Path, section: &str) -> Result<Sit
     }
 
     draft_slugs.sort();
+    // Blog posts keep their figures under assets/blog/<slug>/, which must stay
+    // unpublished with the draft.
+    let draft_dirs: Vec<String> = draft_slugs
+        .iter()
+        .flat_map(|slug| {
+            let mut dirs = vec![format!("{section}/{slug}/")];
+            if section == "blog" {
+                dirs.push(format!("assets/blog/{slug}/"));
+            }
+            dirs
+        })
+        .collect();
     Ok(SitePublishPlan {
-        excludes: draft_slugs
-            .iter()
-            .map(|slug| format!("/{section}/{slug}/"))
-            .collect(),
-        remote_prunes: draft_slugs
-            .iter()
-            .map(|slug| format!("{section}/{slug}/"))
-            .collect(),
+        excludes: draft_dirs.iter().map(|dir| format!("/{dir}")).collect(),
+        remote_prunes: draft_dirs,
     })
 }
 
@@ -1140,8 +1148,7 @@ mod tests {
         let plan = site_publish_plan(root).unwrap();
         for path in [
             "/atlas/",
-            "/assets/blog/jolt-material-memory/",
-            "/assets/blog/wonton-soup-follow-up/",
+            "/assets/blog/lenia-morphospace-obstacle-response/",
             "/assets/causal-emergence/",
             "/assets/causal-emergence.css",
             "/assets/writing-causal-response.svg",
@@ -1157,9 +1164,13 @@ mod tests {
             "/assets/research-material.svg",
             "/dossiers/wonton-soup/paper.pdf",
             "/dossiers/lenia-swarm/causal-emergence/",
+            "/dossiers/lenia-swarm/compendium/",
+            "/dossiers/lenia-swarm/fiber-theory/",
             "/review/",
+            "/status/",
             "/style-study/",
             "/templates/",
+            "/updates/",
             "*-template.html",
         ] {
             assert!(
@@ -1256,5 +1267,10 @@ release: "published"
                 .remote_prunes
                 .contains(&format!("{section}/draft-note/")));
         }
+        assert!(plan.excludes.contains(&"/assets/blog/draft-note/".to_owned()));
+        assert!(!plan.excludes.contains(&"/assets/blog/public-note/".to_owned()));
+        assert!(!plan
+            .excludes
+            .contains(&"/assets/research-notes/draft-note/".to_owned()));
     }
 }

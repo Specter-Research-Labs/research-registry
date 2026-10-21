@@ -23,13 +23,19 @@ $endif$
 <div class="rk-shell">
 <div class="rk-layout">
 <header class="rk-hero">
+$if(rk-site)$
+$else$
 <p class="rk-kicker">$kicker$</p>
+$endif$
 <h1>$title$</h1>
 $if(subtitle)$
 <p class="rk-subtitle">$subtitle$</p>
 $endif$
 $if(rk-layout)$
+$if(rk-site)$
+$else$
 <p class="rk-byline">$authors$</p>
+$endif$
 <p class="rk-meta">$rk-kind$ · revision $revision$ · $rk-minutes$ min read</p>
 <section class="rk-abstract" aria-label="Abstract">
 $abstract$
@@ -41,7 +47,10 @@ $else$
 $if(rk-hero)$
 $rk-hero$
 $endif$
+$if(rk-site)$
+$else$
 <p class="rk-byline">$authors$</p>
+$endif$
 <p class="rk-meta">$rk-kind$ · revision $revision$ · $rk-minutes$ min read</p>
 $endif$
 </header>

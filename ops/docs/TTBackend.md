@@ -22,10 +22,10 @@ Remote runs require `--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at this
 dossier on the target host.
 
 ```bash
-export LENIA_TT_REMOTE_ROOT="$(dispatch workspace plan --on quietbox --project specter-labs --json | jq -r .remote_cwd)"
+export LENIA_TT_REMOTE_ROOT="$(dispatch workspace plan --on <tt-host> --project specter-labs --json | jq -r .remote_cwd)"
 
 LeniaCLI tt run \
-  --host quietbox \
+  --host <tt-host> \
   --config configs/base/paper_base_2c_128.json \
   --output tmp/tt-runs/orbitum-128 \
   --execution-mode single \
@@ -34,7 +34,7 @@ LeniaCLI tt run \
   --frame-every 5
 
 LeniaCLI tt run \
-  --host quietbox \
+  --host <tt-host> \
   --config configs/base/paper_base_2c_128.json \
   --output tmp/tt-runs/fleet-128 \
   --execution-mode fleet \
@@ -57,12 +57,12 @@ The TT-Lang dist container maps `single` mode to `/dev/tenstorrent/0`.
 `fleet` and `mesh` need explicit reservations:
 
 ```bash
-dispatch run --on quietbox --device wormhole:0,1 -- ...
-dispatch run --on quietbox --device wormhole:all -- ...
+dispatch run --on <tt-host> --device wormhole:0,1 -- ...
+dispatch run --on <tt-host> --device wormhole:all -- ...
 ```
 
 `LeniaCLI --host` and `dispatch run` are separate launchers. Use
-`LeniaCLI tt run --host quietbox` for Studio/export artifacts. Use
+`LeniaCLI tt run --host <tt-host>` for Studio/export artifacts. Use
 `dispatch run` for backend profiling when dispatch owns the Wormhole
 reservation; in that mode the command is already running in the remote
 workspace.

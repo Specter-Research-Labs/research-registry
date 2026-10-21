@@ -37,7 +37,6 @@ declared surfaces such as `lenia-compendium`.
 - [LocalCLI](./contracts/LocalCLI.md)
 - [ResearchModes](./contracts/ResearchModes.md)
 - [CompendiumSchema](./contracts/CompendiumSchema.md)
-- [ComparativeMorphospace](./contracts/ComparativeMorphospace.md)
 - [MorphometricsAndTraits](./contracts/MorphometricsAndTraits.md)
 - [EcologyCLI](./contracts/EcologyCLI.md)
 - [ArtifactLayout](./contracts/ArtifactLayout.md)
@@ -53,8 +52,6 @@ declared surfaces such as `lenia-compendium`.
 - [PaperGroundedRuns](./internals/PaperGroundedRuns.md)
 - [IndexerInternals](./internals/IndexerInternals.md)
 - [StudioCompendiumInternals](./internals/StudioCompendiumInternals.md)
-- [TTBackend](./internals/TTBackend.md)
-- [TTBackendPerformance](./internals/TTBackendPerformance.md)
 
 ## Reading Paths
 
@@ -81,5 +78,3 @@ Implement and debug:
 2. `internals/PaperGroundedRuns.md`
 3. `internals/IndexerInternals.md`
 4. `internals/StudioCompendiumInternals.md`
-5. `internals/TTBackend.md`
-6. `internals/TTBackendPerformance.md`
