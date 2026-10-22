@@ -246,12 +246,14 @@
             panel.append(controls, tabs, metrics);
             body.append(figure, panel);
 
-            const makePathRow = (label, steps) => {
+            const laneTitles = { wild: "original", intervention: "tactic blocked" };
+
+            const makePathRow = (lane, steps) => {
                 const row = document.createElement("div");
                 row.className = "ws-path-row";
                 const labelEl = document.createElement("span");
                 labelEl.className = "ws-path-label";
-                labelEl.textContent = label;
+                labelEl.textContent = laneTitles[lane];
                 row.appendChild(labelEl);
                 steps.forEach((step, idx) => {
                     const node = document.createElement("span");
@@ -289,7 +291,7 @@
                 svg.setAttribute("role", "img");
                 svg.setAttribute(
                     "aria-label",
-                    "Flow graph comparing wild and intervention tactic paths",
+                    "Flow graph comparing original and tactic-blocked paths",
                 );
                 const tooltip = document.createElement("div");
                 tooltip.className = "ws-flow-tooltip";
@@ -539,11 +541,12 @@
                 laneLabel.setAttribute("x", "18");
                 laneLabel.setAttribute("y", "22");
                 laneLabel.setAttribute("class", "ws-branch-lane-label");
-                laneLabel.textContent = laneName;
+                const laneTitle = laneTitles[laneName];
+                laneLabel.textContent = laneTitle;
                 svg.appendChild(laneLabel);
 
                 const rootY = top + ((branch.attempts.length - 1) * rowStep) / 2;
-                addNode(rootX, rootY, branch.root, "root", laneName + " root: " + branch.root, {
+                addNode(rootX, rootY, branch.root, "root", laneTitle + " root: " + branch.root, {
                     maxLen: 20,
                 });
 
@@ -551,7 +554,7 @@
                 branch.attempts.forEach((attempt, idx) => {
                     const y = top + idx * rowStep;
                     const attemptTooltip =
-                        laneName +
+                        laneTitle +
                         " attempt " +
                         (idx + 1) +
                         " (" +
@@ -582,7 +585,7 @@
                     }
 
                     const terminalLabel =
-                        attempt.outcome === "blocked" ? "blocked gate" : "dead end";
+                        attempt.outcome === "blocked" ? "blocked" : "dead end";
                     addCurve(
                         attemptX + 64,
                         y,
@@ -590,14 +593,14 @@
                         y,
                         attempt.outcome,
                         markerPrefix + "-" + attempt.outcome,
-                        laneName + " " + attempt.outcome + " terminal",
+                        laneTitle + " " + attempt.outcome + " terminal",
                     );
                     addNode(
                         terminalX,
                         y,
                         terminalLabel,
                         "terminal " + attempt.outcome,
-                        laneName + " " + attempt.outcome + " terminal",
+                        laneTitle + " " + attempt.outcome + " terminal",
                         { width: 88, height: 24, maxLen: 14, radius: 6 },
                     );
                 });
@@ -691,19 +694,19 @@
                 gedMetric.className = "ws-graph-metric";
                 const gedTitle = document.createElement("div");
                 gedTitle.className = "ws-graph-metric-header";
-                gedTitle.textContent = "Normalized GED_search";
+                gedTitle.textContent = "Change in search graph";
                 const gedTrack = document.createElement("div");
                 gedTrack.className = "ws-track";
                 const gedSegment = document.createElement("span");
                 gedSegment.className = "ws-segment ged";
                 gedSegment.style.width = slide.ged * 100 + "%";
-                gedSegment.title = "normalized GED_search: " + slide.ged.toFixed(3);
+                gedSegment.title = "normalized graph edit distance: " + slide.ged.toFixed(3);
                 gedTrack.appendChild(gedSegment);
                 const gedLegend = document.createElement("div");
                 gedLegend.className = "ws-chart-legend";
                 const gedChip = document.createElement("span");
                 gedChip.className = "ws-chart-chip";
-                gedChip.textContent = "value " + slide.ged.toFixed(3);
+                gedChip.textContent = "edit distance " + slide.ged.toFixed(2);
                 gedLegend.appendChild(gedChip);
                 gedMetric.append(gedTitle, gedTrack, gedLegend);
 
