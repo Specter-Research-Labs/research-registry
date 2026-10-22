@@ -38,12 +38,12 @@ warmup steps, host load average between 2 and 5.
 
 | grid | bodies per card | ms per step | body-steps/s per card | box (4 cards) |
 | --- | ---: | ---: | ---: | ---: |
-| `128x128` | 256 | `10.06` | `25,450` | `101,800` |
-| `128x128` | 3584 | `149.7` | `23,950` | `95,800` |
-| `128x128` | 4096 | `158.3` | `25,870` | `103,500` |
-| `256x256` | 128 | `20.83` | `6,145` | `24,600` |
-| `256x256` | 896 | `157.0` | `5,706` | `22,800` |
-| `256x256` | 1024 | `164.7` | `6,216` | `24,900` |
+| `128x128` | 256 | `9.37` | `27,330` | `109,300` |
+| `128x128` | 3584 | `138.7` | `25,850` | `103,400` |
+| `128x128` | 4096 | `147.4` | `27,800` | `111,200` |
+| `256x256` | 128 | `19.38` | `6,605` | `26,400` |
+| `256x256` | 896 | `146.1` | `6,134` | `24,500` |
+| `256x256` | 1024 | `153.7` | `6,664` | `26,700` |
 
 Batches that fill all 64 cores of both chips evenly (multiples of 2048 lanes at
 `128x128`, 512 at `256x256`) are fastest. Cards scale linearly.
@@ -59,10 +59,10 @@ Per-pass time at `128x128`, 4096 bodies per card, from the host timer and from
 | p2 | column FFT, kernel product, inverse column FFT | `31.6` | `33.7` |
 | p3 | inverse row FFT, growth, affinity | `57.5` | `57.0` |
 | p4 | Sobel gradients and flow | `14.9` | `14.6` |
-| p5 | reintegration over the `(2 dd + 1)^2` window | `50.3` | `49.6` |
+| p5 | reintegration over the `(2 dd + 1)^2` window | `39.2` | `38.8` |
 
-p2, p3 and p5 are compute-bound. In p5 the SFPU is busy for `45.5` of `49.4` ms and
-tile copies take `3.0` ms. In p2 and p3 the unpacker spends `10.6` and about
+p2, p3 and p5 are compute-bound. In p5 the SFPU spends `24.5` ms adding terms and
+`10.1` ms weighting source rows by their x overlaps, of `38.8` ms. In p2 and p3 the unpacker spends `10.6` and about
 `17` ms in `cb_wait_front`, but almost all of that is waiting for the same
 core's packer between dependent stages: waits for tiles from DRAM, timed as
 their own zone, total `0.07` ms in p2 and `2.5` ms in p3, and deeper input
@@ -73,6 +73,10 @@ row's mass is weighted once by its x overlap with every target row it reaches,
 and each y overlap is then computed once and shared by up to four rows instead
 of once per target row. That took p5 from `111.9` to `50.1` ms at 3584 bodies,
 with state hashes bit-identical to the per-row kernel at every step of a
-2000-step rollout of 107 bodies. The next gains are fewer SFPU instructions per
-reintegration term and shorter dependency chains between the unpack, math and
-pack stages of p2 and p3.
+2000-step rollout of 107 bodies. Keeping the four row accumulators in registers
+across the y overlaps, instead of loading and storing them for every term, and
+computing two overlaps at a time so that each fills the other's pipeline gaps,
+took p5 to `39.2` ms, again bit-identical over the same rollout. Each overlap
+still costs about twelve instructions against two per term, so a cheaper
+overlap clamp is the next p5 gain; in p2 and p3 it is shorter dependency chains
+between the unpack, math and pack stages.
