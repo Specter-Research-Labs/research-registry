@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import Foundation
 
 private struct SpectrumRGB {
@@ -60,3 +61,4 @@ func leniaDeltaRGBA(previous: Data, current: Data, width: Int, height: Int) thro
     }
     return Data(rgba)
 }
+#endif

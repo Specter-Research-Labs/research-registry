@@ -113,7 +113,7 @@ extension FlowLeniaRuntimeOperators {
         return MLXArray(paramData).reshaped([batchSize, sx, sy, nbK])
     }
 
-    func applyIntervention(runner: FlowLeniaMetalFullStateRunner, intervention: InterventionConfig) {
+    func applyIntervention(runner: any FlowLeniaFieldRunner, intervention: InterventionConfig) {
         switch intervention.type {
         case "jitter_params", "shift_params":
             let patch = buildInterventionPatch(
@@ -182,14 +182,14 @@ extension FlowLeniaRuntimeOperators {
         count: Int,
         batchSize: Int,
         parameterCount: Int
-    ) -> [Int: [FlowLeniaMetalParameterPatchBatch]] {
+    ) -> [Int: [FlowLeniaParameterPatchBatch]] {
         guard let beamConfig = runtimeConfig.beamMutation, beamConfig.enabled else {
             return [:]
         }
         guard count > 0 else {
             return [:]
         }
-        var schedule: [Int: [FlowLeniaMetalParameterPatchBatch]] = [:]
+        var schedule: [Int: [FlowLeniaParameterPatchBatch]] = [:]
         for localStep in 1...count {
             let patch = buildSearchBeamMutationPatch(
                 config: beamConfig,

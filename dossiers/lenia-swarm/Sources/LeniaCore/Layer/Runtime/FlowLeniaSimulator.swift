@@ -188,9 +188,12 @@ public final class FlowLeniaSimulator {
                 )
             case .metalFull:
                 return nil
+            case .cpu:
+                preconditionFailure("The cpu backend serves search and replay only.")
             }
         }
 
+        #if canImport(Metal)
         func makeCachedMetalRunner(
             context: FlowLeniaRuntimeContext,
             kernels: CompiledKernels,
@@ -209,12 +212,15 @@ public final class FlowLeniaSimulator {
                 mixSeed: parameterMixSeed
             )
         }
+        #endif
     }
 
     private let runtimeConfig: LeniaRuntimeConfig
     private let context: FlowLeniaRuntimeContext
     private let stepper: Stepper?
+    #if canImport(Metal)
     private let cachedMetalFullRunner: FlowLeniaMetalFullStateRunner?
+    #endif
 
     public init(runtimeConfig: LeniaRuntimeConfig) {
         self.runtimeConfig = runtimeConfig
@@ -223,11 +229,13 @@ public final class FlowLeniaSimulator {
         let kernels = context.kernels
         let crossMapPotential = context.preparedFields.environmentPotential
         let runtimePlan = RuntimePlan(runtimeConfig: runtimeConfig)
+        #if canImport(Metal)
         self.cachedMetalFullRunner = runtimePlan.makeCachedMetalRunner(
             context: context,
             kernels: kernels,
             crossMapPotential: crossMapPotential
         )
+        #endif
         self.stepper = runtimePlan.makeStepper(
             context: context,
             kernels: kernels,
@@ -248,6 +256,7 @@ public final class FlowLeniaSimulator {
         let wallMask = context.preparedFields.wallMask
         let chemField = context.preparedFields.chemField
 
+        #if canImport(Metal)
         let persistentMetalRunner: FlowLeniaMetalFullStateRunner?
         if runtimeConfig.backend == .metalFull {
             if config.foodSpawn != nil && foodBatch == nil {
@@ -294,6 +303,19 @@ public final class FlowLeniaSimulator {
             )
             persistentMetalRunner = nil
         }
+        let usesMetalRunner = persistentMetalRunner != nil
+        #else
+        if runtimeConfig.backend == .metalFull {
+            preconditionFailure("Backend metal-full requires Apple Metal.")
+        }
+        runtimeOperators.applyWallMaskIfNeeded(
+            massBatch: &ABatch,
+            paramBatch: &PBatch,
+            foodBatch: &foodBatch,
+            wallMask: wallMask
+        )
+        let usesMetalRunner = false
+        #endif
 
         var recordedFrames: [LeniaTrajectoryFrame] = []
         var parameterSeeds: [[Float]] = []
@@ -305,7 +327,7 @@ public final class FlowLeniaSimulator {
         var finalObservedMassMap: MLXArray?
 
         for step in 1...config.steps {
-            if persistentMetalRunner != nil {
+            if usesMetalRunner {
                 if pendingMetalSteps == 0 {
                     pendingMetalStartStep = step
                 }
@@ -367,6 +389,7 @@ public final class FlowLeniaSimulator {
                 continue
             }
 
+            #if canImport(Metal)
             if let runner = persistentMetalRunner {
                 flushPendingMetalSteps(
                     runner: runner,
@@ -379,9 +402,11 @@ public final class FlowLeniaSimulator {
                     PBatch = runner.materializeParams()
                 }
             }
+            #endif
 
             let massMap: MLXArray
             let capturedFood: MLXArray?
+            #if canImport(Metal)
             if let runner = persistentMetalRunner {
                 massMap = runner.materializeMassMap(channelWeights: runtimeOperators.matterWeights())
                 capturedFood = shouldCapture ? runner.materializeFood() : nil
@@ -389,6 +414,10 @@ public final class FlowLeniaSimulator {
                 massMap = runtimeOperators.matterMapFromBatch(ABatch)
                 capturedFood = shouldCapture ? foodBatch : nil
             }
+            #else
+            massMap = runtimeOperators.matterMapFromBatch(ABatch)
+            capturedFood = shouldCapture ? foodBatch : nil
+            #endif
             if step == config.steps {
                 finalObservedMassMap = massMap
             }
@@ -406,8 +435,13 @@ public final class FlowLeniaSimulator {
                 ))
                 if config.captureParameters {
                     let paramField: MLXArray
-                    if let runner = persistentMetalRunner {
-                        paramField = runner.materializeParams()
+                    #if canImport(Metal)
+                    let residentParams = persistentMetalRunner?.materializeParams()
+                    #else
+                    let residentParams: MLXArray? = nil
+                    #endif
+                    if let residentParams {
+                        paramField = residentParams
                     } else if let params = PBatch {
                         paramField = params
                     } else {
@@ -435,6 +469,7 @@ public final class FlowLeniaSimulator {
             }
         }
 
+        #if canImport(Metal)
         if let runner = persistentMetalRunner {
             flushPendingMetalSteps(
                 runner: runner,
@@ -444,6 +479,8 @@ public final class FlowLeniaSimulator {
                 runtimeOperators: runtimeOperators
             )
         }
+        #endif
+        #if canImport(Metal)
         let finalMassMap = if let finalObservedMassMap {
             finalObservedMassMap
         } else if let runner = persistentMetalRunner {
@@ -451,6 +488,9 @@ public final class FlowLeniaSimulator {
         } else {
             runtimeOperators.matterMapFromBatch(ABatch)
         }
+        #else
+        let finalMassMap = finalObservedMassMap ?? runtimeOperators.matterMapFromBatch(ABatch)
+        #endif
         eval(finalMassMap)
         let finalMassCPU = finalMassMap.asArray(Float.self)
         let finalCenter = runtimeOperators.centerOfMass(finalMassCPU, width: runtimeConfig.sx, height: runtimeConfig.sy)
@@ -471,6 +511,7 @@ public final class FlowLeniaSimulator {
         )
     }
 
+    #if canImport(Metal)
     private func flushPendingMetalSteps(
         runner: FlowLeniaMetalFullStateRunner,
         pendingMetalSteps: inout Int,
@@ -515,6 +556,7 @@ public final class FlowLeniaSimulator {
         )
         pendingMetalSteps = 0
     }
+    #endif
 
     // Project the per-cell parameter vector onto a fixed 2D basis and
     // standardize, so distinct local rules (species) land at distinct angles.
@@ -611,7 +653,9 @@ public final class FlowLeniaInteractiveSimulator {
 
     private let massEngine: FlowLeniaBatched?
     private let paramsEngine: FlowLeniaParamsBatched?
+    #if canImport(Metal)
     private let metalRunner: FlowLeniaMetalFullStateRunner?
+    #endif
     private let metalStaticParams: MLXArray?
     private let baseWallPotential: MLXArray?
     private let baseWallMask: MLXArray?
@@ -643,6 +687,8 @@ public final class FlowLeniaInteractiveSimulator {
         self.baseWallPotential = environmentPotential
 
         switch effectiveBackend {
+        case .cpu:
+            preconditionFailure("The cpu backend serves search and replay only.")
         case .mlx:
             self.massEngine = FlowLeniaBatched(
                 config: batchedConfig,
@@ -659,9 +705,12 @@ public final class FlowLeniaInteractiveSimulator {
                     wallPotential: environmentPotential
                 )
                 : nil
+            #if canImport(Metal)
             self.metalRunner = nil
+            #endif
             self.metalStaticParams = nil
         case .metalFull:
+            #if canImport(Metal)
             self.massEngine = nil
             self.paramsEngine = nil
             let runner = FlowLeniaMetalFullStateRunner(
@@ -683,6 +732,9 @@ public final class FlowLeniaInteractiveSimulator {
                     kernels.h.reshaped([1, 1, 1, runtimeConfig.nbK]),
                     to: [1, runtimeConfig.sx, runtimeConfig.sy, runtimeConfig.nbK]
                 )
+            #else
+            preconditionFailure("Backend metal-full requires Apple Metal.")
+            #endif
         }
 
         self.baseWallMask = context.preparedFields.wallMask
@@ -738,6 +790,7 @@ public final class FlowLeniaInteractiveSimulator {
             params: params,
             food: food
         )
+        #if canImport(Metal)
         guard metalRunner != nil else {
             return initialState
         }
@@ -748,35 +801,58 @@ public final class FlowLeniaInteractiveSimulator {
             params: initialState.params,
             food: initialState.food
         )
+        #else
+        return initialState
+        #endif
     }
 
     func capacityPilotLastFlow() -> [Float] {
+        #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Transport tracing requires resident Metal") }
         return metalRunner.materializeLastFlow()
+        #else
+        preconditionFailure("Transport tracing requires resident Metal")
+        #endif
     }
 
     func capacityPilotLastPotential() -> [Float] {
+        #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Potential tracing requires resident Metal") }
         return metalRunner.materializeLastPotential()
+        #else
+        preconditionFailure("Potential tracing requires resident Metal")
+        #endif
     }
 
     func phantomField() -> [Float] {
+        #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Phantom fields require resident Metal") }
         return metalRunner.materializePhantomField()
+        #else
+        preconditionFailure("Phantom fields require resident Metal")
+        #endif
     }
 
     /// Attaches founder masses [sx, sy, channels, founders] to the resident state; they are carried passively
     /// by later resident steps and discarded whenever a different state is uploaded.
     public func setAncestry(_ founderMass: [Float], founderCount: Int, for state: FlowLeniaInteractiveState) {
+        #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Ancestry tracing requires resident Metal.") }
         precondition(isCurrentMetalResident(state), "Ancestry must be attached to the current resident state.")
         metalRunner.setAncestry(founderMass: founderMass, founderCount: founderCount)
+        #else
+        preconditionFailure("Ancestry tracing requires resident Metal.")
+        #endif
     }
 
     public func ancestryFounderMass(for state: FlowLeniaInteractiveState) -> [Float] {
+        #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Ancestry tracing requires resident Metal.") }
         precondition(isCurrentMetalResident(state), "Founder mass is only defined for the current resident state.")
         return metalRunner.materializeAncestry()
+        #else
+        preconditionFailure("Ancestry tracing requires resident Metal.")
+        #endif
     }
 
     public func step(_ state: FlowLeniaInteractiveState) -> FlowLeniaInteractiveState {
@@ -788,9 +864,11 @@ public final class FlowLeniaInteractiveSimulator {
         guard count > 0 else {
             return state
         }
+        #if canImport(Metal)
         if let metalRunner {
             return stepMetal(state, count: count, runner: metalRunner)
         }
+        #endif
 
         var next = state
         for _ in 0..<count {
@@ -851,6 +929,7 @@ public final class FlowLeniaInteractiveSimulator {
         )
     }
 
+    #if canImport(Metal)
     private func stepMetal(
         _ state: FlowLeniaInteractiveState,
         count: Int,
@@ -896,6 +975,8 @@ public final class FlowLeniaInteractiveSimulator {
         )
     }
 
+    #endif
+
     private func isCurrentMetalResident(_ state: FlowLeniaInteractiveState) -> Bool {
         guard let residency = state.metalResidency else {
             return false
@@ -905,6 +986,7 @@ public final class FlowLeniaInteractiveSimulator {
             && metalResidentStep == state.step
     }
 
+    #if canImport(Metal)
     private func synchronizeMetalRunner(with state: FlowLeniaInteractiveState) {
         guard let metalRunner else {
             return
@@ -932,6 +1014,7 @@ public final class FlowLeniaInteractiveSimulator {
         metalResidentStep = state.step
         metalResidencyGeneration &+= 1
     }
+    #endif
 
     private func residentState(
         step: Int,
@@ -978,14 +1061,18 @@ public final class FlowLeniaInteractiveSimulator {
         ).expandedDimensions(axes: [0, 3])
         massEngine?.wallPotential = potential
         paramsEngine?.wallPotential = potential
+        #if canImport(Metal)
         metalRunner?.setWallPotential(potential)
+        #endif
         metalResidentStep = nil
     }
 
     public func clearCircularWallPotential() {
         massEngine?.wallPotential = baseWallPotential
         paramsEngine?.wallPotential = baseWallPotential
+        #if canImport(Metal)
         metalRunner?.setWallPotential(baseWallPotential)
+        #endif
         metalResidentStep = nil
     }
 
@@ -1525,6 +1612,7 @@ public func benchmarkFlowLeniaSimulatorBackend(
     let duration = Date().timeIntervalSince(start)
     let stageTimings: FlowSandboxMetalStageTimings?
     if backend == .metalFull {
+        #if canImport(Metal)
         let kernels = compileKernels(params: params, config: batchedConfigFromRuntime(runtimeConfig), c0: c0, c1: c1)
         stageTimings = profileFlowSandboxMetalStages(
             config: batchedConfigFromRuntime(runtimeConfig),
@@ -1532,6 +1620,9 @@ public func benchmarkFlowLeniaSimulatorBackend(
             initialMass: initialMassBatch,
             initialParams: initialParams.expandedDimensions(axis: 0)
         )
+        #else
+        preconditionFailure("Backend metal-full requires Apple Metal.")
+        #endif
     } else {
         stageTimings = nil
     }
@@ -1920,14 +2011,14 @@ struct FlowLeniaRuntimeOperators {
         config: FlowLeniaFoodSpawnConfig?,
         sx: Int,
         sy: Int
-    ) -> [Int: [FlowLeniaMetalScalarPatchBatch]] {
+    ) -> [Int: [FlowLeniaScalarPatchBatch]] {
         guard let config else {
             return [:]
         }
         let inactiveOrigin = SIMD2<Int32>(-1, -1)
         let maxX = max(0, sx - config.patchSize)
         let maxY = max(0, sy - config.patchSize)
-        var schedule: [Int: [FlowLeniaMetalScalarPatchBatch]] = [:]
+        var schedule: [Int: [FlowLeniaScalarPatchBatch]] = [:]
 
         for offset in 0..<count {
             let step = startStep + offset
@@ -1945,7 +2036,7 @@ struct FlowLeniaRuntimeOperators {
             }
             if hasPlacement {
                 schedule[offset + 1] = [
-                    FlowLeniaMetalScalarPatchBatch(
+                    FlowLeniaScalarPatchBatch(
                         origins: origins,
                         size: config.patchSize,
                         value: config.value
@@ -2037,7 +2128,7 @@ struct FlowLeniaRuntimeOperators {
         config: FlowLeniaDissipationConfig?,
         sx: Int,
         sy: Int
-    ) -> [Int: [FlowLeniaMetalDissipationBatch]] {
+    ) -> [Int: [FlowLeniaDissipationBatch]] {
         guard let config else {
             return [:]
         }
@@ -2048,7 +2139,7 @@ struct FlowLeniaRuntimeOperators {
         let zoneY = config.insertionZoneOrigin[1]
         let maxInsertionX = max(zoneX, zoneX + config.insertionZoneSize - config.patchSize)
         let maxInsertionY = max(zoneY, zoneY + config.insertionZoneSize - config.patchSize)
-        var schedule: [Int: [FlowLeniaMetalDissipationBatch]] = [:]
+        var schedule: [Int: [FlowLeniaDissipationBatch]] = [:]
 
         for offset in 0..<count {
             let step = startStep + offset
@@ -2092,7 +2183,7 @@ struct FlowLeniaRuntimeOperators {
             }
 
             schedule[offset + 1] = [
-                FlowLeniaMetalDissipationBatch(
+                FlowLeniaDissipationBatch(
                     removalOrigins: removalOrigins,
                     insertionOrigins: insertionOrigins,
                     size: config.patchSize,
@@ -2147,14 +2238,14 @@ struct FlowLeniaRuntimeOperators {
         config: BeamMutationConfig?,
         sx: Int,
         sy: Int
-    ) -> [Int: [FlowLeniaMetalParameterPatchBatch]] {
+    ) -> [Int: [FlowLeniaParameterPatchBatch]] {
         guard count > 0 else {
             return [:]
         }
         guard let config, config.enabled else {
             return [:]
         }
-        var schedule: [Int: [FlowLeniaMetalParameterPatchBatch]] = [:]
+        var schedule: [Int: [FlowLeniaParameterPatchBatch]] = [:]
         for localStep in 1...count {
             let patch = buildBeamMutationPatch(
                 config: config,
@@ -2187,22 +2278,22 @@ struct FlowLeniaRuntimeOperators {
         flowMatterWeights(channels: runtimeConfig.channels, excludedChannels: excludedMassChannels())
     }
 
-    func metalStaticChannelFields(chemField: MLXArray?) -> [FlowLeniaMetalChannelField] {
+    func metalStaticChannelFields(chemField: MLXArray?) -> [FlowLeniaChannelField] {
         guard let chemField,
               let chemotaxis = runtimeConfig.chemotaxis,
               chemotaxis.enabled else {
             return []
         }
-        return [FlowLeniaMetalChannelField(channelIndex: chemotaxis.channel_index, field: chemField)]
+        return [FlowLeniaChannelField(channelIndex: chemotaxis.channel_index, field: chemField)]
     }
 
-    func metalFoodState(foodBatch: MLXArray?) -> FlowLeniaMetalFoodState? {
+    func metalFoodState(foodBatch: MLXArray?) -> FlowLeniaFoodState? {
         guard let field = foodBatch,
               let food = runtimeConfig.food,
               food.enabled else {
             return nil
         }
-        return FlowLeniaMetalFoodState(
+        return FlowLeniaFoodState(
             channelIndex: food.channel_index,
             field: field,
             decayRate: food.decay_rate,
@@ -2279,7 +2370,7 @@ private struct FlowLeniaBeamMutationPatch {
     let size: Int
     let deltas: [Float]
 
-    func asMetalPatchBatch() -> FlowLeniaMetalParameterPatchBatch {
-        FlowLeniaMetalParameterPatchBatch(origins: origins, size: size, deltas: deltas, clip: nil)
+    func asMetalPatchBatch() -> FlowLeniaParameterPatchBatch {
+        FlowLeniaParameterPatchBatch(origins: origins, size: size, deltas: deltas, clip: nil)
     }
 }

@@ -2,7 +2,9 @@ import Distributed
 import DistributedCluster
 import Foundation
 import Logging
+#if canImport(Metal)
 import Metal
+#endif
 
 // MARK: - Worker Events
 
@@ -418,18 +420,19 @@ public distributed actor LeniaWorker {
     }
 
     public static func detectBackendCapabilities() -> WorkerBackendCapabilities {
-        let hasMetal = MTLCreateSystemDefaultDevice() != nil
-        if hasMetal {
+        #if canImport(Metal)
+        if MTLCreateSystemDefaultDevice() != nil {
             return WorkerBackendCapabilities(
-                canonicalSearchBackends: [.mlx, .metalFull],
-                canonicalFlowLeniaBackends: [.mlx, .metalFull],
+                canonicalSearchBackends: [.mlx, .metalFull, .cpu],
+                canonicalFlowLeniaBackends: [.mlx, .metalFull, .cpu],
                 canonicalSearchPreferredBackend: .metalFull,
                 canonicalFlowLeniaPreferredBackend: .metalFull
             )
         }
+        #endif
         return WorkerBackendCapabilities(
-            canonicalSearchBackends: [.mlx],
-            canonicalFlowLeniaBackends: [.mlx],
+            canonicalSearchBackends: [.mlx, .cpu],
+            canonicalFlowLeniaBackends: [.mlx, .cpu],
             canonicalSearchPreferredBackend: .mlx,
             canonicalFlowLeniaPreferredBackend: .mlx
         )

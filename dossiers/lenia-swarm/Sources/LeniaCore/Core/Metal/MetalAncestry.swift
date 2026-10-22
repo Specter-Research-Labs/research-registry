@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import Foundation
 import Metal
 
@@ -175,3 +176,5 @@ final class FlowLeniaMetalAncestryTracer {
         """
     }
 }
+
+#endif

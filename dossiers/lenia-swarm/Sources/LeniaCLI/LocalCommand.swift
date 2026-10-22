@@ -15,7 +15,7 @@ struct LocalCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Path to search config.json")
     var search: String
 
-    @Option(name: .long, help: "Requested backend: auto|metal-full|mlx")
+    @Option(name: .long, help: "Requested backend: auto|metal-full|mlx|cpu")
     var backend: String = "auto"
 
     @Option(name: .shortAndLong, help: "Output directory for run artifacts")
@@ -120,6 +120,9 @@ struct LocalCommand: AsyncParsableCommand {
         let framesColorEnabled = framesColor || framesColorDir != nil
         let framesEnabled = frames || framesDir != nil || framesColorEnabled
         if framesEnabled {
+            #if !canImport(Metal)
+            throw ValidationError("Frame export writes PNGs through ImageIO and needs macOS.")
+            #endif
             if runCount != 1 {
                 throw ValidationError("frame export requires count=1")
             }
@@ -210,11 +213,12 @@ struct LocalCommand: AsyncParsableCommand {
             isResuming: isResuming
         )
 
-        var frameWriter: FrameWriter?
-        var colorFrameWriter: ColorFrameWriter?
         var frameCapture: FrameCapture?
         var framesDirPath: String? = nil
         var framesColorDirPath: String? = nil
+        #if canImport(Metal)
+        var frameWriter: FrameWriter?
+        var colorFrameWriter: ColorFrameWriter?
         if framesEnabled {
             let resolvedFramesDir = resolveFramesDir(
                 framesDir: framesDir,
@@ -253,6 +257,7 @@ struct LocalCommand: AsyncParsableCommand {
                 logger.info("Color frame export enabled (dir=\(framesColorDirPath))")
             }
         }
+        #endif
 
         var refOverrides = baseOverrides
         refOverrides["run.steps"] = parsedSearchConfig.steps
@@ -372,12 +377,14 @@ struct LocalCommand: AsyncParsableCommand {
             currentIdx = chunkEnd
         }
 
+        #if canImport(Metal)
         if let writer = frameWriter, let error = writer.error {
             throw error
         }
         if let writer = colorFrameWriter, let error = writer.error {
             throw error
         }
+        #endif
 
         let summary = LocalRunSummary(
             runId: resolvedRunId,

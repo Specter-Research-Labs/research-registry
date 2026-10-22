@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import Foundation
 
 public enum LeniaMetalLibrarySupport {
@@ -329,3 +330,5 @@ public enum LeniaMetalLibrarySupport {
             .deletingLastPathComponent() // package root
     }
 }
+
+#endif

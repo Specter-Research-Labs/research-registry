@@ -1,9 +1,11 @@
+#if canImport(ImageIO)
 import Compression
 import CoreGraphics
-import Foundation
 import ImageIO
-import MLX
 import UniformTypeIdentifiers
+#endif
+import Foundation
+import MLX
 
 public struct ComplexityConfig: Codable, Sendable {
     public let enabled: Bool
@@ -194,6 +196,7 @@ private func normalizeToUInt8(_ data: [Float]) -> [UInt8] {
     return out
 }
 
+#if canImport(ImageIO)
 private func pngCompressedSize(_ bytes: [UInt8], width: Int, height: Int) -> Int {
     guard width > 0 && height > 0 else { return 0 }
     let data = Data(bytes)
@@ -252,3 +255,12 @@ private func zlibCompressedSize(_ bytes: [UInt8]) -> Int {
     }
     return compressedSize
 }
+#else
+private func pngCompressedSize(_ bytes: [UInt8], width: Int, height: Int) -> Int {
+    fatalError("complexity.backend png requires Apple ImageIO and is unavailable on this platform.")
+}
+
+private func zlibCompressedSize(_ bytes: [UInt8]) -> Int {
+    fatalError("complexity.backend zlib requires Apple Compression and is unavailable on this platform.")
+}
+#endif

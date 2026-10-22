@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(Metal)
 import Metal
+#endif
 import MLX
 
 public enum LabGridPreset: Int, CaseIterable, Identifiable, Sendable {
@@ -269,6 +271,7 @@ public struct FlowSandboxWorldContract: Sendable {
     }
 }
 
+#if canImport(Metal)
 public final class LeniaMetalFieldSurface: @unchecked Sendable {
     public let width: Int
     public let height: Int
@@ -328,6 +331,7 @@ public struct FlowSandboxSnapshot: Sendable {
         self.metrics = metrics
     }
 }
+#endif
 
 public struct FlowSandboxStateSnapshot: Codable, Sendable {
     public let step: Int
@@ -493,6 +497,7 @@ public func buildSeedCreatureStamp(
     )
 }
 
+#if canImport(Metal)
 public actor FlowSandboxRuntime {
     public let gridPreset: LabGridPreset
     public let params: ResolvedParams
@@ -1030,6 +1035,8 @@ private func sandboxExecutionSummary(for backend: FlowSandboxBackend) -> String 
         return "Full Metal pipeline with GPU reintegration"
     }
 }
+
+#endif
 
 func flowSandboxConfig(gridSize: Int, nbK: Int) -> BatchedConfig {
     BatchedConfig(

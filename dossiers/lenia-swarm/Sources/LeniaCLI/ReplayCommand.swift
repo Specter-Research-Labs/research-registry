@@ -42,6 +42,9 @@ struct ReplayCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Flow bodies per engine batch. Above 1, every body in a batch must share its config except rule parameters and init seed")
     var batchSize: Int = 1
 
+    @Option(name: .long, help: "Replay backend: auto, metal-full or cpu. Auto picks metal-full when the host and config support it, otherwise the config backend")
+    var backend: String = "auto"
+
     @OptionGroup
     var logOptions: LogOptions
 
@@ -93,6 +96,7 @@ struct ReplayCommand: AsyncParsableCommand {
             inputPath: resolvedInput,
             outputURL: outputURL,
             runID: resolvedRunId,
+            backendRequest: backend,
             exportEnabled: exportEnabled,
             developmentTrace: developmentTrace
                 ? DevelopmentTraceOptions(

@@ -3,6 +3,7 @@ import Foundation
 public enum FlowLeniaComputeBackend: String, CaseIterable, Identifiable, Sendable, Equatable, Hashable, Codable {
     case mlx = "mlx"
     case metalFull = "metal-full"
+    case cpu = "cpu"
 
     public var id: String { rawValue }
 
@@ -12,6 +13,18 @@ public enum FlowLeniaComputeBackend: String, CaseIterable, Identifiable, Sendabl
             "MLX"
         case .metalFull:
             "Metal full"
+        case .cpu:
+            "CPU"
+        }
+    }
+
+    /// Backends that keep the batch resident in a field runner instead of stepping MLX arrays.
+    public var hasResidentFieldRunner: Bool {
+        switch self {
+        case .mlx:
+            false
+        case .metalFull, .cpu:
+            true
         }
     }
 
@@ -21,9 +34,11 @@ public enum FlowLeniaComputeBackend: String, CaseIterable, Identifiable, Sendabl
             self = .mlx
         case "metal-full":
             self = .metalFull
+        case "cpu":
+            self = .cpu
         default:
             throw ConfigError.invalidConfig(
-                "Unsupported backend '\(configValue)'. Expected one of mlx or metal-full."
+                "Unsupported backend '\(configValue)'. Expected one of mlx, metal-full or cpu."
             )
         }
     }

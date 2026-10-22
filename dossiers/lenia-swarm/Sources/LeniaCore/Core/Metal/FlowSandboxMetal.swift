@@ -85,6 +85,7 @@ func flowSandboxDurationMs(_ duration: Duration) -> Double {
         Double(duration.components.attoseconds) / 1_000_000_000_000_000.0
 }
 
+#if canImport(Metal)
 enum FlowSandboxStepper {
     case mlx(FlowLeniaParamsBatched)
     case metalFull(FlowLeniaSandboxMetalEngine)
@@ -142,8 +143,8 @@ final class FlowLeniaSandboxMetalEngine: @unchecked Sendable {
         self.kernels = kernels
         self.wallPotential = wallPotential
         self.reintegrateParams = reintegrateParams
-        self.parameterCount = FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
-        self.kernelBatchCount = FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
+        self.parameterCount = FlowLeniaFieldLayout.parameterCount(for: kernels)
+        self.kernelBatchCount = FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         self.fullMetalBridge = FlowLeniaMetalFullBridge(config: config, kernels: kernels, wallPotential: wallPotential)
     }
 
@@ -282,6 +283,8 @@ public func benchmarkFlowSandboxBackend(
         stageTimings: stageTimings
     )
 }
+
+#endif
 
 func flowSandboxParameterField(
     mass: MLXArray,

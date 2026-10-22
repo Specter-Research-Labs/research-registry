@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 private enum LeniaSignpostMode: Int {
     case off = 0
@@ -18,6 +20,7 @@ private enum LeniaSignpostMode: Int {
     }
 }
 
+#if canImport(os)
 public enum LeniaSignposts {
     public struct Interval {
         fileprivate let name: StaticString
@@ -65,3 +68,36 @@ public enum LeniaSignposts {
         return Interval(name: name, id: id)
     }
 }
+#else
+public enum LeniaSignposts {
+    public struct Interval {}
+
+    private static let mode: LeniaSignpostMode = {
+        let mode = LeniaSignpostMode(envValue: ProcessInfo.processInfo.environment["LENIA_SIGNPOSTS"])
+        guard mode == .off else {
+            fatalError("LENIA_SIGNPOSTS requires os_signpost, which is only available on Apple platforms.")
+        }
+        return mode
+    }()
+
+    public static var phaseEnabled: Bool {
+        mode.rawValue >= LeniaSignpostMode.phase.rawValue
+    }
+
+    public static var stepEnabled: Bool {
+        mode.rawValue >= LeniaSignpostMode.step.rawValue
+    }
+
+    public static func beginPhase(_ name: StaticString, generation: Int? = nil) -> Interval? {
+        guard phaseEnabled else { return nil }
+        return Interval()
+    }
+
+    public static func beginStep(_ name: StaticString) -> Interval? {
+        guard stepEnabled else { return nil }
+        return Interval()
+    }
+
+    public static func end(_ interval: Interval?) {}
+}
+#endif

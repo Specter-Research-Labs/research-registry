@@ -1,5 +1,5 @@
 import ArgumentParser
-import CryptoKit
+import Crypto
 import Foundation
 import LeniaCore
 
@@ -139,7 +139,7 @@ struct CapacityPilotCommand: ParsableCommand {
             let emit: (CapacityPilotBranch) throws -> Void = { branch in
                 try JSONEncoder().encode(branch).write(to: directory.appendingPathComponent("\(branch.name).json"))
                 print("\(id.prefix(8)) \(branch.name) completed", terminator: "\n")
-                fflush(stdout)
+                fflush(nil)
             }
             switch study {
             case "state-continuation", "state-flow":

@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import CoreGraphics
 import Foundation
@@ -784,3 +785,4 @@ func encodeMP4FromPNGSequence(
         throw FrameExportError.ffmpegFailed("encoder did not create a non-empty output at \(outputURL.path)")
     }
 }
+#endif

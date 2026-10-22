@@ -661,7 +661,9 @@ public func executeLeniaCampaignJob(
     capabilities: WorkerBackendCapabilities,
     workerID: String?
 ) throws -> LeniaCampaignJobExecution {
+    #if canImport(Metal)
     try LeniaMetalLibrarySupport.ensureAvailable()
+    #endif
     guard let materializedJob = materializeCampaignJob(job, for: capabilities) else {
         throw WorkerError.invalidConfig("No compatible backend available for campaign job \(job.runID).")
     }

@@ -1,7 +1,9 @@
 import LeniaCore
 import LeniaCLIKit
 import Foundation
-import Darwin
+#if !canImport(Metal)
+import MLX
+#endif
 
 private func failStartup(_ message: String) -> Never {
     if let data = (message.hasSuffix("\n") ? message : "\(message)\n").data(using: .utf8) {
@@ -13,15 +15,16 @@ private func failStartup(_ message: String) -> Never {
 @main
 struct LeniaCLIExec {
     static func main() async {
+        #if canImport(Metal)
         do {
             try LeniaMetalLibrarySupport.ensureAvailable()
         } catch {
             failStartup("LeniaCLI startup failed: \(error.localizedDescription)")
         }
-
-        guard #available(macOS 10.15, *) else {
-            failStartup("LeniaCLI startup failed: requires macOS 10.15 or newer.")
-        }
+        #else
+        // MLX defaults to its GPU device, which Linux builds do not have.
+        Device.setDefault(device: .cpu)
+        #endif
         await LeniaSwarm.main()
     }
 }

@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import Foundation
 import LeniaCore
@@ -113,7 +114,7 @@ func libraryReplayBaseConfig(
         run: RunConfig(steps: resolvedSteps),
         interventions: base.interventions
     )
-    let resolvedBackend = try resolveReplaySearchBackend(baseConfig: replayConfig)
+    let resolvedBackend = try resolveReplaySearchBackend(requestValue: "auto", baseConfig: replayConfig)
     return baseConfigBySettingBackend(replayConfig, backend: resolvedBackend)
 }
 
@@ -321,3 +322,4 @@ private func writeLibraryReplaySidecar(
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     try encoder.encode(sidecar).write(to: runURL.appendingPathComponent("specimen.json"))
 }
+#endif

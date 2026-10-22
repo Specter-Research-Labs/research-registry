@@ -234,7 +234,8 @@ private struct PreparedFlowReplay {
 private func prepareFlowReplay(
     _ resolvedInput: ReplayResolvedInput,
     baseConfig: LeniaBaseConfig,
-    searchConfig: ParsedSearchConfig
+    searchConfig: ParsedSearchConfig,
+    backendRequest: String
 ) throws -> PreparedFlowReplay {
     let sourceCreature = replayCreatureWithExplicitInitPatch(
         resolvedInput.sourceCreature,
@@ -260,7 +261,7 @@ private func prepareFlowReplay(
             supportsActivity: replaySupportsReplayActivity(baseConfig: sourceReplayBaseConfig)
         )
     }
-    let resolvedBackend = try resolveReplaySearchBackend(baseConfig: sourceReplayBaseConfig)
+    let resolvedBackend = try resolveReplaySearchBackend(requestValue: backendRequest, baseConfig: sourceReplayBaseConfig)
     let replayBaseConfig = baseConfigBySettingBackend(sourceReplayBaseConfig, backend: resolvedBackend)
     let configHash = try researchConfigHash([
         ("base", researchEncodedJSON(replayBaseConfig)),
@@ -368,13 +369,14 @@ private func finishFlowReplay(
 func executeFlowReplayBatch(
     _ resolvedInputs: [ReplayResolvedInput],
     runID: String,
+    backendRequest: String,
     developmentTrace: DevelopmentTraceOptions? = nil
 ) throws -> [ReplayExecutionOutcome] {
     let prepared = try resolvedInputs.map { resolvedInput in
         guard case let .flow(baseConfig, searchConfig) = resolvedInput.executionPlan else {
             throw ValidationError("Batched replay only runs Flow Lenia bundles; \(resolvedInput.sourceCreature.name) is not one.")
         }
-        return try prepareFlowReplay(resolvedInput, baseConfig: baseConfig, searchConfig: searchConfig)
+        return try prepareFlowReplay(resolvedInput, baseConfig: baseConfig, searchConfig: searchConfig, backendRequest: backendRequest)
     }
     guard let first = prepared.first else {
         throw ValidationError("Batched replay needs at least one body.")
@@ -384,8 +386,8 @@ func executeFlowReplayBatch(
         throw ValidationError("\(body.sourceCreature.name) and \(first.sourceCreature.name) differ beyond rule parameters and init seed, so they cannot share a replay batch.")
     }
     let runtimeConfig = first.runtimeConfig
-    guard runtimeConfig.backend == .metalFull, !runtimeConfig.parameterEmbedding.enabled, runtimeConfig.randomParamRanges == nil else {
-        throw ValidationError("Batched replay needs the metal-full backend with fixed rule parameters and no parameter embedding.")
+    guard runtimeConfig.backend.hasResidentFieldRunner, !runtimeConfig.parameterEmbedding.enabled, runtimeConfig.randomParamRanges == nil else {
+        throw ValidationError("Batched replay needs the metal-full or cpu backend with fixed rule parameters and no parameter embedding.")
     }
     guard first.searchConfig.kSurvival == nil else {
         throw ValidationError("Batched replay cannot run k-survival, which re-simulates from the batch's shared config.")
@@ -450,11 +452,12 @@ private func flowReplaySharedConfig(_ body: PreparedFlowReplay) throws -> Data {
 func executeReplayResolvedInput(
     _ resolvedInput: ReplayResolvedInput,
     runID: String,
+    backendRequest: String,
     developmentTrace: DevelopmentTraceOptions? = nil
 ) throws -> ReplayExecutionOutcome {
     switch resolvedInput.executionPlan {
     case let .flow(baseConfig, searchConfig):
-        let prepared = try prepareFlowReplay(resolvedInput, baseConfig: baseConfig, searchConfig: searchConfig)
+        let prepared = try prepareFlowReplay(resolvedInput, baseConfig: baseConfig, searchConfig: searchConfig, backendRequest: backendRequest)
         let collector = developmentTrace != nil ? DevelopmentTraceCollector() : nil
         var capture: FrameCapture?
         if let developmentTrace, let collector {
@@ -519,6 +522,7 @@ func materializeReplayBatch(
     inputPath: String,
     outputURL: URL,
     runID: String,
+    backendRequest: String,
     exportEnabled: Bool,
     developmentTrace: DevelopmentTraceOptions? = nil,
     batchSize: Int = 1,
@@ -562,12 +566,14 @@ func materializeReplayBatch(
             groupExecutions = [try executeReplayResolvedInput(
                 resolvedInput,
                 runID: runID,
+                backendRequest: backendRequest,
                 developmentTrace: developmentTrace
             )]
         } else if index % batchSize == 0 {
             groupExecutions = try executeFlowReplayBatch(
                 Array(inputs[index..<min(index + batchSize, inputs.count)]),
                 runID: runID,
+                backendRequest: backendRequest,
                 developmentTrace: developmentTrace
             )
         }

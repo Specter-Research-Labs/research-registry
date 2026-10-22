@@ -307,7 +307,7 @@ struct SearchRolloutAccumulator {
 
     mutating func recordSample(
         step: Int,
-        summarySample: FlowLeniaMetalMassSummary?,
+        summarySample: FlowLeniaMassSummary?,
         massMap: MLXArray?,
         energyPerSample explicitEnergyPerSample: MLXArray?
     ) {

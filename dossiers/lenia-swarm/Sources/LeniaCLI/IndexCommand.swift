@@ -687,7 +687,7 @@ final class SQLiteIndexer {
         let maxConcurrency = allFlowReplays ? 1 : min(max(ProcessInfo.processInfo.activeProcessorCount / 2, 1), 4)
         if maxConcurrency == 1 || pending.count == 1 {
             for item in pending {
-                let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID)
+                let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID, backendRequest: "auto")
                 try FileManager.default.createDirectory(at: item.artifactDirectory, withIntermediateDirectories: true)
                 try Self.persistCanonicalizationArtifacts(
                     directory: item.artifactDirectory,
@@ -721,7 +721,7 @@ final class SQLiteIndexer {
                     }
 
                     do {
-                        let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID)
+                        let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID, backendRequest: "auto")
                         try FileManager.default.createDirectory(at: item.artifactDirectory, withIntermediateDirectories: true)
                         try Self.persistCanonicalizationArtifacts(
                             directory: item.artifactDirectory,

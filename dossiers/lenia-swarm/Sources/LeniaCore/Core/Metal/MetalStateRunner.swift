@@ -1,8 +1,9 @@
+#if canImport(Metal)
 import Foundation
 import Metal
 import MLX
 
-final class FlowLeniaMetalFullStateRunner {
+final class FlowLeniaMetalFullStateRunner: FlowLeniaFieldRunner {
     private typealias BufferCopy = (source: MTLBuffer, destination: MTLBuffer, length: Int)
 
     private struct AncestryBuffers {
@@ -78,7 +79,7 @@ final class FlowLeniaMetalFullStateRunner {
         phantom: FlowLeniaPhantomSpec? = nil
     ) {
         self.config = config
-        let kernelCount = FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
+        let kernelCount = FlowLeniaFieldLayout.parameterCount(for: kernels)
         self.parameterCount = parameterFieldMode.parameterCount(kernelCount: kernelCount)
         self.batchCount = batchCount
         self.channelCount = config.channels
@@ -88,7 +89,7 @@ final class FlowLeniaMetalFullStateRunner {
             channelCount: config.channels
         )
         self.currentMatterWeights = resolvedMatterWeights
-        let kernelBatchCount = FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
+        let kernelBatchCount = FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         guard kernelBatchCount == 1 || kernelBatchCount == batchCount else {
             preconditionFailure("FlowLeniaMetalFullStateRunner requires either shared kernels or one kernel set per batch element.")
         }
@@ -247,8 +248,8 @@ final class FlowLeniaMetalFullStateRunner {
         mass: MLXArray,
         params: MLXArray,
         wallMask: MLXArray?,
-        staticChannelFields: [FlowLeniaMetalChannelField],
-        food: FlowLeniaMetalFoodState?,
+        staticChannelFields: [FlowLeniaChannelField],
+        food: FlowLeniaFoodState?,
         mixStep: Int = 0
     ) {
         if phantom != nil {
@@ -423,7 +424,7 @@ final class FlowLeniaMetalFullStateRunner {
         clip: [Float]?
     ) {
         applyParameterPatch(
-            FlowLeniaMetalParameterPatchBatch(
+            FlowLeniaParameterPatchBatch(
                 origins: Array(repeating: SIMD2<Int32>(Int32(x0), Int32(y0)), count: batchCount),
                 size: size,
                 deltas: deltas,
@@ -439,7 +440,7 @@ final class FlowLeniaMetalFullStateRunner {
         clip: [Float]?
     ) {
         applyParameterPatch(
-            FlowLeniaMetalParameterPatchBatch(
+            FlowLeniaParameterPatchBatch(
                 origins: origins,
                 size: size,
                 deltas: deltas,
@@ -448,7 +449,7 @@ final class FlowLeniaMetalFullStateRunner {
         )
     }
 
-    func applyParameterPatch(_ patch: FlowLeniaMetalParameterPatchBatch) {
+    func applyParameterPatch(_ patch: FlowLeniaParameterPatchBatch) {
         guard patch.size > 0 else {
             return
         }
@@ -467,7 +468,7 @@ final class FlowLeniaMetalFullStateRunner {
         }
         let insertionOrigins = Array(repeating: SIMD2<Int32>(Int32(-size), Int32(-size)), count: batchCount)
         applyDissipationPatch(
-            FlowLeniaMetalDissipationBatch(
+            FlowLeniaDissipationBatch(
                 removalOrigins: origins,
                 insertionOrigins: insertionOrigins,
                 size: size,
@@ -477,7 +478,7 @@ final class FlowLeniaMetalFullStateRunner {
         )
     }
 
-    private func applyDissipationPatch(_ patch: FlowLeniaMetalDissipationBatch) {
+    private func applyDissipationPatch(_ patch: FlowLeniaDissipationBatch) {
         guard patch.size > 0 else {
             return
         }
@@ -502,12 +503,20 @@ final class FlowLeniaMetalFullStateRunner {
         )
     }
 
+    func step(count: Int, postStepParameterPatches: [Int: [FlowLeniaParameterPatchBatch]]) {
+        step(
+            count: count,
+            preStepParameterPatches: [:],
+            postStepParameterPatches: postStepParameterPatches
+        )
+    }
+
     func step(
         count: Int,
-        preStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
-        postStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
-        postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]] = [:],
-        postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]] = [:]
+        preStepParameterPatches: [Int: [FlowLeniaParameterPatchBatch]],
+        postStepParameterPatches: [Int: [FlowLeniaParameterPatchBatch]],
+        postStepScalarPatches: [Int: [FlowLeniaScalarPatchBatch]] = [:],
+        postStepDissipationPatches: [Int: [FlowLeniaDissipationBatch]] = [:]
     ) {
         let stepCount = max(count, 0)
         guard stepCount > 0 else {
@@ -584,7 +593,7 @@ final class FlowLeniaMetalFullStateRunner {
         includeGyration: Bool,
         channelWeights: [Float]? = nil,
         materializeMap: Bool
-    ) -> (summary: FlowLeniaMetalMassSummary, massMap: MLXArray?) {
+    ) -> (summary: FlowLeniaMassSummary, massMap: MLXArray?) {
         submitAndWait(label: "flow-metal.state.mass-observation") { commandBuffer in
             summaryReducer.encodeSummary(
                 on: commandBuffer,
@@ -673,7 +682,7 @@ final class FlowLeniaMetalFullStateRunner {
         occupancyThreshold: Float,
         includeGyration: Bool,
         channelWeights: [Float]? = nil
-    ) -> FlowLeniaMetalMassSummary {
+    ) -> FlowLeniaMassSummary {
         observeMass(
             occupancyThreshold: occupancyThreshold,
             includeGyration: includeGyration,
@@ -716,10 +725,10 @@ final class FlowLeniaMetalFullStateRunner {
 
     private func stepChunk(
         count: Int,
-        preStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
-        postStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
-        postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]],
-        postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]]
+        preStepParameterPatches: [Int: [FlowLeniaParameterPatchBatch]],
+        postStepParameterPatches: [Int: [FlowLeniaParameterPatchBatch]],
+        postStepScalarPatches: [Int: [FlowLeniaScalarPatchBatch]],
+        postStepDissipationPatches: [Int: [FlowLeniaDissipationBatch]]
     ) {
         if let phantom {
             // The phantom clock advances only with real steps, so a restart from
@@ -888,7 +897,7 @@ private func encodeChannelFieldOverwrite(
     private func encodeScalarPatch(
         on commandBuffer: MTLCommandBuffer,
         fieldBuffer: MTLBuffer,
-        patch: FlowLeniaMetalScalarPatchBatch
+        patch: FlowLeniaScalarPatchBatch
     ) {
         guard patch.origins.count == batchCount else {
             preconditionFailure(
@@ -929,7 +938,7 @@ private func encodeChannelFieldOverwrite(
         on commandBuffer: MTLCommandBuffer,
         massBuffer: MTLBuffer,
         paramsBuffer: MTLBuffer,
-        patch: FlowLeniaMetalDissipationBatch
+        patch: FlowLeniaDissipationBatch
     ) {
         guard patch.removalOrigins.count == batchCount, patch.insertionOrigins.count == batchCount else {
             preconditionFailure(
@@ -1036,7 +1045,7 @@ private func encodeChannelFieldOverwrite(
     private func encodeParameterPatch(
         on commandBuffer: MTLCommandBuffer,
         paramsBuffer: MTLBuffer,
-        patch: FlowLeniaMetalParameterPatchBatch
+        patch: FlowLeniaParameterPatchBatch
     ) {
         guard patch.origins.count == batchCount else {
             preconditionFailure(
@@ -1147,7 +1156,7 @@ private func encodeChannelFieldOverwrite(
     }
 
     private func prepareStaticChannelFields(
-        _ fields: [FlowLeniaMetalChannelField]
+        _ fields: [FlowLeniaChannelField]
     ) -> (fields: [FlowLeniaMetalChannelFieldBuffer], uploads: [BufferCopy]) {
         var fieldBuffers: [FlowLeniaMetalChannelFieldBuffer] = []
         var uploads: [BufferCopy] = []
@@ -1186,7 +1195,7 @@ private func encodeChannelFieldOverwrite(
     }
 
     private func prepareFoodState(
-        _ food: FlowLeniaMetalFoodState?
+        _ food: FlowLeniaFoodState?
     ) -> (state: FlowLeniaMetalFoodStateBuffer?, upload: BufferCopy?) {
         guard let food else {
             return (nil, nil)
@@ -1771,39 +1780,6 @@ private func encodeChannelFieldOverwrite(
     }
 }
 
-struct FlowLeniaMetalParameterPatchBatch {
-    let origins: [SIMD2<Int32>]
-    let size: Int
-    let deltas: [Float]
-    let clip: [Float]?
-}
-
-struct FlowLeniaMetalChannelField {
-    let channelIndex: Int
-    let field: MLXArray
-}
-
-struct FlowLeniaMetalFoodState {
-    let channelIndex: Int
-    let field: MLXArray
-    let decayRate: Float
-    let digestRate: Float
-}
-
-struct FlowLeniaMetalScalarPatchBatch {
-    let origins: [SIMD2<Int32>]
-    let size: Int
-    let value: Float
-}
-
-struct FlowLeniaMetalDissipationBatch {
-    let removalOrigins: [SIMD2<Int32>]
-    let insertionOrigins: [SIMD2<Int32>]
-    let size: Int
-    let insertedMass: [Float]
-    let insertedParams: [Float]
-}
-
 private struct FlowLeniaMetalChannelFieldBuffer {
     let channelIndex: Int
     let buffer: MTLBuffer
@@ -1848,3 +1824,5 @@ private struct ParameterPatchOrigin {
     var x0: Int32
     var y0: Int32
 }
+
+#endif

@@ -347,6 +347,18 @@ public func isSearchBackendCompatible(backend: FlowLeniaComputeBackend, config: 
         }
 
         return true
+    case .cpu:
+        guard config.reintegration.border == "torus", !config.parameter_embedding.enabled else {
+            return false
+        }
+        switch config.implementation.mode {
+        case "flowlenia_2022_paper_equations", "flowlenia_2022_colab":
+            return true
+        case "custom":
+            return config.implementation.gradient_boundary == "periodic"
+        default:
+            return false
+        }
     }
 }
 

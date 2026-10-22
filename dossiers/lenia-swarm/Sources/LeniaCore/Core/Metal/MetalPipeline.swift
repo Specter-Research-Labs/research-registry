@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import Foundation
 import Metal
 import MLX
@@ -99,7 +100,7 @@ final class FlowLeniaMetalFullPipeline {
         mixSeed: Int? = nil
     ) {
         self.config = config
-        self.kernelCount = Self.parameterCount(for: kernels)
+        self.kernelCount = FlowLeniaFieldLayout.parameterCount(for: kernels)
         guard parameterFieldMode != .none else {
             preconditionFailure("Flow Metal full pipeline requires an embedded parameter field mode.")
         }
@@ -109,7 +110,7 @@ final class FlowLeniaMetalFullPipeline {
         self.channelCount = config.channels
         self.device = device
         self.commandQueue = commandQueue
-        self.kernelBatchCount = Self.kernelBatchCount(for: kernels)
+        self.kernelBatchCount = FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         self.parameterMixMode = ParameterMixMode(configValue: parameterMix)
         self.mixSeed = UInt32(bitPattern: Int32(mixSeed ?? 42))
         guard self.kernelBatchCount == 1 || self.kernelBatchCount == batchCount else {
@@ -264,10 +265,10 @@ final class FlowLeniaMetalFullPipeline {
     }
 
     func updateKernels(_ kernels: CompiledKernels) {
-        guard Self.parameterCount(for: kernels) == kernelCount else {
+        guard FlowLeniaFieldLayout.parameterCount(for: kernels) == kernelCount else {
             preconditionFailure("Flow Metal full pipeline requires a stable parameter count across kernel updates.")
         }
-        guard Self.kernelBatchCount(for: kernels) == kernelBatchCount else {
+        guard FlowLeniaFieldLayout.kernelBatchCount(for: kernels) == kernelBatchCount else {
             preconditionFailure("Flow Metal full pipeline requires a stable kernel batch count across kernel updates.")
         }
         guard kernels.c1Mask.shape == [channelCount, kernelCount] else {
@@ -297,13 +298,13 @@ final class FlowLeniaMetalFullPipeline {
         _ = c0IdxValues.withUnsafeBytes { rawValues in
             memcpy(c0IdxTransferBuffer.contents(), rawValues.baseAddress, rawValues.count)
         }
-        let mValues = Self.expandedKernelScalars(
+        let mValues = FlowLeniaFieldLayout.expandedKernelScalars(
             from: kernels.m,
             batchCount: batchCount,
             parameterCount: kernelCount,
             label: "m"
         )
-        let sValues = Self.expandedKernelScalars(
+        let sValues = FlowLeniaFieldLayout.expandedKernelScalars(
             from: kernels.s,
             batchCount: batchCount,
             parameterCount: kernelCount,
@@ -360,7 +361,7 @@ final class FlowLeniaMetalFullPipeline {
             wallPotentialEnabled = false
             return
         }
-        let values = Self.expandedScalarField(
+        let values = FlowLeniaFieldLayout.expandedScalarField(
             from: wallPotential,
             batchCount: batchCount,
             sx: config.sx,
@@ -823,85 +824,13 @@ final class FlowLeniaMetalFullPipeline {
         }
     }
 
-    static func parameterCount(for kernels: CompiledKernels) -> Int {
-        guard kernels.c1Mask.shape.count == 2 else {
-            preconditionFailure("Flow Metal kernels require c1Mask with shape [channels, nbK].")
-        }
-        return kernels.c1Mask.shape[1]
-    }
-
     static func summaryPartialGroupCount(sx: Int, sy: Int) -> Int {
         let spatialCount = max(1, sx * sy)
         return max(1, (spatialCount + summaryChunkSpan - 1) / summaryChunkSpan)
     }
 
-    static func kernelBatchCount(for kernels: CompiledKernels) -> Int {
-        if kernels.fK.shape.count == 4 {
-            return kernels.fK.shape[0]
-        }
-        if kernels.m.shape.count == 2 {
-            return kernels.m.shape[0]
-        }
-        return 1
-    }
-
     private static func defaultMatterWeights(channelCount: Int) -> [Float] {
         Array(repeating: 1.0, count: channelCount)
-    }
-
-    private static func expandedKernelScalars(
-        from values: MLXArray,
-        batchCount: Int,
-        parameterCount: Int,
-        label: String
-    ) -> [Float] {
-        switch values.shape.count {
-        case 1:
-            guard values.shape[0] == parameterCount else {
-                preconditionFailure("Flow Metal \(label) values must match the kernel count.")
-            }
-            let row = values.asArray(Float.self)
-            return Array(repeating: row, count: batchCount).flatMap { $0 }
-        case 2:
-            guard values.shape[1] == parameterCount else {
-                preconditionFailure("Flow Metal \(label) values must match the kernel count.")
-            }
-            guard values.shape[0] == 1 || values.shape[0] == batchCount else {
-                preconditionFailure("Flow Metal \(label) values must be shared across the batch or provided per batch element.")
-            }
-            let raw = values.asArray(Float.self)
-            if values.shape[0] == batchCount {
-                return raw
-            }
-            let row = Array(raw[0..<parameterCount])
-            return Array(repeating: row, count: batchCount).flatMap { $0 }
-        default:
-            preconditionFailure("Flow Metal \(label) values must have rank 1 or 2.")
-        }
-    }
-
-    private static func expandedScalarField(
-        from values: MLXArray,
-        batchCount: Int,
-        sx: Int,
-        sy: Int,
-        label: String
-    ) -> [Float] {
-        guard values.shape.count == 4 else {
-            preconditionFailure("Flow Metal \(label) must have rank 4 with shape [batch, sx, sy, 1].")
-        }
-        guard values.shape[1] == sx, values.shape[2] == sy, values.shape[3] == 1 else {
-            preconditionFailure("Flow Metal \(label) must have shape [batch, \(sx), \(sy), 1].")
-        }
-        guard values.shape[0] == 1 || values.shape[0] == batchCount else {
-            preconditionFailure("Flow Metal \(label) must be shared across the batch or provided per batch element.")
-        }
-        let contiguous = values.contiguous()
-        let raw = contiguous.asArray(Float.self)
-        if values.shape[0] == batchCount {
-            return raw
-        }
-        return Array(repeating: raw, count: batchCount).flatMap { $0 }
     }
 
     static func makeTwiddleBuffer(device: MTLDevice, length: Int, label: String) -> MTLBuffer {
@@ -916,10 +845,6 @@ final class FlowLeniaMetalFullPipeline {
     /// kernel and the ancestry tracer both rely on.
     static let transportFloatPragma = "#pragma METAL fp contract(off)"
 
-    static func usesLocalTorusDistance(sx: Int, sy: Int, dd: Int, maxAdvection: Float, useTorus: Bool) -> Bool {
-        useTorus && maxAdvection >= 0 && Float(min(sx, sy)) * 0.5 > Float(dd) + maxAdvection
-    }
-
     /// Tile side for `flowMetalReintegrateLocalTorus`, or nil when transport needs the
     /// general kernel: parameter reintegration, walls, or a torus small enough that a
     /// source can reach a target the long way round.
@@ -930,7 +855,7 @@ final class FlowLeniaMetalFullPipeline {
         maxThreadgroupMemory: Int
     ) -> Int? {
         let maxAdvection = Float(config.dd) - config.sigma
-        guard !reintegrateParams, usesLocalTorusDistance(
+        guard !reintegrateParams, FlowLeniaFieldLayout.usesLocalTorusDistance(
             sx: config.sx,
             sy: config.sy,
             dd: config.dd,
@@ -950,7 +875,7 @@ final class FlowLeniaMetalFullPipeline {
     }
 
     static func reintegrateDistanceBody(sx: Int, sy: Int, dd: Int, maxAdvection: Float, useTorus: Bool) -> String {
-        return if usesLocalTorusDistance(sx: sx, sy: sy, dd: dd, maxAdvection: maxAdvection, useTorus: useTorus) {
+        return if FlowLeniaFieldLayout.usesLocalTorusDistance(sx: sx, sy: sy, dd: dd, maxAdvection: maxAdvection, useTorus: useTorus) {
             """
                                 float dY = metal::fabs(float(dy) - clippedY);
                                 float dX = metal::fabs(float(dx) - clippedX);
@@ -1796,9 +1721,9 @@ final class FlowLeniaMetalFullBridge: @unchecked Sendable {
         self.wallPotential = wallPotential
         self.parameterFieldMode = parameterFieldMode
         self.parameterCount = parameterFieldMode.parameterCount(
-            kernelCount: FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
+            kernelCount: FlowLeniaFieldLayout.parameterCount(for: kernels)
         )
-        self.kernelBatchCount = FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
+        self.kernelBatchCount = FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         let metal = FlowLeniaMetalFullPipeline.makeDeviceAndQueue()
         self.device = metal.0
         self.commandQueue = metal.1
@@ -1950,3 +1875,5 @@ final class FlowLeniaMetalFullBridge: @unchecked Sendable {
         )
     }
 }
+
+#endif

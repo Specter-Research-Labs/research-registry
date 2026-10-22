@@ -19,7 +19,7 @@ private struct SearchBatchSetup {
     let initialFoodMass: [Float]?
     let wallMask: MLXArray?
     let chemField: MLXArray?
-    let persistentMetalRunner: FlowLeniaMetalFullStateRunner?
+    let persistentMetalRunner: (any FlowLeniaFieldRunner)?
     let interventionsByStep: [Int: [InterventionConfig]]
 }
 
@@ -52,7 +52,7 @@ public final class SearchEngine {
     private let environmentPotential: MLXArray?
     private let metalFullKernels: CompiledKernels?
     private let staticParamTemplate: MLXArray?
-    private var persistentMetalRunnerCache: [MetalRunnerCacheKey: FlowLeniaMetalFullStateRunner] = [:]
+    private var persistentMetalRunnerCache: [MetalRunnerCacheKey: any FlowLeniaFieldRunner] = [:]
     private(set) var lastBatchProfile: SearchBatchProfile?
 
     public init(runtimeConfig: LeniaRuntimeConfig, recenterAdditive: Bool = true) {
@@ -71,10 +71,10 @@ public final class SearchEngine {
             c0: runtimeConfig.c0,
             c1: runtimeConfig.c1
         )
-        self.metalFullKernels = runtimeConfig.backend == .metalFull ? kernels : nil
+        self.metalFullKernels = runtimeConfig.backend.hasResidentFieldRunner ? kernels : nil
 
-        if !useParamEmbedding && runtimeConfig.backend == .metalFull {
-            let nbK = FlowLeniaMetalFullPipeline.parameterCount(for: kernels)
+        if !useParamEmbedding && runtimeConfig.backend.hasResidentFieldRunner {
+            let nbK = FlowLeniaFieldLayout.parameterCount(for: kernels)
             self.staticParamTemplate = MLX.broadcast(
                 kernels.h.reshaped([1, 1, 1, nbK]),
                 to: [1, runtimeConfig.sx, runtimeConfig.sy, nbK]
@@ -129,7 +129,7 @@ public final class SearchEngine {
             } else {
                 self.stepper = .mlx(engine, nil)
             }
-        case .metalFull:
+        case .metalFull, .cpu:
             SearchRuntimePreflight.validateMetalBackendCompatibility(
                 runtimeConfig: runtimeConfig,
                 hasEnvironmentPotential: crossMapPotential != nil
@@ -143,18 +143,19 @@ public final class SearchEngine {
     private func reusableMetalFullRunner(
         batchSize: Int,
         kernels: CompiledKernels
-    ) -> FlowLeniaMetalFullStateRunner {
+    ) -> any FlowLeniaFieldRunner {
         let runtimeOperators = makeRuntimeOperators()
         let cacheKey = MetalRunnerCacheKey(
             batchSize: batchSize,
-            kernelBatchCount: FlowLeniaMetalFullPipeline.kernelBatchCount(for: kernels)
+            kernelBatchCount: FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         )
         if let runner = persistentMetalRunnerCache[cacheKey] {
             runner.setMatterWeights(runtimeOperators.matterWeights())
             runner.updateKernels(kernels)
             return runner
         }
-        let runner = FlowLeniaMetalFullStateRunner(
+        let runner = makeFlowLeniaFieldRunner(
+            backend: runtimeConfig.backend,
             config: batchedConfig,
             kernels: kernels,
             batchCount: batchSize,
@@ -169,7 +170,7 @@ public final class SearchEngine {
     }
 
     private func flushPendingMetalSteps(
-        runner: FlowLeniaMetalFullStateRunner,
+        runner: any FlowLeniaFieldRunner,
         pendingMetalSteps: inout Int,
         pendingMetalStartStep: Int,
         batchSize: Int
@@ -180,7 +181,6 @@ public final class SearchEngine {
         let runtimeOperators = makeRuntimeOperators()
         runner.step(
             count: pendingMetalSteps,
-            preStepParameterPatches: [:],
             postStepParameterPatches: runtimeOperators.searchBeamMutationPatchSchedule(
                 startStep: pendingMetalStartStep,
                 count: pendingMetalSteps,
@@ -392,7 +392,7 @@ public final class SearchEngine {
             let needsMaterializedMassMap = shouldCaptureFrame
                 || shouldCaptureActivity
                 || shouldCaptureCoherentTransportReference
-            var summarySample: FlowLeniaMetalMassSummary?
+            var summarySample: FlowLeniaMassSummary?
             var massMap: MLXArray?
             if let runner = persistentMetalRunner {
                 if shouldRecordSample {
@@ -601,8 +601,8 @@ public final class SearchEngine {
                 "explicitParamsBatch count (\(corpus.count)) must equal batch size (\(batchSize))"
             )
             precondition(
-                !useParamEmbedding && runtimeConfig.backend == .metalFull,
-                "explicitParamsBatch requires metal-full backend without parameter embedding"
+                !useParamEmbedding && runtimeConfig.backend.hasResidentFieldRunner,
+                "explicitParamsBatch requires the metal-full or cpu backend without parameter embedding"
             )
             randomParamsBySample = corpus
             activeMetalKernels = compilePopulationKernels(
@@ -612,7 +612,7 @@ public final class SearchEngine {
                 c1: runtimeConfig.c1
             )
         } else if !useParamEmbedding,
-           runtimeConfig.backend == .metalFull,
+           runtimeConfig.backend.hasResidentFieldRunner,
            let ranges = runtimeConfig.randomParamRanges {
             randomParamsBySample = seeds.map {
                 generateRandomParams(seed: $0, nbK: runtimeConfig.nbK, ranges: ranges)
@@ -697,7 +697,7 @@ public final class SearchEngine {
         let chemField = initializationBuilder.runtimeChemotaxisField()
         timings.chemFieldBuildMs = durationMs(chemFieldBuildStart.duration(to: ContinuousClock.now))
 
-        let persistentMetalRunner: FlowLeniaMetalFullStateRunner?
+        let persistentMetalRunner: (any FlowLeniaFieldRunner)?
         if let kernels = activeMetalKernels {
             let runnerSetupStart = ContinuousClock.now
             let runner = reusableMetalFullRunner(batchSize: batchSize, kernels: kernels)
@@ -706,7 +706,8 @@ public final class SearchEngine {
                 params: paramBatch!,
                 wallMask: wallMask,
                 staticChannelFields: runtimeOperators.metalStaticChannelFields(chemField: chemField),
-                food: runtimeOperators.metalFoodState(foodBatch: foodBatch)
+                food: runtimeOperators.metalFoodState(foodBatch: foodBatch),
+                mixStep: 0
             )
             persistentMetalRunner = runner
             timings.runnerSetupMs = durationMs(runnerSetupStart.duration(to: ContinuousClock.now))
@@ -917,14 +918,18 @@ extension SearchEngine {
             explicitParamsBatch: nil,
             timings: &timings
         )
-        guard let runner = batchSetup.persistentMetalRunner else {
-            return nil
+        #if canImport(Metal)
+        guard let runner = batchSetup.persistentMetalRunner as? FlowLeniaMetalFullStateRunner else {
+            preconditionFailure("Stage profiling needs the metal-full runner.")
         }
         let preProfileSteps = min(max(searchConfig.warmupSteps, 0), max(searchConfig.steps - 1, 0))
         if preProfileSteps > 0 {
             runner.step(count: preProfileSteps)
         }
         return runner.profileCurrentStep()
+        #else
+        preconditionFailure("Stage profiling needs the metal-full runner, which requires Apple Metal.")
+        #endif
     }
 }
 
@@ -934,8 +939,8 @@ struct SearchParameterPatch {
     let deltas: [Float]
     let clip: [Float]?
 
-    func asMetalPatchBatch() -> FlowLeniaMetalParameterPatchBatch {
-        FlowLeniaMetalParameterPatchBatch(
+    func asMetalPatchBatch() -> FlowLeniaParameterPatchBatch {
+        FlowLeniaParameterPatchBatch(
             origins: origins,
             size: size,
             deltas: deltas,

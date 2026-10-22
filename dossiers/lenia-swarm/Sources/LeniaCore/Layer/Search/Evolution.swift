@@ -1227,7 +1227,9 @@ public final class EvolutionEngine {
     private let morphologyTemplate: MassTemplate?
     private let templateSequenceTemplates: [MassTemplate]?
     private let populationEvaluator: PopulationEvaluator
+    #if canImport(Metal)
     private var metalFullPopulationRunner: FlowLeniaMetalFullStateRunner?
+    #endif
 
     public var theta: [Float]
     public var rng: SeededRandomNumberGenerator
@@ -1577,11 +1579,18 @@ public final class EvolutionEngine {
         case .mlx:
             self.populationEvaluator = .mlx
         case .metalFull:
+            #if canImport(Metal)
             Self.validateMetalBackendCompatibility(runtimeConfig: runtimeConfig, esConfig: esConfig)
             self.populationEvaluator = .metalFull
+            #else
+            preconditionFailure("Backend metal-full requires Apple Metal.")
+            #endif
+        case .cpu:
+            preconditionFailure("The cpu backend serves search and replay only.")
         }
     }
 
+    #if canImport(Metal)
     private func reusableMetalFullPopulationRunner(kernels: CompiledKernels) -> FlowLeniaMetalFullStateRunner {
         if let runner = metalFullPopulationRunner {
             runner.updateKernels(kernels)
@@ -1597,6 +1606,7 @@ public final class EvolutionEngine {
         metalFullPopulationRunner = runner
         return runner
     }
+    #endif
 
     private func metalMatterWeights() -> [Float]? {
         flowMatterWeights(channels: config.channels, excludedChannels: excludedMassChannels)
@@ -1605,12 +1615,12 @@ public final class EvolutionEngine {
     private func metalStaticChannelFields(
         chemFieldBatch: MLXArray?,
         obstacleFieldBatch: MLXArray?
-    ) -> [FlowLeniaMetalChannelField] {
-        var fields: [FlowLeniaMetalChannelField] = []
+    ) -> [FlowLeniaChannelField] {
+        var fields: [FlowLeniaChannelField] = []
         if let field = chemFieldBatch,
            let chemotaxis = runtimeConfig.chemotaxis,
            chemotaxis.enabled {
-            fields.append(FlowLeniaMetalChannelField(
+            fields.append(FlowLeniaChannelField(
                 channelIndex: chemotaxis.channel_index,
                 field: field.expandedDimensions(axis: 3)
             ))
@@ -1618,7 +1628,7 @@ public final class EvolutionEngine {
         if let field = obstacleFieldBatch,
            let obstacleField = esConfig.obstacleField,
            obstacleField.enabled {
-            fields.append(FlowLeniaMetalChannelField(
+            fields.append(FlowLeniaChannelField(
                 channelIndex: obstacleField.channelIndex,
                 field: field.expandedDimensions(axis: 3)
             ))
@@ -2181,7 +2191,7 @@ public final class EvolutionEngine {
         )
     }
 
-    private func centerSnapshot(from summary: FlowLeniaMetalMassSummary, index: Int) -> CenterSnapshot {
+    private func centerSnapshot(from summary: FlowLeniaMassSummary, index: Int) -> CenterSnapshot {
         let total = summary.totalMass[index]
         guard total > 0 else {
             return deadSnapshot()
@@ -2320,11 +2330,15 @@ public final class EvolutionEngine {
                 evaluationStart: evaluationStart
             )
         case .metalFull:
+            #if canImport(Metal)
             return evaluatePopulationMetal(
                 candidates: candidates,
                 paramsBatch: paramsBatch,
                 evaluationStart: evaluationStart
             )
+            #else
+            preconditionFailure("Backend metal-full requires Apple Metal.")
+            #endif
         }
     }
 
@@ -2598,6 +2612,7 @@ public final class EvolutionEngine {
         )
     }
 
+    #if canImport(Metal)
     private func evaluatePopulationMetal(
         candidates: [[Float]],
         paramsBatch: [ResolvedParams],
@@ -2659,13 +2674,13 @@ public final class EvolutionEngine {
             || (requirements.objective == "chemotaxis" && chemFieldBatch != nil)
         let needsFinalGyration = esConfig.fitness.gyrationPenalty != nil
         var observedFinalMassMap: MLXArray?
-        var observedFinalSummary: FlowLeniaMetalMassSummary?
+        var observedFinalSummary: FlowLeniaMassSummary?
 
         func observeCurrentState(
             centers: Bool,
             massMap: Bool,
             includeGyration: Bool
-        ) -> (centers: [CenterSnapshot]?, massMap: MLXArray?, summary: FlowLeniaMetalMassSummary?) {
+        ) -> (centers: [CenterSnapshot]?, massMap: MLXArray?, summary: FlowLeniaMassSummary?) {
             guard centers || includeGyration else {
                 return (nil, massMap ? runner.materializeMassMap(channelWeights: matterWeights) : nil, nil)
             }
@@ -2894,6 +2909,7 @@ public final class EvolutionEngine {
             measurementMs: measurementMs
         )
     }
+    #endif
 
     func fitnessValue(from measurement: CandidateMeasurement) -> Float {
         switch esConfig.fitness.objective {
@@ -4528,6 +4544,7 @@ extension EvolutionEngine {
         guard runtimeConfig.backend == .metalFull else {
             return nil
         }
+        #if canImport(Metal)
 
         let totalDim = theta.count
         let pop = esConfig.population
@@ -4570,6 +4587,9 @@ extension EvolutionEngine {
             runner.step(count: preProfileSteps)
         }
         return runner.profileCurrentStep()
+        #else
+        preconditionFailure("Backend metal-full requires Apple Metal.")
+        #endif
     }
 }
 
