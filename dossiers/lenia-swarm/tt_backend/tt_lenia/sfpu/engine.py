@@ -25,6 +25,8 @@ from .codegen import TILE_VECTORS, PassSpec, bitrev
 
 LANES = 32
 PAGE_FLOATS = 1024
+# Pass 2 double-buffers its input, kernel and output columns where L1 holds them.
+P2_DEPTH = {128: 2, 256: 2, 512: 1}
 KERNEL_DIR = Path(__file__).parent / "kernels"
 DOSSIER_ROOT = Path(__file__).resolve().parents[3]
 
@@ -102,7 +104,7 @@ class SfpuEngine:
         self.mass_b = self._empty(self.mass_pages)
         self.h = self._upload(self._kernel_pages(params.spectra))
         self.par = self._upload(self._param_pages(params))
-        self.twiddles = self._upload(self._twiddle_pages()) if sx == 2 * codegen.COLUMN else None
+        self.twiddles = self._upload(self._twiddle_pages()) if spec.twiddle_spans else None
         self.s_spec = self._empty(g * C * M * CT)
         self.resp = self._empty(g * K * M * CT)
         self.u = self._empty(g * C * sx * T)
@@ -172,8 +174,8 @@ class SfpuEngine:
         return encode(h.transpose(0, 5, 4, 2, 3, 1)).reshape(-1, PAGE_FLOATS)
 
     def _twiddle_pages(self) -> np.ndarray:
-        """One copy of the pass 2 split twiddles per device, every lane holding the same value."""
-        w = codegen.split_twiddles(self.spec).reshape(-1, TILE_VECTORS, 1)
+        """One copy of the split twiddles per device, every lane holding the same value."""
+        w = codegen.twiddle_table(self.spec).reshape(-1, TILE_VECTORS, 1)
         pages = encode(np.broadcast_to(w, w.shape[:-1] + (LANES,)))
         return np.tile(pages, (self.devices, 1))
 
@@ -206,9 +208,15 @@ class SfpuEngine:
             for index, tiles in sizes.items()
         ]
 
+    def _twiddle_tiles(self) -> int:
+        return sum(self.spec.twiddle_spans) // TILE_VECTORS
+
     def _defines(self, stage: str) -> list[tuple[str, str]]:
         spec = self.spec
+        spans = spec.twiddle_spans
         defines = [
+            ("TWIDDLE_TOP", str(spans[0] if spans else 0)),
+            ("TWIDDLE_TILES", str(self._twiddle_tiles())),
             ("GRID_SX", str(spec.sx)),
             ("GRID_SY", str(spec.sy)),
             ("CHANNELS", str(spec.channels)),
@@ -288,25 +296,27 @@ class SfpuEngine:
 
     def _step_programs(self, src, dst):
         spec = self.spec
-        T, C, K = spec.row_tiles, spec.channels, spec.kernels
+        T, C = spec.row_tiles, spec.channels
         CT, HT = spec.sx // 16, spec.sx // TILE_VECTORS
         cap = self.capture
-        p1 = self._program("p1", [src], [self.s_spec], {0: 2 * T, 16: 2 * T})
-        p2_cbs = {0: 2 * CT, 1: 4 * HT, 2: CT, 3: CT, 4: CT, 5: CT, 16: 2 * CT}
+        row_split = [self.twiddles] if spec.row_split else []
+        row_split_cbs = {4: T, 11: self._twiddle_tiles()} if spec.row_split else {}
+        p1_in = [src] + row_split
+        p1 = self._program("p1", p1_in, [self.s_spec], {0: 2 * T, 16: 2 * T} | row_split_cbs)
+        d = P2_DEPTH[spec.sx]
+        p2_cbs = {0: d * CT, 1: 2 * d * HT, 2: CT, 3: CT, 4: CT, 5: CT, 16: d * CT}
         p2_in = [self.s_spec, self.h]
-        if self.twiddles is not None:
-            p2_cbs |= {10: CT, 11: CT // 2}
+        if spec.sx > codegen.COLUMN:
+            p2_cbs |= {10: CT, 11: self._twiddle_tiles()}
             p2_in.append(self.twiddles)
         p2 = self._program("p2", p2_in, [self.resp], p2_cbs)
-        p3_cbs = {0: 2 * T, 6: K * T, 7: 2, 8: 2, 9: C * T, 16: 2 * C, 17: 2}
+        p3_cbs = {0: 2 * T, 6: spec.max_chunk * T, 7: 2, 8: T, 9: C * T, 16: 2 * C, 17: 2}
+        p3_cbs |= row_split_cbs
         if cap:
             p3_cbs[18] = 2 * T
-        p3 = self._program(
-            "p3",
-            [self.resp, src, self.par],
-            [self.u, self.matter] + ([self.pot] if cap else []),
-            p3_cbs,
-        )
+        p3_in = [self.resp, src, self.par] + row_split
+        p3_out = [self.u, self.matter] + ([self.pot] if cap else [])
+        p3 = self._program("p3", p3_in, p3_out, p3_cbs)
         p4_cbs = {0: 14, 16: 2}
         if cap:
             p4_cbs[18] = 2
@@ -315,9 +325,9 @@ class SfpuEngine:
         )
         p5 = self._program("p5", [src, self.shift], [dst], {0: 6, 16: 4})
         tensors = {
-            "p1": [src, self.s_spec],
+            "p1": p1_in + [self.s_spec],
             "p2": p2_in + [self.resp],
-            "p3": [self.resp, src, self.par, self.u, self.matter] + ([self.pot] if cap else []),
+            "p3": p3_in + p3_out,
             "p4": [self.u, self.matter, self.shift] + ([self.flow] if cap else []),
             "p5": [src, self.shift, dst],
         }

@@ -11,8 +11,8 @@ form a group, and each group gets an equal share of the chip's 64 cores.
 
 The engine follows the Metal pipeline's semantics (`MetalSpectral.swift`,
 `MetalPipeline.swift`) for the configuration the large searches run: torus
-border, `flowlenia_2022_paper_equations`, explicit parameters, sides of 128 or
-256, mass-weighted alpha. The replay runner refuses any other config feature
+border, `flowlenia_2022_paper_equations`, explicit parameters, sides of 128,
+256 or 512, every kernel feeding exactly one channel, mass-weighted alpha. The replay runner refuses any other config feature
 rather than approximating it.
 
 ## Replay
