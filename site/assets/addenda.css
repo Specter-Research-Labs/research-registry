@@ -5,7 +5,7 @@
 .addendum-feature img,.equational-feature img,.addendum-specimen img{display:block;width:100%;height:auto;background:#f1eee5}
 .addendum-feature figure>a,.equational-feature figure>a,.addendum-specimen>a{display:block;text-decoration:none}
 .addendum-series{display:block;margin-bottom:12px;font:11px/1.5 var(--sl-font-mono);color:var(--sl-color-muted)}
-.addendum-feature h2,.equational-feature h2{font:700 clamp(27px,3vw,36px)/1.08 var(--sl-font-display);letter-spacing:-.04em;margin:0 0 19px}
+.addendum-feature h2,.equational-feature h2{margin:0 0 19px}
 .addendum-feature h2 a,.equational-feature h2 a{font-weight:inherit;text-decoration:none}
 .addendum-feature h2 a:hover,.equational-feature h2 a:hover{text-decoration:underline;text-underline-offset:4px}
 .addendum-feature p,.equational-heading p{font:17px/1.65 var(--sl-font-prose);margin:0 0 17px}
@@ -13,7 +13,6 @@
 .addendum-open{font:12px/1.5 var(--sl-font-mono)}
 .equational-feature{border-top:1px solid var(--sl-color-rule);padding-top:34px;margin-bottom:60px}
 .equational-heading{max-width:90ch;margin-bottom:25px}
-.equational-heading h2{font-size:clamp(30px,3.3vw,42px)}
 .equational-specimens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px}
 .more-addenda-heading{margin-bottom:24px}
 #all-addenda .card-stack{display:block;margin:0}
@@ -27,6 +26,4 @@
 #all-addenda .dossier-card-body p{font:17px/1.6 var(--sl-font-prose);margin:0 0 16px;max-width:65ch}
 #all-addenda .dossier-card-body code{font-family:var(--sl-font-mono);font-size:.88em}
 #all-addenda .link-row{font:12px/1.5 var(--sl-font-mono)}
-.publication-footer{display:flex;flex-wrap:wrap;gap:24px;border-top:1px solid var(--sl-color-ink);padding:28px 0 40px;margin-top:64px;font:12px/1.6 var(--sl-font-mono)}
-.publication-footer a:last-child{margin-left:auto}
-@media(max-width:700px){.addenda-showcases,.equational-specimens{grid-template-columns:1fr;gap:38px}.addenda-showcases{margin:30px 0 42px}.equational-feature{padding-top:26px;margin-bottom:38px}.equational-heading{margin-bottom:22px}#all-addenda .addendum-specimen-card{grid-template-columns:1fr;gap:17px;padding:25px 0}.addendum-specimen{grid-column:1;grid-row:2;max-width:100%;width:100%}#all-addenda .dossier-card-body{grid-row:3}#all-addenda .dossier-card-header{grid-row:1}.publication-footer a:last-child{margin-left:0}}
+@media(max-width:700px){.addenda-showcases,.equational-specimens{grid-template-columns:1fr;gap:38px}.addenda-showcases{margin:30px 0 42px}.equational-feature{padding-top:26px;margin-bottom:38px}.equational-heading{margin-bottom:22px}#all-addenda .addendum-specimen-card{grid-template-columns:1fr;gap:17px;padding:25px 0}.addendum-specimen{grid-column:1;grid-row:2;max-width:100%;width:100%}#all-addenda .dossier-card-body{grid-row:3}#all-addenda .dossier-card-header{grid-row:1}}

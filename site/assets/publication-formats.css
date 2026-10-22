@@ -25,28 +25,6 @@ body[data-publication] a:focus-visible,body[data-publication] button:focus-visib
   outline-offset: 5px;
 }
 
-body[data-publication=home] {
-  --paper: #f4f1e8;
-  --ink: #172021;
-  background: #f4f1e8;
-  color: #172021;
-  --sl-color-paper: #f4f1e8;
-  --sl-color-bg: #f4f1e8;
-  --sl-color-ink: #172021;
-}
-
-body[data-publication=home] .text-link:hover,body[data-publication=home] .index-list a:hover {
-  color: var(--publication-primary);
-}
-
-body[data-publication=home] .investigation .eyebrow,body[data-publication=home] .investigation .label {
-  color: var(--publication-primary);
-}
-
-body[data-publication=home] .proof-panel {
-  --accent: var(--publication-primary);
-}
-
 body[data-publication=dossier] .publication-dossier-cover {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
@@ -191,7 +169,7 @@ body[data-publication=dossier] .story-method[open] summary {
   margin-bottom: 20px;
 }
 
-body[data-publication=dossier] .dossier-hub-footer-row {
+body[data-publication=dossier] .dossier-hub-links {
   margin-top: 0;
 }
 
@@ -262,62 +240,6 @@ body[data-publication=report] .publication-measurement #live-plate>h3 {
 
 body[data-publication=report] .report-motion-intro {
   max-width: 780px;
-}
-
-body[data-publication=note] .doc-paper {
-  background: var(--publication-paper);
-  box-shadow: none;
-  border: 0;
-}
-
-body[data-publication=note] .doc-layout {
-  grid-template-columns: 160px minmax(0,1fr);
-  gap: 55px;
-}
-
-body[data-publication=note] .doc-content {
-  max-width: 820px;
-}
-
-body[data-publication=note] .doc-content h1 {
-  font: italic 400 clamp(40px,4.5vw,64px)/1.06 "IBM Plex Serif",Georgia,serif;
-  letter-spacing: -.04em;
-  margin: 35px 0 25px;
-}
-
-body[data-publication=note] .doc-content p {
-  font-size: 19px;
-  line-height: 1.75;
-  max-width: 65ch;
-}
-
-body[data-publication=note] .doc-aside {
-  font-size: 11px;
-}
-
-body[data-publication=note] .doc-stamp {
-  background: none;
-  border: 0;
-  padding: 0;
-}
-
-body[data-publication=note] .toc {
-  display: none;
-}
-
-.publication-journal-masthead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.publication-journal-masthead span {
-  font: italic 28px "IBM Plex Serif",Georgia,serif;
-}
-
-.publication-journal-masthead a {
-  font: 11px PublicationMono,monospace;
 }
 
 body[data-publication=dossier] .publication-dossier-cover img {
@@ -483,19 +405,4 @@ html body.report-format-method .report-result > figure {
     font-size: 25px;
   }
 
-  body[data-publication=note] .doc-layout {
-    display: block;
-  }
-
-  body[data-publication=note] .doc-aside {
-    margin-bottom: 35px;
-  }
-
-  .publication-journal-masthead {
-    flex-wrap: wrap;
-  }
-
-  body[data-publication=note] .doc-content p {
-    font-size: 17px;
-  }
 }
