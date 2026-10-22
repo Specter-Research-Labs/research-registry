@@ -47,6 +47,7 @@ ops/zulip/.env*
 *.jpg
 *.jpeg
 !site/assets/blog/**/*.png
+!site/assets/lenia-swarm/*.png
 !site/dossiers/lenia-swarm/anatomical-compiler/assets/**/*.png
 !dossiers/lenia-swarm/docs/universe/assets/**/*.png
 !dossiers/lenia-swarm/docs/universe/assets/**/*.jpg
