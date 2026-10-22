@@ -260,26 +260,33 @@ def test_retire_refuses_unassessed_traces(tmp_path):
         )
 
 
-def test_trace_digests_match_by_arena_and_body(tmp_path):
-    new = tmp_path / "new.json"
-    new.write_text(
-        json.dumps(
-            {
-                "stripped": [
-                    {"path": "x/n128-torus128/campaigns/0004-elite-1-aaaa0001/t", "sha256": "h1"}
-                ],
-                "kept": [
-                    {"path": "x/n128-torus256/campaigns/0004-elite-1-aaaa0001/t", "sha256": "h2"}
-                ],
-            }
-        )
+def test_trace_frames_match_raw_and_stripped_by_arena_and_body(tmp_path):
+    new = [tmp_path / "new" / "n8-torus8", tmp_path / "new" / "n8-torus16"]
+    old = [tmp_path / "old" / "003-torus8", tmp_path / "old" / "003-torus16"]
+    replay_campaign(new[0], "0004-elite-1-aaaa0001", "AAAA0001", 8)
+    replay_campaign(new[1], "0004-elite-1-aaaa0001", "AAAA0001", 16)
+    replay_campaign(new[1], "0005-elite-2-bbbb0002", "BBBB0002", 16)
+    replay_campaign(old[0], "0000-0001", "AAAA0001", 8)
+    changed = replay_campaign(old[1], "0009-elite-1-aaaa0001", "AAAA0001", 16)
+    replay_campaign(tmp_path / "old" / "003-wall8", "0009-elite-1-aaaa0001", "AAAA0001", 8)
+    a = assessment(tmp_path / "a.json", 8, {"AAAA0001": True})
+    rq.retire_trace_fields(
+        replay_roots=[old[0]],
+        assessments=[a],
+        keep_bodies=[],
+        manifest_path=tmp_path / "manifest.json",
+        apply=True,
     )
-    old = write_jsonl(
-        tmp_path / "old.jsonl",
-        [
-            {"path": "replay-arena/003-torus128/campaigns/0009-elite-1-aaaa0001/t", "sha256": "h1"},
-            {"path": "replay-arena/003-torus256/campaigns/0009-elite-1-aaaa0001/t", "sha256": "h3"},
-        ],
+    frames = [json.loads(line) for line in changed.read_text().splitlines()]
+    frames[1]["centerX"] = 1.0
+    write_jsonl(changed, frames)
+    summary = rq.compare_trace_frames(
+        replay_roots=new, prior_replay_roots=old + [tmp_path / "old" / "003-wall8"]
     )
-    summary = rq.compare_trace_digests(manifests=[new], prior_manifests=[old])
-    assert summary == {"shared": 2, "identical": 1, "differ": ["torus256/aaaa0001"]}
+    assert summary == {
+        "shared": 2,
+        "identical": 1,
+        "differ": [{"arena": "torus16", "body": "aaaa0001", "frames": [2, 2], "first": 1}],
+        "only_new": 1,
+        "only_prior": 1,
+    }

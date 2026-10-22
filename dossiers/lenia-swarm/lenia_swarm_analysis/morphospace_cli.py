@@ -48,7 +48,7 @@ from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_refe
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
 from lenia_swarm_analysis.morphospace.requalification import (
     collect_members,
-    compare_trace_digests,
+    compare_trace_frames,
     compare_verdicts,
     retire_trace_fields,
     write_torus_inputs,
@@ -1160,17 +1160,17 @@ def _build_parser() -> argparse.ArgumentParser:
         )
     )
 
-    digests = subparsers.add_parser(
-        "compare-trace-digests",
-        help="Match whole-trace digests by torus arena size and body between two runs",
+    frames = subparsers.add_parser(
+        "compare-trace-frames",
+        help="Compare development traces frame by frame by arena and body between two runs",
     )
-    digests.add_argument("--manifest", required=True, type=Path, action="append")
-    digests.add_argument("--prior-manifest", required=True, type=Path, action="append")
-    _add_json(digests)
-    digests.set_defaults(
-        handler=lambda args: compare_trace_digests(
-            manifests=[p.resolve() for p in args.manifest],
-            prior_manifests=[p.resolve() for p in args.prior_manifest],
+    frames.add_argument("--replay-root", required=True, type=Path, action="append")
+    frames.add_argument("--prior-replay-root", required=True, type=Path, action="append")
+    _add_json(frames)
+    frames.set_defaults(
+        handler=lambda args: compare_trace_frames(
+            replay_roots=[p.resolve() for p in args.replay_root],
+            prior_replay_roots=[p.resolve() for p in args.prior_replay_root],
         )
     )
 

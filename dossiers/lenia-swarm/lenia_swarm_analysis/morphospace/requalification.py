@@ -177,7 +177,10 @@ def write_torus_inputs(
     """
     members = json.loads(members_path.read_text())["members"]
     output_root.mkdir()
-    receipt: dict[str, Any] = {"members_sha256": sha256_bytes(members_path.read_bytes()), "cells": {}}
+    receipt: dict[str, Any] = {
+        "members_sha256": sha256_bytes(members_path.read_bytes()),
+        "cells": {},
+    }
     for native in sorted({m["native_arena"] for m in members}):
         group = [m for m in members if m["native_arena"] == native]
         for scale in scales:
@@ -300,13 +303,6 @@ def compare_verdicts(
     }
 
 
-def _trace_key(path: Path) -> tuple[int, str]:
-    arena = re.search(r"torus(\d+)", str(path))
-    if arena is None:
-        raise ValueError(f"{path}: no torus arena size in the path")
-    return int(arena.group(1)), path.parent.name.rsplit("-", 1)[1].lower()
-
-
 def retire_trace_fields(
     *,
     replay_roots: list[Path],
@@ -372,28 +368,65 @@ def retire_trace_fields(
     }
 
 
-def compare_trace_digests(*, manifests: list[Path], prior_manifests: list[Path]) -> dict[str, Any]:
-    """Match whole-trace SHA-256 digests by torus arena size and body between two runs.
+def _canonical_frames(trace: Path) -> list[str]:
+    out = []
+    for line in trace.read_text().splitlines():
+        f = json.loads(line)
+        if "fieldF16Base64" in f:
+            digest = sha256_bytes(trace_field(f).tobytes())
+            if f.setdefault("fieldF16Sha256", digest) != digest:
+                raise ValueError(
+                    f"{trace}: step {f['step']} field does not match its fieldF16Sha256"
+                )
+            del f["fieldF16Base64"]
+        out.append(json.dumps(f, sort_keys=True))
+    return out
 
-    Manifests are retirement manifests: {"stripped": [...], "kept": [...]} or a JSONL of stripped
-    rows, each row with the original trace path and sha256.
+
+def _arena_traces(roots: list[Path]) -> dict[tuple[str, str], Path]:
+    out: dict[tuple[str, str], Path] = {}
+    for root in roots:
+        arena = re.search(r"(torus|wall)\d+", root.name)
+        if arena is None:
+            raise ValueError(f"{root}: no torus or wall arena size in the replay root name")
+        for trace in sorted(root.glob("campaigns/*/development-trace.jsonl")):
+            body = json.loads((trace.parent / "replay-manifest.json").read_text())[
+                "sourceCreatureId"
+            ]
+            key = (arena.group(0), body.lower())
+            if key in out:
+                raise ValueError(f"{trace}: second trace of {key}")
+            out[key] = trace
+    return out
+
+
+def compare_trace_frames(
+    *, replay_roots: list[Path], prior_replay_roots: list[Path]
+) -> dict[str, Any]:
+    """Compare development traces frame by frame between two runs, by arena and body.
+
+    Each frame is compared as sorted-key JSON with its raw field replaced by fieldF16Sha256, so raw
+    traces and traces stripped by retire_trace_fields compare alike. Whole-file digests cannot be
+    compared across runs because LeniaCLI writes frame keys in varying order. Replay roots are
+    named with their arena, as in n128-torus256 or 003-wall256.
     """
-
-    def digests(paths: list[Path]) -> dict[tuple[int, str], str]:
-        out: dict[tuple[int, str], str] = {}
-        for path in paths:
-            text = path.read_text()
-            if path.suffix == ".jsonl":
-                rows = [json.loads(line) for line in text.splitlines() if line.strip()]
-                rows = [{**r, "path": str(path.parent / r["path"])} for r in rows]
-            else:
-                manifest = json.loads(text)
-                rows = manifest["stripped"] + manifest["kept"]
-            for r in rows:
-                out[_trace_key(Path(r["path"]))] = r["sha256"]
-        return out
-
-    new, old = digests(manifests), digests(prior_manifests)
+    new, old = _arena_traces(replay_roots), _arena_traces(prior_replay_roots)
     shared = sorted(set(new) & set(old))
-    differ = [f"torus{a}/{b}" for a, b in shared if new[(a, b)] != old[(a, b)]]
-    return {"shared": len(shared), "identical": len(shared) - len(differ), "differ": differ}
+    differ = []
+    for key in shared:
+        a, b = _canonical_frames(new[key]), _canonical_frames(old[key])
+        if a != b:
+            first = next(
+                (i for i, (x, y) in enumerate(zip(a, b, strict=False)) if x != y),
+                min(len(a), len(b)),
+            )
+            differ.append(
+                {"arena": key[0], "body": key[1], "frames": [len(a), len(b)], "first": first}
+            )
+    return {
+        "shared": len(shared),
+        "identical": len(shared) - len(differ),
+        "differ": differ,
+        "only_new": len(set(new) - set(old)),
+        "only_prior": len(set(old) - set(new)),
+    }
