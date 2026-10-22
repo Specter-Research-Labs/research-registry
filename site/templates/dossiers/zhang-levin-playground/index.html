@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="color-scheme" content="light" />
-        <title>Morphogenetic Signatures in Sorting Algorithms | Specter Labs</title>
+        <title>Sorting cells cluster by when they move | Specter Labs</title>
         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->
         <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->
         <link rel="icon" href="../../assets/logo-black.svg" type="image/svg+xml" />
@@ -105,7 +105,7 @@
                 gap: 8px 20px;
                 padding: 10px 14px 0;
                 font-family: var(--zl-mono);
-                font-size: 10px;
+                font-size: 11px;
                 letter-spacing: 0.06em;
                 color: var(--zl-muted);
             }
@@ -218,16 +218,16 @@
 
             .zl-chart-label {
                 font-family: var(--zl-mono);
-                font-size: 10px;
+                font-size: 11px;
                 letter-spacing: 0.08em;
                 fill: #616873;
             }
 
             .zl-chart-label-sm {
                 font-family: var(--zl-mono);
-                font-size: 8.5px;
+                font-size: 10px;
                 letter-spacing: 0.06em;
-                fill: #9aa5b5;
+                fill: #6f7885;
             }
 
             @media (prefers-reduced-motion: reduce) {
@@ -252,23 +252,172 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <section class="section-block">
-<h2 class="story-question">Can order survive when some cells stop acting?</h2>
-<p class="story-deck">Each cell holds a value and follows a sorting rule, and together their local swaps bring the array into order. By freezing some cells, mixing different rules, or changing which moves are allowed, we can watch how that ordering proceeds when the usual route is disrupted and ask what the collective behavior depends on.</p>
-<nav class="story-jumps" aria-label="Experiments"><a href="#zl-dip-fig">Recovering from disorder</a><a href="#zl-cluster-fig">Why like cells cluster</a><a href="#zl-gate-fig">Transplanting the waiting rule</a></nav>
-<h2 class="story-heading">Order returns through temporary setbacks</h2>
-<p>In this replay, three cells cannot initiate a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials, every run contained at least one such dip. We have not yet compared these dips with a random walk at the same number of swaps, or tested whether they become more frequent as more cells are frozen, which is how Zhang and colleagues argue that they are more than noise.</p>
-<figure class="zl-figure" id="zl-dip-fig">
+<h2 class="story-question">Why do cells running the same rule end up side by side?</h2>
+<p class="story-deck">Each cell in the array holds a value and runs its own sorting rule, and their local swaps bring the whole array into order. When two rules share an array, cells of the same rule gather into runs along the way, and the gathering follows when each rule moves: give another rule Insertion's wait and it clusters as much as Insertion does. Freezing some cells asks a second question, which rule still lets the array reach order.</p>
+<nav class="story-jumps" aria-label="Experiments"><a href="#zl-cluster-fig">Why like cells cluster</a><a href="#zl-gate-fig">Transplanting the waiting rule</a><a href="#zl-dip-fig">Recovering from disorder</a></nav>
+
+                    <h2 class="story-heading">Cells cluster when they move at different times</h2>
+                    <p>
+                        The highest point of a noisy clustering curve sits above
+                        the random-mixing level even when both halves of the
+                        array run the same rule, so we score each run against
+                        its own sequence of arrangements with the type labels
+                        shuffled across cells, and report the excess over that
+                        null. Pairs that contain Insertion cluster above it.
+                        Insertion's wait holds each of its cells back until
+                        everything to its left is in order, so the late bursts
+                        of swaps involve mostly Insertion cells, and those
+                        cells end up next to each other without attraction,
+                        type-aware signals or any coordination. Zhang and
+                        colleagues proposed this timing account as an
+                        efficiency hypothesis, in which efficient types move
+                        first and slower ones catch up. Removing the wait
+                        (InsertionNoWait) returns clustering to the null, where
+                        mixtures of neighbor-swapping rules that never wait,
+                        such as Bubble and Gnome, also sit. Bubble mixed with
+                        Selection clusters by another route: with almost no
+                        difference in timing it reaches +0.073 over the null at
+                        100 cells, because Selection cells claim the left end of
+                        the row first and gather there as a front.
+                    </p>
+                    <p>The paired replay below starts from the same array with and without the wait, so the two runs differ only in when the second type is allowed to move.</p>
+
+                    <figure class="zl-figure" id="zl-cluster-fig">
                         <div class="zl-fig-head">
-                            <span class="zl-fig-name">Figure A — Dip replay</span>
-                            <span class="zl-fig-meta">1D cell-view Bubble &middot; n=30 &middot; 3 movable frozen cells &middot; seed 447</span>
+                            <span class="zl-fig-name">Figure A &middot; Paired clustering replay</span>
+                            <span class="zl-fig-meta">n=50 &middot; 25/25 type mix &middot; paired seed 1038</span>
+                        </div>
+                        <div class="zl-legend">
+                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Bubble, active from the start</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>second type, active</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#f1dbd1;border-color:#d99c82"></span>second type, waiting for a sorted prefix</span>
+                        </div>
+                        <div class="zl-stage">
+                            <div class="zl-panels">
+                                <div class="zl-panel">
+                                    <div class="zl-panel-head">Bubble + Insertion <span>&middot; wait intact</span></div>
+                                    <svg id="zl-panel-ins" viewBox="0 0 380 210" role="img"
+                                        aria-label="Cell array of a Bubble and Insertion mixture sorting itself; Insertion cells are shown in the accent color while waiting and turn white as their prefix sorts.">
+                                    </svg>
+                                </div>
+                                <div class="zl-panel">
+                                    <div class="zl-panel-head">Bubble + InsertionNoWait <span>&middot; wait removed</span></div>
+                                    <svg id="zl-panel-nw" viewBox="0 0 380 210" role="img"
+                                        aria-label="The same initial array with the wait removed; second-type cells are active from the start and no segregation emerges.">
+                                    </svg>
+                                </div>
+                            </div>
+                            <svg id="zl-cluster-svg" role="img"
+                                aria-label="Activity raster and clustering curve for both runs. With the wait, Insertion activity concentrates late; without it, activity is spread evenly. Both curves wander above random mixing, and each peak is compared with the peak expected from shuffled labels.">
+                            </svg>
+                        </div>
+                        <div class="zl-controls">
+                            <button class="zl-btn" data-play type="button">Pause</button>
+                            <button class="zl-btn" data-replay type="button">Replay</button>
+                            <span class="zl-speed" role="group" aria-label="Playback speed">
+                                <button data-speed="1" class="is-on" type="button">1&times;</button>
+                                <button data-speed="2" type="button">2&times;</button>
+                                <button data-speed="4" type="button">4&times;</button>
+                            </span>
+                            <span class="zl-counter" data-counter></span>
+                        </div>
+                        <div class="zl-chips">
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Excess over shuffle null, wait intact (this run)</span>
+                                <span class="zl-chip-v" data-chip="ins-dc">&mdash;</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Excess over shuffle null, wait removed (this run)</span>
+                                <span class="zl-chip-v" data-chip="nw-dc">&mdash;</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Insertion mean move time</span>
+                                <span class="zl-chip-v" data-chip="ins-t">&mdash;</span>
+                            </div>
+                            <div class="zl-chip">
+                                <span class="zl-chip-k">Excess over null, 20 trials</span>
+                                <span class="zl-chip-v">+0.079 vs &minus;0.007</span>
+                            </div>
+                        </div>
+                    </figure>
+
+                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
+                    <p>
+                        We gave clones of Bubble and Gnome Insertion's wait and
+                        left their swap rules unchanged, which tests the
+                        efficiency hypothesis directly. Across 30 trials per
+                        pair the delayed clones cluster as far above the null
+                        as native Insertion does (+0.064 and +0.052 against
+                        +0.061), while the same clones without the wait sit at
+                        the null with InsertionNoWait. A permutation test
+                        clears the 1-in-20 level in only 6 of 30 single runs of
+                        each waiting pair, so the transfer shows in the average
+                        over many runs and mostly not in any one run. The wait
+                        does not need to see far: a cell that waits only for the
+                        nearest dozen cells to its left to be in order clusters
+                        as strongly as one that waits for the whole prefix.
+                    </p>
+                    <figure class="zl-figure" id="zl-gate-fig">
+                        <div class="zl-fig-head">
+                            <span class="zl-fig-name">Figure B &middot; The wait, not the rule</span>
+                            <span class="zl-fig-meta">peak clustering above the label-shuffle null &middot; s = timing separation &middot; 30 trials per pair</span>
+                        </div>
+                        <div class="zl-legend">
+                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>no wait</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Insertion-style wait (native or transplanted)</span>
+                        </div>
+                        <div class="zl-stage">
+                            <svg id="zl-gate-svg" role="img"
+                                aria-label="Bar chart of peak clustering above the label-shuffle null across six paired conditions. The three waiting pairs sit near +0.05 to +0.06; the three pairs without a wait sit near zero.">
+                            </svg>
+                        </div>
+                    </figure>
+
+                    <h2 class="story-heading">Getting past a cell that cannot move</h2>
+                    <p>
+                        A frozen cell never starts a swap. When its neighbors
+                        cannot move it either, the rules alone decide which
+                        sorts can finish. Neighbor-swapping rules cannot carry a
+                        value across a frozen cell, so they stop with each
+                        segment sorted, and a long-range Selection cell that
+                        keeps pointing at a frozen target waits forever. Of four
+                        Selection variants that cross long-range or
+                        neighbor-only swaps with rerouting or waiting at a
+                        frozen target, only long-range rerouting reaches the
+                        sorted state. Traditional sorts given the same
+                        skip-the-frozen-cell rerouting agree with the cell
+                        versions in every paired trial, so the cell-view
+                        advantage in the original comparison most likely came
+                        from traditional baselines without that rerouting, and
+                        the ability worth studying is the rerouting rule
+                        itself.
+                    </p>
+                    <p>
+                        Every cell thread waits on one shared lock, so the
+                        threaded implementation is a random scheduler that runs
+                        one cell at a time. With frozen cells running no
+                        thread, as in the original code, threaded and
+                        sequential schedules of the same cells reach the same
+                        outcomes with the same work (ratios between 0.97 and
+                        1.02). Without the lock, in a simulation where cells act
+                        on stale views of their neighbours and writes can
+                        collide, long-range rerouting still sorts past frozen
+                        cells, at about twice the writes, while the other
+                        variants still fail.
+                    </p>
+                    <p>In the replay below three cells cannot start a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials every run contained at least one such dip. We have not yet compared these dips with a random walk at the same number of swaps, or tested whether they become more frequent as more cells are frozen, which is how Zhang and colleagues argue that they are more than noise.</p>
+                    <figure class="zl-figure" id="zl-dip-fig">
+                        <div class="zl-fig-head">
+                            <span class="zl-fig-name">Figure C &middot; Dip replay</span>
+                            <span class="zl-fig-meta">Bubble cells &middot; n=30 &middot; 3 movable frozen cells &middot; seed 447</span>
                         </div>
                         <div class="zl-legend">
                             <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>active Bubble cell (height = value)</span>
-                            <span class="zl-key"><span class="zl-swatch" style="background:repeating-linear-gradient(45deg,#15171a 0 2px,#ffffff 2px 4px)"></span>frozen cell (damaged, never initiates)</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:repeating-linear-gradient(45deg,#15171a 0 2px,#ffffff 2px 4px)"></span>frozen cell (never starts a swap)</span>
                             <span class="zl-key"><span class="zl-swatch" style="background:rgba(43,179,163,0.18);border-color:#2bb3a3"></span>confirmed dip in error trace</span>
                         </div>
                         <div class="zl-stage">
-                            <svg id="zl-dip-svg" viewBox="0 0 780 410" role="img"
+                            <svg id="zl-dip-svg" role="img"
                                 aria-label="Animated replay of a cell-view bubble sort. Bars show cell values sorting over time while a trace of monotonicity errors below shows temporary rises that later recover.">
                             </svg>
                         </div>
@@ -301,177 +450,30 @@
                             </div>
                         </div>
                     </figure>
-
-                    <h2 class="story-heading">Cells cluster when they move at different times</h2>
-                    <p>
-                        The maximum of a noisy clustering curve sits above the
-                        random-mixing baseline even when both halves of the
-                        array run the same rule, so we score each run against
-                        its own trajectory with the algotype labels shuffled
-                        across cells and report the excess over that null.
-                        Pairs that contain Insertion cluster above it, because
-                        Insertion's sorted-prefix gate holds its cells back
-                        until the left part of the array is ordered, and the
-                        late swap bursts then involve mostly one class, whose
-                        cells end up adjacent without attraction, type-aware
-                        communication or explicit coordination. Zhang and
-                        colleagues proposed this timing account as an
-                        efficiency hypothesis, in which efficient types move
-                        first and slower ones catch up. Removing the gate
-                        (<code>InsertionNoWait</code>) returns clustering to
-                        the null, where mixtures of ungated adjacent rules such
-                        as Bubble and Gnome also sit. Bubble mixed with
-                        Selection clusters weakly (+0.026 over the null) at
-                        almost no temporal separation, so timing does not
-                        account for all of the clustering in the original set.
-                    </p>
-                    <p>The paired replay below starts from the same array with and without the gate, letting us follow how changing the timing changes the arrangement that forms.</p>
-
-                    <figure class="zl-figure" id="zl-cluster-fig">
-                        <div class="zl-fig-head">
-                            <span class="zl-fig-name">Figure B — Paired clustering replay</span>
-                            <span class="zl-fig-meta">n=50 &middot; 25/25 algotype mix &middot; paired seed 1038</span>
-                        </div>
-                        <div class="zl-legend">
-                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Bubble — active from the start</span>
-                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>type-2 algotype — active</span>
-                            <span class="zl-key"><span class="zl-swatch" style="background:#f1dbd1;border-color:#d99c82"></span>type-2 — gated, waiting for sorted prefix</span>
-                        </div>
-                        <div class="zl-stage">
-                            <div class="zl-panels">
-                                <div class="zl-panel">
-                                    <div class="zl-panel-head">Bubble + Insertion <span>&middot; gate intact</span></div>
-                                    <svg id="zl-panel-ins" viewBox="0 0 380 210" role="img"
-                                        aria-label="Cell array of a Bubble and Insertion mixture sorting itself; Insertion cells are shown in the accent color while gated and turn white as their prefix sorts.">
-                                    </svg>
-                                </div>
-                                <div class="zl-panel">
-                                    <div class="zl-panel-head">Bubble + InsertionNoWait <span>&middot; gate ablated</span></div>
-                                    <svg id="zl-panel-nw" viewBox="0 0 380 210" role="img"
-                                        aria-label="The same initial array with the waiting gate removed; type-2 cells are active from the start and no segregation emerges.">
-                                    </svg>
-                                </div>
-                            </div>
-                            <svg id="zl-cluster-svg" viewBox="0 0 780 300" role="img"
-                                aria-label="Activity raster and clustering curve for both runs. In the gated run, Insertion activity concentrates late; in the ablated run activity is spread evenly. Both curves wander above random mixing, and each peak is compared with the peak expected from shuffled labels.">
-                            </svg>
-                        </div>
-                        <div class="zl-controls">
-                            <button class="zl-btn" data-play type="button">Pause</button>
-                            <button class="zl-btn" data-replay type="button">Replay</button>
-                            <span class="zl-speed" role="group" aria-label="Playback speed">
-                                <button data-speed="1" class="is-on" type="button">1&times;</button>
-                                <button data-speed="2" type="button">2&times;</button>
-                                <button data-speed="4" type="button">4&times;</button>
-                            </span>
-                            <span class="zl-counter" data-counter></span>
-                        </div>
-                        <div class="zl-chips">
-                            <div class="zl-chip">
-                                <span class="zl-chip-k">Excess over shuffle null, gate intact (exemplar)</span>
-                                <span class="zl-chip-v" data-chip="ins-dc">&mdash;</span>
-                            </div>
-                            <div class="zl-chip">
-                                <span class="zl-chip-k">Excess over shuffle null, gate ablated (exemplar)</span>
-                                <span class="zl-chip-v" data-chip="nw-dc">&mdash;</span>
-                            </div>
-                            <div class="zl-chip">
-                                <span class="zl-chip-k">Insertion mean move time</span>
-                                <span class="zl-chip-v" data-chip="ins-t">&mdash;</span>
-                            </div>
-                            <div class="zl-chip">
-                                <span class="zl-chip-k">Excess over null, 20 trials</span>
-                                <span class="zl-chip-v">+0.079 vs &minus;0.007</span>
-                            </div>
-                        </div>
-                    </figure>
-
-                    <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
-                    <p>
-                        Transplanting Insertion's gate onto clones of Bubble
-                        and Gnome, with the swap rule left unchanged, gives the
-                        efficiency hypothesis its first causal test. Across 30
-                        trials per pair the delayed clones cluster as far above
-                        the null as native Insertion (+0.064 and +0.052 against
-                        +0.061), while the same clones without the gate sit at
-                        the null with <code>InsertionNoWait</code>. The
-                        permutation test clears the 1-in-20 level in only 6 of
-                        30 single runs of each gated pair, so the transfer is a
-                        population effect that single runs mostly do not show.
-                    </p>
-<figure class="zl-figure" id="zl-gate-fig">
-                        <div class="zl-fig-head">
-                            <span class="zl-fig-name">Figure C — The gate, not the algotype</span>
-                            <span class="zl-fig-meta">peak clustering above the label-shuffle null &middot; 30 trials per pair</span>
-                        </div>
-                        <div class="zl-legend">
-                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>no waiting gate</span>
-                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Insertion-style waiting gate (native or transplanted)</span>
-                        </div>
-                        <div class="zl-stage">
-                            <svg id="zl-gate-svg" viewBox="0 0 780 250" role="img"
-                                aria-label="Bar chart of peak clustering above the label-shuffle null across six paired conditions. The three gated pairs sit near +0.05 to +0.06; the three gate-free pairs sit near zero.">
-                            </svg>
-                        </div>
-                    </figure>
-
-                    <h2 class="story-heading">Getting past a cell that cannot move</h2>
-                    <p>
-                        Robustness depends on operator class and obstacle
-                        semantics, and under immovable frozen indices most of
-                        that dependence follows from the rules themselves.
-                        Adjacent moves cannot carry a value across an
-                        immovable frozen index, so adjacent sorts stop in a
-                        segment-sorted state, and a long-range Selection cell
-                        that keeps pointing at a frozen target waits forever,
-                        which leaves long-range Selection with frozen-target
-                        rerouting as the only rule in a 2x2 factorization that
-                        can reach the sorted state. Traditional sorts given the
-                        same skip-frozen rerouting agree with the cell-view
-                        versions in every paired trial, so the cell-view
-                        advantage in the original comparison most likely came
-                        from traditional baselines without that rerouting, and
-                        the competency worth studying is the rerouting rule
-                        itself.
-                    </p>
-                    <p>
-                        Every cell thread waits on one shared lock, so the
-                        threaded implementation is a serialized random
-                        scheduler, and once frozen cells run no thread, as in
-                        the original code, threaded and sequential schedules of
-                        the same cells agree in outcome and do the same work
-                        (ratios between 0.97 and 1.02). An earlier version of
-                        this page reported a large work cost for the threaded
-                        substrate, which came from frozen Selection threads
-                        that spun without acting.
-                    </p>
                     <p>
                         The <a href="/cabinet/k-semantics-reference/k-equations/">K-computation framework</a> of Chis-Ciure and Levin
                         gives a worked example with explicit operators,
                         constraints and costs. Our reachable-state proposal
-                        null makes K set mostly by the size of the reachable
-                        state space, sitting 1.7 to 2.6 units below the
-                        logarithm of the number of active-value permutations
-                        for every algorithm that finishes, so its decline with
-                        frozen count and the failure modes it separates
-                        restate the reachability result.
+                        null makes K depend mostly on the size of the reachable
+                        state space. For long-range rerouting K sits 1.7 to 2.0
+                        units below the base-10 logarithm of the number of
+                        arrangements of the active cells at every frozen count,
+                        and about 2.6 below it for the neighbor-only variants
+                        without frozen cells, so its decline with frozen count
+                        and the failure modes it separates restate the
+                        reachability result.
                     </p>
                     <p>
-                        The TeX source lives under <code>paper/</code> in the
-                        repository, and <code>paper/make_figures.py</code>
-                        regenerates every figure from the compact result files
-                        in <code>paper/results/</code>. The tables for the
-                        rerouting ablation and the centralized comparison come
-                        from an earlier archive that was not retained. We have
-                        not yet revisited the original duplicate-value runs, in
-                        which aggregation persists into the final state, the
-                        opposite-direction chimeras, the three-type mixture, the
-                        efficiency comparisons, or the rise of dips with frozen
-                        count.
+                        The full write-up,
+                        <a href="/dossiers/zhang-levin-playground/corrected-clustering/">Cells that wait their turn form islands in self-sorting arrays</a>,
+                        repeats the original duplicate-value experiment at 100
+                        cells, where clustering outlasts the sort only when one
+                        kind of cell keeps overtaking cells of equal value in one
+                        direction, and traces every number to its result file. We have not yet revisited
+                        the opposite-direction chimeras, the three-type
+                        mixture, the efficiency comparisons, or the rise of dips
+                        with frozen count.
                     </p>
-                    <span class="path-note"
-                        >Repository path: dossiers/zhang-levin-playground</span
-                    >
                 </section>
 
                 <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
@@ -823,8 +825,350 @@
                     observer.observe(player.element);
                 }
 
+                // Each chart takes its viewBox width from its rendered width, so
+                // text keeps its CSS size on a phone instead of shrinking with a
+                // fixed 780-unit drawing.
+                function renderedWidth(svg) {
+                    return Math.round(svg.getBoundingClientRect().width);
+                }
+
+                function setViewBox(svg, width, height) {
+                    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+                }
+
+                const CHAR_W = 6.6;
+
                 // ----------------------------------------------------------
-                // Figure A — delayed gratification dip replay
+                // Figure A: paired clustering replay
+                // ----------------------------------------------------------
+                (function buildClusterFigure() {
+                    const fig = document.getElementById("zl-cluster-fig");
+                    const counter = fig.querySelector("[data-counter]");
+                    const pair = runClusteringPair(1038, 50);
+                    const n = 50;
+                    const nSwaps = pair.ins.states.length - 1;
+
+                    // The max of a noisy C(t) sits well above random mixing even for
+                    // identical rules, so each run is scored against the mean peak of
+                    // the same trajectory with type labels shuffled across values.
+                    function shuffleNullPeak(states, seed, nPerm) {
+                        const rng = mulberry32(seed);
+                        const labelOfValue = [];
+                        states[0].order.forEach(([v, t]) => { labelOfValue[v] = t; });
+                        const rows = states.map((st) => st.order.map(([v]) => v));
+                        let total = 0;
+                        for (let p = 0; p < nPerm; p++) {
+                            const lab = shuffled(labelOfValue.slice(), rng);
+                            let peak = 0;
+                            for (const row of rows) {
+                                let m = 0;
+                                for (let i = 0; i + 1 < row.length; i++) {
+                                    if (lab[row[i]] === lab[row[i + 1]]) m++;
+                                }
+                                peak = Math.max(peak, m / (row.length - 1));
+                            }
+                            total += peak;
+                        }
+                        return total / nPerm;
+                    }
+                    const signed = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2);
+                    const insDC = Math.max(...pair.ins.clust) - shuffleNullPeak(pair.ins.states, 1, 200);
+                    const nwDC = Math.max(...pair.nw.clust) - shuffleNullPeak(pair.nw.states, 2, 200);
+                    const insEvents = pair.ins.events;
+                    const lateIdx = insEvents
+                        .map((t, k) => (t === 1 ? k : null))
+                        .filter((x) => x !== null);
+                    const meanMove =
+                        lateIdx.reduce((s, x) => s + x, 0) / lateIdx.length / (insEvents.length - 1);
+                    fig.querySelector('[data-chip="ins-dc"]').textContent = signed(insDC);
+                    fig.querySelector('[data-chip="nw-dc"]').textContent = signed(nwDC);
+                    fig.querySelector('[data-chip="ins-t"]').textContent =
+                        meanMove.toFixed(2) + " (0 = early, 1 = late)";
+
+                    // --- cell panels ---
+                    function buildPanel(svgId, gated) {
+                        const svg = document.getElementById(svgId);
+                        const slot = 380 / n;
+                        const base = 196;
+                        const maxH = 168;
+                        const bars = [];
+                        for (let i = 0; i < n; i++) {
+                            bars.push(el("rect", {
+                                x: i * slot + 0.8,
+                                y: base - 10,
+                                width: slot - 1.6,
+                                height: 10,
+                            }, svg));
+                        }
+                        el("line", { x1: 0, y1: base + 1, x2: 380, y2: base + 1, stroke: INK, "stroke-width": 1 }, svg);
+                        return { bars, base, maxH, slot, gated };
+                    }
+                    const panelIns = buildPanel("zl-panel-ins", true);
+                    const panelNw = buildPanel("zl-panel-nw", false);
+
+                    const gatedFlags = pair.ins.states.map((state) => {
+                        const ok = prefixSortedOK(state.order);
+                        return state.order.map((c, i) => c[1] === 1 && !ok[i]);
+                    });
+
+                    function renderPanel(panel, state, gatedRow) {
+                        for (let i = 0; i < n; i++) {
+                            const v = state.order[i][0];
+                            const type = state.order[i][1];
+                            const h = ((v + 1) / n) * panel.maxH;
+                            const bar = panel.bars[i];
+                            bar.setAttribute("y", panel.base - h);
+                            bar.setAttribute("height", h);
+                            if (type === 0) {
+                                bar.setAttribute("fill", INK);
+                                bar.setAttribute("stroke", "none");
+                            } else if (panel.gated && gatedRow[i]) {
+                                bar.setAttribute("fill", ROSE_LIGHT);
+                                bar.setAttribute("stroke", "none");
+                            } else {
+                                bar.setAttribute("fill", "#ffffff");
+                                bar.setAttribute("stroke", INK);
+                                bar.setAttribute("stroke-width", "0.8");
+                            }
+                        }
+                        if (state.swap) {
+                            panel.bars[state.swap[0]].setAttribute("stroke", ROSE);
+                            panel.bars[state.swap[0]].setAttribute("stroke-width", "1.6");
+                            panel.bars[state.swap[1]].setAttribute("stroke", ROSE);
+                            panel.bars[state.swap[1]].setAttribute("stroke-width", "1.6");
+                        }
+                    }
+
+                    // --- shared chart: activity raster + clustering curve ---
+                    const svg = document.getElementById("zl-cluster-svg");
+                    const mixing = 24 / 49;
+                    const insPeakVal = Math.max(...pair.ins.clust);
+                    const nwPeakVal = Math.max(...pair.nw.clust);
+                    const legendItems = [
+                        { stroke: ROSE, dash: null, label: "wait intact", stats: "peak " + insPeakVal.toFixed(2) + " · " + signed(insDC) + " over null" },
+                        { stroke: INK, dash: null, label: "wait removed", stats: "peak " + nwPeakVal.toFixed(2) + " · " + signed(nwDC) + " over null" },
+                        { stroke: "#616873", dash: "4 4", label: "random mixing 24/49", stats: null },
+                    ];
+
+                    const W = renderedWidth(svg);
+                    const narrow = W < 560;
+                    const chartL = 34;
+                    const chartR = W - 6;
+                    const xPos = (k) => chartL + (k / nSwaps) * (chartR - chartL);
+
+                    const lanes = [
+                        { label: "Bubble + Insertion", events: pair.ins.events, y: 40 },
+                        { label: "Bubble + InsertionNoWait", events: pair.nw.events, y: 80 },
+                    ];
+                    const curveLabelY = 122;
+                    const legendTop = curveLabelY + 10;
+                    const legendLines = (item) => {
+                        if (item.stats === null) return [item.label];
+                        return narrow ? [item.label, item.stats] : [item.label + " · " + item.stats];
+                    };
+                    const legendRows = [];
+                    let rowX = chartL;
+                    legendItems.forEach((item) => {
+                        const lines = legendLines(item);
+                        const w = 26 + Math.max(...lines.map((t) => t.length)) * CHAR_W;
+                        if (legendRows.length === 0 || rowX + w > chartR) {
+                            legendRows.push({ entries: [], height: 0 });
+                            rowX = chartL;
+                        }
+                        const row = legendRows[legendRows.length - 1];
+                        row.entries.push({ item, lines, x: rowX });
+                        row.height = Math.max(row.height, lines.length * 14 + 4);
+                        rowX += w + 18;
+                    });
+                    const curveTop = legendTop + legendRows.reduce((h, row) => h + row.height, 0) + 10;
+                    const curveBottom = curveTop + (narrow ? 150 : 170);
+                    const H = curveBottom + 22;
+                    setViewBox(svg, W, H);
+
+                    const defs = el("defs", {}, svg);
+                    const clip = el("clipPath", { id: "zl-cl-clip" }, defs);
+                    const clipRect = el("rect", { x: 0, y: 0, width: 0, height: H }, clip);
+
+                    el("text", { x: 0, y: 14, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "SWAP ACTIVITY BY TYPE";
+                    const rasterLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
+                    lanes.forEach((lane) => {
+                        el("text", { x: chartL, y: lane.y - 6, class: "zl-chart-label-sm" }, svg)
+                            .textContent = lane.label;
+                        el("line", { x1: chartL, y1: lane.y + 13, x2: chartR, y2: lane.y + 13, stroke: "#e4e8ef", "stroke-width": 1 }, svg);
+                        lane.events.forEach((type, j) => {
+                            el("rect", {
+                                x: xPos(j + 1) - 0.5,
+                                y: lane.y,
+                                width: 1.4,
+                                height: 12,
+                                fill: type === 0 ? INK : ROSE,
+                                opacity: type === 0 ? 0.55 : 0.9,
+                            }, rasterLive);
+                        });
+                    });
+
+                    el("text", { x: 0, y: curveLabelY, class: "zl-chart-label-sm" }, svg)
+                        .textContent = "CLUSTERING C(t)";
+                    let rowY = legendTop + 8;
+                    legendRows.forEach((row) => {
+                        row.entries.forEach(({ item, lines, x }) => {
+                            const line = el("line", { x1: x, y1: rowY - 4, x2: x + 18, y2: rowY - 4, stroke: item.stroke, "stroke-width": 2 }, svg);
+                            if (item.dash) {
+                                line.setAttribute("stroke-dasharray", item.dash);
+                                line.setAttribute("stroke-width", "1");
+                            }
+                            lines.forEach((text, li) => {
+                                el("text", { x: x + 24, y: rowY + li * 14, class: "zl-chart-label-sm" }, svg).textContent = text;
+                            });
+                        });
+                        rowY += row.height;
+                    });
+
+                    const allC = pair.ins.clust.concat(pair.nw.clust, [mixing]);
+                    const yMin = Math.floor(Math.min(...allC) * 10) / 10;
+                    const yMax = Math.ceil(Math.max(...allC) * 10) / 10;
+                    const yPos = (c) => curveBottom - ((c - yMin) / (yMax - yMin)) * (curveBottom - curveTop);
+                    for (let t = Math.round(yMin * 10); t <= Math.round(yMax * 10); t++) {
+                        const v = t / 10;
+                        const y = yPos(v);
+                        el("line", { x1: chartL, y1: y, x2: chartR, y2: y, stroke: "#e4e8ef", "stroke-width": 1 }, svg);
+                        el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
+                            .textContent = v.toFixed(1);
+                    }
+                    el("line", { x1: chartL, y1: yPos(mixing), x2: chartR, y2: yPos(mixing), stroke: "#616873", "stroke-width": 1, "stroke-dasharray": "4 4" }, svg);
+
+                    const curveLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
+                    function curvePoints(clust) {
+                        return clust.map((c, k) => xPos(k).toFixed(1) + "," + yPos(c).toFixed(1)).join(" ");
+                    }
+                    el("polyline", { points: curvePoints(pair.ins.clust), fill: "none", stroke: ROSE, "stroke-width": 1, opacity: 0.14 }, svg);
+                    el("polyline", { points: curvePoints(pair.nw.clust), fill: "none", stroke: INK, "stroke-width": 1, opacity: 0.12 }, svg);
+                    el("polyline", { points: curvePoints(pair.ins.clust), fill: "none", stroke: ROSE, "stroke-width": 1.8 }, curveLive);
+                    el("polyline", { points: curvePoints(pair.nw.clust), fill: "none", stroke: INK, "stroke-width": 1.8 }, curveLive);
+
+                    function peakMarker(clust, peak, color) {
+                        const k = clust.indexOf(peak);
+                        const g = el("g", { visibility: "hidden" }, svg);
+                        el("circle", { cx: xPos(k), cy: yPos(peak), r: 3.6, fill: color, stroke: "#ffffff", "stroke-width": 1 }, g);
+                        return { g, k };
+                    }
+                    const insPeak = peakMarker(pair.ins.clust, insPeakVal, ROSE);
+                    const nwPeak = peakMarker(pair.nw.clust, nwPeakVal, INK);
+
+                    const playhead = el("line", { x1: chartL, y1: lanes[0].y, x2: chartL, y2: curveBottom, stroke: INK, "stroke-width": 1, opacity: 0.4 }, svg);
+                    el("text", { x: chartL, y: curveBottom + 15, class: "zl-chart-label-sm" }, svg).textContent = "0";
+                    el("text", { x: chartR, y: curveBottom + 15, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
+                        .textContent = nSwaps + " swaps";
+
+                    function render(k) {
+                        renderPanel(panelIns, pair.ins.states[k], gatedFlags[k]);
+                        renderPanel(panelNw, pair.nw.states[k], null);
+                        clipRect.setAttribute("width", xPos(k));
+                        playhead.setAttribute("x1", xPos(k));
+                        playhead.setAttribute("x2", xPos(k));
+                        insPeak.g.setAttribute("visibility", k >= insPeak.k ? "visible" : "hidden");
+                        nwPeak.g.setAttribute("visibility", k >= nwPeak.k ? "visible" : "hidden");
+                        counter.textContent =
+                            "swap " + k + "/" + nSwaps +
+                            " · C(t) " + pair.ins.clust[k].toFixed(2) +
+                            " vs " + pair.nw.clust[k].toFixed(2);
+                    }
+
+                    render(0);
+                    autoplayWhenVisible(makePlayer(fig, pair.ins.states.length, 40, render));
+                })();
+
+                // ----------------------------------------------------------
+                // Figure B: static aggregate, the gate and not the rule
+                // ----------------------------------------------------------
+                (function buildGateFigure() {
+                    const svg = document.getElementById("zl-gate-svg");
+                    // paper/results/exp27_timing_interventions_aggregate.json (seeds 40-42,
+                    // 10 trials each, 50 cells): excess_max_mean and temporal_separation_mean.
+                    const groups = [
+                        {
+                            label: "Bubble family",
+                            bars: [
+                                { name: "BubbleClone", dc: 0.017, s: 0.024, gate: false },
+                                { name: "DelayedBubble", dc: 0.064, s: 0.114, gate: true },
+                            ],
+                        },
+                        {
+                            label: "Gnome family",
+                            bars: [
+                                { name: "GnomeClone", dc: 0.006, s: 0.025, gate: false },
+                                { name: "DelayedGnome", dc: 0.052, s: 0.107, gate: true },
+                            ],
+                        },
+                        {
+                            label: "Native Insertion",
+                            bars: [
+                                { name: "InsertionNoWait", dc: 0.001, s: 0.025, gate: false },
+                                { name: "Insertion", dc: 0.061, s: 0.103, gate: true },
+                            ],
+                        },
+                    ];
+                    const W = renderedWidth(svg);
+                    const narrow = W < 560;
+                    const valueW = 140;
+                    const barL = narrow ? 0 : 150;
+                    const barR = W - valueW;
+                    const xMax = 0.08;
+                    const xPos = (v) => barL + (v / xMax) * (barR - barL);
+                    const barH = 14;
+                    const rowH = narrow ? 38 : 24;
+                    const groupHead = 22;
+                    const groupGap = 14;
+                    const axisY = 14;
+                    const top = axisY + 14;
+                    const H = top + groups.length * (groupHead + 2 * rowH + groupGap);
+                    setViewBox(svg, W, H);
+
+                    const ticks = narrow ? [0, 0.04, 0.08] : [0, 0.02, 0.04, 0.06, 0.08];
+                    ticks.forEach((v) => {
+                        el("text", { x: xPos(v), y: axisY, class: "zl-chart-label-sm", "text-anchor": v === 0 && barL === 0 ? "start" : "middle" }, svg)
+                            .textContent = v.toFixed(2);
+                    });
+
+                    let y = top;
+                    groups.forEach((group) => {
+                        el("text", { x: 0, y: y + 12, class: "zl-chart-label", fill: INK }, svg).textContent = group.label;
+                        y += groupHead;
+                        group.bars.forEach((bar) => {
+                            const barTop = narrow ? y + 18 : y + 4;
+                            ticks.forEach((v) => {
+                                el("line", {
+                                    x1: xPos(v), y1: barTop - 3, x2: xPos(v), y2: barTop + barH + 3,
+                                    stroke: v === 0 ? INK : "#e4e8ef", "stroke-width": 1,
+                                }, svg);
+                            });
+                            el("text", {
+                                x: narrow ? 0 : 12,
+                                y: narrow ? y + 12 : barTop + 11,
+                                class: "zl-chart-label-sm",
+                            }, svg).textContent = bar.name;
+                            const rect = el("rect", {
+                                x: xPos(0),
+                                y: barTop,
+                                width: Math.max(1, xPos(bar.dc) - xPos(0)),
+                                height: barH,
+                                fill: bar.gate ? INK : "#ffffff",
+                            }, svg);
+                            if (!bar.gate) {
+                                rect.setAttribute("stroke", INK);
+                                rect.setAttribute("stroke-width", "1");
+                            }
+                            el("text", { x: xPos(bar.dc) + 6, y: barTop + 11, class: "zl-chart-label", fill: INK }, svg)
+                                .textContent = "+" + bar.dc.toFixed(3) + " · s " + bar.s.toFixed(3);
+                            y += rowH;
+                        });
+                        y += groupGap;
+                    });
+                })();
+
+                // ----------------------------------------------------------
+                // Figure C: delayed gratification dip replay
                 // ----------------------------------------------------------
                 (function buildDipFigure() {
                     const fig = document.getElementById("zl-dip-fig");
@@ -837,21 +1181,25 @@
                     const n = 30;
                     const nSwaps = states.length - 1;
 
-                    // geometry
-                    const barTop = 8;
-                    const barBase = 168;
-                    const barMaxH = 148;
-                    const slot = 780 / n;
-                    const traceTop = 218;
-                    const traceBottom = 388;
-                    const traceL = 36;
-                    const traceR = 772;
+                    const W = renderedWidth(svg);
+                    const narrow = W < 560;
+                    const barMaxH = narrow ? 110 : 148;
+                    const barBase = 20 + barMaxH;
+                    const slot = W / n;
+                    const labelY = barBase + 30;
+                    const noteY = narrow ? labelY + 18 : labelY;
+                    const traceTop = narrow ? noteY + 30 : barBase + 44;
+                    const traceBottom = traceTop + (narrow ? 150 : 170);
+                    const traceL = 30;
+                    const traceR = W - 6;
+                    const H = traceBottom + 22;
+                    setViewBox(svg, W, H);
                     const maxErr = Math.max(...errors);
                     const yTick = maxErr <= 12 ? 3 : 5;
+                    const yMax = Math.ceil(maxErr / yTick) * yTick;
                     const xPos = (k) => traceL + (k / nSwaps) * (traceR - traceL);
-                    const yPos = (e) => traceBottom - (e / (Math.ceil(maxErr / yTick) * yTick)) * (traceBottom - traceTop);
+                    const yPos = (e) => traceBottom - (e / yMax) * (traceBottom - traceTop);
 
-                    // defs: hatch for frozen cells, clip for live trace
                     const defs = el("defs", {}, svg);
                     const hatch = el("pattern", {
                         id: "zl-hatch",
@@ -863,35 +1211,31 @@
                     el("rect", { width: 5, height: 5, fill: "#ffffff" }, hatch);
                     el("line", { x1: 0, y1: 0, x2: 0, y2: 5, stroke: INK, "stroke-width": 1.6 }, hatch);
                     const clip = el("clipPath", { id: "zl-dip-clip" }, defs);
-                    const clipRect = el("rect", { x: 0, y: 0, width: 0, height: 410 }, clip);
+                    const clipRect = el("rect", { x: 0, y: 0, width: 0, height: H }, clip);
 
-                    // --- cell array ---
-                    el("text", { x: 0, y: barTop + 6, class: "zl-chart-label-sm" }, svg)
+                    el("text", { x: 0, y: 12, class: "zl-chart-label-sm" }, svg)
                         .textContent = "CELL ARRAY";
                     const bars = [];
                     for (let i = 0; i < n; i++) {
                         bars.push(el("rect", {
-                            x: i * slot + 2,
+                            x: i * slot + Math.min(2, slot * 0.12),
                             y: barBase - 10,
-                            width: slot - 4,
+                            width: slot - 2 * Math.min(2, slot * 0.12),
                             height: 10,
                             fill: INK,
                         }, svg));
                     }
-                    el("line", { x1: 0, y1: barBase + 1, x2: 780, y2: barBase + 1, stroke: INK, "stroke-width": 1 }, svg);
+                    el("line", { x1: 0, y1: barBase + 1, x2: W, y2: barBase + 1, stroke: INK, "stroke-width": 1 }, svg);
 
-                    // --- error trace ---
-                    el("text", { x: 0, y: traceTop - 8, class: "zl-chart-label-sm" }, svg)
+                    el("text", { x: 0, y: labelY, class: "zl-chart-label-sm" }, svg)
                         .textContent = "MONOTONICITY ERRORS";
-                    const yMax = Math.ceil(maxErr / yTick) * yTick;
                     for (let v = 0; v <= yMax; v += yTick) {
                         const y = yPos(v);
                         el("line", { x1: traceL, y1: y, x2: traceR, y2: y, stroke: v === 0 ? INK : "#e4e8ef", "stroke-width": 1 }, svg);
-                        const label = el("text", { x: traceL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
-                        label.textContent = v;
+                        el("text", { x: traceL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
+                            .textContent = v;
                     }
 
-                    // dip bands (revealed when confirmed)
                     const dipRects = dips.map((d) => {
                         const g = el("g", { visibility: "hidden" }, svg);
                         el("rect", {
@@ -910,33 +1254,32 @@
                         return g;
                     });
 
-                    // deepest dip annotation
                     const deepest = dips.reduce((a, b) => (b.depth > a.depth ? b : a));
                     const annotation = el("g", { visibility: "hidden" }, svg);
-                    const ax = Math.min(xPos(deepest.peakIdx) + 8, traceR - 210);
-                    const ay = Math.max(yPos(deepest.peakVal) - 26, traceTop + 12);
-                    el("line", {
-                        x1: xPos(deepest.peakIdx), y1: yPos(deepest.peakVal) - 4,
-                        x2: ax, y2: ay + 4,
-                        stroke: TEAL, "stroke-width": 0.8,
+                    el("circle", {
+                        cx: xPos(deepest.peakIdx), cy: yPos(deepest.peakVal), r: 6,
+                        fill: "none", stroke: TEAL, "stroke-width": 1.4,
                     }, annotation);
-                    el("text", { x: ax, y: ay, class: "zl-chart-label", fill: TEAL }, annotation)
-                        .textContent = "deepest dip: errors " + deepest.startVal + " \u2192 " + deepest.peakVal +
-                            ", recovered in " + (deepest.endIdx - deepest.peakIdx) + " swaps";
+                    const noteHead = "ringed: deepest dip, " + deepest.startVal + " → " + deepest.peakVal + " errors";
+                    const noteTail = "recovered in " + (deepest.endIdx - deepest.peakIdx) + " swaps";
+                    if (narrow) {
+                        el("text", { x: 0, y: noteY, class: "zl-chart-label", fill: TEAL }, annotation).textContent = noteHead;
+                        el("text", { x: 0, y: noteY + 15, class: "zl-chart-label", fill: TEAL }, annotation).textContent = noteTail;
+                    } else {
+                        el("text", { x: traceR, y: noteY, class: "zl-chart-label", fill: TEAL, "text-anchor": "end" }, annotation)
+                            .textContent = noteHead + ", " + noteTail;
+                    }
 
-                    // full trajectory, faint preview
                     const pts = errors.map((e, k) => xPos(k).toFixed(1) + "," + yPos(e).toFixed(1)).join(" ");
                     el("polyline", { points: pts, fill: "none", stroke: INK, "stroke-width": 1, opacity: 0.16 }, svg);
-                    // live trajectory, clipped
                     const live = el("g", { "clip-path": "url(#zl-dip-clip)" }, svg);
                     el("polyline", { points: pts, fill: "none", stroke: INK, "stroke-width": 1.6 }, live);
                     const playhead = el("line", { x1: traceL, y1: traceTop, x2: traceL, y2: traceBottom, stroke: INK, "stroke-width": 1, opacity: 0.45 }, svg);
                     const errDot = el("circle", { cx: traceL, cy: yPos(errors[0]), r: 3, fill: INK }, svg);
 
-                    // x axis labels
-                    el("text", { x: traceL, y: traceBottom + 14, class: "zl-chart-label-sm" }, svg).textContent = "0";
-                    const endLabel = el("text", { x: traceR, y: traceBottom + 14, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
-                    endLabel.textContent = nSwaps + " swaps";
+                    el("text", { x: traceL, y: traceBottom + 15, class: "zl-chart-label-sm" }, svg).textContent = "0";
+                    el("text", { x: traceR, y: traceBottom + 15, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
+                        .textContent = nSwaps + " swaps";
 
                     function render(k) {
                         const state = states[k];
@@ -975,305 +1318,12 @@
                         );
                         counter.textContent =
                             "swap " + k + "/" + nSwaps +
-                            " \u00b7 errors " + errors[k] +
-                            " \u00b7 dips confirmed " + confirmed + "/" + dips.length;
+                            " · errors " + errors[k] +
+                            " · dips confirmed " + confirmed + "/" + dips.length;
                     }
 
                     render(0);
                     autoplayWhenVisible(makePlayer(fig, states.length, 14, render));
-                })();
-
-                // ----------------------------------------------------------
-                // Figure B — paired clustering replay
-                // ----------------------------------------------------------
-                (function buildClusterFigure() {
-                    const fig = document.getElementById("zl-cluster-fig");
-                    const counter = fig.querySelector("[data-counter]");
-                    const pair = runClusteringPair(1038, 50);
-                    const n = 50;
-                    const nSwaps = pair.ins.states.length - 1;
-
-                    // The max of a noisy C(t) sits well above random mixing even for
-                    // identical rules, so each run is scored against the mean peak of
-                    // the same trajectory with algotype labels shuffled across values.
-                    function shuffleNullPeak(states, seed, nPerm) {
-                        const rng = mulberry32(seed);
-                        const labelOfValue = [];
-                        states[0].order.forEach(([v, t]) => { labelOfValue[v] = t; });
-                        const rows = states.map((st) => st.order.map(([v]) => v));
-                        let total = 0;
-                        for (let p = 0; p < nPerm; p++) {
-                            const lab = shuffled(labelOfValue.slice(), rng);
-                            let peak = 0;
-                            for (const row of rows) {
-                                let m = 0;
-                                for (let i = 0; i + 1 < row.length; i++) {
-                                    if (lab[row[i]] === lab[row[i + 1]]) m++;
-                                }
-                                peak = Math.max(peak, m / (row.length - 1));
-                            }
-                            total += peak;
-                        }
-                        return total / nPerm;
-                    }
-                    const signed = (v) => (v >= 0 ? "+" : "\u2212") + Math.abs(v).toFixed(2);
-                    const insDC = Math.max(...pair.ins.clust) - shuffleNullPeak(pair.ins.states, 1, 200);
-                    const nwDC = Math.max(...pair.nw.clust) - shuffleNullPeak(pair.nw.states, 2, 200);
-                    const insEvents = pair.ins.events;
-                    const lateIdx = insEvents
-                        .map((t, k) => (t === 1 ? k : null))
-                        .filter((x) => x !== null);
-                    const meanMove =
-                        lateIdx.reduce((s, x) => s + x, 0) / lateIdx.length / (insEvents.length - 1);
-                    fig.querySelector('[data-chip="ins-dc"]').textContent = signed(insDC);
-                    fig.querySelector('[data-chip="nw-dc"]').textContent = signed(nwDC);
-                    fig.querySelector('[data-chip="ins-t"]').textContent =
-                        meanMove.toFixed(2) + " (0 = early, 1 = late)";
-
-                    // --- cell panels ---
-                    function buildPanel(svgId, gated) {
-                        const svg = document.getElementById(svgId);
-                        const slot = 380 / n;
-                        const base = 196;
-                        const maxH = 168;
-                        const bars = [];
-                        for (let i = 0; i < n; i++) {
-                            bars.push(el("rect", {
-                                x: i * slot + 0.8,
-                                y: base - 10,
-                                width: slot - 1.6,
-                                height: 10,
-                            }, svg));
-                        }
-                        el("line", { x1: 0, y1: base + 1, x2: 380, y2: base + 1, stroke: INK, "stroke-width": 1 }, svg);
-                        return { bars, base, maxH, slot, gated };
-                    }
-                    const panelIns = buildPanel("zl-panel-ins", true);
-                    const panelNw = buildPanel("zl-panel-nw", false);
-
-                    // gated flags per state for the Insertion panel
-                    const gatedFlags = pair.ins.states.map((state) => {
-                        const ok = prefixSortedOK(state.order);
-                        return state.order.map((c, i) => c[1] === 1 && !ok[i]);
-                    });
-
-                    function renderPanel(panel, state, gatedRow) {
-                        for (let i = 0; i < n; i++) {
-                            const v = state.order[i][0];
-                            const type = state.order[i][1];
-                            const h = ((v + 1) / n) * panel.maxH;
-                            const bar = panel.bars[i];
-                            bar.setAttribute("y", panel.base - h);
-                            bar.setAttribute("height", h);
-                            if (type === 0) {
-                                bar.setAttribute("fill", INK);
-                                bar.setAttribute("stroke", "none");
-                            } else if (panel.gated && gatedRow[i]) {
-                                bar.setAttribute("fill", ROSE_LIGHT);
-                                bar.setAttribute("stroke", "none");
-                            } else {
-                                bar.setAttribute("fill", "#ffffff");
-                                bar.setAttribute("stroke", INK);
-                                bar.setAttribute("stroke-width", "0.8");
-                            }
-                        }
-                        if (state.swap) {
-                            panel.bars[state.swap[0]].setAttribute("stroke", ROSE);
-                            panel.bars[state.swap[0]].setAttribute("stroke-width", "1.6");
-                            panel.bars[state.swap[1]].setAttribute("stroke", ROSE);
-                            panel.bars[state.swap[1]].setAttribute("stroke-width", "1.6");
-                        }
-                    }
-
-                    // --- shared chart: activity raster + clustering curve ---
-                    const svg = document.getElementById("zl-cluster-svg");
-                    const chartL = 84;
-                    const chartR = 772;
-                    const xPos = (k) => chartL + (k / nSwaps) * (chartR - chartL);
-
-                    const defs = el("defs", {}, svg);
-                    const clip = el("clipPath", { id: "zl-cl-clip" }, defs);
-                    const clipRect = el("rect", { x: 0, y: 0, width: 0, height: 300 }, clip);
-
-                    // raster lanes
-                    const lanes = [
-                        { label: "B + Insertion", events: pair.ins.events, y: 30 },
-                        { label: "B + NoWait", events: pair.nw.events, y: 62 },
-                    ];
-                    el("text", { x: 0, y: 16, class: "zl-chart-label-sm" }, svg)
-                        .textContent = "SWAP ACTIVITY BY ALGOTYPE";
-                    const rasterLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
-                    lanes.forEach((lane) => {
-                        const label = el("text", { x: 0, y: lane.y + 9, class: "zl-chart-label-sm" }, svg);
-                        label.textContent = lane.label;
-                        el("line", { x1: chartL, y1: lane.y + 13, x2: chartR, y2: lane.y + 13, stroke: "#e4e8ef", "stroke-width": 1 }, svg);
-                        lane.events.forEach((type, j) => {
-                            el("rect", {
-                                x: xPos(j + 1) - 0.5,
-                                y: lane.y,
-                                width: 1.4,
-                                height: 12,
-                                fill: type === 0 ? INK : ROSE,
-                                opacity: type === 0 ? 0.55 : 0.9,
-                            }, rasterLive);
-                        });
-                    });
-
-                    // clustering curve
-                    const curveTop = 118;
-                    const curveBottom = 272;
-                    const yMin = 0.4;
-                    const yMax = 0.85;
-                    const yPos = (c) => curveBottom - ((c - yMin) / (yMax - yMin)) * (curveBottom - curveTop);
-                    el("text", { x: 0, y: curveTop - 8, class: "zl-chart-label-sm" }, svg)
-                        .textContent = "CLUSTERING C(t)";
-                    [0.4, 0.5, 0.6, 0.7, 0.8].forEach((v) => {
-                        const y = yPos(v);
-                        el("line", { x1: chartL, y1: y, x2: chartR, y2: y, stroke: v === 0.5 ? "none" : "#e4e8ef", "stroke-width": 1 }, svg);
-                        const label = el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
-                        label.textContent = v.toFixed(1);
-                    });
-                    const mixing = 24 / 49;
-                    el("line", { x1: chartL, y1: yPos(mixing), x2: chartR, y2: yPos(mixing), stroke: "#616873", "stroke-width": 1, "stroke-dasharray": "4 4" }, svg);
-                    el("text", { x: chartR, y: yPos(mixing) - 5, class: "zl-chart-label-sm", "text-anchor": "end" }, svg)
-                        .textContent = "random mixing 24/49";
-
-                    const curveLive = el("g", { "clip-path": "url(#zl-cl-clip)" }, svg);
-                    function curvePoints(clust) {
-                        return clust.map((c, k) => xPos(k).toFixed(1) + "," + yPos(c).toFixed(1)).join(" ");
-                    }
-                    // faint full previews
-                    el("polyline", { points: curvePoints(pair.ins.clust), fill: "none", stroke: ROSE, "stroke-width": 1, opacity: 0.14 }, svg);
-                    el("polyline", { points: curvePoints(pair.nw.clust), fill: "none", stroke: INK, "stroke-width": 1, opacity: 0.12 }, svg);
-                    el("polyline", { points: curvePoints(pair.ins.clust), fill: "none", stroke: ROSE, "stroke-width": 1.8 }, curveLive);
-                    el("polyline", { points: curvePoints(pair.nw.clust), fill: "none", stroke: INK, "stroke-width": 1.8 }, curveLive);
-
-                    // peak markers
-                    function peakMarker(clust, color, dcVal, dy) {
-                        const peak = Math.max(...clust);
-                        const k = clust.indexOf(peak);
-                        const g = el("g", { visibility: "hidden" }, svg);
-                        el("circle", { cx: xPos(k), cy: yPos(peak), r: 3.2, fill: color }, g);
-                        const label = el("text", {
-                            x: Math.min(xPos(k) + 8, chartR - 90),
-                            y: yPos(peak) + dy,
-                            class: "zl-chart-label",
-                            fill: color,
-                        }, g);
-                        label.textContent = "peak " + peak.toFixed(2) + " \u00b7 " + signed(dcVal) + " over null";
-                        return { g, k };
-                    }
-                    const insPeak = peakMarker(pair.ins.clust, ROSE, insDC, -8);
-                    const nwPeak = peakMarker(pair.nw.clust, INK, nwDC, 14);
-
-                    const playhead = el("line", { x1: chartL, y1: 24, x2: chartL, y2: curveBottom, stroke: INK, "stroke-width": 1, opacity: 0.4 }, svg);
-                    el("text", { x: chartL, y: curveBottom + 14, class: "zl-chart-label-sm" }, svg).textContent = "0";
-                    const endLabel = el("text", { x: chartR, y: curveBottom + 14, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
-                    endLabel.textContent = nSwaps + " swaps";
-                    el("line", { x1: chartL + 8, y1: curveTop - 11, x2: chartL + 26, y2: curveTop - 11, stroke: ROSE, "stroke-width": 2 }, svg);
-                    el("text", { x: chartL + 32, y: curveTop - 8, class: "zl-chart-label-sm" }, svg)
-                        .textContent = "gate intact";
-                    el("line", { x1: chartL + 108, y1: curveTop - 11, x2: chartL + 126, y2: curveTop - 11, stroke: INK, "stroke-width": 2 }, svg);
-                    el("text", { x: chartL + 132, y: curveTop - 8, class: "zl-chart-label-sm" }, svg)
-                        .textContent = "gate ablated";
-
-                    function render(k) {
-                        renderPanel(panelIns, pair.ins.states[k], gatedFlags[k]);
-                        renderPanel(panelNw, pair.nw.states[k], null);
-                        clipRect.setAttribute("width", xPos(k));
-                        playhead.setAttribute("x1", xPos(k));
-                        playhead.setAttribute("x2", xPos(k));
-                        insPeak.g.setAttribute("visibility", k >= insPeak.k ? "visible" : "hidden");
-                        nwPeak.g.setAttribute("visibility", k >= nwPeak.k ? "visible" : "hidden");
-                        counter.textContent =
-                            "swap " + k + "/" + nSwaps +
-                            " \u00b7 C(t) " + pair.ins.clust[k].toFixed(2) +
-                            " vs " + pair.nw.clust[k].toFixed(2);
-                    }
-
-                    render(0);
-                    autoplayWhenVisible(makePlayer(fig, pair.ins.states.length, 40, render));
-                })();
-
-                // ----------------------------------------------------------
-                // Figure C — static aggregate: the gate, not the algotype
-                // ----------------------------------------------------------
-                (function buildGateFigure() {
-                    const svg = document.getElementById("zl-gate-svg");
-                    // paper/results/exp27_timing_interventions_aggregate.json (seeds 40-42,
-                    // 10 trials each, 50 cells): excess_max_mean and temporal_separation_mean.
-                    const groups = [
-                        {
-                            label: "Bubble family",
-                            bars: [
-                                { name: "BubbleClone", dc: 0.017, s: 0.024, gate: false },
-                                { name: "DelayedBubble", dc: 0.064, s: 0.114, gate: true },
-                            ],
-                        },
-                        {
-                            label: "Gnome family",
-                            bars: [
-                                { name: "GnomeClone", dc: 0.006, s: 0.025, gate: false },
-                                { name: "DelayedGnome", dc: 0.052, s: 0.107, gate: true },
-                            ],
-                        },
-                        {
-                            label: "Native Insertion",
-                            bars: [
-                                { name: "InsertionNoWait", dc: 0.001, s: 0.025, gate: false },
-                                { name: "Insertion", dc: 0.061, s: 0.103, gate: true },
-                            ],
-                        },
-                    ];
-                    const chartL = 44;
-                    const chartR = 772;
-                    const chartTop = 26;
-                    const chartBottom = 196;
-                    const yMax = 0.08;
-                    const yPos = (v) => chartBottom - (v / yMax) * (chartBottom - chartTop);
-
-                    [0, 0.02, 0.04, 0.06, 0.08].forEach((v) => {
-                        const y = yPos(v);
-                        el("line", { x1: chartL, y1: y, x2: chartR, y2: y, stroke: v === 0 ? INK : "#e4e8ef", "stroke-width": 1 }, svg);
-                        const label = el("text", { x: chartL - 6, y: y + 3, class: "zl-chart-label-sm", "text-anchor": "end" }, svg);
-                        label.textContent = v.toFixed(2);
-                    });
-
-                    const groupW = (chartR - chartL) / groups.length;
-                    const barW = 62;
-                    groups.forEach((group, gi) => {
-                        const gx = chartL + gi * groupW;
-                        const innerW = group.bars.length * (barW + 18) - 18;
-                        const startX = gx + (groupW - innerW) / 2;
-                        group.bars.forEach((bar, bi) => {
-                            const x = startX + bi * (barW + 18);
-                            const y = yPos(bar.dc);
-                            const rect = el("rect", {
-                                x, y,
-                                width: barW,
-                                height: chartBottom - y,
-                                fill: bar.gate ? INK : "#ffffff",
-                            }, svg);
-                            if (!bar.gate) {
-                                rect.setAttribute("stroke", INK);
-                                rect.setAttribute("stroke-width", "1");
-                            }
-                            const val = el("text", { x: x + barW / 2, y: y - 16, class: "zl-chart-label", "text-anchor": "middle", fill: INK }, svg);
-                            val.textContent = "+" + bar.dc.toFixed(3);
-                            const sep = el("text", { x: x + barW / 2, y: y - 5, class: "zl-chart-label-sm", "text-anchor": "middle" }, svg);
-                            sep.textContent = "s = " + bar.s.toFixed(3);
-                            const name = el("text", {
-                                x: x + barW / 2, y: chartBottom + 14,
-                                class: "zl-chart-label-sm", "text-anchor": "middle",
-                            }, svg);
-                            name.textContent = bar.name;
-                        });
-                        const glabel = el("text", {
-                            x: gx + groupW / 2, y: chartBottom + 32,
-                            class: "zl-chart-label", "text-anchor": "middle",
-                        }, svg);
-                        glabel.textContent = group.label;
-                    });
                 })();
             })();
         </script>

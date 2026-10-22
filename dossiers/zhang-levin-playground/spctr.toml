@@ -1,9 +1,9 @@
 version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
-title = "Morphogenetic Signatures in Sorting Algorithms"
+title = "Sorting cells cluster by when they move"
 series = "D-001"
-summary = "Cells sort themselves under perturbation, while local moves, waiting rules, and obstacles shape the order that emerges."
-status = "active-writing"
+summary = "Why cells running the same sorting rule end up side by side, and which rule still lets an array with frozen cells reach order."
+status = "active"
 
 [site]
 visible = true

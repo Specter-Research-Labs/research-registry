@@ -2,5 +2,9 @@
   "anatomical-compiler": {
     "revision": "003",
     "path": "/dossiers/lenia-swarm/anatomical-compiler/"
+  },
+  "zhang-sorting-followup": {
+    "revision": "009",
+    "path": "/dossiers/zhang-levin-playground/corrected-clustering/"
   }
 }
