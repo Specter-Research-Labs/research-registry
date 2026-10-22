@@ -117,6 +117,7 @@ def _intervention_payload(intervention: Intervention) -> dict[str, Any]:
     return {
         "name": intervention.name,
         "blocked": sorted(intervention.blocked),
+        "blocked_premises": sorted(intervention.blocked_premises),
         "is_control": intervention.is_control,
     }
 
@@ -126,6 +127,7 @@ def _intervention_from_payload(data: Mapping[str, Any]) -> Intervention:
         name=str(data["name"]),
         blocked={str(item) for item in data.get("blocked", [])},
         is_control=bool(data.get("is_control")),
+        blocked_premises=frozenset(str(item) for item in data.get("blocked_premises", [])),
     )
 
 

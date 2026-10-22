@@ -363,6 +363,7 @@ def _build_intervention_outputs(
     comparison = {
         "name": intervention_result.intervention.name,
         "blocked": blocked,
+        "blocked_premises": sorted(intervention_result.intervention.blocked_premises),
         "solved": intervention_result.intervention_run.solved,
         "status": status,
         "ged_search_graph": ged_search_graph,
@@ -380,6 +381,7 @@ def _build_intervention_outputs(
     summary = {
         "name": intervention_result.intervention.name,
         "blocked": blocked,
+        "blocked_premises": sorted(intervention_result.intervention.blocked_premises),
         "is_control": intervention_result.intervention.is_control,
         "baseline_solved": baseline_result.wild_type.solved,
         "solved": intervention_result.intervention_run.solved,

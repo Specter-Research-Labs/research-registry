@@ -1007,6 +1007,7 @@ async def run_corpus(
         {
             "name": intervention.name,
             "blocked": sorted(intervention.blocked),
+            "blocked_premises": sorted(intervention.blocked_premises),
             "is_control": intervention.is_control,
         }
         for intervention in (extra_interventions or [])

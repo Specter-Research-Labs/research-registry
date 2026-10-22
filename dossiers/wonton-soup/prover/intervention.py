@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -21,6 +22,7 @@ class PegKind(Enum):
     FAMILY = "family"
     CONDITIONAL = "conditional"
     BUDGET = "budget"
+    PREMISE = "premise"
 
 
 @dataclass(frozen=True)
@@ -29,6 +31,7 @@ class PegRule:
     kind: PegKind
     blocked_tactics: frozenset[str] = field(default_factory=frozenset)
     blocked_families: frozenset[str] = field(default_factory=frozenset)
+    blocked_premises: frozenset[str] = field(default_factory=frozenset)
     condition: str | None = None
 
 
@@ -88,12 +91,23 @@ def _goal_matches_condition(goal: LeanGoal, condition: str) -> bool:
     raise ValueError(f"Unknown peg condition: {condition}")
 
 
+def _names_premise(premises: frozenset[str], tactic: str) -> bool:
+    # Only the fully qualified name is matched, including projections such as `.symm`
+    # or `.mp`; uses through `open` namespaces or by automation are caught by the
+    # adapter's term-level check.
+    return any(
+        re.search(rf"(?<![\w.']){re.escape(premise)}(?![\w'])", tactic)
+        for premise in premises
+    )
+
+
 class FilteredTacticProvider(TacticProvider):
     def __init__(
         self,
         base: TacticProvider,
         blocked: set[str] | None = None,
         blocked_families: set[str] | None = None,
+        blocked_premises: set[str] | None = None,
         peg_rules: list[PegRule] | None = None,
         peg_budget: PegBudget | None = None,
         provider_id: str | None = None,
@@ -102,6 +116,7 @@ class FilteredTacticProvider(TacticProvider):
         self.base = base
         self.blocked = set(blocked or [])
         self.blocked_families = set(blocked_families or [])
+        self.blocked_premises = set(blocked_premises or [])
         self.peg_rules: list[PegRule] = []
         self.peg_budget = peg_budget
         self.provider_id = provider_id
@@ -125,6 +140,14 @@ class FilteredTacticProvider(TacticProvider):
                     peg_id="block_family",
                     kind=PegKind.FAMILY,
                     blocked_families=frozenset(self.blocked_families),
+                )
+            )
+        if self.blocked_premises:
+            self.peg_rules.append(
+                PegRule(
+                    peg_id="block_premise",
+                    kind=PegKind.PREMISE,
+                    blocked_premises=frozenset(self.blocked_premises),
                 )
             )
         if peg_rules:
@@ -216,6 +239,16 @@ class FilteredTacticProvider(TacticProvider):
                     provider_id=self.provider_id,
                 )
             if rule.blocked_families and family in rule.blocked_families:
+                return BlockedTactic(
+                    tactic=tactic,
+                    tactic_norm=tactic_norm,
+                    peg_id=rule.peg_id,
+                    peg_kind=rule.kind.value,
+                    block_reason="explicit",
+                    goal_sig=goal_sig,
+                    provider_id=self.provider_id,
+                )
+            if rule.blocked_premises and _names_premise(rule.blocked_premises, tactic):
                 return BlockedTactic(
                     tactic=tactic,
                     tactic_norm=tactic_norm,

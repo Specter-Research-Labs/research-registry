@@ -255,6 +255,7 @@ def _merge_interventions(
         if (
             existing.blocked != intervention.blocked
             or existing.is_control != intervention.is_control
+            or existing.blocked_premises != intervention.blocked_premises
         ):
             raise ValueError(
                 f"Conflicting interventions share the same name: {intervention.name!r}"
@@ -558,6 +559,7 @@ async def run_theorem(
         filtered = FilteredTacticProvider(
             base_provider,
             intervention.blocked,
+            blocked_premises=set(intervention.blocked_premises),
             goal_sig_config=goal_sig_config,
         )
         logger.info(f"  {intervention.name}: using {filtered.describe()}")
@@ -565,14 +567,20 @@ async def run_theorem(
         if progress:
             progress.start_intervention(intervention.name)
 
-        int_result = await _run_theorem_variant(
-            provider=filtered,
-            statement=int_statement,
-            variant_seed_key=intervention.name,
-            trace_filename=f"{intervention.name}_mcts_trace.jsonl",
-            blocked_tactics=intervention.blocked,
-            **variant_kwargs,
-        )
+        if intervention.blocked_premises and mcts_mode != "centralized":
+            raise ValueError("premise interventions require mcts_mode='centralized'")
+        adapter.forbidden_constants = intervention.blocked_premises
+        try:
+            int_result = await _run_theorem_variant(
+                provider=filtered,
+                statement=int_statement,
+                variant_seed_key=intervention.name,
+                trace_filename=f"{intervention.name}_mcts_trace.jsonl",
+                blocked_tactics=intervention.blocked,
+                **variant_kwargs,
+            )
+        finally:
+            adapter.forbidden_constants = frozenset()
 
         wild_canonical = wild_result.graph.to_canonical()
         int_canonical = int_result.graph.to_canonical()

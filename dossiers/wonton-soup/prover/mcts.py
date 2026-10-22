@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
+from prover.dependencies import PremiseBlocked
 from prover.goal_signature import GoalSignatureConfig, compute_goal_signature_strict
 from prover.history import (
     ExplorationHistory,
@@ -17,7 +18,7 @@ from prover.history import (
     TacticAttempt,
     TacticOutcome,
 )
-from prover.intervention import BlockedTactic
+from prover.intervention import BlockedTactic, PegKind
 from prover.providers.base import goal_signature, normalize_tactic, tactic_family
 
 if TYPE_CHECKING:
@@ -1010,6 +1011,29 @@ async def mcts_search(
 
             try:
                 preview = await adapter.preview_tactic(node.mvar_id, tactic)
+            except PremiseBlocked as blocked:
+                if record_attempt is not None:
+                    record_attempt(tactic=tactic, goal_sig=goal_sig, budget_key=node.mvar_id)
+                if history:
+                    attempts.append(
+                        TacticAttempt(
+                            iteration=iteration,
+                            node_mvar_id=node.mvar_id,
+                            tactic=tactic,
+                            outcome=TacticOutcome.BLOCKED,
+                            child_mvar_ids=[],
+                            timestamp_ms=history.elapsed_ms(),
+                            tactic_norm=normalize_tactic(tactic),
+                            goal_sig=goal_sig,
+                            goal_sig_strict=goal_sig_strict,
+                            goal_type=node.goal_type,
+                            peg_id="block_premise",
+                            peg_kind=PegKind.PREMISE.value,
+                            block_reason="term:" + ",".join(blocked.constants),
+                            provider_id=provider_id,
+                        )
+                    )
+                continue
             except Exception:
                 logger.exception(
                     "MCTS adapter.preview_tactic failed for mvar_id=%s tactic=%s; "
@@ -1089,6 +1113,12 @@ async def mcts_search(
                         hyp_exprs=hyp_exprs,
                     )
                 if sig in blocked_goal_sigs:
+                    # Every child is an obligation: pruning one must reject the
+                    # whole tactic, never turn a partial proof into a success.
+                    novel_mvars.clear()
+                    break
+                # Lean can list one unsolved goal twice after a tactic; it is a single obligation.
+                if state_id in novel_mvars:
                     continue
                 sig_strict = compute_goal_signature_strict(
                     type_str=child_goal.type,
@@ -1101,7 +1131,6 @@ async def mcts_search(
                 novel_goal_types.append(child_goal.type)
                 novel_goal_sigs.append(sig)
                 novel_goal_sigs_strict.append(sig_strict)
-                blocked_goal_sigs.add(sig)
 
             if not novel_mvars:
                 if history:
@@ -1129,7 +1158,7 @@ async def mcts_search(
                         node_mvar_id=node.mvar_id,
                         tactic=tactic,
                         outcome=TacticOutcome.SUCCESS,
-                        # Record only novel/deduped children expanded into the tree/graph.
+                        # Retain every obligation of an accepted tactic.
                         child_mvar_ids=list(novel_mvars),
                         timestamp_ms=history.elapsed_ms(),
                         tactic_norm=tactic_norm,
