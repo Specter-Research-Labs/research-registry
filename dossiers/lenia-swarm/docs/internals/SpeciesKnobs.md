@@ -2,7 +2,7 @@
 summary: "Which Flow Lenia parameters define a species and which can vary when searching for Orbium-like gliders, and why Flow Lenia differs from classical Lenia here."
 ---
 
-# Species Knobs for Glider Search
+# Species knobs for glider search
 
 Flow Lenia system, not a classical Lenia implementation. When we say "Orbium-like" below, we mean "a constrained single-kernel Flow Lenia family chosen to stay visually and structurally close to classical Orbium-style gliders", not an exact recreation of Chakazul's preset browser.
 

@@ -2,7 +2,7 @@
 summary: "How Lenia Swarm config families are organized by use case, from base runtimes and searches to presets, sweeps, campaigns, evolution strategies and IMGEP."
 ---
 
-# Config Map
+# Config map
 
 Config families are organized by use-case, not by entrypoint. The filenames below are the canonical inputs used by the CLI, Studio resources, and smoke scripts.
 
@@ -28,4 +28,4 @@ Config families are organized by use-case, not by entrypoint. The filenames belo
 ## Notes
 
 - The CLI and Studio both treat these folders as the source of truth for run inputs.
-- Paper-grounded modes are documented in [ResearchModes](../contracts/ResearchModes.md); this map covers the reusable config families they consume.
+- Paper-grounded modes are documented in [Paper reproductions](../contracts/ResearchModes.md); this map covers the reusable config families they consume.

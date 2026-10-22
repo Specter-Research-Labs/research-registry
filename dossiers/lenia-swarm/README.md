@@ -6,10 +6,9 @@ Distributed parameter search for Flow Lenia across Apple machines using Swift Di
 
 - `docs/README.md`: documentation map (runbooks, concepts, configs, internals).
 - `docs/configs/README.md`: compact map of the config families and canonical entry files.
-- `docs/universe/`: concept docs (physics, morphology, ecology, taxonomy).
-- `docs/contracts/`: CLI/schema/artifact/reproducibility contracts.
+- `docs/universe/`: concept docs (primer and glossary, morphology, taxonomy, ecology).
+- `docs/contracts/`: local sweeps, paper reproductions, and the compendium schema (with ADR-002; ADR-001 is in the taxonomy page).
 - `docs/internals/`: implementation-level references and maps.
-- `docs/decisions/`: ADRs for long-lived doc and schema decisions.
 - `ops/docs/TTBackend.md` and `ops/docs/TTBackendPerformance.md` (repo root): TT backend operation,
   launcher rules, and performance facts.
 
