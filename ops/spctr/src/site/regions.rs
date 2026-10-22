@@ -456,7 +456,12 @@ pub fn render_sitemap_sections(
         .iter()
         .map(|post| leaf(series_label(post.series.as_ref(), &post.title), href(&post.href)))
         .collect();
-    writing_nodes.push(leaf("Lab notes".to_owned(), href("research-notes/")));
+    if !super::blog::published_research_notes(repo_root)?.is_empty() {
+        writing_nodes.push(leaf(
+            "Lab notes".to_owned(),
+            discover::relative_href_with_fragment(page_path, "blog/", "lab-notes"),
+        ));
+    }
 
     let mut addenda: Vec<&SiteRecord> = slices.visible_addenda.clone();
     addenda.sort_by(|a, b| a.series.cmp(&b.series));

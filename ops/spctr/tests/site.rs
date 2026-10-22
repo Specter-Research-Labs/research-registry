@@ -1389,10 +1389,8 @@ fn sitemap_excludes_templates_and_sitemap() {
         "sitemap should exclude sitemap/"
     );
     assert!(
-        sitemap
-            .match_indices("href=\"../research-notes/")
-            .all(|(index, _)| sitemap[index..].starts_with("href=\"../research-notes/\"")),
-        "sitemap links the lab notes index but not individual notes"
+        !sitemap.contains("href=\"../research-notes/"),
+        "sitemap reaches lab notes through the Writing index, which lists them"
     );
 }
 
