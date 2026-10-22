@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import Accelerate
 import CoreGraphics
@@ -719,3 +720,4 @@ private func maxNested(_ values: [[Float]]) -> Float {
     }
     return maxValue ?? 0
 }
+#endif

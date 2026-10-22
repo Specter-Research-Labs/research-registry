@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import Foundation
 import LeniaArchive
@@ -482,7 +483,7 @@ struct CompendiumPublishCommand: ParsableCommand {
         outputURL: URL,
         creatureDirURL: URL
     ) throws -> AtlasRenderedMedia {
-        let resolvedBackend = try resolveReplaySearchBackend(baseConfig: baseConfig)
+        let resolvedBackend = try resolveReplaySearchBackend(requestValue: "auto", baseConfig: baseConfig)
         let replayBaseConfig = baseConfigBySettingBackend(baseConfig, backend: resolvedBackend)
         let runtimeConfig = try loadRuntimeConfig(from: JSONEncoder().encode(replayBaseConfig))
         let frames = try captureReplayFrames(
@@ -857,3 +858,4 @@ private func publishedTranslationRatio(for metrics: SimulationMetrics) -> Float 
     guard metrics.pathLength > 1e-6 else { return 0 }
     return metrics.displacement / metrics.pathLength
 }
+#endif

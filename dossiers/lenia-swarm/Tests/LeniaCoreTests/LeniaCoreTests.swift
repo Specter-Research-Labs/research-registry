@@ -5505,7 +5505,7 @@ final class LeniaCoreTests: XCTestCase {
             params: MLX.zeros([batchCount, config.sx, config.sy, runner.parameterCount]),
             wallMask: nil,
             staticChannelFields: [],
-            food: FlowLeniaMetalFoodState(
+            food: FlowLeniaFoodState(
                 channelIndex: 0,
                 field: MLXArray(foodValues).reshaped([batchCount, config.sx, config.sy]),
                 decayRate: 0.0,
@@ -5593,11 +5593,11 @@ final class LeniaCoreTests: XCTestCase {
             mass: mass,
             params: paramMap,
             wallMask: wallMask,
-            staticChannelFields: [FlowLeniaMetalChannelField(
+            staticChannelFields: [FlowLeniaChannelField(
                 channelIndex: 1,
                 field: staticField
             )],
-            food: FlowLeniaMetalFoodState(
+            food: FlowLeniaFoodState(
                 channelIndex: 2,
                 field: foodField.squeezed(axis: 0),
                 decayRate: 0,
@@ -5628,11 +5628,11 @@ final class LeniaCoreTests: XCTestCase {
             mass: replacementMass,
             params: replacementParams,
             wallMask: replacementWallMask,
-            staticChannelFields: [FlowLeniaMetalChannelField(
+            staticChannelFields: [FlowLeniaChannelField(
                 channelIndex: 1,
                 field: replacementStaticField
             )],
-            food: FlowLeniaMetalFoodState(
+            food: FlowLeniaFoodState(
                 channelIndex: 2,
                 field: replacementFoodField,
                 decayRate: 0,

@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import Foundation
 import LeniaCore
@@ -8,7 +9,9 @@ func captureReplayFrames(
     parsedSearch: ParsedSearchConfig,
     frameBudget: Int
 ) throws -> [Data] {
+    #if canImport(Metal)
     try LeniaMetalLibrarySupport.ensureAvailable()
+    #endif
 
     let targetFrames = max(frameBudget, 1)
     let warmupSteps = max(parsedSearch.warmupSteps, 0)
@@ -396,3 +399,4 @@ private func clampReplayValue(_ value: Float, lower: Float, upper: Float) -> Flo
 private func replayByte(_ value: Float) -> UInt8 {
     UInt8(max(0, min(255, Int(clampReplayValue(value, lower: 0, upper: 1) * 255.0 + 0.5))))
 }
+#endif

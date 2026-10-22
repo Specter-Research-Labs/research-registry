@@ -1,6 +1,7 @@
 import Foundation
 import MLX
 
+#if canImport(Metal)
 public struct FlowLeniaMetalSweepCase: Sendable {
     public let gridSize: Int
     public let channels: Int
@@ -52,6 +53,7 @@ public struct FlowLeniaMetalSweepResult: Sendable {
         self.stageTimings = stageTimings
     }
 }
+#endif
 
 func flowLeniaBenchmarkRanges() -> KernelParamRanges {
     KernelParamRanges(
@@ -128,6 +130,7 @@ func flowLeniaBenchmarkRuntimeConfig(
     )
 }
 
+#if canImport(Metal)
 public func benchmarkFlowLeniaMetalSweepCase(
     _ benchmarkCase: FlowLeniaMetalSweepCase,
     batchSize: Int,
@@ -331,3 +334,4 @@ private struct MetalSweepRNG {
         return Float(value) / Float(UInt32.max)
     }
 }
+#endif

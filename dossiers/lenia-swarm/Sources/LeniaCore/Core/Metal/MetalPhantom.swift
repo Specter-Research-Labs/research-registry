@@ -1,28 +1,7 @@
+#if canImport(Metal)
 import Foundation
 import Metal
 import MLX
-
-/// A sensed-only field added to real mass before convolution. It never moves
-/// real matter, never receives it, and carries no parameters.
-public struct FlowLeniaPhantomSpec {
-    public enum Source: String {
-        case fixed = "static"
-        case replay
-    }
-
-    public let source: Source
-    /// When true the phantom also enters the matter map that sets alpha and the
-    /// mass-gradient term; when false only the growth convolution senses it.
-    public let pressure: Bool
-    /// Float32 field with shape [sx, sy, channels], in the mass layout.
-    public let field: [Float]
-
-    public init(source: Source, pressure: Bool, field: [Float]) {
-        self.source = source
-        self.pressure = pressure
-        self.field = field
-    }
-}
 
 struct FlowLeniaMetalSensing {
     let fieldMassBuffer: MTLBuffer
@@ -176,3 +155,5 @@ final class FlowLeniaMetalPhantom {
     }
     """
 }
+
+#endif

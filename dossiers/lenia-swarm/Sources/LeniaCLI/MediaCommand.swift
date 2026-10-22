@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import CoreGraphics
 import Foundation
@@ -1204,3 +1205,4 @@ private func slugifyEcologyMediaLabel(_ label: String) -> String {
     let trimmed = output.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
     return trimmed.isEmpty ? "ecology-run" : trimmed
 }
+#endif

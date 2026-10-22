@@ -100,6 +100,11 @@ struct BenchmarkCommand: AsyncParsableCommand {
         let sandboxBackends = try selectedSandboxBackends(backend)
         let artifactRunID = LeniaLogging.makeRunId(prefix: "benchmark")
 
+        #if !canImport(Metal)
+        if metalSweep || sandbox {
+            throw ValidationError("--metal-sweep and --sandbox benchmark Apple Metal pipelines and need macOS.")
+        }
+        #else
         if metalSweep {
             try runMetalSweepBenchmark(
                 gridSizes: parsePositiveIntegerList(metalGridSizes, option: "--metal-grid-sizes"),
@@ -113,6 +118,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             )
             return
         }
+        #endif
 
         print("============================================================")
         print("Flow Lenia Swift Benchmark")
@@ -196,6 +202,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             return
         }
 
+        #if canImport(Metal)
         if sandbox {
             let gridPreset: LabGridPreset
             switch gridSize {
@@ -264,6 +271,7 @@ struct BenchmarkCommand: AsyncParsableCommand {
             }
             return
         }
+        #endif
 
         if search {
             print("\nSearch Backends (Repeated Warmed Samples)")
@@ -568,6 +576,7 @@ private func parseBooleanList(_ value: String, option: String) throws -> [Bool] 
     return parsed
 }
 
+#if canImport(Metal)
 private func runMetalSweepBenchmark(
     gridSizes: [Int],
     channelCounts: [Int],
@@ -636,6 +645,7 @@ private func runMetalSweepBenchmark(
         }
     }
 }
+#endif
 
 private struct RepeatedBenchmarkStats<Result> {
     let sample: [Result]

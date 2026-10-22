@@ -1,5 +1,6 @@
-import CoreGraphics
 import Foundation
+#if canImport(ImageIO)
+import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
 
@@ -64,3 +65,12 @@ private func finalizePNG(_ image: CGImage, to url: URL) throws {
         throw ConfigError.invalidConfig("failed to write PNG.")
     }
 }
+#else
+func writeGrayscalePNG(bytes: Data, width: Int, height: Int, to url: URL) throws {
+    throw ConfigError.invalidConfig("PNG export requires Apple ImageIO and is unavailable on this platform.")
+}
+
+func writeRGBAPNG(rgba: Data, width: Int, height: Int, to url: URL) throws {
+    throw ConfigError.invalidConfig("PNG export requires Apple ImageIO and is unavailable on this platform.")
+}
+#endif

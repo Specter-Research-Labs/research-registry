@@ -1,7 +1,17 @@
 import ArgumentParser
 import Foundation
 import LeniaCore
+#if canImport(Metal)
 import Metal
+#endif
+
+private func hostHasMetalDevice() -> Bool {
+    #if canImport(Metal)
+    MTLCreateSystemDefaultDevice() != nil
+    #else
+    false
+    #endif
+}
 
 func resolveMetalFirstSearchBackend(requestValue: String, baseConfig: LeniaBaseConfig) throws -> FlowLeniaComputeBackend {
     let request = try SimulationJobBackendRequest(configValue: requestValue)
@@ -12,7 +22,7 @@ func resolveMetalFirstSearchBackend(requestValue: String, baseConfig: LeniaBaseC
         }
         return backend
     case .auto:
-        guard MTLCreateSystemDefaultDevice() != nil else {
+        guard hostHasMetalDevice() else {
             throw ValidationError("Auto backend requires Apple Metal. Pass --backend mlx explicitly for reference/unsupported runs.")
         }
         guard isSearchBackendCompatible(backend: .metalFull, config: baseConfig) else {
@@ -30,12 +40,15 @@ func resolveMetalFirstEvolutionBackend(
     let request = try SimulationJobBackendRequest(configValue: requestValue)
     switch request {
     case .explicit(let backend):
+        guard backend != .cpu else {
+            throw ValidationError("Backend cpu supports search and replay only.")
+        }
         guard backend == .mlx || isEvolutionMetalBackendCompatible(runtimeConfig: runtimeConfig, esConfig: esConfig) else {
             throw ValidationError("Requested backend \(backend.rawValue) is not compatible with this ES config.")
         }
         return backend
     case .auto:
-        guard MTLCreateSystemDefaultDevice() != nil else {
+        guard hostHasMetalDevice() else {
             throw ValidationError("Auto backend requires Apple Metal. Pass --backend mlx explicitly for reference/unsupported runs.")
         }
         guard isEvolutionMetalBackendCompatible(runtimeConfig: runtimeConfig, esConfig: esConfig) else {
@@ -52,12 +65,15 @@ func resolveMetalFirstSimulatorBackend(
     let request = try SimulationJobBackendRequest(configValue: requestValue)
     switch request {
     case .explicit(let backend):
+        guard backend != .cpu else {
+            throw ValidationError("Backend cpu supports search and replay only.")
+        }
         guard backend == .mlx || runtimeConfigs.allSatisfy(isFlowLeniaSimulatorMetalBackendCompatible) else {
             throw ValidationError("Requested backend \(backend.rawValue) is not compatible with this simulator config.")
         }
         return backend
     case .auto:
-        guard MTLCreateSystemDefaultDevice() != nil else {
+        guard hostHasMetalDevice() else {
             throw ValidationError("Auto backend requires Apple Metal. Pass --backend mlx explicitly for reference/unsupported runs.")
         }
         guard runtimeConfigs.allSatisfy(isFlowLeniaSimulatorMetalBackendCompatible) else {
@@ -79,16 +95,24 @@ func baseConfigDataByApplyingOverrides(_ data: Data, overrides: [String: Any]) t
     return try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
 }
 
-func resolveReplaySearchBackend(baseConfig: LeniaBaseConfig) throws -> FlowLeniaComputeBackend {
-    if MTLCreateSystemDefaultDevice() != nil,
-       isSearchBackendCompatible(backend: .metalFull, config: baseConfig) {
-        return .metalFull
+func resolveReplaySearchBackend(requestValue: String, baseConfig: LeniaBaseConfig) throws -> FlowLeniaComputeBackend {
+    switch try SimulationJobBackendRequest(configValue: requestValue) {
+    case .explicit(let backend):
+        guard isSearchBackendCompatible(backend: backend, config: baseConfig) else {
+            throw ValidationError("Requested backend \(backend.rawValue) is not compatible with this replay config.")
+        }
+        return backend
+    case .auto:
+        if hostHasMetalDevice(),
+           isSearchBackendCompatible(backend: .metalFull, config: baseConfig) {
+            return .metalFull
+        }
+        return try FlowLeniaComputeBackend(configValue: baseConfig.backend)
     }
-    return try FlowLeniaComputeBackend(configValue: baseConfig.backend)
 }
 
 func resolveReplaySimulatorBackend(runtimeConfig: LeniaRuntimeConfig) throws -> FlowLeniaComputeBackend {
-    if MTLCreateSystemDefaultDevice() != nil,
+    if hostHasMetalDevice(),
        isFlowLeniaSimulatorMetalBackendCompatible(runtimeConfig) {
         return .metalFull
     }

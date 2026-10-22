@@ -17,17 +17,32 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
         .package(url: "https://github.com/ml-explore/mlx-swift", from: "0.21.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.12.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
     ],
     targets: [
+        // Apple SDKs ship an SQLite3 module; Linux needs this module map over the system header.
+        .systemLibrary(
+            name: "SQLite3",
+            path: "Sources/SQLite3"
+        ),
+        .target(
+            name: "CFlowLeniaCPU",
+            path: "Sources/CFlowLeniaCPU",
+            cSettings: [
+                .unsafeFlags(["-O3"]),
+                .unsafeFlags(["-march=native"], .when(platforms: [.linux])),
+            ]
+        ),
         .target(
             name: "LeniaCore",
             dependencies: [
+                "CFlowLeniaCPU",
                 .product(name: "DistributedCluster", package: "swift-distributed-actors"),
                 .product(name: "MLX", package: "mlx-swift"),
-                .product(name: "MLXFast", package: "mlx-swift"),
                 .product(name: "MLXRandom", package: "mlx-swift"),
                 .product(name: "MLXFFT", package: "mlx-swift"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ],
             path: "Sources/LeniaCore"
         ),
@@ -43,6 +58,7 @@ let package = Package(
             name: "LeniaArchive",
             dependencies: [
                 "LeniaCore",
+                .target(name: "SQLite3", condition: .when(platforms: [.linux])),
             ],
             path: "Sources/LeniaArchive",
             linkerSettings: [
@@ -54,10 +70,12 @@ let package = Package(
             dependencies: [
                 "LeniaCore",
                 "LeniaArchive",
-                "LeniaVisuals",
+                .target(name: "SQLite3", condition: .when(platforms: [.linux])),
+                .target(name: "LeniaVisuals", condition: .when(platforms: [.macOS])),
                 .product(name: "DistributedCluster", package: "swift-distributed-actors"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ],
             path: "Sources/LeniaCLI",
             swiftSettings: [
@@ -74,6 +92,7 @@ let package = Package(
             name: "LeniaCLI",
             dependencies: [
                 "LeniaCLIKit",
+                .product(name: "MLX", package: "mlx-swift", condition: .when(platforms: [.linux])),
             ],
             path: "Sources/LeniaCLIExec"
         ),

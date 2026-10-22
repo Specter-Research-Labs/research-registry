@@ -2,7 +2,6 @@ import Foundation
 import Logging
 import MLX
 import MLXFFT
-import simd
 
 // Classical Lenia parameter-space atlas: a mu/sigma sweep classified into phases
 // (order / chaos / transition) via Voronoi-polygon probes. Paper: Hudcova et al.,
@@ -950,7 +949,7 @@ private func atlas2026VoronoiMasks(canvasSize: Int, seeds: [SIMD2<Float>]) -> [A
             var bestDistance = Float.greatestFiniteMagnitude
             for (index, seed) in seeds.enumerated() {
                 let delta = point - seed
-                let distance = simd_length_squared(delta)
+                let distance = (delta * delta).sum()
                 if distance < bestDistance {
                     bestDistance = distance
                     best = index

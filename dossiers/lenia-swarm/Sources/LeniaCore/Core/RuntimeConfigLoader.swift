@@ -1,4 +1,4 @@
-import CryptoKit
+import Crypto
 import Foundation
 
 public func connFromMatrix(_ mat: [[Int]]) -> (c0: [Int], c1: [[Int]]) {

@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import ArgumentParser
 import Foundation
 import LeniaArchive
@@ -319,7 +320,7 @@ struct AtlasPublishCommand: ParsableCommand {
 
         let baseConfigData = try Data(contentsOf: baseConfigURL)
         let baseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: baseConfigData)
-        let resolvedBackend = try resolveReplaySearchBackend(baseConfig: baseConfig)
+        let resolvedBackend = try resolveReplaySearchBackend(requestValue: "auto", baseConfig: baseConfig)
         let replayBaseConfigData = try baseConfigDataBySettingBackend(baseConfigData, backend: resolvedBackend)
         let parsedSearch = try JSONDecoder().decode(ParsedSearchConfig.self, from: Data(contentsOf: searchConfigURL))
         let runtimeConfig = try loadRuntimeConfig(from: replayBaseConfigData, overrides: buildOverrides(row: row))
@@ -838,3 +839,4 @@ private func columnText(_ stmt: OpaquePointer, index: Int) -> String? {
 private func clamp(_ value: Float, lower: Float, upper: Float) -> Float {
     max(lower, min(upper, value))
 }
+#endif

@@ -2,7 +2,8 @@ import Foundation
 
 public func scoreMetrics(_ metrics: SimulationMetrics, weights: [String: Float]) -> Float {
     var score: Float = 0.0
-    for (key, weight) in weights {
+    // Sorted so that the Float sum does not depend on Swift's per-process hash seed.
+    for (key, weight) in weights.sorted(by: { $0.key < $1.key }) {
         let value: Float
         switch key {
         case "mass_mean": value = metrics.massMean

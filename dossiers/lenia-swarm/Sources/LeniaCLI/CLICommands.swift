@@ -246,6 +246,37 @@ struct DiscoverCommands: AsyncParsableCommand {
     )
 }
 
+// Media, ecology, atlas and compendium commands render through Metal and ImageIO, so Linux builds leave them out.
+#if canImport(Metal)
+private let analyzeSubcommands: [any ParsableCommand.Type] = [
+    AnalyzeWarehouseCommand.self,
+    AnalyzeTopologyCommand.self,
+    AnalyzeBiologicalCommand.self,
+    AnalyzeDiscoveryCommand.self,
+    EcologyCommand.self,
+    TaxonomyCommand.self,
+]
+private let publishSubcommands: [any ParsableCommand.Type] = [
+    ReplayCommand.self,
+    MediaCommand.self,
+    LibraryFromResultsCommand.self,
+    CompendiumPublishCommand.self,
+    AtlasPublishCommand.self,
+]
+#else
+private let analyzeSubcommands: [any ParsableCommand.Type] = [
+    AnalyzeWarehouseCommand.self,
+    AnalyzeTopologyCommand.self,
+    AnalyzeBiologicalCommand.self,
+    AnalyzeDiscoveryCommand.self,
+    TaxonomyCommand.self,
+]
+private let publishSubcommands: [any ParsableCommand.Type] = [
+    ReplayCommand.self,
+    LibraryFromResultsCommand.self,
+]
+#endif
+
 struct OrchestrateCommands: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "orchestrate",
@@ -275,14 +306,7 @@ struct AnalyzeCommands: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "analyze",
         abstract: "Warehouse refresh and derived analysis",
-        subcommands: [
-            AnalyzeWarehouseCommand.self,
-            AnalyzeTopologyCommand.self,
-            AnalyzeBiologicalCommand.self,
-            AnalyzeDiscoveryCommand.self,
-            EcologyCommand.self,
-            TaxonomyCommand.self,
-        ]
+        subcommands: analyzeSubcommands
     )
 }
 
@@ -300,12 +324,6 @@ struct PublishCommands: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "publish",
         abstract: "Replay, media, compendium, and atlas export surfaces",
-        subcommands: [
-            ReplayCommand.self,
-            MediaCommand.self,
-            LibraryFromResultsCommand.self,
-            CompendiumPublishCommand.self,
-            AtlasPublishCommand.self,
-        ]
+        subcommands: publishSubcommands
     )
 }

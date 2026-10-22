@@ -891,6 +891,8 @@ private func sandboxBackend(for backend: FlowLeniaComputeBackend) -> FlowSandbox
         return .mlx
     case .metalFull:
         return .metalFull
+    case .cpu:
+        preconditionFailure("The cpu backend serves search and replay only.")
     }
 }
 

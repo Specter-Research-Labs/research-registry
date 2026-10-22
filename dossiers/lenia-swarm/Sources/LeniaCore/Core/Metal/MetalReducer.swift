@@ -1,15 +1,6 @@
+#if canImport(Metal)
 import Foundation
 import Metal
-
-struct FlowLeniaMetalMassSummary: Sendable {
-    let totalMass: [Float]
-    let sumSquares: [Float]
-    let energy: [Float]
-    let occupancyCount: [Float]
-    let centerXIndex: [Float]
-    let centerYIndex: [Float]
-    let rawGyration: [Float]?
-}
 
 final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
     private let batchCount: Int
@@ -171,7 +162,7 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
         }
     }
 
-    func readSummary(includeGyration: Bool) -> FlowLeniaMetalMassSummary {
+    func readSummary(includeGyration: Bool) -> FlowLeniaMassSummary {
         let totalMass = FlowLeniaMetalFullPipeline.readFloats(from: totalMassBuffer, count: batchCount)
         let sumSquares = FlowLeniaMetalFullPipeline.readFloats(from: sumSquaresBuffer, count: batchCount)
         let energy = FlowLeniaMetalFullPipeline.readFloats(from: energyBuffer, count: batchCount)
@@ -188,7 +179,7 @@ final class FlowLeniaMetalSummaryReducer: @unchecked Sendable {
             ? FlowLeniaMetalFullPipeline.readFloats(from: gyrationBuffer, count: batchCount)
             : nil
 
-        return FlowLeniaMetalMassSummary(
+        return FlowLeniaMassSummary(
             totalMass: totalMass,
             sumSquares: sumSquares,
             energy: energy,
@@ -358,3 +349,5 @@ final class FlowLeniaMetalScalarSummaryReducer: @unchecked Sendable {
         return FlowLeniaMetalFullPipeline.readFloats(from: sumsBuffer, count: batchCount)
     }
 }
+
+#endif

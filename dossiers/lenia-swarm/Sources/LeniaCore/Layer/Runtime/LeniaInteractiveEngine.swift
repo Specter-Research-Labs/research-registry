@@ -1,3 +1,4 @@
+#if canImport(Metal)
 import Foundation
 
 public struct LeniaInteractiveEngineDescriptor: Sendable {
@@ -263,3 +264,4 @@ private func leniaInteractiveEngineStamp(
 private func leniaInteractiveEngineApproximately(_ lhs: Float, _ rhs: Float, tolerance: Float = 0.0001) -> Bool {
     abs(lhs - rhs) <= tolerance
 }
+#endif

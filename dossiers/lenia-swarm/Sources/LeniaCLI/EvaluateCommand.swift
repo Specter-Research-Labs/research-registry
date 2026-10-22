@@ -3,9 +3,9 @@ import Foundation
 import LeniaCore
 import Logging
 
-/// Batch-evaluate a FIXED corpus of genotypes through metal-full under one condition, the
+/// Batch-evaluate a FIXED corpus of genotypes through metal-full or cpu under one condition, the
 /// measurement primitive for the functional morphospace. Each line of the corpus JSONL is a
-/// rule; they run together in batched Metal rollouts and every metric is written to
+/// rule; they run together in batched rollouts and every metric is written to
 /// results.jsonl. The condition (an ablation intervention, a chemotaxis/obstacle environment)
 /// lives in the base config, so the same command runs every assay.
 struct EvaluateCommand: AsyncParsableCommand {
@@ -28,6 +28,9 @@ struct EvaluateCommand: AsyncParsableCommand {
 
     @Option(name: .shortAndLong, help: "Output directory for results.jsonl")
     var output: String
+
+    @Option(name: .long, help: "Requested backend: metal-full|cpu")
+    var backend: String = "metal-full"
 
     @OptionGroup
     var logOptions: LogOptions
@@ -53,8 +56,11 @@ struct EvaluateCommand: AsyncParsableCommand {
         let baseOverrides = parsedSearch.overridesAsDict()
         let effectiveBaseData = try baseConfigDataByApplyingOverrides(sourceBaseConfigData, overrides: baseOverrides)
         let effectiveBaseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: effectiveBaseData)
-        let backend = try resolveMetalFirstSearchBackend(requestValue: "metal-full", baseConfig: effectiveBaseConfig)
-        let baseConfigData = try baseConfigDataBySettingBackend(sourceBaseConfigData, backend: backend)
+        let resolvedBackend = try resolveMetalFirstSearchBackend(requestValue: backend, baseConfig: effectiveBaseConfig)
+        guard resolvedBackend.hasResidentFieldRunner else {
+            throw ValidationError("evaluate runs batched rollouts on metal-full or cpu, got \(resolvedBackend.rawValue).")
+        }
+        let baseConfigData = try baseConfigDataBySettingBackend(sourceBaseConfigData, backend: resolvedBackend)
 
         let corpusText = try String(contentsOf: URL(fileURLWithPath: corpusPath), encoding: .utf8)
         let decoder = JSONDecoder()
