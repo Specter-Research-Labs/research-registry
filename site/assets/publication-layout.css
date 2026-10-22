@@ -402,6 +402,11 @@ body.report-page {
   --publication-width: 1440px;
 }
 
+/* The Lenia hub borrows report styling but is a hub, so it keeps the shell's width. */
+body.report-page.lenia-overview {
+  --publication-width: var(--sl-layout-shell-max-width);
+}
+
 html body.report-page .report-main {
   gap: var(--publication-space-section);
 }
