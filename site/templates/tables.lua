@@ -34,8 +34,8 @@ end
 -- stylesheet sets on its own muted line, so that every row with an interval
 -- reads as estimate over interval rather than as an accidental wrap.
 local function set_off_interval(inlines)
-  for i, il in ipairs(inlines) do
-    local nxt = inlines[i + 1]
+  for i = #inlines, 1, -1 do
+    local il, nxt = inlines[i], inlines[i + 1]
     if il.t == "Space" and nxt and nxt.t == "Str" and nxt.text:sub(1, 1) == "(" then
       local interval = pandoc.List()
       for k = i + 1, #inlines do interval:insert(inlines[k]) end
@@ -46,6 +46,13 @@ local function set_off_interval(inlines)
     end
   end
   return inlines
+end
+
+-- A text cell that ends in a numeric interval, such as
+-- "0.190, excess 0.079 (0.054 to 0.105)", sets the interval off the same way.
+local function ends_in_interval(s)
+  local b, c = s:match(" %((%S+) to (%S+)%)$")
+  return b ~= nil and is_number(b) and is_number(c)
 end
 
 local function each_cell(rows, fn)
@@ -63,7 +70,7 @@ end
 -- the table has room, leaving the wrapping to headers and columns of prose.
 -- Row labels in the first column get a longer allowance because a wrapped
 -- label makes every cell of its row two lines tall.
-local SHORT_TEXT, SHORT_LABEL = 24, 32
+local SHORT_TEXT, SHORT_LABEL = 28, 32
 
 -- Marks every cell of a column whose body cells are all numeric with the
 -- class "num", so that the stylesheet can right-align it and line up digits.
@@ -79,7 +86,8 @@ local function format_table(t)
   for _, body in ipairs(t.bodies) do
     each_cell(body.body, function(cell, col)
       local text = pandoc.utils.stringify(cell.contents)
-      longest[col] = math.max(longest[col] or 0, utf8.len(text))
+      local value = ends_in_interval(text) and text:match("^(.-) %(%S+ to %S+%)$") or text
+      longest[col] = math.max(longest[col] or 0, utf8.len(value))
       if cell.col_span > 1 or not is_numeric_cell(text) then
         for k = col, col + cell.col_span - 1 do numeric[k] = false end
       elseif text ~= "\u{00B7}" then
@@ -103,6 +111,8 @@ local function format_table(t)
         cell.contents = cell.contents:walk({ Inlines = function(inlines)
           return set_off_interval(keep_value_together(inlines))
         end })
+      elseif ends_in_interval(pandoc.utils.stringify(cell.contents)) then
+        cell.contents = cell.contents:walk({ Inlines = set_off_interval })
       end
     end)
   end
