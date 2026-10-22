@@ -188,7 +188,7 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     blocks.join("\n")
 }
 
-pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
+pub fn render_home_site_tree(records: &[SiteRecord], has_notes: bool) -> String {
     let slices = records::slice_records(records);
     html! {
         ul class="lab-tree" {
@@ -205,8 +205,10 @@ pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
             li {
                 a class="tree-root" href="/blog/" { "Writing" }
                 ul {
-                    li { a href="/blog/#published-writing" { "Articles & reports" } }
-                    li { a href="/blog/#lab-notes" { "Lab notes" } }
+                    li { a href="/blog/#published-writing" { "Reports" } }
+                    @if has_notes {
+                        li { a href="/blog/#lab-notes" { "Lab notes" } }
+                    }
                 }
             }
             li { a class="tree-root" href="/addenda/" { "Addenda" } }

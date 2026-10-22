@@ -1,7 +1,7 @@
 ---
 title: "Stripes, dust, and false fission"
 summary: "How stripes, dust, and mutation artifacts forced a change in experimental design."
-release: "published"
+release: "draft"
 source_id: "D-003"
 toc: false
 ---

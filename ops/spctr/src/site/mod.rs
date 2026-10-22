@@ -114,6 +114,7 @@ fn build_from_projection(
     let record_slices = records::slice_records(&records);
     let causal_emergence_catalog = causal_emergence::load_catalog(repo_root)?;
     causal_emergence_release::validate_website_library(repo_root)?;
+    let research_notes = blog::published_research_notes(repo_root)?;
     let reports = reports::discover_reports(repo_root, &blog_posts)?;
     for report in &reports {
         let manual_hub = record_slices.visible_dossiers.iter().any(|record| {
@@ -133,7 +134,10 @@ fn build_from_projection(
             shell: true,
             template_path: "site/templates/index.html".into(),
             output_path: "site/index.html".into(),
-            regions: vec![("HOME_SITE_TREE", regions::render_home_site_tree(&records))],
+            regions: vec![(
+                "HOME_SITE_TREE",
+                regions::render_home_site_tree(&records, !research_notes.is_empty()),
+            )],
         },
         PageRegion {
             shell: true,
@@ -162,7 +166,7 @@ fn build_from_projection(
                 regions::render_blog_index_posts(&blog_posts, "blog/index.html")?,
             ), (
                 "BLOG_INDEX_NOTES",
-                regions::render_blog_index_notes(&blog::published_research_notes(repo_root)?)?,
+                regions::render_blog_index_notes(&research_notes)?,
             )],
         },
         PageRegion {
