@@ -1583,7 +1583,7 @@
   letter-spacing: -.045em;
 }
 
-.lenia-overview .site-main :is(.feature-card .feature-title, .fiber-section h2) {
+.lenia-overview .site-main .fiber-section h2 {
   color: var(--report-ink);
   font: 750 clamp(1.6rem, 3vw, 2.3rem)/1.15 var(--report-display);
   text-transform: none;
@@ -1594,18 +1594,6 @@
   color: var(--report-ink);
   font: 1.05rem/1.7 "IBM Plex Serif", Georgia, serif;
   max-width: 76ch;
-}
-
-.lenia-overview .site-main .section-block .feature-card {
-  padding: 2rem 0;
-  border: 0;
-  border-bottom: 1px solid var(--report-rule);
-  background: transparent;
-  box-shadow: none;
-}
-
-.lenia-overview .site-main .feature-card .link-row {
-  margin-top: 1rem;
 }
 
 .lenia-overview .link-row a {

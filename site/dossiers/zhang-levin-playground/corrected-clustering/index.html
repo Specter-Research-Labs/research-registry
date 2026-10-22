@@ -143,8 +143,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-hero-figure{margin:0 0 48px}
 .rk-hero-figure img,.rk-hero-figure video{display:block;width:100%;height:auto}
 .rk-hero-figure figcaption{font-size:14px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
-.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:none;padding:4px 0 32px;font-size:13px;line-height:1.35}
-.rk-toc::-webkit-scrollbar{display:none}
+.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:thin;scrollbar-color:var(--rk-rule) transparent;padding:4px 0 32px;font-size:13px;line-height:1.35;animation:rk-toc-fade linear both;animation-timeline:scroll(self)}
+@keyframes rk-toc-fade{from,98%{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 72px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 72px),transparent)}to{-webkit-mask-image:none;mask-image:none}}
 .rk-toc ul{list-style:none;margin:0 0 20px;padding:0}
 .rk-toc li{margin:0 0 7px}
 .rk-toc ul ul{margin:5px 0 4px 14px}
@@ -172,7 +172,7 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-article ul,.rk-article ol{padding-left:1.35em;margin:0 0 18px}
 .rk-article li{margin:0 0 6px}
 .rk-article li>p{margin:0 0 6px}
-.rk-article code{font-family:var(--sl-font-mono);font-size:.82em;background:var(--rk-tint);padding:1px 4px;border-radius:3px}
+.rk-article code{font-family:var(--sl-font-mono);font-size:.82em;overflow-wrap:anywhere;background:var(--rk-tint);padding:1px 4px;border-radius:3px}
 .rk-article pre{font:13px/1.5 var(--sl-font-mono);overflow:auto;background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:20px 0}
 .rk-article pre code{background:none;padding:0;font-size:inherit}
 .rk-article blockquote{margin:24px 0;padding:0 0 0 20px;border-left:2px solid var(--rk-rule);color:var(--rk-muted);font-style:italic}
@@ -201,8 +201,9 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-noteref a{color:var(--rk-accent);text-decoration:none;padding:0 1px}
 .rk-sidenote{float:right;clear:right;width:var(--rk-margin);margin:5px calc(-1*(var(--rk-margin) + var(--rk-gap))) 16px 0;font-size:12.5px;line-height:1.5;color:var(--rk-muted)}
 .rk-sidenote{max-height:var(--rk-note-cap);transition:color var(--rk-speed) ease-out}
-.rk-sidenote-body{display:block;max-height:var(--rk-note-cap);overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap));mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap))}
-.rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
+.rk-sidenote-body{display:block;max-height:var(--rk-note-cap);overflow:hidden;animation:rk-note-fade linear both;animation-timeline:scroll(self)}
+@keyframes rk-note-fade{from,to{-webkit-mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap));mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap))}}
+.rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;animation:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
 .rk-sidenote:hover,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote{color:var(--rk-ink)}
 .rk-sidenote-num{font:10.5px var(--sl-font-mono);color:var(--rk-accent);margin-right:.35em}
 .rk-endmatter{margin-top:112px;border-top:1px solid var(--rk-rule)}
@@ -317,6 +318,7 @@ body {
   color: inherit;
   font: 700 var(--sl-type-scale-brand)/1 var(--sl-font-mono);
   letter-spacing: var(--sl-tracking-brand);
+  text-transform: uppercase;
   text-decoration: none;
 }
 
@@ -408,7 +410,7 @@ body {
 <style>.rk-layout{timeline-scope:--rk-toc,--rk-s1,--rk-s2,--rk-s3,--rk-s4,--rk-s5,--rk-s6,--rk-s7,--rk-s8,--rk-s9,--rk-s10,--rk-s11,--rk-s12,--rk-s13,--rk-s14,--rk-s15}section.rk-s1{view-timeline-name:--rk-s1}.rk-t1{animation-timeline:--rk-s1}section.rk-s2{view-timeline-name:--rk-s2}.rk-t2{animation-timeline:--rk-s2}section.rk-s3{view-timeline-name:--rk-s3}.rk-t3{animation-timeline:--rk-s3}section.rk-s4{view-timeline-name:--rk-s4}.rk-t4{animation-timeline:--rk-s4}section.rk-s5{view-timeline-name:--rk-s5}.rk-t5{animation-timeline:--rk-s5}section.rk-s6{view-timeline-name:--rk-s6}.rk-t6{animation-timeline:--rk-s6}section.rk-s7{view-timeline-name:--rk-s7}.rk-t7{animation-timeline:--rk-s7}section.rk-s8{view-timeline-name:--rk-s8}.rk-t8{animation-timeline:--rk-s8}section.rk-s9{view-timeline-name:--rk-s9}.rk-t9{animation-timeline:--rk-s9}section.rk-s10{view-timeline-name:--rk-s10}.rk-t10{animation-timeline:--rk-s10}section.rk-s11{view-timeline-name:--rk-s11}.rk-t11{animation-timeline:--rk-s11}section.rk-s12{view-timeline-name:--rk-s12}.rk-t12{animation-timeline:--rk-s12}section.rk-s13{view-timeline-name:--rk-s13}.rk-t13{animation-timeline:--rk-s13}section.rk-s14{view-timeline-name:--rk-s14}.rk-t14{animation-timeline:--rk-s14}section.rk-s15{view-timeline-name:--rk-s15}.rk-t15{animation-timeline:--rk-s15}</style>
 </head>
 <body>
-<header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/" aria-current="page">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>Specter Labs</span></a><nav aria-label="Site navigation"><a href="/dossiers/" aria-current="page">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <div class="rk-shell">
 <div class="rk-layout">
 <header class="rk-hero">
@@ -439,6 +441,7 @@ body {
 <h2 class="rk-s2"><span class="rk-num">2</span>Same-kind cells gather more than shuffled colours would, as the original paper found</h2>
 <p>How do you know a run of three orange cells is an island and not luck? In a random half-and-half row about half of all neighbouring pairs already match in colour, and a sorting run passes through thousands of arrangements, so its best moment will beat one half by chance alone. Our yardstick replays each run with the colours dealt out again at random: the cells make exactly the same moves, and only the paint changes. If colour has nothing to do with how cells move, the real colours should do no better than the dealt ones.</p>
 <p>Against that yardstick the original result holds. At the original size of 100 cells holding distinct values, mixing two rules makes the <span class="rk-term" tabindex="0">share of same-type neighbours<span class="rk-term-note" role="tooltip">The share of neighbouring pairs whose two cells run the same rule, written C. In a random half-and-half arrangement of 100 cells it is close to one half, and it peaks somewhere while the array sorts. The original paper calls it the aggregation value.</span></span> peak 0.07 to 0.12 higher than the same runs with <span class="rk-term" tabindex="0">shuffled colours<span class="rk-term-note" role="tooltip">The same sorting run replayed with its cells’ rule labels dealt out again at random, 200 times per run. The cells make the same moves; only which cells count as the same kind changes. Its mean peak is the level that the real peak must beat.</span></span>, and two copies of one rule under different names peak no higher than their shuffles (within 0.01). The paper’s own control, which ran identical rules under two labels, peaked between 0.57 and 0.65, and ours peak between 0.57 and 0.62, right at their shuffle level, so the original control level is what the highest point of a noisy curve looks like when colour has no effect. The original comparison of mixed arrays, which the paper calls <span class="rk-term" tabindex="0">chimeras<span class="rk-term-note" role="tooltip">The original paper’s word, borrowed from biology, for an array or an organism built from cells of two kinds. Here an array in which half the cells run one rule and half another.</span></span>, with those identical-rule controls was the right comparison, and its conclusion stands.</p>
+<div class="table-wrap">
 <table style="width:100%;">
 <colgroup>
 <col style="width: 14%" />
@@ -517,6 +520,7 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>The <span class="rk-term" tabindex="0">excess<span class="rk-term-note" role="tooltip">A run’s peak share of same-type neighbours minus the mean peak over 200 shuffles of its own labels. Zero means the labels carry no information about how cells move.</span></span> column is each run’s peak minus the mean peak of its 200 shuffles, averaged over 40 runs. The original lists its control peaks per panel without naming which identical rule each panel used, so the control column gives their range<sup class="rk-noteref" id="noteref-1"><a href="#note-1">1</a><span class="rk-pop" role="tooltip"><span class="rk-num">1</span> The paper’s clustering value is the fraction of cells whose right-hand neighbour runs the same rule (p. 10). Its code divides by all 100 cells, so the last cell always scores zero and a random arrangement averages 0.49. We divide by the 99 neighbouring pairs, which puts the random level at 49/99 and raises every value by a factor of 100/99.</span></sup><span class="rk-sidenote" aria-hidden="true"><span class="rk-sidenote-body"><span class="rk-sidenote-num">1</span> The paper’s clustering value is the fraction of cells whose right-hand neighbour runs the same rule (p. 10). Its code divides by all 100 cells, so the last cell always scores zero and a random arrangement averages 0.49. We divide by the 99 neighbouring pairs, which puts the random level at 49/99 and raises every value by a factor of 100/99.</span></span>. Each run also carries its own test, and in Insertion with Selection the real peak beats 95% of the shuffled peaks in 33 of 40 runs, while for identical rules this happens in one or two runs of forty, about as often as chance allows.</p>
 <figure class="report-figure wide"><img src="assets/clustering-n100.png" alt="Three panels of mean aggregation value against percent of swaps completed, 100 cells, 40 runs each. Left, identical-rule pairs stay within about 0.02 of one half throughout. Middle, the three chimeras with distinct values rise to mean curve peaks of about 0.60 to 0.67 between 20 and 35 percent of the sort and fall back to one half at the end. Right, with values 1 to 10 repeated, Bubble with Insertion and Bubble with gated Bubble trace almost the same curve, peaking near 0.61 and returning to one half, while Insertion with Selection climbs to 0.70 and stays there and Bubble with Selection rises to about 0.60, drifts near 0.55 and then climbs to 0.69 in the last few percent of swaps."><figcaption>Share of same-type neighbours, averaged over 40 runs at 100 cells, on a common axis of swaps completed. Dotted lines are the averaged shuffled-colour curves, at about 0.495 in every panel. "Gated Bubble" is Bubble with Insertion's wait. An averaged curve peaks lower than the average of the runs' own peaks in Table 1, because individual runs peak at different moments.</figcaption></figure>
 <p>The averaged curves also settle an apparent contradiction in the original paper. The caption of its Figure 8 says the control curves show no significant deviation from 50% and the mixed curves peak at 60% (pp. 33 to 34), while its text quotes control peaks of 0.57 to 0.65 and mixed peaks of 0.65 to 0.72 (pp. 13 to 14). Each is right about a different statistic. A curve averaged over runs stays near one half whenever colour carries no information (our identical-rule averages peak at 0.509 to 0.519, our mixed averages at 0.604 to 0.666), while the text’s numbers behave like the average of each run’s own highest point, which is the statistic in Table 1. What needs correcting is the reference level: a peak of the second kind has to be read against shuffles that peak at 0.56 to 0.62, as the text effectively does by comparing with its controls, and never against one half.</p>
@@ -525,6 +529,7 @@ body {
 <section id="size" class="level2 rk-s3">
 <h2 class="rk-s3"><span class="rk-num">3</span>Larger arrays reach the same peaks, and the excess grows because chance falls</h2>
 <p>Does the gathering get stronger in longer rows? The highest share of same-type neighbours a run reaches hardly moves with size: from 30 to 400 cells it stays between 0.665 and 0.734 in all three mixed pairs. What moves is the chance level. A longer row has more neighbouring pairs, so its share of matching pairs wanders less far from one half, and the shuffled peak falls from 0.62 to 0.65 at 30 cells to 0.55 to 0.57 at 400. The same raw peak then stands further above chance, and the excess of Bubble with Selection triples from 0.036 to 0.109 while that of Bubble with Insertion doubles from 0.060 to 0.120.</p>
+<div class="table-wrap">
 <table style="width:100%;">
 <colgroup>
 <col style="width: 16%" />
@@ -587,6 +592,7 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>Each pair column gives the excess over 200 shuffles per run, averaged over 40 runs, with its 95% interval; separation is defined in the next section. Insertion with Selection stays between 0.098 and 0.128, because its raw peak drifts down from 0.734 to 0.682 along with the chance level.</p>
 <p>Selection’s clustering does not grow faster than anyone else’s. Bubble with Selection sits below Bubble with Insertion at every size and gains nothing from 100 to 200 cells, so nothing in its rise with size ties it to the length of Selection’s jumps, which grow with the row.</p>
 <p>Longer rows make the same gathering easier to tell from chance, so excess values compare fairly only at one size, and the rest of this report compares rules at 100 cells unless it says otherwise.</p>
@@ -620,6 +626,7 @@ body {
 <h2 class="rk-s7"><span class="rk-num">7</span>Islands outlast the sort when one kind keeps overtaking cells of equal value</h2>
 <p>Now let the values repeat, with 100 cells holding the numbers 1 to 10 ten times each, as in the original’s second experiment. Two cells holding a 7 are like two people with the same ticket number in a queue: once the queue is in order, nothing says which of them stands first. The original found that clustering then lasts to the end, at 0.65 for Bubble with Selection and 0.7 for Insertion with Selection, and read this as support for the efficiency explanation, since Selection is the more efficient rule (p. 14).</p>
 <p>We reproduce the lasting islands, and they come with Selection. Insertion with Selection ends at 0.703 and Bubble with Selection at 0.690, both about 0.2 above the shuffles of the final arrangement. Every pair without Selection ends at the shuffle level, including Bubble with Insertion and Bubble with waiting Bubble, which both gather strongly partway through (peaks 0.659 and 0.660) and then let the islands dissolve.</p>
+<div class="table-wrap">
 <table style="width:100%;">
 <colgroup>
 <col style="width: 14%" />
@@ -716,8 +723,10 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>The rows without Selection end identically because those runs end in identical arrangements. Bubble, Insertion and their variants swap only neighbours that are strictly out of order, so two cells holding the same value never pass each other, and in every one of their runs each group of equal values ends in the order it started in; sorting rules with this property are called <span class="rk-term" tabindex="0">stable<span class="rk-term-note" role="tooltip">A sorting rule is stable when cells holding equal values never pass each other, so equal values end in the order they started in. Bubble, Insertion and Gnome are stable, because they swap only strictly out-of-order neighbours. Selection is not.</span></span>. Their finished row is therefore fixed by the starting shuffle, which ignores colour, and it ends at the shuffle level whatever the rules’ timing, after exactly as many swaps as the starting row has out-of-order pairs (2,259 on average). Selection carries cells past their equals, and no run containing Selection kept equal values in their starting order.</p>
 <p>Which part of Selection does it? We took it apart along two lines, whether a rule’s moves reach far or only to a neighbour and whether it may pass an equal value, and added a rule that passes equals with no pointer at all.</p>
+<div class="table-wrap">
 <table style="width:100%;">
 <colgroup>
 <col style="width: 14%" />
@@ -814,6 +823,7 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>Forty runs per pair at 100 cells, 200 shuffles of the final arrangement per run. The rank column is the correlation, within each group of equal values in the finished row, between a cell’s place in the group and being the second-named kind, averaged over groups; negative means the second kind ends toward the left of its equals. Sliding Insertion moves a cell left past the whole run of larger cells beside it in one move.</p>
 <p>Long reach is not needed. <span class="rk-term" tabindex="0">Neighbour-only Selection<span class="rk-term-note" role="tooltip">AdjSelection in the data: Selection’s pointer, but the cell moves one place at a time toward its target, past whichever neighbour stands there, including one holding the same value. The strict version steps only past a neighbour that is out of order.</span></span>, which keeps Selection’s pointer but moves one place at a time past whichever neighbour stands in the way, equal values included, leaves the strongest lasting islands in the study: with Insertion it ends 0.262 above the shuffles, against 0.015 for every stable pair. Forbid it to step past an equal and the excess falls back to 0.015. A far-reaching rule that cannot pass an equal, sliding Insertion, also ends at 0.015, and Selection itself, made to refuse any jump past an equal, makes about 340 swaps in two million turns and never finishes sorting in 40 runs, since a Selection cell with an equal value standing between it and its target can neither jump nor move its pointer on.</p>
 <p>Passing equals is not enough either. Bubble cells that also swap with an equal neighbour pass equals 2,360 times per run, three times as often as Selection cells, and end at 0.016, the stable level.</p>
@@ -827,6 +837,7 @@ body {
 <p>Moving on is what matters. When nobody can move a frozen cell, only far-reaching Selection that <span class="rk-term" tabindex="0">reroutes<span class="rk-term-note" role="tooltip">What a Selection cell does when the place it is aiming for holds a frozen cell: it advances its pointer and aims for the next place. The waiting variant keeps aiming at the frozen place.</span></span> sorts the active cells, in all 30 runs at 3, 6 and 9 frozen cells out of 30, and with fewer swaps as fewer cells take part (108 swaps with none frozen, 56 with nine). Far-reaching Selection that waits stalls as soon as its target is frozen, and the neighbour-only variants can never carry a cell across a frozen one, so they keep swapping until the 5-second time limit (on average 14,077 swaps for neighbour-only rerouting and 6,831 for neighbour-only waiting with three frozen cells, against 412 and 404 with none). Under the original default, in which frozen cells cannot start a swap but active neighbours can still move them, far-reaching rerouting sorts 3 of 15 runs with one frozen cell and none with two or three, and every other variant fails whenever a cell is frozen. These outcomes follow almost directly from the rules, so we read them as checks that the implementation does what the rules say.</p>
 <p>Running cells as parallel threads changes none of this. The original runs every cell as its own thread, but all threads share one lock, so only one cell acts at a time and the operating system picks which, which amounts to a random one-at-a-time scheduler. With frozen cells given no thread, threaded and one-at-a-time runs of the same rules make the same number of comparisons within about 3% (ratios 0.97 to 1.02) and succeed equally often. Neither Bubble nor Insertion reached a sorted array in any of the nine runs in either mode, so their ratios compare runs stopped at the time limit.</p>
 <p>Taking the lock away changes none of this either. We ran the four variants again on a <span class="rk-term" tabindex="0">lock-free substrate<span class="rk-term-note" role="tooltip">Cells act without any lock: each looks at the array, decides on a swap, and carries it out after a random delay while other cells keep moving, so many swaps rest on information that has gone stale. The exchange itself is atomic, so no value is lost or copied.</span></span>, in which every cell looks at the array, decides on a swap and carries it out after a random delay while the others keep moving, so that many swaps rest on stale information. With nobody able to move a frozen cell, far-reaching rerouting sorts the active cells in all 30 runs at 3, 6 and 9 frozen cells with <span class="rk-term" tabindex="0">checked writes<span class="rk-term-note" role="tooltip">A write that is dropped if the cell or the occupant of its target place has moved since the cell looked, as a compare-and-swap on the two places would do. A blind write carries out the swap with whoever is there by then.</span></span> at every delay, and in 29 or 30 of 30 with blind writes even when the delay averages three times the gap between one cell’s looks. Stale information costs it writes (182 instead of 82 with three frozen cells at the longest delay, 40 of them making the array less sorted) and never its success. The other three variants sort at most one run of 30 whenever cells are frozen, always the same starting row with three frozen cells, and the delay changes nothing about that.</p>
+<div class="table-wrap">
 <table style="width:100%;">
 <colgroup>
 <col style="width: 16%" />
@@ -881,6 +892,7 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>Runs that sort within the time budget, out of 30, at 30 cells. The delay between looking and writing is drawn at random with a mean given in units of the mean time between one cell’s looks; with no delay each look and its write are a single step, which is the locked substrate.</p>
 <p>Stale information does separate the variants when nothing is frozen. With blind writes at the longest delay the neighbour-only variants sort only 14 and 13 of 30 runs, against 27 and 30 for the far-reaching ones, and checked writes bring all four back to 30. Under the original default, in which active cells may still move a frozen one, rerouting sorts 2 to 5 of 30 runs with one frozen cell at every delay (4 of 30 with no delay, against 3 of 15 in the locked runs) and almost none with more, as before.</p>
 <p>Two of the follow-up’s scores need reading with care. Far-reaching rerouting’s <span class="rk-term" tabindex="0">K<span class="rk-term-note" role="tooltip">A search-efficiency score: the base-10 logarithm of how much less effort the cells spend reaching order than a blind search through every reachable arrangement would spend. K = 30 means 10 to the 30 times less.</span></span> falls from 30.45 to 18.01 as frozen cells go from 0 to 9, which looks like a loss of competence, but K stays 1.7 to 2.0 below the logarithm of the number of arrangements the active cells can take, so it falls because there are fewer arrangements to search and says little about how well the cells search. The <span class="rk-term" tabindex="0">dips<span class="rk-term-note" role="tooltip">A stretch in which the array becomes less sorted before it recovers past where it started. The original paper reads these dips as a form of delayed gratification.</span></span> reproduce, with Bubble dipping in every run (34.8 times on average) and Selection in 98% of runs (3.7 times), but nobody has yet asked how often a random walk with the same number of swaps would dip, so they cannot yet carry the original’s reading.</p>
@@ -910,6 +922,7 @@ body {
 <h3 class="rk-s12"><span class="rk-num">A.1</span>What our earlier version got wrong</h3>
 <p>The earlier follow-up by Pouey and Rohr reran the original rules from byte-identical copies of the upstream cell classes and introduced the wait removal and transplant, the factorization of Selection’s frozen-cell robustness into the reach of its swaps and its rerouting, and the comparison of threaded with one-at-a-time execution. Rechecking it found four problems that changed numbers. Clustering was scored as peak share minus one half, and the highest point of a noisy curve sits well above one half even when colour has no effect, so most of each reported increase was chance; the earlier description of the drop without the wait as a sharp reduction understated it, because without shuffles the remaining raw value of 0.091 looked like residual clustering. Its Figure 2 sampled the arrays every 0.02 seconds of wall-clock time, which gave the slower waiting runs more samples and therefore higher maxima. The threaded runs in the work comparison started threads for frozen cells, which the original’s <code>multithread_cell_sorting_with_frozen_steps.py</code> does not do, although its <code>freezing_sorting_analysis.py</code> does, and a frozen Selection thread keeps counting comparisons without moving. The result files behind the figures had not been committed.</p>
 <p>The table sets the earlier numbers beside the corrected ones. Raw clustering means peak share of same-type neighbours minus one half, and “Figure 1” and “Figure 2” name the follow-up manuscript’s figures.</p>
+<div class="table-wrap">
 <table>
 <colgroup>
 <col style="width: 25%" />
@@ -1018,6 +1031,7 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>Intervals are 95% intervals over runs. The manuscript’s Figure 1 uses 30 cells and 50 runs per pair, its Figure 2 uses 50 cells and 20 runs, Exp27 uses 50 cells and 30 runs per pair, and the work comparison uses 30 cells and 9 runs per condition.</p>
 <p>The earlier work ratios of 36 and 98 for Selection came from frozen Selection threads, whose movement check never asks whether the cell is frozen, so each pass of a frozen thread recorded a comparison. In one instrumented run with a single frozen cell (seed 1), 8,678 of 9,196 comparisons came from that frozen thread, while the active cells made 519 comparisons threaded and 531 one at a time.</p>
 <figure class="report-figure"><img src="assets/threaded-work.png" alt="Dot plot of threaded over sequential compare-and-swap counts on a log axis for Bubble, Insertion and Selection at one and three frozen cells. Open circles for the earlier runs, in which frozen cells had threads, lie near 1 for Bubble and Insertion and at about 36 and 98 for Selection; filled circles for the corrected runs all lie at 1."><figcaption>Exp26, 30 cells, nine runs per condition, threaded over one-at-a-time mean compare-and-swap count. Open circles are the earlier values quoted in the follow-up manuscript and filled circles the corrected runs without frozen-cell threads.</figcaption></figure>

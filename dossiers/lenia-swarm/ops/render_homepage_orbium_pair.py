@@ -35,7 +35,7 @@ def render_pair(native: Path, recovered: Path) -> None:
         "recorded_steps": {"first": 4, "last": 1200, "stride": 4},
         "video": {"width": 720, "height": 720, "fps": 30, "frames": 300, "seconds": 10},
         "fit_step": 600,
-        "other_displayed_steps": [100, 300, 1200],
+        "other_displayed_steps": [1200],
         "recovery": "Best refined final-frame fit from orbium-system-id-v6-refine; target recording from orbium-system-id-v5. Matches the anatomical compiler report pair.",
         "runs": {},
     }
@@ -94,7 +94,7 @@ def render_pair(native: Path, recovered: Path) -> None:
                 "uint8"
             )
             process.stdin.write(rgb.tobytes())
-            if step in (100, 300, 600, 1200):
+            if step in (600, 1200):
                 Image.fromarray(rgb).save(output / f"orbium-{label}-{step}.webp", quality=96)
             hashes.append(
                 {"frame": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
@@ -117,7 +117,7 @@ def render_pair(native: Path, recovered: Path) -> None:
         "sha256": hashlib.sha256(summary.read_bytes()).hexdigest(),
     }
     (output / "orbium-pair.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print("Rendered two aligned 300-frame videos and eight original-step stills.")
+    print("Rendered two aligned 300-frame videos and four original-step stills.")
 
 
 if __name__ == "__main__":

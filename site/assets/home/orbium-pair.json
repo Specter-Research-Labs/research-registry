@@ -78,8 +78,6 @@
   },
   "fit_step": 600,
   "other_displayed_steps": [
-    100,
-    300,
     1200
   ],
   "recovery": "Best refined final-frame fit from orbium-system-id-v6-refine; target recording from orbium-system-id-v5. Matches the anatomical compiler report pair.",

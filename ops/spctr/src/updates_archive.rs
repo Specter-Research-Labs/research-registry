@@ -500,7 +500,7 @@ fn page_shell(title: &str, description: &str, root_prefix: &str, body: Markup) -
                     header class="site-topnav" {
                         a class="site-brand" href=(format!("{root_prefix}/")) {
                             img src=(format!("{root_prefix}/assets/logo-black.svg")) alt="Specter Labs logo" class="logo";
-                            span class="site-brand-name" { "SPECTER LABS" }
+                            span class="site-brand-name" { "Specter Labs" }
                         }
                         nav class="site-topnav-links" aria-label="Site navigation" {
                             a class="nav-link" href=(format!("{root_prefix}/dossiers/")) { "Research" }

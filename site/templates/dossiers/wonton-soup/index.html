@@ -275,7 +275,10 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <section class="story-split">
-<div><h2 class="story-question">When a proof search loses the tactic it used, can it reach the theorem another way?</h2><p class="story-deck">We rerun Lean proof searches with one tactic blocked and record which routes to the theorem remain. Here the original search closes the theorem with <code>trivial</code> in one step, and with <code>trivial</code> blocked it reaches the same result through three algebraic steps.</p><div class="story-jumps"><a href="../../blog/wonton-soup/">Read the article</a><a href="../../dashboards/wonton-soup/">Inspect individual searches</a></div></div>
+<div><h2 class="story-question">How does a prover’s set of moves shape the proofs it can find?</h2><p class="story-deck">In this recorded search, the original run closes the theorem with <code>trivial</code> in one step, and with <code>trivial</code> blocked it reaches the same result through three algebraic steps.</p>
+<!-- GENERATED:DOSSIER_HUB_REPORT START -->
+<!-- GENERATED:DOSSIER_HUB_REPORT END -->
+<div class="story-jumps"><a href="../../dashboards/wonton-soup/">Inspect individual searches</a></div></div>
 <figure class="tactic-study" data-tactic-study>
 <div class="story-controls" role="group" aria-label="Compare recorded proof routes"><button type="button" data-tactic="available" data-result="Proof found in 1 step" aria-pressed="true">Original search</button><button type="button" data-tactic="blocked" data-result="Proof found in 3 steps" aria-pressed="false">Block trivial</button></div>
 <svg class="tactic-routes" viewBox="0 0 480 350" role="img" aria-label="The original route closes with trivial. With trivial blocked, ring, norm_num and ring reach the same result.">
@@ -296,7 +299,7 @@
                 <section class="ws-section" id="sources">
                     <ul class="ws-source-list">
                         <li>
-                            <a href="../../blog/wonton-soup/">Article</a>
+                            <a href="../../blog/wonton-soup/">Report</a>
                             describes the search, the tactic blocks and the structural comparisons.
                         </li>
                         <li>

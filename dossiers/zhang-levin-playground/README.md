@@ -2,7 +2,7 @@
 summary: "Audits and extends the Zhang and Levin sorting-cell model, with the copied original sources, the paper-facing scripts and the current findings."
 ---
 
-# Zhang-Levin Playground
+# Self-sorting arrays
 
 Audits and extends the Zhang & Levin sorting-cell model from [arXiv:2401.05375](https://arxiv.org/abs/2401.05375). The current paper-facing path is organized around explicit semantics, operator classes, and reproducible archives under `paper/results/`.
 

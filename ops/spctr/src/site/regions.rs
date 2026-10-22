@@ -1,6 +1,7 @@
 use crate::site::discover::{self, BlogPostRecord};
 use crate::site::markup;
 use crate::site::records::{self, SiteRecord};
+use crate::site::reports::Report;
 use anyhow::Result;
 use camino::Utf8Path;
 use maud::{html, Markup, PreEscaped};
@@ -187,7 +188,11 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     blocks.join("\n")
 }
 
-pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
+pub fn render_home_site_tree(
+    records: &[SiteRecord],
+    reports: &[Report],
+    has_notes: bool,
+) -> String {
     let slices = records::slice_records(records);
     html! {
         ul class="lab-tree" {
@@ -196,7 +201,17 @@ pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
                 ul {
                     @for record in &slices.visible_dossiers {
                         @if let Some(href) = record.relative_hub_href("index.html") {
-                            li { a href=(href) { (record.title) } }
+                            li {
+                                a href=(href) { (record.title) }
+                                @let dossier_reports: Vec<&Report> = reports.iter().filter(|report| report.dossier == record.slug).collect();
+                                @if !dossier_reports.is_empty() {
+                                    ul {
+                                        @for report in dossier_reports {
+                                            li { a href=(report.href) { (report.title) } }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -204,12 +219,34 @@ pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
             li {
                 a class="tree-root" href="/blog/" { "Writing" }
                 ul {
-                    li { a href="/blog/#published-writing" { "Articles & reports" } }
-                    li { a href="/blog/#lab-notes" { "Lab notes" } }
+                    li { a href="/blog/#published-writing" { "Reports" } }
+                    @if has_notes {
+                        li { a href="/blog/#lab-notes" { "Lab notes" } }
+                    }
                 }
             }
             li { a class="tree-root" href="/addenda/" { "Addenda" } }
             li { a class="tree-root" href="/cabinet/" { "Cabinet" } }
+        }
+    }
+    .into_string()
+}
+
+/// The report block under a dossier hub's deck. Each card is one link so the
+/// report is the largest target near the top of the hub.
+pub fn render_dossier_hub_reports(reports: &[&Report]) -> String {
+    html! {
+        section class="hub-reports" aria-label=(if reports.len() == 1 { "Report" } else { "Reports" }) {
+            @for report in reports {
+                a class="report-card" href=(report.href) {
+                    div class="report-card-copy" {
+                        span class="report-card-label" { (report.label) }
+                        h2 { (report.title) }
+                        p { (report.finding) }
+                    }
+                    img src=(report.image) alt="" loading="lazy";
+                }
+            }
         }
     }
     .into_string()
@@ -456,7 +493,12 @@ pub fn render_sitemap_sections(
         .iter()
         .map(|post| leaf(series_label(post.series.as_ref(), &post.title), href(&post.href)))
         .collect();
-    writing_nodes.push(leaf("Lab notes".to_owned(), href("research-notes/")));
+    if !super::blog::published_research_notes(repo_root)?.is_empty() {
+        writing_nodes.push(leaf(
+            "Lab notes".to_owned(),
+            discover::relative_href_with_fragment(page_path, "blog/", "lab-notes"),
+        ));
+    }
 
     let mut addenda: Vec<&SiteRecord> = slices.visible_addenda.clone();
     addenda.sort_by(|a, b| a.series.cmp(&b.series));

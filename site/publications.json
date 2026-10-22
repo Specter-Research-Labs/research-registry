@@ -1,7 +1,8 @@
 {
   "anatomical-compiler": {
     "revision": "006",
-    "path": "/dossiers/lenia-swarm/anatomical-compiler/"
+    "path": "/dossiers/lenia-swarm/anatomical-compiler/",
+    "card_image": "/assets/home/orbium-native-600.webp"
   },
   "zhang-sorting-followup": {
     "revision": "009",

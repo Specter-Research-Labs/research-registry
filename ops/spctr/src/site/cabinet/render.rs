@@ -171,23 +171,10 @@ fn render_backlinks_html(
     all_entries: &[DocEntry],
 ) -> String {
     let key = (entry.project_slug.clone(), entry.slug.clone());
-    let sources = backlinks.get(&key);
-
-    let empty_section = |content: &str| -> String {
-        format!(
-            "<section class=\"doc-backlinks\" aria-label=\"Backlinks\">\
-             <div class=\"toc-title\">Backlinks</div>\
-             {content}\
-             </section>"
-        )
+    let source_indices = match backlinks.get(&key) {
+        Some(indices) if !indices.is_empty() => indices,
+        _ => return String::new(),
     };
-
-    let Some(source_indices) = sources else {
-        return empty_section("<p class=\"doc-backlinks-empty\">No backlinks yet.</p>");
-    };
-    if source_indices.is_empty() {
-        return empty_section("<p class=\"doc-backlinks-empty\">No backlinks yet.</p>");
-    }
 
     let mut items = String::new();
     for &idx in source_indices {
@@ -217,7 +204,12 @@ fn render_backlinks_html(
         ));
     }
 
-    empty_section(&format!("<ul class=\"doc-backlinks-list\">{items}</ul>"))
+    format!(
+        "<section class=\"doc-backlinks\" aria-label=\"Backlinks\">\
+         <div class=\"toc-title\">Backlinks</div>\
+         <ul class=\"doc-backlinks-list\">{items}</ul>\
+         </section>"
+    )
 }
 
 fn relative_backlink_href(entry: &DocEntry, target_href: &str) -> String {

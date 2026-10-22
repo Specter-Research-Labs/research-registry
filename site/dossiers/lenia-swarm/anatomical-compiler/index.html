@@ -143,8 +143,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-hero-figure{margin:0 0 48px}
 .rk-hero-figure img,.rk-hero-figure video{display:block;width:100%;height:auto}
 .rk-hero-figure figcaption{font-size:14px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
-.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:none;padding:4px 0 32px;font-size:13px;line-height:1.35}
-.rk-toc::-webkit-scrollbar{display:none}
+.rk-toc{grid-column:1;grid-row:2;position:sticky;top:32px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:thin;scrollbar-color:var(--rk-rule) transparent;padding:4px 0 32px;font-size:13px;line-height:1.35;animation:rk-toc-fade linear both;animation-timeline:scroll(self)}
+@keyframes rk-toc-fade{from,98%{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 72px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 72px),transparent)}to{-webkit-mask-image:none;mask-image:none}}
 .rk-toc ul{list-style:none;margin:0 0 20px;padding:0}
 .rk-toc li{margin:0 0 7px}
 .rk-toc ul ul{margin:5px 0 4px 14px}
@@ -172,7 +172,7 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-article ul,.rk-article ol{padding-left:1.35em;margin:0 0 18px}
 .rk-article li{margin:0 0 6px}
 .rk-article li>p{margin:0 0 6px}
-.rk-article code{font-family:var(--sl-font-mono);font-size:.82em;background:var(--rk-tint);padding:1px 4px;border-radius:3px}
+.rk-article code{font-family:var(--sl-font-mono);font-size:.82em;overflow-wrap:anywhere;background:var(--rk-tint);padding:1px 4px;border-radius:3px}
 .rk-article pre{font:13px/1.5 var(--sl-font-mono);overflow:auto;background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:20px 0}
 .rk-article pre code{background:none;padding:0;font-size:inherit}
 .rk-article blockquote{margin:24px 0;padding:0 0 0 20px;border-left:2px solid var(--rk-rule);color:var(--rk-muted);font-style:italic}
@@ -201,8 +201,9 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-noteref a{color:var(--rk-accent);text-decoration:none;padding:0 1px}
 .rk-sidenote{float:right;clear:right;width:var(--rk-margin);margin:5px calc(-1*(var(--rk-margin) + var(--rk-gap))) 16px 0;font-size:12.5px;line-height:1.5;color:var(--rk-muted)}
 .rk-sidenote{max-height:var(--rk-note-cap);transition:color var(--rk-speed) ease-out}
-.rk-sidenote-body{display:block;max-height:var(--rk-note-cap);overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap));mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap))}
-.rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
+.rk-sidenote-body{display:block;max-height:var(--rk-note-cap);overflow:hidden;animation:rk-note-fade linear both;animation-timeline:scroll(self)}
+@keyframes rk-note-fade{from,to{-webkit-mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap));mask-image:linear-gradient(to bottom,#000 calc(var(--rk-note-cap) - 4.5em),transparent var(--rk-note-cap))}}
+.rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;animation:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
 .rk-sidenote:hover,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote{color:var(--rk-ink)}
 .rk-sidenote-num{font:10.5px var(--sl-font-mono);color:var(--rk-accent);margin-right:.35em}
 .rk-endmatter{margin-top:112px;border-top:1px solid var(--rk-rule)}
@@ -317,6 +318,7 @@ body {
   color: inherit;
   font: 700 var(--sl-type-scale-brand)/1 var(--sl-font-mono);
   letter-spacing: var(--sl-tracking-brand);
+  text-transform: uppercase;
   text-decoration: none;
 }
 
@@ -408,7 +410,7 @@ body {
 <style>.rk-layout{timeline-scope:--rk-toc,--rk-s1,--rk-s2,--rk-s3,--rk-s4,--rk-s5,--rk-s6,--rk-s7,--rk-s8,--rk-s9,--rk-s10,--rk-s11,--rk-s12}section.rk-s1{view-timeline-name:--rk-s1}.rk-t1{animation-timeline:--rk-s1}section.rk-s2{view-timeline-name:--rk-s2}.rk-t2{animation-timeline:--rk-s2}section.rk-s3{view-timeline-name:--rk-s3}.rk-t3{animation-timeline:--rk-s3}section.rk-s4{view-timeline-name:--rk-s4}.rk-t4{animation-timeline:--rk-s4}section.rk-s5{view-timeline-name:--rk-s5}.rk-t5{animation-timeline:--rk-s5}section.rk-s6{view-timeline-name:--rk-s6}.rk-t6{animation-timeline:--rk-s6}section.rk-s7{view-timeline-name:--rk-s7}.rk-t7{animation-timeline:--rk-s7}section.rk-s8{view-timeline-name:--rk-s8}.rk-t8{animation-timeline:--rk-s8}section.rk-s9{view-timeline-name:--rk-s9}.rk-t9{animation-timeline:--rk-s9}section.rk-s10{view-timeline-name:--rk-s10}.rk-t10{animation-timeline:--rk-s10}section.rk-s11{view-timeline-name:--rk-s11}.rk-t11{animation-timeline:--rk-s11}section.rk-s12{view-timeline-name:--rk-s12}.rk-t12{animation-timeline:--rk-s12}</style>
 </head>
 <body>
-<header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>SPECTER LABS</span></a><nav aria-label="Site navigation"><a href="/dossiers/" aria-current="page">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
+<header class="publication-header"><a class="publication-brand" href="/"><img src="/assets/logo-black.svg" alt="" width="51" height="51"><span>Specter Labs</span></a><nav aria-label="Site navigation"><a href="/dossiers/" aria-current="page">Research</a><a href="/blog/">Writing</a><a href="/addenda/">Addenda</a><a href="/cabinet/">Cabinet</a></nav></header>
 <div class="rk-shell">
 <div class="rk-layout">
 <header class="rk-hero">
@@ -478,6 +480,7 @@ body {
 <section id="methods" class="level2 rk-s7">
 <h2 class="rk-s7"><span class="rk-num">7</span>Methods</h2>
 <p>Four kinds of rule run these experiments, and each section uses one.</p>
+<div class="table-wrap">
 <table>
 <colgroup>
 <col style="width: 20%" />
@@ -533,6 +536,7 @@ body {
 </tr>
 </tbody>
 </table>
+</div>
 <p>All Flow Lenia runs use the corrected engine, LeniaCLI build 060e90a71ec1 (A.1). The six behaviour measurements are mean speed, path length, displacement and centre velocity, each log-transformed, and the field’s temporal variance and energy, all standardized before the principal axes are taken; the screen’s creatures are those that passed its persistence filters. Each shape fit is an ordinary least-squares regression of one behaviour or axis on the eight standardized shape measurements, and the size and elongation groups are fitted the same way on their own subsets. The look-alike energy, speed and drift predictions are ridge regressions across the 48 mates scored on held-out fields, from the twelve shape descriptors, from a heading-free description of the body’s interior, and from both. The family-wide rule distances are measured after sorting kernels and also minimized over every kernel and channel relabelling, on 128-cell worlds grown once for 1,500 steps.</p>
 </section>
 <section id="appendix" class="level2 rk-appendix-head">

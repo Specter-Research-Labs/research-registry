@@ -7,8 +7,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .site-rule + .site-rule { display: none; }
 body:not(.report-page) :is(.site-page-title, .dossier-hub-title) { max-width: 24ch; }
 body:not(.report-page) :is(.section-lead, .dossier-hub-deck, .intro, .cabinet-intro) { font: 400 18px/1.65 var(--site-font-prose); color: var(--site-ink); max-width: var(--sl-layout-prose-measure); }
-body:not(.report-page) :is(.project p, .dossier-card p, .resource-card p, .feature-card p, .research-note-card p, .section-block > p) { font: 400 17px/1.65 var(--site-font-prose); max-width: var(--sl-layout-prose-measure); }
-body:not(.report-page) :is(.project-title, .resource-title, .feature-title, .research-note-title, .update-card-title, .addenda-title) { font: 700 25px/1.18 var(--publication-display); letter-spacing: -.025em; text-transform: none; }
+body:not(.report-page) :is(.project p, .dossier-card p, .resource-card p, .research-note-card p, .section-block > p) { font: 400 17px/1.65 var(--site-font-prose); max-width: var(--sl-layout-prose-measure); }
+body:not(.report-page) :is(.project-title, .resource-title, .research-note-title, .update-card-title, .addenda-title) { font: 700 25px/1.18 var(--publication-display); letter-spacing: -.025em; text-transform: none; }
 body:not(.report-page) .site-section-title { font: 400 12px/1.5 var(--sl-font-mono); letter-spacing: .06em; color: var(--site-muted); }
 body:not(.report-page) .section-block { margin-bottom: 2.8rem; }
 body:not(.report-page) .resource-grid { gap: 30px 45px; }
