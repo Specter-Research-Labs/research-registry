@@ -374,6 +374,16 @@ function Pandoc(doc)
   meta.abstract = pandoc.MetaBlocks(pandoc.Blocks(meta.abstract):walk(expand_terms))
   check_all_used()
 
+  local cited_urls = {}
+  if refs_div then
+    refs_div:walk({
+      Link = function(link) cited_urls[link.target] = true end,
+    })
+  end
+  local function is_allowed(target)
+    return is_review_link(target, review_hosts) or cited_urls[target] == true
+  end
+
   local external = {}
   local assets = {}
   local seen_assets = {}
@@ -385,7 +395,7 @@ function Pandoc(doc)
   end
   local function scan_raw(text)
     for href in text:gmatch('href="(https?://[^"]+)"') do
-      if not is_review_link(href, review_hosts) then table.insert(external, href) end
+      if not is_allowed(href) then table.insert(external, href) end
     end
     for href, label in text:gmatch('<a[^>]-href="(assets/[^"#]+)"[^>]*>(.-)</a>') do
       note_asset(href, (label:gsub("<[^>]+>", "")))
@@ -396,7 +406,7 @@ function Pandoc(doc)
   body = body:walk({
     Link = function(link)
       if link.target:match("^https?://") then
-        if not is_review_link(link.target, review_hosts) then table.insert(external, link.target) end
+        if not is_allowed(link.target) then table.insert(external, link.target) end
       elseif link.target:match("^assets/") then
         note_asset((link.target:gsub("#.*$", "")), pandoc.utils.stringify(link.content))
       end
