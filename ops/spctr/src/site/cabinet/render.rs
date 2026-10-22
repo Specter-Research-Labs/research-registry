@@ -280,6 +280,8 @@ pub fn build_index(entries: &[DocEntry], repo_root: &Utf8Path, site_root: &Utf8P
 
         let mut sorted_indices = indices.clone();
         sorted_indices.sort_by(|&a, &b| entries[a].doc_id.cmp(&entries[b].doc_id));
+        let start_here = start_here_order(entries, &sorted_indices)?;
+        sorted_indices.sort_by_key(|idx| start_here.iter().position(|s| s == idx).unwrap_or(usize::MAX));
 
         let mut items_html = String::new();
         for &idx in &sorted_indices {
@@ -287,12 +289,17 @@ pub fn build_index(entries: &[DocEntry], repo_root: &Utf8Path, site_root: &Utf8P
             let href = format!("{}/{}/", entry.project_slug, entry.slug);
             let doc_id = html_escape(&entry.doc_id);
             let title = inline_markdown(&entry.title).into_string();
-            let cat_span = if entry.category.is_empty() {
+            let category = if start_here.contains(&idx) {
+                "start here"
+            } else {
+                entry.category.as_str()
+            };
+            let cat_span = if category.is_empty() {
                 String::new()
             } else {
                 format!(
                     "<span class=\"drawer-item-category\">{}</span>",
-                    html_escape(&entry.category)
+                    html_escape(category)
                 )
             };
             items_html.push_str(&format!(
@@ -345,6 +352,38 @@ pub fn build_index(entries: &[DocEntry], repo_root: &Utf8Path, site_root: &Utf8P
     Ok(())
 }
 
+/// The project README followed by the docs its "## Start here" section links,
+/// in that order. A README without that section yields no start-here group.
+fn start_here_order(entries: &[DocEntry], indices: &[usize]) -> Result<Vec<usize>> {
+    let Some(&readme) = indices.iter().find(|&&i| entries[i].slug == "README") else {
+        return Ok(Vec::new());
+    };
+    let readme_entry = &entries[readme];
+    let text = std::fs::read_to_string(&readme_entry.path)
+        .with_context(|| format!("failed to read {}", readme_entry.path))?;
+    let Some(section) = text.split("\n## ").find(|s| s.starts_with("Start here\n")) else {
+        return Ok(Vec::new());
+    };
+    let mut order = vec![readme];
+    for target in section.split("](").skip(1) {
+        let Some(end) = target.find(')') else { continue };
+        let href = &target[..end];
+        let path = href.split('#').next().unwrap_or(href);
+        let Some(rel) = path.strip_suffix(".md") else { continue };
+        let slug = rel.trim_start_matches("./");
+        let Some(&idx) = indices.iter().find(|&&i| entries[i].slug == slug) else {
+            bail!(
+                "{}: start-here link {href} is not a published doc in this project",
+                readme_entry.path
+            );
+        };
+        if !order.contains(&idx) {
+            order.push(idx);
+        }
+    }
+    Ok(order)
+}
+
 #[cfg(test)]
 mod image_tests {
     use super::*;
@@ -388,5 +427,64 @@ mod image_tests {
             &root.join("site")
         )
         .is_err());
+    }
+}
+
+#[cfg(test)]
+mod start_here_tests {
+    use super::*;
+
+    fn entry(docs: &Utf8Path, slug: &str, doc_id: &str) -> DocEntry {
+        DocEntry {
+            path: docs.join(format!("{slug}.md")),
+            docs_root: docs.to_owned(),
+            project_kind: "dossiers".into(),
+            project_slug: "example".into(),
+            publish_docs: true,
+            published: true,
+            title: slug.into(),
+            slug: slug.into(),
+            category: String::new(),
+            doc_id: doc_id.into(),
+            project_display: "Example".into(),
+            series_id: None,
+            render_markdown: None,
+        }
+    }
+
+    #[test]
+    fn orders_readme_then_its_start_here_links() {
+        let tmp = tempfile::tempdir().unwrap();
+        let docs = Utf8Path::from_path(tmp.path()).unwrap().to_owned();
+        std::fs::write(
+            docs.join("README.md"),
+            "# Docs\n\n## Start here\n\n- [B](./b/two.md)\n- [A](a.md#part)\n\n## Other\n\n- [C](c.md)\n",
+        )
+        .unwrap();
+        let entries = vec![
+            entry(&docs, "README", "D-001.001"),
+            entry(&docs, "a", "D-001.002"),
+            entry(&docs, "b/two", "D-001.003"),
+            entry(&docs, "c", "D-001.004"),
+        ];
+        assert_eq!(start_here_order(&entries, &[0, 1, 2, 3]).unwrap(), vec![0, 2, 1]);
+    }
+
+    #[test]
+    fn rejects_start_here_link_to_unknown_doc() {
+        let tmp = tempfile::tempdir().unwrap();
+        let docs = Utf8Path::from_path(tmp.path()).unwrap().to_owned();
+        std::fs::write(docs.join("README.md"), "# Docs\n\n## Start here\n\n- [X](x.md)\n").unwrap();
+        let entries = vec![entry(&docs, "README", "D-001.001")];
+        assert!(start_here_order(&entries, &[0]).is_err());
+    }
+
+    #[test]
+    fn readme_without_start_here_yields_no_group() {
+        let tmp = tempfile::tempdir().unwrap();
+        let docs = Utf8Path::from_path(tmp.path()).unwrap().to_owned();
+        std::fs::write(docs.join("README.md"), "# Docs\n\nNothing to start.\n").unwrap();
+        let entries = vec![entry(&docs, "README", "D-001.001")];
+        assert!(start_here_order(&entries, &[0]).unwrap().is_empty());
     }
 }
