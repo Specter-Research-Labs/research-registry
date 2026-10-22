@@ -3,10 +3,25 @@ from __future__ import annotations
 import torch
 from transformers import AutoModel, AutoModelForSeq2SeqLM, AutoTokenizer
 
+from prover.providers.shared_prefix_decode import sample_shared_encoder
+
 REPROVER_MODEL_ID = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
 REPROVER_MAX_INPUT_LENGTH = 2300
 REPROVER_DEFAULT_MAX_LENGTH = 256
 REPROVER_BEAM_LIMIT = 4
+
+
+BYT5_OFFSET = 3
+
+
+def decode_byt5(ids: list[int]) -> str:
+    """ByT5 decoding with special tokens skipped: ids 3-258 are the bytes 0-255, everything else is a special token.
+
+    `ByT5Tokenizer.decode` gives the same string but re-sorts its added-token table for every token, which made
+    decoding the sampled tactics cost more than generating them.
+    """
+    data = bytes(i - BYT5_OFFSET for i in ids if BYT5_OFFSET <= i < BYT5_OFFSET + 256)
+    return data.decode("utf-8", errors="ignore")
 
 
 def get_default_device() -> str:
@@ -39,10 +54,13 @@ class ReProverModel:
 
     def load(self):
         self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(
-            self.MODEL_ID
-        ).to(self.device)
+        # Decoding is bound by reading the weights each step, so on a CPU they are held in bfloat16.
+        dtype = torch.bfloat16 if self.device == "cpu" else torch.float32
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(self.MODEL_ID, dtype=dtype).to(self.device)
         self.model.eval()
+
+    def _decode(self, sequence: torch.Tensor) -> str:
+        return decode_byt5(sequence.tolist())
 
     def set_seed(self, seed: int) -> None:
         torch.manual_seed(seed)
@@ -62,34 +80,35 @@ class ReProverModel:
             truncation=True,
         ).to(self.device)
 
+        if self.use_sampling:
+            # Sampled sequences carry no scores, so every tactic gets the same probability and keeps sample order.
+            sequences = sample_shared_encoder(
+                self.model,
+                inputs["input_ids"],
+                num_samples=num_return,
+                max_new_tokens=max_length - 1,
+                temperature=self.temperature,
+                top_p=self.top_p,
+            )
+            prob = torch.sigmoid(torch.tensor(0.0)).item()
+            return [(self._decode(seq).strip(), prob) for seq in sequences]
+
+        num_beams = min(num_return, self.DEFAULT_BEAM_LIMIT)
         with torch.no_grad():
-            if self.use_sampling:
-                outputs = self.model.generate(
-                    **inputs,
-                    max_length=max_length,
-                    do_sample=True,
-                    temperature=self.temperature,
-                    top_p=self.top_p,
-                    num_return_sequences=num_return,
-                    return_dict_in_generate=True,
-                    output_scores=True,
-                )
-            else:
-                num_beams = min(num_return, self.DEFAULT_BEAM_LIMIT)
-                outputs = self.model.generate(
-                    **inputs,
-                    max_length=max_length,
-                    num_beams=num_beams,
-                    num_return_sequences=num_beams,
-                    length_penalty=0.0,
-                    early_stopping=False,
-                    return_dict_in_generate=True,
-                    output_scores=True,
-                )
+            outputs = self.model.generate(
+                **inputs,
+                max_length=max_length,
+                num_beams=num_beams,
+                num_return_sequences=num_beams,
+                length_penalty=0.0,
+                early_stopping=False,
+                return_dict_in_generate=True,
+                output_scores=True,
+            )
 
         tactics = []
         for i, seq in enumerate(outputs.sequences):
-            tactic = self.tokenizer.decode(seq, skip_special_tokens=True)
+            tactic = self._decode(seq)
             has_scores = hasattr(outputs, "sequences_scores")
             score = outputs.sequences_scores[i].item() if has_scores else 0.0
             prob = torch.sigmoid(torch.tensor(score)).item()
