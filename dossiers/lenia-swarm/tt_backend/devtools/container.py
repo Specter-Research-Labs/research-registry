@@ -7,7 +7,8 @@ Usage:
 The whole device tree is mapped because the driver numbers the nodes it sees from zero, so a
 partial mapping would renumber cards; the payload picks its cards with TT_VISIBLE_DEVICES. The
 dossier is mounted at /repo, the working directory is /repo/tt_backend, and the TT-Metal kernel
-cache persists under the runtime root so that repeated runs skip compilation.
+cache persists under the runtime root so that repeated runs skip compilation. The payload runs as
+the invoking user, so the files it writes can be copied and retired without root.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ IMAGE = (
 )
 HUGEPAGES = "/dev/hugepages-1G"
 DOSSIER_ROOT = Path(__file__).resolve().parents[2]
+HOME = "/home/runner"
 
 
 def _held(path: str) -> bool:
@@ -47,9 +49,14 @@ def cache_dir() -> Path:
 
 def docker_command(command: list[str]) -> list[str]:
     args = ["docker", "run", "--rm", "--network", "none", "--device", "/dev/tenstorrent"]
+    # A non-root payload needs an unlimited memlock so that UMD can pin the 1 GB hugepages.
+    args += ["--user", f"{os.getuid()}:{os.getgid()}", "--ulimit", "memlock=-1:-1"]
     args += ["-v", f"{HUGEPAGES}:{HUGEPAGES}", "-v", f"{DOSSIER_ROOT}:/repo"]
-    args += ["-v", f"{cache_dir()}:/root/.cache"]
+    args += ["-v", f"{cache_dir()}:{HOME}/.cache"]
     env = {
+        "HOME": HOME,
+        # TT-Metal resolves its JIT cache from the passwd entry rather than HOME unless told.
+        "TT_METAL_CACHE": f"{HOME}/.cache",
         "TT_METAL_HOME": "/opt/ttlang-toolchain/tt-metal",
         "MESH_DEVICE": "N300",
         "TT_METAL_INSPECTOR": "0",
