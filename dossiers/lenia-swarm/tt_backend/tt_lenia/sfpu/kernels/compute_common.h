@@ -4,6 +4,7 @@
 #include "api/compute/tile_move_copy.h"
 #include "api/compute/eltwise_unary/eltwise_unary.h"
 #include "api/compute/compute_kernel_api.h"
+#include "tools/profiler/kernel_profiler.hpp"
 #include "shape.h"
 
 #ifdef TRISC_MATH

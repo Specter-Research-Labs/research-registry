@@ -101,4 +101,11 @@ quantity passes when the largest device error stays within three times the
 largest float32 error. `bench.py` runs the same batches on all listed cards at
 once and reports per-card and box rates with a per-pass split.
 
+`bench.py --profile DIR` instead runs each pass as its own program under the
+TT-Metal device profiler and reports device time per pass, the busy time of
+each RISC and the sums of the device zones the kernels declare (for example
+`p5-copy` and `p5-sfpu`). Each pass runs once as a warmup and then `--reps`
+times; the raw marker log stays under `DIR`. Profiler builds use separate
+kernel binaries, so profiled times are not throughput numbers.
+
 Results are recorded in [TT Backend Performance](./TTBackendPerformance.md).
