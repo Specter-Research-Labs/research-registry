@@ -30,6 +30,24 @@ local function keep_value_together(inlines)
   return inlines
 end
 
+-- The parenthesized interval after a value goes in span.ci, which the
+-- stylesheet sets on its own muted line, so that every row with an interval
+-- reads as estimate over interval rather than as an accidental wrap.
+local function set_off_interval(inlines)
+  for i, il in ipairs(inlines) do
+    local nxt = inlines[i + 1]
+    if il.t == "Space" and nxt and nxt.t == "Str" and nxt.text:sub(1, 1) == "(" then
+      local interval = pandoc.List()
+      for k = i + 1, #inlines do interval:insert(inlines[k]) end
+      local out = pandoc.List()
+      for k = 1, i do out:insert(inlines[k]) end
+      out:insert(pandoc.Span(interval, pandoc.Attr("", { "ci" })))
+      return out
+    end
+  end
+  return inlines
+end
+
 local function each_cell(rows, fn)
   for _, row in ipairs(rows) do
     local col = 1
@@ -40,13 +58,20 @@ local function each_cell(rows, fn)
   end
 end
 
+-- A text column whose longest body cell fits in this many characters is
+-- marked "short" so that the stylesheet can keep its cells on one line where
+-- the table has room, leaving the wrapping to headers and columns of prose.
+-- Row labels in the first column get a longer allowance because a wrapped
+-- label makes every cell of its row two lines tall.
+local SHORT_TEXT, SHORT_LABEL = 24, 32
+
 -- Marks every cell of a column whose body cells are all numeric with the
 -- class "num", so that the stylesheet can right-align it and line up digits.
 -- Columns the author aligned explicitly are left as written. Column widths are
 -- dropped because pandoc divides long pipe tables into equal columns, which
 -- squeezes text columns and pads numeric ones.
 local function format_table(t)
-  local numeric, valued = {}, {}
+  local numeric, valued, longest = {}, {}, {}
   for i, spec in ipairs(t.colspecs) do
     numeric[i] = spec[1] == pandoc.AlignDefault
     t.colspecs[i] = { spec[1], pandoc.ColWidthDefault }
@@ -54,6 +79,7 @@ local function format_table(t)
   for _, body in ipairs(t.bodies) do
     each_cell(body.body, function(cell, col)
       local text = pandoc.utils.stringify(cell.contents)
+      longest[col] = math.max(longest[col] or 0, utf8.len(text))
       if cell.col_span > 1 or not is_numeric_cell(text) then
         for k = col, col + cell.col_span - 1 do numeric[k] = false end
       elseif text ~= "\u{00B7}" then
@@ -70,20 +96,38 @@ local function format_table(t)
   for _, body in ipairs(t.bodies) do
     each_cell(body.body, function(cell, col)
       mark(cell, col)
+      if cell.col_span == 1 and not numeric[col] and longest[col] <= (col == 1 and SHORT_LABEL or SHORT_TEXT) then
+        cell.attr.classes:insert("short")
+      end
       if cell.attr.classes:includes("num") then
-        cell.contents = cell.contents:walk({ Inlines = keep_value_together })
+        cell.contents = cell.contents:walk({ Inlines = function(inlines)
+          return set_off_interval(keep_value_together(inlines))
+        end })
       end
     end)
   end
 end
 
+-- Tables default to the editorial style; a build that passes
+-- table-style=log as metadata gets the denser log style instead.
+local wrap_classes = { "table-wrap" }
+
 -- Wide tables scroll inside their own box so that narrow screens keep the
 -- page itself from scrolling sideways.
 return {
   {
+    Meta = function(meta)
+      local style = meta["table-style"]
+      if style == nil then return end
+      style = pandoc.utils.stringify(style)
+      if style ~= "log" then error("unknown table-style: " .. style) end
+      wrap_classes = { "table-wrap", "log" }
+    end,
+  },
+  {
     Table = function(t)
       format_table(t)
-      return pandoc.Div({ t }, pandoc.Attr("", { "table-wrap" }))
+      return pandoc.Div({ t }, pandoc.Attr("", wrap_classes))
     end,
   },
 }

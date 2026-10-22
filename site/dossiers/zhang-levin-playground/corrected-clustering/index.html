@@ -178,13 +178,24 @@
   text-align: right;
 }
 
-/* Berkeley Mono and Plex Serif share an x-height, so mono a pixel smaller reads as the same size beside the wider-set serif. */
-.table-wrap td.num {
-  font: 400 13px/18px var(--sl-font-mono);
-  font-variant-numeric: tabular-nums;
+/* Plex Serif's default figures are already tabular and lining; the setting states that numeric columns depend on it. */
+.table-wrap table {
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* The face change already sets code apart in a cell, so it drops its chip. */
+@media (min-width: 1201px) {
+  .table-wrap td.short {
+    white-space: nowrap;
+  }
+}
+
+.table-wrap .ci {
+  display: block;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
 .table-wrap th code,
 .table-wrap td code {
   border: 0;
@@ -193,6 +204,43 @@
   padding: 0;
   font: 400 13px/18px var(--sl-font-mono);
   overflow-wrap: normal;
+}
+
+/* The log style, for reference tables in the cabinet: one mono face, no column rules, and tight rows. Cabinet cells often wrap to several lines, so a faint rule between rows keeps each row's extent readable. */
+.table-wrap.log table {
+  font: 400 12.5px/20px var(--sl-font-mono);
+}
+
+.table-wrap.log th,
+.table-wrap.log td {
+  padding: 0 .4rem;
+  border: 0;
+}
+
+.table-wrap.log tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--sl-color-rule) 50%, transparent);
+}
+
+.table-wrap.log th:first-child,
+.table-wrap.log td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap.log th:last-child,
+.table-wrap.log td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap.log thead th {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--sl-color-ink);
+}
+
+.table-wrap.log code {
+  font: inherit;
 }
 :root{--rk-measure:660px;--rk-toc:200px;--rk-margin:210px;--rk-gap:52px;--rk-ink:var(--sl-color-ink);--rk-muted:var(--sl-color-muted);--rk-faint:color-mix(in srgb,var(--sl-color-muted) 94%,var(--sl-color-paper));--rk-rule:var(--sl-color-rule);--rk-tint:color-mix(in srgb,var(--sl-color-ink) 5%,transparent);--rk-accent:var(--sl-color-accent);--rk-bg:var(--sl-color-paper);--rk-font-heading:var(--sl-font-prose);--rk-heading-weight:500;--rk-speed:140ms;--rk-note-cap:15em}
 *{box-sizing:border-box}
@@ -524,57 +572,57 @@ body {
 </thead>
 <tbody>
 <tr>
-<td>Bubble with Bubble</td>
-<td>control, 0.57 to 0.65</td>
+<td class="short">Bubble with Bubble</td>
+<td class="short">control, 0.57 to 0.65</td>
 <td class="num">0.621</td>
 <td class="num">0.619</td>
-<td class="num">0.002 (−0.006 to 0.010)</td>
-<td>· and 42%</td>
+<td class="num">0.002 <span class="ci">(−0.006 to 0.010)</span></td>
+<td class="short">· and 42%</td>
 <td class="num">1 of 40</td>
 </tr>
 <tr>
-<td>Insertion with Insertion</td>
-<td>control, 0.57 to 0.65</td>
+<td class="short">Insertion with Insertion</td>
+<td class="short">control, 0.57 to 0.65</td>
 <td class="num">0.567</td>
 <td class="num">0.561</td>
-<td class="num">0.006 (−0.006 to 0.018)</td>
-<td>· and 33%</td>
+<td class="num">0.006 <span class="ci">(−0.006 to 0.018)</span></td>
+<td class="short">· and 33%</td>
 <td class="num">1 of 40</td>
 </tr>
 <tr>
-<td>Selection with Selection</td>
-<td>control, 0.57 to 0.65</td>
+<td class="short">Selection with Selection</td>
+<td class="short">control, 0.57 to 0.65</td>
 <td class="num">0.616</td>
 <td class="num">0.611</td>
-<td class="num">0.005 (−0.004 to 0.014)</td>
-<td>· and 37%</td>
+<td class="num">0.005 <span class="ci">(−0.004 to 0.014)</span></td>
+<td class="short">· and 37%</td>
 <td class="num">2 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Selection</td>
-<td>0.72</td>
+<td class="short">Bubble with Selection</td>
+<td class="short">0.72</td>
 <td class="num">0.686</td>
 <td class="num">0.613</td>
-<td class="num">0.073 (0.060 to 0.085)</td>
-<td>42% and 36%</td>
+<td class="num">0.073 <span class="ci">(0.060 to 0.085)</span></td>
+<td class="short">42% and 36%</td>
 <td class="num">23 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Insertion</td>
-<td>0.65</td>
+<td class="short">Bubble with Insertion</td>
+<td class="short">0.65</td>
 <td class="num">0.666</td>
 <td class="num">0.586</td>
-<td class="num">0.080 (0.068 to 0.092)</td>
-<td>21% and 20%</td>
+<td class="num">0.080 <span class="ci">(0.068 to 0.092)</span></td>
+<td class="short">21% and 20%</td>
 <td class="num">22 of 40</td>
 </tr>
 <tr>
-<td>Insertion with Selection</td>
-<td>0.69</td>
+<td class="short">Insertion with Selection</td>
+<td class="short">0.69</td>
 <td class="num">0.711</td>
 <td class="num">0.588</td>
-<td class="num">0.124 (0.105 to 0.142)</td>
-<td>19% and 23%</td>
+<td class="num">0.124 <span class="ci">(0.105 to 0.142)</span></td>
+<td class="short">19% and 23%</td>
 <td class="num">33 of 40</td>
 </tr>
 </tbody>
@@ -604,41 +652,41 @@ body {
 <tr>
 <td class="num">30</td>
 <td class="num">0.622 to 0.649</td>
-<td class="num">0.036 (0.016 to 0.055)</td>
-<td class="num">0.060 (0.041 to 0.078)</td>
-<td class="num">0.112 (0.086 to 0.138)</td>
+<td class="num">0.036 <span class="ci">(0.016 to 0.055)</span></td>
+<td class="num">0.060 <span class="ci">(0.041 to 0.078)</span></td>
+<td class="num">0.112 <span class="ci">(0.086 to 0.138)</span></td>
 <td class="num">0.119</td>
 </tr>
 <tr>
 <td class="num">50</td>
 <td class="num">0.608 to 0.636</td>
-<td class="num">0.049 (0.031 to 0.067)</td>
-<td class="num">0.056 (0.042 to 0.070)</td>
-<td class="num">0.098 (0.077 to 0.119)</td>
+<td class="num">0.049 <span class="ci">(0.031 to 0.067)</span></td>
+<td class="num">0.056 <span class="ci">(0.042 to 0.070)</span></td>
+<td class="num">0.098 <span class="ci">(0.077 to 0.119)</span></td>
 <td class="num">0.100</td>
 </tr>
 <tr>
 <td class="num">100</td>
 <td class="num">0.586 to 0.613</td>
-<td class="num">0.073 (0.060 to 0.085)</td>
-<td class="num">0.080 (0.068 to 0.092)</td>
-<td class="num">0.124 (0.105 to 0.142)</td>
+<td class="num">0.073 <span class="ci">(0.060 to 0.085)</span></td>
+<td class="num">0.080 <span class="ci">(0.068 to 0.092)</span></td>
+<td class="num">0.124 <span class="ci">(0.105 to 0.142)</span></td>
 <td class="num">0.083</td>
 </tr>
 <tr>
 <td class="num">200</td>
 <td class="num">0.564 to 0.591</td>
-<td class="num">0.076 (0.067 to 0.084)</td>
-<td class="num">0.101 (0.092 to 0.111)</td>
-<td class="num">0.113 (0.102 to 0.124)</td>
+<td class="num">0.076 <span class="ci">(0.067 to 0.084)</span></td>
+<td class="num">0.101 <span class="ci">(0.092 to 0.111)</span></td>
+<td class="num">0.113 <span class="ci">(0.102 to 0.124)</span></td>
 <td class="num">0.063</td>
 </tr>
 <tr>
 <td class="num">400</td>
 <td class="num">0.547 to 0.571</td>
-<td class="num">0.109 (0.104 to 0.115)</td>
-<td class="num">0.120 (0.115 to 0.125)</td>
-<td class="num">0.128 (0.121 to 0.135)</td>
+<td class="num">0.109 <span class="ci">(0.104 to 0.115)</span></td>
+<td class="num">0.120 <span class="ci">(0.115 to 0.125)</span></td>
+<td class="num">0.128 <span class="ci">(0.121 to 0.135)</span></td>
 <td class="num">0.034</td>
 </tr>
 </tbody>
@@ -692,75 +740,75 @@ body {
 </thead>
 <tbody>
 <tr>
-<td>Insertion with Selection</td>
+<td class="short">Insertion with Selection</td>
 <td>final 0.7, maximum 0.71 at 100%</td>
-<td>0.719 (43%)</td>
+<td class="short">0.719 (43%)</td>
 <td class="num">0.703</td>
 <td class="num">0.495</td>
-<td class="num">0.207 (0.196 to 0.218)</td>
+<td class="num">0.207 <span class="ci">(0.196 to 0.218)</span></td>
 <td class="num">0 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Selection</td>
+<td class="short">Bubble with Selection</td>
 <td>final 0.65, maximum 0.69 at 100%</td>
-<td>0.706 (71%)</td>
+<td class="short">0.706 (71%)</td>
 <td class="num">0.690</td>
 <td class="num">0.496</td>
-<td class="num">0.195 (0.181 to 0.208)</td>
+<td class="num">0.195 <span class="ci">(0.181 to 0.208)</span></td>
 <td class="num">0 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Insertion</td>
+<td class="short">Bubble with Insertion</td>
 <td>maximum 0.63 at 13%</td>
-<td>0.659 (17%)</td>
+<td class="short">0.659 (17%)</td>
 <td class="num">0.510</td>
 <td class="num">0.495</td>
-<td class="num">0.015 (−0.002 to 0.031)</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
 <td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Bubble with DelayedBubble</td>
+<td class="short">Bubble with DelayedBubble</td>
 <td>·</td>
-<td>0.660 (15%)</td>
+<td class="short">0.660 (15%)</td>
 <td class="num">0.510</td>
 <td class="num">0.495</td>
-<td class="num">0.015 (−0.002 to 0.031)</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
 <td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Bubble with InsertionNoWait</td>
+<td class="short">Bubble with InsertionNoWait</td>
 <td>·</td>
-<td>0.603 (31%), null 0.613</td>
+<td class="short">0.603 (31%), null 0.613</td>
 <td class="num">0.510</td>
 <td class="num">0.495</td>
-<td class="num">0.015 (−0.002 to 0.031)</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
 <td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Bubble</td>
+<td class="short">Bubble with Bubble</td>
 <td>·</td>
-<td>0.627 (36%), null 0.616</td>
+<td class="short">0.627 (36%), null 0.616</td>
 <td class="num">0.510</td>
 <td class="num">0.495</td>
-<td class="num">0.015 (−0.002 to 0.031)</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
 <td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Insertion with Insertion</td>
+<td class="short">Insertion with Insertion</td>
 <td>·</td>
-<td>0.565 (40%), null 0.557</td>
+<td class="short">0.565 (40%), null 0.557</td>
 <td class="num">0.510</td>
 <td class="num">0.495</td>
-<td class="num">0.015 (−0.002 to 0.031)</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
 <td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Selection with Selection</td>
+<td class="short">Selection with Selection</td>
 <td>·</td>
-<td>0.583 (42%), null 0.582</td>
+<td class="short">0.583 (42%), null 0.582</td>
 <td class="num">0.495</td>
 <td class="num">0.496</td>
-<td class="num">−0.000 (−0.016 to 0.015)</td>
+<td class="num">−0.000 <span class="ci">(−0.016 to 0.015)</span></td>
 <td class="num">0 of 40</td>
 </tr>
 </tbody>
@@ -784,75 +832,75 @@ body {
 <tbody>
 <tr>
 <td>Insertion with Selection</td>
-<td>far</td>
-<td>yes</td>
-<td>0.207 (0.196 to 0.218)</td>
+<td class="short">far</td>
+<td class="short">yes</td>
+<td class="short">0.207 (0.196 to 0.218)</td>
 <td class="num">827</td>
 <td class="num">−0.63</td>
-<td>1,187</td>
+<td class="short">1,187</td>
 </tr>
 <tr>
 <td>Bubble with Selection</td>
-<td>far</td>
-<td>yes</td>
-<td>0.195 (0.181 to 0.208)</td>
+<td class="short">far</td>
+<td class="short">yes</td>
+<td class="short">0.195 (0.181 to 0.208)</td>
 <td class="num">721</td>
 <td class="num">−0.59</td>
-<td>1,314</td>
+<td class="short">1,314</td>
 </tr>
 <tr>
 <td>Insertion with neighbour-only Selection</td>
-<td>neighbour</td>
-<td>yes</td>
-<td>0.262 (0.253 to 0.271)</td>
+<td class="short">neighbour</td>
+<td class="short">yes</td>
+<td class="short">0.262 (0.253 to 0.271)</td>
 <td class="num">195</td>
 <td class="num">−0.64</td>
-<td>3,912</td>
+<td class="short">3,912</td>
 </tr>
 <tr>
 <td>Bubble with neighbour-only Selection</td>
-<td>neighbour</td>
-<td>yes</td>
-<td>0.160 (0.145 to 0.175)</td>
+<td class="short">neighbour</td>
+<td class="short">yes</td>
+<td class="short">0.160 (0.145 to 0.175)</td>
 <td class="num">150</td>
 <td class="num">−0.47</td>
-<td>3,778</td>
+<td class="short">3,778</td>
 </tr>
 <tr>
 <td>Bubble with Bubble that also swaps equals</td>
-<td>neighbour</td>
-<td>yes, either way</td>
-<td>0.016 (0.001 to 0.031)</td>
+<td class="short">neighbour</td>
+<td class="short">yes, either way</td>
+<td class="short">0.016 (0.001 to 0.031)</td>
 <td class="num">2,360</td>
 <td class="num">−0.00</td>
-<td>4,619</td>
+<td class="short">4,619</td>
 </tr>
 <tr>
 <td>Bubble or Insertion with strict neighbour-only Selection</td>
-<td>neighbour</td>
-<td>no</td>
-<td>0.015 (−0.002 to 0.031)</td>
+<td class="short">neighbour</td>
+<td class="short">no</td>
+<td class="short">0.015 (−0.002 to 0.031)</td>
 <td class="num">0</td>
 <td class="num">·</td>
-<td>2,259</td>
+<td class="short">2,259</td>
 </tr>
 <tr>
 <td>Bubble or Insertion with sliding Insertion</td>
-<td>far</td>
-<td>no</td>
-<td>0.015 (−0.002 to 0.031)</td>
+<td class="short">far</td>
+<td class="short">no</td>
+<td class="short">0.015 (−0.002 to 0.031)</td>
 <td class="num">0</td>
 <td class="num">·</td>
-<td>1,836 and 1,598</td>
+<td class="short">1,836 and 1,598</td>
 </tr>
 <tr>
 <td>Bubble with Selection that never passes an equal</td>
-<td>far</td>
-<td>no</td>
-<td>none of 40 runs sorted</td>
+<td class="short">far</td>
+<td class="short">no</td>
+<td class="short">none of 40 runs sorted</td>
 <td class="num">·</td>
 <td class="num">·</td>
-<td>·</td>
+<td class="short">·</td>
 </tr>
 </tbody>
 </table>
@@ -884,7 +932,7 @@ body {
 </thead>
 <tbody>
 <tr>
-<td>Far-reaching, rerouting</td>
+<td class="short">Far-reaching, rerouting</td>
 <td class="num">30</td>
 <td class="num">30</td>
 <td class="num">30</td>
@@ -892,7 +940,7 @@ body {
 <td class="num">30</td>
 </tr>
 <tr>
-<td>Far-reaching, waiting</td>
+<td class="short">Far-reaching, waiting</td>
 <td class="num">1</td>
 <td class="num">1</td>
 <td class="num">1</td>
@@ -900,7 +948,7 @@ body {
 <td class="num">30</td>
 </tr>
 <tr>
-<td>Neighbour-only, rerouting</td>
+<td class="short">Neighbour-only, rerouting</td>
 <td class="num">1</td>
 <td class="num">1</td>
 <td class="num">1</td>
@@ -908,7 +956,7 @@ body {
 <td class="num">30</td>
 </tr>
 <tr>
-<td>Neighbour-only, waiting</td>
+<td class="short">Neighbour-only, waiting</td>
 <td class="num">1</td>
 <td class="num">0</td>
 <td class="num">1</td>
@@ -962,91 +1010,91 @@ body {
 <td>Correlation of separation with clustering, ten pairs</td>
 <td>r = 0.78 (raw)</td>
 <td>r = 0.84 raw, 0.94 excess</td>
-<td>Figure 1</td>
+<td class="short">Figure 1</td>
 </tr>
 <tr>
 <td>Same, six pairs without Insertion</td>
 <td>r ≈ 0.05 (raw)</td>
 <td>r = 0.36 raw, 0.43 excess</td>
-<td>Figure 1</td>
+<td class="short">Figure 1</td>
 </tr>
 <tr>
 <td>Bubble with Insertion, raw clustering</td>
 <td>0.166</td>
 <td>0.190, excess 0.079 (0.054 to 0.105)</td>
-<td>Figure 2</td>
+<td class="short">Figure 2</td>
 </tr>
 <tr>
 <td>Bubble with InsertionNoWait, raw clustering</td>
 <td>0.091</td>
 <td>0.131, excess −0.007 (−0.020 to 0.007)</td>
-<td>Figure 2</td>
+<td class="short">Figure 2</td>
 </tr>
 <tr>
 <td>Bubble with Gnome, raw clustering</td>
 <td>0.073</td>
 <td>0.149, excess 0.011 (−0.004 to 0.026)</td>
-<td>Figure 2</td>
+<td class="short">Figure 2</td>
 </tr>
 <tr>
 <td>Bubble with DelayedBubble, raw and separation</td>
 <td>0.176, 0.111</td>
 <td>0.173, 0.114, excess 0.064 (0.050 to 0.078)</td>
-<td>Exp27</td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Bubble with BubbleClone, raw and separation</td>
 <td>0.155, 0.027</td>
 <td>0.156, 0.024, excess 0.017 (0.000 to 0.034)</td>
-<td>Exp27</td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Gnome with DelayedGnome, raw and separation</td>
 <td>0.167, 0.106</td>
 <td>0.160, 0.107, excess 0.052 (0.034 to 0.069)</td>
-<td>Exp27</td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Gnome with GnomeClone, raw and separation</td>
 <td>0.126, 0.043</td>
 <td>0.144, 0.025, excess 0.006 (−0.011 to 0.023)</td>
-<td>Exp27</td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Bubble with InsertionNoWait, raw and separation</td>
 <td>0.134, 0.033</td>
 <td>0.137, 0.025, excess 0.001 (−0.016 to 0.017)</td>
-<td>Exp27</td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Selection, threaded over sequential comparisons, 1 and 3 frozen</td>
 <td>35.86 and 97.84</td>
 <td>1.02 and 1.01</td>
-<td>Exp26</td>
+<td class="short">Exp26</td>
 </tr>
 <tr>
 <td>Bubble, same ratio</td>
 <td>1.18 and 1.00</td>
 <td>0.97 and 0.98</td>
-<td>Exp26</td>
+<td class="short">Exp26</td>
 </tr>
 <tr>
 <td>Insertion, same ratio</td>
 <td>1.04 and 1.11</td>
 <td>1.00 and 1.00</td>
-<td>Exp26</td>
+<td class="short">Exp26</td>
 </tr>
 <tr>
 <td>Long-range rerouting Selection, K at 0, 3, 6, 9 frozen</td>
 <td>30.44, 26.14, 22.01, 18.01</td>
 <td>30.45, 26.14, 22.00, 18.01</td>
-<td>K values</td>
+<td class="short">K values</td>
 </tr>
 <tr>
 <td>Bubble dips per run, depth, recovery steps</td>
 <td>34.2, 0.9, 2.4</td>
 <td>34.8, 0.91, 2.0</td>
-<td>Dip statistics</td>
+<td class="short">Dip statistics</td>
 </tr>
 </tbody>
 </table>

@@ -178,13 +178,24 @@
   text-align: right;
 }
 
-/* Berkeley Mono and Plex Serif share an x-height, so mono a pixel smaller reads as the same size beside the wider-set serif. */
-.table-wrap td.num {
-  font: 400 13px/18px var(--sl-font-mono);
-  font-variant-numeric: tabular-nums;
+/* Plex Serif's default figures are already tabular and lining; the setting states that numeric columns depend on it. */
+.table-wrap table {
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* The face change already sets code apart in a cell, so it drops its chip. */
+@media (min-width: 1201px) {
+  .table-wrap td.short {
+    white-space: nowrap;
+  }
+}
+
+.table-wrap .ci {
+  display: block;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
 .table-wrap th code,
 .table-wrap td code {
   border: 0;
@@ -193,6 +204,43 @@
   padding: 0;
   font: 400 13px/18px var(--sl-font-mono);
   overflow-wrap: normal;
+}
+
+/* The log style, for reference tables in the cabinet: one mono face, no column rules, and tight rows. Cabinet cells often wrap to several lines, so a faint rule between rows keeps each row's extent readable. */
+.table-wrap.log table {
+  font: 400 12.5px/20px var(--sl-font-mono);
+}
+
+.table-wrap.log th,
+.table-wrap.log td {
+  padding: 0 .4rem;
+  border: 0;
+}
+
+.table-wrap.log tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--sl-color-rule) 50%, transparent);
+}
+
+.table-wrap.log th:first-child,
+.table-wrap.log td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap.log th:last-child,
+.table-wrap.log td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap.log thead th {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--sl-color-ink);
+}
+
+.table-wrap.log code {
+  font: inherit;
 }
 :root{--rk-measure:660px;--rk-toc:200px;--rk-margin:210px;--rk-gap:52px;--rk-ink:var(--sl-color-ink);--rk-muted:var(--sl-color-muted);--rk-faint:color-mix(in srgb,var(--sl-color-muted) 94%,var(--sl-color-paper));--rk-rule:var(--sl-color-rule);--rk-tint:color-mix(in srgb,var(--sl-color-ink) 5%,transparent);--rk-accent:var(--sl-color-accent);--rk-bg:var(--sl-color-paper);--rk-font-heading:var(--sl-font-prose);--rk-heading-weight:500;--rk-speed:140ms;--rk-note-cap:15em}
 *{box-sizing:border-box}
@@ -561,37 +609,37 @@ body {
 </thead>
 <tbody>
 <tr>
-<td>Orbium recovery</td>
+<td class="short">Orbium recovery</td>
 <td>additive Lenia, 192 by 192 torus</td>
-<td>1</td>
+<td class="short">1</td>
 <td>1</td>
 <td>Orbium, native rule Chakazul O2(a)</td>
 </tr>
 <tr>
-<td>Shape and travel</td>
+<td class="short">Shape and travel</td>
 <td>Flow Lenia</td>
-<td>2</td>
+<td class="short">2</td>
 <td>10</td>
 <td>8,155 from one screen of 8,192 rules; 112 screens of four families for the medians</td>
 </tr>
 <tr>
-<td>Look-alikes</td>
+<td class="short">Look-alikes</td>
 <td>Flow Lenia</td>
-<td>1</td>
+<td class="short">1</td>
 <td>3</td>
 <td>48 mates and 48 random neighbours at each of seven starting rules</td>
 </tr>
 <tr>
-<td>Family-wide rule distances</td>
+<td class="short">Family-wide rule distances</td>
 <td>Flow Lenia</td>
-<td>2 or 3</td>
+<td class="short">2 or 3</td>
 <td>10, 20 (two channels) or 15 (three)</td>
 <td>four families of 28 runs of 8,192 random rules</td>
 </tr>
 <tr>
-<td>Damage</td>
+<td class="short">Damage</td>
 <td>Flow Lenia</td>
-<td>3</td>
+<td class="short">3</td>
 <td>15</td>
 <td>40 coherent creatures and 120 random rules</td>
 </tr>
