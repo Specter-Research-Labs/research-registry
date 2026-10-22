@@ -1,5 +1,6 @@
 @font-face { font-family: "IBM Plex Serif"; src: url('/fonts/IBMPlexSerif-Regular.woff2'); font-display: swap; }
 @font-face { font-family: "IBM Plex Serif"; src: url('/fonts/IBMPlexSerif-Italic.woff2'); font-display: swap; font-style: italic; }
+@font-face { font-family: "IBM Plex Serif"; src: url('/fonts/IBMPlexSerif-Bold.woff2'); font-display: swap; font-weight: 700; }
 @font-face { font-family: "Berkeley Mono"; src: url('/fonts/BerkeleyMono-Regular.woff2'); font-display: swap; }
 :root { --paper: var(--sl-color-paper); --ink: var(--sl-color-ink); --muted: var(--sl-color-muted); --rule: var(--sl-color-rule); }
 * { box-sizing: border-box; }
@@ -12,8 +13,8 @@ button { cursor: pointer; }
 img { max-width: 100%; display: block; }
 figure, p, h1, h2, h3 { margin: 0; }
 main { max-width: var(--publication-width); margin: auto; padding: 0 var(--publication-gutter) 64px; }
-.hero { padding: 24px 0 88px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
-h1 em { font-family: var(--sl-font-prose); font-weight: 400; letter-spacing: -.06em; }
+.hero { padding: 24px 0 36px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+h1 em { font-family: var(--sl-font-prose); font-weight: 400; letter-spacing: -.02em; }
 .intro { font-size: 17px; line-height: 1.6; max-width: 49ch; margin-top: 26px; }
 .text-link { display: inline-block; margin-top: 22px; font: 11px/1.7 "Berkeley Mono", monospace; text-decoration: none; }
 .text-link:hover { text-decoration: underline; }
@@ -21,8 +22,8 @@ h1 em { font-family: var(--sl-font-prose); font-weight: 400; letter-spacing: -.0
 .hero-art canvas { width: 100%; height: auto; display: block; }
 .hero-art #hero-motion { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .hero-art figcaption { margin-top: 12px; color: var(--muted); font: 10px/1.6 "Berkeley Mono", monospace; text-align: center; }
-.quote { position: relative; max-width: 690px; margin-inline: auto; padding: 0 0 82px; }
-.recurrence { display: block; width: 108px; height: 108px; margin: 0 auto 30px; opacity: .65; }
+.quote { position: relative; max-width: 690px; margin-inline: auto; padding: 0 0 60px; }
+.recurrence { display: block; width: 84px; height: 84px; margin: 0 auto 22px; opacity: .65; }
 blockquote { margin: 0; font-size: 24px; line-height: 1.5; letter-spacing: -.015em; }
 .attribution { font: 10px/1.7 "Berkeley Mono", monospace; margin-top: 20px; color: var(--muted); }
 .proof-figure svg { display: block; width: 100%; max-width: 480px; height: auto; overflow: visible; }
@@ -42,11 +43,11 @@ blockquote { margin: 0; font-size: 24px; line-height: 1.5; letter-spacing: -.015
   .hero { gap: 32px; }
 }
 @media (max-width: 620px) {
-  .hero { grid-template-columns: 1fr; padding: 8px 0 56px; gap: 28px; }
+  .hero { grid-template-columns: 1fr; padding: 8px 0 28px; gap: 28px; }
   .hero-art { max-width: 360px; }
   .intro { font-size: 16px; margin-top: 22px; }
-  .quote { padding-bottom: 56px; }
+  .quote { padding-bottom: 44px; }
   blockquote { font-size: 21px; }
-  .recurrence { width: 82px; height: 82px; margin-bottom: 23px; }
+  .recurrence { width: 68px; height: 68px; margin-bottom: 18px; }
   .proof-figure svg text { font-size: 17px; }
 }

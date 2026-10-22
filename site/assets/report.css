@@ -1568,7 +1568,7 @@
 }
 
 .lenia-overview {
-  --report-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --report-display: var(--sl-font-display);
 }
 
 .lenia-overview .site-shell {
@@ -1578,16 +1578,16 @@
 
 .lenia-overview :is(.dossier-hub-title, .site-page-title) {
   color: var(--report-ink);
-  font: 850 clamp(2.8rem, 6vw, 5.4rem)/1.04 var(--report-display);
+  font: 700 clamp(2.8rem, 6vw, 5.4rem)/1.06 var(--report-display);
   text-transform: none;
-  letter-spacing: -.045em;
+  letter-spacing: -.02em;
 }
 
 .lenia-overview .site-main .fiber-section h2 {
   color: var(--report-ink);
-  font: 750 clamp(1.6rem, 3vw, 2.3rem)/1.15 var(--report-display);
+  font: 700 clamp(1.6rem, 3vw, 2.3rem)/1.2 var(--report-display);
   text-transform: none;
-  letter-spacing: -.025em;
+  letter-spacing: -.01em;
 }
 
 .lenia-overview :is(.section-block p, .section-lead, .fiber-section p) {

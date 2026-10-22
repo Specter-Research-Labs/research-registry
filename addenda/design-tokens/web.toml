@@ -11,8 +11,8 @@ panel = "#fffdf7"
 surface = "#f5e7d7"
 
 [fonts]
-display = ["Arial", "Helvetica", "sans-serif"]
-heading = ["Arial", "Helvetica", "sans-serif"]
+display = ["IBM Plex Serif", "Georgia", "serif"]
+heading = ["IBM Plex Serif", "Georgia", "serif"]
 body = ["IBM Plex Serif", "Georgia", "serif"]
 
 [layout]
@@ -53,9 +53,9 @@ prose = "17px"
 intro = "18px"
 
 [leading]
-title = "1.04"
+title = "1.1"
 prose = "1.65"
 
 [tracking]
-title = "-.045em"
+title = "-.02em"
 brand = ".08em"

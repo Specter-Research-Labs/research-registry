@@ -21,7 +21,7 @@
 #all-addenda .dossier-card-header,#all-addenda .dossier-card-body{grid-column:1;padding:0;border:0;background:none;min-width:0}
 #all-addenda .dossier-card-header{align-self:end}
 #all-addenda .dossier-card-body{align-self:start}
-#all-addenda .dossier-card-tab{width:100%;font:700 clamp(25px,2.8vw,32px)/1.12 var(--sl-font-display);letter-spacing:-.035em;overflow-wrap:anywhere}
+#all-addenda .dossier-card-tab{width:100%;font:700 clamp(25px,2.8vw,32px)/1.18 var(--sl-font-display);letter-spacing:-.01em;overflow-wrap:anywhere}
 #all-addenda .series-badge{display:block;margin-bottom:10px;font:11px/1.5 var(--sl-font-mono);color:var(--sl-color-muted);letter-spacing:0}
 #all-addenda .dossier-card-body p{font:17px/1.6 var(--sl-font-prose);margin:0 0 16px;max-width:65ch}
 #all-addenda .dossier-card-body code{font-family:var(--sl-font-mono);font-size:.88em}

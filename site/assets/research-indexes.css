@@ -108,7 +108,7 @@ body.research-index #lenia-swarm{grid-column:1/-1;grid-template-columns:minmax(0
 body.research-index #lenia-swarm .dossier-preview{grid-row:1/3;aspect-ratio:1.4}
 body.research-index #lenia-swarm .dossier-preview img{object-fit:cover}
 body.research-index .dossier-card-header,body.research-index .dossier-card-body{padding:0;background:none;border:0}
-body.research-index .dossier-card-tab{font:700 clamp(27px,3vw,39px)/1.1 var(--sl-font-display);letter-spacing:-.035em}
+body.research-index .dossier-card-tab{font:700 clamp(27px,3vw,39px)/1.15 var(--sl-font-display);letter-spacing:-.01em}
 body.research-index .series-badge{display:block;font:11px var(--sl-font-mono);margin-bottom:12px;letter-spacing:0;color:var(--sl-color-muted)}
 body.research-index .dossier-card-body p{font:17px/1.6 var(--sl-font-prose);margin-top:0}
 body.research-index .card-meta{display:none}

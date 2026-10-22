@@ -41,8 +41,8 @@ body[data-publication=dossier] .publication-dossier-cover {
 }
 
 .publication-dossier-cover h1 {
-  font: 700 clamp(64px,7vw,108px)/.93 Arial,sans-serif;
-  letter-spacing: -.065em;
+  font: 700 clamp(64px,7vw,108px)/.98 var(--sl-font-display);
+  letter-spacing: -.025em;
   color: var(--publication-surface);
   margin: 35px 0;
 }
@@ -231,7 +231,7 @@ body.report-format-method .report-nav a[aria-current=page] {
 
 body.report-format-method :is(.report-heading, .report-result-copy) h2 {
   font-family: var(--report-display);
-  letter-spacing: -.035em;
+  letter-spacing: -.015em;
 }
 
 body.report-format-method :is(.report-result-copy, .report-figure, .report-comparison) {
@@ -312,8 +312,8 @@ html body.report-format-method .report-result > .report-scroll-hint {
 }
 
 .report-method-heading h2 {
-  font: 700 clamp(30px, 3.8vw, 48px)/1.05 var(--sl-font-display);
-  letter-spacing: -.035em;
+  font: 700 clamp(30px, 3.8vw, 48px)/1.12 var(--sl-font-display);
+  letter-spacing: -.015em;
   margin: 12px 0 0;
   max-width: 20ch;
 }
