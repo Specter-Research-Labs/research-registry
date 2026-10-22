@@ -130,6 +130,7 @@ final class FlowLeniaMetalAncestryTracer {
             device float *nextAncestry [[buffer(3)]],
             uint3 gid [[thread_position_in_grid]]
         ) {
+            \(FlowLeniaMetalFullPipeline.transportFloatPragma)
             if (int(gid.y) >= kSX || int(gid.x) >= kSY || int(gid.z) >= kBatchCount) {
                 return;
             }

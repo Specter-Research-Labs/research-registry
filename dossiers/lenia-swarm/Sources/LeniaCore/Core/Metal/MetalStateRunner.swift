@@ -217,9 +217,8 @@ final class FlowLeniaMetalFullStateRunner {
             label: "flow-metal.state.mass-map-weights"
         )
         if let phantom {
-            guard batchCount == 1, !reintegrateParams, parameterFieldMode == .kernelGain,
-                  !pipeline.requiresSegmentedStepEncoding else {
-                preconditionFailure("Phantom fields require one batch element, fixed kernel-gain parameters, and single-buffer step encoding.")
+            guard batchCount == 1, !reintegrateParams, parameterFieldMode == .kernelGain else {
+                preconditionFailure("Phantom fields require one batch element and fixed kernel-gain parameters.")
             }
             self.phantom = FlowLeniaMetalPhantom(
                 spec: phantom,
@@ -722,17 +721,6 @@ final class FlowLeniaMetalFullStateRunner {
         postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]],
         postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]]
     ) {
-        if pipeline.requiresSegmentedStepEncoding {
-            stepChunkSegmented(
-                count: count,
-                preStepParameterPatches: preStepParameterPatches,
-                postStepParameterPatches: postStepParameterPatches,
-                postStepScalarPatches: postStepScalarPatches,
-                postStepDissipationPatches: postStepDissipationPatches
-            )
-            return
-        }
-
         if let phantom {
             // The phantom clock advances only with real steps, so a restart from
             // another step would pair the real state with the wrong phantom frame.
@@ -859,135 +847,7 @@ final class FlowLeniaMetalFullStateRunner {
         currentMixStep += count
     }
 
-    private func stepChunkSegmented(
-        count: Int,
-        preStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
-        postStepParameterPatches: [Int: [FlowLeniaMetalParameterPatchBatch]],
-        postStepScalarPatches: [Int: [FlowLeniaMetalScalarPatchBatch]],
-        postStepDissipationPatches: [Int: [FlowLeniaMetalDissipationBatch]]
-    ) {
-        var readMassBuffer = currentMassBuffer
-        var readParamsBuffer = currentParamsBuffer
-        var writeMassBuffer = nextMassBuffer
-        var writeParamsBuffer = nextParamsBuffer
-
-        for stepIndex in 1...count {
-            let prePatches = preStepParameterPatches[stepIndex] ?? []
-            let hasPreWork = !staticChannelFields.isEmpty || foodState != nil || !prePatches.isEmpty
-            if hasPreWork {
-                submitAndWait(label: "flow-metal.state.segmented.pre.\(stepIndex)") { commandBuffer in
-                    for field in staticChannelFields {
-                        encodeChannelFieldOverwrite(
-                            on: commandBuffer,
-                            massBuffer: readMassBuffer,
-                            field: field
-                        )
-                    }
-                    if foodState != nil {
-                        encodeFoodFieldOverwrite(
-                            on: commandBuffer,
-                            massBuffer: readMassBuffer
-                        )
-                    }
-                    for patch in prePatches {
-                        encodeParameterPatch(
-                            on: commandBuffer,
-                            paramsBuffer: readParamsBuffer,
-                            patch: patch
-                        )
-                    }
-                }
-            }
-
-            pipeline.runSegmentedStep(
-                preparedMassBuffer: readMassBuffer,
-                paramsBuffer: readParamsBuffer,
-                nextMassBuffer: writeMassBuffer,
-                nextParamsBuffer: writeParamsBuffer,
-                mixStep: currentMixStep + stepIndex - 1
-            )
-            if let buffers = ancestry {
-                submitAndWait(label: "flow-metal.state.segmented.ancestry.\(stepIndex)") { commandBuffer in
-                    buffers.tracer.encode(
-                        on: commandBuffer,
-                        massBuffer: readMassBuffer,
-                        flowBuffer: pipeline.flowBuffer,
-                        ancestryBuffer: buffers.current,
-                        nextAncestryBuffer: buffers.next
-                    )
-                }
-                ancestry!.advance()
-            }
-
-            let postPatches = postStepParameterPatches[stepIndex] ?? []
-            let dissipationPatches = postStepDissipationPatches[stepIndex] ?? []
-            let scalarPatches = postStepScalarPatches[stepIndex] ?? []
-            let hasPostWork = !postPatches.isEmpty || !dissipationPatches.isEmpty || foodState != nil || wallMaskEnabled
-            if hasPostWork {
-                submitAndWait(label: "flow-metal.state.segmented.post.\(stepIndex)") { commandBuffer in
-                    for patch in postPatches {
-                        encodeParameterPatch(
-                            on: commandBuffer,
-                            paramsBuffer: writeParamsBuffer,
-                            patch: patch
-                        )
-                    }
-                    for dissipation in dissipationPatches {
-                        encodeDissipationPatch(
-                            on: commandBuffer,
-                            massBuffer: writeMassBuffer,
-                            paramsBuffer: writeParamsBuffer,
-                            patch: dissipation
-                        )
-                    }
-                    if foodState != nil {
-                        encodeFoodDynamics(
-                            on: commandBuffer,
-                            massBuffer: writeMassBuffer
-                        )
-                    }
-                    if let foodState {
-                        for patch in scalarPatches {
-                            encodeScalarPatch(
-                                on: commandBuffer,
-                                fieldBuffer: foodState.buffer,
-                                patch: patch
-                            )
-                        }
-                        if !scalarPatches.isEmpty {
-                            encodeFoodFieldOverwrite(
-                                on: commandBuffer,
-                                massBuffer: writeMassBuffer
-                            )
-                        }
-                    }
-                    if wallMaskEnabled {
-                        encodeWallMask(
-                            on: commandBuffer,
-                            massBuffer: writeMassBuffer,
-                            paramsBuffer: writeParamsBuffer
-                        )
-                        if foodState != nil {
-                            encodeFoodMask(on: commandBuffer)
-                        }
-                    }
-                }
-            }
-
-            swap(&readMassBuffer, &writeMassBuffer)
-            if reintegrateParams {
-                swap(&readParamsBuffer, &writeParamsBuffer)
-            }
-        }
-
-        currentMassBuffer = readMassBuffer
-        currentParamsBuffer = readParamsBuffer
-        nextMassBuffer = writeMassBuffer
-        nextParamsBuffer = writeParamsBuffer
-        currentMixStep += count
-    }
-
-    private func encodeChannelFieldOverwrite(
+private func encodeChannelFieldOverwrite(
         on commandBuffer: MTLCommandBuffer,
         massBuffer: MTLBuffer,
         field: FlowLeniaMetalChannelFieldBuffer

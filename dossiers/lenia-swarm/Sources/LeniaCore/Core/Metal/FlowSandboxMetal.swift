@@ -69,7 +69,6 @@ public struct FlowSandboxBenchmarkResult: Sendable {
 
 struct FlowSandboxMetalStageOutputs {
     let preparedMass: MLXArray
-    let uk: MLXArray
     let scalarField: MLXArray
     let flow: MLXArray
 }
