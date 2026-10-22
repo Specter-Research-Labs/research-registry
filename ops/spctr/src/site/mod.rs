@@ -136,7 +136,7 @@ fn build_from_projection(
             output_path: "site/index.html".into(),
             regions: vec![(
                 "HOME_SITE_TREE",
-                regions::render_home_site_tree(&records, !research_notes.is_empty()),
+                regions::render_home_site_tree(&records, &reports, !research_notes.is_empty()),
             )],
         },
         PageRegion {

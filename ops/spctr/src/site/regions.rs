@@ -188,7 +188,11 @@ pub fn render_addenda_index_grid(records: &[SiteRecord]) -> String {
     blocks.join("\n")
 }
 
-pub fn render_home_site_tree(records: &[SiteRecord], has_notes: bool) -> String {
+pub fn render_home_site_tree(
+    records: &[SiteRecord],
+    reports: &[Report],
+    has_notes: bool,
+) -> String {
     let slices = records::slice_records(records);
     html! {
         ul class="lab-tree" {
@@ -197,7 +201,17 @@ pub fn render_home_site_tree(records: &[SiteRecord], has_notes: bool) -> String 
                 ul {
                     @for record in &slices.visible_dossiers {
                         @if let Some(href) = record.relative_hub_href("index.html") {
-                            li { a href=(href) { (record.title) } }
+                            li {
+                                a href=(href) { (record.title) }
+                                @let dossier_reports: Vec<&Report> = reports.iter().filter(|report| report.dossier == record.slug).collect();
+                                @if !dossier_reports.is_empty() {
+                                    ul {
+                                        @for report in dossier_reports {
+                                            li { a href=(report.href) { (report.title) } }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
