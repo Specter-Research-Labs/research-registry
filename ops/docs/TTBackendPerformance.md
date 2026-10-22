@@ -53,19 +53,26 @@ Batches that fill all 64 cores of both chips evenly (multiples of 2048 lanes at
 Per-pass time at `128x128`, 4096 bodies per card, from the host timer and from
 `bench.py --profile` on one card:
 
-| pass | work | ms | device profile |
-| --- | --- | ---: | --- |
-| p1 | row FFT of mass | `4.1` | compute waits on the reader for `1.1` of `3.2` ms |
-| p2 | column FFT, kernel product, inverse column FFT | `31.6` | compute waits on the reader for `10.6` of `28.0` ms |
-| p3 | inverse row FFT, growth, affinity | `57.5` | compute waits on the reader for `20.7` of `52.2` ms |
-| p4 | Sobel gradients and flow | `14.9` | compute waits on the reader for `4.0` of `10.4` ms |
-| p5 | reintegration over the `(2 dd + 1)^2` window | `50.3` | SFPU busy `45.5` of `49.4` ms, tile copies `3.0` ms |
+| pass | work | ms | device time |
+| --- | --- | ---: | ---: |
+| p1 | row FFT of mass | `4.1` | `4.3` |
+| p2 | column FFT, kernel product, inverse column FFT | `31.6` | `33.7` |
+| p3 | inverse row FFT, growth, affinity | `57.5` | `57.0` |
+| p4 | Sobel gradients and flow | `14.9` | `14.6` |
+| p5 | reintegration over the `(2 dd + 1)^2` window | `50.3` | `49.6` |
+
+p2, p3 and p5 are compute-bound. In p5 the SFPU is busy for `45.5` of `49.4` ms and
+tile copies take `3.0` ms. In p2 and p3 the unpacker spends `10.6` and about
+`17` ms in `cb_wait_front`, but almost all of that is waiting for the same
+core's packer between dependent stages: waits for tiles from DRAM, timed as
+their own zone, total `0.07` ms in p2 and `2.5` ms in p3, and deeper input
+buffers leave both passes unchanged.
 
 Reintegration works on blocks of four target rows of one channel. Each source
 row's mass is weighted once by its x overlap with every target row it reaches,
 and each y overlap is then computed once and shared by up to four rows instead
-of once per target row. That took p5 from `111.9` to `50.1` ms at 3584 bodies with state hashes
-bit-identical to the per-row kernel at every step of a 2000-step rollout of
-107 bodies. p5 is now SFPU-bound, while p2 and p3 spend a third of their
-compute time waiting for input, so the next gains are fewer SFPU instructions
-per reintegration term and better overlap of reads with compute in p2 and p3.
+of once per target row. That took p5 from `111.9` to `50.1` ms at 3584 bodies,
+with state hashes bit-identical to the per-row kernel at every step of a
+2000-step rollout of 107 bodies. The next gains are fewer SFPU instructions per
+reintegration term and shorter dependency chains between the unpack, math and
+pack stages of p2 and p3.
