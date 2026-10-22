@@ -1,5 +1,5 @@
 ---
-summary: "How the Flow Lenia integrator orders array axes and signs its Sobel gradient, the reversed-sign and crossed-axis transport that earlier runs carried, and the tests that check the corrected engine against the reference implementation."
+summary: "How the Flow Lenia integrator orders array axes and signs its Sobel gradient, the transport bugs earlier runs carried, and the tests against the reference."
 ---
 
 # Flow coordinates and the reference regression

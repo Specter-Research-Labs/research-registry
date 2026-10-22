@@ -1,5 +1,5 @@
 ---
-summary: "The paper-grounded Lenia research modes, from Flow-Lenia tasks to quality-diversity, ecology, curiosity and atlas runs, with their entry points and config families."
+summary: "The paper-grounded Lenia research modes, from Flow-Lenia tasks to quality-diversity, ecology, curiosity and atlas runs, with entry points and configs."
 ---
 
 # Research Modes
