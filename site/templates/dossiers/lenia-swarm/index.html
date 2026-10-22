@@ -45,14 +45,15 @@
           <div class="feature-card">
             <figure class="story-figure"><div class="story-pair"><div><video controls autoplay muted loop playsinline preload="metadata" src="/assets/home/orbium-native.mp4" poster="/assets/home/orbium-native-600.webp"></video><span>Native rule</span></div><div><video controls autoplay muted loop playsinline preload="metadata" src="/assets/home/orbium-recovered.mp4" poster="/assets/home/orbium-recovered-600.webp"></video><span>Recovered rule</span></div></div><figcaption>The same Orbium starting cells grown under its native rule and under the rule a search recovered from one frame. Orbium glides across the grid; both videos stay centred on the body, so it appears to hold still.</figcaption></figure><h2 id="rule-story" class="feature-title">One frame of Orbium was enough to recover its rule</h2>
             <p>
-              We gave a search one frame of Orbium, the best-known creature of
-              standard Lenia, told it the kind of rule and the starting cells,
-              and hid the three numbers that set the rule’s reach and growth.
-              It came back within six percent of the native value on each.
-              Across 8,155 Flow Lenia creatures, eight shape measurements,
-              mostly size and elongation, explain about half of how far and
-              how fast a body travels, while more complex bodies recover no
-              better from a cut than simple ones.
+              We gave an evolution strategy the starting cells of Orbium, the
+              best-known creature of standard Lenia, and one snapshot of it at
+              step 600, fixed every part of the rule except the three numbers
+              that set its reach and growth, and it came back within 0.5, 1.7
+              and 5.9 percent of Orbium’s values. Across 8,155 Flow Lenia
+              creatures, size and elongation explain about half of how far and
+              how fast a body travels, while look-alikes grown under different
+              rules still travel and heal differently, and a more intricate
+              body heals a cut no better than a simple one.
             </p>
             <div class="link-row">
               <a href="anatomical-compiler/">Read the report</a>
@@ -61,9 +62,10 @@
         </section>
 
         <p class="story-method">
-          The experiments run on LeniaCLI, a Swift command-line tool built on
-          an MLX Flow Lenia engine, and the Cabinet docs below explain how to
-          rerun them.
+          The experiments run on LeniaCLI, a Swift command-line tool whose
+          MLX engine simulates standard Lenia for Orbium and Flow Lenia for
+          everything else, and the Cabinet docs below explain how to rerun
+          them.
         </p>
 
         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->

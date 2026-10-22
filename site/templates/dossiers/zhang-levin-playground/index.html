@@ -15,7 +15,6 @@
             :root {
                 --zl-ink: #15171a;
                 --zl-muted: #616873;
-                --zl-faint: #5f6b7a;
                 --zl-rule: #d8dde6;
                 --zl-paper: #ffffff;
                 --zl-mono: "Berkeley Mono", "SFMono-Regular", Menlo, Consolas, monospace;
@@ -269,10 +268,11 @@
                         of swaps involve mostly Insertion cells, and those
                         cells end up next to each other without attraction,
                         type-aware signals or any coordination. Zhang and
-                        colleagues proposed this timing account as an
-                        efficiency hypothesis, in which efficient types move
-                        first and slower ones catch up. Removing the wait
-                        (InsertionNoWait) returns clustering to the null, where
+                        colleagues suggested that cells running the more
+                        efficient rule settle first and the others catch up,
+                        but the timing comes from the wait and not from how
+                        much work a rule does. Removing the wait from
+                        Insertion returns clustering to the null, where
                         mixtures of neighbor-swapping rules that never wait,
                         such as Bubble and Gnome, also sit. Bubble mixed with
                         Selection clusters by another route: with almost no
@@ -301,7 +301,7 @@
                                     </svg>
                                 </div>
                                 <div class="zl-panel">
-                                    <div class="zl-panel-head">Bubble + InsertionNoWait <span>&middot; wait removed</span></div>
+                                    <div class="zl-panel-head">Bubble + Insertion <span>&middot; wait removed</span></div>
                                     <svg id="zl-panel-nw" viewBox="0 0 380 210" role="img"
                                         aria-label="The same initial array with the wait removed; second-type cells are active from the start and no segregation emerges.">
                                     </svg>
@@ -344,12 +344,12 @@
                     <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
                     <p>
                         We gave clones of Bubble and Gnome Insertion's wait and
-                        left their swap rules unchanged, which tests the
-                        efficiency hypothesis directly. Across 30 trials per
+                        left their swap rules unchanged, which separates the
+                        wait from the rest of the rule. Across 30 trials per
                         pair the delayed clones cluster as far above the null
                         as native Insertion does (+0.064 and +0.052 against
                         +0.061), while the same clones without the wait sit at
-                        the null with InsertionNoWait. A permutation test
+                        the null, as Insertion does without its wait. A permutation test
                         clears the 1-in-20 level in only 6 of 30 single runs of
                         each waiting pair, so the transfer shows in the average
                         over many runs and mostly not in any one run. The wait
@@ -469,9 +469,13 @@
                         repeats the original duplicate-value experiment at 100
                         cells, where clustering outlasts the sort only when one
                         kind of cell keeps overtaking cells of equal value in one
-                        direction, and traces every number to its result file. We have not yet revisited
+                        direction. That needs no efficient rule: Insertion with a
+                        neighbor-only Selection takes 3,912 swaps per run against
+                        1,187 with the original Selection and leaves larger
+                        lasting islands. The write-up traces every number to its
+                        result file. We have not yet revisited
                         the opposite-direction chimeras, the three-type
-                        mixture, the efficiency comparisons, or the rise of dips
+                        mixture, the comparison of cell-based with traditional sorting, or the rise of dips
                         with frozen count.
                     </p>
                 </section>
@@ -957,8 +961,8 @@
                     const xPos = (k) => chartL + (k / nSwaps) * (chartR - chartL);
 
                     const lanes = [
-                        { label: "Bubble + Insertion", events: pair.ins.events, y: 40 },
-                        { label: "Bubble + InsertionNoWait", events: pair.nw.events, y: 80 },
+                        { label: "Bubble + Insertion, wait intact", events: pair.ins.events, y: 40 },
+                        { label: "Bubble + Insertion, no wait", events: pair.nw.events, y: 80 },
                     ];
                     const curveLabelY = 122;
                     const legendTop = curveLabelY + 10;
@@ -1090,21 +1094,21 @@
                         {
                             label: "Bubble family",
                             bars: [
-                                { name: "BubbleClone", dc: 0.017, s: 0.024, gate: false },
-                                { name: "DelayedBubble", dc: 0.064, s: 0.114, gate: true },
+                                { name: "Bubble copy", dc: 0.017, s: 0.024, gate: false },
+                                { name: "Bubble with wait", dc: 0.064, s: 0.114, gate: true },
                             ],
                         },
                         {
                             label: "Gnome family",
                             bars: [
-                                { name: "GnomeClone", dc: 0.006, s: 0.025, gate: false },
-                                { name: "DelayedGnome", dc: 0.052, s: 0.107, gate: true },
+                                { name: "Gnome copy", dc: 0.006, s: 0.025, gate: false },
+                                { name: "Gnome with wait", dc: 0.052, s: 0.107, gate: true },
                             ],
                         },
                         {
                             label: "Native Insertion",
                             bars: [
-                                { name: "InsertionNoWait", dc: 0.001, s: 0.025, gate: false },
+                                { name: "Insertion, no wait", dc: 0.001, s: 0.025, gate: false },
                                 { name: "Insertion", dc: 0.061, s: 0.103, gate: true },
                             ],
                         },
