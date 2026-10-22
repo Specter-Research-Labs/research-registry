@@ -76,6 +76,29 @@ Example locations:
 - `dossiers/lenia-swarm/.build/arm64-apple-macosx/debug/mlx.metallib`
 - `<site-packages>/mlx/lib/mlx.metallib`
 
+### Linux (cpu backend)
+
+LeniaCLI also builds on Linux with the Swift toolchain, where it runs `--backend cpu` and MLX
+on CPU. Metal-only commands (media, ecology, atlas, compendium, frame export) are compiled out.
+MLX needs BLAS and LAPACK, and the package needs the SQLite headers. Without root, install
+them under a local prefix:
+
+- OpenBLAS built with LAPACK (`make && make PREFIX=$PREFIX install`), with `libblas.so` and
+  `liblapack.so` symlinked to `libopenblas.so`.
+- `libgfortran.so` symlinked to the system `libgfortran.so.5`, because OpenBLAS's LAPACK links it.
+- `sqlite3.h` in `$PREFIX/include` and `libsqlite3.so` symlinked to the system `libsqlite3.so.0`.
+
+```bash
+swift build -c release --product LeniaCLI \
+  -Xlinker -L$PREFIX/lib -Xlinker -rpath -Xlinker $PREFIX/lib \
+  -Xcc -I$PREFIX/include
+```
+
+The C engine is compiled with `-march=native` on Linux, so the binary only runs on CPUs with the
+build host's instruction set. Rebuild it on each machine. Results are deterministic across thread
+counts on one machine; across machines the engine itself agrees bit for bit, but MLX builds
+the kernels and initial states, so records can differ at the ulp level and then diverge chaotically.
+
 ## Verification
 
 Use the dossier-local `Makefile` for the standard checks:
