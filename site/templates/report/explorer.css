@@ -6,7 +6,7 @@
 .rk-explorer .rk-hero>*,.rk-explorer .rk-article>*,.rk-explorer .rk-article section.level2>*,.rk-explorer .rk-abstract>*,.rk-explorer .rk-endmatter>*{grid-column:wide;min-width:0}
 .rk-explorer .rk-article :is(section.level2,section.level3,.rk-abstract)>:is(p,ul,ol,h3,h4,blockquote,pre,.table-wrap){max-width:var(--rk-measure)}
 .rk-explorer .rk-hero{padding:72px 0 56px;background:var(--rk-panel);border-bottom:1px solid var(--rk-ink)}
-.rk-explorer .rk-hero h1{font:700 clamp(46px,6.4vw,92px)/.98 var(--rk-font-heading);letter-spacing:-.045em;max-width:15ch}
+.rk-explorer .rk-hero h1{font:700 clamp(46px,6.4vw,92px)/1.04 var(--rk-font-heading);letter-spacing:-.02em;max-width:15ch}
 .rk-explorer .rk-subtitle{font-family:var(--sl-font-prose);margin-bottom:0}
 .rk-hero-widget{margin:48px 0 40px}
 .rk-explorer .rk-article{padding-top:48px}
@@ -19,13 +19,13 @@
 .rk-hub a{flex:1;display:flex;flex-direction:column;gap:14px;padding:18px 20px 20px;background:var(--rk-bg);text-decoration:none;transition:background var(--rk-speed) ease-out}
 .rk-hub a:hover,.rk-hub a:focus-visible{background:var(--rk-panel)}
 .rk-hub .rk-num{font-size:12px;color:var(--rk-positive)}
-.rk-hub-title{font:700 19px/1.15 var(--rk-font-heading);letter-spacing:-.02em;text-wrap:balance}
+.rk-hub-title{font:700 19px/1.2 var(--rk-font-heading);letter-spacing:0;text-wrap:balance}
 .rk-hub-tag{margin-top:auto;font:10px/1.4 var(--sl-font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--rk-muted)}
 .rk-explorer .rk-article section.level2{padding:72px 0;border-top:1px solid var(--rk-ink)}
-.rk-explorer .rk-article section.level2>h2{margin:0 0 28px;font-size:clamp(35px,4.1vw,56px);line-height:1.04;letter-spacing:-.04em;max-width:16em;text-wrap:balance}
+.rk-explorer .rk-article section.level2>h2{margin:0 0 28px;font-size:clamp(35px,4.1vw,56px);line-height:1.1;letter-spacing:-.02em;max-width:16em;text-wrap:balance}
 .rk-explorer .rk-article h2 .rk-num{display:block;font-size:12px;letter-spacing:.02em;color:var(--rk-positive);margin:0 0 18px}
 .rk-explorer .rk-article h3{font-size:27px;line-height:1.17;letter-spacing:-.025em}
-.rk-explorer .rk-article h4{font:700 20px/1.2 var(--rk-font-heading);letter-spacing:-.02em;font-style:normal}
+.rk-explorer .rk-article h4{font:700 20px/1.25 var(--rk-font-heading);letter-spacing:0;font-style:normal}
 .rk-explorer .rk-article h3 .rk-num{margin-right:.5em}
 .rk-explorer .rk-article section.rk-band{background:var(--rk-band)}
 .rk-explorer .rk-article section.rk-band-ink{--rk-ink:var(--sl-color-paper);--rk-bg:var(--sl-color-ink);--rk-muted:color-mix(in srgb,var(--sl-color-paper) 72%,var(--sl-color-ink));--rk-faint:color-mix(in srgb,var(--sl-color-paper) 55%,var(--sl-color-ink));--rk-rule:color-mix(in srgb,var(--sl-color-paper) 22%,transparent);--rk-positive:#9fc7b6;background:var(--rk-bg);color:var(--rk-ink)}
@@ -37,7 +37,7 @@
 .rk-explorer .rk-article .rk-appendix-head{margin-top:0}
 .rk-explorer .rk-article section.level2.rk-appendix-head>h2{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;max-width:none}
 .rk-readout{display:flex;flex-direction:column;gap:12px}
-.rk-big{font:700 58px/.95 var(--rk-font-heading);letter-spacing:-.06em}
+.rk-big{font:700 58px/1 var(--rk-font-heading);letter-spacing:-.02em}
 .rk-big span{font-size:20px;letter-spacing:-.02em}
 .rk-widget-error{font:11px/1.5 var(--sl-font-mono);color:var(--rk-accent);margin:12px 0 0}
 .rk-explorer svg text{font-family:var(--sl-font-mono);fill:currentColor}

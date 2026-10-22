@@ -44,16 +44,16 @@
 body:not(.report-page) :is(.site-page-title, .dossier-hub-title),
 body:is(.blog-page, .cabinet-page) .doc-content h1,
 .publication-home .hero h1 {
-  font: 750 var(--publication-type-h1)/1.06 var(--sl-font-display);
-  letter-spacing: -.045em;
+  font: 700 var(--publication-type-h1)/1.1 var(--sl-font-display);
+  letter-spacing: -.02em;
   text-transform: none;
 }
 
 body:is(.blog-page, .cabinet-page) .doc-content h2,
 .editorial-entry .entry-copy h2,
 :is(.addendum-feature, .equational-feature) h2 {
-  font: 700 var(--publication-type-h2)/1.15 var(--sl-font-display);
-  letter-spacing: -.03em;
+  font: 700 var(--publication-type-h2)/1.2 var(--sl-font-display);
+  letter-spacing: -.01em;
   text-transform: none;
 }
 

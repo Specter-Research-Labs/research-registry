@@ -12,7 +12,7 @@ use the same palette or flattening interactive reports into ordinary articles.
 | Ink | `#172021` | Headings, prose, and primary navigation |
 | Muted ink | `#5f645e` | Captions and secondary information |
 | Accents | `#a44733`, `#365b4e` | Restrained editorial emphasis and controls |
-| Display and headings | Arial, Helvetica, sans-serif | Clear, large headings |
+| Display and headings | IBM Plex Serif, Georgia, serif (Bold) | Clear, large headings |
 | Prose | IBM Plex Serif, Georgia, serif | Sustained reading |
 | Labels and navigation | Berkeley Mono | Short identifiers, measurements, and controls |
 | Outer shell | 1320px maximum, border-box | Shared page edges |
