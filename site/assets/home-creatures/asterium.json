@@ -1,0 +1,38 @@
+{
+  "title": "Asterium-derived Flow Lenia",
+  "source_creature_id": "D6DFDD2C-A233-5ADF-BC1B-2AC3C0C5C7BD",
+  "source_run": "track1c-species-asterium-3c15-1024-s6002048",
+  "source_campaign": "0003-luminous-dancer-2568-d6dfdd2c",
+  "source_config_sha256": "824145439c4c1e0778726ba4245ab1f639e8279ae18e47676418ec79c5b8db79",
+  "init_seed": 106002568,
+  "simulation_grid": {
+    "sx": 512,
+    "sy": 512
+  },
+  "recorded_steps": {
+    "first": 432,
+    "last": 3339,
+    "stride": 9
+  },
+  "video": {
+    "width": 768,
+    "height": 768,
+    "frames": 324,
+    "fps": 30
+  },
+  "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
+  "native_capture": "LeniaCLI publish media --steps 3600 --frame-budget 360 --fps 30",
+  "simulation_recentering": false,
+  "presentation": "The CLI's shaded per-channel colour frames, composited on the page paper colour. Fixed square crop; Lanczos display interpolation; no simulation-grid refinement or camera tracking.",
+  "crop": {
+    "left": 30,
+    "top": 29,
+    "side": 447
+  },
+  "screen": {
+    "minimum_connected_area_fraction": 0.9947671883327681
+  },
+  "frames_sha256": "84b8c83905defee4860d7669bb881eb4c8a6f544a52e75ba68067eeb1f318223",
+  "video_sha256": "771f523540e052cde1c9a1e2f60755b0244fbde68675c7956368fcd7b7c46fcf",
+  "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic."
+}

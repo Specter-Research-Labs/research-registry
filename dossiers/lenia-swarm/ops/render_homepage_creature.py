@@ -43,6 +43,8 @@ PALETTE = np.array(
     ]
 )
 KNOTS = [0, 0.06, 0.2, 0.35, 0.5, 0.7, 0.85, 1]
+# --sl-color-paper; colour clips are drawn unkeyed onto the homepage.
+PAGE_PAPER = (248, 244, 234)
 
 
 def video_writer(output: Path, size: int, crf: int, fps: int = 30) -> subprocess.Popen:
@@ -269,9 +271,85 @@ def package_replay(media_root: Path, campaign: Path, output: Path, title: str, s
     print(json.dumps({"title": title, "video": str(video), "screen": receipt["screen"]}))
 
 
+def package_color_replay(
+    specimen_dir: Path, campaign: Path, output: Path, title: str, first_frame: int
+) -> None:
+    specimen = json.loads((specimen_dir / "specimen.json").read_text())
+    files = sorted((specimen_dir / "frames_color").glob("frame_*.png"))[first_frame:]
+    steps = specimen["captured_steps"][first_frame:]
+    if len(files) != len(steps):
+        raise ValueError("Colour frames and captured steps disagree")
+    frames = np.stack([np.asarray(Image.open(path).convert("RGBA")) for path in files])
+    alpha = frames[..., 3]
+
+    # One fixed square over the whole segment, as in package_replay.
+    rows, cols = np.where((alpha > 8).any(axis=0))
+    side = int(np.ceil(max(np.ptp(rows), np.ptp(cols)) * 1.12))
+    top = int((rows.min() + rows.max() - side) // 2)
+    left = int((cols.min() + cols.max() - side) // 2)
+    if min(top, left) < 0 or max(top, left) + side > alpha.shape[1]:
+        raise ValueError("Fixed square leaves the recorded world")
+    coherence = []
+    for a in alpha:
+        components, count = label(a > 8, np.ones((3, 3)))
+        parts = sum_labels(a > 8, components, range(1, count + 1))
+        coherence.append(float(max(parts, default=0) / max((a > 8).sum(), 1)))
+    if min(coherence) < 0.95:
+        raise ValueError(
+            f"Replay loses coherence: minimum connected area fraction {min(coherence):.3f}"
+        )
+
+    config_bytes = (campaign / "config.json").read_bytes()
+    manifest = json.loads((campaign / "replay-manifest.json").read_text())
+    output.parent.mkdir(parents=True, exist_ok=True)
+    video = output.with_suffix(".mp4")
+    encoder = video_writer(video, 768, 30, specimen["fps"])
+    paper = Image.new("RGBA", (side, side), PAGE_PAPER + (255,))
+    for index, frame in enumerate(frames):
+        cropped = Image.fromarray(frame).crop((left, top, left + side, top + side))
+        composed = Image.alpha_composite(paper, cropped).convert("RGB")
+        rgb = composed.resize((768, 768), Image.Resampling.LANCZOS)
+        encoder.stdin.write(rgb.tobytes())
+        if index == 0:
+            rgb.save(output.with_suffix(".webp"), lossless=True)
+    encoder.stdin.close()
+    if encoder.wait():
+        raise RuntimeError("ffmpeg encoding failed")
+    receipt = {
+        "title": title,
+        "source_creature_id": manifest["sourceCreatureId"],
+        "source_run": specimen["run_id"],
+        "source_campaign": manifest["campaignId"],
+        "source_config_sha256": hashlib.sha256(config_bytes).hexdigest(),
+        "init_seed": specimen["init_seed"],
+        "simulation_grid": json.loads(config_bytes)["grid"],
+        "recorded_steps": {"first": steps[0], "last": steps[-1], "stride": steps[1] - steps[0]},
+        "video": {"width": 768, "height": 768, "frames": len(files), "fps": specimen["fps"]},
+        "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
+        "native_capture": f"LeniaCLI publish media --steps 3600 --frame-budget {specimen['frames']} --fps {specimen['fps']}",
+        "simulation_recentering": False,
+        "presentation": "The CLI's shaded per-channel colour frames, composited on the page paper colour. Fixed square crop; Lanczos display interpolation; no simulation-grid refinement or camera tracking.",
+        "crop": {"left": left, "top": top, "side": side},
+        "screen": {"minimum_connected_area_fraction": min(coherence)},
+        "frames_sha256": hashlib.sha256(
+            b"".join(hashlib.sha256(p.read_bytes()).digest() for p in files)
+        ).hexdigest(),
+        "video_sha256": hashlib.sha256(video.read_bytes()).hexdigest(),
+        "loop": "Playback restarts the recording; the endpoint is not claimed to be periodic.",
+    }
+    output.with_suffix(".json").write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({"title": title, "video": str(video), "screen": receipt["screen"]}))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--media-root", type=Path)
+    parser.add_argument(
+        "--color-specimen",
+        type=Path,
+        help="Specimen directory from publish media with frames_color",
+    )
+    parser.add_argument("--first-frame", type=int, default=0, help="First colour frame to keep")
     parser.add_argument("--campaign", type=Path)
     parser.add_argument("--output", type=Path, help="Output basename, without extension")
     parser.add_argument("--title")
@@ -279,7 +357,13 @@ if __name__ == "__main__":
         "--steps", type=int, default=3600, help="Step count passed to native media capture"
     )
     args = parser.parse_args()
-    if any((args.media_root, args.campaign, args.output, args.title)):
+    if args.color_specimen:
+        if not all((args.campaign, args.output, args.title)):
+            parser.error("Colour packaging requires --campaign, --output and --title")
+        package_color_replay(
+            args.color_specimen, args.campaign, args.output, args.title, args.first_frame
+        )
+    elif any((args.media_root, args.campaign, args.output, args.title)):
         if not all((args.media_root, args.campaign, args.output, args.title)):
             parser.error("Replay packaging requires --media-root, --campaign, --output and --title")
         package_replay(args.media_root, args.campaign, args.output, args.title, args.steps)
