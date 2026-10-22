@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Equational Theories Distillation"
 series = "A-010"
-summary = "Sub-10KB offline decision procedure for equational implication over magmas, distilled from the 4694-law implication graph."
+summary = "A plain-text sheet under 10 KB that lets a model decide, without tools, whether one equation about a binary operation forces another."
 status = "active"
 
 [site]

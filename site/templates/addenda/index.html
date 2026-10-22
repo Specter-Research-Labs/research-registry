@@ -24,32 +24,32 @@
                 <section class="section-block" id="all-addenda">
                     <h1 class="site-page-title">Addenda</h1>
                     <div class="addenda-showcases">
-                        <article class="addendum-feature">
+                        <article class="addendum-feature" id="poly-morphogenesis">
                             <figure>
                                 <a href="https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/poly-morphogenesis/docs/diagrams/rd_styled.dot"><img src="/assets/addenda-specimens/poly-morphogenesis.svg?v=20261017-clean" width="1000" height="600" alt="The actual Catlab wiring diagram for the ten-cell reaction–diffusion phase"></a>
                             </figure>
                             <span class="addendum-series">A-013 / Poly Morphogenesis</span>
                             <h2><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/poly-morphogenesis">A pattern that feeds back on itself</a></h2>
-                            <p>Reaction–diffusion, a peak-counting gene network, and feedback compose into one controller. The wiring above comes from the implementation’s Catlab export.</p>
-                            <p class="specimen-context">The connectivity comparison is implemented. The later numerical sweep still needs reproduction; injury and repair remain proposed work.</p>
+                            <p>A reaction–diffusion pattern, a gene network that counts its peaks, and the feedback between them form one controller. The diagram is the wiring the code exports through Catlab.</p>
+                            <p class="specimen-context">The comparison of wirings runs today. The later numerical sweep has not been reproduced yet, and the injury and repair experiments are still proposals.</p>
                             <a class="addendum-open" href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/poly-morphogenesis#current-result">Explore the controller →</a>
                         </article>
-                        <article class="addendum-feature">
+                        <article class="addendum-feature" id="k-semantics-reference">
                             <figure>
                                 <a href="/assets/addenda-specimens/k-grid.json"><img src="/assets/addenda-specimens/k-semantics-reference.svg?v=20261017-clean" width="1000" height="600" alt="Two source-generated paths on a seven-by-seven grid: random walk and shortest-path policy"></a>
                             </figure>
                             <span class="addendum-series">A-009 / K Semantics Reference</span>
                             <h2><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/k-semantics-reference">How much search does a policy save?</a></h2>
                             <p>The start, goal, legal moves, and cost unit stay fixed. A blind walk and a shortest-path policy take different routes through the same problem.</p>
-                            <p class="specimen-context">The paths are two seeded replays. K = log₁₀(τ_blind/τ_agent) = 1.22 means about 16.6× expected-cost savings. This separate exact calculation caps costs at 500 steps, giving a lower bound for this grid.</p>
+                            <p class="specimen-context">The paths are two seeded replays. K = log₁₀(τ_blind/τ_agent) comes from a separate exact calculation that caps each walk at 500 steps, so its value of 1.22, about 16.6 times less expected cost, is a lower bound for this grid.</p>
                             <a class="addendum-open" href="https://github.com/Specter-Research-Labs/research-registry/blob/main/addenda/k-semantics-reference/demos/grid.py">Explore the executable comparison →</a>
                         </article>
                     </div>
-                    <article class="equational-feature">
+                    <article class="equational-feature" id="equational-theories-distillation">
                         <div class="equational-heading">
                             <span class="addendum-series">A-010 / Equational Theories Distillation</span>
                             <h2><a href="https://github.com/Specter-Research-Labs/research-registry/tree/main/addenda/equational-theories-distillation">A countermodel you can inspect</a></h2>
-                            <p>A 4,694-law implication graph is distilled into a small offline decision sheet. Finite operation tables provide explicit counterexamples; source-triggered rules provide constructive routes through some TRUE cases.</p>
+                            <p>We condensed the known implications among 4,694 equational laws into a short sheet a model can use offline. Small operation tables give explicit counterexamples when one law does not imply another, and rules keyed to the starting law prove some of the cases where it does.</p>
                         </div>
                         <div class="equational-specimens">
                             <figure>

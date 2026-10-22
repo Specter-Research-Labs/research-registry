@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Lean Corpus Extractor"
 series = "A-007"
-summary = "Lean-native extractor for deterministic theorem-item JSONL used in Wonton Soup corpus workflows."
+summary = "Pulls theorems out of Lean libraries into the fixed, reproducible lists that Wonton Soup searches over."
 status = "operational"
 
 [site]

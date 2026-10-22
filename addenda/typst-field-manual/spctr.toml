@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Typst Field Manual"
 series = "A-008"
-summary = "Typst template suite for Specter field manuals and public papers."
+summary = "Typst templates that typeset our papers and field manuals in the site’s fonts and colors."
 status = "operational"
 
 [site]

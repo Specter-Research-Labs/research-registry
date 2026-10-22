@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "K Semantics Reference"
 series = "A-009"
-summary = "Compare search policies within the same problem space, horizon, and cost units."
+summary = "Reference code for K, which measures how much faster an agent reaches a goal than blind search does on the same problem with the same costs."
 status = "active"
 
 [site]
