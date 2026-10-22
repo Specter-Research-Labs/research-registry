@@ -87,7 +87,7 @@ body {
   text-underline-offset: 6px;
 }
 
-.publication-header + :is(.site-shell, .blog-shell, .cabinet-shell, .rk-shell) {
+.publication-header + :is(.site-shell, .blog-shell, .cabinet-shell, .doc-shell, .rk-shell) {
   padding-top: 0;
 }
 

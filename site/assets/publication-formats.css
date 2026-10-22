@@ -127,7 +127,7 @@ body[data-publication=dossier] .story-method[open] summary {
 }
 
 body[data-publication=dossier] .dossier-hub-links {
-  margin: 0 0 56px;
+  margin: 0 0 40px;
 }
 
 @media (max-width: 600px) {
