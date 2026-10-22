@@ -5,6 +5,11 @@ use std::fs;
 const HEADER: &str = "site/templates/publication-header.html";
 const FOOTER: &str = "site/templates/publication-footer.html";
 
+/// The Lua filter and stylesheet that give reports, blog posts, research notes
+/// and cabinet docs one table style.
+pub const TABLES_FILTER: &str = "site/templates/tables.lua";
+pub const TABLES_CSS: &str = "site/assets/tables.css";
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Section {
     Research,

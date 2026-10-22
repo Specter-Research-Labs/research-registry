@@ -1,0 +1,64 @@
+/* Every Markdown table on the site; the tables Lua filter wraps each one in .table-wrap and marks numeric columns with .num. */
+
+.table-wrap {
+  margin: 1.4em 0;
+  overflow-x: auto;
+}
+
+/* Words stay whole even where the page breaks long words anywhere, so a table too wide for the screen scrolls instead of splitting its cells mid-word. */
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 12.5px/1.45 var(--sl-font-mono);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: normal;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--sl-color-rule);
+}
+
+.table-wrap th + th,
+.table-wrap td + td {
+  border-left: 1px solid var(--sl-color-rule);
+}
+
+.table-wrap th:first-child,
+.table-wrap td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap th:last-child,
+.table-wrap td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap thead th {
+  font-weight: 700;
+  vertical-align: bottom;
+  padding-top: 0;
+  border-bottom-color: var(--sl-color-ink);
+}
+
+.table-wrap tbody tr:last-child td {
+  border-bottom-color: var(--sl-color-ink);
+}
+
+.table-wrap .num {
+  text-align: right;
+}
+
+/* Cells are already monospace, so inline code drops its chip and matches the cell text. */
+.table-wrap th code,
+.table-wrap td code {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  overflow-wrap: normal;
+}

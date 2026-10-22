@@ -332,12 +332,6 @@ body:is(.blog-page,.cabinet-page) .doc-content pre {
   overflow-wrap: normal;
 }
 
-body:is(.blog-page,.cabinet-page) .doc-content table {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
 html.specter-report main img {
   max-width: 100%;
   height: auto;

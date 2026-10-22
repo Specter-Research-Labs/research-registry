@@ -53,6 +53,7 @@ pub fn render_doc(
         ])
         .args(["--standalone", "--wrap=none"])
         .arg(format!("--template={}", template))
+        .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
         .args(["--toc", "--toc-depth=3", "--mathml"])
         .args(["--metadata", "lang=en"])
         .args([

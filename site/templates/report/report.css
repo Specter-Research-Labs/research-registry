@@ -49,11 +49,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-article pre{font:13px/1.5 var(--sl-font-mono);overflow:auto;background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:20px 0}
 .rk-article pre code{background:none;padding:0;font-size:inherit}
 .rk-article blockquote{margin:24px 0;padding:0 0 0 20px;border-left:2px solid var(--rk-rule);color:var(--rk-muted);font-style:italic}
-.rk-article table{width:100%;border-collapse:collapse;font:12.5px/1.45 var(--sl-font-mono);font-variant-numeric:tabular-nums}
-.rk-article th,.rk-article td{padding:4px 6px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rk-rule)}.rk-article th+th,.rk-article td+td{border-left:1px solid var(--rk-rule)}.rk-article th:first-child,.rk-article td:first-child{padding-left:0}.rk-article th:last-child,.rk-article td:last-child{padding-right:0}
-.rk-article thead th{font-weight:700;vertical-align:bottom;padding-top:0;border-bottom-color:var(--rk-ink)}.rk-article tbody tr:last-child td{border-bottom-color:var(--rk-ink)}.rk-article .num{text-align:right}
 .rk-article figure{margin:40px 0;padding:0;overflow-x:auto}
-.rk-article .table-wrap{margin:40px 0;overflow-x:auto}.rk-article figure .table-wrap{margin:0}
+.rk-article .table-wrap{margin:40px 0}.rk-article figure .table-wrap{margin:0}
 .rk-article figure img,.rk-article figure canvas,.rk-article figure svg{display:block;width:100%}
 @media(min-width:1201px){.rk-article figure.wide{clear:right;margin-right:calc(-1*(var(--rk-margin) + var(--rk-gap)))}.rk-article figure.wide>figcaption{max-width:var(--rk-measure)}}
 .rk-article figcaption{font-size:15px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
