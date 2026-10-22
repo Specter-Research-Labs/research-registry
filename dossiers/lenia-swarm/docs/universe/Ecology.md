@@ -1,5 +1,5 @@
 ---
-summary: "How discovered Lenia patterns distribute across parameter and behavior space, the LeniaCLI analyze ecology export that measures it, and what the quality-gated corpus can support."
+summary: "How discovered Lenia patterns spread across parameter and behavior space, the analyze ecology export that measures it, and what the gated corpus supports."
 ---
 
 # Ecology

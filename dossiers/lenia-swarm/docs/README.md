@@ -1,5 +1,5 @@
 ---
-summary: "Map of the Lenia Swarm documentation: where to start, how creatures are measured and grouped, how to run sweeps and paper reproductions, and how the simulator is built."
+summary: "Map of the Lenia Swarm docs: where to start, how creatures are measured and grouped, how to run sweeps and paper reproductions, and how the simulator is built."
 ---
 
 # Lenia Swarm docs

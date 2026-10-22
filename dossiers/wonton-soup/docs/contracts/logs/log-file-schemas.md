@@ -1,5 +1,5 @@
 ---
-summary: "Index of the Wonton Soup log schemas, the invariants that hold across their files, and which search, proof and trace graph artifacts each proof backend can produce."
+summary: "Index of the Wonton Soup log schemas, the invariants across their files, and which search, proof and trace graph artifacts each proof backend produces."
 ---
 
 # Log file schemas

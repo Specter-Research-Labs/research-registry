@@ -1,5 +1,5 @@
 ---
-summary: "The Lenia compendium: its SQLite schema and migrations, how the indexer writes it, how Studio and the CLI read it, and why every reader requires an exact schema version."
+summary: "The Lenia compendium: its SQLite schema and migrations, how the indexer writes it, how Studio and the CLI read it, and why readers require an exact version."
 ---
 
 # The compendium
