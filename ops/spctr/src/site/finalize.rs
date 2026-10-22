@@ -193,6 +193,30 @@ fn finalize_page(
     Ok(rewritten)
 }
 
+/// What a built page declares about itself, read the same way finalize reads
+/// it, so that cards linking to the page repeat its own title and summary.
+pub(crate) struct DeclaredPage {
+    pub title: String,
+    pub description: String,
+    pub image: String,
+}
+
+pub(crate) fn declared_page(relative: &str, text: &str) -> Result<DeclaredPage> {
+    let head_end = text.find("</head>").context("page has no </head>")?;
+    let head = parse_head(&text[..head_end])?;
+    let field = |key: &str| {
+        head.meta
+            .get(key)
+            .map(|value| decode_entities(value))
+            .with_context(|| format!("{relative} declares no {key}"))
+    };
+    Ok(DeclaredPage {
+        title: decode_entities(page_title(relative, &head.title)?),
+        description: field("description")?,
+        image: field("og:image")?,
+    })
+}
+
 fn parse_head(head: &str) -> Result<PageHead> {
     let title_re = Regex::new(r"(?is)<title[^>]*>(.*?)</title>").expect("valid regex");
     let titles: Vec<String> = title_re

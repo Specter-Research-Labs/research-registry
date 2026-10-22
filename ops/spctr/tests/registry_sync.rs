@@ -24,6 +24,7 @@ fn minimal_shell(root: &Utf8Path) {
         "site/templates/404.html",
         "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>\n",
     );
+    write(root, "site/publications.json", "{}\n");
 }
 
 fn minimal_design_tokens(root: &Utf8Path) {

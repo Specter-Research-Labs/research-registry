@@ -1,6 +1,7 @@
 use crate::site::discover::{self, BlogPostRecord};
 use crate::site::markup;
 use crate::site::records::{self, SiteRecord};
+use crate::site::reports::Report;
 use anyhow::Result;
 use camino::Utf8Path;
 use maud::{html, Markup, PreEscaped};
@@ -210,6 +211,26 @@ pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
             }
             li { a class="tree-root" href="/addenda/" { "Addenda" } }
             li { a class="tree-root" href="/cabinet/" { "Cabinet" } }
+        }
+    }
+    .into_string()
+}
+
+/// The report block under a dossier hub's deck. Each card is one link so the
+/// report is the largest target near the top of the hub.
+pub fn render_dossier_hub_reports(reports: &[&Report]) -> String {
+    html! {
+        section class="hub-reports" aria-label=(if reports.len() == 1 { "Report" } else { "Reports" }) {
+            @for report in reports {
+                a class="report-card" href=(report.href) {
+                    div class="report-card-copy" {
+                        span class="report-card-label" { (report.label) }
+                        h2 { (report.title) }
+                        p { (report.finding) }
+                    }
+                    img src=(report.image) alt="" loading="lazy";
+                }
+            }
         }
     }
     .into_string()

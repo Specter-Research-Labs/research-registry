@@ -13,6 +13,8 @@ pub struct BlogPostRecord {
     pub series: Option<String>,
     pub release: String,
     pub cover: Option<BlogCover>,
+    /// Slug of the dossier whose report this post is, from the `dossier` front matter field.
+    pub dossier: Option<String>,
 }
 
 pub struct BlogCover {
@@ -119,6 +121,7 @@ fn discover_blog_posts(repo_root: &Utf8Path, include_drafts: bool) -> Result<Vec
             series,
             release,
             cover,
+            dossier: fm.get("dossier").cloned(),
         });
     }
     Ok(posts)

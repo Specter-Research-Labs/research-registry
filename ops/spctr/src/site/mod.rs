@@ -17,6 +17,7 @@ pub mod provenance;
 pub mod publish;
 pub mod records;
 pub mod regions;
+pub mod reports;
 pub mod shell;
 pub mod status;
 pub mod tokens;
@@ -113,6 +114,19 @@ fn build_from_projection(
     let record_slices = records::slice_records(&records);
     let causal_emergence_catalog = causal_emergence::load_catalog(repo_root)?;
     causal_emergence_release::validate_website_library(repo_root)?;
+    let reports = reports::discover_reports(repo_root, &blog_posts)?;
+    for report in &reports {
+        let manual_hub = record_slices.visible_dossiers.iter().any(|record| {
+            record.slug == report.dossier && record.hub_path.is_some() && !record.hub_generated
+        });
+        if !manual_hub {
+            bail!(
+                "report {} belongs to dossier {}, which has no visible hand-written hub to list it",
+                report.href,
+                report.dossier
+            );
+        }
+    }
 
     let mut pages: Vec<PageRegion> = vec![
         PageRegion {
@@ -210,21 +224,32 @@ fn build_from_projection(
             } else {
                 regions::render_dossier_hub_header(record)
             };
+            let mut hub_regions = vec![("DOSSIER_HUB_HEADER", header)];
+            let hub_reports: Vec<&reports::Report> = reports
+                .iter()
+                .filter(|report| report.dossier == record.slug)
+                .collect();
+            if !hub_reports.is_empty() {
+                hub_regions.push((
+                    "DOSSIER_HUB_REPORT",
+                    regions::render_dossier_hub_reports(&hub_reports),
+                ));
+            }
+            hub_regions.extend([
+                (
+                    "DOSSIER_HUB_DESCRIPTION",
+                    regions::render_dossier_hub_meta(record),
+                ),
+                (
+                    "DOSSIER_HUB_FOOTER",
+                    regions::render_dossier_hub_footer(record),
+                ),
+            ]);
             pages.push(PageRegion {
                 shell: true,
                 template_path: template,
                 output_path: hub_path.clone(),
-                regions: vec![
-                    ("DOSSIER_HUB_HEADER", header),
-                    (
-                        "DOSSIER_HUB_DESCRIPTION",
-                        regions::render_dossier_hub_meta(record),
-                    ),
-                    (
-                        "DOSSIER_HUB_FOOTER",
-                        regions::render_dossier_hub_footer(record),
-                    ),
-                ],
+                regions: hub_regions,
             });
         }
     }

@@ -137,6 +137,7 @@ color = "ink"
 
 fn minimal_templates(root: &Utf8Path) {
     minimal_design_tokens(root);
+    write(root, "site/publications.json", "{}\n");
     write(
         root,
         "site/templates/publication-header.html",

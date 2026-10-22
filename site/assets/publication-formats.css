@@ -95,14 +95,6 @@ body[data-publication=dossier] .site-main .section-block {
   margin-bottom: 0;
 }
 
-body[data-publication=dossier] .site-main .section-block .feature-card {
-  padding: var(--dossier-block-space) 0;
-}
-
-body[data-publication=dossier] .site-main .feature-card .feature-title {
-  margin-bottom: 12px;
-}
-
 body[data-publication=dossier] .story-figure {
   max-width: var(--dossier-figure-width);
   margin-bottom: 24px;

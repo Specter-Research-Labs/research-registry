@@ -3,6 +3,7 @@ title: "Proof search with a missing tactic"
 release: "published"
 summary: We block one tactic from a successful Lean proof search and rerun it under the same budget to see whether the prover still reaches the theorem by another route.
 series: B-001
+dossier: wonton-soup
 pdf: wonton-soup.pdf
 cover: /assets/blog/wonton-soup/fig1-mcts-tree.png
 cover_alt: A proof search tree in which two rewrites of a * (b + c) lead to proofs by ring.

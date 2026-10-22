@@ -36,7 +36,17 @@ body.dossier-story .story-heading { font: 700 clamp(27px, 3vw, 38px)/1.15 var(--
 .material-study[data-stage="release"] .material-force, .material-study[data-stage="damage"] .material-force { display: none; }
 .material-study[data-stage="damage"] .material-disturbance { display: block; }
 .material-reading { font: 400 17px/1.6 var(--site-font-prose); min-height: 5em; }
-body.dossier-story .feature-card { border: 0; border-top: 1px solid var(--site-rule); padding-top: 28px; }
+body.dossier-story .hub-reports { display: grid; gap: 24px; margin: 20px 0 56px; }
+body.dossier-story .report-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 40px; padding: 28px 0; border-block: 1px solid var(--site-rule); color: inherit; text-decoration: none; }
+body.dossier-story .report-card-label { display: block; margin: 0 0 12px; color: var(--site-muted); font: 11px/1.6 var(--sl-font-mono); }
+body.dossier-story .report-card h2 { margin: 0 0 12px; color: var(--site-ink); font: 750 clamp(25px, 2.6vw, 34px)/1.14 var(--publication-display); letter-spacing: -.03em; text-transform: none; }
+body.dossier-story .report-card p { margin: 0; max-width: 46ch; color: var(--site-ink); font: 400 17px/1.6 var(--site-font-prose); }
+body.dossier-story .report-card img { display: block; width: 100%; height: auto; max-height: 260px; object-fit: contain; border: 0; mix-blend-mode: darken; }
+body.dossier-story .report-card:hover h2 { color: var(--sl-color-accent-2); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+body.dossier-story .story-split .hub-reports { margin: 28px 0 0; }
+body.dossier-story .story-split .report-card { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+body.dossier-story .story-split .report-card img { max-height: 200px; object-position: left center; }
+@media(max-width: 700px) { body.dossier-story .report-card { grid-template-columns: minmax(0, 1fr); gap: 20px; } body.dossier-story .report-card img { object-position: left center; } }
 .story-figure { margin: 0 0 28px; }
 .story-figure img { border: 0; background: #fffdf7; max-height: 450px; object-fit: contain; }
 .story-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 800px; }

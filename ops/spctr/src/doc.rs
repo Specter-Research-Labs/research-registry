@@ -72,9 +72,9 @@ struct LayoutFrontMatter {
 }
 
 #[derive(Debug, Deserialize)]
-struct Publication {
-    revision: String,
-    path: String,
+pub(crate) struct Publication {
+    pub revision: String,
+    pub path: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -333,7 +333,7 @@ fn site_page(
 /// document has exactly one public URL. Two entries never share a path, and no
 /// path lies under the review app's /experiments/ namespace; the review app in
 /// turn must not serve a document that this manifest publishes.
-fn load_publications(repo_root: &Utf8Path) -> Result<BTreeMap<String, Publication>> {
+pub(crate) fn load_publications(repo_root: &Utf8Path) -> Result<BTreeMap<String, Publication>> {
     let path = repo_root.join(PUBLICATIONS);
     let publications: BTreeMap<String, Publication> = serde_json::from_str(&read(&path)?)
         .with_context(|| format!("{path}: expected {{document_id: {{revision, path}}}}"))?;
