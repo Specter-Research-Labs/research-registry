@@ -253,7 +253,7 @@
 
                 <section class="section-block">
 <h2 class="story-question">Why do cells running the same rule end up side by side?</h2>
-<p class="story-deck">Each cell in the array holds a value and runs its own sorting rule, and their local swaps bring the whole array into order. When two rules share an array, cells of the same rule gather into runs along the way, and the gathering follows when each rule moves: give another rule Insertion's waiting gate and it clusters as much as Insertion does. Freezing some cells asks a second question, which rule still lets the array reach order.</p>
+<p class="story-deck">Each cell in the array holds a value and runs its own sorting rule, and their local swaps bring the whole array into order. When two rules share an array, cells of the same rule gather into runs along the way, and the gathering follows when each rule moves: give another rule Insertion's wait and it clusters as much as Insertion does. Freezing some cells asks a second question, which rule still lets the array reach order.</p>
 <nav class="story-jumps" aria-label="Experiments"><a href="#zl-cluster-fig">Why like cells cluster</a><a href="#zl-gate-fig">Transplanting the waiting rule</a><a href="#zl-dip-fig">Recovering from disorder</a></nav>
 
                     <h2 class="story-heading">Cells cluster when they move at different times</h2>
@@ -264,23 +264,23 @@
                         its own sequence of arrangements with the type labels
                         shuffled across cells, and report the excess over that
                         null. Pairs that contain Insertion cluster above it.
-                        Insertion's gate holds each of its cells back until
+                        Insertion's wait holds each of its cells back until
                         everything to its left is in order, so the late bursts
                         of swaps involve mostly Insertion cells, and those
                         cells end up next to each other without attraction,
                         type-aware signals or any coordination. Zhang and
                         colleagues proposed this timing account as an
                         efficiency hypothesis, in which efficient types move
-                        first and slower ones catch up. Removing the gate
+                        first and slower ones catch up. Removing the wait
                         (InsertionNoWait) returns clustering to the null, where
-                        mixtures of ungated neighbor-swapping rules such as
-                        Bubble and Gnome also sit. Bubble mixed with Selection
-                        clusters a little with almost no difference in timing,
-                        +0.026 over the null at 30 cells and +0.073 at the
-                        original 100, so timing does not account for all of the
-                        clustering in the original set.
+                        mixtures of neighbor-swapping rules that never wait,
+                        such as Bubble and Gnome, also sit. Bubble mixed with
+                        Selection clusters by another route: with almost no
+                        difference in timing it reaches +0.073 over the null at
+                        100 cells, because Selection cells claim the left end of
+                        the row first and gather there as a front.
                     </p>
-                    <p>The paired replay below starts from the same array with and without the gate, so the two runs differ only in when the second type is allowed to move.</p>
+                    <p>The paired replay below starts from the same array with and without the wait, so the two runs differ only in when the second type is allowed to move.</p>
 
                     <figure class="zl-figure" id="zl-cluster-fig">
                         <div class="zl-fig-head">
@@ -295,20 +295,20 @@
                         <div class="zl-stage">
                             <div class="zl-panels">
                                 <div class="zl-panel">
-                                    <div class="zl-panel-head">Bubble + Insertion <span>&middot; gate intact</span></div>
+                                    <div class="zl-panel-head">Bubble + Insertion <span>&middot; wait intact</span></div>
                                     <svg id="zl-panel-ins" viewBox="0 0 380 210" role="img"
-                                        aria-label="Cell array of a Bubble and Insertion mixture sorting itself; Insertion cells are shown in the accent color while gated and turn white as their prefix sorts.">
+                                        aria-label="Cell array of a Bubble and Insertion mixture sorting itself; Insertion cells are shown in the accent color while waiting and turn white as their prefix sorts.">
                                     </svg>
                                 </div>
                                 <div class="zl-panel">
-                                    <div class="zl-panel-head">Bubble + InsertionNoWait <span>&middot; gate removed</span></div>
+                                    <div class="zl-panel-head">Bubble + InsertionNoWait <span>&middot; wait removed</span></div>
                                     <svg id="zl-panel-nw" viewBox="0 0 380 210" role="img"
-                                        aria-label="The same initial array with the waiting gate removed; second-type cells are active from the start and no segregation emerges.">
+                                        aria-label="The same initial array with the wait removed; second-type cells are active from the start and no segregation emerges.">
                                     </svg>
                                 </div>
                             </div>
                             <svg id="zl-cluster-svg" role="img"
-                                aria-label="Activity raster and clustering curve for both runs. In the gated run, Insertion activity concentrates late; in the ungated run activity is spread evenly. Both curves wander above random mixing, and each peak is compared with the peak expected from shuffled labels.">
+                                aria-label="Activity raster and clustering curve for both runs. With the wait, Insertion activity concentrates late; without it, activity is spread evenly. Both curves wander above random mixing, and each peak is compared with the peak expected from shuffled labels.">
                             </svg>
                         </div>
                         <div class="zl-controls">
@@ -323,11 +323,11 @@
                         </div>
                         <div class="zl-chips">
                             <div class="zl-chip">
-                                <span class="zl-chip-k">Excess over shuffle null, gate intact (this run)</span>
+                                <span class="zl-chip-k">Excess over shuffle null, wait intact (this run)</span>
                                 <span class="zl-chip-v" data-chip="ins-dc">&mdash;</span>
                             </div>
                             <div class="zl-chip">
-                                <span class="zl-chip-k">Excess over shuffle null, gate removed (this run)</span>
+                                <span class="zl-chip-k">Excess over shuffle null, wait removed (this run)</span>
                                 <span class="zl-chip-v" data-chip="nw-dc">&mdash;</span>
                             </div>
                             <div class="zl-chip">
@@ -343,29 +343,32 @@
 
                     <h2 class="story-heading">Move the waiting rule, and clustering follows</h2>
                     <p>
-                        We gave clones of Bubble and Gnome Insertion's gate and
+                        We gave clones of Bubble and Gnome Insertion's wait and
                         left their swap rules unchanged, which tests the
                         efficiency hypothesis directly. Across 30 trials per
                         pair the delayed clones cluster as far above the null
                         as native Insertion does (+0.064 and +0.052 against
-                        +0.061), while the same clones without the gate sit at
+                        +0.061), while the same clones without the wait sit at
                         the null with InsertionNoWait. A permutation test
                         clears the 1-in-20 level in only 6 of 30 single runs of
-                        each gated pair, so the transfer shows in the average
-                        over many runs and mostly not in any one run.
+                        each waiting pair, so the transfer shows in the average
+                        over many runs and mostly not in any one run. The wait
+                        does not need to see far: a cell that waits only for the
+                        nearest dozen cells to its left to be in order clusters
+                        as strongly as one that waits for the whole prefix.
                     </p>
                     <figure class="zl-figure" id="zl-gate-fig">
                         <div class="zl-fig-head">
-                            <span class="zl-fig-name">Figure B &middot; The gate, not the rule</span>
+                            <span class="zl-fig-name">Figure B &middot; The wait, not the rule</span>
                             <span class="zl-fig-meta">peak clustering above the label-shuffle null &middot; s = timing separation &middot; 30 trials per pair</span>
                         </div>
                         <div class="zl-legend">
-                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>no waiting gate</span>
-                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Insertion-style waiting gate (native or transplanted)</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#ffffff"></span>no wait</span>
+                            <span class="zl-key"><span class="zl-swatch" style="background:#15171a"></span>Insertion-style wait (native or transplanted)</span>
                         </div>
                         <div class="zl-stage">
                             <svg id="zl-gate-svg" role="img"
-                                aria-label="Bar chart of peak clustering above the label-shuffle null across six paired conditions. The three gated pairs sit near +0.05 to +0.06; the three gate-free pairs sit near zero.">
+                                aria-label="Bar chart of peak clustering above the label-shuffle null across six paired conditions. The three waiting pairs sit near +0.05 to +0.06; the three pairs without a wait sit near zero.">
                             </svg>
                         </div>
                     </figure>
@@ -396,7 +399,11 @@
                         thread, as in the original code, threaded and
                         sequential schedules of the same cells reach the same
                         outcomes with the same work (ratios between 0.97 and
-                        1.02).
+                        1.02). Without the lock, in a simulation where cells act
+                        on stale views of their neighbours and writes can
+                        collide, long-range rerouting still sorts past frozen
+                        cells, at about twice the writes, while the other
+                        variants still fail.
                     </p>
                     <p>In the replay below three cells cannot start a swap, but their neighbors can move them. Watch the error trace: the array sometimes becomes less ordered before recovering. Across 50 trials every run contained at least one such dip. We have not yet compared these dips with a random walk at the same number of swaps, or tested whether they become more frequent as more cells are frozen, which is how Zhang and colleagues argue that they are more than noise.</p>
                     <figure class="zl-figure" id="zl-dip-fig">
@@ -460,9 +467,9 @@
                         The full write-up,
                         <a href="/dossiers/zhang-levin-playground/corrected-clustering/">Cells that wait their turn form islands in self-sorting arrays</a>,
                         repeats the original duplicate-value experiment at 100
-                        cells, where clustering persists into the sorted array
-                        only in pairs that contain Selection, and traces every
-                        number to its result file. We have not yet revisited
+                        cells, where clustering outlasts the sort only when one
+                        kind of cell keeps overtaking cells of equal value in one
+                        direction, and traces every number to its result file. We have not yet revisited
                         the opposite-direction chimeras, the three-type
                         mixture, the efficiency comparisons, or the rise of dips
                         with frozen count.
@@ -938,8 +945,8 @@
                     const insPeakVal = Math.max(...pair.ins.clust);
                     const nwPeakVal = Math.max(...pair.nw.clust);
                     const legendItems = [
-                        { stroke: ROSE, dash: null, label: "gate intact", stats: "peak " + insPeakVal.toFixed(2) + " · " + signed(insDC) + " over null" },
-                        { stroke: INK, dash: null, label: "gate removed", stats: "peak " + nwPeakVal.toFixed(2) + " · " + signed(nwDC) + " over null" },
+                        { stroke: ROSE, dash: null, label: "wait intact", stats: "peak " + insPeakVal.toFixed(2) + " · " + signed(insDC) + " over null" },
+                        { stroke: INK, dash: null, label: "wait removed", stats: "peak " + nwPeakVal.toFixed(2) + " · " + signed(nwDC) + " over null" },
                         { stroke: "#616873", dash: "4 4", label: "random mixing 24/49", stats: null },
                     ];
 
