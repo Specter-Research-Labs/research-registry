@@ -1,15 +1,18 @@
-"""Validation: Swift reference bundle vs reference engine vs TT runtime.
+"""Check the SFPU engine against the float64 Metal-semantics reference on one N300 card.
 
 Usage:
-    # On Mac: export reference from Swift, then validate the oracle/reference path
-    python devtools/validate.py --reference reference/ --backend reference
+    python devtools/validate.py --input INDEX.jsonl --card 0
 
-    # On quietbox: validate TT runtime against the same reference bundle
-    python devtools/validate.py --reference reference/ --backend tt
+Every stage of one step is compared for each body, and a short rollout for the first few. The
+float32 reference runs alongside as the yardstick: the largest device error of each quantity
+must stay within RATIO times the largest error an IEEE float32 implementation of the same
+equations makes, which is also the class in which Metal builds differ from each other.
 """
+
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -18,253 +21,109 @@ import numpy as np
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tt_lenia.backends import make_reference_engine, make_runtime_engine
-from tt_lenia.config import load_config
-from tt_lenia.device import (
-    apply_tt_runtime_env,
-    close_ttnn_device,
-    open_ttnn_device,
-    parse_mesh_shape,
-    restore_tt_runtime_env,
-)
-from tt_lenia.reference import load_initial_mass_from_reference, load_kernels_from_reference, load_reference_arrays
+from tt_lenia.device import on_cards
+from tt_lenia.numpy_ref import metal
+from tt_lenia.sfpu.replay import Body, engine_inputs, load_index
+
+STAGES = ("potential", "affinity", "flow", "mass")
+ROLLOUT_BODIES = 4
+RATIO = 3.0
 
 
-TOLERANCES = {
-    "reference_vs_swift": 1e-5,
-    "runtime_vs_reference": 5e-1,
-    "runtime_vs_swift": 5e-1,
-    "reference_multi_step": 1e-2,
-}
+def relative_rms(actual: np.ndarray, expected: np.ndarray) -> float:
+    err = np.sqrt(np.mean((actual.astype(np.float64) - expected) ** 2))
+    return float(err / np.sqrt(np.mean(np.square(expected, dtype=np.float64))))
 
 
-def multi_step_drift_tolerance(backend: str, steps: int) -> float:
-    if steps <= 0:
-        raise ValueError(f"Expected steps > 0, got {steps}.")
-    if backend == "reference":
-        return TOLERANCES["reference_multi_step"]
-    return TOLERANCES["runtime_vs_reference"] * float(np.sqrt(steps))
-
-
-def validate_stage(name: str, actual: np.ndarray, expected: np.ndarray, tol: float) -> bool:
-    if actual.shape != expected.shape:
-        print(f"  FAIL {name}: shape mismatch {actual.shape} vs {expected.shape}")
-        return False
-    max_diff = np.max(np.abs(actual - expected))
-    passed = max_diff < tol
-    status = "PASS" if passed else "FAIL"
-    print(f"  {status} {name}: max_abs_diff={max_diff:.2e} (tol={tol:.0e})")
-    return passed
-
-def validate_reference_vs_swift(ref_dir: Path, config_path: Path) -> bool:
-    ref = load_reference_arrays(ref_dir)
-    if "mass_in" not in ref:
-        print("No Swift reference data found. Export with: lenia-swarm export-reference")
-        return False
-
-    config, raw = load_config(config_path)
-    kernels = load_kernels_from_reference(ref)
-
-    engine = make_reference_engine(config, kernels)
-    result = engine.step(load_initial_mass_from_reference(ref), capture_stages=True)
-
-    tol = TOLERANCES["reference_vs_swift"]
-    all_pass = True
-    if "mass_out" in ref:
-        all_pass &= validate_stage("mass_out", result.mass, ref["mass_out"], tol)
-    return all_pass
-
-
-def make_test_state(config_path: Path):
-    from tt_lenia.config import compile_kernels, resolve_connectivity, resolve_params
-
-    config, raw = load_config(config_path)
-    c0, c1 = resolve_connectivity(raw)
-    params = resolve_params(raw, config.nb_k)
-    kernels = compile_kernels(params, config, c0, c1)
-
-    rng = np.random.default_rng(42)
-    mass = np.zeros((1, config.sx, config.sy, config.channels), dtype=np.float32)
-    mass[0, 44:84, 44:84, :] = rng.uniform(0, 1, (40, 40, config.channels)).astype(np.float32)
-    return config, kernels, mass
-
-
-def make_reference_state(reference_dir: Path, config_path: Path):
-    config, _ = load_config(config_path)
-    ref = load_reference_arrays(reference_dir)
-    kernels = load_kernels_from_reference(ref)
-    mass = load_initial_mass_from_reference(ref)
-    return config, kernels, mass, ref
-
-
-def _make_runtime_validation_engine(
-    backend: str,
-    *,
-    config,
-    kernels,
-    device_id: int,
-    visible_devices: str | None,
-    mesh_shape: tuple[int, int] | None,
-):
-    previous_env = apply_tt_runtime_env(visible_device=visible_devices)
-    device = None
-    try:
-        device = open_ttnn_device(
-            device_id=device_id,
-            mesh_shape=mesh_shape,
-        )
-        engine = make_runtime_engine(backend, config, kernels, device=device)
-        return engine, device, previous_env
-    except Exception:
-        if device is not None:
-            close_ttnn_device(device)
-        restore_tt_runtime_env(previous_env)
-        raise
-
-
-def validate_runtime_vs_reference(
-    backend: str,
-    config_path: Path,
-    reference_dir: Path | None = None,
-    *,
-    device_id: int = 1,
-    visible_devices: str | None = None,
-    mesh_shape: tuple[int, int] | None = None,
-) -> bool:
-    if reference_dir is not None:
-        config, kernels, mass, ref = make_reference_state(reference_dir, config_path)
-    else:
-        config, kernels, mass = make_test_state(config_path)
-        ref = None
-
-    reference_engine = make_reference_engine(config, kernels)
-    runtime_engine, device, previous_env = _make_runtime_validation_engine(
-        backend,
-        config=config,
-        kernels=kernels,
-        device_id=device_id,
-        visible_devices=visible_devices,
-        mesh_shape=mesh_shape,
+def reference(body: Body) -> tuple[metal.MetalKernels, metal.MetalStepConfig]:
+    spec = body.spec
+    kernels = metal.MetalKernels(
+        spectra=body.spectra,
+        c0=np.array(spec.c0),
+        output_weights=np.array(spec.output_weights, np.float32),
+        m=body.m,
+        s=body.s,
+        h=body.h,
     )
+    cfg = metal.MetalStepConfig(
+        dt=spec.dt,
+        dd=spec.dd,
+        sigma=spec.sigma,
+        theta_a=spec.theta_a,
+        n=spec.n,
+        clip_flow=False,
+    )
+    return kernels, cfg
 
+
+def _validate(card: int, bodies: list[Body], steps: int) -> dict:
+    from tt_lenia.device import close_card, open_card
+    from tt_lenia.sfpu.engine import LANES, SfpuEngine
+
+    mesh = open_card()
     try:
-        reference_result = reference_engine.step(mass, capture_stages=True)
-        runtime_result = runtime_engine.step(mass, capture_stages=True)
+        mass, params = engine_inputs(bodies, LANES * int(mesh.get_num_devices()))
+        spec = bodies[0].spec
+        engine = SfpuEngine(mesh, spec, mass, params, capture=True)
+        engine.step()
+        got = engine.captured() | {"mass": engine.mass()}
+        rollout = SfpuEngine(mesh, spec, mass, params, capture=False)
+        rollout.step(steps)
+        rolled = rollout.mass()
     finally:
-        close = getattr(runtime_engine, "close", None)
-        if callable(close):
-            close()
-        if device is not None:
-            close_ttnn_device(device)
-        restore_tt_runtime_env(previous_env)
-
-    tol = TOLERANCES["runtime_vs_reference"]
-    all_pass = True
-    all_pass &= validate_stage("mass_out", runtime_result.mass, reference_result.mass, tol)
-    if ref is not None and "mass_out" in ref:
-        all_pass &= validate_stage(
-            "reference_mass_out_vs_swift",
-            reference_result.mass,
-            ref["mass_out"],
-            TOLERANCES["reference_vs_swift"],
+        close_card(mesh)
+    step_rows = []
+    for i, body in enumerate(bodies):
+        kernels, cfg = reference(body)
+        ref = metal.step(body.mass[None].astype(np.float64), kernels, cfg)
+        ref32 = metal.step(body.mass[None], kernels, cfg, dtype=np.float32)
+        step_rows.append(
+            {
+                name: {
+                    "device": relative_rms(got[name][i : i + 1], ref[name]),
+                    "float32": relative_rms(ref32[name], ref[name]),
+                }
+                for name in STAGES
+            }
         )
-        all_pass &= validate_stage(
-            f"{backend}_mass_out_vs_swift",
-            runtime_result.mass,
-            ref["mass_out"],
-            TOLERANCES["runtime_vs_swift"],
+    rollout_rows = []
+    for i, body in enumerate(bodies[:ROLLOUT_BODIES]):
+        kernels, cfg = reference(body)
+        ref = metal.rollout(body.mass[None], kernels, cfg, steps)
+        ref32 = metal.rollout(body.mass[None], kernels, cfg, steps, dtype=np.float32)
+        rollout_rows.append(
+            {
+                "device": relative_rms(rolled[i : i + 1], ref),
+                "float32": relative_rms(ref32, ref),
+            }
         )
-    return all_pass
+    return {"step": step_rows, "rollout": rollout_rows}
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Validate TT backend against references")
-    parser.add_argument("--reference", type=Path, help="Directory with Swift .npy reference data")
-    parser.add_argument("--backend", choices=["reference", "tt"], required=True)
-    parser.add_argument("--config", type=Path, default=None, help="Config JSON (defaults to paper_base_3k_1c_128)")
-    parser.add_argument("--multi-step", type=int, default=0, help="Run N steps and check drift")
-    parser.add_argument(
-        "--multi-step-tol",
-        type=float,
-        default=None,
-        help="Override multi-step max-abs drift tolerance. Defaults to backend-aware numerical drift.",
-    )
-    parser.add_argument("--device-id", type=int, default=1)
-    parser.add_argument("--tt-visible-devices", default=None)
-    parser.add_argument("--mesh-shape", default=None, help="Explicit TT mesh shape as rows,cols.")
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--input", type=Path, required=True, help="LeniaCLI export index.jsonl")
+    parser.add_argument("--card", type=int, required=True, help="N300 card index")
+    parser.add_argument("--bodies", type=int, default=64)
+    parser.add_argument("--steps", type=int, default=16, help="rollout length")
     args = parser.parse_args()
+    bodies = load_index(args.input)[: args.bodies]
+    result = on_cards(_validate, {args.card: (bodies, args.steps)})[args.card]
 
-    config_path = args.config
-    if config_path is None:
-        config_path = Path(__file__).parents[2] / "configs" / "base" / "paper_base_3k_1c_128.json"
-
-    print(f"Validating {args.backend} backend")
-    print(f"Config: {config_path}")
-    mesh_shape = parse_mesh_shape(args.mesh_shape)
-
-    if args.backend == "reference" and args.reference:
-        passed = validate_reference_vs_swift(args.reference, config_path)
-    elif args.backend == "tt":
-        passed = validate_runtime_vs_reference(
-            args.backend,
-            config_path,
-            reference_dir=args.reference,
-            device_id=args.device_id,
-            visible_devices=args.tt_visible_devices,
-            mesh_shape=mesh_shape,
+    passed = True
+    checks = [(f"{name} one step", [row[name] for row in result["step"]]) for name in STAGES]
+    checks.append((f"mass after {args.steps} steps", result["rollout"]))
+    for label, rows in checks:
+        device = [row["device"] for row in rows]
+        float32 = [row["float32"] for row in rows]
+        ok = max(device) <= RATIO * max(float32)
+        passed &= ok
+        print(
+            f"{'PASS' if ok else 'FAIL'} {label}, {len(rows)} bodies, relative RMS vs float64: "
+            f"device median {np.median(device):.2e} max {max(device):.2e}, "
+            f"float32 median {np.median(float32):.2e} max {max(float32):.2e}"
         )
-    else:
-        print("For reference validation, provide --reference directory with Swift exports")
-        sys.exit(1)
-
-    if args.multi_step > 0:
-        print(f"\nMulti-step drift test ({args.multi_step} steps)...")
-        if args.reference is not None:
-            config, kernels, mass, _ = make_reference_state(args.reference, config_path)
-        else:
-            config, kernels, mass = make_test_state(config_path)
-
-        reference_engine = make_reference_engine(config, kernels)
-        if args.backend == "reference":
-            runtime_engine = reference_engine
-            runtime_device = None
-        else:
-            runtime_engine, runtime_device, previous_env = _make_runtime_validation_engine(
-                args.backend,
-                config=config,
-                kernels=kernels,
-                device_id=args.device_id,
-                visible_devices=args.tt_visible_devices,
-                mesh_shape=mesh_shape,
-            )
-
-        try:
-            reference_result = reference_engine.run(mass, args.multi_step)
-            runtime_result = runtime_engine.run(mass, args.multi_step)
-            diff = np.abs(reference_result - runtime_result)
-            max_diff = np.max(diff)
-            mean_diff = np.mean(diff)
-            drift_tol = (
-                args.multi_step_tol
-                if args.multi_step_tol is not None
-                else multi_step_drift_tolerance(args.backend, args.multi_step)
-            )
-            drift_pass = max_diff < drift_tol
-            status = "PASS" if drift_pass else "FAIL"
-            print(
-                f"  {status} {args.multi_step}-step drift: "
-                f"max_abs_diff={max_diff:.2e}, mean_abs_diff={mean_diff:.2e} (tol={drift_tol:.0e})"
-            )
-            passed &= drift_pass
-        finally:
-            if args.backend != "reference":
-                close = getattr(runtime_engine, "close", None)
-                if callable(close):
-                    close()
-                if runtime_device is not None:
-                    close_ttnn_device(runtime_device)
-                restore_tt_runtime_env(previous_env)
-
+    print(json.dumps({"input": str(args.input), "steps": args.steps, **result}))
     sys.exit(0 if passed else 1)
 
 

@@ -172,7 +172,9 @@ def resolve_params(raw: dict, nb_k: int, seed: int | None = None) -> KernelParam
         )
 
 
-def compile_kernels(params: KernelParams, config: BatchedConfig, c0: list[int], c1: list[list[int]]) -> CompiledKernels:
+def compile_kernels(
+    params: KernelParams, config: BatchedConfig, c0: list[int], c1: list[list[int]]
+) -> CompiledKernels:
     sx, sy = config.sx, config.sy
     mid_x, mid_y = sx // 2, sy // 2
 
@@ -188,7 +190,9 @@ def compile_kernels(params: KernelParams, config: BatchedConfig, c0: list[int], 
         w_k = np.array(params.w[k], dtype=np.float32)
         b_k = np.array(params.b[k], dtype=np.float32)
 
-        radius_base = (params.R + 15.0) if config.implementation.kernel_profile == "notebook" else params.R
+        radius_base = (
+            (params.R + 15.0) if config.implementation.kernel_profile == "notebook" else params.R
+        )
         D = d_base / (radius_base * r_k)
 
         D_exp = D[..., np.newaxis]

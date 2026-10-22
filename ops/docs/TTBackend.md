@@ -1,87 +1,87 @@
 ---
-summary: "Running Flow Lenia on Tenstorrent hardware in single, fleet and mesh modes, and how remote runs are configured."
+summary: "Replaying Flow Lenia export bundles on Tenstorrent N300 cards with the fp32 SFPU engine, and validating and benchmarking it."
 ---
 
 # TT Backend
 
-Tenstorrent execution for Flow Lenia. The user-facing entrypoint is
-`LeniaCLI tt run`; Lenia Studio remains the replay and inspection surface.
+Flow Lenia on Tenstorrent Wormhole runs in `tt_backend/tt_lenia/sfpu`. Every
+operation is IEEE float32 on the SFPU vector units; the matrix unit, which
+truncates to tf32, is never used. One SFPU lane holds one body, so 32 bodies
+form a group, and each group gets an equal share of the chip's 64 cores.
 
-## Modes
+The engine follows the Metal pipeline's semantics (`MetalSpectral.swift`,
+`MetalPipeline.swift`) for the configuration the large searches run: torus
+border, `flowlenia_2022_paper_equations`, explicit parameters, sides of 128 or
+256, mass-weighted alpha. The replay runner refuses any other config feature
+rather than approximating it.
 
-- `single`: one simulation on one TT device.
-- `fleet`: independent simulations split across TT devices.
-- `mesh`: one simulation over a TTNN/TT-Lang mesh. Reintegration is row-sharded;
-  the spectral front half is still replicated/gathered.
+## Replay
 
-Mesh mode is correctness-enabled. It is not yet the default performance path.
-
-## Run
-
-Remote runs require `--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at this
-dossier on the target host.
+The user-facing entrypoint is `LeniaCLI tt replay`. It reads the
+`index.jsonl` that `LeniaCLI publish replay --input` reads and writes the same
+campaign layout (`config.json`, `replay-manifest.json`,
+`development-trace.jsonl` per body, and `summary.json`), so
+`assess-creatures` and `classify-creatures` read TT replays and Metal replays
+alike. Paths must lie under the dossier root, which the container mounts at
+`/repo`.
 
 ```bash
-export LENIA_TT_REMOTE_ROOT="$(dispatch workspace plan --on <tt-host> --project specter-labs --json | jq -r .remote_cwd)"
+export LENIA_TT_REMOTE_ROOT=<dossier root on the TT host>
 
-LeniaCLI tt run \
+LeniaCLI tt replay \
   --host <tt-host> \
-  --config configs/base/paper_base_2c_128.json \
-  --output tmp/tt-runs/orbitum-128 \
-  --execution-mode single \
-  --tt-card-num 0 \
-  --steps 300 \
-  --frame-every 5
-
-LeniaCLI tt run \
-  --host <tt-host> \
-  --config configs/base/paper_base_2c_128.json \
-  --output tmp/tt-runs/fleet-128 \
-  --execution-mode fleet \
-  --device-list 0,1,2,3 \
-  --tt-card-list 0,1,2,3 \
-  --batch-size 4 \
-  --steps 300 \
-  --frame-every 10
+  --input tmp/requal/input/n128-torus128/index.jsonl \
+  --output tmp/tt-replays/n128-torus128 \
+  --steps 40000 \
+  --trace-interval 1000 \
+  --cards 0,1,2,3
 ```
 
-Each run writes `tt_run.json` with backend mode, device selection, seeds,
-timing, and final mass summaries.
-
-## Device Rules
-
-QuietBox N300 cards expose two Wormhole chips per card. Mesh shapes count chips,
-so four cards are `--mesh-shape 1,8`.
-
-The TT-Lang dist container maps `single` mode to `/dev/tenstorrent/0`.
-`fleet` and `mesh` need explicit reservations:
+On the TT host the same run is
 
 ```bash
-dispatch run --on <tt-host> --device wormhole:0,1 -- ...
-dispatch run --on <tt-host> --device wormhole:all -- ...
+python3 tt_backend/devtools/container.py -- \
+  python3 -m tt_lenia.sfpu.replay \
+  --input /repo/tmp/requal/input/n128-torus128/index.jsonl \
+  --output /repo/tmp/tt-replays/n128-torus128 \
+  --steps 40000 --trace-interval 1000 --cards 0,1,2,3
 ```
 
-`LeniaCLI --host` and `dispatch run` are separate launchers. Use
-`LeniaCLI tt run --host <tt-host>` for Studio/export artifacts. Use
-`dispatch run` for backend profiling when dispatch owns the Wormhole
-reservation; in that mode the command is already running in the remote
-workspace.
+Bodies are split evenly across cards. Bodies in one replay must share their
+grid, connectivity and flow parameters, because those are compiled into the
+SFPU code; spectra and growth parameters are per body. Each card pads its share
+to a multiple of 64 lanes with zero-mass filler bodies, which stay at zero and
+are never written out.
 
-## Developer Tools
+## Devices
 
-`tt_backend/devtools/` is for bringup, profiling, and hardware debugging. It is
-not the user workflow.
+An N300 card holds two Wormhole chips and is opened as one `(1, 2)` mesh with
+`MESH_DEVICE=N300`. Cards run as separate processes selected by
+`TT_VISIBLE_DEVICES`, because bodies never interact and a fleet of independent
+cards scales linearly with no fabric between cards.
+
+`tt_backend/devtools/container.py` runs a command in the pinned TT-Lang
+distribution image with the whole `/dev/tenstorrent` tree mapped, so card
+indices mean the same inside and outside the container. It removes hugepage
+files that no process holds before starting, and keeps the TT-Metal kernel cache
+under `$SPECTER_RUNTIME_ROOT/tt-metal-cache` (or the dossier's `tmp/`), so the
+roughly 12 s first-step compilation happens once per kernel variant.
+
+## Validation and benchmarks
 
 ```bash
-python devtools/run.py --backend tt --execution-mode mesh --device-list 0,1,2,3 --mesh-shape 1,8 ...
-python devtools/bench.py --backend tt --execution-mode single --grid-sizes 128,256 --batch-sizes 1 ...
-python devtools/probe_mesh_halo.py --mesh-shape 1,2 --tt-visible-devices 0 --size 256 --planes 2 --assemble
-python devtools/probe_mesh_dft.py --mesh-shape 1,4 --tt-visible-devices 0,1 --size 512 --planes 20 --mode partition-complex-dft
+python3 tt_backend/devtools/container.py -- \
+  python3 devtools/validate.py --input /repo/<index.jsonl> --card 0
+python3 tt_backend/devtools/container.py -- \
+  python3 devtools/bench.py --input /repo/<index.jsonl> --cards 0,1,2,3 --batches 256,3584
 ```
 
-`--mesh-dft` enables the experimental mesh-partitioned DFT path for
-`devtools/run.py` and `devtools/bench.py`. It is correctness-validated but
-slower than the default front half.
+`validate.py` compares potential, affinity, flow and mass after one step for
+every body (64 by default) against the float64 reference in
+`tt_lenia/numpy_ref/metal.py`, and the mass after a 16-step rollout for the
+first four. The float32 reference runs alongside as the yardstick, and each
+quantity passes when the largest device error stays within three times the
+largest float32 error. `bench.py` runs the same batches on all listed cards at
+once and reports per-card and box rates with a per-pass split.
 
-Accepted performance facts and rejected probes are tracked in
-[TT Backend Performance](./TTBackendPerformance.md).
+Results are recorded in [TT Backend Performance](./TTBackendPerformance.md).

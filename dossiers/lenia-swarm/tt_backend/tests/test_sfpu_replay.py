@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from tt_lenia.sfpu import replay
+from tt_lenia.sfpu.codegen import PassSpec
 
 F32 = np.float32
 
@@ -109,3 +110,34 @@ def test_check_config_refuses_unvalidated_features(
     target[path[-1]] = value
     with pytest.raises(ValueError, match=message):
         replay._check_config(raw, "body")
+
+
+def test_engine_inputs_pads_lanes_with_zero_mass_filler() -> None:
+    spec = PassSpec(
+        sx=128,
+        sy=128,
+        channels=1,
+        c0=(0, 0),
+        output_weights=((1, 1),),
+        dt=0.2,
+        dd=5,
+        sigma=0.65,
+        theta_a=1.0,
+        n=2,
+    )
+    body = replay.Body(
+        campaign="c",
+        creature_id="id",
+        export_dir="e",
+        config={},
+        mass=np.ones((128, 128, 1), F32),
+        spectra=np.full((128, 128, 2), 2, F32),
+        m=np.full(2, 0.1, F32),
+        s=np.full(2, 0.2, F32),
+        h=np.full(2, 0.3, F32),
+        spec=spec,
+    )
+    mass, params = replay.engine_inputs([body] * 3, 4)
+    assert mass.shape == (4, 128, 128, 1) and params.spectra.shape == (4, 128, 128, 2)
+    assert mass[:3].min() == 1 and mass[3].max() == 0
+    assert params.s[3].tolist() == [1, 1] and params.m[3].tolist() == [0, 0]
