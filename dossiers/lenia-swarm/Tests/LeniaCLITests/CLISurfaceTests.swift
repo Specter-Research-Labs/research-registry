@@ -32,7 +32,8 @@ final class CLISurfaceTests: XCTestCase {
         XCTAssertEqual(
             Set(commandNames(TTCommands.configuration.subcommands)),
             Set([
-                "run",
+                "replay",
+                "materialize-init",
             ])
         )
     }
@@ -50,6 +51,7 @@ final class CLISurfaceTests: XCTestCase {
                 "ecology-2025",
                 "curiosity-2025",
                 "map-elites",
+                "map-elites-children",
                 "sensorimotor-flowlenia",
                 "evaluate",
                 "obstacle-response",

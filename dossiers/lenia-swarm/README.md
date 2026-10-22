@@ -111,6 +111,8 @@ Useful individual targets:
 - `LeniaCLI orchestrate campaign --campaign configs/campaigns/intervention-battery.json --output RUN`: the intervention battery as a declarative campaign phase.
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
 - `LeniaCLI tt replay`: export-bundle replays on Tenstorrent N300 cards with the float32 SFPU engine.
+- `LeniaCLI tt materialize-init --input INDEX.jsonl --output DIR`: rewrites seeded random-patch export bundles as explicit step-0 state patches, which the SFPU engine requires, and refuses any bundle whose rebuilt step-0 state is not bitwise identical.
+- `LeniaCLI discover map-elites-children --spec SPEC.json --output DIR`: emits MAP-Elites variation children of verified archive parents as replay bundles, with no simulation. Each spec cell names its source lineages, self or cross-lineage pairing, the mutated genome part (`params`, `patch` or `both`), and the isotropic and line sigmas. Children are seeded from the cell id and index, so a cell emitted alone or in chunks reproduces the full spec; `--verify-only` checks that every parent's export rebuilds from its archive genome.
 - `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.
 - `lenia-swarm-analysis`: canonical Python analysis CLI for TDA, fibers,
   transport, packet builders, named-family preset extraction, and warehouse
@@ -123,9 +125,12 @@ Useful individual targets:
 with the float32 SFPU engine, as one-ulp ensembles with one member per seed, and
 writes the same campaign layout as
 `LeniaCLI publish replay`, so `assess-creatures` and `classify-creatures` read
-the result. It runs on the TT host directly or over SSH with `--host`; remote
-runs require `--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at the Lenia
-dossier on that host. When using dispatch's mirrored workspace, that path is the
+the result. Bundles from random-patch searches go through `tt materialize-init`
+first, and `lenia-swarm-analysis morphospace write-arena-inputs --index INDEX.jsonl
+--scale 1 --scale 2` writes the torus arenas an index is classified at. It
+runs on the TT host directly or over SSH with `--host`; remote runs require
+`--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at the Lenia dossier on that
+host. When using dispatch's mirrored workspace, that path is the
 dispatch `remote_cwd`.
 
 ```bash

@@ -3659,15 +3659,36 @@ public final class EvolutionEngine {
         guard !parents.isEmpty else {
             return sampleMAPElitesInitialCandidates(count: count, sigma: sigma, includeParent: false)
         }
-        let dimensions = parents[0].count
         return (0..<count).map { _ in
             let first = parents[Int.random(in: 0..<parents.count, using: &rng)]
             let second = parents[Int.random(in: 0..<parents.count, using: &rng)]
-            return (0..<dimensions).map { dimension in
-                let isotropic = sigma * gaussianSample(rng: &rng)
-                let directional = lineSigma * gaussianSample(rng: &rng) * (second[dimension] - first[dimension])
-                return first[dimension] + isotropic + directional
-            }
+            return Self.mapElitesChild(
+                first: first,
+                second: second,
+                sigma: sigma,
+                lineSigma: lineSigma,
+                mutated: 0..<first.count,
+                rng: &rng
+            )
+        }
+    }
+
+    /// One MAP-Elites variation of `first` along `second`. Both gaussians are drawn for every
+    /// dimension, so children that mutate different `mutated` ranges from one seed share draws.
+    public static func mapElitesChild(
+        first: [Float],
+        second: [Float],
+        sigma: Float,
+        lineSigma: Float,
+        mutated: Range<Int>,
+        rng: inout SeededRandomNumberGenerator
+    ) -> [Float] {
+        precondition(first.count == second.count, "MAP-Elites parents differ in dimension.")
+        return (0..<first.count).map { dimension in
+            let isotropic = sigma * gaussianSample(rng: &rng)
+            let directional = lineSigma * gaussianSample(rng: &rng) * (second[dimension] - first[dimension])
+            guard mutated.contains(dimension) else { return first[dimension] }
+            return first[dimension] + isotropic + directional
         }
     }
 
@@ -4132,6 +4153,14 @@ public final class EvolutionEngine {
             finalMorphology: finalMorphology,
             resultData: resultData
         )
+    }
+
+    /// The genotype and initial condition `evaluateCandidateForResearchExport` exports for
+    /// `candidate`, without simulating it.
+    public func researchExportGenome(_ candidate: [Float]) -> (params: KernelParams, initConfig: InitConfig) {
+        let params = vectorToParams(Array(candidate[0..<thetaParamsDim]), space: paramSpace)
+        let initConfig = resolvedResearchInitConfig(patchValues: resolvedInitPatchValues(candidate))
+        return (params.toKernelParams(), initConfig)
     }
 
     private func resolvedInitPatchValues(_ candidate: [Float]) -> [Float]? {

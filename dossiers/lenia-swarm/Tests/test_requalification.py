@@ -153,6 +153,42 @@ def test_torus_inputs_scale_grid_and_recentre_patch(tmp_path, sources):
     assert json.loads(Path(row["searchConfigPath"]).read_text())["steps"] == 40000
 
 
+def test_arena_inputs_take_every_indexed_body_whatever_its_init_seed(tmp_path):
+    seeded = base_config(128, 0.4)
+    seeded["init"]["seed"] = 104000017
+    rows = [
+        export(tmp_path / "exports", "0000-a", "AAAA0001", seeded),
+        export(tmp_path / "exports", "0001-b", "BBBB0002", base_config(256, 0.5)),
+    ]
+    index = write_jsonl(tmp_path / "index.jsonl", rows)
+    summary = rq.write_arena_inputs(
+        index_path=index, scales=[1, 2], steps=650, output_root=tmp_path / "in"
+    )
+    assert summary["cells"] == {
+        "n128-torus128": 1,
+        "n128-torus256": 1,
+        "n256-torus256": 1,
+        "n256-torus512": 1,
+    }
+    row = json.loads((tmp_path / "in/n128-torus256/index.jsonl").read_text())
+    assert row["creatureId"] == "AAAA0001"
+    base = json.loads(Path(row["baseConfigPath"]).read_text())
+    assert base["init"]["state_patch"]["center"] == [128, 128]
+    assert base["init"]["seed"] == 104000017
+    receipt = json.loads((tmp_path / "in/receipt.json").read_text())
+    assert receipt["index_sha256"] == hashlib.sha256(index.read_bytes()).hexdigest()
+
+
+def test_arena_inputs_refuse_uniform_noise_beside_the_state_patch(tmp_path):
+    noisy = base_config(128, 0.4)
+    noisy["init"]["a_uniform"] = {"low": 0, "high": 0.2}
+    index = write_jsonl(
+        tmp_path / "index.jsonl", [export(tmp_path / "exports", "0000-a", "AAAA0001", noisy)]
+    )
+    with pytest.raises(ValueError, match="only initial condition"):
+        rq.write_arena_inputs(index_path=index, scales=[1], steps=650, output_root=tmp_path / "in")
+
+
 def assessment(path: Path, arena: int, passes: dict[str, bool]) -> Path:
     bodies = [
         {
