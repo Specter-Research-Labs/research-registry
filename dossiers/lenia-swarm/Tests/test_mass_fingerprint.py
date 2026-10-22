@@ -1,0 +1,28 @@
+import base64
+import json
+import zlib
+from pathlib import Path
+
+import numpy as np
+
+from lenia_swarm_analysis.morphospace.fingerprint import mass_fingerprint
+
+FRAMES = Path(__file__).parent / "fixtures" / "metal_mass_fingerprint_frames.json"
+
+
+def test_mass_fingerprint_matches_metal_frames_bitwise() -> None:
+    """Two raw float32 states from a 2-channel 128x128 torus Metal replay (`publish replay
+    --development-state`) at steps 350 and 650, with the `fingerprintU8` the replay traced for each.
+    Both frames sit off-centre, so the roll and the wrap are exercised."""
+    for frame in json.loads(FRAMES.read_text())["frames"]:
+        raw = zlib.decompress(base64.b64decode(frame["stateF32ZlibBase64"]))
+        state = np.frombuffer(raw, dtype="<f4").reshape(frame["shape"]).astype(np.float32)
+        expected = np.frombuffer(base64.b64decode(frame["fingerprintU8"]), np.uint8).reshape(32, 32)
+        got = mass_fingerprint(state)
+        assert got.dtype == np.uint8
+        diff = int((got != expected).sum())
+        assert diff == 0, f"step {frame['step']}: {diff} cells differ"
+
+
+def test_mass_fingerprint_of_empty_state_is_zero() -> None:
+    assert not mass_fingerprint(np.zeros((64, 64, 2), np.float32)).any()
