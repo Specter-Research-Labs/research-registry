@@ -1,7 +1,8 @@
 #include "dataflow_common.h"
+#include GEN_HEADER
 
-// Gathers row x of every kernel response, placing bin ky at chunk bitrev(ky) because the
-// inverse row transform consumes bit-reversed input.
+// Gathers row x of every kernel response in pass 3 order, placing bin ky at chunk bitrev(ky)
+// because the inverse row transform consumes bit-reversed input.
 void kernel_main() {
     const uint32_t resp_addr = get_arg_val<uint32_t>(3);
     const uint32_t mass_addr = get_arg_val<uint32_t>(4);
@@ -19,17 +20,24 @@ void kernel_main() {
     read_pages(par, group * 2, 2, get_write_ptr(CB_PAR));
     noc_async_read_barrier();
     cb_push_back(CB_PAR, 2);
+#if GRID_SY > 256
+    constexpr auto w_args = TensorAccessorArgs<par_args.next_compile_time_args_offset()>();
+    read_twiddles(TensorAccessor(w_args, get_arg_val<uint32_t>(6), PAGE));
+#endif
     for (uint32_t x = begin; x < end; x++) {
         const uint32_t offset = (x % 16) * CHUNK;
-        for (uint32_t k = 0; k < NK; k++) {
-            cb_reserve_back(CB_IN, T);
-            const uint32_t l1 = get_write_ptr(CB_IN);
-            for (uint32_t ky = 0; ky < M; ky++) {
-                const uint32_t page = ((group * NK + k) * M + ky) * CT + x / 16;
-                noc_async_read(resp.get_noc_addr(page, offset), l1 + bitrev(ky, M) * CHUNK, CHUNK);
+        for (uint32_t i = 0; i < GROWTH_CHUNKS; i++) {
+            for (uint32_t j = 0; j < growth_len[i]; j++) {
+                const uint32_t k = growth_kernel[i][j];
+                cb_reserve_back(CB_IN, T);
+                const uint32_t l1 = get_write_ptr(CB_IN);
+                for (uint32_t ky = 0; ky < M; ky++) {
+                    const uint32_t page = ((group * NK + k) * M + ky) * CT + x / 16;
+                    noc_async_read(resp.get_noc_addr(page, offset), l1 + bitrev(ky, M) * CHUNK, CHUNK);
+                }
+                noc_async_read_barrier();
+                cb_push_back(CB_IN, T);
             }
-            noc_async_read_barrier();
-            cb_push_back(CB_IN, T);
         }
         cb_reserve_back(CB_MASS, NC * T);
         const uint32_t l1 = get_write_ptr(CB_MASS);

@@ -10,15 +10,9 @@ void kernel_main() {
     constexpr auto h_args = TensorAccessorArgs<spec_args.next_compile_time_args_offset()>();
     const auto spec = TensorAccessor(spec_args, spec_addr, PAGE);
     const auto h = TensorAccessor(h_args, h_addr, PAGE);
-#if GRID_SX == 256
-    constexpr uint32_t CB_W = tt::CBIndex::c_11;
-    const uint32_t w_addr = get_arg_val<uint32_t>(5);
+#if GRID_SX > 128
     constexpr auto w_args = TensorAccessorArgs<h_args.next_compile_time_args_offset()>();
-    const auto w = TensorAccessor(w_args, w_addr, PAGE);
-    cb_reserve_back(CB_W, CT / 2);
-    read_pages(w, 0, CT / 2, get_write_ptr(CB_W));
-    noc_async_read_barrier();
-    cb_push_back(CB_W, CT / 2);
+    read_twiddles(TensorAccessor(w_args, get_arg_val<uint32_t>(5), PAGE));
 #endif
     for (uint32_t unit = begin; unit < end; unit++) {
         const uint32_t c = unit / M;

@@ -197,21 +197,24 @@ def dit(pos: list[int], sign: int, first_span: int = 2, last_span: int | None = 
     return code
 
 
-def real_forward_post(pos: list[int], n_real: int) -> list[str]:
+def real_forward_post(pos: dict[int, int], n_real: int) -> list[str]:
     """Turn the half-length FFT Z of a packed real row into X' = 2 rfft(row), in place.
 
-    `pos[k]` holds Z[k] and receives X'[k] for k < n_real / 2; slot 0 packs the two real
-    bins as (X'[0], X'[n_real / 2]).
+    `pos[k]` holds Z[k] and receives X'[k]; slot 0 packs the two real bins as
+    (X'[0], X'[n_real / 2]). Bins k and n_real / 2 - k are computed together, so `pos` may
+    hold any set of bins that is closed under that pairing.
     """
     m = n_real // 2
-    p, q = pos[0], pos[m // 2]
-    lines = [
-        f"{{ vFloat zr = dst_reg[{p}]; vFloat zi = dst_reg[{p + 1}]; vFloat s = zr + zi; "
-        f"vFloat d = zr - zi; dst_reg[{p}] = s + s; dst_reg[{p + 1}] = d + d; }}",
-        f"{{ vFloat zr = dst_reg[{q}]; vFloat zi = -dst_reg[{q + 1}]; "
-        f"dst_reg[{q}] = zr + zr; dst_reg[{q + 1}] = zi + zi; }}",
-    ]
-    for k in range(1, m // 2):
+    lines = []
+    if 0 in pos:
+        p, q = pos[0], pos[m // 2]
+        lines += [
+            f"{{ vFloat zr = dst_reg[{p}]; vFloat zi = dst_reg[{p + 1}]; vFloat s = zr + zi; "
+            f"vFloat d = zr - zi; dst_reg[{p}] = s + s; dst_reg[{p + 1}] = d + d; }}",
+            f"{{ vFloat zr = dst_reg[{q}]; vFloat zi = -dst_reg[{q + 1}]; "
+            f"dst_reg[{q}] = zr + zr; dst_reg[{q + 1}] = zi + zi; }}",
+        ]
+    for k in (k for k in range(1, m // 2) if k in pos):
         pa, pb = pos[k], pos[m - k]
         lines.append(
             "{ "
@@ -225,17 +228,19 @@ def real_forward_post(pos: list[int], n_real: int) -> list[str]:
     return lines
 
 
-def real_inverse_pre(pos: list[int], n_real: int) -> list[str]:
+def real_inverse_pre(pos: dict[int, int], n_real: int) -> list[str]:
     """Inverse of `real_forward_post` in place: Z' whose half-length inverse FFT packs the row."""
     m = n_real // 2
-    p, q = pos[0], pos[m // 2]
-    lines = [
-        f"{{ vFloat x0 = dst_reg[{p}]; vFloat xm = dst_reg[{p + 1}]; "
-        f"dst_reg[{p}] = x0 + xm; dst_reg[{p + 1}] = x0 - xm; }}",
-        f"{{ vFloat xr = dst_reg[{q}]; vFloat xi = -dst_reg[{q + 1}]; "
-        f"dst_reg[{q}] = xr + xr; dst_reg[{q + 1}] = xi + xi; }}",
-    ]
-    for k in range(1, m // 2):
+    lines = []
+    if 0 in pos:
+        p, q = pos[0], pos[m // 2]
+        lines += [
+            f"{{ vFloat x0 = dst_reg[{p}]; vFloat xm = dst_reg[{p + 1}]; "
+            f"dst_reg[{p}] = x0 + xm; dst_reg[{p + 1}] = x0 - xm; }}",
+            f"{{ vFloat xr = dst_reg[{q}]; vFloat xi = -dst_reg[{q + 1}]; "
+            f"dst_reg[{q}] = xr + xr; dst_reg[{q + 1}] = xi + xi; }}",
+        ]
+    for k in (k for k in range(1, m // 2) if k in pos):
         pa, pb = pos[k], pos[m - k]
         lines.append(
             "{ "
@@ -276,13 +281,25 @@ def permute(src: dict[int, int]) -> list[str]:
     return lines
 
 
-# A row of SY reals packs into SY / 2 complex values that must fit DST at once. A column of
-# COLUMN complex values fits whole; a column of 2 COLUMN runs its outermost radix-2 stage in
-# chunks of SPLIT positions from each half next to their SPLIT twiddles.
-SIDES = (128, 256)
+# A transform of COLUMN complex values fits DST whole. A longer one first runs its outer
+# radix-2 stages outside DST, in chunks of SPLIT positions from the two halves of a span next
+# to their SPLIT twiddles, and then transforms each COLUMN block on its own. A row of SY reals
+# packs into SY / 2 complex values and splits at most once, because its real-to-complex post
+# pairs bins k and SY / 2 - k, which share a parity and so stay in one half after one stage.
+SIDES = (128, 256, 512)
 COLUMN = DST_VECTORS // 2
 BLOCK = COLUMN // 2
 SPLIT = 32
+
+
+def split_spans(n: int) -> list[int]:
+    """Spans of the radix-2 stages of an n-point transform that run outside DST, outermost
+    first."""
+    spans = []
+    while n > COLUMN:
+        spans.append(n)
+        n //= 2
+    return spans
 
 
 @dataclass(frozen=True)
@@ -317,6 +334,8 @@ class PassSpec:
             raise ValueError(f"reintegration window needs 1 <= dd <= 8, got {self.dd}")
         if self.n < 1:
             raise ValueError(f"alpha exponent must be a positive integer, got {self.n}")
+        if any(sum(col) != 1 for col in zip(*self.output_weights)):
+            raise ValueError("every kernel must feed exactly one channel")
 
     @property
     def kernels(self) -> int:
@@ -334,6 +353,18 @@ class PassSpec:
     def max_shift(self) -> np.float32:
         return np.float32(self.dd) - np.float32(self.sigma)
 
+    @property
+    def row_split(self) -> bool:
+        return self.half > COLUMN
+
+    @property
+    def twiddle_spans(self) -> list[int]:
+        return split_spans(max(self.sx, self.half))
+
+    @property
+    def max_chunk(self) -> int:
+        return max(len(ks) for c in range(self.channels) for ks in self.growth_chunks(c))
+
     def growth_chunks(self, c: int) -> list[list[int]]:
         ks = [k for k, w in enumerate(self.output_weights[c]) if w]
         if not ks:
@@ -344,7 +375,20 @@ class PassSpec:
 def p1_row(spec: PassSpec) -> list[str]:
     m = spec.half
     pos = [2 * q for q in range(m)]
-    return dif(pos, -1) + real_forward_post([2 * bitrev(k, m) for k in range(m)], spec.sy)
+    return dif(pos, -1) + real_forward_post({k: 2 * bitrev(k, m) for k in range(m)}, spec.sy)
+
+
+def _half_bins(spec: PassSpec, h: int) -> dict[int, int]:
+    """DST positions of the bins that half h of a split row holds after its outer stage: the
+    bins of parity h, at their bit-reversed position within the half."""
+    m = spec.half
+    if m != 2 * COLUMN:
+        raise ValueError(f"a split row needs {2 * COLUMN} complex values, got {m}")
+    return {k: 2 * (bitrev(k, m) - h * COLUMN) for k in range(h, m, 2)}
+
+
+def p1_half(spec: PassSpec, h: int) -> list[str]:
+    return dif([2 * q for q in range(COLUMN)], -1) + real_forward_post(_half_bins(spec, h), spec.sy)
 
 
 def chunk_positions(spec: PassSpec) -> int:
@@ -356,10 +400,9 @@ def p2_forward(spec: PassSpec) -> Code:
     return dif([2 * p for p in range(COLUMN)], -1)
 
 
-def split_twiddles(spec: PassSpec) -> np.ndarray:
-    """exp(-2 pi i k / sx) for k < sx / 2 as (re, im) vectors, with the k = 0 and k = sx / 4
+def split_twiddles(n: int) -> np.ndarray:
+    """exp(-2 pi i k / n) for k < n / 2 as (re, im) vectors, with the k = 0 and k = n / 4
     entries exact so that they match the literal rotations of `dif` and `dit`."""
-    n = spec.sx
     w = np.empty(n, np.float32)
     for k in range(n // 2):
         t = _twiddle(-1, k, n)
@@ -371,14 +414,20 @@ def split_twiddles(spec: PassSpec) -> np.ndarray:
     return w
 
 
-def p2_split_forward(spec: PassSpec) -> Code:
-    """First DIF stage of a 2 COLUMN-point column on one chunk: DST holds SPLIT positions of
-    each column half and their twiddles, and the a/b outputs replace the two halves."""
+def twiddle_table(spec: PassSpec) -> np.ndarray:
+    """The split twiddles of every span in `spec.twiddle_spans`, widest first, so that span s
+    starts (spans[0] - s) / 16 tiles in."""
+    return np.concatenate([split_twiddles(n) for n in spec.twiddle_spans])
+
+
+def split_forward() -> Code:
+    """One DIF butterfly stage on a chunk: DST holds SPLIT positions from each half of a span
+    and their twiddles, and the a/b outputs replace the two halves."""
     return [Loop(SPLIT, 2, (_dif_butterfly(0, 2 * SPLIT, TwiddleAt(4 * SPLIT, conj=False)),))]
 
 
-def p2_split_inverse(spec: PassSpec) -> Code:
-    """Last DIT stage of a 2 COLUMN-point column on the chunk layout of `p2_split_forward`."""
+def split_inverse() -> Code:
+    """One DIT butterfly stage on the chunk layout of `split_forward`."""
     return [Loop(SPLIT, 2, (_dit_butterfly(0, 2 * SPLIT, TwiddleAt(4 * SPLIT, conj=True)),))]
 
 
@@ -419,9 +468,13 @@ def p2_merge(spec: PassSpec) -> list[str]:
 
 def p3_row(spec: PassSpec) -> list[str]:
     m = spec.half
-    return real_inverse_pre([2 * bitrev(k, m) for k in range(m)], spec.sy) + dit(
+    return real_inverse_pre({k: 2 * bitrev(k, m) for k in range(m)}, spec.sy) + dit(
         [2 * p for p in range(m)], +1
     )
+
+
+def p3_half(spec: PassSpec, h: int) -> list[str]:
+    return real_inverse_pre(_half_bins(spec, h), spec.sy) + dit([2 * p for p in range(COLUMN)], +1)
 
 
 PARAM_BASE = 6 * TILE_VECTORS
@@ -644,7 +697,8 @@ def _function(name: str, code: Code) -> str:
 
 
 def _growth_plan(spec: PassSpec) -> str:
-    """Tables that every TRISC reads to drive the growth chunks, channel by channel."""
+    """Tables that every TRISC and the pass 3 dataflow kernels read to drive the growth
+    chunks, channel by channel."""
     chunks = [
         (c, i, ks, i == 0, i == len(spec.growth_chunks(c)) - 1)
         for c in range(spec.channels)
@@ -659,6 +713,7 @@ def _growth_plan(spec: PassSpec) -> str:
     return "\n".join(
         [
             f"constexpr uint32_t GROWTH_CHUNKS = {len(chunks)};",
+            table("growth_channel", [str(c) for c, *_ in chunks]),
             table("growth_first", [str(int(f)) for *_, f, _ in chunks]),
             table("growth_last", [str(int(last)) for *_, last in chunks]),
             table("growth_len", [str(len(ks)) for _, _, ks, _, _ in chunks]),
@@ -680,8 +735,15 @@ def header(spec: PassSpec, stage: str) -> str:
     """
     parts: list[str] = []
     plan = ""
+    # The kernels' stage wrappers name the split stages even where a transform fits DST.
+    fwd = _function("split_forward", split_forward())
+    inv = _function("split_inverse", split_inverse())
     if stage == "p1":
-        parts.append(_function("p1_row", p1_row(spec)))
+        parts.append(fwd)
+        if spec.row_split:
+            parts += [_function(f"p1_half_{h}", p1_half(spec, h)) for h in range(2)]
+        else:
+            parts.append(_function("p1_row", p1_row(spec)))
     elif stage == "p2":
         parts += [
             _function("p2_forward", p2_forward(spec)),
@@ -691,12 +753,15 @@ def header(spec: PassSpec, stage: str) -> str:
             _function("p2_final", p2_final(spec)),
             _function("p2_compact", p2_compact(spec)),
             _function("p2_merge", p2_merge(spec)),
+            fwd,
+            inv,
         ]
-        if spec.sx == 2 * COLUMN:
-            parts.append(_function("p2_split_forward", p2_split_forward(spec)))
-            parts.append(_function("p2_split_inverse", p2_split_inverse(spec)))
     elif stage == "p3":
-        parts.append(_function("p3_row", p3_row(spec)))
+        parts.append(inv)
+        if spec.row_split:
+            parts += [_function(f"p3_half_{h}", p3_half(spec, h)) for h in range(2)]
+        else:
+            parts.append(_function("p3_row", p3_row(spec)))
         for c in range(spec.channels):
             for i, ks in enumerate(spec.growth_chunks(c)):
                 parts.append(_function(f"growth_{c}_{i}", growth_chunk(ks, i == 0)))

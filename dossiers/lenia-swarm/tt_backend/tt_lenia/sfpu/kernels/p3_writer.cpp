@@ -1,6 +1,8 @@
 #include "dataflow_common.h"
+#include GEN_HEADER
 
-// Affinity leaves in growth-chunk order: tile q of every channel before tile q + 1.
+// Pass 3 emits growth chunk by chunk: the captured potentials of the chunk's kernels, then
+// the channel's affinity once its last chunk is done.
 void kernel_main() {
     const uint32_t u_addr = get_arg_val<uint32_t>(3);
     const uint32_t matter_addr = get_arg_val<uint32_t>(4);
@@ -17,16 +19,21 @@ void kernel_main() {
     const auto pot = TensorAccessor(pot_args, pot_addr, PAGE);
 #endif
     for (uint32_t x = begin; x < end; x++) {
+        for (uint32_t i = 0; i < GROWTH_CHUNKS; i++) {
 #ifdef CAPTURE
-        for (uint32_t k = 0; k < NK; k++) {
-            cb_wait_front(CB_CAP, T);
-            write_pages(pot, ((group * SX + x) * NK + k) * T, T, get_read_ptr(CB_CAP));
-            noc_async_writes_flushed();
-            cb_pop_front(CB_CAP, T);
-        }
+            for (uint32_t j = 0; j < growth_len[i]; j++) {
+                const uint32_t k = growth_kernel[i][j];
+                cb_wait_front(CB_CAP, T);
+                write_pages(pot, ((group * SX + x) * NK + k) * T, T, get_read_ptr(CB_CAP));
+                noc_async_writes_flushed();
+                cb_pop_front(CB_CAP, T);
+            }
 #endif
-        for (uint32_t q = 0; q < T; q++) {
-            for (uint32_t c = 0; c < NC; c++) {
+            if (!growth_last[i]) {
+                continue;
+            }
+            const uint32_t c = growth_channel[i];
+            for (uint32_t q = 0; q < T; q++) {
                 cb_wait_front(CB_OUT, 1);
                 write_pages(u, ((group * NC + c) * SX + x) * T + q, 1, get_read_ptr(CB_OUT));
                 noc_async_writes_flushed();

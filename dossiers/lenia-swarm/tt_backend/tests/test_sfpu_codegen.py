@@ -92,15 +92,73 @@ def spec_for(size, c0, weights, dd=5) -> PassSpec:
     )
 
 
+# Vectors of one half chunk of a split stage: SPLIT complex positions.
+CHUNK = 2 * codegen.SPLIT
+
+
+def twiddles(span: int) -> list:
+    return [np.full((1, 1), v, F32) for v in codegen.split_twiddles(span)]
+
+
+def split_stage(em, name, code, vecs, span):
+    """One split stage of `span` complex positions over `vecs` in natural order, chunk by
+    chunk as the kernels run it. Returns the chunks in DST after the stage; `vecs` receives
+    them in place."""
+    tw = twiddles(span)
+    pad = [np.zeros((1, 1), F32)] * (codegen.DST_VECTORS - 3 * CHUNK)
+    out = []
+    for b in range(0, len(vecs), 2 * span):
+        for q in range(0, span, CHUNK):
+            a, c = b + q, b + span + q
+            D = vecs[a : a + CHUNK] + vecs[c : c + CHUNK] + tw[q : q + CHUNK] + pad
+            em(name, code, D)
+            vecs[a : a + CHUNK], vecs[c : c + CHUNK] = D[:CHUNK], D[CHUNK : 2 * CHUNK]
+            out.append(D)
+    return out
+
+
+def blocks(em, name, code, vecs):
+    """`code` on every 128-point block of `vecs` in place."""
+    n = codegen.DST_VECTORS
+    for b in range(0, len(vecs), n):
+        vecs[b : b + n] = em(name, code, vecs[b : b + n])
+    return vecs
+
+
+def row_forward(em: Emulator, row: list) -> list:
+    spec = em.spec
+    if not spec.row_split:
+        return em("p1", codegen.p1_row(spec), row + dst(row[0].shape)[len(row) :])
+    split_stage(em, "p1_split", codegen.split_forward(), row, spec.half)
+    for h in range(2):
+        n = codegen.DST_VECTORS
+        row[n * h : n * h + n] = em(
+            f"p1_half_{h}", codegen.p1_half(spec, h), row[n * h : n * h + n]
+        )
+    return row
+
+
+def row_inverse(em: Emulator, row: list) -> list:
+    spec = em.spec
+    if not spec.row_split:
+        return em("p3_row", codegen.p3_row(spec), row + dst(row[0].shape)[len(row) :])
+    for h in range(2):
+        n = codegen.DST_VECTORS
+        row[n * h : n * h + n] = em(
+            f"p3_half_{h}", codegen.p3_half(spec, h), row[n * h : n * h + n]
+        )
+    split_stage(em, "p3_split", codegen.split_inverse(), row, spec.half)
+    return row
+
+
 def potential(em: Emulator, mass: np.ndarray, H: np.ndarray) -> np.ndarray:
     """mass [L, sx, sy, C], H [L, sx, sy//2 + 1, K] already scaled; returns [L, sx, sy, K]."""
     spec = em.spec
     L, sx, sy, C = mass.shape
     M, K = spec.half, spec.kernels
-    D = dst((L, C, sx))
-    for y in range(sy):
-        D[y] = np.ascontiguousarray(mass[:, :, y, :].transpose(0, 2, 1))
-    em("p1", codegen.p1_row(spec), D)
+    D = row_forward(
+        em, [np.ascontiguousarray(mass[:, :, y, :].transpose(0, 2, 1)) for y in range(sy)]
+    )
     S = np.empty((L, C, M, sx), np.complex64)
     for p in range(M):
         S[:, :, bitrev(p, M)] = D[2 * p] + 1j * D[2 * p + 1]
@@ -110,17 +168,10 @@ def potential(em: Emulator, mass: np.ndarray, H: np.ndarray) -> np.ndarray:
         Hv[..., p] = H[:, bitrev(p, sx), :, :].transpose(0, 2, 1)
 
     R = np.empty((L, K, M, sx), np.complex64)
-    split = sx != codegen.COLUMN
-    # A chunk of n complex positions holds n vectors from each column half.
+    spans = codegen.split_spans(sx)
+    # Chunks leave the last inverse stage holding w vectors from each column half.
     w = codegen.chunk_positions(spec)
-    chunks = sx // w
-    tw = [np.full((1, 1), v, F32) for v in codegen.split_twiddles(spec)] if split else []
     pad = [np.zeros((1, 1), F32)] * (2 * w)
-
-    def chunk_of(col, c):
-        """Chunk c holds w / 2 positions from each column half, as pass 2 loads and packs it."""
-        D = col[w * c : w * c + w] + col[sx + w * c : sx + w * c + w]
-        return D + tw[w * c : w * c + w] + pad[: 256 - 3 * w] if split else D
 
     def natural(parts):
         out = [None] * (2 * sx)
@@ -130,15 +181,13 @@ def potential(em: Emulator, mass: np.ndarray, H: np.ndarray) -> np.ndarray:
         return out
 
     def forward(col, name, prep):
-        if not split:
-            return em(f"fw_{name}", prep + codegen.p2_forward(spec), list(col))
-        parts = [
-            em(f"split_{name}", prep + codegen.p2_split_forward(spec), chunk_of(col, c))
-            for c in range(chunks)
-        ]
-        a = em("fw", codegen.p2_forward(spec), [v for D in parts for v in D[:w]])
-        b = em("fw", codegen.p2_forward(spec), [v for D in parts for v in D[w : 2 * w]])
-        return a + b
+        col = list(col)
+        if not spans:
+            return em(f"fw_{name}", prep + codegen.p2_forward(spec), col)
+        for i, span in enumerate(spans):
+            code = (prep if i == 0 else []) + codegen.split_forward()
+            split_stage(em, f"split_{name}{i}", code, col, span)
+        return blocks(em, "fw", codegen.p2_forward(spec), col)
 
     def inverse(F, Hcol, compact):
         T = []
@@ -148,15 +197,12 @@ def potential(em: Emulator, mass: np.ndarray, H: np.ndarray) -> np.ndarray:
             em("p2_block", codegen.p2_block(spec), Dh)
             T += Dh[:128]
         tail = codegen.p2_compact(spec) if compact else []
-        if not split:
+        if not spans:
             return [em(f"final{compact}", codegen.p2_final(spec) + tail, T)]
-        U = []
-        for h in range(2):
-            U += em("final", codegen.p2_final(spec), T[256 * h : 256 * h + 256])
-        return [
-            em(f"isplit{compact}", codegen.p2_split_inverse(spec) + tail, chunk_of(U, c))
-            for c in range(chunks)
-        ]
+        blocks(em, "final", codegen.p2_final(spec), T)
+        for span in spans[:0:-1]:
+            split_stage(em, "isplit", codegen.split_inverse(), T, span)
+        return split_stage(em, f"isplit{compact}", codegen.split_inverse() + tail, T, sx)
 
     col = [None] * (2 * sx)
     for x in range(sx):
@@ -183,18 +229,18 @@ def potential(em: Emulator, mass: np.ndarray, H: np.ndarray) -> np.ndarray:
                     codegen.p2_merge(spec),
                     list(rb[i][:w]) + list(ra[i][:w]) + pad[: 256 - 2 * w],
                 )
-                for i in range(chunks)
+                for i in range(len(ra))
             ]
             out = natural(parts)
             for x in range(sx):
                 R[:, k, 0, x] = out[2 * x] + 1j * out[2 * x + 1]
 
-    D = dst((L, K, sx))
+    D = [None] * sy
     for ky in range(M):
         p = bitrev(ky, M)
         D[2 * p] = R[:, :, ky, :].real.copy()
         D[2 * p + 1] = R[:, :, ky, :].imag.copy()
-    em("p3_row", codegen.p3_row(spec), D)
+    D = row_inverse(em, D)
     return np.stack(D[:sy], axis=-1).transpose(0, 2, 3, 1)
 
 
@@ -287,8 +333,8 @@ def reintegrate(em: Emulator, mass: np.ndarray, shift: np.ndarray) -> np.ndarray
 def case(request):
     rng = np.random.default_rng(7)
     L, sx, sy, C = 4, request.param, request.param, 2
-    c0 = [0] * 3 + [1] * 3
-    weights = [[1, 0, 1, 0, 1, 1], [0, 1, 1, 1, 1, 0]]
+    c0 = [0] * 4 + [1] * 4
+    weights = [[1, 1, 0, 1, 1, 0, 1, 1], [0, 0, 1, 0, 0, 1, 0, 0]]
     spec = spec_for(sx, c0, weights)
     K = len(c0)
     blob = np.zeros((L, sx, sy, C), F32)
