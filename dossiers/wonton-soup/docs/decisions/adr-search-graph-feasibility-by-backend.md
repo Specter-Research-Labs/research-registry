@@ -2,7 +2,7 @@
 summary: "Decision record: graph edit distance is computed per artifact family according to what each proof backend can provide."
 ---
 
-# ADR: Search-Graph Feasibility by Backend
+# ADR: search-graph feasibility by backend
 
 ## Context
 
@@ -62,6 +62,6 @@ Analysis/reporting layers must not treat proxy and true-search GED as interchang
 
 ## References
 
-- [Log Schemas: Backend Artifact Mapping](docs/contracts/logs/log-schemas-backend-mapping.md)
+- [Log file schemas: backend artifact mapping](docs/contracts/logs/log-file-schemas.md#backend-artifact-mapping)
 - [Analysis Metrics Reference](docs/concepts/analysis-metrics.md)
 - [Log File Schemas](docs/contracts/logs/log-file-schemas.md)

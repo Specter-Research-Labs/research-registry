@@ -1,37 +1,43 @@
 ---
-summary: "Map of the Wonton Soup documentation on perturbed proof search: concepts, contracts, decisions and operations."
+summary: "Map of the Wonton Soup documentation on perturbed proof search: where to start, the measures, the run artifacts, the search machinery and the decision records."
 ---
 
-# Wonton Soup Docs
+# Wonton Soup docs
 
-Documentation map for `dossiers/wonton-soup`.
+Wonton Soup runs Monte Carlo tree search (MCTS) over proofs, perturbs the search, and measures what survives. Centralized runs map which proof families the search finds, how stable its basins are, how it reroutes or collapses, and how much faster it is than blind search (K). Distributed runs test whether coordinated controllers change access to the same landscape.
 
-## Mode Framing
+## Start here
 
-`wonton-soup` perturbs MCTS proof search and measures what survives. Centralized runs map proof families, basin stability, rerouting, collapse, and blind-relative efficiency (K). Distributed runs test whether coordinated controllers change access to the same landscape.
+- [Analysis lexicon](concepts/analysis-lexicon.md): the terms used across the analysis and reports.
+- [Analysis metrics reference](concepts/analysis-metrics.md): what each metric family measures.
+- [Log file schemas](contracts/logs/log-file-schemas.md): what a run writes, and which graphs each proof backend can produce.
 
-## Concepts
+## Measures
 
-- Analysis terminology index: [Analysis Lexicon](concepts/analysis-lexicon.md)
-- Metric-family definitions: [Analysis Metrics Reference](concepts/analysis-metrics.md)
-- Attractor/basin metrics deep dive: [Attractor Metrics for Proof Search](concepts/attractor-metrics.md)
-- Distributed MCTS scheduling and control semantics: [Distributed MCTS Semantics](concepts/distributed-mcts.md)
-- Goal identity, deduplication, and preview/commit: [Goal Identity, Deduplication, and Preview/Commit](concepts/goal-deduplication-and-preview-commit.md)
-- Cross-assistant proof graph abstraction: [ProofGraphIR](concepts/proof-graph-ir.md)
-- UCB1 behavior and tuning in this repo: [UCB1 and Blind-Uniform Search in Wonton-Soup](concepts/ucb1.md)
+- [Attractor metrics for proof search](concepts/attractor-metrics.md): basins of attraction in proof search, and when their size means something.
+- [UCB1 and blind-uniform search](concepts/ucb1.md): how centralized search picks nodes and orders tactics, and the blind-uniform baseline.
 
-## Contracts
+## Run artifacts
 
-- Artifact definitions: [Analysis Artifacts Reference](contracts/analysis/analysis-artifacts.md)
-- Log schema index: [Log File Schemas](contracts/logs/log-file-schemas.md)
-- Run-level schema details: [Log Schemas: Run-Level](contracts/logs/log-schemas-run-level.md)
-- Per-theorem schema details: [Log Schemas: Per-Theorem Artifacts](contracts/logs/log-schemas-theorem-level.md)
-- Backend artifact-family mapping: [Log Schemas: Backend Artifact Mapping](contracts/logs/log-schemas-backend-mapping.md)
-- Distributed MCTS trace event dictionary: [Distributed MCTS Trace Event Dictionary](contracts/logs/distributed-mcts-trace-events.md)
-- Partial proof-term extraction + sequential replay: [Partial Proof-Terms and Sequential Replay](contracts/backends/partial-proof-terms.md)
-- Provider options and selection rubric: [Tactic Provider Options for Tactic Suggestion](contracts/providers/tactic-provider-options.md)
-- DeepSeek runtime settings and reproducibility notes: [DeepSeek Provider Settings](contracts/providers/deepseek-provider-settings.md)
+- [Analysis artifacts reference](contracts/analysis/analysis-artifacts.md)
+- [Log schemas: run level](contracts/logs/log-schemas-run-level.md)
+- [Log schemas: per-theorem artifacts](contracts/logs/log-schemas-theorem-level.md)
+- [Distributed MCTS trace event dictionary](contracts/logs/distributed-mcts-trace-events.md)
 
-## Decisions
+## Search machinery
 
-- ADR index: [ADR Index](decisions/README.md)
+- [Distributed MCTS](concepts/distributed-mcts.md): scheduling and control in distributed runs.
+- [Goal identity, deduplication, and preview/commit](concepts/goal-deduplication-and-preview-commit.md)
+- [ProofGraphIR](concepts/proof-graph-ir.md): the proof graph shared across proof assistants.
+- [TacticActionIR](concepts/tactic-action-ir.md): a typed summary of what each proof step did.
+- [Partial proof terms, assembly tracking, and sequential replay](contracts/backends/partial-proof-terms.md)
+- [Tactic provider options for tactic suggestion](contracts/providers/tactic-provider-options.md)
+- [DeepSeek provider settings](contracts/providers/deepseek-provider-settings.md)
+
+## Decision records
+
+- [ADR: checkpoint-scoped goal IDs](decisions/adr-checkpoint-goal-ids.md)
+- [ADR: distributed (cell-view) MCTS runner](decisions/adr-distributed-mcts.md)
+- [ADR: explicit reference selection for lake jobs](decisions/adr-lake-reference-selection.md)
+- [ADR: ProofGraphIR for cross-assistant alignment](decisions/adr-proof-graph-ir-cross-assistant.md)
+- [ADR: search-graph feasibility by backend](decisions/adr-search-graph-feasibility-by-backend.md)

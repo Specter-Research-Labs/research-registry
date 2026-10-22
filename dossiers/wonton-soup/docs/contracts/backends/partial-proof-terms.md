@@ -2,7 +2,7 @@
 summary: "How Wonton Soup tracks partially assembled Lean proof terms during search and reconstructs the final term by sequential replay."
 ---
 
-# Partial Proof Terms, Assembly Tracking, and Sequential Replay
+# Partial proof terms, assembly tracking, and sequential replay
 
 In multi-step Lean proofs, the kernel assembles a term incrementally. This is
 the `wonton-soup` proof-term tracking model and the no-branching replay path

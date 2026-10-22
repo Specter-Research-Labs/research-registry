@@ -2,7 +2,7 @@
 summary: "Checkpoint-scoped goal identities, cycle-breaking through goal signatures, and the preview and commit steps for applying tactics in the Lean adapter."
 ---
 
-# Goal Identity, Deduplication, and Preview/Commit
+# Goal identity, deduplication, and preview/commit
 
 Canonical reference for:
 

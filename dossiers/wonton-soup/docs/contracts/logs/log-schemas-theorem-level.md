@@ -2,7 +2,7 @@
 summary: "Schema of the per-theorem graph, history and tree artifacts in a Wonton Soup run."
 ---
 
-# Log Schemas: Per-Theorem Artifacts
+# Log schemas: per-theorem artifacts
 
 Per-theorem schema contract for files under `logs/corpus-.../<theorem_name>/`.
 

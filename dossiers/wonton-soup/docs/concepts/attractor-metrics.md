@@ -2,7 +2,7 @@
 summary: "How Wonton Soup treats proofs as attractors of stochastic search, and the basin, convergence, rerouting and collapse measures built on that idea."
 ---
 
-# Attractor Metrics for Proof Search
+# Attractor metrics for proof search
 
 These metrics let us group recurring proof structures and follow how searches change after a tactic or scheduling intervention, using occurrence frequencies, structural distances, and outcomes under specified search conditions. The implementation calls some of these quantities “attractors” and “basins”, but finding a frequent proof cluster does not by itself establish the restoring dynamics that an attractor interpretation would require.
 

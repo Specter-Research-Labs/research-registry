@@ -2,7 +2,7 @@
 summary: "Schema of the top-level files in a Wonton Soup corpus run directory."
 ---
 
-# Log Schemas: Run-Level
+# Log schemas: run level
 
 Run-level schema contract for corpus outputs under `logs/corpus-YYYY-MM-DD-HHMMSS/`.
 

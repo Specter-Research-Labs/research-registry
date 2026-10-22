@@ -2,7 +2,7 @@
 summary: "Index of Wonton Soup analysis terms, pointing each to the document that defines it."
 ---
 
-# Analysis Lexicon (Wonton-Soup)
+# Analysis lexicon
 
 Canonical index for analysis terminology, artifact semantics, and metric families.
 
