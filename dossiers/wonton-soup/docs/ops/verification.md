@@ -87,7 +87,7 @@ uv run python wonton.py benchmark-cross-assistant \
   --proof-aggregation single \
   --gate-claim all \
   --gate-axis all \
-  --output "$SPECTER_SYNTHETIC_BUREAU_ROOT/cross_assistant_paired_benchmark.json"
+  --output /abs/path/to/cross_assistant_paired_benchmark.json
 ```
 
 `compare-cross-assistant` is diagnostic only. It is useful for collapse,
