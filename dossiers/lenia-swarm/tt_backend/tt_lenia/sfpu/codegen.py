@@ -587,17 +587,26 @@ def reint_weights(spec: PassSpec, k: int) -> Code:
 
 def reint_terms(spec: PassSpec, rows: tuple[int, ...]) -> Code:
     """Add one source row's terms to the target rows it reaches. Each y overlap is shared by
-    those rows, and every accumulator still takes its terms in ascending dy."""
+    those rows, and every accumulator still takes its terms in ascending dy. The accumulators
+    stay in registers across dy, and two overlaps are computed together so that one's
+    instructions fill the other's pipeline gaps; three gain nothing and four exhaust the
+    registers."""
     halo = window_halo(spec)
-    body = []
-    for dy in range(-spec.dd, spec.dd + 1):
-        j = halo - dy
-        sz = _sz(spec, lit(dy), f"dst_reg[{WIN_SHIFT_Y + j}]")
+    body = [f"vFloat a{r} = dst_reg[{SEGMENT * r}];" for r in rows]
+    dys = list(range(-spec.dd, spec.dd + 1))
+    for pair in (dys[i : i + 2] for i in range(0, len(dys), 2)):
+        names = [f"sz{n}" for n in range(len(pair))]
+        szs = " ".join(
+            f"vFloat {name} = {_sz(spec, lit(dy), f'dst_reg[{WIN_SHIFT_Y + halo - dy}]')};"
+            for name, dy in zip(names, pair)
+        )
         adds = " ".join(
-            f"dst_reg[{SEGMENT * r}] = dst_reg[{SEGMENT * r}] + dst_reg[{WEIGHTED[r] + j}] * sz;"
+            f"a{r} = a{r} + dst_reg[{WEIGHTED[r] + halo - dy}] * {name};"
+            for name, dy in zip(names, pair)
             for r in rows
         )
-        body.append(f"{{ vFloat sz = {sz}; {adds} }}")
+        body.append(f"{{ {szs} {adds} }}")
+    body += [f"dst_reg[{SEGMENT * r}] = a{r};" for r in rows]
     return [_set_reach(spec), Loop(SEGMENT, 1, ("{ " + " ".join(body) + " }",))]
 
 
