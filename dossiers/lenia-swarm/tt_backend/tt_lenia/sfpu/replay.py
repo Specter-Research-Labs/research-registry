@@ -17,8 +17,6 @@ import base64
 import hashlib
 import json
 import math
-import multiprocessing as mp
-import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,11 +24,11 @@ from pathlib import Path
 import numpy as np
 
 from ..config import compile_kernels, load_config, resolve_connectivity, resolve_params
+from ..device import on_cards
 from .codegen import PassSpec
 from .engine import LANES, BodyParams
 
 ENGINE = "tt-sfpu-fp32"
-MESH_SHAPE = (1, 2)
 VALIDATED_MODE = "flowlenia_2022_paper_equations"
 CONFIG_KEYS = {
     "backend",
@@ -219,24 +217,28 @@ def _write_campaign(out: Path, body: Body, index: Path, steps: int, interval: in
     (campaign / "replay-manifest.json").write_text(json.dumps(manifest, indent=2))
 
 
+def engine_inputs(bodies: list[Body], lanes: int) -> tuple[np.ndarray, BodyParams]:
+    """Stacked engine inputs, padded to a multiple of lanes with zero-mass filler bodies."""
+    batch = -(-len(bodies) // lanes) * lanes
+    spec = bodies[0].spec
+    mass = np.zeros((batch, spec.sx, spec.sy, spec.channels), F32)
+    spectra = np.zeros((batch, spec.sx, spec.sy, spec.kernels), F32)
+    m = np.zeros((batch, spec.kernels), F32)
+    s = np.ones((batch, spec.kernels), F32)
+    h = np.zeros((batch, spec.kernels), F32)
+    for i, body in enumerate(bodies):
+        mass[i], spectra[i], m[i], s[i], h[i] = body.mass, body.spectra, body.m, body.s, body.h
+    return mass, BodyParams(spectra, m, s, h)
+
+
 def _card_worker(card: int, bodies: list[Body], out: Path, steps: int, interval: int) -> None:
-    os.environ["TT_VISIBLE_DEVICES"] = str(card)
-    from ..device import close_ttnn_device, open_ttnn_device
+    from ..device import close_card, open_card
     from .engine import SfpuEngine
 
-    mesh = open_ttnn_device(mesh_shape=MESH_SHAPE)
+    mesh = open_card()
     try:
-        lanes = LANES * int(mesh.get_num_devices())
-        batch = -(-len(bodies) // lanes) * lanes
-        spec = bodies[0].spec
-        mass = np.zeros((batch, spec.sx, spec.sy, spec.channels), F32)
-        spectra = np.zeros((batch, spec.sx, spec.sy, spec.kernels), F32)
-        m = np.zeros((batch, spec.kernels), F32)
-        s = np.ones((batch, spec.kernels), F32)
-        h = np.zeros((batch, spec.kernels), F32)
-        for i, body in enumerate(bodies):
-            mass[i], spectra[i], m[i], s[i], h[i] = body.mass, body.spectra, body.m, body.s, body.h
-        engine = SfpuEngine(mesh, spec, mass, BodyParams(spectra, m, s, h), capture=False)
+        mass, params = engine_inputs(bodies, LANES * int(mesh.get_num_devices()))
+        engine = SfpuEngine(mesh, bodies[0].spec, mass, params, capture=False)
         traces = [out / "campaigns" / b.campaign / "development-trace.jsonl" for b in bodies]
         t0 = time.perf_counter()
         for step in range(interval, steps + 1, interval):
@@ -248,7 +250,7 @@ def _card_worker(card: int, bodies: list[Body], out: Path, steps: int, interval:
             rate = step * len(bodies) / (time.perf_counter() - t0)
             print(f"card {card}: step {step}/{steps}, {rate:.0f} body-steps/s", flush=True)
     finally:
-        close_ttnn_device(mesh)
+        close_card(mesh)
 
 
 def replay(index: Path, out: Path, steps: int, interval: int, cards: list[int]) -> dict:
@@ -261,20 +263,9 @@ def replay(index: Path, out: Path, steps: int, interval: int, cards: list[int]) 
     shares = [bodies[i * per_card : (i + 1) * per_card] for i in range(len(cards))]
     for body in bodies:
         _write_campaign(out, body, index, steps, interval)
-    ctx = mp.get_context("spawn")
     t0 = time.perf_counter()
-    procs = [
-        ctx.Process(target=_card_worker, args=(card, share, out, steps, interval))
-        for card, share in zip(cards, shares)
-        if share
-    ]
-    for p in procs:
-        p.start()
-    for p in procs:
-        p.join()
-    failed = [p.name for p in procs if p.exitcode != 0]
-    if failed:
-        raise RuntimeError(f"card workers failed: {failed}")
+    jobs = {card: (share, out, steps, interval) for card, share in zip(cards, shares) if share}
+    on_cards(_card_worker, jobs)
     elapsed = time.perf_counter() - t0
     summary = {
         "engine": ENGINE,

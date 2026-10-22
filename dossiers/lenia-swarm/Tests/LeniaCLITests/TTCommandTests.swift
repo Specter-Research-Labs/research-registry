@@ -2,119 +2,87 @@ import XCTest
 @testable import LeniaCLIKit
 
 final class TTCommandTests: XCTestCase {
-    func testLocalNoContainerInvocationUsesDossierWorkingDirectory() throws {
+    func testLocalInvocationRunsReplayInContainerFromDossierRoot() throws {
         let root = URL(fileURLWithPath: "/tmp/lenia-swarm", isDirectory: true)
 
-        let invocation = try TTBackendRunInvocation(
-            config: "configs/base/paper_base_1c_128.json",
-            output: "tmp/tt-runs/smoke",
-            steps: 2,
-            batchSize: 1,
-            seed: nil,
-            seedList: nil,
-            initSeedOffset: 0,
-            saveEvery: 0,
-            frameEvery: 1,
-            frameProjection: "matter",
-            frameBatchIndex: 0,
-            executionMode: "single",
-            deviceId: 0,
-            deviceList: nil,
-            ttVisibleDevices: nil,
-            meshShape: nil,
-            reference: nil,
-            persistentWorkers: false,
+        let invocation = try TTReplayInvocation(
+            input: "tmp/requal/input/index.jsonl",
+            output: "/tmp/lenia-swarm/tmp/tt-replays/smoke",
+            steps: 650,
+            traceInterval: 50,
+            cards: "0,1",
             python: "python3",
             host: nil,
             remoteRoot: nil,
-            useContainer: false,
-            ttCardNum: 0,
-            ttCardList: nil,
-            reset: false,
-            skipSmoke: false,
             dossierRoot: root
         )
 
         XCTAssertEqual(invocation.executable, "/usr/bin/env")
         XCTAssertEqual(invocation.currentDirectory, root)
-        XCTAssertEqual(Array(invocation.arguments.prefix(3)), ["python3", "tt_backend/devtools/run.py", "--config"])
-        XCTAssertTrue(invocation.arguments.contains("configs/base/paper_base_1c_128.json"))
-        XCTAssertFalse(invocation.arguments.contains("--seed"))
+        XCTAssertEqual(
+            invocation.arguments,
+            [
+                "python3", "tt_backend/devtools/container.py", "--",
+                "python3", "-m", "tt_lenia.sfpu.replay",
+                "--input", "/repo/tmp/requal/input/index.jsonl",
+                "--output", "/repo/tmp/tt-replays/smoke",
+                "--steps", "650",
+                "--trace-interval", "50",
+                "--cards", "0,1",
+            ]
+        )
     }
 
-    func testRemoteContainerInvocationMapsRepoRelativePathsIntoContainer() throws {
-        let invocation = try TTBackendRunInvocation(
-            config: "configs/base/paper_base_1c_128.json",
-            output: "tmp/tt-runs/smoke",
-            steps: 2,
-            batchSize: 1,
-            seed: 0,
-            seedList: "0",
-            initSeedOffset: 11,
-            saveEvery: 0,
-            frameEvery: 1,
-            frameProjection: "matter",
-            frameBatchIndex: 0,
-            executionMode: "mesh",
-            deviceId: 0,
-            deviceList: "0",
-            ttVisibleDevices: nil,
-            meshShape: "1,2",
-            reference: nil,
-            persistentWorkers: false,
+    func testRemoteInvocationMapsRemoteRootPathsIntoContainer() throws {
+        let invocation = try TTReplayInvocation(
+            input: "/remote/lenia-swarm/tmp/requal/input/index.jsonl",
+            output: "tmp/tt-replays/smoke",
+            steps: 40000,
+            traceInterval: 1000,
+            cards: "0,1,2,3",
             python: "python3",
-            host: "quietbox",
+            host: "tt-host",
             remoteRoot: "/remote/lenia-swarm",
-            useContainer: true,
-            ttCardNum: 0,
-            ttCardList: "0",
-            reset: false,
-            skipSmoke: false,
             dossierRoot: URL(fileURLWithPath: "/local/lenia-swarm", isDirectory: true)
         )
 
-        XCTAssertEqual(invocation.executable, "/usr/bin/env")
-        XCTAssertEqual(Array(invocation.arguments.prefix(2)), ["ssh", "quietbox"])
+        XCTAssertEqual(Array(invocation.arguments.prefix(2)), ["ssh", "tt-host"])
         let remoteCommand = try XCTUnwrap(invocation.arguments.last)
-        XCTAssertTrue(remoteCommand.contains("python3 tt_backend/devtools/quietbox_container.py"))
-        XCTAssertTrue(remoteCommand.contains("--device-mode mesh"))
-        XCTAssertTrue(remoteCommand.contains("--config /repo/configs/base/paper_base_1c_128.json"))
-        XCTAssertTrue(remoteCommand.contains("--output /repo/tmp/tt-runs/smoke"))
-        XCTAssertTrue(remoteCommand.contains("--seed-list 0"))
-        XCTAssertTrue(remoteCommand.contains("--seed 0"))
-        XCTAssertTrue(remoteCommand.contains("--init-seed-offset 11"))
-        XCTAssertTrue(remoteCommand.contains("--mesh-shape 1,2"))
+        XCTAssertTrue(remoteCommand.hasPrefix("cd /remote/lenia-swarm && python3 tt_backend/devtools/container.py -- "))
+        XCTAssertTrue(remoteCommand.contains("--input /repo/tmp/requal/input/index.jsonl"))
+        XCTAssertTrue(remoteCommand.contains("--output /repo/tmp/tt-replays/smoke"))
+        XCTAssertTrue(remoteCommand.contains("--cards 0,1,2,3"))
+    }
+
+    func testPathsOutsideTheDossierAreRefused() throws {
+        XCTAssertThrowsError(
+            try TTReplayInvocation(
+                input: "/elsewhere/index.jsonl",
+                output: "tmp/out",
+                steps: 1,
+                traceInterval: 1,
+                cards: "0",
+                python: "python3",
+                host: nil,
+                remoteRoot: nil,
+                dossierRoot: URL(fileURLWithPath: "/local/lenia-swarm", isDirectory: true)
+            )
+        ) { error in
+            XCTAssertTrue(String(describing: error).contains("dossier root"))
+        }
     }
 
     func testRemoteInvocationRequiresRemoteRoot() throws {
         XCTAssertThrowsError(
-            try TTBackendRunInvocation(
-                config: "configs/base/paper_base_1c_128.json",
-                output: "tmp/tt-runs/smoke",
-                steps: 2,
-                batchSize: 1,
-                seed: nil,
-                seedList: nil,
-                initSeedOffset: 0,
-                saveEvery: 0,
-                frameEvery: 0,
-                frameProjection: "matter",
-                frameBatchIndex: 0,
-                executionMode: "single",
-                deviceId: 0,
-                deviceList: nil,
-                ttVisibleDevices: nil,
-                meshShape: nil,
-                reference: nil,
-                persistentWorkers: false,
+            try TTReplayInvocation(
+                input: "tmp/index.jsonl",
+                output: "tmp/out",
+                steps: 1,
+                traceInterval: 1,
+                cards: "0",
                 python: "python3",
-                host: "quietbox",
+                host: "tt-host",
                 remoteRoot: nil,
-                useContainer: true,
-                ttCardNum: 0,
-                ttCardList: nil,
-                reset: false,
-                skipSmoke: false,
                 dossierRoot: URL(fileURLWithPath: "/local/lenia-swarm", isDirectory: true)
             )
         ) { error in

@@ -9,8 +9,8 @@ Distributed parameter search for Flow Lenia across Apple machines using Swift Di
 - `docs/universe/`: concept docs (primer and glossary, morphology, taxonomy, ecology).
 - `docs/contracts/`: local sweeps, paper reproductions, and the compendium schema (with ADR-002; ADR-001 is in the taxonomy page).
 - `docs/internals/`: implementation-level references and maps.
-- `ops/docs/TTBackend.md` and `ops/docs/TTBackendPerformance.md` (repo root): TT backend operation,
-  launcher rules, and performance facts.
+- `ops/docs/TTBackend.md` and `ops/docs/TTBackendPerformance.md` (repo root): TT backend replay,
+  validation, and performance facts.
 
 ## Architecture
 
@@ -110,7 +110,7 @@ Useful individual targets:
 - `LeniaCLI intervene holonomy`: transport experiments.
 - `LeniaCLI orchestrate campaign --campaign configs/campaigns/intervention-battery.json --output RUN`: the intervention battery as a declarative campaign phase.
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
-- `LeniaCLI tt run`: Tenstorrent backend trajectory execution with optional quietbox SSH/container orchestration and Studio frame export.
+- `LeniaCLI tt replay`: export-bundle replays on Tenstorrent N300 cards with the float32 SFPU engine.
 - `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.
 - `lenia-swarm-analysis`: canonical Python analysis CLI for TDA, fibers,
   transport, packet builders, named-family preset extraction, and warehouse
@@ -119,46 +119,26 @@ Useful individual targets:
 
 ### Tenstorrent Runs
 
-`LeniaCLI tt run` is the user-facing entrypoint for the TT backend. It delegates
-compute to the TT Python runtime and can run on a local TT host or over SSH to
-quietbox while exporting raw frame sequences that Lenia Studio can replay.
-Remote runs require `--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at the
-Lenia dossier on the target host.
-When using dispatch's mirrored workspace, that path is the dispatch
-`remote_cwd`.
-For search-style batches, pass `--seed-list` with `--batch-size`; each TT run
-writes `tt_run.json` so the Swift pipeline can recover candidate provenance
-without duplicating scoring, collection, or Studio indexing in Python.
+`LeniaCLI tt replay` replays an export `index.jsonl` on Tenstorrent N300 cards
+with the float32 SFPU engine and writes the same campaign layout as
+`LeniaCLI publish replay`, so `assess-creatures` and `classify-creatures` read
+the result. It runs on the TT host directly or over SSH with `--host`; remote
+runs require `--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at the Lenia
+dossier on that host. When using dispatch's mirrored workspace, that path is the
+dispatch `remote_cwd`.
 
 ```bash
-export LENIA_TT_REMOTE_ROOT="$(dispatch workspace plan --on quietbox --project specter-labs --json | jq -r .remote_cwd)"
-
-LeniaCLI tt run \
-  --host quietbox \
-  --config configs/base/paper_base_2c_128.json \
-  --output tmp/tt-runs/orbitum-128 \
-  --execution-mode single \
-  --tt-card-num 0 \
-  --steps 300 \
-  --frame-every 5
-
-LeniaCLI tt run \
-  --host quietbox \
-  --config configs/base/paper_base_2c_128.json \
-  --output tmp/tt-runs/fleet-128 \
-  --execution-mode fleet \
-  --device-list 0,1,2,3 \
-  --tt-card-list 0,1,2,3 \
-  --batch-size 4 \
-  --steps 300 \
-  --frame-every 10
+LeniaCLI tt replay \
+  --host <tt-host> \
+  --input tmp/requal/input/n128-torus128/index.jsonl \
+  --output tmp/tt-replays/n128-torus128 \
+  --steps 650 \
+  --trace-interval 50 \
+  --cards 0,1,2,3
 ```
 
-Use `LeniaCLI --host` for the main Studio/export path. Use
-`dispatch run --on quietbox --device wormhole:... -- ...` when dispatch owns
-TT device reservation for backend profiling; in that mode the command is
-already running in the remote workspace, so do not wrap it in another
-`LeniaCLI --host` SSH hop.
+Precision, throughput, validation and the device rules are in
+`ops/docs/TTBackend.md` and `ops/docs/TTBackendPerformance.md`.
 
 ### Local CLI Harness
 
