@@ -11,20 +11,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--sl-color-accent
 button { cursor: pointer; }
 img { max-width: 100%; display: block; }
 figure, p, h1, h2, h3 { margin: 0; }
-body > header, main, body > footer { max-width: var(--publication-width); margin: auto; padding-inline: var(--publication-gutter); }
-.publication-home > header { display: flex; align-items: center; justify-content: space-between; padding-block: 30px; gap: 24px; }
-.publication-home > header::after { display: none; }
-.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font: 700 17px "Berkeley Mono", monospace; letter-spacing: .08em; }
-.brand img { width: 42px; height: auto; flex: none; }
-nav { display: flex; gap: 24px; font: 12px "Berkeley Mono", monospace; }
-nav a { text-decoration: none; }
-.hero { padding: 60px 0 80px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center; }
-.hero h1 { font: 750 58px/1.02 var(--sl-font-display); letter-spacing: -.06em; }
+main { max-width: var(--publication-width); margin: auto; padding: 0 var(--publication-gutter) 64px; }
+.hero { padding: 24px 0 88px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
 h1 em { font-family: var(--sl-font-prose); font-weight: 400; letter-spacing: -.06em; }
 .intro { font-size: 17px; line-height: 1.6; max-width: 49ch; margin-top: 26px; }
 .text-link { display: inline-block; margin-top: 22px; font: 11px/1.7 "Berkeley Mono", monospace; text-decoration: none; }
 .text-link:hover { text-decoration: underline; }
-.hero-art { position: relative; min-width: 0; width: 100%; max-width: 360px; }
+.hero-art { position: relative; justify-self: center; min-width: 0; width: 100%; max-width: 560px; }
 .hero-art canvas { width: 100%; height: auto; display: block; }
 .hero-art #hero-motion { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .hero-art figcaption { margin-top: 12px; color: var(--muted); font: 10px/1.6 "Berkeley Mono", monospace; text-align: center; }
@@ -32,25 +25,28 @@ h1 em { font-family: var(--sl-font-prose); font-weight: 400; letter-spacing: -.0
 .recurrence { display: block; width: 108px; height: 108px; margin: 0 auto 30px; opacity: .65; }
 blockquote { margin: 0; font-size: 24px; line-height: 1.5; letter-spacing: -.015em; }
 .attribution { font: 10px/1.7 "Berkeley Mono", monospace; margin-top: 20px; color: var(--muted); }
-.publication-home > footer { padding-block: 28px 36px; display: flex; justify-content: space-between; gap: 24px; font: 11px/1.8 "Berkeley Mono", monospace; }
-.publication-home > footer > div { display: flex; flex-wrap: wrap; gap: 12px 24px; }
-.footer-mark { color: var(--muted); }
+.proof-figure svg { display: block; width: 100%; max-width: 480px; height: auto; overflow: visible; }
+.proof-figure svg text { font: 15px "Berkeley Mono", monospace; fill: var(--ink); }
+.proof-figure .goal { font: 26px "IBM Plex Serif", serif; }
+.proof-figure .goal-label { font: 13px "Berkeley Mono", monospace; fill: var(--muted); }
+.proof-figure .formula { font: 23px "IBM Plex Serif", serif; }
+.proof-route path { fill: none; stroke: currentColor; stroke-width: 1.7; }
+.proof-route circle { fill: var(--paper); stroke: currentColor; stroke-width: 1.7; }
+.proof-route .check { stroke-width: 2; }
+.proof-route.taken { color: #26786c; }
+.proof-route.taken text { fill: #24665d; }
+.proof-route.blocked { color: #879088; opacity: .22; }
+.proof-route.blocked path { stroke-dasharray: 4 5; }
+.removed-mark { fill: none; stroke: #a44733; stroke-width: 2.5; }
 @media (max-width: 850px) {
-  .hero { gap: 24px; }
-  .hero h1 { font-size: 48px; }
-  nav { gap: 16px; font-size: 11px; }
-  .brand { font-size: 15px; }
-  .brand img { width: 36px; }
+  .hero { gap: 32px; }
 }
 @media (max-width: 620px) {
-  .publication-home > header { align-items: flex-start; flex-direction: column; }
-  .hero { grid-template-columns: 1fr; padding: 36px 0 56px; gap: 28px; }
-  .hero h1 { font-size: 44px; }
-  .hero-art { max-width: 280px; }
+  .hero { grid-template-columns: 1fr; padding: 8px 0 56px; gap: 28px; }
+  .hero-art { max-width: 360px; }
   .intro { font-size: 16px; margin-top: 22px; }
   .quote { padding-bottom: 56px; }
   blockquote { font-size: 21px; }
   .recurrence { width: 82px; height: 82px; margin-bottom: 23px; }
-  .attribution { font-size: 10px; }
-  .publication-home > footer { flex-wrap: wrap; }
+  .proof-figure svg text { font-size: 17px; }
 }

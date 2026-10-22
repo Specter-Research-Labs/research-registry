@@ -1,4 +1,4 @@
-@import url("/tokens.css?v=20260909-publication");
+@import url("/tokens.css");
 
 @font-face {
   font-family: PublicationMono;
@@ -35,6 +35,31 @@
   --publication-space-block: 32px;
   --publication-space-topic: 64px;
   --publication-space-section: 96px;
+  --publication-type-h1: clamp(38px, 4.4vw, 58px);
+  --publication-type-h2: clamp(24px, 2.4vw, 30px);
+  --publication-type-body: 17px;
+}
+
+/* One type scale for every non-report page; reports keep their reading scale in report.css. */
+body:not(.report-page) :is(.site-page-title, .dossier-hub-title),
+body:is(.blog-page, .cabinet-page) .doc-content h1,
+.publication-home .hero h1 {
+  font: 750 var(--publication-type-h1)/1.06 var(--sl-font-display);
+  letter-spacing: -.045em;
+  text-transform: none;
+}
+
+body:is(.blog-page, .cabinet-page) .doc-content h2,
+.editorial-entry .entry-copy h2,
+:is(.addendum-feature, .equational-feature) h2 {
+  font: 700 var(--publication-type-h2)/1.15 var(--sl-font-display);
+  letter-spacing: -.03em;
+  text-transform: none;
+}
+
+body:not(.report-page) :is(.section-block > p, .dossier-card p, .resource-card p, .research-note-card p, .editorial-entry .entry-copy p),
+body:is(.blog-page, .cabinet-page) .doc-content {
+  font-size: var(--publication-type-body);
 }
 
 html body .site-shell {
@@ -80,52 +105,6 @@ html body .site-rule.strong {
   height: 1px;
   margin: 0;
   background: var(--publication-ink);
-}
-
-.publication-header,
-.publication-header * {
-  box-sizing: border-box;
-}
-
-html .publication-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-layout-brand-gap);
-  font: 700 var(--sl-type-scale-brand) PublicationMono,monospace;
-  letter-spacing: var(--sl-tracking-brand);
-  text-decoration: none;
-  color: inherit;
-}
-
-html .publication-brand img {
-  display: block;
-  width: var(--sl-layout-brand-size);
-  height: auto;
-  flex: none;
-  max-width: none;
-}
-
-html .publication-header nav {
-  display: flex;
-  gap: var(--sl-layout-nav-gap);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: var(--sl-type-scale-nav) PublicationMono,monospace;
-}
-
-html .publication-header nav a {
-  color: inherit;
-  text-decoration: none;
-  border: 0;
-  background: none;
-  padding: 0;
-}
-
-html .publication-header a:hover {
-  text-decoration: underline;
-  text-underline-offset: 6px;
 }
 
 html.specter-report {
@@ -205,35 +184,6 @@ html.specter-report :is(main,body>header)>.wrap {
   padding-inline: var(--publication-gutter);
 }
 
-.writing-reports {
-  display: block;
-}
-
-.writing-reports>.site-section-title {
-  margin-bottom: 24px;
-}
-
-.writing-report,
-.writing-report-lead {
-  display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-  align-items: center;
-  gap: 42px;
-  border-top: 1px solid #17202133;
-  padding: 32px 0;
-  margin: 0;
-}
-
-.writing-report .writing-cover {
-  margin: 0;
-  overflow: hidden;
-}
-
-.writing-report .writing-cover>img {
-  width: 100%;
-  height: auto;
-}
-
 html.specter-report body>.topbar {
   position: static;
   box-sizing: border-box;
@@ -272,35 +222,6 @@ html.specter-report .hero .micro {
   margin: 0 !important;
   padding: 0 !important;
   background: var(--publication-paper) !important;
-}
-
-html body>.publication-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  max-width: var(--publication-width);
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--sl-layout-shell-pad-top) var(--publication-gutter);
-  border: 0;
-  background: var(--publication-paper);
-  color: var(--publication-ink);
-  position: relative;
-  top: auto;
-  z-index: 1;
-  backdrop-filter: none;
-  border-bottom: 0;
-}
-
-html body>.publication-header::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: var(--publication-gutter);
-  right: var(--publication-gutter);
-  height: 1px;
-  background: var(--publication-ink);
 }
 
 .anatomical-report .masthead {
@@ -351,28 +272,6 @@ html.specter-report body,
   font-family: PublicationSerif,Georgia,serif;
 }
 
-.publication-home>header {
-  position: relative;
-  border-bottom: 0;
-}
-
-.publication-home>header::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: var(--publication-gutter);
-  right: var(--publication-gutter);
-  height: 1px;
-  background: var(--publication-ink);
-}
-
-html .publication-header nav,
-html .publication-header nav a {
-  text-transform: none;
-  letter-spacing: 0;
-  font: var(--sl-type-scale-nav) PublicationMono,monospace;
-}
-
 .publication-context>main {
   box-sizing: border-box;
   max-width: var(--publication-width);
@@ -421,40 +320,6 @@ html .publication-header nav a {
   gap: 20px;
 }
 
-.writing-report .writing-specimens {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: #101820;
-  gap: 1px;
-  padding: 16px 12px;
-  text-decoration: none;
-}
-
-.writing-specimens figure {
-  margin: 0;
-  min-width: 0;
-}
-
-.writing-specimens img {
-  width: 100%;
-  border: 0;
-}
-
-.writing-specimens figcaption {
-  border: 0;
-  margin: 0;
-  padding: 6px;
-  color: #dce7df;
-  font: 11px/1.4 PublicationMono,monospace;
-  text-align: center;
-}
-
-.writing-report .writing-causal img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
 body:is(.blog-page,.cabinet-page) .doc-content {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -500,11 +365,6 @@ html.specter-report .tournament-montage > figure {
   min-width: 0;
 }
 
-.publication-home > main,
-.publication-home > footer {
-  padding-inline: var(--publication-gutter);
-}
-
 /* Reading conventions shared by the report family. */
 
 html body.report-page {
@@ -540,6 +400,11 @@ html.anatomical-editorial,
 html.synthesis-publication,
 body.report-page {
   --publication-width: 1440px;
+}
+
+/* The Lenia hub borrows report styling but is a hub, so it keeps the shell's width. */
+body.report-page.lenia-overview {
+  --publication-width: var(--sl-layout-shell-max-width);
 }
 
 html body.report-page .report-main {
@@ -596,57 +461,22 @@ html body.report-page .report-main > .report-nav {
     padding-top: 22px;
   }
 
-  html body .site-topnav,
-html body>.publication-header {
+  html body .site-topnav {
     flex-wrap: wrap;
     gap: 20px;
     padding-bottom: 22px;
   }
 
-  html body>.publication-header {
-    padding-top: 22px;
-  }
-
-  html body .site-topnav-links,
-html .publication-header nav {
+  html body .site-topnav-links {
     gap: var(--sl-layout-nav-gap-mobile);
   }
 
-  html body .site-brand-name,
-html .publication-brand {
+  html body .site-brand-name {
     font-size: var(--sl-type-scale-brand-mobile);
-  }
-
-  .writing-report,
-.writing-report-lead {
-    grid-template-columns: 1fr;
-    gap: var(--sl-layout-nav-gap-mobile);
-  }
-
-  .writing-report .writing-cover {
-    max-height: 280px;
-  }
-
-  .publication-header nav {
-    flex-wrap: wrap;
   }
 
   html.specter-report body>header.hero {
     padding-block: 20px 35px;
-  }
-
-  .publication-home>header {
-    padding: 22px var(--publication-gutter);
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .publication-home>header .brand {
-    font-size: var(--sl-type-scale-brand-mobile);
-  }
-
-  .publication-home>header nav {
-    gap: var(--sl-layout-nav-gap-mobile);
   }
 
   html.specter-report .tournament-montage {
@@ -691,18 +521,3 @@ html.specter-report .section-head .section-no,
   text-transform: none;
 }
 
-
-body:is(.publication-home, .writing-index) {
-  --publication-width: 1024px;
-  --sl-color-paper: #f4f1e8;
-  --sl-color-bg: #f4f1e8;
-  --publication-gutter: 40px;
-  --sl-layout-brand-size: 42px;
-  --sl-layout-brand-gap: 12px;
-  --sl-type-scale-brand: 17px;
-  --sl-type-scale-nav: 12px;
-  --sl-layout-nav-gap: 24px;
-}
-@media (max-width: 700px) {
-  body:is(.publication-home, .writing-index) { --publication-gutter: 22px; }
-}

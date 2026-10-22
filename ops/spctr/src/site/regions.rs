@@ -205,7 +205,7 @@ pub fn render_home_site_tree(records: &[SiteRecord]) -> String {
                 a class="tree-root" href="/blog/" { "Writing" }
                 ul {
                     li { a href="/blog/#published-writing" { "Articles & reports" } }
-                    li { a href="/research-notes/" { "Lab notes" } }
+                    li { a href="/blog/#lab-notes" { "Lab notes" } }
                 }
             }
             li { a class="tree-root" href="/addenda/" { "Addenda" } }
@@ -242,12 +242,51 @@ pub fn render_blog_index_posts(posts: &[BlogPostRecord], page_path: &str) -> Res
     Ok(blocks.join("\n"))
 }
 
+pub(crate) fn render_blog_index_notes(notes: &[super::blog::ResearchNoteRecord]) -> Result<String> {
+    if notes.is_empty() {
+        return Ok(String::new());
+    }
+    let mut items = Vec::new();
+    for note in notes {
+        let summary = note.summary.as_ref().ok_or_else(|| {
+            anyhow::anyhow!("research-notes/{}/index.md: published note has no summary", note.slug)
+        })?;
+        items.push(html! {
+            li class="research-note-card" {
+                h3 class="research-note-title" {
+                    a href=(format!("/research-notes/{}/", note.slug)) { (note.title) }
+                }
+                p { (summary) }
+            }
+        });
+    }
+    Ok(html! {
+        section class="section-block" id="lab-notes" aria-labelledby="lab-notes-title" {
+            h2 class="site-section-title" id="lab-notes-title" { "Lab notes" }
+            ol class="research-note-list" {
+                @for item in &items { (item) }
+            }
+        }
+    }
+    .into_string())
+}
+
 pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
-    let scope = record.labels.get("scope").map(String::as_str);
     let markup = html! {
         header class="dossier-hub-header" id="overview" {
             h1 class="dossier-hub-title" { (record.title) }
             p class="dossier-hub-deck" { (record.summary) }
+            (render_dossier_hub_metabar(record))
+        }
+    };
+    markup.into_string()
+}
+
+/// The series, status, activity, license and scope strip every hub carries,
+/// including hubs whose cover comes from a hand-written header.html.
+pub fn render_dossier_hub_metabar(record: &SiteRecord) -> maud::Markup {
+    let scope = record.labels.get("scope").map(String::as_str);
+    html! {
             div class="dossier-hub-metabar" {
                 @if let Some(ref sid) = record.series {
                     span class="dossier-hub-metabar-item" {
@@ -273,9 +312,7 @@ pub fn render_dossier_hub_header(record: &SiteRecord) -> String {
                     }
                 }
             }
-        }
-    };
-    markup.into_string()
+    }
 }
 
 pub fn render_dossier_hub_meta(record: &SiteRecord) -> String {
@@ -292,7 +329,7 @@ pub fn render_dossier_hub_footer(record: &SiteRecord) -> String {
     let published_surfaces = record.published_surface_links();
 
     let markup = html! {
-        footer class="dossier-hub-footer-row" {
+        nav class="dossier-hub-links" aria-label="Dossier links" {
             @if let Some(ref href) = cabinet_href {
                 a href=(href) { "Cabinet docs" }
             }

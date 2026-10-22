@@ -427,9 +427,14 @@ fn site(publications: &str) -> Site {
     let temp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(temp.path()).unwrap().to_owned();
     let real = repo_root();
-    fs::create_dir_all(root.join("site")).unwrap();
+    fs::create_dir_all(root.join("site/assets")).unwrap();
     fs::create_dir_all(root.join("addenda")).unwrap();
-    for rel in ["site/templates", "site/fonts", "addenda/design-tokens"] {
+    for rel in [
+        "site/templates",
+        "site/fonts",
+        "site/assets/site-shell.css",
+        "addenda/design-tokens",
+    ] {
         std::os::unix::fs::symlink(real.join(rel), root.join(rel)).unwrap();
     }
     write(&root, "site/publications.json", publications);

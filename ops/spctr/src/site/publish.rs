@@ -8,7 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::Serialize;
 use tempfile::Builder;
 
-use crate::site::{archive, blog, cabinet, finalize, pdf, status};
+use crate::site::{archive, blog, cabinet, finalize, fingerprint, pdf, status};
 use crate::{lake, registry_sync, site, tokens};
 
 const REMOTE_PORTAL_BIN: &str = "/tmp/spctr-portal";
@@ -180,6 +180,7 @@ pub fn stage_site(
         &repo_root.join("addenda/typst-field-manual/assets/fonts"),
         &site_public_url(),
     )?;
+    fingerprint::fingerprint_site(stage_root)?;
     minify_site_tree(stage_root)?;
 
     eprintln!(

@@ -1,0 +1,138 @@
+/* The header and footer that spctr injects into every page; loaded last so page stylesheets cannot restyle the shell. */
+
+html,
+body {
+  background: var(--sl-color-paper);
+}
+
+.publication-header,
+.publication-footer {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: var(--sl-layout-shell-max-width);
+  margin-inline: auto;
+  padding-inline: var(--sl-layout-shell-pad-inline);
+  background: var(--sl-color-paper);
+  color: var(--sl-color-ink);
+  font-family: var(--sl-font-mono);
+}
+
+.publication-header::after,
+.publication-footer::before {
+  content: "";
+  position: absolute;
+  left: var(--sl-layout-shell-pad-inline);
+  right: var(--sl-layout-shell-pad-inline);
+  height: 1px;
+  background: var(--sl-color-ink);
+}
+
+.publication-header {
+  gap: 16px var(--sl-layout-header-gap);
+  margin-block: 0 var(--sl-layout-header-rule-gap);
+  padding-block: var(--sl-layout-shell-pad-top) var(--sl-layout-header-bottom);
+}
+
+.publication-header::after {
+  bottom: 0;
+}
+
+.publication-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-layout-brand-gap);
+  color: inherit;
+  font: 700 var(--sl-type-scale-brand)/1 var(--sl-font-mono);
+  letter-spacing: var(--sl-tracking-brand);
+  text-decoration: none;
+}
+
+.publication-brand img {
+  display: block;
+  flex: none;
+  width: var(--sl-layout-brand-size);
+  max-width: none;
+  height: auto;
+}
+
+.publication-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sl-layout-nav-gap);
+  font: 400 var(--sl-type-scale-nav)/1 var(--sl-font-mono);
+}
+
+.publication-header nav a,
+.publication-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: inherit;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: none;
+}
+
+.publication-header nav a:is(:hover, [aria-current=page]),
+.publication-footer a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+}
+
+.publication-header + :is(.site-shell, .blog-shell, .cabinet-shell, .rk-shell) {
+  padding-top: 0;
+}
+
+.publication-footer {
+  gap: 12px 24px;
+  margin-block: 0;
+  padding-block: 24px 36px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.publication-footer::before {
+  top: 0;
+}
+
+.publication-footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+}
+
+.publication-footer > span {
+  color: var(--sl-color-muted);
+}
+
+@media (max-width: 700px) {
+  .publication-header,
+  .publication-footer {
+    padding-inline: var(--sl-layout-shell-pad-inline-mobile);
+  }
+
+  .publication-header::after,
+  .publication-footer::before {
+    left: var(--sl-layout-shell-pad-inline-mobile);
+    right: var(--sl-layout-shell-pad-inline-mobile);
+  }
+
+  .publication-header {
+    padding-block: var(--sl-layout-shell-pad-top-mobile) var(--sl-layout-header-bottom-mobile);
+  }
+
+  .publication-brand {
+    font-size: var(--sl-type-scale-brand-mobile);
+  }
+
+  .publication-header nav {
+    gap: 0 var(--sl-layout-nav-gap-mobile);
+  }
+}

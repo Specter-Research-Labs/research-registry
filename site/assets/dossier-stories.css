@@ -56,5 +56,4 @@ body.dossier-story .feature-card { border: 0; border-top: 1px solid var(--site-r
 body.dossier-story .ws-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 body.dossier-story .ws-small { font: 400 16px/1.65 var(--site-font-prose); max-width: 75ch; }
 @media(max-width: 600px) { body.dossier-story .ws-metrics { grid-template-columns: 1fr; } }
-body.dossier-story .dossier-hub-title { font-size: clamp(30px, 3.4vw, 44px); }
 body.dossier-story .dossier-hub-deck { font-size: 16px; }

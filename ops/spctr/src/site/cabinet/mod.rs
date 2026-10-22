@@ -64,7 +64,7 @@ pub fn build_cabinet(repo_root: &Utf8Path, write: bool) -> Result<()> {
         )?;
     }
 
-    render::build_index(&entries, &site_root)?;
+    render::build_index(&entries, repo_root, &site_root)?;
 
     eprintln!("cabinet: done");
     Ok(())

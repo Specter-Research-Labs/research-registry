@@ -139,13 +139,41 @@ fn minimal_templates(root: &Utf8Path) {
     minimal_design_tokens(root);
     write(
         root,
+        "site/templates/publication-header.html",
+        "<header class=\"publication-header\"><nav><a href=\"/dossiers/\">Research</a><a href=\"/blog/\">Writing</a><a href=\"/addenda/\">Addenda</a><a href=\"/cabinet/\">Cabinet</a></nav></header>\n",
+    );
+    write(
+        root,
+        "site/templates/publication-footer.html",
+        "<footer class=\"publication-footer\"></footer>\n",
+    );
+    write(
+        root,
+        "site/templates/404.html",
+        "\
+<html>
+<body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
+</body>
+</html>
+",
+    );
+    write(
+        root,
         "site/templates/index.html",
         "\
 <html>
 <body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
 <h1>Curated research</h1>
 <!-- GENERATED:HOME_SITE_TREE START -->
 <!-- GENERATED:HOME_SITE_TREE END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
 </body>
 </html>
 ",
@@ -156,8 +184,12 @@ fn minimal_templates(root: &Utf8Path) {
         "\
 <html>
 <body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
 <!-- GENERATED:DOSSIER_INDEX_GRID START -->
 <!-- GENERATED:DOSSIER_INDEX_GRID END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
 </body>
 </html>
 ",
@@ -168,8 +200,12 @@ fn minimal_templates(root: &Utf8Path) {
         "\
 <html>
 <body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
 <!-- GENERATED:ADDENDA_INDEX_GRID START -->
 <!-- GENERATED:ADDENDA_INDEX_GRID END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
 </body>
 </html>
 ",
@@ -180,32 +216,33 @@ fn minimal_templates(root: &Utf8Path) {
         "\
 <html>
 <body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
 <!-- GENERATED:BLOG_INDEX_POSTS START -->
 <!-- GENERATED:BLOG_INDEX_POSTS END -->
+<!-- GENERATED:BLOG_INDEX_NOTES START -->
+<!-- GENERATED:BLOG_INDEX_NOTES END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
 </body>
 </html>
 ",
     );
-    write(
-        root,
-        "site/templates/research-notes/index.html",
-        "\
-<html>
-<body>
-</body>
-</html>
-",
-    );
+    write(root, "site/research-notes/pandoc-template.html", "$body$");
     write(
         root,
         "site/templates/sitemap/index.html",
         "\
 <html>
 <body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
 <!-- GENERATED:SITEMAP_SECTIONS START -->
 <!-- GENERATED:SITEMAP_SECTIONS END -->
 <!-- GENERATED:SITEMAP_REGISTRY START -->
 <!-- GENERATED:SITEMAP_REGISTRY END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
 </body>
 </html>
 ",
@@ -223,8 +260,12 @@ fn minimal_templates(root: &Utf8Path) {
 <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->
 </head>
 <body>
+<!-- GENERATED:SITE_HEADER START -->
+<!-- GENERATED:SITE_HEADER END -->
 <!-- GENERATED:DOSSIER_HUB_CONTENT START -->
 <!-- GENERATED:DOSSIER_HUB_CONTENT END -->
+<!-- GENERATED:SITE_FOOTER START -->
+<!-- GENERATED:SITE_FOOTER END -->
 </body>
 </html>
 ",
@@ -476,12 +517,16 @@ fn spctr_table_is_ignored_for_site_metadata() {
         root,
         "site/templates/dossiers/alpha/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     let mut manifest = dossier_manifest(
@@ -540,12 +585,16 @@ fn hub_header_is_injected_into_output() {
         root,
         "site/templates/dossiers/alpha/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
@@ -603,12 +652,16 @@ fn hub_footer_is_injected_into_output() {
         root,
         "site/templates/dossiers/alpha/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER START -->\n\
          <!-- GENERATED:DOSSIER_HUB_FOOTER END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
@@ -628,8 +681,8 @@ fn hub_footer_is_injected_into_output() {
 
     let hub = fs::read_to_string(root.join("site/dossiers/alpha/index.html")).unwrap();
     assert!(
-        hub.contains("dossier-hub-footer-row"),
-        "hub should contain the new footer row class"
+        hub.contains("dossier-hub-links"),
+        "hub should contain the dossier links row"
     );
     assert!(
         hub.contains("Repository"),
@@ -675,8 +728,8 @@ fn visible_dossier_without_declared_hub_gets_generated_public_hub() {
         "hub should contain the title"
     );
     assert!(
-        hub.contains("dossier-hub-footer-row"),
-        "auto-gen hub should render the new footer row"
+        hub.contains("dossier-hub-links"),
+        "auto-gen hub should render the dossier links row"
     );
     assert!(
         hub.contains("Cabinet docs"),
@@ -1383,7 +1436,7 @@ fn cabinet_index_requires_drawers_marker() {
         "<html><body><section>no drawers marker</section></body></html>\n",
     );
 
-    let err = spctr::site::cabinet::render::build_index(&[], &root.join("site")).unwrap_err();
+    let err = spctr::site::cabinet::render::build_index(&[], root, &root.join("site")).unwrap_err();
     let msg = format!("{err:#}");
     assert!(
         msg.contains("template missing drawers marker"),
