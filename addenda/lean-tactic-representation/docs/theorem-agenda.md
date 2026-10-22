@@ -1,4 +1,4 @@
-# Theorem Agenda for the General Algebraic Tactic Calculus
+# Theorem agenda for the general algebraic tactic calculus
 
 Companion to
 [general-algebraic-tactic-calculus-spec.md](general-algebraic-tactic-calculus-spec.md).

@@ -1,4 +1,4 @@
-# Data Card (Draft): Lean Sorry Benchmark Index
+# Data card (draft): Lean sorry benchmark index
 
 ## Dataset Surface
 - Primary input: `index.jsonl`

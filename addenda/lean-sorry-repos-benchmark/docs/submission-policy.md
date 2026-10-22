@@ -1,4 +1,4 @@
-# Submission Policy (Beta)
+# Submission policy (beta)
 
 The benchmark is open and self-serve. Anyone can run and publish results if they follow the
 protocol below.

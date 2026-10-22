@@ -1,4 +1,4 @@
-# Algebraic Tactic Calculus
+# Algebraic tactic calculus
 
 Research target for a tactic representation richer than strings.
 

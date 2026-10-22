@@ -1,4 +1,4 @@
-# OpenRouter Throttling Run Notes (2026-03-01)
+# OpenRouter throttling run notes (2026-03-01)
 
 Records a reproducible OpenRouter suite run focused on:
 - handling temporary model throttling,

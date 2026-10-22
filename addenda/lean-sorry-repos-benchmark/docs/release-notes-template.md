@@ -1,4 +1,4 @@
-# Release Notes Template
+# Release notes template
 
 ## Release Identity
 - Release name:

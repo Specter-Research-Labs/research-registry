@@ -1,4 +1,4 @@
-# Replay Runtime Image
+# Replay runtime image
 
 This benchmark has two container targets:
 - `Dockerfile`: lightweight benchmark harness validation.
