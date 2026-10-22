@@ -6,6 +6,7 @@ constexpr uint32_t SY = GRID_SY;
 constexpr uint32_t NC = CHANNELS;
 constexpr uint32_t NK = KERNELS;
 constexpr int32_t DD = REINT_DD;
+constexpr uint32_t ROWS = REINT_ROWS;
 constexpr uint32_t M = SY / 2;
 constexpr uint32_t T = SY / 32;
 constexpr uint32_t CT = SX / 16;

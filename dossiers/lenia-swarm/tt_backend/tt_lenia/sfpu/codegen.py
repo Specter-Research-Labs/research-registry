@@ -525,14 +525,36 @@ def flow_component(spec: PassSpec, axis: int) -> Code:
 
 
 SEGMENT = 16
-MASS_BASE = 1 * TILE_VECTORS
-SHIFT_X_BASE = 3 * TILE_VECTORS
-SHIFT_Y_BASE = 5 * TILE_VECTORS
+ROWS = 4
+ACC_VECTORS = ROWS * SEGMENT
+WIN_MASS = 2 * TILE_VECTORS
+WIN_SHIFT_X = 3 * TILE_VECTORS
+WIN_SHIFT_Y = 4 * TILE_VECTORS
+# Row r's weighted mass replaces the window mass (r = 0) and shift x (r = 1) once a cell has
+# been read, so four rows fit next to the accumulators.
+WEIGHTED = tuple(s * TILE_VECTORS for s in (2, 3, 5, 6))
 
 
-def window_base(parity: int) -> int:
-    """Window index of target 0: even segments see tiles (t-1, t), odd ones (t, t+1)."""
-    return 2 * SEGMENT if parity == 0 else SEGMENT
+def window_halo(spec: PassSpec) -> int:
+    """Cells before a segment in its source window: dd rounded up to whole two-cell chunks."""
+    return 2 * ((spec.dd + 1) // 2)
+
+
+def source_rows(spec: PassSpec) -> int:
+    return ROWS + 2 * spec.dd
+
+
+def row_offsets(spec: PassSpec, k: int) -> dict[int, int]:
+    """The dx of each target row of a block that source row k reaches.
+
+    Source rows run from x0 + ROWS - 1 + dd down to x0 - dd, so every target row sees its
+    dx in ascending order, as in Metal."""
+    out = {}
+    for r in range(ROWS):
+        dx = r - (ROWS - 1) - spec.dd + k
+        if -spec.dd <= dx <= spec.dd:
+            out[r] = dx
+    return out
 
 
 REACH_CONST = "vConstFloatPrgm0"
@@ -550,64 +572,66 @@ def _set_reach(spec: PassSpec) -> str:
     return f"{REACH_CONST} = {lit(np.float32(spec.sigma) + np.float32(0.5))};"
 
 
-DX_VECTOR = 7 * TILE_VECTORS
-
-
-def reint_set_dx(dx: int) -> Code:
-    """The x offset lives in a free DST vector so one prepare loop serves every dx."""
-    return [f"dst_reg[{DX_VECTOR}] = {lit(dx)};"]
-
-
-def reint_prepare(spec: PassSpec, parity: int) -> Code:
-    """Weight the clamped source mass by its x overlap for offset dx, once per source.
+def reint_weights(spec: PassSpec, k: int) -> Code:
+    """Weight the clamped mass of source row k by its x overlap with each target row it reaches.
 
     Metal forms (mass * sz_y) * sz_x; folding sz_x in first reorders one product, which stays
-    within an ulp and turns every window term into a single multiply-add."""
-    w = window_base(parity) - spec.dd
-    sz = _sz(spec, "dxf", f"dst_reg[{SHIFT_X_BASE + w}]")
-    return [
-        _set_reach(spec),
-        f"vFloat dxf = dst_reg[{DX_VECTOR}];",
-        Loop(
-            SEGMENT + 2 * spec.dd,
-            1,
-            (f"dst_reg[{MASS_BASE + w}] = max0(dst_reg[{MASS_BASE + w}]) * {sz};",),
-        ),
-    ]
+    within an ulp and turns every window term into a single multiply-add. Rows are written
+    from the last so that rows 1 and 0 overwrite inputs only after the cell has been read."""
+    w = window_halo(spec) - spec.dd
+    body = [f"vFloat m = max0(dst_reg[{WIN_MASS + w}]);", f"vFloat s = dst_reg[{WIN_SHIFT_X + w}];"]
+    for r, dx in sorted(row_offsets(spec, k).items(), reverse=True):
+        body.append(f"dst_reg[{WEIGHTED[r] + w}] = m * {_sz(spec, lit(dx), 's')};")
+    return [_set_reach(spec), Loop(SEGMENT + 2 * spec.dd, 1, ("{ " + " ".join(body) + " }",))]
 
 
-def reint_terms(spec: PassSpec, parity: int) -> Code:
-    wb = window_base(parity)
-    body = ["vFloat a = dst_reg[0];"]
+def reint_terms(spec: PassSpec, rows: tuple[int, ...]) -> Code:
+    """Add one source row's terms to the target rows it reaches. Each y overlap is shared by
+    those rows, and every accumulator still takes its terms in ascending dy."""
+    halo = window_halo(spec)
+    body = []
     for dy in range(-spec.dd, spec.dd + 1):
-        j = wb - dy
-        sz = _sz(spec, lit(dy), f"dst_reg[{SHIFT_Y_BASE + j}]")
-        body.append(f"{{ vFloat sz = {sz}; a = a + dst_reg[{MASS_BASE + j}] * sz; }}")
-    body.append("dst_reg[0] = a;")
+        j = halo - dy
+        sz = _sz(spec, lit(dy), f"dst_reg[{WIN_SHIFT_Y + j}]")
+        adds = " ".join(
+            f"dst_reg[{SEGMENT * r}] = dst_reg[{SEGMENT * r}] + dst_reg[{WEIGHTED[r] + j}] * sz;"
+            for r in rows
+        )
+        body.append(f"{{ vFloat sz = {sz}; {adds} }}")
     return [_set_reach(spec), Loop(SEGMENT, 1, ("{ " + " ".join(body) + " }",))]
 
 
 def reint_zero() -> Code:
-    return [Loop(SEGMENT, 1, ("dst_reg[0] = 0.0f;",))]
+    return [Loop(ACC_VECTORS, 1, ("dst_reg[0] = 0.0f;",))]
 
 
 def reint_scale(spec: PassSpec) -> Code:
     sigma = np.float32(spec.sigma)
     area = lit(np.float32(1.0) / (np.float32(4.0) * sigma * sigma))
-    return [Loop(SEGMENT, 1, (f"dst_reg[0] = dst_reg[0] * {area};",))]
+    return [Loop(ACC_VECTORS, 1, (f"dst_reg[0] = dst_reg[0] * {area};",))]
+
+
+def _terms_name(rows: tuple[int, ...]) -> str:
+    return f"reint_terms_{rows[0]}_{rows[-1]}"
+
+
+def _reint_functions(spec: PassSpec) -> list[str]:
+    ks = range(source_rows(spec))
+    spans = sorted({tuple(row_offsets(spec, k)) for k in ks})
+    parts = [_function(f"reint_weights_{k}", reint_weights(spec, k)) for k in ks]
+    parts += [_function(_terms_name(rows), reint_terms(spec, rows)) for rows in spans]
+    cases = "\n".join(
+        f"case {k}: reint_weights_{k}(); {_terms_name(tuple(row_offsets(spec, k)))}(); break;"
+        for k in ks
+    )
+    parts.append(f"inline void reint_source(uint32_t k) {{\nswitch (k) {{\n{cases}\n}}\n}}\n")
+    return parts
 
 
 def _function(name: str, code: Code) -> str:
     # Kernels call some transforms from several places, and inlining each copy overflows the
     # per-program kernel config buffer.
     return f"__attribute__((noinline)) void {name}() {{\n{render(code)}\n}}\n"
-
-
-def _dx_dispatch(spec: PassSpec) -> str:
-    cases = "\n".join(
-        f"case {dx}: {render(reint_set_dx(dx))} break;" for dx in range(-spec.dd, spec.dd + 1)
-    )
-    return f"inline void reint_set_dx(int dx) {{\nswitch (dx) {{\n{cases}\n}}\n}}\n"
 
 
 def _growth_plan(spec: PassSpec) -> str:
@@ -675,10 +699,7 @@ def header(spec: PassSpec, stage: str) -> str:
             _function("flow_y", flow_component(spec, 1)),
         ]
     elif stage == "p5":
-        parts.append(_dx_dispatch(spec))
-        for parity in (0, 1):
-            parts.append(_function(f"reint_prepare_{parity}", reint_prepare(spec, parity)))
-            parts.append(_function(f"reint_terms_{parity}", reint_terms(spec, parity)))
+        parts += _reint_functions(spec)
         parts += [
             _function("reint_zero", reint_zero()),
             _function("reint_scale", reint_scale(spec)),

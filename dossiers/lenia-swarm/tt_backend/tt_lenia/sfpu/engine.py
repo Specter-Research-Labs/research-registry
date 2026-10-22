@@ -214,6 +214,7 @@ class SfpuEngine:
             ("CHANNELS", str(spec.channels)),
             ("KERNELS", str(spec.kernels)),
             ("REINT_DD", str(spec.dd)),
+            ("REINT_ROWS", str(codegen.ROWS)),
             ("C0_LIST", ",".join(map(str, spec.c0))),
             ("GEN_HEADER", f'"{self.headers[stage]}"'),
         ]
@@ -222,15 +223,15 @@ class SfpuEngine:
         return defines
 
     def _units(self, stage: str) -> int:
-        """Independent work units of a pass for one group: rows for p1, p3 and p5, columns for
-        p2 and tile blocks for p4."""
+        """Independent work units of a pass for one group: rows for p1 and p3, blocks of
+        codegen.ROWS rows for p5, columns for p2 and tile blocks for p4."""
         spec = self.spec
         return {
             "p1": spec.channels * spec.sx,
             "p2": spec.channels * spec.half,
             "p3": spec.sx,
             "p4": spec.channels * spec.sx * spec.row_tiles,
-            "p5": spec.channels * spec.sx,
+            "p5": spec.channels * spec.sx // codegen.ROWS,
         }[stage]
 
     def _ranges(self, stage: str) -> list[list[int]]:
@@ -312,7 +313,7 @@ class SfpuEngine:
         p4 = self._program(
             "p4", [self.u, self.matter], [self.shift] + ([self.flow] if cap else []), p4_cbs
         )
-        p5 = self._program("p5", [src, self.shift], [dst], {0: 6 * T, 8: 2 * T + 2, 16: 2})
+        p5 = self._program("p5", [src, self.shift], [dst], {0: 6, 16: 4})
         tensors = {
             "p1": [src, self.s_spec],
             "p2": p2_in + [self.resp],

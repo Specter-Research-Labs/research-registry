@@ -34,29 +34,38 @@ ensemble verdicts rather than per-step fields.
 ## Throughput
 
 All four cards running concurrently, per-card batch, 32 timed steps after two
-warmup steps.
+warmup steps, host load average between 2 and 5.
 
 | grid | bodies per card | ms per step | body-steps/s per card | box (4 cards) |
 | --- | ---: | ---: | ---: | ---: |
-| `128x128` | 256 | `13.55` | `18,900` | `75,600` |
-| `128x128` | 3584 | `211.2` | `16,960` | `67,800` |
-| `256x256` | 128 | `28.22` | `4,535` | `18,100` |
-| `256x256` | 896 | `218.9` | `4,093` | `16,400` |
+| `128x128` | 256 | `10.06` | `25,450` | `101,800` |
+| `128x128` | 3584 | `149.7` | `23,950` | `95,800` |
+| `128x128` | 4096 | `158.3` | `25,870` | `103,500` |
+| `256x256` | 128 | `20.83` | `6,145` | `24,600` |
+| `256x256` | 896 | `157.0` | `5,706` | `22,800` |
+| `256x256` | 1024 | `164.7` | `6,216` | `24,900` |
 
-A single card at `128x128` stays between 17,000 and 18,900 body-steps/s from
-64 to 3584 bodies; batches that fill all 64 cores of both chips evenly are
-fastest. Cards scale linearly.
+Batches that fill all 64 cores of both chips evenly (multiples of 2048 lanes at
+`128x128`, 512 at `256x256`) are fastest. Cards scale linearly.
 
 ## Where the step goes
 
-Per-pass time at `128x128`, 3584 bodies per card:
+Per-pass time at `128x128`, 4096 bodies per card, from the host timer and from
+`bench.py --profile` on one card:
 
-| pass | work | ms |
-| --- | --- | ---: |
-| p1 | row FFT of mass | `3.7` |
-| p2 | column FFT, kernel product, inverse column FFT | `28.0` |
-| p3 | inverse row FFT, growth, affinity | `54.3` |
-| p4 | Sobel gradients and flow | `13.7` |
-| p5 | reintegration over the `(2 dd + 1)^2` window | `111.9` |
+| pass | work | ms | device profile |
+| --- | --- | ---: | --- |
+| p1 | row FFT of mass | `4.1` | compute waits on the reader for `1.1` of `3.2` ms |
+| p2 | column FFT, kernel product, inverse column FFT | `31.6` | compute waits on the reader for `10.6` of `28.0` ms |
+| p3 | inverse row FFT, growth, affinity | `57.5` | compute waits on the reader for `20.7` of `52.2` ms |
+| p4 | Sobel gradients and flow | `14.9` | compute waits on the reader for `4.0` of `10.4` ms |
+| p5 | reintegration over the `(2 dd + 1)^2` window | `50.3` | SFPU busy `45.5` of `49.4` ms, tile copies `3.0` ms |
 
-Reintegration is half the step and the first target for further speed.
+Reintegration works on blocks of four target rows of one channel. Each source
+row's mass is weighted once by its x overlap with every target row it reaches,
+and each y overlap is then computed once and shared by up to four rows instead
+of once per target row. That took p5 from `111.9` to `50.1` ms at 3584 bodies with state hashes
+bit-identical to the per-row kernel at every step of a 2000-step rollout of
+107 bodies. p5 is now SFPU-bound, while p2 and p3 spend a third of their
+compute time waiting for input, so the next gains are fewer SFPU instructions
+per reintegration term and better overlap of reads with compute in p2 and p3.
