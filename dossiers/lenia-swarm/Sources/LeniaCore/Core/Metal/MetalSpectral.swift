@@ -27,6 +27,10 @@ struct FlowLeniaSpectralPlan {
         guard let radicesX = Self.radices(sx), let radicesY = Self.radices(sy) else {
             preconditionFailure("Flow Metal FFT needs grid sides whose prime factors are 2, 3, 5 and 7, got \(sx) x \(sy).")
         }
+        // fftshift2 puts the kernel origin at index 0 only on even sides, and the response pass relies on the resulting real kernel spectra.
+        guard sx % 2 == 0, sy % 2 == 0 else {
+            preconditionFailure("Flow Metal FFT needs even grid sides so kernel spectra are real, got \(sx) x \(sy).")
+        }
         self.sx = sx
         self.sy = sy
         self.radicesX = radicesX
@@ -233,7 +237,7 @@ struct FlowLeniaSpectralPlan {
 
         kernel void flowMetalResponseColumns(
             device const float2 *channelSpectra [[buffer(0)]],
-            device const float2 *kernelSpectra [[buffer(1)]],
+            device const float *kernelSpectra [[buffer(1)]],
             device const int *c0Idxs [[buffer(2)]],
             device const float2 *twiddleX [[buffer(3)]],
             device float2 *responses [[buffer(4)]],
@@ -262,7 +266,7 @@ struct FlowLeniaSpectralPlan {
                 int source = c0Idxs[k];
                 int kernelBase = transposedKernelIndex(kernelBatch, ky, k, 0);
                 for (int x = t; x < kSX; x += kThreadsX) {
-                    bufferA[x] = complexMultiply(columns[source][x], kernelSpectra[kernelBase + x]);
+                    bufferA[x] = columns[source][x] * kernelSpectra[kernelBase + x];
                 }
                 threadgroup_barrier(mem_flags::mem_threadgroup);
                 threadgroup float2 *column = fftX(bufferA, bufferB, twiddleX, t, true);

@@ -179,7 +179,7 @@ final class FlowLeniaMetalFullPipeline {
         let scalarBytes = cellCount * MemoryLayout<Float>.stride
         let channelScalarBytes = cellCount * self.channelCount * MemoryLayout<Float>.stride
         let flowBytes = cellCount * self.channelCount * 2 * MemoryLayout<Float>.stride
-        let kernelBytes = self.kernelBatchCount * config.sx * reducedY * self.kernelCount * MemoryLayout<SIMD2<Float>>.stride
+        let kernelBytes = self.kernelBatchCount * config.sx * reducedY * self.kernelCount * MemoryLayout<Float>.stride
         let channelSpectrumBytes = cellCount / config.sy * reducedY * self.channelCount * MemoryLayout<SIMD2<Float>>.stride
         let kernelResponseBytes = cellCount / config.sy * reducedY * self.kernelCount * MemoryLayout<SIMD2<Float>>.stride
         let c0IdxBytes = self.kernelCount * MemoryLayout<Int32>.stride
@@ -279,7 +279,13 @@ final class FlowLeniaMetalFullPipeline {
 
         let reducedY = (config.sy / 2) + 1
         // The response pass reads one (ky, k) kernel column along x, so x is innermost.
-        let packedKernel = kernels.fK[0..., 0..., 0..<reducedY, 0...].transposed(axes: [0, 2, 3, 1]).contiguous()
+        let spectra = kernels.fK[0..., 0..., 0..<reducedY, 0...]
+        let largestReal = MLX.abs(spectra.realPart()).max().item(Float.self)
+        let largestImaginary = MLX.abs(spectra.imaginaryPart()).max().item(Float.self)
+        guard largestImaginary <= 1e-5 * largestReal else {
+            preconditionFailure("Flow Metal full pipeline requires point-symmetric kernels with real spectra, got imaginary parts up to \(largestImaginary) against \(largestReal).")
+        }
+        let packedKernel = spectra.realPart().transposed(axes: [0, 2, 3, 1]).contiguous()
         guard packedKernel.shape == [kernelBatchCount, reducedY, kernelCount, config.sx] else {
             preconditionFailure("Flow Metal full pipeline requires kernel spectra to match its batch, grid, and parameter dimensions.")
         }
