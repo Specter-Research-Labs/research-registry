@@ -579,7 +579,6 @@ fn audit_public_copy(repo_root: &Utf8Path) -> Result<()> {
             ".github",
         ],
         &[
-            "dossiers/lenia-swarm/tt_backend/metal/reintegration",
             "dossiers/jolt-material-memory/engine/src/recording_viewer.mm",
             "ops/spctr/src/release.rs",
         ],

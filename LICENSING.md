@@ -20,9 +20,6 @@ noncommercial terms. It is not offered as OSI open source.
 - Any file or subtree that carries its own license header or local
   `LICENSE` or `NOTICE` file is governed by that local notice, not
   by the Specter defaults above.
-- `dossiers/lenia-swarm/tt_backend/metal/reintegration/**`
-  contains files marked `SPDX-License-Identifier: Apache-2.0`;
-  those files remain Apache-2.0.
 - `dossiers/jolt-material-memory/engine/src/recording_viewer.mm`
   is marked `SPDX-License-Identifier: MIT`; that file remains MIT.
 
