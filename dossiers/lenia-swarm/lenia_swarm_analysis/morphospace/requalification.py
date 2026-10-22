@@ -35,7 +35,8 @@ def _body_spec(base: dict[str, Any]) -> dict[str, Any]:
     native = base["grid"]["sx"]
     if base["grid"]["sy"] != native or patch["center"] != [native // 2, native // 2]:
         raise ValueError("expected a square grid with the initial patch centred")
-    if base["init"]["patches"] or base["init"]["seed"] != 0:
+    # init.seed only drives random patches and uniform noise, so it is free once both are off.
+    if base["init"]["patches"] or base["init"]["a_uniform"] != {"low": 0, "high": 0}:
         raise ValueError("expected a state patch as the only initial condition")
     return {
         "params_sha256": _canonical_sha(base["params"]),
@@ -176,22 +177,61 @@ def write_torus_inputs(
     n<native>-torus<size>.
     """
     members = json.loads(members_path.read_text())["members"]
+    for m in members:
+        base = json.loads((Path(m["input"]["exportDir"]) / "base.json").read_text())
+        if _body_spec(base)["params_sha256"] != m["params_sha256"]:
+            raise ValueError(
+                f"{m['input']['exportDir']}: input changed since members were collected"
+            )
+    return _write_arena_cells(
+        rows=[(m["body"], m["native_arena"], m["input"]) for m in members],
+        source={"members_sha256": sha256_bytes(members_path.read_bytes())},
+        scales=scales,
+        steps=steps,
+        output_root=output_root,
+    )
+
+
+def write_arena_inputs(
+    *, index_path: Path, scales: list[int], steps: int, output_root: Path
+) -> dict[str, Any]:
+    """Write torus replay inputs for every body of an export index, as `write_torus_inputs` does."""
+    rows = []
+    for row in read_jsonl(index_path):
+        base = json.loads((Path(row["exportDir"]) / "base.json").read_text())
+        rows.append((row["creatureId"], _body_spec(base)["native_arena"], row))
+    bodies = Counter(body for body, _, _ in rows)
+    repeated = sorted(b for b, n in bodies.items() if n > 1)
+    if repeated:
+        raise ValueError(f"bodies listed more than once in {index_path}: {repeated}")
+    return _write_arena_cells(
+        rows=rows,
+        source={"index_sha256": sha256_bytes(index_path.read_bytes())},
+        scales=scales,
+        steps=steps,
+        output_root=output_root,
+    )
+
+
+def _write_arena_cells(
+    *,
+    rows: list[tuple[str, int, dict[str, Any]]],
+    source: dict[str, str],
+    scales: list[int],
+    steps: int,
+    output_root: Path,
+) -> dict[str, Any]:
     output_root.mkdir()
-    receipt: dict[str, Any] = {
-        "members_sha256": sha256_bytes(members_path.read_bytes()),
-        "cells": {},
-    }
-    for native in sorted({m["native_arena"] for m in members}):
-        group = [m for m in members if m["native_arena"] == native]
+    receipt: dict[str, Any] = {**source, "cells": {}}
+    for native in sorted({n for _, n, _ in rows}):
+        group = [(body, row) for body, n, row in rows if n == native]
         for scale in scales:
             size = native * scale
             cell = output_root / f"n{native}-torus{size}"
             written, bases = [], {}
-            for m in group:
-                src = Path(m["input"]["exportDir"])
+            for body, row in group:
+                src = Path(row["exportDir"])
                 base = json.loads((src / "base.json").read_text())
-                if _body_spec(base)["params_sha256"] != m["params_sha256"]:
-                    raise ValueError(f"{src}: input changed since members were collected")
                 base["grid"] = {**base["grid"], "sx": size, "sy": size}
                 base["init"]["state_patch"]["center"] = [size // 2, size // 2]
                 base["reintegration"]["border"] = "torus"
@@ -204,13 +244,13 @@ def write_torus_inputs(
                 (d / "meta.json").write_bytes((src / "meta.json").read_bytes())
                 written.append(
                     {
-                        **m["input"],
+                        **row,
                         "exportDir": str(d),
                         "baseConfigPath": str(d / "base.json"),
                         "searchConfigPath": str(d / "search.json"),
                     }
                 )
-                bases[m["body"]] = sha256_bytes((d / "base.json").read_bytes())
+                bases[body] = sha256_bytes((d / "base.json").read_bytes())
             (cell / "index.jsonl").write_text(
                 "".join(json.dumps(r, sort_keys=True) + "\n" for r in written)
             )

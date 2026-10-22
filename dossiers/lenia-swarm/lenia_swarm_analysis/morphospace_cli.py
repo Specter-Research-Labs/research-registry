@@ -51,6 +51,7 @@ from lenia_swarm_analysis.morphospace.requalification import (
     compare_trace_frames,
     compare_verdicts,
     retire_trace_fields,
+    write_arena_inputs,
     write_torus_inputs,
 )
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
@@ -1114,6 +1115,24 @@ def _build_parser() -> argparse.ArgumentParser:
     requal_inputs.set_defaults(
         handler=lambda args: write_torus_inputs(
             members_path=args.members.resolve(),
+            scales=args.scales,
+            steps=int(args.steps),
+            output_root=args.output.resolve(),
+        )
+    )
+
+    arena_inputs = subparsers.add_parser(
+        "write-arena-inputs",
+        help="Write torus replay inputs for every body of an export index at scaled arena sizes",
+    )
+    arena_inputs.add_argument("--index", required=True, type=Path)
+    arena_inputs.add_argument("--scale", required=True, type=int, action="append", dest="scales")
+    arena_inputs.add_argument("--steps", required=True, type=int)
+    arena_inputs.add_argument("--output", required=True, type=Path)
+    _add_json(arena_inputs)
+    arena_inputs.set_defaults(
+        handler=lambda args: write_arena_inputs(
+            index_path=args.index.resolve(),
             scales=args.scales,
             steps=int(args.steps),
             output_root=args.output.resolve(),

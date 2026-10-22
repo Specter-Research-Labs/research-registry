@@ -7,6 +7,7 @@ struct TTCommands: AsyncParsableCommand {
         abstract: "Run Tenstorrent backend workflows",
         subcommands: [
             TTReplayCommand.self,
+            TTMaterializeInitCommand.self,
         ]
     )
 }

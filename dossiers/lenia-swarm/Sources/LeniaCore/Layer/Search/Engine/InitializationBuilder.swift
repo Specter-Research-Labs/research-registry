@@ -414,3 +414,56 @@ struct SearchInitializationBuilder {
         return (x0, x1, y0, y1)
     }
 }
+
+/// The step-0 state that a replay builds from `runtimeConfig`'s seeded random patches for `seed`,
+/// cut to the bounding box of those patches and placed so the explicit state-patch path rebuilds
+/// it bit for bit.
+public func materializedInitialStatePatch(runtimeConfig: LeniaRuntimeConfig, seed: Int) throws -> InitStatePatchConfig {
+    guard runtimeConfig.statePatch == nil else {
+        throw ConfigError.invalidConfig("init already has a state_patch.")
+    }
+    guard !runtimeConfig.parameterEmbedding.enabled else {
+        throw ConfigError.invalidConfig("parameter embedding is not supported.")
+    }
+    guard !runtimeConfig.patches.isEmpty else {
+        throw ConfigError.invalidConfig("init has no random patches.")
+    }
+    let state = searchInitialState(runtimeConfig: runtimeConfig, seed: seed)
+    let bounds = runtimeConfig.patches.map { patch in
+        let half = patch.size / 2
+        return (x0: patch.center[0] - half, x1: patch.center[0] + (patch.size - half),
+                y0: patch.center[1] - half, y1: patch.center[1] + (patch.size - half))
+    }
+    let x0 = bounds.map(\.x0).min()!
+    let x1 = bounds.map(\.x1).max()!
+    let y0 = bounds.map(\.y0).min()!
+    let y1 = bounds.map(\.y1).max()!
+    let width = x1 - x0
+    let height = y1 - y0
+    let channels = runtimeConfig.channels
+    var values: [Float] = []
+    values.reserveCapacity(width * height * channels)
+    for x in x0..<x1 {
+        for y in y0..<y1 {
+            for channel in 0..<channels {
+                values.append(state[(x * runtimeConfig.sy + y) * channels + channel])
+            }
+        }
+    }
+    return InitStatePatchConfig(
+        center: [x0 + width / 2, y0 + height / 2],
+        width: width,
+        height: height,
+        channels: channels,
+        values: values
+    )
+}
+
+/// The step-0 creature state a search replay builds for `seed`, flattened x, y, channel.
+public func searchInitialState(runtimeConfig: LeniaRuntimeConfig, seed: Int) -> [Float] {
+    SearchInitializationBuilder(
+        runtimeConfig: runtimeConfig,
+        useParamEmbedding: false,
+        constantPerPatchParameters: false
+    ).buildInitialState(seed: seed).asArray(Float.self)
+}
