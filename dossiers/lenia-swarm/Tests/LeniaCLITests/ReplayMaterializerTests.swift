@@ -104,4 +104,43 @@ final class BatchedReplayTests: XCTestCase {
         }
         XCTAssertNotEqual(singleFrames[0], singleFrames[1])
     }
+
+    /// Perturbation studies restart bodies from a recorded state, so a batch restarted from each
+    /// body's step-20 state must continue exactly as the uninterrupted runs do.
+    func testExplicitStatePatchesRestartBatchExactly() throws {
+        let bodies = [try runtime(R: 5, m: 0.15, seed: 3), try runtime(R: 6.5, m: 0.2, seed: 7)]
+        let search = SearchConfig(
+            steps: 40, recordInterval: 10, warmupSteps: 0, occupancyThreshold: 0.05,
+            massChannel: -1, scoreWeights: [:], filters: [:], complexity: nil,
+            activity: nil, stability: nil
+        )
+        let (fullCapture, fullFrames) = capture(samples: 2)
+        _ = SearchEngine(runtimeConfig: bodies[0]).runBatch(
+            seeds: [3, 7], initSeedOffset: 0, searchConfig: search, frameCapture: fullCapture,
+            explicitParamsBatch: bodies.map(\.params)
+        )
+        let full = fullFrames()
+        let restartStates = try (0..<2).map { index in
+            InitStatePatchConfig(center: [16, 16], width: 32, height: 32, channels: 1, values: try XCTUnwrap(full[index][20]))
+        }
+
+        let restartSearch = SearchConfig(
+            steps: 20, recordInterval: 10, warmupSteps: 0, occupancyThreshold: 0.05,
+            massChannel: -1, scoreWeights: [:], filters: [:], complexity: nil,
+            activity: nil, stability: nil
+        )
+        let (restartCapture, restartFrames) = capture(samples: 2)
+        _ = SearchEngine(runtimeConfig: bodies[0]).runBatch(
+            seeds: [0, 0], initSeedOffset: 0, searchConfig: restartSearch, frameCapture: restartCapture,
+            explicitParamsBatch: bodies.map(\.params), explicitStatePatches: restartStates
+        )
+        let restarted = restartFrames()
+        for index in 0..<2 {
+            XCTAssertEqual(Set(restarted[index].keys), [10, 20])
+            for offset in [10, 20] {
+                XCTAssertTrue(restarted[index][offset] == full[index][20 + offset], "body \(index) at step \(20 + offset)")
+            }
+        }
+        XCTAssertNotEqual(full[0][40], full[1][40])
+    }
 }

@@ -266,12 +266,14 @@ public final class SearchEngine {
     }
 
     /// `explicitParamsBatch` supplies one rule per seed for Metal evaluation without parameter embedding.
+    /// `explicitStatePatches` supplies one initial state per seed in place of the config's init.
     public func runBatch(
         seeds: [Int],
         initSeedOffset: Int,
         searchConfig: SearchConfig,
         frameCapture: FrameCapture? = nil,
-        explicitParamsBatch: [ResolvedParams]? = nil
+        explicitParamsBatch: [ResolvedParams]? = nil,
+        explicitStatePatches: [InitStatePatchConfig]? = nil
     ) -> [BatchSimulationResult] {
         let totalStart = ContinuousClock.now
         lastBatchProfile = nil
@@ -293,6 +295,7 @@ public final class SearchEngine {
             frameCapture: frameCapture,
             preflight: preflight,
             explicitParamsBatch: explicitParamsBatch,
+            explicitStatePatches: explicitStatePatches,
             timings: &timings
         )
         let initialConditionFamily = batchSetup.initialConditionFamily
@@ -588,6 +591,7 @@ public final class SearchEngine {
         frameCapture: FrameCapture?,
         preflight: SearchConfigPreflight,
         explicitParamsBatch: [ResolvedParams]?,
+        explicitStatePatches: [InitStatePatchConfig]?,
         timings: inout SearchBatchProfile
     ) -> SearchBatchSetup {
         let batchSize = seeds.count
@@ -643,8 +647,18 @@ public final class SearchEngine {
         let captureConfig = SearchConfigPreflight.captureConfig(frameCapture, batchSize: batchSize)
 
         let stateBuildStart = ContinuousClock.now
-        let initialArrays = seeds.map { seed in
-            initializationBuilder.buildInitialState(seed: seed + initSeedOffset)
+        let initialArrays: [MLXArray]
+        if let statePatches = explicitStatePatches {
+            precondition(
+                statePatches.count == batchSize,
+                "explicitStatePatches count (\(statePatches.count)) must equal batch size (\(batchSize))"
+            )
+            precondition(!useParamEmbedding, "explicitStatePatches requires parameter embedding to be off")
+            initialArrays = statePatches.map(initializationBuilder.buildExplicitInitialState)
+        } else {
+            initialArrays = seeds.map { seed in
+                initializationBuilder.buildInitialState(seed: seed + initSeedOffset)
+            }
         }
         timings.stateBuildMs = durationMs(stateBuildStart.duration(to: ContinuousClock.now))
 
@@ -916,6 +930,7 @@ extension SearchEngine {
             frameCapture: nil,
             preflight: preflight,
             explicitParamsBatch: nil,
+            explicitStatePatches: nil,
             timings: &timings
         )
         #if canImport(Metal)

@@ -363,8 +363,8 @@ private func finishFlowReplay(
     )
 }
 
-/// Runs flow bodies that share one simulation config, differing only in rule parameters and
-/// initial seed, as a single engine batch with per-sample rules. Each body's seed and init
+/// Runs flow bodies that share one simulation config, differing only in rule parameters,
+/// initial seed and explicit initial state, as a single engine batch with per-sample rules. Each body's seed and init
 /// seed are restored to what its own batch-1 replay records, so results and traces match it.
 func executeFlowReplayBatch(
     _ resolvedInputs: [ReplayResolvedInput],
@@ -384,6 +384,10 @@ func executeFlowReplayBatch(
     let sharedKey = try flowReplaySharedConfig(first)
     for body in prepared.dropFirst() where try flowReplaySharedConfig(body) != sharedKey {
         throw ValidationError("\(body.sourceCreature.name) and \(first.sourceCreature.name) differ beyond rule parameters and init seed, so they cannot share a replay batch.")
+    }
+    let statePatches = prepared.map(\.runtimeConfig.statePatch)
+    guard statePatches.allSatisfy({ $0 == nil }) || statePatches.allSatisfy({ $0 != nil }) else {
+        throw ValidationError("A replay batch must give every body an explicit init.state_patch or none.")
     }
     let runtimeConfig = first.runtimeConfig
     guard runtimeConfig.backend.hasResidentFieldRunner, !runtimeConfig.parameterEmbedding.enabled, runtimeConfig.randomParamRanges == nil else {
@@ -408,7 +412,8 @@ func executeFlowReplayBatch(
         initSeedOffset: 0,
         searchConfig: first.searchConfig.toSearchConfig(),
         frameCapture: capture,
-        explicitParamsBatch: prepared.map { $0.runtimeConfig.params }
+        explicitParamsBatch: prepared.map { $0.runtimeConfig.params },
+        explicitStatePatches: statePatches.first! == nil ? nil : statePatches.map { $0! }
     )
     guard results.count == prepared.count else {
         throw ValidationError("Replay batch returned \(results.count) results for \(prepared.count) bodies.")
@@ -443,6 +448,7 @@ private func flowReplaySharedConfig(_ body: PreparedFlowReplay) throws -> Data {
     }
     base["params"] = nil
     initConfig["seed"] = nil
+    initConfig["state_patch"] = nil
     base["init"] = initConfig
     search["seed_start"] = nil
     search["init_seed_offset"] = nil
