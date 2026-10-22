@@ -46,6 +46,7 @@ from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
 )
 from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
+from lenia_swarm_analysis.morphospace.regeneration import write_regeneration_inputs
 from lenia_swarm_analysis.morphospace.requalification import (
     collect_members,
     compare_trace_frames,
@@ -1049,6 +1050,30 @@ def _build_parser() -> argparse.ArgumentParser:
             output_path=args.output.resolve(),
             horizon=int(args.horizon),
             workers=int(args.workers),
+        )
+    )
+
+    regeneration = subparsers.add_parser(
+        "regeneration-inputs",
+        help="Write restart bundles that continue every body of a replay from a recorded state, uncut and cut",
+    )
+    regeneration.add_argument("--replay-root", required=True, type=Path)
+    regeneration.add_argument("--source-index", required=True, type=Path)
+    regeneration.add_argument("--step", required=True, type=int)
+    regeneration.add_argument("--restart-steps", required=True, type=int)
+    regeneration.add_argument("--angle-deg", required=True, type=float, action="append")
+    regeneration.add_argument("--removed-fraction", required=True, type=float, action="append")
+    regeneration.add_argument("--output", required=True, type=Path)
+    _add_json(regeneration)
+    regeneration.set_defaults(
+        handler=lambda args: write_regeneration_inputs(
+            replay_root=args.replay_root.resolve(),
+            source_index=args.source_index.resolve(),
+            step=int(args.step),
+            restart_steps=int(args.restart_steps),
+            angles_deg=list(args.angle_deg),
+            fractions=list(args.removed_fraction),
+            output_dir=args.output.resolve(),
         )
     )
 

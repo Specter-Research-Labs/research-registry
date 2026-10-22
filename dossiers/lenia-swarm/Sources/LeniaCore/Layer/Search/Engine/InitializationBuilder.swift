@@ -8,12 +8,7 @@ struct SearchInitializationBuilder {
 
     func buildInitialState(seed: Int) -> MLXArray {
         if let statePatch = runtimeConfig.statePatch {
-            return buildExplicitInitialState(
-                sx: runtimeConfig.sx,
-                sy: runtimeConfig.sy,
-                channels: runtimeConfig.channels,
-                statePatch: statePatch
-            )
+            return buildExplicitInitialState(statePatch)
         }
 
         var rng = SeededRandomNumberGenerator(seed: UInt64(seed))
@@ -100,6 +95,15 @@ struct SearchInitializationBuilder {
             return nil
         }
         return buildCrossMapMask(config: envConfig).expandedDimensions(axes: [0, 3])
+    }
+
+    func buildExplicitInitialState(_ statePatch: InitStatePatchConfig) -> MLXArray {
+        buildExplicitInitialState(
+            sx: runtimeConfig.sx,
+            sy: runtimeConfig.sy,
+            channels: runtimeConfig.channels,
+            statePatch: statePatch
+        )
     }
 
     private func buildExplicitInitialState(
