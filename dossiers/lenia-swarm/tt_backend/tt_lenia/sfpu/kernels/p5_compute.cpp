@@ -43,12 +43,18 @@ void kernel_main() {
                 if (!first) {
                     load_tiles(CB_ACC, 0, 1, 0);
                 }
-                copy_tile_to_dst_init_short(CB_IN);
-                for (uint32_t q = 0; q < 3; q++) {
-                    copy_tile(CB_IN, q * T + lo, 1 + 2 * q);
-                    copy_tile(CB_IN, q * T + hi, 2 + 2 * q);
+                {
+                    DeviceZoneScopedSumN1("p5-copy");
+                    copy_tile_to_dst_init_short(CB_IN);
+                    for (uint32_t q = 0; q < 3; q++) {
+                        copy_tile(CB_IN, q * T + lo, 1 + 2 * q);
+                        copy_tile(CB_IN, q * T + hi, 2 + 2 * q);
+                    }
                 }
-                SFPU(reint_block(parity, dx, first, last));
+                {
+                    DeviceZoneScopedSumN2("p5-sfpu");
+                    SFPU(reint_block(parity, dx, first, last));
+                }
                 regs_handoff();
                 if (!first) {
                     cb_pop_front(CB_ACC, 1);

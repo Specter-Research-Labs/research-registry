@@ -535,19 +535,19 @@ def window_base(parity: int) -> int:
     return 2 * SEGMENT if parity == 0 else SEGMENT
 
 
-SIGMA_CONST = "vConstFloatPrgm0"
+REACH_CONST = "vConstFloatPrgm0"
 
 
 def _sz(spec: PassSpec, offset: str, shift: str) -> str:
-    """Metal's clamp((0.5 - |offset - shift|) + sigma) in an equal-bits form that compiles shorter:
-    |a - b| = |b - a| and (0.5 - d) + sigma = sigma - (d - 0.5) hold exactly in IEEE arithmetic,
-    and sigma sits in a programmable constant register because it has no fp16 immediate."""
+    """Metal's clamp((0.5 - |offset - shift|) + sigma) with 0.5 + sigma folded into one float32
+    constant, which reassociates one sum (within an ulp) and saves a multiply-add per term.
+    The constant sits in a programmable register because it has no fp16 immediate."""
     cmax = lit(min(1.0, 2.0 * float(np.float32(spec.sigma))))
-    return f"clamp({SIGMA_CONST} - (abs({shift} - {offset}) - 0.5f), 0.0f, {cmax})"
+    return f"clamp({REACH_CONST} - abs({shift} - {offset}), 0.0f, {cmax})"
 
 
-def _set_sigma(spec: PassSpec) -> str:
-    return f"{SIGMA_CONST} = {lit(spec.sigma)};"
+def _set_reach(spec: PassSpec) -> str:
+    return f"{REACH_CONST} = {lit(np.float32(spec.sigma) + np.float32(0.5))};"
 
 
 DX_VECTOR = 7 * TILE_VECTORS
@@ -566,7 +566,7 @@ def reint_prepare(spec: PassSpec, parity: int) -> Code:
     w = window_base(parity) - spec.dd
     sz = _sz(spec, "dxf", f"dst_reg[{SHIFT_X_BASE + w}]")
     return [
-        _set_sigma(spec),
+        _set_reach(spec),
         f"vFloat dxf = dst_reg[{DX_VECTOR}];",
         Loop(
             SEGMENT + 2 * spec.dd,
@@ -584,7 +584,7 @@ def reint_terms(spec: PassSpec, parity: int) -> Code:
         sz = _sz(spec, lit(dy), f"dst_reg[{SHIFT_Y_BASE + j}]")
         body.append(f"{{ vFloat sz = {sz}; a = a + dst_reg[{MASS_BASE + j}] * sz; }}")
     body.append("dst_reg[0] = a;")
-    return [_set_sigma(spec), Loop(SEGMENT, 1, ("{ " + " ".join(body) + " }",))]
+    return [_set_reach(spec), Loop(SEGMENT, 1, ("{ " + " ".join(body) + " }",))]
 
 
 def reint_zero() -> Code:
