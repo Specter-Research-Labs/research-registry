@@ -36,7 +36,7 @@ body[data-publication=dossier] .publication-dossier-cover {
   margin: 30px 0 var(--dossier-block-space);
 }
 
-.publication-label,.publication-report-doors span,.publication-dossier-cover figcaption {
+.publication-label,.publication-dossier-cover figcaption {
   font: 11px/1.6 PublicationMono,monospace;
 }
 
@@ -76,41 +76,6 @@ body[data-publication=dossier] .publication-dossier-cover {
 
 .publication-dossier-cover a {
   color: inherit;
-}
-
-.publication-report-doors {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 45px;
-  margin: 0 0 var(--dossier-block-space);
-}
-
-.publication-report-doors a {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-decoration: none;
-  color: var(--publication-ink);
-}
-
-.publication-report-doors span {
-  color: var(--publication-secondary);
-}
-
-.publication-report-doors strong {
-  font: 27px/1.15 "IBM Plex Serif",Georgia,serif;
-  letter-spacing: -.025em;
-}
-
-.publication-report-doors em {
-  font: 12px PublicationMono,monospace;
-  margin-top: auto;
-  text-decoration: underline;
-  text-underline-offset: 5px;
-}
-
-.publication-report-doors a:hover strong {
-  color: var(--publication-primary);
 }
 
 body[data-publication=dossier] {
@@ -395,14 +360,4 @@ html body.report-format-method .report-result > figure {
   .publication-dossier-cover h1 {
     font-size: 75px;
   }
-
-  .publication-report-doors {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .publication-report-doors strong {
-    font-size: 25px;
-  }
-
 }
