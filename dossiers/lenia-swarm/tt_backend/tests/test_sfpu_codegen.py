@@ -254,34 +254,33 @@ def flow(em: Emulator, u: np.ndarray, mass: np.ndarray) -> tuple[np.ndarray, np.
 
 
 def reintegrate(em: Emulator, mass: np.ndarray, shift: np.ndarray) -> np.ndarray:
+    """Every (block, segment, channel) is one batch entry. Unread window vectors and scratch
+    start as NaN, so a read outside the reader's window poisons the result."""
     spec = em.spec
     L, sx, sy, C = mass.shape
-    T = sy // 32
-    out = np.empty_like(mass)
-    for parity in (0, 1):
-        acc = None
-        for dx in range(-spec.dd, spec.dd + 1):
-            src = [
-                np.roll(a, dx, axis=1).reshape(L, sx, T, 32, C)
-                for a in (mass, shift[..., 0], shift[..., 1])
-            ]
-            D = [acc[i] if acc is not None else np.zeros((L, sx, T, C), F32) for i in range(16)]
-            D += [np.zeros((L, sx, T, C), F32)] * 16
-            for a in src:
-                lo = np.roll(a, 1, axis=2) if parity == 0 else a
-                hi = a if parity == 0 else np.roll(a, -1, axis=2)
-                D += [lo[:, :, :, y] for y in range(32)] + [hi[:, :, :, y] for y in range(32)]
-            D += [np.zeros((L, sx, T, C), F32)] * 32
-            em(f"dx{dx}", codegen.reint_set_dx(dx), D)
-            em(f"prep{parity}", codegen.reint_prepare(spec, parity), D)
-            em(f"terms{parity}", codegen.reint_terms(spec, parity), D)
-            acc = D[:16]
-        D = acc + [None] * 240
-        em("scale", codegen.reint_scale(spec), D)
-        seg = np.stack(D[:16], axis=3)
-        for t in range(T):
-            out[:, :, 32 * t + 16 * parity : 32 * t + 16 * parity + 16] = seg[:, :, t]
-    return out
+    R, S = codegen.ROWS, codegen.SEGMENT
+    nb, ns = sx // R, sy // S
+    shape = (L, nb, ns, C)
+    cells = (np.arange(ns)[:, None] * S - codegen.window_halo(spec) + np.arange(32)) % sy
+    valid = np.arange(32) < S + 2 * codegen.window_halo(spec)
+    D = [np.full(shape, np.nan, F32) for _ in range(codegen.DST_VECTORS)]
+    em("zero", codegen.reint_zero(), D)
+    for k in range(codegen.source_rows(spec)):
+        rows = (np.arange(nb) * R + R - 1 + spec.dd - k) % sx
+        for base, field in (
+            (codegen.WIN_MASS, mass),
+            (codegen.WIN_SHIFT_X, shift[..., 0]),
+            (codegen.WIN_SHIFT_Y, shift[..., 1]),
+        ):
+            win = field[:, rows][:, :, cells].transpose(0, 1, 2, 4, 3)
+            for w in range(32):
+                D[base + w] = win[..., w] if valid[w] else np.full(shape, np.nan, F32)
+        em(f"weights{k}", codegen.reint_weights(spec, k), D)
+        live = tuple(codegen.row_offsets(spec, k))
+        em(f"terms{live}", codegen.reint_terms(spec, live), D)
+    em("scale", codegen.reint_scale(spec), D)
+    acc = np.stack(D[: codegen.ACC_VECTORS], axis=-1).reshape(L, nb, ns, C, R, S)
+    return acc.transpose(0, 1, 4, 2, 5, 3).reshape(L, sx, sy, C)
 
 
 @pytest.fixture(scope="module", params=codegen.SIDES)
