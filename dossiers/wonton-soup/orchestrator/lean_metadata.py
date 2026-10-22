@@ -156,6 +156,7 @@ def _peg_rule_config(rule: Any) -> dict[str, Any]:
         "kind": rule.kind.value,
         "blocked_tactics": sorted(rule.blocked_tactics),
         "blocked_families": sorted(rule.blocked_families),
+        "blocked_premises": sorted(rule.blocked_premises),
         "condition": rule.condition,
     }
 
@@ -172,6 +173,7 @@ def provider_config(provider: TacticProvider) -> dict[str, Any]:
                 "provider": "filtered",
                 "blocked_tactics": sorted(provider.blocked),
                 "blocked_families": sorted(provider.blocked_families),
+                "blocked_premises": sorted(provider.blocked_premises),
                 "peg_rules": [_peg_rule_config(rule) for rule in provider.peg_rules],
                 "peg_budget": (
                     {

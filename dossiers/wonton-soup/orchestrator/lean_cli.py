@@ -478,6 +478,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         {
             "name": intervention.name,
             "blocked": sorted(intervention.blocked),
+            "blocked_premises": sorted(intervention.blocked_premises),
             "is_control": intervention.is_control,
         }
         for intervention in extra_interventions

@@ -17,6 +17,7 @@ from leantree.repl_adapter.interaction import (
 )
 
 from prover.assembly import ProofAssemblyTrace
+from prover.dependencies import PremiseBlocked, forbidden_hits
 from prover.expr import ExprDAG, PartialProofTerm
 from prover.tactic_ir import (
     CONTINUATION_KIND_BRANCH,
@@ -212,6 +213,7 @@ class LeanAdapter:
     assembly_trace: ProofAssemblyTrace | None = None
     _last_partial_term: PartialProofTerm | None = None
     _checkpoint_counter: int = 0
+    forbidden_constants: frozenset[str] = frozenset()
 
     def _next_checkpoint_id(self) -> int:
         self._checkpoint_counter += 1
@@ -307,6 +309,8 @@ class LeanAdapter:
             return None
 
         new_branches = result.value
+        if self.forbidden_constants:
+            await self._reject_forbidden_constants(tactic, new_branches)
         checkpoint = self.env.checkpoint()
         checkpoint_id = self._next_checkpoint_id()
 
@@ -366,6 +370,27 @@ class LeanAdapter:
             spawned_goals=spawned_goals,
             proof_step_count=proof_step_count,
         )
+
+    async def _reject_forbidden_constants(
+        self, tactic: str, branches: list[LeanProofBranch]
+    ) -> None:
+        # Masked sibling branches share one REPL proof state, so each state is read once.
+        # inspect_proof_state_async is used instead of branch.inspect_async because the
+        # latter resets the branch's goal mask.
+        proof_states = {branch._proof_state_id for branch in branches}
+        for proof_state in sorted(proof_states):
+            response = await self.env.inspect_proof_state_async(
+                proof_state, include_partial_proof_term=True
+            )
+            partial = response.get("partialProofTerm")
+            if partial is None:
+                raise LeanInteractionException(
+                    f"REPL returned no partial proof term for proof state {proof_state}"
+                )
+            names = ExprDAG.from_json(partial["proofTerm"])._const_names()
+            hits = forbidden_hits(names, self.forbidden_constants)
+            if hits:
+                raise PremiseBlocked(tactic, sorted(hits))
 
     def commit_tactic(self, preview: TacticPreview) -> list[str]:
         if preview.parent_mvar_id in self.states:
@@ -438,6 +463,8 @@ class LeanAdapter:
         self,
         theorem_with_sorry: str,
         solution_path: list[dict[str, Any]],
+        *,
+        extract_proof_term: bool = True,
     ) -> ReplayResult:
         unique_suffix = f"_replay_{int(time.time() * 1000)}"
         theorem_with_new_name = re.sub(
@@ -500,6 +527,8 @@ class LeanAdapter:
                 applied_tactics=applied_tactics,
                 error="proof not solved after replaying all tactics",
             )
+        if not extract_proof_term:
+            return ReplayResult(success=True, applied_tactics=applied_tactics)
 
         proof_term_json = branch.get_proof_term_json()
         if proof_term_json is None:

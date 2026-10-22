@@ -43,8 +43,6 @@ class DedupAdapter:
         if mvar_id != "root" or tactic != "split":
             return None
 
-        # Child c2 duplicates the root goal (same goal signature under scheme="text"),
-        # so it should be dropped by goal dedup and not expanded into the tree/graph.
         child1 = FakeGoal(mvar_id="c1", type="Q", type_expr=None, hypotheses=[])
         child2 = FakeGoal(mvar_id="c2", type="P", type_expr=None, hypotheses=[])
         return TacticPreview(
@@ -173,7 +171,7 @@ class BranchDedupProvider:
         return "fake"
 
 
-def test_history_child_ids_match_tree_and_graph_expansion_under_goal_dedup():
+def test_tactic_with_cyclic_child_is_not_expanded():
     goal_sig_config = GoalSignatureConfig(scheme="text")
     adapter = DedupAdapter()
     provider = DedupProvider()
@@ -192,26 +190,42 @@ def test_history_child_ids_match_tree_and_graph_expansion_under_goal_dedup():
         )
     )
 
+    # c2 repeats the root goal. Dropping it would let c1 alone close a proof that
+    # still owes c2, so the whole tactic is rejected rather than half expanded.
     root = tree.nodes_by_mvar["root"]
-    assert "split" in root.children
-    expanded_child_ids = [n.mvar_id for n in root.children["split"]]
-    assert expanded_child_ids == ["c1"]
-
-    # The recorded attempt should reflect the deduped expansion (not the raw preview list).
-    assert len(history.iterations) == 1
-    attempts = history.iterations[0].attempts
+    assert "split" not in root.children
     split_attempts = [
         a
-        for a in attempts
-        if a.node_mvar_id == "root"
-        and a.tactic == "split"
-        and a.outcome == TacticOutcome.SUCCESS
+        for a in history.iterations[0].attempts
+        if a.node_mvar_id == "root" and a.tactic == "split"
     ]
-    assert len(split_attempts) == 1
-    assert split_attempts[0].child_mvar_ids == expanded_child_ids
+    assert [(a.outcome, a.child_mvar_ids) for a in split_attempts] == [
+        (TacticOutcome.SUCCESS, ["c1", "c2"])
+    ]
+    assert list(graph.graph.successors("root")) == []
 
-    # Graph expansion should match as well (only one successor).
-    assert sorted(graph.graph.successors("root")) == expanded_child_ids
+
+class TwinGoalAdapter(DedupAdapter):
+    async def preview_tactic(self, mvar_id: str, tactic: str) -> TacticPreview | None:
+        preview = await super().preview_tactic(mvar_id, tactic)
+        if preview is None:
+            return None
+        preview.child_goals[1] = FakeGoal(mvar_id="c2", type="Q", type_expr=None, hypotheses=[])
+        return preview
+
+
+def test_sibling_obligations_with_equal_goals_are_both_kept():
+    tree = asyncio.run(
+        mcts_search(
+            "theorem",
+            TwinGoalAdapter(),
+            DedupProvider(),
+            max_iterations=1,
+            goal_sig_config=GoalSignatureConfig(scheme="text"),
+        )
+    )
+    root = tree.nodes_by_mvar["root"]
+    assert [n.mvar_id for n in root.children["split"]] == ["c1", "c2"]
 
 
 def test_goal_dedup_is_branch_local_not_global():

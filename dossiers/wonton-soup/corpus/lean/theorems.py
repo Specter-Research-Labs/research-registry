@@ -1,7 +1,7 @@
 # ruff: noqa: E402, E501
-import re
 import hashlib
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 
 from prover.history import ExplorationHistory
 from prover.providers.base import normalize_tactic
@@ -14,6 +14,7 @@ class Intervention:
     name: str
     blocked: set[str]
     is_control: bool = False
+    blocked_premises: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass
