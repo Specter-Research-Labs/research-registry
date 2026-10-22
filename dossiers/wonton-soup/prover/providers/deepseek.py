@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import math
 import os
 import time
 from collections import OrderedDict
@@ -39,6 +38,16 @@ DEEPSEEK_TOKENIZER_KWARGS = {
     "unk_token": "<unk>",
 }
 DeepSeekBackend = Literal["mlx", "transformers"]
+
+
+def _decode_bytelevel_artifacts(text: str) -> str:
+    # Some MLX tokenizers expose byte-level whitespace instead of decoded text.
+    # Ordinary Unicode Lean identifiers must not be decoded a second time.
+    if not any(marker in text for marker in ("Ġ", "Ċ", "ĉ")):
+        return text
+    from tokenizers.decoders import ByteLevel
+
+    return ByteLevel().decode([text])
 
 
 @dataclass
@@ -173,6 +182,7 @@ class DeepSeekTacticProvider(TacticProvider):
         self._vllm_next = 0
         self._model: Any = None
         self._tokenizer: Any = None
+        self._prompt_tokenizer: Any = None
         self._loaded = False
         self._cache: OrderedDict[str, list[tuple[str, float]]] = OrderedDict()
         self._cache_size = cache_size
@@ -186,6 +196,21 @@ class DeepSeekTacticProvider(TacticProvider):
         self._batch_queue: list[_BatchRequest] = []
         self._batch_task: asyncio.Task[None] | None = None
         self._batch_max_size = 8
+
+    def clear_cache(self) -> None:
+        self._cache.clear()
+
+    def set_seed(self, seed: int) -> None:
+        # Model loading may consume randomness, so seed after initialization.
+        self._ensure_loaded()
+        if self._backend == "mlx":
+            import mlx.core as mx
+
+            mx.random.seed(seed % (2**32))
+        else:
+            import torch
+
+            torch.manual_seed(seed)
 
     def _ensure_loaded(self) -> None:
         if self._loaded:
@@ -376,13 +401,12 @@ class DeepSeekTacticProvider(TacticProvider):
         text = _decode_bytelevel_artifacts(generated_only)
         stop_positions = [
             pos
-            for stop in ("[/TAC]", "</s>", "<｜end of sentence｜>", "<|EOT|>", "\n\n\n", "---")
+            for stop in ("[/TAC", "</s>", "<｜end of sentence｜>", "<|EOT|>", "\n\n\n", "---")
             if (pos := text.find(stop)) >= 0
         ]
         if stop_positions:
             tactic = text[: min(stop_positions)].strip()
-            if tactic:
-                return tactic
+            return tactic or None
         first_line = text.strip().split("\n")[0].strip()
         if first_line:
             return first_line
@@ -399,6 +423,23 @@ class DeepSeekTacticProvider(TacticProvider):
             return self._generate_tactics_transformers(prompt, n)
         return self._generate_tactics_mlx(prompt, n)
 
+    def _prompt_ids(self, prompt: str) -> list[int]:
+        # Keep the head (system prompt, statement) and the tail (current state) of long prompts.
+        encoded_prompt = self._encode_prompt(prompt)
+        if len(encoded_prompt) > self.MAX_INPUT_LENGTH:
+            keep_prefix = self.MAX_INPUT_LENGTH // 2
+            keep_suffix = self.MAX_INPUT_LENGTH - keep_prefix
+            encoded_prompt = encoded_prompt[:keep_prefix] + encoded_prompt[-keep_suffix:]
+        return encoded_prompt
+
+    def _rank_tactics(self, texts: list[str], num_generated: int) -> list[tuple[str, float]]:
+        seen: dict[str, float] = {}
+        for text in texts:
+            tactic = self._extract_tactic_from_generated(text)
+            if tactic and tactic not in seen:
+                seen[tactic] = 1.0 - (len(seen) / num_generated)
+        return sorted(seen.items(), key=lambda x: x[1], reverse=True)
+
     def _generate_tactics_mlx(self, prompt: str, n: int) -> list[tuple[str, float]]:
         self._ensure_loaded()
         from mlx_lm import batch_generate
@@ -406,11 +447,7 @@ class DeepSeekTacticProvider(TacticProvider):
 
         num_to_generate = max(1, min(n, self._num_samples))
         sampler = make_sampler(temp=0.6, top_p=0.9)
-        encoded_prompt = self._encode_prompt(prompt)
-        if len(encoded_prompt) > self.MAX_INPUT_LENGTH:
-            keep_prefix = self.MAX_INPUT_LENGTH // 2
-            keep_suffix = self.MAX_INPUT_LENGTH - keep_prefix
-            encoded_prompt = encoded_prompt[:keep_prefix] + encoded_prompt[-keep_suffix:]
+        encoded_prompt = self._prompt_ids(prompt)
         prompts = [list(encoded_prompt) for _ in range(num_to_generate)]
         batch = batch_generate(
             self._model,
@@ -420,12 +457,7 @@ class DeepSeekTacticProvider(TacticProvider):
             sampler=sampler,
             verbose=False,
         )
-        seen: dict[str, float] = {}
-        for text in batch.texts:
-            tactic = self._extract_tactic_from_generated(text)
-            if tactic and tactic not in seen:
-                seen[tactic] = 1.0 - (len(seen) / num_to_generate)
-        return sorted(seen.items(), key=lambda x: x[1], reverse=True)
+        return self._rank_tactics(batch.texts, num_to_generate)
 
     def _generate_tactics_transformers(self, prompt: str, n: int) -> list[tuple[str, float]]:
         self._ensure_loaded()
@@ -435,44 +467,23 @@ class DeepSeekTacticProvider(TacticProvider):
         assert self._tokenizer is not None
 
         num_to_generate = max(1, min(n, self._num_samples))
-        encoded = self._tokenizer(
-            prompt,
-            return_tensors="pt",
-            max_length=self.MAX_INPUT_LENGTH,
-            truncation=True,
-        ).to(self._device)
+        input_ids = torch.tensor([self._prompt_ids(prompt)], device=self._device)
         with torch.no_grad():
-            outputs = self._model.generate(
-                **encoded,
+            sequences = self._model.generate(
+                input_ids=input_ids,
+                attention_mask=torch.ones_like(input_ids),
                 max_new_tokens=self.MAX_NEW_TOKENS,
                 do_sample=True,
                 temperature=0.6,
                 top_p=0.9,
                 num_return_sequences=num_to_generate,
-                return_dict_in_generate=True,
-                output_scores=True,
                 pad_token_id=self._tokenizer.eos_token_id,
             )
-        prompt_len = encoded["input_ids"].shape[-1]
         decoded = self._tokenizer.batch_decode(
-            outputs.sequences[:, prompt_len:].detach().cpu(),
+            sequences[:, input_ids.shape[-1] :].detach().cpu(),
             skip_special_tokens=False,
         )
-        sequence_scores = getattr(outputs, "sequences_scores", None)
-        seen: dict[str, float] = {}
-
-        for idx, text in enumerate(decoded):
-            tactic = self._extract_tactic_from_generated(text)
-            if tactic is None:
-                continue
-            if sequence_scores is not None:
-                prob = _score_from_logit(float(sequence_scores[idx].item()))
-            else:
-                prob = 1.0 - (idx / max(len(decoded), 1))
-            prev = seen.get(tactic)
-            if prev is None or prob > prev:
-                seen[tactic] = prob
-        return sorted(seen.items(), key=lambda item: item[1], reverse=True)
+        return self._rank_tactics(decoded, num_to_generate)
 
     @staticmethod
     def _extract_theorem_context(adapter: Any) -> str | None:
@@ -520,7 +531,3 @@ def _default_transformers_device_name() -> str:
     import torch
 
     return _default_transformers_device(torch)
-
-
-def _score_from_logit(score: float) -> float:
-    return 1.0 / (1.0 + math.exp(-score))
