@@ -136,8 +136,7 @@
 .table-wrap table {
   width: 100%;
   border-collapse: collapse;
-  font: 12.5px/1.45 var(--sl-font-mono);
-  font-variant-numeric: tabular-nums;
+  font: 400 14px/18px var(--sl-font-prose);
   overflow-wrap: normal;
 }
 
@@ -179,14 +178,20 @@
   text-align: right;
 }
 
-/* Cells are already monospace, so inline code drops its chip and matches the cell text. */
+/* Berkeley Mono and Plex Serif share an x-height, so mono a pixel smaller reads as the same size beside the wider-set serif. */
+.table-wrap td.num {
+  font: 400 13px/18px var(--sl-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The face change already sets code apart in a cell, so it drops its chip. */
 .table-wrap th code,
 .table-wrap td code {
   border: 0;
   border-radius: 0;
   background: none;
   padding: 0;
-  font-size: inherit;
+  font: 400 13px/18px var(--sl-font-mono);
   overflow-wrap: normal;
 }
 :root{--rk-measure:660px;--rk-toc:200px;--rk-margin:210px;--rk-gap:52px;--rk-ink:var(--sl-color-ink);--rk-muted:var(--sl-color-muted);--rk-faint:color-mix(in srgb,var(--sl-color-muted) 94%,var(--sl-color-paper));--rk-rule:var(--sl-color-rule);--rk-tint:color-mix(in srgb,var(--sl-color-ink) 5%,transparent);--rk-accent:var(--sl-color-accent);--rk-bg:var(--sl-color-paper);--rk-font-heading:var(--sl-font-prose);--rk-heading-weight:500;--rk-speed:140ms;--rk-note-cap:15em}
@@ -244,6 +249,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-article .table-wrap{margin:40px 0}.rk-article figure .table-wrap{margin:0}
 .rk-article figure img,.rk-article figure canvas,.rk-article figure svg{display:block;width:100%}
 @media(min-width:1201px){.rk-article figure.wide{clear:right;margin-right:calc(-1*(var(--rk-margin) + var(--rk-gap)))}.rk-article figure.wide>figcaption{max-width:var(--rk-measure)}}
+/* Tables may run past the text measure into the margin column, up to 880px, so that most rows fit on one line; a table that is narrower keeps the measure. */
+@media(min-width:1201px){.rk-article .table-wrap,.rk-article figure:has(.table-wrap){--rk-table-out:calc(min(880px,var(--rk-measure) + var(--rk-gap) + var(--rk-margin)) - var(--rk-measure));margin-right:calc(-1*var(--rk-table-out))}.rk-article figure .table-wrap{margin-right:0}.rk-article figure:has(.table-wrap)>figcaption{max-width:var(--rk-measure)}.rk-article .table-wrap table{width:auto;min-width:var(--rk-measure)}}
 .rk-article figcaption{font-size:15px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
 .rk-article figure:not(:has(img,canvas,svg,video))>figcaption{padding:0 0 12px}
 .rk-article figure:has(img,canvas,svg,video){counter-increment:rk-figure}

@@ -9,8 +9,7 @@
 .table-wrap table {
   width: 100%;
   border-collapse: collapse;
-  font: 12.5px/1.45 var(--sl-font-mono);
-  font-variant-numeric: tabular-nums;
+  font: 400 14px/18px var(--sl-font-prose);
   overflow-wrap: normal;
 }
 
@@ -52,13 +51,19 @@
   text-align: right;
 }
 
-/* Cells are already monospace, so inline code drops its chip and matches the cell text. */
+/* Berkeley Mono and Plex Serif share an x-height, so mono a pixel smaller reads as the same size beside the wider-set serif. */
+.table-wrap td.num {
+  font: 400 13px/18px var(--sl-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The face change already sets code apart in a cell, so it drops its chip. */
 .table-wrap th code,
 .table-wrap td code {
   border: 0;
   border-radius: 0;
   background: none;
   padding: 0;
-  font-size: inherit;
+  font: 400 13px/18px var(--sl-font-mono);
   overflow-wrap: normal;
 }
