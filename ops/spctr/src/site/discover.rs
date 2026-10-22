@@ -272,9 +272,7 @@ pub struct SitemapGroup {
     pub children: Vec<SitePageRecord>,
 }
 
-// Updates and status stay reachable by URL but unlinked, so the sitemap page
-// skips them even when an earlier build left their output on disk.
-const SITEMAP_SKIP: &[&str] = &["sitemap", "research-notes", "status", "updates"];
+const SITEMAP_SKIP: &[&str] = &["sitemap", "research-notes"];
 const SITEMAP_SHALLOW: &[&str] = &["cabinet"];
 
 pub fn discover_sitemap_pages(repo_root: &Utf8Path) -> Vec<SitemapGroup> {

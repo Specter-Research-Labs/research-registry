@@ -10,9 +10,8 @@ Distributed parameter search for Flow Lenia across Apple machines using Swift Di
 - `docs/contracts/`: CLI/schema/artifact/reproducibility contracts.
 - `docs/internals/`: implementation-level references and maps.
 - `docs/decisions/`: ADRs for long-lived doc and schema decisions.
-- `docs/internals/TTBackend.md`: TT backend operation and launcher rules.
-- `docs/internals/TTBackendPerformance.md`: accepted TT backend performance facts and rejected
-  optimization probes.
+- `ops/docs/TTBackend.md` and `ops/docs/TTBackendPerformance.md` (repo root): TT backend operation,
+  launcher rules, and performance facts.
 
 ## Architecture
 

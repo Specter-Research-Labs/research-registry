@@ -121,7 +121,7 @@ There are two public publishing surfaces:
 The site itself is not archived on the releases host. `spctr site publish` uploads each build to `/srv/www/site/releases/<git-sha>` and switches `/srv/www/site/current`; the older release directories there are the rollback set and are not web-reachable. The project surfaces below publish a current surface and also copy an immutable bundle into the releases host.
 
 The site publish entrypoint is `spctr site publish`.
-Internal stylesheet ownership, spacing conventions, and report regeneration are documented in [Report layout maintenance](docs/report-layout.md). These maintainer notes stay under `ops/docs/`, outside the site and Cabinet sources.
+Internal stylesheet ownership, spacing conventions, and report regeneration are documented in [Report layout maintenance](docs/report-layout.md). Lenia Swarm Tenstorrent operation and performance facts are in [TT backend](docs/TTBackend.md) and [TT backend performance](docs/TTBackendPerformance.md). These maintainer notes stay under `ops/docs/`, outside the site and Cabinet sources.
 The release portal renderer is `spctr site portal`.
 The stable direct-tree sync for the records corpus is `spctr site push-records --source <records-bureau>`.
 Project-specific archive publishes are also first-class `spctr` commands:
