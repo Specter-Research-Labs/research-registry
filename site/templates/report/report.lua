@@ -515,6 +515,11 @@ function Pandoc(doc)
       h.level = h.level + 1
       return h
     end,
+    -- Wide tables scroll inside their own box so that narrow screens keep the
+    -- page itself from scrolling sideways.
+    Table = function(t)
+      return pandoc.Div({ t }, pandoc.Attr("", { "table-wrap" }))
+    end,
   })
 
   local function toc_item(entry)
