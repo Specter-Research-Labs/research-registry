@@ -1,7 +1,7 @@
 {
  "schemaVersion": 3,
  "reportId": "anatomical-compiler",
- "engine": "The corrected-engine entries ran on LeniaCLI build 060e90a71ec1, which contains the fixed Flow Lenia spatial-derivative stencil. The Orbium inverse uses additive Lenia, which has no derivative step; its replay on that build reproduced all 900 recorded frames byte for byte.",
+ "engine": "The corrected-engine entries ran on LeniaCLI build 060e90a71ec1, which contains the fixed Flow Lenia spatial-derivative stencil. The Orbium inverse uses additive Lenia, which has no derivative step; its replay on that build reproduced all 900 recorded frames byte for byte. In additive Lenia the search engine rolls the field each step by the integer offset of the previous state's centre of mass from the grid centre, so every recorded Orbium frame is in the body's frame; orbium_glide in the figure script replays both rules without that roll to measure their travel.",
  "withdrawn": "Results computed with a Python port of Flow Lenia and with the main engine before its spatial-derivative stencil was fixed (gradient negated, axes swapped) were removed. The specimen-2876 search was withdrawn because its batched initializer grew each candidate from a different random starting field.",
  "sources": [
   {
@@ -168,6 +168,13 @@
   {
    "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
    "root": "orbium-system-id-v5",
+   "path": "media/target-dense/config.json",
+   "bytes": 4305,
+   "sha256": "8a7cfcb8a4e9a9f045449f414e759cb93c94830681f6c27af5f3274e3fd5de5c"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, broad stage, 2026-09-02",
+   "root": "orbium-system-id-v5",
    "path": "still-es.json",
    "bytes": 197817,
    "sha256": "c8262451e333bf09be212017aab74d92e16631984ed7ce73c24a71ed86935235"
@@ -280,6 +287,13 @@
   {
    "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
    "root": "orbium-system-id-v6-refine",
+   "path": "media/refined-dense/config.json",
+   "bytes": 3437,
+   "sha256": "241b8143b7155ea226626dcc912abd05d053086a7ebf0d87e82aee0bfab1e1e8"
+  },
+  {
+   "kind": "single-frame and three-frame Orbium inverse, narrow stage, 2026-09-02",
+   "root": "orbium-system-id-v6-refine",
    "path": "refine-es.json",
    "bytes": 197819,
    "sha256": "7bcda98c842159355cf1403bea7cfe878debb96eabbd707f32b77a775128baf0"
@@ -368,8 +382,8 @@
   },
   {
    "path": "assets/figures-summary.json",
-   "bytes": 3985,
-   "sha256": "86e83ad63ffc1d12d1e9ec0e5261ba13c8f2ee3afaf0b3e0512d6e4be0f60f6c"
+   "bytes": 5016,
+   "sha256": "12ad5ab63dd425bff4e742185723dd29f6d7067afc305afb1d80ec6013145ec2"
   },
   {
    "path": "assets/orbium-600.png",
