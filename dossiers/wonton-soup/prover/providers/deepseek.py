@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 from leantree.core.lean import LeanGoal
 
 from prover.providers.base import TacticProvider
+from prover.providers.shared_prefix_decode import sample_shared_prefix
 
 if TYPE_CHECKING:
     from prover.adapters.lean import LeanAdapter
@@ -226,7 +227,8 @@ class DeepSeekTacticProvider(TacticProvider):
             from transformers import AutoModelForCausalLM, PreTrainedTokenizerFast
 
             device = self._device or _default_transformers_device(torch)
-            dtype = torch.float16 if device in {"mps", "cuda"} else torch.float32
+            # On a CPU the model runs in bfloat16, its native checkpoint dtype.
+            dtype = torch.float16 if device in {"mps", "cuda"} else torch.bfloat16
             tokenizer_file = Path(self._model_path) / "tokenizer.json"
             if not tokenizer_file.exists():
                 raise FileNotFoundError(f"DeepSeek tokenizer.json not found: {tokenizer_file}")
@@ -468,21 +470,16 @@ class DeepSeekTacticProvider(TacticProvider):
 
         num_to_generate = max(1, min(n, self._num_samples))
         input_ids = torch.tensor([self._prompt_ids(prompt)], device=self._device)
-        with torch.no_grad():
-            sequences = self._model.generate(
-                input_ids=input_ids,
-                attention_mask=torch.ones_like(input_ids),
-                max_new_tokens=self.MAX_NEW_TOKENS,
-                do_sample=True,
-                temperature=0.6,
-                top_p=0.9,
-                num_return_sequences=num_to_generate,
-                pad_token_id=self._tokenizer.eos_token_id,
-            )
-        decoded = self._tokenizer.batch_decode(
-            sequences[:, input_ids.shape[-1] :].detach().cpu(),
-            skip_special_tokens=False,
+        generated = sample_shared_prefix(
+            self._model,
+            input_ids,
+            num_samples=num_to_generate,
+            max_new_tokens=self.MAX_NEW_TOKENS,
+            temperature=0.6,
+            top_p=0.9,
+            eos_token_id=self._tokenizer.eos_token_id,
         )
+        decoded = self._tokenizer.batch_decode(generated.detach().cpu(), skip_special_tokens=False)
         return self._rank_tactics(decoded, num_to_generate)
 
     @staticmethod
