@@ -55,6 +55,7 @@ def docker_command(command: list[str]) -> list[str]:
         "TT_METAL_INSPECTOR": "0",
         "TT_METAL_INSPECTOR_RPC": "0",
         "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONPATH": "/repo",
     }
     for key, value in env.items():
         args += ["-e", f"{key}={value}"]

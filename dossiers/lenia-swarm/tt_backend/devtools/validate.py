@@ -7,6 +7,9 @@ Every stage of one step is compared for each body, and a short rollout for the f
 float32 reference runs alongside as the yardstick: the largest device error of each quantity
 must stay within RATIO times the largest error an IEEE float32 implementation of the same
 equations makes, which is also the class in which Metal builds differ from each other.
+
+The last body is also rolled out alone in the first lane, and its state must match the packed
+rollout bit for bit, so that no body's trajectory depends on its slot or its neighbours.
 """
 
 from __future__ import annotations
@@ -23,7 +26,7 @@ if __package__ in {None, ""}:
 
 from tt_lenia.device import on_cards
 from tt_lenia.numpy_ref import metal
-from tt_lenia.sfpu.replay import Body, engine_inputs, load_index
+from tt_lenia.sfpu.replay import UNIT, Body, Member, engine_inputs, load_index
 
 STAGES = ("potential", "affinity", "flow", "mass")
 ROLLOUT_BODIES = 4
@@ -58,11 +61,12 @@ def reference(body: Body) -> tuple[metal.MetalKernels, metal.MetalStepConfig]:
 
 def _validate(card: int, bodies: list[Body], steps: int) -> dict:
     from tt_lenia.device import close_card, open_card
-    from tt_lenia.sfpu.engine import LANES, SfpuEngine
+    from tt_lenia.sfpu.engine import SfpuEngine
 
     mesh = open_card()
     try:
-        mass, params = engine_inputs(bodies, LANES * int(mesh.get_num_devices()))
+        members = [Member.of(body, 0) for body in bodies]
+        mass, params = engine_inputs(members, -(-len(members) // UNIT) * UNIT)
         spec = bodies[0].spec
         engine = SfpuEngine(mesh, spec, mass, params, capture=True)
         engine.step()
@@ -70,6 +74,9 @@ def _validate(card: int, bodies: list[Body], steps: int) -> dict:
         rollout = SfpuEngine(mesh, spec, mass, params, capture=False)
         rollout.step(steps)
         rolled = rollout.mass()
+        alone = SfpuEngine(mesh, spec, *engine_inputs(members[-1:], UNIT), capture=False)
+        alone.step(steps)
+        alone_state = alone.mass()
     finally:
         close_card(mesh)
     step_rows = []
@@ -97,7 +104,12 @@ def _validate(card: int, bodies: list[Body], steps: int) -> dict:
                 "float32": relative_rms(ref32, ref),
             }
         )
-    return {"step": step_rows, "rollout": rollout_rows}
+    return {
+        "step": step_rows,
+        "rollout": rollout_rows,
+        "fillerZero": not rolled[len(bodies) :].any() and not alone_state[1:].any(),
+        "aloneMatchesPacked": alone_state[0].tobytes() == rolled[len(bodies) - 1].tobytes(),
+    }
 
 
 def main() -> None:
@@ -108,6 +120,8 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=16, help="rollout length")
     args = parser.parse_args()
     bodies = load_index(args.input)[: args.bodies]
+    if len(bodies) < 2:
+        raise ValueError("validation needs two or more bodies to check lane independence")
     result = on_cards(_validate, {args.card: (bodies, args.steps)})[args.card]
 
     passed = True
@@ -123,6 +137,12 @@ def main() -> None:
             f"device median {np.median(device):.2e} max {max(device):.2e}, "
             f"float32 median {np.median(float32):.2e} max {max(float32):.2e}"
         )
+    for key, label in (
+        ("fillerZero", "filler lanes stay zero"),
+        ("aloneMatchesPacked", f"last body alone matches its packed lane after {args.steps} steps"),
+    ):
+        passed &= result[key]
+        print(f"{'PASS' if result[key] else 'FAIL'} {label}")
     print(json.dumps({"input": str(args.input), "steps": args.steps, **result}))
     sys.exit(0 if passed else 1)
 
