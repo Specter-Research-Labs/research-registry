@@ -919,6 +919,10 @@ fn add_article_subgraph(
             optional_value(post.cover.as_ref().map(|cover| &cover.alt)),
         );
         attrs.insert("dossier".to_owned(), optional_value(post.dossier.as_ref()));
+        attrs.insert(
+            "card_image".to_owned(),
+            optional_value(post.card_image.as_ref()),
+        );
         builder.upsert_node(article_id.clone(), "article", attrs);
         if let Some(series_id) = series_id.as_deref() {
             ensure_article_series_node(repo_root, builder, registry, series_id, &source_path)?;

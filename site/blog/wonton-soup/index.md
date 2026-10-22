@@ -7,6 +7,7 @@ dossier: wonton-soup
 pdf: wonton-soup.pdf
 cover: /assets/blog/wonton-soup/fig1-mcts-tree.png
 cover_alt: A proof search tree in which two rewrites of a * (b + c) lead to proofs by ring.
+card_image: /assets/wonton-soup/proof-routes.svg
 ---
 
 # Proof search with a missing tactic

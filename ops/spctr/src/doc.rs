@@ -75,6 +75,8 @@ struct LayoutFrontMatter {
 pub(crate) struct Publication {
     pub revision: String,
     pub path: String,
+    /// Image for the report's card on its dossier hub; the card uses og:image when absent.
+    pub card_image: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -336,7 +338,7 @@ fn site_page(
 pub(crate) fn load_publications(repo_root: &Utf8Path) -> Result<BTreeMap<String, Publication>> {
     let path = repo_root.join(PUBLICATIONS);
     let publications: BTreeMap<String, Publication> = serde_json::from_str(&read(&path)?)
-        .with_context(|| format!("{path}: expected {{document_id: {{revision, path}}}}"))?;
+        .with_context(|| format!("{path}: expected {{document_id: {{revision, path, card_image?}}}}"))?;
     let mut owners = BTreeMap::new();
     for (document, publication) in &publications {
         check_site_path(&publication.path).with_context(|| format!("{path}: entry {document}"))?;

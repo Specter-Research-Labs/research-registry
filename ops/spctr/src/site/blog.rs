@@ -379,6 +379,7 @@ pub(crate) fn load_published_posts_from_graph(
                     alt: required_attr(node, "cover_alt")?,
                 }),
                 dossier: graph::attr_str(node, "dossier").map(str::to_owned),
+                card_image: graph::attr_str(node, "card_image").map(str::to_owned),
             })
         })
         .collect::<Result<Vec<_>>>()?;

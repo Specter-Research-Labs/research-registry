@@ -47,7 +47,7 @@ pub fn discover_reports(
             href: publication.path.clone(),
             title: page.title,
             finding: page.description,
-            image: page.image,
+            image: card_image(repo_root, &document, publication.card_image.as_ref(), page.image)?,
             label: format!("Report · revision {}", publication.revision),
         });
     }
@@ -69,9 +69,28 @@ pub fn discover_reports(
             href: format!("/{}", post.href),
             title: post.title.clone(),
             finding: post.summary.clone(),
-            image: cover.src.clone(),
+            image: card_image(repo_root, &post.href, post.card_image.as_ref(), cover.src.clone())?,
             label: format!("Report · {series}"),
         });
     }
     Ok(reports)
+}
+
+fn card_image(
+    repo_root: &Utf8Path,
+    owner: &str,
+    chosen: Option<&String>,
+    default: String,
+) -> Result<String> {
+    let Some(chosen) = chosen else {
+        return Ok(default);
+    };
+    let Some(relative) = chosen.strip_prefix('/') else {
+        bail!("{owner}: card_image {chosen} must be a site-absolute path");
+    };
+    let file = repo_root.join("site").join(relative);
+    if !file.is_file() {
+        bail!("{owner}: card_image {chosen} does not exist at {file}");
+    }
+    Ok(chosen.clone())
 }
