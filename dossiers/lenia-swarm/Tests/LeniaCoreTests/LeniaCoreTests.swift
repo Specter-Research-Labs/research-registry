@@ -5123,7 +5123,6 @@ final class LeniaCoreTests: XCTestCase {
 
         let actualStages = try! XCTUnwrap(staged.stages)
         XCTAssertLessThan(maxAbsDiff(expectedStages.preparedMass, actualStages.preparedMass), 1e-6)
-        XCTAssertLessThan(maxAbsDiff(expectedStages.uk, actualStages.uk), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expectedStages.scalarField, actualStages.scalarField), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expectedStages.flow, actualStages.flow), 1e-4)
     }
@@ -6002,7 +6001,6 @@ final class LeniaCoreTests: XCTestCase {
 
         let actualStages = try! XCTUnwrap(staged.stages)
         XCTAssertLessThan(maxAbsDiff(expectedStages.preparedMass, actualStages.preparedMass), 1e-6)
-        XCTAssertLessThan(maxAbsDiff(expectedStages.uk, actualStages.uk), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expectedStages.scalarField, actualStages.scalarField), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expectedStages.flow, actualStages.flow), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expectedStep.0, staged.nextMass), 1e-4)
@@ -6063,7 +6061,6 @@ final class LeniaCoreTests: XCTestCase {
             .step(mass, embeddedParams)
         let actualStages = try! XCTUnwrap(staged.stages)
 
-        XCTAssertLessThan(maxAbsDiff(expectedStages.uk, actualStages.uk), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expectedStages.flow, actualStages.flow), 1e-4)
         XCTAssertLessThan(maxAbsDiff(expected.0, staged.nextMass), 1e-4)
         XCTAssertLessThan(
@@ -6075,6 +6072,56 @@ final class LeniaCoreTests: XCTestCase {
             ),
             1e-4
         )
+    }
+
+    func testFlowSandboxMetalFullMatchesMLXOnMixedRadixMultichannelTorus() {
+        let params = makeSandboxMetalParityParams()
+        let squareConfig = flowSandboxConfig(gridSize: 32, nbK: params.r.count)
+        let channels = 3
+        // 40 = 4 * 2 * 5 and 56 = 4 * 2 * 7 exercise every radix and the odd-channel spectrum split.
+        let config = BatchedConfig(
+            sx: 40,
+            sy: 56,
+            channels: channels,
+            nbK: squareConfig.nbK,
+            dt: squareConfig.dt,
+            dd: squareConfig.dd,
+            sigma: squareConfig.sigma,
+            n: squareConfig.n,
+            thetaA: squareConfig.thetaA,
+            border: squareConfig.border,
+            implementation: squareConfig.implementation,
+            chemChannel: nil,
+            chemIncludeInMass: true
+        )
+        let c0 = (0..<params.r.count).map { $0 % channels }
+        let c1 = (0..<channels).map { channel in (0..<params.r.count).filter { $0 % channels == channel } }
+        let kernels = compileKernels(params: params, config: config, c0: c0, c1: c1)
+        let mass = makePatchState(sx: config.sx, sy: config.sy, channels: channels)
+            .expandedDimensions(axis: 0)
+        let embeddedParams = flowSandboxParameterField(
+            mass: mass,
+            parameterValues: params.h,
+            threshold: 0.01
+        )
+        let reference = FlowLeniaParamsBatched(config: config, kernels: kernels, mixMode: "avg", mixSeed: nil)
+        let engine = FlowLeniaSandboxMetalEngine(config: config, kernels: kernels)
+        var expected = (mass, embeddedParams)
+        var actual = (mass, embeddedParams)
+        for _ in 0..<8 {
+            expected = reference.step(expected.0, expected.1)
+            actual = engine.step(actual.0, actual.1)
+        }
+        XCTAssertGreaterThan(expected.0.sum().item(Float.self), 0)
+        XCTAssertLessThan(maxAbsDiff(expected.0, actual.0), 1e-4)
+    }
+
+    func testSpectralPlanAcceptsOnlySmoothGridSides() {
+        XCTAssertEqual(FlowLeniaSpectralPlan.radices(256), [4, 4, 4, 4])
+        XCTAssertEqual(FlowLeniaSpectralPlan.radices(192), [4, 4, 4, 3])
+        XCTAssertEqual(FlowLeniaSpectralPlan.radices(70), [2, 5, 7])
+        XCTAssertNil(FlowLeniaSpectralPlan.radices(214))
+        XCTAssertNil(FlowLeniaSpectralPlan.radices(1))
     }
 
     func testFlowSandboxMetalStageProfilerReportsPositiveTimings() {
@@ -8499,7 +8546,7 @@ private func flowSandboxReferenceStages(
     kernels: CompiledKernels,
     config: BatchedConfig,
     wallPotential: MLXArray? = nil
-) -> (preparedMass: MLXArray, uk: MLXArray, scalarField: MLXArray, flow: MLXArray) {
+) -> (preparedMass: MLXArray, scalarField: MLXArray, flow: MLXArray) {
     let preparedMass = mass.contiguous()
     let fA = MLXFFT.fft2(preparedMass, axes: [1, 2])
     let fAK = fA.take(kernels.c0Idxs, axis: 3)
@@ -8527,7 +8574,7 @@ private func flowSandboxReferenceStages(
     )
     let alphaExpanded = alpha.expandedDimensions(axis: 3)
     let flow = nablaU * (MLXArray(1.0) - alphaExpanded) - nablaA * alphaExpanded
-    return (preparedMass, uk, scalarField, flow)
+    return (preparedMass, scalarField, flow)
 }
 
 private func flowSandboxReferenceSobel(_ A: MLXArray, gradientBoundary: String) -> MLXArray {

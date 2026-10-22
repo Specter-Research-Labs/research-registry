@@ -10,7 +10,7 @@ final class RelativeTransportTests: XCTestCase {
         var records: [[String: Any]] = []
         for torus in [false, true] {
             let n = 32, channels = 2
-            let source = FlowLeniaMetalFullPipeline.kernelSource(kernelCount: 1, parameterCount: 1, batchCount: 1, channelCount: channels, kernelBatchCount: 1, summaryPartialGroupCount: 1, sx: n, sy: n, dt: 0.2, dd: 5, sigma: 0.65, thetaA: 2, n: 2, useTorus: torus, alphaMode: "mass", flowClip: "none", parameterFieldMode: .none, reintegrateParams: false, parameterMixMode: .average)
+            let source = FlowLeniaMetalFullPipeline.kernelSource(kernelCount: 1, parameterCount: 1, batchCount: 1, channelCount: channels, kernelBatchCount: 1, summaryPartialGroupCount: 1, sx: n, sy: n, dt: 0.2, dd: 5, sigma: 0.65, thetaA: 2, n: 2, useTorus: torus, alphaMode: "mass", flowClip: "none", parameterFieldMode: .none, reintegrateParams: false, parameterMixMode: .average, spectralPlan: FlowLeniaSpectralPlan(sx: n, sy: n, channelCount: channels, maxThreadgroupMemory: device.maxThreadgroupMemoryLength), reintegrateTile: nil)
             let lib = try device.makeLibrary(source: source, options: nil)
             let pipeline = try device.makeComputePipelineState(function: XCTUnwrap(lib.makeFunction(name: "flowMetalReintegrateAverage")))
             for kind in ["impulse", "uniform", "edge", "corner", "interior"] {
@@ -54,4 +54,67 @@ final class RelativeTransportTests: XCTestCase {
         }
         if let output=ProcessInfo.processInfo.environment["TRANSPORT_VALIDATION_OUTPUT"] {try JSONSerialization.data(withJSONObject:records,options:[.prettyPrinted,.sortedKeys]).write(to:URL(fileURLWithPath:output))}
     }
+}
+
+final class LocalTorusReintegrateTests: XCTestCase {
+    func testTiledReintegrationIsBitIdenticalToAverageKernel() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        for (sx, sy, channels, flowScale) in [(32, 32, 2, Float(0.4)), (40, 24, 3, Float(3)), (48, 64, 1, Float(30))] {
+            let tile = 16
+            let source = FlowLeniaMetalFullPipeline.kernelSource(kernelCount: 1, parameterCount: 1, batchCount: 2, channelCount: channels, kernelBatchCount: 1, summaryPartialGroupCount: 1, sx: sx, sy: sy, dt: 0.2, dd: 5, sigma: 0.65, thetaA: 2, n: 2, useTorus: true, alphaMode: "mass", flowClip: "none", parameterFieldMode: .kernelGain, reintegrateParams: false, parameterMixMode: .average, spectralPlan: FlowLeniaSpectralPlan(sx: sx, sy: sy, channelCount: channels, maxThreadgroupMemory: device.maxThreadgroupMemoryLength), reintegrateTile: tile)
+            let library = try device.makeLibrary(source: source, options: nil)
+            let average = try device.makeComputePipelineState(function: XCTUnwrap(library.makeFunction(name: "flowMetalReintegrateAverage")))
+            let tiled = try device.makeComputePipelineState(function: XCTUnwrap(library.makeFunction(name: "flowMetalReintegrateLocalTorus")))
+            var generator = SplitMix64(seed: UInt64(sx * 1000 + sy))
+            let count = 2 * sx * sy * channels
+            // Sparse occupancy leaves whole tiles empty and others with a single small displacement.
+            let mass = (0..<count).map { _ -> Float in
+                generator.unit() < 0.3 ? Float(generator.unit()) : 0
+            }
+            let flow = (0..<(count * 2)).map { _ in Float(generator.unit() * 2 - 1) * flowScale }
+            func buffer(_ values: [Float]) -> MTLBuffer {
+                values.withUnsafeBytes { device.makeBuffer(bytes: $0.baseAddress!, length: $0.count, options: .storageModeShared)! }
+            }
+            let massBuffer = buffer(mass), flowBuffer = buffer(flow), dummy = buffer([0])
+            func run(_ pipeline: MTLComputePipelineState, groups: MTLSize?) throws -> [UInt32] {
+                let output = buffer([Float](repeating: -1, count: count))
+                let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
+                let encoder = try XCTUnwrap(commandBuffer.makeComputeCommandEncoder())
+                encoder.setComputePipelineState(pipeline)
+                for (index, bound) in [massBuffer, dummy, flowBuffer, output, dummy].enumerated() {
+                    encoder.setBuffer(bound, offset: 0, index: index)
+                }
+                let uniforms: [UInt32] = [0, 0]
+                uniforms.withUnsafeBytes { encoder.setBytes($0.baseAddress!, length: $0.count, index: 5) }
+                if let groups {
+                    encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: MTLSize(width: tile, height: tile, depth: 1))
+                } else {
+                    encoder.dispatchThreads(MTLSize(width: sy, height: sx, depth: 2), threadsPerThreadgroup: MTLSize(width: 8, height: 8, depth: 1))
+                }
+                encoder.endEncoding()
+                commandBuffer.commit()
+                commandBuffer.waitUntilCompleted()
+                XCTAssertNil(commandBuffer.error)
+                return Array(UnsafeBufferPointer(start: output.contents().assumingMemoryBound(to: UInt32.self), count: count))
+            }
+            let expected = try run(average, groups: nil)
+            let actual = try run(tiled, groups: MTLSize(width: (sy + tile - 1) / tile, height: (sx + tile - 1) / tile, depth: 2))
+            let differing = zip(expected, actual).filter { $0 != $1 }.count
+            XCTAssertEqual(differing, 0, "\(sx)x\(sy) channels=\(channels) flowScale=\(flowScale)")
+        }
+    }
+}
+
+private struct SplitMix64 {
+    var state: UInt64
+    init(seed: UInt64) { state = seed }
+    mutating func next() -> UInt64 {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return z ^ (z >> 31)
+    }
+    mutating func unit() -> Double { Double(next() >> 11) / Double(1 << 53) }
 }
