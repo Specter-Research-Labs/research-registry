@@ -225,6 +225,7 @@ fn render(
             templates.join("pandoc-template.html")
         ))
         .arg(format!("--csl={}", templates.join("ieee.csl")))
+        .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
         .arg(format!("--lua-filter={}", templates.join("report.lua")))
         .arg(format!("--include-in-header={}", header.path().display()))
         .current_dir(dir);
@@ -676,6 +677,7 @@ fn inline_style(repo_root: &Utf8Path, target: Target, layout: Layout) -> Result<
     }
     let tokens = design_tokens::load_spec(&design_tokens::spec_dir(repo_root), "web")?;
     css.push_str(&design_tokens_css::generate_css(&tokens)?);
+    css.push_str(&read(&repo_root.join(shell::TABLES_CSS))?);
     css.push_str(&read(&repo_root.join(TEMPLATE_DIR).join("report.css"))?);
     if target == Target::Site {
         css.push_str(&read(&repo_root.join(SITE_SHELL_CSS))?);

@@ -127,6 +127,7 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
             "--template={}",
             site_root.join("blog/pandoc-template.html")
         ))
+        .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
         .arg(format!(
             "--resource-path={}:{}",
             md.parent().context("article has no parent")?,
@@ -224,6 +225,7 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
                 "--metadata=reference-section-title:References",
             ])
             .arg(format!("--template={}", template))
+            .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
             .args(["--toc", "--toc-depth=2", "--mathml"])
             .arg(format!("--variable=site-header:{site_header}"))
             .arg(format!("--variable=site-footer:{site_footer}"))

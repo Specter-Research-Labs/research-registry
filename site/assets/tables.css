@@ -1,0 +1,117 @@
+/* Every Markdown table on the site; the tables Lua filter wraps each one in .table-wrap and marks numeric columns with .num. */
+
+.table-wrap {
+  margin: 1.4em 0;
+  overflow-x: auto;
+}
+
+/* Words stay whole even where the page breaks long words anywhere, so a table too wide for the screen scrolls instead of splitting its cells mid-word. */
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 14px/18px var(--sl-font-prose);
+  overflow-wrap: normal;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--sl-color-rule);
+}
+
+.table-wrap th + th,
+.table-wrap td + td {
+  border-left: 1px solid var(--sl-color-rule);
+}
+
+.table-wrap th:first-child,
+.table-wrap td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap th:last-child,
+.table-wrap td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap thead th {
+  font-weight: 700;
+  vertical-align: bottom;
+  padding-top: 0;
+  border-bottom-color: var(--sl-color-ink);
+}
+
+.table-wrap tbody tr:last-child td {
+  border-bottom-color: var(--sl-color-ink);
+}
+
+.table-wrap .num {
+  text-align: right;
+}
+
+/* Plex Serif's default figures are already tabular and lining; the setting states that numeric columns depend on it. */
+.table-wrap table {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@media (min-width: 1201px) {
+  .table-wrap td.short {
+    white-space: nowrap;
+  }
+}
+
+.table-wrap .ci {
+  display: block;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.table-wrap th code,
+.table-wrap td code {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  font: 400 13px/18px var(--sl-font-mono);
+  overflow-wrap: normal;
+}
+
+/* The log style, for reference tables in the cabinet: one mono face, no column rules, and tight rows. Cabinet cells often wrap to several lines, so a faint rule between rows keeps each row's extent readable. */
+.table-wrap.log table {
+  font: 400 12.5px/20px var(--sl-font-mono);
+}
+
+.table-wrap.log th,
+.table-wrap.log td {
+  padding: 0 .4rem;
+  border: 0;
+}
+
+.table-wrap.log tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--sl-color-rule) 50%, transparent);
+}
+
+.table-wrap.log th:first-child,
+.table-wrap.log td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap.log th:last-child,
+.table-wrap.log td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap.log thead th {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--sl-color-ink);
+}
+
+.table-wrap.log code {
+  font: inherit;
+}

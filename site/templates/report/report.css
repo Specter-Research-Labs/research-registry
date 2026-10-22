@@ -5,12 +5,12 @@ body{margin:0;background:var(--rk-bg);color:var(--rk-ink);font-family:var(--sl-f
 a{color:inherit;text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent);text-decoration-thickness:1px;text-underline-offset:3px}
 a:hover{text-decoration-color:currentColor}
 img,canvas,svg,video{max-width:100%;height:auto}
-.rk-shell{max-width:calc(var(--rk-toc) + var(--rk-measure) + var(--rk-margin) + 2*var(--rk-gap) + 48px);margin:0 auto;padding:0 24px 128px}
+.rk-shell{max-width:calc(var(--rk-toc) + var(--rk-measure) + var(--rk-margin) + 2*var(--rk-gap) + 48px);margin:0 auto;padding:0 24px 40px}
 .rk-layout{display:grid;grid-template-columns:var(--rk-toc) minmax(0,var(--rk-measure)) var(--rk-margin);column-gap:var(--rk-gap);justify-content:center;align-items:start}
-.rk-hero{grid-column:2;grid-row:1;padding:112px 0 72px}
+.rk-hero{grid-column:2;grid-row:1;padding:0 0 48px}
 .rk-kicker{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0 0 20px}
 .rk-hero h1{font-family:var(--rk-font-heading);font-weight:400;font-size:clamp(38px,4.6vw,54px);line-height:1.12;letter-spacing:-.012em;margin:0;text-wrap:balance}
-.rk-subtitle{font-family:var(--rk-font-heading);font-style:italic;font-size:clamp(21px,2.3vw,27px);line-height:1.35;color:var(--rk-muted);margin:14px 0 56px;text-wrap:balance}
+.rk-subtitle{font-family:var(--rk-font-heading);font-style:italic;font-size:clamp(21px,2.3vw,27px);line-height:1.35;color:var(--rk-muted);margin:14px 0 32px;text-wrap:balance}
 .rk-byline{font:700 12px/1.85 var(--sl-font-mono);margin:0}
 .rk-meta{font:12px/1.85 var(--sl-font-mono);color:var(--rk-muted);margin:0}
 .rk-hero-figure{margin:0 0 48px}
@@ -35,11 +35,11 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-abstract p{font-size:17.5px;line-height:1.6;margin:0 0 14px}
 .rk-abstract p:last-child{margin:0}
 .rk-article h2,.rk-article h3,.rk-article h4{font-family:var(--rk-font-heading);font-weight:var(--rk-heading-weight);color:var(--rk-ink)}
-.rk-article h2{font-size:26px;line-height:1.18;letter-spacing:-.005em;margin:72px 0 20px}
+.rk-article h2{font-size:26px;line-height:1.18;letter-spacing:-.005em;margin:56px 0 20px}
 .rk-article h3{font-size:20px;line-height:1.25;margin:48px 0 14px}
 .rk-article h4{font-size:16.5px;font-style:italic;font-weight:400;line-height:1.4;margin:36px 0 10px}
 .rk-article h2 .rk-num,.rk-article h3 .rk-num{font-size:.8em;margin-right:.55em}
-.rk-article .rk-appendix-head{margin-top:120px}
+.rk-article .rk-appendix-head{margin-top:72px}
 .rk-article .rk-appendix-head>h2{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0}
 .rk-article p{margin:0 0 18px}
 .rk-article ul,.rk-article ol{padding-left:1.35em;margin:0 0 18px}
@@ -49,13 +49,12 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-article pre{font:13px/1.5 var(--sl-font-mono);overflow:auto;background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:20px 0}
 .rk-article pre code{background:none;padding:0;font-size:inherit}
 .rk-article blockquote{margin:24px 0;padding:0 0 0 20px;border-left:2px solid var(--rk-rule);color:var(--rk-muted);font-style:italic}
-.rk-article table{width:100%;border-collapse:collapse;font:12.5px/1.5 var(--sl-font-mono);border-top:1px solid var(--rk-ink);border-bottom:1px solid var(--rk-ink)}
-.rk-article th{text-align:left;font-weight:700;border-bottom:1px solid var(--rk-rule)}
-.rk-article th,.rk-article td{padding:6px 10px;vertical-align:top}.rk-article thead th{padding-top:9px;padding-bottom:8px}.rk-article tbody tr:first-child td{padding-top:10px}.rk-article tbody tr:last-child td{padding-bottom:10px}
-.rk-article figure{margin:52px 0;padding:0;overflow-x:auto}
-.rk-article .table-wrap{margin:36px 0;overflow-x:auto}.rk-article figure .table-wrap{margin:0}
+.rk-article figure{margin:40px 0;padding:0;overflow-x:auto}
+.rk-article .table-wrap{margin:40px 0}.rk-article figure .table-wrap{margin:0}
 .rk-article figure img,.rk-article figure canvas,.rk-article figure svg{display:block;width:100%}
 @media(min-width:1201px){.rk-article figure.wide{clear:right;margin-right:calc(-1*(var(--rk-margin) + var(--rk-gap)))}.rk-article figure.wide>figcaption{max-width:var(--rk-measure)}}
+/* Tables may run past the text measure into the margin column, up to 880px, so that most rows fit on one line; a table that is narrower keeps the measure. */
+@media(min-width:1201px){.rk-article .table-wrap,.rk-article figure:has(.table-wrap){--rk-table-out:calc(min(880px,var(--rk-measure) + var(--rk-gap) + var(--rk-margin)) - var(--rk-measure));margin-right:calc(-1*var(--rk-table-out))}.rk-article figure .table-wrap{margin-right:0}.rk-article figure:has(.table-wrap)>figcaption{max-width:var(--rk-measure)}.rk-article .table-wrap table{width:auto;min-width:var(--rk-measure)}}
 .rk-article figcaption{font-size:15px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
 .rk-article figure:not(:has(img,canvas,svg,video))>figcaption{padding:0 0 12px}
 .rk-article figure:has(img,canvas,svg,video){counter-increment:rk-figure}
@@ -79,7 +78,7 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;animation:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
 .rk-sidenote:hover,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote{color:var(--rk-ink)}
 .rk-sidenote-num{font:10.5px var(--sl-font-mono);color:var(--rk-accent);margin-right:.35em}
-.rk-endmatter{margin-top:112px;border-top:1px solid var(--rk-rule)}
+.rk-endmatter{margin-top:72px;border-top:1px solid var(--rk-rule)}
 .rk-endmatter section{padding:40px 0 0}
 .rk-article .rk-endmatter h2{font-family:var(--rk-font-heading);font-size:15px;font-weight:var(--rk-heading-weight);letter-spacing:0;color:var(--rk-muted);margin:0 0 14px}
 .rk-endmatter p,.rk-endmatter li,.rk-endmatter .csl-entry{font-size:14px;line-height:1.55;color:var(--rk-muted)}
@@ -111,8 +110,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 :target{scroll-margin-top:24px}
 li:target,h2:target,h3:target,.csl-entry:target{background:color-mix(in srgb,var(--rk-accent) 10%,transparent)}
 @media(max-width:1200px){:root{--rk-margin:0px}.rk-layout{grid-template-columns:var(--rk-toc) minmax(0,var(--rk-measure))}.rk-sidenote{display:none}.rk-noteref:hover>.rk-pop,.rk-noteref:focus-within>.rk-pop{display:block}}
-@media(max-width:960px){.rk-layout{display:block;max-width:var(--rk-measure);margin:0 auto}.rk-toc{position:static;max-height:none;padding:0 0 40px}.rk-toc ul ul{display:none}.rk-toc li{margin:0}.rk-toc a{min-height:24px;align-items:center}.rk-hero{padding:64px 0 48px}}
-@media(max-width:700px){.rk-term-note,.rk-sidenote .rk-term-note,.rk-pop{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;margin:0}.rk-shell{padding:0 20px 72px}body{font-size:16px}.rk-abstract p{font-size:16.5px}.rk-hero{padding:48px 0 40px}.rk-subtitle{margin-bottom:36px}.rk-article h2{font-size:23px;margin-top:56px}.rk-article h3{font-size:19px;margin-top:40px}.rk-article figure{margin:40px 0}.rk-data li{display:block}.rk-path{display:block;text-align:left}}
+@media(max-width:960px){.rk-layout{display:block;max-width:var(--rk-measure);margin:0 auto}.rk-toc{position:static;max-height:none;padding:0 0 24px}.rk-toc ul ul{display:none}.rk-toc li{margin:0}.rk-toc a{min-height:24px;align-items:center}.rk-hero{padding:0 0 40px}}
+@media(max-width:700px){.rk-term-note,.rk-sidenote .rk-term-note,.rk-pop{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;margin:0}.rk-shell{padding:0 20px 24px}body{font-size:16px}.rk-abstract p{font-size:16.5px}.rk-hero{padding:0 0 32px}.rk-subtitle{margin-bottom:24px}.rk-article h2{font-size:23px;margin-top:48px}.rk-article h3{font-size:19px;margin-top:40px}.rk-article figure,.rk-article .table-wrap{margin:32px 0}.rk-data li{display:block}.rk-path{display:block;text-align:left}}
 @supports (animation-timeline:view()) and (timeline-scope:none){
 .rk-toc{view-timeline:--rk-toc}
 .rk-article section{view-timeline-inset:20% 0}

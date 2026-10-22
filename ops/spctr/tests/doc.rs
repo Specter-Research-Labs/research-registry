@@ -433,6 +433,7 @@ fn site(publications: &str) -> Site {
         "site/templates",
         "site/fonts",
         "site/assets/site-shell.css",
+        "site/assets/tables.css",
         "addenda/design-tokens",
     ] {
         std::os::unix::fs::symlink(real.join(rel), root.join(rel)).unwrap();

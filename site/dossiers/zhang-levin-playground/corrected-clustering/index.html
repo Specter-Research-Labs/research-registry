@@ -101,8 +101,8 @@
     --sl-layout-prose-measure: 75ch;
     --sl-layout-shell-max-width: 1320px;
     --sl-layout-shell-max-width-doc: 1320px;
-    --sl-layout-shell-pad-bottom: 64px;
-    --sl-layout-shell-pad-bottom-mobile: 38px;
+    --sl-layout-shell-pad-bottom: 40px;
+    --sl-layout-shell-pad-bottom-mobile: 24px;
     --sl-layout-shell-pad-inline: 52px;
     --sl-layout-shell-pad-inline-mobile: 22px;
     --sl-layout-shell-pad-top: 30px;
@@ -125,6 +125,123 @@
     --sl-leading-prose: 1.65;
     --sl-leading-title: 1.1;
 }
+/* Every Markdown table on the site; the tables Lua filter wraps each one in .table-wrap and marks numeric columns with .num. */
+
+.table-wrap {
+  margin: 1.4em 0;
+  overflow-x: auto;
+}
+
+/* Words stay whole even where the page breaks long words anywhere, so a table too wide for the screen scrolls instead of splitting its cells mid-word. */
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 14px/18px var(--sl-font-prose);
+  overflow-wrap: normal;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--sl-color-rule);
+}
+
+.table-wrap th + th,
+.table-wrap td + td {
+  border-left: 1px solid var(--sl-color-rule);
+}
+
+.table-wrap th:first-child,
+.table-wrap td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap th:last-child,
+.table-wrap td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap thead th {
+  font-weight: 700;
+  vertical-align: bottom;
+  padding-top: 0;
+  border-bottom-color: var(--sl-color-ink);
+}
+
+.table-wrap tbody tr:last-child td {
+  border-bottom-color: var(--sl-color-ink);
+}
+
+.table-wrap .num {
+  text-align: right;
+}
+
+/* Plex Serif's default figures are already tabular and lining; the setting states that numeric columns depend on it. */
+.table-wrap table {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@media (min-width: 1201px) {
+  .table-wrap td.short {
+    white-space: nowrap;
+  }
+}
+
+.table-wrap .ci {
+  display: block;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.table-wrap th code,
+.table-wrap td code {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  font: 400 13px/18px var(--sl-font-mono);
+  overflow-wrap: normal;
+}
+
+/* The log style, for reference tables in the cabinet: one mono face, no column rules, and tight rows. Cabinet cells often wrap to several lines, so a faint rule between rows keeps each row's extent readable. */
+.table-wrap.log table {
+  font: 400 12.5px/20px var(--sl-font-mono);
+}
+
+.table-wrap.log th,
+.table-wrap.log td {
+  padding: 0 .4rem;
+  border: 0;
+}
+
+.table-wrap.log tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--sl-color-rule) 50%, transparent);
+}
+
+.table-wrap.log th:first-child,
+.table-wrap.log td:first-child {
+  padding-left: 0;
+}
+
+.table-wrap.log th:last-child,
+.table-wrap.log td:last-child {
+  padding-right: 0;
+}
+
+.table-wrap.log thead th {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--sl-color-ink);
+}
+
+.table-wrap.log code {
+  font: inherit;
+}
 :root{--rk-measure:660px;--rk-toc:200px;--rk-margin:210px;--rk-gap:52px;--rk-ink:var(--sl-color-ink);--rk-muted:var(--sl-color-muted);--rk-faint:color-mix(in srgb,var(--sl-color-muted) 94%,var(--sl-color-paper));--rk-rule:var(--sl-color-rule);--rk-tint:color-mix(in srgb,var(--sl-color-ink) 5%,transparent);--rk-accent:var(--sl-color-accent);--rk-bg:var(--sl-color-paper);--rk-font-heading:var(--sl-font-prose);--rk-heading-weight:500;--rk-speed:140ms;--rk-note-cap:15em}
 *{box-sizing:border-box}
 html{background:var(--rk-bg);-webkit-text-size-adjust:100%}
@@ -132,12 +249,12 @@ body{margin:0;background:var(--rk-bg);color:var(--rk-ink);font-family:var(--sl-f
 a{color:inherit;text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent);text-decoration-thickness:1px;text-underline-offset:3px}
 a:hover{text-decoration-color:currentColor}
 img,canvas,svg,video{max-width:100%;height:auto}
-.rk-shell{max-width:calc(var(--rk-toc) + var(--rk-measure) + var(--rk-margin) + 2*var(--rk-gap) + 48px);margin:0 auto;padding:0 24px 128px}
+.rk-shell{max-width:calc(var(--rk-toc) + var(--rk-measure) + var(--rk-margin) + 2*var(--rk-gap) + 48px);margin:0 auto;padding:0 24px 40px}
 .rk-layout{display:grid;grid-template-columns:var(--rk-toc) minmax(0,var(--rk-measure)) var(--rk-margin);column-gap:var(--rk-gap);justify-content:center;align-items:start}
-.rk-hero{grid-column:2;grid-row:1;padding:112px 0 72px}
+.rk-hero{grid-column:2;grid-row:1;padding:0 0 48px}
 .rk-kicker{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0 0 20px}
 .rk-hero h1{font-family:var(--rk-font-heading);font-weight:400;font-size:clamp(38px,4.6vw,54px);line-height:1.12;letter-spacing:-.012em;margin:0;text-wrap:balance}
-.rk-subtitle{font-family:var(--rk-font-heading);font-style:italic;font-size:clamp(21px,2.3vw,27px);line-height:1.35;color:var(--rk-muted);margin:14px 0 56px;text-wrap:balance}
+.rk-subtitle{font-family:var(--rk-font-heading);font-style:italic;font-size:clamp(21px,2.3vw,27px);line-height:1.35;color:var(--rk-muted);margin:14px 0 32px;text-wrap:balance}
 .rk-byline{font:700 12px/1.85 var(--sl-font-mono);margin:0}
 .rk-meta{font:12px/1.85 var(--sl-font-mono);color:var(--rk-muted);margin:0}
 .rk-hero-figure{margin:0 0 48px}
@@ -162,11 +279,11 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-abstract p{font-size:17.5px;line-height:1.6;margin:0 0 14px}
 .rk-abstract p:last-child{margin:0}
 .rk-article h2,.rk-article h3,.rk-article h4{font-family:var(--rk-font-heading);font-weight:var(--rk-heading-weight);color:var(--rk-ink)}
-.rk-article h2{font-size:26px;line-height:1.18;letter-spacing:-.005em;margin:72px 0 20px}
+.rk-article h2{font-size:26px;line-height:1.18;letter-spacing:-.005em;margin:56px 0 20px}
 .rk-article h3{font-size:20px;line-height:1.25;margin:48px 0 14px}
 .rk-article h4{font-size:16.5px;font-style:italic;font-weight:400;line-height:1.4;margin:36px 0 10px}
 .rk-article h2 .rk-num,.rk-article h3 .rk-num{font-size:.8em;margin-right:.55em}
-.rk-article .rk-appendix-head{margin-top:120px}
+.rk-article .rk-appendix-head{margin-top:72px}
 .rk-article .rk-appendix-head>h2{font:12px/1.4 var(--sl-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--rk-muted);margin:0}
 .rk-article p{margin:0 0 18px}
 .rk-article ul,.rk-article ol{padding-left:1.35em;margin:0 0 18px}
@@ -176,13 +293,12 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-article pre{font:13px/1.5 var(--sl-font-mono);overflow:auto;background:var(--rk-tint);border-radius:4px;padding:12px 14px;margin:20px 0}
 .rk-article pre code{background:none;padding:0;font-size:inherit}
 .rk-article blockquote{margin:24px 0;padding:0 0 0 20px;border-left:2px solid var(--rk-rule);color:var(--rk-muted);font-style:italic}
-.rk-article table{width:100%;border-collapse:collapse;font:12.5px/1.5 var(--sl-font-mono);border-top:1px solid var(--rk-ink);border-bottom:1px solid var(--rk-ink)}
-.rk-article th{text-align:left;font-weight:700;border-bottom:1px solid var(--rk-rule)}
-.rk-article th,.rk-article td{padding:6px 10px;vertical-align:top}.rk-article thead th{padding-top:9px;padding-bottom:8px}.rk-article tbody tr:first-child td{padding-top:10px}.rk-article tbody tr:last-child td{padding-bottom:10px}
-.rk-article figure{margin:52px 0;padding:0;overflow-x:auto}
-.rk-article .table-wrap{margin:36px 0;overflow-x:auto}.rk-article figure .table-wrap{margin:0}
+.rk-article figure{margin:40px 0;padding:0;overflow-x:auto}
+.rk-article .table-wrap{margin:40px 0}.rk-article figure .table-wrap{margin:0}
 .rk-article figure img,.rk-article figure canvas,.rk-article figure svg{display:block;width:100%}
 @media(min-width:1201px){.rk-article figure.wide{clear:right;margin-right:calc(-1*(var(--rk-margin) + var(--rk-gap)))}.rk-article figure.wide>figcaption{max-width:var(--rk-measure)}}
+/* Tables may run past the text measure into the margin column, up to 880px, so that most rows fit on one line; a table that is narrower keeps the measure. */
+@media(min-width:1201px){.rk-article .table-wrap,.rk-article figure:has(.table-wrap){--rk-table-out:calc(min(880px,var(--rk-measure) + var(--rk-gap) + var(--rk-margin)) - var(--rk-measure));margin-right:calc(-1*var(--rk-table-out))}.rk-article figure .table-wrap{margin-right:0}.rk-article figure:has(.table-wrap)>figcaption{max-width:var(--rk-measure)}.rk-article .table-wrap table{width:auto;min-width:var(--rk-measure)}}
 .rk-article figcaption{font-size:15px;line-height:1.5;color:var(--rk-muted);padding:12px 0 0}
 .rk-article figure:not(:has(img,canvas,svg,video))>figcaption{padding:0 0 12px}
 .rk-article figure:has(img,canvas,svg,video){counter-increment:rk-figure}
@@ -206,7 +322,7 @@ img,canvas,svg,video{max-width:100%;height:auto}
 .rk-sidenote:hover .rk-sidenote-body,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote .rk-sidenote-body{position:relative;z-index:15;max-height:none;overflow:visible;animation:none;background:var(--rk-bg);box-shadow:0 0 0 8px var(--rk-bg)}
 .rk-sidenote:hover,.rk-noteref:is(:hover,:focus-within)+.rk-sidenote{color:var(--rk-ink)}
 .rk-sidenote-num{font:10.5px var(--sl-font-mono);color:var(--rk-accent);margin-right:.35em}
-.rk-endmatter{margin-top:112px;border-top:1px solid var(--rk-rule)}
+.rk-endmatter{margin-top:72px;border-top:1px solid var(--rk-rule)}
 .rk-endmatter section{padding:40px 0 0}
 .rk-article .rk-endmatter h2{font-family:var(--rk-font-heading);font-size:15px;font-weight:var(--rk-heading-weight);letter-spacing:0;color:var(--rk-muted);margin:0 0 14px}
 .rk-endmatter p,.rk-endmatter li,.rk-endmatter .csl-entry{font-size:14px;line-height:1.55;color:var(--rk-muted)}
@@ -238,8 +354,8 @@ img,canvas,svg,video{max-width:100%;height:auto}
 :target{scroll-margin-top:24px}
 li:target,h2:target,h3:target,.csl-entry:target{background:color-mix(in srgb,var(--rk-accent) 10%,transparent)}
 @media(max-width:1200px){:root{--rk-margin:0px}.rk-layout{grid-template-columns:var(--rk-toc) minmax(0,var(--rk-measure))}.rk-sidenote{display:none}.rk-noteref:hover>.rk-pop,.rk-noteref:focus-within>.rk-pop{display:block}}
-@media(max-width:960px){.rk-layout{display:block;max-width:var(--rk-measure);margin:0 auto}.rk-toc{position:static;max-height:none;padding:0 0 40px}.rk-toc ul ul{display:none}.rk-toc li{margin:0}.rk-toc a{min-height:24px;align-items:center}.rk-hero{padding:64px 0 48px}}
-@media(max-width:700px){.rk-term-note,.rk-sidenote .rk-term-note,.rk-pop{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;margin:0}.rk-shell{padding:0 20px 72px}body{font-size:16px}.rk-abstract p{font-size:16.5px}.rk-hero{padding:48px 0 40px}.rk-subtitle{margin-bottom:36px}.rk-article h2{font-size:23px;margin-top:56px}.rk-article h3{font-size:19px;margin-top:40px}.rk-article figure{margin:40px 0}.rk-data li{display:block}.rk-path{display:block;text-align:left}}
+@media(max-width:960px){.rk-layout{display:block;max-width:var(--rk-measure);margin:0 auto}.rk-toc{position:static;max-height:none;padding:0 0 24px}.rk-toc ul ul{display:none}.rk-toc li{margin:0}.rk-toc a{min-height:24px;align-items:center}.rk-hero{padding:0 0 40px}}
+@media(max-width:700px){.rk-term-note,.rk-sidenote .rk-term-note,.rk-pop{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;margin:0}.rk-shell{padding:0 20px 24px}body{font-size:16px}.rk-abstract p{font-size:16.5px}.rk-hero{padding:0 0 32px}.rk-subtitle{margin-bottom:24px}.rk-article h2{font-size:23px;margin-top:48px}.rk-article h3{font-size:19px;margin-top:40px}.rk-article figure,.rk-article .table-wrap{margin:32px 0}.rk-data li{display:block}.rk-path{display:block;text-align:left}}
 @supports (animation-timeline:view()) and (timeline-scope:none){
 .rk-toc{view-timeline:--rk-toc}
 .rk-article section{view-timeline-inset:20% 0}
@@ -356,7 +472,7 @@ body {
   text-underline-offset: 6px;
 }
 
-.publication-header + :is(.site-shell, .blog-shell, .cabinet-shell, .rk-shell) {
+.publication-header + :is(.site-shell, .blog-shell, .cabinet-shell, .doc-shell, .rk-shell) {
   padding-top: 0;
 }
 
@@ -442,81 +558,72 @@ body {
 <p>How do you know a run of three orange cells is an island and not luck? In a random half-and-half row about half of all neighbouring pairs already match in colour, and a sorting run passes through thousands of arrangements, so its best moment will beat one half by chance alone. Our yardstick replays each run with the colours dealt out again at random: the cells make exactly the same moves, and only the paint changes. If colour has nothing to do with how cells move, the real colours should do no better than the dealt ones.</p>
 <p>Against that yardstick the original result holds. At the original size of 100 cells holding distinct values, mixing two rules makes the <span class="rk-term" tabindex="0">share of same-type neighbours<span class="rk-term-note" role="tooltip">The share of neighbouring pairs whose two cells run the same rule, written C. In a random half-and-half arrangement of 100 cells it is close to one half, and it peaks somewhere while the array sorts. The original paper calls it the aggregation value.</span></span> peak 0.07 to 0.12 higher than the same runs with <span class="rk-term" tabindex="0">shuffled colours<span class="rk-term-note" role="tooltip">The same sorting run replayed with its cells’ rule labels dealt out again at random, 200 times per run. The cells make the same moves; only which cells count as the same kind changes. Its mean peak is the level that the real peak must beat.</span></span>, and two copies of one rule under different names peak no higher than their shuffles (within 0.01). The paper’s own control, which ran identical rules under two labels, peaked between 0.57 and 0.65, and ours peak between 0.57 and 0.62, right at their shuffle level, so the original control level is what the highest point of a noisy curve looks like when colour has no effect. The original comparison of mixed arrays, which the paper calls <span class="rk-term" tabindex="0">chimeras<span class="rk-term-note" role="tooltip">The original paper’s word, borrowed from biology, for an array or an organism built from cells of two kinds. Here an array in which half the cells run one rule and half another.</span></span>, with those identical-rule controls was the right comparison, and its conclusion stands.</p>
 <div class="table-wrap">
-<table style="width:100%;">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-</colgroup>
+<table>
 <thead>
 <tr>
 <th>Pair, 100 distinct values</th>
 <th>Original peak</th>
-<th>Our peak</th>
-<th>Shuffle null</th>
-<th>Excess (95% interval)</th>
+<th class="num">Our peak</th>
+<th class="num">Shuffle null</th>
+<th class="num">Excess (95% interval)</th>
 <th>Peak position, original and ours</th>
-<th>Runs above 95% of shuffles</th>
+<th class="num">Runs above 95% of shuffles</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Bubble with Bubble</td>
-<td>control, 0.57 to 0.65</td>
-<td>0.621</td>
-<td>0.619</td>
-<td>0.002 (−0.006 to 0.010)</td>
-<td>· and 42%</td>
-<td>1 of 40</td>
+<td class="short">Bubble with Bubble</td>
+<td class="short">control, 0.57 to 0.65</td>
+<td class="num">0.621</td>
+<td class="num">0.619</td>
+<td class="num">0.002 <span class="ci">(−0.006 to 0.010)</span></td>
+<td class="short">· and 42%</td>
+<td class="num">1 of 40</td>
 </tr>
 <tr>
-<td>Insertion with Insertion</td>
-<td>control, 0.57 to 0.65</td>
-<td>0.567</td>
-<td>0.561</td>
-<td>0.006 (−0.006 to 0.018)</td>
-<td>· and 33%</td>
-<td>1 of 40</td>
+<td class="short">Insertion with Insertion</td>
+<td class="short">control, 0.57 to 0.65</td>
+<td class="num">0.567</td>
+<td class="num">0.561</td>
+<td class="num">0.006 <span class="ci">(−0.006 to 0.018)</span></td>
+<td class="short">· and 33%</td>
+<td class="num">1 of 40</td>
 </tr>
 <tr>
-<td>Selection with Selection</td>
-<td>control, 0.57 to 0.65</td>
-<td>0.616</td>
-<td>0.611</td>
-<td>0.005 (−0.004 to 0.014)</td>
-<td>· and 37%</td>
-<td>2 of 40</td>
+<td class="short">Selection with Selection</td>
+<td class="short">control, 0.57 to 0.65</td>
+<td class="num">0.616</td>
+<td class="num">0.611</td>
+<td class="num">0.005 <span class="ci">(−0.004 to 0.014)</span></td>
+<td class="short">· and 37%</td>
+<td class="num">2 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Selection</td>
-<td>0.72</td>
-<td>0.686</td>
-<td>0.613</td>
-<td>0.073 (0.060 to 0.085)</td>
-<td>42% and 36%</td>
-<td>23 of 40</td>
+<td class="short">Bubble with Selection</td>
+<td class="short">0.72</td>
+<td class="num">0.686</td>
+<td class="num">0.613</td>
+<td class="num">0.073 <span class="ci">(0.060 to 0.085)</span></td>
+<td class="short">42% and 36%</td>
+<td class="num">23 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Insertion</td>
-<td>0.65</td>
-<td>0.666</td>
-<td>0.586</td>
-<td>0.080 (0.068 to 0.092)</td>
-<td>21% and 20%</td>
-<td>22 of 40</td>
+<td class="short">Bubble with Insertion</td>
+<td class="short">0.65</td>
+<td class="num">0.666</td>
+<td class="num">0.586</td>
+<td class="num">0.080 <span class="ci">(0.068 to 0.092)</span></td>
+<td class="short">21% and 20%</td>
+<td class="num">22 of 40</td>
 </tr>
 <tr>
-<td>Insertion with Selection</td>
-<td>0.69</td>
-<td>0.711</td>
-<td>0.588</td>
-<td>0.124 (0.105 to 0.142)</td>
-<td>19% and 23%</td>
-<td>33 of 40</td>
+<td class="short">Insertion with Selection</td>
+<td class="short">0.69</td>
+<td class="num">0.711</td>
+<td class="num">0.588</td>
+<td class="num">0.124 <span class="ci">(0.105 to 0.142)</span></td>
+<td class="short">19% and 23%</td>
+<td class="num">33 of 40</td>
 </tr>
 </tbody>
 </table>
@@ -530,65 +637,57 @@ body {
 <h2 class="rk-s3"><span class="rk-num">3</span>Larger arrays reach the same peaks, and the excess grows because chance falls</h2>
 <p>Does the gathering get stronger in longer rows? The highest share of same-type neighbours a run reaches hardly moves with size: from 30 to 400 cells it stays between 0.665 and 0.734 in all three mixed pairs. What moves is the chance level. A longer row has more neighbouring pairs, so its share of matching pairs wanders less far from one half, and the shuffled peak falls from 0.62 to 0.65 at 30 cells to 0.55 to 0.57 at 400. The same raw peak then stands further above chance, and the excess of Bubble with Selection triples from 0.036 to 0.109 while that of Bubble with Insertion doubles from 0.060 to 0.120.</p>
 <div class="table-wrap">
-<table style="width:100%;">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
+<table>
 <thead>
 <tr>
-<th>Cells</th>
-<th>Shuffle peak, range over pairs</th>
-<th>Bubble with Selection</th>
-<th>Bubble with Insertion</th>
-<th>Insertion with Selection</th>
-<th>Separation, Bubble with Insertion</th>
+<th class="num">Cells</th>
+<th class="num">Shuffle peak, range over pairs</th>
+<th class="num">Bubble with Selection</th>
+<th class="num">Bubble with Insertion</th>
+<th class="num">Insertion with Selection</th>
+<th class="num">Separation, Bubble with Insertion</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>30</td>
-<td>0.622 to 0.649</td>
-<td>0.036 (0.016 to 0.055)</td>
-<td>0.060 (0.041 to 0.078)</td>
-<td>0.112 (0.086 to 0.138)</td>
-<td>0.119</td>
+<td class="num">30</td>
+<td class="num">0.622 to 0.649</td>
+<td class="num">0.036 <span class="ci">(0.016 to 0.055)</span></td>
+<td class="num">0.060 <span class="ci">(0.041 to 0.078)</span></td>
+<td class="num">0.112 <span class="ci">(0.086 to 0.138)</span></td>
+<td class="num">0.119</td>
 </tr>
 <tr>
-<td>50</td>
-<td>0.608 to 0.636</td>
-<td>0.049 (0.031 to 0.067)</td>
-<td>0.056 (0.042 to 0.070)</td>
-<td>0.098 (0.077 to 0.119)</td>
-<td>0.100</td>
+<td class="num">50</td>
+<td class="num">0.608 to 0.636</td>
+<td class="num">0.049 <span class="ci">(0.031 to 0.067)</span></td>
+<td class="num">0.056 <span class="ci">(0.042 to 0.070)</span></td>
+<td class="num">0.098 <span class="ci">(0.077 to 0.119)</span></td>
+<td class="num">0.100</td>
 </tr>
 <tr>
-<td>100</td>
-<td>0.586 to 0.613</td>
-<td>0.073 (0.060 to 0.085)</td>
-<td>0.080 (0.068 to 0.092)</td>
-<td>0.124 (0.105 to 0.142)</td>
-<td>0.083</td>
+<td class="num">100</td>
+<td class="num">0.586 to 0.613</td>
+<td class="num">0.073 <span class="ci">(0.060 to 0.085)</span></td>
+<td class="num">0.080 <span class="ci">(0.068 to 0.092)</span></td>
+<td class="num">0.124 <span class="ci">(0.105 to 0.142)</span></td>
+<td class="num">0.083</td>
 </tr>
 <tr>
-<td>200</td>
-<td>0.564 to 0.591</td>
-<td>0.076 (0.067 to 0.084)</td>
-<td>0.101 (0.092 to 0.111)</td>
-<td>0.113 (0.102 to 0.124)</td>
-<td>0.063</td>
+<td class="num">200</td>
+<td class="num">0.564 to 0.591</td>
+<td class="num">0.076 <span class="ci">(0.067 to 0.084)</span></td>
+<td class="num">0.101 <span class="ci">(0.092 to 0.111)</span></td>
+<td class="num">0.113 <span class="ci">(0.102 to 0.124)</span></td>
+<td class="num">0.063</td>
 </tr>
 <tr>
-<td>400</td>
-<td>0.547 to 0.571</td>
-<td>0.109 (0.104 to 0.115)</td>
-<td>0.120 (0.115 to 0.125)</td>
-<td>0.128 (0.121 to 0.135)</td>
-<td>0.034</td>
+<td class="num">400</td>
+<td class="num">0.547 to 0.571</td>
+<td class="num">0.109 <span class="ci">(0.104 to 0.115)</span></td>
+<td class="num">0.120 <span class="ci">(0.115 to 0.125)</span></td>
+<td class="num">0.128 <span class="ci">(0.121 to 0.135)</span></td>
+<td class="num">0.034</td>
 </tr>
 </tbody>
 </table>
@@ -627,99 +726,90 @@ body {
 <p>Now let the values repeat, with 100 cells holding the numbers 1 to 10 ten times each, as in the original’s second experiment. Two cells holding a 7 are like two people with the same ticket number in a queue: once the queue is in order, nothing says which of them stands first. The original found that clustering then lasts to the end, at 0.65 for Bubble with Selection and 0.7 for Insertion with Selection, and read this as support for the efficiency explanation, since Selection is the more efficient rule (p. 14).</p>
 <p>We reproduce the lasting islands, and they come with Selection. Insertion with Selection ends at 0.703 and Bubble with Selection at 0.690, both about 0.2 above the shuffles of the final arrangement. Every pair without Selection ends at the shuffle level, including Bubble with Insertion and Bubble with waiting Bubble, which both gather strongly partway through (peaks 0.659 and 0.660) and then let the islands dissolve.</p>
 <div class="table-wrap">
-<table style="width:100%;">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-</colgroup>
+<table>
 <thead>
 <tr>
 <th>Pair, values 1 to 10 repeated</th>
 <th>Original</th>
 <th>Peak (mean position)</th>
-<th>Final</th>
-<th>Final shuffle null</th>
-<th>Final excess (95% interval)</th>
-<th>Runs keeping equal values in order</th>
+<th class="num">Final</th>
+<th class="num">Final shuffle null</th>
+<th class="num">Final excess (95% interval)</th>
+<th class="num">Runs keeping equal values in order</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Insertion with Selection</td>
+<td class="short">Insertion with Selection</td>
 <td>final 0.7, maximum 0.71 at 100%</td>
-<td>0.719 (43%)</td>
-<td>0.703</td>
-<td>0.495</td>
-<td>0.207 (0.196 to 0.218)</td>
-<td>0 of 40</td>
+<td class="short">0.719 (43%)</td>
+<td class="num">0.703</td>
+<td class="num">0.495</td>
+<td class="num">0.207 <span class="ci">(0.196 to 0.218)</span></td>
+<td class="num">0 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Selection</td>
+<td class="short">Bubble with Selection</td>
 <td>final 0.65, maximum 0.69 at 100%</td>
-<td>0.706 (71%)</td>
-<td>0.690</td>
-<td>0.496</td>
-<td>0.195 (0.181 to 0.208)</td>
-<td>0 of 40</td>
+<td class="short">0.706 (71%)</td>
+<td class="num">0.690</td>
+<td class="num">0.496</td>
+<td class="num">0.195 <span class="ci">(0.181 to 0.208)</span></td>
+<td class="num">0 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Insertion</td>
+<td class="short">Bubble with Insertion</td>
 <td>maximum 0.63 at 13%</td>
-<td>0.659 (17%)</td>
-<td>0.510</td>
-<td>0.495</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>40 of 40</td>
+<td class="short">0.659 (17%)</td>
+<td class="num">0.510</td>
+<td class="num">0.495</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Bubble with DelayedBubble</td>
+<td class="short">Bubble with DelayedBubble</td>
 <td>·</td>
-<td>0.660 (15%)</td>
-<td>0.510</td>
-<td>0.495</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>40 of 40</td>
+<td class="short">0.660 (15%)</td>
+<td class="num">0.510</td>
+<td class="num">0.495</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Bubble with InsertionNoWait</td>
+<td class="short">Bubble with InsertionNoWait</td>
 <td>·</td>
-<td>0.603 (31%), null 0.613</td>
-<td>0.510</td>
-<td>0.495</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>40 of 40</td>
+<td class="short">0.603 (31%), null 0.613</td>
+<td class="num">0.510</td>
+<td class="num">0.495</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Bubble with Bubble</td>
+<td class="short">Bubble with Bubble</td>
 <td>·</td>
-<td>0.627 (36%), null 0.616</td>
-<td>0.510</td>
-<td>0.495</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>40 of 40</td>
+<td class="short">0.627 (36%), null 0.616</td>
+<td class="num">0.510</td>
+<td class="num">0.495</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Insertion with Insertion</td>
+<td class="short">Insertion with Insertion</td>
 <td>·</td>
-<td>0.565 (40%), null 0.557</td>
-<td>0.510</td>
-<td>0.495</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>40 of 40</td>
+<td class="short">0.565 (40%), null 0.557</td>
+<td class="num">0.510</td>
+<td class="num">0.495</td>
+<td class="num">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">40 of 40</td>
 </tr>
 <tr>
-<td>Selection with Selection</td>
+<td class="short">Selection with Selection</td>
 <td>·</td>
-<td>0.583 (42%), null 0.582</td>
-<td>0.495</td>
-<td>0.496</td>
-<td>−0.000 (−0.016 to 0.015)</td>
-<td>0 of 40</td>
+<td class="short">0.583 (42%), null 0.582</td>
+<td class="num">0.495</td>
+<td class="num">0.496</td>
+<td class="num">−0.000 <span class="ci">(−0.016 to 0.015)</span></td>
+<td class="num">0 of 40</td>
 </tr>
 </tbody>
 </table>
@@ -727,99 +817,90 @@ body {
 <p>The rows without Selection end identically because those runs end in identical arrangements. Bubble, Insertion and their variants swap only neighbours that are strictly out of order, so two cells holding the same value never pass each other, and in every one of their runs each group of equal values ends in the order it started in; sorting rules with this property are called <span class="rk-term" tabindex="0">stable<span class="rk-term-note" role="tooltip">A sorting rule is stable when cells holding equal values never pass each other, so equal values end in the order they started in. Bubble, Insertion and Gnome are stable, because they swap only strictly out-of-order neighbours. Selection is not.</span></span>. Their finished row is therefore fixed by the starting shuffle, which ignores colour, and it ends at the shuffle level whatever the rules’ timing, after exactly as many swaps as the starting row has out-of-order pairs (2,259 on average). Selection carries cells past their equals, and no run containing Selection kept equal values in their starting order.</p>
 <p>Which part of Selection does it? We took it apart along two lines, whether a rule’s moves reach far or only to a neighbour and whether it may pass an equal value, and added a rule that passes equals with no pointer at all.</p>
 <div class="table-wrap">
-<table style="width:100%;">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 14%" />
-</colgroup>
+<table>
 <thead>
 <tr>
 <th>Pair, values 1 to 10 repeated</th>
 <th>Reach</th>
 <th>Passes equals</th>
 <th>Final excess (95% interval)</th>
-<th>Passes between equals per run</th>
-<th>Rank of the second kind within equal values</th>
+<th class="num">Passes between equals per run</th>
+<th class="num">Rank of the second kind within equal values</th>
 <th>Swaps per run</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Insertion with Selection</td>
-<td>far</td>
-<td>yes</td>
-<td>0.207 (0.196 to 0.218)</td>
-<td>827</td>
-<td>−0.63</td>
-<td>1,187</td>
+<td class="short">far</td>
+<td class="short">yes</td>
+<td class="short">0.207 <span class="ci">(0.196 to 0.218)</span></td>
+<td class="num">827</td>
+<td class="num">−0.63</td>
+<td class="short">1,187</td>
 </tr>
 <tr>
 <td>Bubble with Selection</td>
-<td>far</td>
-<td>yes</td>
-<td>0.195 (0.181 to 0.208)</td>
-<td>721</td>
-<td>−0.59</td>
-<td>1,314</td>
+<td class="short">far</td>
+<td class="short">yes</td>
+<td class="short">0.195 <span class="ci">(0.181 to 0.208)</span></td>
+<td class="num">721</td>
+<td class="num">−0.59</td>
+<td class="short">1,314</td>
 </tr>
 <tr>
 <td>Insertion with neighbour-only Selection</td>
-<td>neighbour</td>
-<td>yes</td>
-<td>0.262 (0.253 to 0.271)</td>
-<td>195</td>
-<td>−0.64</td>
-<td>3,912</td>
+<td class="short">neighbour</td>
+<td class="short">yes</td>
+<td class="short">0.262 <span class="ci">(0.253 to 0.271)</span></td>
+<td class="num">195</td>
+<td class="num">−0.64</td>
+<td class="short">3,912</td>
 </tr>
 <tr>
 <td>Bubble with neighbour-only Selection</td>
-<td>neighbour</td>
-<td>yes</td>
-<td>0.160 (0.145 to 0.175)</td>
-<td>150</td>
-<td>−0.47</td>
-<td>3,778</td>
+<td class="short">neighbour</td>
+<td class="short">yes</td>
+<td class="short">0.160 <span class="ci">(0.145 to 0.175)</span></td>
+<td class="num">150</td>
+<td class="num">−0.47</td>
+<td class="short">3,778</td>
 </tr>
 <tr>
 <td>Bubble with Bubble that also swaps equals</td>
-<td>neighbour</td>
-<td>yes, either way</td>
-<td>0.016 (0.001 to 0.031)</td>
-<td>2,360</td>
-<td>−0.00</td>
-<td>4,619</td>
+<td class="short">neighbour</td>
+<td class="short">yes, either way</td>
+<td class="short">0.016 <span class="ci">(0.001 to 0.031)</span></td>
+<td class="num">2,360</td>
+<td class="num">−0.00</td>
+<td class="short">4,619</td>
 </tr>
 <tr>
 <td>Bubble or Insertion with strict neighbour-only Selection</td>
-<td>neighbour</td>
-<td>no</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>0</td>
-<td>·</td>
-<td>2,259</td>
+<td class="short">neighbour</td>
+<td class="short">no</td>
+<td class="short">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">0</td>
+<td class="num">·</td>
+<td class="short">2,259</td>
 </tr>
 <tr>
 <td>Bubble or Insertion with sliding Insertion</td>
-<td>far</td>
-<td>no</td>
-<td>0.015 (−0.002 to 0.031)</td>
-<td>0</td>
-<td>·</td>
-<td>1,836 and 1,598</td>
+<td class="short">far</td>
+<td class="short">no</td>
+<td class="short">0.015 <span class="ci">(−0.002 to 0.031)</span></td>
+<td class="num">0</td>
+<td class="num">·</td>
+<td class="short">1,836 and 1,598</td>
 </tr>
 <tr>
 <td>Bubble with Selection that never passes an equal</td>
-<td>far</td>
-<td>no</td>
-<td>none of 40 runs sorted</td>
-<td>·</td>
-<td>·</td>
-<td>·</td>
+<td class="short">far</td>
+<td class="short">no</td>
+<td class="short">none of 40 runs sorted</td>
+<td class="num">·</td>
+<td class="num">·</td>
+<td class="short">·</td>
 </tr>
 </tbody>
 </table>
@@ -838,57 +919,49 @@ body {
 <p>Running cells as parallel threads changes none of this. The original runs every cell as its own thread, but all threads share one lock, so only one cell acts at a time and the operating system picks which, which amounts to a random one-at-a-time scheduler. With frozen cells given no thread, threaded and one-at-a-time runs of the same rules make the same number of comparisons within about 3% (ratios 0.97 to 1.02) and succeed equally often. Neither Bubble nor Insertion reached a sorted array in any of the nine runs in either mode, so their ratios compare runs stopped at the time limit.</p>
 <p>Taking the lock away changes none of this either. We ran the four variants again on a <span class="rk-term" tabindex="0">lock-free substrate<span class="rk-term-note" role="tooltip">Cells act without any lock: each looks at the array, decides on a swap, and carries it out after a random delay while other cells keep moving, so many swaps rest on information that has gone stale. The exchange itself is atomic, so no value is lost or copied.</span></span>, in which every cell looks at the array, decides on a swap and carries it out after a random delay while the others keep moving, so that many swaps rest on stale information. With nobody able to move a frozen cell, far-reaching rerouting sorts the active cells in all 30 runs at 3, 6 and 9 frozen cells with <span class="rk-term" tabindex="0">checked writes<span class="rk-term-note" role="tooltip">A write that is dropped if the cell or the occupant of its target place has moved since the cell looked, as a compare-and-swap on the two places would do. A blind write carries out the swap with whoever is there by then.</span></span> at every delay, and in 29 or 30 of 30 with blind writes even when the delay averages three times the gap between one cell’s looks. Stale information costs it writes (182 instead of 82 with three frozen cells at the longest delay, 40 of them making the array less sorted) and never its success. The other three variants sort at most one run of 30 whenever cells are frozen, always the same starting row with three frozen cells, and the delay changes nothing about that.</p>
 <div class="table-wrap">
-<table style="width:100%;">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
+<table>
 <thead>
 <tr>
 <th>Selection variant, immovable frozen cells</th>
-<th>3 frozen, no delay</th>
-<th>3 frozen, delay 3, blind</th>
-<th>3 frozen, delay 3, checked</th>
-<th>none frozen, delay 3, blind</th>
-<th>none frozen, delay 3, checked</th>
+<th class="num">3 frozen, no delay</th>
+<th class="num">3 frozen, delay 3, blind</th>
+<th class="num">3 frozen, delay 3, checked</th>
+<th class="num">none frozen, delay 3, blind</th>
+<th class="num">none frozen, delay 3, checked</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Far-reaching, rerouting</td>
-<td>30</td>
-<td>30</td>
-<td>30</td>
-<td>27</td>
-<td>30</td>
+<td class="short">Far-reaching, rerouting</td>
+<td class="num">30</td>
+<td class="num">30</td>
+<td class="num">30</td>
+<td class="num">27</td>
+<td class="num">30</td>
 </tr>
 <tr>
-<td>Far-reaching, waiting</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>30</td>
-<td>30</td>
+<td class="short">Far-reaching, waiting</td>
+<td class="num">1</td>
+<td class="num">1</td>
+<td class="num">1</td>
+<td class="num">30</td>
+<td class="num">30</td>
 </tr>
 <tr>
-<td>Neighbour-only, rerouting</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>14</td>
-<td>30</td>
+<td class="short">Neighbour-only, rerouting</td>
+<td class="num">1</td>
+<td class="num">1</td>
+<td class="num">1</td>
+<td class="num">14</td>
+<td class="num">30</td>
 </tr>
 <tr>
-<td>Neighbour-only, waiting</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>13</td>
-<td>30</td>
+<td class="short">Neighbour-only, waiting</td>
+<td class="num">1</td>
+<td class="num">0</td>
+<td class="num">1</td>
+<td class="num">13</td>
+<td class="num">30</td>
 </tr>
 </tbody>
 </table>
@@ -924,12 +997,6 @@ body {
 <p>The table sets the earlier numbers beside the corrected ones. Raw clustering means peak share of same-type neighbours minus one half, and “Figure 1” and “Figure 2” name the follow-up manuscript’s figures.</p>
 <div class="table-wrap">
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Quantity</th>
@@ -941,93 +1008,93 @@ body {
 <tbody>
 <tr>
 <td>Correlation of separation with clustering, ten pairs</td>
-<td>r = 0.78 (raw)</td>
-<td>r = 0.84 raw, 0.94 excess</td>
-<td>Figure 1</td>
+<td class="short">r = 0.78 (raw)</td>
+<td class="short">r = 0.84 raw, 0.94 excess</td>
+<td class="short">Figure 1</td>
 </tr>
 <tr>
 <td>Same, six pairs without Insertion</td>
-<td>r ≈ 0.05 (raw)</td>
-<td>r = 0.36 raw, 0.43 excess</td>
-<td>Figure 1</td>
+<td class="short">r ≈ 0.05 (raw)</td>
+<td class="short">r = 0.36 raw, 0.43 excess</td>
+<td class="short">Figure 1</td>
 </tr>
 <tr>
 <td>Bubble with Insertion, raw clustering</td>
-<td>0.166</td>
-<td>0.190, excess 0.079 (0.054 to 0.105)</td>
-<td>Figure 2</td>
+<td class="short">0.166</td>
+<td class="short">0.190, excess 0.079 <span class="ci">(0.054 to 0.105)</span></td>
+<td class="short">Figure 2</td>
 </tr>
 <tr>
 <td>Bubble with InsertionNoWait, raw clustering</td>
-<td>0.091</td>
-<td>0.131, excess −0.007 (−0.020 to 0.007)</td>
-<td>Figure 2</td>
+<td class="short">0.091</td>
+<td class="short">0.131, excess −0.007 <span class="ci">(−0.020 to 0.007)</span></td>
+<td class="short">Figure 2</td>
 </tr>
 <tr>
 <td>Bubble with Gnome, raw clustering</td>
-<td>0.073</td>
-<td>0.149, excess 0.011 (−0.004 to 0.026)</td>
-<td>Figure 2</td>
+<td class="short">0.073</td>
+<td class="short">0.149, excess 0.011 <span class="ci">(−0.004 to 0.026)</span></td>
+<td class="short">Figure 2</td>
 </tr>
 <tr>
 <td>Bubble with DelayedBubble, raw and separation</td>
-<td>0.176, 0.111</td>
-<td>0.173, 0.114, excess 0.064 (0.050 to 0.078)</td>
-<td>Exp27</td>
+<td class="short">0.176, 0.111</td>
+<td class="short">0.173, 0.114, excess 0.064 <span class="ci">(0.050 to 0.078)</span></td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Bubble with BubbleClone, raw and separation</td>
-<td>0.155, 0.027</td>
-<td>0.156, 0.024, excess 0.017 (0.000 to 0.034)</td>
-<td>Exp27</td>
+<td class="short">0.155, 0.027</td>
+<td class="short">0.156, 0.024, excess 0.017 <span class="ci">(0.000 to 0.034)</span></td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Gnome with DelayedGnome, raw and separation</td>
-<td>0.167, 0.106</td>
-<td>0.160, 0.107, excess 0.052 (0.034 to 0.069)</td>
-<td>Exp27</td>
+<td class="short">0.167, 0.106</td>
+<td class="short">0.160, 0.107, excess 0.052 <span class="ci">(0.034 to 0.069)</span></td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Gnome with GnomeClone, raw and separation</td>
-<td>0.126, 0.043</td>
-<td>0.144, 0.025, excess 0.006 (−0.011 to 0.023)</td>
-<td>Exp27</td>
+<td class="short">0.126, 0.043</td>
+<td class="short">0.144, 0.025, excess 0.006 <span class="ci">(−0.011 to 0.023)</span></td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Bubble with InsertionNoWait, raw and separation</td>
-<td>0.134, 0.033</td>
-<td>0.137, 0.025, excess 0.001 (−0.016 to 0.017)</td>
-<td>Exp27</td>
+<td class="short">0.134, 0.033</td>
+<td class="short">0.137, 0.025, excess 0.001 <span class="ci">(−0.016 to 0.017)</span></td>
+<td class="short">Exp27</td>
 </tr>
 <tr>
 <td>Selection, threaded over sequential comparisons, 1 and 3 frozen</td>
-<td>35.86 and 97.84</td>
-<td>1.02 and 1.01</td>
-<td>Exp26</td>
+<td class="short">35.86 and 97.84</td>
+<td class="short">1.02 and 1.01</td>
+<td class="short">Exp26</td>
 </tr>
 <tr>
 <td>Bubble, same ratio</td>
-<td>1.18 and 1.00</td>
-<td>0.97 and 0.98</td>
-<td>Exp26</td>
+<td class="short">1.18 and 1.00</td>
+<td class="short">0.97 and 0.98</td>
+<td class="short">Exp26</td>
 </tr>
 <tr>
 <td>Insertion, same ratio</td>
-<td>1.04 and 1.11</td>
-<td>1.00 and 1.00</td>
-<td>Exp26</td>
+<td class="short">1.04 and 1.11</td>
+<td class="short">1.00 and 1.00</td>
+<td class="short">Exp26</td>
 </tr>
 <tr>
 <td>Long-range rerouting Selection, K at 0, 3, 6, 9 frozen</td>
-<td>30.44, 26.14, 22.01, 18.01</td>
-<td>30.45, 26.14, 22.00, 18.01</td>
-<td>K values</td>
+<td class="short">30.44, 26.14, 22.01, 18.01</td>
+<td class="short">30.45, 26.14, 22.00, 18.01</td>
+<td class="short">K values</td>
 </tr>
 <tr>
 <td>Bubble dips per run, depth, recovery steps</td>
-<td>34.2, 0.9, 2.4</td>
-<td>34.8, 0.91, 2.0</td>
-<td>Dip statistics</td>
+<td class="short">34.2, 0.9, 2.4</td>
+<td class="short">34.8, 0.91, 2.0</td>
+<td class="short">Dip statistics</td>
 </tr>
 </tbody>
 </table>
