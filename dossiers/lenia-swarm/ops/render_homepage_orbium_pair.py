@@ -29,7 +29,7 @@ def render_pair(native: Path, recovered: Path) -> None:
         "renderer": "dossiers/lenia-swarm/ops/render_homepage_orbium_pair.py",
         "source_precision": "Original 192x192 single-channel 8-bit grayscale PNG exports; Engine.frameDataFromMassMap clamps each density to [0,1] and multiplies by 255. No per-frame normalization.",
         "simulation": "No simulation rerun or resolution change; recolors the exact original paired experiment frames.",
-        "rendering": "Same fixed central 36x36 crop for both sequences, bilinear scalar display interpolation to 720x720, then the homepage density palette. No motion interpolation, camera tracking, or individual contrast adjustment.",
+        "rendering": "Same fixed central 36x36 crop for both sequences, bilinear scalar display interpolation to 720x720, then the homepage density palette. The engine rolls the field so the body's centre of mass sits at the grid centre before every step, so the body appears stationary although it glides. No motion interpolation, extra camera tracking, or individual contrast adjustment.",
         "crop_xywh": [78, 78, 36, 36],
         "density_palette": {"values": KNOTS, "rgb": PALETTE.tolist()},
         "recorded_steps": {"first": 4, "last": 1200, "stride": 4},

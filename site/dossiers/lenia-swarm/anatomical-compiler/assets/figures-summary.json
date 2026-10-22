@@ -3,6 +3,32 @@
   "mean_abs_pixel_diff_native_recovered_600": 7.063589324618735e-05,
   "centre_offset_native_recovered_600": 0.003415849067212071
  },
+ "orbium_glide": {
+  "native": {
+   "recentred_replay_within_two_grey_levels_up_to_one_cell_roll_through_step": 136,
+   "recentred_replay_max_abs_diff_up_to_one_cell_roll_through_step_300": 0.0111077806528877,
+   "world_displacement_100_1200": 706.1869959449955,
+   "world_path_100_1200": 706.4684711774139,
+   "world_speed_cells_per_step": 0.6419881781318141,
+   "world_heading_rows_cols": [
+    0.9290492627193268,
+    0.36995603446987524
+   ],
+   "recorded_centroid_max_offset_from_grid_centre": 1.613860862492075
+  },
+  "recovered": {
+   "recentred_replay_within_two_grey_levels_up_to_one_cell_roll_through_step": 176,
+   "recentred_replay_max_abs_diff_up_to_one_cell_roll_through_step_300": 0.02409810429694606,
+   "world_displacement_100_1200": 715.7197826019002,
+   "world_path_100_1200": 716.0067791768774,
+   "world_speed_cells_per_step": 0.6506543478199093,
+   "world_heading_rows_cols": [
+    0.9281156602705423,
+    0.3722919837447152
+   ],
+   "recorded_centroid_max_offset_from_grid_centre": 1.593525765502946
+  }
+ },
  "rule_recovery": {
   "start": {
    "R": 10.0,
