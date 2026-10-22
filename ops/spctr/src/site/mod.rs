@@ -164,11 +164,7 @@ fn build_from_projection(
             regions: vec![
                 (
                     "SITEMAP_SECTIONS",
-                    regions::render_sitemap_sections(repo_root)?,
-                ),
-                (
-                    "SITEMAP_REGISTRY",
-                    regions::render_sitemap_registry(&records, &blog_posts),
+                    regions::render_sitemap_sections(repo_root, &records, &blog_posts)?,
                 ),
             ],
         },

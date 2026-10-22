@@ -2,7 +2,7 @@
 summary: "Decision record: lake jobs that build reference outcomes must select the reference population explicitly, to avoid in-sample leakage."
 ---
 
-# ADR: Explicit Reference Selection for Lake Jobs
+# ADR: explicit reference selection for lake jobs
 
 ## Context
 
@@ -17,7 +17,8 @@ comparison looks cleaner than justified.
 When `reference.build_outcomes` is set in a lake job config, `reference.selection` must be a
 non-empty object.
 
-Enforced in `analysis.lake.job.load_job_config()`.
+Enforced when the config is loaded, in `analysis.lake.job_config.load_job_config()`, and again in
+`analysis.lake.job.run_job()`.
 
 ## Problem Statement
 
@@ -42,9 +43,10 @@ Implicitly reusing `job.selection` for reference membership is too error-prone.
 ```json
 {
   "schema_version": 2,
+  "name": "k_scores",
   "selection": {"provider": "reprover"},
   "reference": {"build_outcomes": {"alpha": 1.0}, "score_k": true},
-  "datasets": []
+  "datasets": [{"name": "runs", "query": "SELECT * FROM selected_runs ORDER BY run_key"}]
 }
 ```
 
@@ -55,13 +57,14 @@ Reason: `reference.selection` missing.
 ```json
 {
   "schema_version": 2,
+  "name": "k_scores",
   "selection": {"provider": "reprover"},
   "reference": {
     "build_outcomes": {"alpha": 1.0},
     "selection": {"provider": "reprover"},
     "score_k": true
   },
-  "datasets": []
+  "datasets": [{"name": "runs", "query": "SELECT * FROM selected_runs ORDER BY run_key"}]
 }
 ```
 
@@ -70,13 +73,14 @@ Reason: `reference.selection` missing.
 ```json
 {
   "schema_version": 2,
+  "name": "k_scores",
   "selection": {"provider": "deepseek"},
   "reference": {
     "build_outcomes": {"alpha": 1.0},
     "selection": {"provider": "reprover"},
     "score_k": true
   },
-  "datasets": []
+  "datasets": [{"name": "runs", "query": "SELECT * FROM selected_runs ORDER BY run_key"}]
 }
 ```
 
@@ -97,4 +101,5 @@ When publishing K-style results from lake jobs, report:
 
 ## References
 
+- `analysis/lake/job_config.py`
 - `analysis/lake/job.py`

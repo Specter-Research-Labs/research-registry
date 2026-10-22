@@ -1,4 +1,4 @@
-# Public Benchmark Notes
+# Public benchmark notes
 
 Findings from the addendum pipeline as of 2026-03-15.
 

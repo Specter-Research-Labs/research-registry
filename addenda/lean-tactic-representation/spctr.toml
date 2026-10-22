@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Lean Tactic Representation"
 series = "A-004"
-summary = "Algebraic, round-trippable representations of Lean proof-state tactics."
+summary = "A research plan and a small interpreter for writing Lean tactics as parts that combine and convert back without loss."
 status = "concept"
 
 [site]

@@ -1,4 +1,4 @@
-# Lenia TRIBE Overlay
+# Lenia TRIBE overlay
 
 ## Question
 `lenia-swarm` already gives each creature 16 shape-and-motion numbers

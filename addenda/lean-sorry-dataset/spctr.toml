@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Lean Sorry Dataset"
 series = "A-001"
-summary = "Deterministic ingestion pipeline for SorryDB-compatible snapshots and benchmark indexes."
+summary = "Turns snapshots of SorryDB, a catalogue of unfinished proofs in public Lean projects, into a fixed benchmark index."
 status = "operational"
 
 [site]

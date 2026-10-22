@@ -1,80 +1,37 @@
 ---
-summary: "Map of the Lenia Swarm documentation: research framing, contracts, configs, implementation internals and decision records."
+summary: "Map of the Lenia Swarm docs: where to start, how creatures are measured and grouped, how to run sweeps and paper reproductions, and how the simulator is built."
 ---
 
-# Lenia Swarm Docs
+# Lenia Swarm docs
 
-Use this map to navigate Lenia Swarm research framing, contracts, configs, internals, and decisions.
+Lenia Swarm runs Flow Lenia simulations, indexes the persistent patterns they produce into a SQLite compendium, and measures and groups those patterns. `LeniaCLI` and `LeniaStudio` do the computation; `spctr surface` preserves and publishes declared surfaces such as `lenia-compendium`.
 
-## Lanes
+## Start here
 
-- `universe/`: conceptual language, ontology, interpretation, and research framing.
-- `contracts/`: executable interfaces and guarantees (CLI, schema, artifact layout, reproducibility rules).
+- [Primer](./universe/Primer.md): what is simulated and recorded, the physics terms, and the glossary.
+- [Running a local sweep](./contracts/LocalCLI.md): build `LeniaCLI`, run a sweep, read the run directory, and keep it reproducible.
+- [Config map](./configs/README.md): the config families every run starts from.
+
+## Measuring and grouping creatures
+
+- [Morphology and morphometrics](./universe/Morphology.md): the vocabulary of form and behavior, and the measurements stored for each creature.
+- [Taxonomy](./universe/Taxonomy.md): how `LeniaCLI analyze taxonomy` assigns family, genus and species IDs.
+- [Ecology](./universe/Ecology.md): how creatures spread across parameter space, and the `LeniaCLI analyze ecology` export.
+
+## Running experiments
+
+- [Paper reproductions](./contracts/ResearchModes.md): the seven paper-grounded run families, their entry points, outputs, code and gaps.
+- [The compendium](./contracts/CompendiumSchema.md): schema, migrations, indexer behavior, Studio reads, and the exact-version rule.
+
+## Inside the simulator
+
+- [FlowLenia.swift parameter mapping](./internals/FlowLeniaImplementationMap.md): how the Swift parameters map onto the Flow-Lenia paper's equations.
+- [Flow coordinates and the reference regression](./flow-spatial-conventions.md): axis order and gradient signs in the integrator, and the tests against the reference implementation.
+- [Species knobs for glider search](./internals/SpeciesKnobs.md): which parameters define a species and which can vary.
+
+## Layout
+
+- `universe/`: concepts and research vocabulary.
+- `contracts/`: interfaces and guarantees (CLI, schema, run directory, reproducibility).
 - `configs/`: configuration families and canonical entry files.
-- `internals/`: implementation details tied directly to source files.
-- `decisions/`: ADRs that capture the rationale for durable structure choices.
-
-Use universe for research framing, contracts for durable interfaces, configs for run inputs, and internals for implementation details.
-
-`LeniaCLI` and `LeniaStudio` own computation. `spctr surface` owns preservation and publication of
-declared surfaces such as `lenia-compendium`.
-
-## Start Here
-
-- [Primer](./universe/Primer.md)
-- [Glossary](./universe/Glossary.md)
-- [Config Map](./configs/README.md)
-
-## Universe
-
-- [Physics](./universe/Physics.md)
-- [Morphology](./universe/Morphology.md)
-- [Ecology](./universe/Ecology.md)
-- [Taxonomy](./universe/Taxonomy.md)
-
-## Contracts
-
-- [LocalCLI](./contracts/LocalCLI.md)
-- [ResearchModes](./contracts/ResearchModes.md)
-- [CompendiumSchema](./contracts/CompendiumSchema.md)
-- [MorphometricsAndTraits](./contracts/MorphometricsAndTraits.md)
-- [EcologyCLI](./contracts/EcologyCLI.md)
-- [ArtifactLayout](./contracts/ArtifactLayout.md)
-- [Reproducibility](./contracts/Reproducibility.md)
-
-## Configs
-
-- [Config Map](./configs/README.md)
-
-## Internals
-
-- [FlowLeniaImplementationMap](./internals/FlowLeniaImplementationMap.md)
-- [PaperGroundedRuns](./internals/PaperGroundedRuns.md)
-- [IndexerInternals](./internals/IndexerInternals.md)
-- [StudioCompendiumInternals](./internals/StudioCompendiumInternals.md)
-
-## Reading Paths
-
-Research orientation:
-
-1. `universe/Primer.md`
-2. `universe/Physics.md`
-3. `universe/Morphology.md`
-4. `universe/Ecology.md`
-5. `universe/Taxonomy.md`
-
-Run and operate:
-
-1. `contracts/LocalCLI.md`
-2. `contracts/ResearchModes.md`
-3. `contracts/ArtifactLayout.md`
-4. `contracts/Reproducibility.md`
-5. `contracts/CompendiumSchema.md`
-6. `configs/README.md`
-
-Implement and debug:
-
-1. `internals/FlowLeniaImplementationMap.md`
-2. `internals/PaperGroundedRuns.md`
-3. `internals/IndexerInternals.md`
-4. `internals/StudioCompendiumInternals.md`
+- `internals/`: implementation details tied to source files.

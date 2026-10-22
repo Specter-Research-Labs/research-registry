@@ -1,4 +1,4 @@
-# Release Equivalents (External Benchmarks)
+# Release equivalents (external benchmarks)
 
 Maps our current release protocol to practices used by established public benchmarks.
 

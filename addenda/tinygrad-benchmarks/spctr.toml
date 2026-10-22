@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "tinygrad Benchmarks"
 series = "A-003"
-summary = "LLM coding evaluations from merged tinygrad PRs, using isolated checkouts and comparing candidate patches with the historical human solution."
+summary = "Coding tasks taken from merged tinygrad pull requests, each asking whether a model can write a patch that passes the check the original change passed."
 status = "concept"
 
 [site]

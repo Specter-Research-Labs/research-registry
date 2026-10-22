@@ -1188,7 +1188,7 @@ fn replace_region_injects_content() {
 }
 
 #[test]
-fn sitemap_auto_discovers_new_section() {
+fn sitemap_lists_each_dossier_hub_once_with_its_reports() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
     minimal_templates(root);
@@ -1199,31 +1199,45 @@ fn sitemap_auto_discovers_new_section() {
     );
     write(
         root,
-        "site/foo/index.html",
+        "site/dossiers/alpha/report/index.html",
         "\
 <html>
 <head>
 <title>
-<!-- GENERATED:FOO_TITLE START -->
-Foo Section
-<!-- GENERATED:FOO_TITLE END --> | Specter Labs
+<!-- GENERATED:REPORT_TITLE START -->
+Alpha Report
+<!-- GENERATED:REPORT_TITLE END --> | Specter Labs
 </title>
 </head>
 <body></body>
 </html>
 ",
     );
+    write(
+        root,
+        "site/foo/index.html",
+        "<html><head><title>Foo Section | Specter Labs</title></head><body></body></html>\n",
+    );
 
     spctr::site::build(root, true).unwrap();
 
     let sitemap = fs::read_to_string(root.join("site/sitemap/index.html")).unwrap();
-    assert!(
-        sitemap.contains("Foo Section"),
-        "sitemap should auto-discover site/foo/"
+    assert_eq!(
+        sitemap.matches("href=\"../dossiers/alpha/\"").count(),
+        1,
+        "each dossier hub is listed exactly once"
     );
     assert!(
-        !sitemap.contains("GENERATED:FOO_TITLE"),
+        sitemap.contains("href=\"../dossiers/alpha/report/\"") && sitemap.contains("Alpha Report"),
+        "published report pages are listed under their hub"
+    );
+    assert!(
+        !sitemap.contains("GENERATED:REPORT_TITLE"),
         "sitemap title should strip generated-region comments"
+    );
+    assert!(
+        !sitemap.contains("Foo Section"),
+        "sections outside the site tree are not listed"
     );
 }
 
@@ -1375,8 +1389,10 @@ fn sitemap_excludes_templates_and_sitemap() {
         "sitemap should exclude sitemap/"
     );
     assert!(
-        !sitemap.contains("href=\"../research-notes"),
-        "sitemap should exclude hidden research notes/"
+        sitemap
+            .match_indices("href=\"../research-notes/")
+            .all(|(index, _)| sitemap[index..].starts_with("href=\"../research-notes/\"")),
+        "sitemap links the lab notes index but not individual notes"
     );
 }
 

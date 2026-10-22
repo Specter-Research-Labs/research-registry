@@ -398,174 +398,122 @@ fn render_sitemap_tree(nodes: &[SitemapNode], indent: &str) -> String {
     lines.join("\n")
 }
 
-pub fn render_sitemap_sections(repo_root: &Utf8Path) -> anyhow::Result<String> {
+fn series_label(series: Option<&String>, title: &str) -> String {
+    match series {
+        Some(series_id) => format!("{series_id} {title}"),
+        None => title.to_owned(),
+    }
+}
+
+fn leaf(label: String, href: String) -> SitemapNode {
+    SitemapNode {
+        label,
+        href: Some(href),
+        children: Vec::new(),
+    }
+}
+
+pub fn render_sitemap_sections(
+    repo_root: &Utf8Path,
+    records: &[SiteRecord],
+    blog_posts: &[BlogPostRecord],
+) -> anyhow::Result<String> {
     let page_path = "sitemap/index.html";
-    let groups = discover::discover_sitemap_pages(repo_root);
+    let href = |target: &str| discover::relative_href(page_path, target);
+    let slices = records::slice_records(records);
 
-    const KNOWN_ORDER: &[&str] = &["", "dossiers", "blog", "addenda", "cabinet", "dashboards"];
+    let dossier_pages: Vec<discover::SitePageRecord> = discover::discover_sitemap_pages(repo_root)
+        .into_iter()
+        .filter(|group| group.section == "dossiers")
+        .flat_map(|group| group.children)
+        .collect();
 
-    fn section_sort_key(section: &str) -> (usize, String) {
-        let pos = KNOWN_ORDER.iter().position(|&s| s == section);
-        (pos.unwrap_or(KNOWN_ORDER.len()), section.to_owned())
-    }
-
-    fn section_label(section: &str) -> String {
-        if section.is_empty() {
-            return "Home".to_owned();
-        }
-        let mut chars = section.chars();
-        match chars.next() {
-            Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
-            None => section.to_owned(),
-        }
-    }
-
-    let mut sorted_groups: Vec<&discover::SitemapGroup> = groups.iter().collect();
-    sorted_groups.sort_by(|a, b| section_sort_key(&a.section).cmp(&section_sort_key(&b.section)));
-
-    let mut nodes: Vec<SitemapNode> = Vec::new();
-
-    for group in &sorted_groups {
-        let label = match &group.index {
-            Some(_) if group.section.is_empty() => "Home".to_owned(),
-            Some(idx) => idx.title.clone(),
-            None => section_label(&group.section),
-        };
-        let parent_href = group
-            .index
-            .as_ref()
-            .map(|idx| discover::relative_href(page_path, &idx.href));
-
-        let children: Vec<SitemapNode> = group
-            .children
-            .iter()
-            .map(|child| SitemapNode {
-                label: child.title.clone(),
-                href: Some(discover::relative_href(page_path, &child.href)),
-                children: Vec::new(),
+    let mut dossiers: Vec<&SiteRecord> = slices.visible_dossiers.clone();
+    dossiers.sort_by(|a, b| a.series.cmp(&b.series));
+    let dossier_nodes: Vec<SitemapNode> = dossiers
+        .iter()
+        .filter_map(|record| {
+            let hub = record.hub_href()?;
+            let reports = dossier_pages
+                .iter()
+                .filter(|page| page.href != hub && page.href.starts_with(&hub))
+                .map(|page| leaf(page.title.clone(), href(&page.href)))
+                .collect();
+            Some(SitemapNode {
+                label: series_label(record.series.as_ref(), &record.title),
+                href: Some(href(&hub)),
+                children: reports,
             })
-            .collect();
+        })
+        .collect();
 
-        nodes.push(SitemapNode {
-            label,
-            href: parent_href,
-            children,
-        });
-    }
+    let mut posts: Vec<&BlogPostRecord> = blog_posts
+        .iter()
+        .filter(|post| post.release == discover::RELEASE_PUBLISHED)
+        .collect();
+    posts.sort_by(|a, b| a.series.cmp(&b.series));
+    let mut writing_nodes: Vec<SitemapNode> = posts
+        .iter()
+        .map(|post| leaf(series_label(post.series.as_ref(), &post.title), href(&post.href)))
+        .collect();
+    writing_nodes.push(leaf("Lab notes".to_owned(), href("research-notes/")));
 
-    nodes.push(SitemapNode {
-        label: "Elsewhere".to_owned(),
-        href: None,
-        children: vec![
-            SitemapNode {
-                label: "Research Registry".to_owned(),
-                href: Some(
+    let mut addenda: Vec<&SiteRecord> = slices.visible_addenda.clone();
+    addenda.sort_by(|a, b| a.series.cmp(&b.series));
+    let addenda_nodes: Vec<SitemapNode> = addenda
+        .iter()
+        .map(|record| {
+            leaf(
+                series_label(record.series.as_ref(), &record.title),
+                discover::addendum_index_href(record, page_path),
+            )
+        })
+        .collect();
+
+    let nodes = vec![
+        leaf("Home".to_owned(), href("")),
+        SitemapNode {
+            label: "Research".to_owned(),
+            href: Some(href("dossiers/")),
+            children: dossier_nodes,
+        },
+        SitemapNode {
+            label: "Writing".to_owned(),
+            href: Some(href("blog/")),
+            children: writing_nodes,
+        },
+        SitemapNode {
+            label: "Addenda".to_owned(),
+            href: Some(href("addenda/")),
+            children: addenda_nodes,
+        },
+        leaf("Cabinet".to_owned(), href("cabinet/")),
+        SitemapNode {
+            label: "Dashboards".to_owned(),
+            href: None,
+            children: vec![leaf(
+                "Wonton Soup dashboard".to_owned(),
+                href("dashboards/wonton-soup/"),
+            )],
+        },
+        SitemapNode {
+            label: "Elsewhere".to_owned(),
+            href: None,
+            children: vec![
+                leaf(
+                    "Research registry".to_owned(),
                     "https://github.com/Specter-Research-Labs/research-registry/tree/main"
                         .to_owned(),
                 ),
-                children: Vec::new(),
-            },
-            SitemapNode {
-                label: "Release Archive".to_owned(),
-                href: Some("https://releases.specterlab.org/".to_owned()),
-                children: Vec::new(),
-            },
-        ],
-    });
+                leaf(
+                    "Release archive".to_owned(),
+                    "https://releases.specterlab.org/".to_owned(),
+                ),
+            ],
+        },
+    ];
 
-    let indent = "    ";
-    Ok(render_sitemap_tree(&nodes, indent))
-}
-
-pub fn render_sitemap_registry(records: &[SiteRecord], blog_posts: &[BlogPostRecord]) -> String {
-    struct Entry {
-        series_id: String,
-        title: String,
-        href: Option<String>,
-    }
-
-    let page_path = "sitemap/index.html";
-    let mut dossiers = records
-        .iter()
-        .filter(|record| record.kind == "dossier" && record.visible)
-        .filter_map(|record| {
-            record.series.as_ref().map(|series_id| Entry {
-                series_id: series_id.clone(),
-                title: record.title.clone(),
-                href: record.relative_hub_href(page_path),
-            })
-        })
-        .collect::<Vec<_>>();
-    let mut addenda = records
-        .iter()
-        .filter(|record| record.kind == "addendum" && record.visible)
-        .filter_map(|record| {
-            record.series.as_ref().map(|series_id| Entry {
-                series_id: series_id.clone(),
-                title: record.title.clone(),
-                href: Some(discover::addendum_index_href(record, page_path)),
-            })
-        })
-        .collect::<Vec<_>>();
-    let mut articles = blog_posts
-        .iter()
-        .filter_map(|post| {
-            post.series.as_ref().map(|series_id| Entry {
-                series_id: series_id.clone(),
-                title: post.title.clone(),
-                href: Some(discover::relative_href(page_path, &post.href)),
-            })
-        })
-        .collect::<Vec<_>>();
-
-    dossiers.sort_by(|left, right| left.series_id.cmp(&right.series_id));
-    addenda.sort_by(|left, right| left.series_id.cmp(&right.series_id));
-    articles.sort_by(|left, right| left.series_id.cmp(&right.series_id));
-
-    fn render_group(label: &str, entries: &[Entry]) -> Markup {
-        if entries.is_empty() {
-            return html! {};
-        }
-        html! {
-            (PreEscaped("                        "))
-            div class="registry-group" { "\n"
-                (PreEscaped("                            "))
-                div class="site-kicker" { (label) } "\n"
-                (PreEscaped("                            "))
-                ul class="registry-list" { "\n"
-                    @for entry in entries {
-                        (PreEscaped("                                "))
-                        li class="registry-entry" {
-                            span class="registry-id" { (entry.series_id) }
-                            span class="registry-title" {
-                                @if let Some(ref href) = entry.href {
-                                    a href=(href) { (entry.title) }
-                                } @else {
-                                    (entry.title)
-                                }
-                            }
-                        } "\n"
-                    }
-                    (PreEscaped("                            "))
-                } "\n"
-                (PreEscaped("                        "))
-            }
-        }
-    }
-
-    let indent = "                    ";
-    let markup = html! {
-        (PreEscaped(indent))
-        section class="section-block" id="registry" { "\n"
-            (PreEscaped("                        "))
-            h2 { "Registry" } "\n"
-            (render_group("Dossiers", &dossiers)) "\n"
-            (render_group("Addenda", &addenda)) "\n"
-            (render_group("Articles", &articles)) "\n"
-            (PreEscaped(indent))
-        }
-    };
-    markup.into_string()
+    Ok(render_sitemap_tree(&nodes, "    "))
 }
 
 #[cfg(test)]

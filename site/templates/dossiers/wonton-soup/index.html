@@ -275,7 +275,7 @@
                 <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
                 <section class="story-split">
-<div><h2 class="story-question">Removing a tactic can lead to a different proof</h2><p class="story-deck">The tactic <code>trivial</code> closes this theorem in one step. With that tactic disabled, the search reaches the same result through three algebraic steps. The unchanged control repeats the original route.</p><div class="story-jumps"><a href="../../blog/wonton-soup/">Read the article</a><a href="../../dashboards/wonton-soup/">Inspect individual searches</a></div></div>
+<div><h2 class="story-question">When a proof search loses the tactic it used, can it reach the theorem another way?</h2><p class="story-deck">We rerun Lean proof searches with one tactic blocked and record which routes to the theorem remain. Here the original search closes the theorem with <code>trivial</code> in one step, and with <code>trivial</code> blocked it reaches the same result through three algebraic steps.</p><div class="story-jumps"><a href="../../blog/wonton-soup/">Read the article</a><a href="../../dashboards/wonton-soup/">Inspect individual searches</a></div></div>
 <figure class="tactic-study" data-tactic-study>
 <div class="story-controls" role="group" aria-label="Compare recorded proof routes"><button type="button" data-tactic="available" data-result="Proof found in 1 step" aria-pressed="true">Original search</button><button type="button" data-tactic="blocked" data-result="Proof found in 3 steps" aria-pressed="false">Block trivial</button></div>
 <svg class="tactic-routes" viewBox="0 0 480 350" role="img" aria-label="The original route closes with trivial. With trivial blocked, ring, norm_num and ring reach the same result.">
@@ -286,7 +286,7 @@
 </svg>
 <p class="tactic-count" aria-live="polite">Proof found in 1 step</p>
 <figcaption>A recorded heuristic search in Lean. The theorem describes how a value tagged “left” is encoded as a natural number.</figcaption>
-<details class="tactic-source"><summary>Inspect the recorded proof steps</summary><p><code>encode_inl</code>, same seed and search budget. The unchanged control blocks <code>decide</code>, which was already unavailable in the original search.</p><ol><li><code>ring</code> rearranges the multiplication on the right.</li><li><code>norm_num</code> unfolds the encoding and simplifies the numbers.</li><li><code>ring</code> closes <code>2 · encode(a) = encode(a) · 2</code>.</li></ol></details>
+<details class="tactic-source"><summary>Inspect the recorded proof steps</summary><p><code>encode_inl</code>, same seed and search budget. As a control we also reran the search with <code>decide</code> blocked, a tactic it never had available, and it repeated the original route.</p><ol><li><code>ring</code> rearranges the multiplication on the right.</li><li><code>norm_num</code> unfolds the encoding and simplifies the numbers.</li><li><code>ring</code> closes <code>2 · encode(a) = encode(a) · 2</code>.</li></ol></details>
 </figure>
 </section>
 

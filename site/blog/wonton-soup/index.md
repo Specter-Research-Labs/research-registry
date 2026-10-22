@@ -1,7 +1,7 @@
 ---
 title: "Proof search with a missing tactic"
 release: "published"
-summary: We block one tactic from a successful Lean proof search and rerun it to see which proofs survive.
+summary: We block one tactic from a successful Lean proof search and rerun it under the same budget to see whether the prover still reaches the theorem by another route.
 series: B-001
 pdf: wonton-soup.pdf
 cover: /assets/blog/wonton-soup/fig1-mcts-tree.png
@@ -10,20 +10,18 @@ cover_alt: A proof search tree in which two rewrites of a * (b + c) lead to proo
 
 # Proof search with a missing tactic
 
-In one Wonton search, the prover found a proof using `contrapose!`, and when we blocked that tactic it still reached the theorem, this time through `intro` and `exact`. It is a small detour, but it gets at something we wanted to understand about proof search: if a theorem admits several proofs, how many of them can a particular prover actually reach when the route it normally takes becomes unavailable?
+In one Wonton search the prover proved a theorem with `contrapose!`, and when we blocked that tactic it still got there, this time through `intro` and `exact`. It is a small detour, but it is the question we built Wonton to ask: if a theorem admits several proofs, how many of them can a given prover actually reach once the route it normally takes is closed?
 
-The difficulty is that even visibly different proofs can depend on the same tactic, so collecting more of them need not give the prover another way through. We record the attempted tactics and intermediate goals, remove a tactic from a successful search, and give the prover the same budget to try again, which lets us follow where the alternatives come from and where they run out. Some searches recover, some fail, and occasionally removing a move helps by taking an unproductive possibility out of the search.
+Counting proofs does not answer that, because visibly different proofs can lean on the same tactic, and losing that tactic closes all of them at once. So we record the attempted tactics and intermediate goals, block one tactic the successful search used, and give the prover the same budget again, which shows where the alternatives come from and where they run out. Some searches recover, some fail, and occasionally the block helps by taking an unproductive branch out of the search.
 
 ## Following the detour
 
-At each unfinished goal, the prover proposes tactics and explores the proof states they produce, with each attempt either failing, opening further goals, or completing the proof. The examples below follow three successful searches through tactic removal so that we can see what changed along the way, including cases where the final success would otherwise make the intervention look inconsequential.
+At each unfinished goal the prover proposes tactics, and each attempt fails, opens new goals or closes the proof. The gallery follows three searches that still succeeded after the block, because a success can hide how much changed underneath it. Blocking `contrapose!` sends the prover through a direct argument that assumes the premise and derives the conclusion. The other two are local swaps in which the goals stay the same and only the last step changes, so a comparison of graph shapes alone would miss them.
 
-In the first example, blocking contraposition sends the prover through a direct argument in which it assumes the premise and derives the conclusion. The other two are more local substitutions: the sequence of goals stays similar, but a different final step closes the proof, so even a comparison of graph shapes would miss part of what happened.
-
-<div class="ws-stepper ws-vignette-stepper" data-title="Log-derived vignette gallery" data-slides='[
+<div class="ws-stepper ws-vignette-stepper" data-title="Three searches with one tactic blocked" data-slides='[
   {
     "label":"contrapositive / block contrapose!",
-    "metrics":"Solved | normalized GED_search 0.67 | structural reroute",
+    "metrics":"Solved | edit distance 0.67 | different route",
     "ged":0.6666666666666666,
     "attempts":{"blocked":1,"failure":1,"success":1},
     "attempt_graph":{
@@ -47,12 +45,12 @@ In the first example, blocking contraposition sends the prover through a direct 
     },
     "wild_path":["contrapose! hnq","exact h hnq"],
     "intervention_path":["intro hP","exact hnq (h hP)"],
-    "caption":"Blocking contrapose! forces a forward route (intro + exact), producing a clear structural shift.",
+    "caption":"With contrapose! blocked, the prover argues forward with intro and exact.",
     "lightbox":false
   },
   {
     "label":"nat_succ_pred / block positivity",
-    "metrics":"Solved | normalized GED_search 0.00 | local tactic swap",
+    "metrics":"Solved | edit distance 0.00 | last step swapped",
     "ged":0.0,
     "attempts":{"blocked":0,"failure":0,"success":1},
     "attempt_graph":{
@@ -75,12 +73,12 @@ In the first example, blocking contraposition sends the prover through a direct 
     },
     "wild_path":["rw [succ_pred]","positivity"],
     "intervention_path":["rw [succ_pred]","exact Nat.ne_of_gt h"],
-    "caption":"Blocking positivity preserves structure and swaps in an explicit Nat.ne_of_gt proof step.",
+    "caption":"With positivity blocked, the prover makes the same rewrite and closes the remaining goal with Nat.ne_of_gt. The blocked simp attempts in the original search come from this sweep, which blocks simp in every run.",
     "lightbox":false
   },
   {
     "label":"iff_intro / block exact",
-    "metrics":"Solved | normalized GED_search 0.00 | terminal discharge swap",
+    "metrics":"Solved | edit distance 0.00 | last step swapped",
     "ged":0.0,
     "attempts":{"blocked":3,"failure":0,"success":1},
     "attempt_graph":{
@@ -104,7 +102,7 @@ In the first example, blocking contraposition sends the prover through a direct 
     },
     "wild_path":["constructor","exact hpq"],
     "intervention_path":["constructor","assumption"],
-    "caption":"The terminal tactic changes from exact to assumption while the trajectory remains in-family.",
+    "caption":"With exact blocked, the prover still splits the iff with constructor and closes the goal with assumption instead.",
     "lightbox":false
   }
 ]'>
@@ -114,30 +112,26 @@ In the first example, blocking contraposition sends the prover through a direct 
 </div>
 
 
-The gallery records early examples from February 2026. Its graph distances describe changes in the recorded searches; repeated structures do not by themselves establish dynamical attractors.
+The examples come from runs in February 2026. Edit distance is the normalized graph edit distance between the two recorded search graphs, which is 0 when they have the same shape.
 
 ## The control changed too
 
-Before attributing a changed proof to the tactic block, we needed to know how much the search could change when its available choices stayed the same. We repeated it with a tactic disabled that was already unavailable to the original run (an inert intervention), and although ReProver repeated consistently, some DeepSeek results changed under this control too.
+Before blaming a changed proof on the block, we needed to know how much the search changes when its available tactics stay the same. We reran it with a tactic blocked that the original run never had available (an inert block), and while ReProver repeated itself, some DeepSeek searches changed under this control too.
 
-We had fixed the search seed, but the model server was still sampling new tactic suggestions, and difficult theorems made more calls to that server, giving small differences more opportunities to redirect the search. Without the inert rerun, we could have mistaken those differences for an effect of the tactic we intended to study. A configuration flag named `deterministic_inference` made the problem easy to miss because it fixed only the search seed, and earlier DeepSeek campaigns had mostly run without the paired controls that would have exposed it.
-
-The controlled comparison therefore requires both the original search and its inert rerun to solve the theorem before we ask what happens when a tactic used by the successful search is actually blocked.
+We had fixed the search seed, but the model server still sampled new tactic suggestions, and hard theorems made more calls to it, giving small differences more chances to redirect the search. A configuration flag named `deterministic_inference` made this easy to miss, because it fixed only the search seed, and earlier DeepSeek campaigns had mostly run without the paired controls that would have exposed it. We now count a comparison only when both the original search and its inert rerun solve the theorem.
 
 ## When removing a move helps
 
-Removing a tactic can help when it cuts off a branch on which the prover would otherwise spend its budget, leaving more attempts for a route that succeeds. In those cases the restricted search may reach a theorem the original search missed, or reach it sooner, and the trace lets us investigate that improvement by following where the attempts went. A restriction changes the allocation of a finite search as well as the set of moves available to it.
+Blocking a tactic can help when it cuts off a branch the prover would otherwise spend its budget on, leaving more attempts for a route that works. The restricted search may then reach a theorem the original missed, or reach it sooner, and the trace shows where the saved attempts went.
 
-To compare that cost with a specified blind policy, we use $K = \log_{10}(\tau_{blind}/\tau_{agent})$, which expresses the saving in orders of magnitude when both policies face the same moves, constraints, goal, horizon, and cost units. These choices define the comparison, so changing them changes what the number tells us; the [K reference](/cabinet/k-semantics-reference/k-equations/) works through them, while the [analysis reference](/cabinet/wonton-soup/concepts/analysis-metrics/) distinguishes the measurements stored by Wonton.
+To size that saving against a blind policy we use $K = \log_{10}(\tau_{blind}/\tau_{agent})$, the saving in orders of magnitude when both policies face the same moves, constraints, goal, horizon and cost units. Those choices define the number, so changing them changes what it tells us; the [K reference](/cabinet/k-semantics-reference/k-equations/) works through them, and the [analysis reference](/cabinet/wonton-soup/concepts/analysis-metrics/) describes the measurements Wonton stores.
 
 ## What can travel between systems?
 
-One reason we became interested in this experiment is Levin's [TAME framework](https://arxiv.org/abs/2201.10346), and the question running through it of how a system reaches the same outcome when it has to find another way. Proof search gives us an unusually explicit version of that problem, because the goal is supplied in advance, a checker determines whether it has been reached, and the trace lets us inspect the attempts made under the new constraint.
+One reason we built this experiment is Levin's [TAME framework](https://arxiv.org/abs/2201.10346) and its question of how a system reaches the same outcome when it has to find another way. Proof search makes that problem unusually explicit, because the goal is fixed in advance, a checker decides whether it was reached, and the trace shows every attempt made under the new constraint.
 
-With a developing body, we first have to decide which features of its organization count as persisting or recovering, which makes the comparison harder and also part of what we want to investigate. We can still ask which routes remain available after an intervention and what resources those routes share, using the Wonton result to motivate a more specific question: could the variety we observe among forms or behaviors also overstate their resilience when they depend on the same vulnerable mechanism?
+With a developing body we first have to decide which features of its organization count as persisting or recovering, which makes the comparison harder and is part of what we want to study. The proof searches still suggest a specific question for bodies: does the variety we see among forms or behaviors overstate their resilience when they all depend on the same vulnerable mechanism?
 
-For proofs, we can test this by grouping them according to the lemmas and tactic resources they use, then asking whether that description predicts survival on held-out theorem–prover groups better than counting proof shapes. That would give us a chance to explain why the diversity prediction failed, and to distinguish alternatives that merely look different from ones the prover can actually use when a resource disappears.
+For proofs we can test this by grouping them by the lemmas and tactics they use and asking whether that grouping predicts survival on held-out theorem and prover pairs better than counting proof shapes does. That would separate alternatives that only look different from ones the prover can still use when a resource disappears.
 
-*This article records the early experimental framework, and the counts from the later controlled tactic-blocking cohort are being re-audited before we publish them again. Selected runs are available in the [Wonton Soup Dashboard](/dashboards/wonton-soup/).*
-
-The [Cabinet](/cabinet/wonton-soup/README/) documents search scheduling, backend differences, and the files needed to reproduce the comparisons.
+Selected runs are in the [Wonton Soup dashboard](/dashboards/wonton-soup/), and the [Cabinet](/cabinet/wonton-soup/README/) documents search scheduling, backend differences and the files needed to reproduce the comparisons.

@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Design Tokens"
 series = "A-011"
-summary = "Canonical SPECTER design language specification and multi-target token generation."
+summary = "The colors, type sizes and spacing used by this site, our papers and our emails, written once in TOML and generated into CSS, Typst and email styles."
 status = "active"
 
 [site]

@@ -174,7 +174,7 @@ struct CompendiumBackfillCommand: ParsableCommand {
             print("taxonomy: nothing to backfill")
             return
         }
-        print("taxonomy: \(missing) creatures need assignment — run `compendium taxonomy --db <path>` to fill")
+        print("taxonomy: \(missing) creatures need assignment — run `LeniaCLI analyze taxonomy --db <path>` to fill")
     }
 
     // MARK: - Trait Labels

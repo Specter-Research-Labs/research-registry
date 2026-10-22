@@ -2,7 +2,7 @@
 summary: "Scenarios, backends, policy and memory conditions, and seed ranges that make up the material-memory campaign, with the resulting run count."
 ---
 
-# Experiment Matrix
+# Experiment matrix
 
 Campaign config: `configs/paper_track_v1.json`
 

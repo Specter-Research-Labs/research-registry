@@ -1,4 +1,4 @@
-# Benchmark Card (Draft): `goal_to_tactic_proposal_v1`
+# Benchmark card (draft): `goal_to_tactic_proposal_v1`
 
 ## Identity
 - Addendum: `addenda/lean-sorry-repos-benchmark`

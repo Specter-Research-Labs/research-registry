@@ -65,7 +65,7 @@
     },
     "B-001": {
       "slug": "wonton-soup",
-      "title": "Wonton Soup: Proof Structures Under Interventions"
+      "title": "Proof search with a missing tactic"
     },
     "D-001": {
       "slug": "zhang-levin-playground",

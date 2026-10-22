@@ -1,4 +1,4 @@
-# Parity Targets
+# Parity targets
 
 Parity means a benchmark lane keeps the legacy state variables, update order,
 event semantics, and numerical mode that change its output. Old storage layout

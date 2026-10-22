@@ -2,7 +2,7 @@
 summary: "Decision record: distributed MCTS runs as a separate runner so the centralized search engine stays unchanged."
 ---
 
-# ADR: Distributed (Cell-View) MCTS Runner
+# ADR: distributed (cell-view) MCTS runner
 
 ## Context
 

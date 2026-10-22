@@ -1,94 +1,95 @@
 ---
-summary: "The paper-grounded Lenia research modes, from Flow-Lenia tasks to quality-diversity, ecology, curiosity and atlas runs, with entry points and configs."
+summary: "The Lenia paper reproductions, from the Flow-Lenia task suite to quality-diversity, ecology, curiosity and atlas runs, with entry points, outputs and gaps."
 ---
 
-# Research Modes
+# Paper reproductions
 
-Defines the paper-grounded entrypoints in `lenia-swarm`.
+Paper reproductions are separate run families, not ad hoc sweeps. Each paper asks a different question, searches a different space, and measures success differently, and one generic command would hide those differences. They share the core simulator and nothing else.
 
-Implementation detail belongs in [PaperGroundedRuns](../internals/PaperGroundedRuns.md). Config families and canonical entry files are mapped in [Config Map](../configs/README.md).
+Config families and canonical entry files are listed in the [config map](../configs/README.md).
 
 ## Registry
 
-| Mode | Paper anchor | Public entrypoint | Config family | Current scope |
+| Mode | Paper anchor | Public entrypoint | Config family | Scope |
 | --- | --- | --- | --- | --- |
 | Flow tasks | Flow-Lenia 2022 | `LeniaCLI discover evolve` | `configs/base/`, `configs/search/`, `configs/es/` | task-conditioned optimization |
-| RD validation | Reaction-Diffusion Lenia 2023 | `LeniaCLI discover rd-2023` | paper bundle + `configs/presets/` | mathematical validation/emulation |
+| RD validation | Reaction-Diffusion Lenia 2023 | `LeniaCLI discover rd-2023` | paper bundle + `configs/presets/` | mathematical validation and emulation |
 | Sensorimotor | Hamon et al. 2024 | `LeniaCLI discover sensorimotor-2024` | paper bundle + `configs/presets/` | goal-conditioned diversity search |
 | QD | LeniaBreeder 2024 | `LeniaCLI discover qd-2024` | `configs/presets/`, `configs/sweeps/`, `configs/es/` | MAP-Elites and AURORA repertoire search |
 | Ecology | Flow-Lenia ecology 2025 | `LeniaCLI discover ecology-2025` | paper bundle + `configs/presets/` | intrinsic-evolution ecology runs |
 | Curiosity | AI scientist 2025 | `LeniaCLI discover curiosity-2025` | paper bundle + `configs/presets/` | curiosity-driven universe exploration |
 | Atlas | Lenia parameter space 2026 | `LeniaCLI discover atlas-2026` | paper bundle + `configs/presets/` | classical Lenia atlas runs |
 
-Retired user-facing names:
+The 2022 paper is task-conditioned optimization, not open-ended discovery. The 2024 agency paper is goal-conditioned diversity search with a curriculum and a robustness battery. The 2024 QD paper builds repertoires with MAP-Elites and AURORA. The 2025 papers move from isolated organisms to ecosystem- and universe-scale discovery metrics. The 2026 atlas maps parameter space before any glider or creature hunting.
 
-- `leniabreeder-2024`
-- `flowlenia-ecology-2025`
-- `ai-scientist-2025`
+The old user-facing names `leniabreeder-2024`, `flowlenia-ecology-2025`, and `ai-scientist-2025` are retired. They still appear in config directories and older artifacts as provenance labels, not as CLI vocabulary.
 
-Those names can still appear in config directories and older artifacts because they remain provenance labels.
+## Shared rules
 
-## Shared Rules
-
-- Paper-specific logic must live above the shared simulator.
-- No research mode can silently change the core Flow-Lenia equations.
-- The invariant guard is [LeniaCoreTests.swift](../../Tests/LeniaCoreTests/LeniaCoreTests.swift), especially `testPopulationKernelsMatchSingleKernelPath`.
+- Paper-specific logic lives above the shared simulator: core simulation in [FlowLenia.swift](../../Sources/LeniaCore/Core/FlowLenia.swift) and related runtime code, paper runners in `Sources/LeniaCore/Layer/`, user-facing entrypoints in `Sources/LeniaCLI/`, paper configs under [configs/papers](../../configs/papers/).
+- No research mode may silently change the core Flow-Lenia equations. The guard is [LeniaCoreTests.swift](../../Tests/LeniaCoreTests/LeniaCoreTests.swift), especially `testPopulationKernelsMatchSingleKernelPath`. A new paper command goes in a paper runner, is proven with focused tests, and keeps the core path numerically consistent.
 - Durable run outputs go to `SPECTER_ARTIFACT_ROOT` when set; otherwise the mode writes to the explicit `--output` path.
-- Contract changes to run outputs must remain deterministic and rerunnable from captured configs.
+- Changes to run outputs must remain deterministic and rerunnable from captured configs.
 
 ## Modes
 
-### Flow tasks
+### Flow tasks (Flow-Lenia 2022)
 
 Entrypoint:
 
-- `LeniaCLI discover evolve --config <task.json> --es <optimizer.json> --output <dir>`
+- `LeniaCLI discover evolve --config <task.json> --es <optimizer.json> --output <dir>`, with [paper configs](../../configs/papers/flowlenia-2022/).
 
-Primary outputs:
+Primary outputs: `summary.json`, `history.jsonl`, and the task-specific run artifacts captured by `evolve`.
 
-- `summary.json`
-- `history.jsonl`
-- task-specific run artifacts captured by `evolve`
+Code: [Evolution.swift](../../Sources/LeniaCore/Layer/Search/Evolution.swift), [FlowLenia.swift](../../Sources/LeniaCore/Core/FlowLenia.swift).
 
-Notes:
+What we re-implemented:
 
-- This mode is for explicit objectives such as directed motion, angular motion, obstacle navigation, and chemotaxis.
-- It is not a repertoire builder and it is not a compendium writer.
+- directed motion, angular motion, obstacle navigation and chemotaxis tasks,
+- the paper-style OpenES loop with antithetic Gaussian noise,
+- paper-locked task configs and output capture.
 
-### RD validation
+This is a reproducible task runner for motion and navigation, which keeps optimization and morphology debugging apart from open-ended discovery. It is not a repertoire builder and does not write to the compendium.
 
-Entrypoint:
+Known gap: public sources do not include every original experiment wrapper, so parity is against the published paper and config regime, not unpublished internal scripts.
 
-- `LeniaCLI discover rd-2023 --config-dir <dir> --output <dir>`
-
-Primary outputs:
-
-- `summary.json`
-- validation/emulation reports written by the mode
-
-Notes:
-
-- This mode is a validator.
-- It is not a discovery command and it does not write compendium rows.
-
-### Sensorimotor
+### RD validation (Reaction-Diffusion Lenia 2023)
 
 Entrypoint:
 
-- `LeniaCLI discover sensorimotor-2024 --config-dir <dir> --output <dir>`
+- `LeniaCLI discover rd-2023 --config-dir <dir> --output <dir>`, with [reaction-diffusion-lenia-2023 configs](../../configs/papers/reaction-diffusion-lenia-2023/).
 
-Primary outputs:
+Primary outputs: `summary.json` and the validation and emulation reports written by the mode.
 
-- `summary.json`
-- `history.jsonl`
-- archive/evaluation artifacts written by the mode
+Code: [RD23.swift](../../Sources/LeniaCore/Layer/Papers/RD23.swift), [RD23Command.swift](../../Sources/LeniaCLI/RD23Command.swift).
 
-Notes:
+What we re-implemented: validation and emulation tools around the reaction-diffusion interpretation, and asymptotic-versus-original comparison outputs.
 
-- This mode implements the 2024 agency-discovery protocol.
-- It is archive-based, not compendium-indexed.
+This is the core validation path. It checks whether the continuous dynamics remain mathematically defensible, not only visually plausible. It is a validator, not a discovery command, writes no compendium rows, and should stay small.
 
-### QD
+### Sensorimotor (2024)
+
+Entrypoint:
+
+- `LeniaCLI discover sensorimotor-2024 --config-dir <dir> --output <dir>`, with [sensorimotor-lenia-2024 configs](../../configs/papers/sensorimotor-lenia-2024/).
+
+Primary outputs: `summary.json`, `history.jsonl`, and the archive and evaluation artifacts written by the mode.
+
+Code: [Sensorimotor24.swift](../../Sources/LeniaCore/Layer/Papers/Sensorimotor24.swift), [Sensorimotor24Command.swift](../../Sources/LeniaCLI/Sensorimotor24Command.swift).
+
+What we re-implemented:
+
+- history and archive bootstrap,
+- the goal-sampling curriculum,
+- source selection and mutation,
+- local optimization toward sampled goals,
+- the paper-style evaluation battery for movement, agency, and obstacle robustness.
+
+This implements the 2024 agency-discovery protocol: a principled discovery loop in place of score-only sweeps, and the mode closest to the earlier failure of finding motion without convincing organisms. It is archive-based, not compendium-indexed.
+
+Known gap: real paper-scale runs matter more than more support code; the work needs broad experiments and result comparison.
+
+### QD (LeniaBreeder 2024)
 
 Entrypoints:
 
@@ -96,117 +97,93 @@ Entrypoints:
 - `LeniaCLI discover qd-2024 --config-dir <dir> --algorithm aurora --output <dir>`
 - `LeniaCLI discover qd-2024 --distributed --algorithm me ...`
 
-Primary outputs:
+Configs: [leniabreeder-2024](../../configs/papers/leniabreeder-2024/).
 
-- `summary.json`
-- `history.jsonl`
-- `metrics.csv`
-- `best.json`
-- `repertoire/centroids.json`
-- `repertoire/occupied.json`
+Primary outputs: `summary.json`, `history.jsonl`, `metrics.csv`, `best.json`, `repertoire/centroids.json`, `repertoire/occupied.json`; also `aurora-diagnostics.jsonl` for AURORA and `distributed.json` for distributed MAP-Elites.
 
-Additional outputs:
+Code: [QD24.swift](../../Sources/LeniaCore/Layer/Papers/QD24.swift), [QD24Command.swift](../../Sources/LeniaCLI/QD24Command.swift).
 
-- `aurora-diagnostics.jsonl` for AURORA
-- `distributed.json` for distributed MAP-Elites
+What we re-implemented:
 
-Notes:
+- MAP-Elites repertoire search around the Aquarium-centered structured genotype space,
+- time-series metrics after a developmental phase,
+- hard viability filtering for empty, full and spread failures,
+- AURORA with a VAE-trained latent descriptor,
+- COM-centered `32x32x3` phenotype crops,
+- `8`-dimensional latent descriptors,
+- the unsupervised descriptor as the mean latent trajectory,
+- unsupervised fitness as negative average latent dispersion.
 
-- `qd-2024` writes repertoire artifacts, not run-library exports.
-- `qd-2024` is not auto-indexed into `compendium.sqlite`.
-- There is currently no built-in bridge from `qd-2024` outputs to:
-  - compendium indexing
-  - taxonomy assignment
-  - ecology export
-  - morphometrics thresholding
-- Distributed support currently exists for `--algorithm me` only.
+This is repertoire discovery, not one-winner search, for broad species discovery when stepping stones and diversity matter. It writes repertoire artifacts, not run-library exports, and is not indexed into `compendium.sqlite`, so its outputs do not reach compendium indexing, taxonomy assignment, the ecology export, or morphometrics thresholding. Distributed support exists for `--algorithm me` only.
 
-### Ecology
+Known gap: paper-scale validation, not missing AURORA machinery.
+
+### Ecology (Flow-Lenia 2025)
 
 Entrypoint:
 
-- `LeniaCLI discover ecology-2025 --config-dir <dir> --output <dir>`
+- `LeniaCLI discover ecology-2025 --config-dir <dir> --output <dir>`, with [flowlenia-ecology-2025 configs](../../configs/papers/flowlenia-ecology-2025/).
 
-Primary outputs:
+Primary outputs: `summary.json` and the ecology metrics and artifacts written by the mode.
 
-- `summary.json`
-- ecology metrics/artifacts written by the mode
+Code: [Ecology25.swift](../../Sources/LeniaCore/Layer/Papers/Ecology25.swift), [Ecology25Command.swift](../../Sources/LeniaCLI/Ecology25Command.swift).
 
-Notes:
+What we re-implemented: paper-locked intrinsic-evolution ecology runs, evolutionary activity and diversity summaries, and strict validation of the paper regime before execution.
 
-- This mode studies long-run ecosystem dynamics.
-- It is separate from the compendium/indexer pipeline.
+This moves the dossier from isolated specimens to long-run multispecies ecosystem behavior. It is separate from the compendium and indexer pipeline, and from the compendium-based [ecology export](../universe/Ecology.md).
 
-### Curiosity
+Known gap: judge it by long-horizon ecology outputs, not small smoke tests.
 
-Entrypoint:
-
-- `LeniaCLI discover curiosity-2025 --config-dir <dir> --output <dir>`
-
-Primary outputs:
-
-- `summary.json`
-- archive/coverage artifacts written by the mode
-
-Notes:
-
-- This mode is system-level exploration, not per-creature indexing.
-
-### Atlas
+### Curiosity (2025)
 
 Entrypoint:
 
-- `LeniaCLI discover atlas-2026 --config-dir <dir> --output <dir>`
+- `LeniaCLI discover curiosity-2025 --config-dir <dir> --output <dir>`, with [ai-scientist-2025 configs](../../configs/papers/ai-scientist-2025/).
 
-Primary outputs:
+Primary outputs: `summary.json` and the archive and coverage artifacts written by the mode.
 
-- `summary.json`
-- `data/phases/*.json`
-- `data/kernels/**/mu_*/sigma_*.json`
+Code: [Curiosity25.swift](../../Sources/LeniaCore/Layer/Papers/Curiosity25.swift), [Curiosity25Command.swift](../../Sources/LeniaCLI/Curiosity25Command.swift).
 
-Notes:
+What we re-implemented: curiosity-driven Flow-Lenia universe exploration, paper-specific goal spaces for ecosystem and movement modes, archive and coverage accounting, and MP4-size and non-neutral activity metrics.
 
-- This mode maps classical parameter space.
-- It does not auto-populate the compendium.
+This is open-ended universe discovery with system-level novelty metrics in place of creature ranking, not per-creature indexing.
 
-## Compendium Boundary
+Known gap: the real test is paper-scale exploration, not smoke coverage.
 
-The compendium remains the indexed database produced by `LeniaCLI index ingest`.
+### Atlas (2026)
 
-Relevant docs:
+Entrypoint:
 
-- [CompendiumSchema](./CompendiumSchema.md)
-- [ArtifactLayout](./ArtifactLayout.md)
-- [IndexerInternals](../internals/IndexerInternals.md)
+- `LeniaCLI discover atlas-2026 --config-dir <dir> --output <dir>`, with [lenia-atlas-2026 configs](../../configs/papers/lenia-atlas-2026/).
 
-Current writers:
+Primary outputs: `summary.json`, `data/phases/*.json`, `data/kernels/**/mu_*/sigma_*.json`.
 
-- `LeniaCLI index ingest`
-- `LeniaCLI discover local` when auto-indexing is enabled
+Code: [Atlas26.swift](../../Sources/LeniaCore/Layer/Papers/Atlas26.swift), [Atlas26Command.swift](../../Sources/LeniaCLI/Atlas26Command.swift).
 
-Research modes do not become compendium-visible unless they emit an artifact layout that the indexer understands and are then indexed explicitly.
+What we re-implemented: the classical Lenia `mu`/`sigma` atlas, public-style polygon-library input, and paper-style batch semantics and phase-map export.
 
-Current status by mode:
+This maps classical parameter space before glider or creature mining, in place of blind classical sweeps. It does not populate the compendium.
 
-| Mode | Auto-indexes into compendium | Emits indexer-ready library/export bundles |
-| --- | --- | --- |
-| Flow tasks | No | No |
-| RD validation | No | No |
-| Sensorimotor | No | No |
-| QD | No | No |
-| Ecology | No | No |
-| Curiosity | No | No |
-| Atlas | No | No |
+Known gap: full atlas scale and result inspection, not another sweep heuristic.
 
-## Apple Silicon Note
+## The compendium boundary
 
-These modes are intended to run on the MLX/Metal path on Apple Silicon.
+The compendium is written only by `LeniaCLI index ingest` and by `LeniaCLI discover local` when auto-indexing is enabled. None of the paper modes auto-indexes or emits indexer-ready library or export bundles. A mode becomes compendium-visible only if it emits an artifact layout the indexer understands and is then indexed explicitly. See [The compendium](./CompendiumSchema.md) and [Running a local sweep](./LocalCLI.md).
 
-Current performance facts that affect the contract:
+## Metal and MLX
 
-- batched evaluation is the default expectation for the heavy modes,
-- `qd-2024` has local and distributed MAP-Elites paths,
-- `reintegrationBatched` remains the main custom-kernel candidate if another major speed step is needed.
+These modes run on the MLX/Metal path on Apple Silicon, with batched evaluation as the default for the heavy ones.
+
+Relevant code: [FlowLenia.swift](../../Sources/LeniaCore/Core/FlowLenia.swift), [Evolution.swift](../../Sources/LeniaCore/Layer/Search/Evolution.swift), [SignpostSupport.swift](../../Sources/LeniaCore/Layer/Infra/SignpostSupport.swift).
+
+Done so far:
+
+- release-path runs for long paper jobs,
+- Instruments signpost support for hot-path profiling,
+- rollout sync cleanup so metrics do not force unnecessary host-device barriers,
+- external artifact and log routing for long runs on remote volumes.
+
+`reintegrationBatched` remains the strongest custom-kernel candidate if another major speed step is needed.
 
 ## Papers
 

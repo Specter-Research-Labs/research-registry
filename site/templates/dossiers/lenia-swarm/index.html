@@ -39,67 +39,32 @@
         <!-- GENERATED:DOSSIER_HUB_HEADER START -->
         <!-- GENERATED:DOSSIER_HUB_HEADER END -->
 
-        <section class="section-block"><p class="story-deck">Flow Lenia’s local rules move matter across a grid, sometimes producing bodies that hold together as they move and sometimes patterns that break apart. Saving a state lets us replay either outcome under changed conditions, so that we can investigate what sustains the body and which changes send its development in another direction.</p><nav class="story-jumps" aria-label="Research questions"><a href="/dossiers/lenia-swarm/#rule-story">Recover rules</a></nav></section>
+        <section class="section-block"><p class="story-deck">Flow Lenia’s local rules move matter across a grid, and some of what they produce holds together as a moving body while the rest breaks apart. We save states and replay them under changed conditions to find out what keeps a body together and which changes send its development somewhere else.</p></section>
 
         <section class="section-block">
           <div class="feature-card">
-            <figure class="story-figure"><div class="story-pair"><div><video autoplay muted loop playsinline preload="metadata" src="/assets/home/orbium-native.mp4" poster="/assets/home/orbium-native-600.webp"></video><span>Native rule</span></div><div><video autoplay muted loop playsinline preload="metadata" src="/assets/home/orbium-recovered.mp4" poster="/assets/home/orbium-recovered-600.webp"></video><span>Recovered rule</span></div></div><figcaption>Rule recovery in standard Lenia: the same Orbium seed under native and recovered rules. <a href="/assets/home/orbium-pair.json">Recording provenance</a>.</figcaption></figure><h2 id="rule-story" class="feature-title">Recovering the rule behind a Lenia body</h2>
+            <figure class="story-figure"><div class="story-pair"><div><video controls autoplay muted loop playsinline preload="metadata" src="/assets/home/orbium-native.mp4" poster="/assets/home/orbium-native-600.webp"></video><span>Native rule</span></div><div><video controls autoplay muted loop playsinline preload="metadata" src="/assets/home/orbium-recovered.mp4" poster="/assets/home/orbium-recovered-600.webp"></video><span>Recovered rule</span></div></div><figcaption>The same Orbium starting cells grown under its native rule and under the rule a search recovered from one frame. Orbium glides across the grid; both videos stay centred on the body, so it appears to hold still.</figcaption></figure><h2 id="rule-story" class="feature-title">One frame of Orbium was enough to recover its rule</h2>
             <p>
-              We give a search one observed frame from a known rule family and
-              recover Orbium's hidden parameters close to their native values.
-              Across a corpus of creatures, body size and elongation carry much
-              of how a body moves, and complexity says little about whether it
-              recovers from damage.
+              We gave a search one frame of Orbium, the best-known creature of
+              standard Lenia, told it the kind of rule and the starting cells,
+              and hid the three numbers that set the rule’s reach and growth.
+              It came back within six percent of the native value on each.
+              Across 8,155 Flow Lenia creatures, eight shape measurements,
+              mostly size and elongation, explain about half of how far and
+              how fast a body travels, while more complex bodies recover no
+              better from a cut than simple ones.
             </p>
             <div class="link-row">
-              <a href="anatomical-compiler/">Open the Report</a>
-              <a href="anatomical-compiler/assets/source-manifest.json"
-                >Evidence Manifest</a
-              >
+              <a href="anatomical-compiler/">Read the report</a>
             </div>
           </div>
         </section>
 
-        <section class="section-block">
-          <div class="feature-card">
-            <h2 class="feature-title">Causal emergence in developing bodies</h2>
-            <p>
-              We are also asking whether a developing Flow Lenia body comes to
-              behave as a whole, in the sense that a description of the whole
-              body predicts and steers its future better than descriptions of
-              its parts, and whether that organization appears before the body
-              settles into a coherent form. The measurements so far are
-              preliminary, because they depend on how the field is divided into
-              parts and on which information estimator is used, and we are
-              re-testing them across those choices for robustness before we
-              report a result.
-            </p>
-          </div>
-        </section>
-
-        <details class="story-method"><summary>Tools for reproducing the experiments</summary>
-          <p>
-            The system is a controller-worker topology over a SWIM gossip
-            cluster, with an MLX Swift engine for GPU-accelerated Flow Lenia
-            across Apple machines, split into three components:
-          </p>
-          <ul>
-            <li>
-              <code>LeniaCore</code>: physics engine, distributed actors, search
-              infrastructure.
-            </li>
-            <li>
-              <code>LeniaCLI</code>: headless workflows under
-              <code>discover</code>, <code>orchestrate</code>,
-              <code>index</code>, <code>analyze</code>, <code>intervene</code>,
-              <code>publish</code>.
-            </li>
-            <li>
-              <code>LeniaStudio</code>: macOS SwiftUI app for local exploration,
-              host mode, and worker mode.
-            </li>
-          </ul>
-        </details>
+        <p class="story-method">
+          The experiments run on LeniaCLI, a Swift command-line tool built on
+          an MLX Flow Lenia engine, and the Cabinet docs below explain how to
+          rerun them.
+        </p>
 
         <!-- GENERATED:DOSSIER_HUB_FOOTER START -->
         <!-- GENERATED:DOSSIER_HUB_FOOTER END -->

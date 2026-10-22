@@ -2,7 +2,7 @@
 summary: "The P and K search-efficiency equations from Chis-Ciure and Levin's Cognition All the Way Down 2.0, implemented as a small reference calculus."
 ---
 
-# K Equations From CATWD 2.0
+# K equations from CATWD 2.0
 
 Explains the `P` and `K` equations used in this addendum, grounded in
 Robert Chis-Ciure and Michael Levin, *Cognition all the way down 2.0:

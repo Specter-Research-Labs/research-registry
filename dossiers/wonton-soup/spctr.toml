@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Wonton Soup"
 series = "D-002"
-summary = "Lean proof searches rerun with one tactic removed, testing which routes to a theorem remain available."
+summary = "Lean proof searches rerun with one tactic blocked, to see whether the prover still reaches the theorem by another route."
 status = "active"
 
 [site]
@@ -10,9 +10,6 @@ visible = true
 featured = true
 featured_order = 2
 hub_path = "site/dossiers/wonton-soup/index.html"
-
-[labels]
-scope = "expansion"
 
 [release]
 stage = "candidate"

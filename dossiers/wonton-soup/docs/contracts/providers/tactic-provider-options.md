@@ -2,7 +2,7 @@
 summary: "The tactic-provider interface used by MCTS search and the options available for suggesting Lean tactics."
 ---
 
-# Tactic Provider Options for Tactic Suggestion
+# Tactic provider options for tactic suggestion
 
 Reference for the Lean tactic-provider API used by MCTS and distributed MCTS.
 
