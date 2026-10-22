@@ -315,9 +315,11 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
                 XCTAssertEqual(finalFounders[cell * 2] + finalFounders[cell * 2 + 1], actual[cell],
                                accuracy: 1e-6 + actual[cell] * 1e-5)
             }
-            XCTAssertGreaterThan(zip(stride(from: 0, to: finalFounders.count, by: 2), actual).filter {
-                finalFounders[$0.0] > 0.05 * $0.1 && finalFounders[$0.0 + 1] > 0.05 * $0.1
-            }.count, 0, "founders should mix somewhere for the test to exercise mixing")
+            let mixedCells = actual.indices.filter { cell -> Bool in
+                let threshold: Float = 0.05 * actual[cell]
+                return finalFounders[cell * 2] > threshold && finalFounders[cell * 2 + 1] > threshold
+            }
+            XCTAssertGreaterThan(mixedCells.count, 0, "founders should mix somewhere for the test to exercise mixing")
         }
     }
 

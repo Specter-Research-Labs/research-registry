@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Self-sorting arrays"
 series = "D-001"
-summary = "Cells that each run their own sorting rule bring an array into order, and on the way produce patterns no rule asks for, like clusters of the same kind. We take the rules apart to find which piece produces which pattern."
+summary = "Cells that each run their own sorting rule bring an array into order, and on the way produce patterns no rule asks for, like clusters of the same kind."
 status = "active"
 
 [site]

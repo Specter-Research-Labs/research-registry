@@ -2,7 +2,7 @@ version = 1
 license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
 title = "Wonton Soup"
 series = "D-002"
-summary = "Lean proof searches rerun with one tactic removed, to see how a prover's set of moves shapes the proofs it can find and which routes survive when one move is gone."
+summary = "Lean proof searches rerun with one tactic removed, to see how a prover's set of moves shapes the proofs it can find and which routes survive without it."
 status = "active"
 
 [site]
