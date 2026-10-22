@@ -11,6 +11,8 @@ final class TTCommandTests: XCTestCase {
             steps: 650,
             traceInterval: 50,
             cards: "0,1",
+            seeds: "0-8",
+            batch: 4096,
             python: "python3",
             host: nil,
             remoteRoot: nil,
@@ -29,6 +31,8 @@ final class TTCommandTests: XCTestCase {
                 "--steps", "650",
                 "--trace-interval", "50",
                 "--cards", "0,1",
+                "--seeds", "0-8",
+                "--batch", "4096",
             ]
         )
     }
@@ -40,6 +44,8 @@ final class TTCommandTests: XCTestCase {
             steps: 40000,
             traceInterval: 1000,
             cards: "0,1,2,3",
+            seeds: "0",
+            batch: 256,
             python: "python3",
             host: "tt-host",
             remoteRoot: "/remote/lenia-swarm",
@@ -51,7 +57,7 @@ final class TTCommandTests: XCTestCase {
         XCTAssertTrue(remoteCommand.hasPrefix("cd /remote/lenia-swarm && python3 tt_backend/devtools/container.py -- "))
         XCTAssertTrue(remoteCommand.contains("--input /repo/tmp/requal/input/index.jsonl"))
         XCTAssertTrue(remoteCommand.contains("--output /repo/tmp/tt-replays/smoke"))
-        XCTAssertTrue(remoteCommand.contains("--cards 0,1,2,3"))
+        XCTAssertTrue(remoteCommand.contains("--cards 0,1,2,3 --seeds 0 --batch 256"))
     }
 
     func testPathsOutsideTheDossierAreRefused() throws {
@@ -62,6 +68,8 @@ final class TTCommandTests: XCTestCase {
                 steps: 1,
                 traceInterval: 1,
                 cards: "0",
+                seeds: "0",
+                batch: 64,
                 python: "python3",
                 host: nil,
                 remoteRoot: nil,
@@ -80,6 +88,8 @@ final class TTCommandTests: XCTestCase {
                 steps: 1,
                 traceInterval: 1,
                 cards: "0",
+                seeds: "0",
+                batch: 64,
                 python: "python3",
                 host: "tt-host",
                 remoteRoot: nil,

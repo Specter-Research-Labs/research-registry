@@ -5,9 +5,16 @@ campaign directory with config.json, replay-manifest.json and development-trace.
 rows follow morphospaceDevelopmentSample with the field at the arena side, so
 assess-creatures and classify-creatures read TT replays and Metal replays alike.
 
-Each N300 card runs one engine on its (1, 2) mesh in its own process. Bodies are split evenly
-across cards; lanes past the last body of a card hold zero-mass filler bodies, which stay at
-zero and are never written out.
+Every body runs as an ensemble of members, one per seed, built by the one-ulp perturbation of
+lenia_swarm_analysis with role index 0; seed 0 is the unperturbed body. Each member is its own
+campaign, named with a `-u<seed>` suffix, whose config.json carries the member's exact initial
+field as a full-grid state patch.
+
+Members form one queue, cut into rounds of whole 64-lane units and dealt round-robin to the N300
+cards, each of which runs its rounds one engine at a time on its (1, 2) mesh in its own process.
+Lanes share no data, so a member's trajectory does not depend on its slot or its neighbours, and
+only the last unit of the queue holds filler: zero-mass, zero-spectrum lanes that are checked to
+stay zero and are never written out. summary.json lists every filler slot.
 """
 
 from __future__ import annotations
@@ -23,8 +30,10 @@ from pathlib import Path
 
 import numpy as np
 
+from lenia_swarm_analysis.perturbation import one_ulp_member
+
 from ..config import compile_kernels, load_config, resolve_connectivity, resolve_params
-from ..device import on_cards
+from ..device import MESH_SHAPE, on_cards
 from .codegen import PassSpec
 from .engine import LANES, BodyParams
 
@@ -46,6 +55,9 @@ CONFIG_KEYS = {
     "run",
 }
 F32 = np.float32
+ROLE_INDEX = 0
+PERTURBATION = "lenia_swarm_analysis.perturbation.one_ulp_member"
+UNIT = LANES * MESH_SHAPE[0] * MESH_SHAPE[1]
 
 
 @dataclass(frozen=True)
@@ -60,6 +72,34 @@ class Body:
     s: np.ndarray
     h: np.ndarray
     spec: PassSpec
+
+
+@dataclass(frozen=True)
+class Member:
+    body: Body
+    seed: int
+    mass: np.ndarray
+
+    @classmethod
+    def of(cls, body: Body, seed: int) -> Member:
+        return cls(body, seed, one_ulp_member(body.mass, seed, ROLE_INDEX))
+
+    @property
+    def campaign(self) -> str:
+        return f"{self.body.campaign}-u{self.seed}"
+
+
+@dataclass(frozen=True)
+class Round:
+    card: int
+    index: int
+    start: int
+    stop: int
+    size: int
+
+
+def _sha256(state: np.ndarray) -> str:
+    return hashlib.sha256(np.ascontiguousarray(state, "<f4").tobytes()).hexdigest()
 
 
 def _check_config(raw: dict, name: str) -> None:
@@ -196,76 +236,174 @@ def trace_row(step: int, state: np.ndarray) -> dict:
         "height": rows,
         "fieldResolution": cols,
         "fieldF16Base64": base64.b64encode(field.tobytes()).decode(),
-        "stateSha256": hashlib.sha256(np.ascontiguousarray(state, "<f4").tobytes()).hexdigest(),
+        "stateSha256": _sha256(state),
     }
 
 
-def _write_campaign(out: Path, body: Body, index: Path, steps: int, interval: int) -> None:
-    campaign = out / "campaigns" / body.campaign
+def parse_seeds(text: str) -> list[int]:
+    """Comma-separated seeds and inclusive ranges, such as `0`, `1-8` or `0,3-5`."""
+    seeds = []
+    for part in text.split(","):
+        first, _, last = part.partition("-")
+        seeds += list(range(int(first), int(last or first) + 1))
+    if len(set(seeds)) != len(seeds) or min(seeds) < 0:
+        raise ValueError(f"seeds {text!r} repeat or are negative")
+    return seeds
+
+
+def plan_rounds(count: int, cards: list[int], batch: int) -> list[Round]:
+    """Cut a queue of `count` members into rounds of at most `batch` lanes, as even as whole
+    units allow, so that every card gets the same number of rounds and filler only ever pads
+    the queue's last unit."""
+    if batch <= 0 or batch % UNIT:
+        raise ValueError(f"batch {batch} must be a positive multiple of {UNIT}")
+    units = -(-count // UNIT)
+    rounds = min(units, len(cards) * -(-units // (len(cards) * (batch // UNIT))))
+    base, extra = divmod(units, rounds)
+    plan, unit = [], 0
+    for r in range(rounds):
+        n = base + (r < extra)
+        start = unit * UNIT
+        plan.append(
+            Round(
+                cards[r % len(cards)],
+                r // len(cards),
+                start,
+                min(start + n * UNIT, count),
+                n * UNIT,
+            )
+        )
+        unit += n
+    return plan
+
+
+def slot(lane: int, size: int) -> dict:
+    """Where batch position `lane` of a round of `size` lanes sits on the card."""
+    per_chip = size // (MESH_SHAPE[0] * MESH_SHAPE[1])
+    return {"chip": lane // per_chip, "group": lane % per_chip // LANES, "lane": lane % LANES}
+
+
+def _member_config(member: Member, steps: int) -> dict:
+    raw = member.body.config
+    sx, sy, channels = member.mass.shape
+    patch = {
+        "center": [sx // 2, sy // 2],
+        "channels": channels,
+        "width": sx,
+        "height": sy,
+        "encoding": "f32le",
+        "data": base64.b64encode(np.ascontiguousarray(member.mass, "<f4").tobytes()).decode(),
+    }
+    return {
+        **raw,
+        "init": {**raw["init"], "state_patch": patch},
+        "run": {**raw["run"], "steps": steps},
+    }
+
+
+def _write_campaign(
+    out: Path, member: Member, where: dict, index: Path, steps: int, interval: int
+) -> None:
+    body = member.body
+    campaign = out / "campaigns" / member.campaign
     campaign.mkdir(parents=True)
-    config = {**body.config, "run": {**body.config["run"], "steps": steps}}
+    config = _member_config(member, steps)
+    if not np.array_equal(initial_mass(config), member.mass):
+        raise AssertionError(f"{member.campaign}: config does not reproduce the member field")
     (campaign / "config.json").write_text(json.dumps(config, indent=2))
     manifest = {
-        "campaignId": body.campaign,
+        "campaignId": member.campaign,
         "capturedSteps": list(range(interval, steps + 1, interval)),
         "engine": ENGINE,
         "inputPath": str(index),
         "recordEvery": interval,
         "sourceCreatureId": body.creature_id,
         "sourceExportDir": body.export_dir,
+        "sourceCampaignId": body.campaign,
+        "seed": member.seed,
+        "roleIndex": ROLE_INDEX,
+        "perturbation": PERTURBATION,
+        "inputFieldSha256": _sha256(member.mass),
+        "slot": where,
     }
     (campaign / "replay-manifest.json").write_text(json.dumps(manifest, indent=2))
 
 
-def engine_inputs(bodies: list[Body], lanes: int) -> tuple[np.ndarray, BodyParams]:
-    """Stacked engine inputs, padded to a multiple of lanes with zero-mass filler bodies."""
-    batch = -(-len(bodies) // lanes) * lanes
-    spec = bodies[0].spec
-    mass = np.zeros((batch, spec.sx, spec.sy, spec.channels), F32)
-    spectra = np.zeros((batch, spec.sx, spec.sy, spec.kernels), F32)
-    m = np.zeros((batch, spec.kernels), F32)
-    s = np.ones((batch, spec.kernels), F32)
-    h = np.zeros((batch, spec.kernels), F32)
-    for i, body in enumerate(bodies):
-        mass[i], spectra[i], m[i], s[i], h[i] = body.mass, body.spectra, body.m, body.s, body.h
+def engine_inputs(members: list[Member], size: int) -> tuple[np.ndarray, BodyParams]:
+    """Stacked engine inputs; lanes past the last member hold zero-mass, zero-spectrum filler."""
+    if len(members) > size:
+        raise ValueError(f"{len(members)} members exceed the {size} lanes")
+    spec = members[0].body.spec
+    mass = np.zeros((size, spec.sx, spec.sy, spec.channels), F32)
+    spectra = np.zeros((size, spec.sx, spec.sy, spec.kernels), F32)
+    m = np.zeros((size, spec.kernels), F32)
+    s = np.ones((size, spec.kernels), F32)
+    h = np.zeros((size, spec.kernels), F32)
+    for i, member in enumerate(members):
+        body = member.body
+        mass[i], spectra[i], m[i], s[i], h[i] = member.mass, body.spectra, body.m, body.s, body.h
     return mass, BodyParams(spectra, m, s, h)
 
 
-def _card_worker(card: int, bodies: list[Body], out: Path, steps: int, interval: int) -> None:
+def _card_worker(
+    card: int, rounds: list[tuple[Round, list[Member]]], out: Path, steps: int, interval: int
+) -> None:
     from ..device import close_card, open_card
     from .engine import SfpuEngine
 
     mesh = open_card()
     try:
-        mass, params = engine_inputs(bodies, LANES * int(mesh.get_num_devices()))
-        engine = SfpuEngine(mesh, bodies[0].spec, mass, params, capture=False)
-        traces = [out / "campaigns" / b.campaign / "development-trace.jsonl" for b in bodies]
-        t0 = time.perf_counter()
-        for step in range(interval, steps + 1, interval):
-            engine.step(interval)
-            state = engine.mass()
-            for i, path in enumerate(traces):
-                with path.open("a") as f:
-                    f.write(json.dumps(trace_row(step, state[i])) + "\n")
-            rate = step * len(bodies) / (time.perf_counter() - t0)
-            print(f"card {card}: step {step}/{steps}, {rate:.0f} body-steps/s", flush=True)
+        done, t0 = 0, time.perf_counter()
+        for rnd, members in rounds:
+            mass, params = engine_inputs(members, rnd.size)
+            engine = SfpuEngine(mesh, members[0].body.spec, mass, params, capture=False)
+            traces = [out / "campaigns" / m.campaign / "development-trace.jsonl" for m in members]
+            for step in range(interval, steps + 1, interval):
+                engine.step(interval)
+                state = engine.mass()
+                if state[len(members) :].any():
+                    raise AssertionError(f"card {card} round {rnd.index}: filler lanes left zero")
+                for i, path in enumerate(traces):
+                    with path.open("a") as f:
+                        f.write(json.dumps(trace_row(step, state[i])) + "\n")
+                rate = (done + step * len(members)) / (time.perf_counter() - t0)
+                print(
+                    f"card {card} round {rnd.index}: step {step}/{steps}, {rate:.0f} body-steps/s",
+                    flush=True,
+                )
+            done += steps * len(members)
+            del engine
     finally:
         close_card(mesh)
 
 
-def replay(index: Path, out: Path, steps: int, interval: int, cards: list[int]) -> dict:
+def replay(
+    index: Path,
+    out: Path,
+    steps: int,
+    interval: int,
+    cards: list[int],
+    seeds: list[int],
+    batch: int,
+) -> dict:
     if steps % interval:
         raise ValueError(f"steps {steps} must be a multiple of the trace interval {interval}")
     if out.exists():
         raise ValueError(f"{out} exists; replays never write into an existing directory")
-    bodies = load_index(index)
-    per_card = -(-len(bodies) // len(cards))
-    shares = [bodies[i * per_card : (i + 1) * per_card] for i in range(len(cards))]
-    for body in bodies:
-        _write_campaign(out, body, index, steps, interval)
+    members = [Member.of(body, seed) for body in load_index(index) for seed in seeds]
+    plan = plan_rounds(len(members), cards, batch)
+    jobs: dict[int, list] = {card: [] for card in cards}
+    filler = []
+    for rnd in plan:
+        share = members[rnd.start : rnd.stop]
+        for lane, member in enumerate(share):
+            where = {"card": rnd.card, "round": rnd.index, **slot(lane, rnd.size)}
+            _write_campaign(out, member, where, index, steps, interval)
+        for lane in range(len(share), rnd.size):
+            filler.append({"card": rnd.card, "round": rnd.index, **slot(lane, rnd.size)})
+        jobs[rnd.card].append((rnd, share))
     t0 = time.perf_counter()
-    jobs = {card: (share, out, steps, interval) for card, share in zip(cards, shares) if share}
-    on_cards(_card_worker, jobs)
+    on_cards(_card_worker, {card: (r, out, steps, interval) for card, r in jobs.items() if r})
     elapsed = time.perf_counter() - t0
     summary = {
         "engine": ENGINE,
@@ -273,10 +411,23 @@ def replay(index: Path, out: Path, steps: int, interval: int, cards: list[int]) 
         "inputSha256": hashlib.sha256(index.read_bytes()).hexdigest(),
         "steps": steps,
         "recordEvery": interval,
-        "cards": {str(card): [b.campaign for b in share] for card, share in zip(cards, shares)},
-        "bodies": len(bodies),
+        "seeds": seeds,
+        "roleIndex": ROLE_INDEX,
+        "perturbation": PERTURBATION,
+        "batch": batch,
+        "rounds": [
+            {
+                "card": r.card,
+                "round": r.index,
+                "lanes": r.size,
+                "campaigns": [m.campaign for m in members[r.start : r.stop]],
+            }
+            for r in plan
+        ],
+        "filler": {"count": len(filler), "slots": filler},
+        "members": len(members),
         "elapsedSeconds": elapsed,
-        "bodyStepsPerSecond": len(bodies) * steps / elapsed,
+        "bodyStepsPerSecond": len(members) * steps / elapsed,
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
     return summary
@@ -289,10 +440,18 @@ def main() -> None:
     parser.add_argument("--steps", type=int, required=True)
     parser.add_argument("--trace-interval", type=int, required=True)
     parser.add_argument("--cards", required=True, help="comma-separated N300 card indices")
+    parser.add_argument("--seeds", required=True, help="ensemble seeds per body, such as 0-8")
+    parser.add_argument(
+        "--batch", type=int, required=True, help=f"lanes per round, a multiple of {UNIT}"
+    )
     args = parser.parse_args()
     cards = [int(c) for c in args.cards.split(",")]
-    summary = replay(args.input, args.output, args.steps, args.trace_interval, cards)
-    print(json.dumps({k: v for k, v in summary.items() if k != "cards"}, indent=2))
+    seeds = parse_seeds(args.seeds)
+    summary = replay(
+        args.input, args.output, args.steps, args.trace_interval, cards, seeds, args.batch
+    )
+    print(json.dumps({k: v for k, v in summary.items() if k not in ("rounds", "filler")}, indent=2))
+    print(f"filler lanes: {summary['filler']['count']}")
 
 
 if __name__ == "__main__":

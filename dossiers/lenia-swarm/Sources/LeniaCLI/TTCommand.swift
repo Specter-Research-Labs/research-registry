@@ -33,6 +33,12 @@ struct TTReplayCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Comma-separated N300 card indices")
     var cards: String
 
+    @Option(name: .long, help: "One-ulp ensemble seeds per body, such as 0-8; seed 0 is unperturbed")
+    var seeds: String
+
+    @Option(name: .long, help: "Lanes per engine round on each card, a multiple of 64")
+    var batch: Int
+
     @Option(name: .long, help: "Python executable on the target host")
     var python: String = "python3"
 
@@ -55,6 +61,8 @@ struct TTReplayCommand: AsyncParsableCommand {
             steps: steps,
             traceInterval: traceInterval,
             cards: cards,
+            seeds: seeds,
+            batch: batch,
             python: python,
             host: host,
             remoteRoot: remoteRoot ?? ProcessInfo.processInfo.environment["LENIA_TT_REMOTE_ROOT"],
@@ -80,6 +88,8 @@ struct TTReplayInvocation {
         steps: Int,
         traceInterval: Int,
         cards: String,
+        seeds: String,
+        batch: Int,
         python: String,
         host: String?,
         remoteRoot: String?,
@@ -93,6 +103,8 @@ struct TTReplayInvocation {
             "--steps", String(steps),
             "--trace-interval", String(traceInterval),
             "--cards", cards,
+            "--seeds", seeds,
+            "--batch", String(batch),
         ]
         self.executable = "/usr/bin/env"
         if let host {

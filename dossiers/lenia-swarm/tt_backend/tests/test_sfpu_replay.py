@@ -112,7 +112,7 @@ def test_check_config_refuses_unvalidated_features(
         replay._check_config(raw, "body")
 
 
-def test_engine_inputs_pads_lanes_with_zero_mass_filler() -> None:
+def _body(campaign: str = "c") -> replay.Body:
     spec = PassSpec(
         sx=128,
         sy=128,
@@ -125,11 +125,16 @@ def test_engine_inputs_pads_lanes_with_zero_mass_filler() -> None:
         theta_a=1.0,
         n=2,
     )
-    body = replay.Body(
-        campaign="c",
+    return replay.Body(
+        campaign=campaign,
         creature_id="id",
         export_dir="e",
-        config={},
+        config={
+            "channels": 1,
+            "grid": {"sx": 128, "sy": 128},
+            "init": {"state_patch": {}},
+            "run": {"steps": 1},
+        },
         mass=np.ones((128, 128, 1), F32),
         spectra=np.full((128, 128, 2), 2, F32),
         m=np.full(2, 0.1, F32),
@@ -137,7 +142,73 @@ def test_engine_inputs_pads_lanes_with_zero_mass_filler() -> None:
         h=np.full(2, 0.3, F32),
         spec=spec,
     )
-    mass, params = replay.engine_inputs([body] * 3, 4)
+
+
+def test_engine_inputs_pads_lanes_with_zero_mass_filler() -> None:
+    members = [replay.Member.of(_body(), seed) for seed in (0, 1, 2)]
+    mass, params = replay.engine_inputs(members, 4)
     assert mass.shape == (4, 128, 128, 1) and params.spectra.shape == (4, 128, 128, 2)
-    assert mass[:3].min() == 1 and mass[3].max() == 0
+    assert mass[0].min() == 1 and mass[3].max() == 0 and params.spectra[3].max() == 0
     assert params.s[3].tolist() == [1, 1] and params.m[3].tolist() == [0, 0]
+    assert mass[1].tobytes() != mass[0].tobytes()
+
+
+def test_members_are_named_and_perturbed_by_seed() -> None:
+    body = _body("0001-x-abcd")
+    zero, one = replay.Member.of(body, 0), replay.Member.of(body, 1)
+    assert (zero.campaign, one.campaign) == ("0001-x-abcd-u0", "0001-x-abcd-u1")
+    assert zero.mass.tobytes() == body.mass.tobytes()
+    assert (one.mass != body.mass).sum() == round(0.01 * 128 * 128)
+
+
+@pytest.mark.parametrize(
+    ("text", "seeds"), [("0", [0]), ("1-8", list(range(1, 9))), ("0,3-5", [0, 3, 4, 5])]
+)
+def test_parse_seeds(text: str, seeds: list[int]) -> None:
+    assert replay.parse_seeds(text) == seeds
+
+
+def test_parse_seeds_refuses_repeats() -> None:
+    with pytest.raises(ValueError, match="repeat"):
+        replay.parse_seeds("1-3,2")
+
+
+@pytest.mark.parametrize(
+    ("count", "cards", "batch"),
+    [(963, [0, 1, 2, 3], 4096), (856, [0, 1, 2, 3], 128), (64, [0, 1, 2, 3], 4096), (1, [3], 64)],
+)
+def test_plan_rounds_covers_the_queue_with_tail_filler_only(count, cards, batch) -> None:
+    plan = replay.plan_rounds(count, cards, batch)
+    assert plan[0].start == 0 and plan[-1].stop == count
+    assert all(a.stop == b.start for a, b in zip(plan, plan[1:]))
+    assert all(r.size % replay.UNIT == 0 and 0 < r.size <= batch for r in plan)
+    assert all(r.stop - r.start == r.size for r in plan[:-1])
+    assert plan[-1].size - (plan[-1].stop - plan[-1].start) < replay.UNIT
+    per_card = [sum(r.card == c for r in plan) for c in cards]
+    assert max(per_card) - min(per_card) <= 1
+    assert sorted((r.card, r.index) for r in plan) == sorted({(r.card, r.index) for r in plan})
+
+
+def test_plan_rounds_balances_units() -> None:
+    plan = replay.plan_rounds(963, [0, 1, 2, 3], 4096)
+    assert [r.size for r in plan] == [256, 256, 256, 256]
+    assert plan[-1].stop - plan[-1].start == 963 - 768
+
+
+def test_plan_rounds_refuses_partial_units() -> None:
+    with pytest.raises(ValueError, match="multiple of 64"):
+        replay.plan_rounds(10, [0], 96)
+
+
+def test_slot_splits_groups_across_chips() -> None:
+    assert replay.slot(0, 256) == {"chip": 0, "group": 0, "lane": 0}
+    assert replay.slot(33, 256) == {"chip": 0, "group": 1, "lane": 1}
+    assert replay.slot(128, 256) == {"chip": 1, "group": 0, "lane": 0}
+    assert replay.slot(255, 256) == {"chip": 1, "group": 3, "lane": 31}
+
+
+def test_member_config_reproduces_the_member_field() -> None:
+    member = replay.Member.of(_body(), 2)
+    config = replay._member_config(member, 400)
+    assert config["run"]["steps"] == 400
+    assert replay.initial_mass(config).tobytes() == member.mass.tobytes()

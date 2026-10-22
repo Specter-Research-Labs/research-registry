@@ -120,7 +120,8 @@ Useful individual targets:
 ### Tenstorrent Runs
 
 `LeniaCLI tt replay` replays an export `index.jsonl` on Tenstorrent N300 cards
-with the float32 SFPU engine and writes the same campaign layout as
+with the float32 SFPU engine, as one-ulp ensembles with one member per seed, and
+writes the same campaign layout as
 `LeniaCLI publish replay`, so `assess-creatures` and `classify-creatures` read
 the result. It runs on the TT host directly or over SSH with `--host`; remote
 runs require `--remote-root` or `LENIA_TT_REMOTE_ROOT` pointing at the Lenia
@@ -134,7 +135,9 @@ LeniaCLI tt replay \
   --output tmp/tt-replays/n128-torus128 \
   --steps 650 \
   --trace-interval 50 \
-  --cards 0,1,2,3
+  --cards 0,1,2,3 \
+  --seeds 0-8 \
+  --batch 4096
 ```
 
 Precision, throughput, validation and the device rules are in

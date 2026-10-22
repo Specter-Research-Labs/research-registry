@@ -20,7 +20,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tt_lenia.device import on_cards
-from tt_lenia.sfpu.replay import Body, engine_inputs, load_index
+from tt_lenia.sfpu.replay import Body, Member, engine_inputs, load_index
 
 WARMUP_STEPS = 2
 
@@ -36,7 +36,8 @@ def _bench(card: int, bodies: list[Body], batches: list[int], steps: int) -> lis
         for batch in batches:
             if batch % lanes:
                 raise ValueError(f"batch {batch} is not a multiple of {lanes} lanes")
-            mass, params = engine_inputs([bodies[i % len(bodies)] for i in range(batch)], lanes)
+            members = [Member.of(bodies[i % len(bodies)], 0) for i in range(batch)]
+            mass, params = engine_inputs(members, batch)
             engine = SfpuEngine(mesh, bodies[0].spec, mass, params, capture=False)
             engine.step(WARMUP_STEPS)
             engine.synchronize()
