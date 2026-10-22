@@ -8,6 +8,7 @@ pub mod causal_emergence_release;
 pub mod data;
 pub mod discover;
 pub mod finalize;
+pub mod fingerprint;
 pub mod inject;
 pub mod markup;
 pub mod pdf;
