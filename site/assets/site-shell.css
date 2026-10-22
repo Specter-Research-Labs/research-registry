@@ -49,6 +49,7 @@ body {
   color: inherit;
   font: 700 var(--sl-type-scale-brand)/1 var(--sl-font-mono);
   letter-spacing: var(--sl-tracking-brand);
+  text-transform: uppercase;
   text-decoration: none;
 }
 
