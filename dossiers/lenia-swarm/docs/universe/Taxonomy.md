@@ -54,7 +54,7 @@ Genus appends four bands to the family ID, joined by dots:
 | complexity (mean, `0` when absent) | `cx-low` < 0.05 <= `cx-mid` < 0.12 <= `cx-high` |
 | mass (mean) | `mass-small` < 150 <= `mass-medium` < 400 <= `mass-large` |
 
-Species appends a fingerprint of the genotype to the genus ID. The kernels are sorted into a canonical order so the fingerprint does not depend on kernel order, every value is rounded to three decimals, and the resulting vector is hashed with 64-bit FNV-1a.
+Species appends a fingerprint of the genotype to the genus ID. The kernels are sorted into a canonical order so the fingerprint does not depend on kernel order, every value is rounded to three decimals, and the resulting vector is hashed with 64-bit FNV-1a. A species ID therefore names one rounded genotype within a genus; it does not group creatures by continuity.
 
 `taxonomy_confidence` is a fixed value, `0.86` when morphometrics exist and `0.72` when tortuosity had to be computed from raw metrics. It records which inputs were available, not a measured fit.
 
