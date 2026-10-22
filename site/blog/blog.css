@@ -32,3 +32,22 @@
     max-width:100%;
     overflow-wrap:anywhere;
 }
+
+@media (max-width:480px){
+    .ws-stepper-figure,
+    .ws-stepper-panel,
+    .ws-flow-wrap,
+    .ws-branch-wrap{
+        min-width:0;
+    }
+
+    .ws-flow-wrap,
+    .ws-branch-wrap{
+        overflow-x:auto;
+    }
+
+    .ws-flow-svg,
+    .ws-branch-svg{
+        min-width:520px;
+    }
+}
