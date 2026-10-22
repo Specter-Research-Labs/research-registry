@@ -7,11 +7,14 @@ use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use regex_lite::Regex;
 
+use super::shell;
+
 pub const SITE_NAME: &str = "Specter Labs";
 pub const TITLE_SUFFIX: &str = " | Specter Labs";
 const NOT_FOUND_PAGE: &str = "404.html";
 const ASSETS_DIR: &str = "assets/";
 const CARD_META: &str = "spctr:card";
+const MAX_DESCRIPTION: usize = 160;
 const NO_CARD: &str = "none";
 const CARD_TEMPLATE: &str = include_str!("og-card.typ");
 
@@ -128,7 +131,9 @@ fn finalize_page(
         let canonical = format!("{public_url}{url_path}");
         tags.push(format!(r#"<link rel="canonical" href="{canonical}">"#));
         tags.push(meta_property("og:url", &canonical));
-        report.canonical_urls.push(canonical);
+        if relative != NOT_FOUND_PAGE {
+            report.canonical_urls.push(canonical);
+        }
     }
     tags.push(meta_property("og:site_name", SITE_NAME));
     tags.push(meta_property("og:title", page_title));
@@ -136,6 +141,10 @@ fn finalize_page(
         tags.push(meta_property("og:type", "website"));
     }
     match head.meta.get("description") {
+        Some(description) if description.chars().count() > MAX_DESCRIPTION => bail!(
+            "meta description has {} characters; search results cut it after {MAX_DESCRIPTION}",
+            description.chars().count()
+        ),
         Some(description) => tags.push(meta_property("og:description", description)),
         None => report.missing_description.push(relative.to_owned()),
     }
@@ -157,15 +166,23 @@ fn finalize_page(
             tags.push(meta_property("og:image", &format!("{public_url}/{image}")));
             head_text
         }
-        (None, None) => {
-            report.missing_image.push(relative.to_owned());
-            head_text
-        }
+        (None, None) => match shell::nav_section(relative) {
+            Some(section) => {
+                let image = card_path(relative)?;
+                render_card(stage_root, font_path, &image, page_title, section.card_kicker())?;
+                tags.push(meta_property("og:image", &format!("{public_url}/{image}")));
+                head_text
+            }
+            None => {
+                report.missing_image.push(relative.to_owned());
+                head_text
+            }
+        },
     };
-    let card = match (declared_image, kicker) {
-        (Some(_), _) => "summary_large_image",
-        (None, Some(NO_CARD) | None) => "summary",
-        (None, Some(_)) => "summary_large_image",
+    let card = if tags.iter().any(|tag| tag.contains("og:image")) || declared_image.is_some() {
+        "summary_large_image"
+    } else {
+        "summary"
     };
     tags.push(format!(r#"<meta name="twitter:card" content="{card}">"#));
 
@@ -246,7 +263,7 @@ fn page_title<'a>(relative: &str, title: &'a str) -> Result<&'a str> {
 fn url_path(relative: &str) -> Option<String> {
     // HTML under assets/ is embedded in other pages (interactive figures), so it
     // gets no canonical URL and stays out of sitemap.xml.
-    if relative == NOT_FOUND_PAGE || relative.starts_with(ASSETS_DIR) {
+    if relative.starts_with(ASSETS_DIR) {
         return None;
     }
     if relative == "index.html" {
@@ -421,7 +438,7 @@ mod tests {
         let temp = stage_with(&[
             ("index.html", "<html><head><title>Specter Labs</title><meta name=\"description\" content=\"Home\"><meta property=\"og:image\" content=\"/a.webp\"></head><body></body></html>"),
             ("a.webp", ""),
-            ("blog/index.html", "<html><head><title>Writing | Specter Labs</title></head><body><a href=\"/blog/x/\">x</a></body></html>"),
+            ("blog/index.html", "<html><head><title>Writing | Specter Labs</title><meta name=\"spctr:card\" content=\"none\"></head><body><a href=\"/blog/x/\">x</a></body></html>"),
             ("404.html", "<html><head><title>Page not found | Specter Labs</title></head><body></body></html>"),
             ("assets/blog/fig.html", "<html><head><title>Figure | Specter Labs</title></head><body></body></html>"),
         ]);
@@ -441,7 +458,8 @@ mod tests {
         assert!(blog.contains(r#"<meta name="twitter:card" content="summary">"#));
 
         let not_found = fs::read_to_string(temp.path().join("404.html")).unwrap();
-        assert!(!not_found.contains("canonical"));
+        assert!(not_found.contains(r#"<link rel="canonical" href="https://example.org/404.html">"#));
+        assert!(not_found.contains(r#"<meta property="og:url" content="https://example.org/404.html">"#));
         let figure = fs::read_to_string(temp.path().join("assets/blog/fig.html")).unwrap();
         assert!(!figure.contains("canonical"));
 
@@ -457,6 +475,18 @@ mod tests {
         assert!(sitemap.contains("<loc>https://example.org/blog/</loc>"));
         assert!(!sitemap.contains("404"));
         assert!(!sitemap.contains("assets"));
+    }
+
+    #[test]
+    fn rejects_long_descriptions() {
+        let description = "a".repeat(MAX_DESCRIPTION + 1);
+        let temp = stage_with(&[(
+            "blog/index.html",
+            &format!("<html><head><title>Writing | Specter Labs</title><meta name=\"description\" content=\"{description}\"></head></html>"),
+        )]);
+        let error =
+            finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org/").unwrap_err();
+        assert!(format!("{error:#}").contains("meta description has 161 characters"));
     }
 
     #[test]

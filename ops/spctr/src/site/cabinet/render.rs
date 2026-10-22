@@ -1,6 +1,8 @@
 use crate::markdown;
 use crate::site::cabinet::docs::{self, DocEntry};
+use crate::site::inject::replace_region;
 use crate::site::regions::inline_markdown;
+use crate::site::shell;
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use std::collections::HashMap;
@@ -55,8 +57,15 @@ pub fn render_doc(
         .args(["--metadata", "lang=en"])
         .args([
             "--metadata",
-            &format!("pagetitle={} | Specter Labs", entry.title),
+            // Titles are inline Markdown, but <title> is plain text, so code spans
+            // lose their backticks there.
+            &format!("pagetitle={} | Specter Labs", entry.title.replace('`', "")),
         ])
+        .arg(format!(
+            "--variable=site-header:{}",
+            shell::header(repo_root, Some(shell::Section::Cabinet))?
+        ))
+        .arg(format!("--variable=site-footer:{}", shell::footer(repo_root)?))
         .args(["--metadata", &format!("slug={}", entry.slug)])
         .args(["--metadata", &format!("doc_id={}", entry.doc_id)])
         .args(["--metadata", &format!("dossier={}", entry.project_display)])
@@ -247,7 +256,7 @@ fn html_escape(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
-pub fn build_index(entries: &[DocEntry], site_root: &Utf8Path) -> Result<()> {
+pub fn build_index(entries: &[DocEntry], repo_root: &Utf8Path, site_root: &Utf8Path) -> Result<()> {
     let index_template = site_root.join("cabinet/index-template.html");
     let template_text = std::fs::read_to_string(&index_template)
         .with_context(|| format!("failed to read {}", index_template))?;
@@ -315,7 +324,15 @@ pub fn build_index(entries: &[DocEntry], site_root: &Utf8Path) -> Result<()> {
         ));
     }
 
-    let index_html = template_text.replace(DRAWERS_MARKER, &drawers_html);
+    let template_path = index_template.as_str();
+    let index_html = replace_region(
+        &template_text,
+        "SITE_HEADER",
+        &shell::header(repo_root, Some(shell::Section::Cabinet))?,
+        template_path,
+    )?;
+    let index_html = replace_region(&index_html, "SITE_FOOTER", &shell::footer(repo_root)?, template_path)?;
+    let index_html = index_html.replace(DRAWERS_MARKER, &drawers_html);
     let out = site_root.join("cabinet/index.html");
     std::fs::write(&out, &index_html).with_context(|| format!("failed to write {out}"))?;
 

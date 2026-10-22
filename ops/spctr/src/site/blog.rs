@@ -9,6 +9,7 @@ use crate::graph::{self, RegistryGraph};
 use crate::markdown;
 use crate::registry;
 use crate::site::discover;
+use crate::site::shell;
 
 struct FigureSource {
     slug: &'static str,
@@ -131,6 +132,11 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
             md.parent().context("article has no parent")?,
             site_root
         ))
+        .arg(format!(
+            "--variable=site-header:{}",
+            shell::header(repo_root, Some(shell::Section::Writing))?
+        ))
+        .arg(format!("--variable=site-footer:{}", shell::footer(repo_root)?))
         .args([
             "--metadata",
             "lang=en",
@@ -156,14 +162,26 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
     String::from_utf8(result.stdout).context("pandoc produced invalid UTF-8")
 }
 
-struct ResearchNoteRecord {
-    slug: String,
-    title: String,
-    summary: Option<String>,
-    spctr_id: Option<String>,
+pub(crate) struct ResearchNoteRecord {
+    pub(crate) slug: String,
+    pub(crate) title: String,
+    pub(crate) summary: Option<String>,
+    pub(crate) spctr_id: Option<String>,
     release_label: String,
     source_id: Option<String>,
     source_href: Option<String>,
+}
+
+/// Published notes for the Lab notes section of the Writing index, newest first
+/// because note slugs start with their date.
+pub(crate) fn published_research_notes(repo_root: &Utf8Path) -> Result<Vec<ResearchNoteRecord>> {
+    let notes_root = repo_root.join("site/research-notes");
+    let mut notes: Vec<_> = load_research_notes(repo_root, &notes_root)?
+        .into_iter()
+        .filter(|note| note.release_label == discover::RELEASE_PUBLISHED)
+        .collect();
+    notes.reverse();
+    Ok(notes)
 }
 
 pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<usize> {
@@ -183,6 +201,8 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
         bail!("missing pandoc template: site/research-notes/pandoc-template.html");
     }
 
+    let site_header = shell::header(repo_root, Some(shell::Section::Writing))?;
+    let site_footer = shell::footer(repo_root)?;
     notes.par_iter().try_for_each(|note| -> Result<()> {
         let md_path = notes_root.join(&note.slug).join("index.md");
         let out_path = notes_root.join(&note.slug).join("index.html");
@@ -205,6 +225,8 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
             ])
             .arg(format!("--template={}", template))
             .args(["--toc", "--toc-depth=2", "--mathml"])
+            .arg(format!("--variable=site-header:{site_header}"))
+            .arg(format!("--variable=site-footer:{site_footer}"))
             .arg("--metadata")
             .arg("lang=en")
             .arg("--metadata")
@@ -361,15 +383,6 @@ pub(crate) fn load_published_posts_from_graph(
         .collect::<Result<Vec<_>>>()?;
     posts.sort_by(|left, right| left.href.cmp(&right.href));
     Ok(posts)
-}
-
-/// Published research notes as (N-series id, title).
-pub(crate) fn published_research_notes(repo_root: &Utf8Path) -> Result<Vec<(String, String)>> {
-    let notes_root = repo_root.join("site/research-notes");
-    Ok(load_research_notes(repo_root, &notes_root)?
-        .into_iter()
-        .filter_map(|note| note.spctr_id.map(|series| (series, note.title)))
-        .collect())
 }
 
 fn load_research_notes(

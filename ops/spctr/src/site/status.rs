@@ -72,8 +72,16 @@ fn collect(repo_root: &Utf8Path, release_id: &str) -> Result<LabStatus> {
 
     let notes = blog::published_research_notes(repo_root)?
         .into_iter()
-        .map(|(series, title)| Published { series, title })
-        .collect();
+        .map(|note| {
+            let Some(series) = note.spctr_id else {
+                bail!("published note {} has no series id", note.slug);
+            };
+            Ok(Published {
+                series,
+                title: note.title,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     let docs = cabinet::docs::find_published_docs_from_graph(repo_root, &graph)?;
     let cabinet_projects = docs

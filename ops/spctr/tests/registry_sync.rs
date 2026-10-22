@@ -8,6 +8,24 @@ fn write(root: &Utf8Path, rel: &str, content: &str) {
     fs::write(path, content).unwrap();
 }
 
+fn minimal_shell(root: &Utf8Path) {
+    write(
+        root,
+        "site/templates/publication-header.html",
+        "<header class=\"publication-header\"><nav><a href=\"/dossiers/\">Research</a><a href=\"/blog/\">Writing</a><a href=\"/addenda/\">Addenda</a><a href=\"/cabinet/\">Cabinet</a></nav></header>\n",
+    );
+    write(
+        root,
+        "site/templates/publication-footer.html",
+        "<footer class=\"publication-footer\"></footer>\n",
+    );
+    write(
+        root,
+        "site/templates/404.html",
+        "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>\n",
+    );
+}
+
 fn minimal_design_tokens(root: &Utf8Path) {
     write(
         root,
@@ -269,6 +287,7 @@ release: "draft"
 fn research_note_addendum_source_does_not_render_missing_href() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+    minimal_shell(root);
     minimal_design_tokens(root);
     write(
         root,
@@ -286,32 +305,27 @@ fn research_note_addendum_source_does_not_render_missing_href() {
     write(
         root,
         "site/templates/index.html",
-        "<html><body>\n<!-- GENERATED:HOME_ACTIVE_PROJECTS START -->\n<!-- GENERATED:HOME_ACTIVE_PROJECTS END -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA START -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA END -->\n<!-- GENERATED:HOME_BLOG_POSTS START -->\n<!-- GENERATED:HOME_BLOG_POSTS END -->\n<!-- GENERATED:HOME_SITE_TREE START -->\n<!-- GENERATED:HOME_SITE_TREE END -->\n</body></html>",
+        "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:HOME_ACTIVE_PROJECTS START -->\n<!-- GENERATED:HOME_ACTIVE_PROJECTS END -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA START -->\n<!-- GENERATED:HOME_FEATURED_ADDENDA END -->\n<!-- GENERATED:HOME_BLOG_POSTS START -->\n<!-- GENERATED:HOME_BLOG_POSTS END -->\n<!-- GENERATED:HOME_SITE_TREE START -->\n<!-- GENERATED:HOME_SITE_TREE END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>",
     );
     write(
         root,
         "site/templates/dossiers/index.html",
-        "<html><body>\n<!-- GENERATED:DOSSIER_INDEX_GRID START -->\n<!-- GENERATED:DOSSIER_INDEX_GRID END -->\n</body></html>",
+        "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:DOSSIER_INDEX_GRID START -->\n<!-- GENERATED:DOSSIER_INDEX_GRID END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>",
     );
     write(
         root,
         "site/templates/addenda/index.html",
-        "<html><body>\n<!-- GENERATED:ADDENDA_INDEX_GRID START -->\n<!-- GENERATED:ADDENDA_INDEX_GRID END -->\n</body></html>",
+        "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:ADDENDA_INDEX_GRID START -->\n<!-- GENERATED:ADDENDA_INDEX_GRID END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>",
     );
     write(
         root,
         "site/templates/blog/index.html",
-        "<html><body>\n<!-- GENERATED:BLOG_INDEX_POSTS START -->\n<!-- GENERATED:BLOG_INDEX_POSTS END -->\n</body></html>",
-    );
-    write(
-        root,
-        "site/templates/research-notes/index.html",
-        "<html><body>\n</body></html>",
+        "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:BLOG_INDEX_POSTS START -->\n<!-- GENERATED:BLOG_INDEX_POSTS END -->\n<!-- GENERATED:BLOG_INDEX_NOTES START -->\n<!-- GENERATED:BLOG_INDEX_NOTES END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>",
     );
     write(
         root,
         "site/templates/sitemap/index.html",
-        "<html><body>\n<!-- GENERATED:SITEMAP_SECTIONS START -->\n<!-- GENERATED:SITEMAP_SECTIONS END -->\n<!-- GENERATED:SITEMAP_REGISTRY START -->\n<!-- GENERATED:SITEMAP_REGISTRY END -->\n</body></html>",
+        "<html><body>\n<!-- GENERATED:SITE_HEADER START -->\n<!-- GENERATED:SITE_HEADER END -->\n<!-- GENERATED:SITEMAP_SECTIONS START -->\n<!-- GENERATED:SITEMAP_SECTIONS END -->\n<!-- GENERATED:SITEMAP_REGISTRY START -->\n<!-- GENERATED:SITEMAP_REGISTRY END -->\n<!-- GENERATED:SITE_FOOTER START -->\n<!-- GENERATED:SITE_FOOTER END -->\n</body></html>",
     );
     write(
         root,
@@ -349,6 +363,7 @@ source_id: "A-001"
 fn site_build_no_longer_assigns_series_implicitly() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
+    minimal_shell(root);
     minimal_design_tokens(root);
     write(
         root,
@@ -372,6 +387,8 @@ fn site_build_no_longer_assigns_series_implicitly() {
         root,
         "site/templates/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:HOME_ACTIVE_PROJECTS START -->\n\
          <!-- GENERATED:HOME_ACTIVE_PROJECTS END -->\n\
          <!-- GENERATED:HOME_FEATURED_ADDENDA START -->\n\
@@ -380,46 +397,60 @@ fn site_build_no_longer_assigns_series_implicitly() {
          <!-- GENERATED:HOME_BLOG_POSTS END -->\n\
          <!-- GENERATED:HOME_SITE_TREE START -->\n\
          <!-- GENERATED:HOME_SITE_TREE END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
         root,
         "site/templates/dossiers/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_INDEX_GRID START -->\n\
          <!-- GENERATED:DOSSIER_INDEX_GRID END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
         root,
         "site/templates/addenda/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:ADDENDA_INDEX_GRID START -->\n\
          <!-- GENERATED:ADDENDA_INDEX_GRID END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
         root,
         "site/templates/blog/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:BLOG_INDEX_POSTS START -->\n\
          <!-- GENERATED:BLOG_INDEX_POSTS END -->\n\
-         </body></html>\n",
-    );
-    write(
-        root,
-        "site/templates/research-notes/index.html",
-        "<html><body>\n\
+         <!-- GENERATED:BLOG_INDEX_NOTES START -->\n\
+         <!-- GENERATED:BLOG_INDEX_NOTES END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
         root,
         "site/templates/sitemap/index.html",
         "<html><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:SITEMAP_SECTIONS START -->\n\
          <!-- GENERATED:SITEMAP_SECTIONS END -->\n\
          <!-- GENERATED:SITEMAP_REGISTRY START -->\n\
          <!-- GENERATED:SITEMAP_REGISTRY END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
@@ -430,8 +461,12 @@ fn site_build_no_longer_assigns_series_implicitly() {
          <!-- GENERATED:DOSSIER_HUB_TITLE END --> | Specter Labs</title>\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION START -->\n\
          <!-- GENERATED:DOSSIER_HUB_DESCRIPTION END --></head><body>\n\
+         <!-- GENERATED:SITE_HEADER START -->\n\
+         <!-- GENERATED:SITE_HEADER END -->\n\
          <!-- GENERATED:DOSSIER_HUB_CONTENT START -->\n\
          <!-- GENERATED:DOSSIER_HUB_CONTENT END -->\n\
+         <!-- GENERATED:SITE_FOOTER START -->\n\
+         <!-- GENERATED:SITE_FOOTER END -->\n\
          </body></html>\n",
     );
     write(
@@ -464,6 +499,7 @@ publish = true
         r#"---
 title: "Field Note"
 release: "published"
+summary: "A note from the field."
 ---
 
 # Field Note

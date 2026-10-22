@@ -4,39 +4,18 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="color-scheme" content="light" />
-        <title>$pagetitle$</title><meta name="spctr:card" content="none">
+        <title>$pagetitle$</title>
         $if(description)$<meta name="description" content="$description$" />$endif$
         <link rel="icon" href="$root_prefix$assets/logo-black.svg" type="image/svg+xml" />
         <link rel="stylesheet" href="$root_prefix$style.css" />
         <link rel="stylesheet" href="$root_prefix$cabinet/cabinet.css" />
-        <link rel="stylesheet" href="/assets/editorial.css?v=20260909-3" />
-<link rel="stylesheet" href="/assets/publication-layout.css?v=20260909-curated"></head>
+        <link rel="stylesheet" href="/assets/editorial.css" />
+<link rel="stylesheet" href="/assets/publication-layout.css">
+<link rel="stylesheet" href="/assets/site-shell.css"></head>
     <body class="cabinet-page">
+$site-header$
         <div class="doc-shell">
             <div class="doc-paper">
-                <div class="doc-top">
-                    <header class="site-topnav">
-                        <a class="site-brand" href="$root_prefix$">
-                            <img
-                                src="$root_prefix$assets/logo-black.svg"
-                                alt="Specter Labs logo"
-                                class="logo"
-                            />
-                            <span class="site-brand-name">SPECTER LABS</span>
-                        </a>
-                        <nav class="site-topnav-links" aria-label="Site navigation">
-                    <a class="nav-link" href="$root_prefix$dossiers/">Research</a>
-                    <a class="nav-link" href="$root_prefix$blog/">Writing</a>
-                    <a class="nav-link" href="$root_prefix$addenda/">Addenda</a>
-                    <a class="nav-link" href="$root_prefix$cabinet/" aria-current="page">Cabinet</a>
-                </nav>
-                    </header>
-                    <div class="site-rules" aria-hidden="true">
-                        <div class="site-rule strong"></div>
-                        <div class="site-rule"></div>
-                    </div>
-                </div>
-
                 <main class="doc-layout">
                     <aside class="doc-aside">
                         <a class="doc-nav-back" href="$root_prefix$cabinet/">
@@ -84,13 +63,8 @@
                     <article class="doc-content">$body$</article>
                 </main>
 
-                <footer class="doc-footer">
-                    <div class="doc-footer-inner">
-                        <div>Specter Labs</div>
-                        <div>$dossier$</div>
-                    </div>
-                </footer>
             </div>
         </div>
+$site-footer$
     </body>
 </html>

@@ -1068,19 +1068,6 @@ fn add_site_output_subgraph(
         visible_addenda_ids.into_iter().chain([addenda_template_id]),
     );
 
-    let blog_template_id = ensure_source_file_node(builder, "site/templates/blog/index.html");
-    let blog_id = upsert_site_output(builder, "site/blog/index.html", "blog_index");
-    add_output_dependencies(
-        builder,
-        &blog_id,
-        article_ids
-            .iter()
-            .cloned()
-            .chain([blog_template_id.clone()]),
-    );
-
-    let research_notes_template_id =
-        ensure_source_file_node(builder, "site/templates/research-notes/index.html");
     let research_note_template_id =
         ensure_source_file_node(builder, "site/research-notes/pandoc-template.html");
     let registry_source_id = ensure_source_file_node(builder, "spctr-registry.json");
@@ -1089,22 +1076,21 @@ fn add_site_output_subgraph(
         .iter()
         .map(|(_, source_path)| ensure_source_file_node(builder, source_path))
         .collect::<Vec<_>>();
-    let research_notes_id = upsert_site_output(
-        builder,
-        "site/research-notes/index.html",
-        "research_notes_index",
-    );
+
+    let blog_template_id = ensure_source_file_node(builder, "site/templates/blog/index.html");
+    let blog_id = upsert_site_output(builder, "site/blog/index.html", "blog_index");
     add_output_dependencies(
         builder,
-        &research_notes_id,
-        research_note_source_ids
+        &blog_id,
+        article_ids
             .iter()
             .cloned()
-            .chain([research_notes_template_id, registry_source_id.clone()]),
+            .chain(research_note_source_ids.iter().cloned())
+            .chain([blog_template_id.clone(), registry_source_id.clone()]),
     );
     for ((slug, _), source_id) in research_note_sources
         .into_iter()
-        .zip(research_note_source_ids.into_iter())
+        .zip(research_note_source_ids.iter().cloned())
     {
         let output_id = upsert_site_output(
             builder,
@@ -1287,7 +1273,8 @@ fn add_site_output_subgraph(
             .cloned()
             .chain(article_ids.iter().cloned())
             .chain(doc_ids)
-            .chain([research_notes_id, status_source_id, panel_source_id]),
+            .chain(research_note_source_ids)
+            .chain([status_source_id, panel_source_id]),
     );
 
     Ok(())

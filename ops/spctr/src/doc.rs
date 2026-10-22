@@ -9,16 +9,17 @@ use std::fs;
 use std::io::Write as _;
 use std::process::Command;
 
+use crate::site::shell;
 use crate::{design_tokens, design_tokens_css};
 
 const TEMPLATE_DIR: &str = "site/templates/report";
 const PUBLICATIONS: &str = "site/publications.json";
-const SITE_HEADER: &str = "site/templates/publication-header.html";
-const SITE_FOOTER: &str = "site/templates/publication-footer.html";
 
 /// Hosts of the private review app. Its revision links are allowed in report
 /// sources and must be resolved to public URLs before anything reaches the site.
 const REVIEW_HOSTS: &[&str] = &["lab.specterlab.org", "review.specterlab.org"];
+
+const SITE_SHELL_CSS: &str = "site/assets/site-shell.css";
 
 /// Site paths that must never be public.
 const PRIVATE_SITE_PATHS: &[&str] = &[
@@ -250,11 +251,11 @@ fn render(
             ))
             .arg(format!(
                 "--variable=rk-site-header:{}",
-                read(&repo_root.join(SITE_HEADER))?.trim()
+                shell::header(repo_root, shell::section_for_page(&page.path)?)?
             ))
             .arg(format!(
                 "--variable=rk-site-footer:{}",
-                read(&repo_root.join(SITE_FOOTER))?.trim()
+                shell::footer(repo_root)?
             ));
     }
     let output = command
@@ -674,6 +675,9 @@ fn inline_style(repo_root: &Utf8Path, target: Target, layout: Layout) -> Result<
     let tokens = design_tokens::load_spec(&design_tokens::spec_dir(repo_root), "web")?;
     css.push_str(&design_tokens_css::generate_css(&tokens)?);
     css.push_str(&read(&repo_root.join(TEMPLATE_DIR).join("report.css"))?);
+    if target == Target::Site {
+        css.push_str(&read(&repo_root.join(SITE_SHELL_CSS))?);
+    }
     if layout == Layout::Explorer {
         css.push_str(&read(&repo_root.join(TEMPLATE_DIR).join("explorer.css"))?);
     }

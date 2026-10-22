@@ -16,6 +16,7 @@ pub mod provenance;
 pub mod publish;
 pub mod records;
 pub mod regions;
+pub mod shell;
 pub mod status;
 pub mod tokens;
 
@@ -31,6 +32,9 @@ struct PageRegion {
     template_path: String,
     output_path: String,
     regions: Vec<(&'static str, String)>,
+    /// Public pages carry the shared site header and footer; the unreleased
+    /// causal-emergence pages keep their own chrome.
+    shell: bool,
 }
 
 struct ProjectFeeds {
@@ -111,11 +115,13 @@ fn build_from_projection(
 
     let mut pages: Vec<PageRegion> = vec![
         PageRegion {
+            shell: true,
             template_path: "site/templates/index.html".into(),
             output_path: "site/index.html".into(),
             regions: vec![("HOME_SITE_TREE", regions::render_home_site_tree(&records))],
         },
         PageRegion {
+            shell: true,
             template_path: "site/templates/dossiers/index.html".into(),
             output_path: "site/dossiers/index.html".into(),
             regions: vec![(
@@ -124,6 +130,7 @@ fn build_from_projection(
             )],
         },
         PageRegion {
+            shell: true,
             template_path: "site/templates/addenda/index.html".into(),
             output_path: "site/addenda/index.html".into(),
             regions: vec![(
@@ -132,19 +139,25 @@ fn build_from_projection(
             )],
         },
         PageRegion {
+            shell: true,
             template_path: "site/templates/blog/index.html".into(),
             output_path: "site/blog/index.html".into(),
             regions: vec![(
                 "BLOG_INDEX_POSTS",
                 regions::render_blog_index_posts(&blog_posts, "blog/index.html")?,
+            ), (
+                "BLOG_INDEX_NOTES",
+                regions::render_blog_index_notes(&blog::published_research_notes(repo_root)?)?,
             )],
         },
         PageRegion {
-            template_path: "site/templates/research-notes/index.html".into(),
-            output_path: "site/research-notes/index.html".into(),
+            shell: true,
+            template_path: "site/templates/404.html".into(),
+            output_path: "site/404.html".into(),
             regions: vec![],
         },
         PageRegion {
+            shell: true,
             template_path: "site/templates/sitemap/index.html".into(),
             output_path: "site/sitemap/index.html".into(),
             regions: vec![
@@ -166,6 +179,7 @@ fn build_from_projection(
         };
         if record.hub_generated {
             pages.push(PageRegion {
+                shell: true,
                 template_path: "site/templates/dossiers/default-hub.html".into(),
                 output_path: hub_path.clone(),
                 regions: vec![
@@ -189,12 +203,18 @@ fn build_from_projection(
             );
             let header_path = repo_root.join(&template).with_file_name("header.html");
             let header = if header_path.exists() {
-                fs::read_to_string(&header_path)
-                    .with_context(|| format!("failed to read dossier header {header_path}"))?
+                let cover = fs::read_to_string(&header_path)
+                    .with_context(|| format!("failed to read dossier header {header_path}"))?;
+                format!(
+                    "{}\n{}",
+                    cover.trim_end(),
+                    regions::render_dossier_hub_metabar(record).into_string()
+                )
             } else {
                 regions::render_dossier_hub_header(record)
             };
             pages.push(PageRegion {
+                shell: true,
                 template_path: template,
                 output_path: hub_path.clone(),
                 regions: vec![
@@ -238,6 +258,7 @@ fn build_from_projection(
             ),
         ] {
             pages.push(PageRegion {
+                shell: false,
                 template_path: template_path.into(),
                 output_path: output_path.into(),
                 regions: vec![
@@ -262,6 +283,25 @@ fn build_from_projection(
         }
         let mut text = fs::read_to_string(&template_abs)
             .with_context(|| format!("failed to read {}", page.template_path))?;
+        if page.shell {
+            let relative = page
+                .output_path
+                .strip_prefix("site/")
+                .with_context(|| format!("{}: output outside site/", page.output_path))?;
+            let section = shell::section_for_page(relative)?;
+            text = replace_region(
+                &text,
+                "SITE_HEADER",
+                &shell::header(repo_root, section)?,
+                &page.template_path,
+            )?;
+            text = replace_region(
+                &text,
+                "SITE_FOOTER",
+                &shell::footer(repo_root)?,
+                &page.template_path,
+            )?;
+        }
         for (name, content) in &page.regions {
             text = replace_region(&text, name, content, &page.template_path)?;
         }
