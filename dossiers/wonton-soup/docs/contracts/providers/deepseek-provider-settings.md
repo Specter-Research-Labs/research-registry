@@ -28,6 +28,19 @@ Hugging Face checkpoint directory. It loads `tokenizer.json` with
 checkpoint metadata can otherwise select a slow Llama tokenizer that corrupts
 space tokens.
 
+The `tt` backend samples on a Tenstorrent N300 card through
+`prover/providers/tt_deepseek_server.py`, a Unix-socket server that runs in the
+tt-metal Python environment and holds the model through tt-transformers' Llama
+path in bfloat16. It is reached from Python only, with
+`create_provider(..., deepseek_backend="tt", deepseek_tt_socket=<socket>)` or
+`DeepSeekTacticProvider(backend="tt", tt_socket=<socket>)`. The provider
+encodes and decodes with the same `PreTrainedTokenizerFast` as the Transformers
+backend and draws one sampling seed per request from a generator seeded by
+`set_seed`, so a search is reproducible for a fixed server. All samples of a
+request share the prompt's key-value blocks on the card. With bfloat8_b weights
+the root proposals picked up junk tokens the CPU path never produced, so the
+server keeps bfloat16.
+
 ## Current Decoding Settings
 
 Current code path uses stochastic sampling:
