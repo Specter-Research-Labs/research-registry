@@ -5,11 +5,23 @@
 
   outputs = { self, nixpkgs }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs { inherit system; };
-      shells = import ./ops/nix/shells.nix { inherit system pkgs; };
+      systems = [
+        "aarch64-darwin"
+        "x86_64-darwin"
+        "aarch64-linux"
+        "x86_64-linux"
+      ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
     in
     {
-      devShells.${system}.default = shells.mkRootShell;
+      devShells = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+          shells = import ./ops/nix/shells.nix { inherit system pkgs; };
+        in
+        {
+          default = shells.mkRootShell;
+          "poly-morphogenesis" = shells.mkPolyMorphogenesisShell;
+        });
     };
 }

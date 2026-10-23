@@ -1,0 +1,44 @@
+name: poly-morphogenesis
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/poly-morphogenesis.yml"
+      - "addenda/poly-morphogenesis/**"
+  pull_request:
+    paths:
+      - ".github/workflows/poly-morphogenesis.yml"
+      - "addenda/poly-morphogenesis/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      JULIA_NUM_THREADS: "1"
+    defaults:
+      run:
+        working-directory: addenda/poly-morphogenesis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.11.8"
+
+      - name: Cache Julia dependencies
+        uses: julia-actions/cache@v2
+
+      - name: Test
+        run: julia --startup-file=no --project=. -e 'using Pkg; Pkg.test()'

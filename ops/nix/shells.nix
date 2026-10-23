@@ -24,7 +24,7 @@ let
     in
     builtins.getAttr attr pinnedPkgs;
 
-  appleShellHook = ''
+  appleShellHook = lib.optionalString pinnedPkgs.stdenv.isDarwin ''
     unset NIX_CFLAGS_COMPILE NIX_CFLAGS_LINK NIX_LDFLAGS
     unset DEVELOPER_DIR SDKROOT TOOLCHAINS
     if [ -n "$LIBRARY_PATH" ]; then
@@ -119,13 +119,14 @@ PY
     DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" exec /usr/bin/xcrun swift "$@"
   '';
 
-  commonPackages = with pinnedPkgs; [
+  commonPackages = (with pinnedPkgs; [
     cmake
     elan
     uv
     ruff
     ty
     typst
+  ]) ++ lib.optionals pinnedPkgs.stdenv.isDarwin [
     swiftWrapper
     xcodebuildWrapper
   ];
@@ -174,6 +175,10 @@ rec {
 
   mkRootShell = mkProjectShell {
     pythonVersion = "3.12";
+  };
+
+  mkPolyMorphogenesisShell = mkProjectShell {
+    extraPackages = with pinnedPkgs; [ julia_111-bin ];
   };
 
   mkPythonProjectShell =
