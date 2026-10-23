@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import random
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -38,7 +39,7 @@ DEEPSEEK_TOKENIZER_KWARGS = {
     "pad_token": "<｜end▁of▁sentence｜>",
     "unk_token": "<unk>",
 }
-DeepSeekBackend = Literal["mlx", "transformers"]
+DeepSeekBackend = Literal["mlx", "transformers", "tt"]
 
 
 def _decode_bytelevel_artifacts(text: str) -> str:
@@ -125,9 +126,7 @@ def _resolve_backend(
             with urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
                     endpoints = [
-                        f"http://localhost:{p}"
-                        for p in _VLLM_DEFAULT_PORTS
-                        if _probe_port(p)
+                        f"http://localhost:{p}" for p in _VLLM_DEFAULT_PORTS if _probe_port(p)
                     ]
                     return endpoints, ""
         except Exception:
@@ -169,13 +168,22 @@ class DeepSeekTacticProvider(TacticProvider):
         cache_size: int = 100,
         num_samples: int = 10,
         proof_before_steps: int = 8,
+        tt_socket: str | None = None,
     ):
-        if backend not in ("mlx", "transformers"):
+        if backend not in ("mlx", "transformers", "tt"):
             raise ValueError(f"Unknown DeepSeek backend: {backend}")
+        if (backend == "tt") != (tt_socket is not None):
+            raise ValueError("tt_socket is required for the tt backend and only valid with it")
         self._backend = backend
+        self._tt_socket = tt_socket
+        self._tt_seeds: random.Random | None = None
         if backend == "mlx":
             self._vllm_endpoints, self._model_path = _resolve_backend(model_path)
             self._device = device
+        elif backend == "tt":
+            self._vllm_endpoints = []
+            self._model_path = _resolve_model_path(model_path)
+            self._device = None
         else:
             self._vllm_endpoints = []
             self._model_path = _resolve_model_path(model_path)
@@ -208,6 +216,8 @@ class DeepSeekTacticProvider(TacticProvider):
             import mlx.core as mx
 
             mx.random.seed(seed % (2**32))
+        elif self._backend == "tt":
+            self._tt_seeds = random.Random(seed)
         else:
             import torch
 
@@ -223,12 +233,8 @@ class DeepSeekTacticProvider(TacticProvider):
             self._model, self._tokenizer = load(self._model_path)
             self._prompt_tokenizer = self._load_prompt_tokenizer(self._model_path)
         else:
-            import torch
-            from transformers import AutoModelForCausalLM, PreTrainedTokenizerFast
+            from transformers import PreTrainedTokenizerFast
 
-            device = self._device or _default_transformers_device(torch)
-            # On a CPU the model runs in bfloat16, its native checkpoint dtype.
-            dtype = torch.float16 if device in {"mps", "cuda"} else torch.bfloat16
             tokenizer_file = Path(self._model_path) / "tokenizer.json"
             if not tokenizer_file.exists():
                 raise FileNotFoundError(f"DeepSeek tokenizer.json not found: {tokenizer_file}")
@@ -236,6 +242,13 @@ class DeepSeekTacticProvider(TacticProvider):
                 tokenizer_file=str(tokenizer_file),
                 **DEEPSEEK_TOKENIZER_KWARGS,
             )
+        if self._backend == "transformers":
+            import torch
+            from transformers import AutoModelForCausalLM
+
+            device = self._device or _default_transformers_device(torch)
+            # On a CPU the model runs in bfloat16, its native checkpoint dtype.
+            dtype = torch.float16 if device in {"mps", "cuda"} else torch.bfloat16
             model = AutoModelForCausalLM.from_pretrained(
                 self._model_path,
                 torch_dtype=dtype,
@@ -423,6 +436,8 @@ class DeepSeekTacticProvider(TacticProvider):
     def _generate_tactics(self, prompt: str, n: int) -> list[tuple[str, float]]:
         if self._backend == "transformers":
             return self._generate_tactics_transformers(prompt, n)
+        if self._backend == "tt":
+            return self._generate_tactics_tt(prompt, n)
         return self._generate_tactics_mlx(prompt, n)
 
     def _prompt_ids(self, prompt: str) -> list[int]:
@@ -480,6 +495,26 @@ class DeepSeekTacticProvider(TacticProvider):
             eos_token_id=self._tokenizer.eos_token_id,
         )
         decoded = self._tokenizer.batch_decode(generated.detach().cpu(), skip_special_tokens=False)
+        return self._rank_tactics(decoded, num_to_generate)
+
+    def _generate_tactics_tt(self, prompt: str, n: int) -> list[tuple[str, float]]:
+        self._ensure_loaded()
+        from prover.providers.tt_deepseek_server import request_samples
+
+        if self._tt_seeds is None:
+            raise RuntimeError("set_seed must be called before sampling from the tt backend")
+        assert self._tt_socket is not None
+        num_to_generate = max(1, min(n, self._num_samples))
+        generated = request_samples(
+            self._tt_socket,
+            self._prompt_ids(prompt),
+            n=num_to_generate,
+            seed=self._tt_seeds.getrandbits(63),
+            max_new_tokens=self.MAX_NEW_TOKENS,
+            temperature=0.6,
+            top_p=0.9,
+        )
+        decoded = self._tokenizer.batch_decode(generated, skip_special_tokens=False)
         return self._rank_tactics(decoded, num_to_generate)
 
     @staticmethod

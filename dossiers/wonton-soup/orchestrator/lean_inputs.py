@@ -168,6 +168,7 @@ def create_provider(
     deepseek_num_samples: int | None = None,
     deepseek_model_path: str | None = None,
     deepseek_backend: str = "mlx",
+    deepseek_tt_socket: str | None = None,
     bfs_num_samples: int | None = None,
     internlm_num_samples: int | None = None,
 ) -> TacticProvider:
@@ -179,19 +180,16 @@ def create_provider(
             top_p=0.9,
         )
     elif provider_name == "deepseek":
-        if deepseek_num_samples is None:
-            base = DeepSeekTacticProvider(
-                model_path=deepseek_model_path,
-                backend=deepseek_backend,
-                device=device,
-            )
-        else:
-            base = DeepSeekTacticProvider(
-                model_path=deepseek_model_path,
-                backend=deepseek_backend,
-                device=device,
-                num_samples=deepseek_num_samples,
-            )
+        deepseek_kwargs: dict[str, Any] = {}
+        if deepseek_num_samples is not None:
+            deepseek_kwargs["num_samples"] = deepseek_num_samples
+        base = DeepSeekTacticProvider(
+            model_path=deepseek_model_path,
+            backend=deepseek_backend,
+            device=device,
+            tt_socket=deepseek_tt_socket,
+            **deepseek_kwargs,
+        )
     elif provider_name == "bfs":
         kwargs = {
             "device": device,
