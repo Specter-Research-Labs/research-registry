@@ -1,8 +1,11 @@
+import base64
+import json
 import math
 
 import numpy as np
+import pytest
 
-from lenia_swarm_analysis.morphospace.regeneration import cut_state
+from lenia_swarm_analysis.morphospace.regeneration import cut_state, retire_restart_fields
 
 
 def _body_across_seam(n=64):
@@ -31,3 +34,40 @@ def test_opposite_cuts_remove_opposite_sides():
     occupied = state.sum(axis=-1) > 0
     assert not (plus & minus & occupied).any()
     assert np.flatnonzero((plus & occupied).any(axis=0)).min() > np.flatnonzero((minus & occupied).any(axis=0)).max() - 1
+
+
+def _restart_cell(root, restarts):
+    for i, (body, _) in enumerate(restarts):
+        d = root / "campaigns" / f"{i + 1:04d}-{body}"
+        d.mkdir(parents=True)
+        (d / "replay-manifest.json").write_text(json.dumps({"sourceCreatureId": body}))
+        field = base64.b64encode(np.zeros(16, dtype="<f2").tobytes()).decode()
+        frames = [{"step": s, "stateSha256": f"{body}-{s}", "fieldResolution": 4, "fieldF16Base64": field} for s in (400, 800)]
+        (d / "development-trace.jsonl").write_text("".join(json.dumps(f) + "\n" for f in frames))
+    shapes = root / "shapes.npz"
+    np.savez(shapes, body=np.array([b for b, _ in restarts]), condition=np.array([c for _, c in restarts]),
+             state_sha256=np.array([[f"{b}-400", f"{b}-800"] for b, _ in restarts]))
+    return shapes
+
+
+def test_retire_restart_fields_strips_measured_traces_and_keeps_named_restarts(tmp_path):
+    shapes = _restart_cell(tmp_path, [("A", "control"), ("A", "cut-a0-f0.5")])
+    kept = (tmp_path / "campaigns/0002-A/development-trace.jsonl").read_bytes()
+    summary = retire_restart_fields(replay_root=tmp_path, shapes=shapes, keep=["A:cut-a0-f0.5"],
+                                    manifest_path=tmp_path / "manifest.json", apply=True)
+    assert (summary["stripped"], summary["kept"]) == (1, 1)
+    assert (tmp_path / "campaigns/0002-A/development-trace.jsonl").read_bytes() == kept
+    frames = [json.loads(line) for line in (tmp_path / "campaigns/0001-A/development-trace.jsonl").read_text().splitlines()]
+    assert "fieldF16Base64" not in frames[0] and "fieldF16Base64" in frames[1]
+    assert all("fieldF16Sha256" in f for f in frames)
+
+
+def test_retire_restart_fields_refuses_unmeasured_traces(tmp_path):
+    shapes = _restart_cell(tmp_path, [("A", "control")])
+    trace = tmp_path / "campaigns/0001-A/development-trace.jsonl"
+    frames = [json.loads(line) for line in trace.read_text().splitlines()]
+    frames[1]["stateSha256"] = "other"
+    trace.write_text("".join(json.dumps(f) + "\n" for f in frames))
+    with pytest.raises(ValueError, match="do not match"):
+        retire_restart_fields(replay_root=tmp_path, shapes=shapes, keep=[],
+                              manifest_path=tmp_path / "manifest.json", apply=True)

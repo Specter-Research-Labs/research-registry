@@ -23,10 +23,12 @@ from pathlib import Path
 
 import numpy as np
 
+from lenia_swarm_analysis._io import sha256_bytes
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import state_patch_config
 from lenia_swarm_analysis.observer.states import load_states
 
 from .common_morphology import AXIS_IDS, point_cloud_shape_features
+from .requalification import strip_trace_fields
 
 CONTROL = "control"
 
@@ -179,3 +181,48 @@ def write_regeneration_inputs(
                "restart_steps": restart_steps, "conditions": conditions, "restarts": manifest}
     (output_dir / "regeneration-inputs.json").write_text(json.dumps(receipt, indent=1) + "\n")
     return {"restarts": len(manifest), "bodies": len(bodies), "conditions": len(conditions), "output": str(output_dir)}
+
+
+def retire_restart_fields(
+    *, replay_root: Path, shapes: Path, keep: list[str], manifest_path: Path, apply: bool
+) -> dict:
+    """Strip raw fields from the restart traces of one replay cell once their shapes are measured.
+
+    `shapes` is the cell's shape record, an npz whose rows follow the campaign order with arrays body,
+    condition and state_sha256. A trace is stripped only if its body and the state hashes of its field
+    frames match its row, so that no trace loses its fields before it was measured. Restarts named in
+    `keep` as body:condition stay whole. Without `apply` only the manifest is written."""
+    record = np.load(shapes)
+    campaigns = sorted((replay_root / "campaigns").iterdir())
+    if len(campaigns) != len(record["body"]):
+        raise ValueError(f"{replay_root}: {len(campaigns)} campaigns against {len(record['body'])} rows in {shapes}")
+    named = set(keep)
+    rows, kept = [], []
+    for campaign, body, condition, hashes in zip(
+        campaigns, record["body"], record["condition"], record["state_sha256"], strict=True
+    ):
+        trace = campaign / "development-trace.jsonl"
+        if json.loads((campaign / "replay-manifest.json").read_text())["sourceCreatureId"] != body:
+            raise ValueError(f"{campaign}: body differs from row {body} of {shapes}")
+        raw = trace.read_bytes()
+        frames = [json.loads(line) for line in raw.decode().splitlines()]
+        measured = [f["stateSha256"] for f in frames if "fieldF16Base64" in f]
+        if measured != list(hashes):
+            raise ValueError(f"{trace}: field frames do not match the measured row of {shapes}")
+        name = f"{body}:{condition}"
+        if name in named:
+            named.discard(name)
+            kept.append({"restart": name, "path": str(trace), "sha256": sha256_bytes(raw), "bytes": len(raw)})
+            continue
+        rows.append({"restart": name, **strip_trace_fields(trace, raw, frames, apply=apply)})
+    if named:
+        raise ValueError(f"restarts to keep not in {replay_root}: {sorted(named)}")
+    manifest_path.write_text(json.dumps({"applied": apply, "shapes_sha256": sha256_bytes(shapes.read_bytes()),
+                                         "stripped": rows, "kept": kept}, indent=1))
+    return {
+        "manifest": str(manifest_path),
+        "applied": apply,
+        "stripped": len(rows),
+        "kept": len(kept),
+        "freed_bytes": sum(r["bytes"] - r["stripped_bytes"] for r in rows),
+    }
