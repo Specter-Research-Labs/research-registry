@@ -343,6 +343,33 @@ def compare_verdicts(
     }
 
 
+def strip_trace_fields(
+    trace: Path, raw: bytes, frames: list[dict], *, apply: bool
+) -> dict[str, Any]:
+    """Drop every frame's raw field except the terminal one, recording fieldF16Sha256 of each
+    decoded float16 field. Without `apply` the trace is left as it is."""
+    stripped = []
+    for i, f in enumerate(frames):
+        if "fieldF16Base64" not in f:
+            raise ValueError(f"{trace}: step {f['step']} has no field (already stripped?)")
+        f["fieldF16Sha256"] = sha256_bytes(trace_field(f).tobytes())
+        if i != len(frames) - 1:
+            del f["fieldF16Base64"]
+        stripped.append(json.dumps(f, sort_keys=True))
+    text = ("\n".join(stripped) + "\n").encode()
+    if apply:
+        tmp = trace.with_suffix(".stripped")
+        tmp.write_bytes(text)
+        tmp.replace(trace)
+    return {
+        "path": str(trace),
+        "sha256": sha256_bytes(raw),
+        "bytes": len(raw),
+        "stripped_sha256": sha256_bytes(text),
+        "stripped_bytes": len(text),
+    }
+
+
 def retire_trace_fields(
     *,
     replay_roots: list[Path],
@@ -375,28 +402,7 @@ def retire_trace_fields(
             if body.lower() in keep:
                 kept.append({"path": str(trace), "sha256": sha256_bytes(raw), "bytes": len(raw)})
                 continue
-            stripped = []
-            for i, f in enumerate(frames):
-                if "fieldF16Base64" not in f:
-                    raise ValueError(f"{trace}: already stripped")
-                f["fieldF16Sha256"] = sha256_bytes(trace_field(f).tobytes())
-                if i != len(frames) - 1:
-                    del f["fieldF16Base64"]
-                stripped.append(json.dumps(f, sort_keys=True))
-            text = ("\n".join(stripped) + "\n").encode()
-            rows.append(
-                {
-                    "path": str(trace),
-                    "sha256": sha256_bytes(raw),
-                    "bytes": len(raw),
-                    "stripped_sha256": sha256_bytes(text),
-                    "stripped_bytes": len(text),
-                }
-            )
-            if apply:
-                tmp = trace.with_suffix(".stripped")
-                tmp.write_bytes(text)
-                tmp.replace(trace)
+            rows.append(strip_trace_fields(trace, raw, frames, apply=apply))
     manifest = {"applied": apply, "stripped": rows, "kept": kept}
     manifest_path.write_text(json.dumps(manifest, indent=1))
     return {

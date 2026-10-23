@@ -46,7 +46,10 @@ from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
 )
 from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
-from lenia_swarm_analysis.morphospace.regeneration import write_regeneration_inputs
+from lenia_swarm_analysis.morphospace.regeneration import (
+    retire_restart_fields,
+    write_regeneration_inputs,
+)
 from lenia_swarm_analysis.morphospace.requalification import (
     collect_members,
     compare_trace_frames,
@@ -1199,6 +1202,26 @@ def _build_parser() -> argparse.ArgumentParser:
             replay_roots=[p.resolve() for p in args.replay_root],
             assessments=[p.resolve() for p in args.assessment],
             keep_bodies=args.keep_body,
+            manifest_path=args.manifest.resolve(),
+            apply=bool(args.apply),
+        )
+    )
+
+    retire_restarts = subparsers.add_parser(
+        "retire-restart-fields",
+        help="Strip raw fields from measured regeneration restart traces, keeping per-frame hashes",
+    )
+    retire_restarts.add_argument("--replay-root", required=True, type=Path)
+    retire_restarts.add_argument("--shapes", required=True, type=Path)
+    retire_restarts.add_argument("--keep", action="append", default=[], help="body:condition of a restart to keep whole")
+    retire_restarts.add_argument("--manifest", required=True, type=Path)
+    retire_restarts.add_argument("--apply", action="store_true")
+    _add_json(retire_restarts)
+    retire_restarts.set_defaults(
+        handler=lambda args: retire_restart_fields(
+            replay_root=args.replay_root.resolve(),
+            shapes=args.shapes.resolve(),
+            keep=args.keep,
             manifest_path=args.manifest.resolve(),
             apply=bool(args.apply),
         )
