@@ -81,7 +81,10 @@ distribution image with the whole `/dev/tenstorrent` tree mapped, so card
 indices mean the same inside and outside the container. It removes hugepage
 files that no process holds before starting, and keeps the TT-Metal kernel cache
 under `$SPECTER_RUNTIME_ROOT/tt-metal-cache` (or the dossier's `tmp/`), so the
-roughly 12 s first-step compilation happens once per kernel variant.
+roughly 12 s first-step compilation happens once per kernel variant. The payload
+runs as the invoking user, so replays, assessments and trace retirement need no
+root; directories written by older root-run containers must be handed back to
+that user once.
 
 ## Validation and benchmarks
 
