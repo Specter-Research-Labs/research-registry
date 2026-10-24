@@ -194,7 +194,7 @@ fn finalize_page(
     rewritten.push_str(&head_text);
     rewritten.push_str(&tags.join(""));
     rewritten.push_str(&text[head_end..]);
-    rewrite_external_links(&rewritten, public_url)
+    rewrite_new_tab_links(&rewritten, public_url)
 }
 
 /// What a built page declares about itself, read the same way finalize reads
@@ -344,17 +344,17 @@ fn ensure_current_site_shell(text: &str) -> String {
     rewritten
 }
 
-fn rewrite_external_links(text: &str, public_url: &str) -> Result<String> {
+fn rewrite_new_tab_links(text: &str, public_url: &str) -> Result<String> {
     let site = Url::parse(public_url).context("site public URL is invalid")?;
     let anchor_re = Regex::new(r"(?is)<a\b[^>]*>").expect("valid regex");
     Ok(anchor_re
         .replace_all(text, |captures: &regex_lite::Captures<'_>| {
-            rewrite_external_anchor(&captures[0], &site)
+            rewrite_new_tab_anchor(&captures[0], &site)
         })
         .into_owned())
 }
 
-fn rewrite_external_anchor(tag: &str, site: &Url) -> String {
+fn rewrite_new_tab_anchor(tag: &str, site: &Url) -> String {
     let attrs = parse_attrs(tag);
     let Some(href) = attrs.get("href") else {
         return tag.to_owned();
@@ -362,7 +362,9 @@ fn rewrite_external_anchor(tag: &str, site: &Url) -> String {
     let Ok(url) = site.join(href) else {
         return tag.to_owned();
     };
-    if !matches!(url.scheme(), "http" | "https") || url.host_str() == site.host_str() {
+    if !matches!(url.scheme(), "http" | "https")
+        || (url.host_str() == site.host_str() && !looks_like_file(&url))
+    {
         return tag.to_owned();
     }
 
@@ -378,6 +380,16 @@ fn rewrite_external_anchor(tag: &str, site: &Url) -> String {
     }
     let rewritten = set_tag_attribute(tag, "target", "_blank");
     set_tag_attribute(&rewritten, "rel", &rel.join(" "))
+}
+
+fn looks_like_file(url: &Url) -> bool {
+    let file_name = url.path().rsplit('/').next().unwrap_or_default();
+    let Some((_, extension)) = file_name.rsplit_once('.') else {
+        return false;
+    };
+    !extension.is_empty()
+        && !extension.eq_ignore_ascii_case("html")
+        && !extension.eq_ignore_ascii_case("htm")
 }
 
 fn set_tag_attribute(tag: &str, name: &str, value: &str) -> String {
@@ -699,9 +711,9 @@ mod tests {
     }
 
     #[test]
-    fn external_links_open_in_a_new_tab_without_changing_site_links() {
-        let input = r#"<a href="https://outside.example/a">outside</a><a href='//outside.example/b' target='_self' rel='nofollow'>protocol relative</a><a href="https://outside.example/c" target="_blank" rel="noopener noreferrer">ready</a><a href="https://specterlab.org/dossiers/">absolute site</a><a href="/blog/">relative site</a><a href="mailto:contact@specterlab.org">mail</a>"#;
-        let rewritten = rewrite_external_links(input, "https://specterlab.org").unwrap();
+    fn external_and_file_links_open_in_a_new_tab_without_changing_page_links() {
+        let input = r#"<a href="https://outside.example/a">outside</a><a href='//outside.example/b' target='_self' rel='nofollow'>protocol relative</a><a href="https://outside.example/c" target="_blank" rel="noopener noreferrer">ready</a><a href="https://specterlab.org/dossiers/">absolute site</a><a href="/blog/">relative site</a><a href="about.html">relative HTML page</a><a href="/data/results.json">JSON</a><a href='analysis.PY?raw=1#source' target='_self' rel='nofollow'>Python</a><a href="https://specterlab.org/files/archive.tar.gz">archive</a><a href="mailto:contact@specterlab.org">mail</a>"#;
+        let rewritten = rewrite_new_tab_links(input, "https://specterlab.org").unwrap();
 
         assert!(rewritten
             .contains(r#"href="https://outside.example/a" target="_blank" rel="noopener""#));
@@ -714,7 +726,38 @@ mod tests {
             rewritten.contains(r#"<a href="https://specterlab.org/dossiers/">absolute site</a>"#)
         );
         assert!(rewritten.contains(r#"<a href="/blog/">relative site</a>"#));
+        assert!(rewritten.contains(r#"<a href="about.html">relative HTML page</a>"#));
+        assert!(rewritten.contains(r#"href="/data/results.json" target="_blank" rel="noopener""#));
+        assert!(rewritten.contains(
+            r#"href='analysis.PY?raw=1#source' target="_blank" rel="nofollow noopener""#
+        ));
+        assert!(rewritten.contains(
+            r#"href="https://specterlab.org/files/archive.tar.gz" target="_blank" rel="noopener""#
+        ));
         assert!(rewritten.contains(r#"<a href="mailto:contact@specterlab.org">mail</a>"#));
+    }
+
+    #[test]
+    fn file_links_are_detected_by_path_instead_of_a_fixed_extension_list() {
+        for path in [
+            "data.json",
+            "analysis.py",
+            "table.csv",
+            "paper.pdf",
+            "figure.svg",
+            "notebook.ipynb",
+            "archive.tar.gz",
+            "source.txt",
+        ] {
+            assert!(looks_like_file(
+                &Url::parse(&format!("https://specterlab.org/{path}?raw=1#source")).unwrap()
+            ));
+        }
+        for path in ["", "writing/", "article", "article.html", "ARTICLE.HTM"] {
+            assert!(!looks_like_file(
+                &Url::parse(&format!("https://specterlab.org/{path}")).unwrap()
+            ));
+        }
     }
 
     #[test]
