@@ -6,6 +6,7 @@ use std::process::{Command, Stdio};
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use regex_lite::Regex;
+use url::Url;
 
 use super::shell;
 
@@ -17,6 +18,8 @@ const CARD_META: &str = "spctr:card";
 const MAX_DESCRIPTION: usize = 160;
 const NO_CARD: &str = "none";
 const CARD_TEMPLATE: &str = include_str!("og-card.typ");
+const TOKENS_STYLESHEET: &str = "/tokens.css";
+const SITE_SHELL_STYLESHEET: &str = "/assets/site-shell.css";
 
 // Keys finalize derives from the page title, description, and path. A page that
 // declares one itself would ship a second, possibly conflicting, value.
@@ -111,9 +114,10 @@ fn finalize_page(
     public_url: &str,
     report: &mut FinalizeReport,
 ) -> Result<String> {
+    let text = ensure_current_site_shell(text);
     let head_end = text.find("</head>").context("page has no </head>")?;
     let head = parse_head(&text[..head_end])?;
-    check_internal_links(text)?;
+    check_internal_links(&text)?;
 
     let page_title = page_title(relative, &head.title)?;
     for key in DERIVED_META {
@@ -190,7 +194,7 @@ fn finalize_page(
     rewritten.push_str(&head_text);
     rewritten.push_str(&tags.join(""));
     rewritten.push_str(&text[head_end..]);
-    Ok(rewritten)
+    rewrite_external_links(&rewritten, public_url)
 }
 
 /// What a built page declares about itself, read the same way finalize reads
@@ -317,6 +321,87 @@ fn check_internal_links(text: &str) -> Result<()> {
         );
     }
     Ok(())
+}
+
+fn ensure_current_site_shell(text: &str) -> String {
+    let header_re = Regex::new(
+        r#"(?is)<header\s[^>]*class\s*=\s*["'][^"']*\bpublication-header\b[^"']*["'][^>]*>"#,
+    )
+    .expect("valid regex");
+    if !header_re.is_match(text) || text.contains(SITE_SHELL_STYLESHEET) {
+        return text.to_owned();
+    }
+    let Some(head_end) = text.find("</head>") else {
+        return text.to_owned();
+    };
+    let injection = format!(
+        r#"<link rel="stylesheet" href="{TOKENS_STYLESHEET}"><link rel="stylesheet" href="{SITE_SHELL_STYLESHEET}">"#
+    );
+    let mut rewritten = String::with_capacity(text.len() + injection.len());
+    rewritten.push_str(&text[..head_end]);
+    rewritten.push_str(&injection);
+    rewritten.push_str(&text[head_end..]);
+    rewritten
+}
+
+fn rewrite_external_links(text: &str, public_url: &str) -> Result<String> {
+    let site = Url::parse(public_url).context("site public URL is invalid")?;
+    let anchor_re = Regex::new(r"(?is)<a\b[^>]*>").expect("valid regex");
+    Ok(anchor_re
+        .replace_all(text, |captures: &regex_lite::Captures<'_>| {
+            rewrite_external_anchor(&captures[0], &site)
+        })
+        .into_owned())
+}
+
+fn rewrite_external_anchor(tag: &str, site: &Url) -> String {
+    let attrs = parse_attrs(tag);
+    let Some(href) = attrs.get("href") else {
+        return tag.to_owned();
+    };
+    let Ok(url) = site.join(href) else {
+        return tag.to_owned();
+    };
+    if !matches!(url.scheme(), "http" | "https") || url.host_str() == site.host_str() {
+        return tag.to_owned();
+    }
+
+    let mut rel: Vec<&str> = attrs
+        .get("rel")
+        .map(|value| value.split_whitespace().collect())
+        .unwrap_or_default();
+    if !rel
+        .iter()
+        .any(|value| value.eq_ignore_ascii_case("noopener"))
+    {
+        rel.push("noopener");
+    }
+    let rewritten = set_tag_attribute(tag, "target", "_blank");
+    set_tag_attribute(&rewritten, "rel", &rel.join(" "))
+}
+
+fn set_tag_attribute(tag: &str, name: &str, value: &str) -> String {
+    let pattern = format!(r#"(?i)(\s{name}\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s>]+)"#);
+    let attr_re = Regex::new(&pattern).expect("valid attribute regex");
+    if attr_re.is_match(tag) {
+        return attr_re
+            .replace(tag, |captures: &regex_lite::Captures<'_>| {
+                format!(r#"{}"{value}""#, &captures[1])
+            })
+            .into_owned();
+    }
+    let Some(end) = tag.rfind('>') else {
+        return tag.to_owned();
+    };
+    let mut insertion = end;
+    if tag[..end].trim_end().ends_with('/') {
+        insertion = tag[..end].rfind('/').unwrap_or(end);
+    }
+    let mut rewritten = String::with_capacity(tag.len() + name.len() + value.len() + 4);
+    rewritten.push_str(&tag[..insertion]);
+    rewritten.push_str(&format!(r#" {name}="{value}""#));
+    rewritten.push_str(&tag[insertion..]);
+    rewritten
 }
 
 fn check_image(stage_root: &Utf8Path, image: &str) -> Result<()> {
@@ -590,6 +675,46 @@ mod tests {
             finalize_site(root(&temp), Utf8Path::new("fonts"), "https://example.org").unwrap_err()
         );
         assert!(message.contains("page declares both og:image and spctr:card"));
+    }
+
+    #[test]
+    fn loads_the_current_shell_after_embedded_report_styles() {
+        let report = r#"<html><head><style>:root{--sl-layout-brand-size:51px}</style></head><body><header class="publication-header"></header></body></html>"#;
+        let rewritten = ensure_current_site_shell(report);
+        assert!(rewritten.contains(r#"href="/tokens.css""#));
+        assert!(rewritten.contains(r#"href="/assets/site-shell.css""#));
+        assert!(
+            rewritten.find(SITE_SHELL_STYLESHEET).unwrap()
+                > rewritten.find("--sl-layout-brand-size:51px").unwrap()
+        );
+
+        let already_current = format!(
+            r#"<html><head><link rel="stylesheet" href="{SITE_SHELL_STYLESHEET}"></head><body><header class="publication-header"></header></body></html>"#
+        );
+        assert_eq!(ensure_current_site_shell(&already_current), already_current);
+        assert_eq!(
+            ensure_current_site_shell("<html><head></head><body></body></html>"),
+            "<html><head></head><body></body></html>"
+        );
+    }
+
+    #[test]
+    fn external_links_open_in_a_new_tab_without_changing_site_links() {
+        let input = r#"<a href="https://outside.example/a">outside</a><a href='//outside.example/b' target='_self' rel='nofollow'>protocol relative</a><a href="https://outside.example/c" target="_blank" rel="noopener noreferrer">ready</a><a href="https://specterlab.org/dossiers/">absolute site</a><a href="/blog/">relative site</a><a href="mailto:contact@specterlab.org">mail</a>"#;
+        let rewritten = rewrite_external_links(input, "https://specterlab.org").unwrap();
+
+        assert!(rewritten
+            .contains(r#"href="https://outside.example/a" target="_blank" rel="noopener""#));
+        assert!(rewritten
+            .contains(r#"href='//outside.example/b' target="_blank" rel="nofollow noopener""#));
+        assert!(rewritten.contains(
+            r#"href="https://outside.example/c" target="_blank" rel="noopener noreferrer""#
+        ));
+        assert!(
+            rewritten.contains(r#"<a href="https://specterlab.org/dossiers/">absolute site</a>"#)
+        );
+        assert!(rewritten.contains(r#"<a href="/blog/">relative site</a>"#));
+        assert!(rewritten.contains(r#"<a href="mailto:contact@specterlab.org">mail</a>"#));
     }
 
     #[test]
