@@ -14,7 +14,7 @@ img { max-width: 100%; display: block; }
 figure, p, h1, h2, h3 { margin: 0; }
 main { max-width: var(--publication-width); margin: auto; padding: 0 var(--publication-gutter) 40px; }
 .hero { padding: 24px 0 36px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
-h1 em { font-family: var(--sl-font-prose); font-weight: 400; letter-spacing: -.02em; }
+h1 em { font-family: var(--sl-font-prose); font-weight: 700; letter-spacing: -.02em; }
 .intro { font-size: 17px; line-height: 1.6; max-width: 49ch; margin-top: 26px; }
 .text-link { display: inline-block; margin-top: 22px; font: 11px/1.7 "Berkeley Mono", monospace; text-decoration: none; }
 .text-link:hover { text-decoration: underline; }
