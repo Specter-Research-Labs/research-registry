@@ -1,7 +1,8 @@
 @font-face { font-family: "IBM Plex Serif"; src: url('/fonts/IBMPlexSerif-Regular.woff2'); font-display: swap; }
 @font-face { font-family: "IBM Plex Serif"; src: url('/fonts/IBMPlexSerif-Italic.woff2'); font-display: swap; font-style: italic; }
 @font-face { font-family: "IBM Plex Serif"; src: url('/fonts/IBMPlexSerif-Bold.woff2'); font-display: swap; font-weight: 700; }
-@font-face { font-family: "Berkeley Mono"; src: url('/fonts/BerkeleyMono-Regular.woff2'); font-display: swap; }
+@font-face { font-family: "Berkeley Mono"; src: url('/fonts/BerkeleyMono-Regular.woff2'); font-display: swap; font-weight: 400; }
+@font-face { font-family: "Berkeley Mono"; src: url('/fonts/BerkeleyMono-Bold.woff2'); font-display: swap; font-weight: 700; }
 :root { --paper: var(--sl-color-paper); --ink: var(--sl-color-ink); --muted: var(--sl-color-muted); --rule: var(--sl-color-rule); }
 * { box-sizing: border-box; }
 html { scroll-padding-top: 28px; }
