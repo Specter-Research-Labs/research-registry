@@ -5,7 +5,12 @@ import math
 import numpy as np
 import pytest
 
-from lenia_swarm_analysis.morphospace.regeneration import cut_state, retire_restart_fields
+from lenia_swarm_analysis.morphospace.regeneration import (
+    circular_centre,
+    cut_state,
+    reshape_state,
+    retire_restart_fields,
+)
 
 
 def _body_across_seam(n=64):
@@ -34,6 +39,40 @@ def test_opposite_cuts_remove_opposite_sides():
     occupied = state.sum(axis=-1) > 0
     assert not (plus & minus & occupied).any()
     assert np.flatnonzero((plus & occupied).any(axis=0)).min() > np.flatnonzero((minus & occupied).any(axis=0)).max() - 1
+
+
+def _gyration_and_axis(field):
+    mass = field.sum(axis=-1, dtype=np.float64)
+    offsets = [(np.arange(n) - c + n / 2) % n - n / 2 for n, c in zip(mass.shape, circular_centre(mass), strict=True)]
+    d0, d1 = np.meshgrid(*offsets, indexing="ij")
+    w = mass / mass.sum()
+    cov = np.array([[np.sum(w * a * b) for b in (d0, d1)] for a in (d0, d1)])
+    values, vectors = np.linalg.eigh(cov)
+    return math.sqrt(np.trace(cov)), vectors[:, int(np.argmax(values))], values.max() / values.min()
+
+
+@pytest.mark.parametrize("profile", ["gauss", "ellipse"])
+def test_reshape_keeps_channel_mass_centre_size_and_axis(profile):
+    state = _body_across_seam(128)
+    shaped = reshape_state(state, profile, 3.0)
+    np.testing.assert_allclose(shaped.sum(axis=(0, 1)), state.sum(axis=(0, 1)), rtol=1e-5)
+    np.testing.assert_allclose(circular_centre(shaped.sum(axis=-1)), circular_centre(state.sum(axis=-1)), atol=0.5)
+    size, axis, ratio = _gyration_and_axis(shaped)
+    body_size, body_axis, _ = _gyration_and_axis(state)
+    assert abs(size - body_size) / body_size < 0.05
+    assert abs(abs(axis @ body_axis) - 1) < 1e-3
+    assert abs(math.sqrt(ratio) - 3.0) < 0.3
+    visible = shaped.sum(axis=-1) > shaped.sum(axis=-1).max() / 255
+    ratios = shaped[visible, 0] / shaped[visible, 1]
+    assert ratios.std() < 1e-4 * ratios.mean()
+
+
+def test_ellipse_is_flat_and_gauss_peaks():
+    state = _body_across_seam(128)
+    flat = reshape_state(state, "ellipse", 2.0).sum(axis=-1)
+    peaked = reshape_state(state, "gauss", 2.0).sum(axis=-1)
+    assert np.unique(flat[flat > 0].round(5)).size == 1
+    assert peaked.max() > 4 * np.median(peaked[peaked > peaked.max() / 255])
 
 
 def _restart_cell(root, restarts):

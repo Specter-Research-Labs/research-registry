@@ -47,6 +47,7 @@ from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
 from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
 from lenia_swarm_analysis.morphospace.regeneration import (
+    PROFILES,
     retire_restart_fields,
     write_regeneration_inputs,
 )
@@ -91,6 +92,13 @@ def _using_warehouse(
 
 def _resolve_optional_path(path: Path | None) -> Path | None:
     return path.resolve() if path is not None else None
+
+
+def _reshape_spec(value: str) -> tuple[str, float]:
+    profile, _, aspect = value.partition(":")
+    if profile not in PROFILES or not aspect:
+        raise argparse.ArgumentTypeError(f"expected PROFILE:ASPECT with PROFILE in {PROFILES}, got {value!r}")
+    return profile, float(aspect)
 
 
 def _add_json(parser: argparse.ArgumentParser) -> None:
@@ -1064,8 +1072,16 @@ def _build_parser() -> argparse.ArgumentParser:
     regeneration.add_argument("--source-index", required=True, type=Path)
     regeneration.add_argument("--step", required=True, type=int)
     regeneration.add_argument("--restart-steps", required=True, type=int)
-    regeneration.add_argument("--angle-deg", required=True, type=float, action="append")
-    regeneration.add_argument("--removed-fraction", required=True, type=float, action="append")
+    regeneration.add_argument("--angle-deg", type=float, action="append", default=[])
+    regeneration.add_argument("--removed-fraction", type=float, action="append", default=[])
+    regeneration.add_argument(
+        "--reshape",
+        type=_reshape_spec,
+        action="append",
+        default=[],
+        metavar="PROFILE:ASPECT",
+        help="Redraw the body's mass as gauss or ellipse with this aspect ratio, e.g. gauss:3",
+    )
     regeneration.add_argument("--output", required=True, type=Path)
     _add_json(regeneration)
     regeneration.set_defaults(
@@ -1076,6 +1092,7 @@ def _build_parser() -> argparse.ArgumentParser:
             restart_steps=int(args.restart_steps),
             angles_deg=list(args.angle_deg),
             fractions=list(args.removed_fraction),
+            reshapes=list(args.reshape),
             output_dir=args.output.resolve(),
         )
     )
