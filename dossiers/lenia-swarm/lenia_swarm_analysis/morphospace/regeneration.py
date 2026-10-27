@@ -7,6 +7,10 @@ init.state_patch. `publish replay --batch-size N` runs all of them as one batch,
 restart, which is step S of the body. Flow Lenia conserves mass, so a cut body cannot regrow what was
 removed; the question is whether the remaining mass reorganises into the same shape at a smaller size.
 
+A reshape condition keeps the mass and redraws the body: `reshape_state` spreads each channel's
+total over one smooth profile with the body's centre, size and major axis, so the restart asks
+whether the rule rebuilds its adult from a body of the same matter in another shape.
+
 The shape of a frame is the twelve common_morphology_v1 axes on the native positive-density cloud
 (cells above 1/255 of the frame peak, weighted by density), after rolling the torus so the circular
 centre of mass sits at the arena centre so that a body crossing the seam is measured whole.
@@ -104,10 +108,44 @@ def cut_state(state: np.ndarray, angle: float, removed_fraction: float) -> tuple
     return cut, float(mass[removed].sum() / mass.sum())
 
 
-def cut_conditions(angles_deg: list[float], fractions: list[float]) -> list[dict]:
-    return [{"name": CONTROL}] + [
-        {"name": f"cut-a{a:g}-f{f:g}", "angle_deg": a, "removed_fraction": f} for f in fractions for a in angles_deg
-    ]
+PROFILES = ("gauss", "ellipse")
+
+
+def reshape_state(state: np.ndarray, profile: str, aspect: float) -> np.ndarray:
+    """Spread each channel's total mass over one profile centred on the body's circular centre of
+    mass, with the body's radius of gyration and its principal axis as the long axis, `aspect` times
+    the short one. `gauss` falls off as a Gaussian, `ellipse` is uniform inside an ellipse; every cell
+    carries the body's overall channel mix."""
+    if profile not in PROFILES:
+        raise ValueError(f"profile must be one of {PROFILES}, got {profile!r}")
+    if aspect < 1:
+        raise ValueError(f"aspect must be at least 1, got {aspect}")
+    mass = state.sum(axis=-1, dtype=np.float64)
+    offsets = [(np.arange(n) - c + n / 2) % n - n / 2 for n, c in zip(mass.shape, circular_centre(mass), strict=True)]
+    d0, d1 = np.meshgrid(offsets[0], offsets[1], indexing="ij")
+    weights = mass / mass.sum()
+    covariance = np.array([[np.sum(weights * a * b) for b in (d0, d1)] for a in (d0, d1)])
+    gyration = math.sqrt(np.trace(covariance))
+    values, vectors = np.linalg.eigh(covariance)
+    major = vectors[:, int(np.argmax(values))]
+    along = major[0] * d0 + major[1] * d1
+    across = -major[1] * d0 + major[0] * d1
+    if profile == "gauss":
+        short = gyration / math.sqrt(aspect**2 + 1)
+        shape = np.exp(-0.5 * ((along / (aspect * short)) ** 2 + (across / short) ** 2))
+    else:
+        short = 2 * gyration / math.sqrt(aspect**2 + 1)
+        shape = ((along / (aspect * short)) ** 2 + (across / short) ** 2 <= 1).astype(np.float64)
+    totals = state.sum(axis=(0, 1), dtype=np.float64)
+    return (shape[..., None] / shape.sum() * totals).astype(state.dtype)
+
+
+def cut_conditions(angles_deg: list[float], fractions: list[float], reshapes: list[tuple[str, float]]) -> list[dict]:
+    return (
+        [{"name": CONTROL}]
+        + [{"name": f"cut-a{a:g}-f{f:g}", "angle_deg": a, "removed_fraction": f} for f in fractions for a in angles_deg]
+        + [{"name": f"reshape-{p}-a{a:g}", "profile": p, "aspect": a} for p, a in reshapes]
+    )
 
 
 def write_regeneration_inputs(
@@ -118,6 +156,7 @@ def write_regeneration_inputs(
     restart_steps: int,
     angles_deg: list[float],
     fractions: list[float],
+    reshapes: list[tuple[str, float]],
     output_dir: Path,
 ) -> dict:
     """One restart bundle per (body of `replay_root`, condition) from the body's state at `step`. The
@@ -135,7 +174,7 @@ def write_regeneration_inputs(
     if missing:
         raise ValueError(f"replayed bodies without a row in {source_index}: {missing}")
 
-    conditions = cut_conditions(angles_deg, fractions)
+    conditions = cut_conditions(angles_deg, fractions, reshapes)
     output_dir.mkdir(parents=True, exist_ok=False)
     index_lines, manifest = [], []
     for body in bodies:
@@ -155,6 +194,8 @@ def write_regeneration_inputs(
         for condition in conditions:
             if condition["name"] == CONTROL:
                 field, achieved = state, 0.0
+            elif "profile" in condition:
+                field, achieved = reshape_state(state, condition["profile"], condition["aspect"]), 0.0
             else:
                 field, achieved = cut_state(state, math.radians(condition["angle_deg"]), condition["removed_fraction"])
             bundle = output_dir / f"{source_dir.name}-{condition['name']}"
@@ -172,6 +213,8 @@ def write_regeneration_inputs(
                 "angle_deg": condition.get("angle_deg"),
                 "target_removed_fraction": condition.get("removed_fraction"),
                 "removed_fraction": achieved,
+                "profile": condition.get("profile"),
+                "aspect": condition.get("aspect"),
                 "cut_step": step,
                 "source_state_sha256": hashlib.sha256(state.tobytes()).hexdigest(),
                 "restart_state_sha256": hashlib.sha256(np.ascontiguousarray(field, dtype="<f4").tobytes()).hexdigest(),
