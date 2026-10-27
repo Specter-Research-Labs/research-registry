@@ -234,13 +234,13 @@ def retire_restart_fields(
     `shapes` is the cell's shape record, an npz whose rows follow the campaign order with arrays body,
     condition and state_sha256. A trace is stripped only if its body and the state hashes of its field
     frames match its row, so that no trace loses its fields before it was measured. Restarts named in
-    `keep` as body:condition stay whole. Without `apply` only the manifest is written."""
+    `keep` as body:condition stay whole. Every trace and keep name is checked before any trace is stripped.
+    Without `apply` only the manifest is written."""
     record = np.load(shapes)
     campaigns = sorted((replay_root / "campaigns").iterdir())
     if len(campaigns) != len(record["body"]):
         raise ValueError(f"{replay_root}: {len(campaigns)} campaigns against {len(record['body'])} rows in {shapes}")
-    named = set(keep)
-    rows, kept = [], []
+    checked = []
     for campaign, body, condition, hashes in zip(
         campaigns, record["body"], record["condition"], record["state_sha256"], strict=True
     ):
@@ -252,14 +252,16 @@ def retire_restart_fields(
         measured = [f["stateSha256"] for f in frames if "fieldF16Base64" in f]
         if measured != list(hashes):
             raise ValueError(f"{trace}: field frames do not match the measured row of {shapes}")
-        name = f"{body}:{condition}"
-        if name in named:
-            named.discard(name)
+        checked.append((f"{body}:{condition}", trace, raw, frames))
+    missing = set(keep) - {name for name, *_ in checked}
+    if missing:
+        raise ValueError(f"restarts to keep not in {replay_root}: {sorted(missing)}")
+    rows, kept = [], []
+    for name, trace, raw, frames in checked:
+        if name in keep:
             kept.append({"restart": name, "path": str(trace), "sha256": sha256_bytes(raw), "bytes": len(raw)})
-            continue
-        rows.append({"restart": name, **strip_trace_fields(trace, raw, frames, apply=apply)})
-    if named:
-        raise ValueError(f"restarts to keep not in {replay_root}: {sorted(named)}")
+        else:
+            rows.append({"restart": name, **strip_trace_fields(trace, raw, frames, apply=apply)})
     manifest_path.write_text(json.dumps({"applied": apply, "shapes_sha256": sha256_bytes(shapes.read_bytes()),
                                          "stripped": rows, "kept": kept}, indent=1))
     return {
