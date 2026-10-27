@@ -32,12 +32,14 @@ class ReProverTacticProvider(TacticProvider):
         temperature: float = 0.7,
         top_p: float = 0.9,
         num_runs: int = 1,
+        sample_socket: str | None = None,
     ):
         self.model = ReProverModel(
             device=device,
             use_sampling=use_sampling,
             temperature=temperature,
             top_p=top_p,
+            sample_socket=sample_socket,
         )
         self.retriever = PremiseRetriever(device=device) if use_retrieval else None
         self._loaded = False

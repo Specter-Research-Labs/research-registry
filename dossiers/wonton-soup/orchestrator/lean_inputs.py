@@ -169,15 +169,21 @@ def create_provider(
     deepseek_model_path: str | None = None,
     deepseek_backend: str = "mlx",
     deepseek_tt_socket: str | None = None,
+    reprover_socket: str | None = None,
     bfs_num_samples: int | None = None,
     internlm_num_samples: int | None = None,
 ) -> TacticProvider:
+    if reprover_socket is not None and provider_name != "reprover":
+        raise ValueError(
+            f"reprover_socket is only valid with the reprover provider, not {provider_name}"
+        )
     if provider_name == "reprover":
         base = ReProverTacticProvider(
             device=device,
             use_sampling=use_sampling,
             temperature=0.7,
             top_p=0.9,
+            sample_socket=reprover_socket,
         )
     elif provider_name == "deepseek":
         deepseek_kwargs: dict[str, Any] = {}

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 import torch
 from transformers import AutoModel, AutoModelForSeq2SeqLM, AutoTokenizer
 
@@ -44,16 +46,23 @@ class ReProverModel:
         use_sampling: bool = False,
         temperature: float = 0.7,
         top_p: float = 0.9,
+        sample_socket: str | None = None,
     ):
+        if sample_socket is not None and not use_sampling:
+            raise ValueError("a sample server only serves sampling; beam search runs in-process")
         self.device = device if device is not None else get_default_device()
         self.tokenizer = None
         self.model = None
         self.use_sampling = use_sampling
         self.temperature = temperature
         self.top_p = top_p
+        self.sample_socket = sample_socket
+        self._server_seeds: random.Random | None = None
 
     def load(self):
         self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
+        if self.sample_socket is not None:
+            return
         # Decoding is bound by reading the weights each step, so on a CPU they are held in bfloat16.
         dtype = torch.bfloat16 if self.device == "cpu" else torch.float32
         self.model = AutoModelForSeq2SeqLM.from_pretrained(self.MODEL_ID, dtype=dtype).to(self.device)
@@ -63,6 +72,9 @@ class ReProverModel:
         return decode_byt5(sequence.tolist())
 
     def set_seed(self, seed: int) -> None:
+        if self.sample_socket is not None:
+            self._server_seeds = random.Random(seed)
+            return
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
@@ -70,6 +82,8 @@ class ReProverModel:
     def generate_tactics(
         self, state: str, num_return: int = 10, max_length: int = DEFAULT_MAX_LENGTH
     ) -> list[tuple[str, float]]:
+        if self.sample_socket is not None:
+            return self._generate_from_server(state, num_return, max_length)
         if self.tokenizer is None or self.model is None:
             raise RuntimeError("Model not loaded. Call load() first.")
 
@@ -115,6 +129,31 @@ class ReProverModel:
             tactics.append((tactic.strip(), prob))
 
         return sorted(tactics, key=lambda x: x[1], reverse=True)
+
+    def _generate_from_server(
+        self, state: str, num_return: int, max_length: int
+    ) -> list[tuple[str, float]]:
+        from prover.providers.reprover_sample_server import request_samples
+
+        if self.tokenizer is None:
+            raise RuntimeError("Model not loaded. Call load() first.")
+        if self._server_seeds is None:
+            raise RuntimeError("set_seed must be called before sampling from a sample server")
+        assert self.sample_socket is not None
+        ids = self.tokenizer(state, max_length=self.DEFAULT_MAX_INPUT_LENGTH, truncation=True)[
+            "input_ids"
+        ]
+        sequences = request_samples(
+            self.sample_socket,
+            ids,
+            n=num_return,
+            seed=self._server_seeds.getrandbits(63),
+            max_new_tokens=max_length - 1,
+            temperature=self.temperature,
+            top_p=self.top_p,
+        )
+        prob = torch.sigmoid(torch.tensor(0.0)).item()
+        return [(decode_byt5(seq).strip(), prob) for seq in sequences]
 
     def generate_tactics_multi_run(
         self,
