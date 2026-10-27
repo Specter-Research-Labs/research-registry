@@ -110,3 +110,21 @@ def test_retire_restart_fields_refuses_unmeasured_traces(tmp_path):
     with pytest.raises(ValueError, match="do not match"):
         retire_restart_fields(replay_root=tmp_path, shapes=shapes, keep=[],
                               manifest_path=tmp_path / "manifest.json", apply=True)
+
+
+def test_retire_restart_fields_strips_nothing_when_a_check_fails(tmp_path):
+    shapes = _restart_cell(tmp_path, [("A", "control"), ("B", "control")])
+    traces = sorted(tmp_path.glob("campaigns/*/development-trace.jsonl"))
+    before = [t.read_bytes() for t in traces]
+    with pytest.raises(ValueError, match="not in"):
+        retire_restart_fields(replay_root=tmp_path, shapes=shapes, keep=["C:control"],
+                              manifest_path=tmp_path / "manifest.json", apply=True)
+    frames = [json.loads(line) for line in traces[1].read_text().splitlines()]
+    frames[1]["stateSha256"] = "other"
+    traces[1].write_text("".join(json.dumps(f) + "\n" for f in frames))
+    before[1] = traces[1].read_bytes()
+    with pytest.raises(ValueError, match="do not match"):
+        retire_restart_fields(replay_root=tmp_path, shapes=shapes, keep=[],
+                              manifest_path=tmp_path / "manifest.json", apply=True)
+    assert [t.read_bytes() for t in traces] == before
+    assert not (tmp_path / "manifest.json").exists()
