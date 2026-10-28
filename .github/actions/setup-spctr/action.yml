@@ -25,6 +25,10 @@ inputs:
     description: Whether to run uv sync in the project directory.
     required: false
     default: "false"
+  use-lean:
+    description: Whether to install the project's lean-toolchain with elan.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -52,6 +56,17 @@ runs:
     - name: Build spctr
       shell: bash
       run: cargo build --release --locked --manifest-path ops/spctr/Cargo.toml
+
+    - name: Setup Lean
+      if: ${{ inputs.use-lean == 'true' }}
+      uses: leanprover/lean-action@v1
+      with:
+        auto-config: false
+        build: false
+        test: false
+        lint: false
+        use-github-cache: false
+        lake-package-directory: ${{ inputs.project-root }}
 
     - name: Require Python version
       if: ${{ inputs.use-python == 'true' && inputs.python-version == '' }}

@@ -1,5 +1,5 @@
 {
-  description = "Lean Tactic Representation dev shell";
+  description = "Lean Tactic Representation Lean/Python dev shell";
 
   outputs = { self }:
     let

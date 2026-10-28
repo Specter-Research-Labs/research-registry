@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "request_id": "compiled_apply_local_rule",
+  "imports": ["Lean"],
+  "problem": {
+    "atoms": ["P", "Q"],
+    "hypotheses": [
+      {
+        "name": "hp",
+        "type": {"kind": "atom", "name": "P"}
+      },
+      {
+        "name": "hq",
+        "type": {"kind": "atom", "name": "Q"}
+      },
+      {
+        "name": "mkPair",
+        "type": {
+          "kind": "arrow",
+          "domain": {"kind": "atom", "name": "P"},
+          "codomain": {
+            "kind": "arrow",
+            "domain": {"kind": "atom", "name": "Q"},
+            "codomain": {
+              "kind": "and",
+              "left": {"kind": "atom", "name": "P"},
+              "right": {"kind": "atom", "name": "Q"}
+            }
+          }
+        }
+      }
+    ],
+    "target": {
+      "kind": "and",
+      "left": {"kind": "atom", "name": "P"},
+      "right": {"kind": "atom", "name": "Q"}
+    }
+  },
+  "code": [
+    {"op": "apply", "term": {"kind": "local", "name": "mkPair"}},
+    {"op": "exact", "hypothesis": "hp"},
+    {"op": "exact", "hypothesis": "hq"}
+  ]
+}
