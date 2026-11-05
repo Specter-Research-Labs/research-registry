@@ -45,12 +45,14 @@ Native replay exports live in `site/assets/home-creatures/`, with a poster and J
 
 ```sh
 LeniaCLI publish media --input <single-specimen-replay-root> --output <media-root> \
-  --steps 120 --frame-budget 120 --fps 15 --render-mode body
+  --steps 120 --frame-budget 120 --fps 15 --render-mode body --frames
 uv run --project dossiers/lenia-swarm python \
   dossiers/lenia-swarm/ops/render_homepage_creature.py \
   --media-root <media-root> --campaign <source-campaign> --steps 120 \
   --output site/assets/home-creatures/<slug> --title '<accurate specimen label>'
 ```
+
+`publish media` keeps only the MP4 unless `--frames` asks for per-frame PNGs; the packager reads the exact grayscale frames, which the lossy MP4 cannot reproduce.
 
 Use the current native CLI: media capture disables the additive search engine's automatic recentering so locomotion remains visible. Search itself retains its existing behavior. An unchanged crop alone does not guarantee world-coordinate footage when an older capture engine centers the simulation.
 

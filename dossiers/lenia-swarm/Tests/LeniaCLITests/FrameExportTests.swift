@@ -44,21 +44,52 @@ final class FrameExportTests: XCTestCase {
         XCTAssertEqual(robustPositiveScale(values), 0.2, accuracy: 1e-6)
     }
 
-    func testSupportMaskUsesRelativeMatterScale() {
-        let frame = CapturedStateFrame(
-            step: 0,
-            width: 3,
-            height: 1,
-            channels: 2,
-            values: [
-                0.002, 0.001,
-                0.008, 0.0,
-                0.2, 0.0,
-            ]
+    func testSpecimenMediaKeepsOnlyTheVideoUnlessFramesAreRequested() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("specimen-media-\(UUID().uuidString)", isDirectory: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appendingPathComponent("specimen", isDirectory: true)
+        let renderer = try GrayscaleColorRenderer(renderMode: .body)
+        let render: (Int) throws -> SpecimenFrame = { index in
+            var truth = Data(repeating: 0, count: 32 * 32)
+            for cell in (10 * 32 + index)..<(10 * 32 + index + 8) {
+                truth[cell] = 200
+            }
+            return SpecimenFrame(
+                step: index * 5,
+                truth: truth,
+                truthWidth: 32,
+                truthHeight: 32,
+                color: try renderer.render(width: 32, height: 32, grayscale: truth)
+            )
+        }
+
+        let exported = try writeSpecimenMedia(
+            directory: directory,
+            videoName: "clip.mp4",
+            frameCount: 5,
+            output: MediaOutputOptions(fps: 6, ffmpeg: "ffmpeg", exportFrames: true),
+            frame: render
         )
+        let colorFramesURL = try XCTUnwrap(exported.colorFramesURL)
+        let framesURL = try XCTUnwrap(exported.framesURL)
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: framesURL.path).sorted(),
+            (0..<5).map { String(format: "frame_%06d.png", $0 * 5) }
+        )
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: colorFramesURL.path).count, 5)
+        XCTAssertEqual(exported.contactRow.color.count, 3)
+        XCTAssertEqual(exported.contactRow.truth.map(\.width), [32, 32, 32])
 
-        let mask = [UInt8](frame.supportMaskBytes(scale: 0.2))
-
-        XCTAssertEqual(mask, [0, 255, 255])
+        let streamed = try writeSpecimenMedia(
+            directory: directory,
+            videoName: "clip.mp4",
+            frameCount: 5,
+            output: MediaOutputOptions(fps: 6, ffmpeg: "ffmpeg", exportFrames: false),
+            frame: render
+        )
+        XCTAssertNil(streamed.framesURL)
+        XCTAssertNil(streamed.colorFramesURL)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["clip.mp4"])
     }
 }

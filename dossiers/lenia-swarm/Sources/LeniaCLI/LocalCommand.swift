@@ -220,10 +220,7 @@ struct LocalCommand: AsyncParsableCommand {
         var frameWriter: FrameWriter?
         var colorFrameWriter: ColorFrameWriter?
         if framesEnabled {
-            let resolvedFramesDir = resolveFramesDir(
-                framesDir: framesDir,
-                runDir: runDirURL
-            )
+            let resolvedFramesDir = resolveFramesDir(framesDir, defaultName: "frames", runDir: runDirURL)
             try FileManager.default.createDirectory(at: resolvedFramesDir, withIntermediateDirectories: true)
             let writer = FrameWriter(outputDir: resolvedFramesDir)
             frameWriter = writer
@@ -232,12 +229,9 @@ struct LocalCommand: AsyncParsableCommand {
                 writer.write(step: step, width: width, height: height, data: data)
             }
             if framesColorEnabled {
-                let resolvedColorDir = resolveFramesColorDir(
-                    framesDir: framesColorDir,
-                    runDir: runDirURL
-                )
+                let resolvedColorDir = resolveFramesDir(framesColorDir, defaultName: "frames_color", runDir: runDirURL)
                 try FileManager.default.createDirectory(at: resolvedColorDir, withIntermediateDirectories: true)
-                let colorWriter = ColorFrameWriter(outputDir: resolvedColorDir)
+                let colorWriter = try ColorFrameWriter(outputDir: resolvedColorDir, renderMode: .body)
                 colorFrameWriter = colorWriter
                 framesColorDirPath = resolvedColorDir.path
                 captureHandler = { step, width, height, data in

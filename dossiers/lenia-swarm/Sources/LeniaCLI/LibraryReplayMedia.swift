@@ -149,25 +149,13 @@ func renderLibraryReplayMediaBundle(
     outputRoot: URL,
     frameBudget: Int,
     steps: Int?,
-    fps: Int,
     renderMode: LeniaRenderMode,
-    ffmpeg: String
-) throws -> MediaRenderRecord {
+    output: MediaOutputOptions
+) throws -> (record: MediaRenderRecord, contactRow: ContactSheetRow) {
     let creature = bundle.entry.creature
     let runId = bundle.manifest.sourceRunId ?? bundle.entry.runId
     let label = "library-\(creature.initialCondition.seed)-\(creature.name)"
     let runURL = outputRoot.appendingPathComponent(label, isDirectory: true)
-    if FileManager.default.fileExists(atPath: runURL.path) {
-        try FileManager.default.removeItem(at: runURL)
-    }
-    let framesURL = runURL.appendingPathComponent("frames", isDirectory: true)
-    let colorFramesURL = runURL.appendingPathComponent("frames_color", isDirectory: true)
-    let channelFramesURL = runURL.appendingPathComponent("frames_channels", isDirectory: true)
-    let maskFramesURL = runURL.appendingPathComponent("frames_mask", isDirectory: true)
-    try FileManager.default.createDirectory(at: framesURL, withIntermediateDirectories: true)
-    try FileManager.default.createDirectory(at: colorFramesURL, withIntermediateDirectories: true)
-    try FileManager.default.createDirectory(at: channelFramesURL, withIntermediateDirectories: true)
-    try FileManager.default.createDirectory(at: maskFramesURL, withIntermediateDirectories: true)
 
     let replayConfig = try libraryReplayBaseConfig(bundle: bundle, steps: steps)
     let runtimeConfig = try loadRuntimeConfig(from: JSONEncoder().encode(replayConfig))
@@ -188,67 +176,39 @@ func renderLibraryReplayMediaBundle(
     )
 
     let matterScale = robustMatterScale(frames)
-    let frameWriter = FrameWriter(outputDir: framesURL)
-    let colorWriter = ChannelAwareColorFrameWriter(outputDir: colorFramesURL, renderMode: renderMode)
-    let channelWriter = ChannelDiagnosticFrameWriter(outputDir: channelFramesURL)
-    let maskWriter = FrameWriter(outputDir: maskFramesURL)
-    // Color frames crop to the creature so it fills the frame; raw frames stay
-    // full-world for analysis.
+    let colorRenderer = try ChannelColorRenderer(renderMode: renderMode)
+    // Color frames crop to the creature so it fills the frame; truth frames
+    // stay full-world for analysis.
     let grayscaleFrames = frames.map { $0.matterBytes(scale: matterScale) }
     let box = autoFrameBox(grayscaleFrames: grayscaleFrames, width: runtimeConfig.sx, height: runtimeConfig.sy)
-    for (index, frame) in frames.enumerated() {
-        frameWriter.write(
+    let media = try writeSpecimenMedia(
+        directory: runURL,
+        videoName: "\(label).mp4",
+        frameCount: frames.count,
+        output: output
+    ) { index in
+        let frame = frames[index]
+        let framed = box.map { cropCapturedFrame(frame, box: $0) } ?? frame
+        return SpecimenFrame(
             step: index,
-            width: runtimeConfig.sx,
-            height: runtimeConfig.sy,
-            data: grayscaleFrames[index]
-        )
-        let fullFrame = CapturedStateFrame(
-            step: index,
-            width: frame.width,
-            height: frame.height,
-            channels: frame.channels,
-            values: frame.values,
-            flow: frame.flow,
-            growth: frame.growth
-        )
-        let framed = box.map { cropCapturedFrame(fullFrame, box: $0) } ?? fullFrame
-        colorWriter.write(frame: framed, scale: matterScale)
-        channelWriter.write(frame: fullFrame, scale: matterScale)
-        maskWriter.write(
-            step: index,
-            width: runtimeConfig.sx,
-            height: runtimeConfig.sy,
-            data: fullFrame.supportMaskBytes(scale: matterScale)
+            truth: grayscaleFrames[index],
+            truthWidth: runtimeConfig.sx,
+            truthHeight: runtimeConfig.sy,
+            color: try colorRenderer.render(frame: framed, scale: matterScale)
         )
     }
-    if let error = frameWriter.error {
-        throw error
-    }
-    if let error = colorWriter.error {
-        throw error
-    }
-    if let error = channelWriter.error {
-        throw error
-    }
-    if let error = maskWriter.error {
-        throw error
-    }
-
-    let videoURL = runURL.appendingPathComponent("\(label).mp4")
-    try encodeMP4FromPNGSequence(framesDir: colorFramesURL, outputURL: videoURL, fps: fps, ffmpeg: ffmpeg)
 
     let specimenId = "result:\(runId)|overall|\(creature.initialCondition.seed)"
     try writeLibraryReplaySidecar(
         runURL: runURL,
         bundle: bundle,
         specimenId: specimenId,
-        videoURL: videoURL,
+        videoURL: media.videoURL,
         capturedSteps: frames.map(\.step),
-        fps: fps
+        fps: output.fps
     )
 
-    return MediaRenderRecord(
+    let record = MediaRenderRecord(
         sourceMode: "library-replay",
         label: label,
         cell: nil,
@@ -257,15 +217,14 @@ func renderLibraryReplayMediaBundle(
         descriptor: nil,
         selectionReason: specimenId,
         frames: frames.count,
-        fps: fps,
-        framesPath: framesURL.path,
-        framesColorPath: colorFramesURL.path,
-        framesChannelPath: channelFramesURL.path,
-        framesMaskPath: maskFramesURL.path,
+        fps: output.fps,
+        framesPath: media.framesURL?.path,
+        framesColorPath: media.colorFramesURL?.path,
         templatePatchesPath: nil,
         nativeSteps: nil,
-        videoPath: videoURL.path
+        videoPath: media.videoURL.path
     )
+    return (record, media.contactRow)
 }
 
 struct LibraryReplaySidecar: Codable {

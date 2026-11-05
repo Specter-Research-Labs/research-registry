@@ -174,6 +174,8 @@ def package_replay(media_root: Path, campaign: Path, output: Path, title: str, s
     if len(records) != 1:
         raise ValueError("Select one specimen per media export")
     record = records[0]
+    if "framesPath" not in record:
+        raise ValueError("Exact grayscale frames are required; re-run publish media with --frames")
     files = sorted(Path(record["framesPath"]).glob("frame_*.png"))
     fields = np.stack([np.asarray(Image.open(path).convert("L")) for path in files])
     frame_count = len(fields)
@@ -249,7 +251,7 @@ def package_replay(media_root: Path, campaign: Path, output: Path, title: str, s
         },
         "video": {"width": 1024, "height": 1024, "frames": frame_count, "fps": record["fps"]},
         "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
-        "native_capture": f"LeniaCLI publish media --steps {steps} --frame-budget {frame_count} --fps {record['fps']} --render-mode body",
+        "native_capture": f"LeniaCLI publish media --frames --steps {steps} --frame-budget {frame_count} --fps {record['fps']} --render-mode body",
         "simulation_recentering": False,
         "presentation": "Native full-world 8-bit total-density frames, using the CLI's shared recording scale. Fixed square crop; bilinear display interpolation; no simulation-grid refinement or camera tracking. Channels are summed.",
         "crop": {"left": left, "top": top, "side": side},
@@ -275,6 +277,10 @@ def package_color_replay(
     specimen_dir: Path, campaign: Path, output: Path, title: str, first_frame: int
 ) -> None:
     specimen = json.loads((specimen_dir / "specimen.json").read_text())
+    if not (specimen_dir / "frames_color").is_dir():
+        raise ValueError(
+            "Colour frames with alpha are required; re-run publish media with --frames"
+        )
     files = sorted((specimen_dir / "frames_color").glob("frame_*.png"))[first_frame:]
     steps = specimen["captured_steps"][first_frame:]
     if len(files) != len(steps):
@@ -326,7 +332,7 @@ def package_color_replay(
         "recorded_steps": {"first": steps[0], "last": steps[-1], "stride": steps[1] - steps[0]},
         "video": {"width": 768, "height": 768, "frames": len(files), "fps": specimen["fps"]},
         "renderer": "dossiers/lenia-swarm/ops/render_homepage_creature.py",
-        "native_capture": f"LeniaCLI publish media --steps 3600 --frame-budget {specimen['frames']} --fps {specimen['fps']}",
+        "native_capture": f"LeniaCLI publish media --frames --steps 3600 --frame-budget {specimen['frames']} --fps {specimen['fps']}",
         "simulation_recentering": False,
         "presentation": "The CLI's shaded per-channel colour frames, composited on the page paper colour. Fixed square crop; Lanczos display interpolation; no simulation-grid refinement or camera tracking.",
         "crop": {"left": left, "top": top, "side": side},
@@ -347,7 +353,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--color-specimen",
         type=Path,
-        help="Specimen directory from publish media with frames_color",
+        help="Specimen directory from publish media --frames",
     )
     parser.add_argument("--first-frame", type=int, default=0, help="First colour frame to keep")
     parser.add_argument("--campaign", type=Path)

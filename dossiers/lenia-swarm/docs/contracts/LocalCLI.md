@@ -98,7 +98,6 @@ Within `--output/<run_id>/`:
 - `library/index.jsonl` (optional): collected creatures, when collection is enabled in the search config.
 - `exports/index.jsonl` (optional): replay-export bundles for collected creatures, when `collection.export_enabled` is true.
 - `exports/<slug>-<id>/base.json`, `search.json`, `meta.json` (optional): export bundles consumed by compendium indexing and later replay and publish stages.
-- `media/rank_XXX_seed_YYY/creature.gif`, `video.mp4`, and `frames/frame_XXXXXX.png` (optional): written later by `LeniaCLI publish media`.
 
 Every run has its own `run_id` namespace, and the copied config and search files are the provenance snapshot used for reruns.
 

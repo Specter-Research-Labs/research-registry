@@ -214,7 +214,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experiment-root", required=True, type=Path)
     parser.add_argument("--target-config", required=True, type=Path)
-    parser.add_argument("--media-root", required=True, type=Path)
+    parser.add_argument(
+        "--media-root",
+        required=True,
+        type=Path,
+        help="Parent of discover local runs exported with --frames-color (step-named frames_color/ PNGs)",
+    )
     parser.add_argument("--refinement-root", type=Path)
     parser.add_argument("--refinement-media-root", type=Path)
     parser.add_argument("--output", required=True, type=Path)

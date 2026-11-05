@@ -617,41 +617,16 @@ private func aiScientist2025MP4Size(frames: [LeniaTrajectoryFrame], framerate: I
     guard !frames.isEmpty else {
         return 0
     }
-    guard let ffmpeg = ProcessInfo.processInfo.environment["PATH"]?
-        .split(separator: ":")
-        .map(String.init)
-        .map({ URL(fileURLWithPath: $0).appendingPathComponent("ffmpeg").path })
-        .first(where: { FileManager.default.isExecutableFile(atPath: $0) }) else {
-        throw ConfigError.invalidConfig("ffmpeg must be available on PATH for ai-scientist-2025 MP4 metrics.")
+    let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("ai-scientist-2025-\(UUID().uuidString).mp4")
+    try encodeMP4(ffmpeg: "ffmpeg", outputURL: outputURL, fps: framerate, pixelFormat: .gray) { sink in
+        for frame in frames {
+            try sink.append(frame.bytes, width: frame.width, height: frame.height)
+        }
     }
-
-    let tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-    try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: tempDirectory) }
-
-    for (index, frame) in frames.enumerated() {
-        let pngURL = tempDirectory.appendingPathComponent(String(format: "frame_%05d.png", index))
-        try writeGrayscalePNG(bytes: frame.bytes, width: frame.width, height: frame.height, to: pngURL)
+    defer { try? FileManager.default.removeItem(at: outputURL) }
+    let size = try outputURL.resourceValues(forKeys: [.fileSizeKey]).fileSize
+    guard let size else {
+        throw ConfigError.invalidConfig("ai-scientist-2025 MP4 size is unavailable for \(outputURL.path).")
     }
-
-    let outputURL = tempDirectory.appendingPathComponent("out.mp4")
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: ffmpeg)
-    process.arguments = [
-        "-y",
-        "-framerate", String(framerate),
-        "-i", tempDirectory.appendingPathComponent("frame_%05d.png").path,
-        "-pix_fmt", "yuv420p",
-        outputURL.path
-    ]
-    let stderrPipe = Pipe()
-    process.standardError = stderrPipe
-    try process.run()
-    process.waitUntilExit()
-    guard process.terminationStatus == 0 else {
-        let error = String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        throw ConfigError.invalidConfig("ffmpeg failed while computing ai-scientist-2025 MP4 size: \(error)")
-    }
-    let attributes = try FileManager.default.attributesOfItem(atPath: outputURL.path)
-    return attributes[.size] as? Int ?? 0
+    return size
 }
