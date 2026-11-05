@@ -4,6 +4,7 @@ import Accelerate
 import CoreGraphics
 import Foundation
 import ImageIO
+import LeniaArchive
 import LeniaCore
 import SQLite3
 import UniformTypeIdentifiers

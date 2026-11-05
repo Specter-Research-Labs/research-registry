@@ -148,20 +148,6 @@ public struct SimulationResultData: Codable, Sendable {
     }
 }
 
-public func decodeSimulationResultLines(_ json: String, workerId: String? = nil) -> [SimulationResultData] {
-    json.split(separator: "\n").compactMap { line in
-        guard let data = line.data(using: .utf8),
-              var result = try? JSONDecoder().decode(SimulationResultData.self, from: data)
-        else {
-            return nil
-        }
-        if let workerId {
-            result.workerId = workerId
-        }
-        return result
-    }
-}
-
 public func topSimulationResults(from results: [SimulationResultData], limit: Int) -> [SimulationResultData] {
     guard limit > 0 else { return [] }
     return Array(
@@ -337,19 +323,6 @@ public func appendResearchJSONLines<T: Encodable>(
     for value in values {
         handle.write(try researchJSONLine(value, encoder: resolvedEncoder))
     }
-}
-
-@discardableResult
-public func writeTopSimulationResults(
-    from results: [SimulationResultData],
-    limit: Int,
-    to url: URL
-) throws -> [SimulationResultData] {
-    let top = topSimulationResults(from: results, limit: limit)
-    if !top.isEmpty {
-        try writeTopSimulationResultsSnapshot(top, to: url)
-    }
-    return top
 }
 
 public func writeTopSimulationResultsSnapshot(

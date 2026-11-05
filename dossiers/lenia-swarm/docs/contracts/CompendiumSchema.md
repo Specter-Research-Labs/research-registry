@@ -1,5 +1,5 @@
 ---
-summary: "The Lenia compendium: its SQLite schema and migrations, how the indexer writes it, how Studio and the CLI read it, and why readers require an exact version."
+summary: "The Lenia compendium: its SQLite schema, how the indexer writes it, how Studio and the CLI read it, and why readers require an exact version."
 ---
 
 # The compendium
@@ -39,51 +39,9 @@ Commands that depend on schema shape require an exact match: `analyze ecology`, 
 - `specimens`: strict canonical specimen rows for replayable and warehouse-derived analysis.
 - `ingest_state`: incremental ingestion cursor by source file (`offset`, `size`, `mtime`).
 
-## Migration history
+## No migrations
 
-Migrations are explicit functions in `Sources/LeniaCLI/IndexCommand.swift`, `migrate1to2` through `migrate14to15`.
-
-`v1 -> v2`:
-
-- expands `runs` metadata (`run_name`, `host_id`, `output_root`, `indexed_at`),
-- normalizes historical run IDs and run-dir metadata.
-
-`v2 -> v3`:
-
-- adds taxonomy fields on `creatures`:
-  - `taxonomy_family_id`, `taxonomy_genus_id`, `taxonomy_species_id`,
-  - `taxonomy_confidence`, `taxonomy_method`, `taxonomy_version`.
-- adds morphometrics fields on `creatures`:
-  - `morphometrics_json`, `morphometrics_method`, `morphometrics_version`.
-
-`v3 -> v4`:
-
-- adds `config_hash` to `creatures` and `runs`.
-
-`v4 -> v5`:
-
-- makes `campaigns` run-scoped via a composite `(run_id, campaign_id)` key,
-- gives `exports` a stable synthetic primary key so identical relative export paths from different runs do not collide.
-
-`v5 -> v6`:
-
-- adds `velocity_x`, `velocity_y` and `heading_rad` to `creatures`.
-
-`v6 -> v14`:
-
-- adds strict specimen tables and contracts,
-- adds runtime family and capability projections,
-- normalizes replay naming,
-- adds `initial_condition_json` and canonical `creatures.canonical_specimen_id`,
-- requires every canonical creature row to resolve to one strict specimen.
-
-`v14 -> v15`:
-
-- adds catalog QC fields on `creatures`:
-  - `catalog_status` (`active`, `protected`, `quarantine`, `rejected`),
-  - `quality_flags_json`.
-- adds `creature_qc_events` for reversible curation audit trails.
-- normal browse and warehouse ingest surfaces default to `active` plus `protected`.
+The compendium is derived data. `LeniaCLI index` creates the current schema in a new database and refuses a database at any other version; rebuild such a database from its run directories with `--rebuild`. A schema change bumps `compendiumSchemaVersion` and edits `createSchema()` in `Sources/LeniaCLI/IndexCommand.swift`; it does not add migration code.
 
 ## How the indexer writes
 
@@ -99,7 +57,7 @@ Primary source: `Sources/LeniaCLI/IndexCommand.swift`.
 
 Fail-loud behavior:
 
-- schema versions newer than the binary supports cause an immediate error,
+- a schema version other than the current one causes an immediate error,
 - invalid UTF-8 or malformed JSON lines fail ingest for the active path,
 - `LeniaCLI index sanity` checks required tables, the exact schema version, and per-run completeness (missing taxonomy, provenance, morphometrics and trait labels).
 
@@ -125,7 +83,7 @@ Null taxonomy fields are valid data, meaning taxonomy has not been assigned yet,
 
 When changing compendium-facing columns:
 
-1. update the schema and its migration,
+1. update the schema and bump its version,
 2. update CLI validations,
 3. update Studio readers and views,
 4. update this page.
@@ -137,7 +95,7 @@ Status: accepted.
 Read commands and UI surfaces depend on fixed table and column layouts, and a silent compatibility fallback risks incorrect analysis. So the compendium uses explicit schema versioning with exact-match enforcement for every command that reads structured compendium data.
 
 - Failing loudly prevents silent misreads.
-- Migration steps make evolution explicit and reviewable.
+- Rebuilding from run directories keeps every database on one reviewed schema.
 - A version-locked schema makes deterministic reproduction easier.
 
-Consequences: schema bumps require migration code and doc updates, older databases must be migrated before some commands run, and older binaries reject newer databases instead of reading them partially.
+Consequences: schema bumps require doc updates and a rebuild of existing databases, and binaries reject databases at any other version instead of reading them partially.

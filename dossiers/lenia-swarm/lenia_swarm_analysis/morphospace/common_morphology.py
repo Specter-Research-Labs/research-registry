@@ -1081,23 +1081,6 @@ def _existing_axis_stats(
     return stats if set(stats) == set(AXIS_IDS) else None
 
 
-def _selected_study_rows(
-    connection: DuckDBPyConnection,
-    *,
-    dryad_fish_root: Path | None,
-    study_id: str,
-) -> list[_CommonMorphologyRow]:
-    return [
-        *_collect_lenia_rows(connection, study_id=study_id),
-        *_collect_fish_rows(
-            connection,
-            study_id=study_id,
-            dataset_root=dryad_fish_root,
-        ),
-        *_collect_embryomaker_rows(connection, study_id=study_id),
-    ]
-
-
 def _iter_selected_study_rows(
     connection: DuckDBPyConnection,
     *,
@@ -1133,18 +1116,6 @@ def _source_counts_excluding_study(
     ).fetchall()
     for source_id, count in rows:
         counts[str(source_id)] = int(count)
-    return counts
-
-
-def _source_counts_after_replace(
-    connection: DuckDBPyConnection,
-    *,
-    study_id: str,
-    replacement_rows: list[_CommonMorphologyRow],
-) -> dict[str, int]:
-    counts = _source_counts_excluding_study(connection, study_id=study_id)
-    for row in replacement_rows:
-        counts[row.source_id] = counts.get(row.source_id, 0) + 1
     return counts
 
 

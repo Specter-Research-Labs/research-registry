@@ -399,13 +399,6 @@ public final class AppState: ObservableObject {
         }
     }
 
-    public func updateArenaStateForId(_ id: UUID, state: ArenaState) {
-        arenaStates[id] = state
-        if activeArenaConfig?.id == id {
-            arenaState = state
-        }
-    }
-
     // MARK: - Campaign Methods
 
     public func updateCampaigns(_ campaigns: [CampaignStatus]) {

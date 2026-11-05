@@ -552,7 +552,7 @@ def safe_filename(code: str) -> str:
     return normalized.strip("-") or "unnamed"
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Extract Chakazul Lenia preset taxonomy and cells")
     parser.add_argument("--input", type=Path, help="Local Lenia-LifeForms.js source")
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -562,7 +562,7 @@ def main() -> None:
     parser.add_argument("--qd-max-pattern-size", type=int, default=96)
     parser.add_argument("--qd-limit-per-family", type=int)
     parser.add_argument("--qd-additive-native-parity-dir", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     source = args.input.read_text(encoding="utf-8") if args.input else fetch_source()
     presets = parse_presets(source)
@@ -592,7 +592,8 @@ def main() -> None:
             f"{args.qd_additive_native_parity_dir}"
         )
     print(f"wrote {len(presets)} presets to {args.output_dir}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

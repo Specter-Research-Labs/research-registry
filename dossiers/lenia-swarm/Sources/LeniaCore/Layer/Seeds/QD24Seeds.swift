@@ -23,69 +23,6 @@ public func loadQD2024SeedsFromLibrary(
     }
 }
 
-public func qd2024CenterCropPatchValues(
-    seed: LeniaBreeder2024ExpressedSeed,
-    size: Int,
-    channels: [Int]? = nil
-) throws -> [Float] {
-    guard size > 0 else {
-        throw ConfigError.invalidConfig("qd-2024 seed patch size must be > 0.")
-    }
-    let selectedChannels = channels ?? Array(0..<seed.world.channels)
-    guard !selectedChannels.isEmpty else {
-        throw ConfigError.invalidConfig("qd-2024 seed patch must include at least one channel.")
-    }
-    for channel in selectedChannels where channel < 0 || channel >= seed.world.channels {
-        throw ConfigError.invalidConfig("qd-2024 seed patch channel \(channel) is out of range for \(seed.world.channels)-channel seed.")
-    }
-    guard size <= seed.world.width, size <= seed.world.height else {
-        throw ConfigError.invalidConfig("qd-2024 seed patch size \(size) exceeds seed dimensions \(seed.world.width)x\(seed.world.height).")
-    }
-
-    let startX = max(0, (seed.world.width - size) / 2)
-    let startY = max(0, (seed.world.height - size) / 2)
-    var out: [Float] = []
-    out.reserveCapacity(size * size * selectedChannels.count)
-    for x in startX..<(startX + size) {
-        for y in startY..<(startY + size) {
-            for channel in selectedChannels {
-                out.append(seed.world.values[qd2024WorldIndex(x: x, y: y, channel: channel, width: seed.world.width, height: seed.world.height, channels: seed.world.channels)])
-            }
-        }
-    }
-    return out
-}
-
-public func qd2024ResizedMassInitialization(
-    seed: LeniaBreeder2024ExpressedSeed,
-    size: Int
-) throws -> [[Float]] {
-    guard size > 0 else {
-        throw ConfigError.invalidConfig("qd-2024 initialization size must be > 0.")
-    }
-    let mass = qd2024MassMap(seed: seed)
-    let bbox = qd2024ActiveBoundingBox(
-        massMap: mass,
-        width: seed.world.width,
-        height: seed.world.height,
-        threshold: 1e-5
-    )
-    let sourceWidth = bbox.width
-    let sourceHeight = bbox.height
-    var out = Array(
-        repeating: Array(repeating: Float(0), count: size),
-        count: size
-    )
-    for row in 0..<size {
-        let srcY = bbox.minY + min(sourceHeight - 1, Int(Float(row) / Float(max(size - 1, 1)) * Float(max(sourceHeight - 1, 0))))
-        for col in 0..<size {
-            let srcX = bbox.minX + min(sourceWidth - 1, Int(Float(col) / Float(max(size - 1, 1)) * Float(max(sourceWidth - 1, 0))))
-            out[row][col] = mass[srcY * seed.world.width + srcX]
-        }
-    }
-    return out
-}
-
 public func qd2024ActivePatch(seed: LeniaBreeder2024ExpressedSeed) -> WorldState {
     let mass = qd2024MassMap(seed: seed)
     let bbox = qd2024ActiveBoundingBox(
@@ -104,51 +41,6 @@ public func qd2024ActivePatch(seed: LeniaBreeder2024ExpressedSeed) -> WorldState
         }
     }
     return WorldState(width: bbox.width, height: bbox.height, channels: seed.world.channels, values: data)
-}
-
-public func writeQD2024FamilyConfig(
-    sourceConfigDirectory: URL,
-    familyRoot: URL,
-    familyID: String,
-    familyName: String,
-    derivedPattern: LeniaBreeder2024PatternSpec
-) throws -> URL {
-    let fileManager = FileManager.default
-    try fileManager.createDirectory(at: familyRoot, withIntermediateDirectories: true)
-    let patternsDirectory = familyRoot.appendingPathComponent("patterns", isDirectory: true)
-    try fileManager.createDirectory(at: patternsDirectory, withIntermediateDirectories: true)
-
-    for name in ["me.json", "aurora.json"] {
-        let source = sourceConfigDirectory.appendingPathComponent(name)
-        let target = familyRoot.appendingPathComponent(name)
-        if fileManager.fileExists(atPath: target.path) {
-            try fileManager.removeItem(at: target)
-        }
-        try fileManager.copyItem(at: source, to: target)
-    }
-
-    let baseURL = sourceConfigDirectory.appendingPathComponent("base.json")
-    let baseObject = try JSONSerialization.jsonObject(with: Data(contentsOf: baseURL), options: [])
-    guard var baseJSON = baseObject as? [String: Any] else {
-        throw ConfigError.invalidConfig("qd-2024 base.json must decode as a JSON object.")
-    }
-    baseJSON["pattern_id"] = familyID
-    let baseData = try JSONSerialization.data(withJSONObject: baseJSON, options: [.prettyPrinted, .sortedKeys])
-    try baseData.write(to: familyRoot.appendingPathComponent("base.json"))
-
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    try encoder.encode(
-        LeniaBreeder2024PatternSpec(
-            R: derivedPattern.R,
-            T: derivedPattern.T,
-            cells: derivedPattern.cells,
-            kernels: derivedPattern.kernels,
-            name: familyName
-        )
-    ).write(to: patternsDirectory.appendingPathComponent("\(familyID).json"))
-
-    return familyRoot
 }
 
 private func qd2024RequestedCells(libraryURL: URL, explicit: [Int]?) throws -> [Int] {

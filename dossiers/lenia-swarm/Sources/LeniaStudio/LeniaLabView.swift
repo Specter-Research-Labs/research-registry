@@ -655,22 +655,6 @@ final class LeniaLabModel: ObservableObject {
         }
     }
 
-    func waitForRunStateTransition() async {
-        await runStateTask?.value
-    }
-
-    func waitForRuntimeMutations() async {
-        await runtimeMutationTail?.value
-    }
-
-    func runtimeStepSnapshot() async -> Int? {
-        guard let runtime else { return nil }
-        return await runtime.snapshot(
-            refreshMetrics: false,
-            projection: activeProjection
-        ).step
-    }
-
     func reset() {
         guard let runtime else { return }
         let generation = sessionGeneration

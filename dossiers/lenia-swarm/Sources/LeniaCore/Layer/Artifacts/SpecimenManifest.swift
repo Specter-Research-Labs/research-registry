@@ -458,11 +458,5 @@ private func normalizedSpecimenText(_ value: String?) -> String? {
 }
 
 public func normalizedSpecimenSourceMode(_ value: String?) -> String? {
-    guard let normalized = normalizedSpecimenText(value) else {
-        return nil
-    }
-    if normalized == "replay-specimens" {
-        return "replay"
-    }
-    return normalized
+    normalizedSpecimenText(value)
 }

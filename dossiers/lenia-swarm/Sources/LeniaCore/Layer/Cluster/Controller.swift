@@ -575,10 +575,6 @@ public distributed actor SwarmController {
         }
     }
 
-    public func getLibrary() -> [SavedCreature] {
-        return creatureLibrary
-    }
-
     private func broadcastFullLibrary(to worker: LeniaWorker) async {
         do {
             try await worker.receiveLibraryUpdate(.fullSync(creatureLibrary))
@@ -777,10 +773,6 @@ public distributed actor SwarmController {
             logger.error("Failed to join arena: \(error)")
             return false
         }
-    }
-
-    public func getActiveArenas() -> [UUID] {
-        return Array(activeArenas.keys)
     }
 
     // MARK: - Campaign/Sweep Management

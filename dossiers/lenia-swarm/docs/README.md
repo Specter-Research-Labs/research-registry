@@ -21,7 +21,7 @@ Lenia Swarm runs Flow Lenia simulations, indexes the persistent patterns they pr
 ## Running experiments
 
 - [Paper reproductions](./contracts/ResearchModes.md): the seven paper-grounded run families, their entry points, outputs, code and gaps.
-- [The compendium](./contracts/CompendiumSchema.md): schema, migrations, indexer behavior, Studio reads, and the exact-version rule.
+- [The compendium](./contracts/CompendiumSchema.md): schema, rebuild rule, indexer behavior, Studio reads, and the exact-version rule.
 
 ## Inside the simulator
 

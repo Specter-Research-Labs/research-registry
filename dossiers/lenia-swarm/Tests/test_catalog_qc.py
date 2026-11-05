@@ -23,7 +23,9 @@ def test_apply_shape_behavior_qc_marks_protected_and_quarantine(tmp_path):
             speed_mean REAL,
             path_length REAL,
             score REAL,
-            metrics_json TEXT
+            metrics_json TEXT,
+            catalog_status TEXT NOT NULL DEFAULT 'active',
+            quality_flags_json TEXT NOT NULL DEFAULT '[]'
         );
         """
     )
