@@ -1,5 +1,5 @@
 ---
-summary: "How to build LeniaCLI and run a local Flow Lenia sweep, what the run directory contains, and what must be captured for a run to be reproduced later."
+summary: "How to build LeniaCLI and run a local Flow Lenia sweep, what the run directory contains, what must be captured for a run to be reproduced later, and the stored field and specimen formats with the command that rewrites older artifacts."
 ---
 
 # Running a local sweep
@@ -132,6 +132,52 @@ Per indexed record:
 - method and version tags for derived fields such as morphometrics and taxonomy.
 
 Results are not guaranteed bitwise identical across different hardware, compiler versions, or MLX backend revisions unless the experiment protocol pins them.
+
+## Storage compaction
+
+### Field patches
+
+Every stored float field (`init.state_patch`, `init.p_state_patch`, `terminal-state.json`, `terminal-params.json`, and the same patches inside creatures, export bundles and Studio organisms) has one encoding:
+
+```json
+{"center": [x, y], "width": W, "height": H, "channels": C,
+ "encoding": "f32le-shuffle-zlib", "data": "<base64>"}
+```
+
+`data` is base64 of a zlib stream (RFC 1950, level 9) of the `W*H*C` little-endian float32 values after a byte-plane shuffle: byte 0 of every value, then byte 1 of every value, then bytes 2 and 3, in the value order the patch has always used. The inflated stream must be exactly `4*W*H*C` bytes. The shuffle groups the near-constant exponent bytes, which is where most of the saving comes from. `FieldCodec` (Swift) and `lenia_swarm_analysis.trace_codec` (Python) share the fixture `Tests/LeniaCoreTests/Fixtures/field-codec.json`, and the codec is lossless to the bit, including NaN payloads and signed zeros.
+
+Decoders accept only `f32le-shuffle-zlib`. The retired raw `f32le` encoding fails with a message naming the compaction command, and any other encoding fails as unknown.
+
+### One copy per specimen
+
+The genotype, initial condition, metrics and descriptor bundle live on the creature (or on the row columns of a result) beside its specimen manifest, and nowhere else. `snapshots` in a specimen manifest holds only `morphometrics`, which has no other home.
+
+Library rows (`library/index.jsonl`) require `runtime_family`, `runtime_capabilities` and `specimen_manifest`. Export `meta.json` requires `bundleKind`, `reason`, `runtimeFamily` and `runtimeCapabilities`. Creatures store their initial condition under `initialCondition`. The retired `phenotype` key, the `qd-2024` runtime family (now `qd24_paper`) and the capability names `native-replay`, `native-intervention` and `phenotype-queryable` are no longer read. The `phenotype` key in compendium release details is the published site format and is unaffected.
+
+### Rewriting an artifact store
+
+Files written before these formats are rewritten in place by:
+
+```bash
+cd dossiers/lenia-swarm
+uv run lenia-swarm-analysis compact <root> --dry-run
+uv run lenia-swarm-analysis compact <root> [--jobs N]
+```
+
+The command walks every `*.json` and `*.jsonl` under `<root>`, skipping symlinks, and rewrites only documents that need it. It keeps each file's JSON style (indent, separators, `\/` escaping), leaves unchanged JSONL lines byte-identical, writes numbers in their shortest round-trip form (`0.20000000000000001` becomes `0.2`, the same double), and replaces each file atomically. Before it writes a file it checks that the rewritten text reparses to the same raw float bytes, compared by SHA-256, for every patch.
+
+It fails a file, and leaves it untouched, when:
+
+- a patch has an unknown encoding or a byte count that does not match its shape;
+- a snapshot it would drop differs from, or cannot be checked against, the creature it supposedly duplicates;
+- a creature lacks a required saved-creature field;
+- a retired record has no unambiguous current form, such as an export bundle missing from its `exports/index.jsonl`.
+
+Errors go to stderr and the exit status is 1. Resolve the named files and rerun; the command is idempotent.
+
+A run writes `<root>/compaction-receipts/<UTC>.jsonl`. It holds a header, then one line per rewritten file with byte counts, the file SHA-256 before and after, the raw-float SHA-256 of every converted patch, and the counts of snapshots dropped and manifests written. `--dry-run` prints the projected per-directory table and writes nothing.
+
+Compaction preserves the simulation input exactly: the same LeniaCLI build produces byte-identical `results.jsonl` and `top.json` from a config before and after compaction. A run recorded before a physics change will not reproduce under the current build either way. Compaction does change file bytes and therefore anything hashed over encoded configs. A `config_hash` recorded before compaction is not what LeniaCLI computes from the compacted config, because the hash covers the encoded patch text, and `discover local` refuses to resume a pre-compaction `checkpoint.json` because its `inputHash` covers the config file bytes. SQLite and DuckDB files are not rewritten; reindex from the compacted JSON.
 
 ## Determinism smoke test
 

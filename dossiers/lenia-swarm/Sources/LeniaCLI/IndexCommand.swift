@@ -511,9 +511,10 @@ final class SQLiteIndexer {
                 name: name,
                 ownerId: ownerID,
                 manifest: manifest,
-                fallbackGenotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
-                fallbackInitialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
-                fallbackMetrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
+                genotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
+                initialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
+                metrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
+                descriptorBundle: nil,
                 sweep: try decodeOptionalJSONString(columnText(stmt, index: 15), as: [String: Double].self, decoder: decoder),
                 score: score,
                 scoreWeights: try decodeOptionalJSONString(columnText(stmt, index: 16), as: [String: Float].self, decoder: decoder),
@@ -614,11 +615,7 @@ final class SQLiteIndexer {
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .deferredToDate
-        let metadata = try decodeCreatureExportMetadata(
-            Data(contentsOf: metadataURL),
-            decoder: decoder,
-            indexBundleKind: exportRecord.bundleKind
-        )
+        let metadata = try decoder.decode(CreatureExportMetadata.self, from: Data(contentsOf: metadataURL))
         return try upsertSpecimenFromExportMetadata(
             metadata: metadata,
             gap: target.gap,
@@ -1179,14 +1176,14 @@ final class SQLiteIndexer {
             name: gap.creature.name,
             ownerId: gap.creature.ownerId,
             manifest: nil,
-            fallbackGenotype: gap.creature.genotype,
-            fallbackInitialCondition: gap.creature.initialCondition,
-            fallbackMetrics: gap.creature.metrics,
+            genotype: gap.creature.genotype,
+            initialCondition: gap.creature.initialCondition,
+            metrics: gap.creature.metrics,
+            descriptorBundle: gap.creature.descriptorBundle,
             sweep: gap.creature.sweep,
             score: gap.creature.score,
             scoreWeights: gap.creature.scoreWeights,
             fallbackInitialConditionFamily: gap.creature.initialConditionFamily,
-            fallbackDescriptorBundle: gap.creature.descriptorBundle,
             fallbackConfigHash: gap.configHash ?? gap.creature.configHash,
             fallbackSourceMode: gap.sourceMode,
             fallbackSourceAlgorithm: gap.sourceAlgorithm,
@@ -1338,7 +1335,7 @@ final class SQLiteIndexer {
             guard let data = line.data(using: .utf8) else {
                 throw SQLiteIndexError.invalidUTF8(url.path)
             }
-            let entry = try decodeResearchLibraryEntry(data, decoder: decoder)
+            let entry = try decoder.decode(ResearchLibraryEntry.self, from: data)
             partial[entry.creature.id.uuidString] = entry
         }
     }
@@ -2433,13 +2430,16 @@ final class SQLiteIndexer {
         }
         let select = try db.prepare("""
             SELECT
-                id, name, owner_id, run_id, campaign_id, recorded_at, score,
-                config_hash, source_mode, source_algorithm, research_metadata_json,
-                trait_labels_json, genotype_json, initial_condition_json, sweep_json,
-                metrics_json, score_weights_json, morphometrics_json, specimen_manifest_json,
-                taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id,
-                taxonomy_confidence, taxonomy_method, taxonomy_version
-            FROM creatures
+                c.id, c.name, c.owner_id, c.run_id, c.campaign_id, c.recorded_at, c.score,
+                c.config_hash, c.source_mode, c.source_algorithm, c.research_metadata_json,
+                c.trait_labels_json, c.genotype_json, c.initial_condition_json, c.sweep_json,
+                c.metrics_json, c.score_weights_json, c.morphometrics_json, c.specimen_manifest_json,
+                c.taxonomy_family_id, c.taxonomy_genus_id, c.taxonomy_species_id,
+                c.taxonomy_confidence, c.taxonomy_method, c.taxonomy_version,
+                s.descriptor_version, s.symmetry_policy, s.genotype_descriptor_json,
+                s.terminal_descriptor_json, s.trajectory_descriptor_json
+            FROM creatures c
+            LEFT JOIN specimens s ON s.id = c.canonical_specimen_id
         """)
         defer { sqlite3_finalize(select) }
 
@@ -2484,9 +2484,10 @@ final class SQLiteIndexer {
                 name: name,
                 ownerId: ownerID,
                 manifest: manifest,
-                fallbackGenotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
-                fallbackInitialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
-                fallbackMetrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
+                genotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
+                initialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
+                metrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
+                descriptorBundle: try strictSpecimenDescriptorBundle(select, firstIndex: 25, decoder: decoder),
                 sweep: try decodeOptionalJSONString(columnText(select, index: 14), as: [String: Double].self, decoder: decoder),
                 score: sqlite3_column_type(select, 6) == SQLITE_NULL ? nil : Float(sqlite3_column_double(select, 6)),
                 scoreWeights: try decodeOptionalJSONString(columnText(select, index: 16), as: [String: Float].self, decoder: decoder),
@@ -2539,6 +2540,28 @@ final class SQLiteIndexer {
             db.bindText(update, index: 4, value: id)
             try db.step(update)
         }
+    }
+
+    private func strictSpecimenDescriptorBundle(
+        _ stmt: OpaquePointer,
+        firstIndex: Int32,
+        decoder: JSONDecoder
+    ) throws -> MorphospaceDescriptorBundle? {
+        guard sqlite3_column_type(stmt, firstIndex) != SQLITE_NULL else {
+            return nil
+        }
+        guard let symmetryPolicy = columnText(stmt, index: firstIndex + 1),
+              let genotypeJSON = columnText(stmt, index: firstIndex + 2),
+              let terminalJSON = columnText(stmt, index: firstIndex + 3) else {
+            throw SQLiteIndexError.sqliteError(message: "Canonical specimen row is missing descriptor columns.")
+        }
+        return MorphospaceDescriptorBundle(
+            descriptorVersion: Int(sqlite3_column_int(stmt, firstIndex)),
+            symmetryPolicy: symmetryPolicy,
+            genotype: try decodeJSONString(genotypeJSON, as: MorphospaceGenotypeDescriptor.self, decoder: decoder),
+            terminal: try decodeJSONString(terminalJSON, as: MorphospaceTerminalDescriptor.self, decoder: decoder),
+            trajectory: try decodeOptionalJSONString(columnText(stmt, index: firstIndex + 4), as: MorphospaceTrajectoryDescriptor.self, decoder: decoder)
+        )
     }
 
     private func backfillStrictSpecimenContracts() throws {
@@ -2637,12 +2660,9 @@ final class SQLiteIndexer {
                 ),
                 traitLabels: try decodeOptionalJSONString(columnText(select, index: 20), as: [String].self, decoder: decoder),
                 snapshots: SpecimenSnapshotRecord(
-                    genotype: try decodeOptionalJSONString(columnText(select, index: 15), as: KernelParams.self, decoder: decoder),
-                    initialCondition: try decodeOptionalJSONString(columnText(select, index: 16), as: InitConfig.self, decoder: decoder),
-                    metrics: try decodeOptionalJSONString(columnText(select, index: 17), as: SimulationMetrics.self, decoder: decoder),
-                    descriptorBundle: descriptorBundle,
                     morphometrics: try decodeOptionalJSONString(columnText(select, index: 19), as: Morphometrics.self, decoder: decoder)
                 ),
+                descriptorBundle: descriptorBundle,
                 researchMetadata: researchMetadata
             )
             let strictContract = try persistedStrictSpecimenContract(
@@ -2888,7 +2908,6 @@ final class SQLiteIndexer {
     private func withDecodedJSONLLines<Record: Decodable>(
         path: URL,
         configureDecoder: (JSONDecoder) -> Void = { _ in },
-        decodeRecord: ((Data, JSONDecoder) throws -> Record)? = nil,
         _ body: ([Record]) throws -> Void
     ) throws {
         let (lines, newOffset, attrs) = try readJSONLLines(path: path)
@@ -2902,9 +2921,6 @@ final class SQLiteIndexer {
             configureDecoder(decoder)
             let records = try lines.compactMap { line -> Record? in
                 guard let data = line.data(using: .utf8) else { return nil }
-                if let decodeRecord {
-                    return try decodeRecord(data, decoder)
-                }
                 return try decoder.decode(Record.self, from: data)
             }
             try body(records)
@@ -2915,8 +2931,7 @@ final class SQLiteIndexer {
     private func ingestLibraryIndex(path: URL, runKey: String, runDir: URL) throws {
         try withDecodedJSONLLines(
             path: path,
-            configureDecoder: { $0.dateDecodingStrategy = .deferredToDate },
-            decodeRecord: decodeResearchLibraryEntry
+            configureDecoder: { $0.dateDecodingStrategy = .deferredToDate }
         ) { (entries: [ResearchLibraryEntry]) in
             let provenance = try resolvedLibraryProvenance(entries: entries, runKey: runKey, path: path)
 
@@ -3153,7 +3168,7 @@ final class SQLiteIndexer {
     private func ingestExportIndex(path: URL, runKey: String, runDir: URL) throws {
         try withDecodedJSONLLines(path: path, configureDecoder: {
             $0.dateDecodingStrategy = .deferredToDate
-        }) { (records: [ExportRecord]) in
+        }) { (records: [CreatureExportRecord]) in
             let exportPlaceholders = Array(repeating: "?", count: 18).joined(separator: ",")
             let stmt = try db.prepare("""
                 INSERT OR REPLACE INTO exports (
@@ -3178,15 +3193,15 @@ final class SQLiteIndexer {
                     runID: runKey,
                     campaignID: record.campaignId,
                     recordedAt: record.exportedAt,
-                    sourceMode: record.specimenManifest?.sourceMode,
-                    sourceAlgorithm: record.specimenManifest?.sourceAlgorithm,
-                    configHash: record.specimenManifest?.configHash,
+                    sourceMode: record.specimenManifest.sourceMode,
+                    sourceAlgorithm: record.specimenManifest.sourceAlgorithm,
+                    configHash: record.specimenManifest.configHash,
                     bundleKind: record.bundleKind,
                     exportDir: exportDir,
                     baseConfigPath: baseConfigPath,
                     searchConfigPath: searchConfigPath,
                     payloadPath: payloadPath,
-                    researchMetadata: record.specimenManifest?.researchMetadata
+                    researchMetadata: record.specimenManifest.researchMetadata
                 )
                 try persistExportManifest(specimenManifest, creatureID: record.creatureId.uuidString) {
                     runtimeFamily,
@@ -3746,13 +3761,8 @@ final class SQLiteIndexer {
                 initialConditionFamily: initialConditionFamily,
                 taxonomy: contract.manifest.taxonomy,
                 traitLabels: contract.manifest.traitLabels,
-                snapshots: SpecimenSnapshotRecord(
-                    genotype: creature.genotype,
-                    initialCondition: creature.initialCondition,
-                    metrics: creature.metrics,
-                    descriptorBundle: descriptorBundle,
-                    morphometrics: contract.morphometrics
-                ),
+                snapshots: SpecimenSnapshotRecord(morphometrics: contract.morphometrics),
+                descriptorBundle: descriptorBundle,
                 researchMetadata: contract.manifest.researchMetadata ?? researchMetadata
             ),
             overlayManifest: contract.manifest
@@ -4326,102 +4336,3 @@ private struct IngestState {
     let mtime: Double
 }
 
-private struct ExportRecord: Decodable {
-    let creatureId: UUID
-    let name: String
-    let ownerId: String
-    let runId: String
-    let campaignId: String?
-    let exportDir: String
-    let bundleKind: LeniaArtifactBundleKind
-    let baseConfigPath: String?
-    let searchConfigPath: String?
-    let payloadPath: String?
-    let exportedAt: Date
-    let reason: String
-    let score: Float?
-    let filtersPassed: Bool?
-    let runtimeFamily: String?
-    let runtimeCapabilities: [String]?
-    let specimenManifest: SpecimenManifest?
-
-    enum CodingKeys: String, CodingKey {
-        case creatureId = "creature_id"
-        case name
-        case ownerId = "owner_id"
-        case runId = "run_id"
-        case campaignId = "campaign_id"
-        case exportDir = "export_dir"
-        case bundleKind = "bundle_kind"
-        case baseConfigPath = "base_config_path"
-        case searchConfigPath = "search_config_path"
-        case payloadPath = "payload_path"
-        case exportedAt = "exported_at"
-        case reason
-        case score
-        case filtersPassed = "filters_passed"
-        case runtimeFamily = "runtime_family"
-        case runtimeCapabilities = "runtime_capabilities"
-        case specimenManifest = "specimen_manifest"
-    }
-
-    enum AltCodingKeys: String, CodingKey {
-        case creatureId
-        case name
-        case ownerId
-        case runId
-        case campaignId
-        case exportDir
-        case bundleKind
-        case baseConfigPath
-        case searchConfigPath
-        case payloadPath
-        case exportedAt
-        case reason
-        case score
-        case filtersPassed
-        case runtimeFamily
-        case runtimeCapabilities
-        case specimenManifest
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let alt = try decoder.container(keyedBy: AltCodingKeys.self)
-
-        creatureId = try container.decodeIfPresent(UUID.self, forKey: .creatureId)
-            ?? alt.decode(UUID.self, forKey: .creatureId)
-        name = try container.decodeIfPresent(String.self, forKey: .name)
-            ?? alt.decode(String.self, forKey: .name)
-        ownerId = try container.decodeIfPresent(String.self, forKey: .ownerId)
-            ?? alt.decode(String.self, forKey: .ownerId)
-        runId = try container.decodeIfPresent(String.self, forKey: .runId)
-            ?? alt.decode(String.self, forKey: .runId)
-        campaignId = try container.decodeIfPresent(String.self, forKey: .campaignId)
-            ?? alt.decodeIfPresent(String.self, forKey: .campaignId)
-        exportDir = try container.decodeIfPresent(String.self, forKey: .exportDir)
-            ?? alt.decode(String.self, forKey: .exportDir)
-        bundleKind = try container.decodeIfPresent(LeniaArtifactBundleKind.self, forKey: .bundleKind)
-            ?? alt.decode(LeniaArtifactBundleKind.self, forKey: .bundleKind)
-        baseConfigPath = try container.decodeIfPresent(String.self, forKey: .baseConfigPath)
-            ?? alt.decodeIfPresent(String.self, forKey: .baseConfigPath)
-        searchConfigPath = try container.decodeIfPresent(String.self, forKey: .searchConfigPath)
-            ?? alt.decodeIfPresent(String.self, forKey: .searchConfigPath)
-        payloadPath = try container.decodeIfPresent(String.self, forKey: .payloadPath)
-            ?? alt.decodeIfPresent(String.self, forKey: .payloadPath)
-        exportedAt = try container.decodeIfPresent(Date.self, forKey: .exportedAt)
-            ?? alt.decode(Date.self, forKey: .exportedAt)
-        reason = try container.decodeIfPresent(String.self, forKey: .reason)
-            ?? alt.decode(String.self, forKey: .reason)
-        score = try container.decodeIfPresent(Float.self, forKey: .score)
-            ?? alt.decodeIfPresent(Float.self, forKey: .score)
-        filtersPassed = try container.decodeIfPresent(Bool.self, forKey: .filtersPassed)
-            ?? alt.decodeIfPresent(Bool.self, forKey: .filtersPassed)
-        runtimeFamily = try container.decodeIfPresent(String.self, forKey: .runtimeFamily)
-            ?? alt.decodeIfPresent(String.self, forKey: .runtimeFamily)
-        runtimeCapabilities = try container.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-            ?? alt.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-        specimenManifest = try container.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-            ?? alt.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-    }
-}

@@ -7,28 +7,8 @@ import XCTest
 @testable import LeniaCLIKit
 import LeniaCore
 
-private struct TestLibraryEntry: Codable {
-    let creature: SavedCreature
-    let campaign_id: String?
-    let run_id: String
-    let recorded_at: Date
-}
-
-private struct TestExportRecord: Codable {
-    let creature_id: UUID
-    let name: String
-    let owner_id: String
-    let run_id: String
-    let campaign_id: String?
-    let export_dir: String
-    let bundle_kind: String
-    let base_config_path: String
-    let search_config_path: String
-    let payload_path: String?
-    let exported_at: Date
-    let reason: String
-    let score: Float?
-    let filters_passed: Bool?
+private func testLibraryEntry(creature: SavedCreature, campaign_id: String?, run_id: String, recorded_at: Date) -> ResearchLibraryEntry {
+    ResearchLibraryEntry(creature: creature, campaignId: campaign_id, runId: run_id, recordedAt: recorded_at, configHash: nil)
 }
 
 final class CompendiumIndexingTests: XCTestCase {
@@ -147,7 +127,7 @@ final class CompendiumIndexingTests: XCTestCase {
 
         let seed = 42
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, name: "test-creature", seed: seed),
                 campaign_id: nil,
                 run_id: "run-001",
@@ -220,7 +200,7 @@ final class CompendiumIndexingTests: XCTestCase {
         try makeRunLayout(at: runB)
 
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")!, name: "alpha-run-a", seed: 7),
                 campaign_id: "campaign-001",
                 run_id: "run-001",
@@ -229,7 +209,7 @@ final class CompendiumIndexingTests: XCTestCase {
         ], to: runA.appendingPathComponent("library/index.jsonl"))
 
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")!, name: "alpha-run-b", seed: 8),
                 campaign_id: "campaign-001",
                 run_id: "run-001",
@@ -291,7 +271,7 @@ final class CompendiumIndexingTests: XCTestCase {
             seed: 23
         )
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: creature,
                 campaign_id: nil,
                 run_id: "run-001",
@@ -489,13 +469,13 @@ final class CompendiumIndexingTests: XCTestCase {
 
         let seed = 17
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "cccccccc-cccc-cccc-cccc-cccccccccccc")!, name: "overall", seed: seed),
                 campaign_id: nil,
                 run_id: "run-001",
                 recorded_at: fixedDate
             ),
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "dddddddd-dddd-dddd-dddd-dddddddddddd")!, name: "campaign", seed: seed),
                 campaign_id: "campaign-001",
                 run_id: "run-001",
@@ -551,7 +531,7 @@ final class CompendiumIndexingTests: XCTestCase {
         try makeRunLayout(at: runDir)
 
         let creatureId = UUID(uuidString: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")!
-        let originalEntry = TestLibraryEntry(
+        let originalEntry = testLibraryEntry(
             creature: makeCreature(id: creatureId, name: "alpha", seed: 99),
             campaign_id: nil,
             run_id: "run-001",
@@ -559,7 +539,7 @@ final class CompendiumIndexingTests: XCTestCase {
         )
         let originalLine = try jsonlLine(originalEntry)
         var rewrittenName = "bravo"
-        var rewrittenEntry = TestLibraryEntry(
+        var rewrittenEntry = testLibraryEntry(
             creature: makeCreature(id: creatureId, name: rewrittenName, seed: 99),
             campaign_id: nil,
             run_id: "run-001",
@@ -573,7 +553,7 @@ final class CompendiumIndexingTests: XCTestCase {
             } else {
                 rewrittenName = String(rewrittenName.dropLast(-lineDelta))
             }
-            rewrittenEntry = TestLibraryEntry(
+            rewrittenEntry = testLibraryEntry(
                 creature: makeCreature(id: creatureId, name: rewrittenName, seed: 99),
                 campaign_id: nil,
                 run_id: "run-001",
@@ -2215,22 +2195,21 @@ private func makeExportRecord(
     runId: String,
     campaignId: String?,
     exportDir: String
-) -> TestExportRecord {
-    TestExportRecord(
-        creature_id: creatureId,
+) -> CreatureExportRecord {
+    CreatureExportRecord(
+        creatureId: creatureId,
         name: "exported",
-        owner_id: "tester",
-        run_id: runId,
-        campaign_id: campaignId,
-        export_dir: exportDir,
-        bundle_kind: LeniaArtifactBundleKind.strictReplayBundleV1.rawValue,
-        base_config_path: exportDir + "/base.json",
-        search_config_path: exportDir + "/search.json",
-        payload_path: nil,
-        exported_at: fixedDate,
+        ownerId: "tester",
+        runId: runId,
+        campaignId: campaignId,
+        bundleKind: .strictReplayBundleV1,
+        exportDir: exportDir,
+        baseConfigPath: exportDir + "/base.json",
+        searchConfigPath: exportDir + "/search.json",
+        exportedAt: fixedDate,
         reason: "test",
         score: 0.99,
-        filters_passed: true
+        filtersPassed: true
     )
 }
 

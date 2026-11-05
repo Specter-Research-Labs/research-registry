@@ -405,7 +405,7 @@ final class AtlasPublishTests: XCTestCase {
         XCTAssertEqual(release["source_db"] as? String, "compendium.sqlite")
     }
 
-    func testBrowseCompendiumPrefersCanonicalSpecimenSnapshots() throws {
+    func testBrowseCompendiumReadsSpecimenStateFromCreatureRowAndManifestFromCanonicalSpecimen() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory
             .appendingPathComponent("lenia-compendium-browse-\(UUID().uuidString)", isDirectory: true)
@@ -467,11 +467,13 @@ final class AtlasPublishTests: XCTestCase {
         let result = try browseCompendium(path: dbPath, query: CompendiumBrowseQuery(limit: 10))
         let entry = try XCTUnwrap(result.entries.first)
 
-        XCTAssertEqual(entry.creature.initialCondition.seed, creature.initialCondition.seed)
-        XCTAssertEqual(entry.previewSeed, creature.initialCondition.seed)
-        XCTAssertEqual(entry.creature.genotype.R, creature.genotype.R)
-        XCTAssertNotEqual(entry.creature.initialCondition.seed, mutatedInitialCondition.seed)
-        XCTAssertNotEqual(entry.creature.genotype.R, mutatedGenotype.R)
+        XCTAssertEqual(entry.creature.initialCondition.seed, mutatedInitialCondition.seed)
+        XCTAssertEqual(entry.previewSeed, mutatedInitialCondition.seed)
+        XCTAssertEqual(entry.creature.genotype.R, mutatedGenotype.R)
+        let manifest = try XCTUnwrap(entry.specimenManifest)
+        XCTAssertEqual(manifest.specimenID, "creature:\(creature.id.uuidString)")
+        XCTAssertEqual(manifest.configHash, "atlas-fixture")
+        XCTAssertEqual(entry.runtimeCapabilities, manifest.runtimeCapabilities)
     }
 }
 

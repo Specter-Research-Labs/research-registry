@@ -1,4 +1,3 @@
-import base64
 import json
 
 import numpy as np
@@ -11,6 +10,7 @@ from lenia_swarm_analysis.anatomical_compiler.trajectory_inverse import (
     prepare_experiment,
     prepare_refinement_experiment,
 )
+from lenia_swarm_analysis.trace_codec import state_patch_values
 
 
 def native_config() -> dict:
@@ -53,7 +53,7 @@ def test_image_state_patch_encodes_normalized_row_major_float32(tmp_path) -> Non
     Image.fromarray(pixels).save(image_path)
 
     patch = image_state_patch(image_path, (4, 4))
-    decoded = np.frombuffer(base64.b64decode(patch["data"]), dtype="<f4")
+    decoded = state_patch_values(patch)
 
     assert patch["center"] == [4, 4]
     assert (patch["width"], patch["height"], patch["channels"]) == (2, 2, 1)

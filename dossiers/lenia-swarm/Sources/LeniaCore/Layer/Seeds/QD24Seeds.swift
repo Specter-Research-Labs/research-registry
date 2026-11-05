@@ -161,7 +161,7 @@ private func qd2024RequestedCells(libraryURL: URL, explicit: [Int]?) throws -> [
         .map(String.init)
         .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     let entries = try lines.map { line in
-        try decodeResearchLibraryEntry(Data(line.utf8), decoder: decoder)
+        try decoder.decode(ResearchLibraryEntry.self, from: Data(line.utf8))
     }
     let cells = entries.compactMap { entry -> Int? in
         let raw = entry.researchMetadata?["cell"]?.value

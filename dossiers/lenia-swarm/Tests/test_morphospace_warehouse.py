@@ -1076,20 +1076,7 @@ def test_morphospace_library_ingest_prefers_specimen_manifest_contract(tmp_path:
                     "replay": {
                         "exportDir": "exports/replay-manifest-origin",
                     },
-                    "snapshots": {
-                        "descriptorBundle": {
-                            "terminal": _terminal(
-                                mass=15.0,
-                                occupancy=0.14,
-                                gyration=4.2,
-                                fingerprint=FINGERPRINT_COLUMN,
-                            ),
-                            "trajectory": {
-                                "centerVelocity": 0.02,
-                                "pathTortuosity": 2.5,
-                            },
-                        }
-                    },
+                    "snapshots": {},
                 },
                 "creature": {
                     "id": "creature-manifest",

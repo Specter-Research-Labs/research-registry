@@ -1,35 +1,28 @@
 from __future__ import annotations
 
+import pytest
+
 from lenia_swarm_analysis.waddington.random_experiment import _sync_randomized_manifest
 
 
-def test_sync_randomized_manifest_updates_genotype_snapshot_and_ids() -> None:
-    genotype = {"R": 9.0, "m": [0.2]}
+def test_sync_randomized_manifest_rewrites_ids_and_clears_template_snapshots() -> None:
     entry = {
-        "creature": {"id": "new-id", "genotype": genotype},
+        "creature": {"id": "new-id", "genotype": {"R": 9.0}},
         "specimen_manifest": {
             "creatureID": "old-creature",
             "specimenID": "old-specimen",
-            "snapshots": {"genotype": {"R": 1.0}, "metrics": {"mass": 0.5}},
+            "snapshots": {"morphometrics": {"pathTortuosity": 0.5}},
         },
     }
 
-    _sync_randomized_manifest(entry, "new-id", genotype)
+    _sync_randomized_manifest(entry, "new-id")
 
     manifest = entry["specimen_manifest"]
     assert manifest["creatureID"] == "new-id"
     assert manifest["specimenID"] == "new-id"
-    assert manifest["snapshots"]["genotype"] == genotype
-    assert manifest["snapshots"]["metrics"] == {"mass": 0.5}
+    assert manifest["snapshots"] == {}
 
 
-def test_sync_randomized_manifest_creates_missing_snapshots_object() -> None:
-    genotype = {"R": 6.0}
-    entry = {
-        "creature": {"id": "new-id", "genotype": genotype},
-        "specimen_manifest": {"creatureID": "old-creature", "specimenID": "old-specimen"},
-    }
-
-    _sync_randomized_manifest(entry, "new-id", genotype)
-
-    assert entry["specimen_manifest"]["snapshots"]["genotype"] == genotype
+def test_sync_randomized_manifest_requires_a_manifest() -> None:
+    with pytest.raises(SystemExit, match="no specimen_manifest"):
+        _sync_randomized_manifest({"creature": {"id": "new-id"}}, "new-id")

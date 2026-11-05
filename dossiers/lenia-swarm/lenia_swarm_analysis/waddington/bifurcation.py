@@ -24,7 +24,8 @@ from pathlib import Path
 
 import numpy as np
 
-from ..trace_codec import encode_state_patch_values, state_patch_values
+from ..trace_codec import state_patch as build_state_patch
+from ..trace_codec import state_patch_values
 from .family_pipeline import CLI, CONFIG_ROOT
 from .study import FIGURES_DIR, STUDY_ROOT
 
@@ -60,9 +61,13 @@ def _search_cfg(path: Path) -> None:
 def _scale_patch(state_patch: dict, amp: float) -> dict:
     if amp == 1.0:
         return state_patch
-    out = dict(state_patch)
-    out["data"] = encode_state_patch_values(state_patch_values(state_patch) * amp)
-    return out
+    return build_state_patch(
+        center=state_patch["center"],
+        width=state_patch["width"],
+        height=state_patch["height"],
+        channels=state_patch["channels"],
+        values=state_patch_values(state_patch) * amp,
+    )
 
 
 def _run_point(base: dict, m: float, s: float, amp: float, work: Path, search: Path) -> dict:

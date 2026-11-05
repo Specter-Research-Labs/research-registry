@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import re
-import struct
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from lenia_swarm_analysis._io import write_json
+from lenia_swarm_analysis.trace_codec import state_patch
 
 SOURCE_URL = "https://chakazul.github.io/Lenia/JavaScript/Lenia-LifeForms.js"
 QD24_PAPER_ID = "toward-artificial-open-ended-evolution-within-lenia-using-quality-diversity-2024"
@@ -474,15 +475,13 @@ def qd24_additive_native_parity_config(preset: ChakazulPreset) -> dict[str, Any]
 def qd24_state_patch(cells: list[list[float]], center: list[int]) -> dict[str, Any]:
     row_count = len(cells)
     column_count = len(cells[0]) if cells else 0
-    packed = b"".join(struct.pack("<f", value) for row in cells for value in row)
-    return {
-        "width": row_count,
-        "height": column_count,
-        "channels": 1,
-        "center": center,
-        "encoding": "f32le",
-        "data": base64.b64encode(packed).decode("ascii"),
-    }
+    return state_patch(
+        center=center,
+        width=row_count,
+        height=column_count,
+        channels=1,
+        values=np.asarray([value for row in cells for value in row], dtype="<f4"),
+    )
 
 
 def qd24_map_elites_smoke_config() -> dict[str, Any]:

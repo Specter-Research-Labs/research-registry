@@ -605,11 +605,7 @@ def _fingerprint_point_cloud(
     return points, weights
 
 
-def _terminal_from_payloads(
-    *,
-    provenance_json: Any,
-    specimen_manifest_json: Any,
-) -> dict[str, Any] | None:
+def _terminal_from_provenance(provenance_json: Any) -> dict[str, Any] | None:
     provenance = _json_dict(provenance_json)
     terminal = provenance.get("terminal")
     if isinstance(terminal, dict):
@@ -617,19 +613,6 @@ def _terminal_from_payloads(
     bundle = provenance.get("descriptorBundle")
     if isinstance(bundle, dict) and isinstance(bundle.get("terminal"), dict):
         return bundle["terminal"]
-
-    manifest = _json_dict(specimen_manifest_json)
-    snapshots = manifest.get("snapshots")
-    if isinstance(snapshots, dict):
-        descriptor_bundle = snapshots.get("descriptorBundle")
-        if isinstance(descriptor_bundle, dict) and isinstance(
-            descriptor_bundle.get("terminal"),
-            dict,
-        ):
-            return descriptor_bundle["terminal"]
-    descriptor_bundle = manifest.get("descriptorBundle")
-    if isinstance(descriptor_bundle, dict) and isinstance(descriptor_bundle.get("terminal"), dict):
-        return descriptor_bundle["terminal"]
     return None
 
 
@@ -715,8 +698,7 @@ def _iter_lenia_rows(
                     specimens.export_dir,
                     specimens.activity_path,
                     specimens.fingerprint_path,
-                    specimens.provenance_json,
-                    specimens.specimen_manifest_json
+                    specimens.provenance_json
                 FROM specimens
                 WHERE specimens.specimen_id IN ({placeholders})
                 """,
@@ -731,12 +713,8 @@ def _iter_lenia_rows(
                     activity_path,
                     fingerprint_path,
                     provenance_json,
-                    specimen_manifest_json,
                 ) = specimen_row
-                terminal = _terminal_from_payloads(
-                    provenance_json=provenance_json,
-                    specimen_manifest_json=specimen_manifest_json,
-                )
+                terminal = _terminal_from_provenance(provenance_json)
                 if terminal is None:
                     continue
                 point_cloud = _fingerprint_point_cloud(terminal, specimen_id=str(specimen_id))

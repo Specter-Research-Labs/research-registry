@@ -18,7 +18,7 @@ final class FrameExportTests: XCTestCase {
         var initial = try XCTUnwrap(config["init"] as? [String: Any])
         initial["state_patch"] = [
             "width": 1, "height": 1, "channels": 1,
-            "center": [22, 16], "data": "AACAPw==", "encoding": "f32le",
+            "center": [22, 16], "data": "eNpjYGiwBwABQwDA", "encoding": FieldCodec.encoding,
         ]
         config["init"] = initial
         let runtime = try loadRuntimeConfig(from: JSONSerialization.data(withJSONObject: config))

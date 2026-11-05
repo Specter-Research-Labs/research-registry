@@ -7,10 +7,10 @@ import numpy as np
 import pytest
 
 from lenia_swarm_analysis.morphospace import requalification as rq
+from lenia_swarm_analysis.trace_codec import state_patch
 
 
 def base_config(native: int, seed_value: float) -> dict:
-    patch = np.full((2, 4, 4), seed_value, dtype="<f4").tobytes()
     return {
         "grid": {"sx": native, "sy": native},
         "params": {"R": 12.0, "r": [seed_value]},
@@ -18,14 +18,13 @@ def base_config(native: int, seed_value: float) -> dict:
             "a_uniform": {"high": 0, "low": 0},
             "patches": [],
             "seed": 0,
-            "state_patch": {
-                "center": [native // 2, native // 2],
-                "channels": 2,
-                "encoding": "f32le",
-                "height": 4,
-                "width": 4,
-                "data": base64.b64encode(patch).decode(),
-            },
+            "state_patch": state_patch(
+                center=[native // 2, native // 2],
+                width=4,
+                height=4,
+                channels=2,
+                values=np.full((2, 4, 4), seed_value, dtype="<f4"),
+            ),
         },
         "reintegration": {"border": "wall", "dd": 5, "sigma": 0.65},
         "run": {"steps": 900},

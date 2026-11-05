@@ -786,9 +786,6 @@ private func labValidateStatePatchShape(
     guard statePatch.channels == channels else {
         throw ConfigError.invalidConfig("\(label).channels must equal \(channels).")
     }
-    guard statePatch.encoding == "f32le" else {
-        throw ConfigError.invalidConfig("\(label).encoding must be \"f32le\".")
-    }
     let expectedBytes = statePatch.width * statePatch.height * statePatch.channels * MemoryLayout<Float>.size
     guard statePatch.data.count == expectedBytes else {
         throw ConfigError.invalidConfig("\(label).data must contain exactly \(expectedBytes) bytes.")

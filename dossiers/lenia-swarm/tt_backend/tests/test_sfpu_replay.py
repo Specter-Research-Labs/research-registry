@@ -8,6 +8,7 @@ import json
 import numpy as np
 import pytest
 
+from lenia_swarm_analysis.trace_codec import FIELD_ENCODING, state_patch
 from tt_lenia.sfpu import replay
 from tt_lenia.sfpu.codegen import PassSpec
 
@@ -22,14 +23,9 @@ def _patch_config(
         "channels": channels,
         "grid": {"sx": sx, "sy": sy},
         "init": {
-            "state_patch": {
-                "channels": channels,
-                "width": w,
-                "height": h,
-                "center": center,
-                "encoding": "f32le",
-                "data": base64.b64encode(values.tobytes()).decode(),
-            }
+            "state_patch": state_patch(
+                center=center, width=w, height=h, channels=channels, values=values
+            )
         },
     }
     return raw, values.reshape(w, h, channels)
@@ -81,7 +77,7 @@ def export_config(paper_config_path) -> dict:
     raw["init"] = {
         "patches": [],
         "a_uniform": {"low": 0, "high": 0},
-        "state_patch": {"encoding": "f32le"},
+        "state_patch": {"encoding": FIELD_ENCODING},
     }
     return raw
 

@@ -31,6 +31,7 @@ from pathlib import Path
 import numpy as np
 
 from lenia_swarm_analysis.perturbation import one_ulp_member
+from lenia_swarm_analysis.trace_codec import state_patch, state_patch_values
 
 from ..config import compile_kernels, load_config, resolve_connectivity, resolve_params
 from ..device import MESH_SHAPE, on_cards
@@ -120,8 +121,8 @@ def _check_config(raw: dict, name: str) -> None:
     init = raw["init"]
     if init["patches"] or init["a_uniform"] != {"low": 0, "high": 0}:
         problems.append("random init patches")
-    if init.get("state_patch", {}).get("encoding") != "f32le":
-        problems.append("no f32le state patch")
+    if "state_patch" not in init:
+        problems.append("no state patch")
     if problems:
         raise ValueError(f"{name}: unsupported config: {'; '.join(problems)}")
 
@@ -133,9 +134,7 @@ def initial_mass(raw: dict) -> np.ndarray:
     if patch["channels"] != channels:
         raise ValueError(f"state patch has {patch['channels']} channels, config has {channels}")
     w, h = patch["width"], patch["height"]
-    values = np.frombuffer(base64.b64decode(patch["data"]), dtype="<f4")
-    if values.size != w * h * channels:
-        raise ValueError(f"state patch holds {values.size} values, expected {w * h * channels}")
+    values = state_patch_values(patch)
     cx, cy = patch["center"]
     x0, y0 = cx - w // 2, cy - h // 2
     if x0 < 0 or y0 < 0 or x0 + w > sx or y0 + h > sy:
@@ -286,14 +285,9 @@ def slot(lane: int, size: int) -> dict:
 def _member_config(member: Member, steps: int) -> dict:
     raw = member.body.config
     sx, sy, channels = member.mass.shape
-    patch = {
-        "center": [sx // 2, sy // 2],
-        "channels": channels,
-        "width": sx,
-        "height": sy,
-        "encoding": "f32le",
-        "data": base64.b64encode(np.ascontiguousarray(member.mass, "<f4").tobytes()).decode(),
-    }
+    patch = state_patch(
+        center=[sx // 2, sy // 2], width=sx, height=sy, channels=channels, values=member.mass
+    )
     return {
         **raw,
         "init": {**raw["init"], "state_patch": patch},

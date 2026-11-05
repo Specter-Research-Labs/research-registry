@@ -90,46 +90,6 @@ public struct CreatureExportRecord: Codable {
         self.runtimeCapabilities = (runtimeCapabilities ?? resolvedManifest.runtimeCapabilities).sorted()
         self.specimenManifest = resolvedManifest
     }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        creatureId = try container.decode(UUID.self, forKey: .creatureId)
-        name = try container.decode(String.self, forKey: .name)
-        ownerId = try container.decode(String.self, forKey: .ownerId)
-        runId = try container.decode(String.self, forKey: .runId)
-        campaignId = try container.decodeIfPresent(String.self, forKey: .campaignId)
-        bundleKind = try container.decode(LeniaArtifactBundleKind.self, forKey: .bundleKind)
-        exportDir = try container.decode(String.self, forKey: .exportDir)
-        baseConfigPath = try container.decodeIfPresent(String.self, forKey: .baseConfigPath)
-        searchConfigPath = try container.decodeIfPresent(String.self, forKey: .searchConfigPath)
-        payloadPath = try container.decodeIfPresent(String.self, forKey: .payloadPath)
-        exportedAt = try container.decode(Date.self, forKey: .exportedAt)
-        reason = try container.decode(String.self, forKey: .reason)
-        score = persistedFiniteScore(try container.decodeIfPresent(Float.self, forKey: .score))
-        filtersPassed = try container.decodeIfPresent(Bool.self, forKey: .filtersPassed)
-        let decodedManifest = try container.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-        let backfilledManifest = decodedManifest ?? buildExportSpecimenManifest(
-            creatureID: creatureId.uuidString,
-            runID: runId,
-            campaignID: campaignId,
-            recordedAt: exportedAt,
-            sourceMode: nil,
-            sourceAlgorithm: nil,
-            configHash: nil,
-            bundleKind: bundleKind,
-            exportDir: exportDir,
-            baseConfigPath: baseConfigPath,
-            searchConfigPath: searchConfigPath,
-            payloadPath: payloadPath
-        )
-        runtimeFamily = try container.decodeIfPresent(String.self, forKey: .runtimeFamily)
-            ?? backfilledManifest.runtimeFamily
-        runtimeCapabilities = (
-            try container.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-                ?? backfilledManifest.runtimeCapabilities
-        ).sorted()
-        specimenManifest = backfilledManifest
-    }
 }
 
 public struct CreatureExportMetadata: Codable {
@@ -180,7 +140,6 @@ public struct CreatureExportMetadata: Codable {
         self.reason = reason
         self.score = persistedFiniteScore(score)
         self.filtersPassed = filtersPassed
-        let replay = SpecimenReplayRecord(bundleKind: bundleKind)
         let resolvedManifest = specimenManifest ?? SpecimenManifest(
             specimenID: creature.id.uuidString,
             creatureID: creature.id.uuidString,
@@ -198,107 +157,13 @@ public struct CreatureExportMetadata: Codable {
             configHash: creature.configHash,
             recordedAt: exportedAt,
             initialConditionFamily: creature.initialConditionFamily ?? morphospaceInitialConditionFamily(creature.initialCondition),
-            replay: replay,
-            snapshots: SpecimenSnapshotRecord(
-                genotype: creature.genotype,
-                initialCondition: creature.initialCondition,
-                metrics: creature.metrics,
-                descriptorBundle: creature.descriptorBundle
-            )
+            replay: SpecimenReplayRecord(bundleKind: bundleKind),
+            snapshots: SpecimenSnapshotRecord()
         )
         self.runtimeFamily = runtimeFamily ?? resolvedManifest.runtimeFamily
         self.runtimeCapabilities = (runtimeCapabilities ?? resolvedManifest.runtimeCapabilities).sorted()
         self.specimenManifest = resolvedManifest
     }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        creature = try container.decode(SavedCreature.self, forKey: .creature)
-        runId = try container.decode(String.self, forKey: .runId)
-        campaignId = try container.decodeIfPresent(String.self, forKey: .campaignId)
-        bundleKind = try container.decode(LeniaArtifactBundleKind.self, forKey: .bundleKind)
-        exportedAt = try container.decode(Date.self, forKey: .exportedAt)
-        reason = try container.decode(String.self, forKey: .reason)
-        score = persistedFiniteScore(try container.decodeIfPresent(Float.self, forKey: .score))
-        filtersPassed = try container.decodeIfPresent(Bool.self, forKey: .filtersPassed)
-        let decodedManifest = try container.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-        let backfilledManifest = decodedManifest ?? SpecimenManifest(
-            specimenID: creature.id.uuidString,
-            creatureID: creature.id.uuidString,
-            runID: runId,
-            campaignID: campaignId,
-            sourceKind: "export_metadata",
-            sourceMode: nil,
-            sourceAlgorithm: nil,
-            runtimeFamily: specimenRuntimeFamily(sourceMode: nil, bundleKind: bundleKind).rawValue,
-            runtimeCapabilities: specimenRuntimeCapabilities(
-                descriptorBundle: creature.descriptorBundle,
-                bundleKind: bundleKind,
-                researchMetadata: nil
-            ),
-            configHash: creature.configHash,
-            recordedAt: exportedAt,
-            initialConditionFamily: creature.initialConditionFamily ?? morphospaceInitialConditionFamily(creature.initialCondition),
-            replay: SpecimenReplayRecord(bundleKind: bundleKind),
-            snapshots: SpecimenSnapshotRecord(
-                genotype: creature.genotype,
-                initialCondition: creature.initialCondition,
-                metrics: creature.metrics,
-                descriptorBundle: creature.descriptorBundle
-            )
-        )
-        runtimeFamily = try container.decodeIfPresent(String.self, forKey: .runtimeFamily)
-            ?? backfilledManifest.runtimeFamily
-        runtimeCapabilities = (
-            try container.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-                ?? backfilledManifest.runtimeCapabilities
-        ).sorted()
-        specimenManifest = backfilledManifest
-    }
-}
-
-public func decodeCreatureExportMetadata(
-    _ data: Data,
-    decoder: JSONDecoder,
-    indexBundleKind: LeniaArtifactBundleKind?
-) throws -> CreatureExportMetadata {
-    do {
-        return try decoder.decode(CreatureExportMetadata.self, from: data)
-    } catch DecodingError.keyNotFound(let key, let context)
-        where (context.codingPath.map(\.stringValue) == ["creature"] && key.stringValue == "initialCondition")
-            || (context.codingPath.isEmpty && key.stringValue == "bundleKind") {
-        let normalized = try normalizeLegacyCreatureExportMetadataData(
-            data,
-            indexBundleKind: indexBundleKind
-        )
-        return try decoder.decode(CreatureExportMetadata.self, from: normalized)
-    }
-}
-
-// Exports written before meta.json carried bundleKind still record it in exports/index.jsonl,
-// so readers that come through the index supply it; readers holding only meta.json cannot.
-private func normalizeLegacyCreatureExportMetadataData(
-    _ data: Data,
-    indexBundleKind: LeniaArtifactBundleKind?
-) throws -> Data {
-    guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-          var creature = root["creature"] as? [String: Any] else {
-        return data
-    }
-    if root["bundleKind"] == nil {
-        guard let indexBundleKind else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(
-                codingPath: [],
-                debugDescription: "Export meta.json has no bundleKind and no export index record supplies one; read it through its exports/index.jsonl record or re-export it."
-            ))
-        }
-        root["bundleKind"] = indexBundleKind.rawValue
-    }
-    if creature["initialCondition"] == nil, let legacy = creature["phenotype"] {
-        creature["initialCondition"] = legacy
-    }
-    root["creature"] = creature
-    return try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
 }
 
 public struct CreatureExportArtifacts {

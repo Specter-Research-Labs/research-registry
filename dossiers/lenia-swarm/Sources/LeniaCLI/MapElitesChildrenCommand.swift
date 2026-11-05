@@ -416,11 +416,7 @@ func verifyMapElitesChildParent(
 ) throws -> String {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .deferredToDate
-    let meta = try decodeCreatureExportMetadata(
-        Data(contentsOf: exportDir.appendingPathComponent("meta.json")),
-        decoder: decoder,
-        indexBundleKind: .strictReplayBundleV1
-    )
+    let meta = try decoder.decode(CreatureExportMetadata.self, from: Data(contentsOf: exportDir.appendingPathComponent("meta.json")))
     guard meta.creature.id == parentID else {
         throw ValidationError("Export \(exportDir.path) holds creature \(meta.creature.id), not \(parentID).")
     }

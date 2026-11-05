@@ -766,7 +766,7 @@ private func existingLocalReplayExportRecord(
     }
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .deferredToDate
-    let metadata = try decodeCreatureExportMetadata(Data(contentsOf: metadataURL), decoder: decoder, indexBundleKind: nil)
+    let metadata = try decoder.decode(CreatureExportMetadata.self, from: Data(contentsOf: metadataURL))
     let baseURL = exportDir.appendingPathComponent("base.json")
     let searchURL = exportDir.appendingPathComponent("search.json")
     return CreatureExportRecord(

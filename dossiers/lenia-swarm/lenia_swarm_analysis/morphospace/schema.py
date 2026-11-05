@@ -966,14 +966,14 @@ def create_views(connection: DuckDBPyConnection) -> None:
                 ) AS resolved_runtime_family,
                 try_cast(
                     json_extract(
-                        specimens.specimen_manifest_json,
-                        '$.snapshots.descriptorBundle.genotype.kernelCount'
+                        specimens.provenance_json,
+                        '$.genotype_descriptor.kernelCount'
                     ) AS INTEGER
                 ) AS resolved_kernel_count,
                 try_cast(
                     json_extract(
-                        specimens.specimen_manifest_json,
-                        '$.snapshots.descriptorBundle.terminal.massChannel'
+                        specimens.provenance_json,
+                        '$.terminal.massChannel'
                     ) AS INTEGER
                 ) AS resolved_mass_channel
             FROM specimens

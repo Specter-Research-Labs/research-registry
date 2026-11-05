@@ -31,6 +31,7 @@ GROUPS_BY_NAME = {group.name: group for group in ANALYSIS_GROUPS}
 
 STANDALONE_COMMANDS = (
     Subcommand("chakazul-presets", "chakazul_presets", "Extract Chakazul Lenia presets"),
+    Subcommand("compact", "compact", "Rewrite JSON artifacts into the current storage format"),
 )
 
 ROOT_COMMANDS = (

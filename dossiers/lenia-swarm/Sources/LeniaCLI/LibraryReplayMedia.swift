@@ -56,7 +56,7 @@ func discoverLibraryReplayBundles(from inputURL: URL) throws -> [LibraryReplayBu
         guard lines.count == 1 else {
             throw ValidationError("Library replay bundle expects exactly one entry, found \(lines.count): \(libraryURL.path)")
         }
-        let entry = try decodeResearchLibraryEntry(lineData, decoder: decoder)
+        let entry = try decoder.decode(ResearchLibraryEntry.self, from: lineData)
         let baseConfig = try decoder.decode(LeniaBaseConfig.self, from: Data(contentsOf: configURL))
         let parsedSearch = try decoder.decode(ParsedSearchConfig.self, from: Data(contentsOf: searchURL))
 

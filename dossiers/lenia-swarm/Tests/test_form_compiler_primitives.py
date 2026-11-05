@@ -1,5 +1,3 @@
-import base64
-
 import numpy as np
 
 from lenia_swarm_analysis.anatomical_compiler.form_topology import (
@@ -9,6 +7,7 @@ from lenia_swarm_analysis.anatomical_compiler.form_topology import (
 )
 from lenia_swarm_analysis.anatomical_compiler.forward_sim import state_patch_config
 from lenia_swarm_analysis.anatomical_compiler.swift_form_seed import form_is_held
+from lenia_swarm_analysis.trace_codec import state_patch_values
 
 
 def test_persistence_signature_distinguishes_ring_from_disk() -> None:
@@ -49,7 +48,7 @@ def test_state_patch_config_encodes_c_order_float32_without_mutating_source() ->
     patch = configured["init"]["state_patch"]
     assert patch["center"] == [5, 7]
     assert (patch["width"], patch["height"], patch["channels"]) == (2, 2, 2)
-    decoded = np.frombuffer(base64.b64decode(patch["data"]), dtype="<f4")
+    decoded = state_patch_values(patch)
     np.testing.assert_array_equal(decoded, field.ravel(order="C"))
 
 
