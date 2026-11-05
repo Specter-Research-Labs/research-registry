@@ -49,7 +49,7 @@ AXIS_SPECS: tuple[dict[str, str], ...] = (
     {"id": "type2_cell_fraction", "label": "Type 2 cell fraction", "units": "fraction"},
 )
 AXIS_IDS = tuple(spec["id"] for spec in AXIS_SPECS)
-_SNAPSHOT_SUFFIXES = (".output.dat", ".dat")
+_SNAPSHOT_SUFFIXES = (".output.dat", ".dat", ".output.dat.gz", ".dat.gz")
 _FAMILY_RE = re.compile(r"^(IC\d+)", re.IGNORECASE)
 
 
@@ -123,12 +123,17 @@ def iter_embryomaker_snapshot_paths(
         if not resolved_root.is_dir():
             raise FileNotFoundError(resolved_root)
         for path in resolved_root.rglob("*"):
-            if not path.is_file() or path.name == "name.dat":
+            if not path.is_file() or path.name in ("name.dat", "name.dat.gz"):
                 continue
             if any(path.name.endswith(suffix) for suffix in _SNAPSHOT_SUFFIXES):
                 paths.append(path.resolve())
     unique_paths = sorted(dict.fromkeys(paths))
     return unique_paths[:limit] if limit is not None else unique_paths
+
+
+def _logical_snapshot_path(path: Path) -> Path:
+    """Path without the .gz suffix, so that specimen ids survive compressing a snapshot in place."""
+    return path.with_suffix("") if path.name.endswith(".gz") else path
 
 
 def _family_label(path: Path) -> str:
@@ -342,14 +347,15 @@ def ingest_embryomaker_snapshots(
         metadata_json={"sourceId": SOURCE_ID, "featureSpaceId": FEATURE_SPACE_ID},
     )
     for record in records:
-        source_ref = str(record.path)
+        logical_path = _logical_snapshot_path(record.path)
+        source_ref = str(logical_path)
         specimen_id = stable_id(SOURCE_ID, "specimen", source_ref)
         observation_id = stable_id(SOURCE_ID, "observation", study_id, source_ref)
         upsert_specimen(
             connection,
             {
                 "specimen_id": specimen_id,
-                "source_creature_id": record.path.stem,
+                "source_creature_id": logical_path.stem,
                 "study_id": study_id,
                 "source_kind": "embryomaker",
                 "source_mode": record.family,

@@ -24,14 +24,7 @@ final class EcologyExportTests: XCTestCase {
             fingerprintByte: 0x40
         )
 
-        struct Entry: Codable {
-            let creature: SavedCreature
-            let campaign_id: String?
-            let run_id: String
-            let recorded_at: Date
-        }
-
-        let entryA = Entry(creature: creature, campaign_id: nil, run_id: "run-001", recorded_at: Date())
+        let entryA = ResearchLibraryEntry(creature: creature, campaignId: nil, runId: "run-001", recordedAt: Date(), configHash: nil)
         let creature2 = makeEcologyCreature(
             id: UUID(uuidString: "50505050-5050-5050-5050-505050505050")!,
             name: "test-creature-2",
@@ -39,7 +32,7 @@ final class EcologyExportTests: XCTestCase {
             score: 0.99,
             fingerprintByte: 0x50
         )
-        let entryB = Entry(creature: creature2, campaign_id: nil, run_id: "run-001", recorded_at: Date())
+        let entryB = ResearchLibraryEntry(creature: creature2, campaignId: nil, runId: "run-001", recordedAt: Date(), configHash: nil)
 
         let encoder = JSONEncoder()
         let libraryPath = libraryDir.appendingPathComponent("index.jsonl")
@@ -102,13 +95,6 @@ final class EcologyExportTests: XCTestCase {
         try fm.createDirectory(at: libraryDir, withIntermediateDirectories: true)
         try fm.createDirectory(at: overallDir, withIntermediateDirectories: true)
 
-        struct Entry: Codable {
-            let creature: SavedCreature
-            let campaign_id: String?
-            let run_id: String
-            let recorded_at: Date
-        }
-
         let creatures = [
             makeEcologyCreature(
                 id: UUID(uuidString: "10101010-1010-1010-1010-101010101010")!,
@@ -136,7 +122,7 @@ final class EcologyExportTests: XCTestCase {
         let encoder = JSONEncoder()
         let libraryPath = libraryDir.appendingPathComponent("index.jsonl")
         let payload = try creatures.map {
-            let entry = Entry(creature: $0, campaign_id: nil, run_id: "run-001", recorded_at: Date(timeIntervalSince1970: 1_700_000_000))
+            let entry = ResearchLibraryEntry(creature: $0, campaignId: nil, runId: "run-001", recordedAt: Date(timeIntervalSince1970: 1_700_000_000), configHash: nil)
             return String(data: try encoder.encode(entry), encoding: .utf8)! + "\n"
         }.joined()
         try payload.write(to: libraryPath, atomically: true, encoding: .utf8)

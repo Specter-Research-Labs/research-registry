@@ -199,6 +199,11 @@ def ingest_library_index(
                 "provenance_json": {
                     **row,
                     "research_metadata": research_metadata,
+                    "genotype_descriptor": (
+                        descriptor_bundle.get("genotype")
+                        if isinstance(descriptor_bundle, dict)
+                        else None
+                    ),
                     "terminal": terminal,
                     "trajectory": trajectory,
                 },

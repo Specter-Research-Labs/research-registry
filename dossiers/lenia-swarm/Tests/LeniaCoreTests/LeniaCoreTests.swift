@@ -37,10 +37,8 @@ final class LeniaCoreTests: XCTestCase {
         defer { try? fm.removeItem(at: root) }
 
         let bundleDir = root.appendingPathComponent("run", isDirectory: true)
-        try fm.createDirectory(
-            at: bundleDir.appendingPathComponent("trajectory-frames/frames", isDirectory: true),
-            withIntermediateDirectories: true
-        )
+        try fm.createDirectory(at: bundleDir, withIntermediateDirectories: true)
+        try "".write(to: bundleDir.appendingPathComponent("trajectory-frames.jsonl"), atomically: true, encoding: .utf8)
         try "{}".write(to: bundleDir.appendingPathComponent("base.json"), atomically: true, encoding: .utf8)
         try "{}".write(to: bundleDir.appendingPathComponent("payload.json"), atomically: true, encoding: .utf8)
         try """
@@ -56,7 +54,7 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(bundle.bundleKind, .flowLeniaEcology2025ArenaReplayBundleV1)
         XCTAssertEqual(try bundle.requireBaseConfig().lastPathComponent, "base.json")
         XCTAssertEqual(try bundle.requirePayload().lastPathComponent, "payload.json")
-        XCTAssertEqual(bundle.trajectoryFramesURL?.lastPathComponent, "trajectory-frames")
+        XCTAssertEqual(bundle.trajectoryFramesURL?.lastPathComponent, "trajectory-frames.jsonl")
     }
 
     func testLeniaRunBundleIndexLoadsCamelAndSnakeCaseRecords() throws {
@@ -70,7 +68,7 @@ final class LeniaCoreTests: XCTestCase {
         let ecologyDir = root.appendingPathComponent("ecology", isDirectory: true)
         let contents = """
         {"bundleKind":"strict_replay_bundle_v1","exportDir":"\(strictDir.path)","baseConfigPath":"\(strictDir.appendingPathComponent("base.json").path)","searchConfigPath":"\(strictDir.appendingPathComponent("search.json").path)"}
-        {"bundle_kind":"flowlenia_ecology2025_arena_replay_bundle_v1","bundle_dir":"\(ecologyDir.path)","base_config_path":"\(ecologyDir.appendingPathComponent("base.json").path)","payload_path":"\(ecologyDir.appendingPathComponent("payload.json").path)","trajectory_frames_path":"\(ecologyDir.appendingPathComponent("trajectory-frames").path)"}
+        {"bundle_kind":"flowlenia_ecology2025_arena_replay_bundle_v1","bundle_dir":"\(ecologyDir.path)","base_config_path":"\(ecologyDir.appendingPathComponent("base.json").path)","payload_path":"\(ecologyDir.appendingPathComponent("payload.json").path)","trajectory_frames_path":"\(ecologyDir.appendingPathComponent("trajectory-frames.jsonl").path)"}
         """
         try contents.write(to: indexURL, atomically: true, encoding: .utf8)
 
@@ -78,7 +76,7 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(bundles.map(\.bundleKind), [.strictReplayBundleV1, .flowLeniaEcology2025ArenaReplayBundleV1])
         XCTAssertEqual(bundles[0].searchConfigURL?.lastPathComponent, "search.json")
         XCTAssertEqual(bundles[1].payloadURL?.lastPathComponent, "payload.json")
-        XCTAssertEqual(bundles[1].trajectoryFramesURL?.lastPathComponent, "trajectory-frames")
+        XCTAssertEqual(bundles[1].trajectoryFramesURL?.lastPathComponent, "trajectory-frames.jsonl")
     }
 
     private func testResearchSeedCreature(

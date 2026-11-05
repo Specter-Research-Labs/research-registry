@@ -2,7 +2,7 @@
 
 First render a collection containing the two selected replay campaigns:
   LeniaCLI publish media --input REPLAY_COLLECTION --output MEDIA_ROOT \
-    --steps 3600 --frame-budget 300 --fps 30 --render-mode body
+    --steps 3600 --frame-budget 300 --fps 30 --render-mode body --frames
 Then run this script with --media-root MEDIA_ROOT. The CLI uses the original
 256-square simulation, a fixed crop across the recording, and a shared density
 scale within each recording. Its presentation frames are 512-square.
@@ -30,6 +30,8 @@ for record in records:
     if record['label'] not in ids:
         continue
     label = ids[record['label']]
+    if 'framesColorPath' not in record:
+        raise SystemExit('Transparent frames are required; re-run publish media with --frames')
     frames = Path(record['framesColorPath'])
     files = sorted(frames.glob('frame_*.png'))
     assert len(files) == 300

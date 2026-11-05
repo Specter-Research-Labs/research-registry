@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import re
-import struct
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from lenia_swarm_analysis._io import write_json
+from lenia_swarm_analysis.trace_codec import state_patch
 
 SOURCE_URL = "https://chakazul.github.io/Lenia/JavaScript/Lenia-LifeForms.js"
 QD24_PAPER_ID = "toward-artificial-open-ended-evolution-within-lenia-using-quality-diversity-2024"
@@ -474,15 +475,13 @@ def qd24_additive_native_parity_config(preset: ChakazulPreset) -> dict[str, Any]
 def qd24_state_patch(cells: list[list[float]], center: list[int]) -> dict[str, Any]:
     row_count = len(cells)
     column_count = len(cells[0]) if cells else 0
-    packed = b"".join(struct.pack("<f", value) for row in cells for value in row)
-    return {
-        "width": row_count,
-        "height": column_count,
-        "channels": 1,
-        "center": center,
-        "encoding": "f32le",
-        "data": base64.b64encode(packed).decode("ascii"),
-    }
+    return state_patch(
+        center=center,
+        width=row_count,
+        height=column_count,
+        channels=1,
+        values=np.asarray([value for row in cells for value in row], dtype="<f4"),
+    )
 
 
 def qd24_map_elites_smoke_config() -> dict[str, Any]:
@@ -553,7 +552,7 @@ def safe_filename(code: str) -> str:
     return normalized.strip("-") or "unnamed"
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Extract Chakazul Lenia preset taxonomy and cells")
     parser.add_argument("--input", type=Path, help="Local Lenia-LifeForms.js source")
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -563,7 +562,7 @@ def main() -> None:
     parser.add_argument("--qd-max-pattern-size", type=int, default=96)
     parser.add_argument("--qd-limit-per-family", type=int)
     parser.add_argument("--qd-additive-native-parity-dir", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     source = args.input.read_text(encoding="utf-8") if args.input else fetch_source()
     presets = parse_presets(source)
@@ -593,7 +592,8 @@ def main() -> None:
             f"{args.qd_additive_native_parity_dir}"
         )
     print(f"wrote {len(presets)} presets to {args.output_dir}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

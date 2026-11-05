@@ -47,24 +47,12 @@ public struct SpecimenReplayRecord: Codable, Sendable {
     }
 }
 
+/// Invariant: genotype, initial condition, metrics and descriptor bundle live only on the
+/// creature (or the row columns) beside the manifest, so each specimen payload is stored once.
 public struct SpecimenSnapshotRecord: Codable, Sendable {
-    public let genotype: KernelParams?
-    public let initialCondition: InitConfig?
-    public let metrics: SimulationMetrics?
-    public let descriptorBundle: MorphospaceDescriptorBundle?
     public let morphometrics: Morphometrics?
 
-    public init(
-        genotype: KernelParams? = nil,
-        initialCondition: InitConfig? = nil,
-        metrics: SimulationMetrics? = nil,
-        descriptorBundle: MorphospaceDescriptorBundle? = nil,
-        morphometrics: Morphometrics? = nil
-    ) {
-        self.genotype = genotype
-        self.initialCondition = initialCondition
-        self.metrics = metrics
-        self.descriptorBundle = descriptorBundle
+    public init(morphometrics: Morphometrics? = nil) {
         self.morphometrics = morphometrics
     }
 }
@@ -264,6 +252,7 @@ public func buildSpecimenManifest(
     traitLabels: [String]? = nil,
     replay: SpecimenReplayRecord? = nil,
     snapshots: SpecimenSnapshotRecord,
+    descriptorBundle: MorphospaceDescriptorBundle?,
     backend: String? = nil,
     researchMetadata: [String: AnyCodable]? = nil
 ) -> SpecimenManifest {
@@ -276,7 +265,7 @@ public func buildSpecimenManifest(
         researchMetadata: researchMetadata
     )
     let runtimeCapabilities = specimenRuntimeCapabilities(
-        descriptorBundle: snapshots.descriptorBundle,
+        descriptorBundle: descriptorBundle,
         bundleKind: bundleKind,
         researchMetadata: researchMetadata
     )
@@ -329,13 +318,8 @@ public func buildLibrarySpecimenManifest(
         taxonomy: taxonomy,
         traitLabels: traitLabels,
         replay: SpecimenReplayRecord(bundleKind: bundleKind),
-        snapshots: SpecimenSnapshotRecord(
-            genotype: creature.genotype,
-            initialCondition: creature.initialCondition,
-            metrics: creature.metrics,
-            descriptorBundle: creature.descriptorBundle,
-            morphometrics: morphometrics
-        ),
+        snapshots: SpecimenSnapshotRecord(morphometrics: morphometrics),
+        descriptorBundle: creature.descriptorBundle,
         researchMetadata: researchMetadata
     )
 }
@@ -373,6 +357,7 @@ public func buildExportSpecimenManifest(
             payloadPath: payloadPath
         ),
         snapshots: SpecimenSnapshotRecord(),
+        descriptorBundle: nil,
         researchMetadata: researchMetadata
     )
 }
@@ -398,44 +383,10 @@ public func buildResultSpecimenManifest(
         configHash: configHash,
         recordedAt: nil,
         initialConditionFamily: initialConditionFamily,
-        snapshots: SpecimenSnapshotRecord(
-            metrics: result.metrics,
-            descriptorBundle: result.descriptorBundle
-        ),
+        snapshots: SpecimenSnapshotRecord(),
+        descriptorBundle: result.descriptorBundle,
         backend: result.backend
     )
-}
-
-public func savedCreatureFromSpecimenManifest(
-    id: UUID,
-    name: String,
-    ownerId: String,
-    manifest: SpecimenManifest?,
-    fallbackGenotype: KernelParams,
-    fallbackInitialCondition: InitConfig,
-    fallbackMetrics: SimulationMetrics,
-    sweep: [String: Double]? = nil,
-    score: Float? = nil,
-    scoreWeights: [String: Float]? = nil,
-    fallbackInitialConditionFamily: String? = nil,
-    fallbackDescriptorBundle: MorphospaceDescriptorBundle? = nil,
-    fallbackConfigHash: String? = nil
-) -> SavedCreature {
-    resolveSpecimenProjection(
-        id: id,
-        name: name,
-        ownerId: ownerId,
-        manifest: manifest,
-        fallbackGenotype: fallbackGenotype,
-        fallbackInitialCondition: fallbackInitialCondition,
-        fallbackMetrics: fallbackMetrics,
-        sweep: sweep,
-        score: score,
-        scoreWeights: scoreWeights,
-        fallbackInitialConditionFamily: fallbackInitialConditionFamily,
-        fallbackDescriptorBundle: fallbackDescriptorBundle,
-        fallbackConfigHash: fallbackConfigHash
-    ).creature
 }
 
 public func resolveSpecimenProjection(
@@ -443,14 +394,14 @@ public func resolveSpecimenProjection(
     name: String,
     ownerId: String,
     manifest: SpecimenManifest?,
-    fallbackGenotype: KernelParams,
-    fallbackInitialCondition: InitConfig,
-    fallbackMetrics: SimulationMetrics,
+    genotype: KernelParams,
+    initialCondition: InitConfig,
+    metrics: SimulationMetrics,
+    descriptorBundle: MorphospaceDescriptorBundle?,
     sweep: [String: Double]? = nil,
     score: Float? = nil,
     scoreWeights: [String: Float]? = nil,
     fallbackInitialConditionFamily: String? = nil,
-    fallbackDescriptorBundle: MorphospaceDescriptorBundle? = nil,
     fallbackConfigHash: String? = nil,
     fallbackRuntimeFamily: String? = nil,
     fallbackRuntimeCapabilities: [String]? = nil,
@@ -459,10 +410,6 @@ public func resolveSpecimenProjection(
     fallbackResearchMetadata: [String: AnyCodable]? = nil,
     fallbackTraitLabels: [String]? = nil
 ) -> ResolvedSpecimenProjection {
-    let snapshots = manifest?.snapshots
-    let genotype = snapshots?.genotype ?? fallbackGenotype
-    let initialCondition = snapshots?.initialCondition ?? fallbackInitialCondition
-    let metrics = snapshots?.metrics ?? fallbackMetrics
     return ResolvedSpecimenProjection(
         manifest: manifest,
         creature: SavedCreature(
@@ -472,7 +419,7 @@ public func resolveSpecimenProjection(
             genotype: genotype,
             initialCondition: initialCondition,
             initialConditionFamily: manifest?.initialConditionFamily ?? fallbackInitialConditionFamily,
-            descriptorBundle: snapshots?.descriptorBundle ?? fallbackDescriptorBundle,
+            descriptorBundle: descriptorBundle,
             metrics: metrics,
             sweep: sweep,
             score: score ?? metrics.massMean,
@@ -511,11 +458,5 @@ private func normalizedSpecimenText(_ value: String?) -> String? {
 }
 
 public func normalizedSpecimenSourceMode(_ value: String?) -> String? {
-    guard let normalized = normalizedSpecimenText(value) else {
-        return nil
-    }
-    if normalized == "replay-specimens" {
-        return "replay"
-    }
-    return normalized
+    normalizedSpecimenText(value)
 }

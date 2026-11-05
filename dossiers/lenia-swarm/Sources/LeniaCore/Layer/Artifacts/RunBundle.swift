@@ -243,10 +243,5 @@ private func existingBundleArtifact(_ url: URL) -> URL? {
 }
 
 private func existingTrajectoryFramesURL(in directory: URL) -> URL? {
-    let directoryURL = directory.appendingPathComponent("trajectory-frames", isDirectory: true)
-    if FileManager.default.fileExists(atPath: directoryURL.path) {
-        return directoryURL
-    }
-    let legacyJSONLURL = directory.appendingPathComponent("trajectory-frames.jsonl")
-    return FileManager.default.fileExists(atPath: legacyJSONLURL.path) ? legacyJSONLURL : nil
+    existingBundleArtifact(directory.appendingPathComponent("trajectory-frames.jsonl"))
 }

@@ -5,30 +5,11 @@ import Logging
 import SQLite3
 import XCTest
 @testable import LeniaCLIKit
+import LeniaArchive
 import LeniaCore
 
-private struct TestLibraryEntry: Codable {
-    let creature: SavedCreature
-    let campaign_id: String?
-    let run_id: String
-    let recorded_at: Date
-}
-
-private struct TestExportRecord: Codable {
-    let creature_id: UUID
-    let name: String
-    let owner_id: String
-    let run_id: String
-    let campaign_id: String?
-    let export_dir: String
-    let bundle_kind: String
-    let base_config_path: String
-    let search_config_path: String
-    let payload_path: String?
-    let exported_at: Date
-    let reason: String
-    let score: Float?
-    let filters_passed: Bool?
+private func testLibraryEntry(creature: SavedCreature, campaign_id: String?, run_id: String, recorded_at: Date) -> ResearchLibraryEntry {
+    ResearchLibraryEntry(creature: creature, campaignId: campaign_id, runId: run_id, recordedAt: recorded_at, configHash: nil)
 }
 
 final class CompendiumIndexingTests: XCTestCase {
@@ -44,8 +25,7 @@ final class CompendiumIndexingTests: XCTestCase {
         let plan = try resolveCompendiumIngestPlan(
             outputRoots: [],
             runDirs: [runA.path, runB.path],
-            dbPath: root.appendingPathComponent("compendium.sqlite").path,
-            repairOnly: false
+            dbPath: root.appendingPathComponent("compendium.sqlite").path
         )
 
         XCTAssertEqual(plan.runInputs.map(\.runId), ["run-a", "run-b"])
@@ -147,7 +127,7 @@ final class CompendiumIndexingTests: XCTestCase {
 
         let seed = 42
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, name: "test-creature", seed: seed),
                 campaign_id: nil,
                 run_id: "run-001",
@@ -220,7 +200,7 @@ final class CompendiumIndexingTests: XCTestCase {
         try makeRunLayout(at: runB)
 
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")!, name: "alpha-run-a", seed: 7),
                 campaign_id: "campaign-001",
                 run_id: "run-001",
@@ -229,7 +209,7 @@ final class CompendiumIndexingTests: XCTestCase {
         ], to: runA.appendingPathComponent("library/index.jsonl"))
 
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")!, name: "alpha-run-b", seed: 8),
                 campaign_id: "campaign-001",
                 run_id: "run-001",
@@ -291,7 +271,7 @@ final class CompendiumIndexingTests: XCTestCase {
             seed: 23
         )
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: creature,
                 campaign_id: nil,
                 run_id: "run-001",
@@ -489,13 +469,13 @@ final class CompendiumIndexingTests: XCTestCase {
 
         let seed = 17
         try writeJSONL([
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "cccccccc-cccc-cccc-cccc-cccccccccccc")!, name: "overall", seed: seed),
                 campaign_id: nil,
                 run_id: "run-001",
                 recorded_at: fixedDate
             ),
-            TestLibraryEntry(
+            testLibraryEntry(
                 creature: makeCreature(id: UUID(uuidString: "dddddddd-dddd-dddd-dddd-dddddddddddd")!, name: "campaign", seed: seed),
                 campaign_id: "campaign-001",
                 run_id: "run-001",
@@ -551,7 +531,7 @@ final class CompendiumIndexingTests: XCTestCase {
         try makeRunLayout(at: runDir)
 
         let creatureId = UUID(uuidString: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")!
-        let originalEntry = TestLibraryEntry(
+        let originalEntry = testLibraryEntry(
             creature: makeCreature(id: creatureId, name: "alpha", seed: 99),
             campaign_id: nil,
             run_id: "run-001",
@@ -559,7 +539,7 @@ final class CompendiumIndexingTests: XCTestCase {
         )
         let originalLine = try jsonlLine(originalEntry)
         var rewrittenName = "bravo"
-        var rewrittenEntry = TestLibraryEntry(
+        var rewrittenEntry = testLibraryEntry(
             creature: makeCreature(id: creatureId, name: rewrittenName, seed: 99),
             campaign_id: nil,
             run_id: "run-001",
@@ -573,7 +553,7 @@ final class CompendiumIndexingTests: XCTestCase {
             } else {
                 rewrittenName = String(rewrittenName.dropLast(-lineDelta))
             }
-            rewrittenEntry = TestLibraryEntry(
+            rewrittenEntry = testLibraryEntry(
                 creature: makeCreature(id: creatureId, name: rewrittenName, seed: 99),
                 campaign_id: nil,
                 run_id: "run-001",
@@ -615,366 +595,15 @@ final class CompendiumIndexingTests: XCTestCase {
         XCTAssertEqual(String(cString: sqlite3_column_text(stmt, 0)!), rewrittenName)
     }
 
-    func testSchemaMigrationFromV6ToV7PreservesExistingRows() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-cli-v6-migrate-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        try fm.createDirectory(at: root, withIntermediateDirectories: true)
-
+    func testIndexRejectsCompendiumWithOtherSchemaVersion() throws {
+        let root = try makeTempDirectory(prefix: "lenia-compendium-schema-mismatch")
+        defer { try? FileManager.default.removeItem(at: root) }
         let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        try makeV6CompendiumSchema(at: dbPath)
-
-        let db = try SQLiteDB(path: dbPath)
-        try db.exec("""
-            INSERT INTO runs (
-                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash
-            ) VALUES (
-                'run-001', 'run-001', NULL, NULL, 'run-001', '2026-03-12T00:00:00Z', 'cfg-v6'
-            )
-        """)
-
-        let creature = makeCreature(
-            id: UUID(uuidString: "ffffffff-ffff-ffff-ffff-ffffffffffff")!,
-            name: "legacy-creature",
-            seed: 5
-        )
-        try insertV6Creature(creature, runId: "run-001", db: db)
-
         _ = try SQLiteIndexer(path: dbPath, rebuild: false)
+        try SQLiteDB(path: dbPath).exec("UPDATE compendium_meta SET schema_version = \(compendiumSchemaVersion - 1)")
 
-        XCTAssertEqual(try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1"), compendiumSchemaVersion)
-        XCTAssertTrue(try db.tableColumns("runs").contains("source_mode"))
-        XCTAssertTrue(try db.tableColumns("creatures").contains("research_metadata_json"))
-        XCTAssertTrue(try db.tableColumns("creatures").contains("runtime_family"))
-        XCTAssertTrue(try db.tableColumns("creatures").contains("runtime_capabilities_json"))
-        XCTAssertTrue(try db.tableColumns("creatures").contains("specimen_manifest_json"))
-        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM runs"), 1)
-        XCTAssertEqual(try db.scalarInt("SELECT COUNT(*) FROM creatures"), 1)
-
-        let stmt = try db.prepare("""
-            SELECT run_name, config_hash, source_mode, source_algorithm
-            FROM runs WHERE run_id = 'run-001'
-        """)
-        defer { sqlite3_finalize(stmt) }
-        XCTAssertEqual(sqlite3_step(stmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(stmt, 0), "run-001")
-        XCTAssertEqual(sqliteText(stmt, 1), "cfg-v6")
-        XCTAssertNil(sqliteOptionalText(stmt, 2))
-        XCTAssertNil(sqliteOptionalText(stmt, 3))
-        let contractStmt = try db.prepare("""
-            SELECT runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM creatures WHERE id = ?
-        """)
-        defer { sqlite3_finalize(contractStmt) }
-        db.bindText(contractStmt, index: 1, value: creature.id.uuidString)
-        XCTAssertEqual(sqlite3_step(contractStmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(contractStmt, 0), "flow_lenia")
-        XCTAssertTrue((sqliteOptionalText(contractStmt, 1) ?? "").contains("warehouse_ingest"))
-        XCTAssertTrue((sqliteOptionalText(contractStmt, 2) ?? "").contains("\"runtimeFamily\":\"flow_lenia\""))
-    }
-
-    func testSchemaMigrationFromV10ToV11AddsExportBundleColumns() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-cli-v10-migrate-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        try fm.createDirectory(at: root, withIntermediateDirectories: true)
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        try makeV10CompendiumSchema(at: dbPath)
-
-        let db = try SQLiteDB(path: dbPath)
-        try db.exec("""
-            INSERT INTO exports (
-                id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                base_config_path, search_config_path, exported_at, reason, score, filters_passed
-            ) VALUES (
-                'export-001', '/tmp/export-001', 'creature-001', 'legacy-export', 'tester', 'run-001', NULL,
-                '/tmp/base.json', '/tmp/search.json', '2026-03-12T00:00:00Z', 'legacy', 1.25, 1
-            )
-        """)
-
-        _ = try SQLiteIndexer(path: dbPath, rebuild: false)
-
-        XCTAssertEqual(try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1"), compendiumSchemaVersion)
-        XCTAssertTrue(try db.tableColumns("exports").contains("bundle_kind"))
-        XCTAssertTrue(try db.tableColumns("exports").contains("payload_path"))
-        XCTAssertTrue(try db.tableColumns("exports").contains("runtime_family"))
-        XCTAssertTrue(try db.tableColumns("exports").contains("runtime_capabilities_json"))
-        XCTAssertTrue(try db.tableColumns("exports").contains("specimen_manifest_json"))
-
-        let stmt = try db.prepare("""
-            SELECT bundle_kind, payload_path, export_dir, runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM exports WHERE id = 'export-001'
-        """)
-        defer { sqlite3_finalize(stmt) }
-        XCTAssertEqual(sqlite3_step(stmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(stmt, 0), "strict_replay_bundle_v1")
-        XCTAssertNil(sqliteOptionalText(stmt, 1))
-        XCTAssertEqual(sqliteText(stmt, 2), "/tmp/export-001")
-        XCTAssertEqual(sqliteText(stmt, 3), "flow_lenia")
-        XCTAssertTrue((sqliteOptionalText(stmt, 4) ?? "").contains("replay"))
-        XCTAssertTrue((sqliteOptionalText(stmt, 5) ?? "").contains("\"bundleKind\":\"strict_replay_bundle_v1\""))
-    }
-
-    func testSchemaMigrationFromV11ToV12RepairsExportNullability() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-cli-v11-migrate-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        try fm.createDirectory(at: root, withIntermediateDirectories: true)
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        try makeV11PartialCompendiumSchema(at: dbPath)
-
-        let db = try SQLiteDB(path: dbPath)
-        try db.exec("""
-            INSERT INTO exports (
-                id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                base_config_path, search_config_path, exported_at, reason, score, filters_passed,
-                bundle_kind, payload_path
-            ) VALUES (
-                'export-002', '/tmp/export-002', 'creature-002', 'partial-export', 'tester', 'run-002', NULL,
-                '/tmp/base.json', '/tmp/search.json', '2026-03-12T00:00:00Z', 'partial', 2.5, 0,
-                'strict_replay_bundle_v1', NULL
-            )
-        """)
-
-        _ = try SQLiteIndexer(path: dbPath, rebuild: false)
-
-        XCTAssertEqual(try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1"), compendiumSchemaVersion)
-        let pragma = try db.prepare("PRAGMA table_info(exports)")
-        defer { sqlite3_finalize(pragma) }
-        var notNullByName: [String: Int32] = [:]
-        while sqlite3_step(pragma) == SQLITE_ROW {
-            if let name = sqliteOptionalText(pragma, 1) {
-                notNullByName[name] = sqlite3_column_int(pragma, 3)
-            }
-        }
-        XCTAssertEqual(notNullByName["base_config_path"], 0)
-        XCTAssertEqual(notNullByName["search_config_path"], 0)
-
-        let stmt = try db.prepare("""
-            SELECT bundle_kind, payload_path, export_dir, runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM exports WHERE id = 'export-002'
-        """)
-        defer { sqlite3_finalize(stmt) }
-        XCTAssertEqual(sqlite3_step(stmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(stmt, 0), "strict_replay_bundle_v1")
-        XCTAssertNil(sqliteOptionalText(stmt, 1))
-        XCTAssertEqual(sqliteText(stmt, 2), "/tmp/export-002")
-        XCTAssertEqual(sqliteText(stmt, 3), "flow_lenia")
-        XCTAssertTrue((sqliteOptionalText(stmt, 4) ?? "").contains("replay"))
-        XCTAssertTrue((sqliteOptionalText(stmt, 5) ?? "").contains("\"runtimeFamily\":\"flow_lenia\""))
-    }
-
-    func testSchemaRepairAtCurrentVersionRestoresMissingSpecimenContractColumns() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-cli-v13-repair-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        try fm.createDirectory(at: root, withIntermediateDirectories: true)
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        try makeV13PartialCompendiumSchema(at: dbPath)
-
-        let db = try SQLiteDB(path: dbPath)
-        try db.exec("""
-            INSERT INTO runs (
-                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash, source_mode, source_algorithm
-            ) VALUES (
-                'run-013', 'run-013', NULL, NULL, 'run-013', '2026-03-12T00:00:00Z', 'cfg-v13', 'qd-2024', 'me'
-            )
-        """)
-
-        let creature = makeMorphospaceReadyCreature(
-            id: UUID(uuidString: "13131313-1313-1313-1313-131313131313")!,
-            name: "partial-v13-creature",
-            seed: 13,
-            isStable: true,
-            fingerprintByte: 0x13
-        )
-        try insertV6Creature(creature, runId: "run-013", db: db)
-        try db.exec("""
-            UPDATE creatures
-            SET source_mode = 'qd-2024',
-                source_algorithm = 'me',
-                research_metadata_json = '{"mode":"qd-2024","algorithm":"me"}',
-                trait_labels_json = '["segmented"]',
-                runtime_family = 'flow_lenia',
-                runtime_capabilities_json = '["warehouse_ingest"]'
-            WHERE id = '\(creature.id.uuidString)'
-        """)
-
-        try db.exec("""
-            INSERT INTO exports (
-                id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                bundle_kind, base_config_path, search_config_path, payload_path,
-                exported_at, reason, score, filters_passed,
-                runtime_family, runtime_capabilities_json
-            ) VALUES (
-                'export-013', '/tmp/export-013', '\(creature.id.uuidString)', 'partial-v13-export', 'tester', 'run-013', NULL,
-                'strict_replay_bundle_v1', '/tmp/base.json', '/tmp/search.json', '/tmp/payload.bin',
-                '2026-03-12T00:00:00Z', 'partial-v13', 3.5, 1,
-                'flow_lenia', '["replay","warehouse_ingest"]'
-            )
-        """)
-
-        let encoder = JSONEncoder()
-        let descriptorBundle = try XCTUnwrap(creature.descriptorBundle)
-        let genotypeDescriptorJSON = String(data: try encoder.encode(descriptorBundle.genotype), encoding: .utf8)!
-        let terminalDescriptorJSON = String(data: try encoder.encode(descriptorBundle.terminal), encoding: .utf8)!
-        let trajectoryDescriptorJSON = String(data: try encoder.encode(descriptorBundle.trajectory), encoding: .utf8)!
-        try db.exec("""
-            INSERT INTO specimens (
-                id, result_id, creature_id, run_id, campaign_id, source_kind, recorded_at, seed, init_seed,
-                source_mode, source_algorithm, config_hash, initial_condition_family, descriptor_version,
-                symmetry_policy, genotype_descriptor_json, terminal_descriptor_json, trajectory_descriptor_json,
-                activity_path, fingerprint_path, provenance_json
-            ) VALUES (
-                'specimen-013', NULL, '\(creature.id.uuidString)', 'run-013', NULL, 'replay_bundle',
-                '2026-03-12T00:00:00Z', 13, 13, 'qd-2024', 'me', 'cfg-v13', 'centered_patch',
-                \(descriptorBundle.descriptorVersion), 'translation_kernel_permutation_v1',
-                '\(genotypeDescriptorJSON.replacingOccurrences(of: "'", with: "''"))',
-                '\(terminalDescriptorJSON.replacingOccurrences(of: "'", with: "''"))',
-                '\(trajectoryDescriptorJSON.replacingOccurrences(of: "'", with: "''"))',
-                NULL, NULL, '{"source":"partial-v13"}'
-            )
-        """)
-
-        _ = try SQLiteIndexer(path: dbPath, rebuild: false)
-
-        XCTAssertEqual(try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1"), compendiumSchemaVersion)
-        XCTAssertTrue(try db.tableColumns("creatures").contains("specimen_manifest_json"))
-        XCTAssertTrue(try db.tableColumns("exports").contains("specimen_manifest_json"))
-        XCTAssertTrue(try db.tableColumns("specimens").contains("runtime_family"))
-        XCTAssertTrue(try db.tableColumns("specimens").contains("runtime_capabilities_json"))
-        XCTAssertTrue(try db.tableColumns("specimens").contains("specimen_manifest_json"))
-
-        let creatureStmt = try db.prepare("""
-            SELECT runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM creatures WHERE id = ?
-        """)
-        defer { sqlite3_finalize(creatureStmt) }
-        db.bindText(creatureStmt, index: 1, value: creature.id.uuidString)
-        XCTAssertEqual(sqlite3_step(creatureStmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(creatureStmt, 0), "qd24_paper")
-        XCTAssertTrue((sqliteOptionalText(creatureStmt, 1) ?? "").contains("warehouse_ingest"))
-        XCTAssertTrue((sqliteOptionalText(creatureStmt, 2) ?? "").contains("\"runtimeFamily\":\"qd24_paper\""))
-
-        let exportStmt = try db.prepare("""
-            SELECT runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM exports WHERE id = 'export-013'
-        """)
-        defer { sqlite3_finalize(exportStmt) }
-        XCTAssertEqual(sqlite3_step(exportStmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(exportStmt, 0), "flow_lenia")
-        XCTAssertTrue((sqliteOptionalText(exportStmt, 1) ?? "").contains("replay"))
-        XCTAssertTrue((sqliteOptionalText(exportStmt, 2) ?? "").contains("\"bundleKind\":\"strict_replay_bundle_v1\""))
-
-        let specimenStmt = try db.prepare("""
-            SELECT runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM specimens WHERE id = 'specimen-013'
-        """)
-        defer { sqlite3_finalize(specimenStmt) }
-        XCTAssertEqual(sqlite3_step(specimenStmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteText(specimenStmt, 0), "flow_lenia")
-        XCTAssertTrue((sqliteOptionalText(specimenStmt, 1) ?? "").contains("replay"))
-        XCTAssertTrue((sqliteOptionalText(specimenStmt, 2) ?? "").contains("\"runtimeFamily\":\"flow_lenia\""))
-        XCTAssertTrue((sqliteOptionalText(specimenStmt, 2) ?? "").contains("\"bundleKind\":\"strict_replay_bundle_v1\""))
-    }
-
-    func testSchemaRepairAtCurrentVersionNormalizesLegacyPhenotypeSnapshotColumn() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-cli-v13-legacy-phenotype-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        try fm.createDirectory(at: root, withIntermediateDirectories: true)
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        try makeV13LegacyPhenotypeCompendiumSchema(at: dbPath)
-
-        let db = try SQLiteDB(path: dbPath)
-        try db.exec("""
-            INSERT INTO runs (
-                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash, source_mode, source_algorithm
-            ) VALUES (
-                'run-014', 'run-014', NULL, NULL, 'run-014', '2026-03-12T00:00:00Z', 'cfg-v14', 'qd-2024', 'me'
-            )
-        """)
-
-        let creature = makeMorphospaceReadyCreature(
-            id: UUID(uuidString: "14141414-1414-1414-1414-141414141414")!,
-            name: "legacy-phenotype-creature",
-            seed: 14,
-            isStable: true,
-            fingerprintByte: 0x14
-        )
-        try insertV6Creature(creature, runId: "run-014", initialConditionColumn: "phenotype_json", db: db)
-        try db.exec("""
-            UPDATE creatures
-            SET source_mode = 'qd-2024',
-                source_algorithm = 'me',
-                research_metadata_json = '{"mode":"qd-2024","algorithm":"me"}',
-                trait_labels_json = '["segmented"]'
-            WHERE id = '\(creature.id.uuidString)'
-        """)
-
-        try db.exec("""
-            INSERT INTO exports (
-                id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                bundle_kind, base_config_path, search_config_path, payload_path,
-                exported_at, reason, score, filters_passed
-            ) VALUES (
-                'export-014', '/tmp/export-014', '\(creature.id.uuidString)', 'legacy-phenotype-export', 'tester', 'run-014', NULL,
-                'strict_replay_bundle_v1', '/tmp/base.json', '/tmp/search.json', '/tmp/payload.bin',
-                '2026-03-12T00:00:00Z', 'legacy-phenotype', 4.5, 1
-            )
-        """)
-
-        let encoder = JSONEncoder()
-        let descriptorBundle = try XCTUnwrap(creature.descriptorBundle)
-        let genotypeDescriptorJSON = String(data: try encoder.encode(descriptorBundle.genotype), encoding: .utf8)!
-        let terminalDescriptorJSON = String(data: try encoder.encode(descriptorBundle.terminal), encoding: .utf8)!
-        let trajectoryDescriptorJSON = String(data: try encoder.encode(descriptorBundle.trajectory), encoding: .utf8)!
-        try db.exec("""
-            INSERT INTO specimens (
-                id, result_id, creature_id, run_id, campaign_id, source_kind, recorded_at, seed, init_seed,
-                source_mode, source_algorithm, config_hash, initial_condition_family, descriptor_version,
-                symmetry_policy, genotype_descriptor_json, terminal_descriptor_json, trajectory_descriptor_json,
-                activity_path, fingerprint_path, provenance_json
-            ) VALUES (
-                'specimen-014', NULL, '\(creature.id.uuidString)', 'run-014', NULL, 'replay_bundle',
-                '2026-03-12T00:00:00Z', 14, 14, 'qd-2024', 'me', 'cfg-v14', 'centered_patch',
-                \(descriptorBundle.descriptorVersion), 'translation_kernel_permutation_v1',
-                '\(genotypeDescriptorJSON.replacingOccurrences(of: "'", with: "''"))',
-                '\(terminalDescriptorJSON.replacingOccurrences(of: "'", with: "''"))',
-                '\(trajectoryDescriptorJSON.replacingOccurrences(of: "'", with: "''"))',
-                NULL, NULL, '{"source":"legacy-phenotype"}'
-            )
-        """)
-
-        _ = try SQLiteIndexer(path: dbPath, rebuild: false)
-
-        XCTAssertEqual(try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1"), compendiumSchemaVersion)
-        XCTAssertTrue(try db.tableColumns("creatures").contains("initial_condition_json"))
-        XCTAssertTrue(try db.tableColumns("creatures").contains("specimen_manifest_json"))
-        XCTAssertTrue(try db.tableColumns("exports").contains("specimen_manifest_json"))
-        XCTAssertTrue(try db.tableColumns("specimens").contains("runtime_family"))
-        XCTAssertTrue(try db.tableColumns("specimens").contains("specimen_manifest_json"))
-
-        let creatureStmt = try db.prepare("""
-            SELECT phenotype_json, initial_condition_json, runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM creatures WHERE id = ?
-        """)
-        defer { sqlite3_finalize(creatureStmt) }
-        db.bindText(creatureStmt, index: 1, value: creature.id.uuidString)
-        XCTAssertEqual(sqlite3_step(creatureStmt), SQLITE_ROW)
-        XCTAssertEqual(sqliteOptionalText(creatureStmt, 0), sqliteOptionalText(creatureStmt, 1))
-        XCTAssertEqual(sqliteText(creatureStmt, 2), "qd24_paper")
-        XCTAssertTrue((sqliteOptionalText(creatureStmt, 3) ?? "").contains("warehouse_ingest"))
-        XCTAssertTrue((sqliteOptionalText(creatureStmt, 4) ?? "").contains("\"runtimeFamily\":\"qd24_paper\""))
+        XCTAssertThrowsError(try SQLiteIndexer(path: dbPath, rebuild: false))
+        XCTAssertNoThrow(try SQLiteIndexer(path: dbPath, rebuild: true))
     }
 
     func testCanonicalCoverageRepairClonesDuplicateResultLinksPerCreature() throws {
@@ -1022,7 +651,7 @@ final class CompendiumIndexingTests: XCTestCase {
             ),
         ]
         for creature in creatures {
-            try insertV6Creature(creature, runId: runID, db: db)
+            try insertCreatureRow(creature, runId: runID, db: db)
             try db.exec("""
                 UPDATE creatures
                 SET campaign_id = '\(campaignID)',
@@ -1176,79 +805,6 @@ final class CompendiumIndexingTests: XCTestCase {
         XCTAssertEqual(sqliteText(runStmt, 0), "qd-2024")
         XCTAssertEqual(sqliteText(runStmt, 1), "me")
         XCTAssertEqual(sqliteText(runStmt, 2), "cfg-qd-001")
-    }
-
-    func testIndexToleratesLegacyCreatureRowsWithoutInitialCondition() throws {
-        let root = try makeTempDirectory(prefix: "lenia-legacy-creature-repair")
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let legacyRunDir = root.appendingPathComponent("legacy-run", isDirectory: true)
-        try makeRunLayout(at: legacyRunDir)
-        let legacyID = UUID(uuidString: "43434343-3434-4343-3434-434343434343")!
-        let legacyEntry = ResearchLibraryEntry(
-            creature: makeCreature(id: legacyID, name: "legacy-row", seed: 31),
-            campaignId: nil,
-            runId: "legacy-run",
-            recordedAt: fixedDate,
-            configHash: "cfg-legacy",
-            sourceMode: "replay-specimens",
-            sourceAlgorithm: "legacy"
-        )
-        _ = try ResearchLibraryWriter.write(entries: [legacyEntry], runDirectory: legacyRunDir)
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        var command = try IndexCommand.parseAsRoot([
-            "--run-dir", legacyRunDir.path,
-            "--db", dbPath,
-            "--rebuild",
-        ])
-        try command.run()
-
-        let db = try SQLiteDB(path: dbPath)
-        try db.exec("""
-            UPDATE creatures
-            SET initial_condition_json = NULL,
-                specimen_manifest_json = NULL,
-                runtime_family = NULL,
-                runtime_capabilities_json = NULL,
-                canonical_specimen_id = NULL,
-                source_mode = 'replay-specimens'
-            WHERE id = '\(legacyID.uuidString)'
-        """)
-        try db.exec("DELETE FROM specimens WHERE creature_id = '\(legacyID.uuidString)'")
-
-        let freshRunDir = root.appendingPathComponent("fresh-run", isDirectory: true)
-        try makeRunLayout(at: freshRunDir)
-        let freshID = UUID(uuidString: "56565656-5656-5656-5656-565656565656")!
-        let freshEntry = ResearchLibraryEntry(
-            creature: makeCreature(id: freshID, name: "fresh-row", seed: 56),
-            campaignId: nil,
-            runId: "fresh-run",
-            recordedAt: fixedDate,
-            configHash: "cfg-fresh",
-            sourceMode: "flow-map-elites",
-            sourceAlgorithm: "local"
-        )
-        _ = try ResearchLibraryWriter.write(entries: [freshEntry], runDirectory: freshRunDir)
-
-        command = try IndexCommand.parseAsRoot([
-            "--run-dir", freshRunDir.path,
-            "--db", dbPath,
-        ])
-        try command.run()
-
-        XCTAssertEqual(
-            try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE id = '\(freshID.uuidString)'"),
-            1
-        )
-        XCTAssertEqual(
-            try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE id = '\(freshID.uuidString)' AND canonical_specimen_id IS NOT NULL"),
-            1
-        )
-        XCTAssertEqual(
-            try db.scalarInt("SELECT COUNT(*) FROM creatures WHERE id = '\(legacyID.uuidString)' AND canonical_specimen_id IS NULL"),
-            1
-        )
     }
 
     func testQD2024LocalRunEmitsIndexableLibraryEntries() throws {
@@ -2215,22 +1771,21 @@ private func makeExportRecord(
     runId: String,
     campaignId: String?,
     exportDir: String
-) -> TestExportRecord {
-    TestExportRecord(
-        creature_id: creatureId,
+) -> CreatureExportRecord {
+    CreatureExportRecord(
+        creatureId: creatureId,
         name: "exported",
-        owner_id: "tester",
-        run_id: runId,
-        campaign_id: campaignId,
-        export_dir: exportDir,
-        bundle_kind: LeniaArtifactBundleKind.strictReplayBundleV1.rawValue,
-        base_config_path: exportDir + "/base.json",
-        search_config_path: exportDir + "/search.json",
-        payload_path: nil,
-        exported_at: fixedDate,
+        ownerId: "tester",
+        runId: runId,
+        campaignId: campaignId,
+        bundleKind: .strictReplayBundleV1,
+        exportDir: exportDir,
+        baseConfigPath: exportDir + "/base.json",
+        searchConfigPath: exportDir + "/search.json",
+        exportedAt: fixedDate,
         reason: "test",
         score: 0.99,
-        filters_passed: true
+        filtersPassed: true
     )
 }
 
@@ -2261,335 +1816,9 @@ private func sqliteOptionalText(_ stmt: OpaquePointer, _ index: Int32) -> String
     sqlite3_column_text(stmt, index).map { String(cString: $0) }
 }
 
-private func makeV6CompendiumSchema(at path: String) throws {
-    let db = try SQLiteDB(path: path)
-    try db.exec("PRAGMA foreign_keys = ON")
-    try db.exec("""
-        CREATE TABLE compendium_meta (
-            schema_version INTEGER NOT NULL,
-            indexed_at TEXT NOT NULL
-        )
-    """)
-    try db.exec("""
-        INSERT INTO compendium_meta (schema_version, indexed_at)
-        VALUES (6, '2026-03-12T00:00:00Z')
-    """)
-    try db.exec("""
-        CREATE TABLE campaigns (
-            run_id TEXT NOT NULL,
-            campaign_id TEXT NOT NULL,
-            PRIMARY KEY (run_id, campaign_id)
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE runs (
-            run_id TEXT PRIMARY KEY,
-            run_name TEXT NOT NULL,
-            host_id TEXT,
-            output_root TEXT,
-            run_dir TEXT NOT NULL,
-            indexed_at TEXT NOT NULL,
-            config_hash TEXT
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE creatures (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            owner_id TEXT NOT NULL,
-            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-            campaign_id TEXT,
-            recorded_at TEXT NOT NULL,
-            init_seed INTEGER NOT NULL,
-            score REAL,
-            is_stable INTEGER,
-            mass_mean REAL,
-            mass_std REAL,
-            mass_min REAL,
-            mass_max REAL,
-            occupancy_mean REAL,
-            variance_mean REAL,
-            energy_mean REAL,
-            speed_mean REAL,
-            path_length REAL,
-            displacement REAL,
-            gyration REAL,
-            center_velocity REAL,
-            velocity_x REAL,
-            velocity_y REAL,
-            heading_rad REAL,
-            complexity_mean REAL,
-            complexity_target_score REAL,
-            activity_eac_mean REAL,
-            activity_ean_mean REAL,
-            activity_diversity_mean REAL,
-            activity_species_mean REAL,
-            taxonomy_family_id TEXT,
-            taxonomy_genus_id TEXT,
-            taxonomy_species_id TEXT,
-            taxonomy_confidence REAL,
-            taxonomy_method TEXT,
-            taxonomy_version INTEGER,
-            morphometrics_json TEXT,
-            morphometrics_method TEXT,
-            morphometrics_version INTEGER,
-            config_hash TEXT,
-            score_weights_json TEXT,
-            genotype_json TEXT NOT NULL,
-            initial_condition_json TEXT NOT NULL,
-            sweep_json TEXT,
-            metrics_json TEXT NOT NULL,
-            UNIQUE (run_id, campaign_id, id)
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE exports (
-            id TEXT PRIMARY KEY,
-            export_dir TEXT NOT NULL,
-            creature_id TEXT NOT NULL REFERENCES creatures(id) ON DELETE CASCADE,
-            name TEXT NOT NULL,
-            owner_id TEXT NOT NULL,
-            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-            campaign_id TEXT,
-            base_config_path TEXT NOT NULL,
-            search_config_path TEXT NOT NULL,
-            exported_at TEXT NOT NULL,
-            reason TEXT NOT NULL,
-            score REAL,
-            filters_passed INTEGER
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE results (
-            id TEXT PRIMARY KEY,
-            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-            campaign_id TEXT,
-            seed INTEGER NOT NULL,
-            init_seed INTEGER,
-            score REAL,
-            filters_passed INTEGER NOT NULL,
-            backend TEXT NOT NULL,
-            implementation_json TEXT,
-            score_weights_json TEXT,
-            metrics_json TEXT NOT NULL,
-            params_json TEXT NOT NULL,
-            sweep_json TEXT,
-            worker_id TEXT
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE ingest_state (
-            path TEXT PRIMARY KEY,
-            offset INTEGER NOT NULL,
-            modified_at REAL NOT NULL,
-            file_size INTEGER NOT NULL
-        )
-    """)
-}
-
-private func makeV10CompendiumSchema(at path: String) throws {
-    try makeV6CompendiumSchema(at: path)
-    let db = try SQLiteDB(path: path)
-    try db.exec("ALTER TABLE runs ADD COLUMN source_mode TEXT")
-    try db.exec("ALTER TABLE runs ADD COLUMN source_algorithm TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN source_mode TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN source_algorithm TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN research_metadata_json TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN trait_labels_json TEXT")
-    try db.exec("UPDATE compendium_meta SET schema_version = 10")
-}
-
-private func makeV11PartialCompendiumSchema(at path: String) throws {
-    try makeV6CompendiumSchema(at: path)
-    let db = try SQLiteDB(path: path)
-    try db.exec("ALTER TABLE runs ADD COLUMN source_mode TEXT")
-    try db.exec("ALTER TABLE runs ADD COLUMN source_algorithm TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN source_mode TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN source_algorithm TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN research_metadata_json TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN trait_labels_json TEXT")
-    try db.exec("UPDATE compendium_meta SET schema_version = 11")
-    try db.exec("ALTER TABLE exports ADD COLUMN bundle_kind TEXT NOT NULL DEFAULT 'strict_replay_bundle_v1'")
-    try db.exec("ALTER TABLE exports ADD COLUMN payload_path TEXT")
-}
-
-private func makeV13PartialCompendiumSchema(at path: String) throws {
-    try makeV6CompendiumSchema(at: path)
-    let db = try SQLiteDB(path: path)
-    try db.exec("UPDATE compendium_meta SET schema_version = 13")
-    try db.exec("ALTER TABLE runs ADD COLUMN source_mode TEXT")
-    try db.exec("ALTER TABLE runs ADD COLUMN source_algorithm TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN source_mode TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN source_algorithm TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN research_metadata_json TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN runtime_family TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN runtime_capabilities_json TEXT")
-    try db.exec("ALTER TABLE creatures ADD COLUMN trait_labels_json TEXT")
-    try db.exec("ALTER TABLE exports ADD COLUMN bundle_kind TEXT NOT NULL DEFAULT 'strict_replay_bundle_v1'")
-    try db.exec("ALTER TABLE exports ADD COLUMN payload_path TEXT")
-    try db.exec("ALTER TABLE exports ADD COLUMN runtime_family TEXT")
-    try db.exec("ALTER TABLE exports ADD COLUMN runtime_capabilities_json TEXT")
-    try db.exec("""
-        CREATE TABLE specimens (
-            id TEXT PRIMARY KEY,
-            result_id TEXT,
-            creature_id TEXT,
-            run_id TEXT NOT NULL,
-            campaign_id TEXT,
-            source_kind TEXT NOT NULL,
-            recorded_at TEXT,
-            seed INTEGER,
-            init_seed INTEGER,
-            source_mode TEXT,
-            source_algorithm TEXT,
-            config_hash TEXT,
-            initial_condition_family TEXT,
-            descriptor_version INTEGER NOT NULL,
-            symmetry_policy TEXT NOT NULL,
-            genotype_descriptor_json TEXT NOT NULL,
-            terminal_descriptor_json TEXT NOT NULL,
-            trajectory_descriptor_json TEXT,
-            activity_path TEXT,
-            fingerprint_path TEXT,
-            provenance_json TEXT
-        )
-    """)
-}
-
-private func makeV13LegacyPhenotypeCompendiumSchema(at path: String) throws {
-    let db = try SQLiteDB(path: path)
-    try db.exec("PRAGMA foreign_keys = ON")
-    try db.exec("""
-        CREATE TABLE compendium_meta (
-            schema_version INTEGER NOT NULL,
-            indexed_at TEXT NOT NULL
-        )
-    """)
-    try db.exec("""
-        INSERT INTO compendium_meta (schema_version, indexed_at)
-        VALUES (13, '2026-03-12T00:00:00Z')
-    """)
-    try db.exec("""
-        CREATE TABLE runs (
-            run_id TEXT PRIMARY KEY,
-            run_name TEXT NOT NULL,
-            host_id TEXT,
-            output_root TEXT,
-            run_dir TEXT NOT NULL,
-            indexed_at TEXT NOT NULL,
-            config_hash TEXT,
-            source_mode TEXT,
-            source_algorithm TEXT
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE creatures (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            owner_id TEXT NOT NULL,
-            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-            campaign_id TEXT,
-            recorded_at TEXT NOT NULL,
-            init_seed INTEGER NOT NULL,
-            score REAL,
-            is_stable INTEGER,
-            mass_mean REAL,
-            mass_std REAL,
-            mass_min REAL,
-            mass_max REAL,
-            occupancy_mean REAL,
-            variance_mean REAL,
-            energy_mean REAL,
-            speed_mean REAL,
-            path_length REAL,
-            displacement REAL,
-            gyration REAL,
-            center_velocity REAL,
-            velocity_x REAL,
-            velocity_y REAL,
-            heading_rad REAL,
-            complexity_mean REAL,
-            complexity_target_score REAL,
-            activity_eac_mean REAL,
-            activity_ean_mean REAL,
-            activity_diversity_mean REAL,
-            activity_species_mean REAL,
-            taxonomy_family_id TEXT,
-            taxonomy_genus_id TEXT,
-            taxonomy_species_id TEXT,
-            taxonomy_confidence REAL,
-            taxonomy_method TEXT,
-            taxonomy_version INTEGER,
-            morphometrics_json TEXT,
-            morphometrics_method TEXT,
-            morphometrics_version INTEGER,
-            config_hash TEXT,
-            score_weights_json TEXT,
-            genotype_json TEXT NOT NULL,
-            phenotype_json TEXT NOT NULL,
-            sweep_json TEXT,
-            metrics_json TEXT NOT NULL,
-            source_mode TEXT,
-            source_algorithm TEXT,
-            research_metadata_json TEXT,
-            trait_labels_json TEXT,
-            runtime_family TEXT,
-            runtime_capabilities_json TEXT,
-            UNIQUE (run_id, campaign_id, id)
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE exports (
-            id TEXT PRIMARY KEY,
-            export_dir TEXT NOT NULL,
-            creature_id TEXT NOT NULL REFERENCES creatures(id) ON DELETE CASCADE,
-            name TEXT NOT NULL,
-            owner_id TEXT NOT NULL,
-            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-            campaign_id TEXT,
-            base_config_path TEXT,
-            search_config_path TEXT,
-            exported_at TEXT NOT NULL,
-            reason TEXT NOT NULL,
-            score REAL,
-            filters_passed INTEGER,
-            bundle_kind TEXT NOT NULL DEFAULT 'strict_replay_bundle_v1',
-            payload_path TEXT,
-            runtime_family TEXT,
-            runtime_capabilities_json TEXT
-        )
-    """)
-    try db.exec("""
-        CREATE TABLE specimens (
-            id TEXT PRIMARY KEY,
-            result_id TEXT,
-            creature_id TEXT,
-            run_id TEXT NOT NULL,
-            campaign_id TEXT,
-            source_kind TEXT NOT NULL,
-            recorded_at TEXT,
-            seed INTEGER,
-            init_seed INTEGER,
-            source_mode TEXT,
-            source_algorithm TEXT,
-            config_hash TEXT,
-            initial_condition_family TEXT,
-            descriptor_version INTEGER NOT NULL,
-            symmetry_policy TEXT NOT NULL,
-            genotype_descriptor_json TEXT NOT NULL,
-            terminal_descriptor_json TEXT NOT NULL,
-            trajectory_descriptor_json TEXT,
-            activity_path TEXT,
-            fingerprint_path TEXT,
-            provenance_json TEXT
-        )
-    """)
-}
-
-private func insertV6Creature(
+private func insertCreatureRow(
     _ creature: SavedCreature,
     runId: String,
-    initialConditionColumn: String = "initial_condition_json",
     db: SQLiteDB
 ) throws {
     let encoder = JSONEncoder()
@@ -2611,7 +1840,7 @@ private func insertV6Creature(
             activity_eac_mean, activity_ean_mean, activity_diversity_mean, activity_species_mean,
             taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id, taxonomy_confidence, taxonomy_method, taxonomy_version,
             morphometrics_json, morphometrics_method, morphometrics_version,
-            config_hash, score_weights_json, genotype_json, \(initialConditionColumn), sweep_json, metrics_json
+            config_hash, score_weights_json, genotype_json, initial_condition_json, sweep_json, metrics_json
         ) VALUES (\(placeholders))
     """)
     defer { sqlite3_finalize(stmt) }

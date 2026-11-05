@@ -170,14 +170,14 @@ private func replayLibraryProjection(_ entry: ResearchLibraryEntry) -> ResolvedS
         name: entry.creature.name,
         ownerId: entry.creature.ownerId,
         manifest: entry.specimenManifest,
-        fallbackGenotype: entry.creature.genotype,
-        fallbackInitialCondition: entry.creature.initialCondition,
-        fallbackMetrics: entry.creature.metrics,
+        genotype: entry.creature.genotype,
+        initialCondition: entry.creature.initialCondition,
+        metrics: entry.creature.metrics,
+        descriptorBundle: entry.creature.descriptorBundle,
         sweep: entry.creature.sweep,
         score: entry.creature.score,
         scoreWeights: entry.creature.scoreWeights,
         fallbackInitialConditionFamily: entry.creature.initialConditionFamily,
-        fallbackDescriptorBundle: entry.creature.descriptorBundle,
         fallbackConfigHash: entry.configHash,
         fallbackRuntimeFamily: entry.runtimeFamily,
         fallbackRuntimeCapabilities: entry.runtimeCapabilities,
@@ -205,14 +205,14 @@ private func replayExportProjection(
         name: creature.name,
         ownerId: creature.ownerId,
         manifest: manifest,
-        fallbackGenotype: creature.genotype,
-        fallbackInitialCondition: creature.initialCondition,
-        fallbackMetrics: creature.metrics,
+        genotype: creature.genotype,
+        initialCondition: creature.initialCondition,
+        metrics: creature.metrics,
+        descriptorBundle: creature.descriptorBundle,
         sweep: creature.sweep,
         score: metadata?.score ?? record.score ?? creature.score,
         scoreWeights: creature.scoreWeights,
         fallbackInitialConditionFamily: creature.initialConditionFamily,
-        fallbackDescriptorBundle: creature.descriptorBundle,
         fallbackConfigHash: creature.configHash,
         fallbackRuntimeFamily: metadata?.runtimeFamily ?? record.runtimeFamily,
         fallbackRuntimeCapabilities: metadata?.runtimeCapabilities ?? record.runtimeCapabilities,
@@ -739,7 +739,7 @@ func loadReplayResolvedInputs(from inputURL: URL) throws -> [ReplayResolvedInput
     }
 
     if let firstData = first.data(using: .utf8),
-       (try? decodeResearchLibraryEntry(firstData, decoder: decoder)) != nil {
+       (try? decoder.decode(ResearchLibraryEntry.self, from: firstData)) != nil {
         let runDir = inputURL.deletingLastPathComponent().deletingLastPathComponent()
         let baseURL = runDir.appendingPathComponent("config.json")
         let searchURL = runDir.appendingPathComponent("search.json")
@@ -756,7 +756,7 @@ func loadReplayResolvedInputs(from inputURL: URL) throws -> [ReplayResolvedInput
             guard let data = line.data(using: .utf8) else {
                 throw ValidationError("Invalid UTF-8 line in \(inputURL.path)")
             }
-            let entry = try decodeResearchLibraryEntry(data, decoder: decoder)
+            let entry = try decoder.decode(ResearchLibraryEntry.self, from: data)
             try validateReplayLibraryEntry(entry)
             let projection = replayLibraryProjection(entry)
             return ReplayResolvedInput(
@@ -792,11 +792,7 @@ func replayResolvedInput(
     let metaURL = URL(fileURLWithPath: record.exportDir, isDirectory: true).appendingPathComponent("meta.json")
     let metadata: CreatureExportMetadata?
     if FileManager.default.fileExists(atPath: metaURL.path) {
-        metadata = try decodeCreatureExportMetadata(
-            Data(contentsOf: metaURL),
-            decoder: decoder,
-            indexBundleKind: record.bundleKind
-        )
+        metadata = try decoder.decode(CreatureExportMetadata.self, from: Data(contentsOf: metaURL))
     } else {
         metadata = nil
     }

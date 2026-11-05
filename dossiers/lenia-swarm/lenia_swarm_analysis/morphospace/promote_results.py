@@ -133,7 +133,6 @@ def _manifest(
     source_mode: str,
     source_algorithm: str,
     recorded_at: str,
-    initial_condition: dict[str, Any] | None,
     research_metadata: dict[str, Any],
 ) -> dict[str, Any]:
     return {
@@ -166,13 +165,7 @@ def _manifest(
             "searchConfigPath": None,
             "payloadPath": None,
         },
-        "snapshots": {
-            "genotype": row.get("params"),
-            "initialCondition": initial_condition,
-            "metrics": row.get("metrics"),
-            "descriptorBundle": row.get("descriptor_bundle"),
-            "morphometrics": None,
-        },
+        "snapshots": {"morphometrics": None},
         "researchMetadata": {
             **research_metadata,
             "resultID": result_id,
@@ -246,7 +239,6 @@ def _projection_values(
         source_mode=source_mode,
         source_algorithm=source_algorithm,
         recorded_at=recorded_at,
-        initial_condition=initial_condition,
         research_metadata=research_metadata,
     )
     runtime_capabilities_json = _json(RUNTIME_CAPABILITIES)

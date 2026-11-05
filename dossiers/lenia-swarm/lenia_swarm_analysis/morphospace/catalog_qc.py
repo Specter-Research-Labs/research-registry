@@ -19,18 +19,6 @@ def _json_object(value: dict[str, Any]) -> str:
 
 
 def ensure_catalog_qc_schema(connection: sqlite3.Connection) -> None:
-    columns = {
-        row[1]
-        for row in connection.execute("PRAGMA table_info(creatures)")
-    }
-    if "catalog_status" not in columns:
-        connection.execute(
-            "ALTER TABLE creatures ADD COLUMN catalog_status TEXT NOT NULL DEFAULT 'active'"
-        )
-    if "quality_flags_json" not in columns:
-        connection.execute(
-            "ALTER TABLE creatures ADD COLUMN quality_flags_json TEXT NOT NULL DEFAULT '[]'"
-        )
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS creature_qc_events (
@@ -44,9 +32,6 @@ def ensure_catalog_qc_schema(connection: sqlite3.Connection) -> None:
             created_at TEXT NOT NULL
         )
         """
-    )
-    connection.execute(
-        "CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)"
     )
     connection.execute(
         "CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)"

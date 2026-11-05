@@ -1,1 +1,0 @@
-let compendiumSchemaVersion = 15

@@ -215,25 +215,11 @@ def _strict_specimen_manifest(
     existing = _loads_optional_json(row.get("specimen_manifest_json"))
     if isinstance(existing, dict):
         return existing
-    genotype = _loads_optional_json(creature_row.get("genotype_json")) if creature_row else None
-    initial_condition = (
-        _loads_optional_json(creature_row.get("initial_condition_json"))
-        if creature_row
-        else None
-    )
-    metrics = _loads_optional_json(creature_row.get("metrics_json")) if creature_row else None
     morphometrics = (
         _loads_optional_json(creature_row.get("morphometrics_json"))
         if creature_row
         else None
     )
-    descriptor_bundle = {
-        "descriptorVersion": row.get("descriptor_version"),
-        "symmetryPolicy": row.get("symmetry_policy"),
-        "genotype": _loads_optional_json(row.get("genotype_descriptor_json")),
-        "terminal": _loads_optional_json(row.get("terminal_descriptor_json")),
-        "trajectory": _loads_optional_json(row.get("trajectory_descriptor_json")),
-    }
     runtime_family = _runtime_family(
         {
             "runtime_family": row.get("runtime_family"),
@@ -283,13 +269,7 @@ def _strict_specimen_manifest(
             "searchConfigPath": export_row.get("search_config_path") if export_row else None,
             "payloadPath": export_row.get("payload_path") if export_row else None,
         },
-        "snapshots": {
-            "genotype": genotype,
-            "initialCondition": initial_condition,
-            "metrics": metrics,
-            "descriptorBundle": descriptor_bundle,
-            "morphometrics": morphometrics,
-        },
+        "snapshots": {"morphometrics": morphometrics},
         "researchMetadata": research_metadata,
     }
 
@@ -537,6 +517,9 @@ def ingest_compendium(
                         "specimen": row,
                         "creature": raw_creature_row,
                         "export": export_row,
+                        "genotype_descriptor": _loads_optional_json(
+                            row.get("genotype_descriptor_json")
+                        ),
                         "terminal": terminal_descriptor,
                         "trajectory": trajectory_descriptor,
                         "research_metadata": research_metadata,

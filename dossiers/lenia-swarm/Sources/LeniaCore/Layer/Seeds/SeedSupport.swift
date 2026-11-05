@@ -410,11 +410,7 @@ private func loadResearchSeedPatchesFromExportIndex(
         let exportDir = URL(fileURLWithPath: record.exportDir, isDirectory: true)
         let metaURL = exportDir.appendingPathComponent("meta.json")
         let decoder = JSONDecoder()
-        let metadata = try decodeCreatureExportMetadata(
-            Data(contentsOf: metaURL),
-            decoder: decoder,
-            indexBundleKind: record.bundleKind
-        )
+        let metadata = try decoder.decode(CreatureExportMetadata.self, from: Data(contentsOf: metaURL))
         let projection = resolveSpecimenProjection(
             id: researchSeedProjectionID(
                 manifest: metadata.specimenManifest,
@@ -423,14 +419,14 @@ private func loadResearchSeedPatchesFromExportIndex(
             name: metadata.creature.name,
             ownerId: metadata.creature.ownerId,
             manifest: metadata.specimenManifest,
-            fallbackGenotype: metadata.creature.genotype,
-            fallbackInitialCondition: metadata.creature.initialCondition,
-            fallbackMetrics: metadata.creature.metrics,
+            genotype: metadata.creature.genotype,
+            initialCondition: metadata.creature.initialCondition,
+            metrics: metadata.creature.metrics,
+            descriptorBundle: metadata.creature.descriptorBundle,
             sweep: metadata.creature.sweep,
             score: metadata.score ?? metadata.creature.score,
             scoreWeights: metadata.creature.scoreWeights,
             fallbackInitialConditionFamily: metadata.creature.initialConditionFamily,
-            fallbackDescriptorBundle: metadata.creature.descriptorBundle,
             fallbackConfigHash: metadata.creature.configHash,
             fallbackRuntimeFamily: metadata.runtimeFamily,
             fallbackRuntimeCapabilities: metadata.runtimeCapabilities
@@ -579,7 +575,7 @@ private func loadResearchSeedPatchesFromLocalLibrary(
         .split(whereSeparator: \.isNewline)
         .map(String.init)
         .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-        .map { try decodeResearchLibraryEntry(Data($0.utf8), decoder: decoder) }
+        .map { try decoder.decode(ResearchLibraryEntry.self, from: Data($0.utf8)) }
     let runDirectory = indexURL
         .deletingLastPathComponent()
         .deletingLastPathComponent()
@@ -594,14 +590,14 @@ private func loadResearchSeedPatchesFromLocalLibrary(
             name: entry.creature.name,
             ownerId: entry.creature.ownerId,
             manifest: entry.specimenManifest,
-            fallbackGenotype: entry.creature.genotype,
-            fallbackInitialCondition: entry.creature.initialCondition,
-            fallbackMetrics: entry.creature.metrics,
+            genotype: entry.creature.genotype,
+            initialCondition: entry.creature.initialCondition,
+            metrics: entry.creature.metrics,
+            descriptorBundle: entry.creature.descriptorBundle,
             sweep: entry.creature.sweep,
             score: entry.creature.score,
             scoreWeights: entry.creature.scoreWeights,
             fallbackInitialConditionFamily: entry.creature.initialConditionFamily,
-            fallbackDescriptorBundle: entry.creature.descriptorBundle,
             fallbackConfigHash: entry.configHash,
             fallbackRuntimeFamily: entry.runtimeFamily,
             fallbackRuntimeCapabilities: entry.runtimeCapabilities,

@@ -5,38 +5,23 @@ from duckdb import DuckDBPyConnection
 SCHEMA_VERSION = 8
 
 
-def _table_columns(connection: DuckDBPyConnection, table_name: str) -> set[str]:
-    rows = connection.execute(f"PRAGMA table_info('{table_name}')").fetchall()
-    return {str(row[1]) for row in rows}
-
-
-def _ensure_column(
-    connection: DuckDBPyConnection,
-    *,
-    table_name: str,
-    column_name: str,
-    ddl: str,
-) -> None:
-    if column_name in _table_columns(connection, table_name):
-        return
-    connection.execute(f"ALTER TABLE {table_name} ADD COLUMN {ddl}")
-
-
 def create_schema(connection: DuckDBPyConnection) -> None:
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS schema_meta (
-            schema_version INTEGER NOT NULL
-        )
-        """
-    )
-    schema_count_row = connection.execute("SELECT COUNT(*) FROM schema_meta").fetchone()
-    if schema_count_row is None:
-        raise AssertionError("schema_meta count query returned no rows")
-    if int(schema_count_row[0]) == 0:
-        connection.execute("INSERT INTO schema_meta VALUES (?)", [SCHEMA_VERSION])
+    has_meta = connection.execute(
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'schema_meta'"
+    ).fetchone()
+    if has_meta is None:
+        raise AssertionError("information_schema query returned no rows")
+    if int(has_meta[0]) == 1:
+        version_row = connection.execute("SELECT schema_version FROM schema_meta").fetchone()
+        if version_row is None or int(version_row[0]) != SCHEMA_VERSION:
+            found = None if version_row is None else int(version_row[0])
+            raise SystemExit(
+                f"morphospace warehouse has schema version {found}, expected {SCHEMA_VERSION}; "
+                "delete the .duckdb file and re-ingest it from the compendium."
+            )
     else:
-        connection.execute("UPDATE schema_meta SET schema_version = ?", [SCHEMA_VERSION])
+        connection.execute("CREATE TABLE schema_meta (schema_version INTEGER NOT NULL)")
+        connection.execute("INSERT INTO schema_meta VALUES (?)", [SCHEMA_VERSION])
 
     connection.execute(
         """
@@ -144,24 +129,6 @@ def create_schema(connection: DuckDBPyConnection) -> None:
             specimen_manifest_json JSON
         )
         """
-    )
-    _ensure_column(
-        connection,
-        table_name="specimens",
-        column_name="runtime_family",
-        ddl="runtime_family TEXT",
-    )
-    _ensure_column(
-        connection,
-        table_name="specimens",
-        column_name="runtime_capabilities_json",
-        ddl="runtime_capabilities_json JSON",
-    )
-    _ensure_column(
-        connection,
-        table_name="specimens",
-        column_name="specimen_manifest_json",
-        ddl="specimen_manifest_json JSON",
     )
     connection.execute(
         """
@@ -966,14 +933,14 @@ def create_views(connection: DuckDBPyConnection) -> None:
                 ) AS resolved_runtime_family,
                 try_cast(
                     json_extract(
-                        specimens.specimen_manifest_json,
-                        '$.snapshots.descriptorBundle.genotype.kernelCount'
+                        specimens.provenance_json,
+                        '$.genotype_descriptor.kernelCount'
                     ) AS INTEGER
                 ) AS resolved_kernel_count,
                 try_cast(
                     json_extract(
-                        specimens.specimen_manifest_json,
-                        '$.snapshots.descriptorBundle.terminal.massChannel'
+                        specimens.provenance_json,
+                        '$.terminal.massChannel'
                     ) AS INTEGER
                 ) AS resolved_mass_channel
             FROM specimens

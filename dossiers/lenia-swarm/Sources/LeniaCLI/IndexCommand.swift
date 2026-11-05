@@ -25,9 +25,6 @@ struct IndexCommand: ParsableCommand {
     @Flag(name: .long, help: "Include results.jsonl (not just library/exports)")
     var includeResults: Bool = false
 
-    @Flag(name: .long, help: "Repair schema and backfill specimen contracts without ingesting run outputs")
-    var repairOnly: Bool = false
-
     @OptionGroup
     var warehouseRefresh: WarehouseRefreshOptions
 
@@ -38,8 +35,7 @@ struct IndexCommand: ParsableCommand {
         let resolvedPlan = try resolveCompendiumIngestPlan(
             outputRoots: outputRoots,
             runDirs: runDirs,
-            dbPath: dbPath,
-            repairOnly: repairOnly
+            dbPath: dbPath
         )
         let plan = CompendiumIngestPlan(
             runInputs: resolvedPlan.runInputs,
@@ -48,8 +44,7 @@ struct IndexCommand: ParsableCommand {
         let indexer = try executeCompendiumIngest(
             plan: plan,
             rebuild: rebuild,
-            includeResults: includeResults,
-            repairOnly: repairOnly
+            includeResults: includeResults
         )
         let warehouseResult = try refreshWarehouseProjection(
             compendiumPath: plan.resolvedDBPath,
@@ -178,7 +173,6 @@ final class SQLiteIndexer {
     }
 
     func ensureCanonicalSpecimenCoverage() throws {
-        try repairCurrentSchema()
         try repairCanonicalCreatureLinks()
         let unresolvedGaps = try backfillStrictSpecimensFromIndexedArtifacts()
         if !unresolvedGaps.isEmpty {
@@ -511,9 +505,10 @@ final class SQLiteIndexer {
                 name: name,
                 ownerId: ownerID,
                 manifest: manifest,
-                fallbackGenotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
-                fallbackInitialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
-                fallbackMetrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
+                genotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
+                initialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
+                metrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
+                descriptorBundle: nil,
                 sweep: try decodeOptionalJSONString(columnText(stmt, index: 15), as: [String: Double].self, decoder: decoder),
                 score: score,
                 scoreWeights: try decodeOptionalJSONString(columnText(stmt, index: 16), as: [String: Float].self, decoder: decoder),
@@ -614,11 +609,7 @@ final class SQLiteIndexer {
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .deferredToDate
-        let metadata = try decodeCreatureExportMetadata(
-            Data(contentsOf: metadataURL),
-            decoder: decoder,
-            indexBundleKind: exportRecord.bundleKind
-        )
+        let metadata = try decoder.decode(CreatureExportMetadata.self, from: Data(contentsOf: metadataURL))
         return try upsertSpecimenFromExportMetadata(
             metadata: metadata,
             gap: target.gap,
@@ -1179,14 +1170,14 @@ final class SQLiteIndexer {
             name: gap.creature.name,
             ownerId: gap.creature.ownerId,
             manifest: nil,
-            fallbackGenotype: gap.creature.genotype,
-            fallbackInitialCondition: gap.creature.initialCondition,
-            fallbackMetrics: gap.creature.metrics,
+            genotype: gap.creature.genotype,
+            initialCondition: gap.creature.initialCondition,
+            metrics: gap.creature.metrics,
+            descriptorBundle: gap.creature.descriptorBundle,
             sweep: gap.creature.sweep,
             score: gap.creature.score,
             scoreWeights: gap.creature.scoreWeights,
             fallbackInitialConditionFamily: gap.creature.initialConditionFamily,
-            fallbackDescriptorBundle: gap.creature.descriptorBundle,
             fallbackConfigHash: gap.configHash ?? gap.creature.configHash,
             fallbackSourceMode: gap.sourceMode,
             fallbackSourceAlgorithm: gap.sourceAlgorithm,
@@ -1338,7 +1329,7 @@ final class SQLiteIndexer {
             guard let data = line.data(using: .utf8) else {
                 throw SQLiteIndexError.invalidUTF8(url.path)
             }
-            let entry = try decodeResearchLibraryEntry(data, decoder: decoder)
+            let entry = try decoder.decode(ResearchLibraryEntry.self, from: data)
             partial[entry.creature.id.uuidString] = entry
         }
     }
@@ -1409,699 +1400,17 @@ final class SQLiteIndexer {
     }
 
     private func ensureSchema() throws {
-        if try !db.tableExists("compendium_meta") {
-            try createSchema()
-            try db.exec("INSERT INTO compendium_meta (schema_version) VALUES (\(Self.schemaVersion))")
-            try repairCurrentSchema()
-            return
-        }
-
-        let rowCount = try db.scalarInt("SELECT COUNT(*) FROM compendium_meta")
-        if rowCount == 0 {
-            try db.exec("INSERT INTO compendium_meta (schema_version) VALUES (\(Self.schemaVersion))")
-            try createSchema()
-            try repairCurrentSchema()
-            return
-        }
-
-        let version = try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1")
-        if version > Self.schemaVersion {
-            throw SQLiteIndexError.sqliteError(message: "Compendium schema version \(version) is newer than supported \(Self.schemaVersion)")
-        }
-        if version < 2 {
-            try migrate1to2()
-        }
-        if version < 3 {
-            try migrate2to3()
-        }
-        if version < 4 {
-            try migrate3to4()
-        }
-        if version < 5 {
-            try migrate4to5()
-        }
-        if version < 6 {
-            try migrate5to6()
-        }
-        if version < 7 {
-            try migrate6to7()
-        }
-        if version < 8 {
-            try migrate7to8()
-        }
-        if version < 9 {
-            try migrate8to9()
-        }
-        if version < 10 {
-            try migrate9to10()
-        }
-        if version < 11 {
-            try migrate10to11()
-        }
-        if version < 12 {
-            try migrate11to12()
-        }
-        if version < 13 {
-            try migrate12to13()
-        }
-        if version < 14 {
-            try migrate13to14()
-        }
-        if version < 15 {
-            try migrate14to15()
-        }
-
-        try createSchema()
-        try repairCurrentSchema()
-    }
-
-    private func migrate1to2() throws {
-        try db.withImmediateTransaction {
-            try db.exec("ALTER TABLE runs ADD COLUMN run_name TEXT NOT NULL DEFAULT ''")
-            try db.exec("ALTER TABLE runs ADD COLUMN host_id TEXT")
-            try db.exec("ALTER TABLE runs ADD COLUMN output_root TEXT")
-            try db.exec("ALTER TABLE runs ADD COLUMN indexed_at TEXT NOT NULL DEFAULT ''")
-            try db.exec("UPDATE runs SET run_name = run_id WHERE run_name = ''")
-
-            let select = try db.prepare("SELECT run_id, run_dir FROM runs")
-            defer { sqlite3_finalize(select) }
-
-            while sqlite3_step(select) == SQLITE_ROW {
-                guard let runIdC = sqlite3_column_text(select, 0),
-                      let runDirC = sqlite3_column_text(select, 1) else {
-                    continue
-                }
-                let runId = String(cString: runIdC)
-                let runDir = String(cString: runDirC)
-
-                let inferred = inferRunDirMetadata(runDir)
-                let hostId = inferred.hostId
-                let outputRoot = inferred.outputRoot
-                let runDirStored = inferred.runDirRelative ?? runDir
-                let runName = runId
-                let indexedAt = formatter.string(from: Date())
-
-                var newRunId = runId
-                if let hostId = hostId, !runId.contains("::") {
-                    newRunId = "\(hostId)::\(runId)"
-                }
-
-                if newRunId != runId {
-                    try updateRunId(table: "creatures", newRunId: newRunId, oldRunId: runId)
-                    try updateRunId(table: "campaigns", newRunId: newRunId, oldRunId: runId)
-                    try updateRunId(table: "exports", newRunId: newRunId, oldRunId: runId)
-                    try updateRunId(table: "results", newRunId: newRunId, oldRunId: runId)
-                }
-
-                let update = try db.prepare("""
-                    UPDATE runs
-                    SET run_id = ?, run_name = ?, host_id = ?, output_root = ?, run_dir = ?, indexed_at = ?
-                    WHERE run_id = ?
-                """)
-                db.bindText(update, index: 1, value: newRunId)
-                db.bindText(update, index: 2, value: runName)
-                db.bindText(update, index: 3, value: hostId)
-                db.bindText(update, index: 4, value: outputRoot)
-                db.bindText(update, index: 5, value: runDirStored)
-                db.bindText(update, index: 6, value: indexedAt)
-                db.bindText(update, index: 7, value: runId)
-                try db.step(update)
-                sqlite3_finalize(update)
-            }
-
-            try db.exec("UPDATE compendium_meta SET schema_version = 2")
-        }
-    }
-
-    private func migrate2to3() throws {
-        try db.withImmediateTransaction {
-            let creatureColumns = try db.tableColumns("creatures")
-            if !creatureColumns.contains("taxonomy_family_id") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN taxonomy_family_id TEXT")
-            }
-            if !creatureColumns.contains("taxonomy_genus_id") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN taxonomy_genus_id TEXT")
-            }
-            if !creatureColumns.contains("taxonomy_species_id") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN taxonomy_species_id TEXT")
-            }
-            if !creatureColumns.contains("taxonomy_confidence") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN taxonomy_confidence REAL")
-            }
-            if !creatureColumns.contains("taxonomy_method") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN taxonomy_method TEXT")
-            }
-            if !creatureColumns.contains("taxonomy_version") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN taxonomy_version INTEGER")
-            }
-            if !creatureColumns.contains("morphometrics_json") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN morphometrics_json TEXT")
-            }
-            if !creatureColumns.contains("morphometrics_method") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN morphometrics_method TEXT")
-            }
-            if !creatureColumns.contains("morphometrics_version") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN morphometrics_version INTEGER")
-            }
-
-            try db.exec("UPDATE compendium_meta SET schema_version = 3")
-        }
-    }
-
-    private func migrate3to4() throws {
-        try db.withImmediateTransaction {
-            let creatureColumns = try db.tableColumns("creatures")
-            if !creatureColumns.contains("config_hash") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN config_hash TEXT")
-            }
-
-            let runColumns = try db.tableColumns("runs")
-            if !runColumns.contains("config_hash") {
-                try db.exec("ALTER TABLE runs ADD COLUMN config_hash TEXT")
-            }
-
-            try db.exec("UPDATE compendium_meta SET schema_version = 4")
-        }
-    }
-
-    private func migrate4to5() throws {
-        try db.withImmediateTransaction {
-            try db.exec("""
-                CREATE TABLE campaigns_v5 (
-                    run_id TEXT NOT NULL,
-                    campaign_id TEXT NOT NULL,
-                    PRIMARY KEY (run_id, campaign_id)
-                )
-            """)
-
-            let selectCampaigns = try db.prepare("""
-                SELECT DISTINCT run_id, campaign_id
-                FROM (
-                    SELECT run_id, campaign_id FROM campaigns
-                    UNION
-                    SELECT run_id, campaign_id FROM creatures WHERE campaign_id IS NOT NULL
-                    UNION
-                    SELECT run_id, campaign_id FROM exports WHERE campaign_id IS NOT NULL
-                    UNION
-                    SELECT run_id, campaign_id FROM results WHERE campaign_id IS NOT NULL
-                )
-                WHERE campaign_id IS NOT NULL
-            """)
-            defer { sqlite3_finalize(selectCampaigns) }
-
-            let insertCampaign = try db.prepare("""
-                INSERT OR REPLACE INTO campaigns_v5 (run_id, campaign_id)
-                VALUES (?, ?)
-            """)
-            defer { sqlite3_finalize(insertCampaign) }
-
-            while sqlite3_step(selectCampaigns) == SQLITE_ROW {
-                guard let runIdC = sqlite3_column_text(selectCampaigns, 0),
-                      let campaignIdC = sqlite3_column_text(selectCampaigns, 1) else {
-                    continue
-                }
-                sqlite3_reset(insertCampaign)
-                sqlite3_clear_bindings(insertCampaign)
-                db.bindText(insertCampaign, index: 1, value: String(cString: runIdC))
-                db.bindText(insertCampaign, index: 2, value: String(cString: campaignIdC))
-                try db.step(insertCampaign)
-            }
-
-            try db.exec("""
-                CREATE TABLE exports_v5 (
-                    id TEXT PRIMARY KEY,
-                    export_dir TEXT NOT NULL,
-                    creature_id TEXT NOT NULL,
-                    name TEXT NOT NULL,
-                    owner_id TEXT NOT NULL,
-                    run_id TEXT NOT NULL,
-                    campaign_id TEXT,
-                    base_config_path TEXT NOT NULL,
-                    search_config_path TEXT NOT NULL,
-                    exported_at TEXT NOT NULL,
-                    reason TEXT NOT NULL,
-                    score REAL,
-                    filters_passed INTEGER
-                )
-            """)
-
-            let selectExports = try db.prepare("""
-                SELECT export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                       base_config_path, search_config_path, exported_at, reason,
-                       score, filters_passed
-                FROM exports
-            """)
-            defer { sqlite3_finalize(selectExports) }
-
-            let insertExport = try db.prepare("""
-                INSERT OR REPLACE INTO exports_v5 (
-                    id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                    base_config_path, search_config_path, exported_at, reason,
-                    score, filters_passed
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """)
-            defer { sqlite3_finalize(insertExport) }
-
-            while sqlite3_step(selectExports) == SQLITE_ROW {
-                guard let exportDirC = sqlite3_column_text(selectExports, 0),
-                      let creatureIdC = sqlite3_column_text(selectExports, 1),
-                      let nameC = sqlite3_column_text(selectExports, 2),
-                      let ownerIdC = sqlite3_column_text(selectExports, 3),
-                      let runIdC = sqlite3_column_text(selectExports, 4),
-                      let baseConfigC = sqlite3_column_text(selectExports, 6),
-                      let searchConfigC = sqlite3_column_text(selectExports, 7),
-                      let exportedAtC = sqlite3_column_text(selectExports, 8),
-                      let reasonC = sqlite3_column_text(selectExports, 9) else {
-                    throw SQLiteIndexError.sqliteError(message: "Invalid exports row during schema v5 migration.")
-                }
-
-                let exportDir = String(cString: exportDirC)
-                let runId = String(cString: runIdC)
-                let campaignId = sqlite3_column_text(selectExports, 5).map { String(cString: $0) }
-                let score = sqlite3_column_type(selectExports, 10) == SQLITE_NULL ? nil : sqlite3_column_double(selectExports, 10)
-                let filtersPassed = sqlite3_column_type(selectExports, 11) == SQLITE_NULL ? nil : sqlite3_column_int(selectExports, 11) != 0
-
-                sqlite3_reset(insertExport)
-                sqlite3_clear_bindings(insertExport)
-                db.bindText(insertExport, index: 1, value: Self.exportRecordId(runKey: runId, exportDir: exportDir))
-                db.bindText(insertExport, index: 2, value: exportDir)
-                db.bindText(insertExport, index: 3, value: String(cString: creatureIdC))
-                db.bindText(insertExport, index: 4, value: String(cString: nameC))
-                db.bindText(insertExport, index: 5, value: String(cString: ownerIdC))
-                db.bindText(insertExport, index: 6, value: runId)
-                db.bindText(insertExport, index: 7, value: campaignId)
-                db.bindText(insertExport, index: 8, value: String(cString: baseConfigC))
-                db.bindText(insertExport, index: 9, value: String(cString: searchConfigC))
-                db.bindText(insertExport, index: 10, value: String(cString: exportedAtC))
-                db.bindText(insertExport, index: 11, value: String(cString: reasonC))
-                db.bindDouble(insertExport, index: 12, value: score)
-                db.bindBool(insertExport, index: 13, value: filtersPassed)
-                try db.step(insertExport)
-            }
-
-            try db.exec("DROP TABLE campaigns")
-            try db.exec("ALTER TABLE campaigns_v5 RENAME TO campaigns")
-            try db.exec("DROP TABLE exports")
-            try db.exec("ALTER TABLE exports_v5 RENAME TO exports")
-            try db.exec("UPDATE compendium_meta SET schema_version = 5")
-        }
-    }
-
-    private func migrate5to6() throws {
-        try db.withImmediateTransaction {
-            let creatureColumns = try db.tableColumns("creatures")
-            if !creatureColumns.contains("velocity_x") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN velocity_x REAL")
-            }
-            if !creatureColumns.contains("velocity_y") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN velocity_y REAL")
-            }
-            if !creatureColumns.contains("heading_rad") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN heading_rad REAL")
-            }
-
-            try db.exec("""
-                UPDATE creatures
-                SET velocity_x = COALESCE(velocity_x, 0.0),
-                    velocity_y = COALESCE(velocity_y, 0.0),
-                    heading_rad = COALESCE(heading_rad, 0.0)
-            """)
-
-            try db.exec("UPDATE compendium_meta SET schema_version = 6")
-        }
-    }
-
-    private func migrate6to7() throws {
-        try db.withImmediateTransaction {
-            let runColumns = try db.tableColumns("runs")
-            if !runColumns.contains("source_mode") {
-                try db.exec("ALTER TABLE runs ADD COLUMN source_mode TEXT")
-            }
-            if !runColumns.contains("source_algorithm") {
-                try db.exec("ALTER TABLE runs ADD COLUMN source_algorithm TEXT")
-            }
-
-            let creatureColumns = try db.tableColumns("creatures")
-            if !creatureColumns.contains("source_mode") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN source_mode TEXT")
-            }
-            if !creatureColumns.contains("source_algorithm") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN source_algorithm TEXT")
-            }
-            if !creatureColumns.contains("research_metadata_json") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN research_metadata_json TEXT")
-            }
-
-            try db.exec("UPDATE compendium_meta SET schema_version = 7")
-        }
-    }
-
-    private func migrate7to8() throws {
-        try db.withImmediateTransaction {
-            let creatureColumns = try db.tableColumns("creatures")
-            if !creatureColumns.contains("trait_labels_json") {
-                try db.exec("ALTER TABLE creatures ADD COLUMN trait_labels_json TEXT")
-            }
-
-            try db.exec("UPDATE compendium_meta SET schema_version = 8")
-        }
-    }
-
-    private func migrate8to9() throws {
-        try db.withImmediateTransaction {
-            try createMorphospaceTables()
-            try db.exec("UPDATE compendium_meta SET schema_version = 9")
-        }
-    }
-
-    private func migrate9to10() throws {
-        try db.withImmediateTransaction {
-            try createEcologyRunTables()
-            try db.exec("UPDATE compendium_meta SET schema_version = 10")
-        }
-    }
-
-    private func migrate10to11() throws {
-        try db.withImmediateTransaction {
-            try rebuildExportsTableForReplayBundles()
-            try db.exec("UPDATE compendium_meta SET schema_version = 11")
-        }
-    }
-
-    private func migrate11to12() throws {
-        try db.withImmediateTransaction {
-            try rebuildExportsTableForReplayBundles()
-            try db.exec("UPDATE compendium_meta SET schema_version = 12")
-        }
-    }
-
-    private func migrate12to13() throws {
-        try db.withImmediateTransaction {
-            try ensureCanonicalCreatureSnapshotColumns()
-            try ensureSpecimenContractColumns()
-            try backfillSpecimenContracts()
-            try db.exec("UPDATE compendium_meta SET schema_version = 13")
-        }
-    }
-
-    private func migrate13to14() throws {
-        try db.withImmediateTransaction {
-            try ensureCanonicalCreatureSnapshotColumns()
-            try ensureSpecimenContractColumns()
-            try backfillSpecimenContracts()
-            try db.exec("UPDATE compendium_meta SET schema_version = 14")
-        }
-    }
-
-    private func migrate14to15() throws {
-        try db.withImmediateTransaction {
-            try ensureCreatureCatalogQCColumns()
-            try db.exec("UPDATE compendium_meta SET schema_version = 15")
-        }
-    }
-
-    private func repairCurrentSchema() throws {
         guard try db.tableExists("compendium_meta") else {
+            try createSchema()
+            try db.exec("INSERT INTO compendium_meta (schema_version) VALUES (\(Self.schemaVersion))")
             return
         }
-        try db.withImmediateTransaction {
-            if try !currentSchemaNeedsRepair() {
-                return
-            }
-            try ensureCanonicalCreatureSnapshotColumns()
-            try ensureSpecimenContractColumns()
-            try ensureCreatureCatalogQCColumns()
-            try normalizeLegacyReplaySourceMode()
-            try backfillSpecimenContracts()
-            try db.exec("UPDATE compendium_meta SET schema_version = \(Self.schemaVersion)")
-        }
-    }
-
-    private func currentSchemaNeedsRepair() throws -> Bool {
-        try legacyCreatureSnapshotNeedsRepair()
-            || specimenContractColumnsNeedRepair()
-            || canonicalCreatureLinkNeedsRepair()
-            || creatureCatalogQCColumnsNeedRepair()
-            || legacyReplaySourceModeNeedsRepair()
-    }
-
-    private func creatureCatalogQCColumnsNeedRepair() throws -> Bool {
-        guard try db.tableExists("creatures") else {
-            return false
-        }
-        let columns = try db.tableColumns("creatures")
-        return !columns.contains("catalog_status") || !columns.contains("quality_flags_json")
-    }
-
-    private func ensureCreatureCatalogQCColumns() throws {
-        guard try db.tableExists("creatures") else {
-            return
-        }
-        let columns = try db.tableColumns("creatures")
-        if !columns.contains("catalog_status") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN catalog_status TEXT NOT NULL DEFAULT 'active'")
-        }
-        if !columns.contains("quality_flags_json") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN quality_flags_json TEXT NOT NULL DEFAULT '[]'")
-        }
-        try db.exec("""
-            CREATE TABLE IF NOT EXISTS creature_qc_events (
-                id TEXT PRIMARY KEY,
-                creature_id TEXT NOT NULL,
-                old_status TEXT,
-                new_status TEXT NOT NULL,
-                policy_id TEXT NOT NULL,
-                reasons_json TEXT NOT NULL,
-                metrics_snapshot_json TEXT,
-                created_at TEXT NOT NULL
+        let version = try db.scalarInt("SELECT schema_version FROM compendium_meta LIMIT 1")
+        guard version == Self.schemaVersion else {
+            throw SQLiteIndexError.sqliteError(
+                message: "Compendium \(path) has schema version \(version), expected \(Self.schemaVersion). Rebuild it from run directories with --rebuild."
             )
-        """)
-        try db.exec("CREATE INDEX IF NOT EXISTS creatures_catalog_status ON creatures(catalog_status)")
-        try db.exec("CREATE INDEX IF NOT EXISTS creature_qc_events_creature ON creature_qc_events(creature_id)")
-    }
-
-    private func legacyCreatureSnapshotNeedsRepair() throws -> Bool {
-        guard try db.tableExists("creatures") else {
-            return false
         }
-
-        let creatureColumns = try db.tableColumns("creatures")
-        guard creatureColumns.contains("phenotype_json") else {
-            return !creatureColumns.contains("initial_condition_json")
-        }
-        guard creatureColumns.contains("initial_condition_json") else {
-            return true
-        }
-        return try db.scalarInt("""
-            SELECT COUNT(*)
-            FROM creatures
-            WHERE initial_condition_json IS NULL AND phenotype_json IS NOT NULL
-        """) > 0
-    }
-
-    private func specimenContractColumnsNeedRepair() throws -> Bool {
-        guard try db.tableExists("creatures"),
-              try db.tableExists("exports") else {
-            return false
-        }
-        if try !db.tableExists("specimens") {
-            return true
-        }
-
-        let creatureColumns = try db.tableColumns("creatures")
-        let exportColumns = try db.tableColumns("exports")
-        let specimenColumns = try db.tableColumns("specimens")
-        let requiredColumns = ["runtime_family", "runtime_capabilities_json", "specimen_manifest_json"]
-        return requiredColumns.contains(where: { !creatureColumns.contains($0) })
-            || requiredColumns.contains(where: { !exportColumns.contains($0) })
-            || requiredColumns.contains(where: { !specimenColumns.contains($0) })
-    }
-
-    private func legacyReplaySourceModeNeedsRepair() throws -> Bool {
-        for table in ["runs", "creatures", "exports", "specimens"] {
-            guard try db.tableExists(table),
-                  try db.tableColumns(table).contains("source_mode") else {
-                continue
-            }
-            if try db.scalarInt("SELECT COUNT(*) FROM \(table) WHERE source_mode = 'replay-specimens'") > 0 {
-                return true
-            }
-        }
-        if try db.tableExists("creatures"),
-           try db.tableColumns("creatures").contains("research_metadata_json"),
-           try db.scalarInt("""
-                SELECT COUNT(*)
-                FROM creatures
-                WHERE research_metadata_json LIKE '%replay-specimens%'
-           """) > 0 {
-            return true
-        }
-        for table in ["creatures", "exports", "specimens"] {
-            guard try db.tableExists(table),
-                  try db.tableColumns(table).contains("specimen_manifest_json") else {
-                continue
-            }
-            if try db.scalarInt("""
-                SELECT COUNT(*)
-                FROM \(table)
-                WHERE specimen_manifest_json LIKE '%replay-specimens%'
-            """) > 0 {
-                return true
-            }
-        }
-        return false
-    }
-
-    private func normalizeLegacyReplaySourceMode() throws {
-        for table in ["runs", "creatures", "exports", "specimens"] {
-            guard try db.tableExists(table),
-                  try db.tableColumns(table).contains("source_mode") else {
-                continue
-            }
-            try db.exec("""
-                UPDATE \(table)
-                SET source_mode = 'replay'
-                WHERE source_mode = 'replay-specimens'
-            """)
-        }
-        if try db.tableExists("creatures"),
-           try db.tableColumns("creatures").contains("research_metadata_json") {
-            try db.exec("""
-                UPDATE creatures
-                SET research_metadata_json = REPLACE(research_metadata_json, 'replay-specimens', 'replay')
-                WHERE research_metadata_json LIKE '%replay-specimens%'
-            """)
-        }
-        for table in ["creatures", "exports", "specimens"] {
-            guard try db.tableExists(table),
-                  try db.tableColumns(table).contains("specimen_manifest_json") else {
-                continue
-            }
-            try db.exec("""
-                UPDATE \(table)
-                SET specimen_manifest_json = REPLACE(specimen_manifest_json, 'replay-specimens', 'replay')
-                WHERE specimen_manifest_json LIKE '%replay-specimens%'
-            """)
-        }
-    }
-
-    private func canonicalCreatureLinkNeedsRepair() throws -> Bool {
-        guard try db.tableExists("creatures") else {
-            return false
-        }
-        return try !db.tableColumns("creatures").contains("canonical_specimen_id")
-    }
-
-    private func ensureCanonicalCreatureSnapshotColumns() throws {
-        guard try db.tableExists("creatures") else {
-            return
-        }
-
-        let creatureColumns = try db.tableColumns("creatures")
-        if !creatureColumns.contains("initial_condition_json") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN initial_condition_json TEXT")
-        }
-        if creatureColumns.contains("phenotype_json") {
-            try db.exec("""
-                UPDATE creatures
-                SET initial_condition_json = COALESCE(initial_condition_json, phenotype_json)
-                WHERE phenotype_json IS NOT NULL
-            """)
-        }
-    }
-
-    private func ensureSpecimenContractColumns() throws {
-        guard try db.tableExists("creatures"),
-              try db.tableExists("exports") else {
-            return
-        }
-
-        try createMorphospaceTables()
-
-        let creatureColumns = try db.tableColumns("creatures")
-        if !creatureColumns.contains("runtime_family") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN runtime_family TEXT")
-        }
-        if !creatureColumns.contains("runtime_capabilities_json") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN runtime_capabilities_json TEXT")
-        }
-        if !creatureColumns.contains("specimen_manifest_json") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN specimen_manifest_json TEXT")
-        }
-        if !creatureColumns.contains("canonical_specimen_id") {
-            try db.exec("ALTER TABLE creatures ADD COLUMN canonical_specimen_id TEXT")
-        }
-
-        let exportColumns = try db.tableColumns("exports")
-        if !exportColumns.contains("runtime_family") {
-            try db.exec("ALTER TABLE exports ADD COLUMN runtime_family TEXT")
-        }
-        if !exportColumns.contains("runtime_capabilities_json") {
-            try db.exec("ALTER TABLE exports ADD COLUMN runtime_capabilities_json TEXT")
-        }
-        if !exportColumns.contains("specimen_manifest_json") {
-            try db.exec("ALTER TABLE exports ADD COLUMN specimen_manifest_json TEXT")
-        }
-
-        let specimenColumns = try db.tableColumns("specimens")
-        if !specimenColumns.contains("runtime_family") {
-            try db.exec("ALTER TABLE specimens ADD COLUMN runtime_family TEXT")
-        }
-        if !specimenColumns.contains("runtime_capabilities_json") {
-            try db.exec("ALTER TABLE specimens ADD COLUMN runtime_capabilities_json TEXT")
-        }
-        if !specimenColumns.contains("specimen_manifest_json") {
-            try db.exec("ALTER TABLE specimens ADD COLUMN specimen_manifest_json TEXT")
-        }
-    }
-
-    private func backfillSpecimenContracts() throws {
-        try backfillCreatureSpecimenContracts()
-        try backfillStrictSpecimenContracts()
-        try backfillExportSpecimenContracts()
-    }
-
-    private func rebuildExportsTableForReplayBundles() throws {
-        let exportColumns = try db.tableColumns("exports")
-        let bundleKindExpr = exportColumns.contains("bundle_kind")
-            ? "bundle_kind"
-            : "'strict_replay_bundle_v1'"
-        let payloadPathExpr = exportColumns.contains("payload_path")
-            ? "payload_path"
-            : "NULL"
-        try db.exec("""
-            CREATE TABLE exports_rebuilt (
-                id TEXT PRIMARY KEY,
-                export_dir TEXT NOT NULL,
-                creature_id TEXT NOT NULL,
-                name TEXT NOT NULL,
-                owner_id TEXT NOT NULL,
-                run_id TEXT NOT NULL,
-                campaign_id TEXT,
-                bundle_kind TEXT NOT NULL,
-                base_config_path TEXT,
-                search_config_path TEXT,
-                payload_path TEXT,
-                exported_at TEXT NOT NULL,
-                reason TEXT NOT NULL,
-                score REAL,
-                filters_passed INTEGER
-            )
-        """)
-        try db.exec("""
-            INSERT INTO exports_rebuilt (
-                id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                bundle_kind, base_config_path, search_config_path, payload_path,
-                exported_at, reason, score, filters_passed
-            )
-            SELECT
-                id, export_dir, creature_id, name, owner_id, run_id, campaign_id,
-                \(bundleKindExpr), base_config_path, search_config_path, \(payloadPathExpr),
-                exported_at, reason, score, filters_passed
-            FROM exports
-        """)
-        try db.exec("DROP TABLE exports")
-        try db.exec("ALTER TABLE exports_rebuilt RENAME TO exports")
     }
 
     private func createSchema() throws {
@@ -2427,323 +1736,6 @@ final class SQLiteIndexer {
         try db.exec("CREATE INDEX IF NOT EXISTS transition_edges_target ON transition_edges(target_attractor_id)")
     }
 
-    private func backfillCreatureSpecimenContracts() throws {
-        guard try db.tableExists("creatures") else {
-            return
-        }
-        let select = try db.prepare("""
-            SELECT
-                id, name, owner_id, run_id, campaign_id, recorded_at, score,
-                config_hash, source_mode, source_algorithm, research_metadata_json,
-                trait_labels_json, genotype_json, initial_condition_json, sweep_json,
-                metrics_json, score_weights_json, morphometrics_json, specimen_manifest_json,
-                taxonomy_family_id, taxonomy_genus_id, taxonomy_species_id,
-                taxonomy_confidence, taxonomy_method, taxonomy_version
-            FROM creatures
-        """)
-        defer { sqlite3_finalize(select) }
-
-        let update = try db.prepare("""
-            UPDATE creatures
-            SET runtime_family = ?, runtime_capabilities_json = ?, specimen_manifest_json = ?
-            WHERE id = ?
-        """)
-        defer { sqlite3_finalize(update) }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .deferredToDate
-
-        while sqlite3_step(select) == SQLITE_ROW {
-            guard let id = columnText(select, index: 0),
-                  let name = columnText(select, index: 1),
-                  let ownerID = columnText(select, index: 2),
-                  let runID = columnText(select, index: 3) else {
-                throw SQLiteIndexError.sqliteError(message: "Invalid creature row while backfilling specimen contracts.")
-            }
-
-            let manifest = try decodeOptionalJSONString(
-                columnText(select, index: 18),
-                as: SpecimenManifest.self,
-                decoder: decoder
-            )
-            let researchMetadata = try decodeOptionalJSONString(
-                columnText(select, index: 10),
-                as: [String: AnyCodable].self,
-                decoder: decoder
-            )
-            guard let genotypeJSON = columnText(select, index: 12),
-                  let initialConditionJSON = columnText(select, index: 13),
-                  let metricsJSON = columnText(select, index: 15) else {
-                if manifest == nil {
-                    continue
-                }
-                throw SQLiteIndexError.sqliteError(message: "Invalid creature row while backfilling specimen contracts.")
-            }
-            let projection = resolveSpecimenProjection(
-                id: UUID(uuidString: id) ?? deterministicResearchUUID(id),
-                name: name,
-                ownerId: ownerID,
-                manifest: manifest,
-                fallbackGenotype: try decodeJSONString(genotypeJSON, as: KernelParams.self, decoder: decoder),
-                fallbackInitialCondition: try decodeJSONString(initialConditionJSON, as: InitConfig.self, decoder: decoder),
-                fallbackMetrics: try decodeJSONString(metricsJSON, as: SimulationMetrics.self, decoder: decoder),
-                sweep: try decodeOptionalJSONString(columnText(select, index: 14), as: [String: Double].self, decoder: decoder),
-                score: sqlite3_column_type(select, 6) == SQLITE_NULL ? nil : Float(sqlite3_column_double(select, 6)),
-                scoreWeights: try decodeOptionalJSONString(columnText(select, index: 16), as: [String: Float].self, decoder: decoder),
-                fallbackConfigHash: columnText(select, index: 7),
-                fallbackSourceMode: columnText(select, index: 8),
-                fallbackSourceAlgorithm: columnText(select, index: 9),
-                fallbackResearchMetadata: researchMetadata,
-                fallbackTraitLabels: try decodeOptionalJSONString(columnText(select, index: 11), as: [String].self, decoder: decoder)
-            )
-            let traitLabels = try decodeOptionalJSONString(
-                columnText(select, index: 11),
-                as: [String].self,
-                decoder: decoder
-            ) ?? projection.traitLabels
-            let morphometrics = try decodeOptionalJSONString(
-                columnText(select, index: 17),
-                as: Morphometrics.self,
-                decoder: decoder
-            ) ?? Morphometrics.from(metrics: projection.creature.metrics, activity: nil)
-            let taxonomy = SpecimenTaxonomyRecord(
-                familyID: columnText(select, index: 19),
-                genusID: columnText(select, index: 20),
-                speciesID: columnText(select, index: 21),
-                confidence: sqlite3_column_type(select, 22) == SQLITE_NULL ? nil : sqlite3_column_double(select, 22),
-                method: columnText(select, index: 23),
-                version: sqlite3_column_type(select, 24) == SQLITE_NULL ? nil : Int(sqlite3_column_int(select, 24))
-            )
-            let recordedAt = columnText(select, index: 5)
-                ?? manifest?.recordedAt.map(formatter.string(from:))
-            let contract = librarySpecimenContract(
-                creature: projection.creature,
-                campaignID: columnText(select, index: 4),
-                runID: runID,
-                recordedAt: parsedRecordedAt(recordedAt),
-                configHash: projection.creature.configHash,
-                sourceMode: projection.sourceMode,
-                sourceAlgorithm: projection.sourceAlgorithm,
-                researchMetadata: projection.researchMetadata,
-                taxonomy: taxonomy,
-                traitLabels: traitLabels,
-                morphometrics: morphometrics
-            )
-            let persistedContract = try persistedLibrarySpecimenContract(contract)
-
-            sqlite3_reset(update)
-            sqlite3_clear_bindings(update)
-            db.bindText(update, index: 1, value: persistedContract.runtimeFamily)
-            db.bindText(update, index: 2, value: persistedContract.runtimeCapabilitiesJSON)
-            db.bindText(update, index: 3, value: persistedContract.specimenManifestJSON)
-            db.bindText(update, index: 4, value: id)
-            try db.step(update)
-        }
-    }
-
-    private func backfillStrictSpecimenContracts() throws {
-        guard try db.tableExists("specimens") else {
-            return
-        }
-        let strictQuery: String
-        if try db.tableExists("creatures") {
-            strictQuery = """
-            SELECT
-                s.id, s.creature_id, s.run_id, s.campaign_id, s.source_kind, s.recorded_at,
-                s.source_mode, s.source_algorithm, s.config_hash, s.initial_condition_family,
-                s.descriptor_version, s.symmetry_policy, s.genotype_descriptor_json,
-                s.terminal_descriptor_json, s.trajectory_descriptor_json,
-                c.genotype_json, c.initial_condition_json, c.metrics_json,
-                c.research_metadata_json, c.morphometrics_json, c.trait_labels_json,
-                c.taxonomy_family_id, c.taxonomy_genus_id, c.taxonomy_species_id,
-                c.taxonomy_confidence, c.taxonomy_method, c.taxonomy_version,
-                s.specimen_manifest_json
-            FROM specimens s
-            LEFT JOIN creatures c ON c.id = s.creature_id
-            """
-        } else {
-            strictQuery = """
-            SELECT
-                s.id, s.creature_id, s.run_id, s.campaign_id, s.source_kind, s.recorded_at,
-                s.source_mode, s.source_algorithm, s.config_hash, s.initial_condition_family,
-                s.descriptor_version, s.symmetry_policy, s.genotype_descriptor_json,
-                s.terminal_descriptor_json, s.trajectory_descriptor_json,
-                NULL AS genotype_json, NULL AS initial_condition_json, NULL AS metrics_json,
-                NULL AS research_metadata_json, NULL AS morphometrics_json, NULL AS trait_labels_json,
-                NULL AS taxonomy_family_id, NULL AS taxonomy_genus_id, NULL AS taxonomy_species_id,
-                NULL AS taxonomy_confidence, NULL AS taxonomy_method, NULL AS taxonomy_version,
-                s.specimen_manifest_json
-            FROM specimens s
-            """
-        }
-        let select = try db.prepare(strictQuery)
-        defer { sqlite3_finalize(select) }
-
-        let update = try db.prepare("""
-            UPDATE specimens
-            SET runtime_family = ?, runtime_capabilities_json = ?, specimen_manifest_json = ?
-            WHERE id = ?
-        """)
-        defer { sqlite3_finalize(update) }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .deferredToDate
-
-        while sqlite3_step(select) == SQLITE_ROW {
-            guard let specimenID = columnText(select, index: 0),
-                  let runID = columnText(select, index: 2),
-                  let sourceKind = columnText(select, index: 4),
-                  let symmetryPolicy = columnText(select, index: 11),
-                  let genotypeDescriptorJSON = columnText(select, index: 12),
-                  let terminalDescriptorJSON = columnText(select, index: 13) else {
-                throw SQLiteIndexError.sqliteError(message: "Invalid strict specimen row while backfilling specimen contracts.")
-            }
-
-            let descriptorBundle = MorphospaceDescriptorBundle(
-                descriptorVersion: Int(sqlite3_column_int(select, 10)),
-                symmetryPolicy: symmetryPolicy,
-                genotype: try decodeJSONString(genotypeDescriptorJSON, as: MorphospaceGenotypeDescriptor.self, decoder: decoder),
-                terminal: try decodeJSONString(terminalDescriptorJSON, as: MorphospaceTerminalDescriptor.self, decoder: decoder),
-                trajectory: try decodeOptionalJSONString(columnText(select, index: 14), as: MorphospaceTrajectoryDescriptor.self, decoder: decoder)
-            )
-            let researchMetadata = try decodeOptionalJSONString(
-                columnText(select, index: 18),
-                as: [String: AnyCodable].self,
-                decoder: decoder
-            )
-            let existingManifest = try decodeOptionalJSONString(
-                columnText(select, index: 27),
-                as: SpecimenManifest.self,
-                decoder: decoder
-            )
-            let manifest = buildSpecimenManifest(
-                specimenID: specimenID,
-                creatureID: columnText(select, index: 1),
-                runID: runID,
-                campaignID: columnText(select, index: 3),
-                sourceKind: sourceKind,
-                sourceMode: columnText(select, index: 6),
-                sourceAlgorithm: columnText(select, index: 7),
-                configHash: columnText(select, index: 8),
-                recordedAt: parsedRecordedAt(columnText(select, index: 5)),
-                initialConditionFamily: columnText(select, index: 9),
-                taxonomy: SpecimenTaxonomyRecord(
-                    familyID: columnText(select, index: 21),
-                    genusID: columnText(select, index: 22),
-                    speciesID: columnText(select, index: 23),
-                    confidence: sqlite3_column_type(select, 24) == SQLITE_NULL ? nil : sqlite3_column_double(select, 24),
-                    method: columnText(select, index: 25),
-                    version: sqlite3_column_type(select, 26) == SQLITE_NULL ? nil : Int(sqlite3_column_int(select, 26))
-                ),
-                traitLabels: try decodeOptionalJSONString(columnText(select, index: 20), as: [String].self, decoder: decoder),
-                snapshots: SpecimenSnapshotRecord(
-                    genotype: try decodeOptionalJSONString(columnText(select, index: 15), as: KernelParams.self, decoder: decoder),
-                    initialCondition: try decodeOptionalJSONString(columnText(select, index: 16), as: InitConfig.self, decoder: decoder),
-                    metrics: try decodeOptionalJSONString(columnText(select, index: 17), as: SimulationMetrics.self, decoder: decoder),
-                    descriptorBundle: descriptorBundle,
-                    morphometrics: try decodeOptionalJSONString(columnText(select, index: 19), as: Morphometrics.self, decoder: decoder)
-                ),
-                researchMetadata: researchMetadata
-            )
-            let strictContract = try persistedStrictSpecimenContract(
-                baseManifest: manifest,
-                overlayManifest: existingManifest
-            )
-
-            sqlite3_reset(update)
-            sqlite3_clear_bindings(update)
-            db.bindText(update, index: 1, value: strictContract.runtimeFamily)
-            db.bindText(update, index: 2, value: strictContract.runtimeCapabilitiesJSON)
-            db.bindText(update, index: 3, value: strictContract.specimenManifestJSON)
-            db.bindText(update, index: 4, value: specimenID)
-            try db.step(update)
-        }
-    }
-
-    private func backfillExportSpecimenContracts() throws {
-        guard try db.tableExists("exports") else {
-            return
-        }
-        let exportQuery: String
-        if try db.tableExists("creatures") {
-            exportQuery = """
-            SELECT
-                e.id, e.creature_id, e.run_id, e.campaign_id, e.bundle_kind,
-                e.export_dir, e.base_config_path, e.search_config_path, e.payload_path,
-                e.exported_at,
-                c.source_mode, c.source_algorithm, c.config_hash, c.research_metadata_json
-            FROM exports e
-            LEFT JOIN creatures c ON c.id = e.creature_id
-            """
-        } else {
-            exportQuery = """
-            SELECT
-                e.id, e.creature_id, e.run_id, e.campaign_id, e.bundle_kind,
-                e.export_dir, e.base_config_path, e.search_config_path, e.payload_path,
-                e.exported_at,
-                NULL AS source_mode, NULL AS source_algorithm, NULL AS config_hash, NULL AS research_metadata_json
-            FROM exports e
-            """
-        }
-        let select = try db.prepare(exportQuery)
-        defer { sqlite3_finalize(select) }
-
-        let update = try db.prepare("""
-            UPDATE exports
-            SET runtime_family = ?, runtime_capabilities_json = ?, specimen_manifest_json = ?
-            WHERE id = ?
-        """)
-        defer { sqlite3_finalize(update) }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .deferredToDate
-
-        while sqlite3_step(select) == SQLITE_ROW {
-            guard let exportID = columnText(select, index: 0),
-                  let creatureID = columnText(select, index: 1),
-                  let runID = columnText(select, index: 2),
-                  let bundleKindRaw = columnText(select, index: 4),
-                  let bundleKind = LeniaArtifactBundleKind(rawValue: bundleKindRaw),
-                  let exportDir = columnText(select, index: 5) else {
-                throw SQLiteIndexError.sqliteError(message: "Invalid export row while backfilling specimen contracts.")
-            }
-
-            let researchMetadata = try decodeOptionalJSONString(
-                columnText(select, index: 13),
-                as: [String: AnyCodable].self,
-                decoder: decoder
-            )
-            let manifest = buildExportSpecimenManifest(
-                creatureID: creatureID,
-                runID: runID,
-                campaignID: columnText(select, index: 3),
-                recordedAt: parsedRecordedAt(columnText(select, index: 9)),
-                sourceMode: columnText(select, index: 10),
-                sourceAlgorithm: columnText(select, index: 11),
-                configHash: columnText(select, index: 12),
-                bundleKind: bundleKind,
-                exportDir: exportDir,
-                baseConfigPath: columnText(select, index: 6),
-                searchConfigPath: columnText(select, index: 7),
-                payloadPath: columnText(select, index: 8),
-                researchMetadata: researchMetadata
-            )
-
-            try persistExportManifest(manifest, creatureID: creatureID) {
-                runtimeFamily,
-                runtimeCapabilitiesJSON,
-                specimenManifestJSON in
-                sqlite3_reset(update)
-                sqlite3_clear_bindings(update)
-                db.bindText(update, index: 1, value: runtimeFamily)
-                db.bindText(update, index: 2, value: runtimeCapabilitiesJSON)
-                db.bindText(update, index: 3, value: specimenManifestJSON)
-                db.bindText(update, index: 4, value: exportID)
-                try db.step(update)
-            }
-        }
-    }
-
     private func persistExportManifest(
         _ manifest: SpecimenManifest,
         creatureID: String,
@@ -2808,13 +1800,6 @@ final class SQLiteIndexer {
             db.bindText(update, index: 4, value: specimenID)
             try db.step(update)
         }
-    }
-
-    private func parsedRecordedAt(_ value: String?) -> Date {
-        if let value, let date = formatter.date(from: value) {
-            return date
-        }
-        return Date(timeIntervalSince1970: 0)
     }
 
     private func decodeJSONString<T: Decodable>(
@@ -2888,7 +1873,6 @@ final class SQLiteIndexer {
     private func withDecodedJSONLLines<Record: Decodable>(
         path: URL,
         configureDecoder: (JSONDecoder) -> Void = { _ in },
-        decodeRecord: ((Data, JSONDecoder) throws -> Record)? = nil,
         _ body: ([Record]) throws -> Void
     ) throws {
         let (lines, newOffset, attrs) = try readJSONLLines(path: path)
@@ -2902,9 +1886,6 @@ final class SQLiteIndexer {
             configureDecoder(decoder)
             let records = try lines.compactMap { line -> Record? in
                 guard let data = line.data(using: .utf8) else { return nil }
-                if let decodeRecord {
-                    return try decodeRecord(data, decoder)
-                }
                 return try decoder.decode(Record.self, from: data)
             }
             try body(records)
@@ -2915,8 +1896,7 @@ final class SQLiteIndexer {
     private func ingestLibraryIndex(path: URL, runKey: String, runDir: URL) throws {
         try withDecodedJSONLLines(
             path: path,
-            configureDecoder: { $0.dateDecodingStrategy = .deferredToDate },
-            decodeRecord: decodeResearchLibraryEntry
+            configureDecoder: { $0.dateDecodingStrategy = .deferredToDate }
         ) { (entries: [ResearchLibraryEntry]) in
             let provenance = try resolvedLibraryProvenance(entries: entries, runKey: runKey, path: path)
 
@@ -3153,7 +2133,7 @@ final class SQLiteIndexer {
     private func ingestExportIndex(path: URL, runKey: String, runDir: URL) throws {
         try withDecodedJSONLLines(path: path, configureDecoder: {
             $0.dateDecodingStrategy = .deferredToDate
-        }) { (records: [ExportRecord]) in
+        }) { (records: [CreatureExportRecord]) in
             let exportPlaceholders = Array(repeating: "?", count: 18).joined(separator: ",")
             let stmt = try db.prepare("""
                 INSERT OR REPLACE INTO exports (
@@ -3178,15 +2158,15 @@ final class SQLiteIndexer {
                     runID: runKey,
                     campaignID: record.campaignId,
                     recordedAt: record.exportedAt,
-                    sourceMode: record.specimenManifest?.sourceMode,
-                    sourceAlgorithm: record.specimenManifest?.sourceAlgorithm,
-                    configHash: record.specimenManifest?.configHash,
+                    sourceMode: record.specimenManifest.sourceMode,
+                    sourceAlgorithm: record.specimenManifest.sourceAlgorithm,
+                    configHash: record.specimenManifest.configHash,
                     bundleKind: record.bundleKind,
                     exportDir: exportDir,
                     baseConfigPath: baseConfigPath,
                     searchConfigPath: searchConfigPath,
                     payloadPath: payloadPath,
-                    researchMetadata: record.specimenManifest?.researchMetadata
+                    researchMetadata: record.specimenManifest.researchMetadata
                 )
                 try persistExportManifest(specimenManifest, creatureID: record.creatureId.uuidString) {
                     runtimeFamily,
@@ -3746,13 +2726,8 @@ final class SQLiteIndexer {
                 initialConditionFamily: initialConditionFamily,
                 taxonomy: contract.manifest.taxonomy,
                 traitLabels: contract.manifest.traitLabels,
-                snapshots: SpecimenSnapshotRecord(
-                    genotype: creature.genotype,
-                    initialCondition: creature.initialCondition,
-                    metrics: creature.metrics,
-                    descriptorBundle: descriptorBundle,
-                    morphometrics: contract.morphometrics
-                ),
+                snapshots: SpecimenSnapshotRecord(morphometrics: contract.morphometrics),
+                descriptorBundle: descriptorBundle,
                 researchMetadata: contract.manifest.researchMetadata ?? researchMetadata
             ),
             overlayManifest: contract.manifest
@@ -4097,38 +3072,6 @@ final class SQLiteIndexer {
         try db.step(stmt)
     }
 
-    private func updateRunId(table: String, newRunId: String, oldRunId: String) throws {
-        let stmt = try db.prepare("UPDATE \(table) SET run_id = ? WHERE run_id = ?")
-        defer { sqlite3_finalize(stmt) }
-        db.bindText(stmt, index: 1, value: newRunId)
-        db.bindText(stmt, index: 2, value: oldRunId)
-        try db.step(stmt)
-    }
-
-    private func inferRunDirMetadata(_ runDir: String) -> (outputRoot: String?, hostId: String?, runDirRelative: String?) {
-        let expanded = (runDir as NSString).expandingTildeInPath
-        let url = URL(fileURLWithPath: expanded).standardizedFileURL
-        let parts = url.pathComponents
-
-        if let hostsIndex = parts.lastIndex(of: "hosts"),
-           hostsIndex + 2 < parts.count,
-           parts[hostsIndex + 2] == "runs" {
-            let hostId = parts[hostsIndex + 1]
-            let rootParts = Array(parts[0..<hostsIndex])
-            let outputRoot = rootParts.isEmpty ? nil : NSString.path(withComponents: rootParts)
-            let runDirRelative = NSString.path(withComponents: Array(parts[hostsIndex...]))
-            return (outputRoot, hostId, runDirRelative)
-        }
-
-        let relParts = (runDir as NSString).pathComponents
-        if relParts.first == "hosts", relParts.count > 2 {
-            let hostId = relParts[1]
-            return (nil, hostId, runDir)
-        }
-
-        return (nil, nil, runDir)
-    }
-
     private func relativePath(_ path: String, base: URL) -> String {
         let expanded = (path as NSString).expandingTildeInPath
         let fileURL = URL(fileURLWithPath: expanded).standardizedFileURL
@@ -4326,102 +3269,3 @@ private struct IngestState {
     let mtime: Double
 }
 
-private struct ExportRecord: Decodable {
-    let creatureId: UUID
-    let name: String
-    let ownerId: String
-    let runId: String
-    let campaignId: String?
-    let exportDir: String
-    let bundleKind: LeniaArtifactBundleKind
-    let baseConfigPath: String?
-    let searchConfigPath: String?
-    let payloadPath: String?
-    let exportedAt: Date
-    let reason: String
-    let score: Float?
-    let filtersPassed: Bool?
-    let runtimeFamily: String?
-    let runtimeCapabilities: [String]?
-    let specimenManifest: SpecimenManifest?
-
-    enum CodingKeys: String, CodingKey {
-        case creatureId = "creature_id"
-        case name
-        case ownerId = "owner_id"
-        case runId = "run_id"
-        case campaignId = "campaign_id"
-        case exportDir = "export_dir"
-        case bundleKind = "bundle_kind"
-        case baseConfigPath = "base_config_path"
-        case searchConfigPath = "search_config_path"
-        case payloadPath = "payload_path"
-        case exportedAt = "exported_at"
-        case reason
-        case score
-        case filtersPassed = "filters_passed"
-        case runtimeFamily = "runtime_family"
-        case runtimeCapabilities = "runtime_capabilities"
-        case specimenManifest = "specimen_manifest"
-    }
-
-    enum AltCodingKeys: String, CodingKey {
-        case creatureId
-        case name
-        case ownerId
-        case runId
-        case campaignId
-        case exportDir
-        case bundleKind
-        case baseConfigPath
-        case searchConfigPath
-        case payloadPath
-        case exportedAt
-        case reason
-        case score
-        case filtersPassed
-        case runtimeFamily
-        case runtimeCapabilities
-        case specimenManifest
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let alt = try decoder.container(keyedBy: AltCodingKeys.self)
-
-        creatureId = try container.decodeIfPresent(UUID.self, forKey: .creatureId)
-            ?? alt.decode(UUID.self, forKey: .creatureId)
-        name = try container.decodeIfPresent(String.self, forKey: .name)
-            ?? alt.decode(String.self, forKey: .name)
-        ownerId = try container.decodeIfPresent(String.self, forKey: .ownerId)
-            ?? alt.decode(String.self, forKey: .ownerId)
-        runId = try container.decodeIfPresent(String.self, forKey: .runId)
-            ?? alt.decode(String.self, forKey: .runId)
-        campaignId = try container.decodeIfPresent(String.self, forKey: .campaignId)
-            ?? alt.decodeIfPresent(String.self, forKey: .campaignId)
-        exportDir = try container.decodeIfPresent(String.self, forKey: .exportDir)
-            ?? alt.decode(String.self, forKey: .exportDir)
-        bundleKind = try container.decodeIfPresent(LeniaArtifactBundleKind.self, forKey: .bundleKind)
-            ?? alt.decode(LeniaArtifactBundleKind.self, forKey: .bundleKind)
-        baseConfigPath = try container.decodeIfPresent(String.self, forKey: .baseConfigPath)
-            ?? alt.decodeIfPresent(String.self, forKey: .baseConfigPath)
-        searchConfigPath = try container.decodeIfPresent(String.self, forKey: .searchConfigPath)
-            ?? alt.decodeIfPresent(String.self, forKey: .searchConfigPath)
-        payloadPath = try container.decodeIfPresent(String.self, forKey: .payloadPath)
-            ?? alt.decodeIfPresent(String.self, forKey: .payloadPath)
-        exportedAt = try container.decodeIfPresent(Date.self, forKey: .exportedAt)
-            ?? alt.decode(Date.self, forKey: .exportedAt)
-        reason = try container.decodeIfPresent(String.self, forKey: .reason)
-            ?? alt.decode(String.self, forKey: .reason)
-        score = try container.decodeIfPresent(Float.self, forKey: .score)
-            ?? alt.decodeIfPresent(Float.self, forKey: .score)
-        filtersPassed = try container.decodeIfPresent(Bool.self, forKey: .filtersPassed)
-            ?? alt.decodeIfPresent(Bool.self, forKey: .filtersPassed)
-        runtimeFamily = try container.decodeIfPresent(String.self, forKey: .runtimeFamily)
-            ?? alt.decodeIfPresent(String.self, forKey: .runtimeFamily)
-        runtimeCapabilities = try container.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-            ?? alt.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-        specimenManifest = try container.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-            ?? alt.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-    }
-}

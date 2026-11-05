@@ -20,10 +20,14 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
     ],
     targets: [
-        // Apple SDKs ship an SQLite3 module; Linux needs this module map over the system header.
+        // Apple SDKs ship SQLite3 and zlib modules; Linux needs these module maps over the system headers.
         .systemLibrary(
             name: "SQLite3",
             path: "Sources/SQLite3"
+        ),
+        .systemLibrary(
+            name: "zlib",
+            path: "Sources/zlib"
         ),
         .target(
             name: "CFlowLeniaCPU",
@@ -37,6 +41,7 @@ let package = Package(
             name: "LeniaCore",
             dependencies: [
                 "CFlowLeniaCPU",
+                .target(name: "zlib", condition: .when(platforms: [.linux])),
                 .product(name: "DistributedCluster", package: "swift-distributed-actors"),
                 .product(name: "MLX", package: "mlx-swift"),
                 .product(name: "MLXRandom", package: "mlx-swift"),

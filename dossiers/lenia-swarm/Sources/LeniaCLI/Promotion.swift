@@ -81,8 +81,7 @@ func promoteRunArtifacts(
             resolvedDBPath: compendiumPath
         ),
         rebuild: false,
-        includeResults: includeResults,
-        repairOnly: false
+        includeResults: includeResults
     )
 
     if stats {

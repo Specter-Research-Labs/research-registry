@@ -9,7 +9,7 @@ Lenia Swarm runs Flow Lenia simulations, indexes the persistent patterns they pr
 ## Start here
 
 - [Primer](./universe/Primer.md): what is simulated and recorded, the physics terms, and the glossary.
-- [Running a local sweep](./contracts/LocalCLI.md): build `LeniaCLI`, run a sweep, read the run directory, and keep it reproducible.
+- [Running a local sweep](./contracts/LocalCLI.md): build `LeniaCLI`, run a sweep, read the run directory, keep it reproducible, and rewrite older artifacts into the current storage format.
 - [Config map](./configs/README.md): the config families every run starts from.
 
 ## Measuring and grouping creatures
@@ -21,7 +21,7 @@ Lenia Swarm runs Flow Lenia simulations, indexes the persistent patterns they pr
 ## Running experiments
 
 - [Paper reproductions](./contracts/ResearchModes.md): the seven paper-grounded run families, their entry points, outputs, code and gaps.
-- [The compendium](./contracts/CompendiumSchema.md): schema, migrations, indexer behavior, Studio reads, and the exact-version rule.
+- [The compendium](./contracts/CompendiumSchema.md): schema, rebuild rule, indexer behavior, Studio reads, and the exact-version rule.
 
 ## Inside the simulator
 

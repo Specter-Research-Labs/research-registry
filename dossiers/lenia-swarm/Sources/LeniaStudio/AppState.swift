@@ -399,13 +399,6 @@ public final class AppState: ObservableObject {
         }
     }
 
-    public func updateArenaStateForId(_ id: UUID, state: ArenaState) {
-        arenaStates[id] = state
-        if activeArenaConfig?.id == id {
-            arenaState = state
-        }
-    }
-
     // MARK: - Campaign Methods
 
     public func updateCampaigns(_ campaigns: [CampaignStatus]) {
@@ -588,5 +581,5 @@ public final class AppState: ObservableObject {
 private func loadReplayRuntimeFamily(from metaURL: URL) -> String? {
     guard let data = try? Data(contentsOf: metaURL) else { return nil }
     let decoder = JSONDecoder()
-    return try? decodeCreatureExportMetadata(data, decoder: decoder, indexBundleKind: nil).runtimeFamily
+    return try? decoder.decode(CreatureExportMetadata.self, from: data).runtimeFamily
 }

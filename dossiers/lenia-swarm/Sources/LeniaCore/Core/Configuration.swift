@@ -42,7 +42,6 @@ private func validateInitStatePatch(
     try require(patch.width > 0, "\(label).width must be > 0.")
     try require(patch.height > 0, "\(label).height must be > 0.")
     try require(patch.channels == channels, "\(label).channels must equal config.channels=\(channels).")
-    try require(patch.encoding == "f32le", "\(label).encoding must be \"f32le\".")
     let expectedBytes = patch.width * patch.height * patch.channels * MemoryLayout<Float>.size
     try require(patch.data.count == expectedBytes, "\(label).data must contain exactly \(expectedBytes) bytes.")
 

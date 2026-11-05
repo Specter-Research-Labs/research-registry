@@ -28,19 +28,6 @@ public struct ResearchLibraryEntry: Codable, Sendable {
         case specimenManifest = "specimen_manifest"
     }
 
-    enum LegacyCodingKeys: String, CodingKey {
-        case campaignId
-        case runId
-        case recordedAt
-        case configHash
-        case sourceMode
-        case sourceAlgorithm
-        case researchMetadata
-        case runtimeFamily
-        case runtimeCapabilities
-        case specimenManifest
-    }
-
     public init(
         creature: SavedCreature,
         campaignId: String?,
@@ -76,72 +63,6 @@ public struct ResearchLibraryEntry: Codable, Sendable {
         self.runtimeCapabilities = (runtimeCapabilities ?? resolvedManifest.runtimeCapabilities).sorted()
         self.specimenManifest = resolvedManifest
     }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let legacy = try decoder.container(keyedBy: LegacyCodingKeys.self)
-        creature = try container.decode(SavedCreature.self, forKey: .creature)
-        campaignId = try container.decodeIfPresent(String.self, forKey: .campaignId)
-            ?? legacy.decodeIfPresent(String.self, forKey: .campaignId)
-        runId = try container.decodeIfPresent(String.self, forKey: .runId)
-            ?? legacy.decode(String.self, forKey: .runId)
-        recordedAt = try container.decodeIfPresent(Date.self, forKey: .recordedAt)
-            ?? legacy.decode(Date.self, forKey: .recordedAt)
-        configHash = try container.decodeIfPresent(String.self, forKey: .configHash)
-            ?? legacy.decodeIfPresent(String.self, forKey: .configHash)
-        sourceMode = try container.decodeIfPresent(String.self, forKey: .sourceMode)
-            ?? legacy.decodeIfPresent(String.self, forKey: .sourceMode)
-        sourceAlgorithm = try container.decodeIfPresent(String.self, forKey: .sourceAlgorithm)
-            ?? legacy.decodeIfPresent(String.self, forKey: .sourceAlgorithm)
-        researchMetadata = try container.decodeIfPresent([String: AnyCodable].self, forKey: .researchMetadata)
-            ?? legacy.decodeIfPresent([String: AnyCodable].self, forKey: .researchMetadata)
-        let decodedManifest = try container.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-            ?? legacy.decodeIfPresent(SpecimenManifest.self, forKey: .specimenManifest)
-        let backfilledManifest = decodedManifest ?? buildLibrarySpecimenManifest(
-            creature: creature,
-            campaignID: campaignId,
-            runID: runId,
-            recordedAt: recordedAt,
-            configHash: configHash,
-            sourceMode: sourceMode,
-            sourceAlgorithm: sourceAlgorithm,
-            researchMetadata: researchMetadata
-        )
-        runtimeFamily = try container.decodeIfPresent(String.self, forKey: .runtimeFamily)
-            ?? legacy.decodeIfPresent(String.self, forKey: .runtimeFamily)
-            ?? backfilledManifest.runtimeFamily
-        runtimeCapabilities = (
-            try container.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-                ?? legacy.decodeIfPresent([String].self, forKey: .runtimeCapabilities)
-                ?? backfilledManifest.runtimeCapabilities
-        ).sorted()
-        specimenManifest = backfilledManifest
-    }
-}
-
-public func decodeResearchLibraryEntry(
-    _ data: Data,
-    decoder: JSONDecoder
-) throws -> ResearchLibraryEntry {
-    do {
-        return try decoder.decode(ResearchLibraryEntry.self, from: data)
-    } catch DecodingError.keyNotFound(let key, let context)
-        where context.codingPath.map(\.stringValue) == ["creature"] && key.stringValue == "initialCondition" {
-        let normalized = try normalizeLegacyResearchLibraryEntryData(data)
-        return try decoder.decode(ResearchLibraryEntry.self, from: normalized)
-    }
-}
-
-private func normalizeLegacyResearchLibraryEntryData(_ data: Data) throws -> Data {
-    guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-          var creature = root["creature"] as? [String: Any] else {
-        return data
-    }
-    if creature["initialCondition"] == nil, let legacy = creature["phenotype"] {
-        creature["initialCondition"] = legacy
-    }
-    root["creature"] = creature
-    return try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
 }
 
 public enum ResearchLibraryWriter {

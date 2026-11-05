@@ -91,11 +91,7 @@ func materializeExportInit(_ record: CreatureExportRecord, outputRoot: URL) thro
     }
     creature["initialCondition"] = try JSONSerialization.jsonObject(with: encoder.encode(materializedBase.`init`))
     meta["creature"] = creature
-    let materializedMeta = try decodeCreatureExportMetadata(
-        JSONSerialization.data(withJSONObject: meta),
-        decoder: decoder,
-        indexBundleKind: record.bundleKind
-    )
+    let materializedMeta = try decoder.decode(CreatureExportMetadata.self, from: JSONSerialization.data(withJSONObject: meta))
 
     let exportDir = outputRoot.appendingPathComponent(sourceDir.lastPathComponent, isDirectory: true)
     try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: false)

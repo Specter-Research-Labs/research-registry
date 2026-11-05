@@ -9,20 +9,12 @@ struct CompendiumIngestPlan {
 func resolveCompendiumIngestPlan(
     outputRoots: [String],
     runDirs: [String],
-    dbPath: String?,
-    repairOnly: Bool
+    dbPath: String?
 ) throws -> CompendiumIngestPlan {
     let hasOutputRoot = !outputRoots.isEmpty
     let hasRunDir = !runDirs.isEmpty
 
-    if repairOnly {
-        guard !(hasOutputRoot && hasRunDir) else {
-            throw ValidationError("Provide at most one of --output-root or --run-dir when using --repair-only.")
-        }
-        guard hasOutputRoot || hasRunDir || dbPath != nil else {
-            throw ValidationError("Provide --db when using --repair-only without --output-root or --run-dir.")
-        }
-    } else if hasOutputRoot == hasRunDir {
+    if hasOutputRoot == hasRunDir {
         throw ValidationError("Provide exactly one of --output-root or --run-dir.")
     }
 
@@ -47,14 +39,11 @@ func resolveCompendiumIngestPlan(
 func executeCompendiumIngest(
     plan: CompendiumIngestPlan,
     rebuild: Bool,
-    includeResults: Bool,
-    repairOnly: Bool
+    includeResults: Bool
 ) throws -> SQLiteIndexer {
     let indexer = try SQLiteIndexer(path: plan.resolvedDBPath, rebuild: rebuild)
-    if !repairOnly {
-        for input in plan.runInputs {
-            try indexer.ingestRun(input: input, includeResults: includeResults)
-        }
+    for input in plan.runInputs {
+        try indexer.ingestRun(input: input, includeResults: includeResults)
     }
     try indexer.ensureCanonicalSpecimenCoverage()
     return indexer

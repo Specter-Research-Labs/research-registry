@@ -4,56 +4,6 @@ func writeFlowLeniaEcologyFrames(_ frames: [FlowLeniaEcology2025FrameMetrics], t
     try writeJSONLines(frames, to: url)
 }
 
-private func writeFlowLeniaEcologyTrajectoryFrames(_ frames: [LeniaTrajectoryFrame], to url: URL) throws {
-    guard !frames.isEmpty else {
-        return
-    }
-    let massURL = url.appendingPathComponent("frames", isDirectory: true)
-    let colorURL = url.appendingPathComponent("frames_color", isDirectory: true)
-    try FileManager.default.createDirectory(at: massURL, withIntermediateDirectories: true)
-    try FileManager.default.createDirectory(at: colorURL, withIntermediateDirectories: true)
-    for frame in frames {
-        let name = String(format: "frame_%06d.png", frame.step)
-        try writeGrayscalePNG(
-            bytes: frame.bytes,
-            width: frame.width,
-            height: frame.height,
-            to: massURL.appendingPathComponent(name)
-        )
-        if let foodBytes = frame.foodBytes {
-            try writeRGBAPNG(
-                rgba: flowLeniaEcologyFoodRGBA(mass: frame.bytes, food: foodBytes),
-                width: frame.width,
-                height: frame.height,
-                to: colorURL.appendingPathComponent(name)
-            )
-        } else {
-            try writeGrayscalePNG(
-                bytes: frame.bytes,
-                width: frame.width,
-                height: frame.height,
-                to: colorURL.appendingPathComponent(name)
-            )
-        }
-    }
-}
-
-private func flowLeniaEcologyFoodRGBA(mass: Data, food: Data) throws -> Data {
-    guard mass.count == food.count else {
-        throw ConfigError.invalidConfig("food frame stores \(food.count) bytes but mass frame stores \(mass.count).")
-    }
-    var rgba = [UInt8](repeating: 0, count: mass.count * 4)
-    for index in 0..<mass.count {
-        let m = Float(mass[index]) / 255
-        let f = Float(food[index]) / 255
-        rgba[index * 4] = UInt8(min(255, m * 255 + f * 32))
-        rgba[index * 4 + 1] = UInt8(min(255, m * 180 + f * 230))
-        rgba[index * 4 + 2] = UInt8(min(255, m * 90 + f * 40))
-        rgba[index * 4 + 3] = 255
-    }
-    return Data(rgba)
-}
-
 public func writeFlowLeniaEcology2025RunArtifacts(
     runDirectory: URL,
     runID: String,
@@ -80,9 +30,9 @@ public func writeFlowLeniaEcology2025RunArtifacts(
     )).write(to: metadataURL)
     let trajectoryFramesURL = trajectoryFrames.isEmpty
         ? nil
-        : runDirectory.appendingPathComponent("trajectory-frames", isDirectory: true)
+        : runDirectory.appendingPathComponent("trajectory-frames.jsonl")
     if let trajectoryFramesURL {
-        try writeFlowLeniaEcologyTrajectoryFrames(trajectoryFrames, to: trajectoryFramesURL)
+        try writeJSONLines(trajectoryFrames, to: trajectoryFramesURL)
     }
     let activitySummaryURL = activitySummary.map { _ in
         runDirectory.appendingPathComponent("activity-summary.json")

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import base64
 import json
-import struct
 from pathlib import Path
 
 from lenia_swarm_analysis.chakazul_presets import (
@@ -16,6 +14,7 @@ from lenia_swarm_analysis.chakazul_presets import (
     write_qd24_additive_native_parity_configs,
     write_qd24_config_lanes,
 )
+from lenia_swarm_analysis.trace_codec import state_patch_values
 
 
 def test_unzip_cells_decodes_chakazul_repeat_and_values() -> None:
@@ -183,8 +182,7 @@ var catalogueArr = [];
     assert state_patch["height"] == 3
     assert config["provenance"]["native_patch_width"] == 3
     assert config["provenance"]["native_patch_height"] == 2
-    raw = base64.b64decode(state_patch["data"])
-    assert list(struct.unpack("<" + "f" * (len(raw) // 4), raw)) == [
+    assert state_patch_values(state_patch).tolist() == [
         0.0,
         1.0,
         2.0,

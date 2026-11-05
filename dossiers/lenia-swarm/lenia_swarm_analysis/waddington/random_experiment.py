@@ -51,17 +51,14 @@ def _resample(value, lo: float, hi: float, rng: random.Random):
     return rng.uniform(lo, hi)
 
 
-def _sync_randomized_manifest(entry: dict, creature_id: str, genotype: dict) -> None:
+def _sync_randomized_manifest(entry: dict, creature_id: str) -> None:
     manifest = entry.get("specimen_manifest")
     if not isinstance(manifest, dict):
-        return
+        raise SystemExit(f"{creature_id}: template library row has no specimen_manifest")
     manifest["creatureID"] = creature_id
     manifest["specimenID"] = creature_id
-    snapshots = manifest.get("snapshots")
-    if not isinstance(snapshots, dict):
-        snapshots = {}
-        manifest["snapshots"] = snapshots
-    snapshots["genotype"] = genotype
+    # The template's morphometrics describe the template genotype, not the resampled one.
+    manifest["snapshots"] = {}
 
 
 def build_config_random_inputs(config: RuleConfig, target: int) -> int:
@@ -100,7 +97,7 @@ def build_config_random_inputs(config: RuleConfig, target: int) -> int:
             creature_id = str(__import__("uuid").UUID(int=rng.getrandbits(128)))
             entry["creature"]["id"] = creature_id
             entry["creature"]["name"] = f"random-{config.label}-{i}"
-            _sync_randomized_manifest(entry, creature_id, genotype)
+            _sync_randomized_manifest(entry, creature_id)
             out.write(json.dumps(entry) + "\n")
     return len(templates)
 

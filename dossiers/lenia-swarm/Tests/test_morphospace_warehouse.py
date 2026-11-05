@@ -53,6 +53,7 @@ from lenia_swarm_analysis.morphospace.resolve_discovery_exports import (
 )
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
 from lenia_swarm_analysis.morphospace.run_universality import run_universality
+from lenia_swarm_analysis.morphospace.schema import SCHEMA_VERSION
 from lenia_swarm_analysis.morphospace.warehouse import (
     connect_database,
     normalize_optional_timestamp,
@@ -1076,20 +1077,7 @@ def test_morphospace_library_ingest_prefers_specimen_manifest_contract(tmp_path:
                     "replay": {
                         "exportDir": "exports/replay-manifest-origin",
                     },
-                    "snapshots": {
-                        "descriptorBundle": {
-                            "terminal": _terminal(
-                                mass=15.0,
-                                occupancy=0.14,
-                                gyration=4.2,
-                                fingerprint=FINGERPRINT_COLUMN,
-                            ),
-                            "trajectory": {
-                                "centerVelocity": 0.02,
-                                "pathTortuosity": 2.5,
-                            },
-                        }
-                    },
+                    "snapshots": {},
                 },
                 "creature": {
                     "id": "creature-manifest",
@@ -1572,80 +1560,17 @@ def test_morphospace_compendium_ingest_prefers_canonical_specimen_manifest(
         connection.close()
 
 
-def test_connect_database_migrates_legacy_specimen_contract_columns(tmp_path: Path) -> None:
-    path = tmp_path / "legacy.duckdb"
+def test_connect_database_rejects_other_schema_version(tmp_path: Path) -> None:
+    path = tmp_path / "stale.duckdb"
     connection = duckdb.connect(str(path))
     try:
         connection.execute("CREATE TABLE schema_meta (schema_version INTEGER NOT NULL)")
-        connection.execute("INSERT INTO schema_meta VALUES (5)")
-        connection.execute(
-            """
-            CREATE TABLE specimens (
-                specimen_id TEXT PRIMARY KEY,
-                source_creature_id TEXT,
-                study_id TEXT NOT NULL,
-                run_id TEXT,
-                campaign_id TEXT,
-                source_kind TEXT NOT NULL,
-                source_mode TEXT,
-                source_algorithm TEXT,
-                config_hash TEXT,
-                initial_condition_family TEXT,
-                regime_family TEXT,
-                geometry_family TEXT,
-                canonical_family TEXT,
-                family_kind TEXT,
-                score DOUBLE,
-                filters_passed BOOLEAN,
-                search_is_stable_candidate BOOLEAN,
-                recorded_at TIMESTAMP,
-                results_path TEXT,
-                export_dir TEXT,
-                activity_path TEXT,
-                fingerprint_path TEXT,
-                provenance_json JSON
-            )
-            """
-        )
-        connection.execute(
-            """
-            INSERT INTO specimens (
-                specimen_id, source_creature_id, study_id, run_id, campaign_id, source_kind,
-                source_mode, source_algorithm, config_hash, initial_condition_family,
-                regime_family, geometry_family, canonical_family, family_kind, score,
-                filters_passed, search_is_stable_candidate, recorded_at, results_path,
-                export_dir, activity_path, fingerprint_path, provenance_json
-            )
-            VALUES (
-                'specimen-legacy', 'creature-legacy', 'study-legacy', 'run-legacy', NULL, 'legacy',
-                'campaign', 'discovery', 'cfg-legacy', 'initfam:legacy',
-                NULL, NULL, NULL, NULL, 0.5,
-                NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL, CAST('{}' AS JSON)
-            )
-            """
-        )
+        connection.execute("INSERT INTO schema_meta VALUES (?)", [SCHEMA_VERSION - 1])
     finally:
         connection.close()
 
-    migrated = connect_database(path)
-    try:
-        columns = {
-            str(row[1]) for row in migrated.execute("PRAGMA table_info('specimens')").fetchall()
-        }
-        assert "runtime_family" in columns
-        assert "runtime_capabilities_json" in columns
-        assert "specimen_manifest_json" in columns
-        row = migrated.execute(
-            """
-            SELECT specimen_id, runtime_family, runtime_capabilities_json, specimen_manifest_json
-            FROM specimens
-            WHERE specimen_id = 'specimen-legacy'
-            """
-        ).fetchone()
-        assert row == ("specimen-legacy", None, None, None)
-    finally:
-        migrated.close()
+    with pytest.raises(SystemExit, match="schema version"):
+        connect_database(path)
 
 
 def test_derive_creature_signals_requires_replay_samples(tmp_path: Path) -> None:

@@ -605,11 +605,7 @@ def _fingerprint_point_cloud(
     return points, weights
 
 
-def _terminal_from_payloads(
-    *,
-    provenance_json: Any,
-    specimen_manifest_json: Any,
-) -> dict[str, Any] | None:
+def _terminal_from_provenance(provenance_json: Any) -> dict[str, Any] | None:
     provenance = _json_dict(provenance_json)
     terminal = provenance.get("terminal")
     if isinstance(terminal, dict):
@@ -617,19 +613,6 @@ def _terminal_from_payloads(
     bundle = provenance.get("descriptorBundle")
     if isinstance(bundle, dict) and isinstance(bundle.get("terminal"), dict):
         return bundle["terminal"]
-
-    manifest = _json_dict(specimen_manifest_json)
-    snapshots = manifest.get("snapshots")
-    if isinstance(snapshots, dict):
-        descriptor_bundle = snapshots.get("descriptorBundle")
-        if isinstance(descriptor_bundle, dict) and isinstance(
-            descriptor_bundle.get("terminal"),
-            dict,
-        ):
-            return descriptor_bundle["terminal"]
-    descriptor_bundle = manifest.get("descriptorBundle")
-    if isinstance(descriptor_bundle, dict) and isinstance(descriptor_bundle.get("terminal"), dict):
-        return descriptor_bundle["terminal"]
     return None
 
 
@@ -715,8 +698,7 @@ def _iter_lenia_rows(
                     specimens.export_dir,
                     specimens.activity_path,
                     specimens.fingerprint_path,
-                    specimens.provenance_json,
-                    specimens.specimen_manifest_json
+                    specimens.provenance_json
                 FROM specimens
                 WHERE specimens.specimen_id IN ({placeholders})
                 """,
@@ -731,12 +713,8 @@ def _iter_lenia_rows(
                     activity_path,
                     fingerprint_path,
                     provenance_json,
-                    specimen_manifest_json,
                 ) = specimen_row
-                terminal = _terminal_from_payloads(
-                    provenance_json=provenance_json,
-                    specimen_manifest_json=specimen_manifest_json,
-                )
+                terminal = _terminal_from_provenance(provenance_json)
                 if terminal is None:
                     continue
                 point_cloud = _fingerprint_point_cloud(terminal, specimen_id=str(specimen_id))
@@ -1103,23 +1081,6 @@ def _existing_axis_stats(
     return stats if set(stats) == set(AXIS_IDS) else None
 
 
-def _selected_study_rows(
-    connection: DuckDBPyConnection,
-    *,
-    dryad_fish_root: Path | None,
-    study_id: str,
-) -> list[_CommonMorphologyRow]:
-    return [
-        *_collect_lenia_rows(connection, study_id=study_id),
-        *_collect_fish_rows(
-            connection,
-            study_id=study_id,
-            dataset_root=dryad_fish_root,
-        ),
-        *_collect_embryomaker_rows(connection, study_id=study_id),
-    ]
-
-
 def _iter_selected_study_rows(
     connection: DuckDBPyConnection,
     *,
@@ -1155,18 +1116,6 @@ def _source_counts_excluding_study(
     ).fetchall()
     for source_id, count in rows:
         counts[str(source_id)] = int(count)
-    return counts
-
-
-def _source_counts_after_replace(
-    connection: DuckDBPyConnection,
-    *,
-    study_id: str,
-    replacement_rows: list[_CommonMorphologyRow],
-) -> dict[str, int]:
-    counts = _source_counts_excluding_study(connection, study_id=study_id)
-    for row in replacement_rows:
-        counts[row.source_id] = counts.get(row.source_id, 0) + 1
     return counts
 
 

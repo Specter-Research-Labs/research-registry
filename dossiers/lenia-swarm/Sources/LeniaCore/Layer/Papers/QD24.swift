@@ -357,12 +357,6 @@ import MLX
      public let defaultAlgorithm: String
  }
  
- public struct LeniaBreeder2024EvaluatedElite: Sendable {
-     public let elite: LeniaBreeder2024EliteSummary
-     public let kernelParams: KernelParams
-     public let metrics: SimulationMetrics
-     public let summary: LeniaBreeder2024CreatureSummary
- }
  
  public struct LeniaBreeder2024ExpressedSeed: Sendable {
      public let elite: LeniaBreeder2024EliteSummary
@@ -3961,31 +3955,6 @@ private func leniaBreeder2024ExtractSeries(
      return try JSONDecoder().decode([LeniaBreeder2024EliteSummary].self, from: data)
  }
  
- public func evaluateLeniaBreeder2024Elites(
-     run: LeniaBreeder2024ResolvedRun,
-     elites: [LeniaBreeder2024EliteSummary],
-     algorithmOverride: String? = nil
- ) throws -> [LeniaBreeder2024EvaluatedElite] {
-     guard !elites.isEmpty else { return [] }
-     let algorithm = leniaBreeder2024ResolvedAlgorithm(run: run, override: algorithmOverride)
-     let assets = try leniaBreeder2024ResolvedAssets(run: run, algorithm: algorithm)
-     let descriptorNames = leniaBreeder2024DescriptorNames(run: run, algorithm: algorithm)
-     let fitnessName = leniaBreeder2024FitnessName(run: run, algorithm: algorithm)
-     let evaluations = try leniaBreeder2024EvaluatePopulation(
-         genotypes: elites.map(\.genotype),
-         assets: assets,
-         descriptorNames: descriptorNames,
-         fitnessName: fitnessName
-     )
-     return zip(elites, evaluations).map { elite, evaluation in
-         LeniaBreeder2024EvaluatedElite(
-             elite: elite,
-             kernelParams: leniaBreeder2024KernelParams(genotype: elite.genotype, assets: assets),
-             metrics: leniaBreeder2024SimulationMetrics(summary: evaluation.creatureSummary),
-             summary: evaluation.creatureSummary
-         )
-     }
- }
  
 public func captureLeniaBreeder2024ReplayFrames(
     run: LeniaBreeder2024ResolvedRun,
@@ -4381,91 +4350,7 @@ public func leniaBreeder2024VisualizationRuntimeConfig(
      )
  }
  
- public func retrofitLeniaBreeder2024LibraryIndex(
-     run: LeniaBreeder2024ResolvedRun,
-     outputDirectory: URL? = nil,
-     runId: String? = nil
- ) throws -> URL {
-     let elites = try loadLeniaBreeder2024EliteSummaries(runDirectory: run.runDirectory)
-     let algorithm = leniaBreeder2024ResolvedAlgorithm(run: run, override: nil)
-     let evaluated = try evaluateLeniaBreeder2024Elites(run: run, elites: elites, algorithmOverride: algorithm)
-     return try writeLeniaBreeder2024ResearchLibraryIndex(
-         run: run,
-         evaluated: evaluated,
-         outputDirectory: outputDirectory,
-         runId: runId,
-         algorithmOverride: algorithm
-     )
- }
  
- public func writeLeniaBreeder2024ResearchLibraryIndex(
-     run: LeniaBreeder2024ResolvedRun,
-     evaluated: [LeniaBreeder2024EvaluatedElite],
-     outputDirectory: URL? = nil,
-     runId: String? = nil,
-     algorithmOverride: String? = nil
- ) throws -> URL {
-     let algorithm = leniaBreeder2024ResolvedAlgorithm(run: run, override: algorithmOverride)
-     let assets = try leniaBreeder2024ResolvedAssets(run: run, algorithm: algorithm)
-     let configHash: String = try {
-         switch algorithm {
-         case "aurora":
-             return try leniaBreeder2024AURORAConfigHash(base: run.base, aurora: run.aurora, pattern: run.pattern)
-         default:
-             return try leniaBreeder2024MAPElitesConfigHash(base: run.base, mapElites: run.mapElites, pattern: run.pattern)
-         }
-     }()
-     let effectiveRunId = runId ?? run.runDirectory.lastPathComponent
-     let distributed = FileManager.default.fileExists(
-         atPath: run.runDirectory.appendingPathComponent("distributed.json").path
-     )
-     let entries = try evaluated.map { evaluatedElite in
-         let cell = evaluatedElite.elite.cell
-         let metadata: [String: AnyCodable] = [
-             "version": try researchMetadataValue(1),
-             "mode": try researchMetadataValue("qd-2024"),
-             "morphospace_payload": try researchMetadataValue("summary_only_metrics_v1"),
-             "morphospace_ready": try researchMetadataValue(false),
-             "algorithm": try researchMetadataValue(algorithm),
-             "generation": try researchMetadataValue(evaluatedElite.elite.generation),
-             "cell": try researchMetadataValue(cell),
-             "descriptor": try researchMetadataValue(evaluatedElite.elite.descriptor),
-             "centroid": try researchMetadataValue(evaluatedElite.elite.centroid),
-             "fitness": try researchMetadataValue(evaluatedElite.elite.fitness),
-             "pattern_id": try researchMetadataValue(run.base.patternID),
-             "distributed": try researchMetadataValue(distributed),
-             "genotype": try researchMetadataValue(evaluatedElite.elite.genotype),
-         ]
-        return archiveResearchLibraryEntry(
-            creature: archivedCreature(
-                stableKey: "\(effectiveRunId)|\(algorithm)|\(cell)",
-                name: "qd-\(algorithm)-cell-\(cell)",
-                ownerId: "qd-2024",
-                genotype: leniaBreeder2024KernelParams(genotype: evaluatedElite.elite.genotype, assets: assets),
-                initialCondition: InitConfig(
-                    seed: cell,
-                    patches: [],
-                    a_uniform: UniformRange(low: 0, high: 0),
-                    p_uniform: nil
-                ),
-                metrics: evaluatedElite.metrics,
-                sweep: ["cell": Double(cell)],
-                score: evaluatedElite.elite.fitness,
-                scoreWeights: ["fitness": 1.0],
-                configHash: configHash
-            ),
-            runId: effectiveRunId,
-            configHash: configHash,
-            sourceMode: "qd-2024",
-            sourceAlgorithm: algorithm,
-            researchMetadata: metadata
-        )
-     }
-     return try ResearchLibraryWriter.write(
-         entries: entries,
-         runDirectory: outputDirectory ?? run.runDirectory
-     )
- }
  
  public func expressLeniaBreeder2024Seed(
      run: LeniaBreeder2024ResolvedRun,
@@ -4498,24 +4383,6 @@ public func leniaBreeder2024VisualizationRuntimeConfig(
      )
  }
  
- public func leniaBreeder2024PatternSpecFromElite(
-     run: LeniaBreeder2024ResolvedRun,
-     elite: LeniaBreeder2024EliteSummary,
-     name: String,
-     algorithmOverride: String? = nil
- ) throws -> LeniaBreeder2024PatternSpec {
-     let algorithm = leniaBreeder2024ResolvedAlgorithm(run: run, override: algorithmOverride)
-     let assets = try leniaBreeder2024ResolvedAssets(run: run, algorithm: algorithm)
-     let embryoSize = Int(sqrt(Double((elite.genotype.count - assets.nParams) / assets.nChannel)))
-     return leniaBreeder2024PatternSpec(
-         basePattern: run.pattern,
-         genotype: elite.genotype,
-         nChannel: assets.nChannel,
-         nKernel: assets.nKernel,
-         embryoSize: embryoSize,
-         name: name
-     )
- }
  
  private func loadLeniaBreeder2024Pattern(
      runDirectory: URL,

@@ -265,6 +265,12 @@ Run `LeniaCLI discover evolve --help` for all flags.
 - `history.jsonl`: Per-generation fitness statistics
 - `config.json`, `es_config.json`: Input configs (copied)
 
+Stored float fields (state and parameter patches, terminal states) use the single
+`f32le-shuffle-zlib` encoding, and each specimen's genotype, initial condition, metrics and
+descriptor bundle are stored once, on the creature. Older artifacts are rewritten with
+`uv run lenia-swarm-analysis compact <root>`; the encoding, record shapes and command are
+specified in [Storage compaction](docs/contracts/LocalCLI.md#storage-compaction).
+
 Flow integrator conventions and the pinned author regression are documented in
 [Flow coordinates and the reference regression](docs/flow-spatial-conventions.md).
 

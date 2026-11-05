@@ -374,9 +374,10 @@ private final class DeferredCreatureStorage: @unchecked Sendable {
             name: row.name,
             ownerId: row.ownerID,
             manifest: decodeOptional(SpecimenManifest.self, from: row.specimenManifestJSON),
-            fallbackGenotype: try! decoder.decode(KernelParams.self, from: Data((row.genotypeJSON ?? "{}").utf8)),
-            fallbackInitialCondition: try! decoder.decode(InitConfig.self, from: Data((row.initialConditionJSON ?? "{}").utf8)),
-            fallbackMetrics: try! decoder.decode(SimulationMetrics.self, from: Data((row.metricsJSON ?? "{}").utf8)),
+            genotype: try! decoder.decode(KernelParams.self, from: Data((row.genotypeJSON ?? "{}").utf8)),
+            initialCondition: try! decoder.decode(InitConfig.self, from: Data((row.initialConditionJSON ?? "{}").utf8)),
+            metrics: try! decoder.decode(SimulationMetrics.self, from: Data((row.metricsJSON ?? "{}").utf8)),
+            descriptorBundle: nil,
             sweep: decodeOptional([String: Double].self, from: row.sweepJSON),
             score: row.score,
             scoreWeights: decodeOptional([String: Float].self, from: row.scoreWeightsJSON),
@@ -499,15 +500,10 @@ public func browseCompendium(
     }
     defer { sqlite3_close(handle) }
 
-    let creatureColumns = try tableColumns(handle: handle, tableName: "creatures")
-    guard creatureColumns.contains("canonical_specimen_id") else {
+    let schemaVersion = try compendiumBrowseSchemaVersion(handle: handle)
+    guard schemaVersion == compendiumSchemaVersion else {
         throw CompendiumBrowseError.invalidDatabase(
-            "Compendium is missing creatures.canonical_specimen_id. Rebuild the canonical compendium before browsing."
-        )
-    }
-    guard try tableExists(handle: handle, tableName: "specimens") else {
-        throw CompendiumBrowseError.invalidDatabase(
-            "Compendium is missing specimens. Rebuild the canonical compendium before browsing."
+            "Compendium has schema version \(schemaVersion), expected \(compendiumSchemaVersion). Rebuild it with `LeniaCLI index --rebuild`."
         )
     }
 
@@ -526,15 +522,13 @@ public func browseCompendium(
         if query.minScore != nil {
             clauses.append("COALESCE(c.score, 0) >= ?")
         }
-        if creatureColumns.contains("catalog_status") {
-            switch query.catalogFilter {
-            case .active:
-                clauses.append("c.catalog_status IN ('active', 'protected')")
-            case .quarantine:
-                clauses.append("c.catalog_status = 'quarantine'")
-            case .all:
-                break
-            }
+        switch query.catalogFilter {
+        case .active:
+            clauses.append("c.catalog_status IN ('active', 'protected')")
+        case .quarantine:
+            clauses.append("c.catalog_status = 'quarantine'")
+        case .all:
+            break
         }
         clauses.append("c.genotype_json IS NOT NULL AND json_valid(c.genotype_json) = 1")
         clauses.append("c.initial_condition_json IS NOT NULL AND json_valid(c.initial_condition_json) = 1")
@@ -584,8 +578,8 @@ public func browseCompendium(
             c.taxonomy_confidence,
             c.taxonomy_method,
             c.taxonomy_version,
-            \(creatureColumns.contains("catalog_status") ? "c.catalog_status" : "'active'") AS catalog_status,
-            \(creatureColumns.contains("quality_flags_json") ? "COALESCE(c.quality_flags_json, '[]')" : "'[]'") AS quality_flags_json
+            c.catalog_status,
+            c.quality_flags_json
         FROM creatures c\(indexHint)
         \(whereSQL)
         ORDER BY c.score DESC, c.recorded_at DESC
@@ -788,38 +782,19 @@ private func formatBrowseDuration(_ duration: TimeInterval) -> String {
     return String(format: "%.2f s", duration)
 }
 
-private func tableExists(handle: OpaquePointer, tableName: String) throws -> Bool {
-    let sql = "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1"
+private func compendiumBrowseSchemaVersion(handle: OpaquePointer) throws -> Int {
     var stmt: OpaquePointer?
-    guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else {
-        throw CompendiumBrowseError.queryFailed(String(cString: sqlite3_errmsg(handle)))
-    }
-    guard let statement = stmt else {
-        throw CompendiumBrowseError.queryFailed("Failed to prepare sqlite_master table lookup.")
+    guard sqlite3_prepare_v2(handle, "SELECT schema_version FROM compendium_meta LIMIT 1", -1, &stmt, nil) == SQLITE_OK,
+          let statement = stmt else {
+        throw CompendiumBrowseError.invalidDatabase(
+            "Compendium has no readable compendium_meta: \(String(cString: sqlite3_errmsg(handle)))"
+        )
     }
     defer { sqlite3_finalize(statement) }
-    sqlite3_bind_text(statement, 1, tableName, -1, SQLITE_TRANSIENT)
-    return sqlite3_step(statement) == SQLITE_ROW
-}
-
-private func tableColumns(handle: OpaquePointer, tableName: String) throws -> Set<String> {
-    var stmt: OpaquePointer?
-    let sql = "PRAGMA table_info(\(tableName))"
-    guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else {
-        throw CompendiumBrowseError.queryFailed(String(cString: sqlite3_errmsg(handle)))
+    guard sqlite3_step(statement) == SQLITE_ROW else {
+        throw CompendiumBrowseError.invalidDatabase("Compendium compendium_meta has no schema_version row.")
     }
-    guard let statement = stmt else {
-        throw CompendiumBrowseError.queryFailed("Failed to prepare table_info for \(tableName).")
-    }
-    defer { sqlite3_finalize(statement) }
-
-    var columns: Set<String> = []
-    while sqlite3_step(statement) == SQLITE_ROW {
-        if let name = sqlite3_column_text(statement, 1) {
-            columns.insert(String(cString: name))
-        }
-    }
-    return columns
+    return Int(sqlite3_column_int64(statement, 0))
 }
 
 private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)

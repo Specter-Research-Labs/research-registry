@@ -63,10 +63,10 @@ lenia-swarm replay and media pipelines from a curated specimen list:
 
 1. Write an `index.jsonl` enumerating chosen `specimen_id`s and their
    `export_dir`s (read straight from `morphospace.duckdb`).
-2. Run `swift run lenia-cli replay --input <index.jsonl> ...` to materialize
-   replay-capable run dirs per specimen.
-3. Run `swift run lenia-cli media --input <replay-dir> ...` to render MP4s
-   labelled per specimen.
+2. Run `swift run LeniaCLI publish replay --input <index.jsonl> --output <replay-dir>`
+   to materialize replay-capable run dirs per specimen.
+3. Run `swift run LeniaCLI publish media --input <replay-dir> --output <media-dir>`
+   to render one MP4 per specimen, listed in `<media-dir>/index.json`.
 4. Build a manifest mapping `{name, mp4, specimen_id}` and feed it to
    `lenia-tribe-score --manifest`.
 

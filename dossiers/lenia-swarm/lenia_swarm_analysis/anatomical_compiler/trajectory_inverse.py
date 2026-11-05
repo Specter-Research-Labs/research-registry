@@ -9,7 +9,6 @@ moments. Comparing them isolates the information supplied by time.
 from __future__ import annotations
 
 import argparse
-import base64
 import copy
 import json
 from pathlib import Path
@@ -17,6 +16,8 @@ from typing import Any
 
 import numpy as np
 from PIL import Image
+
+from lenia_swarm_analysis.trace_codec import state_patch
 
 DEFAULT_INITIAL_PARAMS = {"r": 1.0, "m": 0.12, "s": 0.024, "R": 10.0}
 DEFAULT_PARAM_RANGES = {
@@ -36,14 +37,7 @@ def image_state_patch(path: Path, center: tuple[int, int]) -> dict[str, Any]:
     with Image.open(path) as image:
         field = np.asarray(image.convert("L"), dtype=np.float32) / 255.0
     height, width = field.shape
-    return {
-        "center": list(center),
-        "width": width,
-        "height": height,
-        "channels": 1,
-        "encoding": "f32le",
-        "data": base64.b64encode(field.astype("<f4").tobytes(order="C")).decode("ascii"),
-    }
+    return state_patch(center=list(center), width=width, height=height, channels=1, values=field)
 
 
 def blind_runtime_config(
