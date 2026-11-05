@@ -1,3 +1,4 @@
+import gzip
 import json
 from pathlib import Path
 
@@ -505,6 +506,22 @@ def test_parse_and_compare_cell_sorting_summaries(tmp_path: Path) -> None:
 
     assert comparison.matches
     assert comparison.mismatches == ()
+
+
+def test_gzipped_snapshot_parses_like_plain(tmp_path: Path) -> None:
+    text = _sample_snapshot_text() + "\n"
+    plain_path = tmp_path / "plain" / "_0.dat"
+    gz_path = tmp_path / "gz" / "_0.dat.gz"
+    plain_path.parent.mkdir()
+    gz_path.parent.mkdir()
+    plain_path.write_text(text, encoding="utf-8")
+    with gzip.open(gz_path, "wt", encoding="utf-8") as handle:
+        handle.write(text)
+
+    assert parse_legacy_snapshot(gz_path) == parse_legacy_snapshot(plain_path)
+    assert [frame.getot for frame in load_legacy_snapshot_series(gz_path.parent).frames] == [
+        frame.getot for frame in load_legacy_snapshot_series(plain_path.parent).frames
+    ]
 
 
 def test_parse_and_compare_invagination_summaries(tmp_path: Path) -> None:

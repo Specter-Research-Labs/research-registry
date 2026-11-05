@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gzip
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -117,6 +118,13 @@ class LegacyEpithelialSnapshotSummary:
     mean_vod: float
 
 
+def _read_snapshot_text(path: Path) -> str:
+    if path.name.endswith(".gz"):
+        with gzip.open(path, "rt", encoding="utf-8", errors="replace") as handle:
+            return handle.read()
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
 def _find_line(lines: list[str], header: str) -> int:
     for index, line in enumerate(lines):
         if line.strip() == header:
@@ -221,7 +229,7 @@ def _parse_node_block(
 
 
 def parse_legacy_snapshot(path: Path) -> LegacySnapshot:
-    lines = path.read_text(encoding="utf-8", errors="replace").replace("\x00", "").splitlines()
+    lines = _read_snapshot_text(path).replace("\x00", "").splitlines()
     if len(lines) < 2:
         raise ValueError("snapshot file is too short")
 
@@ -245,7 +253,7 @@ def parse_legacy_snapshot(path: Path) -> LegacySnapshot:
 
 
 def extract_legacy_rng_seed_words(path: Path) -> tuple[int, ...]:
-    lines = path.read_text(encoding="utf-8", errors="replace").replace("\x00", "").splitlines()
+    lines = _read_snapshot_text(path).replace("\x00", "").splitlines()
     start = _find_line(lines, "random seed at this iteration") + 1
     values: list[int] = []
     for line in lines[start:]:
@@ -352,8 +360,8 @@ def write_legacy_invagination_bootstrap(snapshot: LegacySnapshot, path: Path) ->
 
 def load_legacy_snapshot_series(directory: Path) -> LegacySnapshotSeries:
     frames: list[LegacySnapshotSummary] = []
-    for path in sorted(directory.glob("*.dat")):
-        if path.name == "name.dat":
+    for path in sorted([*directory.glob("*.dat"), *directory.glob("*.dat.gz")]):
+        if path.name in ("name.dat", "name.dat.gz"):
             continue
         snapshot = parse_legacy_snapshot(path)
         summary = summarize_legacy_snapshot(snapshot)
@@ -375,7 +383,7 @@ def load_legacy_snapshot_series(directory: Path) -> LegacySnapshotSeries:
         )
 
     if not frames:
-        raise ValueError(f"no legacy .dat snapshots found in {directory}")
+        raise ValueError(f"no legacy .dat or .dat.gz snapshots found in {directory}")
 
     frames.sort(key=lambda frame: frame.getot)
     return LegacySnapshotSeries(frames=tuple(frames))
