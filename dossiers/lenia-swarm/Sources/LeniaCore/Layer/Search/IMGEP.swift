@@ -8,7 +8,6 @@ public struct IMGEPConfig: Codable, Sendable {
     public let seedsPerCandidate: Int
     public let goal: IMGEPGoalConfig
     public let mutation: IMGEPMutationConfig
-    public let experiment: IMGEPExperimentConfig?
 
     public init(
         iterations: Int,
@@ -16,8 +15,7 @@ public struct IMGEPConfig: Codable, Sendable {
         batchSize: Int,
         seedsPerCandidate: Int,
         goal: IMGEPGoalConfig,
-        mutation: IMGEPMutationConfig,
-        experiment: IMGEPExperimentConfig? = nil
+        mutation: IMGEPMutationConfig
     ) {
         self.iterations = iterations
         self.warmupIterations = warmupIterations
@@ -25,7 +23,6 @@ public struct IMGEPConfig: Codable, Sendable {
         self.seedsPerCandidate = seedsPerCandidate
         self.goal = goal
         self.mutation = mutation
-        self.experiment = experiment
     }
 }
 
