@@ -148,16 +148,6 @@ public struct SimulationResultData: Codable, Sendable {
     }
 }
 
-public func topSimulationResults(from results: [SimulationResultData], limit: Int) -> [SimulationResultData] {
-    guard limit > 0 else { return [] }
-    return Array(
-        results
-            .filter { $0.filtersPassed && $0.score != nil }
-            .sorted { ($0.score ?? 0) > ($1.score ?? 0) }
-            .prefix(limit)
-    )
-}
-
 public func materializeSearchResultData(
     _ result: BatchSimulationResult,
     backend: String,
