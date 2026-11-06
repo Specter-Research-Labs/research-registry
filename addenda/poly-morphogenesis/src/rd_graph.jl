@@ -7,15 +7,26 @@ using SciMLBase
 using ..RD: RDParameters
 
 export RDGraphConfig,
+    RD_GRAPH_SOLVER_ALGORITHM,
+    RD_GRAPH_ABSTOL,
+    RD_GRAPH_RELTOL,
+    RD_GRAPH_MAXITERS,
     grid_graph_config,
     grid_node_index,
     make_rd_graph_state,
     direct_rd_graph_step,
+    graph_residual_linf,
     settle_rd_graph!,
     graph_connected_components,
+    graph_without_edges,
     graph_subconfig,
     graph_substate,
     graph_embed_substate!
+
+const RD_GRAPH_SOLVER_ALGORITHM = "Tsit5"
+const RD_GRAPH_ABSTOL = 1.0e-8
+const RD_GRAPH_RELTOL = 1.0e-8
+const RD_GRAPH_MAXITERS = 10_000_000
 
 Base.@kwdef struct RDGraphConfig
     n_cells::Int
@@ -198,6 +209,14 @@ function direct_rd_graph_step(
     return vcat(dA, dI)
 end
 
+function graph_residual_linf(
+    state::AbstractVector{<:Real},
+    params::RDParameters,
+    config::RDGraphConfig,
+)
+    return maximum(abs, direct_rd_graph_step(state, params, config))
+end
+
 function _rd_graph_rhs!(du, u, params, t)
     rd_params, rd_config = params
     du .= direct_rd_graph_step(u, rd_params, rd_config)
@@ -233,10 +252,12 @@ function settle_rd_graph!(
         save_start=false,
         save_end=true,
         dense=false,
-        abstol=1.0e-8,
-        reltol=1.0e-8,
-        maxiters=10_000_000,
+        abstol=RD_GRAPH_ABSTOL,
+        reltol=RD_GRAPH_RELTOL,
+        maxiters=RD_GRAPH_MAXITERS,
     )
+    SciMLBase.successful_retcode(solution) ||
+        error("graph RD solve failed with return code $(solution.retcode)")
     copyto!(state, solution.u[end])
     return solution
 end
@@ -276,6 +297,40 @@ function graph_connected_components(config::RDGraphConfig)
     end
     sort!(components; by=component -> (length(component), component[1]))
     return components
+end
+
+function graph_without_edges(config::RDGraphConfig, removed_edges::Vector{NTuple{2,Int}})
+    config = _validate_rd_graph_config(config)
+    available = Set(config.edges)
+    removed = Set{NTuple{2,Int}}()
+    for edge in removed_edges
+        left, right = edge
+        normalized = left < right ? (left, right) : (right, left)
+        normalized in available || error("requested edge $(normalized) does not exist")
+        normalized in removed && error("requested edge $(normalized) is duplicated")
+        push!(removed, normalized)
+    end
+
+    edges = NTuple{2,Int}[]
+    weights = Float64[]
+    for (edge, weight) in zip(config.edges, config.edge_weights)
+        if edge ∉ removed
+            push!(edges, edge)
+            push!(weights, weight)
+        end
+    end
+    return _validate_rd_graph_config(
+        RDGraphConfig(
+            n_cells=config.n_cells,
+            x=config.x,
+            y=config.y,
+            edges=edges,
+            edge_weights=weights,
+            tspan=config.tspan,
+            seed=config.seed,
+            steady_tol=config.steady_tol,
+        ),
+    )
 end
 
 function graph_subconfig(config::RDGraphConfig, nodes::Vector{Int})
