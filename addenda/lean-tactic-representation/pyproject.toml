@@ -1,7 +1,7 @@
 [project]
 name = "lean-tactic-representation"
 version = "0.1.0"
-description = "Toy interpreter and CLI visualizer for algebraic tactic-calculus fragments"
+description = "Lean-backed structured tactic compiler and kernel-checked executor"
 requires-python = ">=3.12"
 dependencies = []
 

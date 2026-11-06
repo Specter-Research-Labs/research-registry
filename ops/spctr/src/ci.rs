@@ -617,6 +617,9 @@ fn render_setup_action(yaml: &mut String, plan: &GithubWorkflowPlan, job: &Githu
         })
     )
     .unwrap();
+    if job_requires_lean(job) {
+        writeln!(yaml, "          use-lean: 'true'").unwrap();
+    }
     let rust_targets = rust_toolchain_targets(job);
     if !rust_targets.is_empty() {
         writeln!(
@@ -702,6 +705,10 @@ fn job_requires_swift(job: &GithubWorkflowJobPlan) -> bool {
         .any(|requirement| requirement == "swift")
 }
 
+fn job_requires_lean(job: &GithubWorkflowJobPlan) -> bool {
+    job.requires.iter().any(|requirement| requirement == "lean")
+}
+
 fn rust_toolchain_targets(job: &GithubWorkflowJobPlan) -> Vec<&str> {
     let mut targets = Vec::new();
     for requirement in &job.requires {
@@ -719,7 +726,7 @@ fn unsupported_requires(job: &GithubWorkflowJobPlan) -> Vec<&str> {
         .filter(|requirement| {
             !matches!(
                 *requirement,
-                "python" | "uv" | "rust" | "wasm32-unknown-unknown"
+                "python" | "uv" | "rust" | "lean" | "wasm32-unknown-unknown"
             )
         })
         .collect()
