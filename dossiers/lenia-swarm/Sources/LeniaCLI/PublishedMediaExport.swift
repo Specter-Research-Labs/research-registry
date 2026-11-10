@@ -3,6 +3,51 @@ import ArgumentParser
 import Foundation
 import LeniaCore
 
+struct AtlasRenderedMedia {
+    let media: AtlasMedia
+    let telemetry: AtlasTelemetrySummary
+}
+
+struct AtlasPoint: Codable {
+    let x: Float
+    let y: Float
+}
+
+struct AtlasTelemetrySummary: Codable {
+    let centroid: AtlasPoint
+    let trail: [AtlasPoint]
+    let vx: Float
+    let vy: Float
+    let speed: Float
+    let headingRad: Float
+}
+
+struct AtlasAnatomyMedia: Codable {
+    let fieldPath: String
+    let deltaPath: String
+    let neighborPath: String
+    let kernelPath: String
+}
+
+struct AtlasMedia: Codable {
+    let posterPath: String
+    let replayPath: String?
+    let width: Int
+    let height: Int
+    let anatomy: AtlasAnatomyMedia
+}
+
+struct AtlasReplay: Codable {
+    let width: Int
+    let height: Int
+    let frameCount: Int
+    let fps: Int
+    let framesPath: String
+    let centroids: [[Float]]
+    let velocities: [[Float]]
+    let palette: String
+}
+
 func captureReplayFrames(
     runtimeConfig: LeniaRuntimeConfig,
     seed: Int,
