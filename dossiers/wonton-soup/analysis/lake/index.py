@@ -19,24 +19,6 @@ from analysis.logs import (
 )
 
 
-def _maybe_read_json(path: Path) -> Any | None:
-    if not path.exists():
-        return None
-    try:
-        return read_json(path)
-    except Exception:
-        return None
-
-
-def _maybe_read_json_gz(path: Path) -> Any | None:
-    if not path.exists():
-        return None
-    try:
-        return read_json_gz(path)
-    except Exception:
-        return None
-
-
 def _maybe_read_json_with_error(path: Path) -> tuple[Any | None, str | None]:
     if not path.exists():
         return None, None

@@ -9,12 +9,6 @@ set -euo pipefail
 # 2. Runs 20-seed basin sweeps to establish basin width distribution
 # 3. Runs lesion interventions on the same theorems
 # 4. Results can be analyzed to fit basin-width vs recovery correlation
-#
-# Run on quietbox via dispatch:
-#   dispatch run --on quietbox --project specter-labs --sync-workspace --isolated-workspace \
-#     --batch --name basin-width-v1 -- \
-#     bash research-registry/dossiers/wonton-soup/scripts/basin_width_experiment_v1.sh \
-#       --phase all --execute
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
@@ -25,12 +19,6 @@ fi
 
 if ! command -v uv >/dev/null 2>&1 && [ -x "${HOME}/.local/bin/uv" ]; then
   export PATH="${HOME}/.local/bin:${PATH}"
-fi
-
-if [[ -d "/shared/specter-runtime" ]]; then
-  export SPECTER_RUNTIME_ROOT="${SPECTER_RUNTIME_ROOT:-/shared/specter-runtime}"
-  export SPECTER_LOG_ROOT="${SPECTER_LOG_ROOT:-/shared/specter-runtime}"
-  export SPECTER_ARTIFACT_ROOT="${SPECTER_ARTIFACT_ROOT:-/shared/specter-runtime}"
 fi
 
 if [[ -z "${LEAN_PROJECT_PATH:-}" && -d "${ROOT_DIR}/lean_project" ]]; then

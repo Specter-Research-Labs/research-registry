@@ -13,7 +13,6 @@ LOCAL_DB_CANDIDATE = Path(__file__).resolve().parents[1] / "artifacts" / "lake" 
 DEFAULT_DB_CANDIDATES = (
     os.environ.get("LAKE_DB_PATH"),
     str(LOCAL_DB_CANDIDATE),
-    "/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb",
 )
 
 INK = "#1f2937"

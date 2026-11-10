@@ -102,12 +102,6 @@ class Dependency:
     def row(self) -> list[Any]:
         return [self.name, self.kind, self.module, self.instance, self.prop]
 
-    @classmethod
-    def from_row(cls, row: list[Any]) -> Dependency:
-        name, kind, module, instance, prop = row
-        return cls(name=name, kind=kind, module=module, instance=instance, prop=prop)
-
-
 @dataclass(frozen=True)
 class ProofCheck:
     ok: bool

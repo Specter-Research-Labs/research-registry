@@ -106,7 +106,7 @@ Cross-theorem root-goal TED matrix + clustering.
 
 Cross-problem statement TED matrix for external corpora.
 
-- Implementation: `analysis/external_statement_similarity.py`, `analysis/postprocess_metrics.py`
+- Implementation: `analysis/postprocess_metrics.py`
 - Output: `external_statement_similarity.json`
 
 ### GED Matrix Bundle

@@ -21,10 +21,6 @@ class RemoteSSHConfig:
     def target(self, path: Path | str) -> str:
         return f"{self.user}@{self.host}:{path}"
 
-    def ssh_cmd(self) -> list[str]:
-        return ["ssh", "-p", str(self.port)]
-
-
 @dataclass(frozen=True)
 class SyncReport:
     src_root: Path
@@ -182,15 +178,6 @@ def resolve_synthetic_bureau_root() -> Path:
     return sibling
 
 
-def ssh_config_for_root(root: Path | None) -> RemoteSSHConfig | None:
-    cfg = configured_remote_ssh()
-    if cfg is None:
-        return None
-    if root is not None and root.exists():
-        return None
-    return cfg
-
-
 # --- Sync: thin rsync wrapper for orchestrator hot-path usage ---
 
 
@@ -268,19 +255,8 @@ def sync_artifacts_to_remote(
     return sync_to_remote(local_path, configured_remote_artifacts_root(), require_src=require_src)
 
 
-def sync_artifacts_from_remote(
-    local_path: Path, *, require_src: bool = False, **_kw: object
-) -> SyncReport | None:
-    return sync_from_remote(local_path, configured_remote_artifacts_root(), require_src=require_src)
-
-
 def sync_corpora_to_remote(
     local_path: Path, *, require_src: bool = False, **_kw: object
 ) -> SyncReport | None:
     return sync_to_remote(local_path, configured_remote_corpora_root(), require_src=require_src)
 
-
-def sync_corpora_from_remote(
-    local_path: Path, *, require_src: bool = False, **_kw: object
-) -> SyncReport | None:
-    return sync_from_remote(local_path, configured_remote_corpora_root(), require_src=require_src)

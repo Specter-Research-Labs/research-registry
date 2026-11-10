@@ -58,8 +58,8 @@ uv run python dossiers/wonton-soup/paper/build_figures.py \
   --out-dir dossiers/wonton-soup/paper/artifacts
 ```
 
-`build_figures.py` checks `LAKE_DB_PATH` first, then falls back to the shared
-lake default used by the notebook.
+`build_figures.py` checks `LAKE_DB_PATH` first, then `artifacts/lake/lake.duckdb`
+under the dossier root.
 
 ## Site Dashboard
 

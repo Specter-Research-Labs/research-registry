@@ -11,6 +11,8 @@ if __package__ in (None, ""):
         "Run this module as `python -m analysis.export_dashboard` from the dossier root."
     )
 
+from runtime_paths import resolve_logs_root
+
 from .logs import inspect_run_artifacts, relpath_under
 from .run_metadata import (
     build_run_label,
@@ -19,7 +21,12 @@ from .run_metadata import (
     load_run_snapshot,
 )
 from .viz_payloads import build_dashboard_payload_v2
-from .viz_server import resolve_logs_dir
+
+
+def _resolve_logs_dir(logs_dir: str | None) -> Path:
+    if logs_dir is None or logs_dir == "logs":
+        return resolve_logs_root().resolve()
+    return Path(logs_dir).resolve()
 
 
 class RunEntry(TypedDict):
@@ -324,7 +331,7 @@ def main() -> None:
     if args.all and args.label:
         parser.error("--all cannot be combined with --label")
 
-    logs_dir = resolve_logs_dir(args.logs_dir)
+    logs_dir = _resolve_logs_dir(args.logs_dir)
     if not logs_dir.exists():
         raise FileNotFoundError(f"Logs directory not found: {logs_dir}")
 

@@ -7,10 +7,6 @@ from typing import Any, Callable
 
 import networkx as nx
 
-from analysis.external_statement_similarity import (
-    compute_external_statement_similarity,
-    compute_tptp_statement_similarity_from_logs,
-)
 from analysis.logs import (
     ProviderRun,
     extract_solution_steps,
@@ -44,12 +40,6 @@ DEFAULT_ROOT_GOAL_KNN_K = 12
 DEFAULT_ROOT_GOAL_KNN_SAMPLE = 200
 DEFAULT_ROOT_GOAL_SAMPLE_SIZE = 400
 DEFAULT_ROOT_GOAL_MODE = "auto"
-DEFAULT_EXTERNAL_STATEMENT_MAX_FULL = 400
-DEFAULT_EXTERNAL_STATEMENT_MAX_KNN = 2000
-DEFAULT_EXTERNAL_STATEMENT_KNN_K = 12
-DEFAULT_EXTERNAL_STATEMENT_KNN_SAMPLE = 200
-DEFAULT_EXTERNAL_STATEMENT_SAMPLE_SIZE = 400
-DEFAULT_EXTERNAL_STATEMENT_MODE = "auto"
 
 
 def _env_int(name: str, default: int) -> int:
@@ -697,12 +687,6 @@ class PostprocessParams:
             DEFAULT_ROOT_GOAL_MODE,
         )
     )
-    external_statement_max_full: int = DEFAULT_EXTERNAL_STATEMENT_MAX_FULL
-    external_statement_max_knn: int = DEFAULT_EXTERNAL_STATEMENT_MAX_KNN
-    external_statement_knn_k: int = DEFAULT_EXTERNAL_STATEMENT_KNN_K
-    external_statement_knn_sample: int = DEFAULT_EXTERNAL_STATEMENT_KNN_SAMPLE
-    external_statement_sample_size: int = DEFAULT_EXTERNAL_STATEMENT_SAMPLE_SIZE
-    external_statement_mode: str = DEFAULT_EXTERNAL_STATEMENT_MODE
     resume: bool = True
 
 
@@ -731,12 +715,6 @@ def _staleness_params(params: PostprocessParams) -> dict[str, Any]:
         "root_goal_knn_sample": params.root_goal_knn_sample,
         "root_goal_sample_size": params.root_goal_sample_size,
         "root_goal_mode": params.root_goal_mode,
-        "external_statement_max_full": params.external_statement_max_full,
-        "external_statement_max_knn": params.external_statement_max_knn,
-        "external_statement_knn_k": params.external_statement_knn_k,
-        "external_statement_knn_sample": params.external_statement_knn_sample,
-        "external_statement_sample_size": params.external_statement_sample_size,
-        "external_statement_mode": params.external_statement_mode,
     }
 
 
@@ -856,53 +834,7 @@ def postprocess_provider_run(
             raise ValueError("run_config.corpus_meta must be an object for external runs")
 
         stmt_report: dict[str, Any]
-        if corpus in {"tptp", "smtlib"}:
-            selection = run_config.get("problem_selection", {})
-            root_raw = corpus_meta.get("root")
-            if not isinstance(root_raw, str) or not root_raw.strip():
-                raise ValueError("run_config.corpus_meta.root missing for external runs")
-            root = Path(root_raw).expanduser().resolve()
-            selected = selection.get("selected_problems") if isinstance(selection, dict) else None
-            if not isinstance(selected, list) or not all(isinstance(n, str) for n in selected):
-                raise ValueError(
-                    "run_config.problem_selection.selected_problems missing for external runs"
-                )
-
-            if not root.exists():
-                if corpus == "tptp":
-                    stmt_report = compute_tptp_statement_similarity_from_logs(
-                        run_dir,
-                        selected_names=selected,
-                        mode=params.external_statement_mode,
-                        max_theorems_full=params.external_statement_max_full,
-                        max_knn_theorems=params.external_statement_max_knn,
-                        knn_k=params.external_statement_knn_k,
-                        knn_sample_size=params.external_statement_knn_sample,
-                        sample_size=params.external_statement_sample_size,
-                    )
-                else:
-                    stmt_report = _unsupported_external_statement_similarity(
-                        corpus=corpus,
-                        root=root,
-                        selected_count=len(selected),
-                        reason=(
-                            f"statement similarity requires external corpus root {root}, "
-                            "but that path is not available on this machine"
-                        ),
-                    )
-            else:
-                stmt_report = compute_external_statement_similarity(
-                    corpus=corpus,
-                    root=root,
-                    selected_names=selected,
-                    mode=params.external_statement_mode,
-                    max_theorems_full=params.external_statement_max_full,
-                    max_knn_theorems=params.external_statement_max_knn,
-                    knn_k=params.external_statement_knn_k,
-                    knn_sample_size=params.external_statement_knn_sample,
-                    sample_size=params.external_statement_sample_size,
-                )
-        elif corpus in {"coq", "coq-stdlib"}:
+        if corpus in {"coq", "coq-stdlib"}:
             selection = run_config.get("theorem_selection", {})
             selected = selection.get("selected_theorems") if isinstance(selection, dict) else None
             if not isinstance(selected, list) or not all(isinstance(n, str) for n in selected):
@@ -1372,12 +1304,6 @@ def postprocess_run(
             "root_goal_knn_sample": params.root_goal_knn_sample,
             "root_goal_sample_size": params.root_goal_sample_size,
             "root_goal_mode": params.root_goal_mode,
-            "external_statement_max_full": params.external_statement_max_full,
-            "external_statement_max_knn": params.external_statement_max_knn,
-            "external_statement_knn_k": params.external_statement_knn_k,
-            "external_statement_knn_sample": params.external_statement_knn_sample,
-            "external_statement_sample_size": params.external_statement_sample_size,
-            "external_statement_mode": params.external_statement_mode,
             "resume": params.resume,
         },
         "inputs": {

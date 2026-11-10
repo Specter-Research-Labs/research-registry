@@ -31,8 +31,8 @@ def _(mo):
     from scipy import stats
 
     db_path = os.environ.get("LAKE_DB_PATH")
-    if not db_path or not os.path.exists(db_path):
-        db_path = "/shared/specter-runtime/wonton-soup/artifacts/lake/lake.duckdb"
+    if not db_path:
+        raise RuntimeError("Set LAKE_DB_PATH to the lake.duckdb file")
 
     conn = duckdb.connect(db_path, read_only=True)
     # Seed an empty selected_run_keys table; the filter cell repopulates it.

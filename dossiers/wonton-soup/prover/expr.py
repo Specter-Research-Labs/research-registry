@@ -304,49 +304,6 @@ class ExprDAG:
             ],
         }
 
-    def pretty_print(self, indent: int = 0) -> str:
-        lines = []
-        visited = set()
-
-        def visit(node_id: str, depth: int):
-            if node_id in visited:
-                lines.append("  " * depth + f"[ref: {node_id}]")
-                return
-            visited.add(node_id)
-
-            node = self.nodes.get(node_id)
-            if node is None:
-                lines.append("  " * depth + f"[missing: {node_id}]")
-                return
-
-            label = node.kind
-            if node.name:
-                label += f" {node.name}"
-            if node.binder_name:
-                label += f" ({node.binder_name})"
-            if node.lit_val:
-                label += f" = {node.lit_val}"
-            if node.de_bruijn_idx is not None:
-                label += f" #{node.de_bruijn_idx}"
-
-            lines.append("  " * depth + label)
-
-            if node.fn:
-                lines.append("  " * (depth + 1) + "fn:")
-                visit(node.fn, depth + 2)
-            if node.arg:
-                lines.append("  " * (depth + 1) + "arg:")
-                visit(node.arg, depth + 2)
-            if node.binder_type:
-                lines.append("  " * (depth + 1) + "type:")
-                visit(node.binder_type, depth + 2)
-            if node.body:
-                lines.append("  " * (depth + 1) + "body:")
-                visit(node.body, depth + 2)
-
-        visit(self.root_id, indent)
-        return "\n".join(lines)
-
     def to_lean_string(self, max_depth: int = 50) -> str:
         visited: set[str] = set()
 

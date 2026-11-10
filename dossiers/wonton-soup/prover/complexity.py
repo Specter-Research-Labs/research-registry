@@ -87,14 +87,6 @@ def compute_tree_size(dag: ExprDAG) -> int:
     return visit(dag.root_id)
 
 
-def compute_sharing_ratio(dag: ExprDAG) -> float:
-    dag_size = len(dag.nodes)
-    if dag_size == 0:
-        return 1.0
-    tree_size = compute_tree_size(dag)
-    return tree_size / dag_size
-
-
 def count_cuts(dag: ExprDAG) -> int:
     const_names = set()
     for node in dag.nodes.values():
@@ -233,20 +225,3 @@ def metrics_to_dict(metrics: ComplexityMetrics) -> dict:
         "projection_count": metrics.projection_count,
     }
 
-
-def compare_complexity(dag1: ExprDAG, dag2: ExprDAG) -> dict:
-    m1 = compute_complexity(dag1)
-    m2 = compute_complexity(dag2)
-
-    return {
-        "first": metrics_to_dict(m1),
-        "second": metrics_to_dict(m2),
-        "comparison": {
-            "dag_size_ratio": round(m2.dag_size / m1.dag_size, 3) if m1.dag_size > 0 else None,
-            "tree_size_ratio": round(m2.tree_size / m1.tree_size, 3) if m1.tree_size > 0 else None,
-            "sharing_diff": round(m2.sharing_ratio - m1.sharing_ratio, 3),
-            "cut_diff": m2.cut_count - m1.cut_count,
-            "lambda_depth_diff": m2.lambda_depth - m1.lambda_depth,
-            "app_spine_diff": m2.max_app_spine - m1.max_app_spine,
-        },
-    }

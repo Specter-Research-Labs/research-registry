@@ -37,12 +37,6 @@ def _params_dict(params: PostprocessParams) -> dict[str, object]:
         "root_goal_knn_sample": params.root_goal_knn_sample,
         "root_goal_sample_size": params.root_goal_sample_size,
         "root_goal_mode": params.root_goal_mode,
-        "external_statement_max_full": params.external_statement_max_full,
-        "external_statement_max_knn": params.external_statement_max_knn,
-        "external_statement_knn_k": params.external_statement_knn_k,
-        "external_statement_knn_sample": params.external_statement_knn_sample,
-        "external_statement_sample_size": params.external_statement_sample_size,
-        "external_statement_mode": params.external_statement_mode,
     }
 
 
