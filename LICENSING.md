@@ -36,7 +36,9 @@ noncommercial terms. It is not offered as OSI open source.
 
 The Berkeley Mono and IBM Plex typefaces in `site/fonts/` are the
 property of their respective owners, under their own licenses. They
-are not covered by the repository licenses.
+are not covered by the repository licenses. IBM Plex Serif is under
+the SIL Open Font License 1.1, reproduced in
+[`site/fonts/OFL-IBMPlexSerif.txt`](site/fonts/OFL-IBMPlexSerif.txt).
 
 ## Commercial Use
 

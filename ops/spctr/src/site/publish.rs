@@ -93,7 +93,6 @@ pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
     "dossiers/jolt-material-memory",
     "dossiers/lenia-swarm/compendium",
     "review",
-    "status",
     "templates",
     "updates",
 ];
@@ -1149,7 +1148,6 @@ mod tests {
             "/dossiers/jolt-material-memory/",
             "/dossiers/lenia-swarm/compendium/",
             "/review/",
-            "/status/",
             "/templates/",
             "/updates/",
             "*-template.html",
