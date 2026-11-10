@@ -255,6 +255,10 @@ final class Track1TaxonomyCatalogStore: ObservableObject {
         loadTask?.cancel()
     }
 
+    func reportRootResolutionFailure(_ failure: Error) {
+        error = failure.localizedDescription
+    }
+
     func load(rootPath: String) {
         loadTask?.cancel()
         requestID += 1
@@ -318,17 +322,8 @@ private func catalogIncludingBundledOrganisms(
     )
 }
 
-func defaultTrack1ConfigRoot(fileManager: FileManager = .default) -> String? {
-    let home = fileManager.homeDirectoryForCurrentUser.path
-    let candidates = [
-        "\(home)/dev/specter-labs/research-registry/dossiers/lenia-swarm/artifacts/configs",
-        "\(home)/dev/specter-labs/research-registry-lenia-fiber-tda/dossiers/lenia-swarm/artifacts/configs",
-        "\(home)/Library/Application Support/lenia-swarm/artifacts/configs",
-    ]
-    if let existing = candidates.first(where: { fileManager.fileExists(atPath: $0) }) {
-        return existing
-    }
-    return bundledOrganismRoot(fileManager: fileManager)
+func defaultTrack1ConfigRoot() throws -> String {
+    try requireArtifactRootPath("artifacts/configs", dossier: "lenia-swarm")
 }
 
 func bundledFeaturedOrganisms() throws -> [Track1TaxonomyConfig] {
@@ -342,14 +337,6 @@ func bundledFeaturedOrganisms() throws -> [Track1TaxonomyConfig] {
         .filter { $0.pathExtension == "json" }
         .compactMap { try track1TaxonomyConfig(url: $0, isBundled: true) }
         .sorted { $0.catalogHierarchy.localizedStandardCompare($1.catalogHierarchy) == .orderedAscending }
-}
-
-private func bundledOrganismRoot(fileManager: FileManager) -> String? {
-    guard let root = Bundle.module.resourceURL,
-          fileManager.fileExists(atPath: root.path) else {
-        return nil
-    }
-    return root.path
 }
 
 func loadTrack1TaxonomyCatalog(rootPath: String) throws -> Track1TaxonomyCatalog {

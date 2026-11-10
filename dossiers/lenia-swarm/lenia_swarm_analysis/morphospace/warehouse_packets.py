@@ -8,9 +8,6 @@ from typing import Any
 from duckdb import DuckDBPyConnection
 
 from lenia_swarm_analysis.transform.atlas import build_transformation_atlas_packet
-from lenia_swarm_analysis.transform.family_comparison import (
-    build_transformation_family_comparison_packet,
-)
 from lenia_swarm_analysis.transform.focal import (
     _baseline_summary,
     _condition_summary,
@@ -642,79 +639,6 @@ def export_topology_packet(
         ],
         "spaces": spaces,
     }
-
-
-def export_family_comparison_packet(
-    connection: DuckDBPyConnection,
-    *,
-    atlas_study_id: str,
-    focal_study_id: str | None,
-    atlas_topology_study_id: str | None,
-    focal_topology_study_id: str | None,
-    canonical_families: list[str] | None,
-) -> dict[str, Any]:
-    atlas_packet = export_atlas_packet(
-        connection,
-        study_id=atlas_study_id,
-        top_exemplars_per_axis=5,
-    )
-    focal_packet = (
-        export_focal_packet(connection, study_id=focal_study_id)
-        if focal_study_id is not None
-        else None
-    )
-    atlas_topology_packet = (
-        export_topology_packet(connection, study_id=atlas_topology_study_id)
-        if atlas_topology_study_id is not None
-        else None
-    )
-    focal_topology_packet = (
-        export_topology_packet(connection, study_id=focal_topology_study_id)
-        if focal_topology_study_id is not None
-        else None
-    )
-    with tempfile.TemporaryDirectory(prefix="morphospace-family-") as tmpdir:
-        tmp = Path(tmpdir)
-        atlas_path = tmp / "atlas.json"
-        atlas_path.write_text(json.dumps(atlas_packet, indent=2, sort_keys=True), encoding="utf-8")
-        focal_path = None
-        if focal_packet is not None:
-            focal_path = tmp / "focal.json"
-            focal_path.write_text(
-                json.dumps(focal_packet, indent=2, sort_keys=True), encoding="utf-8"
-            )
-        atlas_topology_path = None
-        if atlas_topology_packet is not None:
-            atlas_topology_path = tmp / "atlas-topology.json"
-            atlas_topology_path.write_text(
-                json.dumps(atlas_topology_packet, indent=2, sort_keys=True),
-                encoding="utf-8",
-            )
-        focal_topology_path = None
-        if focal_topology_packet is not None:
-            focal_topology_path = tmp / "focal-topology.json"
-            focal_topology_path.write_text(
-                json.dumps(focal_topology_packet, indent=2, sort_keys=True),
-                encoding="utf-8",
-            )
-        packet = build_transformation_family_comparison_packet(
-            atlas_packet_path=atlas_path,
-            focal_packet_path=focal_path,
-            atlas_topology_packet_path=atlas_topology_path,
-            focal_topology_packet_path=focal_topology_path,
-            canonical_families=canonical_families,
-        )
-    packet["sourceArtifacts"] = {
-        "atlasStudy": f"duckdb://study/{atlas_study_id}",
-        "focalStudy": None if focal_study_id is None else f"duckdb://study/{focal_study_id}",
-        "atlasTopologyStudy": None
-        if atlas_topology_study_id is None
-        else f"duckdb://study/{atlas_topology_study_id}",
-        "focalTopologyStudy": None
-        if focal_topology_study_id is None
-        else f"duckdb://study/{focal_topology_study_id}",
-    }
-    return packet
 
 
 def compute_and_store_topology(

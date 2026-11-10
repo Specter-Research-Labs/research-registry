@@ -216,7 +216,6 @@ public struct LeniaSwarm: AsyncParsableCommand {
             PublishCommands.self,
             TTCommands.self,
             BenchmarkCommand.self,
-            ExportReferenceCommand.self,
         ]
     )
 
@@ -250,30 +249,22 @@ struct DiscoverCommands: AsyncParsableCommand {
 #if canImport(Metal)
 private let analyzeSubcommands: [any ParsableCommand.Type] = [
     AnalyzeWarehouseCommand.self,
-    AnalyzeTopologyCommand.self,
-    AnalyzeBiologicalCommand.self,
-    AnalyzeDiscoveryCommand.self,
     EcologyCommand.self,
     TaxonomyCommand.self,
 ]
 private let publishSubcommands: [any ParsableCommand.Type] = [
     ReplayCommand.self,
     MediaCommand.self,
-    LibraryFromResultsCommand.self,
     CompendiumPublishCommand.self,
     AtlasPublishCommand.self,
 ]
 #else
 private let analyzeSubcommands: [any ParsableCommand.Type] = [
     AnalyzeWarehouseCommand.self,
-    AnalyzeTopologyCommand.self,
-    AnalyzeBiologicalCommand.self,
-    AnalyzeDiscoveryCommand.self,
     TaxonomyCommand.self,
 ]
 private let publishSubcommands: [any ParsableCommand.Type] = [
     ReplayCommand.self,
-    LibraryFromResultsCommand.self,
 ]
 #endif
 

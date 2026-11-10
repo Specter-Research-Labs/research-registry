@@ -47,7 +47,7 @@ analysis package and `swift package resolve` for the Swift package graph.
 Use `xcodebuild` for app and CLI builds that need bundled Metal resources:
 
 ```bash
-# Build CLI (discover/orchestrate/index/analyze/intervene/publish plus benchmark/export-reference)
+# Build CLI (discover/orchestrate/index/analyze/intervene/publish plus benchmark)
 xcodebuild build -scheme LeniaCLI -destination 'platform=OS X' -configuration Release
 
 # Build Studio (macOS app)
@@ -129,14 +129,14 @@ Useful individual targets:
 - Add `--study symmetry` to compare quarter-turn and axis-swap continuations at initialization and the checkpoint. Add `--study followup --horizon 512` for three sampling ages, matched passive/probe observations, and seven channel-edit histories followed by paired challenges after a 256-step wait. The delayed opposite write is a new intervention, not an exact inverse; immediate checkpoint restoration is the handling control. This harness preserves the configured engine, including any measured anisotropy, so engine corrections require a separately recorded comparison.
 - `LeniaCLI orchestrate controller|worker|campaign`: distributed sweep, worker, and campaign dispatch.
 - `LeniaCLI index ingest|sanity|backfill`: compendium ingest and repair.
-- `LeniaCLI analyze warehouse|topology|biological|discovery|ecology|taxonomy`: warehouse refresh and derived analysis.
+- `LeniaCLI analyze warehouse|ecology|taxonomy`: warehouse refresh and derived analysis.
 - `LeniaCLI intervene holonomy`: transport experiments.
 - `LeniaCLI orchestrate campaign --campaign configs/campaigns/intervention-battery.json --output RUN`: the intervention battery as a declarative campaign phase.
 - `LeniaCLI publish replay|compendium|atlas`: replay, media, compendium, and atlas export.
 - `LeniaCLI tt replay`: export-bundle replays on Tenstorrent N300 cards with the float32 SFPU engine.
 - `LeniaCLI tt materialize-init --input INDEX.jsonl --output DIR`: rewrites seeded random-patch export bundles as explicit step-0 state patches, which the SFPU engine requires, and refuses any bundle whose rebuilt step-0 state is not bitwise identical.
 - `LeniaCLI discover map-elites-children --spec SPEC.json --output DIR`: emits MAP-Elites variation children of verified archive parents as replay bundles, with no simulation. Each spec cell names its source lineages, self or cross-lineage pairing, the mutated genome part (`params`, `patch` or `both`), and the isotropic and line sigmas. Children are seeded from the cell id and index, so a cell emitted alone or in chunks reproduces the full spec; `--verify-only` checks that every parent's export rebuilds from its archive genome.
-- `LeniaCLI benchmark` and `LeniaCLI export-reference`: standalone utility commands.
+- `LeniaCLI benchmark`: standalone utility command.
 - `lenia-swarm-analysis`: canonical Python analysis CLI for TDA, fibers,
   transport, packet builders, named-family preset extraction, and warehouse
   bridge operations. Existing `lenia-swarm-*` Python commands remain

@@ -23,7 +23,7 @@ Consumers:
 
 ## Schema version
 
-The current schema version is `15`, set by `compendiumSchemaVersion` in `Sources/LeniaCLI/Compendium/Schema.swift`.
+The current schema version is `15`, set by `compendiumSchemaVersion` in `Sources/LeniaArchive/CompendiumSchemaVersion.swift`.
 
 Commands that depend on schema shape require an exact match: `analyze ecology`, `analyze taxonomy`, `index sanity`, and the canonical browse and warehouse surfaces.
 

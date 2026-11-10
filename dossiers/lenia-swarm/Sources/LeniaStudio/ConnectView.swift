@@ -514,9 +514,6 @@ struct ConnectView: View {
     }
 
     private func bundlePresetPath(_ resourceName: String) -> String? {
-        (
-            Bundle.module.url(forResource: resourceName, withExtension: "json", subdirectory: "Presets")
-                ?? Bundle.module.url(forResource: resourceName, withExtension: "json")
-        )?.path
+        Bundle.module.url(forResource: resourceName, withExtension: "json")?.path
     }
 }
