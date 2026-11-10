@@ -156,12 +156,6 @@ requires = ["swift"]
 network = "bootstrap"
 cache_paths = [".build", ".swiftpm", ".venv", ".ruff_cache", ".pytest_cache", "tmp/xcode-build/DerivedData"]
 
-[spctr.ci]
-runner = "macos-latest"
-pull_request = ["check"]
-push_main = ["check", "release-build"]
-nightly = []
-
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"
 

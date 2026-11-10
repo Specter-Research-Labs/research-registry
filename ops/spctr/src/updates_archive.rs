@@ -382,12 +382,6 @@ fn load_update_entries(repo_root: &Utf8Path) -> Result<Vec<UpdateEntry>> {
     Ok(entries)
 }
 
-pub(crate) fn latest_update(repo_root: &Utf8Path) -> Result<(String, String)> {
-    let entries = load_update_entries(repo_root)?;
-    let latest = &entries[0];
-    Ok((latest.label.clone(), latest.date.clone()))
-}
-
 fn section_count_labels(entry: &UpdateEntry) -> String {
     SECTION_ORDER
         .iter()

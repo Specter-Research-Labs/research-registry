@@ -101,13 +101,11 @@ pub fn sync(repo_root: &Utf8Path) -> Result<RegistrySyncReport> {
 fn build_plan(repo_root: &Utf8Path) -> Result<PlannedSync> {
     let mut report = RegistrySyncReport::default();
     let mut planned_registry = registry::load_registry(repo_root)?;
-    let graph = graph::build_with_options(
+    let graph = graph::build(
         repo_root,
-        None,
         graph::GraphBuildOptions {
             include_docs: true,
             include_evidence: false,
-            include_updates: false,
         },
     )?;
 

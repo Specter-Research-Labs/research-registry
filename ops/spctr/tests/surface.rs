@@ -195,7 +195,7 @@ fn only_snapshot_dir(history_root: &Path) -> PathBuf {
 }
 
 #[test]
-fn checkpoint_promote_pull_and_status_flow() {
+fn checkpoint_sync_and_status_flow() {
     let temp = TempDir::new().unwrap();
     let project_root = create_project(temp.path());
     let config_path = create_config(temp.path());
@@ -212,21 +212,13 @@ fn checkpoint_promote_pull_and_status_flow() {
     assert!(missing.status.success(), "{}", output_text(&missing));
     assert!(output_text(&missing).contains("state=missing_snapshot"));
 
-    let promote = spctr(&["surface", "promote", "demo"], &project_root, &config_path);
-    assert!(promote.status.success(), "{}", output_text(&promote));
-    assert!(output_text(&promote).contains("promoted="));
+    let sync = spctr(&["surface", "sync", "demo"], &project_root, &config_path);
+    assert!(sync.status.success(), "{}", output_text(&sync));
+    assert!(output_text(&sync).contains("promoted="));
 
     let clean = spctr(&["surface", "status", "demo"], &project_root, &config_path);
     assert!(clean.status.success(), "{}", output_text(&clean));
     assert!(output_text(&clean).contains("state=clean"));
-
-    fs::remove_file(project_root.join("outputs/demo.sqlite")).unwrap();
-    let pull = spctr(&["surface", "pull", "demo"], &project_root, &config_path);
-    assert!(pull.status.success(), "{}", output_text(&pull));
-    assert_eq!(
-        fs::read_to_string(project_root.join("outputs/demo.sqlite")).unwrap(),
-        "db-v1\n"
-    );
 
     write(&project_root.join("logs/run-a.log"), "alpha-updated\n");
     let second = spctr(
@@ -240,21 +232,6 @@ fn checkpoint_promote_pull_and_status_flow() {
     let dirty = spctr(&["surface", "status", "demo"], &project_root, &config_path);
     assert!(dirty.status.success(), "{}", output_text(&dirty));
     assert!(output_text(&dirty).contains("state=dirty"));
-}
-
-#[test]
-fn list_reports_manifest_surfaces() {
-    let temp = TempDir::new().unwrap();
-    let project_root = create_project(temp.path());
-    let config_path = create_config(temp.path());
-
-    let output = spctr(&["surface", "list"], &project_root, &config_path);
-    assert!(output.status.success(), "{}", output_text(&output));
-    let text = output_text(&output);
-    assert!(text.contains("demo\tproject=alpha\tkind=raw_plus_db"));
-    assert!(text.contains("raw_roots=2"));
-    assert!(text.contains("db=outputs/demo.sqlite"));
-    assert!(text.contains(" default"));
 }
 
 #[test]

@@ -52,12 +52,6 @@ requires = ["python", "uv"]
 network = "off"
 cache_paths = [".venv", ".ruff_cache", ".pytest_cache"]
 
-[spctr.ci]
-runner = "ubuntu-latest"
-pull_request = ["check"]
-push_main = []
-nightly = []
-
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"
 

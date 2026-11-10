@@ -1,5 +1,5 @@
 use camino::Utf8Path;
-use spctr::graph::{build, build_with_options, GraphBuildOptions};
+use spctr::graph::{build, GraphBuildOptions};
 use std::collections::BTreeMap;
 use std::fs;
 use tempfile::TempDir;
@@ -242,26 +242,6 @@ local_source = "artifacts/site-data"
         "{ this ignored simulation output is deliberately invalid JSON\n",
     );
     write(
-        &root.join("site/updates/entries/spctr-update-001.json"),
-        r#"{
-  "id": "spctr-update-001",
-  "kind": "main",
-  "label": "SPCTR-UPDATE-001",
-  "date": "2026-04-06",
-  "published_at": "2026-04-06T12:00:00Z",
-  "topic": "weekly / spctr-update-001",
-  "window": { "start": "2026-04-01", "end": "2026-04-06" },
-  "series_number": 1,
-  "sections": {
-    "dossiers": ["alpha: graph build landed."],
-    "addenda": [],
-    "ops": [],
-    "lab": []
-  }
-}
-"#,
-    );
-    write(
         &root.join("site/blog/hello-world/index.md"),
         r#"---
 title: Hello World
@@ -277,10 +257,8 @@ Graph-native article.
 "#,
     );
 
-    let graph = build(root, None).unwrap();
+    let graph = build(root, GraphBuildOptions::site_projection()).unwrap();
 
-    assert_eq!(graph.version, 1);
-    assert!(graph.scope_project.is_none());
     assert!(graph
         .nodes
         .iter()
@@ -333,10 +311,6 @@ Graph-native article.
         .nodes
         .iter()
         .any(|node| node.id == "site_output:site/cabinet/alpha/intro/index.html"));
-    assert!(graph
-        .nodes
-        .iter()
-        .any(|node| node.id == "site_output:site/status/index.html"));
     assert!(!graph
         .nodes
         .iter()
@@ -353,10 +327,6 @@ Graph-native article.
         node.id
             == "evidence_card:release:dossier:alpha:dossiers/alpha/releases/source-python.evidence.json"
     }));
-    assert!(graph
-        .nodes
-        .iter()
-        .any(|node| node.id == "update:spctr-update-001" && node.kind == "update"));
     assert!(graph
         .nodes
         .iter()
@@ -439,11 +409,6 @@ Graph-native article.
             && edge.dst == "durable_surface:dossier:alpha:lake"
     }));
     assert!(graph.edges.iter().any(|edge| {
-        edge.src == "site_output:site/status/index.html"
-            && edge.kind == "output_depends_on"
-            && edge.dst == "source_file:ops/spctr/src/site/status.rs"
-    }));
-    assert!(graph.edges.iter().any(|edge| {
         edge.src
             == "evidence_card:release:dossier:alpha:dossiers/alpha/artifacts/evidence/alpha-python.evidence.json"
             && edge.kind == "evidence_for_surface"
@@ -504,7 +469,7 @@ publish = true
 "#,
     );
 
-    let err = build(root, None).unwrap_err();
+    let err = build(root, GraphBuildOptions::site_projection()).unwrap_err();
     let msg = format!("{err:#}");
     assert!(
         msg.contains("spctr-registry.json"),
@@ -566,7 +531,7 @@ cover_alt: A placeholder cover.
 "#,
     );
 
-    let err = build(root, None).unwrap_err();
+    let err = build(root, GraphBuildOptions::site_projection()).unwrap_err();
     let msg = format!("{err:#}");
     assert!(
         msg.contains("missing series assignment"),
@@ -608,7 +573,7 @@ fn build_skips_draft_article_without_series() {
     let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
     write_draft_article_fixture(root, "", "");
 
-    let graph = build(root, None).unwrap();
+    let graph = build(root, GraphBuildOptions::site_projection()).unwrap();
     assert!(!graph
         .nodes
         .iter()
@@ -629,81 +594,10 @@ fn build_rejects_draft_article_holding_series() {
         let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
         write_draft_article_fixture(root, registry_series, frontmatter_series);
 
-        let err = build(root, None).unwrap_err();
+        let err = build(root, GraphBuildOptions::site_projection()).unwrap_err();
         let msg = format!("{err:#}");
         assert!(msg.contains(expected), "expected '{expected}', got: {msg}");
     }
-}
-
-#[test]
-fn targeted_build_reuses_selected_manifests_for_docs() {
-    let temp = TempDir::new().unwrap();
-    let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
-    minimal_design_tokens(root);
-
-    write(
-        &root.join("dossiers/alpha/spctr.toml"),
-        r#"version = 1
-license = "Mixed: PolyForm-Noncommercial-1.0.0 (code), CC-BY-NC-4.0 (docs)"
-title = "Alpha"
-summary = "Alpha summary."
-status = "active"
-
-[site]
-visible = true
-featured = false
-publish_docs = true
-
-[release]
-stage = "promoted"
-
-[[release.surfaces]]
-name = "source"
-kind = "source_bundle"
-publish = true
-"#,
-    );
-    write(&root.join("dossiers/alpha/docs/README.md"), "# Alpha\n");
-    write(
-        &root.join("dossiers/beta/spctr.toml"),
-        r#"version = 1
-title = "Beta"
-summary = "Broken."
-status = "active"
-
-[site]
-visible = true
-featured = false
-
-[release]
-stage = "promoted"
-
-[[release.surfaces]]
-name = "source"
-kind = "source_bundle"
-publish = true
-"#,
-    );
-
-    let graph = build_with_options(
-        root,
-        Some("alpha"),
-        GraphBuildOptions {
-            include_docs: true,
-            include_evidence: false,
-            include_updates: false,
-        },
-    )
-    .unwrap();
-
-    assert_eq!(
-        graph.scope_project.as_deref(),
-        Some("project:dossier:alpha")
-    );
-    assert!(graph
-        .nodes
-        .iter()
-        .any(|node| node.id == "doc:dossier:alpha:README"));
 }
 
 #[test]
@@ -774,13 +668,11 @@ publish = false
     );
     write(&root.join("addenda/hidden/docs/README.md"), "# Hidden\n");
 
-    let graph = build_with_options(
+    let graph = build(
         root,
-        None,
         GraphBuildOptions {
             include_docs: true,
             include_evidence: false,
-            include_updates: false,
         },
     )
     .unwrap();

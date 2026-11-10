@@ -106,7 +106,11 @@ fn kind_names_the_document_in_byline_and_citation() {
     let temp = tempfile::tempdir().unwrap();
     let dir = Utf8Path::from_path(temp.path()).unwrap();
     write(dir, "refs.bib", BIB);
-    write(dir, "report.md", &report(BODY).replacen("kind: report", "kind: proposal", 1));
+    write(
+        dir,
+        "report.md",
+        &report(BODY).replacen("kind: report", "kind: proposal", 1),
+    );
     spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap();
     let html = fs::read_to_string(dir.join("report.html")).unwrap();
     assert!(html.contains("Proposal · revision 3 · 1 min read"));
@@ -116,10 +120,18 @@ fn kind_names_the_document_in_byline_and_citation() {
 
     for (front, message) in [
         ("", "missing metadata field 'kind'"),
-        ("kind: memo\n", "kind must be report, proposal or synthesis, found 'memo'"),
+        (
+            "kind: memo\n",
+            "kind must be report, proposal or synthesis, found 'memo'",
+        ),
     ] {
-        write(dir, "report.md", &report(BODY).replacen("kind: report\n", front, 1));
-        let error = spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap_err();
+        write(
+            dir,
+            "report.md",
+            &report(BODY).replacen("kind: report\n", front, 1),
+        );
+        let error =
+            spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None).unwrap_err();
         assert!(format!("{error:#}").contains(message), "{error:#}");
     }
 }

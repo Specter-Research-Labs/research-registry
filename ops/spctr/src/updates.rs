@@ -22,7 +22,7 @@ pub enum UpdateKind {
     Main,
 }
 
-pub struct CreateOptions {
+pub struct DraftOptions {
     pub repo_root: Option<Utf8PathBuf>,
     pub kind: UpdateKind,
     pub date: Option<String>,
@@ -33,8 +33,6 @@ pub struct CreateOptions {
     pub topic: Option<String>,
     pub entry_id: Option<String>,
     pub series_number: Option<u32>,
-    pub ledger_entry_id: Option<String>,
-    pub zulip_message_id: Option<u64>,
     pub body_file: Option<Utf8PathBuf>,
     pub force: bool,
     pub report: bool,
@@ -42,7 +40,7 @@ pub struct CreateOptions {
 }
 
 pub struct ApprovalOptions {
-    pub create: CreateOptions,
+    pub draft: DraftOptions,
     pub dispatch_url: Option<String>,
     pub dispatch_secret: Option<String>,
     pub requested_by_email: Option<String>,
@@ -89,7 +87,7 @@ struct DraftParse {
     series_number: Option<u32>,
 }
 
-struct ResolvedCreateDraft {
+struct ResolvedDraft {
     repo_root: Utf8PathBuf,
     entry_path: Utf8PathBuf,
     entry_id: String,
@@ -103,8 +101,6 @@ struct ResolvedCreateDraft {
     force: bool,
     report: bool,
     requested_published_at: Option<String>,
-    requested_ledger_entry_id: Option<String>,
-    requested_zulip_message_id: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -128,8 +124,7 @@ struct UpdateEntryPayload {
     window: UpdateWindowPayload,
     #[serde(skip_serializing_if = "Option::is_none")]
     series_number: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    ledger_entry_id: Option<String>,
+    ledger_entry_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     zulip_message_id: Option<u64>,
     sections: SectionsPayload,
@@ -337,10 +332,6 @@ fn default_topic(
     }
 }
 
-fn default_published_at(stamp: &str) -> String {
-    format!("{stamp}T00:00:00Z")
-}
-
 fn trimmed_option(value: Option<&str>, field_name: &str) -> Result<Option<String>> {
     let Some(text) = value else {
         return Ok(None);
@@ -359,7 +350,7 @@ fn read_body_text(path: Option<&Utf8Path>) -> Result<String> {
         }
         None => {
             if io::stdin().is_terminal() {
-                bail!("updates create requires --body-file or piped stdin");
+                bail!("updates approve requires --body-file or piped stdin");
             }
             let mut body = String::new();
             io::stdin()
@@ -401,7 +392,7 @@ fn run_archive_render(repo_root: &Utf8Path, report: bool) -> Result<()> {
     Ok(())
 }
 
-fn resolve_create_draft(options: CreateOptions) -> Result<ResolvedCreateDraft> {
+fn resolve_draft(options: DraftOptions) -> Result<ResolvedDraft> {
     let repo_root = discover_repo_root(options.repo_root.as_deref())?;
     let body_text = read_body_text(options.body_file.as_deref())?;
     let draft = parse_draft(&body_text)?;
@@ -410,12 +401,12 @@ fn resolve_create_draft(options: CreateOptions) -> Result<ResolvedCreateDraft> {
         .window_start
         .clone()
         .or_else(|| draft.window.as_ref().map(|window| window.start.clone()))
-        .context("updates create requires --window-start/--window-end or a draft Window line")?;
+        .context("updates approve requires --window-start/--window-end or a draft Window line")?;
     let end = options
         .window_end
         .clone()
         .or_else(|| draft.window.as_ref().map(|window| window.end.clone()))
-        .context("updates create requires --window-start/--window-end or a draft Window line")?;
+        .context("updates approve requires --window-start/--window-end or a draft Window line")?;
     let window = UpdateWindow {
         start: parse_date(&start, "window.start")?,
         end: parse_date(&end, "window.end")?,
@@ -474,7 +465,7 @@ fn resolve_create_draft(options: CreateOptions) -> Result<ResolvedCreateDraft> {
         None => None,
     };
 
-    Ok(ResolvedCreateDraft {
+    Ok(ResolvedDraft {
         repo_root,
         entry_path: entry_dir.join(format!("{entry_id}.json")),
         entry_id,
@@ -488,18 +479,13 @@ fn resolve_create_draft(options: CreateOptions) -> Result<ResolvedCreateDraft> {
         force: options.force,
         report: options.report,
         requested_published_at,
-        requested_ledger_entry_id: match &options.ledger_entry_id {
-            Some(text) => trimmed_option(Some(text), "ledger_entry_id")?,
-            None => None,
-        },
-        requested_zulip_message_id: options.zulip_message_id,
     })
 }
 
 fn write_update_entry(
-    draft: &ResolvedCreateDraft,
+    draft: &ResolvedDraft,
     published_at: &str,
-    ledger_entry_id: Option<&str>,
+    ledger_entry_id: &str,
     zulip_message_id: Option<u64>,
 ) -> Result<()> {
     if draft.entry_path.exists() && !draft.force {
@@ -511,11 +497,9 @@ fn write_update_entry(
 
     let published_at = parse_timestamp(published_at)?;
 
-    if let Some(ledger_id) = ledger_entry_id {
-        let trimmed = ledger_id.trim();
-        if trimmed.is_empty() {
-            bail!("ledger_entry_id must be a non-empty string");
-        }
+    let ledger_entry_id = ledger_entry_id.trim();
+    if ledger_entry_id.is_empty() {
+        bail!("ledger_entry_id must be a non-empty string");
     }
 
     let payload = UpdateEntryPayload {
@@ -533,7 +517,7 @@ fn write_update_entry(
             end: draft.window.end.clone(),
         },
         series_number: draft.series_number,
-        ledger_entry_id: ledger_entry_id.map(|s| s.trim().to_owned()),
+        ledger_entry_id: ledger_entry_id.to_owned(),
         zulip_message_id,
         sections: SectionsPayload {
             dossiers: draft.sections.dossiers.clone(),
@@ -555,8 +539,7 @@ fn write_update_entry(
     Ok(())
 }
 
-#[derive(Debug, Serialize)]
-struct CreateResult {
+struct WrittenEntry {
     path: String,
     id: String,
     label: String,
@@ -573,11 +556,11 @@ struct ApproveResult {
 }
 
 fn finalize_update_entry(
-    draft: &ResolvedCreateDraft,
+    draft: &ResolvedDraft,
     published_at: &str,
-    ledger_entry_id: Option<&str>,
+    ledger_entry_id: &str,
     zulip_message_id: Option<u64>,
-) -> Result<CreateResult> {
+) -> Result<WrittenEntry> {
     write_update_entry(draft, published_at, ledger_entry_id, zulip_message_id)?;
     run_archive_render(&draft.repo_root, draft.report)?;
     let rel_path = draft
@@ -585,7 +568,7 @@ fn finalize_update_entry(
         .strip_prefix(&draft.repo_root)
         .unwrap_or(&draft.entry_path)
         .to_string();
-    Ok(CreateResult {
+    Ok(WrittenEntry {
         path: rel_path,
         id: draft.entry_id.clone(),
         label: draft.label.clone(),
@@ -652,35 +635,11 @@ fn post_approved_ledger_entry(
     })
 }
 
-pub fn create(options: CreateOptions) -> Result<()> {
-    let json = options.json;
-    let draft = resolve_create_draft(options)?;
-    let published_at = draft
-        .requested_published_at
-        .clone()
-        .unwrap_or_else(|| default_published_at(&draft.stamp));
-    let result = finalize_update_entry(
-        &draft,
-        &published_at,
-        draft.requested_ledger_entry_id.as_deref(),
-        draft.requested_zulip_message_id,
-    )?;
-    if json {
-        println!("{}", serde_json::to_string_pretty(&result)?);
-    } else {
-        println!(
-            "created={} id={} label={}",
-            result.path, result.id, result.label
-        );
-    }
-    Ok(())
-}
-
 pub fn approve(options: ApprovalOptions) -> Result<()> {
-    let json = options.create.json;
+    let json = options.draft.json;
     let dispatch_url = resolve_dispatch_url(options.dispatch_url.as_deref())?;
     let dispatch_secret = resolve_dispatch_secret(options.dispatch_secret.as_deref())?;
-    let draft = resolve_create_draft(options.create)?;
+    let draft = resolve_draft(options.draft)?;
     let ledger = post_approved_ledger_entry(
         &dispatch_url,
         &dispatch_secret,
@@ -693,18 +652,13 @@ pub fn approve(options: ApprovalOptions) -> Result<()> {
         .requested_published_at
         .clone()
         .unwrap_or_else(|| ledger.created_at.clone());
-    let result = finalize_update_entry(
-        &draft,
-        &published_at,
-        Some(&ledger.entry_id),
-        ledger.message_id,
-    )
-    .with_context(|| {
-        format!(
-            "approved update was already posted to Zulip as ledger entry {}",
-            ledger.entry_id
-        )
-    })?;
+    let result = finalize_update_entry(&draft, &published_at, &ledger.entry_id, ledger.message_id)
+        .with_context(|| {
+            format!(
+                "approved update was already posted to Zulip as ledger entry {}",
+                ledger.entry_id
+            )
+        })?;
     if json {
         println!(
             "{}",

@@ -4,9 +4,6 @@ use camino::Utf8Path;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::collections::BTreeSet;
 use std::process::Command;
-use std::sync::OnceLock;
-
-const NEUTRAL_CONTEXT_PATTERNS: &[&str] = &[".github/workflows/site-projects.yml"];
 
 #[derive(Clone, Debug)]
 struct GeneratedRule {
@@ -30,11 +27,6 @@ where
     builder
         .build()
         .unwrap_or_else(|error| panic!("failed to build globset: {error}"))
-}
-
-fn neutral_context_set() -> &'static GlobSet {
-    static SET: OnceLock<GlobSet> = OnceLock::new();
-    SET.get_or_init(|| build_globset(NEUTRAL_CONTEXT_PATTERNS))
 }
 
 fn run_git(repo_root: &Utf8Path, args: &[&str]) -> Result<std::process::Output> {
@@ -101,9 +93,9 @@ fn find_provenance_violations_with_rules<'a>(
     rules: &[GeneratedRule],
 ) -> Vec<String> {
     let paths = changed_paths.into_iter().collect::<Vec<_>>();
-    let pure_generated_sync = paths.iter().all(|path| {
-        rules.iter().any(|rule| rule.output_path == *path) || neutral_context_set().is_match(path)
-    });
+    let pure_generated_sync = paths
+        .iter()
+        .all(|path| rules.iter().any(|rule| rule.output_path == *path));
 
     let mut violations = Vec::new();
     for rule in rules {
@@ -129,8 +121,7 @@ fn find_provenance_violations_with_rules<'a>(
 }
 
 fn repo_generated_rules(repo_root: &Utf8Path) -> Result<Vec<GeneratedRule>> {
-    let graph_artifact =
-        graph::build_with_options(repo_root, None, GraphBuildOptions::site_projection())?;
+    let graph_artifact = graph::build(repo_root, GraphBuildOptions::site_projection())?;
     Ok(graph_generated_rules(&graph_artifact))
 }
 

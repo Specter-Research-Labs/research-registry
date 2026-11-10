@@ -168,12 +168,6 @@ platforms = ["macos", "linux"]
 requires = ["python"]
 cache_paths = ["tmp"]
 
-[spctr.ci]
-pull_request = ["check"]
-push_main = ["check"]
-nightly = ["check"]
-nightly_cron = "0 8 * * 1"
-
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"
 
@@ -200,11 +194,6 @@ require_frontmatter = true
     assert_eq!(
         spctr.runtime.as_ref().unwrap().platforms,
         vec!["macos", "linux"]
-    );
-    assert_eq!(spctr.ci.as_ref().unwrap().pull_request, vec!["check"]);
-    assert_eq!(
-        spctr.ci.as_ref().unwrap().nightly_cron.as_deref(),
-        Some("0 8 * * 1")
     );
     assert_eq!(spctr.expected_outputs[0].surface.as_deref(), Some("python"));
     assert_eq!(
@@ -266,63 +255,6 @@ card_path = "artifacts/evidence/latest.json"
         .unwrap_err()
         .to_string();
     assert!(error.contains("expected_outputs references unknown output 'missing-output'"));
-}
-
-#[test]
-fn manifest_rejects_ci_lane_referencing_unknown_exec_action() {
-    let temp = TempDir::new().unwrap();
-    let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
-    let manifest_path = root.join("dossiers/alpha/spctr.toml");
-    write(
-        &manifest_path,
-        &format!(
-            "{}{}",
-            manifest(""),
-            r#"
-[spctr]
-
-[spctr.exec.check]
-command = ["uv", "run", "pytest"]
-
-[spctr.ci]
-pull_request = ["smoke"]
-"#,
-        ),
-    );
-
-    let error = load_project_manifest(&manifest_path, None)
-        .unwrap_err()
-        .to_string();
-    assert!(error.contains("spctr.ci.pull_request references unknown exec action 'smoke'"));
-}
-
-#[test]
-fn manifest_rejects_nightly_cron_without_nightly_lane() {
-    let temp = TempDir::new().unwrap();
-    let root = Utf8Path::from_path(temp.path()).expect("temp dir is valid UTF-8");
-    let manifest_path = root.join("dossiers/alpha/spctr.toml");
-    write(
-        &manifest_path,
-        &format!(
-            "{}{}",
-            manifest(""),
-            r#"
-[spctr]
-
-[spctr.exec.check]
-command = ["uv", "run", "pytest"]
-
-[spctr.ci]
-pull_request = ["check"]
-nightly_cron = "0 8 * * 1"
-"#,
-        ),
-    );
-
-    let error = load_project_manifest(&manifest_path, None)
-        .unwrap_err()
-        .to_string();
-    assert!(error.contains("spctr.ci.nightly_cron requires at least one spctr.ci.nightly action"));
 }
 
 #[test]

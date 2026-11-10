@@ -858,79 +858,6 @@ pub fn bundle_source_surface(
     Ok(archive_path)
 }
 
-pub fn materialize_package_surface(
-    repo_root: &Utf8Path,
-    manifest: &ProjectManifest,
-    surface_name: &str,
-    output_dir: &Utf8Path,
-) -> Result<Utf8PathBuf> {
-    let surface = manifest
-        .release
-        .surfaces
-        .iter()
-        .find(|surface| surface.name == surface_name)
-        .with_context(|| {
-            format!(
-                "unknown release surface '{}' for {}",
-                surface_name, manifest.slug
-            )
-        })?;
-    if surface.kind != ReleaseSurfaceKind::Package {
-        bail!(
-            "{}: release surface '{}' is not a package surface",
-            manifest.path,
-            surface.name
-        );
-    }
-    validate_package_surface(repo_root, manifest, surface)?;
-    fs::create_dir_all(output_dir)
-        .with_context(|| format!("failed to create package output dir {output_dir}"))?;
-    let package_root = validate_project_subpath(manifest, &surface.path)?;
-    let package_name = package_name(manifest, surface);
-    let materialized_root = output_dir.join(&package_name);
-    if materialized_root.exists() {
-        fs::remove_dir_all(&materialized_root)
-            .with_context(|| format!("failed to clear existing package dir {materialized_root}"))?;
-    }
-    fs::create_dir_all(&materialized_root)
-        .with_context(|| format!("failed to create package dir {materialized_root}"))?;
-    let mirror_mode = surface.publish_mode == Some(PublishMode::MirrorRepo);
-    if mirror_mode {
-        copy_dir_contents(&package_root, &materialized_root)?;
-    } else {
-        let repo_rel = normalize_repo_relative(repo_root, &package_root, "package root")?;
-        copy_rel_path(repo_root, &repo_rel, &materialized_root)?;
-    }
-    let payload = serde_json::to_string_pretty(&serde_json::json!({
-        "version": 1,
-        "project": manifest.slug,
-        "surface": surface.name,
-        "language": surface.language.expect("validated package language").as_str(),
-        "registry": surface.registry,
-        "distribution_channel": surface.distribution_channel,
-        "publish_mode": surface.publish_mode.expect("validated publish mode").as_str(),
-        "mirror_repo": surface.mirror_repo,
-        "source_path": package_root.as_str(),
-    }))?;
-    fs::write(
-        materialized_root.join("spctr-package-surface.json"),
-        payload,
-    )
-    .with_context(|| format!("failed to write package metadata into {materialized_root}"))?;
-    let package_root_rel = normalize_repo_relative(repo_root, &package_root, "package root")?;
-    write_release_artifact_evidence(
-        repo_root,
-        manifest,
-        surface,
-        "package_surface",
-        None,
-        &[package_root_rel.as_str()],
-        &[materialized_root.clone()],
-        &materialized_root.join("spctr-release-evidence.json"),
-    )?;
-    Ok(materialized_root)
-}
-
 fn bundle_evidence_path(archive_path: &Utf8Path) -> Utf8PathBuf {
     let file_name = archive_path
         .file_name()
@@ -940,32 +867,6 @@ fn bundle_evidence_path(archive_path: &Utf8Path) -> Utf8PathBuf {
         .parent()
         .unwrap_or_else(|| Utf8Path::new("."))
         .join(format!("{file_name}.evidence.json"))
-}
-
-fn write_release_artifact_evidence(
-    repo_root: &Utf8Path,
-    manifest: &ProjectManifest,
-    surface: &ReleaseSurfaceConfig,
-    action: &str,
-    release_id: Option<&str>,
-    input_paths: &[&str],
-    output_paths: &[Utf8PathBuf],
-    card_path: &Utf8Path,
-) -> Result<()> {
-    let inputs = input_paths
-        .iter()
-        .map(|rel| fingerprint_repo_rel_path(repo_root, rel))
-        .collect::<Result<Vec<_>>>()?;
-    write_release_artifact_evidence_with_inputs(
-        repo_root,
-        manifest,
-        surface,
-        action,
-        release_id,
-        inputs,
-        output_paths,
-        card_path,
-    )
 }
 
 fn write_release_artifact_evidence_with_inputs(
@@ -1009,13 +910,6 @@ fn write_release_artifact_evidence_with_inputs(
     fs::write(card_path, rendered)
         .with_context(|| format!("failed to write release evidence card {card_path}"))?;
     Ok(())
-}
-
-fn fingerprint_repo_rel_path(
-    repo_root: &Utf8Path,
-    rel_path: &str,
-) -> Result<ReleaseEvidencePathRecord> {
-    fingerprint_path(repo_root, &repo_root.join(rel_path))
 }
 
 fn fingerprint_tracked_include_path(
@@ -1247,17 +1141,6 @@ fn normalize_repo_relative(repo_root: &Utf8Path, abs: &Utf8Path, field: &str) ->
         .with_context(|| format!("{field} must stay inside repo root"))
 }
 
-fn copy_rel_path(repo_root: &Utf8Path, rel_path: &str, dest_root: &Utf8Path) -> Result<()> {
-    let source = repo_root.join(rel_path);
-    if source.is_dir() {
-        copy_dir_recursive(&source, &dest_root.join(rel_path))
-    } else if source.is_file() {
-        copy_file(&source, &dest_root.join(rel_path))
-    } else {
-        bail!("missing path while bundling: {rel_path}");
-    }
-}
-
 fn copy_tracked_include_paths(
     repo_root: &Utf8Path,
     include_paths: &BTreeSet<String>,
@@ -1288,31 +1171,6 @@ fn copy_tracked_include_paths(
         copy_file(&repo_root.join(rel), &dest_root.join(rel))?;
     }
     Ok(copied_paths.into_iter().collect())
-}
-
-fn copy_dir_contents(source: &Utf8Path, dest: &Utf8Path) -> Result<()> {
-    for entry in fs::read_dir(source).with_context(|| format!("failed to read {source}"))? {
-        let entry = entry.with_context(|| format!("failed to read entry in {source}"))?;
-        let file_name = entry.file_name();
-        let child_source = Utf8PathBuf::from_path_buf(entry.path())
-            .map_err(|_| anyhow::anyhow!("non-UTF-8 path"))?;
-        let child_dest = dest.join(
-            file_name
-                .to_str()
-                .ok_or_else(|| anyhow::anyhow!("non-UTF-8 path component"))?,
-        );
-        if child_source.is_dir() {
-            copy_dir_recursive(&child_source, &child_dest)?;
-        } else if child_source.is_file() {
-            copy_file(&child_source, &child_dest)?;
-        }
-    }
-    Ok(())
-}
-
-fn copy_dir_recursive(source: &Utf8Path, dest: &Utf8Path) -> Result<()> {
-    fs::create_dir_all(dest).with_context(|| format!("failed to create {dest}"))?;
-    copy_dir_contents(source, dest)
 }
 
 fn copy_file(source: &Utf8Path, dest: &Utf8Path) -> Result<()> {
@@ -1610,8 +1468,8 @@ fn path_relative_to_include(path: &str, include: &str) -> Option<String> {
 mod tests {
     use super::{
         bundle_source_surface, find_text_pattern_hits, gate_manifest, is_forbidden_tracked_path,
-        is_safe_tracked_envrc, lookup_project, matches_root, materialize_package_surface,
-        validate_manifest, validate_release_id,
+        is_safe_tracked_envrc, lookup_project, matches_root, validate_manifest,
+        validate_release_id,
     };
     use camino::Utf8Path;
     use serde_json::Value;
@@ -1846,66 +1704,6 @@ include_docs = false
     }
 
     #[test]
-    fn materialize_package_surface_writes_release_evidence() {
-        let temp = TempDir::new().unwrap();
-        let repo_root = Utf8Path::from_path(temp.path()).unwrap();
-        let project_root = repo_root.join("dossiers/alpha");
-        let manifest_path = project_root.join("spctr.toml");
-        write(
-            &project_root.join("pkg/pyproject.toml"),
-            r#"[project]
-name = "alpha-pkg"
-version = "0.1.0"
-"#,
-        );
-        write(&project_root.join("pkg/alpha_pkg.py"), "VALUE = 1\n");
-        write(
-            &manifest_path,
-            r#"version = 1
-license = "MIT"
-title = "Alpha"
-summary = "Alpha summary."
-status = "active"
-
-[site]
-visible = false
-featured = false
-
-[release]
-stage = "candidate"
-
-[[release.surfaces]]
-name = "python"
-kind = "package"
-publish = false
-language = "python"
-registry = "pypi"
-publish_mode = "subdir"
-path = "pkg"
-"#,
-        );
-
-        let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
-        let output_dir = repo_root.join("tmp/package-check");
-        let materialized =
-            materialize_package_surface(repo_root, &manifest, "python", &output_dir).unwrap();
-        let evidence_path = materialized.join("spctr-release-evidence.json");
-        assert!(materialized.is_dir());
-        assert!(evidence_path.is_file());
-        let card: Value =
-            serde_json::from_str(&fs::read_to_string(evidence_path).unwrap()).unwrap();
-        assert_eq!(card["action"], "package_surface");
-        assert_eq!(card["surface"], "python");
-        assert_eq!(card["language"], "python");
-        assert_eq!(card["outputs"][0]["path"], "tmp/package-check/alpha-pkg");
-        assert!(card["inputs"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|entry| entry["path"] == "dossiers/alpha/pkg" && entry["kind"] == "directory"));
-    }
-
-    #[test]
     fn release_id_rejects_path_traversal_inputs() {
         assert!(validate_release_id("../oops").is_err());
         assert!(validate_release_id("..").is_err());
@@ -1926,10 +1724,7 @@ path = "pkg"
     fn matches_root_handles_files_and_directories() {
         assert!(matches_root("README.md", "README.md"));
         assert!(matches_root("ops/spctr/src/cli.rs", "ops"));
-        assert!(matches_root(
-            ".github/workflows/site-projects.yml",
-            ".github"
-        ));
+        assert!(matches_root(".github/workflows/pages.yml", ".github"));
         assert!(!matches_root("site/README.md", "README.md"));
     }
 

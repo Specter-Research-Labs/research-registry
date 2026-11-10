@@ -173,7 +173,13 @@ fn finalize_page(
         (None, None) => match shell::nav_section(relative) {
             Some(section) => {
                 let image = card_path(relative)?;
-                render_card(stage_root, font_path, &image, page_title, section.card_kicker())?;
+                render_card(
+                    stage_root,
+                    font_path,
+                    &image,
+                    page_title,
+                    section.card_kicker(),
+                )?;
                 tags.push(meta_property("og:image", &format!("{public_url}/{image}")));
                 head_text
             }
@@ -580,7 +586,8 @@ mod tests {
 
         let not_found = fs::read_to_string(temp.path().join("404.html")).unwrap();
         assert!(not_found.contains(r#"<link rel="canonical" href="https://example.org/404.html">"#));
-        assert!(not_found.contains(r#"<meta property="og:url" content="https://example.org/404.html">"#));
+        assert!(not_found
+            .contains(r#"<meta property="og:url" content="https://example.org/404.html">"#));
         let figure = fs::read_to_string(temp.path().join("assets/blog/fig.html")).unwrap();
         assert!(!figure.contains("canonical"));
 

@@ -153,10 +153,9 @@ Use:
 
 - `spctr exec run --project <slug> <check|smoke|build|publish>`
 - `spctr release gate <slug>`
-- `spctr ci sync --project <slug> --write`
 - `spctr surface sync <surface>` for durable surfaces that have both raw artifacts and a local database snapshot
 
-If a project does not declare a lane, treat that as intentional. Add the narrowest honest lane to
+If a project does not declare an action, treat that as intentional. Add the narrowest honest action to
 `spctr.toml` first.
 
 Machine-local artifact roots belong in `~/.config/spctr/config.toml` as

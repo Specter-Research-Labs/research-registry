@@ -43,18 +43,6 @@ pub struct SiteRecordSlices<'a> {
 }
 
 impl SiteRecord {
-    pub fn hub_mode(&self) -> &'static str {
-        if self.kind != "dossier" {
-            "n/a"
-        } else if self.hub_path.is_none() {
-            "missing"
-        } else if self.hub_generated {
-            "generated"
-        } else {
-            "manual"
-        }
-    }
-
     pub fn hub_href(&self) -> Option<String> {
         self.hub_path
             .as_ref()
@@ -91,10 +79,6 @@ impl SiteRecord {
             .filter(|surface| surface.publish)
     }
 
-    pub fn has_published_release_surfaces(&self) -> bool {
-        self.published_release_surfaces().next().is_some()
-    }
-
     pub fn published_surface_links(&self) -> Vec<(&str, &str)> {
         self.published_release_surfaces()
             .filter_map(|surface| {
@@ -108,8 +92,7 @@ impl SiteRecord {
 }
 
 pub fn load_site_records(repo_root: &Utf8Path) -> Result<Vec<SiteRecord>> {
-    let registry_graph =
-        graph::build_with_options(repo_root, None, graph::GraphBuildOptions::site_records())?;
+    let registry_graph = graph::build(repo_root, graph::GraphBuildOptions::site_records())?;
     load_site_records_from_graph(repo_root, &registry_graph)
 }
 
@@ -514,14 +497,12 @@ mod tests {
             ],
         );
 
-        assert!(record.has_published_release_surfaces());
         assert_eq!(
             record.published_surface_links(),
             vec![("PyPI", "https://example.test/pypi")]
         );
 
         let candidate = make_record("candidate", record.release_surfaces.clone());
-        assert!(!candidate.has_published_release_surfaces());
         assert!(candidate.published_surface_links().is_empty());
     }
 }

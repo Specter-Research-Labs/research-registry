@@ -286,7 +286,10 @@ pub(crate) fn render_blog_index_notes(notes: &[super::blog::ResearchNoteRecord])
     let mut items = Vec::new();
     for note in notes {
         let summary = note.summary.as_ref().ok_or_else(|| {
-            anyhow::anyhow!("research-notes/{}/index.md: published note has no summary", note.slug)
+            anyhow::anyhow!(
+                "research-notes/{}/index.md: published note has no summary",
+                note.slug
+            )
         })?;
         items.push(html! {
             li class="research-note-card" {
@@ -491,7 +494,12 @@ pub fn render_sitemap_sections(
     posts.sort_by(|a, b| a.series.cmp(&b.series));
     let mut writing_nodes: Vec<SitemapNode> = posts
         .iter()
-        .map(|post| leaf(series_label(post.series.as_ref(), &post.title), href(&post.href)))
+        .map(|post| {
+            leaf(
+                series_label(post.series.as_ref(), &post.title),
+                href(&post.href),
+            )
+        })
         .collect();
     if !super::blog::published_research_notes(repo_root)?.is_empty() {
         writing_nodes.push(leaf(

@@ -6,7 +6,7 @@
 #let size = if title.len() > 90 { 22pt } else if title.len() > 60 { 26pt } else { 31pt }
 
 #set page(width: 600pt, height: 315pt, margin: (x: 36pt, top: 34pt, bottom: 26pt), fill: luma(97%))
-#set text(font: "IBM Plex Sans", fill: ink)
+#set text(font: "IBM Plex Serif", fill: ink)
 
 #place(top + left, dx: -36pt, dy: -34pt, rect(width: 600pt, height: 3pt, fill: ink, stroke: none))
 

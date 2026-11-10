@@ -1,8 +1,6 @@
 use crate::config::{load_machine_config, MachineConfig, SshConfig};
 use crate::drivers::{resolve_surface, RawRoot, RemoteBase, ResolvedSurface};
-use crate::manifest::{
-    discover_manifest, discover_surfaced_manifests, repo_root, ProjectManifest, SurfaceConfig,
-};
+use crate::manifest::{discover_manifest, ProjectManifest, SurfaceConfig};
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use chrono::Utc;
@@ -22,7 +20,6 @@ trait RemoteFs {
     fn list_json_stems(&self, dir: &str) -> Result<Vec<String>>;
     fn rsync_target(&self, path: &str) -> String;
     fn rsync_transport_args(&self) -> Vec<String>;
-    fn copy_to_local(&self, source: &str, local_target: &Utf8Path) -> Result<()>;
     fn copy_remote_file(&self, source: &str, target: &str) -> Result<()>;
     fn cas_write_text(
         &self,
@@ -99,12 +96,6 @@ impl RemoteFs for LocalFs {
 
     fn rsync_transport_args(&self) -> Vec<String> {
         Vec::new()
-    }
-
-    fn copy_to_local(&self, source: &str, local_target: &Utf8Path) -> Result<()> {
-        fs::copy(source, local_target)
-            .with_context(|| format!("failed to copy {source} to {local_target}"))?;
-        Ok(())
     }
 
     fn copy_remote_file(&self, source: &str, target: &str) -> Result<()> {
@@ -247,15 +238,6 @@ impl RemoteFs for SshFs {
         vec!["-e".to_owned(), format!("ssh -p {}", self.ssh.port)]
     }
 
-    fn copy_to_local(&self, source: &str, local_target: &Utf8Path) -> Result<()> {
-        let mut args = vec!["-a".to_owned(), "--delete".to_owned()];
-        args.extend(self.rsync_transport_args());
-        args.push(self.rsync_target(source));
-        args.push(local_target.to_string());
-        check_command("rsync", &args, None, &BTreeMap::new(), None)?;
-        Ok(())
-    }
-
     fn copy_remote_file(&self, source: &str, target: &str) -> Result<()> {
         let args = self.remote_command_args(&[
             "python3".to_owned(),
@@ -343,9 +325,8 @@ struct RefreshResult {
     status: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(crate) struct PromoteResult {
-    pub(crate) surface: String,
     pub(crate) snapshot_id: String,
     pub(crate) changed: bool,
 }
@@ -360,28 +341,12 @@ pub(crate) struct SurfaceSyncResult {
 }
 
 #[derive(Debug, Serialize)]
-struct PullResult {
-    surface: String,
-    snapshot_id: String,
-}
-
-#[derive(Debug, Serialize)]
 struct StatusPayload {
     surface: String,
     latest_checkpoint_id: Option<String>,
     current_snapshot_id: Option<String>,
     state: String,
     included_raw_checkpoint_ids: Vec<String>,
-}
-
-#[derive(Debug, Serialize)]
-struct SurfaceListItem {
-    name: String,
-    project: String,
-    kind: String,
-    default: bool,
-    raw_roots: usize,
-    db_path: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -541,55 +506,6 @@ fn selected_surfaces(
         .get(surface_name)
         .ok_or_else(|| anyhow::anyhow!("unknown surface: {surface_name}"))?;
     Ok(vec![resolve_surface(manifest, surface, machine)?])
-}
-
-pub fn list(json: bool) -> Result<()> {
-    let repo_root = match repo_root() {
-        Ok(root) => root,
-        Err(_) => {
-            let manifest = discover_manifest(None)?;
-            manifest
-                .root
-                .parent()
-                .and_then(Utf8Path::parent)
-                .context("manifest is not under dossiers/ or addenda/")?
-                .to_owned()
-        }
-    };
-    let mut items = Vec::new();
-    for manifest in discover_surfaced_manifests(&repo_root)? {
-        let Some(spctr) = &manifest.spctr else {
-            continue;
-        };
-        for (name, surface) in &spctr.surfaces {
-            items.push(SurfaceListItem {
-                name: name.clone(),
-                project: spctr.project.clone(),
-                kind: surface.kind.clone(),
-                default: spctr.default_surface.as_deref() == Some(name.as_str()),
-                raw_roots: surface.raw_roots.len(),
-                db_path: surface.local_db_path.clone(),
-            });
-        }
-    }
-    items.sort_by(|left, right| {
-        left.project
-            .cmp(&right.project)
-            .then_with(|| left.name.cmp(&right.name))
-    });
-    if json {
-        println!("{}", serde_json::to_string_pretty(&items)?);
-        return Ok(());
-    }
-    for item in items {
-        let default = if item.default { " default" } else { "" };
-        let db = item.db_path.as_deref().unwrap_or("-");
-        println!(
-            "{}\tproject={}\tkind={}\traw_roots={}\tdb={}{}",
-            item.name, item.project, item.kind, item.raw_roots, db, default
-        );
-    }
-    Ok(())
 }
 
 pub(crate) fn env_for_machine(machine: &MachineConfig) -> BTreeMap<String, String> {
@@ -763,17 +679,6 @@ fn copy_local_to_remote(fs: &dyn RemoteFs, source: &Utf8Path, target: &str) -> R
     args.push(source.to_string());
     args.push(fs.rsync_target(target));
     check_command("rsync", &args, None, &BTreeMap::new(), None)?;
-    Ok(())
-}
-
-fn copy_remote_to_local(fs: &dyn RemoteFs, source: &str, target: &Utf8Path) -> Result<()> {
-    if let Some(parent) = target.parent() {
-        std::fs::create_dir_all(parent).with_context(|| format!("failed to create {parent}"))?;
-    }
-    let tmp = tmp_path(target);
-    fs.copy_to_local(source, &tmp)?;
-    std::fs::rename(tmp.as_std_path(), target.as_std_path())
-        .with_context(|| format!("failed to rename {tmp} to {target}"))?;
     Ok(())
 }
 
@@ -983,7 +888,6 @@ pub(crate) fn promote_resolved_surface(
                 .is_some_and(|current_included| current_included == &included)
     }) {
         return Ok(PromoteResult {
-            surface: resolved.surface_name.clone(),
             snapshot_id: expected_current.unwrap_or_default(),
             changed: false,
         });
@@ -1036,28 +940,9 @@ pub(crate) fn promote_resolved_surface(
         expected_current.as_deref(),
     )?;
     Ok(PromoteResult {
-        surface: resolved.surface_name.clone(),
         snapshot_id,
         changed: true,
     })
-}
-
-pub fn promote(surface: &str, json: bool) -> Result<()> {
-    let manifest = load_manifest()?;
-    let machine = resolve_machine()?;
-    let resolved = selected_surfaces(&manifest, &machine, surface)?
-        .into_iter()
-        .next()
-        .context("missing resolved surface")?;
-    let result = promote_resolved_surface(&machine, &manifest, &resolved)?;
-    if json {
-        println!("{}", serde_json::to_string_pretty(&result)?);
-    } else if result.changed {
-        println!("{}: promoted={}", result.surface, result.snapshot_id);
-    } else {
-        println!("{}: promote=no-op", result.surface);
-    }
-    Ok(())
 }
 
 pub(crate) fn sync_resolved_surface(
@@ -1106,63 +991,6 @@ pub fn sync(surface: &str, json: bool) -> Result<()> {
     }
     if json {
         println!("{}", serde_json::to_string_pretty(&results)?);
-    }
-    Ok(())
-}
-
-pub fn pull(surface: &str, json: bool) -> Result<()> {
-    let manifest = load_manifest()?;
-    let machine = resolve_machine()?;
-    let fs = fs_for(&machine);
-    let resolved = selected_surfaces(&manifest, &machine, surface)?
-        .into_iter()
-        .next()
-        .context("missing resolved surface")?;
-    let db_path = resolved
-        .db_path
-        .as_ref()
-        .context(format!("{surface} does not define a database surface"))?;
-    let db_filename = resolved
-        .db_filename
-        .as_ref()
-        .context(format!("{surface} does not define a database surface"))?;
-    let current: CurrentSnapshot = read_json(&*fs, &remote_current_path(&machine, &resolved))?
-        .ok_or_else(|| anyhow::anyhow!("no current snapshot for {}", resolved.surface_name))?;
-    let snapshot_id = current
-        .snapshot_id
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "remote current snapshot is invalid for {}",
-                resolved.surface_name
-            )
-        })?;
-    let remote_db_path = remote_join(
-        &remote_join(&remote_history_root(&machine, &resolved), snapshot_id),
-        db_filename,
-    );
-    copy_remote_to_local(&*fs, &remote_db_path, db_path)?;
-    let local_sha = sha256_file(db_path)?;
-    let expected_sha = current.db_sha256.as_deref().unwrap_or_default();
-    if local_sha != expected_sha {
-        bail!(
-            "pulled DB checksum mismatch for {}: local={} expected={}",
-            resolved.surface_name,
-            local_sha,
-            expected_sha
-        );
-    }
-    if json {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&PullResult {
-                surface: resolved.surface_name.clone(),
-                snapshot_id: snapshot_id.to_owned(),
-            })?
-        );
-    } else {
-        println!("{}: pulled={snapshot_id}", resolved.surface_name);
     }
     Ok(())
 }

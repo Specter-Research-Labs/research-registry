@@ -139,60 +139,6 @@ pub fn push_data(
     Ok(())
 }
 
-pub fn pull_data(
-    repo_root: &Utf8Path,
-    project_filter: Option<&str>,
-    name_filter: Option<&str>,
-    host: Option<&str>,
-    user: Option<&str>,
-) -> Result<()> {
-    let deploy_user = match user {
-        Some(value) => value.to_owned(),
-        None => publish::required_env("SPECTER_DEPLOY_USER")?,
-    };
-    let deploy_host = match host {
-        Some(value) => value.to_owned(),
-        None => publish::required_env("SPECTER_DEPLOY_HOST")?,
-    };
-    let mounts = resolve_mounts(repo_root)?;
-    let filtered: Vec<_> = mounts
-        .iter()
-        .filter(|m| {
-            project_filter.map_or(true, |p| m.project == p)
-                && name_filter.map_or(true, |n| m.name == n)
-        })
-        .collect();
-    if filtered.is_empty() {
-        bail!("no matching site data mounts found");
-    }
-    for mount in &filtered {
-        if let Some(parent) = mount.local_abs.parent() {
-            std::fs::create_dir_all(parent)
-                .with_context(|| format!("failed to create parent for {}", mount.local_abs))?;
-        }
-        std::fs::create_dir_all(&mount.local_abs)
-            .with_context(|| format!("failed to create {}", mount.local_abs))?;
-        eprintln!(
-            "site data: pulling {}/{} <- {}",
-            mount.project, mount.name, mount.remote_path
-        );
-        let mut rsync = Command::new("rsync");
-        rsync
-            .arg("-az")
-            .arg("--delete")
-            .arg("-e")
-            .arg(publish::rsync_ssh_command())
-            .arg(format!(
-                "{deploy_user}@{deploy_host}:{}/",
-                mount.remote_path
-            ))
-            .arg(format!("{}/", mount.local_abs));
-        publish::run_command(&mut rsync, "failed to pull site data")?;
-        eprintln!("site data: pulled {}/{}", mount.project, mount.name);
-    }
-    Ok(())
-}
-
 pub fn rsync_excludes(repo_root: &Utf8Path) -> Result<Vec<String>> {
     let discoveries = manifest::discover_site_data_mounts(repo_root)?;
     Ok(discoveries

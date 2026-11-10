@@ -129,15 +129,6 @@ pub struct RuntimeConfig {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CiConfig {
-    pub runner: Option<String>,
-    pub pull_request: Vec<String>,
-    pub push_main: Vec<String>,
-    pub nightly: Vec<String>,
-    pub nightly_cron: Option<String>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EvidenceOutputConfig {
     pub name: String,
     pub path: String,
@@ -264,7 +255,6 @@ pub struct SpctrConfig {
     pub exec: BTreeMap<String, ExecActionConfig>,
     pub expected_outputs: Vec<EvidenceOutputConfig>,
     pub runtime: Option<RuntimeConfig>,
-    pub ci: Option<CiConfig>,
     pub evidence: Option<EvidenceConfig>,
     pub docs: Option<DocsConfig>,
 }
@@ -583,42 +573,6 @@ fn validate_runtime(value: &Value, path: &Utf8Path) -> Result<RuntimeConfig> {
     })
 }
 
-fn validate_ci(value: &Value, path: &Utf8Path) -> Result<CiConfig> {
-    let field = "spctr.ci";
-    let table = value
-        .as_table()
-        .ok_or_else(|| anyhow::anyhow!("{}: {field} must be a table", path))?;
-    ensure_allowed_keys(
-        table,
-        &[
-            "runner",
-            "pull_request",
-            "push_main",
-            "nightly",
-            "nightly_cron",
-        ],
-        field,
-        path,
-    )?;
-    Ok(CiConfig {
-        runner: table
-            .get("runner")
-            .map(|value| require_string(Some(value), "spctr.ci.runner", path))
-            .transpose()?,
-        pull_request: validate_string_array(
-            table.get("pull_request"),
-            "spctr.ci.pull_request",
-            path,
-        )?,
-        push_main: validate_string_array(table.get("push_main"), "spctr.ci.push_main", path)?,
-        nightly: validate_string_array(table.get("nightly"), "spctr.ci.nightly", path)?,
-        nightly_cron: table
-            .get("nightly_cron")
-            .map(|value| validate_github_cron(Some(value), "spctr.ci.nightly_cron", path))
-            .transpose()?,
-    })
-}
-
 fn validate_exec_output_names(table: &Table, field: &str, path: &Utf8Path) -> Result<Vec<String>> {
     if table.get("outputs").is_some() {
         bail!(
@@ -749,44 +703,7 @@ fn validate_spctr_internal_consistency(spctr: &SpctrConfig, path: &Utf8Path) -> 
             }
         }
     }
-    if let Some(ci) = &spctr.ci {
-        for (lane, actions) in [
-            ("pull_request", &ci.pull_request),
-            ("push_main", &ci.push_main),
-            ("nightly", &ci.nightly),
-        ] {
-            for action_name in actions {
-                if !spctr.exec.contains_key(action_name) {
-                    bail!(
-                        "{}: spctr.ci.{lane} references unknown exec action '{action_name}'",
-                        path
-                    );
-                }
-            }
-        }
-        if ci.nightly_cron.is_some() && ci.nightly.is_empty() {
-            bail!(
-                "{}: spctr.ci.nightly_cron requires at least one spctr.ci.nightly action",
-                path
-            );
-        }
-    }
     Ok(())
-}
-
-fn validate_github_cron(
-    value: Option<&Value>,
-    field_name: &str,
-    path: &Utf8Path,
-) -> Result<String> {
-    let cron = require_string(value, field_name, path)?;
-    if cron.split_whitespace().count() != 5 {
-        bail!(
-            "{}: {field_name} must be a five-field GitHub Actions cron expression",
-            path
-        );
-    }
-    Ok(cron)
 }
 
 fn validate_spctr_release_references(
@@ -1316,7 +1233,6 @@ fn validate_spctr(
             "exec",
             "expected_outputs",
             "runtime",
-            "ci",
             "evidence",
             "docs",
         ],
@@ -1406,10 +1322,6 @@ fn validate_spctr(
         .get("runtime")
         .map(|value| validate_runtime(value, path))
         .transpose()?;
-    let ci = table
-        .get("ci")
-        .map(|value| validate_ci(value, path))
-        .transpose()?;
     let evidence = table
         .get("evidence")
         .map(|value| validate_evidence(value, path))
@@ -1426,7 +1338,6 @@ fn validate_spctr(
         exec,
         expected_outputs,
         runtime,
-        ci,
         evidence,
         docs,
     };
