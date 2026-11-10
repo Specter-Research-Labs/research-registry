@@ -1,5 +1,5 @@
 ---
-summary: "How to build LeniaCLI and run a local Flow Lenia sweep, what the run directory contains, what must be captured for a run to be reproduced later, and the stored field and specimen formats with the command that rewrites older artifacts."
+summary: "How to build LeniaCLI, run a local Flow Lenia sweep and reproduce it later, with the run directory layout and the stored field and specimen formats."
 ---
 
 # Running a local sweep
