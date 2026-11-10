@@ -2,12 +2,12 @@
 
 # Specter Labs
 
-Canonical research monorepo for Specter Labs.
+Research monorepo for Specter Labs.
 
 ## Structure
 
 - `dossiers/` holds primary research programs.
-- `addenda/` holds focused side programs, tools and various side quests.
+- `addenda/` holds supporting projects and notes.
 - `site/` holds source for public web surfaces.
 - `ops/` holds the `spctr` tooling for registry, release, and site work.
 

@@ -1,82 +1,39 @@
 # Agent Guidelines for Specter Labs
-Keep this repository clean; it contains internal research experiments and supporting materials for studying platonic patterns in computational systems.
+This public repository holds research experiments and supporting materials for studying platonic patterns in computational systems. We aim for clarity, reproducibility, and elegant minimalism, and we want to be SOTA down to the details.
 
-# Vision and Scope
-We build research-grade systems and experiments that expose, measure, and explain platonic patterns in computational systems. We aim for clarity, reproducibility, and elegant minimalism. We want to be SOTA down to the details.
-
-## Supported Scope
-- Dossiers and addenda are the primary unit of research work.
-- Experiments, analyses, and tooling that directly support the research questions.
-- Diagnostics, visualization, and analysis when they improve understanding or reproducibility.
-- Repo-level shared surfaces (for example, `site/`, shared assets) are allowed when they clearly support the dossiers/addenda and do not create a second stack.
-
-## Non-Goals
-- No second stacks for the same use-case.
-- No long-lived services or infrastructure unless explicitly requested.
-- No large, generic frameworks that obscure the core idea.
+# Scope
+- Dossiers and addenda are the primary unit of research work, together with the experiments, analyses, diagnostics, visualization, and tooling that directly support their research questions.
+- Repo-level shared surfaces such as `site/` are allowed when they clearly support the dossiers and addenda.
+- No long-lived services or infrastructure unless explicitly requested. No large, generic frameworks that obscure the core idea.
 
 # Repository Contract
-- No internal-only paths, hostnames, IPs, or secrets in tracked files.
-- One clear path per use-case; avoid parallel stacks for the same job.
-- Explicit over magical: no hidden background machinery or side effects.
-- Fail fast, fail loud: guardrails with actionable errors, no silent downshifts.
+- No internal-only paths, hostnames, IPs, or secrets in tracked files. Personal overrides belong in local shell config or `.envrc.local`.
+- One clear path per use-case; no second stacks for the same job.
 - One source of truth per artifact: no duplicate configs or schemas that can drift.
-
-# Principles
-- Small, sharp surfaces: tiny modules with crisp responsibilities and few public knobs.
-- Hot paths first: if it does not improve correctness, stability, or insight, it does not belong on the critical path.
+- Explicit over magical: no hidden background machinery, side effects, fallbacks, or default behavior. Fail fast and loud with actionable errors, with no silent downshifts. If something can be None, handle it explicitly.
 - Determinism and provenance: experiments must be rerunnable months later with captured config and inputs.
-- Documentation that guides: precise and actionable, no fluff.
-- No orphans (code + scripts): if a module/CLI/script is not imported, invoked, or referenced by an entry point, delete it; if a function is not called, delete it; if a variable is not used, delete it.
-- Minimal footprint: every file must have a purpose; every dependency must be justified; prefer the standard library; remove unused imports, functions, and variables.
-- Explicit over implicit: no hidden fallbacks, no magic default behavior; fail loudly on errors; if something can be None, handle it explicitly.
 
-# Change Rubric
-- Intent: Does this improve correctness, reproducibility, or insight?
-- Uniqueness: Are we creating a second way to do something? If yes, why?
-- Surface: Did we add a new public knob? Could it be expressed via existing config?
-- Invariants: Are determinism and key invariants enforced or clarified?
-- Repro: Is configuration and provenance captured to rerun months later?
-- Elegance: Is the code visibly simpler afterward?
+# Code
+- Small, sharp surfaces: tiny modules with crisp responsibilities and few public knobs. Express a change through existing config before adding a knob.
+- Hot paths first: if it does not improve correctness, stability, or insight, it does not belong on the critical path. Leave the code visibly simpler.
+- No orphans: delete any module, CLI, script, function, variable, or import that nothing invokes or references.
+- Minimal footprint: every file has a purpose, every dependency is justified, and the standard library comes first.
+- No "just in case" error handling, backwards compatibility shims, or abstractions for one-time operations.
+- No emojis. No commented-out code, debug transcripts, or disabled branches in tracked files; if one is genuinely needed as documentation, move it to the project's `docs/`.
+- A comment must capture non-obvious rationale, an invariant, an edge case, a performance constraint, or an external-system quirk, and should answer "why" (often with `because`, `so that`, `to avoid`, or `invariant:`). If it could be mechanically generated from the next line, delete it.
 
-# Ops & Workflow
-- Operational workflow (JJ workspaces, logs/artifacts routing, vault/docs/Obsidian handling) lives in the $specter-ops skill. Invoke it when needed.
-- Keep the tracked root bootstrap generic. Personal homelab overrides belong in local shell config or `.envrc.local`, not in tracked repo files.
-- Prefer the project-local flake in each dossier/addendum that has real setup burden: `cd <project> && nix develop` or `direnv allow`.
-- Use SPECTER_LOG_ROOT and SPECTER_ARTIFACT_ROOT for durable data on remote volumes; if unset, fall back to dossier-local paths.
-- Use SPECTER_RUNTIME_ROOT for transient dossier/addendum scratch and cache paths on external volumes; if unset, fall back to repo-local `tmp/` paths or tool-local `TMPDIR`.
-- `synthetic-bureau` lives as a private sibling repo, usually `../synthetic-bureau/`, or at `SPECTER_SYNTHETIC_BUREAU_ROOT` if set.
-  - It is for assistant-generated reports, research notes, and analysis written to disk only when explicitly requested by a human.
-  - Treat it as ephemeral, local-only output.
-  - `synthetic-bureau/` is exempt from the "no orphans" rule.
-- `records-bureau` lives as a private sibling repo, usually `../records-bureau/`, or at `SPECTER_RECORDS_BUREAU_ROOT` if set.
+# Projects
+- Each Python dossier or addendum uses `uv`, `ty`, and `ruff`, has a `pyproject.toml` and an obvious entry point, and runs independently.
+- Projects with real setup burden carry a local flake: `cd <project> && nix develop` or `direnv allow`.
+- Durable data goes under `SPECTER_LOG_ROOT` and `SPECTER_ARTIFACT_ROOT`, or dossier-local paths if unset. Transient scratch and cache go under `SPECTER_RUNTIME_ROOT`, or repo-local `tmp/` or tool-local `TMPDIR` if unset.
 
-## Clean Experiments
-Each Python dossier or addenda directory should have:
-- Use `uv`, `ty`, and `ruff`
-- A `pyproject.toml` for dependencies
-- A clear entry point (how to run is obvious)
-- Self-contained (runs independently)
-- Optional `docs/` for experiment-specific technical documentation
+# Documentation
+- Be precise and actionable, with no fluff.
+- Markdown documentation lives in `dossiers/*/docs/` or `addenda/*/docs/`, which feed the public website Cabinet. Exceptions: root repo files such as `README.md` and `LICENSING.md`, per-project `README.md` entry points, public sources under `site/blog/*/index.md` and `site/research-notes/*/index.md`, and maintainer docs under `ops/docs/`.
+- Internal maintenance guides and operational notes go in `ops/docs/`, linked from `ops/README.md`, never in published research docs or `site/`.
 
-# What NOT to Do
-- Do not create documentation markdown files outside `dossiers/*/docs/` or `addenda/*/docs/`.
-  - Exceptions: repo root `README.md`, per-dossier/per-addendum `README.md` entry points, public research-note sources under `site/research-notes/*/index.md`, and internal maintainer documentation under `ops/docs/`.
-  - Dossier and addendum `docs/` directories feed the public website Cabinet. Keep internal maintenance guides and operational notes in `ops/docs/`, linked from `ops/README.md`; do not put them in published research docs or `site/`.
-- For public prose and research notes, avoid abstract institutional scaffolding.
-  - Do not default to "types of things" lists, stacked tiny sections, symmetrical
-    "what X can/cannot prove" framing, or taxonomy-first exposition.
-  - Avoid strategic-vision phrases such as "the central claim," "the disciplined
-    claim," "the program needs," "best current interpretation," "formal interface
-    theory," and similar abstract noun clusters.
-  - Prefer direct research narrative: what we tried, what changed, what result
-    surprised us, what boundary remains, and what would count as evidence.
-  - Use lists for real contracts, receipts, metrics, release checklists, or tables;
-    otherwise write examples and reasoning as prose.
-- Do not add "just in case" error handling
-- Do not add backwards compatibility shims
-- Do not create abstractions for one-time operations
-- Do not write useless comments or use emojis anywhere in the code
-- Do not add comments that narrate the code. If the comment could be mechanically generated from the next line, delete it.
-- Do not leave commented-out code, debug transcripts, or disabled branches in tracked files. Delete them; if they are genuinely needed as documentation, move them into the dossier/addendum `docs/` instead.
-- Any new comment must justify itself by capturing at least one: non-obvious rationale, invariant, edge case, performance constraint, or an external-system quirk. Prefer wording that answers "why" (often using `because`, `so that`, `to avoid`, or `invariant:`).
+# Public Prose
+- Avoid abstract institutional scaffolding: no default "types of things" lists, stacked tiny sections, symmetrical "what X can/cannot prove" framing, or taxonomy-first exposition.
+- Avoid strategic-vision phrases such as "the central claim," "the disciplined claim," "the program needs," "best current interpretation," "formal interface theory," and similar abstract noun clusters.
+- Prefer direct research narrative: what we tried, what changed, what result surprised us, what boundary remains, and what would count as evidence.
+- Use lists for real contracts, receipts, metrics, release checklists, or tables; otherwise write examples and reasoning as prose.

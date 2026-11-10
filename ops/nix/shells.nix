@@ -42,8 +42,7 @@ let
 
       for p in \
         "$repo_root/dossiers/lenia-swarm/.build/arm64-apple-macosx/debug/mlx.metallib" \
-        "$repo_root/dossiers/lenia-swarm/.build/mlx-metallib/mlx/backend/metal/kernels/mlx.metallib" \
-        "$repo_root/dossiers/lenia-playground/.venv/lib/python3.13/site-packages/mlx/lib/mlx.metallib"; do
+        "$repo_root/dossiers/lenia-swarm/.build/mlx-metallib/mlx/backend/metal/kernels/mlx.metallib"; do
         if [ -f "$p" ]; then
           export MLX_METAL_PATH="$p"
           break
