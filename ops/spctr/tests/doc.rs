@@ -660,11 +660,7 @@ fn site_refuses_review_host_mentions_and_scripts() {
 
 #[test]
 fn site_refuses_private_paths() {
-    for path in [
-        "/dossiers/lenia-swarm/causal-emergence/",
-        "/dossiers/lenia-swarm/causal-emergence/reports/x/",
-        "/home-prototype/",
-    ] {
+    for path in ["/home-prototype/"] {
         let private = site(&PUBLISHED.replace("/dossiers/lenia-swarm/arrest/", path));
         let error = site_error(&private);
         assert!(error.contains("stays private"), "{path}: {error}");

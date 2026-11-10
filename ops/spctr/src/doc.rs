@@ -22,10 +22,7 @@ const REVIEW_HOSTS: &[&str] = &["lab.specterlab.org", "review.specterlab.org"];
 const SITE_SHELL_CSS: &str = "site/assets/site-shell.css";
 
 /// Site paths that must never be public.
-const PRIVATE_SITE_PATHS: &[&str] = &[
-    "/dossiers/lenia-swarm/causal-emergence/",
-    "/home-prototype/",
-];
+const PRIVATE_SITE_PATHS: &[&str] = &["/home-prototype/"];
 
 /// Where the review app serves its own publications on the public site.
 const REVIEW_APP_SITE_PATH: &str = "/experiments/";

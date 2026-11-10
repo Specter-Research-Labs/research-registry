@@ -4,7 +4,6 @@ summary: "Separating simple growth from a measured change in developmental susce
 release: "draft"
 source_id: "D-003"
 toc: false
-publication_pdf: /assets/publications/development-response.pdf
 ---
 
 # Development changes the effect of a disturbance

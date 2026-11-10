@@ -86,14 +86,12 @@ fn emit_archived_publish_result(
 // in the repository but never reach the public site or its sitemaps.
 pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
     "assets/blog/lenia-morphospace-obstacle-response",
-    "assets/causal-emergence",
     "atlas",
     "dashboards/wonton-soup/dist",
     "dashboards/wonton-soup/node_modules",
     "dashboards/wonton-soup/src",
     "cabinet/jolt-material-memory",
     "dossiers/jolt-material-memory",
-    "dossiers/lenia-swarm/causal-emergence",
     "dossiers/lenia-swarm/compendium",
     "dossiers/lenia-swarm/fiber-theory",
     "review",
@@ -103,14 +101,11 @@ pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
     "updates",
 ];
 
-// Build inputs, orphans, withdrawn figures, and assets of the unpublished
-// causal-emergence library that sit next to published pages. Only the built
-// dashboard ships.
+// Build inputs, orphans, and withdrawn figures that sit next to published
+// pages. Only the built dashboard ships.
 pub(crate) const UNPUBLISHED_SITE_FILES: &[&str] = &[
-    "assets/causal-emergence.css",
     "assets/research-material.svg",
     "assets/wonton-soup/dossier-evidence.json",
-    "assets/writing-causal-response.svg",
     "dashboards/wonton-soup/package-lock.json",
     "dashboards/wonton-soup/package.json",
     "dashboards/wonton-soup/tsconfig.json",
@@ -1150,9 +1145,6 @@ mod tests {
         for path in [
             "/atlas/",
             "/assets/blog/lenia-morphospace-obstacle-response/",
-            "/assets/causal-emergence/",
-            "/assets/causal-emergence.css",
-            "/assets/writing-causal-response.svg",
             "/dashboards/wonton-soup/dist/",
             "/dashboards/wonton-soup/node_modules/",
             "/dashboards/wonton-soup/src/",
@@ -1164,7 +1156,6 @@ mod tests {
             "/dossiers/jolt-material-memory/",
             "/assets/research-material.svg",
             "/dossiers/wonton-soup/paper.pdf",
-            "/dossiers/lenia-swarm/causal-emergence/",
             "/dossiers/lenia-swarm/compendium/",
             "/dossiers/lenia-swarm/fiber-theory/",
             "/review/",
@@ -1181,7 +1172,7 @@ mod tests {
         }
         assert!(plan
             .remote_prunes
-            .contains(&"dossiers/lenia-swarm/causal-emergence/".to_owned()));
+            .contains(&"templates/".to_owned()));
     }
 
     #[test]

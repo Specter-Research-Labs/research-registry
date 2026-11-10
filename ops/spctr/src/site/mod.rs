@@ -3,8 +3,6 @@ pub mod artifacts;
 pub mod blog;
 pub mod cabinet;
 pub mod catalog;
-pub mod causal_emergence;
-pub mod causal_emergence_release;
 pub mod data;
 pub mod discover;
 pub mod finalize;
@@ -34,9 +32,6 @@ struct PageRegion {
     template_path: String,
     output_path: String,
     regions: Vec<(&'static str, String)>,
-    /// Public pages carry the shared site header and footer; the unreleased
-    /// causal-emergence pages keep their own chrome.
-    shell: bool,
 }
 
 struct ProjectFeeds {
@@ -112,8 +107,6 @@ fn build_from_projection(
         project_feeds,
     } = projection;
     let record_slices = records::slice_records(&records);
-    let causal_emergence_catalog = causal_emergence::load_catalog(repo_root)?;
-    causal_emergence_release::validate_website_library(repo_root)?;
     let research_notes = blog::published_research_notes(repo_root)?;
     let reports = reports::discover_reports(repo_root, &blog_posts)?;
     for report in &reports {
@@ -131,7 +124,6 @@ fn build_from_projection(
 
     let mut pages: Vec<PageRegion> = vec![
         PageRegion {
-            shell: true,
             template_path: "site/templates/index.html".into(),
             output_path: "site/index.html".into(),
             regions: vec![(
@@ -140,7 +132,6 @@ fn build_from_projection(
             )],
         },
         PageRegion {
-            shell: true,
             template_path: "site/templates/dossiers/index.html".into(),
             output_path: "site/dossiers/index.html".into(),
             regions: vec![(
@@ -149,7 +140,6 @@ fn build_from_projection(
             )],
         },
         PageRegion {
-            shell: true,
             template_path: "site/templates/addenda/index.html".into(),
             output_path: "site/addenda/index.html".into(),
             regions: vec![(
@@ -158,7 +148,6 @@ fn build_from_projection(
             )],
         },
         PageRegion {
-            shell: true,
             template_path: "site/templates/blog/index.html".into(),
             output_path: "site/blog/index.html".into(),
             regions: vec![(
@@ -170,13 +159,11 @@ fn build_from_projection(
             )],
         },
         PageRegion {
-            shell: true,
             template_path: "site/templates/404.html".into(),
             output_path: "site/404.html".into(),
             regions: vec![],
         },
         PageRegion {
-            shell: true,
             template_path: "site/templates/sitemap/index.html".into(),
             output_path: "site/sitemap/index.html".into(),
             regions: vec![
@@ -194,7 +181,6 @@ fn build_from_projection(
         };
         if record.hub_generated {
             pages.push(PageRegion {
-                shell: true,
                 template_path: "site/templates/dossiers/default-hub.html".into(),
                 output_path: hub_path.clone(),
                 regions: vec![
@@ -250,54 +236,9 @@ fn build_from_projection(
                 ),
             ]);
             pages.push(PageRegion {
-                shell: true,
                 template_path: template,
                 output_path: hub_path.clone(),
                 regions: hub_regions,
-            });
-        }
-    }
-
-    if let Some(catalog) = causal_emergence_catalog.as_ref() {
-        let template_path = "site/templates/dossiers/lenia-swarm/causal-emergence/page.html";
-        for (output_path, title, description, canonical_path, content) in [
-            (
-                causal_emergence::LANDING_OUTPUT,
-                "Causal Emergence in Flow Lenia",
-                "A guided path through the experiments that follow when a developing Flow Lenia system becomes harder to redirect and more specific in its response.",
-                "/dossiers/lenia-swarm/causal-emergence/",
-                causal_emergence::render_landing(catalog),
-            ),
-            (
-                causal_emergence::LIBRARY_OUTPUT,
-                "Flow Lenia Causal Emergence Report Library",
-                "Seven selected reports on development, interventions, hidden composition, and the failed recovery prediction.",
-                "/dossiers/lenia-swarm/causal-emergence/library/",
-                causal_emergence::render_library(catalog),
-            ),
-            (
-                causal_emergence::ARCHIVE_OUTPUT,
-                "Flow Lenia Causal Emergence Archive",
-                "Pilots and superseded Flow Lenia causal-emergence reports retained as part of the experimental record.",
-                "/dossiers/lenia-swarm/causal-emergence/archive/",
-                causal_emergence::render_archive(catalog),
-            ),
-        ] {
-            pages.push(PageRegion {
-                shell: false,
-                template_path: template_path.into(),
-                output_path: output_path.into(),
-                regions: vec![
-                    (
-                        "CAUSAL_EMERGENCE_PAGE_TITLE",
-                        causal_emergence::render_page_title(title),
-                    ),
-                    (
-                        "CAUSAL_EMERGENCE_PAGE_META",
-                        causal_emergence::render_page_meta(title, description, canonical_path),
-                    ),
-                    ("CAUSAL_EMERGENCE_PAGE_CONTENT", content),
-                ],
             });
         }
     }
@@ -309,25 +250,23 @@ fn build_from_projection(
         }
         let mut text = fs::read_to_string(&template_abs)
             .with_context(|| format!("failed to read {}", page.template_path))?;
-        if page.shell {
-            let relative = page
-                .output_path
-                .strip_prefix("site/")
-                .with_context(|| format!("{}: output outside site/", page.output_path))?;
-            let section = shell::section_for_page(relative)?;
-            text = replace_region(
-                &text,
-                "SITE_HEADER",
-                &shell::header(repo_root, section)?,
-                &page.template_path,
-            )?;
-            text = replace_region(
-                &text,
-                "SITE_FOOTER",
-                &shell::footer(repo_root)?,
-                &page.template_path,
-            )?;
-        }
+        let relative = page
+            .output_path
+            .strip_prefix("site/")
+            .with_context(|| format!("{}: output outside site/", page.output_path))?;
+        let section = shell::section_for_page(relative)?;
+        text = replace_region(
+            &text,
+            "SITE_HEADER",
+            &shell::header(repo_root, section)?,
+            &page.template_path,
+        )?;
+        text = replace_region(
+            &text,
+            "SITE_FOOTER",
+            &shell::footer(repo_root)?,
+            &page.template_path,
+        )?;
         for (name, content) in &page.regions {
             text = replace_region(&text, name, content, &page.template_path)?;
         }

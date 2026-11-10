@@ -307,25 +307,6 @@ enum SiteCommand {
         )]
         passthrough: Vec<String>,
     },
-    #[command(about = "Stage the SHA-matched Flow Lenia causal-emergence report library")]
-    StageLeniaCausalReports {
-        #[arg(
-            long,
-            help = "Local root containing source report HTML or a verified public library bundle"
-        )]
-        input_root: camino::Utf8PathBuf,
-        #[arg(
-            long,
-            default_value = "artifacts/publication/causal-emergence",
-            help = "New output directory for the website report bundle"
-        )]
-        output: camino::Utf8PathBuf,
-        #[arg(
-            long,
-            help = "Stage one catalog report id instead of the whole library"
-        )]
-        id: Option<String>,
-    },
     #[command(about = "Refresh, archive, and publish the Wonton site dashboard surface")]
     PublishWontonDashboard {
         #[arg(long, help = "Release identifier; defaults to git HEAD")]
@@ -1041,31 +1022,6 @@ fn dispatch_site(command: SiteCommand) -> anyhow::Result<()> {
                 output.as_deref(),
                 &passthrough,
             )
-        }
-        SiteCommand::StageLeniaCausalReports {
-            input_root,
-            output,
-            id,
-        } => {
-            let repo_root = crate::manifest::repo_root()?;
-            let input_root = if input_root.is_absolute() {
-                input_root
-            } else {
-                repo_root.join(input_root)
-            };
-            let output = if output.is_absolute() {
-                output
-            } else {
-                repo_root.join(output)
-            };
-            let result = crate::site::causal_emergence_release::stage_library(
-                &repo_root,
-                &input_root,
-                &output,
-                id.as_deref(),
-            )?;
-            println!("{}", serde_json::to_string_pretty(&result)?);
-            Ok(())
         }
         SiteCommand::PublishWontonDashboard {
             release_id,
