@@ -32,6 +32,12 @@ noncommercial terms. It is not offered as OSI open source.
   [`LICENSE`](LICENSE) notice unless a file or subtree states
   otherwise.
 
+## Third-Party Typefaces
+
+The Berkeley Mono and IBM Plex typefaces in `site/fonts/` are the
+property of their respective owners, under their own licenses. They
+are not covered by the repository licenses.
+
 ## Commercial Use
 
 Commercial use of Specter-authored code or research materials
