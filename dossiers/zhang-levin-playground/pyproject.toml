@@ -30,7 +30,6 @@ include = [
     "exp16_movable_frozen.py",
     "exp17_duplicate_values.py",
     "exp1_frozen_cells.py",
-    "exp_random_baseline.py",
     "exp25_selection_factorization.py",
     "exp26_substrate_matched_baselines.py",
     "exp27_timing_interventions.py",
