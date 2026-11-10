@@ -59,8 +59,6 @@ The paper now leans on a smaller set of reproducible, audited surfaces:
 - `paper/make_figures.py`
   Regenerates all paper figures from the compact result files in `paper/results/`. The Exp10 and Exp14 tables in `main.tex` come from an earlier archive that was not retained.
 
-Legacy 2D scripts such as `exp19_2d_sorting.py`, `exp22_2d_deeper.py`, and `exp23_2d_alt_ordering.py` remain in the repo as exploratory or historical surfaces. They are no longer the intended provenance path for Figure 3.
-
 ## Current Findings
 
 Clustering is reported as the excess of the trajectory maximum of C(t) over a 200-shuffle label-permutation null on the same per-swap trajectory, because the raw maximum sits about 0.11 to 0.14 above the random-mixing baseline even for identical rules.
@@ -191,16 +189,13 @@ uv run python paper/make_figures.py
 
 ## Experiment Map
 
-### Core original and follow-up 1D experiments
+### 1D experiments
 ```text
 exp1_frozen_cells.py
 exp10_ablation_goal_adjustment.py
-exp11_robustness_curve.py
 exp14_cellview_vs_traditional.py
-exp15_delay_gratification.py
 exp16_movable_frozen.py
 exp17_duplicate_values.py
-exp18_nudge_unfreezing.py
 exp25_selection_factorization.py
 exp26_substrate_matched_baselines.py
 exp27_timing_interventions.py
@@ -208,13 +203,9 @@ exp27_timing_interventions.py
 
 ### 2D experiments
 ```text
-exp19_2d_sorting.py              # legacy exploratory surface
-exp22_2d_deeper.py               # legacy exploratory surface
-exp23_2d_alt_ordering.py         # legacy exploratory surface
-exp24_pattern_guided_2d.py       # exploratory extension
-exp28_2d_canonical.py            # canonical paper-facing 2D archive
-paper/exp2d_core.py              # canonical 2D engine
-paper/aggregate_fig3_2d.py       # canonical Figure 3 aggregation
+exp28_2d_canonical.py            # raw-trial archive for the 2D section
+paper/exp2d_core.py              # 2D engine
+paper/aggregate_fig3_2d.py       # Figure 3 aggregation
 ```
 
 ### Diagnostics and secondary metrics
@@ -223,7 +214,6 @@ paper/compute_dip_stats.py
 paper/compute_fig5_h1.py
 paper/compute_directed_flow.py
 paper/compute_k.py               # matched state-space K on the Exp25 immovable factorization
-analysis/persistent_homology.py
 ```
 
 ## Data

@@ -184,37 +184,37 @@ uv run python scripts/render_run.py \
   --stride 3
 ```
 
-Offline Blender:
+Cinematic stills and video render directly from NDJSON with matplotlib. The output suffix picks
+the format (`.png`, `.jpg`, `.gif`, `.mp4`). Stills show the last sampled frame unless
+`--frame-index` picks another. MP4 output needs `ffmpeg`:
 
 ```bash
-BLENDER_INSTALL_ROOT=/path/to/blender-apps \
-  bash scripts/install_blender.sh
-
-SPECTER_ARTIFACT_ROOT=/path/to/artifacts \
-  uv run python scripts/export_render_bundle.py \
-    --ndjson data/smoke_cpu.ndjson \
-    --name smoke-hq \
-    --stride 2
-
-BLENDER_APP=/path/to/blender-apps/Blender-5.0.1.app \
-BLENDER_RUNTIME_ROOT=/path/to/blender-runtime \
-  bash scripts/run_blender_render.sh \
-    /path/to/artifacts/jolt-material-memory/render-bundles/smoke-hq \
-    /path/to/output/smoke-hq.png \
-    --mode still \
-    --samples 96
-
-BLENDER_APP=/path/to/blender-apps/Blender-5.0.1.app \
-BLENDER_RUNTIME_ROOT=/path/to/blender-runtime \
-  bash scripts/run_blender_render.sh \
-    /path/to/artifacts/jolt-material-memory/render-bundles/smoke-hq \
-    /path/to/output/smoke-hq.mp4 \
-    --mode animation \
-    --fps 24 \
-    --samples 32
+uv run python scripts/render_cinematic_run.py \
+  --ndjson data/smoke_cpu.ndjson \
+  --out data/smoke_cpu-cinematic.mp4 \
+  --fps 24 \
+  --stride 2
 ```
 
-Fresh run NDJSON includes per-body `body_plasticity`, `body_stiffness`, `body_friction`,
-`body_contact`, and `body_strain`. The Blender renderer maps those channels to substrate
-thickness, glow, contact footprints, and damage/event markers. MP4 output is assembled from a PNG
-sequence with `ffmpeg`.
+Compare runs side by side on one plate, one `--panel '<ndjson>::<label>'` per run:
+
+```bash
+uv run python scripts/render_cinematic_plate.py \
+  --panel 'data/off.ndjson::Memory off' \
+  --panel 'data/on.ndjson::Memory on' \
+  --out data/comparison-plate.png
+```
+
+`scripts/build_article_assets.py` reruns analysis on the four campaigns under `data/`, renders the
+article figures and videos through these two scripts, and stages everything in
+`site/assets/blog/jolt-material-memory/`.
+
+Export the per-body channels of a run (`body_plasticity`, `body_stiffness`, `body_friction`,
+`body_contact`, `body_strain`) as `manifest.json` plus `tracks.npz`:
+
+```bash
+uv run python scripts/export_render_bundle.py \
+  --ndjson data/smoke_cpu.ndjson \
+  --name smoke-hq \
+  --stride 2
+```

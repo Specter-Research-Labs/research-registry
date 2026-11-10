@@ -125,6 +125,42 @@ def probe(
         raise typer.Exit(code=result.returncode)
 
 
+@BACKEND_APP.command("start")
+def start(
+    image: str = typer.Option(_DEFAULT_IMAGE, "--image", envvar="FLYBRAINLAB_DOCKER_IMAGE"),
+    name: str = typer.Option(_DEFAULT_NAME, "--name", envvar="FLYBRAINLAB_DOCKER_NAME"),
+    ui_port: int = typer.Option(_DEFAULT_UI_PORT, "--ui-port", envvar="FLYBRAINLAB_UI_PORT"),
+    processor_port: int = typer.Option(
+        _DEFAULT_PROCESSOR_PORT,
+        "--processor-port",
+        envvar="FLYBRAINLAB_PROCESSOR_PORT",
+    ),
+    database_dir: Path | None = typer.Option(
+        None,
+        "--database-dir",
+        envvar="FLYBRAINLAB_DATABASE_DIR",
+    ),
+) -> None:
+    report = detect_host()
+    if report.blocker is not None:
+        typer.echo(report.blocker, err=True)
+        raise typer.Exit(code=1)
+    if database_dir is not None:
+        database_dir.mkdir(parents=True, exist_ok=True)
+    command = docker_run_command(
+        image=image,
+        name=name,
+        ui_port=ui_port,
+        processor_port=processor_port,
+        database_dir=database_dir,
+    )
+    typer.echo(f"Launching {image}")
+    typer.echo(f"Jupyter UI: http://localhost:{ui_port}")
+    typer.echo(f"Processor URL: ws://localhost:{processor_port}/ws")
+    typer.echo(shlex.join(command))
+    os.execvp(command[0], command)
+
+
 def detect_host() -> HostReport:
     system = platform.system().lower()
     machine = platform.machine().lower()
@@ -247,25 +283,6 @@ def docker_run_command(
         )
     command.extend(["-it", image])
     return tuple(command)
-
-
-def format_docker_run_command(
-    *,
-    image: str = _DEFAULT_IMAGE,
-    name: str = _DEFAULT_NAME,
-    ui_port: int = _DEFAULT_UI_PORT,
-    processor_port: int = _DEFAULT_PROCESSOR_PORT,
-    database_dir: Path | None = None,
-) -> str:
-    return shlex.join(
-        docker_run_command(
-            image=image,
-            name=name,
-            ui_port=ui_port,
-            processor_port=processor_port,
-            database_dir=database_dir,
-        )
-    )
 
 
 def _command_version(command: tuple[str, ...]) -> str | None:
